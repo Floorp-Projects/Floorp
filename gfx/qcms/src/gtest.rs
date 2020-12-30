@@ -497,8 +497,8 @@ mod gtest {
     }
 
     struct QcmsProfileTest {
-        in_profile: *mut qcms_profile,
-        out_profile: *mut qcms_profile,
+        in_profile: *mut Profile,
+        out_profile: *mut Profile,
         transform: *mut qcms_transform,
 
         input: Vec<u8>,
@@ -782,7 +782,7 @@ mod gtest {
         }
     }
 
-    fn profile_from_path(file: &str) -> *mut qcms_profile {
+    fn profile_from_path(file: &str) -> *mut Profile {
         use std::io::Read;
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push("profiles");

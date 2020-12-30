@@ -24,8 +24,8 @@ use crate::{
     iccread::LAB_SIGNATURE,
     iccread::RGB_SIGNATURE,
     iccread::XYZ_SIGNATURE,
-    iccread::{lutType, lutmABType, qcms_profile},
-    matrix::{matrix, matrix_invert},
+    iccread::{lutType, lutmABType, Profile},
+    matrix::{matrix_invert, Matrix},
     s15Fixed16Number_to_float,
     transform_util::clamp_float,
     transform_util::{
@@ -36,7 +36,7 @@ use crate::{
 
 #[derive(Clone, Default)]
 pub struct qcms_modular_transform {
-    pub matrix: matrix,
+    pub matrix: Matrix,
     pub tx: f32,
     pub ty: f32,
     pub tz: f32,
@@ -67,8 +67,8 @@ fn lerp(mut a: f32, mut b: f32, mut t: f32) -> f32 {
     a * (1.0 - t) + b * t
 }
 
-fn build_lut_matrix(mut lut: Option<&lutType>) -> matrix {
-    let mut result: matrix = matrix {
+fn build_lut_matrix(mut lut: Option<&lutType>) -> Matrix {
+    let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
@@ -89,8 +89,8 @@ fn build_lut_matrix(mut lut: Option<&lutType>) -> matrix {
     }
     result
 }
-fn build_mAB_matrix(lut: &lutmABType) -> matrix {
-    let mut result: matrix = matrix {
+fn build_mAB_matrix(lut: &lutmABType) -> Matrix {
+    let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
@@ -490,7 +490,7 @@ fn transform_module_matrix_translate(
     mut src: &[f32],
     mut dest: &mut [f32],
 ) {
-    let mut mat: matrix = matrix {
+    let mut mat: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
@@ -527,7 +527,7 @@ fn transform_module_matrix(
     mut src: &[f32],
     mut dest: &mut [f32],
 ) {
-    let mut mat: matrix = matrix {
+    let mut mat: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
@@ -748,7 +748,7 @@ fn modular_transform_create_lut(mut lut: &lutType) -> Option<Box<qcms_modular_tr
     None
 }
 
-fn modular_transform_create_input(mut in_0: &qcms_profile) -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_create_input(mut in_0: &Profile) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if in_0.A2B0.is_some() {
@@ -819,7 +819,7 @@ fn modular_transform_create_input(mut in_0: &qcms_profile) -> Option<Box<qcms_mo
     }
     first_transform
 }
-fn modular_transform_create_output(mut out: &qcms_profile) -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_create_output(mut out: &Profile) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if out.B2A0.is_some() {
@@ -944,8 +944,8 @@ remove_next:
 }
 */
 fn modular_transform_create(
-    mut in_0: &qcms_profile,
-    mut out: &qcms_profile,
+    mut in_0: &Profile,
+    mut out: &Profile,
 ) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
@@ -1018,8 +1018,8 @@ fn modular_transform_data(
 }
 
 pub fn chain_transform(
-    mut in_0: &qcms_profile,
-    mut out: &qcms_profile,
+    mut in_0: &Profile,
+    mut out: &Profile,
     mut src: Vec<f32>,
     mut dest: Vec<f32>,
     mut lutSize: usize,

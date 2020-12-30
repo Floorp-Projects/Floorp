@@ -37,7 +37,7 @@ use crate::{
     },
 };
 use crate::{
-    iccread::{qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, qcms_profile, GRAY_SIGNATURE, RGB_SIGNATURE},
+    iccread::{qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, Profile, GRAY_SIGNATURE, RGB_SIGNATURE},
     transform_util::clamp_float,
     Intent,
 };
@@ -220,17 +220,17 @@ fn clamp_u8(mut v: f32) -> u8 {
 fn build_RGB_to_XYZ_transfer_matrix(
     mut white: qcms_CIE_xyY,
     mut primrs: qcms_CIE_xyYTRIPLE,
-) -> matrix {
-    let mut primaries: matrix = matrix {
+) -> Matrix {
+    let mut primaries: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
 
-    let mut result: matrix = matrix {
+    let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
-    let mut white_point: vector = vector { v: [0.; 3] };
+    let mut white_point: Vector = Vector { v: [0.; 3] };
 
     let mut xn: f64 = white.x;
     let mut yn: f64 = white.y;
@@ -257,11 +257,11 @@ fn build_RGB_to_XYZ_transfer_matrix(
     white_point.v[0] = (xn / yn) as f32;
     white_point.v[1] = 1.;
     white_point.v[2] = ((1.0f64 - xn - yn) / yn) as f32;
-    let mut primaries_invert: matrix = matrix_invert(primaries);
+    let mut primaries_invert: Matrix = matrix_invert(primaries);
     if primaries_invert.invalid {
         return matrix_invalid();
     }
-    let mut coefs: vector = matrix_eval(primaries_invert, white_point);
+    let mut coefs: Vector = matrix_eval(primaries_invert, white_point);
     result.m[0][0] = (coefs.v[0] as f64 * xr) as f32;
     result.m[0][1] = (coefs.v[1] as f64 * xg) as f32;
     result.m[0][2] = (coefs.v[2] as f64 * xb) as f32;
@@ -298,19 +298,19 @@ fn xyY2XYZ(mut source: qcms_CIE_xyY) -> CIE_XYZ {
 fn compute_chromatic_adaption(
     mut source_white_point: CIE_XYZ,
     mut dest_white_point: CIE_XYZ,
-    mut chad: matrix,
-) -> matrix {
-    let mut cone_source_XYZ: vector = vector { v: [0.; 3] };
+    mut chad: Matrix,
+) -> Matrix {
+    let mut cone_source_XYZ: Vector = Vector { v: [0.; 3] };
 
-    let mut cone_dest_XYZ: vector = vector { v: [0.; 3] };
+    let mut cone_dest_XYZ: Vector = Vector { v: [0.; 3] };
 
-    let mut cone: matrix = matrix {
+    let mut cone: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
 
-    let mut tmp: matrix = chad;
-    let mut chad_inv: matrix = matrix_invert(tmp);
+    let mut tmp: Matrix = chad;
+    let mut chad_inv: Matrix = matrix_invert(tmp);
     if chad_inv.invalid {
         return matrix_invalid();
     }
@@ -321,8 +321,8 @@ fn compute_chromatic_adaption(
     cone_dest_XYZ.v[1] = dest_white_point.Y as f32;
     cone_dest_XYZ.v[2] = dest_white_point.Z as f32;
 
-    let mut cone_source_rgb: vector = matrix_eval(chad, cone_source_XYZ);
-    let mut cone_dest_rgb: vector = matrix_eval(chad, cone_dest_XYZ);
+    let mut cone_source_rgb: Vector = matrix_eval(chad, cone_source_XYZ);
+    let mut cone_dest_rgb: Vector = matrix_eval(chad, cone_dest_XYZ);
     cone.m[0][0] = cone_dest_rgb.v[0] / cone_source_rgb.v[0];
     cone.m[0][1] = 0.;
     cone.m[0][2] = 0.;
@@ -339,9 +339,9 @@ fn compute_chromatic_adaption(
 /* from lcms: cmsAdaptionMatrix */
 // Returns the final chrmatic adaptation from illuminant FromIll to Illuminant ToIll
 // Bradford is assumed
-fn adaption_matrix(mut source_illumination: CIE_XYZ, mut target_illumination: CIE_XYZ) -> matrix {
-    let mut lam_rigg: matrix = {
-        let mut init = matrix {
+fn adaption_matrix(mut source_illumination: CIE_XYZ, mut target_illumination: CIE_XYZ) -> Matrix {
+    let mut lam_rigg: Matrix = {
+        let mut init = Matrix {
             m: [
                 [0.8951, 0.2664, -0.1614],
                 [-0.7502, 1.7135, 0.0367],
@@ -354,24 +354,24 @@ fn adaption_matrix(mut source_illumination: CIE_XYZ, mut target_illumination: CI
     compute_chromatic_adaption(source_illumination, target_illumination, lam_rigg)
 }
 /* from lcms: cmsAdaptMatrixToD50 */
-fn adapt_matrix_to_D50(mut r: matrix, mut source_white_pt: qcms_CIE_xyY) -> matrix {
+fn adapt_matrix_to_D50(mut r: Matrix, mut source_white_pt: qcms_CIE_xyY) -> Matrix {
     if source_white_pt.y == 0.0f64 {
         return matrix_invalid();
     }
 
     let mut Dn: CIE_XYZ = xyY2XYZ(source_white_pt);
-    let mut Bradford: matrix = adaption_matrix(Dn, D50_XYZ);
+    let mut Bradford: Matrix = adaption_matrix(Dn, D50_XYZ);
     if Bradford.invalid {
         return matrix_invalid();
     }
     matrix_multiply(Bradford, r)
 }
 pub(crate) fn set_rgb_colorants(
-    mut profile: &mut qcms_profile,
+    mut profile: &mut Profile,
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
 ) -> bool {
-    let mut colorants: matrix = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
+    let mut colorants: Matrix = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
     colorants = adapt_matrix_to_D50(colorants, white_point);
     if colorants.invalid {
         return false;
@@ -389,7 +389,7 @@ pub(crate) fn set_rgb_colorants(
     true
 }
 pub(crate) fn get_rgb_colorants(
-    mut colorants: &mut matrix,
+    mut colorants: &mut Matrix,
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
 ) -> bool {
@@ -1010,7 +1010,7 @@ pub unsafe extern "C" fn qcms_transform_release(mut t: *mut qcms_transform) {
     drop(t)
 }
 
-const bradford_matrix: matrix = matrix {
+const bradford_matrix: Matrix = Matrix {
     m: [
         [0.8951, 0.2664, -0.1614],
         [-0.7502, 1.7135, 0.0367],
@@ -1019,7 +1019,7 @@ const bradford_matrix: matrix = matrix {
     invalid: false,
 };
 
-const bradford_matrix_inv: matrix = matrix {
+const bradford_matrix_inv: Matrix = Matrix {
     m: [
         [0.9869929, -0.1470543, 0.1599627],
         [0.4323053, 0.5183603, 0.0492912],
@@ -1029,7 +1029,7 @@ const bradford_matrix_inv: matrix = matrix {
 };
 
 // See ICCv4 E.3
-fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
+fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> Matrix {
     let mut p: f32 = (0.96422 * bradford_matrix.m[0][0]
         + 1.000 * bradford_matrix.m[1][0]
         + 0.82521 * bradford_matrix.m[2][0])
@@ -1042,7 +1042,7 @@ fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
         + 1.000 * bradford_matrix.m[1][2]
         + 0.82521 * bradford_matrix.m[2][2])
         / (X * bradford_matrix.m[0][2] + Y * bradford_matrix.m[1][2] + Z * bradford_matrix.m[2][2]);
-    let mut white_adaption = matrix {
+    let mut white_adaption = Matrix {
         m: [[p, 0., 0.], [0., y, 0.], [0., 0., b]],
         invalid: false,
     };
@@ -1052,7 +1052,7 @@ fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
     )
 }
 #[no_mangle]
-pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut qcms_profile) {
+pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut Profile) {
     /* we only support precaching on rgb profiles */
     if profile.color_space != RGB_SIGNATURE {
         return;
@@ -1102,8 +1102,8 @@ pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut qcms_
 /* Replace the current transformation with a LUT transformation using a given number of sample points */
 fn transform_precacheLUT_float(
     mut transform: Box<qcms_transform>,
-    mut in_0: &qcms_profile,
-    mut out: &qcms_profile,
+    mut in_0: &Profile,
+    mut out: &Profile,
     mut samples: i32,
     mut in_type: qcms_data_type,
 ) -> Option<Box<qcms_transform>> {
@@ -1146,9 +1146,9 @@ fn transform_precacheLUT_float(
 }
 
 pub fn transform_create(
-    mut in_0: &qcms_profile,
+    mut in_0: &Profile,
     mut in_type: qcms_data_type,
-    mut out: &qcms_profile,
+    mut out: &Profile,
     mut out_type: qcms_data_type,
     mut intent: Intent,
 ) -> Option<Box<qcms_transform>> {
@@ -1269,13 +1269,13 @@ pub fn transform_create(
         }
         /* build combined colorant matrix */
 
-        let mut in_matrix: matrix = build_colorant_matrix(in_0);
-        let mut out_matrix: matrix = build_colorant_matrix(out);
+        let mut in_matrix: Matrix = build_colorant_matrix(in_0);
+        let mut out_matrix: Matrix = build_colorant_matrix(out);
         out_matrix = matrix_invert(out_matrix);
         if out_matrix.invalid {
             return None;
         }
-        let mut result_0: matrix = matrix_multiply(out_matrix, in_matrix);
+        let mut result_0: Matrix = matrix_multiply(out_matrix, in_matrix);
         /* check for NaN values in the matrix and bail if we find any */
         let mut i: u32 = 0;
         while i < 3 {
@@ -1348,8 +1348,8 @@ pub struct Transform {
 
 impl Transform {
     pub fn new(
-        input: &qcms_profile,
-        output: &qcms_profile,
+        input: &Profile,
+        output: &Profile,
         ty: qcms_data_type,
         intent: Intent,
     ) -> Option<Self> {

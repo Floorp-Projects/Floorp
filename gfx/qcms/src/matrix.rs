@@ -23,19 +23,19 @@
 
 #[repr(C)]
 #[derive(Copy, Clone, Default)]
-pub struct matrix {
+pub struct Matrix {
     pub m: [[f32; 3]; 3],
     pub invalid: bool,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct vector {
+pub struct Vector {
     pub v: [f32; 3],
 }
 
-pub fn matrix_eval(mut mat: matrix, mut v: vector) -> vector {
-    let mut result: vector = vector { v: [0.; 3] };
+pub fn matrix_eval(mut mat: Matrix, mut v: Vector) -> Vector {
+    let mut result: Vector = Vector { v: [0.; 3] };
     result.v[0] = mat.m[0][0] * v.v[0] + mat.m[0][1] * v.v[1] + mat.m[0][2] * v.v[2];
     result.v[1] = mat.m[1][0] * v.v[0] + mat.m[1][1] * v.v[1] + mat.m[1][2] * v.v[2];
     result.v[2] = mat.m[2][0] * v.v[0] + mat.m[2][1] * v.v[1] + mat.m[2][2] * v.v[2];
@@ -43,7 +43,7 @@ pub fn matrix_eval(mut mat: matrix, mut v: vector) -> vector {
 }
 //XXX: should probably pass by reference and we could
 //probably reuse this computation in matrix_invert
-pub fn matrix_det(mut mat: matrix) -> f32 {
+pub fn matrix_det(mut mat: Matrix) -> f32 {
     let mut det: f32 = mat.m[0][0] * mat.m[1][1] * mat.m[2][2]
         + mat.m[0][1] * mat.m[1][2] * mat.m[2][0]
         + mat.m[0][2] * mat.m[1][0] * mat.m[2][1]
@@ -56,8 +56,8 @@ pub fn matrix_det(mut mat: matrix) -> f32 {
 /* lcms uses gauss-jordan elimination with partial pivoting which is
  * less efficient and not as numerically stable. See Mathematics for
  * Game Programmers. */
-pub fn matrix_invert(mut mat: matrix) -> matrix {
-    let mut dest_mat: matrix = matrix {
+pub fn matrix_invert(mut mat: Matrix) -> Matrix {
+    let mut dest_mat: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
@@ -94,8 +94,8 @@ pub fn matrix_invert(mut mat: matrix) -> matrix {
     }
     dest_mat
 }
-pub fn matrix_identity() -> matrix {
-    let mut i: matrix = matrix {
+pub fn matrix_identity() -> Matrix {
+    let mut i: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
@@ -111,15 +111,15 @@ pub fn matrix_identity() -> matrix {
     i.invalid = false;
     i
 }
-pub fn matrix_invalid() -> matrix {
-    let mut inv: matrix = matrix_identity();
+pub fn matrix_invalid() -> Matrix {
+    let mut inv: Matrix = matrix_identity();
     inv.invalid = true;
     inv
 }
 /* from pixman */
 /* MAT3per... */
-pub fn matrix_multiply(mut a: matrix, mut b: matrix) -> matrix {
-    let mut result: matrix = matrix {
+pub fn matrix_multiply(mut a: Matrix, mut b: Matrix) -> Matrix {
+    let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
