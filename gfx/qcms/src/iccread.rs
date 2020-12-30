@@ -31,7 +31,7 @@ use crate::{matrix::matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent,
 
 pub static qcms_supports_iccv4: AtomicBool = AtomicBool::new(false);
 
-pub type icColorSpaceSignature = libc::c_uint;
+pub type icColorSpaceSignature = u32;
 pub const icMaxEnumData: icColorSpaceSignature = 4294967295;
 pub const icSig15colorData: icColorSpaceSignature = 1178815570;
 pub const icSig14colorData: icColorSpaceSignature = 1162038354;
@@ -753,8 +753,8 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
         debug_assert!(num_in_channels as i32 == 3);
         // clut_size can not overflow since lg(256^num_in_channels) = 24 bits.
         i = 0;
-        while i < num_in_channels as libc::c_uint {
-            clut_size *= read_u8(src, (clut_offset + i) as usize) as libc::c_uint;
+        while i < num_in_channels as u32 {
+            clut_size *= read_u8(src, (clut_offset + i) as usize) as u32;
             if clut_size == 0 {
                 invalid_source(src, "bad clut_size");
             }
@@ -764,7 +764,7 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
         clut_size = 0
     }
     // 24bits * 3 won't overflow either
-    clut_size *= num_out_channels as libc::c_uint;
+    clut_size *= num_out_channels as u32;
     if clut_size > 500000 {
         return None;
     }
@@ -773,7 +773,7 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
 
     if clut_offset != 0 {
         i = 0;
-        while i < num_in_channels as libc::c_uint {
+        while i < num_in_channels as u32 {
             lut.num_grid_points[i as usize] = read_u8(src, (clut_offset + i) as usize);
             if lut.num_grid_points[i as usize] as i32 == 0 {
                 invalid_source(src, "bad grid_points");
@@ -787,18 +787,18 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
     lut.num_out_channels = num_out_channels;
     if matrix_offset != 0 {
         // read the matrix if we have it
-        lut.e00 = read_s15Fixed16Number(src, (matrix_offset + (4 * 0) as libc::c_uint) as usize); // the caller checks that this doesn't happen
-        lut.e01 = read_s15Fixed16Number(src, (matrix_offset + (4 * 1) as libc::c_uint) as usize);
-        lut.e02 = read_s15Fixed16Number(src, (matrix_offset + (4 * 2) as libc::c_uint) as usize);
-        lut.e10 = read_s15Fixed16Number(src, (matrix_offset + (4 * 3) as libc::c_uint) as usize);
-        lut.e11 = read_s15Fixed16Number(src, (matrix_offset + (4 * 4) as libc::c_uint) as usize);
-        lut.e12 = read_s15Fixed16Number(src, (matrix_offset + (4 * 5) as libc::c_uint) as usize);
-        lut.e20 = read_s15Fixed16Number(src, (matrix_offset + (4 * 6) as libc::c_uint) as usize);
-        lut.e21 = read_s15Fixed16Number(src, (matrix_offset + (4 * 7) as libc::c_uint) as usize);
-        lut.e22 = read_s15Fixed16Number(src, (matrix_offset + (4 * 8) as libc::c_uint) as usize);
-        lut.e03 = read_s15Fixed16Number(src, (matrix_offset + (4 * 9) as libc::c_uint) as usize);
-        lut.e13 = read_s15Fixed16Number(src, (matrix_offset + (4 * 10) as libc::c_uint) as usize);
-        lut.e23 = read_s15Fixed16Number(src, (matrix_offset + (4 * 11) as libc::c_uint) as usize)
+        lut.e00 = read_s15Fixed16Number(src, (matrix_offset + (4 * 0) as u32) as usize); // the caller checks that this doesn't happen
+        lut.e01 = read_s15Fixed16Number(src, (matrix_offset + (4 * 1) as u32) as usize);
+        lut.e02 = read_s15Fixed16Number(src, (matrix_offset + (4 * 2) as u32) as usize);
+        lut.e10 = read_s15Fixed16Number(src, (matrix_offset + (4 * 3) as u32) as usize);
+        lut.e11 = read_s15Fixed16Number(src, (matrix_offset + (4 * 4) as u32) as usize);
+        lut.e12 = read_s15Fixed16Number(src, (matrix_offset + (4 * 5) as u32) as usize);
+        lut.e20 = read_s15Fixed16Number(src, (matrix_offset + (4 * 6) as u32) as usize);
+        lut.e21 = read_s15Fixed16Number(src, (matrix_offset + (4 * 7) as u32) as usize);
+        lut.e22 = read_s15Fixed16Number(src, (matrix_offset + (4 * 8) as u32) as usize);
+        lut.e03 = read_s15Fixed16Number(src, (matrix_offset + (4 * 9) as u32) as usize);
+        lut.e13 = read_s15Fixed16Number(src, (matrix_offset + (4 * 10) as u32) as usize);
+        lut.e23 = read_s15Fixed16Number(src, (matrix_offset + (4 * 11) as u32) as usize)
     }
     if a_curve_offset != 0 {
         read_nested_curveType(src, &mut lut.a_curves, num_in_channels, a_curve_offset);

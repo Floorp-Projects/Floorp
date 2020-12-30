@@ -349,10 +349,24 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
     *size = length as usize;
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn qcms_transform_data(
+    mut transform: &qcms_transform,
+    mut src: *const libc::c_void,
+    mut dest: *mut libc::c_void,
+    mut length: usize,
+) {
+    transform.transform_fn.expect("non-null function pointer")(
+        transform,
+        src as *const u8,
+        dest as *mut u8,
+        length,
+    );
+}
+
 pub use crate::iccread::qcms_profile;
 pub use crate::iccread::qcms_profile_is_bogus;
 pub use crate::iccread::{icSigGrayData, icSigRgbData};
 pub use crate::transform::{
-    qcms_enable_iccv4, qcms_profile_precache_output_transform, qcms_transform_data,
-    qcms_transform_release,
+    qcms_enable_iccv4, qcms_profile_precache_output_transform, qcms_transform_release,
 };
