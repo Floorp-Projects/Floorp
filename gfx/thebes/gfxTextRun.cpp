@@ -2926,8 +2926,17 @@ gfxFont* gfxFontGroup::FindFallbackFaceForChar(
 gfxFont* gfxFontGroup::FindFallbackFaceForChar(
     fontlist::Family* aFamily, uint32_t aCh, uint32_t aNextCh,
     eFontPresentation aPresentation) {
-  fontlist::FontList* list =
-      gfxPlatformFontList::PlatformFontList()->SharedFontList();
+  auto* pfl = gfxPlatformFontList::PlatformFontList();
+  auto* list = pfl->SharedFontList();
+
+  // If async fallback is enabled, and the family isn't fully initialized yet,
+  // just start the async cmap loading and return.
+  if (!aFamily->IsFullyInitialized() &&
+      StaticPrefs::gfx_font_rendering_fallback_async()) {
+    pfl->StartCmapLoadingFromFamily(aFamily - list->Families());
+    return nullptr;
+  }
+
   GlobalFontMatch data(aCh, aNextCh, mStyle, aPresentation);
   aFamily->SearchAllFontsForChar(list, &data);
   gfxFontEntry* fe = data.mBestMatch;

@@ -366,7 +366,7 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvUpdateFontList(
       nsTArray<SystemFontListEntry>&& aFontList);
-  mozilla::ipc::IPCResult RecvRebuildFontList();
+  mozilla::ipc::IPCResult RecvRebuildFontList(const bool& aFullRebuild);
 
   mozilla::ipc::IPCResult RecvUpdateAppLocales(
       nsTArray<nsCString>&& aAppLocales);

@@ -2408,12 +2408,13 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateDictionaryList(
 mozilla::ipc::IPCResult ContentChild::RecvUpdateFontList(
     nsTArray<SystemFontListEntry>&& aFontList) {
   mFontList = std::move(aFontList);
-  gfxPlatform::GetPlatform()->UpdateFontList();
+  gfxPlatform::GetPlatform()->UpdateFontList(true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvRebuildFontList() {
-  gfxPlatform::GetPlatform()->UpdateFontList();
+mozilla::ipc::IPCResult ContentChild::RecvRebuildFontList(
+    const bool& aFullRebuild) {
+  gfxPlatform::GetPlatform()->UpdateFontList(aFullRebuild);
   return IPC_OK();
 }
 

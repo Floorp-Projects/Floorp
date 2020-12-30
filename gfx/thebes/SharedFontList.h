@@ -290,6 +290,13 @@ struct Family {
   // It is possible that character maps have not yet been loaded.
   bool IsInitialized() const { return !mFaces.IsNull(); }
 
+  // IsFullyInitialized indicates that not only faces but also character maps
+  // have been set up, so the family can be searched without the possibility
+  // that IPC messaging will be triggered.
+  bool IsFullyInitialized() const {
+    return IsInitialized() && !mCharacterMap.IsNull();
+  }
+
   void FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
                             nsTArray<Face*>& aFaceList,
                             bool aIgnoreSizeTolerance = false) const;
