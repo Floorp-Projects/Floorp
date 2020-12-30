@@ -1,9 +1,12 @@
 use std::{ptr::null_mut, slice};
 
-use libc::{fclose, fopen, fread, free, malloc, FILE};
+use libc::{fclose, fopen, fread, free, malloc, memset, FILE};
 
 use crate::{
+    double_to_s15Fixed16Number,
     iccread::*,
+    matrix::matrix,
+    transform::get_rgb_colorants,
     transform::qcms_data_type,
     transform::{qcms_transform, transform_create},
     Intent,
@@ -233,6 +236,117 @@ pub extern "C" fn qcms_transform_create(
         Some(transform) => Box::into_raw(transform),
         None => null_mut(),
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
+    mut white_point: qcms_CIE_xyY,
+    mut primaries: qcms_CIE_xyYTRIPLE,
+    mut gamma: f32,
+    mut mem: *mut *mut libc::c_void,
+    mut size: *mut usize,
+) {
+    let mut length: u32;
+    let mut index: u32;
+    let mut xyz_count: u32;
+    let mut trc_count: u32;
+    let mut tag_table_offset: usize;
+    let mut tag_data_offset: usize;
+    let mut data: *mut libc::c_void;
+    let mut colorants: matrix = matrix {
+        m: [[0.; 3]; 3],
+        invalid: false,
+    };
+    let mut TAG_XYZ: [u32; 3] = [TAG_rXYZ, TAG_gXYZ, TAG_bXYZ];
+    let mut TAG_TRC: [u32; 3] = [TAG_rTRC, TAG_gTRC, TAG_bTRC];
+    if mem.is_null() || size.is_null() {
+        return;
+    }
+    *mem = std::ptr::null_mut::<libc::c_void>();
+    *size = 0;
+    /*
+    	* total length = icc profile header(128) + tag count(4) +
+    	* (tag table item (12) * total tag (6 = 3 rTRC + 3 rXYZ)) + rTRC elements data (3 * 20)
+    	* + rXYZ elements data (3*16), and all tag data elements must start at the 4-byte boundary.
+    	*/
+    xyz_count = 3; // rXYZ, gXYZ, bXYZ
+    trc_count = 3; // rTRC, gTRC, bTRC
+    length =
+        (128 + 4) as libc::c_uint + 12 * (xyz_count + trc_count) + xyz_count * 20 + trc_count * 16;
+    // reserve the total memory.
+    data = malloc(length as usize);
+    if data.is_null() {
+        return;
+    }
+    memset(data, 0, length as usize);
+    // Part1 : write rXYZ, gXYZ and bXYZ
+    if !get_rgb_colorants(&mut colorants, white_point, primaries) {
+        free(data);
+        return;
+    }
+    let data = std::slice::from_raw_parts_mut(data as *mut u8, length as usize);
+    // the position of first tag's signature in tag table
+    tag_table_offset = (128 + 4) as usize; // the start of tag data elements.
+    tag_data_offset = ((128 + 4) as libc::c_uint + 12 * (xyz_count + trc_count)) as usize;
+    index = 0;
+    while index < xyz_count {
+        // tag table
+        write_u32(data, tag_table_offset, TAG_XYZ[index as usize]); // 20 bytes per TAG_(r/g/b)XYZ tag element
+        write_u32(data, tag_table_offset + 4, tag_data_offset as u32);
+        write_u32(data, tag_table_offset + 8, 20);
+        // tag data element
+        write_u32(data, tag_data_offset, XYZ_TYPE);
+        // reserved 4 bytes.
+        write_u32(
+            data,
+            tag_data_offset + 8,
+            double_to_s15Fixed16Number(colorants.m[0][index as usize] as f64) as u32,
+        );
+        write_u32(
+            data,
+            tag_data_offset + 12,
+            double_to_s15Fixed16Number(colorants.m[1][index as usize] as f64) as u32,
+        );
+        write_u32(
+            data,
+            tag_data_offset + 16,
+            double_to_s15Fixed16Number(colorants.m[2][index as usize] as f64) as u32,
+        );
+        tag_table_offset += 12;
+        tag_data_offset += 20;
+        index += 1
+    }
+    // Part2 : write rTRC, gTRC and bTRC
+    index = 0;
+    while index < trc_count {
+        // tag table
+        write_u32(data, tag_table_offset, TAG_TRC[index as usize]); // 14 bytes per TAG_(r/g/b)TRC element
+        write_u32(data, tag_table_offset + 4, tag_data_offset as u32);
+        write_u32(data, tag_table_offset + 8, 14);
+        // tag data element
+        write_u32(data, tag_data_offset, CURVE_TYPE);
+        // reserved 4 bytes.
+        write_u32(data, tag_data_offset + 8, 1); // count
+        write_u16(data, tag_data_offset + 12, float_to_u8Fixed8Number(gamma));
+        tag_table_offset += 12;
+        tag_data_offset += 16;
+        index += 1
+    }
+    /* Part3 : write profile header
+     *
+     * Important header fields are left empty. This generates a profile for internal use only.
+     * We should be generating: Profile version (04300000h), Profile signature (acsp),
+     * PCS illumiant field. Likewise mandatory profile tags are omitted.
+     */
+    write_u32(data, 0, length); // the total length of this memory
+    write_u32(data, 12, DISPLAY_DEVICE_PROFILE); // profile->class_type
+    write_u32(data, 16, RGB_SIGNATURE); // profile->color_space
+    write_u32(data, 20, XYZ_TYPE); // profile->pcs
+    write_u32(data, 64, Intent::QCMS_INTENT_PERCEPTUAL as u32); // profile->rendering_intent
+    write_u32(data, 128, 6); // total tag count
+                             // prepare the result
+    *mem = data.as_mut_ptr() as *mut libc::c_void;
+    *size = length as usize;
 }
 
 pub use crate::iccread::qcms_profile;
