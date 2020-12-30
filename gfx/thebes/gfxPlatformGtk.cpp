@@ -201,6 +201,11 @@ nsresult gfxPlatformGtk::GetFontList(nsAtom* aLangGroup,
   return NS_OK;
 }
 
+nsresult gfxPlatformGtk::UpdateFontList() {
+  gfxPlatformFontList::PlatformFontList()->UpdateFontList();
+  return NS_OK;
+}
+
 // xxx - this is ubuntu centric, need to go through other distros and flesh
 // out a more general list
 static const char kFontDejaVuSans[] = "DejaVu Sans";
