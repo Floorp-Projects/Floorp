@@ -135,8 +135,7 @@ unsafe extern "C" fn qcms_data_from_file(
         (length as libc::c_ulong - ::std::mem::size_of::<be32>() as libc::c_ulong) as u32;
     /* read the rest profile */
     read_length = fread(
-        (data as *mut libc::c_uchar).add(::std::mem::size_of::<be32>())
-            as *mut libc::c_void,
+        (data as *mut libc::c_uchar).add(::std::mem::size_of::<be32>()) as *mut libc::c_void,
         1,
         remaining_length as usize,
         file,

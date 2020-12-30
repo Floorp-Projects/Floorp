@@ -87,15 +87,12 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
         vec_r0 = _mm_broadcast_ss(&*igtbl_r.offset(*src.add(F::kRIndex) as isize));
         vec_g0 = _mm_broadcast_ss(&*igtbl_g.offset(*src.add(F::kGIndex) as isize));
         vec_b0 = _mm_broadcast_ss(&*igtbl_b.offset(*src.add(F::kBIndex) as isize));
-        vec_r1 = _mm_broadcast_ss(
-            &*igtbl_r.offset(*src.add(F::kRIndex + components as usize) as isize),
-        );
-        vec_g1 = _mm_broadcast_ss(
-            &*igtbl_g.offset(*src.add(F::kGIndex + components as usize) as isize),
-        );
-        vec_b1 = _mm_broadcast_ss(
-            &*igtbl_b.offset(*src.add(F::kBIndex + components as usize) as isize),
-        );
+        vec_r1 =
+            _mm_broadcast_ss(&*igtbl_r.offset(*src.add(F::kRIndex + components as usize) as isize));
+        vec_g1 =
+            _mm_broadcast_ss(&*igtbl_g.offset(*src.add(F::kGIndex + components as usize) as isize));
+        vec_b1 =
+            _mm_broadcast_ss(&*igtbl_b.offset(*src.add(F::kBIndex + components as usize) as isize));
         vec_r = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_r0), vec_r1, 1);
         vec_g = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_g0), vec_g1, 1);
         vec_b = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_b0), vec_b1, 1);
@@ -131,15 +128,12 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
         vec_r0 = _mm_broadcast_ss(&*igtbl_r.offset(*src.add(F::kRIndex) as isize));
         vec_g0 = _mm_broadcast_ss(&*igtbl_g.offset(*src.add(F::kGIndex) as isize));
         vec_b0 = _mm_broadcast_ss(&*igtbl_b.offset(*src.add(F::kBIndex) as isize));
-        vec_r1 = _mm_broadcast_ss(
-            &*igtbl_r.offset(*src.add(F::kRIndex + components as usize) as isize),
-        );
-        vec_g1 = _mm_broadcast_ss(
-            &*igtbl_g.offset(*src.add(F::kGIndex + components as usize) as isize),
-        );
-        vec_b1 = _mm_broadcast_ss(
-            &*igtbl_b.offset(*src.add(F::kBIndex + components as usize) as isize),
-        );
+        vec_r1 =
+            _mm_broadcast_ss(&*igtbl_r.offset(*src.add(F::kRIndex + components as usize) as isize));
+        vec_g1 =
+            _mm_broadcast_ss(&*igtbl_g.offset(*src.add(F::kGIndex + components as usize) as isize));
+        vec_b1 =
+            _mm_broadcast_ss(&*igtbl_b.offset(*src.add(F::kBIndex + components as usize) as isize));
         vec_r = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_r0), vec_r1, 1);
         vec_g = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_g0), vec_g1, 1);
         vec_b = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_b0), vec_b1, 1);
