@@ -1,5 +1,4 @@
 use crate::transform::{qcms_transform, Format, BGRA, CLAMPMAXVAL, FLOATSCALE, RGB, RGBA};
-use ::libc;
 #[cfg(target_arch = "x86")]
 pub use std::arch::x86::{
     __m128, __m128i, __m256, __m256i, _mm256_add_ps, _mm256_broadcast_ps, _mm256_castps128_ps256,
@@ -23,8 +22,8 @@ struct Output([u32; 8]);
 #[target_feature(enable = "avx")]
 unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
@@ -63,7 +62,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
     let max: __m256 = _mm256_set1_ps(CLAMPMAXVAL);
     let min: __m256 = _mm256_setzero_ps();
     let scale: __m256 = _mm256_set1_ps(FLOATSCALE);
-    let components: libc::c_uint = if F::kAIndex == 0xff { 3 } else { 4 } as libc::c_uint;
+    let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
     /* working variables */
     let mut vec_r: __m256 = _mm256_setzero_ps();
     let mut vec_g: __m256 = _mm256_setzero_ps();
@@ -75,8 +74,8 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
     let mut vec_r1: __m128;
     let mut vec_g1: __m128;
     let mut vec_b1: __m128;
-    let mut alpha1: libc::c_uchar = 0;
-    let mut alpha2: libc::c_uchar = 0;
+    let mut alpha1: u8 = 0;
+    let mut alpha2: u8 = 0;
     /* CYA */
     if length == 0 {
         return;
@@ -203,8 +202,8 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_avx::<RGB>(transform, src, dest, length);
@@ -213,8 +212,8 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_avx::<RGBA>(transform, src, dest, length);
@@ -223,8 +222,8 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_avx(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_avx::<BGRA>(transform, src, dest, length);
