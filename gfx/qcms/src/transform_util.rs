@@ -22,10 +22,10 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{
-    iccread::{curveType, qcms_profile},
+    iccread::{curveType, Profile},
     s15Fixed16Number_to_float,
 };
-use crate::{matrix::matrix, transform::PRECACHE_OUTPUT_MAX, transform::PRECACHE_OUTPUT_SIZE};
+use crate::{matrix::Matrix, transform::PRECACHE_OUTPUT_MAX, transform::PRECACHE_OUTPUT_SIZE};
 
 //XXX: could use a bettername
 pub type uint16_fract_t = u16;
@@ -227,8 +227,8 @@ pub(crate) fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec
 
     Some(gamma_table)
 }
-pub fn build_colorant_matrix(mut p: &qcms_profile) -> matrix {
-    let mut result: matrix = matrix {
+pub fn build_colorant_matrix(mut p: &Profile) -> Matrix {
+    let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
