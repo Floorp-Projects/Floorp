@@ -229,9 +229,7 @@ fn read_u32(mut mem: &mut mem_source, mut offset: usize) -> u32 {
         invalid_source(mem, "Invalid offset");
         0
     } else {
-        let k = unsafe {
-            std::ptr::read_unaligned(mem.buf.as_ptr().add(offset) as *const be32)
-        };
+        let k = unsafe { std::ptr::read_unaligned(mem.buf.as_ptr().add(offset) as *const be32) };
         be32_to_cpu(k)
     }
 }
@@ -240,9 +238,7 @@ fn read_u16(mut mem: &mut mem_source, mut offset: usize) -> u16 {
         invalid_source(mem, "Invalid offset");
         0u16
     } else {
-        let k = unsafe {
-            std::ptr::read_unaligned(mem.buf.as_ptr().add(offset) as *const be16)
-        };
+        let k = unsafe { std::ptr::read_unaligned(mem.buf.as_ptr().add(offset) as *const be16) };
         be16_to_cpu(k)
     }
 }
