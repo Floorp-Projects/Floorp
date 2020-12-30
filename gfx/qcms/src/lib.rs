@@ -14,7 +14,6 @@
 #![feature(arm_target_feature)]
 #![feature(raw_ref_op)]
 
-extern crate libc;
 #[repr(u32)]
 #[derive(Clone, Copy)]
 pub enum Intent {
@@ -46,6 +45,9 @@ fn double_to_s15Fixed16Number(mut v: f64) -> s15Fixed16Number {
     (v * 65536f64) as i32
 }
 
+#[cfg(feature = "c_bindings")]
+extern crate libc;
+#[cfg(feature = "c_bindings")]
 pub mod c_bindings;
 mod chain;
 mod gtest;
