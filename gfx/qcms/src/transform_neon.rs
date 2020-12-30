@@ -1,5 +1,4 @@
 use crate::transform::{qcms_transform, Format, BGRA, CLAMPMAXVAL, FLOATSCALE, RGB, RGBA};
-use ::libc;
 #[cfg(target_arch = "aarch64")]
 use core::arch::aarch64::{float32x4_t, int32x4_t, vaddq_f32};
 #[cfg(target_arch = "arm")]
@@ -13,18 +12,17 @@ static mut clampMaxValue: f32 = CLAMPMAXVAL;
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
-    let mut input_back: [libc::c_char; 32] = [0; 32];
+    let mut input_back: [u8; 32] = [0; 32];
     /* Ensure we have a buffer that's 16 byte aligned regardless of the original
      * stack alignment. We can't use __attribute__((aligned(16))) or __declspec(align(32))
      * because they don't work on stack variables. gcc 4.4 does do the right thing
      * on x86 but that's too new for us right now. For more info: gcc bug #16660 */
-    let mut input: *const f32 = (&mut *input_back.as_mut_ptr().offset(16isize) as *mut libc::c_char
-        as usize
+    let mut input: *const f32 = (&mut *input_back.as_mut_ptr().offset(16isize) as *mut u8 as usize
         & !(0xf) as usize) as *mut f32;
     /* share input and output locations to save having to keep the
      * locations in separate registers */
@@ -60,13 +58,13 @@ unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
     let max: float32x4_t = vld1q_dup_f32(&clampMaxValue);
     let min: float32x4_t = zeroed();
     let scale: float32x4_t = vld1q_dup_f32(&floatScale);
-    let components: libc::c_uint = if F::kAIndex == 0xff { 3 } else { 4 } as libc::c_uint;
+    let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
     /* working variables */
     let mut vec_r: float32x4_t;
     let mut vec_g: float32x4_t;
     let mut vec_b: float32x4_t;
     let mut result: int32x4_t;
-    let mut alpha: libc::c_uchar = 0;
+    let mut alpha: u8 = 0;
     /* CYA */
     if length == 0 {
         return;
@@ -81,7 +79,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
         alpha = *src.offset(F::kAIndex as isize)
     }
     src = src.offset(components as isize);
-    let mut i: libc::c_uint = 0;
+    let mut i: u32 = 0;
     while (i as usize) < length {
         /* gamma * matrix */
         vec_r = vmulq_f32(vec_r, mat0);
@@ -133,8 +131,8 @@ unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_neon(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_neon::<RGB>(transform, src, dest, length);
@@ -144,8 +142,8 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_neon(
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_neon(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_neon::<RGBA>(transform, src, dest, length);
@@ -156,8 +154,8 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_neon(
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_neon(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_neon::<BGRA>(transform, src, dest, length);

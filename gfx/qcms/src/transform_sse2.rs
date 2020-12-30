@@ -1,5 +1,4 @@
 use crate::transform::{qcms_transform, Format, BGRA, CLAMPMAXVAL, FLOATSCALE, RGB, RGBA};
-use ::libc;
 #[cfg(target_arch = "x86")]
 pub use std::arch::x86::{
     __m128, __m128i, _mm_add_ps, _mm_cvtps_epi32, _mm_load_ps, _mm_load_ss, _mm_max_ps, _mm_min_ps,
@@ -16,8 +15,8 @@ struct Output([u32; 4]);
 
 unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
@@ -56,13 +55,13 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
     let max: __m128 = _mm_set1_ps(CLAMPMAXVAL);
     let min: __m128 = _mm_setzero_ps();
     let scale: __m128 = _mm_set1_ps(FLOATSCALE);
-    let components: libc::c_uint = if F::kAIndex == 0xff { 3 } else { 4 } as libc::c_uint;
+    let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
     /* working variables */
     let mut vec_r: __m128;
     let mut vec_g: __m128;
     let mut vec_b: __m128;
     let mut result: __m128;
-    let mut alpha: libc::c_uchar = 0;
+    let mut alpha: u8 = 0;
     /* CYA */
     if length == 0 {
         return;
@@ -77,7 +76,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
         alpha = *src.add(F::kAIndex)
     }
     src = src.offset(components as isize);
-    let mut i: libc::c_uint = 0;
+    let mut i: u32 = 0;
     while (i as usize) < length {
         /* position values from gamma tables */
         vec_r = _mm_shuffle_ps(vec_r, vec_r, 0);
@@ -133,8 +132,8 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_sse2(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_sse2::<RGB>(transform, src, dest, length);
@@ -142,8 +141,8 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_sse2(
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_sse2(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_sse2::<RGBA>(transform, src, dest, length);
@@ -152,8 +151,8 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_sse2(
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_sse2(
     mut transform: *const qcms_transform,
-    mut src: *const libc::c_uchar,
-    mut dest: *mut libc::c_uchar,
+    mut src: *const u8,
+    mut dest: *mut u8,
     mut length: usize,
 ) {
     qcms_transform_data_template_lut_sse2::<BGRA>(transform, src, dest, length);
