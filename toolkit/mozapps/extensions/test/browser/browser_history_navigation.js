@@ -48,12 +48,15 @@ function go_back() {
   gBrowser.goBack();
 }
 
-function go_back_backspace() {
-  EventUtils.synthesizeKey("KEY_Backspace");
+const goBackKeyModifier =
+  AppConstants.platform == "macosx" ? { metaKey: true } : { altKey: true };
+
+function go_back_key() {
+  EventUtils.synthesizeKey("KEY_ArrowLeft", goBackKeyModifier);
 }
 
-function go_forward_backspace() {
-  EventUtils.synthesizeKey("KEY_Backspace", { shiftKey: true });
+function go_forward_key() {
+  EventUtils.synthesizeKey("KEY_ArrowRight", goBackKeyModifier);
 }
 
 function go_forward() {
@@ -229,14 +232,7 @@ add_task(async function test_navigate_between_webpage_and_aboutaddons() {
 
 // Tests simple forward and back navigation and that the right heading and
 // category is selected -- Keyboard navigation [Bug 565359]
-// Only add the test if the backspace key navigates back and addon-manager
-// loaded in a tab
 add_task(async function test_keyboard_history_navigation() {
-  if (Services.prefs.getIntPref("browser.backspace_action") != 0) {
-    info("Test skipped on browser.backspace_action != 0");
-    return;
-  }
-
   let aManager = await open_manager("addons://list/extension");
   let categoryUtils = new CategoryUtilities(aManager);
   info("Part 1");
@@ -248,19 +244,19 @@ add_task(async function test_keyboard_history_navigation() {
   info("Part 2");
   is_in_list(aManager, "addons://list/plugin", true, false);
 
-  go_back_backspace();
+  go_back_key();
 
   aManager = await wait_for_view_load(aManager);
   info("Part 3");
   is_in_list(aManager, "addons://list/extension", false, true);
 
-  go_forward_backspace();
+  go_forward_key();
 
   aManager = await wait_for_view_load(aManager);
   info("Part 4");
   is_in_list(aManager, "addons://list/plugin", true, false);
 
-  go_back_backspace();
+  go_back_key();
 
   aManager = await wait_for_view_load(aManager);
   info("Part 5");
@@ -272,7 +268,7 @@ add_task(async function test_keyboard_history_navigation() {
   info("Part 6");
   is_in_detail(aManager, "addons://list/extension", true, false);
 
-  go_back_backspace();
+  go_back_key();
 
   aManager = await wait_for_view_load(aManager);
   info("Part 7");
