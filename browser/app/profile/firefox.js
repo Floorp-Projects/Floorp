@@ -824,11 +824,7 @@ pref("browser.proton.enabled", false);
 // 0 goes Back/Forward
 // 1 act like PgUp/PgDown
 // 2 and other values, nothing
-#ifdef UNIX_BUT_NOT_MAC
-  pref("browser.backspace_action", 2);
-#else
-  pref("browser.backspace_action", 0);
-#endif
+pref("browser.backspace_action", 2);
 
 pref("intl.regional_prefs.use_os_locales", false);
 
