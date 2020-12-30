@@ -1,5 +1,5 @@
-#[cfg(test)]
-mod test {
+#[cfg(all(test, feature = "c_bindings"))]
+mod gtest {
     use crate::{
         c_bindings::*, iccread::*, transform::qcms_data_type::*, transform::*,
         transform_util::lut_inverse_interp16, Intent::QCMS_INTENT_PERCEPTUAL,
@@ -854,7 +854,10 @@ mod test {
             qcms_profile_release(output);
         }
     }
+}
 
+#[cfg(test)]
+mod test {
     #[test]
     fn identity() {
         let p1 = crate::Profile::new_sRGB();
