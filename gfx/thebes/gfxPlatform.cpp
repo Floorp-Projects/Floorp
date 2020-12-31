@@ -1791,8 +1791,8 @@ nsresult gfxPlatform::GetFontList(nsAtom* aLangGroup,
   return NS_OK;
 }
 
-nsresult gfxPlatform::UpdateFontList() {
-  gfxPlatformFontList::PlatformFontList()->UpdateFontList();
+nsresult gfxPlatform::UpdateFontList(bool aFullRebuild) {
+  gfxPlatformFontList::PlatformFontList()->UpdateFontList(aFullRebuild);
   return NS_OK;
 }
 
