@@ -29,7 +29,7 @@ use std::{
 use crate::transform::{precache_output, set_rgb_colorants};
 use crate::{matrix::Matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent, Intent::*};
 
-pub static qcms_supports_iccv4: AtomicBool = AtomicBool::new(false);
+pub static SUPPORTS_ICCV4: AtomicBool = AtomicBool::new(false);
 
 pub type icColorSpaceSignature = u32;
 pub const icMaxEnumData: icColorSpaceSignature = 4294967295;
@@ -1268,9 +1268,7 @@ impl Profile {
                         profile.mBA = read_tag_lutmABType(src, B2A0)
                     }
                 }
-                if find_tag(&index, TAG_rXYZ).is_some()
-                    || !qcms_supports_iccv4.load(Ordering::Relaxed)
-                {
+                if find_tag(&index, TAG_rXYZ).is_some() || !SUPPORTS_ICCV4.load(Ordering::Relaxed) {
                     profile.redColorant = read_tag_XYZType(src, &index, TAG_rXYZ);
                     profile.greenColorant = read_tag_XYZType(src, &index, TAG_gXYZ);
                     profile.blueColorant = read_tag_XYZType(src, &index, TAG_bXYZ)
@@ -1279,9 +1277,7 @@ impl Profile {
                     return None;
                 }
 
-                if find_tag(&index, TAG_rTRC).is_some()
-                    || !qcms_supports_iccv4.load(Ordering::Relaxed)
-                {
+                if find_tag(&index, TAG_rTRC).is_some() || !SUPPORTS_ICCV4.load(Ordering::Relaxed) {
                     profile.redTRC = read_tag_curveType(src, &index, TAG_rTRC);
                     profile.greenTRC = read_tag_curveType(src, &index, TAG_gTRC);
                     profile.blueTRC = read_tag_curveType(src, &index, TAG_bTRC);
