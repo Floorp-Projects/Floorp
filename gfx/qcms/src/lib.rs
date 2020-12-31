@@ -3,7 +3,6 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(unused_mut)]
-#![allow(unused_variables)]
 #![feature(stdsimd)]
 // These are needed for the neon intrinsics implementation
 // and can be removed once the MSRV is high enough (1.48)

@@ -125,7 +125,7 @@ fn f_1(t: f32) -> f32 {
 }
 
 fn transform_module_LAB_to_XYZ(
-    transform: &qcms_modular_transform,
+    _transform: &qcms_modular_transform,
     src: &[f32],
     mut dest: &mut [f32],
 ) {
@@ -133,7 +133,6 @@ fn transform_module_LAB_to_XYZ(
     let mut WhitePointX: f32 = 0.9642;
     let mut WhitePointY: f32 = 1.0;
     let mut WhitePointZ: f32 = 0.8249;
-    let mut i: usize = 0;
 
     for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         let mut device_L: f32 = src[0] * 100.0;
@@ -153,7 +152,7 @@ fn transform_module_LAB_to_XYZ(
 }
 //Based on lcms cmsXYZ2Lab
 fn transform_module_XYZ_to_LAB(
-    mut transform: &qcms_modular_transform,
+    _transform: &qcms_modular_transform,
     mut src: &[f32],
     mut dest: &mut [f32],
 ) {
@@ -161,7 +160,6 @@ fn transform_module_XYZ_to_LAB(
     let mut WhitePointX: f32 = 0.9642;
     let mut WhitePointY: f32 = 1.0;
     let mut WhitePointZ: f32 = 0.8249;
-    let mut i: usize = 0;
     for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         let mut device_x: f32 =
             (src[0] as f64 * (1.0f64 + 32767.0f64 / 32768.0f64) / WhitePointX as f64) as f32;
@@ -196,7 +194,6 @@ fn transform_module_clut_only(
     let mut g_table = &transform.clut.as_ref().unwrap()[1..];
     let mut b_table = &transform.clut.as_ref().unwrap()[2..];
 
-    let mut i: usize = 0;
     let CLU = |table: &[f32], x, y, z| table[((x * len + y * x_len + z * xy_len) * 3) as usize];
 
     for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
@@ -257,7 +254,6 @@ fn transform_module_clut(
     let mut b_table = &transform.clut.as_ref().unwrap()[2..];
     let CLU = |table: &[f32], x, y, z| table[((x * len + y * x_len + z * xy_len) * 3) as usize];
 
-    let mut i: usize = 0;
     let input_clut_table_r = transform.input_clut_table_r.as_ref().unwrap();
     let input_clut_table_g = transform.input_clut_table_g.as_ref().unwrap();
     let input_clut_table_b = transform.input_clut_table_b.as_ref().unwrap();
@@ -446,7 +442,6 @@ fn transform_module_gamma_table(
     let mut out_r: f32;
     let mut out_g: f32;
     let mut out_b: f32;
-    let mut i: usize = 0;
     let input_clut_table_r = transform.input_clut_table_r.as_ref().unwrap();
     let input_clut_table_g = transform.input_clut_table_g.as_ref().unwrap();
     let input_clut_table_b = transform.input_clut_table_b.as_ref().unwrap();
@@ -472,7 +467,6 @@ fn transform_module_gamma_lut(
     let mut out_r: f32;
     let mut out_g: f32;
     let mut out_b: f32;
-    let mut i: usize = 0;
     for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         let mut in_r: f32 = src[0];
         let mut in_g: f32 = src[1];
@@ -505,7 +499,6 @@ fn transform_module_matrix_translate(
     mat.m[0][2] = transform.matrix.m[2][0];
     mat.m[1][2] = transform.matrix.m[2][1];
     mat.m[2][2] = transform.matrix.m[2][2];
-    let mut i: usize = 0;
     for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         let mut in_r: f32 = src[0];
         let mut in_g: f32 = src[1];
@@ -542,7 +535,6 @@ fn transform_module_matrix(
     mat.m[0][2] = transform.matrix.m[2][0];
     mat.m[1][2] = transform.matrix.m[2][1];
     mat.m[2][2] = transform.matrix.m[2][2];
-    let mut i: usize = 0;
     for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         let mut in_r: f32 = src[0];
         let mut in_g: f32 = src[1];
@@ -691,11 +683,11 @@ fn modular_transform_create_lut(mut lut: &lutType) -> Option<Box<qcms_modular_tr
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
 
-    let mut in_curve_len: usize;
+    let _in_curve_len: usize;
     let mut clut_length: usize;
-    let mut out_curve_len: usize;
-    let mut in_curves: *mut f32;
-    let mut out_curves: *mut f32;
+    let _out_curve_len: usize;
+    let _in_curves: *mut f32;
+    let _out_curves: *mut f32;
     let mut transform = modular_transform_alloc();
     if transform.is_some() {
         transform.as_mut().unwrap().matrix = build_lut_matrix(Some(lut));
@@ -999,11 +991,11 @@ fn modular_transform_data(
     mut transform: Option<&qcms_modular_transform>,
     mut src: Vec<f32>,
     mut dest: Vec<f32>,
-    mut len: usize,
+    _len: usize,
 ) -> Option<Vec<f32>> {
     while transform.is_some() {
         // Keep swaping src/dest when performing a transform to use less memory.
-        let transform_fn: transform_module_fn_t = transform.unwrap().transform_module_fn;
+        let _transform_fn: transform_module_fn_t = transform.unwrap().transform_module_fn;
         transform
             .unwrap()
             .transform_module_fn
