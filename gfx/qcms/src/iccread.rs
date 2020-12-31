@@ -276,7 +276,7 @@ pub fn write_u16(mut mem: &mut [u8], mut offset: usize, mut value: u16) {
 pub(crate) const MAX_PROFILE_SIZE: usize = 1024 * 1024 * 4;
 const MAX_TAG_COUNT: u32 = 1024;
 
-fn check_CMM_type_signature(mut src: &mut mem_source) {
+fn check_CMM_type_signature(_src: &mut mem_source) {
     //uint32_t CMM_type_signature = read_u32(src, 4);
     //TODO: do the check?
 }
@@ -338,7 +338,7 @@ fn read_pcs(mut profile: &mut Profile, mut mem: &mut mem_source) {
         }
     };
 }
-fn read_tag_table(mut profile: &mut Profile, mut mem: &mut mem_source) -> Vec<tag> {
+fn read_tag_table(_profile: &mut Profile, mut mem: &mut mem_source) -> Vec<tag> {
     let count = read_u32(mem, 128);
     if count > MAX_TAG_COUNT {
         invalid_source(mem, "max number of tags exceeded");
@@ -609,10 +609,8 @@ fn read_curveType(
     mut len: &mut u32,
 ) -> Option<Box<curveType>> {
     const COUNT_TO_LENGTH: [u32; 5] = [1, 3, 4, 5, 7]; //PARAMETRIC_CURVE_TYPE
-    let mut curve: *mut curveType;
     let mut type_0: u32 = read_u32(src, offset as usize);
     let mut count: u32;
-    let mut i: u32;
     if type_0 != CURVE_TYPE && type_0 != PARAMETRIC_CURVE_TYPE {
         invalid_source(src, "unexpected type, expected CURV or PARA");
         return None;
@@ -852,7 +850,6 @@ fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutTy
     let mut output_offset: u32;
     let mut clut_size: u32;
     let mut entry_size: usize;
-    let mut i: u32;
     if type_0 == LUT8_TYPE {
         num_input_table_entries = 256u16;
         num_output_table_entries = 256u16;
@@ -1010,7 +1007,6 @@ fn profile_create() -> Box<Profile> {
 /* build sRGB gamma table */
 /* based on cmsBuildParametricGamma() */
 fn build_sRGB_gamma_table(mut num_entries: i32) -> Vec<u16> {
-    let mut i: i32;
     /* taken from lcms: Build_sRGBGamma() */
     let mut gamma: f64 = 2.4f64;
     let mut a: f64 = 1.0f64 / 1.055f64;
