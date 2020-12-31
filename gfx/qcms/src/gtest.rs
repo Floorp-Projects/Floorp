@@ -27,7 +27,7 @@ mod gtest {
 
     #[test]
     fn test_lut_inverse_crash() {
-        let mut lutTable1: [u16; 128] = [
+        let lutTable1: [u16; 128] = [
             0x0000, 0x0000, 0x0000, 0x8000, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
             0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
             0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
@@ -41,7 +41,7 @@ mod gtest {
             0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
             0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
         ];
-        let mut lutTable2: [u16; 128] = [
+        let lutTable2: [u16; 128] = [
             0xFFF0, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
             0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
             0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
@@ -155,7 +155,7 @@ mod gtest {
     fn basic() {
         let sRGB_profile = crate::c_bindings::qcms_profile_sRGB();
 
-        let mut Rec709Primaries = qcms_CIE_xyYTRIPLE {
+        let Rec709Primaries = qcms_CIE_xyYTRIPLE {
             red: qcms_CIE_xyY {
                 x: 0.6400f64,
                 y: 0.3300f64,
@@ -220,7 +220,7 @@ mod gtest {
         };
         assert!(!transform.is_null());
 
-        let mut in_data: [u8; 4] = [0, 255, 255, 0];
+        let in_data: [u8; 4] = [0, 255, 255, 0];
         let mut out_data: [u8; 2 * 4] = [0; 8];
         unsafe {
             qcms_transform_data(
@@ -311,7 +311,7 @@ mod gtest {
 
         // the reference values here should be adjusted if the accuracy
         // of the transformation changes
-        let mut reference = [
+        let reference = [
             246, 246, 246, // gray
             255, 0, 0, // red
             248, 14, 22, // red
@@ -854,7 +854,7 @@ mod test {
     fn identity() {
         let p1 = crate::Profile::new_sRGB();
         let p2 = crate::Profile::new_sRGB();
-        let mut xfm = crate::Transform::new(
+        let xfm = crate::Transform::new(
             &p1,
             &p2,
             crate::DataType::DATA_RGB_8,

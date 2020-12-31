@@ -34,7 +34,7 @@ pub struct Vector {
     pub v: [f32; 3],
 }
 
-pub fn matrix_eval(mut mat: Matrix, mut v: Vector) -> Vector {
+pub fn matrix_eval(mat: Matrix, v: Vector) -> Vector {
     let mut result: Vector = Vector { v: [0.; 3] };
     result.v[0] = mat.m[0][0] * v.v[0] + mat.m[0][1] * v.v[1] + mat.m[0][2] * v.v[2];
     result.v[1] = mat.m[1][0] * v.v[0] + mat.m[1][1] * v.v[1] + mat.m[1][2] * v.v[2];
@@ -43,8 +43,8 @@ pub fn matrix_eval(mut mat: Matrix, mut v: Vector) -> Vector {
 }
 //XXX: should probably pass by reference and we could
 //probably reuse this computation in matrix_invert
-pub fn matrix_det(mut mat: Matrix) -> f32 {
-    let mut det: f32 = mat.m[0][0] * mat.m[1][1] * mat.m[2][2]
+pub fn matrix_det(mat: Matrix) -> f32 {
+    let det: f32 = mat.m[0][0] * mat.m[1][1] * mat.m[2][2]
         + mat.m[0][1] * mat.m[1][2] * mat.m[2][0]
         + mat.m[0][2] * mat.m[1][0] * mat.m[2][1]
         - mat.m[0][0] * mat.m[1][2] * mat.m[2][1]
@@ -56,7 +56,7 @@ pub fn matrix_det(mut mat: Matrix) -> f32 {
 /* lcms uses gauss-jordan elimination with partial pivoting which is
  * less efficient and not as numerically stable. See Mathematics for
  * Game Programmers. */
-pub fn matrix_invert(mut mat: Matrix) -> Matrix {
+pub fn matrix_invert(mat: Matrix) -> Matrix {
     let mut dest_mat: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -77,10 +77,10 @@ pub fn matrix_invert(mut mat: Matrix) -> Matrix {
     while j < 3 {
         i = 0;
         while i < 3 {
-            let mut ai: i32 = a[i as usize];
-            let mut aj: i32 = a[j as usize];
-            let mut bi: i32 = b[i as usize];
-            let mut bj: i32 = b[j as usize];
+            let ai: i32 = a[i as usize];
+            let aj: i32 = a[j as usize];
+            let bi: i32 = b[i as usize];
+            let bj: i32 = b[j as usize];
             let mut p: f64 = (mat.m[ai as usize][aj as usize] * mat.m[bi as usize][bj as usize]
                 - mat.m[ai as usize][bj as usize] * mat.m[bi as usize][aj as usize])
                 as f64;
@@ -118,7 +118,7 @@ pub fn matrix_invalid() -> Matrix {
 }
 /* from pixman */
 /* MAT3per... */
-pub fn matrix_multiply(mut a: Matrix, mut b: Matrix) -> Matrix {
+pub fn matrix_multiply(a: Matrix, b: Matrix) -> Matrix {
     let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,

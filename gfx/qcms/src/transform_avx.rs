@@ -21,34 +21,34 @@ struct Output([u32; 8]);
 
 #[target_feature(enable = "avx")]
 unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
-    mut transform: *const qcms_transform,
+    transform: *const qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
     mut length: usize,
 ) {
-    let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
+    let mat: *const [f32; 4] = (*transform).matrix.as_ptr();
     let mut input: Output = std::mem::zeroed();
     /* share input and output locations to save having to keep the
      * locations in separate registers */
-    let mut output: *const u32 = &mut input as *mut Output as *mut u32;
+    let output: *const u32 = &mut input as *mut Output as *mut u32;
     /* deref *transform now to avoid it in loop */
-    let mut igtbl_r: *const f32 = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
-    let mut igtbl_g: *const f32 = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
-    let mut igtbl_b: *const f32 = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
+    let igtbl_r: *const f32 = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
+    let igtbl_g: *const f32 = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
+    let igtbl_b: *const f32 = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
     /* deref *transform now to avoid it in loop */
-    let mut otdata_r: *const u8 = (*transform)
+    let otdata_r: *const u8 = (*transform)
         .output_table_r
         .as_deref()
         .unwrap()
         .data
         .as_ptr();
-    let mut otdata_g: *const u8 = (*transform)
+    let otdata_g: *const u8 = (*transform)
         .output_table_g
         .as_deref()
         .unwrap()
         .data
         .as_ptr();
-    let mut otdata_b: *const u8 = (*transform)
+    let otdata_b: *const u8 = (*transform)
         .output_table_b
         .as_deref()
         .unwrap()
@@ -201,30 +201,30 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
 #[no_mangle]
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_avx::<RGB>(transform, src, dest, length);
 }
 #[no_mangle]
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_avx::<RGBA>(transform, src, dest, length);
 }
 #[no_mangle]
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_avx(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_avx::<BGRA>(transform, src, dest, length);
 }
