@@ -195,7 +195,7 @@ impl GrayFormat for GrayAlpha {
 }
 
 #[inline]
-fn clamp_u8(mut v: f32) -> u8 {
+fn clamp_u8(v: f32) -> u8 {
     if v > 255. {
         255
     } else if v < 0. {
@@ -217,10 +217,7 @@ fn clamp_u8(mut v: f32) -> u8 {
 //            - Then I eval the source white point across this matrix
 //              obtaining the coeficients of the transformation
 //            - Then, I apply these coeficients to the original matrix
-fn build_RGB_to_XYZ_transfer_matrix(
-    mut white: qcms_CIE_xyY,
-    mut primrs: qcms_CIE_xyYTRIPLE,
-) -> Matrix {
+fn build_RGB_to_XYZ_transfer_matrix(white: qcms_CIE_xyY, primrs: qcms_CIE_xyYTRIPLE) -> Matrix {
     let mut primaries: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -232,18 +229,18 @@ fn build_RGB_to_XYZ_transfer_matrix(
     };
     let mut white_point: Vector = Vector { v: [0.; 3] };
 
-    let mut xn: f64 = white.x;
-    let mut yn: f64 = white.y;
+    let xn: f64 = white.x;
+    let yn: f64 = white.y;
     if yn == 0.0f64 {
         return matrix_invalid();
     }
 
-    let mut xr: f64 = primrs.red.x;
-    let mut yr: f64 = primrs.red.y;
-    let mut xg: f64 = primrs.green.x;
-    let mut yg: f64 = primrs.green.y;
-    let mut xb: f64 = primrs.blue.x;
-    let mut yb: f64 = primrs.blue.y;
+    let xr: f64 = primrs.red.x;
+    let yr: f64 = primrs.red.y;
+    let xg: f64 = primrs.green.x;
+    let yg: f64 = primrs.green.y;
+    let xb: f64 = primrs.blue.x;
+    let yb: f64 = primrs.blue.y;
     primaries.m[0][0] = xr as f32;
     primaries.m[0][1] = xg as f32;
     primaries.m[0][2] = xb as f32;
@@ -257,11 +254,11 @@ fn build_RGB_to_XYZ_transfer_matrix(
     white_point.v[0] = (xn / yn) as f32;
     white_point.v[1] = 1.;
     white_point.v[2] = ((1.0f64 - xn - yn) / yn) as f32;
-    let mut primaries_invert: Matrix = matrix_invert(primaries);
+    let primaries_invert: Matrix = matrix_invert(primaries);
     if primaries_invert.invalid {
         return matrix_invalid();
     }
-    let mut coefs: Vector = matrix_eval(primaries_invert, white_point);
+    let coefs: Vector = matrix_eval(primaries_invert, white_point);
     result.m[0][0] = (coefs.v[0] as f64 * xr) as f32;
     result.m[0][1] = (coefs.v[1] as f64 * xg) as f32;
     result.m[0][2] = (coefs.v[2] as f64 * xb) as f32;
@@ -282,7 +279,7 @@ const D50_XYZ: CIE_XYZ = CIE_XYZ {
 };
 /* from lcms: xyY2XYZ()
  * corresponds to argyll: icmYxy2XYZ() */
-fn xyY2XYZ(mut source: qcms_CIE_xyY) -> CIE_XYZ {
+fn xyY2XYZ(source: qcms_CIE_xyY) -> CIE_XYZ {
     let mut dest: CIE_XYZ = CIE_XYZ {
         X: 0.,
         Y: 0.,
@@ -296,9 +293,9 @@ fn xyY2XYZ(mut source: qcms_CIE_xyY) -> CIE_XYZ {
 /* from lcms: ComputeChromaticAdaption */
 // Compute chromatic adaption matrix using chad as cone matrix
 fn compute_chromatic_adaption(
-    mut source_white_point: CIE_XYZ,
-    mut dest_white_point: CIE_XYZ,
-    mut chad: Matrix,
+    source_white_point: CIE_XYZ,
+    dest_white_point: CIE_XYZ,
+    chad: Matrix,
 ) -> Matrix {
     let mut cone_source_XYZ: Vector = Vector { v: [0.; 3] };
 
@@ -309,8 +306,8 @@ fn compute_chromatic_adaption(
         invalid: false,
     };
 
-    let mut tmp: Matrix = chad;
-    let mut chad_inv: Matrix = matrix_invert(tmp);
+    let tmp: Matrix = chad;
+    let chad_inv: Matrix = matrix_invert(tmp);
     if chad_inv.invalid {
         return matrix_invalid();
     }
@@ -321,8 +318,8 @@ fn compute_chromatic_adaption(
     cone_dest_XYZ.v[1] = dest_white_point.Y as f32;
     cone_dest_XYZ.v[2] = dest_white_point.Z as f32;
 
-    let mut cone_source_rgb: Vector = matrix_eval(chad, cone_source_XYZ);
-    let mut cone_dest_rgb: Vector = matrix_eval(chad, cone_dest_XYZ);
+    let cone_source_rgb: Vector = matrix_eval(chad, cone_source_XYZ);
+    let cone_dest_rgb: Vector = matrix_eval(chad, cone_dest_XYZ);
     cone.m[0][0] = cone_dest_rgb.v[0] / cone_source_rgb.v[0];
     cone.m[0][1] = 0.;
     cone.m[0][2] = 0.;
@@ -339,9 +336,9 @@ fn compute_chromatic_adaption(
 /* from lcms: cmsAdaptionMatrix */
 // Returns the final chrmatic adaptation from illuminant FromIll to Illuminant ToIll
 // Bradford is assumed
-fn adaption_matrix(mut source_illumination: CIE_XYZ, mut target_illumination: CIE_XYZ) -> Matrix {
-    let mut lam_rigg: Matrix = {
-        let mut init = Matrix {
+fn adaption_matrix(source_illumination: CIE_XYZ, target_illumination: CIE_XYZ) -> Matrix {
+    let lam_rigg: Matrix = {
+        let init = Matrix {
             m: [
                 [0.8951, 0.2664, -0.1614],
                 [-0.7502, 1.7135, 0.0367],
@@ -354,13 +351,13 @@ fn adaption_matrix(mut source_illumination: CIE_XYZ, mut target_illumination: CI
     compute_chromatic_adaption(source_illumination, target_illumination, lam_rigg)
 }
 /* from lcms: cmsAdaptMatrixToD50 */
-fn adapt_matrix_to_D50(mut r: Matrix, mut source_white_pt: qcms_CIE_xyY) -> Matrix {
+fn adapt_matrix_to_D50(r: Matrix, source_white_pt: qcms_CIE_xyY) -> Matrix {
     if source_white_pt.y == 0.0f64 {
         return matrix_invalid();
     }
 
-    let mut Dn: CIE_XYZ = xyY2XYZ(source_white_pt);
-    let mut Bradford: Matrix = adaption_matrix(Dn, D50_XYZ);
+    let Dn: CIE_XYZ = xyY2XYZ(source_white_pt);
+    let Bradford: Matrix = adaption_matrix(Dn, D50_XYZ);
     if Bradford.invalid {
         return matrix_invalid();
     }
@@ -368,8 +365,8 @@ fn adapt_matrix_to_D50(mut r: Matrix, mut source_white_pt: qcms_CIE_xyY) -> Matr
 }
 pub(crate) fn set_rgb_colorants(
     mut profile: &mut Profile,
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
+    white_point: qcms_CIE_xyY,
+    primaries: qcms_CIE_xyYTRIPLE,
 ) -> bool {
     let mut colorants: Matrix = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
     colorants = adapt_matrix_to_D50(colorants, white_point);
@@ -389,9 +386,9 @@ pub(crate) fn set_rgb_colorants(
     true
 }
 pub(crate) fn get_rgb_colorants(
-    mut colorants: &mut Matrix,
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
+    colorants: &mut Matrix,
+    white_point: qcms_CIE_xyY,
+    primaries: qcms_CIE_xyYTRIPLE,
 ) -> bool {
     *colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
     *colorants = adapt_matrix_to_D50(*colorants, white_point);
@@ -403,10 +400,10 @@ pub(crate) fn get_rgb_colorants(
     See: ftp://ftp.alvyray.com/Acrobat/17_Nonln.pdf
 */
 unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: Format>(
-    mut transform: *const qcms_transform,
+    transform: *const qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
-    mut length: usize,
+    length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
     let input_gamma_table_gray = (*transform)
@@ -419,24 +416,24 @@ unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: For
     while (i as usize) < length {
         let fresh0 = src;
         src = src.offset(1);
-        let mut device: u8 = *fresh0;
+        let device: u8 = *fresh0;
         let mut alpha: u8 = 0xffu8;
         if I::has_alpha {
             let fresh1 = src;
             src = src.offset(1);
             alpha = *fresh1
         }
-        let mut linear: f32 = *input_gamma_table_gray.offset(device as isize);
+        let linear: f32 = *input_gamma_table_gray.offset(device as isize);
 
-        let mut out_device_r: f32 = lut_interp_linear(
+        let out_device_r: f32 = lut_interp_linear(
             linear as f64,
             &(*transform).output_gamma_lut_r.as_ref().unwrap(),
         );
-        let mut out_device_g: f32 = lut_interp_linear(
+        let out_device_g: f32 = lut_interp_linear(
             linear as f64,
             &(*transform).output_gamma_lut_g.as_ref().unwrap(),
         );
-        let mut out_device_b: f32 = lut_interp_linear(
+        let out_device_b: f32 = lut_interp_linear(
             linear as f64,
             &(*transform).output_gamma_lut_b.as_ref().unwrap(),
         );
@@ -451,50 +448,50 @@ unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: For
     }
 }
 unsafe extern "C" fn qcms_transform_data_gray_out_lut(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_lut::<Gray, RGB>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_gray_rgba_out_lut(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_lut::<Gray, RGBA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_gray_bgra_out_lut(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_lut::<Gray, BGRA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_graya_rgba_out_lut(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_lut::<GrayAlpha, RGBA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_graya_bgra_out_lut(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_lut::<GrayAlpha, BGRA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_gray_template_precache<I: GrayFormat, F: Format>(
-    mut transform: *const qcms_transform,
+    transform: *const qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
-    mut length: usize,
+    length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
     let output_table_r = ((*transform).output_table_r).as_deref().unwrap();
@@ -511,7 +508,7 @@ unsafe extern "C" fn qcms_transform_data_gray_template_precache<I: GrayFormat, F
     while (i as usize) < length {
         let fresh2 = src;
         src = src.offset(1);
-        let mut device: u8 = *fresh2;
+        let device: u8 = *fresh2;
         let mut alpha: u8 = 0xffu8;
         if I::has_alpha {
             let fresh3 = src;
@@ -519,9 +516,9 @@ unsafe extern "C" fn qcms_transform_data_gray_template_precache<I: GrayFormat, F
             alpha = *fresh3
         }
 
-        let mut linear: f32 = *input_gamma_table_gray.offset(device as isize);
+        let linear: f32 = *input_gamma_table_gray.offset(device as isize);
         /* we could round here... */
-        let mut gray: u16 = (linear * PRECACHE_OUTPUT_MAX as f32) as u16;
+        let gray: u16 = (linear * PRECACHE_OUTPUT_MAX as f32) as u16;
         *dest.add(F::kRIndex) = (output_table_r).data[gray as usize];
         *dest.add(F::kGIndex) = (output_table_g).data[gray as usize];
         *dest.add(F::kBIndex) = (output_table_b).data[gray as usize];
@@ -533,50 +530,50 @@ unsafe extern "C" fn qcms_transform_data_gray_template_precache<I: GrayFormat, F
     }
 }
 unsafe extern "C" fn qcms_transform_data_gray_out_precache(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_precache::<Gray, RGB>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_gray_rgba_out_precache(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_precache::<Gray, RGBA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_gray_bgra_out_precache(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_precache::<Gray, BGRA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_graya_rgba_out_precache(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_precache::<GrayAlpha, RGBA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_graya_bgra_out_precache(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_gray_template_precache::<GrayAlpha, BGRA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
-    mut transform: *const qcms_transform,
+    transform: *const qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
-    mut length: usize,
+    length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
     let output_table_r = ((*transform).output_table_r).as_deref().unwrap();
@@ -586,21 +583,21 @@ unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
     let input_gamma_table_g = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
     let input_gamma_table_b = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
 
-    let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
+    let mat: *const [f32; 4] = (*transform).matrix.as_ptr();
     let mut i: u32 = 0;
     while (i as usize) < length {
-        let mut device_r: u8 = *src.add(F::kRIndex);
-        let mut device_g: u8 = *src.add(F::kGIndex);
-        let mut device_b: u8 = *src.add(F::kBIndex);
+        let device_r: u8 = *src.add(F::kRIndex);
+        let device_g: u8 = *src.add(F::kGIndex);
+        let device_b: u8 = *src.add(F::kBIndex);
         let mut alpha: u8 = 0;
         if F::kAIndex != 0xff {
             alpha = *src.add(F::kAIndex)
         }
         src = src.offset(components as isize);
 
-        let mut linear_r: f32 = *input_gamma_table_r.offset(device_r as isize);
-        let mut linear_g: f32 = *input_gamma_table_g.offset(device_g as isize);
-        let mut linear_b: f32 = *input_gamma_table_b.offset(device_b as isize);
+        let linear_r: f32 = *input_gamma_table_r.offset(device_r as isize);
+        let linear_g: f32 = *input_gamma_table_g.offset(device_g as isize);
+        let linear_b: f32 = *input_gamma_table_b.offset(device_b as isize);
         let mut out_linear_r: f32 = (*mat.offset(0isize))[0] * linear_r
             + (*mat.offset(1isize))[0] * linear_g
             + (*mat.offset(2isize))[0] * linear_b;
@@ -615,9 +612,9 @@ unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
         out_linear_b = clamp_float(out_linear_b);
         /* we could round here... */
 
-        let mut r: u16 = (out_linear_r * PRECACHE_OUTPUT_MAX as f32) as u16;
-        let mut g: u16 = (out_linear_g * PRECACHE_OUTPUT_MAX as f32) as u16;
-        let mut b: u16 = (out_linear_b * PRECACHE_OUTPUT_MAX as f32) as u16;
+        let r: u16 = (out_linear_r * PRECACHE_OUTPUT_MAX as f32) as u16;
+        let g: u16 = (out_linear_g * PRECACHE_OUTPUT_MAX as f32) as u16;
+        let b: u16 = (out_linear_b * PRECACHE_OUTPUT_MAX as f32) as u16;
         *dest.add(F::kRIndex) = (output_table_r).data[r as usize];
         *dest.add(F::kGIndex) = (output_table_g).data[g as usize];
         *dest.add(F::kBIndex) = (output_table_b).data[b as usize];
@@ -630,28 +627,28 @@ unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_precache(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_precache::<RGB>(transform, src, dest, length);
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_precache(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_precache::<RGBA>(transform, src, dest, length);
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_precache(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_precache::<BGRA>(transform, src, dest, length);
 }
@@ -712,25 +709,25 @@ static void qcms_transform_data_clut(const qcms_transform *transform, const unsi
     }
 }
 */
-fn int_div_ceil(mut value: i32, mut div: i32) -> i32 {
+fn int_div_ceil(value: i32, div: i32) -> i32 {
     (value + div - 1) / div
 }
 // Using lcms' tetra interpolation algorithm.
 unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
-    mut transform: *const qcms_transform,
+    transform: *const qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
-    mut length: usize,
+    length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
 
-    let mut xy_len: i32 = 1;
-    let mut x_len: i32 = (*transform).grid_size as i32;
-    let mut len: i32 = x_len * x_len;
-    let mut table = (*transform).clut.as_ref().unwrap().as_ptr();
-    let mut r_table: *const f32 = table;
-    let mut g_table: *const f32 = table.offset(1);
-    let mut b_table: *const f32 = table.offset(2);
+    let xy_len: i32 = 1;
+    let x_len: i32 = (*transform).grid_size as i32;
+    let len: i32 = x_len * x_len;
+    let table = (*transform).clut.as_ref().unwrap().as_ptr();
+    let r_table: *const f32 = table;
+    let g_table: *const f32 = table.offset(1);
+    let b_table: *const f32 = table.offset(2);
     let mut c0_r: f32;
     let mut c1_r: f32;
     let mut c2_r: f32;
@@ -748,26 +745,26 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
     let mut clut_b: f32;
     let mut i: u32 = 0;
     while (i as usize) < length {
-        let mut in_r: u8 = *src.add(F::kRIndex);
-        let mut in_g: u8 = *src.add(F::kGIndex);
-        let mut in_b: u8 = *src.add(F::kBIndex);
+        let in_r: u8 = *src.add(F::kRIndex);
+        let in_g: u8 = *src.add(F::kGIndex);
+        let in_b: u8 = *src.add(F::kBIndex);
         let mut in_a: u8 = 0;
         if F::kAIndex != 0xff {
             in_a = *src.add(F::kAIndex)
         }
         src = src.offset(components as isize);
-        let mut linear_r: f32 = in_r as i32 as f32 / 255.0;
-        let mut linear_g: f32 = in_g as i32 as f32 / 255.0;
-        let mut linear_b: f32 = in_b as i32 as f32 / 255.0;
-        let mut x: i32 = in_r as i32 * ((*transform).grid_size as i32 - 1) / 255;
-        let mut y: i32 = in_g as i32 * ((*transform).grid_size as i32 - 1) / 255;
-        let mut z: i32 = in_b as i32 * ((*transform).grid_size as i32 - 1) / 255;
-        let mut x_n: i32 = int_div_ceil(in_r as i32 * ((*transform).grid_size as i32 - 1), 255);
-        let mut y_n: i32 = int_div_ceil(in_g as i32 * ((*transform).grid_size as i32 - 1), 255);
-        let mut z_n: i32 = int_div_ceil(in_b as i32 * ((*transform).grid_size as i32 - 1), 255);
-        let mut rx: f32 = linear_r * ((*transform).grid_size as i32 - 1) as f32 - x as f32;
-        let mut ry: f32 = linear_g * ((*transform).grid_size as i32 - 1) as f32 - y as f32;
-        let mut rz: f32 = linear_b * ((*transform).grid_size as i32 - 1) as f32 - z as f32;
+        let linear_r: f32 = in_r as i32 as f32 / 255.0;
+        let linear_g: f32 = in_g as i32 as f32 / 255.0;
+        let linear_b: f32 = in_b as i32 as f32 / 255.0;
+        let x: i32 = in_r as i32 * ((*transform).grid_size as i32 - 1) / 255;
+        let y: i32 = in_g as i32 * ((*transform).grid_size as i32 - 1) / 255;
+        let z: i32 = in_b as i32 * ((*transform).grid_size as i32 - 1) / 255;
+        let x_n: i32 = int_div_ceil(in_r as i32 * ((*transform).grid_size as i32 - 1), 255);
+        let y_n: i32 = int_div_ceil(in_g as i32 * ((*transform).grid_size as i32 - 1), 255);
+        let z_n: i32 = int_div_ceil(in_b as i32 * ((*transform).grid_size as i32 - 1), 255);
+        let rx: f32 = linear_r * ((*transform).grid_size as i32 - 1) as f32 - x as f32;
+        let ry: f32 = linear_g * ((*transform).grid_size as i32 - 1) as f32 - y as f32;
+        let rz: f32 = linear_b * ((*transform).grid_size as i32 - 1) as f32 - z as f32;
         c0_r = *r_table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
         c0_g = *g_table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
         c0_b = *b_table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
@@ -888,55 +885,55 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
     }
 }
 unsafe extern "C" fn qcms_transform_data_tetra_clut_rgb(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_tetra_clut_template::<RGB>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_tetra_clut_rgba(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_tetra_clut_template::<RGBA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_tetra_clut_bgra(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_tetra_clut_template::<BGRA>(transform, src, dest, length);
 }
 unsafe extern "C" fn qcms_transform_data_template_lut<F: Format>(
-    mut transform: *const qcms_transform,
+    transform: *const qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
-    mut length: usize,
+    length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
 
-    let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
+    let mat: *const [f32; 4] = (*transform).matrix.as_ptr();
     let mut i: u32 = 0;
     let input_gamma_table_r = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
     let input_gamma_table_g = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
     let input_gamma_table_b = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
     while (i as usize) < length {
-        let mut device_r: u8 = *src.add(F::kRIndex);
-        let mut device_g: u8 = *src.add(F::kGIndex);
-        let mut device_b: u8 = *src.add(F::kBIndex);
+        let device_r: u8 = *src.add(F::kRIndex);
+        let device_g: u8 = *src.add(F::kGIndex);
+        let device_b: u8 = *src.add(F::kBIndex);
         let mut alpha: u8 = 0;
         if F::kAIndex != 0xff {
             alpha = *src.add(F::kAIndex)
         }
         src = src.offset(components as isize);
 
-        let mut linear_r: f32 = *input_gamma_table_r.offset(device_r as isize);
-        let mut linear_g: f32 = *input_gamma_table_g.offset(device_g as isize);
-        let mut linear_b: f32 = *input_gamma_table_b.offset(device_b as isize);
+        let linear_r: f32 = *input_gamma_table_r.offset(device_r as isize);
+        let linear_g: f32 = *input_gamma_table_g.offset(device_g as isize);
+        let linear_b: f32 = *input_gamma_table_b.offset(device_b as isize);
         let mut out_linear_r: f32 = (*mat.offset(0isize))[0] * linear_r
             + (*mat.offset(1isize))[0] * linear_g
             + (*mat.offset(2isize))[0] * linear_b;
@@ -950,15 +947,15 @@ unsafe extern "C" fn qcms_transform_data_template_lut<F: Format>(
         out_linear_g = clamp_float(out_linear_g);
         out_linear_b = clamp_float(out_linear_b);
 
-        let mut out_device_r: f32 = lut_interp_linear(
+        let out_device_r: f32 = lut_interp_linear(
             out_linear_r as f64,
             &(*transform).output_gamma_lut_r.as_ref().unwrap(),
         );
-        let mut out_device_g: f32 = lut_interp_linear(
+        let out_device_g: f32 = lut_interp_linear(
             out_linear_g as f64,
             (*transform).output_gamma_lut_g.as_ref().unwrap(),
         );
-        let mut out_device_b: f32 = lut_interp_linear(
+        let out_device_b: f32 = lut_interp_linear(
             out_linear_b as f64,
             (*transform).output_gamma_lut_b.as_ref().unwrap(),
         );
@@ -974,28 +971,28 @@ unsafe extern "C" fn qcms_transform_data_template_lut<F: Format>(
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut::<RGB>(transform, src, dest, length);
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut::<RGBA>(transform, src, dest, length);
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut::<BGRA>(transform, src, dest, length);
 }
@@ -1005,7 +1002,7 @@ fn precache_create() -> Arc<precache_output> {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_release(mut t: *mut qcms_transform) {
+pub unsafe extern "C" fn qcms_transform_release(t: *mut qcms_transform) {
     let t = Box::from_raw(t);
     drop(t)
 }
@@ -1029,20 +1026,20 @@ const bradford_matrix_inv: Matrix = Matrix {
 };
 
 // See ICCv4 E.3
-fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> Matrix {
-    let mut p: f32 = (0.96422 * bradford_matrix.m[0][0]
+fn compute_whitepoint_adaption(X: f32, Y: f32, Z: f32) -> Matrix {
+    let p: f32 = (0.96422 * bradford_matrix.m[0][0]
         + 1.000 * bradford_matrix.m[1][0]
         + 0.82521 * bradford_matrix.m[2][0])
         / (X * bradford_matrix.m[0][0] + Y * bradford_matrix.m[1][0] + Z * bradford_matrix.m[2][0]);
-    let mut y: f32 = (0.96422 * bradford_matrix.m[0][1]
+    let y: f32 = (0.96422 * bradford_matrix.m[0][1]
         + 1.000 * bradford_matrix.m[1][1]
         + 0.82521 * bradford_matrix.m[2][1])
         / (X * bradford_matrix.m[0][1] + Y * bradford_matrix.m[1][1] + Z * bradford_matrix.m[2][1]);
-    let mut b: f32 = (0.96422 * bradford_matrix.m[0][2]
+    let b: f32 = (0.96422 * bradford_matrix.m[0][2]
         + 1.000 * bradford_matrix.m[1][2]
         + 0.82521 * bradford_matrix.m[2][2])
         / (X * bradford_matrix.m[0][2] + Y * bradford_matrix.m[1][2] + Z * bradford_matrix.m[2][2]);
-    let mut white_adaption = Matrix {
+    let white_adaption = Matrix {
         m: [[p, 0., 0.], [0., y, 0.], [0., 0., b]],
         invalid: false,
     };
@@ -1102,16 +1099,16 @@ pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut Profi
 /* Replace the current transformation with a LUT transformation using a given number of sample points */
 fn transform_precacheLUT_float(
     mut transform: Box<qcms_transform>,
-    mut in_0: &Profile,
-    mut out: &Profile,
-    mut samples: i32,
-    mut in_type: qcms_data_type,
+    in_0: &Profile,
+    out: &Profile,
+    samples: i32,
+    in_type: qcms_data_type,
 ) -> Option<Box<qcms_transform>> {
     /* The range between which 2 consecutive sample points can be used to interpolate */
-    let mut lutSize: u32 = (3 * samples * samples * samples) as u32;
+    let lutSize: u32 = (3 * samples * samples * samples) as u32;
 
     let mut src = Vec::with_capacity(lutSize as usize);
-    let mut dest = vec![0.; lutSize as usize];
+    let dest = vec![0.; lutSize as usize];
     /* Prepare a list of points we want to sample */
     for x in 0..samples {
         for y in 0..samples {
@@ -1142,10 +1139,10 @@ fn transform_precacheLUT_float(
 }
 
 pub fn transform_create(
-    mut in_0: &Profile,
-    mut in_type: qcms_data_type,
-    mut out: &Profile,
-    mut out_type: qcms_data_type,
+    in_0: &Profile,
+    in_type: qcms_data_type,
+    out: &Profile,
+    out_type: qcms_data_type,
     _intent: Intent,
 ) -> Option<Box<qcms_transform>> {
     // Ensure the requested input and output types make sense.
@@ -1177,7 +1174,7 @@ pub fn transform_create(
         // This evenly divides 256 into blocks of 8x8x8.
         // TODO For transforming small data sets of about 200x200 or less
         // precaching should be avoided.
-        let mut result = transform_precacheLUT_float(transform, in_0, out, 33, in_type);
+        let result = transform_precacheLUT_float(transform, in_0, out, 33, in_type);
         debug_assert!(result.is_some(), "precacheLUT failed");
         return result;
     }
@@ -1265,13 +1262,13 @@ pub fn transform_create(
         }
         /* build combined colorant matrix */
 
-        let mut in_matrix: Matrix = build_colorant_matrix(in_0);
+        let in_matrix: Matrix = build_colorant_matrix(in_0);
         let mut out_matrix: Matrix = build_colorant_matrix(out);
         out_matrix = matrix_invert(out_matrix);
         if out_matrix.invalid {
             return None;
         }
-        let mut result_0: Matrix = matrix_multiply(out_matrix, in_matrix);
+        let result_0: Matrix = matrix_multiply(out_matrix, in_matrix);
         /* check for NaN values in the matrix and bail if we find any */
         let mut i: u32 = 0;
         while i < 3 {

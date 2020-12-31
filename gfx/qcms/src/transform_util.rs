@@ -31,14 +31,14 @@ use crate::{matrix::Matrix, transform::PRECACHE_OUTPUT_MAX, transform::PRECACHE_
 pub type uint16_fract_t = u16;
 
 #[inline]
-fn u8Fixed8Number_to_float(mut x: u16) -> f32 {
+fn u8Fixed8Number_to_float(x: u16) -> f32 {
     // 0x0000 = 0.
     // 0x0100 = 1.
     // 0xffff = 255  + 255/256
     (x as i32 as f64 / 256.0f64) as f32
 }
 #[inline]
-pub fn clamp_float(mut a: f32) -> f32 {
+pub fn clamp_float(a: f32) -> f32 {
     /* One would naturally write this function as the following:
     if (a > 1.)
       return 1.;
@@ -62,12 +62,12 @@ pub fn clamp_float(mut a: f32) -> f32 {
 /* value must be a value between 0 and 1 */
 //XXX: is the above a good restriction to have?
 // the output range of this functions is 0..1
-pub fn lut_interp_linear(mut input_value: f64, mut table: &[u16]) -> f32 {
+pub fn lut_interp_linear(mut input_value: f64, table: &[u16]) -> f32 {
     input_value *= (table.len() - 1) as f64;
 
-    let mut upper: i32 = input_value.ceil() as i32;
-    let mut lower: i32 = input_value.floor() as i32;
-    let mut value: f32 = ((table[upper as usize] as f64) * (1. - (upper as f64 - input_value))
+    let upper: i32 = input_value.ceil() as i32;
+    let lower: i32 = input_value.floor() as i32;
+    let value: f32 = ((table[upper as usize] as f64) * (1. - (upper as f64 - input_value))
         + (table[lower as usize] as f64 * (upper as f64 - input_value)))
         as f32;
     /* scale the value */
@@ -75,14 +75,14 @@ pub fn lut_interp_linear(mut input_value: f64, mut table: &[u16]) -> f32 {
 }
 /* same as above but takes and returns a uint16_t value representing a range from 0..1 */
 #[no_mangle]
-pub fn lut_interp_linear16(mut input_value: u16, mut table: &[u16]) -> u16 {
+pub fn lut_interp_linear16(input_value: u16, table: &[u16]) -> u16 {
     /* Start scaling input_value to the length of the array: 65535*(length-1).
      * We'll divide out the 65535 next */
     let mut value: u32 = (input_value as i32 * (table.len() as i32 - 1)) as u32; /* equivalent to ceil(value/65535) */
-    let mut upper: u32 = (value + 65534) / 65535; /* equivalent to floor(value/65535) */
-    let mut lower: u32 = value / 65535;
+    let upper: u32 = (value + 65534) / 65535; /* equivalent to floor(value/65535) */
+    let lower: u32 = value / 65535;
     /* interp is the distance from upper to value scaled to 0..65535 */
-    let mut interp: u32 = value % 65535; // 0..65535*65535
+    let interp: u32 = value % 65535; // 0..65535*65535
     value = (table[upper as usize] as u32 * interp
         + table[lower as usize] as u32 * (65535 - interp))
         / 65535;
@@ -90,16 +90,16 @@ pub fn lut_interp_linear16(mut input_value: u16, mut table: &[u16]) -> u16 {
 }
 /* same as above but takes an input_value from 0..PRECACHE_OUTPUT_MAX
  * and returns a uint8_t value representing a range from 0..1 */
-fn lut_interp_linear_precache_output(mut input_value: u32, mut table: &[u16]) -> u8 {
+fn lut_interp_linear_precache_output(input_value: u32, table: &[u16]) -> u8 {
     /* Start scaling input_value to the length of the array: PRECACHE_OUTPUT_MAX*(length-1).
      * We'll divide out the PRECACHE_OUTPUT_MAX next */
     let mut value: u32 = input_value * (table.len() - 1) as u32;
     /* equivalent to ceil(value/PRECACHE_OUTPUT_MAX) */
-    let mut upper: u32 = (value + PRECACHE_OUTPUT_MAX as u32 - 1) / PRECACHE_OUTPUT_MAX as u32;
+    let upper: u32 = (value + PRECACHE_OUTPUT_MAX as u32 - 1) / PRECACHE_OUTPUT_MAX as u32;
     /* equivalent to floor(value/PRECACHE_OUTPUT_MAX) */
-    let mut lower: u32 = value / PRECACHE_OUTPUT_MAX as u32;
+    let lower: u32 = value / PRECACHE_OUTPUT_MAX as u32;
     /* interp is the distance from upper to value scaled to 0..PRECACHE_OUTPUT_MAX */
-    let mut interp: u32 = value % PRECACHE_OUTPUT_MAX as u32;
+    let interp: u32 = value % PRECACHE_OUTPUT_MAX as u32;
     /* the table values range from 0..65535 */
     value = table[upper as usize] as u32 * interp
         + table[lower as usize] as u32 * (PRECACHE_OUTPUT_MAX as u32 - interp); // 0..(65535*PRECACHE_OUTPUT_MAX)
@@ -110,37 +110,37 @@ fn lut_interp_linear_precache_output(mut input_value: u32, mut table: &[u16]) ->
 }
 /* value must be a value between 0 and 1 */
 //XXX: is the above a good restriction to have?
-pub fn lut_interp_linear_float(mut value: f32, mut table: &[f32]) -> f32 {
+pub fn lut_interp_linear_float(mut value: f32, table: &[f32]) -> f32 {
     value *= (table.len() - 1) as f32;
 
-    let mut upper: i32 = value.ceil() as i32;
-    let mut lower: i32 = value.floor() as i32;
+    let upper: i32 = value.ceil() as i32;
+    let lower: i32 = value.floor() as i32;
     //XXX: can we be more performant here?
     value = (table[upper as usize] as f64 * (1.0f64 - (upper as f32 - value) as f64)
         + (table[lower as usize] * (upper as f32 - value)) as f64) as f32;
     /* scale the value */
     value
 }
-fn compute_curve_gamma_table_type1(mut gamma_table: &mut Vec<f32>, mut gamma: u16) {
-    let mut gamma_float: f32 = u8Fixed8Number_to_float(gamma);
+fn compute_curve_gamma_table_type1(gamma_table: &mut Vec<f32>, gamma: u16) {
+    let gamma_float: f32 = u8Fixed8Number_to_float(gamma);
     for i in 0..256 {
         // 0..1^(0..255 + 255/256) will always be between 0 and 1
         gamma_table.push((i as f64 / 255.0f64).powf(gamma_float as f64) as f32);
     }
 }
-fn compute_curve_gamma_table_type2(mut gamma_table: &mut Vec<f32>, mut table: &[u16]) {
+fn compute_curve_gamma_table_type2(gamma_table: &mut Vec<f32>, table: &[u16]) {
     for i in 0..256 {
         gamma_table.push(lut_interp_linear(i as f64 / 255.0f64, table));
     }
 }
-fn compute_curve_gamma_table_type_parametric(mut gamma_table: &mut Vec<f32>, mut params: &[f32]) {
-    let mut interval: f32;
-    let mut a: f32;
-    let mut b: f32;
-    let mut c: f32;
-    let mut e: f32;
-    let mut f: f32;
-    let mut y: f32 = params[0];
+fn compute_curve_gamma_table_type_parametric(gamma_table: &mut Vec<f32>, params: &[f32]) {
+    let interval: f32;
+    let a: f32;
+    let b: f32;
+    let c: f32;
+    let e: f32;
+    let f: f32;
+    let y: f32 = params[0];
     // XXX: this could probably be cleaner with slice patterns
     if params.len() == 1 {
         a = 1.;
@@ -203,12 +203,12 @@ fn compute_curve_gamma_table_type_parametric(mut gamma_table: &mut Vec<f32>, mut
     }
 }
 
-fn compute_curve_gamma_table_type0(mut gamma_table: &mut Vec<f32>) {
+fn compute_curve_gamma_table_type0(gamma_table: &mut Vec<f32>) {
     for i in 0..256 {
         gamma_table.push((i as f64 / 255.0f64) as f32);
     }
 }
-pub(crate) fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec<f32>> {
+pub(crate) fn build_input_gamma_table(TRC: Option<&curveType>) -> Option<Vec<f32>> {
     let TRC = match TRC {
         Some(TRC) => TRC,
         None => return None,
@@ -227,7 +227,7 @@ pub(crate) fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec
 
     Some(gamma_table)
 }
-pub fn build_colorant_matrix(mut p: &Profile) -> Matrix {
+pub fn build_colorant_matrix(p: &Profile) -> Matrix {
     let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -249,7 +249,7 @@ pub fn build_colorant_matrix(mut p: &Profile) -> Matrix {
  * icmTable_lookup_bwd and icmTable_setup_bwd. However, for now this is a quick way
  * to a working solution and allows for easy comparing with lcms. */
 #[no_mangle]
-pub fn lut_inverse_interp16(mut Value: u16, mut LutTable: &[u16]) -> uint16_fract_t {
+pub fn lut_inverse_interp16(Value: u16, LutTable: &[u16]) -> uint16_fract_t {
     let mut l: i32 = 1; // 'int' Give spacing for negative values
     let mut r: i32 = 0x10000;
     let mut x: i32 = 0;
@@ -272,8 +272,8 @@ pub fn lut_inverse_interp16(mut Value: u16, mut LutTable: &[u16]) -> uint16_frac
     }
     // Does the curve belong to this case?
     if NumZeroes > 1 || NumPoles > 1 {
-        let mut a_0: i32;
-        let mut b_0: i32;
+        let a_0: i32;
+        let b_0: i32;
         // Identify if value fall downto 0 or FFFF zone
         if Value as i32 == 0 {
             return 0u16;
@@ -313,23 +313,23 @@ pub fn lut_inverse_interp16(mut Value: u16, mut LutTable: &[u16]) -> uint16_frac
     // Get surrounding nodes
     debug_assert!(x >= 1);
 
-    let mut val2: f64 = (length - 1) as f64 * ((x - 1) as f64 / 65535.0f64);
-    let mut cell0: i32 = val2.floor() as i32;
-    let mut cell1: i32 = val2.ceil() as i32;
+    let val2: f64 = (length - 1) as f64 * ((x - 1) as f64 / 65535.0f64);
+    let cell0: i32 = val2.floor() as i32;
+    let cell1: i32 = val2.ceil() as i32;
     if cell0 == cell1 {
         return x as uint16_fract_t;
     }
 
-    let mut y0: f64 = LutTable[cell0 as usize] as f64;
-    let mut x0: f64 = 65535.0f64 * cell0 as f64 / (length - 1) as f64;
-    let mut y1: f64 = LutTable[cell1 as usize] as f64;
-    let mut x1: f64 = 65535.0f64 * cell1 as f64 / (length - 1) as f64;
-    let mut a: f64 = (y1 - y0) / (x1 - x0);
-    let mut b: f64 = y0 - a * x0;
+    let y0: f64 = LutTable[cell0 as usize] as f64;
+    let x0: f64 = 65535.0f64 * cell0 as f64 / (length - 1) as f64;
+    let y1: f64 = LutTable[cell1 as usize] as f64;
+    let x1: f64 = 65535.0f64 * cell1 as f64 / (length - 1) as f64;
+    let a: f64 = (y1 - y0) / (x1 - x0);
+    let b: f64 = y0 - a * x0;
     if a.abs() < 0.01f64 {
         return x as uint16_fract_t;
     }
-    let mut f: f64 = (Value as i32 as f64 - b) / a;
+    let f: f64 = (Value as i32 as f64 - b) / a;
     if f < 0.0f64 {
         return 0u16;
     }
@@ -351,18 +351,18 @@ invert_lut will produce an inverse of:
 which has an maximum error of about 9855 (pixel difference of ~38.346)
 
 For now, we punt the decision of output size to the caller. */
-fn invert_lut(mut table: &[u16], mut out_length: i32) -> Vec<u16> {
+fn invert_lut(table: &[u16], out_length: i32) -> Vec<u16> {
     /* for now we invert the lut by creating a lut of size out_length
      * and attempting to lookup a value for each entry using lut_inverse_interp16 */
     let mut output = Vec::with_capacity(out_length as usize);
     for i in 0..out_length {
-        let mut x: f64 = i as f64 * 65535.0f64 / (out_length - 1) as f64;
-        let mut input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
+        let x: f64 = i as f64 * 65535.0f64 / (out_length - 1) as f64;
+        let input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
         output.push(lut_inverse_interp16(input, table));
     }
     output
 }
-fn compute_precache_pow(output: &mut [u8; PRECACHE_OUTPUT_SIZE], mut gamma: f32) {
+fn compute_precache_pow(output: &mut [u8; PRECACHE_OUTPUT_SIZE], gamma: f32) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
         //XXX: don't do integer/float conversion... and round?
@@ -371,14 +371,14 @@ fn compute_precache_pow(output: &mut [u8; PRECACHE_OUTPUT_SIZE], mut gamma: f32)
         v += 1
     }
 }
-pub fn compute_precache_lut(mut output: &mut [u8; PRECACHE_OUTPUT_SIZE], mut table: &[u16]) {
+pub fn compute_precache_lut(output: &mut [u8; PRECACHE_OUTPUT_SIZE], table: &[u16]) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
         output[v as usize] = lut_interp_linear_precache_output(v, table);
         v += 1
     }
 }
-pub fn compute_precache_linear(mut output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
+pub fn compute_precache_linear(output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
         //XXX: round?
@@ -386,10 +386,7 @@ pub fn compute_precache_linear(mut output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
         v += 1
     }
 }
-pub(crate) fn compute_precache(
-    mut trc: &curveType,
-    mut output: &mut [u8; PRECACHE_OUTPUT_SIZE],
-) -> bool {
+pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPUT_SIZE]) -> bool {
     match trc {
         curveType::Parametric(params) => {
             let mut gamma_table = Vec::with_capacity(256);
@@ -409,7 +406,7 @@ pub(crate) fn compute_precache(
             if inverted_size < 256 {
                 inverted_size = 256
             }
-            let mut inverted = invert_lut(&gamma_table_uint, inverted_size);
+            let inverted = invert_lut(&gamma_table_uint, inverted_size);
             compute_precache_lut(output, &inverted);
         }
         curveType::Curve(data) => {
@@ -425,7 +422,7 @@ pub(crate) fn compute_precache(
                     if inverted_size < 256 {
                         inverted_size = 256
                     } //XXX turn this conversion into a function
-                    let mut inverted = invert_lut(data, inverted_size);
+                    let inverted = invert_lut(data, inverted_size);
                     compute_precache_lut(output, &inverted);
                 }
             }
@@ -433,27 +430,27 @@ pub(crate) fn compute_precache(
     }
     true
 }
-fn build_linear_table(mut length: i32) -> Vec<u16> {
+fn build_linear_table(length: i32) -> Vec<u16> {
     let mut output = Vec::with_capacity(length as usize);
     for i in 0..length {
-        let mut x: f64 = i as f64 * 65535.0f64 / (length - 1) as f64;
-        let mut input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
+        let x: f64 = i as f64 * 65535.0f64 / (length - 1) as f64;
+        let input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
         output.push(input);
     }
     output
 }
-fn build_pow_table(mut gamma: f32, mut length: i32) -> Vec<u16> {
+fn build_pow_table(gamma: f32, length: i32) -> Vec<u16> {
     let mut output = Vec::with_capacity(length as usize);
     for i in 0..length {
         let mut x: f64 = i as f64 / (length - 1) as f64;
         x = x.powf(gamma as f64);
-        let mut result: uint16_fract_t = (x * 65535.0f64 + 0.5f64).floor() as uint16_fract_t;
+        let result: uint16_fract_t = (x * 65535.0f64 + 0.5f64).floor() as uint16_fract_t;
         output.push(result);
     }
     output
 }
 
-pub(crate) fn build_output_lut(mut trc: &curveType) -> Vec<u16> {
+pub(crate) fn build_output_lut(trc: &curveType) -> Vec<u16> {
     match trc {
         curveType::Parametric(params) => {
             let mut gamma_table = Vec::with_capacity(256);
@@ -468,7 +465,7 @@ pub(crate) fn build_output_lut(mut trc: &curveType) -> Vec<u16> {
             match data.len() {
                 0 => build_linear_table(4096),
                 1 => {
-                    let mut gamma = 1. / u8Fixed8Number_to_float(data[0]);
+                    let gamma = 1. / u8Fixed8Number_to_float(data[0]);
                     build_pow_table(gamma, 4096)
                 }
                 _ => {

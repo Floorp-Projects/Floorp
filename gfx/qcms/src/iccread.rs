@@ -190,32 +190,32 @@ struct mem_source<'a> {
 }
 pub type uInt8Number = u8;
 #[inline]
-fn uInt8Number_to_float(mut a: uInt8Number) -> f32 {
+fn uInt8Number_to_float(a: uInt8Number) -> f32 {
     a as i32 as f32 / 255.0
 }
 
 #[inline]
-fn uInt16Number_to_float(mut a: uInt16Number) -> f32 {
+fn uInt16Number_to_float(a: uInt16Number) -> f32 {
     a as i32 as f32 / 65535.0
 }
 
-fn cpu_to_be32(mut v: u32) -> be32 {
+fn cpu_to_be32(v: u32) -> be32 {
     v.to_be()
 }
-fn cpu_to_be16(mut v: u16) -> be16 {
+fn cpu_to_be16(v: u16) -> be16 {
     v.to_be()
 }
-fn be32_to_cpu(mut v: be32) -> u32 {
+fn be32_to_cpu(v: be32) -> u32 {
     u32::from_be(v)
 }
-fn be16_to_cpu(mut v: be16) -> u16 {
+fn be16_to_cpu(v: be16) -> u16 {
     u16::from_be(v)
 }
 fn invalid_source(mut mem: &mut mem_source, reason: &'static str) {
     mem.valid = false;
     mem.invalid_reason = Some(reason);
 }
-fn read_u32(mut mem: &mut mem_source, mut offset: usize) -> u32 {
+fn read_u32(mem: &mut mem_source, offset: usize) -> u32 {
     /* Subtract from mem->size instead of the more intuitive adding to offset.
      * This avoids overflowing offset. The subtraction is safe because
      * mem->size is guaranteed to be > 4 */
@@ -227,7 +227,7 @@ fn read_u32(mut mem: &mut mem_source, mut offset: usize) -> u32 {
         be32_to_cpu(k)
     }
 }
-fn read_u16(mut mem: &mut mem_source, mut offset: usize) -> u16 {
+fn read_u16(mem: &mut mem_source, offset: usize) -> u16 {
     if offset > mem.buf.len() - 2 {
         invalid_source(mem, "Invalid offset");
         0u16
@@ -236,7 +236,7 @@ fn read_u16(mut mem: &mut mem_source, mut offset: usize) -> u16 {
         be16_to_cpu(k)
     }
 }
-fn read_u8(mut mem: &mut mem_source, mut offset: usize) -> u8 {
+fn read_u8(mem: &mut mem_source, offset: usize) -> u8 {
     if offset > mem.buf.len() - 1 {
         invalid_source(mem, "Invalid offset");
         0u8
@@ -244,16 +244,16 @@ fn read_u8(mut mem: &mut mem_source, mut offset: usize) -> u8 {
         unsafe { *(mem.buf.as_ptr().add(offset) as *mut u8) }
     }
 }
-fn read_s15Fixed16Number(mut mem: &mut mem_source, mut offset: usize) -> s15Fixed16Number {
+fn read_s15Fixed16Number(mem: &mut mem_source, offset: usize) -> s15Fixed16Number {
     read_u32(mem, offset) as s15Fixed16Number
 }
-fn read_uInt8Number(mut mem: &mut mem_source, mut offset: usize) -> uInt8Number {
+fn read_uInt8Number(mem: &mut mem_source, offset: usize) -> uInt8Number {
     read_u8(mem, offset)
 }
-fn read_uInt16Number(mut mem: &mut mem_source, mut offset: usize) -> uInt16Number {
+fn read_uInt16Number(mem: &mut mem_source, offset: usize) -> uInt16Number {
     read_u16(mem, offset)
 }
-pub fn write_u32(mut mem: &mut [u8], mut offset: usize, mut value: u32) {
+pub fn write_u32(mem: &mut [u8], offset: usize, value: u32) {
     if offset <= mem.len() - std::mem::size_of_val(&value) {
         panic!("OOB");
     }
@@ -262,7 +262,7 @@ pub fn write_u32(mut mem: &mut [u8], mut offset: usize, mut value: u32) {
         std::ptr::write_unaligned(mem.add(offset) as *mut u32, cpu_to_be32(value));
     }
 }
-pub fn write_u16(mut mem: &mut [u8], mut offset: usize, mut value: u16) {
+pub fn write_u16(mem: &mut [u8], offset: usize, value: u16) {
     if offset <= mem.len() - std::mem::size_of_val(&value) {
         panic!("OOB");
     }
@@ -280,13 +280,13 @@ fn check_CMM_type_signature(_src: &mut mem_source) {
     //uint32_t CMM_type_signature = read_u32(src, 4);
     //TODO: do the check?
 }
-fn check_profile_version(mut src: &mut mem_source) {
+fn check_profile_version(src: &mut mem_source) {
     /*
     uint8_t major_revision = read_u8(src, 8 + 0);
     uint8_t minor_revision = read_u8(src, 8 + 1);
     */
-    let mut reserved1: u8 = read_u8(src, (8 + 2) as usize);
-    let mut reserved2: u8 = read_u8(src, (8 + 3) as usize);
+    let reserved1: u8 = read_u8(src, (8 + 2) as usize);
+    let reserved2: u8 = read_u8(src, (8 + 3) as usize);
     /* Checking the version doesn't buy us anything
     if (major_revision != 0x4) {
         if (major_revision > 0x2)
@@ -308,7 +308,7 @@ const COLOR_SPACE_PROFILE: u32 = 0x73706163; // 'spac'
 const ABSTRACT_PROFILE: u32 = 0x61627374; // 'abst'
 const NAMED_COLOR_PROFILE: u32 = 0x6e6d636c; // 'nmcl'
 
-fn read_class_signature(mut profile: &mut Profile, mut mem: &mut mem_source) {
+fn read_class_signature(mut profile: &mut Profile, mem: &mut mem_source) {
     profile.class_type = read_u32(mem, 12);
     match profile.class_type {
         DISPLAY_DEVICE_PROFILE
@@ -320,7 +320,7 @@ fn read_class_signature(mut profile: &mut Profile, mut mem: &mut mem_source) {
         }
     };
 }
-fn read_color_space(mut profile: &mut Profile, mut mem: &mut mem_source) {
+fn read_color_space(mut profile: &mut Profile, mem: &mut mem_source) {
     profile.color_space = read_u32(mem, 16);
     match profile.color_space {
         RGB_SIGNATURE | GRAY_SIGNATURE => {}
@@ -329,7 +329,7 @@ fn read_color_space(mut profile: &mut Profile, mut mem: &mut mem_source) {
         }
     };
 }
-fn read_pcs(mut profile: &mut Profile, mut mem: &mut mem_source) {
+fn read_pcs(mut profile: &mut Profile, mem: &mut mem_source) {
     profile.pcs = read_u32(mem, 20);
     match profile.pcs {
         XYZ_SIGNATURE | LAB_SIGNATURE => {}
@@ -338,7 +338,7 @@ fn read_pcs(mut profile: &mut Profile, mut mem: &mut mem_source) {
         }
     };
 }
-fn read_tag_table(_profile: &mut Profile, mut mem: &mut mem_source) -> Vec<tag> {
+fn read_tag_table(_profile: &mut Profile, mem: &mut mem_source) -> Vec<tag> {
     let count = read_u32(mem, 128);
     if count > MAX_TAG_COUNT {
         invalid_source(mem, "max number of tags exceeded");
@@ -432,20 +432,20 @@ authorization from SunSoft Inc.
 // true if the profile looks bogus and should probably be
 // ignored.
 #[no_mangle]
-pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut Profile) -> bool {
+pub extern "C" fn qcms_profile_is_bogus(profile: &mut Profile) -> bool {
     let mut sum: [f32; 3] = [0.; 3];
     let mut target: [f32; 3] = [0.; 3];
     let mut tolerance: [f32; 3] = [0.; 3];
-    let mut rX: f32;
-    let mut rY: f32;
-    let mut rZ: f32;
-    let mut gX: f32;
-    let mut gY: f32;
-    let mut gZ: f32;
-    let mut bX: f32;
-    let mut bY: f32;
-    let mut bZ: f32;
-    let mut negative: bool;
+    let rX: f32;
+    let rY: f32;
+    let rZ: f32;
+    let gX: f32;
+    let gY: f32;
+    let gZ: f32;
+    let bX: f32;
+    let bY: f32;
+    let bZ: f32;
+    let negative: bool;
     let mut i: u32;
     // We currently only check the bogosity of RGB profiles
     if profile.color_space != RGB_SIGNATURE {
@@ -530,7 +530,7 @@ pub const TAG_A2B0: u32 = 0x41324230;
 pub const TAG_B2A0: u32 = 0x42324130;
 pub const TAG_CHAD: u32 = 0x63686164;
 
-fn find_tag(mut index: &tag_index, mut tag_id: u32) -> Option<&tag> {
+fn find_tag(index: &tag_index, tag_id: u32) -> Option<&tag> {
     for t in index {
         if t.signature == tag_id {
             return Some(t);
@@ -548,20 +548,16 @@ pub const LUT_MAB_TYPE: u32 = 0x6d414220; // 'mAB '
 pub const LUT_MBA_TYPE: u32 = 0x6d424120; // 'mBA '
 pub const CHROMATIC_TYPE: u32 = 0x73663332; // 'sf32'
 
-fn read_tag_s15Fixed16ArrayType(
-    mut src: &mut mem_source,
-    mut index: &tag_index,
-    mut tag_id: u32,
-) -> Matrix {
-    let mut tag = find_tag(index, tag_id);
+fn read_tag_s15Fixed16ArrayType(src: &mut mem_source, index: &tag_index, tag_id: u32) -> Matrix {
+    let tag = find_tag(index, tag_id);
     let mut matrix: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
     if let Some(tag) = tag {
         let mut i: u8;
-        let mut offset: u32 = tag.offset;
-        let mut type_0: u32 = read_u32(src, offset as usize);
+        let offset: u32 = tag.offset;
+        let type_0: u32 = read_u32(src, offset as usize);
         // Check mandatory type signature for s16Fixed16ArrayType
         if type_0 != CHROMATIC_TYPE {
             invalid_source(src, "unexpected type, expected \'sf32\'");
@@ -580,15 +576,15 @@ fn read_tag_s15Fixed16ArrayType(
     }
     matrix
 }
-fn read_tag_XYZType(mut src: &mut mem_source, mut index: &tag_index, mut tag_id: u32) -> XYZNumber {
+fn read_tag_XYZType(src: &mut mem_source, index: &tag_index, tag_id: u32) -> XYZNumber {
     let mut num: XYZNumber = {
-        let mut init = XYZNumber { X: 0, Y: 0, Z: 0 };
+        let init = XYZNumber { X: 0, Y: 0, Z: 0 };
         init
     };
-    let mut tag = find_tag(&index, tag_id);
+    let tag = find_tag(&index, tag_id);
     if let Some(tag) = tag {
-        let mut offset: u32 = tag.offset;
-        let mut type_0: u32 = read_u32(src, offset as usize);
+        let offset: u32 = tag.offset;
+        let type_0: u32 = read_u32(src, offset as usize);
         if type_0 != XYZ_TYPE {
             invalid_source(src, "unexpected type, expected XYZ");
         }
@@ -603,14 +599,10 @@ fn read_tag_XYZType(mut src: &mut mem_source, mut index: &tag_index, mut tag_id:
 // Read the tag at a given offset rather then the tag_index.
 // This method is used when reading mAB tags where nested curveType are
 // present that are not part of the tag_index.
-fn read_curveType(
-    mut src: &mut mem_source,
-    mut offset: u32,
-    mut len: &mut u32,
-) -> Option<Box<curveType>> {
+fn read_curveType(src: &mut mem_source, offset: u32, len: &mut u32) -> Option<Box<curveType>> {
     const COUNT_TO_LENGTH: [u32; 5] = [1, 3, 4, 5, 7]; //PARAMETRIC_CURVE_TYPE
-    let mut type_0: u32 = read_u32(src, offset as usize);
-    let mut count: u32;
+    let type_0: u32 = read_u32(src, offset as usize);
+    let count: u32;
     if type_0 != CURVE_TYPE && type_0 != PARAMETRIC_CURVE_TYPE {
         invalid_source(src, "unexpected type, expected CURV or PARA");
         return None;
@@ -644,7 +636,7 @@ fn read_curveType(
         *len = 12 + COUNT_TO_LENGTH[count as usize] * 4;
         if count == 1 || count == 2 {
             /* we have a type 1 or type 2 function that has a division by 'a' */
-            let mut a: f32 = params[1];
+            let a: f32 = params[1];
             if a == 0.0 {
                 invalid_source(src, "parametricCurve definition causes division by zero");
             }
@@ -653,11 +645,11 @@ fn read_curveType(
     }
 }
 fn read_tag_curveType(
-    mut src: &mut mem_source,
-    mut index: &tag_index,
-    mut tag_id: u32,
+    src: &mut mem_source,
+    index: &tag_index,
+    tag_id: u32,
 ) -> Option<Box<curveType>> {
-    let mut tag = find_tag(index, tag_id);
+    let tag = find_tag(index, tag_id);
     if let Some(tag) = tag {
         let mut len: u32 = 0;
         return read_curveType(src, tag.offset, &mut len);
@@ -668,10 +660,10 @@ fn read_tag_curveType(
 }
 // arbitrary
 fn read_nested_curveType(
-    mut src: &mut mem_source,
-    mut curveArray: &mut [Option<Box<curveType>>; 10],
-    mut num_channels: u8,
-    mut curve_offset: u32,
+    src: &mut mem_source,
+    curveArray: &mut [Option<Box<curveType>>; 10],
+    num_channels: u8,
+    curve_offset: u32,
 ) {
     let mut channel_offset: u32 = 0;
     let mut i: i32;
@@ -694,18 +686,18 @@ fn read_nested_curveType(
 }
 
 /* See section 10.10 for specs */
-fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutmABType>> {
-    let mut offset: u32 = tag.offset;
+fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType>> {
+    let offset: u32 = tag.offset;
     let mut a_curve_offset: u32;
     let mut b_curve_offset: u32;
     let mut m_curve_offset: u32;
     let mut matrix_offset: u32;
     let mut clut_offset: u32;
     let mut clut_size: u32 = 1;
-    let mut clut_precision: u8;
-    let mut type_0: u32 = read_u32(src, offset as usize);
-    let mut num_in_channels: u8;
-    let mut num_out_channels: u8;
+    let clut_precision: u8;
+    let type_0: u32 = read_u32(src, offset as usize);
+    let num_in_channels: u8;
+    let num_out_channels: u8;
     let mut lut: Box<lutmABType>;
     let mut i: u32;
     if type_0 != LUT_MAB_TYPE && type_0 != LUT_MBA_TYPE {
@@ -837,19 +829,19 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
     }
     Some(lut)
 }
-fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutType>> {
-    let mut offset: u32 = tag.offset;
-    let mut type_0: u32 = read_u32(src, offset as usize);
-    let mut num_input_table_entries: u16;
-    let mut num_output_table_entries: u16;
-    let mut in_chan: u8;
-    let mut grid_points: u8;
-    let mut out_chan: u8;
-    let mut input_offset: u32;
-    let mut clut_offset: u32;
-    let mut output_offset: u32;
-    let mut clut_size: u32;
-    let mut entry_size: usize;
+fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
+    let offset: u32 = tag.offset;
+    let type_0: u32 = read_u32(src, offset as usize);
+    let num_input_table_entries: u16;
+    let num_output_table_entries: u16;
+    let in_chan: u8;
+    let grid_points: u8;
+    let out_chan: u8;
+    let input_offset: u32;
+    let clut_offset: u32;
+    let output_offset: u32;
+    let clut_size: u32;
+    let entry_size: usize;
     if type_0 == LUT8_TYPE {
         num_input_table_entries = 256u16;
         num_output_table_entries = 256u16;
@@ -988,7 +980,7 @@ fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutTy
         output_table,
     }))
 }
-fn read_rendering_intent(mut profile: &mut Profile, mut src: &mut mem_source) {
+fn read_rendering_intent(mut profile: &mut Profile, src: &mut mem_source) {
     let intent = read_u32(src, 64);
     profile.rendering_intent = match intent {
         x if x == QCMS_INTENT_PERCEPTUAL as u32 => QCMS_INTENT_PERCEPTUAL,
@@ -1006,24 +998,24 @@ fn profile_create() -> Box<Profile> {
 }
 /* build sRGB gamma table */
 /* based on cmsBuildParametricGamma() */
-fn build_sRGB_gamma_table(mut num_entries: i32) -> Vec<u16> {
+fn build_sRGB_gamma_table(num_entries: i32) -> Vec<u16> {
     /* taken from lcms: Build_sRGBGamma() */
-    let mut gamma: f64 = 2.4f64;
-    let mut a: f64 = 1.0f64 / 1.055f64;
-    let mut b: f64 = 0.055f64 / 1.055f64;
-    let mut c: f64 = 1.0f64 / 12.92f64;
-    let mut d: f64 = 0.04045f64;
+    let gamma: f64 = 2.4f64;
+    let a: f64 = 1.0f64 / 1.055f64;
+    let b: f64 = 0.055f64 / 1.055f64;
+    let c: f64 = 1.0f64 / 12.92f64;
+    let d: f64 = 0.04045f64;
     let mut table = Vec::with_capacity(num_entries as usize);
 
     for i in 0..num_entries {
-        let mut x: f64 = i as f64 / (num_entries - 1) as f64;
-        let mut y: f64;
+        let x: f64 = i as f64 / (num_entries - 1) as f64;
+        let y: f64;
         let mut output: f64;
         // IEC 61966-2.1 (sRGB)
         // Y = (aX + b)^Gamma | X >= d
         // Y = cX             | X < d
         if x >= d {
-            let mut e: f64 = a * x + b;
+            let e: f64 = a * x + b;
             if e > 0f64 {
                 y = e.powf(gamma)
             } else {
@@ -1044,10 +1036,10 @@ fn build_sRGB_gamma_table(mut num_entries: i32) -> Vec<u16> {
     }
     table
 }
-fn curve_from_table(mut table: &[u16]) -> Box<curveType> {
+fn curve_from_table(table: &[u16]) -> Box<curveType> {
     Box::new(curveType::Curve(table.to_vec()))
 }
-pub fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
+pub fn float_to_u8Fixed8Number(a: f32) -> u16 {
     if a > 255.0 + 255.0 / 256f32 {
         0xffffu16
     } else if a < 0.0 {
@@ -1057,7 +1049,7 @@ pub fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
     }
 }
 
-fn curve_from_gamma(mut gamma: f32) -> Box<curveType> {
+fn curve_from_gamma(gamma: f32) -> Box<curveType> {
     Box::new(curveType::Curve(vec![float_to_u8Fixed8Number(gamma)]))
 }
 
@@ -1066,17 +1058,17 @@ fn curve_from_gamma(mut gamma: f32) -> Box<curveType> {
  * Invalid values of tempK will return
  * (x,y,Y) = (-1.0, -1.0, -1.0)
  * similar to argyll: icx_DTEMP2XYZ() */
-fn white_point_from_temp(mut temp_K: i32) -> qcms_CIE_xyY {
+fn white_point_from_temp(temp_K: i32) -> qcms_CIE_xyY {
     let mut white_point: qcms_CIE_xyY = qcms_CIE_xyY {
         x: 0.,
         y: 0.,
         Y: 0.,
     };
-    let mut x: f64;
-    let mut y: f64;
-    let mut T: f64;
-    let mut T2: f64;
-    let mut T3: f64;
+    let x: f64;
+    let y: f64;
+    let T: f64;
+    let T2: f64;
+    let T3: f64;
     // double M1, M2;
     // No optimization provided.
     T = temp_K as f64; // Square
@@ -1124,8 +1116,8 @@ impl Profile {
     //XXX: should this also be taking a black_point?
     /* similar to CGColorSpaceCreateCalibratedRGB */
     pub fn new_rgb_with_table(
-        mut white_point: qcms_CIE_xyY,
-        mut primaries: qcms_CIE_xyYTRIPLE,
+        white_point: qcms_CIE_xyY,
+        primaries: qcms_CIE_xyYTRIPLE,
         table: &[u16],
     ) -> Option<Box<Profile>> {
         let mut profile = profile_create();
@@ -1184,11 +1176,11 @@ impl Profile {
     }
 
     pub fn new_rgb_with_gamma_set(
-        mut white_point: qcms_CIE_xyY,
-        mut primaries: qcms_CIE_xyYTRIPLE,
-        mut redGamma: f32,
-        mut greenGamma: f32,
-        mut blueGamma: f32,
+        white_point: qcms_CIE_xyY,
+        primaries: qcms_CIE_xyYTRIPLE,
+        redGamma: f32,
+        greenGamma: f32,
+        blueGamma: f32,
     ) -> Option<Box<Profile>> {
         let mut profile = profile_create();
 
@@ -1207,13 +1199,13 @@ impl Profile {
     }
 
     pub fn new_from_slice(mem: &[u8]) -> Option<Box<Profile>> {
-        let mut length: u32;
+        let length: u32;
         let mut source: mem_source = mem_source {
             buf: mem,
             valid: false,
             invalid_reason: None,
         };
-        let mut index;
+        let index;
         source.valid = true;
         let mut src: &mut mem_source = &mut source;
         if mem.len() < 4 {
