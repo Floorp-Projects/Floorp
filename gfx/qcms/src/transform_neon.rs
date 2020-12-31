@@ -11,30 +11,30 @@ static mut clampMaxValue: f32 = CLAMPMAXVAL;
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
-    mut transform: *const qcms_transform,
+    transform: *const qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
     mut length: usize,
 ) {
-    let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
+    let mat: *const [f32; 4] = (*transform).matrix.as_ptr();
     /* deref *transform now to avoid it in loop */
-    let mut igtbl_r: *const f32 = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
-    let mut igtbl_g: *const f32 = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
-    let mut igtbl_b: *const f32 = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
+    let igtbl_r: *const f32 = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
+    let igtbl_g: *const f32 = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
+    let igtbl_b: *const f32 = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
     /* deref *transform now to avoid it in loop */
-    let mut otdata_r: *const u8 = (*transform)
+    let otdata_r: *const u8 = (*transform)
         .output_table_r
         .as_deref()
         .unwrap()
         .data
         .as_ptr();
-    let mut otdata_g: *const u8 = (*transform)
+    let otdata_g: *const u8 = (*transform)
         .output_table_g
         .as_deref()
         .unwrap()
         .data
         .as_ptr();
-    let mut otdata_b: *const u8 = (*transform)
+    let otdata_b: *const u8 = (*transform)
         .output_table_b
         .as_deref()
         .unwrap()
@@ -120,10 +120,10 @@ unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_neon(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_neon::<RGB>(transform, src, dest, length);
 }
@@ -131,10 +131,10 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_neon(
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_neon(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_neon::<RGBA>(transform, src, dest, length);
 }
@@ -143,10 +143,10 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_neon(
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_neon(
-    mut transform: *const qcms_transform,
-    mut src: *const u8,
-    mut dest: *mut u8,
-    mut length: usize,
+    transform: *const qcms_transform,
+    src: *const u8,
+    dest: *mut u8,
+    length: usize,
 ) {
     qcms_transform_data_template_lut_neon::<BGRA>(transform, src, dest, length);
 }

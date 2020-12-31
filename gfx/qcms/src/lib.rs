@@ -2,7 +2,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
-#![allow(unused_mut)]
 #![feature(stdsimd)]
 // These are needed for the neon intrinsics implementation
 // and can be removed once the MSRV is high enough (1.48)
@@ -35,12 +34,12 @@ pub(crate) type s15Fixed16Number = i32;
 /* produces the nearest float to 'a' with a maximum error
  * of 1/1024 which happens for large values like 0x40000040 */
 #[inline]
-fn s15Fixed16Number_to_float(mut a: s15Fixed16Number) -> f32 {
+fn s15Fixed16Number_to_float(a: s15Fixed16Number) -> f32 {
     a as f32 / 65536.0
 }
 
 #[inline]
-fn double_to_s15Fixed16Number(mut v: f64) -> s15Fixed16Number {
+fn double_to_s15Fixed16Number(v: f64) -> s15Fixed16Number {
     (v * 65536f64) as i32
 }
 

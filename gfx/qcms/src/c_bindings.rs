@@ -24,11 +24,11 @@ pub extern "C" fn qcms_profile_sRGB() -> *mut Profile {
 /* similar to CGColorSpaceCreateCalibratedRGB */
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
-    mut redGamma: f32,
-    mut greenGamma: f32,
-    mut blueGamma: f32,
+    white_point: qcms_CIE_xyY,
+    primaries: qcms_CIE_xyYTRIPLE,
+    redGamma: f32,
+    greenGamma: f32,
+    blueGamma: f32,
 ) -> *mut Profile {
     let profile =
         Profile::new_rgb_with_gamma_set(white_point, primaries, redGamma, greenGamma, blueGamma);
@@ -39,26 +39,26 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(mut gamma: f32) -> *mut Profile {
+pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(gamma: f32) -> *mut Profile {
     let profile = Profile::new_gray_with_gamma(gamma);
     Box::into_raw(profile)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma(
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
-    mut gamma: f32,
+    white_point: qcms_CIE_xyY,
+    primaries: qcms_CIE_xyYTRIPLE,
+    gamma: f32,
 ) -> *mut Profile {
     qcms_profile_create_rgb_with_gamma_set(white_point, primaries, gamma, gamma, gamma)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
-    mut table: *const u16,
-    mut num_entries: i32,
+    white_point: qcms_CIE_xyY,
+    primaries: qcms_CIE_xyYTRIPLE,
+    table: *const u16,
+    num_entries: i32,
 ) -> *mut Profile {
     let table = slice::from_raw_parts(table, num_entries as usize);
     let profile = Profile::new_rgb_with_table(white_point, primaries, table);
@@ -71,8 +71,8 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
 /* qcms_profile_from_memory does not hold a reference to the memory passed in */
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_from_memory(
-    mut mem: *const libc::c_void,
-    mut size: usize,
+    mem: *const libc::c_void,
+    size: usize,
 ) -> *mut Profile {
     let mem = slice::from_raw_parts(mem as *const libc::c_uchar, size);
     let profile = Profile::new_from_slice(mem);
@@ -92,19 +92,19 @@ pub extern "C" fn qcms_profile_get_color_space(profile: &Profile) -> icColorSpac
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_release(mut profile: *mut Profile) {
+pub unsafe extern "C" fn qcms_profile_release(profile: *mut Profile) {
     drop(Box::from_raw(profile));
 }
 unsafe extern "C" fn qcms_data_from_file(
-    mut file: *mut FILE,
-    mut mem: *mut *mut libc::c_void,
-    mut size: *mut usize,
+    file: *mut FILE,
+    mem: *mut *mut libc::c_void,
+    size: *mut usize,
 ) {
-    let mut length: u32;
-    let mut remaining_length: u32;
-    let mut read_length: usize;
+    let length: u32;
+    let remaining_length: u32;
+    let read_length: usize;
     let mut length_be: be32 = 0;
-    let mut data: *mut libc::c_void;
+    let data: *mut libc::c_void;
     *mem = std::ptr::null_mut::<libc::c_void>();
     *size = 0;
     if fread(
@@ -148,9 +148,9 @@ unsafe extern "C" fn qcms_data_from_file(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_from_file(mut file: *mut FILE) -> *mut Profile {
+pub unsafe extern "C" fn qcms_profile_from_file(file: *mut FILE) -> *mut Profile {
     let mut length: usize = 0;
-    let mut profile: *mut Profile;
+    let profile: *mut Profile;
     let mut data: *mut libc::c_void = std::ptr::null_mut::<libc::c_void>();
     qcms_data_from_file(file, &mut data, &mut length);
     if data.is_null() || length == 0 {
@@ -161,9 +161,9 @@ pub unsafe extern "C" fn qcms_profile_from_file(mut file: *mut FILE) -> *mut Pro
     profile
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_from_path(mut path: *const libc::c_char) -> *mut Profile {
+pub unsafe extern "C" fn qcms_profile_from_path(path: *const libc::c_char) -> *mut Profile {
     let mut profile: *mut Profile = std::ptr::null_mut::<Profile>();
-    let mut file = fopen(path, b"rb\x00" as *const u8 as *const libc::c_char);
+    let file = fopen(path, b"rb\x00" as *const u8 as *const libc::c_char);
     if !file.is_null() {
         profile = qcms_profile_from_file(file);
         fclose(file);
@@ -172,9 +172,9 @@ pub unsafe extern "C" fn qcms_profile_from_path(mut path: *const libc::c_char) -
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_data_from_path(
-    mut path: *const libc::c_char,
-    mut mem: *mut *mut libc::c_void,
-    mut size: *mut usize,
+    path: *const libc::c_char,
+    mem: *mut *mut libc::c_void,
+    size: *mut usize,
 ) {
     *mem = std::ptr::null_mut::<libc::c_void>();
     *size = 0;
@@ -192,8 +192,8 @@ extern "C" {
 
 #[cfg(windows)]
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_from_unicode_path(mut path: *const libc::wchar_t) {
-    let mut file = _wfopen(path, ['r' as u16, 'b' as u16, '\0' as u16].as_ptr());
+pub unsafe extern "C" fn qcms_profile_from_unicode_path(path: *const libc::wchar_t) {
+    let file = _wfopen(path, ['r' as u16, 'b' as u16, '\0' as u16].as_ptr());
     if !file.is_null() {
         qcms_profile_from_file(file);
         fclose(file);
@@ -203,13 +203,13 @@ pub unsafe extern "C" fn qcms_profile_from_unicode_path(mut path: *const libc::w
 #[cfg(windows)]
 #[no_mangle]
 pub unsafe extern "C" fn qcms_data_from_unicode_path(
-    mut path: *const libc::wchar_t,
-    mut mem: *mut *mut libc::c_void,
-    mut size: *mut usize,
+    path: *const libc::wchar_t,
+    mem: *mut *mut libc::c_void,
+    size: *mut usize,
 ) {
     *mem = 0 as *mut libc::c_void;
     *size = 0;
-    let mut file = _wfopen(path, ['r' as u16, 'b' as u16, '\0' as u16].as_ptr());
+    let file = _wfopen(path, ['r' as u16, 'b' as u16, '\0' as u16].as_ptr());
     if !file.is_null() {
         qcms_data_from_file(file, mem, size);
         fclose(file);
@@ -218,11 +218,11 @@ pub unsafe extern "C" fn qcms_data_from_unicode_path(
 
 #[no_mangle]
 pub extern "C" fn qcms_transform_create(
-    mut in_0: &Profile,
-    mut in_type: qcms_data_type,
-    mut out: &Profile,
-    mut out_type: qcms_data_type,
-    mut intent: Intent,
+    in_0: &Profile,
+    in_type: qcms_data_type,
+    out: &Profile,
+    out_type: qcms_data_type,
+    intent: Intent,
 ) -> *mut qcms_transform {
     let transform = transform_create(in_0, in_type, out, out_type, intent);
     match transform {
@@ -233,25 +233,25 @@ pub extern "C" fn qcms_transform_create(
 
 #[no_mangle]
 pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
-    mut gamma: f32,
-    mut mem: *mut *mut libc::c_void,
-    mut size: *mut usize,
+    white_point: qcms_CIE_xyY,
+    primaries: qcms_CIE_xyYTRIPLE,
+    gamma: f32,
+    mem: *mut *mut libc::c_void,
+    size: *mut usize,
 ) {
-    let mut length: u32;
+    let length: u32;
     let mut index: u32;
-    let mut xyz_count: u32;
-    let mut trc_count: u32;
+    let xyz_count: u32;
+    let trc_count: u32;
     let mut tag_table_offset: usize;
     let mut tag_data_offset: usize;
-    let mut data: *mut libc::c_void;
+    let data: *mut libc::c_void;
     let mut colorants: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
-    let mut TAG_XYZ: [u32; 3] = [TAG_rXYZ, TAG_gXYZ, TAG_bXYZ];
-    let mut TAG_TRC: [u32; 3] = [TAG_rTRC, TAG_gTRC, TAG_bTRC];
+    let TAG_XYZ: [u32; 3] = [TAG_rXYZ, TAG_gXYZ, TAG_bXYZ];
+    let TAG_TRC: [u32; 3] = [TAG_rTRC, TAG_gTRC, TAG_bTRC];
     if mem.is_null() || size.is_null() {
         return;
     }
@@ -344,10 +344,10 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
 
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data(
-    mut transform: &qcms_transform,
-    mut src: *const libc::c_void,
-    mut dest: *mut libc::c_void,
-    mut length: usize,
+    transform: &qcms_transform,
+    src: *const libc::c_void,
+    dest: *mut libc::c_void,
+    length: usize,
 ) {
     transform.transform_fn.expect("non-null function pointer")(
         transform,
