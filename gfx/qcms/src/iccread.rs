@@ -29,7 +29,7 @@ use std::{
 use crate::transform::{precache_output, set_rgb_colorants};
 use crate::{matrix::Matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent, Intent::*};
 
-pub static SUPPORTS_ICCV4: AtomicBool = AtomicBool::new(false);
+pub static SUPPORTS_ICCV4: AtomicBool = AtomicBool::new(cfg!(feature = "iccv4-enabled"));
 
 pub type icColorSpaceSignature = u32;
 pub const icMaxEnumData: icColorSpaceSignature = 4294967295;

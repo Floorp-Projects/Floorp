@@ -13,6 +13,7 @@ categories = ["graphics"]
 [features]
 default = ["c_bindings"]
 c_bindings = ["libc"]
+iccv4-enabled = []
 
 [dependencies]
 libc = {version = "0.2", optional = true }
