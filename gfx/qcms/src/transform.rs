@@ -29,7 +29,7 @@ use crate::transform_neon::{
 use crate::{
     chain::chain_transform,
     double_to_s15Fixed16Number,
-    iccread::qcms_supports_iccv4,
+    iccread::SUPPORTS_ICCV4,
     matrix::*,
     transform_util::{
         build_colorant_matrix, build_input_gamma_table, build_output_lut, compute_precache,
@@ -1054,7 +1054,7 @@ pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut Profi
     if profile.color_space != RGB_SIGNATURE {
         return;
     }
-    if qcms_supports_iccv4.load(Ordering::Relaxed) {
+    if SUPPORTS_ICCV4.load(Ordering::Relaxed) {
         /* don't precache since we will use the B2A LUT */
         if profile.B2A0.is_some() {
             return;
@@ -1165,7 +1165,7 @@ pub fn transform_create(
         precache = true
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
-    if qcms_supports_iccv4.load(Ordering::Relaxed) as i32 != 0
+    if SUPPORTS_ICCV4.load(Ordering::Relaxed) as i32 != 0
         && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
         && (in_0.A2B0.is_some() || out.B2A0.is_some() || in_0.mAB.is_some() || out.mAB.is_some())
     {
@@ -1366,5 +1366,5 @@ impl Transform {
 
 #[no_mangle]
 pub extern "C" fn qcms_enable_iccv4() {
-    qcms_supports_iccv4.store(true, Ordering::Relaxed);
+    SUPPORTS_ICCV4.store(true, Ordering::Relaxed);
 }
