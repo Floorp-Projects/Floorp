@@ -427,10 +427,6 @@ mod gtest {
 
         // Sample every blue pixel value with a subset of red and green.
         let mut color = &mut outBuffer[..];
-        let mut i = 0;
-        let mut r_count = 0;
-        let mut g_count = 0;
-        let mut b_count = 0;
         for &r in colorSamples.iter() {
             for &g in colorSamples.iter() {
                 for b in 0..=255u16 {
@@ -440,13 +436,9 @@ mod gtest {
                     if kHasAlpha {
                         color[kAIndex] = 0x80;
                     }
-                    i += pixelSize;
                     color = &mut color[pixelSize..];
-                    b_count += 1;
                 }
-                g_count += 1;
             }
-            r_count += 1;
         }
 
         (pixelCount, outBuffer)

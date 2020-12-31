@@ -17,16 +17,6 @@ unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
     mut length: usize,
 ) {
     let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
-    let mut input_back: [u8; 32] = [0; 32];
-    /* Ensure we have a buffer that's 16 byte aligned regardless of the original
-     * stack alignment. We can't use __attribute__((aligned(16))) or __declspec(align(32))
-     * because they don't work on stack variables. gcc 4.4 does do the right thing
-     * on x86 but that's too new for us right now. For more info: gcc bug #16660 */
-    let mut input: *const f32 = (&mut *input_back.as_mut_ptr().offset(16isize) as *mut u8 as usize
-        & !(0xf) as usize) as *mut f32;
-    /* share input and output locations to save having to keep the
-     * locations in separate registers */
-    let mut output: *const u32 = input as *mut u32;
     /* deref *transform now to avoid it in loop */
     let mut igtbl_r: *const f32 = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
     let mut igtbl_g: *const f32 = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
