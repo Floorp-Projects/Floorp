@@ -191,12 +191,12 @@ struct mem_source<'a> {
 pub type uInt8Number = u8;
 #[inline]
 fn uInt8Number_to_float(a: uInt8Number) -> f32 {
-    a as i32 as f32 / 255.0
+    a as f32 / 255.0
 }
 
 #[inline]
 fn uInt16Number_to_float(a: uInt16Number) -> f32 {
-    a as i32 as f32 / 65535.0
+    a as f32 / 65535.0
 }
 
 fn cpu_to_be32(v: u32) -> be32 {
@@ -295,7 +295,7 @@ fn check_profile_version(src: &mut mem_source) {
             invalid_source(src, "Unsupported minor revision");
     }
     */
-    if reserved1 as i32 != 0 || reserved2 as i32 != 0 {
+    if reserved1 != 0 || reserved2 != 0 {
         invalid_source(src, "Invalid reserved bytes");
     };
 }
@@ -555,19 +555,16 @@ fn read_tag_s15Fixed16ArrayType(src: &mut mem_source, index: &tag_index, tag_id:
         invalid: false,
     };
     if let Some(tag) = tag {
-        let mut i: u8;
         let offset: u32 = tag.offset;
         let type_0: u32 = read_u32(src, offset as usize);
         // Check mandatory type signature for s16Fixed16ArrayType
         if type_0 != CHROMATIC_TYPE {
             invalid_source(src, "unexpected type, expected \'sf32\'");
         }
-        i = 0u8;
-        while (i as i32) < 9 {
-            matrix.m[(i as i32 / 3) as usize][(i as i32 % 3) as usize] = s15Fixed16Number_to_float(
-                read_s15Fixed16Number(src, (offset + 8 + (i as i32 * 4) as u32) as usize),
+        for i in 0..=8 {
+            matrix.m[(i / 3) as usize][(i % 3) as usize] = s15Fixed16Number_to_float(
+                read_s15Fixed16Number(src, (offset + 8 + (i * 4) as u32) as usize),
             );
-            i += 1
         }
         matrix.invalid = false
     } else {
@@ -705,14 +702,14 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
     }
     num_in_channels = read_u8(src, (offset + 8) as usize);
     num_out_channels = read_u8(src, (offset + 9) as usize);
-    if num_in_channels as i32 > 10 || num_out_channels as i32 > 10 {
+    if num_in_channels > 10 || num_out_channels > 10 {
         return None;
     }
     // We require 3in/out channels since we only support RGB->XYZ (or RGB->LAB)
     // XXX: If we remove this restriction make sure that the number of channels
     //      is less or equal to the maximum number of mAB curves in qcmsint.h
     //      also check for clut_size overflow. Also make sure it's != 0
-    if num_in_channels as i32 != 3 || num_out_channels as i32 != 3 {
+    if num_in_channels != 3 || num_out_channels != 3 {
         return None;
     }
     // some of this data is optional and is denoted by a zero offset
@@ -740,7 +737,7 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
         b_curve_offset += offset
     }
     if clut_offset != 0 {
-        debug_assert!(num_in_channels as i32 == 3);
+        debug_assert!(num_in_channels == 3);
         // clut_size can not overflow since lg(256^num_in_channels) = 24 bits.
         i = 0;
         while i < num_in_channels as u32 {
@@ -765,7 +762,7 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
         i = 0;
         while i < num_in_channels as u32 {
             lut.num_grid_points[i as usize] = read_u8(src, (clut_offset + i) as usize);
-            if lut.num_grid_points[i as usize] as i32 == 0 {
+            if lut.num_grid_points[i as usize] == 0 {
                 invalid_source(src, "bad grid_points");
             }
             i += 1
@@ -804,7 +801,7 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
     if clut_offset != 0 {
         clut_precision = read_u8(src, (clut_offset + 16) as usize);
         let mut clut_table = Vec::with_capacity(clut_size as usize);
-        if clut_precision as i32 == 1 {
+        if clut_precision == 1 {
             for i in 0..clut_size {
                 clut_table.push(uInt8Number_to_float(read_uInt8Number(
                     src,
@@ -812,7 +809,7 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
                 )));
             }
             lut.clut_table = Some(clut_table);
-        } else if clut_precision as i32 == 2 {
+        } else if clut_precision == 2 {
             for i in 0..clut_size {
                 clut_table.push(uInt16Number_to_float(read_uInt16Number(
                     src,
@@ -879,7 +876,7 @@ fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
         invalid_source(src, "CLUT must not be empty.");
         return None;
     }
-    if in_chan as i32 != 3 || out_chan as i32 != 3 {
+    if in_chan != 3 || out_chan != 3 {
         invalid_source(src, "CLUT only supports RGB");
         return None;
     }
