@@ -1113,9 +1113,9 @@ fn transform_precacheLUT_float(
     for x in 0..samples {
         for y in 0..samples {
             for z in 0..samples {
-                src.push(x as i32 as f32 / (samples - 1) as f32);
-                src.push(y as i32 as f32 / (samples - 1) as f32);
-                src.push(z as i32 as f32 / (samples - 1) as f32);
+                src.push(x as f32 / (samples - 1) as f32);
+                src.push(y as f32 / (samples - 1) as f32);
+                src.push(z as f32 / (samples - 1) as f32);
             }
         }
     }
@@ -1165,7 +1165,7 @@ pub fn transform_create(
         precache = true
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
-    if SUPPORTS_ICCV4.load(Ordering::Relaxed) as i32 != 0
+    if SUPPORTS_ICCV4.load(Ordering::Relaxed)
         && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
         && (in_0.A2B0.is_some() || out.B2A0.is_some() || in_0.mAB.is_some() || out.mAB.is_some())
     {

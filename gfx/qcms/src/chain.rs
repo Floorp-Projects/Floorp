@@ -723,8 +723,8 @@ fn modular_transform_create_input(in_0: &Profile) -> Option<Box<qcms_modular_tra
             append_transform(lut_transform, next_transform);
         }
     } else if in_0.mAB.is_some()
-        && (*in_0.mAB.as_deref().unwrap()).num_in_channels as i32 == 3
-        && (*in_0.mAB.as_deref().unwrap()).num_out_channels as i32 == 3
+        && (*in_0.mAB.as_deref().unwrap()).num_in_channels == 3
+        && (*in_0.mAB.as_deref().unwrap()).num_out_channels == 3
     {
         let mAB_transform = modular_transform_create_mAB(in_0.mAB.as_deref().unwrap());
         if mAB_transform.is_none() {
@@ -794,8 +794,8 @@ fn modular_transform_create_output(out: &Profile) -> Option<Box<qcms_modular_tra
             append_transform(lut_transform, next_transform);
         }
     } else if out.mBA.is_some()
-        && (*out.mBA.as_deref().unwrap()).num_in_channels as i32 == 3
-        && (*out.mBA.as_deref().unwrap()).num_out_channels as i32 == 3
+        && (*out.mBA.as_deref().unwrap()).num_in_channels == 3
+        && (*out.mBA.as_deref().unwrap()).num_out_channels == 3
     {
         let lut_transform_0 = modular_transform_create_mAB(out.mBA.as_deref().unwrap());
         if lut_transform_0.is_none() {
