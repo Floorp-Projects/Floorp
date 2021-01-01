@@ -387,7 +387,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">ログイン情報</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs_2">タブを開く</string>
+    <string name="preferences_sync_tabs_2">開いているタブ</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">ログアウト</string>
     <!-- Preference displays and allows changing current FxA device name -->
