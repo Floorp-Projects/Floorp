@@ -186,6 +186,18 @@ class Canvas2dPixelsReporter final : public nsIMemoryReporter {
 
 NS_IMPL_ISUPPORTS(Canvas2dPixelsReporter, nsIMemoryReporter)
 
+class CanvasConicGradient : public CanvasGradient {
+ public:
+  CanvasConicGradient(CanvasRenderingContext2D* aContext, Float aAngle,
+                      const Point& aCenter)
+      : CanvasGradient(aContext, Type::CONIC),
+        mAngle(aAngle),
+        mCenter(aCenter) {}
+
+  const Float mAngle;
+  const Point mCenter;
+};
+
 class CanvasRadialGradient : public CanvasGradient {
  public:
   CanvasRadialGradient(CanvasRenderingContext2D* aContext,
@@ -279,6 +291,15 @@ class CanvasGeneralPattern {
       mPattern.InitRadialGradientPattern(
           gradient->mCenter1, gradient->mCenter2, gradient->mRadius1,
           gradient->mRadius2, gradient->GetGradientStopsForTarget(aRT));
+    } else if (state.gradientStyles[aStyle] &&
+               state.gradientStyles[aStyle]->GetType() ==
+                   CanvasGradient::Type::CONIC) {
+      auto gradient =
+          static_cast<CanvasConicGradient*>(state.gradientStyles[aStyle].get());
+
+      mPattern.InitConicGradientPattern(
+          gradient->mCenter, gradient->mAngle, 0, 1,
+          gradient->GetGradientStopsForTarget(aRT));
     } else if (state.patternStyles[aStyle]) {
       if (aCtx->mCanvasElement) {
         CanvasUtils::DoDrawImageSecurityCheck(
@@ -2064,6 +2085,11 @@ already_AddRefed<CanvasGradient> CanvasRenderingContext2D::CreateRadialGradient(
   return grad.forget();
 }
 
+already_AddRefed<CanvasGradient> CanvasRenderingContext2D::CreateConicGradient(
+    double aAngle, double aCx, double aCy) {
+  return MakeAndAddRef<CanvasConicGradient>(this, aAngle, Point(aCx, aCy));
+}
+
 already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
     const CanvasImageSource& aSource, const nsAString& aRepeat,
     ErrorResult& aError) {
@@ -3526,6 +3552,12 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
     CanvasGradient::Type type = gradient->GetType();
 
     switch (type) {
+      case CanvasGradient::Type::CONIC: {
+        auto conic = static_cast<CanvasConicGradient*>(gradient);
+        pattern = new gfxPattern(conic->mCenter.x, conic->mCenter.y,
+                                 conic->mAngle, 0, 1);
+        break;
+      }
       case CanvasGradient::Type::RADIAL: {
         auto radial = static_cast<CanvasRadialGradient*>(gradient);
         pattern = new gfxPattern(radial->mCenter1.x, radial->mCenter1.y,
@@ -3540,7 +3572,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
         break;
       }
       default:
-        MOZ_ASSERT(false, "Should be linear or radial gradient.");
+        MOZ_ASSERT(false, "Should be linear, radial or conic gradient.");
         return nullptr;
     }
 

@@ -22,7 +22,7 @@ class CanvasGradient : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasGradient)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasGradient)
 
-  enum class Type : uint8_t { LINEAR = 0, RADIAL };
+  enum class Type : uint8_t { LINEAR = 0, RADIAL, CONIC };
 
   Type GetType() { return mType; }
 
