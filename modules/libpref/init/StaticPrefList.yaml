@@ -1199,6 +1199,12 @@
   value: false
   mirror: always
 
+# Is support for CanvasRenderingContext2D's createConicGradient API enabled?
+- name: canvas.createConicGradient.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Provide ability to turn on support for canvas mozGetAsFile API.
 - name: canvas.mozgetasfile.enabled
   type: bool

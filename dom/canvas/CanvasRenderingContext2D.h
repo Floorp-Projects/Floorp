@@ -155,6 +155,9 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   already_AddRefed<CanvasGradient> CreateRadialGradient(
       double aX0, double aY0, double aR0, double aX1, double aY1, double aR1,
       ErrorResult& aError) override;
+  already_AddRefed<CanvasGradient> CreateConicGradient(double aAngle,
+                                                       double aCx,
+                                                       double aCy) override;
   already_AddRefed<CanvasPattern> CreatePattern(
       const CanvasImageSource& aElement, const nsAString& aRepeat,
       ErrorResult& aError) override;
