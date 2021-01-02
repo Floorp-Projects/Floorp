@@ -1099,8 +1099,8 @@ pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut Profi
 /* Replace the current transformation with a LUT transformation using a given number of sample points */
 fn transform_precacheLUT_float(
     mut transform: Box<qcms_transform>,
-    in_0: &Profile,
-    out: &Profile,
+    input: &Profile,
+    output: &Profile,
     samples: i32,
     in_type: qcms_data_type,
 ) -> Option<Box<qcms_transform>> {
@@ -1119,7 +1119,7 @@ fn transform_precacheLUT_float(
             }
         }
     }
-    let lut = chain_transform(in_0, out, src, dest, lutSize as usize);
+    let lut = chain_transform(input, output, src, dest, lutSize as usize);
     if let Some(lut) = lut {
         (*transform).clut = Some(lut);
         (*transform).grid_size = samples as u16;
@@ -1139,9 +1139,9 @@ fn transform_precacheLUT_float(
 }
 
 pub fn transform_create(
-    in_0: &Profile,
+    input: &Profile,
     in_type: qcms_data_type,
-    out: &Profile,
+    output: &Profile,
     out_type: qcms_data_type,
     _intent: Intent,
 ) -> Option<Box<qcms_transform>> {
@@ -1160,35 +1160,35 @@ pub fn transform_create(
     }
     let mut transform: Box<qcms_transform> = Box::new(Default::default());
     let mut precache: bool = false;
-    if out.output_table_r.is_some() && out.output_table_g.is_some() && out.output_table_b.is_some()
+    if output.output_table_r.is_some() && output.output_table_g.is_some() && output.output_table_b.is_some()
     {
         precache = true
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
     if SUPPORTS_ICCV4.load(Ordering::Relaxed)
         && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
-        && (in_0.A2B0.is_some() || out.B2A0.is_some() || in_0.mAB.is_some() || out.mAB.is_some())
+        && (input.A2B0.is_some() || output.B2A0.is_some() || input.mAB.is_some() || output.mAB.is_some())
     {
         // Precache the transformation to a CLUT 33x33x33 in size.
         // 33 is used by many profiles and works well in pratice.
         // This evenly divides 256 into blocks of 8x8x8.
         // TODO For transforming small data sets of about 200x200 or less
         // precaching should be avoided.
-        let result = transform_precacheLUT_float(transform, in_0, out, 33, in_type);
+        let result = transform_precacheLUT_float(transform, input, output, 33, in_type);
         debug_assert!(result.is_some(), "precacheLUT failed");
         return result;
     }
     if precache {
-        transform.output_table_r = Some(Arc::clone(out.output_table_r.as_ref().unwrap()));
-        transform.output_table_g = Some(Arc::clone(out.output_table_g.as_ref().unwrap()));
-        transform.output_table_b = Some(Arc::clone(out.output_table_b.as_ref().unwrap()));
+        transform.output_table_r = Some(Arc::clone(output.output_table_r.as_ref().unwrap()));
+        transform.output_table_g = Some(Arc::clone(output.output_table_g.as_ref().unwrap()));
+        transform.output_table_b = Some(Arc::clone(output.output_table_b.as_ref().unwrap()));
     } else {
-        if out.redTRC.is_none() || out.greenTRC.is_none() || out.blueTRC.is_none() {
+        if output.redTRC.is_none() || output.greenTRC.is_none() || output.blueTRC.is_none() {
             return None;
         }
-        transform.output_gamma_lut_r = Some(build_output_lut(out.redTRC.as_deref().unwrap()));
-        transform.output_gamma_lut_g = Some(build_output_lut(out.greenTRC.as_deref().unwrap()));
-        transform.output_gamma_lut_b = Some(build_output_lut(out.blueTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_r = Some(build_output_lut(output.redTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_g = Some(build_output_lut(output.greenTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_b = Some(build_output_lut(output.blueTRC.as_deref().unwrap()));
 
         if transform.output_gamma_lut_r.is_none()
             || transform.output_gamma_lut_g.is_none()
@@ -1197,7 +1197,7 @@ pub fn transform_create(
             return None;
         }
     }
-    if in_0.color_space == RGB_SIGNATURE {
+    if input.color_space == RGB_SIGNATURE {
         if precache {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             if is_x86_feature_detected!("avx") {
@@ -1251,9 +1251,9 @@ pub fn transform_create(
             transform.transform_fn = Some(qcms_transform_data_bgra_out_lut)
         }
         //XXX: avoid duplicating tables if we can
-        transform.input_gamma_table_r = build_input_gamma_table(in_0.redTRC.as_deref());
-        transform.input_gamma_table_g = build_input_gamma_table(in_0.greenTRC.as_deref());
-        transform.input_gamma_table_b = build_input_gamma_table(in_0.blueTRC.as_deref());
+        transform.input_gamma_table_r = build_input_gamma_table(input.redTRC.as_deref());
+        transform.input_gamma_table_g = build_input_gamma_table(input.greenTRC.as_deref());
+        transform.input_gamma_table_b = build_input_gamma_table(input.blueTRC.as_deref());
         if transform.input_gamma_table_r.is_none()
             || transform.input_gamma_table_g.is_none()
             || transform.input_gamma_table_b.is_none()
@@ -1262,8 +1262,8 @@ pub fn transform_create(
         }
         /* build combined colorant matrix */
 
-        let in_matrix: Matrix = build_colorant_matrix(in_0);
-        let mut out_matrix: Matrix = build_colorant_matrix(out);
+        let in_matrix: Matrix = build_colorant_matrix(input);
+        let mut out_matrix: Matrix = build_colorant_matrix(output);
         out_matrix = matrix_invert(out_matrix);
         if out_matrix.invalid {
             return None;
@@ -1292,8 +1292,8 @@ pub fn transform_create(
         transform.matrix[0][2] = result_0.m[2][0];
         transform.matrix[1][2] = result_0.m[2][1];
         transform.matrix[2][2] = result_0.m[2][2]
-    } else if in_0.color_space == GRAY_SIGNATURE {
-        transform.input_gamma_table_gray = build_input_gamma_table(in_0.grayTRC.as_deref());
+    } else if input.color_space == GRAY_SIGNATURE {
+        transform.input_gamma_table_gray = build_input_gamma_table(input.grayTRC.as_deref());
         transform.input_gamma_table_gray.as_ref()?;
         if precache {
             if out_type == DATA_RGB_8 {
