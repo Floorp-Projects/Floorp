@@ -13,7 +13,8 @@ from recommonmark.transform import AutoStructify
 OUR_DIR = os.path.dirname(__file__)
 topsrcdir = os.path.normpath(os.path.join(OUR_DIR, ".."))
 
-copybutton_prompt_text = ">>> |\\\\$ |\\[\\d*\\]: |\\.\\.\\.: "
+# Escapes $, [, ] and 3 dots in copy button
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
 copybutton_prompt_is_regexp = True
 
 EXTRA_PATHS = (
