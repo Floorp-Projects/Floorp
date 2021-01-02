@@ -25,7 +25,7 @@ use crate::{
     iccread::RGB_SIGNATURE,
     iccread::XYZ_SIGNATURE,
     iccread::{lutType, lutmABType, Profile},
-    matrix::{matrix_invert, Matrix},
+    matrix::Matrix,
     s15Fixed16Number_to_float,
     transform_util::clamp_float,
     transform_util::{
@@ -808,7 +808,7 @@ fn modular_transform_create_output(out: &Profile) -> Option<Box<qcms_modular_tra
         if transform.is_none() {
             return None;
         } else {
-            transform.as_mut().unwrap().matrix = matrix_invert(build_colorant_matrix(out));
+            transform.as_mut().unwrap().matrix = build_colorant_matrix(out).invert();
             transform.as_mut().unwrap().transform_module_fn = Some(transform_module_matrix);
             next_transform = append_transform(transform, next_transform);
             transform = modular_transform_alloc();

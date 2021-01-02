@@ -232,7 +232,7 @@ fn build_RGB_to_XYZ_transfer_matrix(white: qcms_CIE_xyY, primrs: qcms_CIE_xyYTRI
     let xn: f64 = white.x;
     let yn: f64 = white.y;
     if yn == 0.0f64 {
-        return matrix_invalid();
+        return Matrix::invalid();
     }
 
     let xr: f64 = primrs.red.x;
@@ -254,11 +254,11 @@ fn build_RGB_to_XYZ_transfer_matrix(white: qcms_CIE_xyY, primrs: qcms_CIE_xyYTRI
     white_point.v[0] = (xn / yn) as f32;
     white_point.v[1] = 1.;
     white_point.v[2] = ((1.0f64 - xn - yn) / yn) as f32;
-    let primaries_invert: Matrix = matrix_invert(primaries);
+    let primaries_invert: Matrix = primaries.invert();
     if primaries_invert.invalid {
-        return matrix_invalid();
+        return Matrix::invalid();
     }
-    let coefs: Vector = matrix_eval(primaries_invert, white_point);
+    let coefs: Vector = primaries_invert.eval(white_point);
     result.m[0][0] = (coefs.v[0] as f64 * xr) as f32;
     result.m[0][1] = (coefs.v[1] as f64 * xg) as f32;
     result.m[0][2] = (coefs.v[2] as f64 * xb) as f32;
@@ -307,9 +307,9 @@ fn compute_chromatic_adaption(
     };
 
     let tmp: Matrix = chad;
-    let chad_inv: Matrix = matrix_invert(tmp);
+    let chad_inv: Matrix = tmp.invert();
     if chad_inv.invalid {
-        return matrix_invalid();
+        return Matrix::invalid();
     }
     cone_source_XYZ.v[0] = source_white_point.X as f32;
     cone_source_XYZ.v[1] = source_white_point.Y as f32;
@@ -318,8 +318,8 @@ fn compute_chromatic_adaption(
     cone_dest_XYZ.v[1] = dest_white_point.Y as f32;
     cone_dest_XYZ.v[2] = dest_white_point.Z as f32;
 
-    let cone_source_rgb: Vector = matrix_eval(chad, cone_source_XYZ);
-    let cone_dest_rgb: Vector = matrix_eval(chad, cone_dest_XYZ);
+    let cone_source_rgb: Vector = chad.eval(cone_source_XYZ);
+    let cone_dest_rgb: Vector = chad.eval(cone_dest_XYZ);
     cone.m[0][0] = cone_dest_rgb.v[0] / cone_source_rgb.v[0];
     cone.m[0][1] = 0.;
     cone.m[0][2] = 0.;
@@ -331,7 +331,7 @@ fn compute_chromatic_adaption(
     cone.m[2][2] = cone_dest_rgb.v[2] / cone_source_rgb.v[2];
     cone.invalid = false;
     // Normalize
-    matrix_multiply(chad_inv, matrix_multiply(cone, chad))
+    Matrix::multiply(chad_inv, Matrix::multiply(cone, chad))
 }
 /* from lcms: cmsAdaptionMatrix */
 // Returns the final chrmatic adaptation from illuminant FromIll to Illuminant ToIll
@@ -353,15 +353,15 @@ fn adaption_matrix(source_illumination: CIE_XYZ, target_illumination: CIE_XYZ) -
 /* from lcms: cmsAdaptMatrixToD50 */
 fn adapt_matrix_to_D50(r: Matrix, source_white_pt: qcms_CIE_xyY) -> Matrix {
     if source_white_pt.y == 0.0f64 {
-        return matrix_invalid();
+        return Matrix::invalid();
     }
 
     let Dn: CIE_XYZ = xyY2XYZ(source_white_pt);
     let Bradford: Matrix = adaption_matrix(Dn, D50_XYZ);
     if Bradford.invalid {
-        return matrix_invalid();
+        return Matrix::invalid();
     }
-    matrix_multiply(Bradford, r)
+    Matrix::multiply(Bradford, r)
 }
 pub(crate) fn set_rgb_colorants(
     mut profile: &mut Profile,
@@ -1043,9 +1043,9 @@ fn compute_whitepoint_adaption(X: f32, Y: f32, Z: f32) -> Matrix {
         m: [[p, 0., 0.], [0., y, 0.], [0., 0., b]],
         invalid: false,
     };
-    matrix_multiply(
+    Matrix::multiply(
         bradford_matrix_inv,
-        matrix_multiply(white_adaption, bradford_matrix),
+        Matrix::multiply(white_adaption, bradford_matrix),
     )
 }
 #[no_mangle]
@@ -1264,11 +1264,11 @@ pub fn transform_create(
 
         let in_matrix: Matrix = build_colorant_matrix(input);
         let mut out_matrix: Matrix = build_colorant_matrix(output);
-        out_matrix = matrix_invert(out_matrix);
+        out_matrix = out_matrix.invert();
         if out_matrix.invalid {
             return None;
         }
-        let result_0: Matrix = matrix_multiply(out_matrix, in_matrix);
+        let result_0: Matrix = Matrix::multiply(out_matrix, in_matrix);
         /* check for NaN values in the matrix and bail if we find any */
         let mut i: u32 = 0;
         while i < 3 {
