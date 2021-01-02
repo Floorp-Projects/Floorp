@@ -7505,23 +7505,11 @@ var ctx = canvas.getContext('2d');
 
 var _thrown_outer = false;
 try {
-
-var imgdata = ctx.createImageData(0.0001, 0.0001);
-ok(imgdata.data.length == imgdata.width*imgdata.height*4, "imgdata.data.length == imgdata.width*imgdata.height*4");
-ok(imgdata.width == 1, "imgdata.width == 1");
-ok(imgdata.height == 1, "imgdata.height == 1");
-var isTransparentBlack = true;
-for (var i = 0; i < imgdata.data.length; ++i)
-    if (imgdata.data[i] !== 0)
-        isTransparentBlack = false;
-ok(isTransparentBlack, "isTransparentBlack");
-
+    var imgdata = ctx.createImageData(0.0001, 0.0001);
 } catch (e) {
     _thrown_outer = true;
 }
-ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
-
-
+ok(_thrown_outer, ctx.canvas.id + ' should throw exception');
 }
 </script>
 
