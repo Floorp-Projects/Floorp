@@ -21,42 +21,41 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#[repr(C)]
 #[derive(Copy, Clone, Default)]
 pub struct Matrix {
     pub m: [[f32; 3]; 3],
     pub invalid: bool,
 }
 
-#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Vector {
     pub v: [f32; 3],
 }
 
-pub fn matrix_eval(mat: Matrix, v: Vector) -> Vector {
+impl Matrix {
+pub fn eval(&self, v: Vector) -> Vector {
     let mut result: Vector = Vector { v: [0.; 3] };
-    result.v[0] = mat.m[0][0] * v.v[0] + mat.m[0][1] * v.v[1] + mat.m[0][2] * v.v[2];
-    result.v[1] = mat.m[1][0] * v.v[0] + mat.m[1][1] * v.v[1] + mat.m[1][2] * v.v[2];
-    result.v[2] = mat.m[2][0] * v.v[0] + mat.m[2][1] * v.v[1] + mat.m[2][2] * v.v[2];
+    result.v[0] = self.m[0][0] * v.v[0] + self.m[0][1] * v.v[1] + self.m[0][2] * v.v[2];
+    result.v[1] = self.m[1][0] * v.v[0] + self.m[1][1] * v.v[1] + self.m[1][2] * v.v[2];
+    result.v[2] = self.m[2][0] * v.v[0] + self.m[2][1] * v.v[1] + self.m[2][2] * v.v[2];
     result
 }
-//XXX: should probably pass by reference and we could
+
 //probably reuse this computation in matrix_invert
-pub fn matrix_det(mat: Matrix) -> f32 {
-    let det: f32 = mat.m[0][0] * mat.m[1][1] * mat.m[2][2]
-        + mat.m[0][1] * mat.m[1][2] * mat.m[2][0]
-        + mat.m[0][2] * mat.m[1][0] * mat.m[2][1]
-        - mat.m[0][0] * mat.m[1][2] * mat.m[2][1]
-        - mat.m[0][1] * mat.m[1][0] * mat.m[2][2]
-        - mat.m[0][2] * mat.m[1][1] * mat.m[2][0];
+pub fn det(&self) -> f32 {
+    let det: f32 = self.m[0][0] * self.m[1][1] * self.m[2][2]
+        + self.m[0][1] * self.m[1][2] * self.m[2][0]
+        + self.m[0][2] * self.m[1][0] * self.m[2][1]
+        - self.m[0][0] * self.m[1][2] * self.m[2][1]
+        - self.m[0][1] * self.m[1][0] * self.m[2][2]
+        - self.m[0][2] * self.m[1][1] * self.m[2][0];
     det
 }
 /* from pixman and cairo and Mathematics for Game Programmers */
 /* lcms uses gauss-jordan elimination with partial pivoting which is
  * less efficient and not as numerically stable. See Mathematics for
  * Game Programmers. */
-pub fn matrix_invert(mat: Matrix) -> Matrix {
+pub fn invert(&self) -> Matrix {
     let mut dest_mat: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -66,7 +65,7 @@ pub fn matrix_invert(mat: Matrix) -> Matrix {
     const a: [i32; 3] = [2, 2, 1];
     const b: [i32; 3] = [1, 0, 0];
     /* inv  (A) = 1/det (A) * adj (A) */
-    let mut det: f32 = matrix_det(mat);
+    let mut det: f32 = self.det();
     if det == 0. {
         dest_mat.invalid = true;
         return dest_mat;
@@ -81,8 +80,8 @@ pub fn matrix_invert(mat: Matrix) -> Matrix {
             let aj: i32 = a[j as usize];
             let bi: i32 = b[i as usize];
             let bj: i32 = b[j as usize];
-            let mut p: f64 = (mat.m[ai as usize][aj as usize] * mat.m[bi as usize][bj as usize]
-                - mat.m[ai as usize][bj as usize] * mat.m[bi as usize][aj as usize])
+            let mut p: f64 = (self.m[ai as usize][aj as usize] * self.m[bi as usize][bj as usize]
+                - self.m[ai as usize][bj as usize] * self.m[bi as usize][aj as usize])
                 as f64;
             if ((i + j) & 1) != 0 {
                 p = -p
@@ -94,7 +93,7 @@ pub fn matrix_invert(mat: Matrix) -> Matrix {
     }
     dest_mat
 }
-pub fn matrix_identity() -> Matrix {
+pub fn identity() -> Matrix {
     let mut i: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -111,14 +110,14 @@ pub fn matrix_identity() -> Matrix {
     i.invalid = false;
     i
 }
-pub fn matrix_invalid() -> Matrix {
-    let mut inv: Matrix = matrix_identity();
+pub fn invalid() -> Matrix {
+    let mut inv: Matrix = Self::identity();
     inv.invalid = true;
     inv
 }
 /* from pixman */
 /* MAT3per... */
-pub fn matrix_multiply(a: Matrix, b: Matrix) -> Matrix {
+pub fn multiply(a: Matrix, b: Matrix) -> Matrix {
     let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -143,4 +142,5 @@ pub fn matrix_multiply(a: Matrix, b: Matrix) -> Matrix {
     }
     result.invalid = a.invalid as i32 != 0 || b.invalid as i32 != 0;
     result
+}
 }
