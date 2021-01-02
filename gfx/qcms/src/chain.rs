@@ -712,21 +712,21 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<qcms_modular_transf
     None
 }
 
-fn modular_transform_create_input(in_0: &Profile) -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_create_input(input: &Profile) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
-    if in_0.A2B0.is_some() {
-        let lut_transform = modular_transform_create_lut(in_0.A2B0.as_deref().unwrap());
+    if input.A2B0.is_some() {
+        let lut_transform = modular_transform_create_lut(input.A2B0.as_deref().unwrap());
         if lut_transform.is_none() {
             return None;
         } else {
             append_transform(lut_transform, next_transform);
         }
-    } else if in_0.mAB.is_some()
-        && (*in_0.mAB.as_deref().unwrap()).num_in_channels == 3
-        && (*in_0.mAB.as_deref().unwrap()).num_out_channels == 3
+    } else if input.mAB.is_some()
+        && (*input.mAB.as_deref().unwrap()).num_in_channels == 3
+        && (*input.mAB.as_deref().unwrap()).num_out_channels == 3
     {
-        let mAB_transform = modular_transform_create_mAB(in_0.mAB.as_deref().unwrap());
+        let mAB_transform = modular_transform_create_mAB(input.mAB.as_deref().unwrap());
         if mAB_transform.is_none() {
             return None;
         } else {
@@ -738,11 +738,11 @@ fn modular_transform_create_input(in_0: &Profile) -> Option<Box<qcms_modular_tra
             return None;
         } else {
             transform.as_mut().unwrap().input_clut_table_r =
-                build_input_gamma_table(in_0.redTRC.as_deref());
+                build_input_gamma_table(input.redTRC.as_deref());
             transform.as_mut().unwrap().input_clut_table_g =
-                build_input_gamma_table(in_0.greenTRC.as_deref());
+                build_input_gamma_table(input.greenTRC.as_deref());
             transform.as_mut().unwrap().input_clut_table_b =
-                build_input_gamma_table(in_0.blueTRC.as_deref());
+                build_input_gamma_table(input.blueTRC.as_deref());
             transform.as_mut().unwrap().transform_module_fn = Some(transform_module_gamma_table);
             if transform.as_mut().unwrap().input_clut_table_r.is_none()
                 || transform.as_mut().unwrap().input_clut_table_g.is_none()
@@ -772,7 +772,7 @@ fn modular_transform_create_input(in_0: &Profile) -> Option<Box<qcms_modular_tra
                     if transform.is_none() {
                         return None;
                     } else {
-                        transform.as_mut().unwrap().matrix = build_colorant_matrix(in_0);
+                        transform.as_mut().unwrap().matrix = build_colorant_matrix(input);
                         transform.as_mut().unwrap().transform_module_fn =
                             Some(transform_module_matrix);
                         append_transform(transform, next_transform);
@@ -907,11 +907,11 @@ remove_next:
     return transform;
 }
 */
-fn modular_transform_create(in_0: &Profile, out: &Profile) -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_create(input: &Profile, output: &Profile) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
-    if in_0.color_space == RGB_SIGNATURE {
-        let rgb_to_pcs = modular_transform_create_input(in_0);
+    if input.color_space == RGB_SIGNATURE {
+        let rgb_to_pcs = modular_transform_create_input(input);
         rgb_to_pcs.as_ref()?;
         next_transform = append_transform(rgb_to_pcs, next_transform);
     } else {
@@ -919,7 +919,7 @@ fn modular_transform_create(in_0: &Profile, out: &Profile) -> Option<Box<qcms_mo
         return None;
     }
 
-    if in_0.pcs == LAB_SIGNATURE && out.pcs == XYZ_SIGNATURE {
+    if input.pcs == LAB_SIGNATURE && output.pcs == XYZ_SIGNATURE {
         let mut lab_to_pcs = modular_transform_alloc();
         lab_to_pcs.as_ref()?;
         lab_to_pcs.as_mut().unwrap().transform_module_fn = Some(transform_module_LAB_to_XYZ);
@@ -937,15 +937,15 @@ fn modular_transform_create(in_0: &Profile, out: &Profile) -> Option<Box<qcms_mo
     //	chromaticAdaption->transform_module_fn = qcms_transform_module_matrix;
     //}
 
-    if in_0.pcs == XYZ_SIGNATURE && out.pcs == LAB_SIGNATURE {
+    if input.pcs == XYZ_SIGNATURE && output.pcs == LAB_SIGNATURE {
         let mut pcs_to_lab = modular_transform_alloc();
         pcs_to_lab.as_ref()?;
         pcs_to_lab.as_mut().unwrap().transform_module_fn = Some(transform_module_XYZ_to_LAB);
         next_transform = append_transform(pcs_to_lab, next_transform);
     }
 
-    if out.color_space == RGB_SIGNATURE {
-        let pcs_to_rgb = modular_transform_create_output(out);
+    if output.color_space == RGB_SIGNATURE {
+        let pcs_to_rgb = modular_transform_create_output(output);
         pcs_to_rgb.as_ref()?;
         append_transform(pcs_to_rgb, next_transform);
     } else {
@@ -979,13 +979,13 @@ fn modular_transform_data(
 }
 
 pub fn chain_transform(
-    in_0: &Profile,
-    out: &Profile,
+    input: &Profile,
+    output: &Profile,
     src: Vec<f32>,
     dest: Vec<f32>,
     lutSize: usize,
 ) -> Option<Vec<f32>> {
-    let transform_list = modular_transform_create(in_0, out);
+    let transform_list = modular_transform_create(input, output);
     if transform_list.is_some() {
         let lut = modular_transform_data(transform_list.as_deref(), src, dest, lutSize / 3);
         modular_transform_release(transform_list);
