@@ -740,6 +740,8 @@
     <string name="download_delete_all">Smazat stažené soubory</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Opravdu chcete smazat všechny stažené soubory?</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Soubor %1$s odebrán</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message_1">Žádné stažené soubory</string>
     <!-- History multi select title in app bar
@@ -748,6 +750,10 @@
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Otevřít</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Smazat</string>
 
 
     <!-- Crashes -->
