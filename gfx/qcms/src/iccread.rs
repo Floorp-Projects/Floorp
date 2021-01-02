@@ -684,22 +684,13 @@ fn read_nested_curveType(
 /* See section 10.10 for specs */
 fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType>> {
     let offset: u32 = tag.offset;
-    let mut a_curve_offset: u32;
-    let mut b_curve_offset: u32;
-    let mut m_curve_offset: u32;
-    let mut matrix_offset: u32;
-    let mut clut_offset: u32;
     let mut clut_size: u32 = 1;
-    let clut_precision: u8;
     let type_0: u32 = read_u32(src, offset as usize);
-    let num_in_channels: u8;
-    let num_out_channels: u8;
-    let mut lut: Box<lutmABType>;
     if type_0 != LUT_MAB_TYPE && type_0 != LUT_MBA_TYPE {
         return None;
     }
-    num_in_channels = read_u8(src, (offset + 8) as usize);
-    num_out_channels = read_u8(src, (offset + 9) as usize);
+    let num_in_channels = read_u8(src, (offset + 8) as usize);
+    let num_out_channels = read_u8(src, (offset + 9) as usize);
     if num_in_channels > 10 || num_out_channels > 10 {
         return None;
     }
@@ -712,11 +703,11 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
     }
     // some of this data is optional and is denoted by a zero offset
     // we also use this to track their existance
-    a_curve_offset = read_u32(src, (offset + 28) as usize);
-    clut_offset = read_u32(src, (offset + 24) as usize);
-    m_curve_offset = read_u32(src, (offset + 20) as usize);
-    matrix_offset = read_u32(src, (offset + 16) as usize);
-    b_curve_offset = read_u32(src, (offset + 12) as usize);
+    let mut a_curve_offset = read_u32(src, (offset + 28) as usize);
+    let mut clut_offset = read_u32(src, (offset + 24) as usize);
+    let mut m_curve_offset = read_u32(src, (offset + 20) as usize);
+    let mut matrix_offset = read_u32(src, (offset + 16) as usize);
+    let mut b_curve_offset = read_u32(src, (offset + 12) as usize);
     // Convert offsets relative to the tag to relative to the profile
     // preserve zero for optional fields
     if a_curve_offset != 0 {
@@ -752,7 +743,7 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
         return None;
     }
 
-    lut = Box::new(lutmABType::default());
+    let mut lut = Box::new(lutmABType::default());
 
     if clut_offset != 0 {
         for i in 0..usize::from(num_in_channels) {
@@ -793,7 +784,7 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
         invalid_source(src, "B curves required");
     }
     if clut_offset != 0 {
-        clut_precision = read_u8(src, (clut_offset + 16) as usize);
+        let clut_precision = read_u8(src, (clut_offset + 16) as usize);
         let mut clut_table = Vec::with_capacity(clut_size as usize);
         if clut_precision == 1 {
             for i in 0..clut_size {
@@ -825,13 +816,7 @@ fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
     let type_0: u32 = read_u32(src, offset as usize);
     let num_input_table_entries: u16;
     let num_output_table_entries: u16;
-    let in_chan: u8;
-    let grid_points: u8;
-    let out_chan: u8;
     let input_offset: u32;
-    let clut_offset: u32;
-    let output_offset: u32;
-    let clut_size: u32;
     let entry_size: usize;
     if type_0 == LUT8_TYPE {
         num_input_table_entries = 256u16;
@@ -858,10 +843,10 @@ fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
         invalid_source(src, "Unexpected lut type");
         return None;
     }
-    in_chan = read_u8(src, (offset + 8) as usize);
-    out_chan = read_u8(src, (offset + 9) as usize);
-    grid_points = read_u8(src, (offset + 10) as usize);
-    clut_size = (grid_points as f64).powf(in_chan as f64) as u32;
+    let in_chan = read_u8(src, (offset + 8) as usize);
+    let out_chan = read_u8(src, (offset + 9) as usize);
+    let grid_points = read_u8(src, (offset + 10) as usize);
+    let clut_size = (grid_points as f64).powf(in_chan as f64) as u32;
     if clut_size > MAX_LUT_SIZE {
         invalid_source(src, "CLUT too large");
         return None;
@@ -899,7 +884,7 @@ fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
             )))
         }
     }
-    clut_offset = ((offset + input_offset) as usize
+    let clut_offset = ((offset + input_offset) as usize
         + (num_input_table_entries as i32 * in_chan as i32) as usize * entry_size)
         as u32;
 
@@ -933,7 +918,7 @@ fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
             )))
         }
     }
-    output_offset =
+    let output_offset =
         (clut_offset as usize + (clut_size * out_chan as u32) as usize * entry_size) as u32;
 
     let mut output_table =
@@ -1055,24 +1040,18 @@ fn white_point_from_temp(temp_K: i32) -> qcms_CIE_xyY {
         y: 0.,
         Y: 0.,
     };
-    let x: f64;
-    let y: f64;
-    let T: f64;
-    let T2: f64;
-    let T3: f64;
-    // double M1, M2;
     // No optimization provided.
-    T = temp_K as f64; // Square
-    T2 = T * T; // Cube
-    T3 = T2 * T;
+    let T = temp_K as f64; // Square
+    let T2 = T * T; // Cube
+    let T3 = T2 * T;
     // For correlated color temperature (T) between 4000K and 7000K:
-    if T >= 4000.0f64 && T <= 7000.0f64 {
-        x = -4.6070f64 * (1E9f64 / T3)
+    let x = if T >= 4000.0f64 && T <= 7000.0f64 {
+        -4.6070f64 * (1E9f64 / T3)
             + 2.9678f64 * (1E6f64 / T2)
             + 0.09911f64 * (1E3f64 / T)
             + 0.244063f64
     } else if T > 7000.0f64 && T <= 25000.0f64 {
-        x = -2.0064f64 * (1E9f64 / T3)
+        -2.0064f64 * (1E9f64 / T3)
             + 1.9018f64 * (1E6f64 / T2)
             + 0.24748f64 * (1E3f64 / T)
             + 0.237040f64
@@ -1084,12 +1063,12 @@ fn white_point_from_temp(temp_K: i32) -> qcms_CIE_xyY {
         white_point.Y = -1.0f64;
         debug_assert!(false, "invalid temp");
         return white_point;
-    }
+    };
     // Obtain y(x)
-    y = -3.000f64 * (x * x) + 2.870f64 * x - 0.275f64;
+    let y = -3.000f64 * (x * x) + 2.870f64 * x - 0.275f64;
     // wave factors (not used, but here for futures extensions)
-    // M1 = (-1.3515 - 1.7703*x + 5.9114 *y)/(0.0241 + 0.2562*x - 0.7341*y);
-    // M2 = (0.0300 - 31.4424*x + 30.0717*y)/(0.0241 + 0.2562*x - 0.7341*y);
+    // let M1 = (-1.3515 - 1.7703*x + 5.9114 *y)/(0.0241 + 0.2562*x - 0.7341*y);
+    // let M2 = (0.0300 - 31.4424*x + 30.0717*y)/(0.0241 + 0.2562*x - 0.7341*y);
     // Fill white_point struct
     white_point.x = x;
     white_point.y = y;
