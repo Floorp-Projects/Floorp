@@ -148,6 +148,30 @@ class PinnedSitesStorageTest {
     }
 
     @Test
+    fun testRenamingPinnedSites() = runBlocking {
+        storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
+        var pinnedSites = storage.getPinnedSites()
+
+        assertEquals(1, pinnedSites.size)
+        assertEquals("https://www.mozilla.org", pinnedSites[0].url)
+        assertEquals("Mozilla", pinnedSites[0].title)
+
+        storage.renamePinnedSite(pinnedSites[0], "")
+
+        pinnedSites = storage.getPinnedSites()
+        assertEquals(1, pinnedSites.size)
+        assertEquals("https://www.mozilla.org", pinnedSites[0].url)
+        assertEquals("", pinnedSites[0].title)
+
+        storage.renamePinnedSite(pinnedSites[0], "Mozilla Firefox")
+
+        pinnedSites = storage.getPinnedSites()
+        assertEquals(1, pinnedSites.size)
+        assertEquals("https://www.mozilla.org", pinnedSites[0].url)
+        assertEquals("Mozilla Firefox", pinnedSites[0].title)
+    }
+
+    @Test
     fun migrate1to2() {
         val dbVersion1 = helper.createDatabase(MIGRATION_TEST_DB, 1).apply {
             execSQL(

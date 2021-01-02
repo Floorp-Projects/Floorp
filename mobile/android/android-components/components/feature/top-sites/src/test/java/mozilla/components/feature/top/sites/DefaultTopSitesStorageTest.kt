@@ -17,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 @ExperimentalCoroutinesApi
@@ -103,6 +104,49 @@ class DefaultTopSitesStorageTest {
 
         verify(pinnedSitesStorage).removePinnedSite(defaultSite)
         verify(historyStorage).deleteVisitsFor(defaultSite.url)
+    }
+
+    @Test
+    fun `renameTopSite`() = runBlockingTest {
+        val defaultTopSitesStorage = DefaultTopSitesStorage(
+            pinnedSitesStorage,
+            historyStorage,
+            listOf(),
+            coroutineContext
+        )
+
+        val defaultSite = TopSite(
+            id = 1,
+            title = "Firefox",
+            url = "https://firefox.com",
+            createdAt = 1,
+            type = TopSite.Type.DEFAULT
+        )
+        defaultTopSitesStorage.renameTopSite(defaultSite, "Mozilla Firefox")
+
+        verify(pinnedSitesStorage).renamePinnedSite(defaultSite, "Mozilla Firefox")
+
+        val pinnedSite = TopSite(
+            id = 2,
+            title = "Wikipedia",
+            url = "https://wikipedia.com",
+            createdAt = 2,
+            type = TopSite.Type.PINNED
+        )
+        defaultTopSitesStorage.renameTopSite(pinnedSite, "Wiki")
+
+        verify(pinnedSitesStorage).renamePinnedSite(pinnedSite, "Wiki")
+
+        val frecentSite = TopSite(
+            id = 1,
+            title = "Mozilla",
+            url = "https://mozilla.com",
+            createdAt = 1,
+            type = TopSite.Type.FRECENT
+        )
+        defaultTopSitesStorage.renameTopSite(frecentSite, "Moz")
+
+        verify(pinnedSitesStorage, never()).renamePinnedSite(frecentSite, "Moz")
     }
 
     @Test
