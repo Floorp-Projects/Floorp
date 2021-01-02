@@ -109,9 +109,9 @@ pub(crate) struct lutmABType {
     // reversed elements (for mBA)
     pub reversed: bool,
     pub clut_table: Option<Vec<f32>>,
-    pub a_curves: [Option<Box<curveType>>; 10],
-    pub b_curves: [Option<Box<curveType>>; 10],
-    pub m_curves: [Option<Box<curveType>>; 10],
+    pub a_curves: [Option<Box<curveType>>; MAX_CHANNELS],
+    pub b_curves: [Option<Box<curveType>>; MAX_CHANNELS],
+    pub m_curves: [Option<Box<curveType>>; MAX_CHANNELS],
 }
 
 pub(crate) enum curveType {
@@ -655,20 +655,18 @@ fn read_tag_curveType(
     }
     None
 }
-// arbitrary
+const MAX_CHANNELS: usize = 10; // arbitrary
 fn read_nested_curveType(
     src: &mut mem_source,
-    curveArray: &mut [Option<Box<curveType>>; 10],
+    curveArray: &mut [Option<Box<curveType>>; MAX_CHANNELS],
     num_channels: u8,
     curve_offset: u32,
 ) {
     let mut channel_offset: u32 = 0;
-    let mut i: i32;
-    i = 0;
-    while i < num_channels as i32 {
+    for i in 0..usize::from(num_channels) {
         let mut tag_len: u32 = 0;
-        curveArray[i as usize] = read_curveType(src, curve_offset + channel_offset, &mut tag_len);
-        if curveArray[i as usize].is_none() {
+        curveArray[i] = read_curveType(src, curve_offset + channel_offset, &mut tag_len);
+        if curveArray[i].is_none() {
             invalid_source(src, "invalid nested curveType curve");
             break;
         } else {
@@ -677,7 +675,6 @@ fn read_nested_curveType(
             if tag_len % 4 != 0 {
                 channel_offset += 4 - tag_len % 4
             }
-            i += 1
         }
     }
 }
