@@ -87,4 +87,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">Co-theannaich  na mholar de chlàraidhean a-steach</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Clàraidhean a-steach a mholamaid</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">A bheil thu airson an dàta a chur gun làrach seo a-rithist?</string>
+    <string name="mozac_feature_prompt_repost_message">Ma nì thu ath-nuadhachadh air an duilleag seo, dh’fhaoidte gun dèid gnìomhan a rinn thu o chionn goirid, can pàigheadh a chur thu no beachd a phostaich thu, a dhèanamh a-rithist.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Cuir an dàta a-rithist</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Sguir dheth</string>
 </resources>
