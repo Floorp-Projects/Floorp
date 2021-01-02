@@ -363,27 +363,21 @@ fn invert_lut(table: &[u16], out_length: i32) -> Vec<u16> {
     output
 }
 fn compute_precache_pow(output: &mut [u8; PRECACHE_OUTPUT_SIZE], gamma: f32) {
-    let mut v: u32 = 0;
-    while v < PRECACHE_OUTPUT_SIZE as u32 {
+    for v in 0..PRECACHE_OUTPUT_SIZE {
         //XXX: don't do integer/float conversion... and round?
-        output[v as usize] =
+        output[v] =
             (255.0f64 * (v as f64 / PRECACHE_OUTPUT_MAX as f64).powf(gamma as f64)) as u8;
-        v += 1
     }
 }
 pub fn compute_precache_lut(output: &mut [u8; PRECACHE_OUTPUT_SIZE], table: &[u16]) {
-    let mut v: u32 = 0;
-    while v < PRECACHE_OUTPUT_SIZE as u32 {
-        output[v as usize] = lut_interp_linear_precache_output(v, table);
-        v += 1
+    for v in 0..PRECACHE_OUTPUT_SIZE {
+        output[v] = lut_interp_linear_precache_output(v as u32, table);
     }
 }
 pub fn compute_precache_linear(output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
-    let mut v: u32 = 0;
-    while v < PRECACHE_OUTPUT_SIZE as u32 {
+    for v in  0..PRECACHE_OUTPUT_SIZE {
         //XXX: round?
-        output[v as usize] = (v / (PRECACHE_OUTPUT_SIZE / 256) as u32) as u8;
-        v += 1
+        output[v] = (v / (PRECACHE_OUTPUT_SIZE / 256)) as u8;
     }
 }
 pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPUT_SIZE]) -> bool {
