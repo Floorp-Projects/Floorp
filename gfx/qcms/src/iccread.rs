@@ -655,6 +655,8 @@ fn read_tag_curveType(
     }
     None
 }
+
+const MAX_LUT_SIZE: u32 = 500000; // arbitrary
 const MAX_CHANNELS: usize = 10; // arbitrary
 fn read_nested_curveType(
     src: &mut mem_source,
@@ -693,7 +695,6 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
     let num_in_channels: u8;
     let num_out_channels: u8;
     let mut lut: Box<lutmABType>;
-    let mut i: u32;
     if type_0 != LUT_MAB_TYPE && type_0 != LUT_MBA_TYPE {
         return None;
     }
@@ -736,33 +737,29 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
     if clut_offset != 0 {
         debug_assert!(num_in_channels == 3);
         // clut_size can not overflow since lg(256^num_in_channels) = 24 bits.
-        i = 0;
-        while i < num_in_channels as u32 {
+        for i in 0..u32::from(num_in_channels) {
             clut_size *= read_u8(src, (clut_offset + i) as usize) as u32;
             if clut_size == 0 {
                 invalid_source(src, "bad clut_size");
             }
-            i += 1
         }
     } else {
         clut_size = 0
     }
     // 24bits * 3 won't overflow either
     clut_size *= num_out_channels as u32;
-    if clut_size > 500000 {
+    if clut_size > MAX_LUT_SIZE {
         return None;
     }
 
     lut = Box::new(lutmABType::default());
 
     if clut_offset != 0 {
-        i = 0;
-        while i < num_in_channels as u32 {
-            lut.num_grid_points[i as usize] = read_u8(src, (clut_offset + i) as usize);
-            if lut.num_grid_points[i as usize] == 0 {
+        for i in 0..usize::from(num_in_channels) {
+            lut.num_grid_points[i] = read_u8(src, clut_offset as usize + i);
+            if lut.num_grid_points[i] == 0 {
                 invalid_source(src, "bad grid_points");
             }
-            i += 1
         }
     }
     // Reverse the processing of transformation elements for mBA type.
@@ -865,7 +862,7 @@ fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
     out_chan = read_u8(src, (offset + 9) as usize);
     grid_points = read_u8(src, (offset + 10) as usize);
     clut_size = (grid_points as f64).powf(in_chan as f64) as u32;
-    if clut_size > 500000 {
+    if clut_size > MAX_LUT_SIZE {
         invalid_source(src, "CLUT too large");
         return None;
     }
