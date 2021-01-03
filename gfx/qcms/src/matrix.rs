@@ -33,114 +33,115 @@ pub struct Vector {
 }
 
 impl Matrix {
-pub fn eval(&self, v: Vector) -> Vector {
-    let mut result: Vector = Vector { v: [0.; 3] };
-    result.v[0] = self.m[0][0] * v.v[0] + self.m[0][1] * v.v[1] + self.m[0][2] * v.v[2];
-    result.v[1] = self.m[1][0] * v.v[0] + self.m[1][1] * v.v[1] + self.m[1][2] * v.v[2];
-    result.v[2] = self.m[2][0] * v.v[0] + self.m[2][1] * v.v[1] + self.m[2][2] * v.v[2];
-    result
-}
-
-//probably reuse this computation in matrix_invert
-pub fn det(&self) -> f32 {
-    let det: f32 = self.m[0][0] * self.m[1][1] * self.m[2][2]
-        + self.m[0][1] * self.m[1][2] * self.m[2][0]
-        + self.m[0][2] * self.m[1][0] * self.m[2][1]
-        - self.m[0][0] * self.m[1][2] * self.m[2][1]
-        - self.m[0][1] * self.m[1][0] * self.m[2][2]
-        - self.m[0][2] * self.m[1][1] * self.m[2][0];
-    det
-}
-/* from pixman and cairo and Mathematics for Game Programmers */
-/* lcms uses gauss-jordan elimination with partial pivoting which is
- * less efficient and not as numerically stable. See Mathematics for
- * Game Programmers. */
-pub fn invert(&self) -> Matrix {
-    let mut dest_mat: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-        invalid: false,
-    };
-    let mut i: i32;
-
-    const a: [i32; 3] = [2, 2, 1];
-    const b: [i32; 3] = [1, 0, 0];
-    /* inv  (A) = 1/det (A) * adj (A) */
-    let mut det: f32 = self.det();
-    if det == 0. {
-        dest_mat.invalid = true;
-        return dest_mat;
+    pub fn eval(&self, v: Vector) -> Vector {
+        let mut result: Vector = Vector { v: [0.; 3] };
+        result.v[0] = self.m[0][0] * v.v[0] + self.m[0][1] * v.v[1] + self.m[0][2] * v.v[2];
+        result.v[1] = self.m[1][0] * v.v[0] + self.m[1][1] * v.v[1] + self.m[1][2] * v.v[2];
+        result.v[2] = self.m[2][0] * v.v[0] + self.m[2][1] * v.v[1] + self.m[2][2] * v.v[2];
+        result
     }
-    dest_mat.invalid = false;
-    det = 1. / det;
-    let mut j: i32 = 0;
-    while j < 3 {
-        i = 0;
-        while i < 3 {
-            let ai: i32 = a[i as usize];
-            let aj: i32 = a[j as usize];
-            let bi: i32 = b[i as usize];
-            let bj: i32 = b[j as usize];
-            let mut p: f64 = (self.m[ai as usize][aj as usize] * self.m[bi as usize][bj as usize]
-                - self.m[ai as usize][bj as usize] * self.m[bi as usize][aj as usize])
-                as f64;
-            if ((i + j) & 1) != 0 {
-                p = -p
-            }
-            dest_mat.m[j as usize][i as usize] = (det as f64 * p) as f32;
-            i += 1
+
+    //probably reuse this computation in matrix_invert
+    pub fn det(&self) -> f32 {
+        let det: f32 = self.m[0][0] * self.m[1][1] * self.m[2][2]
+            + self.m[0][1] * self.m[1][2] * self.m[2][0]
+            + self.m[0][2] * self.m[1][0] * self.m[2][1]
+            - self.m[0][0] * self.m[1][2] * self.m[2][1]
+            - self.m[0][1] * self.m[1][0] * self.m[2][2]
+            - self.m[0][2] * self.m[1][1] * self.m[2][0];
+        det
+    }
+    /* from pixman and cairo and Mathematics for Game Programmers */
+    /* lcms uses gauss-jordan elimination with partial pivoting which is
+     * less efficient and not as numerically stable. See Mathematics for
+     * Game Programmers. */
+    pub fn invert(&self) -> Matrix {
+        let mut dest_mat: Matrix = Matrix {
+            m: [[0.; 3]; 3],
+            invalid: false,
+        };
+        let mut i: i32;
+
+        const a: [i32; 3] = [2, 2, 1];
+        const b: [i32; 3] = [1, 0, 0];
+        /* inv  (A) = 1/det (A) * adj (A) */
+        let mut det: f32 = self.det();
+        if det == 0. {
+            dest_mat.invalid = true;
+            return dest_mat;
         }
-        j += 1
-    }
-    dest_mat
-}
-pub fn identity() -> Matrix {
-    let mut i: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-        invalid: false,
-    };
-    i.m[0][0] = 1.;
-    i.m[0][1] = 0.;
-    i.m[0][2] = 0.;
-    i.m[1][0] = 0.;
-    i.m[1][1] = 1.;
-    i.m[1][2] = 0.;
-    i.m[2][0] = 0.;
-    i.m[2][1] = 0.;
-    i.m[2][2] = 1.;
-    i.invalid = false;
-    i
-}
-pub fn invalid() -> Matrix {
-    let mut inv: Matrix = Self::identity();
-    inv.invalid = true;
-    inv
-}
-/* from pixman */
-/* MAT3per... */
-pub fn multiply(a: Matrix, b: Matrix) -> Matrix {
-    let mut result: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-        invalid: false,
-    };
-    let mut dx: i32;
-
-    let mut o: i32;
-    let mut dy: i32 = 0;
-    while dy < 3 {
-        dx = 0;
-        while dx < 3 {
-            let mut v: f64 = 0f64;
-            o = 0;
-            while o < 3 {
-                v += (a.m[dy as usize][o as usize] * b.m[o as usize][dx as usize]) as f64;
-                o += 1
+        dest_mat.invalid = false;
+        det = 1. / det;
+        let mut j: i32 = 0;
+        while j < 3 {
+            i = 0;
+            while i < 3 {
+                let ai: i32 = a[i as usize];
+                let aj: i32 = a[j as usize];
+                let bi: i32 = b[i as usize];
+                let bj: i32 = b[j as usize];
+                let mut p: f64 = (self.m[ai as usize][aj as usize]
+                    * self.m[bi as usize][bj as usize]
+                    - self.m[ai as usize][bj as usize] * self.m[bi as usize][aj as usize])
+                    as f64;
+                if ((i + j) & 1) != 0 {
+                    p = -p
+                }
+                dest_mat.m[j as usize][i as usize] = (det as f64 * p) as f32;
+                i += 1
             }
-            result.m[dy as usize][dx as usize] = v as f32;
-            dx += 1
+            j += 1
         }
-        dy += 1
+        dest_mat
     }
-    result.invalid = a.invalid as i32 != 0 || b.invalid as i32 != 0;
-    result
-}
+    pub fn identity() -> Matrix {
+        let mut i: Matrix = Matrix {
+            m: [[0.; 3]; 3],
+            invalid: false,
+        };
+        i.m[0][0] = 1.;
+        i.m[0][1] = 0.;
+        i.m[0][2] = 0.;
+        i.m[1][0] = 0.;
+        i.m[1][1] = 1.;
+        i.m[1][2] = 0.;
+        i.m[2][0] = 0.;
+        i.m[2][1] = 0.;
+        i.m[2][2] = 1.;
+        i.invalid = false;
+        i
+    }
+    pub fn invalid() -> Matrix {
+        let mut inv: Matrix = Self::identity();
+        inv.invalid = true;
+        inv
+    }
+    /* from pixman */
+    /* MAT3per... */
+    pub fn multiply(a: Matrix, b: Matrix) -> Matrix {
+        let mut result: Matrix = Matrix {
+            m: [[0.; 3]; 3],
+            invalid: false,
+        };
+        let mut dx: i32;
+
+        let mut o: i32;
+        let mut dy: i32 = 0;
+        while dy < 3 {
+            dx = 0;
+            while dx < 3 {
+                let mut v: f64 = 0f64;
+                o = 0;
+                while o < 3 {
+                    v += (a.m[dy as usize][o as usize] * b.m[o as usize][dx as usize]) as f64;
+                    o += 1
+                }
+                result.m[dy as usize][dx as usize] = v as f32;
+                dx += 1
+            }
+            dy += 1
+        }
+        result.invalid = a.invalid as i32 != 0 || b.invalid as i32 != 0;
+        result
+    }
 }
