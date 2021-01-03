@@ -30,6 +30,7 @@
 #  include "mozilla/a11y/AccessibleWrap.h"
 #  include "mozilla/a11y/Compatibility.h"
 #endif
+#include <map>
 #include <utility>
 
 #include "BrowserParent.h"
@@ -37,7 +38,6 @@
 #include "Geolocation.h"
 #include "GfxInfoBase.h"
 #include "MMPrinter.h"
-#include "PDMFactory.h"
 #include "PreallocatedProcessManager.h"
 #include "ProcessPriorityManager.h"
 #include "SandboxHal.h"
@@ -367,6 +367,9 @@ extern FileDescriptor CreateAudioIPCConnection();
 namespace dom {
 
 LazyLogModule gProcessLog("Process");
+
+static std::map<RemoteDecodeIn, PDMFactory::MediaCodecsSupported>
+    sCodecsSupported;
 
 /* static */
 LogModule* ContentParent::GetLog() { return gProcessLog; }
@@ -1499,6 +1502,16 @@ void ContentParent::BroadcastThemeUpdate(widget::ThemeChangeKind aKind) {
 
   for (auto* cp : AllProcesses(eLive)) {
     Unused << cp->SendThemeChanged(lnfData, aKind);
+  }
+}
+
+/*static */
+void ContentParent::BroadcastMediaCodecsSupportedUpdate(
+    RemoteDecodeIn aLocation,
+    const PDMFactory::MediaCodecsSupported& aSupported) {
+  sCodecsSupported[aLocation] = aSupported;
+  for (auto* cp : AllProcesses(eAll)) {
+    Unused << cp->SendUpdateMediaCodecsSupported(aLocation, aSupported);
   }
 }
 
@@ -2789,9 +2802,9 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   // Send the dynamic scalar definitions to the new process.
   TelemetryIPC::GetDynamicScalarDefinitions(xpcomInit.dynamicScalarDefs());
 
-  // Pre-calculate the various PlatformDecoderModule (PDM) supported on this
-  // machine.
-  xpcomInit.codecsSupported() = PDMFactory::Supported();
+  for (auto const& [location, supported] : sCodecsSupported) {
+    Unused << SendUpdateMediaCodecsSupported(location, supported);
+  }
 
   // Must send screen info before send initialData
   ScreenManager& screenManager = ScreenManager::GetSingleton();
