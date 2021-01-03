@@ -87,7 +87,7 @@ class PDMFactory final {
 
   using MediaCodecsSupported = EnumSet<MediaCodecs>;
 
-  static MediaCodecsSupported Supported();
+  static MediaCodecsSupported Supported(bool aForceRefresh = false);
   static bool SupportsMimeType(const nsACString& aMimeType,
                                const MediaCodecsSupported& aSupported);
 
