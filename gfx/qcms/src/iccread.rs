@@ -140,9 +140,9 @@ pub struct qcms_CIE_xyYTRIPLE {
 }
 
 struct Tag {
-    pub signature: u32,
-    pub offset: u32,
-    pub size: u32,
+    signature: u32,
+    offset: u32,
+    size: u32,
 }
 
 /* It might be worth having a unified limit on content controlled
@@ -156,9 +156,9 @@ type TagIndex = [Tag];
 /* a wrapper around the memory that we are going to parse
  * into a qcms_profile */
 struct MemSource<'a> {
-    pub buf: &'a [u8],
-    pub valid: bool,
-    pub invalid_reason: Option<&'static str>,
+    buf: &'a [u8],
+    valid: bool,
+    invalid_reason: Option<&'static str>,
 }
 pub type uInt8Number = u8;
 #[inline]
