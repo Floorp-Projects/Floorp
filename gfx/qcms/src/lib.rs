@@ -59,7 +59,7 @@ mod transform;
 pub use iccread::qcms_CIE_xyY as CIE_xyY;
 pub use iccread::qcms_CIE_xyYTRIPLE as CIE_xyYTRIPLE;
 pub use iccread::Profile;
-pub use transform::qcms_data_type as DataType;
+pub use transform::DataType as DataType;
 pub use transform::Transform;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod transform_avx;
