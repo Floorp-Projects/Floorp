@@ -11,7 +11,7 @@ static mut clampMaxValue: f32 = CLAMPMAXVAL;
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
     mut length: usize,
@@ -120,7 +120,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_neon<F: Format>(
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_neon(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,
@@ -131,7 +131,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_neon(
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_neon(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,
@@ -143,7 +143,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_neon(
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_neon(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,

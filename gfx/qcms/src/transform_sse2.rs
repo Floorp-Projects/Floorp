@@ -14,7 +14,7 @@ pub use std::arch::x86_64::{
 struct Output([u32; 4]);
 
 unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
     mut length: usize,
@@ -131,7 +131,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_sse2(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,
@@ -140,7 +140,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_sse2(
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_sse2(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,
@@ -150,7 +150,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_sse2(
 
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_sse2(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,
