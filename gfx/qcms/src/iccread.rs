@@ -139,7 +139,7 @@ pub struct qcms_CIE_xyYTRIPLE {
     pub blue: qcms_CIE_xyY,
 }
 
-struct tag {
+struct Tag {
     pub signature: u32,
     pub offset: u32,
     pub size: u32,
@@ -151,11 +151,11 @@ struct tag {
 pub type be32 = u32;
 pub type be16 = u16;
 
-type tag_index = [tag];
+type TagIndex = [Tag];
 
 /* a wrapper around the memory that we are going to parse
  * into a qcms_profile */
-struct mem_source<'a> {
+struct MemSource<'a> {
     pub buf: &'a [u8],
     pub valid: bool,
     pub invalid_reason: Option<&'static str>,
@@ -183,11 +183,11 @@ fn be32_to_cpu(v: be32) -> u32 {
 fn be16_to_cpu(v: be16) -> u16 {
     u16::from_be(v)
 }
-fn invalid_source(mut mem: &mut mem_source, reason: &'static str) {
+fn invalid_source(mut mem: &mut MemSource, reason: &'static str) {
     mem.valid = false;
     mem.invalid_reason = Some(reason);
 }
-fn read_u32(mem: &mut mem_source, offset: usize) -> u32 {
+fn read_u32(mem: &mut MemSource, offset: usize) -> u32 {
     /* Subtract from mem->size instead of the more intuitive adding to offset.
      * This avoids overflowing offset. The subtraction is safe because
      * mem->size is guaranteed to be > 4 */
@@ -199,7 +199,7 @@ fn read_u32(mem: &mut mem_source, offset: usize) -> u32 {
         be32_to_cpu(k)
     }
 }
-fn read_u16(mem: &mut mem_source, offset: usize) -> u16 {
+fn read_u16(mem: &mut MemSource, offset: usize) -> u16 {
     if offset > mem.buf.len() - 2 {
         invalid_source(mem, "Invalid offset");
         0u16
@@ -208,7 +208,7 @@ fn read_u16(mem: &mut mem_source, offset: usize) -> u16 {
         be16_to_cpu(k)
     }
 }
-fn read_u8(mem: &mut mem_source, offset: usize) -> u8 {
+fn read_u8(mem: &mut MemSource, offset: usize) -> u8 {
     if offset > mem.buf.len() - 1 {
         invalid_source(mem, "Invalid offset");
         0u8
@@ -216,13 +216,13 @@ fn read_u8(mem: &mut mem_source, offset: usize) -> u8 {
         unsafe { *(mem.buf.as_ptr().add(offset) as *mut u8) }
     }
 }
-fn read_s15Fixed16Number(mem: &mut mem_source, offset: usize) -> s15Fixed16Number {
+fn read_s15Fixed16Number(mem: &mut MemSource, offset: usize) -> s15Fixed16Number {
     read_u32(mem, offset) as s15Fixed16Number
 }
-fn read_uInt8Number(mem: &mut mem_source, offset: usize) -> uInt8Number {
+fn read_uInt8Number(mem: &mut MemSource, offset: usize) -> uInt8Number {
     read_u8(mem, offset)
 }
-fn read_uInt16Number(mem: &mut mem_source, offset: usize) -> uInt16Number {
+fn read_uInt16Number(mem: &mut MemSource, offset: usize) -> uInt16Number {
     read_u16(mem, offset)
 }
 pub fn write_u32(mem: &mut [u8], offset: usize, value: u32) {
@@ -248,11 +248,11 @@ pub fn write_u16(mem: &mut [u8], offset: usize, value: u16) {
 pub(crate) const MAX_PROFILE_SIZE: usize = 1024 * 1024 * 4;
 const MAX_TAG_COUNT: u32 = 1024;
 
-fn check_CMM_type_signature(_src: &mut mem_source) {
+fn check_CMM_type_signature(_src: &mut MemSource) {
     //uint32_t CMM_type_signature = read_u32(src, 4);
     //TODO: do the check?
 }
-fn check_profile_version(src: &mut mem_source) {
+fn check_profile_version(src: &mut MemSource) {
     /*
     uint8_t major_revision = read_u8(src, 8 + 0);
     uint8_t minor_revision = read_u8(src, 8 + 1);
@@ -280,7 +280,7 @@ const COLOR_SPACE_PROFILE: u32 = 0x73706163; // 'spac'
 const ABSTRACT_PROFILE: u32 = 0x61627374; // 'abst'
 const NAMED_COLOR_PROFILE: u32 = 0x6e6d636c; // 'nmcl'
 
-fn read_class_signature(mut profile: &mut Profile, mem: &mut mem_source) {
+fn read_class_signature(mut profile: &mut Profile, mem: &mut MemSource) {
     profile.class_type = read_u32(mem, 12);
     match profile.class_type {
         DISPLAY_DEVICE_PROFILE
@@ -292,7 +292,7 @@ fn read_class_signature(mut profile: &mut Profile, mem: &mut mem_source) {
         }
     };
 }
-fn read_color_space(mut profile: &mut Profile, mem: &mut mem_source) {
+fn read_color_space(mut profile: &mut Profile, mem: &mut MemSource) {
     profile.color_space = read_u32(mem, 16);
     match profile.color_space {
         RGB_SIGNATURE | GRAY_SIGNATURE => {}
@@ -301,7 +301,7 @@ fn read_color_space(mut profile: &mut Profile, mem: &mut mem_source) {
         }
     };
 }
-fn read_pcs(mut profile: &mut Profile, mem: &mut mem_source) {
+fn read_pcs(mut profile: &mut Profile, mem: &mut MemSource) {
     profile.pcs = read_u32(mem, 20);
     match profile.pcs {
         XYZ_SIGNATURE | LAB_SIGNATURE => {}
@@ -310,7 +310,7 @@ fn read_pcs(mut profile: &mut Profile, mem: &mut mem_source) {
         }
     };
 }
-fn read_tag_table(_profile: &mut Profile, mem: &mut mem_source) -> Vec<tag> {
+fn read_tag_table(_profile: &mut Profile, mem: &mut MemSource) -> Vec<Tag> {
     let count = read_u32(mem, 128);
     if count > MAX_TAG_COUNT {
         invalid_source(mem, "max number of tags exceeded");
@@ -318,7 +318,7 @@ fn read_tag_table(_profile: &mut Profile, mem: &mut mem_source) -> Vec<tag> {
     }
     let mut index = Vec::with_capacity(count as usize);
     for i in 0..count {
-        index.push(tag {
+        index.push(Tag {
             signature: read_u32(mem, (128 + 4 + 4 * i * 3) as usize),
             offset: read_u32(mem, (128 + 4 + 4 * i * 3 + 4) as usize),
             size: read_u32(mem, (128 + 4 + 4 * i * 3 + 8) as usize),
@@ -430,7 +430,7 @@ pub const TAG_A2B0: u32 = 0x41324230;
 pub const TAG_B2A0: u32 = 0x42324130;
 pub const TAG_CHAD: u32 = 0x63686164;
 
-fn find_tag(index: &tag_index, tag_id: u32) -> Option<&tag> {
+fn find_tag(index: &TagIndex, tag_id: u32) -> Option<&Tag> {
     for t in index {
         if t.signature == tag_id {
             return Some(t);
@@ -448,7 +448,7 @@ pub const LUT_MAB_TYPE: u32 = 0x6d414220; // 'mAB '
 pub const LUT_MBA_TYPE: u32 = 0x6d424120; // 'mBA '
 pub const CHROMATIC_TYPE: u32 = 0x73663332; // 'sf32'
 
-fn read_tag_s15Fixed16ArrayType(src: &mut mem_source, index: &tag_index, tag_id: u32) -> Matrix {
+fn read_tag_s15Fixed16ArrayType(src: &mut MemSource, index: &TagIndex, tag_id: u32) -> Matrix {
     let tag = find_tag(index, tag_id);
     let mut matrix: Matrix = Matrix {
         m: [[0.; 3]; 3],
@@ -473,7 +473,7 @@ fn read_tag_s15Fixed16ArrayType(src: &mut mem_source, index: &tag_index, tag_id:
     }
     matrix
 }
-fn read_tag_XYZType(src: &mut mem_source, index: &tag_index, tag_id: u32) -> XYZNumber {
+fn read_tag_XYZType(src: &mut MemSource, index: &TagIndex, tag_id: u32) -> XYZNumber {
     let mut num: XYZNumber = {
         let init = XYZNumber { X: 0, Y: 0, Z: 0 };
         init
@@ -496,7 +496,7 @@ fn read_tag_XYZType(src: &mut mem_source, index: &tag_index, tag_id: u32) -> XYZ
 // Read the tag at a given offset rather then the tag_index.
 // This method is used when reading mAB tags where nested curveType are
 // present that are not part of the tag_index.
-fn read_curveType(src: &mut mem_source, offset: u32, len: &mut u32) -> Option<Box<curveType>> {
+fn read_curveType(src: &mut MemSource, offset: u32, len: &mut u32) -> Option<Box<curveType>> {
     const COUNT_TO_LENGTH: [u32; 5] = [1, 3, 4, 5, 7]; //PARAMETRIC_CURVE_TYPE
     let type_0: u32 = read_u32(src, offset as usize);
     let count: u32;
@@ -542,8 +542,8 @@ fn read_curveType(src: &mut mem_source, offset: u32, len: &mut u32) -> Option<Bo
     }
 }
 fn read_tag_curveType(
-    src: &mut mem_source,
-    index: &tag_index,
+    src: &mut MemSource,
+    index: &TagIndex,
     tag_id: u32,
 ) -> Option<Box<curveType>> {
     let tag = find_tag(index, tag_id);
@@ -559,7 +559,7 @@ fn read_tag_curveType(
 const MAX_LUT_SIZE: u32 = 500000; // arbitrary
 const MAX_CHANNELS: usize = 10; // arbitrary
 fn read_nested_curveType(
-    src: &mut mem_source,
+    src: &mut MemSource,
     curveArray: &mut [Option<Box<curveType>>; MAX_CHANNELS],
     num_channels: u8,
     curve_offset: u32,
@@ -582,7 +582,7 @@ fn read_nested_curveType(
 }
 
 /* See section 10.10 for specs */
-fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType>> {
+fn read_tag_lutmABType(src: &mut MemSource, tag: &Tag) -> Option<Box<lutmABType>> {
     let offset: u32 = tag.offset;
     let mut clut_size: u32 = 1;
     let type_0: u32 = read_u32(src, offset as usize);
@@ -711,7 +711,7 @@ fn read_tag_lutmABType(src: &mut mem_source, tag: &tag) -> Option<Box<lutmABType
     }
     Some(lut)
 }
-fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
+fn read_tag_lutType(src: &mut MemSource, tag: &Tag) -> Option<Box<lutType>> {
     let offset: u32 = tag.offset;
     let type_0: u32 = read_u32(src, offset as usize);
     let num_input_table_entries: u16;
@@ -856,7 +856,7 @@ fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
         output_table,
     }))
 }
-fn read_rendering_intent(mut profile: &mut Profile, src: &mut mem_source) {
+fn read_rendering_intent(mut profile: &mut Profile, src: &mut MemSource) {
     let intent = read_u32(src, 64);
     profile.rendering_intent = match intent {
         x if x == Perceptual as u32 => Perceptual,
@@ -1064,14 +1064,14 @@ impl Profile {
 
     pub fn new_from_slice(mem: &[u8]) -> Option<Box<Profile>> {
         let length: u32;
-        let mut source: mem_source = mem_source {
+        let mut source: MemSource = MemSource {
             buf: mem,
             valid: false,
             invalid_reason: None,
         };
         let index;
         source.valid = true;
-        let mut src: &mut mem_source = &mut source;
+        let mut src: &mut MemSource = &mut source;
         if mem.len() < 4 {
             return None;
         }

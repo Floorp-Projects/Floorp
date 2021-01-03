@@ -35,7 +35,7 @@ use crate::{
 };
 
 #[derive(Clone, Default)]
-pub struct qcms_modular_transform {
+pub struct ModularTransform {
     pub matrix: Matrix,
     pub tx: f32,
     pub ty: f32,
@@ -56,11 +56,11 @@ pub struct qcms_modular_transform {
     pub output_gamma_lut_r_length: usize,
     pub output_gamma_lut_g_length: usize,
     pub output_gamma_lut_b_length: usize,
-    pub transform_module_fn: transform_module_fn_t,
-    pub next_transform: Option<Box<qcms_modular_transform>>,
+    pub transform_module_fn: TransformModuleFn,
+    pub next_transform: Option<Box<ModularTransform>>,
 }
-pub type transform_module_fn_t =
-    Option<fn(_: &qcms_modular_transform, _: &[f32], _: &mut [f32]) -> ()>;
+pub type TransformModuleFn =
+    Option<fn(_: &ModularTransform, _: &[f32], _: &mut [f32]) -> ()>;
 
 #[inline]
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
@@ -124,7 +124,7 @@ fn f_1(t: f32) -> f32 {
     }
 }
 
-fn transform_module_LAB_to_XYZ(_transform: &qcms_modular_transform, src: &[f32], dest: &mut [f32]) {
+fn transform_module_LAB_to_XYZ(_transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     // lcms: D50 XYZ values
     let WhitePointX: f32 = 0.9642;
     let WhitePointY: f32 = 1.0;
@@ -147,7 +147,7 @@ fn transform_module_LAB_to_XYZ(_transform: &qcms_modular_transform, src: &[f32],
     }
 }
 //Based on lcms cmsXYZ2Lab
-fn transform_module_XYZ_to_LAB(_transform: &qcms_modular_transform, src: &[f32], dest: &mut [f32]) {
+fn transform_module_XYZ_to_LAB(_transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     // lcms: D50 XYZ values
     let WhitePointX: f32 = 0.9642;
     let WhitePointY: f32 = 1.0;
@@ -173,7 +173,7 @@ fn transform_module_XYZ_to_LAB(_transform: &qcms_modular_transform, src: &[f32],
         dest[2] = (b + 128.0) / 255.0;
     }
 }
-fn transform_module_clut_only(transform: &qcms_modular_transform, src: &[f32], dest: &mut [f32]) {
+fn transform_module_clut_only(transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     let xy_len: i32 = 1;
     let x_len: i32 = transform.grid_size as i32;
     let len: i32 = x_len * x_len;
@@ -228,7 +228,7 @@ fn transform_module_clut_only(transform: &qcms_modular_transform, src: &[f32], d
         dest[2] = clamp_float(clut_b);
     }
 }
-fn transform_module_clut(transform: &qcms_modular_transform, src: &[f32], dest: &mut [f32]) {
+fn transform_module_clut(transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     let xy_len: i32 = 1;
     let x_len: i32 = transform.grid_size as i32;
     let len: i32 = x_len * x_len;
@@ -418,7 +418,7 @@ static void qcms_transform_module_tetra_clut(struct qcms_modular_transform *tran
     }
 }
 */
-fn transform_module_gamma_table(transform: &qcms_modular_transform, src: &[f32], dest: &mut [f32]) {
+fn transform_module_gamma_table(transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     let mut out_r: f32;
     let mut out_g: f32;
     let mut out_b: f32;
@@ -439,7 +439,7 @@ fn transform_module_gamma_table(transform: &qcms_modular_transform, src: &[f32],
         dest[2] = clamp_float(out_b);
     }
 }
-fn transform_module_gamma_lut(transform: &qcms_modular_transform, src: &[f32], dest: &mut [f32]) {
+fn transform_module_gamma_lut(transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     let mut out_r: f32;
     let mut out_g: f32;
     let mut out_b: f32;
@@ -456,7 +456,7 @@ fn transform_module_gamma_lut(transform: &qcms_modular_transform, src: &[f32], d
     }
 }
 fn transform_module_matrix_translate(
-    transform: &qcms_modular_transform,
+    transform: &ModularTransform,
     src: &[f32],
     dest: &mut [f32],
 ) {
@@ -491,7 +491,7 @@ fn transform_module_matrix_translate(
     }
 }
 
-fn transform_module_matrix(transform: &qcms_modular_transform, src: &[f32], dest: &mut [f32]) {
+fn transform_module_matrix(transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     let mut mat: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -519,10 +519,10 @@ fn transform_module_matrix(transform: &qcms_modular_transform, src: &[f32], dest
         dest[2] = clamp_float(out_b);
     }
 }
-fn modular_transform_alloc() -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_alloc() -> Option<Box<ModularTransform>> {
     Some(Box::new(Default::default()))
 }
-fn modular_transform_release(mut t: Option<Box<qcms_modular_transform>>) {
+fn modular_transform_release(mut t: Option<Box<ModularTransform>>) {
     // destroy a list of transforms non-recursively
     let mut next_transform;
     while let Some(mut transform) = t {
@@ -532,9 +532,9 @@ fn modular_transform_release(mut t: Option<Box<qcms_modular_transform>>) {
 }
 /* Set transform to be the next element in the linked list. */
 fn append_transform(
-    transform: Option<Box<qcms_modular_transform>>,
-    mut next_transform: &mut Option<Box<qcms_modular_transform>>,
-) -> &mut Option<Box<qcms_modular_transform>> {
+    transform: Option<Box<ModularTransform>>,
+    mut next_transform: &mut Option<Box<ModularTransform>>,
+) -> &mut Option<Box<ModularTransform>> {
     *next_transform = transform;
     while next_transform.is_some() {
         next_transform = &mut next_transform.as_mut().unwrap().next_transform;
@@ -543,8 +543,8 @@ fn append_transform(
 }
 /* reverse the transformation list (used by mBA) */
 fn reverse_transform(
-    mut transform: Option<Box<qcms_modular_transform>>,
-) -> Option<Box<qcms_modular_transform>> {
+    mut transform: Option<Box<ModularTransform>>,
+) -> Option<Box<ModularTransform>> {
     let mut prev_transform = None;
     while transform.is_some() {
         let next_transform = std::mem::replace(
@@ -556,7 +556,7 @@ fn reverse_transform(
     }
     prev_transform
 }
-fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     let mut transform;
@@ -651,7 +651,7 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<qcms_modular_tra
     first_transform
 }
 
-fn modular_transform_create_lut(lut: &lutType) -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
 
@@ -712,7 +712,7 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<qcms_modular_transf
     None
 }
 
-fn modular_transform_create_input(input: &Profile) -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_create_input(input: &Profile) -> Option<Box<ModularTransform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if input.A2B0.is_some() {
@@ -783,7 +783,7 @@ fn modular_transform_create_input(input: &Profile) -> Option<Box<qcms_modular_tr
     }
     first_transform
 }
-fn modular_transform_create_output(out: &Profile) -> Option<Box<qcms_modular_transform>> {
+fn modular_transform_create_output(out: &Profile) -> Option<Box<ModularTransform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if out.B2A0.is_some() {
@@ -910,7 +910,7 @@ remove_next:
 fn modular_transform_create(
     input: &Profile,
     output: &Profile,
-) -> Option<Box<qcms_modular_transform>> {
+) -> Option<Box<ModularTransform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if input.color_space == RGB_SIGNATURE {
@@ -960,14 +960,14 @@ fn modular_transform_create(
     first_transform
 }
 fn modular_transform_data(
-    mut transform: Option<&qcms_modular_transform>,
+    mut transform: Option<&ModularTransform>,
     mut src: Vec<f32>,
     mut dest: Vec<f32>,
     _len: usize,
 ) -> Option<Vec<f32>> {
     while transform.is_some() {
         // Keep swaping src/dest when performing a transform to use less memory.
-        let _transform_fn: transform_module_fn_t = transform.unwrap().transform_module_fn;
+        let _transform_fn: TransformModuleFn = transform.unwrap().transform_module_fn;
         transform
             .unwrap()
             .transform_module_fn
