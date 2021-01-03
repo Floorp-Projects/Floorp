@@ -19,9 +19,9 @@ use qcms::DataType::*;
    // qcms supports GRAY and RGB profiles as input, and RGB as output.
  
    let src_color_space = qcms_profile_get_color_space(&*src_profile);
-   let mut src_type = if (size & 1) != 0 { DATA_RGBA_8 } else { DATA_RGB_8 };
+   let mut src_type = if (size & 1) != 0 { RGBA8 } else { RGB8 };
    if src_color_space == icSigGrayData {
-     src_type = if (size & 1) != 0 { DATA_GRAYA_8 } else { DATA_GRAY_8 };
+     src_type = if (size & 1) != 0 { GrayA8 } else { Gray8 };
    } else if src_color_space != icSigRgbData {
      return;
    }
@@ -30,7 +30,7 @@ use qcms::DataType::*;
    if dst_color_space != icSigRgbData {
      return;
    }
-   let dst_type = if (size & 2) != 0 { DATA_RGBA_8 } else { DATA_RGB_8 };
+   let dst_type = if (size & 2) != 0 { RGBA8 } else { RGB8 };
  
    let intent = qcms_profile_get_rendering_intent(&*src_profile);
    // Firefox calls this on the display profile to increase performance.
@@ -53,16 +53,7 @@ use qcms::DataType::*;
    ];
    let mut dst: [u8; 36 * 4] = [0; 144]; // 4x in case of GRAY to RGBA
  
-   let mut src_bytes_per_pixel = 4; // DATA_RGBA_8
-   if src_type == DATA_RGB_8 {
-     src_bytes_per_pixel = 3;
-   } else if src_type == DATA_GRAYA_8 {
-     src_bytes_per_pixel = 2;
-   } else if src_type == DATA_GRAY_8 {
-     src_bytes_per_pixel = 1;
-   }
- 
-   qcms_transform_data(&*transform, src.as_ptr() as *const libc::c_void, dst.as_mut_ptr() as *mut libc::c_void, (SRC_SIZE / src_bytes_per_pixel) as usize);
+   qcms_transform_data(&*transform, src.as_ptr() as *const libc::c_void, dst.as_mut_ptr() as *mut libc::c_void, (SRC_SIZE / src_type.bytes_per_pixel()) as usize);
    qcms_transform_release(transform);
  }
  
