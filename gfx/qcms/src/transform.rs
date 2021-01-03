@@ -1352,7 +1352,7 @@ impl Transform {
 
     pub fn apply(&self, data: &mut [u8]) {
         if data.len() % self.ty.bytes_per_pixel() != 0 {
-            panic!("incomplete pixels")
+            panic!("incomplete pixels: should be a multiple of {} got {}", self.ty.bytes_per_pixel(), data.len())
         }
         unsafe {
             self.xfm.transform_fn.expect("non-null function pointer")(
