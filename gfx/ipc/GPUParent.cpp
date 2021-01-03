@@ -6,22 +6,32 @@
 
 #ifdef XP_WIN
 #  include "WMF.h"
+#  include "WMFDecoderModule.h"
 #endif
-#include "GPUParent.h"
-#include "gfxConfig.h"
-#include "gfxCrashReporterUtils.h"
-#include "GfxInfoBase.h"
-#include "gfxPlatform.h"
 #include "GLContextProvider.h"
+#include "GPUParent.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
+#include "GfxInfoBase.h"
+#include "ProcessUtils.h"
+#include "VRGPUChild.h"
+#include "VRManager.h"
+#include "VRManagerParent.h"
+#include "VsyncBridgeParent.h"
+#include "cairo.h"
+#include "gfxConfig.h"
+#include "gfxCrashReporterUtils.h"
+#include "gfxPlatform.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/HangDetails.h"
 #include "mozilla/PerfStats.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/RemoteDecoderManagerChild.h"
+#include "mozilla/RemoteDecoderManagerParent.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/RemoteDecoderManagerChild.h"
-#include "mozilla/RemoteDecoderManagerParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -29,43 +39,37 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/APZInputBridgeParent.h"
-#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/APZPublicUtils.h"  // for apz::InitializeGlobalState
+#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
-#include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/layers/MemoryReportingMLGPU.h"
+#include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/HangDetails.h"
-#include "mozilla/Preferences.h"
-#include "nscore.h"
 #include "nsDebugImpl.h"
 #include "nsIGfxInfo.h"
 #include "nsThreadManager.h"
+#include "nscore.h"
 #include "prenv.h"
-#include "ProcessUtils.h"
-#include "VRGPUChild.h"
-#include "VRManager.h"
-#include "VRManagerParent.h"
-#include "VsyncBridgeParent.h"
-#include "cairo.h"
 #include "skia/include/core/SkGraphics.h"
 #if defined(XP_WIN)
+#  include <dwrite.h>
+#  include <process.h>
+
+#  include "mozilla/WindowsVersion.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/widget/WinCompositorWindowThread.h"
-#  include "mozilla/WindowsVersion.h"
-#  include <process.h>
-#  include <dwrite.h>
 #else
 #  include <unistd.h>
 #endif
 #ifdef MOZ_WIDGET_GTK
 #  include <gtk/gtk.h>
+
 #  include "skia/include/ports/SkTypeface_cairo.h"
 #endif
 #ifdef MOZ_GECKO_PROFILER
@@ -374,6 +378,18 @@ mozilla::ipc::IPCResult GPUParent::RecvInitProfiler(
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
+#if defined(XP_WIN)
+  auto scopeExit = MakeScopeExit(
+      [couldUseHWDecoder = gfx::gfxVars::CanUseHardwareVideoDecoding()] {
+        if (couldUseHWDecoder != gfx::gfxVars::CanUseHardwareVideoDecoding()) {
+          // The capabilities of the system may have changed, force a refresh by
+          // re-initializing the WMF PDM.
+          WMFDecoderModule::Init();
+          Unused << GPUParent::GetSingleton()->SendUpdateMediaCodecsSupported(
+              PDMFactory::Supported(true /* force refresh */));
+        }
+      });
+#endif
   gfxVars::ApplyUpdate(aUpdate);
   return IPC_OK();
 }
