@@ -21,6 +21,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "nsThreadUtils.h"
 
 #define LOG(...) DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
@@ -581,7 +582,7 @@ CFDictionaryRef AppleVTDecoder::CreateDecoderSpecification() {
   const void* specKeys[] = {
       kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder};
   const void* specValues[1];
-  if (AppleDecoderModule::sCanUseHardwareVideoDecoder) {
+  if (gfx::gfxVars::CanUseHardwareVideoDecoding()) {
     specValues[0] = kCFBooleanTrue;
   } else {
     // This GPU is blacklisted for hardware decoding.
