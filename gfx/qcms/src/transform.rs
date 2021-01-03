@@ -117,6 +117,7 @@ pub struct qcms_transform {
 pub type transform_fn_t = Option<
     unsafe extern "C" fn(_: *const qcms_transform, _: *const u8, _: *mut u8, _: usize) -> (),
 >;
+//XXX: I don't really like the _DATA_ prefix
 #[repr(u32)]
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum qcms_data_type {

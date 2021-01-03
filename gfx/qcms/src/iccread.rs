@@ -31,6 +31,68 @@ use crate::{matrix::Matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent,
 
 pub static SUPPORTS_ICCV4: AtomicBool = AtomicBool::new(cfg!(feature = "iccv4-enabled"));
 
+/* icc34 defines */
+/* ****************************************************************
+ Copyright (c) 1994-1996 SunSoft, Inc.
+
+                    Rights Reserved
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without restrict-
+ion, including without limitation the rights to use, copy, modify,
+merge, publish distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-
+INFRINGEMENT.  IN NO EVENT SHALL SUNSOFT, INC. OR ITS PARENT
+COMPANY BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of SunSoft, Inc.
+shall not be used in advertising or otherwise to promote the
+sale, use or other dealings in this Software without written
+authorization from SunSoft Inc.
+******************************************************************/
+
+/*
+ * Color Space Signatures
+ * Note that only icSigXYZData and icSigLabData are valid
+ * Profile Connection Spaces (PCSs)
+ */
+/* 'XYZ ' */
+/* 'Lab ' */
+/* 'Luv ' */
+/* 'YCbr' */
+/* 'Yxy ' */
+/* 'RGB ' */
+/* 'GRAY' */
+/* 'HSV ' */
+/* 'HLS ' */
+/* 'CMYK' */
+/* 'CMY ' */
+/* '2CLR' */
+/* '3CLR' */
+/* '4CLR' */
+/* '5CLR' */
+/* '6CLR' */
+/* '7CLR' */
+/* '8CLR' */
+/* '9CLR' */
+/* 'ACLR' */
+/* 'BCLR' */
+/* 'CCLR' */
+/* 'DCLR' */
+/* 'ECLR' */
+/* 'FCLR' */
 pub type icColorSpaceSignature = u32;
 pub const icMaxEnumData: icColorSpaceSignature = 4294967295;
 pub const icSig15colorData: icColorSpaceSignature = 1178815570;
@@ -355,82 +417,12 @@ fn read_tag_table(_profile: &mut Profile, mem: &mut mem_source) -> Vec<tag> {
 
     index
 }
-/* if we've already got an ICC_H header we can ignore the following */
-/* icc34 defines */
-/* ****************************************************************
- Copyright (c) 1994-1996 SunSoft, Inc.
 
-                    Rights Reserved
 
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without restrict-
-ion, including without limitation the rights to use, copy, modify,
-merge, publish distribute, sublicense, and/or sell copies of the
-Software, and to permit persons to whom the Software is furnished
-to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-
-INFRINGEMENT.  IN NO EVENT SHALL SUNSOFT, INC. OR ITS PARENT
-COMPANY BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-Except as contained in this notice, the name of SunSoft, Inc.
-shall not be used in advertising or otherwise to promote the
-sale, use or other dealings in this Software without written
-authorization from SunSoft Inc.
-******************************************************************/
-/*
- * QCMS, in general, is not threadsafe. However, it should be safe to create
- * profile and transformation objects on different threads, so long as you
- * don't use the same objects on different threads at the same time.
- */
-/*
- * Color Space Signatures
- * Note that only icSigXYZData and icSigLabData are valid
- * Profile Connection Spaces (PCSs)
- */
-/* 'XYZ ' */
-/* 'Lab ' */
-/* 'Luv ' */
-/* 'YCbr' */
-/* 'Yxy ' */
-/* 'RGB ' */
-/* 'GRAY' */
-/* 'HSV ' */
-/* 'HLS ' */
-/* 'CMYK' */
-/* 'CMY ' */
-/* '2CLR' */
-/* '3CLR' */
-/* '4CLR' */
-/* '5CLR' */
-/* '6CLR' */
-/* '7CLR' */
-/* '8CLR' */
-/* '9CLR' */
-/* 'ACLR' */
-/* 'BCLR' */
-/* 'CCLR' */
-/* 'DCLR' */
-/* 'ECLR' */
-/* 'FCLR' */
-/* these values match the Rendering Intent values from the ICC spec */
-/* Chris Murphy (CM consultant) suggests this as a default in the event that we
- * cannot reproduce relative + Black Point Compensation.  BPC brings an
- * unacceptable performance overhead, so we go with perceptual. */
-//XXX: I don't really like the _DATA_ prefix
-
-// Checks a profile for obvious inconsistencies and returns
-// true if the profile looks bogus and should probably be
-// ignored.
+/// Checks a profile for obvious inconsistencies and returns
+/// true if the profile looks bogus and should probably be
+/// ignored.
 #[no_mangle]
 pub extern "C" fn qcms_profile_is_bogus(profile: &mut Profile) -> bool {
     let mut sum: [f32; 3] = [0.; 3];
