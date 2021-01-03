@@ -119,27 +119,27 @@ pub type transform_fn_t =
 //XXX: I don't really like the _DATA_ prefix
 #[repr(u32)]
 #[derive(PartialEq, Eq, Clone, Copy)]
-pub enum qcms_data_type {
-    DATA_RGB_8 = 0,
-    DATA_RGBA_8 = 1,
-    DATA_BGRA_8 = 2,
-    DATA_GRAY_8 = 3,
-    DATA_GRAYA_8 = 4,
+pub enum DataType {
+    RGB8 = 0,
+    RGBA8 = 1,
+    BGRA8 = 2,
+    Gray8 = 3,
+    GrayA8 = 4,
 }
 
-impl qcms_data_type {
-    fn bytes_per_pixel(&self) -> usize {
+impl DataType {
+    pub fn bytes_per_pixel(&self) -> usize {
         match self {
-            DATA_RGB_8 => 3,
-            DATA_RGBA_8 => 4,
-            DATA_BGRA_8 => 4,
-            DATA_GRAY_8 => 1,
-            DATA_GRAYA_8 => 1,
+            RGB8 => 3,
+            RGBA8 => 4,
+            BGRA8 => 4,
+            Gray8 => 1,
+            GrayA8 => 1,
         }
     }
 }
 
-use qcms_data_type::*;
+use DataType::*;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1102,7 +1102,7 @@ fn transform_precacheLUT_float(
     input: &Profile,
     output: &Profile,
     samples: i32,
-    in_type: qcms_data_type,
+    in_type: DataType,
 ) -> Option<Box<qcms_transform>> {
     /* The range between which 2 consecutive sample points can be used to interpolate */
     let lutSize: u32 = (3 * samples * samples * samples) as u32;
@@ -1123,11 +1123,11 @@ fn transform_precacheLUT_float(
     if let Some(lut) = lut {
         (*transform).clut = Some(lut);
         (*transform).grid_size = samples as u16;
-        if in_type == DATA_RGBA_8 {
+        if in_type == RGBA8 {
             (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgba)
-        } else if in_type == DATA_BGRA_8 {
+        } else if in_type == BGRA8 {
             (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_bgra)
-        } else if in_type == DATA_RGB_8 {
+        } else if in_type == RGB8 {
             (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgb)
         }
         debug_assert!((*transform).transform_fn.is_some());
@@ -1140,18 +1140,18 @@ fn transform_precacheLUT_float(
 
 pub fn transform_create(
     input: &Profile,
-    in_type: qcms_data_type,
+    in_type: DataType,
     output: &Profile,
-    out_type: qcms_data_type,
+    out_type: DataType,
     _intent: Intent,
 ) -> Option<Box<qcms_transform>> {
     // Ensure the requested input and output types make sense.
     let matching_format = match (in_type, out_type) {
-        (DATA_RGB_8, DATA_RGB_8) => true,
-        (DATA_RGBA_8, DATA_RGBA_8) => true,
-        (DATA_BGRA_8, DATA_BGRA_8) => true,
-        (DATA_GRAY_8, out_type) => matches!(out_type, DATA_RGB_8 | DATA_RGBA_8 | DATA_BGRA_8),
-        (DATA_GRAYA_8, out_type) => matches!(out_type, DATA_RGBA_8 | DATA_BGRA_8),
+        (RGB8, RGB8) => true,
+        (RGBA8, RGBA8) => true,
+        (BGRA8, BGRA8) => true,
+        (Gray8, out_type) => matches!(out_type, RGB8 | RGBA8 | BGRA8),
+        (GrayA8, out_type) => matches!(out_type, RGBA8 | BGRA8),
         _ => false,
     };
     if !matching_format {
@@ -1168,7 +1168,7 @@ pub fn transform_create(
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
     if SUPPORTS_ICCV4.load(Ordering::Relaxed)
-        && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
+        && (in_type == RGB8 || in_type == RGBA8 || in_type == BGRA8)
         && (input.A2B0.is_some()
             || output.B2A0.is_some()
             || input.mAB.is_some()
@@ -1206,19 +1206,19 @@ pub fn transform_create(
         if precache {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             if is_x86_feature_detected!("avx") {
-                if in_type == DATA_RGB_8 {
+                if in_type == RGB8 {
                     transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_avx)
-                } else if in_type == DATA_RGBA_8 {
+                } else if in_type == RGBA8 {
                     transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_avx)
-                } else if in_type == DATA_BGRA_8 {
+                } else if in_type == BGRA8 {
                     transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_avx)
                 }
             } else if cfg!(not(miri)) && is_x86_feature_detected!("sse2") {
-                if in_type == DATA_RGB_8 {
+                if in_type == RGB8 {
                     transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_sse2)
-                } else if in_type == DATA_RGBA_8 {
+                } else if in_type == RGBA8 {
                     transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_sse2)
-                } else if in_type == DATA_BGRA_8 {
+                } else if in_type == BGRA8 {
                     transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_sse2)
                 }
             }
@@ -1230,29 +1230,29 @@ pub fn transform_create(
 
             #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
             if neon_supported {
-                if in_type == DATA_RGB_8 {
+                if in_type == RGB8 {
                     transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_neon)
-                } else if in_type == DATA_RGBA_8 {
+                } else if in_type == RGBA8 {
                     transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_neon)
-                } else if in_type == DATA_BGRA_8 {
+                } else if in_type == BGRA8 {
                     transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_neon)
                 }
             }
 
             if transform.transform_fn.is_none() {
-                if in_type == DATA_RGB_8 {
+                if in_type == RGB8 {
                     transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_precache)
-                } else if in_type == DATA_RGBA_8 {
+                } else if in_type == RGBA8 {
                     transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_precache)
-                } else if in_type == DATA_BGRA_8 {
+                } else if in_type == BGRA8 {
                     transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_precache)
                 }
             }
-        } else if in_type == DATA_RGB_8 {
+        } else if in_type == RGB8 {
             transform.transform_fn = Some(qcms_transform_data_rgb_out_lut)
-        } else if in_type == DATA_RGBA_8 {
+        } else if in_type == RGBA8 {
             transform.transform_fn = Some(qcms_transform_data_rgba_out_lut)
-        } else if in_type == DATA_BGRA_8 {
+        } else if in_type == BGRA8 {
             transform.transform_fn = Some(qcms_transform_data_bgra_out_lut)
         }
         //XXX: avoid duplicating tables if we can
@@ -1301,31 +1301,31 @@ pub fn transform_create(
         transform.input_gamma_table_gray = build_input_gamma_table(input.grayTRC.as_deref());
         transform.input_gamma_table_gray.as_ref()?;
         if precache {
-            if out_type == DATA_RGB_8 {
+            if out_type == RGB8 {
                 transform.transform_fn = Some(qcms_transform_data_gray_out_precache)
-            } else if out_type == DATA_RGBA_8 {
-                if in_type == DATA_GRAY_8 {
+            } else if out_type == RGBA8 {
+                if in_type == Gray8 {
                     transform.transform_fn = Some(qcms_transform_data_gray_rgba_out_precache)
                 } else {
                     transform.transform_fn = Some(qcms_transform_data_graya_rgba_out_precache)
                 }
-            } else if out_type == DATA_BGRA_8 {
-                if in_type == DATA_GRAY_8 {
+            } else if out_type == BGRA8 {
+                if in_type == Gray8 {
                     transform.transform_fn = Some(qcms_transform_data_gray_bgra_out_precache)
                 } else {
                     transform.transform_fn = Some(qcms_transform_data_graya_bgra_out_precache)
                 }
             }
-        } else if out_type == DATA_RGB_8 {
+        } else if out_type == RGB8 {
             transform.transform_fn = Some(qcms_transform_data_gray_out_lut)
-        } else if out_type == DATA_RGBA_8 {
-            if in_type == DATA_GRAY_8 {
+        } else if out_type == RGBA8 {
+            if in_type == Gray8 {
                 transform.transform_fn = Some(qcms_transform_data_gray_rgba_out_lut)
             } else {
                 transform.transform_fn = Some(qcms_transform_data_graya_rgba_out_lut)
             }
-        } else if out_type == DATA_BGRA_8 {
-            if in_type == DATA_GRAY_8 {
+        } else if out_type == BGRA8 {
+            if in_type == Gray8 {
                 transform.transform_fn = Some(qcms_transform_data_gray_bgra_out_lut)
             } else {
                 transform.transform_fn = Some(qcms_transform_data_graya_bgra_out_lut)
@@ -1340,7 +1340,7 @@ pub fn transform_create(
 }
 
 pub struct Transform {
-    ty: qcms_data_type,
+    ty: DataType,
     xfm: Box<qcms_transform>,
 }
 
@@ -1348,7 +1348,7 @@ impl Transform {
     pub fn new(
         input: &Profile,
         output: &Profile,
-        ty: qcms_data_type,
+        ty: DataType,
         intent: Intent,
     ) -> Option<Self> {
         transform_create(input, ty, output, ty, intent).map(|xfm| Transform { ty, xfm })

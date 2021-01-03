@@ -7,7 +7,7 @@ use crate::{
     iccread::*,
     matrix::Matrix,
     transform::get_rgb_colorants,
-    transform::qcms_data_type,
+    transform::DataType,
     transform::{qcms_transform, transform_create},
     Intent,
 };
@@ -219,9 +219,9 @@ pub unsafe extern "C" fn qcms_data_from_unicode_path(
 #[no_mangle]
 pub extern "C" fn qcms_transform_create(
     in_0: &Profile,
-    in_type: qcms_data_type,
+    in_type: DataType,
     out: &Profile,
-    out_type: qcms_data_type,
+    out_type: DataType,
     intent: Intent,
 ) -> *mut qcms_transform {
     let transform = transform_create(in_0, in_type, out, out_type, intent);
