@@ -859,10 +859,10 @@ fn read_tag_lutType(src: &mut mem_source, tag: &tag) -> Option<Box<lutType>> {
 fn read_rendering_intent(mut profile: &mut Profile, src: &mut mem_source) {
     let intent = read_u32(src, 64);
     profile.rendering_intent = match intent {
-        x if x == QCMS_INTENT_PERCEPTUAL as u32 => QCMS_INTENT_PERCEPTUAL,
-        x if x == QCMS_INTENT_RELATIVE_COLORIMETRIC as u32 => QCMS_INTENT_RELATIVE_COLORIMETRIC,
-        x if x == QCMS_INTENT_SATURATION as u32 => QCMS_INTENT_SATURATION,
-        x if x == QCMS_INTENT_ABSOLUTE_COLORIMETRIC as u32 => QCMS_INTENT_ABSOLUTE_COLORIMETRIC,
+        x if x == Perceptual as u32 => Perceptual,
+        x if x == RelativeColorimetric as u32 => RelativeColorimetric,
+        x if x == Saturation as u32 => Saturation,
+        x if x == AbsoluteColorimetric as u32 => AbsoluteColorimetric,
         _ => {
             invalid_source(src, "unknown rendering intent");
             Intent::default()
@@ -993,7 +993,7 @@ impl Profile {
         profile.blueTRC = Some(curve_from_table(table));
         profile.greenTRC = Some(curve_from_table(table));
         profile.class_type = DISPLAY_DEVICE_PROFILE;
-        profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+        profile.rendering_intent = Perceptual;
         profile.color_space = RGB_SIGNATURE;
         profile.pcs = XYZ_TYPE;
         Some(profile)
@@ -1033,7 +1033,7 @@ impl Profile {
 
         profile.grayTRC = Some(curve_from_gamma(gamma));
         profile.class_type = DISPLAY_DEVICE_PROFILE;
-        profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+        profile.rendering_intent = Perceptual;
         profile.color_space = GRAY_SIGNATURE;
         profile.pcs = XYZ_TYPE;
         profile
@@ -1056,7 +1056,7 @@ impl Profile {
         profile.blueTRC = Some(curve_from_gamma(blueGamma));
         profile.greenTRC = Some(curve_from_gamma(greenGamma));
         profile.class_type = DISPLAY_DEVICE_PROFILE;
-        profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+        profile.rendering_intent = Perceptual;
         profile.color_space = RGB_SIGNATURE;
         profile.pcs = XYZ_TYPE;
         Some(profile)
