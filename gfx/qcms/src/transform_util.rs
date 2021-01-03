@@ -365,8 +365,7 @@ fn invert_lut(table: &[u16], out_length: i32) -> Vec<u16> {
 fn compute_precache_pow(output: &mut [u8; PRECACHE_OUTPUT_SIZE], gamma: f32) {
     for v in 0..PRECACHE_OUTPUT_SIZE {
         //XXX: don't do integer/float conversion... and round?
-        output[v] =
-            (255. * (v as f32 / PRECACHE_OUTPUT_MAX as f32).powf(gamma)) as u8;
+        output[v] = (255. * (v as f32 / PRECACHE_OUTPUT_MAX as f32).powf(gamma)) as u8;
     }
 }
 pub fn compute_precache_lut(output: &mut [u8; PRECACHE_OUTPUT_SIZE], table: &[u16]) {
@@ -375,7 +374,7 @@ pub fn compute_precache_lut(output: &mut [u8; PRECACHE_OUTPUT_SIZE], table: &[u1
     }
 }
 pub fn compute_precache_linear(output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
-    for v in  0..PRECACHE_OUTPUT_SIZE {
+    for v in 0..PRECACHE_OUTPUT_SIZE {
         //XXX: round?
         output[v] = (v / (PRECACHE_OUTPUT_SIZE / 256)) as u8;
     }
