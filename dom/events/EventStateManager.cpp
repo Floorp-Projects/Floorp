@@ -3339,8 +3339,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             break;
           }
 
-          int32_t tabIndexUnused;
-          if (frame->IsFocusable(&tabIndexUnused, true)) {
+          if (frame->IsFocusable(/* aWithMouse = */ true)) {
             break;
           }
         }
