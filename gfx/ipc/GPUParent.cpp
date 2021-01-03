@@ -142,9 +142,7 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   LayerTreeOwnerTracker::Initialize();
   CompositorBridgeParent::InitializeStatics();
   mozilla::ipc::SetThisProcessName("GPU Process");
-#ifdef XP_WIN
-  wmf::MFStartup();
-#endif
+
   return true;
 }
 
@@ -294,6 +292,19 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   GPUDeviceData data;
   RecvGetDeviceStatus(&data);
   Unused << SendInitComplete(data);
+
+  // Dispatch a task to run when idle that will determine which codecs are
+  // usable. The primary goal is to determine if the media feature pack is
+  // installed.
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThreadQueue(
+      NS_NewRunnableFunction(
+          "GPUParent::Supported",
+          []() {
+            auto supported = PDMFactory::Supported();
+            Unused << GPUParent::GetSingleton()->SendUpdateMediaCodecsSupported(
+                supported);
+          }),
+      2000 /* 2 seconds timeout */, EventQueuePriority::Idle));
 
   Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_INITIALIZATION_TIME_MS,
                                  mLaunchTime);
