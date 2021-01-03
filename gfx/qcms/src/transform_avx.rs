@@ -21,7 +21,7 @@ struct Output([u32; 8]);
 
 #[target_feature(enable = "avx")]
 unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
     mut length: usize,
@@ -201,7 +201,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
 #[no_mangle]
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,
@@ -211,7 +211,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
 #[no_mangle]
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,
@@ -221,7 +221,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
 #[no_mangle]
 #[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_avx(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
     length: usize,
