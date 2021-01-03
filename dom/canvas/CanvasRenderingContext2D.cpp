@@ -5333,13 +5333,13 @@ static already_AddRefed<ImageData> CreateImageData(
 
 already_AddRefed<ImageData> CanvasRenderingContext2D::CreateImageData(
     JSContext* aCx, double aSw, double aSh, ErrorResult& aError) {
-  int32_t wi = JS::ToInt32(aSw);
-  int32_t hi = JS::ToInt32(aSh);
-
-  if (wi == 0 || hi == 0) {
+  if (!aSw || !aSh) {
     aError.ThrowIndexSizeError("Invalid width or height");
     return nullptr;
   }
+
+  int32_t wi = JS::ToInt32(aSw);
+  int32_t hi = JS::ToInt32(aSh);
 
   uint32_t w = Abs(wi);
   uint32_t h = Abs(hi);
