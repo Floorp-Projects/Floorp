@@ -62,7 +62,7 @@ pub const FLOATSCALE: f32 = PRECACHE_OUTPUT_SIZE as f32;
 pub const CLAMPMAXVAL: f32 = ((PRECACHE_OUTPUT_SIZE - 1) as f32) / PRECACHE_OUTPUT_SIZE as f32;
 
 #[repr(C)]
-pub struct precache_output {
+pub struct PrecacheOuput {
     /* We previously used a count of 65536 here but that seems like more
      * precision than we actually need.  By reducing the size we can
      * improve startup performance and reduce memory usage. ColorSync on
@@ -71,9 +71,9 @@ pub struct precache_output {
     pub data: [u8; PRECACHE_OUTPUT_SIZE],
 }
 
-impl Default for precache_output {
-    fn default() -> precache_output {
-        precache_output {
+impl Default for PrecacheOuput {
+    fn default() -> PrecacheOuput {
+        PrecacheOuput {
             data: [0; PRECACHE_OUTPUT_SIZE],
         }
     }
@@ -108,9 +108,9 @@ pub struct qcms_transform {
     pub output_gamma_lut_g_length: usize,
     pub output_gamma_lut_b_length: usize,
     pub output_gamma_lut_gray_length: usize,
-    pub output_table_r: Option<Arc<precache_output>>,
-    pub output_table_g: Option<Arc<precache_output>>,
-    pub output_table_b: Option<Arc<precache_output>>,
+    pub output_table_r: Option<Arc<PrecacheOuput>>,
+    pub output_table_g: Option<Arc<PrecacheOuput>>,
+    pub output_table_b: Option<Arc<PrecacheOuput>>,
     pub transform_fn: transform_fn_t,
 }
 
@@ -998,8 +998,8 @@ pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut(
     qcms_transform_data_template_lut::<BGRA>(transform, src, dest, length);
 }
 
-fn precache_create() -> Arc<precache_output> {
-    Arc::new(precache_output::default())
+fn precache_create() -> Arc<PrecacheOuput> {
+    Arc::new(PrecacheOuput::default())
 }
 
 #[no_mangle]
