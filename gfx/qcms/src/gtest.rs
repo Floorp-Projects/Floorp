@@ -2,7 +2,7 @@
 mod gtest {
     use crate::{
         c_bindings::*, iccread::*, transform::qcms_data_type::*, transform::*,
-        transform_util::lut_inverse_interp16, Intent::QCMS_INTENT_PERCEPTUAL,
+        transform_util::lut_inverse_interp16, Intent::Perceptual,
     };
     use libc::c_void;
     use std::ptr::null_mut;
@@ -182,7 +182,7 @@ mod gtest {
                 DATA_RGB_8,
                 &mut *other,
                 DATA_RGB_8,
-                QCMS_INTENT_PERCEPTUAL,
+                Perceptual,
             )
         };
         let mut data: [u8; 120] = [0; 120];
@@ -215,7 +215,7 @@ mod gtest {
                 DATA_GRAYA_8,
                 &mut *sRGB_profile,
                 DATA_RGBA_8,
-                QCMS_INTENT_PERCEPTUAL,
+                Perceptual,
             )
         };
         assert!(!transform.is_null());
@@ -550,7 +550,7 @@ mod gtest {
                 ty,
                 &*self.out_profile,
                 ty,
-                QCMS_INTENT_PERCEPTUAL,
+                Perceptual,
             ))
         }
 
@@ -826,7 +826,7 @@ mod gtest {
                 DATA_RGB_8,
                 &*output,
                 DATA_RGB_8,
-                QCMS_INTENT_PERCEPTUAL,
+                Perceptual,
             )
         };
         let src = [0u8, 60, 195];

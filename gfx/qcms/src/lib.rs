@@ -16,10 +16,10 @@
 #[repr(u32)]
 #[derive(Clone, Copy)]
 pub enum Intent {
-    QCMS_INTENT_ABSOLUTE_COLORIMETRIC = 3,
-    QCMS_INTENT_SATURATION = 2,
-    QCMS_INTENT_RELATIVE_COLORIMETRIC = 1,
-    QCMS_INTENT_PERCEPTUAL = 0,
+    AbsoluteColorimetric = 3,
+    Saturation = 2,
+    RelativeColorimetric = 1,
+    Perceptual = 0,
 }
 
 use Intent::*;
@@ -29,7 +29,7 @@ impl Default for Intent {
         /* Chris Murphy (CM consultant) suggests this as a default in the event that we
          * cannot reproduce relative + Black Point Compensation.  BPC brings an
          * unacceptable performance overhead, so we go with perceptual. */
-        QCMS_INTENT_PERCEPTUAL
+        Perceptual
     }
 }
 
