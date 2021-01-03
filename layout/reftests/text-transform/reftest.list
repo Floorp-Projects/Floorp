@@ -1,3 +1,6 @@
+# Some text-transform tests may require font fallback
+defaults pref(gfx.font_rendering.fallback.async,false)
+
 == capitalize-1.html capitalize-ref.html
 == capitalize-2.html capitalize-ref.html
 == capitalize-3.html capitalize-3-ref.html
@@ -37,3 +40,6 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == irish-lowercase-1b.html 
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-1.html fullwidth-1-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-2.html fullwidth-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-all.html fullwidth-all-ref.html # Bug 1392106
+
+# Reset default prefs
+defaults
