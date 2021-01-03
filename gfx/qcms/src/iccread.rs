@@ -26,7 +26,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::transform::{precache_output, set_rgb_colorants};
+use crate::transform::{PrecacheOuput, set_rgb_colorants};
 use crate::{matrix::Matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent, Intent::*};
 
 pub static SUPPORTS_ICCV4: AtomicBool = AtomicBool::new(cfg!(feature = "iccv4-enabled"));
@@ -55,9 +55,9 @@ pub struct Profile {
     pub(crate) mAB: Option<Box<lutmABType>>,
     pub(crate) mBA: Option<Box<lutmABType>>,
     pub(crate) chromaticAdaption: Matrix,
-    pub(crate) output_table_r: Option<Arc<precache_output>>,
-    pub(crate) output_table_g: Option<Arc<precache_output>>,
-    pub(crate) output_table_b: Option<Arc<precache_output>>,
+    pub(crate) output_table_r: Option<Arc<PrecacheOuput>>,
+    pub(crate) output_table_g: Option<Arc<PrecacheOuput>>,
+    pub(crate) output_table_b: Option<Arc<PrecacheOuput>>,
 }
 
 #[derive(Default)]
