@@ -74,8 +74,7 @@ void HTMLLegendElement::Focus(const FocusOptions& aOptions,
     return;
   }
 
-  int32_t tabIndex;
-  if (frame->IsFocusable(&tabIndex, false)) {
+  if (frame->IsFocusable()) {
     nsGenericHTMLElement::Focus(aOptions, aCallerType, aError);
     return;
   }
