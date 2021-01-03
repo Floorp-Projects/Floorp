@@ -593,7 +593,7 @@ mod gtest {
 
         unsafe fn ProduceRef(&mut self, trans_fn: transform_fn_t) {
             trans_fn.unwrap()(
-                self.transform,
+                &*self.transform,
                 self.input.as_mut_ptr(),
                 self.reference.as_mut_ptr(),
                 self.pixels,
@@ -613,7 +613,7 @@ mod gtest {
         unsafe fn ProduceOutput(&mut self, trans_fn: transform_fn_t) {
             self.ClearOutputBuffer();
             trans_fn.unwrap()(
-                self.transform,
+                &*self.transform,
                 self.input.as_mut_ptr(),
                 self.output.as_mut_ptr(),
                 self.pixels,
