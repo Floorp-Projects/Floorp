@@ -114,9 +114,8 @@ pub struct qcms_transform {
     pub transform_fn: transform_fn_t,
 }
 
-pub type transform_fn_t = Option<
-    unsafe extern "C" fn(_: &qcms_transform, _: *const u8, _: *mut u8, _: usize) -> (),
->;
+pub type transform_fn_t =
+    Option<unsafe extern "C" fn(_: &qcms_transform, _: *const u8, _: *mut u8, _: usize) -> ()>;
 //XXX: I don't really like the _DATA_ prefix
 #[repr(u32)]
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -1161,14 +1160,19 @@ pub fn transform_create(
     }
     let mut transform: Box<qcms_transform> = Box::new(Default::default());
     let mut precache: bool = false;
-    if output.output_table_r.is_some() && output.output_table_g.is_some() && output.output_table_b.is_some()
+    if output.output_table_r.is_some()
+        && output.output_table_g.is_some()
+        && output.output_table_b.is_some()
     {
         precache = true
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
     if SUPPORTS_ICCV4.load(Ordering::Relaxed)
         && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
-        && (input.A2B0.is_some() || output.B2A0.is_some() || input.mAB.is_some() || output.mAB.is_some())
+        && (input.A2B0.is_some()
+            || output.B2A0.is_some()
+            || input.mAB.is_some()
+            || output.mAB.is_some())
     {
         // Precache the transformation to a CLUT 33x33x33 in size.
         // 33 is used by many profiles and works well in pratice.
@@ -1352,7 +1356,11 @@ impl Transform {
 
     pub fn apply(&self, data: &mut [u8]) {
         if data.len() % self.ty.bytes_per_pixel() != 0 {
-            panic!("incomplete pixels: should be a multiple of {} got {}", self.ty.bytes_per_pixel(), data.len())
+            panic!(
+                "incomplete pixels: should be a multiple of {} got {}",
+                self.ty.bytes_per_pixel(),
+                data.len()
+            )
         }
         unsafe {
             self.xfm.transform_fn.expect("non-null function pointer")(
