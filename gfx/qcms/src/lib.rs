@@ -12,6 +12,7 @@
 #![feature(arm_target_feature)]
 #![feature(raw_ref_op)]
 
+/* These values match the Rendering Intent values from the ICC spec */
 #[repr(u32)]
 #[derive(Clone, Copy)]
 pub enum Intent {
@@ -25,6 +26,9 @@ use Intent::*;
 
 impl Default for Intent {
     fn default() -> Self {
+        /* Chris Murphy (CM consultant) suggests this as a default in the event that we
+         * cannot reproduce relative + Black Point Compensation.  BPC brings an
+         * unacceptable performance overhead, so we go with perceptual. */
         QCMS_INTENT_PERCEPTUAL
     }
 }
