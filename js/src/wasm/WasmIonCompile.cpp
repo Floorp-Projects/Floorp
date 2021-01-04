@@ -1447,6 +1447,9 @@ class FunctionCompiler {
     }
 
     for (iter.switchToPrev(); !iter.done(); iter.prev()) {
+      if (!mirGen().ensureBallast()) {
+        return false;
+      }
       const ABIResult& result = iter.cur();
       MInstruction* def;
       if (result.inRegister()) {
