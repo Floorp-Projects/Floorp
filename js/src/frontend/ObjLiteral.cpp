@@ -147,10 +147,6 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
     json.value("NoValues");
     flags -= ObjLiteralFlag::NoValues;
   }
-  if (flags.contains(ObjLiteralFlag::IsInnerSingleton)) {
-    json.value("IsInnerSingleton");
-    flags -= ObjLiteralFlag::IsInnerSingleton;
-  }
 
   if (!flags.isEmpty()) {
     json.value("Unknown(%x)", flags.serialize());

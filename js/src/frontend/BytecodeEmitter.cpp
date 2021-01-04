@@ -8972,8 +8972,6 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     return false;
   }
 
-  // TODO(no-TI): remove IsInnerSingleton flag.
-
   // JSOp::Object may only be used by (top-level) run-once scripts.
   MOZ_ASSERT_IF(singleton, compilationInfo.input.options.isRunOnce);
 
@@ -9749,9 +9747,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
     }
     if (!useObjLiteralValues) {
       flags += ObjLiteralFlag::NoValues;
-    }
-    if (isInner) {
-      flags += ObjLiteralFlag::IsInnerSingleton;
     }
 
     // Use an ObjLiteral op. This will record ObjLiteral insns in the
