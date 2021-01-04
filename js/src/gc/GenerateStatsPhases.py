@@ -167,7 +167,6 @@ PhaseKindGraphRoots = [
                     ),
                     PhaseKind("SWEEP_BASE_SHAPE", "Sweep Base Shapes", 24),
                     PhaseKind("SWEEP_INITIAL_SHAPE", "Sweep Initial Shapes", 25),
-                    PhaseKind("SWEEP_TYPE_OBJECT", "Sweep Type Objects", 26),
                     PhaseKind("SWEEP_REGEXP", "Sweep Regexps", 28),
                     PhaseKind("SWEEP_COMPRESSION", "Sweep Compression Tasks", 62),
                     PhaseKind("SWEEP_WEAKMAPS", "Sweep WeakMaps", 63),
