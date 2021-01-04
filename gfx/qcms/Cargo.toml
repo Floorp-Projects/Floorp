@@ -11,7 +11,7 @@ keywords = ["color"]
 categories = ["graphics"]
 
 [features]
-default = ["c_bindings"]
+default = []
 c_bindings = ["libc"]
 iccv4-enabled = []
 
