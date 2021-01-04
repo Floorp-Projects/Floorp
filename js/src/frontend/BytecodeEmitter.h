@@ -495,7 +495,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                      PropListType type, bool isInner = false);
 
   MOZ_MUST_USE bool emitPropertyListObjLiteral(ListNode* obj,
-                                               ObjLiteralFlags flags);
+                                               ObjLiteralFlags flags,
+                                               bool singleton);
 
   MOZ_MUST_USE bool emitDestructuringRestExclusionSetObjLiteral(
       ListNode* pattern);

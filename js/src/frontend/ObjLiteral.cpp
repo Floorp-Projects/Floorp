@@ -135,10 +135,6 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
     json.value("Array");
     flags -= ObjLiteralFlag::Array;
   }
-  if (flags.contains(ObjLiteralFlag::Singleton)) {
-    json.value("Singleton");
-    flags -= ObjLiteralFlag::Singleton;
-  }
   if (flags.contains(ObjLiteralFlag::NoValues)) {
     json.value("NoValues");
     flags -= ObjLiteralFlag::NoValues;

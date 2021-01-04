@@ -8931,12 +8931,12 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 }
 
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
-                                                 ObjLiteralFlags flags) {
+                                                 ObjLiteralFlags flags,
+                                                 bool singleton) {
   ObjLiteralWriter writer;
 
   writer.beginObject(flags);
   bool noValues = flags.contains(ObjLiteralFlag::NoValues);
-  bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
   for (ParseNode* propdef : obj->contents()) {
     BinaryNode* prop = &propdef->as<BinaryNode>();
@@ -9740,9 +9740,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
     // not change without running (at least) Speedometer, Octane, Kraken, TP6,
     // and AWSY tests.
     ObjLiteralFlags flags;
-    if (isSingletonContext && !isInner) {
-      flags += ObjLiteralFlag::Singleton;
-    }
     if (!useObjLiteralValues) {
       flags += ObjLiteralFlag::NoValues;
     }
@@ -9752,7 +9749,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
     // fixups so that at GC-publish time at the end of parse, the full (case 1)
     // or template-without-values (case 2) object can be allocated and the
     // bytecode can be patched to refer to it.
-    if (!emitPropertyListObjLiteral(objNode, flags)) {
+    bool singleton = isSingletonContext && !isInner;
+    if (!emitPropertyListObjLiteral(objNode, flags, singleton)) {
       //              [stack] OBJ
       return false;
     }
