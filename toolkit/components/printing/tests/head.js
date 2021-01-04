@@ -47,12 +47,15 @@ class PrintHelper {
     }
 
     // Reset all of the other printing prefs to their default.
+    this.resetPrintPrefs();
+    return taskReturn;
+  }
+
+  static resetPrintPrefs() {
     for (let name of Services.prefs.getChildList("print.")) {
       Services.prefs.clearUserPref(name);
     }
     Services.prefs.clearUserPref("print_printer");
-
-    return taskReturn;
   }
 
   static getTestPageUrl(pathName) {
@@ -187,12 +190,19 @@ class PrintHelper {
     ok(!file.exists(), "File does not exist before printing");
     await this.withClosingFn(testFn);
     await TestUtils.waitForCondition(
-      () => file.exists(),
-      "Wait for printed file",
+      () => file.exists() && file.fileSize > 0,
+      "Wait for target file to get created",
+      50
+    );
+    ok(file.exists(), "Created target file");
+
+    await TestUtils.waitForCondition(
+      () => file.fileSize > 0,
+      "Wait for the print progress to run",
       50
     );
 
-    ok(file.exists(), "Printed the file");
+    ok(file.fileSize > 0, "Target file not empty");
   }
 
   setupMockPrint() {
