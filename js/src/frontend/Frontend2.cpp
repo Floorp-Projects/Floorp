@@ -22,11 +22,12 @@
 #include "frontend/CompilationInfo.h"   // CompilationState, CompilationInfo
 #include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData, NewEmptyVarScopeData, NewEmptyFunctionScopeData
 #include "frontend/ParserAtom.h"        // ParserAtomsTable
+#include "frontend/ScriptIndex.h"       // ScriptIndex
 #include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
 #include "frontend/SourceNotes.h"       // SrcNote
-#include "frontend/Stencil.h"      // ScopeStencil, RegExpIndex, FunctionIndex
-#include "frontend/TokenStream.h"  // TokenStreamAnyChars
-#include "irregexp/RegExpAPI.h"    // irregexp::CheckPatternSyntax
+#include "frontend/Stencil.h"           // ScopeStencil, RegExpIndex
+#include "frontend/TokenStream.h"       // TokenStreamAnyChars
+#include "irregexp/RegExpAPI.h"         // irregexp::CheckPatternSyntax
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCAPI.h"                 // JS::AutoCheckCannotGC
@@ -235,7 +236,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         bool hasParameterExprs = function.has_parameter_exprs;
         bool needsEnvironment = function.non_positional_formal_start;
-        FunctionIndex functionIndex = FunctionIndex(function.function_index);
+        ScriptIndex functionIndex = ScriptIndex(function.function_index);
         bool isArrow = function.is_arrow;
 
         ScopeIndex enclosingIndex(function.enclosing);
@@ -398,7 +399,7 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
         break;
       }
       case SmooshGCThing::Tag::Function: {
-        new (raw) TaggedScriptThingIndex(FunctionIndex(item.AsFunction()));
+        new (raw) TaggedScriptThingIndex(ScriptIndex(item.AsFunction()));
         break;
       }
       case SmooshGCThing::Tag::Scope: {
@@ -425,7 +426,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           const SmooshScriptStencil& smooshScript,
                           Vector<const ParserAtom*>& allAtoms,
                           CompilationInfo& compilationInfo,
-                          ScriptStencil& script, FunctionIndex functionIndex) {
+                          ScriptStencil& script, ScriptIndex scriptIndex) {
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
   const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
@@ -463,7 +464,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
       return false;
     }
 
-    if (!compilationInfo.stencil.sharedData.addAndShare(cx, functionIndex,
+    if (!compilationInfo.stencil.sharedData.addAndShare(cx, scriptIndex,
                                                         sharedData)) {
       return false;
     }
@@ -625,7 +626,7 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
 
     if (!ConvertScriptStencil(
             cx, result, result.scripts.data[i], allAtoms, compilationInfo,
-            compilationInfo.stencil.scriptData[i], FunctionIndex(i))) {
+            compilationInfo.stencil.scriptData[i], ScriptIndex(i))) {
       return false;
     }
   }
