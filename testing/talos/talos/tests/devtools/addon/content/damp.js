@@ -15,6 +15,10 @@ const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 
+const DampLoadParentModule = require("damp-test/actors/DampLoadParent.jsm");
+const dampTestHead = require("damp-test/tests/head.js");
+const DAMP_TESTS = require("damp-test/damp-tests.js");
+
 const env = Cc["@mozilla.org/process/environment;1"].getService(
   Ci.nsIEnvironment
 );
@@ -432,8 +436,7 @@ Damp.prototype = {
 
     try {
       dump("Initialize the head file with a reference to this DAMP instance\n");
-      let head = require("damp-test/tests/head.js");
-      head.initialize(this);
+      dampTestHead.initialize(this);
 
       this._registerDampLoadActors();
 
@@ -444,7 +447,6 @@ Damp.prototype = {
       // Filter tests via `./mach --subtests filter` command line argument
       let filter = Services.prefs.getCharPref("talos.subtests", "");
 
-      let DAMP_TESTS = require("damp-test/damp-tests.js");
       let tests = DAMP_TESTS.filter(test => !test.disabled).filter(test =>
         test.name.includes(filter)
       );
@@ -492,7 +494,7 @@ Damp.prototype = {
       `Wait for a pageshow event for browsing context ${browser.browsingContext.id}\n`
     );
     return new Promise(resolve => {
-      const eventDispatcher = this._getDampLoadEventDispatcher();
+      const eventDispatcher = DampLoadParentModule.EventDispatcher;
       const onPageShow = (eventName, data) => {
         dump(`Received pageshow event for ${data.browsingContext.id}\n`);
         if (data.browsingContext !== browser.browsingContext) {
@@ -530,15 +532,6 @@ Damp.prototype = {
   _unregisterDampLoadActors() {
     dump(`[DampLoad helper] Unregister DampLoad actors\n`);
     ChromeUtils.unregisterWindowActor("DampLoad");
-  },
-
-  _getDampLoadEventDispatcher() {
-    if (!this._dampLoadEventDispatcher) {
-      const DampLoadParentModule = require("damp-test/actors/DampLoadParent.jsm");
-      this._dampLoadEventDispatcher = DampLoadParentModule.EventDispatcher;
-    }
-
-    return this._dampLoadEventDispatcher;
   },
 };
 
