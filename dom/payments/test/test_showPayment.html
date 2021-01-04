@@ -215,64 +215,58 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   async function testShowNormalFlow() {
     const testName = "testShowNormalFlow";
     await requestChromeAction("set-normal-ui-service", testName);
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      request.addEventListener("shippingaddresschange", event => {
-        checkAddress(testName, request.shippingAddress, true/*fromEvent*/);
-        event.updateWith(updateWithPromise(defaultDetails));
-      });
-      request.addEventListener("shippingoptionchange", event => {
-        event.updateWith(updateWithPromise(updatedShippingOptionsDetails));
-      });
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        let response = await request.show();
-        checkResponse(testName, response, false);
-        await response.complete();
-      } catch (error) {
-        ok(false, `${testName} Unexpected error: ${e.name}`);
-      }
-      await handler.destruct();
-      resolve();
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    request.addEventListener("shippingaddresschange", event => {
+      checkAddress(testName, request.shippingAddress, true/*fromEvent*/);
+      event.updateWith(updateWithPromise(defaultDetails));
     });
+    request.addEventListener("shippingoptionchange", event => {
+      event.updateWith(updateWithPromise(updatedShippingOptionsDetails));
+    });
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      let response = await request.show();
+      checkResponse(testName, response, false);
+      await response.complete();
+    } catch (error) {
+      ok(false, `${testName} Unexpected error: ${e.name}`);
+    }
+    await handler.destruct();
   }
 
   // testing show with nonsupported methods
   async function testCannotMakePaymentShow() {
     const testName = "testCannotMakePaymentShow";
     await requestChromeAction("set-simple-ui-service", testName);
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(nonSupportedMethods, defaultDetails);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      let result = await request.canMakePayment();
-      ok(!result, `${testName}: canMakePayment() should return false.`);
-      try {
-        await request.show();
-        ok(false, `${testName}: should be rejected with 'NotSupportedError' but got resolved.`);
-      } catch (error) {
-        is(error.name, "NotSupportedError", `${testName}: should be rejected with 'NotSupportedError'.`);
-      }
-      await handler.destruct();
-      resolve();
-    });
+
+    const request = new PaymentRequest(nonSupportedMethods, defaultDetails);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let result = await request.canMakePayment();
+    ok(!result, `${testName}: canMakePayment() should return false.`);
+    try {
+      await request.show();
+      ok(false, `${testName}: should be rejected with 'NotSupportedError' but got resolved.`);
+    } catch (error) {
+      is(error.name, "NotSupportedError", `${testName}: should be rejected with 'NotSupportedError'.`);
+    }
+    await handler.destruct();
   }
 
   // testing show rejected by user
   async function testRejectShow() {
     const testName = "testRejectShow";
     await requestChromeAction("set-reject-ui-service", testName);
-    return new Promise(async(resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        await request.show();
-        ok(false, `${testName}: Should be rejected with 'AbortError' but got resolved.`);
-      } catch(error) {
-        is(error.name, "AbortError", `${testName}: Should be rejected with 'AbortError'.`);
-      }
-      await handler.destruct();
-      resolve();
-    });
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      await request.show();
+      ok(false, `${testName}: Should be rejected with 'AbortError' but got resolved.`);
+    } catch(error) {
+      is(error.name, "AbortError", `${testName}: Should be rejected with 'AbortError'.`);
+    }
+    await handler.destruct();
   }
 
   // testing PaymentResponse.complete() with specified result
@@ -283,18 +277,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     } else {
       await requestChromeAction(`set-complete-status-unknown`);
     }
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        let response = await request.show();
-        await response.complete(result);
-      } catch (error) {
-        ok(false, `${testName}: Unexpected error ${error.name}.`);
-      }
-      await handler.destruct();
-      resolve();
-    });
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      let response = await request.show();
+      await response.complete(result);
+    } catch (error) {
+      ok(false, `${testName}: Unexpected error ${error.name}.`);
+    }
+    await handler.destruct();
   }
 
   async function testCompleteFail() {
@@ -324,32 +316,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     } else {
       await requestChromeAction("set-update-with-ui-service", testName);
     }
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      request.addEventListener("shippingaddresschange", event => {
-        event.updateWith(updateWithPromise(detailsUpdate));
-      });
-      request.addEventListener("shippingoptionchange", event => {
-        event.updateWith(updateWithPromise(detailsUpdate));
-      });
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        const response = await request.show();
-        if (expectedError) {
-          ok(false, `${testName}: Should be rejected with ${expectedError} but got resolved.`);
-        } else {
-          await response.complete("success");
-        }
-      } catch(error) {
-        if (expectedError) {
-          is(error.name, expectedError, `${testName}: Should be rejected with ${expectedError}.`);
-        } else {
-          ok(false, `${testName}: Unexpected error ${error.name}.`);
-        }
-      }
-      await handler.destruct();
-      resolve();
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    request.addEventListener("shippingaddresschange", event => {
+      event.updateWith(updateWithPromise(detailsUpdate));
     });
+    request.addEventListener("shippingoptionchange", event => {
+      event.updateWith(updateWithPromise(detailsUpdate));
+    });
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      const response = await request.show();
+      if (expectedError) {
+        ok(false, `${testName}: Should be rejected with ${expectedError} but got resolved.`);
+      } else {
+        await response.complete("success");
+      }
+    } catch(error) {
+      if (expectedError) {
+        is(error.name, expectedError, `${testName}: Should be rejected with ${expectedError}.`);
+      } else {
+        ok(false, `${testName}: Unexpected error ${error.name}.`);
+      }
+    }
+    await handler.destruct();
   }
 
   async function testUpdateWithReject() {
@@ -379,29 +369,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     } else {
       await requestChromeAction("set-simple-ui-service", testName);
     }
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      ok(!request.shippingOption, `${testName}: request.shippingOption should be null.`);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        let response = await request.show(updateWithPromise(detailsUpdate));
-        if (expectedError) {
-          ok(false, `${testName}: Should be rejected with ${expectedError} but got resolved.`);
-        } else {
-          ok(response.shippingOption,
-             `${testName}: response.shippingOption should not be null.`);
-        }
-        await response.complete();
-      } catch(error) {
-        if (expectedError) {
-          is(error.name, expectedError, `${testName}: Should be rejected with ${expectedError}.`);
-        } else {
-          ok(false, `${testName}: Unexpected error ${error.name}.`);
-        }
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    ok(!request.shippingOption, `${testName}: request.shippingOption should be null.`);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      let response = await request.show(updateWithPromise(detailsUpdate));
+      if (expectedError) {
+        ok(false, `${testName}: Should be rejected with ${expectedError} but got resolved.`);
+      } else {
+        ok(response.shippingOption,
+           `${testName}: response.shippingOption should not be null.`);
       }
-      await handler.destruct();
-      resolve();
-    });
+      await response.complete();
+    } catch(error) {
+      if (expectedError) {
+        is(error.name, expectedError, `${testName}: Should be rejected with ${expectedError}.`);
+      } else {
+        ok(false, `${testName}: Unexpected error ${error.name}.`);
+      }
+    }
+    await handler.destruct();
   }
   async function testShowWithValidPromise() {
     const testName = "testShowWithValidPromise";
@@ -426,20 +414,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   async function testShowWithPromiseResolvedByRejectedPromise() {
     const testName = "testShowWithPromiseResolvedByRejectedPromise";
     await requestChromeAction("set-reject-ui-service", testName);
-    return new Promise(async (resolve)=> {
-      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      let rejectPromise = Promise.reject(new TypeError());
-      let detailsUpdatePromise = Promise.resolve(rejectPromise);
-      try {
-        await request.show(detailsUpdatePromise);
-        ok(false, `${testName}: should be rejected with AbortError but got resolved.`);
-      } catch(error) {
-        is(error.name, "AbortError", `${testName}: should be rejected with AbortError.`);
-      }
-      await handler.destruct();
-      resolve();
-    });
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let rejectPromise = Promise.reject(new TypeError());
+    let detailsUpdatePromise = Promise.resolve(rejectPromise);
+    try {
+      await request.show(detailsUpdatePromise);
+      ok(false, `${testName}: should be rejected with AbortError but got resolved.`);
+    } catch(error) {
+      is(error.name, "AbortError", `${testName}: should be rejected with AbortError.`);
+    }
+    await handler.destruct();
   }
 
   // testing show response initialization in chrome process
@@ -452,16 +438,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   async function testShowNotTriggeredByUser() {
     const testName = "testShowNotTriggeredByUser";
     await requestChromeAction("set-simple-ui-service", testName);
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, defaultDetails);
-      try {
-        await request.show();
-        ok(false, `${testName}: should be rejected with SecurityError, but got resolved.`);
-      } catch (error) {
-        is(error.name, "SecurityError", `${testName}: should be rejected with SecurityError.`);
-      }
-      resolve();
-    });
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails);
+    try {
+      await request.show();
+      ok(false, `${testName}: should be rejected with SecurityError, but got resolved.`);
+    } catch (error) {
+      is(error.name, "SecurityError", `${testName}: should be rejected with SecurityError.`);
+    }
   }
 
   // teardown function

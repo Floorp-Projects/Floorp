@@ -40,20 +40,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
     const testName = "testCloseByReloading";
     await requestChromeAction("test-setup", testName);
     info(testName);
-    return new Promise(async (resolve) => {
-      let nextStatus = ["creating", "reloading"];
-      let currStatus = nextStatus.shift();
-      let ifr = document.createElement('iframe');
-      await requestChromeAction("payment-num-set");
-      let listener = async function(event) {
+    let nextStatus = ["creating", "reloading"];
+    let currStatus = nextStatus.shift();
+    let ifr = document.createElement('iframe');
+    await requestChromeAction("payment-num-set");
+
+    await new Promise((resolve) => {
+      let listener = function(event) {
         is(event.data, "successful",
            `${testName}: Expected 'successful' when ${currStatus}, but got '${event.data}'.`);
         if (currStatus === "creating") {
           ifr.contentWindow.location.reload();
         } else if (currStatus === "reloading") {
           window.removeEventListener("message", listener);
-          await requestChromeAction("payment-num-check", 1);
-          document.body.removeChild(ifr);
           resolve();
         }
         currStatus = nextStatus.shift();
@@ -62,6 +61,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
       ifr.src = "simple_payment_request.html";
       document.body.appendChild(ifr);
     });
+
+    await requestChromeAction("payment-num-check", 1);
+    document.body.removeChild(ifr);
+
   }
 
   async function testCloseByRedirecting() {
@@ -205,37 +208,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
   async function testNonfullyActivePayment() {
     const testName = "testNonfullyActivePayment";
     await requestChromeAction("test-setup", testName);
-    return new Promise(async (resolve) => {
-      const outer = document.createElement("iframe");
-      outer.allow = "payment";
-      document.body.appendChild(outer);
-      await getLoadedPaymentRequest(outer,"blank_page.html");
 
-      const inner = outer.contentDocument.createElement("iframe");
-      inner.allow = "payment";
-      outer.contentDocument.body.appendChild(inner);
+    const outer = document.createElement("iframe");
+    outer.allow = "payment";
+    document.body.appendChild(outer);
+    await getLoadedPaymentRequest(outer,"blank_page.html");
 
-      const request = await getLoadedPaymentRequest(inner,"blank_page.html");
-      ok(request, `${testName}: PaymentRequest in inner iframe should exist.`);
+    const inner = outer.contentDocument.createElement("iframe");
+    inner.allow = "payment";
+    outer.contentDocument.body.appendChild(inner);
 
-      await new Promise(res => {
-        outer.addEventListener("load", res);
-        outer.src = "simple_payment_request.html";
-      });
+    const request = await getLoadedPaymentRequest(inner,"blank_page.html");
+    ok(request, `${testName}: PaymentRequest in inner iframe should exist.`);
 
-      let handler = SpecialPowers.getDOMWindowUtils(inner.contentWindow).setHandlingUserInput(true);
-      try {
-        const showPromise = await request.show();
-        ok(false, `${testName}: expected 'AbortError', but got resolved.`);
-      } catch (error) {
-        is(error.name, "AbortError",
-           `${testName}: expected 'AbortError'.`);
-      }
-      await handler.destruct();
-      inner.remove();
-      outer.remove();
-      resolve();
+    await new Promise(res => {
+      outer.addEventListener("load", res);
+      outer.src = "simple_payment_request.html";
     });
+
+    let handler = SpecialPowers.getDOMWindowUtils(inner.contentWindow).setHandlingUserInput(true);
+    try {
+      const showPromise = await request.show();
+      ok(false, `${testName}: expected 'AbortError', but got resolved.`);
+    } catch (error) {
+      is(error.name, "AbortError",
+         `${testName}: expected 'AbortError'.`);
+    }
+    await handler.destruct();
+    inner.remove();
+    outer.remove();
   }
 
   async function teardown() {
