@@ -73,6 +73,10 @@ enum class ProfileBufferEntryKind : ProfileBufferEntryKindUnderlyingType {
   // Markers and their data.
   Marker = LEGACY_LIMIT,
 
+  // Entry with "running times", such as CPU usage measurements.
+  // Optional between TimeBeforeCompactStack and CompactStack.
+  RunningTimes,
+
   // Optional between TimeBeforeCompactStack and CompactStack.
   UnresponsiveDurationMs,
 
