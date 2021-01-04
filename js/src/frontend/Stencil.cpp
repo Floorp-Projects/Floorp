@@ -349,8 +349,6 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
     fun = item.function;
     auto index = item.index;
     if (scriptStencil.hasSharedData) {
-      auto* sharedData = stencil.sharedData.get(index);
-
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
       //
@@ -361,8 +359,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
       }
 
       RootedScript script(
-          cx, JSScript::fromStencil(cx, input, stencil, gcOutput, index,
-                                    sharedData, fun));
+          cx, JSScript::fromStencil(cx, input, stencil, gcOutput, index));
       if (!script) {
         return false;
       }
@@ -393,26 +390,18 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
                                 CompilationGCOutput& gcOutput) {
   const ScriptStencil& scriptStencil =
       stencil.scriptData[CompilationInfo::TopLevelIndex];
-  RootedFunction fun(cx);
-  if (scriptStencil.isFunction()) {
-    fun = gcOutput.functions[CompilationInfo::TopLevelIndex];
-  }
 
   // Top-level asm.js does not generate a JSScript.
   if (scriptStencil.functionFlags.isAsmJSNative()) {
     return true;
   }
 
-  auto* sharedData = stencil.sharedData.get(CompilationInfo::TopLevelIndex);
-  MOZ_ASSERT(sharedData);
-
   if (input.lazy) {
     gcOutput.script = JSScript::CastFromLazy(input.lazy);
 
     Rooted<JSScript*> script(cx, gcOutput.script);
     if (!JSScript::fullyInitFromStencil(cx, input, stencil, gcOutput, script,
-                                        CompilationInfo::TopLevelIndex,
-                                        sharedData, fun)) {
+                                        CompilationInfo::TopLevelIndex)) {
       return false;
     }
 
@@ -424,9 +413,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return true;
   }
 
-  gcOutput.script =
-      JSScript::fromStencil(cx, input, stencil, gcOutput,
-                            CompilationInfo::TopLevelIndex, sharedData, fun);
+  gcOutput.script = JSScript::fromStencil(cx, input, stencil, gcOutput,
+                                          CompilationInfo::TopLevelIndex);
   if (!gcOutput.script) {
     return false;
   }
