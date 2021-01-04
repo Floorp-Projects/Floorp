@@ -3289,7 +3289,7 @@
 # W3C pointer events draft.
 - name: dom.w3c_pointer_events.implicit_capture
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Is support for Navigator.webdriver enabled?
