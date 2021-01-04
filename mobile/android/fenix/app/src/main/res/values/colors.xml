@@ -372,6 +372,7 @@
     <color name="mozac_feature_readerview_selected">@color/accent_high_contrast_dark_theme</color>
 
     <!-- Onboarding colors -->
+    <color name="onboarding_padded_background_color">#1F000000</color>
     <color name="onboarding_card_background_dark">#20123A</color>
     <color name="onboarding_card_primary_text_dark">#FFFFFF</color>
     <color name="onboarding_card_button_background_dark">#F9F9FB</color>
