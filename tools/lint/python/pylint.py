@@ -51,7 +51,11 @@ def setup(root, **lintargs):
     virtualenv_manager = lintargs["virtualenv_manager"]
     try:
         virtualenv_manager.install_pip_requirements(
-            PYLINT_REQUIREMENTS_PATH, quiet=True
+            PYLINT_REQUIREMENTS_PATH,
+            quiet=True,
+            # The defined versions of astroid and lazy-object-proxy conflict and fail to
+            # install with the new 2020 pip resolver (bug 1682959)
+            legacy_resolver=True,
         )
     except subprocess.CalledProcessError:
         print(PYLINT_INSTALL_ERROR)
