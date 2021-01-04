@@ -2220,6 +2220,14 @@ TEST(GeckoProfiler, CPUUsage)
       {
         EXPECT_EQ_JSON(sampleUnits["time"], String, "ms");
         EXPECT_EQ_JSON(sampleUnits["eventDelay"], String, "ms");
+#if defined(GP_OS_windows)
+        // Note: The exact string is not important here.
+        EXPECT_TRUE(sampleUnits["threadCPUDelta"].isString())
+            << "There should be a sampleUnits.threadCPUDelta on this platform";
+#else
+        EXPECT_FALSE(sampleUnits.isMember("threadCPUDelta"))
+            << "Unexpected sampleUnits.threadCPUDelta on this platform";;
+#endif
       }
     }
 
@@ -2250,10 +2258,14 @@ TEST(GeckoProfiler, CPUUsage)
             }
           }
 
+#if defined(GP_OS_windows)
+          EXPECT_GE(threadCPUDeltaCount, data.size() - 1u)
+              << "There should be 'threadCPUDelta' values in all but 1 samples";
+#else
           // All "threadCPUDelta" data should be absent or null on unsupported
           // platforms.
-          // TODO: Update this test on supported platforms.
           EXPECT_EQ(threadCPUDeltaCount, 0u);
+#endif
         }
       }
     }
