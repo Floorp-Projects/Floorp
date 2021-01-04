@@ -9034,14 +9034,12 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   return true;
 }
 
-bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
+// TODO(no-TI): currently unused. Consider calling it.
+bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead) {
   ObjLiteralWriter writer;
 
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
-  if (isCow) {
-    // TODO(no-TI): remove.
-    flags += ObjLiteralFlag::ArrayCOW;
-  }
+
   writer.beginObject(flags);
 
   writer.beginDenseArrayElements();
