@@ -152,9 +152,28 @@ int tgkill(pid_t tgid, pid_t tid, int signalno) {
 
 class PlatformData {
  public:
-  explicit PlatformData(int aThreadId) { MOZ_COUNT_CTOR(PlatformData); }
+  explicit PlatformData(int aThreadId) {
+    MOZ_ASSERT(aThreadId == profiler_current_thread_id());
+    MOZ_COUNT_CTOR(PlatformData);
+    if (clockid_t clockid;
+        pthread_getcpuclockid(pthread_self(), &clockid) == 0) {
+      mClockId = Some(clockid);
+    }
+  }
 
   MOZ_COUNTED_DTOR(PlatformData)
+
+  // Clock Id for this profiled thread. `Nothing` if `pthread_getcpuclockid`
+  // failed (e.g., if the system doesn't support per-thread clocks).
+  Maybe<clockid_t> GetClockId() const { return mClockId; }
+
+  RunningTimes& PreviousThreadRunningTimesRef() {
+    return mPreviousThreadRunningTimes;
+  }
+
+ private:
+  Maybe<clockid_t> mClockId;
+  RunningTimes mPreviousThreadRunningTimes;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -303,15 +322,29 @@ void Sampler::Disable(PSLockRef aLock) {
 
 static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
                                           SpliceableJSONWriter& aWriter) {
-  // TODO
+  aWriter.StringProperty("threadCPUDelta", "ns");
 }
 
 static RunningTimes GetThreadRunningTimesDiff(
     PSLockRef aLock, const RegisteredThread& aRegisteredThread) {
-  RunningTimes diff;
+  AUTO_PROFILER_STATS(GetRunningTimes_clock_gettime_thread);
 
-  // TODO
+  PlatformData* platformData = aRegisteredThread.GetPlatformData();
+  MOZ_RELEASE_ASSERT(platformData);
 
+  RunningTimes newRunningTimes;
+
+  if (Maybe<clockid_t> cid = platformData->GetClockId(); cid.isSome()) {
+    AUTO_PROFILER_STATS(GetRunningTimes_clock_gettime_thread_gettime);
+    if (timespec ts; clock_gettime(*cid, &ts) == 0) {
+      newRunningTimes.SetThreadCPUDelta(uint64_t(ts.tv_sec) * 1'000'000'000u +
+                                        uint64_t(ts.tv_nsec));
+    }
+  }
+
+  RunningTimes diff =
+      newRunningTimes - platformData->PreviousThreadRunningTimesRef();
+  platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
   return diff;
 }
 
