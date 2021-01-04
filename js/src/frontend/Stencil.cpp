@@ -178,7 +178,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
 static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
                                   CompilationStencil& stencil,
                                   const ScriptStencil& script,
-                                  FunctionIndex functionIndex) {
+                                  ScriptIndex functionIndex) {
   GeneratorKind generatorKind =
       script.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
           ? GeneratorKind::Generator
@@ -290,16 +290,15 @@ static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
                                  CompilationGCOutput& gcOutput) {
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
-    auto functionIndex = item.functionIndex;
+    auto index = item.index;
 
     MOZ_ASSERT(!item.function);
 
-    JSFunction* fun =
-        CreateFunction(cx, input, stencil, scriptStencil, functionIndex);
+    JSFunction* fun = CreateFunction(cx, input, stencil, scriptStencil, index);
     if (!fun) {
       return false;
     }
-    gcOutput.functions[functionIndex] = fun;
+    gcOutput.functions[index] = fun;
   }
 
   return true;
@@ -348,7 +347,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
     fun = item.function;
-    auto index = item.functionIndex;
+    auto index = item.index;
     if (scriptStencil.hasSharedData) {
       auto* sharedData = stencil.sharedData.get(index);
 
@@ -575,9 +574,9 @@ static void AssertDelazificationFieldsMatch(CompilationStencil& stencil,
                 acceptableDifferenceForFunction));
 
     // Delazification shouldn't delazify inner scripts.
-    MOZ_ASSERT_IF(item.functionIndex == CompilationInfo::TopLevelIndex,
+    MOZ_ASSERT_IF(item.index == CompilationInfo::TopLevelIndex,
                   scriptStencil.hasSharedData);
-    MOZ_ASSERT_IF(item.functionIndex > CompilationInfo::TopLevelIndex,
+    MOZ_ASSERT_IF(item.index > CompilationInfo::TopLevelIndex,
                   !scriptStencil.hasSharedData);
 
     // FIXME: If this function is lazily parsed again, nargs isn't set to
@@ -722,7 +721,7 @@ bool CompilationInfoVector::buildDelazificationIndices(JSContext* cx) {
     if (!ptr) {
       continue;
     }
-    delazificationIndices[ptr->value()] = FunctionIndex(i);
+    delazificationIndices[ptr->value()] = ScriptIndex(i);
   }
 
   return true;
@@ -969,9 +968,9 @@ bool SharedDataContainer::prepareStorageFor(JSContext* cx,
   return true;
 }
 
-js::SharedImmutableScriptData* SharedDataContainer::get(FunctionIndex index) {
+js::SharedImmutableScriptData* SharedDataContainer::get(ScriptIndex index) {
   struct Matcher {
-    FunctionIndex index;
+    ScriptIndex index;
 
     js::SharedImmutableScriptData* operator()(SingleSharedData& ptr) {
       if (index == CompilationInfo::TopLevelIndex) {
@@ -1000,11 +999,11 @@ js::SharedImmutableScriptData* SharedDataContainer::get(FunctionIndex index) {
   return storage.match(m);
 }
 
-bool SharedDataContainer::addAndShare(JSContext* cx, FunctionIndex index,
+bool SharedDataContainer::addAndShare(JSContext* cx, ScriptIndex index,
                                       js::SharedImmutableScriptData* data) {
   struct Matcher {
     JSContext* cx;
-    FunctionIndex index;
+    ScriptIndex index;
     js::SharedImmutableScriptData* data;
 
     bool operator()(SingleSharedData& ptr) {
@@ -1202,7 +1201,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
   if (kind_ == ScopeKind::Function) {
     if (functionIndex_.isSome()) {
-      json.formatProperty("functionIndex", "FunctionIndex(%zu)",
+      json.formatProperty("functionIndex", "ScriptIndex(%zu)",
                           size_t(*functionIndex_));
     } else {
       json.property("functionIndex", "Nothing");
@@ -1405,7 +1404,7 @@ void StencilModuleMetadata::dumpFields(js::JSONPrinter& json,
 
   json.beginListProperty("functionDecls");
   for (auto& index : functionDecls) {
-    json.value("FunctionIndex(%zu)", size_t(index));
+    json.value("ScriptIndex(%zu)", size_t(index));
   }
   json.endList();
 
@@ -1617,7 +1616,7 @@ static void DumpScriptThing(js::JSONPrinter& json,
       json.value("ScopeIndex(%zu)", size_t(thing.toScope()));
       break;
     case TaggedScriptThingIndex::Kind::Function:
-      json.value("FunctionIndex(%zu)", size_t(thing.toFunction()));
+      json.value("ScriptIndex(%zu)", size_t(thing.toFunction()));
       break;
     case TaggedScriptThingIndex::Kind::EmptyGlobalScope:
       json.value("EmptyGlobalScope");

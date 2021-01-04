@@ -11290,7 +11290,7 @@ bool BytecodeEmitter::newSrcNoteOperand(ptrdiff_t operand) {
 }
 
 bool BytecodeEmitter::intoScriptStencil(ScriptStencil* script,
-                                        FunctionIndex index) {
+                                        ScriptIndex scriptIndex) {
   js::UniquePtr<ImmutableScriptData> immutableScriptData =
       createImmutableScriptData(cx);
   if (!immutableScriptData) {
@@ -11320,7 +11320,8 @@ bool BytecodeEmitter::intoScriptStencil(ScriptStencil* script,
   }
 
   // De-duplicate the bytecode within the runtime.
-  if (!compilationInfo.stencil.sharedData.addAndShare(cx, index, sharedData)) {
+  if (!compilationInfo.stencil.sharedData.addAndShare(cx, scriptIndex,
+                                                      sharedData)) {
     return false;
   }
 

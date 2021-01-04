@@ -238,7 +238,7 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
                          CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, const ParserAtom* atom,
-                         FunctionFlags flags, FunctionIndex index)
+                         FunctionFlags flags, ScriptIndex index)
     : SuspendableContext(cx, Kind::FunctionBox, compilationInfo, directives,
                          extent, generatorKind == GeneratorKind::Generator,
                          asyncKind == FunctionAsyncKind::AsyncFunction),

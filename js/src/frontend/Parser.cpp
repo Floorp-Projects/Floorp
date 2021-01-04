@@ -44,6 +44,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVerify.h"
+#include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpAPI.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -256,8 +257,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
   MOZ_ASSERT(funNode);
 
-  FunctionIndex index =
-      FunctionIndex(compilationInfo_.stencil.scriptData.length());
+  ScriptIndex index = ScriptIndex(compilationInfo_.stencil.scriptData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx_);
     return nullptr;
@@ -2027,7 +2027,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   // See: FullParseHandler::nextLazyInnerFunction(),
   //      FullParseHandler::nextLazyClosedOverBinding()
   auto cursor = stencilThings.begin();
-  for (const FunctionIndex& index : pc_->innerFunctionIndexesForLazy) {
+  for (const ScriptIndex& index : pc_->innerFunctionIndexesForLazy) {
     void* raw = &(*cursor++);
     new (raw) TaggedScriptThingIndex(index);
   }
@@ -11594,7 +11594,7 @@ void CompilationInfo::rewind(const CompilationInfo::RewindToken& pos) {
   if (stencil.asmJS.count() != pos.asmJSCount) {
     for (size_t i = pos.scriptDataLength; i < stencil.scriptData.length();
          i++) {
-      stencil.asmJS.remove(FunctionIndex(i));
+      stencil.asmJS.remove(ScriptIndex(i));
     }
     MOZ_ASSERT(stencil.asmJS.count() == pos.asmJSCount);
   }

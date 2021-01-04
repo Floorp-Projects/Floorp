@@ -14,6 +14,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/NameAnalysisTypes.h"  // DeclaredNameInfo
 #include "frontend/NameCollections.h"
+#include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/SharedContext.h"
 #include "frontend/UsedNameTracker.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
@@ -348,7 +349,7 @@ class ParseContext : public Nestable<ParseContext> {
   // All inner functions in this context. Only used when syntax parsing.
   // The Functions (or FunctionCreateionDatas) are traced as part of the
   // CompilationInfo function vector.
-  Vector<FunctionIndex, 4> innerFunctionIndexesForLazy;
+  Vector<ScriptIndex, 4> innerFunctionIndexesForLazy;
 
   // In a function context, points to a Directive struct that can be updated
   // to reflect new directives encountered in the Directive Prologue that
