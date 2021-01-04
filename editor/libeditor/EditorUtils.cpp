@@ -5,6 +5,7 @@
 
 #include "EditorUtils.h"
 
+#include "gfxFontUtils.h"
 #include "WSRunObject.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ContentIterator.h"

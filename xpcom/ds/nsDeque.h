@@ -31,6 +31,7 @@
 #include "mozilla/fallible.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
+#include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
 

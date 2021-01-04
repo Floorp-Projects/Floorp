@@ -5,7 +5,6 @@
 
 #include "TransactionStack.h"
 
-#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsISupportsUtils.h"

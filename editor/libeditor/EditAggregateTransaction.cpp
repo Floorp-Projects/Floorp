@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EditAggregateTransaction.h"
+#include "mozilla/ReverseIterator.h"  // for Reversed
 #include "nsAString.h"
 #include "nsCOMPtr.h"          // for nsCOMPtr
 #include "nsError.h"           // for NS_OK, etc.
