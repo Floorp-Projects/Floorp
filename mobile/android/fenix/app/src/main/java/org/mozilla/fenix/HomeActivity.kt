@@ -14,6 +14,7 @@ import android.os.SystemClock
 import android.text.format.DateUtils
 import android.util.AttributeSet
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
@@ -89,6 +90,7 @@ import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.perf.Performance
+import org.mozilla.fenix.perf.PerformanceInflater
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchDialogFragmentDirections
 import org.mozilla.fenix.session.PrivateNotificationService
@@ -137,6 +139,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private val webExtensionPopupFeature by lazy {
         WebExtensionPopupFeature(components.core.store, ::openPopup)
     }
+
+    private var inflater: LayoutInflater? = null
 
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
@@ -822,6 +826,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         base.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             super.attachBaseContext(base)
         }
+    }
+
+    override fun getSystemService(name: String): Any? {
+        if (LAYOUT_INFLATER_SERVICE == name) {
+            if (inflater == null) {
+                inflater = PerformanceInflater(LayoutInflater.from(baseContext), this)
+            }
+            return inflater
+        }
+        return super.getSystemService(name)
     }
 
     protected open fun createBrowsingModeManager(initialMode: BrowsingMode): BrowsingModeManager {

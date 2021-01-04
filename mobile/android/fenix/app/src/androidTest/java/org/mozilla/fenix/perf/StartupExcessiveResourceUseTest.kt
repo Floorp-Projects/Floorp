@@ -25,6 +25,7 @@ private const val EXPECTED_RUNBLOCKING_COUNT = 2
 private const val EXPECTED_COMPONENT_INIT_COUNT = 42
 private const val EXPECTED_VIEW_HIERARCHY_DEPTH = 12
 private const val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN = 4
+private const val EXPECTED_NUMBER_OF_INFLATION = 12
 
 private val failureMsgStrictMode = getErrorMessage(
     shortName = "StrictMode suppression",
@@ -54,6 +55,11 @@ private val failureMsgRecyclerViewConstraintLayoutChildren = getErrorMessage(
 ) + "Please note that we're not sure if this is a useful metric to assert: with your feedback, " +
     "we'll find out over time if it is or is not."
 
+private val failureMsgNumberOfInflation = getErrorMessage(
+    shortName = "Number of inflation on start up doesn't match expected count",
+    implications = "The number of inflation can negatively impact start up time. Having more inflations" +
+            "will most likely mean we're adding extra work on the UI thread."
+)
 /**
  * A performance test to limit the number of StrictMode suppressions and number of runBlocking used
  * on startup.
@@ -90,6 +96,8 @@ class StartupExcessiveResourceUseTest {
         val actualViewHierarchyDepth = countAndLogViewHierarchyDepth(rootView, 1)
         val actualRecyclerViewConstraintLayoutChildren = countRecyclerViewConstraintLayoutChildren(rootView, null)
 
+        val actualNumberOfInflations = InflationCounter.inflationCount.get()
+
         assertEquals(failureMsgStrictMode, EXPECTED_SUPPRESSION_COUNT, actualSuppresionCount)
         assertEquals(failureMsgRunBlocking, EXPECTED_RUNBLOCKING_COUNT, actualRunBlocking)
         assertEquals(failureMsgComponentInit, EXPECTED_COMPONENT_INIT_COUNT, actualComponentInitCount)
@@ -99,6 +107,7 @@ class StartupExcessiveResourceUseTest {
             EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN,
             actualRecyclerViewConstraintLayoutChildren
         )
+        assertEquals(failureMsgNumberOfInflation, EXPECTED_NUMBER_OF_INFLATION, actualNumberOfInflations)
     }
 }
 
