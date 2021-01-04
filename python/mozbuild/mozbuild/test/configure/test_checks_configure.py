@@ -174,7 +174,7 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for foo... not found
-            DEBUG: foo: Trying unknown
+            DEBUG: foo: Looking for unknown
             ERROR: Cannot find foo
         """
             ),
@@ -190,9 +190,9 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for foo... not found
-            DEBUG: foo: Trying unknown
-            DEBUG: foo: Trying unknown-2
-            DEBUG: foo: Trying 'unknown 3'
+            DEBUG: foo: Looking for unknown
+            DEBUG: foo: Looking for unknown-2
+            DEBUG: foo: Looking for 'unknown 3'
             ERROR: Cannot find foo
         """
             ),
@@ -250,7 +250,7 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for foo... not found
-            DEBUG: foo: Trying %s
+            DEBUG: foo: Looking for %s
             ERROR: Cannot find foo
         """
             )
@@ -278,7 +278,7 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for foo... not found
-            DEBUG: foo: Trying unknown
+            DEBUG: foo: Looking for unknown
             ERROR: Cannot find foo
         """
             ),
@@ -305,9 +305,9 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for the target C compiler... not found
-            DEBUG: cc: Trying unknown
-            DEBUG: cc: Trying unknown-2
-            DEBUG: cc: Trying 'unknown 3'
+            DEBUG: cc: Looking for unknown
+            DEBUG: cc: Looking for unknown-2
+            DEBUG: cc: Looking for 'unknown 3'
             ERROR: Cannot find the target C compiler
         """
             ),
@@ -383,8 +383,8 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for cc... not found
-            DEBUG: cc: Trying gcc
-            DEBUG: cc: Trying clang
+            DEBUG: cc: Looking for gcc
+            DEBUG: cc: Looking for clang
             ERROR: Cannot find cc
         """
             ),
@@ -398,8 +398,8 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for cc... not found
-            DEBUG: cc: Trying gcc
-            DEBUG: cc: Trying clang
+            DEBUG: cc: Looking for gcc
+            DEBUG: cc: Looking for clang
             ERROR: Cannot find cc
         """
             ),
@@ -413,8 +413,8 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for cc... not found
-            DEBUG: cc: Trying cl
-            DEBUG: cc: Trying clang-cl
+            DEBUG: cc: Looking for cl
+            DEBUG: cc: Looking for clang-cl
             ERROR: Cannot find cc
         """
             ),
@@ -476,7 +476,7 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
             checking for a... not found
-            DEBUG: a: Trying known-a
+            DEBUG: a: Looking for known-a
             ERROR: Cannot find a
         """
             ),
@@ -552,7 +552,7 @@ class TestChecksConfigure(unittest.TestCase):
                 """\
             checking for a... """  # noqa  # trailing whitespace...
                 """
-            DEBUG: a: Trying known-a
+            DEBUG: a: Looking for known-a
             ERROR: Paths provided to find_program must be a list of strings, not %r
         """
                 % mozpath.dirname(self.OTHER_A)

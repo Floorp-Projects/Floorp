@@ -170,13 +170,13 @@ def check_prog(
         if paths_have_priority:
             for path in paths:
                 for prog in value or progs:
-                    log.debug("%s: Trying %s", var.lower(), quote(prog))
+                    log.debug("%s: Looking for %s", var.lower(), quote(prog))
                     result = find_program(prog, [path])
                     if result:
                         return result
         else:
             for prog in value or progs:
-                log.debug("%s: Trying %s", var.lower(), quote(prog))
+                log.debug("%s: Looking for %s", var.lower(), quote(prog))
                 result = find_program(prog, paths)
                 if result:
                     return result
