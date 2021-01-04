@@ -2239,17 +2239,20 @@ void SamplerThread::Run() {
   // TODO: If possible, name this thread later on, after NSPR becomes available.
   // PR_SetCurrentThreadName("SamplerThread");
 
-  // Features won't change during this SamplerThread's lifetime, so we can
-  // determine now whether stack sampling is required.
-  const bool noStackSampling = []() {
+  // Features won't change during this SamplerThread's lifetime, so we can read
+  // them once and store them locally.
+  const uint32_t features = []() -> uint32_t {
     PSAutoLock lock;
     if (!ActivePS::Exists(lock)) {
       // If there is no active profiler, it doesn't matter what we return,
-      // because this thread will exit before any stack sampling is attempted.
-      return false;
+      // because this thread will exit before any feature is used.
+      return 0;
     }
-    return ActivePS::FeatureNoStackSampling(lock);
+    return ActivePS::Features(lock);
   }();
+
+  // Not *no*-stack-sampling means we do want stack sampling.
+  const bool stackSampling = !ProfilerFeature::HasNoStackSampling(features);
 
   // Use local BlocksRingBuffer&ProfileBuffer to capture the stack.
   // (This is to avoid touching the CorePS::CoreBuffer lock while
@@ -2315,7 +2318,7 @@ void SamplerThread::Run() {
         }
         TimeStamp countersSampled = TimeStamp::NowUnfuzzed();
 
-        if (!noStackSampling) {
+        if (stackSampling) {
           const Vector<LiveProfiledThreadData>& liveThreads =
               ActivePS::LiveProfiledThreads(lock);
 
