@@ -9916,32 +9916,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                           nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                           &doesNotReturnData);
       if (doesNotReturnData) {
-        // The context to check user-interaction with for the purposes of
-        // popup-blocking.
-        //
-        // We generally want to check the context that initiated the navigation.
-        WindowContext* sourceWindowContext = [&] {
-          const MaybeDiscardedBrowsingContext& sourceBC =
-              aLoadState->SourceBrowsingContext();
-          if (!sourceBC.IsNullOrDiscarded()) {
-            if (WindowContext* wc = sourceBC.get()->GetCurrentWindowContext()) {
-              return wc;
-            }
-          }
-          return mBrowsingContext->GetParentWindowContext();
-        }();
-
-        MOZ_ASSERT(sourceWindowContext);
-        // FIXME: We can't check user-interaction against an OOP window. This is
-        // the next best thing we can really do. The load state keeps whether
-        // the navigation had a user interaction in process
-        // (aLoadState->HasValidUserGestureActivation()), but we can't really
-        // consume it, which we want to prevent popup-spamming from the same
-        // click event.
-        WindowContext* context =
-            sourceWindowContext->IsInProcess()
-                ? sourceWindowContext
-                : mBrowsingContext->GetCurrentWindowContext();
+        WindowContext* parentContext =
+            mBrowsingContext->GetParentWindowContext();
+        MOZ_ASSERT(parentContext);
         const bool popupBlocked = [&] {
           const bool active = mBrowsingContext->IsActive();
 
@@ -9950,15 +9927,15 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
           //
           // We consume the flag now even if there's no user activation.
           const bool hasFreePass = [&] {
-            if (!active || !context->SameOriginWithTop()) {
+            if (!active || !parentContext->SameOriginWithTop()) {
               return false;
             }
             nsGlobalWindowInner* win =
-                context->TopWindowContext()->GetInnerWindow();
+                parentContext->TopWindowContext()->GetInnerWindow();
             return win && win->TryOpenExternalProtocolIframe();
           }();
 
-          if (context->ConsumeTransientUserGestureActivation()) {
+          if (parentContext->ConsumeTransientUserGestureActivation()) {
             // If the user has interacted with the page, consume it.
             return false;
           }
@@ -9971,7 +9948,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
             return false;
           }
 
-          if (sourceWindowContext->CanShowPopup()) {
+          if (parentContext->CanShowPopup()) {
             return false;
           }
 
@@ -9991,7 +9968,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
           if (NS_SUCCEEDED(rv)) {
             nsContentUtils::ReportToConsoleByWindowID(
                 message, nsIScriptError::warningFlag, "DOM"_ns,
-                context->InnerWindowId());
+                parentContext->InnerWindowId());
           }
           return NS_OK;
         }
