@@ -61,7 +61,7 @@ bool RenderExternalTextureHost::CreateSurfaces() {
         mSize, mFormat);
   } else {
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
-    const SurfaceFormat surfaceFormat =
+    const gfx::SurfaceFormat surfaceFormat =
         SurfaceFormatForColorDepth(desc.colorDepth());
 
     mSurfaces[0] = gfx::Factory::CreateWrappingDataSourceSurface(

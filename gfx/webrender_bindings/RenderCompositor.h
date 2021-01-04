@@ -13,6 +13,8 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "Units.h"
 
+#include "GLTypes.h"
+
 namespace mozilla {
 
 namespace gl {

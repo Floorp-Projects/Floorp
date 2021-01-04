@@ -9,6 +9,7 @@
 #include "gfxConfig.h"
 #include "GLContext.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/webrender/RenderCompositorOGL.h"

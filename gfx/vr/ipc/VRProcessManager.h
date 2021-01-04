@@ -9,6 +9,7 @@
 #include "VRProcessParent.h"
 
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "nsIObserver.h"
 
 namespace mozilla {
 class MemoryReportingProcess;

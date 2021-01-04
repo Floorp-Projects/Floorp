@@ -6,6 +6,7 @@
 
 #include "SharedSurfacesParent.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/SharedSurfacesMemoryReport.h"

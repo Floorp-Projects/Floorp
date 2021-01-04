@@ -11,6 +11,7 @@
 #include "GLContextProvider.h"
 #include "GLLibraryEGL.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/BuildConstants.h"
 #include "mozilla/webrender/RenderThread.h"

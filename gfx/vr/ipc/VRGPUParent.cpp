@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRGPUParent.h"
+#include "VRPuppetCommandBuffer.h"
 
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
