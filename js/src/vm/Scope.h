@@ -491,10 +491,7 @@ class LexicalScope : public Scope {
   friend class frontend::ScopeStencil;
 
  public:
-  // Data is public because it is created by the frontend. See
-  // Parser<FullParseHandler>::newLexicalScopeData.
-  template <typename NameT>
-  struct AbstractData : public AbstractBaseScopeData<NameT> {
+  struct SlotInfo {
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
     uint32_t nextFrameSlot = 0;
@@ -505,6 +502,13 @@ class LexicalScope : public Scope {
     // consts - [constStart, length)
     uint32_t constStart = 0;
     uint32_t length = 0;
+  };
+
+  // Data is public because it is created by the frontend. See
+  // Parser<FullParseHandler>::newLexicalScopeData.
+  template <typename NameT>
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
+    SlotInfo slotInfo;
 
     // Tagged JSAtom* names, allocated beyond the end of the struct.
     AbstractTrailingNamesArray<NameT> trailingNames;
@@ -540,7 +544,7 @@ class LexicalScope : public Scope {
   static uint32_t nextFrameSlot(const AbstractScopePtr& scope);
 
  public:
-  uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
+  uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
 
   // Returns an empty shape for extensible global and non-syntactic lexical
   // scopes.
@@ -582,15 +586,7 @@ class FunctionScope : public Scope {
   static const ScopeKind classScopeKind_ = ScopeKind::Function;
 
  public:
-  // Data is public because it is created by the
-  // frontend. See Parser<FullParseHandler>::newFunctionScopeData.
-  template <typename NameT>
-  struct AbstractData : public AbstractBaseScopeData<NameT> {
-    // The canonical function of the scope, as during a scope walk we
-    // often query properties of the JSFunction (e.g., is the function an
-    // arrow).
-    HeapPtr<JSFunction*> canonicalFunction = {};
-
+  struct SlotInfo {
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
     uint32_t nextFrameSlot = 0;
@@ -629,6 +625,18 @@ class FunctionScope : public Scope {
     uint16_t nonPositionalFormalStart = 0;
     uint16_t varStart = 0;
     uint32_t length = 0;
+  };
+
+  // Data is public because it is created by the
+  // frontend. See Parser<FullParseHandler>::newFunctionScopeData.
+  template <typename NameT>
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
+    // The canonical function of the scope, as during a scope walk we
+    // often query properties of the JSFunction (e.g., is the function an
+    // arrow).
+    HeapPtr<JSFunction*> canonicalFunction = {};
+
+    SlotInfo slotInfo;
 
     // Tagged JSAtom* names, allocated beyond the end of the struct.
     AbstractTrailingNamesArray<NameT> trailingNames;
@@ -669,16 +677,16 @@ class FunctionScope : public Scope {
   const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
-  uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
+  uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
 
   JSFunction* canonicalFunction() const { return data().canonicalFunction; }
 
   JSScript* script() const;
 
-  bool hasParameterExprs() const { return data().hasParameterExprs; }
+  bool hasParameterExprs() const { return data().slotInfo.hasParameterExprs; }
 
   uint32_t numPositionalFormalParameters() const {
-    return data().nonPositionalFormalStart;
+    return data().slotInfo.nonPositionalFormalStart;
   }
 
   static bool isSpecialName(JSContext* cx, JSAtom* name);
@@ -702,10 +710,7 @@ class VarScope : public Scope {
   friend class frontend::ScopeStencil;
 
  public:
-  // Data is public because it is created by the
-  // frontend. See Parser<FullParseHandler>::newVarScopeData.
-  template <typename NameT>
-  struct AbstractData : public AbstractBaseScopeData<NameT> {
+  struct SlotInfo {
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
     uint32_t nextFrameSlot = 0;
@@ -714,6 +719,13 @@ class VarScope : public Scope {
     //
     //            vars - [0, length)
     uint32_t length = 0;
+  };
+
+  // Data is public because it is created by the
+  // frontend. See Parser<FullParseHandler>::newVarScopeData.
+  template <typename NameT>
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
+    SlotInfo slotInfo;
 
     // Tagged JSAtom* names, allocated beyond the end of the struct.
     AbstractTrailingNamesArray<NameT> trailingNames;
@@ -746,7 +758,7 @@ class VarScope : public Scope {
   const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
-  uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
+  uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
 };
 
 template <>
@@ -779,10 +791,7 @@ class GlobalScope : public Scope {
   friend class GCMarker;
 
  public:
-  // Data is public because it is created by the frontend. See
-  // Parser<FullParseHandler>::newGlobalScopeData.
-  template <typename NameT>
-  struct AbstractData : public AbstractBaseScopeData<NameT> {
+  struct SlotInfo {
     // Bindings are sorted by kind.
     // `vars` includes top-level functions which is distinguished by a bit
     // on the BindingName.
@@ -793,6 +802,13 @@ class GlobalScope : public Scope {
     uint32_t letStart = 0;
     uint32_t constStart = 0;
     uint32_t length = 0;
+  };
+
+  // Data is public because it is created by the frontend. See
+  // Parser<FullParseHandler>::newGlobalScopeData.
+  template <typename NameT>
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
+    SlotInfo slotInfo;
 
     // Tagged JSAtom* names, allocated beyond the end of the struct.
     AbstractTrailingNamesArray<NameT> trailingNames;
@@ -828,7 +844,7 @@ class GlobalScope : public Scope {
  public:
   bool isSyntactic() const { return kind() != ScopeKind::NonSyntactic; }
 
-  bool hasBindings() const { return data().length > 0; }
+  bool hasBindings() const { return data().slotInfo.length > 0; }
 };
 
 template <>
@@ -872,10 +888,7 @@ class EvalScope : public Scope {
   friend class frontend::ScopeStencil;
 
  public:
-  // Data is public because it is created by the frontend. See
-  // Parser<FullParseHandler>::newEvalScopeData.
-  template <typename NameT>
-  struct AbstractData : public AbstractBaseScopeData<NameT> {
+  struct SlotInfo {
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
     uint32_t nextFrameSlot = 0;
@@ -888,6 +901,13 @@ class EvalScope : public Scope {
     //
     //            vars - [0, length)
     uint32_t length = 0;
+  };
+
+  // Data is public because it is created by the frontend. See
+  // Parser<FullParseHandler>::newEvalScopeData.
+  template <typename NameT>
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
+    SlotInfo slotInfo;
 
     // Tagged JSAtom* names, allocated beyond the end of the struct.
     AbstractTrailingNamesArray<NameT> trailingNames;
@@ -923,11 +943,11 @@ class EvalScope : public Scope {
   // introduce vars on.
   static Scope* nearestVarScopeForDirectEval(Scope* scope);
 
-  uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
+  uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
 
   bool strict() const { return kind() == ScopeKind::StrictEval; }
 
-  bool hasBindings() const { return data().length > 0; }
+  bool hasBindings() const { return data().slotInfo.length > 0; }
 
   bool isNonGlobal() const {
     if (strict()) {
@@ -959,13 +979,7 @@ class ModuleScope : public Scope {
   static const ScopeKind classScopeKind_ = ScopeKind::Module;
 
  public:
-  // Data is public because it is created by the frontend. See
-  // Parser<FullParseHandler>::newModuleScopeData.
-  template <typename NameT>
-  struct AbstractData : public AbstractBaseScopeData<NameT> {
-    // The module of the scope.
-    HeapPtr<ModuleObject*> module = {};
-
+  struct SlotInfo {
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
     uint32_t nextFrameSlot = 0;
@@ -980,6 +994,16 @@ class ModuleScope : public Scope {
     uint32_t letStart = 0;
     uint32_t constStart = 0;
     uint32_t length = 0;
+  };
+
+  // Data is public because it is created by the frontend. See
+  // Parser<FullParseHandler>::newModuleScopeData.
+  template <typename NameT>
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
+    // The module of the scope.
+    HeapPtr<ModuleObject*> module = {};
+
+    SlotInfo slotInfo;
 
     // Tagged JSAtom* names, allocated beyond the end of the struct.
     AbstractTrailingNamesArray<NameT> trailingNames;
@@ -1012,7 +1036,7 @@ class ModuleScope : public Scope {
   const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
-  uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
+  uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
 
   ModuleObject* module() const { return data().module; }
 
@@ -1029,11 +1053,7 @@ class WasmInstanceScope : public Scope {
   static const ScopeKind classScopeKind_ = ScopeKind::WasmInstance;
 
  public:
-  template <typename NameT>
-  struct AbstractData : public AbstractBaseScopeData<NameT> {
-    // The wasm instance of the scope.
-    HeapPtr<WasmInstanceObject*> instance = {};
-
+  struct SlotInfo {
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
     uint32_t nextFrameSlot = 0;
@@ -1044,6 +1064,14 @@ class WasmInstanceScope : public Scope {
     //  globals - [globalsStart, length)
     uint32_t globalsStart = 0;
     uint32_t length = 0;
+  };
+
+  template <typename NameT>
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
+    // The wasm instance of the scope.
+    HeapPtr<WasmInstanceObject*> instance = {};
+
+    SlotInfo slotInfo;
 
     // Tagged JSAtom* names, allocated beyond the end of the struct.
     AbstractTrailingNamesArray<NameT> trailingNames;
@@ -1067,9 +1095,9 @@ class WasmInstanceScope : public Scope {
 
   uint32_t memoriesStart() const { return 0; }
 
-  uint32_t globalsStart() const { return data().globalsStart; }
+  uint32_t globalsStart() const { return data().slotInfo.globalsStart; }
 
-  uint32_t namesCount() const { return data().length; }
+  uint32_t namesCount() const { return data().slotInfo.length; }
 };
 
 // Scope corresponding to the wasm function. A WasmFunctionScope is used by
@@ -1083,8 +1111,7 @@ class WasmFunctionScope : public Scope {
   static const ScopeKind classScopeKind_ = ScopeKind::WasmFunction;
 
  public:
-  template <typename NameT>
-  struct AbstractData : public AbstractBaseScopeData<NameT> {
+  struct SlotInfo {
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
     uint32_t nextFrameSlot = 0;
@@ -1093,6 +1120,11 @@ class WasmFunctionScope : public Scope {
     //
     //    vars - [0, length)
     uint32_t length = 0;
+  };
+
+  template <typename NameT>
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
+    SlotInfo slotInfo;
 
     // Tagged JSAtom* names, allocated beyond the end of the struct.
     AbstractTrailingNamesArray<NameT> trailingNames;

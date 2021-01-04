@@ -953,30 +953,31 @@ ParserFunctionScopeData* NewEmptyFunctionScopeData(JSContext* cx,
 
 namespace detail {
 
-template <class Data>
+template <class SlotInfo>
 static MOZ_ALWAYS_INLINE ParserBindingName* InitializeIndexedBindings(
-    Data* data, ParserBindingName* start, ParserBindingName* cursor) {
+    SlotInfo& slotInfo, ParserBindingName* start, ParserBindingName* cursor) {
   return cursor;
 }
 
-template <class Data, typename UnsignedInteger, typename... Step>
+template <class SlotInfo, typename UnsignedInteger, typename... Step>
 static MOZ_ALWAYS_INLINE ParserBindingName* InitializeIndexedBindings(
-    Data* data, ParserBindingName* start, ParserBindingName* cursor,
-    UnsignedInteger Data::*field, const ParserBindingNameVector& bindings,
+    SlotInfo& slotInfo, ParserBindingName* start, ParserBindingName* cursor,
+    UnsignedInteger SlotInfo::*field, const ParserBindingNameVector& bindings,
     Step&&... step) {
-  data->*field = AssertedCast<UnsignedInteger>(PointerRangeSize(start, cursor));
+  slotInfo.*field =
+      AssertedCast<UnsignedInteger>(PointerRangeSize(start, cursor));
 
   ParserBindingName* newCursor =
       std::uninitialized_copy(bindings.begin(), bindings.end(), cursor);
 
-  return InitializeIndexedBindings(data, start, newCursor,
+  return InitializeIndexedBindings(slotInfo, start, newCursor,
                                    std::forward<Step>(step)...);
 }
 
 }  // namespace detail
 
-// Initialize |data->trailingNames| bindings, then set |data->length| to the
-// count of bindings added (which must equal |count|).
+// Initialize |data->trailingNames| bindings, then set |data->slotInfo.length|
+// to the count of bindings added (which must equal |count|).
 //
 // First, |firstBindings| are added to |data->trailingNames|.  Then any "steps"
 // present are performed first to last.  Each step is 1) a pointer to a member
@@ -987,7 +988,7 @@ template <class Data, typename... Step>
 static MOZ_ALWAYS_INLINE void InitializeBindingData(
     Data* data, uint32_t count, const ParserBindingNameVector& firstBindings,
     Step&&... step) {
-  MOZ_ASSERT(data->length == 0, "data shouldn't be filled yet");
+  MOZ_ASSERT(data->slotInfo.length == 0, "data shouldn't be filled yet");
 
   ParserBindingName* start = data->trailingNames.start();
   ParserBindingName* cursor = std::uninitialized_copy(
@@ -996,11 +997,11 @@ static MOZ_ALWAYS_INLINE void InitializeBindingData(
 #ifdef DEBUG
   ParserBindingName* end =
 #endif
-      detail::InitializeIndexedBindings(data, start, cursor,
+      detail::InitializeIndexedBindings(data->slotInfo, start, cursor,
                                         std::forward<Step>(step)...);
 
   MOZ_ASSERT(PointerRangeSize(start, end) == count);
-  data->length = count;
+  data->slotInfo.length = count;
 }
 
 Maybe<ParserGlobalScopeData*> NewGlobalScopeData(JSContext* cx,
@@ -1057,8 +1058,8 @@ Maybe<ParserGlobalScopeData*> NewGlobalScopeData(JSContext* cx,
 
     // The ordering here is important. See comments in GlobalScope.
     InitializeBindingData(bindings, numBindings, vars,
-                          &ParserGlobalScopeData::letStart, lets,
-                          &ParserGlobalScopeData::constStart, consts);
+                          &ParserGlobalScopeSlotInfo::letStart, lets,
+                          &ParserGlobalScopeSlotInfo::constStart, consts);
   }
 
   return Some(bindings);
@@ -1122,9 +1123,9 @@ Maybe<ParserModuleScopeData*> NewModuleScopeData(JSContext* cx,
 
     // The ordering here is important. See comments in ModuleScope.
     InitializeBindingData(bindings, numBindings, imports,
-                          &ParserModuleScopeData::varStart, vars,
-                          &ParserModuleScopeData::letStart, lets,
-                          &ParserModuleScopeData::constStart, consts);
+                          &ParserModuleScopeSlotInfo::varStart, vars,
+                          &ParserModuleScopeSlotInfo::letStart, lets,
+                          &ParserModuleScopeSlotInfo::constStart, consts);
   }
 
   return Some(bindings);
@@ -1263,9 +1264,10 @@ Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
     }
 
     // The ordering here is important. See comments in FunctionScope.
-    InitializeBindingData(bindings, numBindings, positionalFormals,
-                          &ParserFunctionScopeData::nonPositionalFormalStart,
-                          formals, &ParserFunctionScopeData::varStart, vars);
+    InitializeBindingData(
+        bindings, numBindings, positionalFormals,
+        &ParserFunctionScopeSlotInfo::nonPositionalFormalStart, formals,
+        &ParserFunctionScopeSlotInfo::varStart, vars);
   }
 
   return Some(bindings);
@@ -1396,7 +1398,7 @@ Maybe<ParserLexicalScopeData*> NewLexicalScopeData(JSContext* cx,
 
     // The ordering here is important. See comments in LexicalScope.
     InitializeBindingData(bindings, numBindings, lets,
-                          &ParserLexicalScopeData::constStart, consts);
+                          &ParserLexicalScopeSlotInfo::constStart, consts);
   }
 
   return Some(bindings);
