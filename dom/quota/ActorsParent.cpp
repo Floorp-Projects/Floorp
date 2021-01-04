@@ -8423,6 +8423,13 @@ RecordQuotaInfoLoadTimeHelper::Run() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mInitializedTime.isSome()) {
+    // Keys for QM_QUOTA_INFO_LOAD_TIME_V0:
+    // Normal: Normal conditions.
+    // WasSuspended: There was a OS sleep so that it was suspended.
+    // TimeStampErr1: The recorded start time is unexpectedly greater than the
+    //                end time.
+    // TimeStampErr2: The initialized time for the recording class is unexpectly
+    //                greater than the last OS wake time.
     const auto key = [this, wasSuspended = gLastOSWake > *mInitializedTime]() {
       if (wasSuspended) {
         return "WasSuspended"_ns;
