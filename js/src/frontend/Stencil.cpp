@@ -1293,8 +1293,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::WasmInstance: {
-      auto* data = static_cast<
-          AbstractScopeData<WasmInstanceScope, TaggedParserAtomIndex>*>(data_);
+      auto* data = static_cast<ParserWasmInstanceScopeData*>(data_);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("globalsStart", data->slotInfo.globalsStart);
 
@@ -1304,8 +1303,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::WasmFunction: {
-      auto* data = static_cast<
-          AbstractScopeData<WasmFunctionScope, TaggedParserAtomIndex>*>(data_);
+      auto* data = static_cast<ParserWasmFunctionScopeData*>(data_);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;

@@ -214,7 +214,7 @@ static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
 
 template <typename ConcreteScope>
 static void MarkParserScopeData(JSContext* cx,
-                                ParserScopeData<ConcreteScope>* data,
+                                typename ConcreteScope::ParserData* data,
                                 frontend::CompilationStencil& stencil) {
   auto* names = data->trailingNames.start();
   uint32_t length = data->slotInfo.length;
@@ -281,9 +281,9 @@ static bool PrepareScopeData(
 }
 
 template <typename ConcreteScope>
-static ParserScopeData<ConcreteScope>* NewEmptyParserScopeData(
+static typename ConcreteScope::ParserData* NewEmptyParserScopeData(
     JSContext* cx, LifoAlloc& alloc, uint32_t length = 0) {
-  using Data = ParserScopeData<ConcreteScope>;
+  using Data = typename ConcreteScope::ParserData;
 
   size_t dataSize = SizeOfScopeData<Data>(length);
   void* raw = alloc.alloc(dataSize);
@@ -312,7 +312,7 @@ static UniquePtr<AbstractScopeData<ConcreteScope, AtomT>> NewEmptyScopeData(
 template <typename ConcreteScope>
 static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
-    ParserScopeData<ConcreteScope>* data) {
+    typename ConcreteScope::ParserData* data) {
   using ConcreteData = typename ConcreteScope::Data;
 
   // Convert all scope ParserAtoms to rooted JSAtoms.
@@ -889,6 +889,14 @@ template
     LexicalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
                       HandleScope enclosing, MutableHandleScope scope);
 
+static void SetCanonicalFunction(FunctionScope::Data& data,
+                                 HandleFunction fun) {
+  data.canonicalFunction.init(fun);
+}
+
+static void SetCanonicalFunction(FunctionScope::ParserData& data,
+                                 HandleFunction fun) {}
+
 template <typename AtomT, typename ShapeT>
 bool FunctionScope::prepareForScopeCreation(
     JSContext* cx,
@@ -903,7 +911,7 @@ bool FunctionScope::prepareForScopeCreation(
   }
 
   data->slotInfo.hasParameterExprs = hasParameterExprs;
-  data->canonicalFunction.init(fun);
+  SetCanonicalFunction(*data, fun);
 
   // An environment may be needed regardless of existence of any closed over
   // bindings:
@@ -1347,10 +1355,14 @@ template
     EvalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
                    HandleScope enclosing, MutableHandleScope scope);
 
-template <>
-Zone* ModuleScope::AbstractData<JSAtom>::zone() const {
-  return module ? module->zone() : nullptr;
+ModuleScope::Data::Data(size_t nameCount) : trailingNames(nameCount) {}
+
+static void InitModule(ModuleScope::Data& data, HandleModuleObject module) {
+  data.module.init(module);
 }
+
+static void InitModule(ModuleScope::ParserData& data,
+                       HandleModuleObject module) {}
 
 /* static */
 template <typename AtomT, typename ShapeT>
@@ -1365,7 +1377,7 @@ bool ModuleScope::prepareForScopeCreation(
     return false;
   }
 
-  data->module.init(module);
+  InitModule(*data, module);
 
   // Modules always need an environment object for now.
   bool needsEnvironment = true;
@@ -1477,6 +1489,8 @@ static void InitializeNextTrailingName(const Rooted<UniquePtr<Data>>& data,
   InitializeTrailingName(data->trailingNames, data->slotInfo.length, name);
   data->slotInfo.length++;
 }
+
+WasmInstanceScope::Data::Data(size_t nameCount) : trailingNames(nameCount) {}
 
 /* static */
 WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
