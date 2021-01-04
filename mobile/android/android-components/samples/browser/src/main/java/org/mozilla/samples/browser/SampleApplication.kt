@@ -56,7 +56,7 @@ class SampleApplication : Application() {
         Facts.registerProcessor(LogFactProcessor())
 
         components.engine.warmUp()
-        restoreBrowsingSession()
+        restoreBrowserState()
 
         GlobalScope.launch(Dispatchers.IO) {
             components.webAppManifestStorage.warmUpScopes(System.currentTimeMillis())
@@ -96,7 +96,7 @@ class SampleApplication : Application() {
         }
     }
 
-    private fun restoreBrowsingSession() = GlobalScope.launch(Dispatchers.Main) {
+    private fun restoreBrowserState() = GlobalScope.launch(Dispatchers.Main) {
         components.tabsUseCases.restore(components.sessionStorage)
 
         components.sessionStorage.autoSave(components.store)

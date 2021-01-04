@@ -90,6 +90,8 @@ High-level components for building browser(-like) apps.
 
 * 🔵 [**Session**](components/browser/session/README.md) - A generic representation of a browser session.
 
+* 🔵 [**Session-Storage**](components/browser/session-storage/README.md) - Component for saving and restoring the browser state.
+
 * 🔵 [**Storage-Memory**](components/browser/storage-memory/README.md) - An in-memory implementation of browser storage.
 
 * 🔵 [**Storage-Sync**](components/browser/storage-sync/README.md) - A syncable implementation of browser storage backed by [application-services' Places lib](https://github.com/mozilla/application-services).

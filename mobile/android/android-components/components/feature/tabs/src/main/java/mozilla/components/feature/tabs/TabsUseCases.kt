@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.storage.BrowsingSession
+import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.UndoAction
@@ -313,9 +313,9 @@ class TabsUseCases(
         }
 
         /**
-         * Restores the given [BrowsingSession].
+         * Restores the given [RecoverableBrowserState].
          */
-        operator fun invoke(browsingSession: BrowsingSession) {
+        operator fun invoke(browsingSession: RecoverableBrowserState) {
             invoke(browsingSession.tabs, browsingSession.selectedTabId)
         }
 

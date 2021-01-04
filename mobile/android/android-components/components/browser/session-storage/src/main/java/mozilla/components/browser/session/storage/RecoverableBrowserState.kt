@@ -9,7 +9,7 @@ import mozilla.components.browser.state.state.recover.RecoverableTab
 /**
  * A restored browsing session, read from disk.
  */
-data class BrowsingSession(
+data class RecoverableBrowserState(
     val tabs: List<RecoverableTab>,
     val selectedTabId: String?
 )

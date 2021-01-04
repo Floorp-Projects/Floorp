@@ -1,4 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+package mozilla.components.browser.session.storage/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,8 +8,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.browser.session.storage.SessionStorage
-import mozilla.components.browser.session.storage.getFileForEngine
 import mozilla.components.support.ktx.util.writeString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

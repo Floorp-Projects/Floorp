@@ -16,7 +16,11 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -44,17 +48,17 @@ class BrowserStateWriterReaderTest {
             File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
         )
 
-        Assert.assertTrue(writer.writeTab(tab, file))
+        assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        Assert.assertNotNull(restoredTab!!)
+        assertNotNull(restoredTab!!)
 
-        Assert.assertEquals("https://www.mozilla.org", restoredTab.url)
-        Assert.assertEquals("Mozilla", restoredTab.title)
-        Assert.assertEquals("work", restoredTab.contextId)
-        Assert.assertEquals(engineState, restoredTab.state)
-        Assert.assertFalse(restoredTab.readerState.active)
-        Assert.assertNull(restoredTab.readerState.activeUrl)
+        assertEquals("https://www.mozilla.org", restoredTab.url)
+        assertEquals("Mozilla", restoredTab.title)
+        assertEquals("work", restoredTab.contextId)
+        assertEquals(engineState, restoredTab.state)
+        assertFalse(restoredTab.readerState.active)
+        assertNull(restoredTab.readerState.activeUrl)
     }
 
     @Test
@@ -76,13 +80,13 @@ class BrowserStateWriterReaderTest {
             File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
         )
 
-        Assert.assertTrue(writer.writeTab(tab, file))
+        assertTrue(writer.writeTab(tab, file))
 
         val restoredTab = reader.readTab(engine, file)
-        Assert.assertNotNull(restoredTab!!)
+        assertNotNull(restoredTab!!)
 
-        Assert.assertTrue(restoredTab.readerState.active)
-        Assert.assertEquals("https://www.example.org", restoredTab.readerState.activeUrl)
+        assertTrue(restoredTab.readerState.active)
+        assertEquals("https://www.example.org", restoredTab.readerState.activeUrl)
     }
 }
 

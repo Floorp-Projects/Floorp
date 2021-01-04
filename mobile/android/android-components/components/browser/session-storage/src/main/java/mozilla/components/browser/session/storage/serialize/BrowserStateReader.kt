@@ -7,7 +7,7 @@ package mozilla.components.browser.session.storage.serialize
 import android.util.AtomicFile
 import android.util.JsonReader
 import android.util.JsonToken
-import mozilla.components.browser.session.storage.BrowsingSession
+import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.TabSessionState
@@ -20,17 +20,17 @@ import mozilla.components.support.ktx.util.readJSON
 import java.util.UUID
 
 /**
- * Reads a [BrowsingSession] (partial, serialized [BrowserState]) or a single [RecoverableTab]
+ * Reads a [RecoverableBrowserState] (partial, serialized [BrowserState]) or a single [RecoverableTab]
  * (partial, serialized [TabSessionState]) from disk.
  */
 class BrowserStateReader {
     /**
-     * Reads a serialized [BrowsingSession] from the given [AtomicFile].
+     * Reads a serialized [RecoverableBrowserState] from the given [AtomicFile].
      */
     fun read(
         engine: Engine,
         file: AtomicFile
-    ): BrowsingSession? {
+    ): RecoverableBrowserState? {
         return file.readJSON { browsingSession(
             engine,
             restoreSessionId = true,
@@ -62,7 +62,7 @@ private fun JsonReader.browsingSession(
     engine: Engine,
     restoreSessionId: Boolean = true,
     restoreParentId: Boolean = true
-): BrowsingSession? {
+): RecoverableBrowserState? {
     beginObject()
 
     var version = 1 // Initially we didn't save a version. If there's none then we assume it is version 1.
@@ -89,7 +89,7 @@ private fun JsonReader.browsingSession(
     }
 
     return if (tabs != null && tabs.isNotEmpty()) {
-        BrowsingSession(tabs, selectedTabId)
+        RecoverableBrowserState(tabs, selectedTabId)
     } else {
         null
     }

@@ -42,7 +42,7 @@ class SessionStorage(
      * Reads the saved state from disk. Returns null if no state was found on disk or if reading the file failed.
      */
     @WorkerThread
-    fun restore(): BrowsingSession? {
+    fun restore(): RecoverableBrowserState? {
         synchronized(sessionFileLock) {
             val file = getFileForEngine(context, engine)
             return stateReader.read(engine, file)

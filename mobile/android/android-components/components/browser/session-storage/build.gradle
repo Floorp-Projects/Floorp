@@ -46,10 +46,6 @@ dependencies {
     implementation Dependencies.androidx_lifecycle_runtime
     implementation Dependencies.androidx_lifecycle_process
 
-    // We expose this as API because we are using Observable in our public API and do not want every
-    // consumer to have to manually import "support-base".
-    api project(':support-base')
-
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
 
