@@ -105,8 +105,13 @@ class PlatformData {
 
   HANDLE ProfiledThread() { return mProfiledThread; }
 
+  RunningTimes& PreviousThreadRunningTimesRef() {
+    return mPreviousThreadRunningTimes;
+  }
+
  private:
   HANDLE mProfiledThread;
+  RunningTimes mPreviousThreadRunningTimes;
 };
 
 #if defined(USE_MOZ_STACK_WALK)
@@ -125,15 +130,29 @@ void Sampler::Disable(PSLockRef aLock) {}
 
 static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
                                           SpliceableJSONWriter& aWriter) {
-  // TODO
+  aWriter.StringProperty("threadCPUDelta", "variable CPU cycles");
 }
 
 static RunningTimes GetThreadRunningTimesDiff(
     PSLockRef aLock, const RegisteredThread& aRegisteredThread) {
-  RunningTimes diff;
+  AUTO_PROFILER_STATS(GetRunningTimes);
 
-  // TODO
+  PlatformData* platformData = aRegisteredThread.GetPlatformData();
+  MOZ_RELEASE_ASSERT(platformData);
+  HANDLE profiledThread = platformData->ProfiledThread();
 
+  RunningTimes newRunningTimes;
+
+  {
+    AUTO_PROFILER_STATS(GetRunningTimes_QueryThreadCycleTime);
+    if (ULONG64 cycles; QueryThreadCycleTime(profiledThread, &cycles) != 0) {
+      newRunningTimes.SetThreadCPUDelta(cycles);
+    }
+  }
+
+  RunningTimes diff =
+      newRunningTimes - platformData->PreviousThreadRunningTimesRef();
+  platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
   return diff;
 }
 
