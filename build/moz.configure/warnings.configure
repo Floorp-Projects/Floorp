@@ -98,6 +98,12 @@ check_and_add_gcc_warning("-Wfloat-zero-conversion")
 # catches issues around loops
 check_and_add_gcc_warning("-Wloop-analysis")
 
+# Clang < 10 doesn't play nice with "auto&&" and non-reference ranges.
+check_and_add_gcc_warning(
+    "-Wno-range-loop-analysis",
+    when=depends(c_compiler)(lambda c: c.type == "clang" and c.version < "10.0"),
+)
+
 # catches C++ version forward-compat issues
 check_and_add_gcc_warning("-Wc++2a-compat", cxx_compiler)
 
