@@ -30,25 +30,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
     info("iframe loaded");
 
     var h1 = iframe.contentDocument.getElementById("h");
-    h1.style.width = "400px";
-    info("Adjusted h1.style.width; now calling waitForInterruptibleReflow");
-    yield waitForInterruptibleReflow(iframe.docShell);
+    let myCallback = function() { h1.style.width = "400px"; };
+    info("Calling waitForInterruptibleReflow");
+    yield waitForInterruptibleReflow(iframe.docShell, myCallback);
     info("got past top-level waitForInterruptibleReflow");
 
-    h1.style.width = "300px";
-    info("Adjusted h1.style.width; now calling waitForReflow");
-    waitForReflow(iframe.docShell);
+    myCallback = function() { h1.style.width = "300px"; };
+    info("Calling waitForReflow");
+    waitForReflow(iframe.docShell, myCallback);
     info("got past top-level waitForReflow");
     yield is(300, h1.offsetWidth, "h1 has correct width");
 
     SimpleTest.finish();
   }
 
-  function waitForInterruptibleReflow(docShell) {
-    waitForReflow(docShell, true);
+  function waitForInterruptibleReflow(docShell,
+                                      callbackThatShouldTriggerReflow) {
+    waitForReflow(docShell, callbackThatShouldTriggerReflow, true);
   }
 
-  function waitForReflow(docShell, interruptible = false) {
+  function waitForReflow(docShell, callbackThatShouldTriggerReflow,
+                         interruptible = false) {
     info("Entering waitForReflow");
     function done() {
       info("Entering done (inside of waitForReflow)");
@@ -92,6 +94,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
 
     info("waitForReflow is adding a reflow observer");
     docShell.addWeakReflowObserver(observer);
+    callbackThatShouldTriggerReflow();
   }
 
   function whenLoaded(iframe) {
