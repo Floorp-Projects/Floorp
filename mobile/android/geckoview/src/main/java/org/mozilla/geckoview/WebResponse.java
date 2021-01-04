@@ -53,6 +53,9 @@ public class WebResponse extends WebMessage {
 
     /**
      * An {@link InputStream} containing the response body, if available.
+     * Attention: the stream must be closed whenever the app is done with it,
+     * even when the body is ignored.
+     * Otherwise the connection will not be closed until the stream is garbage collected
      */
     public final @Nullable InputStream body;
 
