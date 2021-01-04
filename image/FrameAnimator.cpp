@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FrameAnimator.h"
+#include "GeckoProfiler.h"
 
 #include <utility>
 

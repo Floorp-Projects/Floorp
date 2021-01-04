@@ -7,6 +7,8 @@
 #include "Common.h"
 #include "AnimationSurfaceProvider.h"
 #include "Decoder.h"
+#include "ImageFactory.h"
+#include "nsIInputStream.h"
 #include "RasterImage.h"
 
 using namespace mozilla;

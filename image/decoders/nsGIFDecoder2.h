@@ -156,7 +156,7 @@ class nsGIFDecoder2 : public Decoder {
 
   gif_struct mGIFStruct;
 
-  SwizzleRowFn mSwizzleFn;  /// Method to unpack color tables from RGB.
+  gfx::SwizzleRowFn mSwizzleFn;  /// Method to unpack color tables from RGB.
   SurfacePipe mPipe;  /// The SurfacePipe used to write to the output surface.
 };
 

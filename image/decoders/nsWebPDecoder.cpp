@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLogging.h"  // Must appear first
+#include "gfxPlatform.h"
+#include "mozilla/TelemetryHistogramEnums.h"
 #include "nsWebPDecoder.h"
 
 #include "RasterImage.h"
