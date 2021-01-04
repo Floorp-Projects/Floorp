@@ -218,7 +218,7 @@ const size_t ScopeDataAlignBytes = size_t(1) << gc::CellFlagBitsReservedForGC;
  * suitably aligned to allow storing GC flags in the low bits.
  */
 template <typename NameT>
-class alignas(ScopeDataAlignBytes) AbstractBaseScopeData {
+class AbstractBaseScopeData {
  public:
   using NameType = NameT;
 };
@@ -504,7 +504,8 @@ class LexicalScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct Data : public AbstractBaseScopeData<JSAtom> {
+  struct alignas(ScopeDataAlignBytes) Data
+      : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
@@ -634,7 +635,8 @@ class FunctionScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct Data : public AbstractBaseScopeData<JSAtom> {
+  struct alignas(ScopeDataAlignBytes) Data
+      : public AbstractBaseScopeData<JSAtom> {
     // The canonical function of the scope, as during a scope walk we
     // often query properties of the JSFunction (e.g., is the function an
     // arrow).
@@ -734,7 +736,8 @@ class VarScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct Data : public AbstractBaseScopeData<JSAtom> {
+  struct alignas(ScopeDataAlignBytes) Data
+      : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
@@ -825,7 +828,8 @@ class GlobalScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct Data : public AbstractBaseScopeData<JSAtom> {
+  struct alignas(ScopeDataAlignBytes) Data
+      : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
@@ -932,7 +936,8 @@ class EvalScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct Data : public AbstractBaseScopeData<JSAtom> {
+  struct alignas(ScopeDataAlignBytes) Data
+      : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
@@ -1033,7 +1038,8 @@ class ModuleScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct Data : public AbstractBaseScopeData<JSAtom> {
+  struct alignas(ScopeDataAlignBytes) Data
+      : public AbstractBaseScopeData<JSAtom> {
     // The module of the scope.
     HeapPtr<ModuleObject*> module = {};
     SlotInfo slotInfo;
@@ -1109,7 +1115,8 @@ class WasmInstanceScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct Data : public AbstractBaseScopeData<JSAtom> {
+  struct alignas(ScopeDataAlignBytes) Data
+      : public AbstractBaseScopeData<JSAtom> {
     // The wasm instance of the scope.
     HeapPtr<WasmInstanceObject*> instance = {};
     SlotInfo slotInfo;
@@ -1174,7 +1181,8 @@ class WasmFunctionScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct Data : public AbstractBaseScopeData<JSAtom> {
+  struct alignas(ScopeDataAlignBytes) Data
+      : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
