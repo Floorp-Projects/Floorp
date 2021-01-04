@@ -225,7 +225,9 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         // NOTE: data->slotInfo.nextFrameSlot is set in
         // ScopeStencil::createForFunctionScope.
 
-        data->slotInfo.hasParameterExprs = function.has_parameter_exprs;
+        if (function.has_parameter_exprs) {
+          data->slotInfo.setHasParameterExprs();
+        }
         data->slotInfo.nonPositionalFormalStart =
             function.non_positional_formal_start;
         data->slotInfo.varStart = function.var_start;

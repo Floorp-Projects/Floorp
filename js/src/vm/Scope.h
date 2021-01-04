@@ -599,9 +599,13 @@ class FunctionScope : public Scope {
     // scope.
     uint32_t nextFrameSlot = 0;
 
+    // Flag bits.
+    // This uses uint32_t in order to make this struct packed.
+    uint32_t flags = 0;
+
     // If parameter expressions are present, parameters act like lexical
     // bindings.
-    bool hasParameterExprs = false;
+    static constexpr uint32_t HasParameterExprsFlag = 1;
 
     // Bindings are sorted by kind in both frames and environments.
     //
@@ -633,6 +637,9 @@ class FunctionScope : public Scope {
     uint16_t nonPositionalFormalStart = 0;
     uint16_t varStart = 0;
     uint32_t length = 0;
+
+    bool hasParameterExprs() const { return flags & HasParameterExprsFlag; }
+    void setHasParameterExprs() { flags |= HasParameterExprsFlag; }
   };
 
   struct alignas(ScopeDataAlignBytes) Data
@@ -698,7 +705,7 @@ class FunctionScope : public Scope {
 
   JSScript* script() const;
 
-  bool hasParameterExprs() const { return data().slotInfo.hasParameterExprs; }
+  bool hasParameterExprs() const { return data().slotInfo.hasParameterExprs(); }
 
   uint32_t numPositionalFormalParameters() const {
     return data().slotInfo.nonPositionalFormalStart;

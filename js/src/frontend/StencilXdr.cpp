@@ -212,6 +212,12 @@ static typename ScopeT::ParserData* NewEmptyScopeData(JSContext* cx,
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::FunctionScopeData(XDRState<mode>* xdr,
                                                      ScopeStencil& stencil) {
+#ifdef __cpp_lib_has_unique_object_representations
+  static_assert(
+      std::has_unique_object_representations<ParserFunctionScopeData>(),
+      "ParserFunctionScopeData structure must be fully packed");
+#endif
+
   ParserFunctionScopeData* data =
       static_cast<ParserFunctionScopeData*>(stencil.data_);
 
@@ -223,7 +229,7 @@ template <XDRMode mode>
 
   if (mode == XDR_ENCODE) {
     nextFrameSlot = data->slotInfo.nextFrameSlot;
-    hasParameterExprs = data->slotInfo.hasParameterExprs ? 1 : 0;
+    hasParameterExprs = data->slotInfo.hasParameterExprs() ? 1 : 0;
     nonPositionalFormalStart = data->slotInfo.nonPositionalFormalStart;
     varStart = data->slotInfo.varStart;
     length = data->slotInfo.length;
@@ -241,7 +247,9 @@ template <XDRMode mode>
         xdr->cx(), xdr->stencilAlloc(), length, [&](auto data) {
           data->slotInfo.nextFrameSlot = nextFrameSlot;
           MOZ_ASSERT(hasParameterExprs <= 1);
-          data->slotInfo.hasParameterExprs = hasParameterExprs;
+          if (hasParameterExprs) {
+            data->slotInfo.setHasParameterExprs();
+          }
           data->slotInfo.nonPositionalFormalStart = nonPositionalFormalStart;
           data->slotInfo.varStart = varStart;
           data->slotInfo.length = length;
@@ -260,6 +268,11 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::VarScopeData(XDRState<mode>* xdr,
                                                 ScopeStencil& stencil) {
+#ifdef __cpp_lib_has_unique_object_representations
+  static_assert(std::has_unique_object_representations<ParserVarScopeData>(),
+                "ParserVarScopeData structure must be fully packed");
+#endif
+
   ParserVarScopeData* data = static_cast<ParserVarScopeData*>(stencil.data_);
 
   uint32_t nextFrameSlot = 0;
@@ -294,6 +307,12 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::LexicalScopeData(XDRState<mode>* xdr,
                                                     ScopeStencil& stencil) {
+#ifdef __cpp_lib_has_unique_object_representations
+  static_assert(
+      std::has_unique_object_representations<ParserLexicalScopeData>(),
+      "ParserLexicalScopeData structure must be fully packed");
+#endif
+
   ParserLexicalScopeData* data =
       static_cast<ParserLexicalScopeData*>(stencil.data_);
 
@@ -333,6 +352,11 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::GlobalScopeData(XDRState<mode>* xdr,
                                                    ScopeStencil& stencil) {
+#ifdef __cpp_lib_has_unique_object_representations
+  static_assert(std::has_unique_object_representations<ParserGlobalScopeData>(),
+                "ParserGlobalScopeData structure must be fully packed");
+#endif
+
   ParserGlobalScopeData* data =
       static_cast<ParserGlobalScopeData*>(stencil.data_);
 
@@ -372,6 +396,11 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::ModuleScopeData(XDRState<mode>* xdr,
                                                    ScopeStencil& stencil) {
+#ifdef __cpp_lib_has_unique_object_representations
+  static_assert(std::has_unique_object_representations<ParserModuleScopeData>(),
+                "ParserModuleScopeData structure must be fully packed");
+#endif
+
   ParserModuleScopeData* data =
       static_cast<ParserModuleScopeData*>(stencil.data_);
 
@@ -419,6 +448,11 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::EvalScopeData(XDRState<mode>* xdr,
                                                  ScopeStencil& stencil) {
+#ifdef __cpp_lib_has_unique_object_representations
+  static_assert(std::has_unique_object_representations<ParserEvalScopeData>(),
+                "ParserEvalScopeData structure must be fully packed");
+#endif
+
   ParserEvalScopeData* data = static_cast<ParserEvalScopeData*>(stencil.data_);
 
   uint32_t nextFrameSlot = 0;

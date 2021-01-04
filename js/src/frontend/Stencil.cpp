@@ -1220,7 +1220,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     case ScopeKind::Function: {
       auto* data = static_cast<ParserFunctionScopeData*>(data_);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
-      json.property("hasParameterExprs", data->slotInfo.hasParameterExprs);
+      json.property("hasParameterExprs", data->slotInfo.hasParameterExprs());
       json.property("nonPositionalFormalStart",
                     data->slotInfo.nonPositionalFormalStart);
       json.property("varStart", data->slotInfo.varStart);
