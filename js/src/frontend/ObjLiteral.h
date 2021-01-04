@@ -170,26 +170,22 @@ enum class ObjLiteralFlag : uint8_t {
   // If set, this object is an array.
   Array = 1,
 
-  // If set, the created object will be created with an object group either
-  // freshly allocated or determined by property names by calling
-  // `ObjectGroup::newPlainObject`.
-  SpecificGroup = 2,
   // If set, the created object will be created with newType == SingletonObject
   // rather than TenuredObject.
-  Singleton = 3,
+  Singleton = 2,
   // If set, the created array will be created as a COW array rather than a
   // normal array.
-  ArrayCOW = 4,
+  ArrayCOW = 3,
 
   // No values are provided; the object is meant as a template object.
-  NoValues = 5,
+  NoValues = 4,
 
   // This object is inside a top-level singleton, and so prior to ObjLiteral,
   // would have been allocated at parse time, but is now allocated in bytecode.
   // We do special things to get the right group on the template object; this
   // flag indicates that if JSOp::NewObject copies the object, it should retain
   // its group.
-  IsInnerSingleton = 6,
+  IsInnerSingleton = 5,
 };
 
 using ObjLiteralFlags = mozilla::EnumSet<ObjLiteralFlag>;
