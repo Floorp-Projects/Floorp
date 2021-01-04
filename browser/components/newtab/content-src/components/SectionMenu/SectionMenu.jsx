@@ -5,6 +5,7 @@
 import { actionCreators as ac } from "common/Actions.jsm";
 import { ContextMenu } from "content-src/components/ContextMenu/ContextMenu";
 import React from "react";
+import { connect } from "react-redux";
 import { SectionMenuOptions } from "content-src/lib/section-menu-options";
 
 const DEFAULT_SECTION_MENU_OPTIONS = [
@@ -45,6 +46,17 @@ export class _SectionMenu extends React.PureComponent {
     const propOptions = props.isWebExtension
       ? [...WEBEXT_SECTION_MENU_OPTIONS]
       : [...DEFAULT_SECTION_MENU_OPTIONS];
+
+    // Remove Collapse/Expand related option if the `newNewtabExperience.enabled`
+    // pref is set to true.
+    if (props.Prefs.values["newNewtabExperience.enabled"]) {
+      if (props.isWebExtension) {
+        propOptions.splice(2, 2);
+      } else {
+        propOptions.splice(4, 1);
+      }
+    }
+
     // Remove the move related options if the section is fixed
     if (props.isFixed) {
       propOptions.splice(propOptions.indexOf("MoveUp"), 3);
@@ -105,4 +117,6 @@ export class _SectionMenu extends React.PureComponent {
   }
 }
 
-export const SectionMenu = _SectionMenu;
+export const SectionMenu = connect(state => ({
+  Prefs: state.Prefs,
+}))(_SectionMenu);

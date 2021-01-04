@@ -1872,8 +1872,13 @@ main {
             .collapsible-section .section-title .click-target-container .learn-more-link-wrapper .learn-more-link {
               margin-inline-start: 0; } }
       .collapsible-section .section-title .click-target-container .click-target {
-        cursor: pointer;
         white-space: nowrap; }
+        .collapsible-section .section-title .click-target-container .click-target.click-pointer {
+          cursor: pointer; }
+        .collapsible-section .section-title .click-target-container .click-target.new-header span {
+          cursor: default;
+          font-weight: 700;
+          font-size: 17px; }
     .collapsible-section .section-title .collapsible-arrow {
       margin-inline-start: 8px;
       margin-top: -1px; }

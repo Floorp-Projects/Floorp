@@ -1,5 +1,5 @@
 import { actionTypes as at } from "common/Actions.jsm";
-import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
+import { _CollapsibleSection as CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
 import { mount } from "enzyme";
 import React from "react";
@@ -17,6 +17,7 @@ const DEFAULT_PROPS = {
     visibilityState: "visible",
   },
   dispatch: () => {},
+  Prefs: { values: {} },
 };
 
 describe("CollapsibleSection", () => {

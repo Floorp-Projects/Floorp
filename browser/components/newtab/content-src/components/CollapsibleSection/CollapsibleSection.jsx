@@ -6,6 +6,7 @@ import { actionCreators as ac } from "common/Actions.jsm";
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
 import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
 import React from "react";
+import { connect } from "react-redux";
 import { SectionMenu } from "content-src/components/SectionMenu/SectionMenu";
 import { SectionMenuOptions } from "content-src/lib/section-menu-options";
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
@@ -13,10 +14,11 @@ import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMen
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 
-export class CollapsibleSection extends React.PureComponent {
+export class _CollapsibleSection extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onBodyMount = this.onBodyMount.bind(this);
+    this.collapseOrExpandSection = this.collapseOrExpandSection.bind(this);
     this.onHeaderClick = this.onHeaderClick.bind(this);
     this.onKeyPress = this.onKeyPress.bind(this);
     this.onTransitionEnd = this.onTransitionEnd.bind(this);
@@ -93,12 +95,11 @@ export class CollapsibleSection extends React.PureComponent {
     this.sectionBody = node;
   }
 
-  onHeaderClick() {
+  collapseOrExpandSection() {
     // If this.sectionBody is unset, it means that we're in some sort of error
     // state, probably displaying the error fallback, so we won't be able to
     // compute the height, and we don't want to persist the preference.
-    // If props.collapsed is undefined handler shouldn't do anything.
-    if (!this.sectionBody || this.props.collapsed === undefined) {
+    if (!this.sectionBody) {
       return;
     }
 
@@ -107,8 +108,27 @@ export class CollapsibleSection extends React.PureComponent {
       isAnimating: true,
       maxHeight: `${this._getSectionBodyHeight()}px`,
     });
-    const { action, userEvent } = SectionMenuOptions.CheckCollapsed(this.props);
+    const { action } = SectionMenuOptions.CheckCollapsed(this.props);
     this.props.dispatch(action);
+  }
+
+  onHeaderClick() {
+    // If the new new tab experience pref is turned on,
+    // sections should not be collapsible.
+    // If this.sectionBody is unset, it means that we're in some sort of error
+    // state, probably displaying the error fallback, so we won't be able to
+    // compute the height, and we don't want to persist the preference.
+    // If props.collapsed is undefined handler shouldn't do anything.
+    if (
+      this.props.Prefs.values["newNewtabExperience.enabled"] ||
+      !this.sectionBody ||
+      this.props.collapsed === undefined
+    ) {
+      return;
+    }
+
+    this.collapseOrExpandSection();
+    const { userEvent } = SectionMenuOptions.CheckCollapsed(this.props);
     this.props.dispatch(
       ac.UserEvent({
         event: userEvent,
@@ -173,6 +193,17 @@ export class CollapsibleSection extends React.PureComponent {
 
   render() {
     const isCollapsible = this.props.collapsed !== undefined;
+    const isNewNewtabExperienceEnabled = this.props.Prefs.values[
+      "newNewtabExperience.enabled"
+    ];
+
+    // If new new tab prefs are set to true, sections should not be
+    // collapsible. Expand and make the section visible, if it has been
+    // previously collapsed.
+    if (isNewNewtabExperienceEnabled && this.props.collapsed) {
+      this.collapseOrExpandSection();
+    }
+
     const {
       enableAnimation,
       isAnimating,
@@ -220,15 +251,19 @@ export class CollapsibleSection extends React.PureComponent {
             <span className="click-target-container">
               {/* Click-targets that toggle a collapsible section should have an aria-expanded attribute; see bug 1553234 */}
               <span
-                className="click-target"
+                className={`click-target ${
+                  isNewNewtabExperienceEnabled
+                    ? " new-header"
+                    : " click-pointer"
+                }`}
                 role="button"
                 tabIndex="0"
                 onKeyPress={this.onKeyPress}
                 onClick={this.onHeaderClick}
               >
-                {this.renderIcon()}
+                {!isNewNewtabExperienceEnabled && this.renderIcon()}
                 <FluentOrText message={title} />
-                {isCollapsible && (
+                {!isNewNewtabExperienceEnabled && isCollapsible && (
                   <span
                     data-l10n-id={
                       collapsed
@@ -291,11 +326,14 @@ export class CollapsibleSection extends React.PureComponent {
   }
 }
 
-CollapsibleSection.defaultProps = {
+_CollapsibleSection.defaultProps = {
   document: global.document || {
     addEventListener: () => {},
     removeEventListener: () => {},
     visibilityState: "hidden",
   },
-  Prefs: { values: {} },
 };
+
+export const CollapsibleSection = connect(state => ({
+  Prefs: state.Prefs,
+}))(_CollapsibleSection);
