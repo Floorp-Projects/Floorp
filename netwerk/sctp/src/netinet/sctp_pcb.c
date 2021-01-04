@@ -4958,7 +4958,15 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
 		if ((ntohs(sin->sin_port) == 0) ||
 		    (sin->sin_addr.s_addr == INADDR_ANY) ||
 		    (sin->sin_addr.s_addr == INADDR_BROADCAST) ||
-		    IN_MULTICAST(ntohl(sin->sin_addr.s_addr))) {
+		    IN_MULTICAST(ntohl(sin->sin_addr.s_addr)) ||
+#if defined(__Userspace__)
+		    (((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_CONN) != 0) ||
+		     (((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) != 0) &&
+		      (SCTP_IPV6_V6ONLY(inp) != 0)))) {
+#else
+		    (((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) != 0) &&
+		     (SCTP_IPV6_V6ONLY(inp) != 0))) {
+#endif
 			/* Invalid address */
 			SCTP_INP_RUNLOCK(inp);
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, EINVAL);
@@ -4977,7 +4985,8 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
 		sin6 = (struct sockaddr_in6 *)firstaddr;
 		if ((ntohs(sin6->sin6_port) == 0) ||
 		    IN6_IS_ADDR_UNSPECIFIED(&sin6->sin6_addr) ||
-		    IN6_IS_ADDR_MULTICAST(&sin6->sin6_addr)) {
+		    IN6_IS_ADDR_MULTICAST(&sin6->sin6_addr) ||
+		    ((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) == 0)) {
 			/* Invalid address */
 			SCTP_INP_RUNLOCK(inp);
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, EINVAL);
@@ -4995,7 +5004,8 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
 
 		sconn = (struct sockaddr_conn *)firstaddr;
 		if ((ntohs(sconn->sconn_port) == 0) ||
-		    (sconn->sconn_addr == NULL)) {
+		    (sconn->sconn_addr == NULL) ||
+		    ((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_CONN) == 0)) {
 			/* Invalid address */
 			SCTP_INP_RUNLOCK(inp);
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, EINVAL);
