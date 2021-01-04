@@ -310,3 +310,38 @@ add_task(async function nested_iframes() {
   await dialogClosedPromise;
   gBrowser.removeTab(tab);
 });
+
+add_task(async function test_oop_iframe() {
+  const URI = `data:text/html,<div id="root"><iframe src="http://example.com/document-builder.sjs?html=<a href='mailto:help@example.com'>Mail it</a>"></iframe></div>`;
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URI);
+
+  // Wait for the window and then click the link.
+  let dialogWindowPromise = waitForProtocolAppChooserDialog(
+    tab.linkedBrowser,
+    true
+  );
+
+  BrowserTestUtils.synthesizeMouseAtCenter(
+    "a:link",
+    {},
+    tab.linkedBrowser.browsingContext.children[0]
+  );
+
+  let dialog = await dialogWindowPromise;
+
+  is(
+    dialog._frame.contentDocument.location.href,
+    CONTENT_HANDLING_URL,
+    "Dialog URL is as expected"
+  );
+  let dialogClosedPromise = waitForProtocolAppChooserDialog(
+    tab.linkedBrowser,
+    false
+  );
+
+  info("Removing tab to close the dialog.");
+  gBrowser.removeTab(tab);
+  await dialogClosedPromise;
+  ok(!dialog._frame.contentWindow, "The dialog should have been closed.");
+});
