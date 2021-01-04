@@ -205,12 +205,6 @@ class EventStates {
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet).
 #define NS_EVENT_STATE_LOADING NS_DEFINE_EVENT_STATE_MACRO(17)
-// Handler for the content has been blocked.
-#define NS_EVENT_STATE_HANDLER_BLOCKED NS_DEFINE_EVENT_STATE_MACRO(18)
-// Handler for the content has been disabled.
-#define NS_EVENT_STATE_HANDLER_DISABLED NS_DEFINE_EVENT_STATE_MACRO(19)
-// Handler for the content has crashed
-#define NS_EVENT_STATE_HANDLER_CRASHED NS_DEFINE_EVENT_STATE_MACRO(20)
 // Content is required.
 #define NS_EVENT_STATE_REQUIRED NS_DEFINE_EVENT_STATE_MACRO(21)
 // Content is optional (and can be required).
@@ -250,12 +244,6 @@ class EventStates {
 #define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(38)
 // Content has focus and should show a ring.
 #define NS_EVENT_STATE_FOCUSRING NS_DEFINE_EVENT_STATE_MACRO(39)
-// Handler for click to play plugin
-#define NS_EVENT_STATE_TYPE_CLICK_TO_PLAY NS_DEFINE_EVENT_STATE_MACRO(40)
-// Handler for click to play plugin (vulnerable w/update)
-#define NS_EVENT_STATE_VULNERABLE_UPDATABLE NS_DEFINE_EVENT_STATE_MACRO(41)
-// Handler for click to play plugin (vulnerable w/no update)
-#define NS_EVENT_STATE_VULNERABLE_NO_UPDATE NS_DEFINE_EVENT_STATE_MACRO(42)
 // Element has focus-within.
 #define NS_EVENT_STATE_FOCUS_WITHIN NS_DEFINE_EVENT_STATE_MACRO(43)
 // Element is ltr (for :dir pseudo-class)

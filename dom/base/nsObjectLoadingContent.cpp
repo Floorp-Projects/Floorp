@@ -1275,21 +1275,16 @@ EventStates nsObjectLoadingContent::ObjectState() const {
       switch (mFallbackType) {
         case eFallbackClickToPlay:
         case eFallbackClickToPlayQuiet:
-          return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
+        case eFallbackVulnerableUpdatable:
+        case eFallbackVulnerableNoUpdate:
+          return EventStates();
         case eFallbackDisabled:
-          return NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_HANDLER_DISABLED;
         case eFallbackBlocklisted:
-          return NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_HANDLER_BLOCKED;
         case eFallbackCrashed:
-          return NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_HANDLER_CRASHED;
         case eFallbackUnsupported:
         case eFallbackOutdated:
         case eFallbackAlternate:
           return NS_EVENT_STATE_BROKEN;
-        case eFallbackVulnerableUpdatable:
-          return NS_EVENT_STATE_VULNERABLE_UPDATABLE;
-        case eFallbackVulnerableNoUpdate:
-          return NS_EVENT_STATE_VULNERABLE_NO_UPDATE;
         case eFallbackBlockAllPlugins:
           return NS_EVENT_STATE_HANDLER_NOPLUGINS;
       }
@@ -1918,6 +1913,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
   // Save these for NotifyStateChanged();
   EventStates oldState = ObjectState();
   ObjectType oldType = mType;
+  FallbackType oldFallbackType = mFallbackType;
 
   ParameterUpdateFlags stateChange = UpdateObjectParameters();
 
@@ -2128,9 +2124,10 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     case eType_Plugin: {
       if (mChannel) {
         // Force a sync state change now, we need the frame created
-        NotifyStateChanged(oldType, oldState, true, aNotify);
+        NotifyStateChanged(oldType, oldState, oldFallbackType, true, aNotify);
         oldType = mType;
         oldState = ObjectState();
+        oldFallbackType = mFallbackType;
 
         if (!thisContent->GetPrimaryFrame()) {
           // We're un-rendered, and can't instantiate a plugin. HasNewFrame will
@@ -2243,7 +2240,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
   }
 
   // Notify of our final state
-  NotifyStateChanged(oldType, oldState, false, aNotify);
+  NotifyStateChanged(oldType, oldState, oldFallbackType, false, aNotify);
   NS_ENSURE_TRUE(mIsLoading, NS_OK);
 
   //
@@ -2548,6 +2545,7 @@ void nsObjectLoadingContent::UnloadObject(bool aResetState) {
 
 void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
                                                 EventStates aOldState,
+                                                FallbackType aOldFallbackType,
                                                 bool aSync, bool aNotify) {
   LOG(("OBJLC [%p]: Notifying about state change: (%u, %" PRIx64
        ") -> (%u, %" PRIx64 ")"
@@ -2576,9 +2574,9 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     return;  // Nothing to do
   }
 
-  EventStates newState = ObjectState();
-
-  if (newState == aOldState && mType == aOldType) {
+  const EventStates newState = ObjectState();
+  if (newState == aOldState && mType == aOldType &&
+      (mType != eType_Null || mFallbackType == aOldFallbackType)) {
     return;  // Also done.
   }
 
@@ -2590,20 +2588,25 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
       nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(thisEl, changedBits);
     }
+  }
 
+  auto NeedsUAWidget = [](ObjectType aType, FallbackType aFallbackType) {
+    if (aType != eType_Null) {
+      return false;
+    }
+    return aFallbackType != eFallbackUnsupported &&
+           aFallbackType != eFallbackOutdated &&
+           aFallbackType != eFallbackAlternate &&
+           aFallbackType != eFallbackDisabled;
+  };
+
+  const bool needsWidget = NeedsUAWidget(mType, mFallbackType);
+  const bool neededWidget = NeedsUAWidget(aOldType, aOldFallbackType);
+  if (needsWidget != neededWidget) {
     // Create/destroy plugin problem UAWidget.
-    const EventStates pluginProblemState =
-        NS_EVENT_STATE_HANDLER_BLOCKED | NS_EVENT_STATE_HANDLER_CRASHED |
-        NS_EVENT_STATE_TYPE_CLICK_TO_PLAY |
-        NS_EVENT_STATE_VULNERABLE_UPDATABLE |
-        NS_EVENT_STATE_VULNERABLE_NO_UPDATE | NS_EVENT_STATE_HANDLER_NOPLUGINS;
-
-    bool hadProblemState = !(aOldState & pluginProblemState).IsEmpty();
-    bool hasProblemState = !(newState & pluginProblemState).IsEmpty();
-
-    if (hadProblemState && !hasProblemState) {
+    if (neededWidget) {
       thisEl->NotifyUAWidgetTeardown();
-    } else if (!hadProblemState && hasProblemState) {
+    } else {
       thisEl->AttachAndSetUAShadowRoot();
       // When blocking all plugins, we do not want the element to have focus
       // so relinquish focus if we are in that state.
@@ -2614,11 +2617,10 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
         }
       }
     }
-  } else if (aOldType != mType) {
-    // If our state changed, then we already recreated frames
-    // Otherwise, need to do that here
-    RefPtr<PresShell> presShell = doc->GetPresShell();
-    if (presShell) {
+  }
+
+  if (aOldType != mType) {
+    if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
       presShell->PostRecreateFramesFor(thisEl);
     }
   }
@@ -2840,6 +2842,7 @@ nsObjectLoadingContent::GetSrcURI(nsIURI** aURI) {
 void nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
   EventStates oldState = ObjectState();
   ObjectType oldType = mType;
+  FallbackType oldFallbackType = mFallbackType;
 
   NS_ASSERTION(!mInstanceOwner && !mFrameLoader && !mChannel,
                "LoadFallback called with loaded content");
@@ -2905,7 +2908,7 @@ void nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
     return;  // done
   }
 
-  NotifyStateChanged(oldType, oldState, false, true);
+  NotifyStateChanged(oldType, oldState, oldFallbackType, false, true);
 }
 
 void nsObjectLoadingContent::DoStopPlugin(
