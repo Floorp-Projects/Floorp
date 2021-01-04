@@ -287,10 +287,8 @@ class ScopeStencil {
  private:
   // Non owning reference to data
   template <typename SpecificScopeType>
-  typename SpecificScopeType::template AbstractData<TaggedParserAtomIndex>&
-  data() const {
-    using Data = typename SpecificScopeType ::template AbstractData<
-        TaggedParserAtomIndex>;
+  typename SpecificScopeType::ParserData& data() const {
+    using Data = typename SpecificScopeType ::ParserData;
 
     MOZ_ASSERT(data_);
     return *static_cast<Data*>(data_);
