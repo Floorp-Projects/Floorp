@@ -755,7 +755,6 @@ class GCRuntime {
   IncrementalProgress markDuringSweeping(JSFreeOp* fop, SliceBudget& budget);
   void updateAtomsBitmap();
   void sweepCCWrappers();
-  void sweepObjectGroups();
   void sweepMisc();
   void sweepCompressionTasks();
   void sweepWeakMaps();

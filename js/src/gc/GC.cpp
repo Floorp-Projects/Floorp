@@ -2275,7 +2275,6 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   }
 
   for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
-    r->traceWeakObjectGroups(trc);
     r->traceWeakRegExps(trc);
     r->traceWeakSavedStacks(trc);
     r->tracekWeakVarNames(trc);
@@ -5141,14 +5140,6 @@ void GCRuntime::sweepCCWrappers() {
   }
 }
 
-void GCRuntime::sweepObjectGroups() {
-  SweepingTracer trc(rt);
-  for (SweepGroupRealmsIter r(this); !r.done(); r.next()) {
-    AutoSetThreadIsSweeping threadIsSweeping(r->zone());
-    r->traceWeakObjectGroups(&trc);
-  }
-}
-
 void GCRuntime::sweepMisc() {
   SweepingTracer trc(rt);
   for (SweepGroupRealmsIter r(this); !r.done(); r.next()) {
@@ -5459,8 +5450,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
 
     AutoRunParallelTask sweepCCWrappers(this, &GCRuntime::sweepCCWrappers,
                                         PhaseKind::SWEEP_CC_WRAPPER, lock);
-    AutoRunParallelTask sweepObjectGroups(this, &GCRuntime::sweepObjectGroups,
-                                          PhaseKind::SWEEP_TYPE_OBJECT, lock);
     AutoRunParallelTask sweepMisc(this, &GCRuntime::sweepMisc,
                                   PhaseKind::SWEEP_MISC, lock);
     AutoRunParallelTask sweepCompTasks(this, &GCRuntime::sweepCompressionTasks,

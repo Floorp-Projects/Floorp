@@ -359,37 +359,7 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
 // ObjectGroupRealm
 /////////////////////////////////////////////////////////////////////
 
-ObjectGroupRealm::~ObjectGroupRealm() {
-  js_delete(defaultNewTable);
-  stringSplitStringGroup = nullptr;
-}
-
-/* static */
-ObjectGroup* ObjectGroupRealm::getStringSplitStringGroup(JSContext* cx) {
-  ObjectGroupRealm& groups = ObjectGroupRealm::getForNewObject(cx);
-
-  ObjectGroup* group = groups.stringSplitStringGroup.get();
-  if (group) {
-    return group;
-  }
-
-  // The following code is a specialized version of the code
-  // for ObjectGroup::allocationSiteGroup().
-
-  JSObject* proto = GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
-  if (!proto) {
-    return nullptr;
-  }
-  Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-
-  group = MakeGroup(cx, &ArrayObject::class_, tagged);
-  if (!group) {
-    return nullptr;
-  }
-
-  groups.stringSplitStringGroup.set(group);
-  return group;
-}
+ObjectGroupRealm::~ObjectGroupRealm() { js_delete(defaultNewTable); }
 
 void ObjectGroupRealm::addSizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf, size_t* realmTables) {
@@ -403,13 +373,6 @@ void ObjectGroupRealm::clearTables() {
     defaultNewTable->clear();
   }
   defaultNewGroupCache.purge();
-}
-
-void ObjectGroupRealm::traceWeak(JSTracer* trc) {
-  if (stringSplitStringGroup) {
-    JS::GCPolicy<WeakHeapPtrObjectGroup>::traceWeak(trc,
-                                                    &stringSplitStringGroup);
-  }
 }
 
 void ObjectGroupRealm::fixupNewTableAfterMovingGC(NewTable* table) {

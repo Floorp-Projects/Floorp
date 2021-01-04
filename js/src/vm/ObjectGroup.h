@@ -199,14 +199,6 @@ class ObjectGroupRealm {
                                           JSObject* associated);
   } defaultNewGroupCache = {};
 
-  // A single per-realm ObjectGroup for all calls to StringSplitString.
-  // StringSplitString is always called from self-hosted code, and conceptually
-  // the return object for a string.split(string) operation should have a
-  // unified type.  Having a global group for this also allows us to remove
-  // the hash-table lookup that would be required if we allocated this group
-  // on the basis of call-site pc.
-  WeakHeapPtrObjectGroup stringSplitStringGroup = {};
-
   // END OF PROPERTIES
 
  private:
@@ -224,14 +216,10 @@ class ObjectGroupRealm {
   static ObjectGroupRealm& get(const ObjectGroup* group);
   static ObjectGroupRealm& getForNewObject(JSContext* cx);
 
-  static ObjectGroup* getStringSplitStringGroup(JSContext* cx);
-
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* realmTables);
 
   void clearTables();
-
-  void traceWeak(JSTracer* trc);
 
   void purge() { defaultNewGroupCache.purge(); }
 
