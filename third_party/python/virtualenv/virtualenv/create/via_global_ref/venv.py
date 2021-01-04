@@ -46,10 +46,7 @@ class Venv(ViaGlobalRefApi):
         from venv import EnvBuilder
 
         builder = EnvBuilder(
-            system_site_packages=self.enable_system_site_package,
-            clear=False,
-            symlinks=self.symlinks,
-            with_pip=False,
+            system_site_packages=self.enable_system_site_package, clear=False, symlinks=self.symlinks, with_pip=False,
         )
         builder.create(str(self.dest))
 

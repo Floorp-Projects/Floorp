@@ -13,17 +13,13 @@ else:
     Popen = subprocess.Popen
 
 
-CREATE_NO_WINDOW = 0x80000000
+DETACHED_PROCESS = 0x00000008
 
 
 def run_cmd(cmd):
     try:
         process = Popen(
-            cmd,
-            universal_newlines=True,
-            stdin=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+            cmd, universal_newlines=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
         )
         out, err = process.communicate()  # input disabled
         code = process.returncode
@@ -36,5 +32,5 @@ __all__ = (
     "subprocess",
     "Popen",
     "run_cmd",
-    "CREATE_NO_WINDOW",
+    "DETACHED_PROCESS",
 )
