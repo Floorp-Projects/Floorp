@@ -31,7 +31,13 @@ exports.SIMPLE_URL = PAGES_BASE_URL + "simple.html";
 exports.COMPLICATED_URL =
   "http://www.bild.de-talos/fis/tp5n/bild.de/www.bild.de/index.html";
 
-const { damp } = require("damp-test/damp");
+let damp = null;
+/*
+ * This method should be called by js before starting the tests.
+ */
+exports.initialize = function(_damp) {
+  damp = _damp;
+};
 
 function garbageCollect() {
   return damp.garbageCollect();
