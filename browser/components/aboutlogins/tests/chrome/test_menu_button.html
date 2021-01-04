@@ -78,6 +78,12 @@ add_task(async function test_menu_click_outside () {
   await synthesizeMouseAtCenter(outsideEl, {});
   await new Promise(resolve => requestAnimationFrame(resolve));
   ok(menu.hidden, "menu should be hidden after a click outside of the menu has been clicked");
+
+  for (let key of ["KEY_ArrowDown", "KEY_ArrowUp"]) {
+    synthesizeKey(key);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    ok(menu.hidden, `menu should still be hidden when ${key} is entered`);
+  }
 });
 
 add_task(async function test_menu_esc_after_click_disabled_item () {
