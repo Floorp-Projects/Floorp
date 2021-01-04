@@ -458,7 +458,7 @@ nsWindowsRegKey::StartWatching(bool aRecurse) {
     return NS_OK;
   }
 
-  mWatchEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+  mWatchEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
   if (!mWatchEvent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
