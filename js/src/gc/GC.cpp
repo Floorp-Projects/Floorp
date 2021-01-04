@@ -1504,6 +1504,10 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return nursery().capacity();
     case JSGC_NUMBER:
       return uint32_t(number);
+    case JSGC_MAJOR_GC_NUMBER:
+      return uint32_t(majorGCNumber);
+    case JSGC_MINOR_GC_NUMBER:
+      return uint32_t(minorGCNumber);
     case JSGC_MODE:
       return uint32_t(mode);
     case JSGC_UNUSED_CHUNKS:
@@ -4082,12 +4086,6 @@ void GCRuntime::unmarkWeakMaps() {
 bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PREPARE);
 
-#ifdef DEBUG
-  if (fullCompartmentChecks) {
-    checkForCompartmentMismatches();
-  }
-#endif
-
   if (!prepareZonesForCollection(reason, &isFull.ref())) {
     return false;
   }
@@ -4284,6 +4282,12 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
       }
     }
   }
+
+#ifdef DEBUG
+  if (fullCompartmentChecks) {
+    checkForCompartmentMismatches();
+  }
+#endif
 }
 
 void GCRuntime::beginMarkPhase(AutoGCSession& session) {
@@ -6429,6 +6433,10 @@ void GCRuntime::finishCollection() {
     zone->notifyObservingDebuggers();
   }
 
+#ifdef JS_GC_ZEAL
+  clearSelectedForMarking();
+#endif
+
   auto currentTime = ReallyNow();
   schedulingState.updateHighFrequencyMode(lastGCEndTime_, currentTime,
                                           tunables);
@@ -6524,7 +6532,9 @@ static JS::ProfilingCategoryPair GCHeapStateToProfilingCategory(
 AutoHeapSession::AutoHeapSession(GCRuntime* gc, JS::HeapState heapState)
     : gc(gc), prevState(gc->heapState_) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
-  MOZ_ASSERT(prevState == JS::HeapState::Idle);
+  MOZ_ASSERT(prevState == JS::HeapState::Idle ||
+             (prevState == JS::HeapState::MajorCollecting &&
+              heapState == JS::HeapState::MinorCollecting));
   MOZ_ASSERT(heapState != JS::HeapState::Idle);
 
   gc->heapState_ = heapState;
@@ -6710,10 +6720,22 @@ static bool ShouldSweepOnBackgroundThread(JS::GCReason reason) {
   return reason != JS::GCReason::DESTROY_RUNTIME && CanUseExtraThreads();
 }
 
+static bool NeedToCollectNursery(GCRuntime* gc) {
+  return !gc->nursery().isEmpty() || !gc->storeBuffer().isEmpty();
+}
+
 void GCRuntime::incrementalSlice(SliceBudget& budget,
                                  const MaybeInvocationKind& gckind,
-                                 JS::GCReason reason, AutoGCSession& session) {
+                                 JS::GCReason reason) {
   AutoSetThreadIsPerformingGC performingGC;
+
+  AutoGCSession session(this, JS::HeapState::MajorCollecting);
+
+  // We don't allow off-thread parsing to start while we're doing an
+  // incremental GC of the atoms zone.
+  if (rt->activeGCInAtomsZone()) {
+    session.maybeCheckAtomsAccess.emplace(rt);
+  }
 
   bool destroyingRuntime = (reason == JS::GCReason::DESTROY_RUNTIME);
 
@@ -6744,14 +6766,6 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
   isIncremental = !budget.isUnlimited();
 
-  /*
-   * Non-incremental collection expects that the nursery is empty.
-   */
-  if (!isIncremental && !isIncrementalGCInProgress()) {
-    MOZ_ASSERT(nursery().isEmpty());
-    storeBuffer().checkEmpty();
-  }
-
   if (useZeal && hasIncrementalTwoSliceZealMode()) {
     /*
      * Yields between slices occurs at predetermined points in these modes;
@@ -6760,8 +6774,6 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
     stats().writeLogMessage("Using unlimited budget for two-slice zeal mode");
     budget.makeUnlimited();
   }
-
-  incGcSliceNumber();
 
   switch (incrementalState) {
     case State::NotActive:
@@ -6783,7 +6795,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       incrementalState = State::Prepare;
       if (!beginPreparePhase(reason, session)) {
         incrementalState = State::NotActive;
-        return;
+        break;
       }
 
       if (isIncremental && useZeal &&
@@ -6799,15 +6811,19 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
         break;
       }
 
-      endPreparePhase(reason);
       incrementalState = State::MarkRoots;
       [[fallthrough]];
 
     case State::MarkRoots:
+      if (NeedToCollectNursery(this)) {
+        collectNurseryFromMajorGC(gckind, reason);
+      }
+
+      endPreparePhase(reason);
+
       beginMarkPhase(session);
 
-      /* If we needed delayed marking for gray roots, then collect until done.
-       */
+      // If we needed delayed marking for gray roots, then collect until done.
       if (isIncremental && !hasValidGrayRootsBuffer()) {
         budget.makeUnlimited();
         isIncremental = false;
@@ -6875,6 +6891,10 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Sweep:
+      if (storeBuffer().mayHavePointersToDeadCells()) {
+        collectNurseryFromMajorGC(gckind, reason);
+      }
+
       if (initialState == State::Sweep) {
         rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
       }
@@ -6918,7 +6938,10 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
     case State::Compact:
       if (isCompacting) {
-        MOZ_ASSERT(nursery().isEmpty());
+        if (NeedToCollectNursery(this)) {
+          collectNurseryFromMajorGC(gckind, reason);
+        }
+
         storeBuffer().checkEmpty();
         if (!startedCompacting) {
           beginCompactPhase();
@@ -6954,6 +6977,12 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
   MOZ_ASSERT(safeToYield);
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
+}
+
+void GCRuntime::collectNurseryFromMajorGC(const MaybeInvocationKind& gckind,
+                                          JS::GCReason reason) {
+  collectNursery(gckind.valueOr(GC_NORMAL), reason,
+                 gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
 }
 
 bool GCRuntime::hasForegroundWork() const {
@@ -7055,20 +7084,22 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     return resetIncrementalGC(GCAbortReason::AbortRequested);
   }
 
-  GCAbortReason unsafeReason = IsIncrementalGCUnsafe(rt);
-  if (unsafeReason == GCAbortReason::None) {
-    if (reason == JS::GCReason::COMPARTMENT_REVIVED) {
-      unsafeReason = GCAbortReason::CompartmentRevived;
-    } else if (mode != JSGC_MODE_INCREMENTAL &&
-               mode != JSGC_MODE_ZONE_INCREMENTAL) {
-      unsafeReason = GCAbortReason::ModeChange;
+  if (!budget.isUnlimited()) {
+    GCAbortReason unsafeReason = IsIncrementalGCUnsafe(rt);
+    if (unsafeReason == GCAbortReason::None) {
+      if (reason == JS::GCReason::COMPARTMENT_REVIVED) {
+        unsafeReason = GCAbortReason::CompartmentRevived;
+      } else if (mode != JSGC_MODE_INCREMENTAL &&
+                 mode != JSGC_MODE_ZONE_INCREMENTAL) {
+        unsafeReason = GCAbortReason::ModeChange;
+      }
     }
-  }
 
-  if (unsafeReason != GCAbortReason::None) {
-    budget.makeUnlimited();
-    stats().nonincremental(unsafeReason);
-    return resetIncrementalGC(unsafeReason);
+    if (unsafeReason != GCAbortReason::None) {
+      budget.makeUnlimited();
+      stats().nonincremental(unsafeReason);
+      return resetIncrementalGC(unsafeReason);
+    }
   }
 
   GCAbortReason resetReason = GCAbortReason::None;
@@ -7245,6 +7276,17 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   // they are operating on zones which will not be collected from here.
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
+  // This reason is used internally. See below.
+  MOZ_ASSERT(reason != JS::GCReason::RESET);
+
+  // Background finalization and decommit are finished by definition before we
+  // can start a new major GC.  Background allocation may still be running, but
+  // that's OK because chunk pools are protected by the GC lock.
+  if (!isIncrementalGCInProgress()) {
+    assertBackgroundSweepingFinished();
+    MOZ_ASSERT(decommitTask.isIdle());
+  }
+
   // Note that GC callbacks are allowed to re-enter GC.
   AutoCallGCCallbacks callCallbacks(*this, reason);
 
@@ -7256,7 +7298,8 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(),
                            gckind.valueOr(invocationKind), budget, reason);
 
-  auto result = budgetIncrementalGC(nonincrementalByAPI, reason, budget);
+  IncrementalResult result =
+      budgetIncrementalGC(nonincrementalByAPI, reason, budget);
   if (result == IncrementalResult::ResetIncremental) {
     if (incrementalState == State::NotActive) {
       // The collection was reset and has finished.
@@ -7267,105 +7310,43 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
     reason = JS::GCReason::RESET;
   }
 
-  if (shouldCollectNurseryForSlice(nonincrementalByAPI, budget)) {
-    collectNursery(gckind.valueOr(GC_NORMAL), reason,
-                   gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
-  } else {
-    ++number;  // This otherwise happens in Nursery::collect().
-  }
-
-  AutoGCSession session(this, JS::HeapState::MajorCollecting);
-
   majorGCTriggerReason = JS::GCReason::NO_REASON;
   MOZ_ASSERT(!stats().hasTrigger());
 
-  {
-    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
-
-    // Background finalization and decommit are finished by defininition
-    // before we can start a new GC session.
-    if (!isIncrementalGCInProgress()) {
-      assertBackgroundSweepingFinished();
-      MOZ_ASSERT(decommitTask.isIdle());
-    }
-
-    // We must also wait for background allocation to finish so we can
-    // avoid taking the GC lock when manipulating the chunks during the GC.
-    // The background alloc task can run between slices, so we must wait
-    // for it at the start of every slice.
-    allocTask.cancelAndWait();
-  }
-
-  // We don't allow off-thread parsing to start while we're doing an
-  // incremental GC of the atoms zone.
-  if (rt->activeGCInAtomsZone()) {
-    session.maybeCheckAtomsAccess.emplace(rt);
-  }
+  incGcNumber();
+  incGcSliceNumber();
 
   gcprobes::MajorGCStart();
-
-  incrementalSlice(budget, gckind, reason, session);
-
-#ifdef JS_GC_ZEAL
-  clearSelectedForMarking();
-#endif
-
+  incrementalSlice(budget, gckind, reason);
   gcprobes::MajorGCEnd();
 
   MOZ_ASSERT_IF(result == IncrementalResult::ResetIncremental,
                 !isIncrementalGCInProgress());
-
   return result;
 }
 
-bool GCRuntime::shouldCollectNurseryForSlice(bool nonincrementalByAPI,
-                                             SliceBudget& budget) {
-  if (!nursery().isEnabled()) {
-    return false;
+void GCRuntime::waitForBackgroundTasksBeforeSlice() {
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
+
+  // Background finalization and decommit are finished by definition before we
+  // can start a new major GC.
+  if (!isIncrementalGCInProgress()) {
+    assertBackgroundSweepingFinished();
+    MOZ_ASSERT(decommitTask.isIdle());
   }
 
-  if (nursery().shouldCollect()) {
-    return true;
-  }
-
-  bool nonIncremental = nonincrementalByAPI || budget.isUnlimited();
-
-  bool shouldCollectForSweeping = storeBuffer().mayHavePointersToDeadCells();
-
-  switch (incrementalState) {
-    case State::NotActive:
-      return true;
-    case State::Prepare:
-      return true;
-    case State::Mark:
-      return (mightSweepInThisSlice(nonIncremental) &&
-              shouldCollectForSweeping) ||
-             mightCompactInThisSlice(nonIncremental);
-    case State::Sweep:
-      return shouldCollectForSweeping ||
-             mightCompactInThisSlice(nonIncremental);
-    case State::Finalize:
-      return mightCompactInThisSlice(nonIncremental);
-    case State::Compact:
-      return true;
-    case State::Decommit:
-    case State::Finish:
-      return false;
-    default:
-      MOZ_CRASH("Unexpected GC state");
-  }
-
-  return false;
+  // We must also wait for background allocation to finish so we can avoid
+  // taking the GC lock when manipulating the chunks during the GC.  The
+  // background alloc task can run between slices, so we must wait for it at the
+  // start of every slice.
+  //
+  // TODO: Is this still necessary?
+  allocTask.cancelAndWait();
 }
 
 inline bool GCRuntime::mightSweepInThisSlice(bool nonIncremental) {
   MOZ_ASSERT(incrementalState < State::Sweep);
   return nonIncremental || lastMarkSlice || hasIncrementalTwoSliceZealMode();
-}
-
-inline bool GCRuntime::mightCompactInThisSlice(bool nonIncremental) {
-  MOZ_ASSERT(incrementalState < State::Compact);
-  return isCompacting && (nonIncremental || hasIncrementalTwoSliceZealMode());
 }
 
 #ifdef JS_GC_ZEAL
@@ -7730,7 +7711,16 @@ void GCRuntime::minorGC(JS::GCReason reason, gcstats::PhaseKind phase) {
     return;
   }
 
+  incGcNumber();
+
   collectNursery(GC_NORMAL, reason, phase);
+
+#ifdef JS_GC_ZEAL
+  if (hasZealMode(ZealMode::CheckHeapAfterGC)) {
+    gcstats::AutoPhase ap(stats(), phase);
+    CheckHeapAfterGC(rt);
+  }
+#endif
 
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     maybeTriggerGCAfterAlloc(zone);
@@ -7761,12 +7751,6 @@ void GCRuntime::collectNursery(JSGCInvocationKind kind, JS::GCReason reason,
   MOZ_ASSERT(nursery().isEmpty());
 
   startBackgroundFreeAfterMinorGC();
-
-#ifdef JS_GC_ZEAL
-  if (hasZealMode(ZealMode::CheckHeapAfterGC)) {
-    CheckHeapAfterGC(rt);
-  }
-#endif
 }
 
 void GCRuntime::startBackgroundFreeAfterMinorGC() {
