@@ -480,6 +480,7 @@ class StoreBuffer {
   void disable();
   bool isEnabled() const { return enabled_; }
 
+  bool isEmpty() const;
   void clear();
 
   const Nursery& nursery() const { return nursery_; }
