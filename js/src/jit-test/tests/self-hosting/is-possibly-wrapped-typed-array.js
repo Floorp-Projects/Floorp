@@ -1,7 +1,3 @@
-// |jit-test| skip-if: !isTypeInferenceEnabled()
-// With trial inlining enabled, this test loops infinitely
-// waiting for a trial-inlined function to be recompiled.
-
 var IsPossiblyWrappedTypedArray = getSelfHostedValue("IsPossiblyWrappedTypedArray");
 
 var declareSamples = `
