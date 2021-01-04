@@ -426,10 +426,12 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           const SmooshScriptStencil& smooshScript,
                           Vector<const ParserAtom*>& allAtoms,
                           CompilationInfo& compilationInfo,
-                          ScriptStencil& script, ScriptIndex scriptIndex) {
+                          ScriptIndex scriptIndex) {
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
   const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
+
+  ScriptStencil& script = compilationInfo.stencil.scriptData[scriptIndex];
 
   script.immutableFlags = smooshScript.immutable_flags;
 
@@ -624,9 +626,8 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
   for (size_t i = 0; i < result.scripts.len; i++) {
     compilationInfo.stencil.scriptData.infallibleEmplaceBack();
 
-    if (!ConvertScriptStencil(
-            cx, result, result.scripts.data[i], allAtoms, compilationInfo,
-            compilationInfo.stencil.scriptData[i], ScriptIndex(i))) {
+    if (!ConvertScriptStencil(cx, result, result.scripts.data[i], allAtoms,
+                              compilationInfo, ScriptIndex(i))) {
       return false;
     }
   }
