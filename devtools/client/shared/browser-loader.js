@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const loaders = ChromeUtils.import("resource://devtools/shared/base-loader.js");
+const BaseLoader = ChromeUtils.import(
+  "resource://devtools/shared/base-loader.js"
+);
 const { require: devtoolsRequire, loader } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );
@@ -94,21 +96,21 @@ function BrowserLoader(options) {
  *
  * @param string baseURI
  *        Base path to load modules from.
- * @param Object window
- *        The window instance to evaluate modules within
- * @param Boolean useOnlyShared
- *        If true, ignores `baseURI` and only loads the shared
- *        BROWSER_BASED_DIRS via BrowserLoader.
  * @param Function commonLibRequire
  *        Require function that should be used to load common libraries, like React.
  *        Allows for sharing common modules between tools, instead of loading a new
  *        instance into each tool. For example, pass "toolbox.browserRequire" here.
+ * @param Boolean useOnlyShared
+ *        If true, ignores `baseURI` and only loads the shared
+ *        BROWSER_BASED_DIRS via BrowserLoader.
+ * @param Object window
+ *        The window instance to evaluate modules within
  */
 function BrowserLoaderBuilder({
   baseURI,
-  window,
-  useOnlyShared,
   commonLibRequire,
+  useOnlyShared,
+  window,
 }) {
   assert(
     !!baseURI !== !!useOnlyShared,
@@ -198,13 +200,13 @@ function BrowserLoaderBuilder({
     },
   };
 
-  const mainModule = loaders.Module(baseURI, joinURI(baseURI, "main.js"));
-  this.loader = loaders.Loader(opts);
+  const mainModule = BaseLoader.Module(baseURI, joinURI(baseURI, "main.js"));
+  this.loader = BaseLoader.Loader(opts);
   // When running tests, expose the BrowserLoader instance for metrics tests.
   if (flags.testing) {
     window.getBrowserLoaderForWindow = () => this;
   }
-  this.require = loaders.Require(this.loader, mainModule);
+  this.require = BaseLoader.Require(this.loader, mainModule);
 }
 
 BrowserLoaderBuilder.prototype = {

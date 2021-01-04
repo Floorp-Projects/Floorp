@@ -78,6 +78,19 @@ function DevToolsLoader({
     paths.promise = "resource://gre/modules/Promise-backend.js";
   }
 
+  // DAMP tests use a dynamic path. If DEBUG_DEVTOOLS_DAMP_TEST_PATH was set as
+  // a custom preference, add a corresponding path mapping entry.
+  // DAMP runner and tests are under testing/talos/talos/tests/devtools
+  const dampTestPath = Services.prefs.getCharPref(
+    "devtools.damp.test-path",
+    ""
+  );
+  if (dampTestPath) {
+    // damp-test points to testing/talos/talos/tests/devtools/addon/content/
+    // (prefixed by the dynamically generated talos server)
+    paths["damp-test"] = dampTestPath;
+  }
+
   this.loader = new Loader({
     paths,
     invisibleToDebugger,
