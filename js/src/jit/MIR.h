@@ -6413,11 +6413,8 @@ class MStringConvertCase : public MUnaryInstruction,
 
 class MStringSplit : public MBinaryInstruction,
                      public MixPolicy<StringPolicy<0>, StringPolicy<1>>::Data {
-  CompilerObjectGroup group_;
-
-  MStringSplit(TempAllocator& alloc, MDefinition* string, MDefinition* sep,
-               ObjectGroup* group)
-      : MBinaryInstruction(classOpcode, string, sep), group_(group) {
+  MStringSplit(TempAllocator& alloc, MDefinition* string, MDefinition* sep)
+      : MBinaryInstruction(classOpcode, string, sep) {
     setResultType(MIRType::Object);
   }
 
@@ -6426,7 +6423,6 @@ class MStringSplit : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
   NAMED_OPERANDS((0, string), (1, separator))
 
-  ObjectGroup* group() const { return group_; }
   bool possiblyCalls() const override { return true; }
   virtual AliasSet getAliasSet() const override {
     // Although this instruction returns a new array, we don't have to mark

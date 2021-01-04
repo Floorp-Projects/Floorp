@@ -1609,12 +1609,7 @@ static bool intrinsic_StringSplitString(JSContext* cx, unsigned argc,
   RootedString string(cx, args[0].toString());
   RootedString sep(cx, args[1].toString());
 
-  RootedObjectGroup group(cx, ObjectGroupRealm::getStringSplitStringGroup(cx));
-  if (!group) {
-    return false;
-  }
-
-  JSObject* aobj = StringSplitString(cx, group, string, sep, INT32_MAX);
+  JSObject* aobj = StringSplitString(cx, string, sep, INT32_MAX);
   if (!aobj) {
     return false;
   }
@@ -1637,12 +1632,7 @@ static bool intrinsic_StringSplitStringLimit(JSContext* cx, unsigned argc,
   MOZ_ASSERT(limit > 0,
              "Zero limit case is already handled in self-hosted code.");
 
-  RootedObjectGroup group(cx, ObjectGroupRealm::getStringSplitStringGroup(cx));
-  if (!group) {
-    return false;
-  }
-
-  JSObject* aobj = StringSplitString(cx, group, string, sep, limit);
+  JSObject* aobj = StringSplitString(cx, string, sep, limit);
   if (!aobj) {
     return false;
   }
