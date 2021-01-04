@@ -83,8 +83,6 @@ class nsDOMTokenList : public nsISupports, public nsWrapperCache {
 
   nsresult CheckToken(const nsAString& aStr);
   nsresult CheckTokens(const nsTArray<nsString>& aStr);
-  void RemoveDuplicatesInternal(nsTArray<RefPtr<nsAtom>>* aArray,
-                                uint32_t aStart);
   void AddInternal(const nsAttrValue* aAttr, const nsTArray<nsString>& aTokens);
   void RemoveInternal(const nsAttrValue* aAttr,
                       const nsTArray<nsString>& aTokens);
