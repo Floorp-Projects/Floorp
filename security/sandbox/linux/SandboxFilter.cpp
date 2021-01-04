@@ -649,6 +649,11 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
             .ElseIf(clk_id == CLOCK_REALTIME_COARSE, Allow())
 #endif
             .ElseIf(clk_id == CLOCK_THREAD_CPUTIME_ID, Allow())
+#ifdef MOZ_GECKO_PROFILER
+            // Allow clock_gettime on a thread.
+            // 4 -> CPUCLOCK_PERTHREAD_MASK. 2 -> CPUCLOCK_SCHED.
+            .ElseIf((clk_id & 7u) == (4u | 2u), Allow())
+#endif
             .Else(InvalidSyscall());
       }
 
