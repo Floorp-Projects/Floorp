@@ -35,6 +35,7 @@ class nsWaylandDisplay {
   bool DispatchEventQueue();
 
   void SyncBegin();
+  void QueueSyncBegin();
   void SyncEnd();
   void WaitForSyncEnd();
 
