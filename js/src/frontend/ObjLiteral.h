@@ -170,12 +170,8 @@ enum class ObjLiteralFlag : uint8_t {
   // If set, this object is an array.
   Array = 1,
 
-  // If set, the created object will be created with newType == SingletonObject
-  // rather than TenuredObject.
-  Singleton = 2,
-
   // No values are provided; the object is meant as a template object.
-  NoValues = 3,
+  NoValues = 2,
 };
 
 using ObjLiteralFlags = mozilla::EnumSet<ObjLiteralFlag>;
