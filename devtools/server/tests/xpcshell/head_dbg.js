@@ -75,8 +75,6 @@ async function startupAddonsManager() {
   const profileDir = do_get_profile().clone();
   profileDir.append("extensions");
 
-  /* global globalThis */
-  /* See Bug 1595810 to add globalThis to eslint */
   AddonTestUtils.init(globalThis);
   AddonTestUtils.overrideCertDB();
   AddonTestUtils.appInfo = getAppInfo();
