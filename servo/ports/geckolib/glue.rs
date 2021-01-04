@@ -60,7 +60,6 @@ use style::gecko_bindings::structs::nsStyleTransformMatrix::MatrixTransformOpera
 use style::gecko_bindings::structs::nsTArray;
 use style::gecko_bindings::structs::nsTimingFunction;
 use style::gecko_bindings::structs::nsresult;
-use style::gecko_bindings::structs::AtomArray;
 use style::gecko_bindings::structs::CallerType;
 use style::gecko_bindings::structs::CompositeOperation;
 use style::gecko_bindings::structs::DeclarationBlockMutationClosure;
@@ -3698,7 +3697,7 @@ pub extern "C" fn Servo_ResolvePseudoStyle(
     }
 }
 
-fn debug_atom_array(atoms: &AtomArray) -> String {
+fn debug_atom_array(atoms: &nsTArray<structs::RefPtr<nsAtom>>) -> String {
     let mut result = String::from("[");
     for atom in atoms.iter() {
         if atom.mRawPtr.is_null() {
@@ -3717,7 +3716,7 @@ pub extern "C" fn Servo_ComputedValues_ResolveXULTreePseudoStyle(
     element: &RawGeckoElement,
     pseudo_tag: *mut nsAtom,
     inherited_style: &ComputedValues,
-    input_word: &AtomArray,
+    input_word: &nsTArray<structs::RefPtr<nsAtom>>,
     raw_data: &RawServoStyleSet,
 ) -> Strong<ComputedValues> {
     let element = GeckoElement(element);
