@@ -3151,12 +3151,11 @@ bool WarpCacheIRTranspiler::emitStringReplaceStringResult(
 }
 
 bool WarpCacheIRTranspiler::emitStringSplitStringResult(
-    StringOperandId strId, StringOperandId separatorId, uint32_t groupOffset) {
+    StringOperandId strId, StringOperandId separatorId) {
   MDefinition* str = getOperand(strId);
   MDefinition* separator = getOperand(separatorId);
-  ObjectGroup* group = groupStubField(groupOffset);
 
-  auto* split = MStringSplit::New(alloc(), str, separator, group);
+  auto* split = MStringSplit::New(alloc(), str, separator);
   add(split);
 
   pushResult(split);

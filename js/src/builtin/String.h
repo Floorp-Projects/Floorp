@@ -70,9 +70,8 @@ extern MOZ_MUST_USE bool intl_toLocaleUpperCase(JSContext* cx, unsigned argc,
                                                 Value* vp);
 #endif
 
-ArrayObject* StringSplitString(JSContext* cx, Handle<ObjectGroup*> group,
-                               HandleString str, HandleString sep,
-                               uint32_t limit);
+ArrayObject* StringSplitString(JSContext* cx, HandleString str,
+                               HandleString sep, uint32_t limit);
 
 JSString* StringFlatReplaceString(JSContext* cx, HandleString string,
                                   HandleString pattern,

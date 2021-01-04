@@ -7097,27 +7097,20 @@ bool CacheIRCompiler::emitStringReplaceStringResult(
 }
 
 bool CacheIRCompiler::emitStringSplitStringResult(StringOperandId strId,
-                                                  StringOperandId separatorId,
-                                                  uint32_t groupOffset) {
+                                                  StringOperandId separatorId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoCallVM callvm(masm, this, allocator);
 
   Register str = allocator.useRegister(masm, strId);
   Register separator = allocator.useRegister(masm, separatorId);
-  AutoScratchRegister scratch(allocator, masm);
-
-  StubFieldOffset group(groupOffset, StubField::Type::ObjectGroup);
-  emitLoadStubField(group, scratch);
 
   callvm.prepare();
   masm.Push(Imm32(INT32_MAX));
   masm.Push(separator);
   masm.Push(str);
-  masm.Push(scratch);
 
-  using Fn = ArrayObject* (*)(JSContext*, HandleObjectGroup, HandleString,
-                              HandleString, uint32_t);
+  using Fn = ArrayObject* (*)(JSContext*, HandleString, HandleString, uint32_t);
   callvm.call<Fn, js::StringSplitString>();
   return true;
 }

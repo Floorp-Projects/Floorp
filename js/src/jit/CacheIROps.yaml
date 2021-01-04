@@ -324,7 +324,6 @@
   args:
     str: StringId
     separator: StringId
-    group: GroupField
 
 - name: RegExpPrototypeOptimizableResult
   shared: true

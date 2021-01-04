@@ -1304,19 +1304,13 @@ RStringSplit::RStringSplit(CompactBufferReader& reader) {}
 bool RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedString str(cx, iter.read().toString());
   RootedString sep(cx, iter.read().toString());
-  RootedObjectGroup group(cx, ObjectGroupRealm::getStringSplitStringGroup(cx));
-  if (!group) {
-    return false;
-  }
-  RootedValue result(cx);
 
-  JSObject* res = StringSplitString(cx, group, str, sep, INT32_MAX);
+  JSObject* res = StringSplitString(cx, str, sep, INT32_MAX);
   if (!res) {
     return false;
   }
 
-  result.setObject(*res);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*res));
   return true;
 }
 
