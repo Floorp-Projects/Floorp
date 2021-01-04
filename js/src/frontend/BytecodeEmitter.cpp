@@ -7545,9 +7545,10 @@ bool BytecodeEmitter::isRestParameter(ParseNode* expr) {
   Maybe<NameLocation> paramLoc = locationOfNameBoundInFunctionScope(name);
   if (paramLoc && lookupName(name) == *paramLoc) {
     ParserFunctionScopeData* bindings = funbox->functionScopeBindings();
-    if (bindings->nonPositionalFormalStart > 0) {
+    if (bindings->slotInfo.nonPositionalFormalStart > 0) {
       auto index =
-          bindings->trailingNames[bindings->nonPositionalFormalStart - 1]
+          bindings
+              ->trailingNames[bindings->slotInfo.nonPositionalFormalStart - 1]
               .name();
       if (index.isNull()) {
         // Rest parameter name can be null when the rest destructuring syntax is
@@ -10359,7 +10360,7 @@ bool BytecodeEmitter::emitClass(
 
       // The constructor scope should only contain the |.initializers| binding.
       MOZ_ASSERT(!constructorScope->isEmptyScope());
-      MOZ_ASSERT(constructorScope->scopeBindings()->length == 1);
+      MOZ_ASSERT(constructorScope->scopeBindings()->slotInfo.length == 1);
       MOZ_ASSERT(constructorScope->scopeBindings()->trailingNames[0].name() ==
                  cx->parserNames().dotInitializers->toIndex());
 

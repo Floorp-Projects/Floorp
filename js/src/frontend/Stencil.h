@@ -67,6 +67,15 @@ using ParserFunctionScopeData = ParserScopeData<FunctionScope>;
 using ParserModuleScopeData = ParserScopeData<ModuleScope>;
 using ParserVarScopeData = ParserScopeData<VarScope>;
 
+template <typename Scope>
+using ParserScopeSlotInfo = typename Scope::SlotInfo;
+using ParserGlobalScopeSlotInfo = ParserScopeSlotInfo<GlobalScope>;
+using ParserEvalScopeSlotInfo = ParserScopeSlotInfo<EvalScope>;
+using ParserLexicalScopeSlotInfo = ParserScopeSlotInfo<LexicalScope>;
+using ParserFunctionScopeSlotInfo = ParserScopeSlotInfo<FunctionScope>;
+using ParserModuleScopeSlotInfo = ParserScopeSlotInfo<ModuleScope>;
+using ParserVarScopeSlotInfo = ParserScopeSlotInfo<VarScope>;
+
 using ParserBindingIter = AbstractBindingIter<TaggedParserAtomIndex>;
 
 // [SMDOC] Script Stencil (Frontend Representation)
@@ -300,7 +309,7 @@ class ScopeStencil {
   uint32_t nextFrameSlot() const {
     // If a scope has been allocated for the ScopeStencil we no longer own data,
     // so defer to scope
-    return data<SpecificScopeType>().nextFrameSlot;
+    return data<SpecificScopeType>().slotInfo.nextFrameSlot;
   }
 
   template <typename SpecificEnvironmentType>
