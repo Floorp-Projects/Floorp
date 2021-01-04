@@ -410,7 +410,6 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
                               const MediaInfo& aInfo) {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
-  MOZ_DIAGNOSTIC_ASSERT(!mOutputTracks.IsEmpty());
 
   LOG_DS(LogLevel::Debug, "Start() mStartTime=%" PRId64,
          aStartTime.ToMicroseconds());
