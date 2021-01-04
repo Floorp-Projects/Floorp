@@ -4443,9 +4443,7 @@ class LLoadElementT : public LInstructionHelper<1, 2, 0> {
   }
 
   const char* extraName() const {
-    return mir()->needsHoleCheck()
-               ? "HoleCheck"
-               : (mir()->loadDoubles() ? "Doubles" : nullptr);
+    return mir()->needsHoleCheck() ? "HoleCheck" : nullptr;
   }
 
   const MLoadElement* mir() const { return mir_->toLoadElement(); }

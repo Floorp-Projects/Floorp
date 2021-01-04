@@ -13072,11 +13072,7 @@ void CodeGenerator::emitLoadElementT(LLoadElementT* lir, const T& source) {
   }
 
   AnyRegister output = ToAnyRegister(lir->output());
-  if (lir->mir()->loadDoubles()) {
-    masm.unboxDouble(source, output.fpu());
-  } else {
-    masm.loadUnboxedValue(source, lir->mir()->type(), output);
-  }
+  masm.loadUnboxedValue(source, lir->mir()->type(), output);
 }
 
 void CodeGenerator::visitLoadElementT(LLoadElementT* lir) {

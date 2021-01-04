@@ -199,13 +199,14 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
                                                  BigIntOperandId rhsId);
 
   template <typename T>
-  [[nodiscard]] bool emitBigIntBinaryArithEffectfulResult(BigIntOperandId lhsId,
-                                                          BigIntOperandId rhsId);
+  [[nodiscard]] bool emitBigIntBinaryArithEffectfulResult(
+      BigIntOperandId lhsId, BigIntOperandId rhsId);
 
   template <typename T>
   [[nodiscard]] bool emitBigIntUnaryArithResult(BigIntOperandId inputId);
 
-  [[nodiscard]] bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
+  [[nodiscard]] bool emitCompareResult(JSOp op, OperandId lhsId,
+                                       OperandId rhsId,
                                        MCompare::CompareType compareType);
 
   [[nodiscard]] bool emitNewIteratorResult(MNewIterator::Type type,
@@ -1670,9 +1671,7 @@ bool WarpCacheIRTranspiler::emitLoadDenseElementResult(ObjOperandId objId,
   index = addBoundsCheck(index, length);
 
   bool needsHoleCheck = true;
-  bool loadDouble = false;  // TODO(post-Warp): Ion-only optimization.
-  auto* load =
-      MLoadElement::New(alloc(), elements, index, needsHoleCheck, loadDouble);
+  auto* load = MLoadElement::New(alloc(), elements, index, needsHoleCheck);
   add(load);
 
   pushResult(load);
