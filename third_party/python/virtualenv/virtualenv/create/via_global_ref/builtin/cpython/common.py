@@ -6,7 +6,6 @@ from collections import OrderedDict
 from six import add_metaclass
 
 from virtualenv.create.describe import PosixSupports, WindowsSupports
-from virtualenv.create.via_global_ref.builtin.ref import RefMust, RefWhen
 from virtualenv.util.path import Path
 
 from ..via_global_self_do import ViaGlobalRefVirtualenvBuiltin
@@ -34,27 +33,19 @@ class CPythonPosix(CPython, PosixSupports):
         targets = OrderedDict(
             (i, None) for i in ["python", "python{}".format(major), "python{}.{}".format(major, minor), host_exe.name]
         )
-        must = RefMust.COPY if interpreter.version_info.major == 2 else RefMust.NA
-        yield host_exe, list(targets.keys()), must, RefWhen.ANY
+        yield host_exe, list(targets.keys())
 
 
 @add_metaclass(ABCMeta)
 class CPythonWindows(CPython, WindowsSupports):
     @classmethod
     def _executables(cls, interpreter):
-        # symlink of the python executables does not work reliably, copy always instead
-        # - https://bugs.python.org/issue42013
-        # - venv
-        host = cls.host_python(interpreter)
+        host = Path(interpreter.system_executable)
         for path in (host.parent / n for n in {"python.exe", host.name}):
-            yield host, [path.name], RefMust.COPY, RefWhen.ANY
+            yield host, [path.name]
         # for more info on pythonw.exe see https://stackoverflow.com/a/30313091
         python_w = host.parent / "pythonw.exe"
-        yield python_w, [python_w.name], RefMust.COPY, RefWhen.ANY
-
-    @classmethod
-    def host_python(cls, interpreter):
-        return Path(interpreter.system_executable)
+        yield python_w, [python_w.name]
 
 
 def is_mac_os_framework(interpreter):
