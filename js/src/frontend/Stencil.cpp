@@ -361,7 +361,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
       }
 
       RootedScript script(
-          cx, JSScript::fromStencil(cx, input, stencil, gcOutput, scriptStencil,
+          cx, JSScript::fromStencil(cx, input, stencil, gcOutput, index,
                                     sharedData, fun));
       if (!script) {
         return false;
@@ -411,7 +411,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
 
     Rooted<JSScript*> script(cx, gcOutput.script);
     if (!JSScript::fullyInitFromStencil(cx, input, stencil, gcOutput, script,
-                                        scriptStencil, sharedData, fun)) {
+                                        CompilationInfo::TopLevelIndex,
+                                        sharedData, fun)) {
       return false;
     }
 
@@ -423,8 +424,9 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return true;
   }
 
-  gcOutput.script = JSScript::fromStencil(cx, input, stencil, gcOutput,
-                                          scriptStencil, sharedData, fun);
+  gcOutput.script =
+      JSScript::fromStencil(cx, input, stencil, gcOutput,
+                            CompilationInfo::TopLevelIndex, sharedData, fun);
   if (!gcOutput.script) {
     return false;
   }

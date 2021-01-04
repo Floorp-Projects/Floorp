@@ -26,6 +26,7 @@
 
 #include "jstypes.h"
 
+#include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/SourceNotes.h"  // SrcNote
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
@@ -82,7 +83,6 @@ namespace frontend {
 struct CompilationInfo;
 struct CompilationStencil;
 struct CompilationGCOutput;
-class ScriptStencil;
 }  // namespace frontend
 
 class ScriptCounts {
@@ -1409,7 +1409,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
                               js::frontend::CompilationInput& input,
                               js::frontend::CompilationStencil& stencil,
                               js::frontend::CompilationGCOutput& gcOutput,
-                              const js::frontend::ScriptStencil& scriptStencil);
+                              const js::frontend::ScriptIndex scriptIndex);
 
   void trace(JSTracer* trc);
 
@@ -1905,7 +1905,7 @@ class JSScript : public js::BaseScript {
       js::frontend::CompilationInput& input,
       js::frontend::CompilationStencil& stencil,
       js::frontend::CompilationGCOutput& gcOutput,
-      const js::frontend::ScriptStencil& scriptStencil);
+      const js::frontend::ScriptIndex scriptIndex);
 
  private:
   using js::BaseScript::BaseScript;
@@ -1929,12 +1929,14 @@ class JSScript : public js::BaseScript {
                                       uint32_t ngcthings);
 
  public:
-  static bool fullyInitFromStencil(
-      JSContext* cx, js::frontend::CompilationInput& input,
-      js::frontend::CompilationStencil& stencil,
-      js::frontend::CompilationGCOutput& gcOutput, js::HandleScript script,
-      const js::frontend::ScriptStencil& scriptStencil,
-      js::SharedImmutableScriptData* sharedData, js::HandleFunction function);
+  static bool fullyInitFromStencil(JSContext* cx,
+                                   js::frontend::CompilationInput& input,
+                                   js::frontend::CompilationStencil& stencil,
+                                   js::frontend::CompilationGCOutput& gcOutput,
+                                   js::HandleScript script,
+                                   const js::frontend::ScriptIndex scriptIndex,
+                                   js::SharedImmutableScriptData* sharedData,
+                                   js::HandleFunction function);
 
   // Allocate a JSScript and initialize it with bytecode. This consumes
   // allocations within the stencil.
@@ -1942,7 +1944,7 @@ class JSScript : public js::BaseScript {
                                js::frontend::CompilationInput& input,
                                js::frontend::CompilationStencil& stencil,
                                js::frontend::CompilationGCOutput& gcOutput,
-                               const js::frontend::ScriptStencil& scriptStencil,
+                               const js::frontend::ScriptIndex scriptIndex,
                                js::SharedImmutableScriptData* sharedData,
                                js::HandleFunction function);
 
