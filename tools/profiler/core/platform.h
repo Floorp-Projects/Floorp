@@ -32,6 +32,8 @@
 #include "PlatformMacros.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/MathAlgorithms.h"
+#include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "nsString.h"
@@ -125,5 +127,144 @@ bool profiler_get_symbol_table(const char* debug_path, const char* breakpad_id,
 
 bool profiler_demangle_rust(const char* mangled, char* buffer, size_t len);
 }
+
+// For each running times value, call MACRO(index, name, unit, jsonProperty)
+#define PROFILER_FOR_EACH_RUNNING_TIME(MACRO) \
+  MACRO(0, ThreadCPU, Delta, threadCPUDelta)
+
+// This class contains all "running times" such as CPU usage measurements.
+// All measurements are listed in `PROFILER_FOR_EACH_RUNNING_TIME` above.
+// Each measurement is optional and only takes a value when explicitly set.
+// Two RunningTimes object may be subtracted, to get the difference between
+// known values.
+class RunningTimes {
+ public:
+  constexpr RunningTimes() = default;
+
+  constexpr void Clear() { *this = RunningTimes{}; }
+
+  constexpr bool IsEmpty() const { return mKnownBits == 0; }
+
+  // Should be filled for any registered thread.
+
+#define RUNNING_TIME_MEMBER(index, name, unit, jsonProperty)          \
+  constexpr bool Is##name##unit##Known() const {                      \
+    return (mKnownBits & mGot##name##unit) != 0;                      \
+  }                                                                   \
+                                                                      \
+  constexpr void Set##name##unit(uint64_t a##name##unit) {            \
+    MOZ_ASSERT(!Is##name##unit##Known(), #name #unit " already set"); \
+    m##name##unit = a##name##unit;                                    \
+    mKnownBits |= mGot##name##unit;                                   \
+  }                                                                   \
+                                                                      \
+  constexpr mozilla::Maybe<uint64_t> Get##name##unit() const {        \
+    if (Is##name##unit##Known()) {                                    \
+      return mozilla::Some(m##name##unit);                            \
+    }                                                                 \
+    return mozilla::Nothing{};                                        \
+  }
+
+  PROFILER_FOR_EACH_RUNNING_TIME(RUNNING_TIME_MEMBER)
+
+#undef RUNNING_TIME_MEMBER
+
+  // Take values from another RunningTimes.
+  RunningTimes& TakeFrom(RunningTimes& aOther) {
+    if (!aOther.IsEmpty()) {
+#define RUNNING_TIME_TAKE(index, name, unit, jsonProperty)   \
+  if (aOther.Is##name##unit##Known()) {                      \
+    Set##name##unit(std::exchange(aOther.m##name##unit, 0)); \
+  }
+
+      PROFILER_FOR_EACH_RUNNING_TIME(RUNNING_TIME_TAKE)
+
+#undef RUNNING_TIME_TAKE
+
+      aOther.mKnownBits = 0;
+    }
+    return *this;
+  }
+
+  // Difference from `aBefore` to `this`. Any unknown makes the result unknown.
+  RunningTimes operator-(const RunningTimes& aBefore) const {
+    RunningTimes diff;
+#define RUNNING_TIME_SUB(index, name, unit, jsonProperty)           \
+  if (Is##name##unit##Known() && aBefore.Is##name##unit##Known()) { \
+    diff.Set##name##unit(m##name##unit - aBefore.m##name##unit);    \
+  }
+
+    PROFILER_FOR_EACH_RUNNING_TIME(RUNNING_TIME_SUB)
+
+#undef RUNNING_TIME_SUB
+    return diff;
+  }
+
+ private:
+  friend mozilla::ProfileBufferEntryWriter::Serializer<RunningTimes>;
+  friend mozilla::ProfileBufferEntryReader::Deserializer<RunningTimes>;
+
+  uint32_t mKnownBits = 0u;
+
+#define RUNNING_TIME_MEMBER(index, name, unit, jsonProperty) \
+  static constexpr uint32_t mGot##name##unit = 1u << index;  \
+  uint64_t m##name##unit = 0;
+
+  PROFILER_FOR_EACH_RUNNING_TIME(RUNNING_TIME_MEMBER)
+
+#undef RUNNING_TIME_MEMBER
+};
+
+template <>
+struct mozilla::ProfileBufferEntryWriter::Serializer<RunningTimes> {
+  static Length Bytes(const RunningTimes& aRunningTimes) {
+    return ULEB128Size(aRunningTimes.mKnownBits) +
+           mozilla::CountPopulation32(aRunningTimes.mKnownBits) *
+               sizeof(uint64_t);
+  }
+
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const RunningTimes& aRunningTimes) {
+    aEW.WriteULEB128(aRunningTimes.mKnownBits);
+
+#define RUNNING_TIME_SERIALIZE(index, name, unit, jsonProperty) \
+  if (aRunningTimes.Is##name##unit##Known()) {                  \
+    aEW.WriteObject(aRunningTimes.m##name##unit);               \
+  }
+
+    PROFILER_FOR_EACH_RUNNING_TIME(RUNNING_TIME_SERIALIZE)
+
+#undef RUNNING_TIME_SERIALIZE
+  }
+};
+
+template <>
+struct mozilla::ProfileBufferEntryReader::Deserializer<RunningTimes> {
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       RunningTimes& aRunningTimes) {
+    aRunningTimes = Read(aER);
+  }
+
+  static RunningTimes Read(ProfileBufferEntryReader& aER) {
+    // Start with empty running times, everything is cleared.
+    RunningTimes times;
+
+    // This sets all the bits into mKnownBits, we don't need to modify it
+    // further.
+    times.mKnownBits = aER.ReadULEB128<uint32_t>();
+
+    // For each member that should be known, read its value.
+#define RUNNING_TIME_DESERIALIZE(index, name, unit, jsonProperty) \
+  if (times.Is##name##unit##Known()) {                            \
+    aER.ReadIntoObject(times.m##name##unit);                      \
+  }
+
+    PROFILER_FOR_EACH_RUNNING_TIME(RUNNING_TIME_DESERIALIZE)
+
+#undef RUNNING_TIME_DESERIALIZE
+
+    return times;
+  }
+};
 
 #endif /* ndef TOOLS_PLATFORM_H_ */

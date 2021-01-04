@@ -14,6 +14,8 @@
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileChunkedBuffer.h"
 
+class RunningTimes;
+
 // Class storing most profiling data in a ProfileChunkedBuffer.
 //
 // This class is used as a queue of entries which, after construction, never
@@ -86,7 +88,8 @@ class ProfileBuffer final {
   // Returns whether duplication was successful.
   bool DuplicateLastSample(int aThreadId,
                            const mozilla::TimeStamp& aProcessStartTime,
-                           mozilla::Maybe<uint64_t>& aLastSample);
+                           mozilla::Maybe<uint64_t>& aLastSample,
+                           const RunningTimes& aRunningTimes);
 
   void DiscardSamplesBeforeTime(double aTime);
 

@@ -378,6 +378,7 @@ class UniqueStacks {
 //       "stack": 0,          /* index into stackTable */
 //       "time": 1,           /* number */
 //       "eventDelay": 2,     /* number */
+//       "ThreadCPUDelta": 3, /* optional number */
 //     },
 //     "data":
 //     [
