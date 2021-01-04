@@ -2186,3 +2186,56 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   profiler_stop();
   ASSERT_TRUE(!profiler_is_active());
 }
+
+TEST(GeckoProfiler, CPUUsage)
+{
+  const char* filters[] = {"GeckoMain"};
+
+  ASSERT_TRUE(!profiler_is_active());
+  ASSERT_TRUE(!profiler_callback_after_sampling(
+      [&](SamplingState) { ASSERT_TRUE(false); }));
+
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                 ProfilerFeature::StackWalk | ProfilerFeature::CPUUtilization,
+                 filters, MOZ_ARRAY_LENGTH(filters), 0);
+  // Grab a few samples.
+  static constexpr unsigned MinSamplings = 10;
+  for (unsigned i = MinSamplings; i != 0; --i) {
+    ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+  }
+  UniquePtr<char[]> profile = profiler_get_profile();
+  JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {
+    // Check that the "cpu" feature is present.
+    GET_JSON(meta, aRoot["meta"], Object);
+    {
+      GET_JSON(configuration, meta["configuration"], Object);
+      {
+        GET_JSON(features, configuration["features"], Array);
+        { EXPECT_JSON_ARRAY_CONTAINS(features, String, "cpu"); }
+      }
+    }
+
+    // Check that the sample schema DOES NOT contain "threadCPUUsage".
+    // TODO: This will change when the feature is implemented.
+    GET_JSON(threads, aRoot["threads"], Array);
+    {
+      GET_JSON(thread0, threads[0], Object);
+      {
+        GET_JSON(samples, thread0["samples"], Object);
+        {
+          GET_JSON(schema, samples["schema"], Object);
+          EXPECT_FALSE(schema.isMember("threadCPUUsage"));
+        }
+      }
+    }
+  });
+
+  // Note: There is no non-racy way to test for SamplingState::JustStopped, as
+  // it would require coordination between `profiler_stop()` and another thread
+  // doing `profiler_callback_after_sampling()` at just the right moment.
+
+  profiler_stop();
+  ASSERT_TRUE(!profiler_is_active());
+  ASSERT_TRUE(!profiler_callback_after_sampling(
+      [&](SamplingState) { ASSERT_TRUE(false); }));
+}
