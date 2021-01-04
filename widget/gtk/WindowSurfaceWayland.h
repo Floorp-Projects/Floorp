@@ -181,7 +181,8 @@ class WindowSurfaceWayland : public WindowSurface {
 
   void DrawDelayedImageCommits(gfx::DrawTarget* aDrawTarget,
                                LayoutDeviceIntRegion& aWaylandBufferDamage);
-  void FlushPendingCommitsInternal();
+  // Return true if we need to sync Wayland events after this call.
+  bool FlushPendingCommitsLocked();
 
   // TODO: Do we need to hold a reference to nsWindow object?
   nsWindow* mWindow;
