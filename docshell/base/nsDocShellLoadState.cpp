@@ -19,6 +19,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
 
 #include "mozilla/OriginAttributes.h"

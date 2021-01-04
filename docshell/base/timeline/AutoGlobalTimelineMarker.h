@@ -7,6 +7,7 @@
 #ifndef mozilla_AutoGlobalTimelineMarker_h_
 #define mozilla_AutoGlobalTimelineMarker_h_
 
+#include "mozilla/Attributes.h"
 #include "TimelineMarkerEnums.h"
 
 namespace mozilla {

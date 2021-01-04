@@ -22,9 +22,11 @@
 class nsSHEntry;
 class nsISHEntry;
 class nsISHistory;
+class nsIContentSecurityPolicy;
 class nsIContentViewer;
 class nsIDocShellTreeItem;
 class nsILayoutHistoryState;
+class nsIPrincipal;
 class nsDocShellEditorData;
 class nsIMutableArray;
 class nsSHistory;
