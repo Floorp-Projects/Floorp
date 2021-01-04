@@ -325,7 +325,7 @@ nsresult nsNotifyAddrListener::Init(void) {
       observerService->AddObserver(this, "xpcom-shutdown-threads", false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCheckEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+  mCheckEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
   NS_ENSURE_TRUE(mCheckEvent, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
