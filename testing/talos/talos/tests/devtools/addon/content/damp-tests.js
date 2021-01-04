@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* globals module, require */
-
 const Services = require("Services");
 const isFissionEnabled = Services.appinfo.fissionAutostart;
 /**

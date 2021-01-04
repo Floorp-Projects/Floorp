@@ -1,8 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-/* globals dampWindow, exports, require, res:true, rootURI */
+/* globals dampWindow */
 
-// eslint-disable-next-line mozilla/no-define-cc-etc
 const { Ci, Cc, Cu } = require("chrome");
 const {
   gBrowser,
@@ -297,13 +300,13 @@ Damp.prototype = {
   },
 
   _reportAllResults() {
-    var testNames = [];
-    var testResults = [];
+    const testNames = [];
+    const testResults = [];
 
-    var out = "";
-    for (var i in this._results) {
+    let out = "";
+    for (const i in this._results) {
       const res = this._results[i];
-      var disp = []
+      const disp = []
         .concat(res.value)
         .map(function(a) {
           return isNaN(a) ? -1 : a.toFixed(1);
