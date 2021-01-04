@@ -1323,6 +1323,7 @@ void ContentChild::InitXPCOM(
 
   DataStorage::SetCachedStorageEntries(aXPCOMInit.dataStorage());
 
+  PDMFactory::SetSupported(aXPCOMInit.codecsSupported());
   // Initialize the RemoteDecoderManager thread and its associated PBackground
   // channel.
   RemoteDecoderManagerChild::Init();
@@ -4449,14 +4450,6 @@ IPCResult ContentChild::RecvFlushFOGData(FlushFOGDataResolver&& aResolver) {
 #ifdef MOZ_GLEAN
   glean::FlushFOGData(std::move(aResolver));
 #endif
-  return IPC_OK();
-}
-
-IPCResult ContentChild::RecvUpdateMediaCodecsSupported(
-    RemoteDecodeIn aLocation,
-    const PDMFactory::MediaCodecsSupported& aSupported) {
-  RemoteDecoderManagerChild::SetSupported(aLocation, aSupported);
-
   return IPC_OK();
 }
 

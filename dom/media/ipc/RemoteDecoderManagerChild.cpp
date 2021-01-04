@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RemoteDecoderManagerChild.h"
 
-#include "PDMFactory.h"
 #include "RemoteAudioDecoder.h"
 #include "RemoteMediaDataDecoder.h"
 #include "RemoteVideoDecoder.h"
@@ -45,11 +44,6 @@ static StaticRefPtr<RemoteDecoderManagerChild>
 static StaticRefPtr<RemoteDecoderManagerChild>
     sRemoteDecoderManagerChildForGPUProcess;
 static UniquePtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
-
-static StaticDataMutex<Maybe<PDMFactory::MediaCodecsSupported>> sGPUSupported(
-    "RDMC::sGPUSupported");
-static StaticDataMutex<Maybe<PDMFactory::MediaCodecsSupported>> sRDDSupported(
-    "RDMC::sRDDSupported");
 
 class ShutdownObserver final : public nsIObserver {
  public:
@@ -196,30 +190,18 @@ nsISerialEventTarget* RemoteDecoderManagerChild::GetManagerThread() {
 bool RemoteDecoderManagerChild::Supports(
     RemoteDecodeIn aLocation, const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) {
-  Maybe<PDMFactory::MediaCodecsSupported> supported;
+  RefPtr<PDMFactory> pdm;
   switch (aLocation) {
-    case RemoteDecodeIn::RddProcess: {
-      auto supportedRDD = sRDDSupported.Lock();
-      supported = *supportedRDD;
+    case RemoteDecodeIn::RddProcess:
+      pdm = PDMFactory::PDMFactoryForRdd();
       break;
-    }
-    case RemoteDecodeIn::GpuProcess: {
-      auto supportedGPU = sGPUSupported.Lock();
-      supported = *supportedGPU;
+    case RemoteDecodeIn::GpuProcess:
+      pdm = PDMFactory::PDMFactoryForGpu();
       break;
-    }
     default:
       return false;
   }
-  if (!supported) {
-    // We haven't received the correct information yet from either the GPU or
-    // the RDD process; assume it is supported to prevent false negative.
-    return true;
-  }
-
-  // We can ignore the SupportDecoderParams argument for now as creation of the
-  // decoder will actually fail later and fallback PDMs will be tested on later.
-  return PDMFactory::SupportsMimeType(aParams.MimeType(), *supported);
+  return pdm->Supports(aParams, aDiagnostics);
 }
 
 /* static */
@@ -590,25 +572,6 @@ void RemoteDecoderManagerChild::DeallocateSurfaceDescriptor(
 
 void RemoteDecoderManagerChild::HandleFatalError(const char* aMsg) const {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
-}
-
-void RemoteDecoderManagerChild::SetSupported(
-    RemoteDecodeIn aLocation,
-    const PDMFactory::MediaCodecsSupported& aSupported) {
-  switch (aLocation) {
-    case RemoteDecodeIn::GpuProcess: {
-      auto supported = sGPUSupported.Lock();
-      *supported = Some(aSupported);
-      break;
-    }
-    case RemoteDecodeIn::RddProcess: {
-      auto supported = sRDDSupported.Lock();
-      *supported = Some(aSupported);
-      break;
-    }
-    default:
-      MOZ_CRASH("Not to be used for any other process");
-  }
 }
 
 }  // namespace mozilla

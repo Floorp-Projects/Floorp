@@ -68,8 +68,6 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   mozilla::ipc::IPCResult RecvUsedFallback(const Fallback& aFallback,
                                            const nsCString& aMessage);
   mozilla::ipc::IPCResult RecvBHRThreadHang(const HangDetails& aDetails);
-  mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
-      const PDMFactory::MediaCodecsSupported& aSupported);
 
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,
