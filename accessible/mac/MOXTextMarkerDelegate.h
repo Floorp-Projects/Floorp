@@ -34,6 +34,8 @@
 
 - (mozilla::a11y::GeckoTextMarkerRange)selection;
 
+- (BOOL)selectionIsCollapsed;
+
 // override
 - (id)moxStartTextMarker;
 

@@ -1017,21 +1017,23 @@ struct RoleDescrComparator {
       // reduntant.
       id<MOXTextMarkerSupport> delegate = [self moxTextMarkerDelegate];
       id selectedRange = [delegate moxSelectedTextMarkerRange];
-      id editableAncestor = [self moxEditableAncestor];
-      id textChangeElement = editableAncestor ? editableAncestor : self;
+      BOOL isCollapsed =
+          [static_cast<MOXTextMarkerDelegate*>(delegate) selectionIsCollapsed];
       NSDictionary* userInfo = @{
-        @"AXTextChangeElement" : textChangeElement,
+        @"AXTextChangeElement" : self,
         @"AXSelectedTextMarkerRange" :
-            (selectedRange ? selectedRange : [NSNull null])
+            (selectedRange ? selectedRange : [NSNull null]),
+        @"AXTextStateChangeType" : isCollapsed
+            ? @(AXTextStateChangeTypeSelectionMove)
+            : @(AXTextStateChangeTypeSelectionExtend)
       };
 
       mozAccessible* webArea = [self topWebArea];
       [webArea
           moxPostNotification:NSAccessibilitySelectedTextChangedNotification
                  withUserInfo:userInfo];
-      [textChangeElement
-          moxPostNotification:NSAccessibilitySelectedTextChangedNotification
-                 withUserInfo:userInfo];
+      [self moxPostNotification:NSAccessibilitySelectedTextChangedNotification
+                   withUserInfo:userInfo];
       break;
     }
     case nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED:

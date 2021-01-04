@@ -234,7 +234,14 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
                                 at:caretOffset];
       }
 
-      [nativeAcc handleAccessibleEvent:eventType];
+      if (mozTextAccessible* textAcc = static_cast<mozTextAccessible*>(
+              [nativeAcc moxEditableAncestor])) {
+        [textAcc
+            handleAccessibleEvent:nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED];
+      } else {
+        [nativeAcc
+            handleAccessibleEvent:nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED];
+      }
       break;
     }
 

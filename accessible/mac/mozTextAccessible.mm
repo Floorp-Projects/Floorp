@@ -309,24 +309,6 @@ inline NSString* ToNSString(id aValue) {
 
 #pragma mark - mozAccessible
 
-enum AXTextEditType {
-  AXTextEditTypeUnknown,
-  AXTextEditTypeDelete,
-  AXTextEditTypeInsert,
-  AXTextEditTypeTyping,
-  AXTextEditTypeDictation,
-  AXTextEditTypeCut,
-  AXTextEditTypePaste,
-  AXTextEditTypeAttributesChange
-};
-
-enum AXTextStateChangeType {
-  AXTextStateChangeTypeUnknown,
-  AXTextStateChangeTypeEdit,
-  AXTextStateChangeTypeSelectionMove,
-  AXTextStateChangeTypeSelectionExtend
-};
-
 - (void)handleAccessibleTextChangeEvent:(NSString*)change
                                inserted:(BOOL)isInserted
                             inContainer:(const AccessibleOrProxy&)container
