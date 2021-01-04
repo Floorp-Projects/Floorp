@@ -71,7 +71,7 @@ class DecodedStream : public MediaSink {
 
  private:
   void DestroyData(UniquePtr<DecodedStreamData>&& aData);
-  void SendAudio(double aVolume, const PrincipalHandle& aPrincipalHandle);
+  void SendAudio(const PrincipalHandle& aPrincipalHandle);
   void SendVideo(const PrincipalHandle& aPrincipalHandle);
   void ResetAudio();
   void ResetVideo(const PrincipalHandle& aPrincipalHandle);
