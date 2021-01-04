@@ -11,6 +11,11 @@ add_task(async function open_customize_mode_in_lazy_tab() {
 
   is(tab.linkedPanel, "", "Tab should be lazy");
 
+  let title = gNavigatorBundle.getFormattedString("customizeMode.tabTitle", [
+    document.getElementById("bundle_brand").getString("brandShortName"),
+  ]);
+  is(tab.label, title, "Tab should have correct title");
+
   let tabLoaded = new Promise(resolve => {
     gBrowser.addTabsProgressListener({
       async onLocationChange(aBrowser) {
