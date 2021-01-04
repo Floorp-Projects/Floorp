@@ -179,13 +179,6 @@ enum class ObjLiteralFlag : uint8_t {
 
   // No values are provided; the object is meant as a template object.
   NoValues = 4,
-
-  // This object is inside a top-level singleton, and so prior to ObjLiteral,
-  // would have been allocated at parse time, but is now allocated in bytecode.
-  // We do special things to get the right group on the template object; this
-  // flag indicates that if JSOp::NewObject copies the object, it should retain
-  // its group.
-  IsInnerSingleton = 5,
 };
 
 using ObjLiteralFlags = mozilla::EnumSet<ObjLiteralFlag>;
