@@ -19,13 +19,6 @@ if six.PY3:
                 with self.open(mode="r", encoding=encoding, errors=errors) as f:
                     return f.read()
 
-            def read_bytes(self):
-                """
-                Open the file in bytes mode, read it, and close the file.
-                """
-                with self.open(mode="rb") as f:
-                    return f.read()
-
             def write_text(self, data, encoding=None, errors=None):
                 """
                 Open the file in text mode, write to it, and close the file.
@@ -35,21 +28,10 @@ if six.PY3:
                 with self.open(mode="w", encoding=encoding, errors=errors) as f:
                     return f.write(data)
 
-            def write_bytes(self, data):
-                """
-                Open the file in bytes mode, write to it, and close the file.
-                """
-                # type-check for the buffer interface before truncating the file
-                view = memoryview(data)
-                with self.open(mode="wb") as f:
-                    return f.write(view)
-
             def mkdir(self, mode=0o777, parents=False, exist_ok=False):
-                try:
-                    super(type(BuiltinPath()), self).mkdir(mode, parents)
-                except FileExistsError as exception:
-                    if not exist_ok:
-                        raise exception
+                if exist_ok and self.exists():
+                    return
+                super(type(BuiltinPath()), self).mkdir(mode, parents)
 
 
 else:

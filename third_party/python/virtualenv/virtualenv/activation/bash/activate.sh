@@ -47,9 +47,6 @@ deactivate () {
 deactivate nondestructive
 
 VIRTUAL_ENV='__VIRTUAL_ENV__'
-if ([ "$OSTYPE" = "cygwin" ] || [ "$OSTYPE" = "msys" ]) && $(command -v cygpath &> /dev/null) ; then
-    VIRTUAL_ENV=$(cygpath -u "$VIRTUAL_ENV")
-fi
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
