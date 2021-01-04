@@ -540,7 +540,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    * @param aNotify if false, only need to update the state of our element.
    */
   void NotifyStateChanged(ObjectType aOldType, mozilla::EventStates aOldState,
-                          bool aSync, bool aNotify);
+                          FallbackType aOldFallbackType, bool aSync,
+                          bool aNotify);
 
   /**
    * Returns a ObjectType value corresponding to the type of content we would
