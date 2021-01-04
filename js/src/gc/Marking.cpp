@@ -1397,39 +1397,31 @@ void AbstractBindingName<JSAtom>::trace(JSTracer* trc) {
 void BindingIter::trace(JSTracer* trc) {
   TraceNullableBindingNames(trc, names_, length_);
 }
-template <>
-void LexicalScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
+void LexicalScope::Data::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
-template <>
-void FunctionScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
+void FunctionScope::Data::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &canonicalFunction, "scope canonical function");
   TraceNullableBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
-template <>
-void VarScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
+void VarScope::Data::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
-template <>
-void GlobalScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
+void GlobalScope::Data::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
-template <>
-void EvalScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
+void EvalScope::Data::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
-template <>
-void ModuleScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
+void ModuleScope::Data::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &module, "scope module");
   TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
-template <>
-void WasmInstanceScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
+void WasmInstanceScope::Data::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &instance, "wasm instance");
   TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
-template <>
-void WasmFunctionScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
+void WasmFunctionScope::Data::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
 void Scope::traceChildren(JSTracer* trc) {

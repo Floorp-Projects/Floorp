@@ -39,7 +39,7 @@
 //
 // - This bulk-deallocation DOES NOT run destructors.
 //
-// - Instances of `ParserScopeData<LexicalScope>` MUST BE allocated as
+// - Instances of `LexicalScope::ParserData` MUST BE allocated as
 //   instances of `ParseNode`, in the same `LifoAlloc`. They are bulk-
 //   deallocated alongside the rest of the tree.
 
@@ -1611,12 +1611,12 @@ class BigIntLiteral : public ParseNode {
 };
 
 class LexicalScopeNode : public ParseNode {
-  ParserScopeData<LexicalScope>* bindings;
+  LexicalScope::ParserData* bindings;
   ParseNode* body;
   ScopeKind kind_;
 
  public:
-  LexicalScopeNode(ParserScopeData<LexicalScope>* bindings, ParseNode* body,
+  LexicalScopeNode(LexicalScope::ParserData* bindings, ParseNode* body,
                    ScopeKind kind = ScopeKind::Lexical)
       : ParseNode(ParseNodeKind::LexicalScope, body->pn_pos),
         bindings(bindings),
@@ -1638,7 +1638,7 @@ class LexicalScopeNode : public ParseNode {
   void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
-  ParserScopeData<LexicalScope>* scopeBindings() const {
+  LexicalScope::ParserData* scopeBindings() const {
     MOZ_ASSERT(!isEmptyScope());
     return bindings;
   }

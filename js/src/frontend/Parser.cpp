@@ -923,9 +923,10 @@ bool Parser<FullParseHandler, Unit>::checkStatementsEOF() {
 }
 
 template <typename ScopeT>
-ParserScopeData<ScopeT>* NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc,
-                                             uint32_t numBindings) {
-  using Data = ParserScopeData<ScopeT>;
+typename ScopeT::ParserData* NewEmptyBindingData(JSContext* cx,
+                                                 LifoAlloc& alloc,
+                                                 uint32_t numBindings) {
+  using Data = typename ScopeT::ParserData;
   size_t allocSize = SizeOfScopeData<Data>(numBindings);
   auto* bindings = alloc.newWithSize<Data>(allocSize, numBindings);
   if (!bindings) {

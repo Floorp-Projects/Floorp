@@ -57,15 +57,14 @@ class StencilXDR;
 using BaseParserScopeData = AbstractBaseScopeData<TaggedParserAtomIndex>;
 using ParserBindingName = AbstractBindingName<TaggedParserAtomIndex>;
 
-template <typename Scope>
-using ParserScopeData =
-    typename Scope::template AbstractData<TaggedParserAtomIndex>;
-using ParserGlobalScopeData = ParserScopeData<GlobalScope>;
-using ParserEvalScopeData = ParserScopeData<EvalScope>;
-using ParserLexicalScopeData = ParserScopeData<LexicalScope>;
-using ParserFunctionScopeData = ParserScopeData<FunctionScope>;
-using ParserModuleScopeData = ParserScopeData<ModuleScope>;
-using ParserVarScopeData = ParserScopeData<VarScope>;
+using ParserGlobalScopeData = GlobalScope::ParserData;
+using ParserEvalScopeData = EvalScope::ParserData;
+using ParserLexicalScopeData = LexicalScope::ParserData;
+using ParserFunctionScopeData = FunctionScope::ParserData;
+using ParserModuleScopeData = ModuleScope::ParserData;
+using ParserVarScopeData = VarScope::ParserData;
+using ParserWasmInstanceScopeData = WasmInstanceScope::ParserData;
+using ParserWasmFunctionScopeData = WasmFunctionScope::ParserData;
 
 template <typename Scope>
 using ParserScopeSlotInfo = typename Scope::SlotInfo;
@@ -197,8 +196,6 @@ class ScopeStencil {
   bool isArrow_ = false;
 
   // The list of binding and scope-specific data.
-  // Note: The back pointers to the owning JSFunction / ModuleObject are not set
-  //       until Stencils are converted to GC allocations.
   // Note: This allocation is owned by CompilationStencil.
   BaseParserScopeData* data_ = nullptr;
 

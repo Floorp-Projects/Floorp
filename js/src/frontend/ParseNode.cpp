@@ -365,7 +365,7 @@ void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
   out.printf("(%s [", name);
   int nameIndent = indent + strlen(name) + 3;
   if (!isEmptyScope()) {
-    ParserScopeData<LexicalScope>* bindings = scopeBindings();
+    LexicalScope::ParserData* bindings = scopeBindings();
     for (uint32_t i = 0; i < bindings->slotInfo.length; i++) {
       auto index = bindings->trailingNames[i].name();
       JSONPrinter json(out);
