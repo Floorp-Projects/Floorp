@@ -151,7 +151,7 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
     if (preloadCsp) {
       // obtain the enforcement decision
       rv = preloadCsp->ShouldLoad(
-          contentType, cspEventListener, aContentLocation, aMimeTypeGuess,
+          contentType, cspEventListener, aContentLocation,
           nullptr,  // no redirect, aOriginal URL is null.
           aLoadInfo->GetSendCSPViolationEvents(), cspNonce, parserCreatedScript,
           aDecision);
@@ -177,7 +177,6 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   if (csp) {
     // obtain the enforcement decision
     rv = csp->ShouldLoad(contentType, cspEventListener, aContentLocation,
-                         aMimeTypeGuess,
                          nullptr,  // no redirect, aOriginal URL is null.
                          aLoadInfo->GetSendCSPViolationEvents(), cspNonce,
                          parserCreatedScript, aDecision);
@@ -361,7 +360,6 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
           policyType,  // load type per nsIContentPolicy (uint32_t)
           cspEventListener,
           aNewURI,       // nsIURI
-          ""_ns,         // ACString - MIME guess
           aOriginalURI,  // Original nsIURI
           true,          // aSendViolationReports
           cspNonce,      // nonce
@@ -383,7 +381,6 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
     csp->ShouldLoad(policyType,  // load type per nsIContentPolicy (uint32_t)
                     cspEventListener,
                     aNewURI,       // nsIURI
-                    ""_ns,         // ACString - MIME guess
                     aOriginalURI,  // Original nsIURI
                     true,          // aSendViolationReports
                     cspNonce,      // nonce
