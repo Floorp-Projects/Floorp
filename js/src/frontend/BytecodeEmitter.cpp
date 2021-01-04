@@ -1671,10 +1671,7 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
 }
 
 bool BytecodeEmitter::iteratorResultShape(GCThingIndex* outShape) {
-  // Use |NoValues| to keep the flags consistent with their usage for normal
-  // object literal creation, where |NoValues| is always used in conjunction
-  // with |NewObject|.
-  ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
+  ObjLiteralFlags flags;
 
   ObjLiteralWriter writer;
   writer.beginObject(flags);
@@ -8930,12 +8927,11 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 }
 
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
-                                                 ObjLiteralFlags flags,
-                                                 bool singleton) {
+                                                 ObjLiteralFlags flags) {
   ObjLiteralWriter writer;
 
   writer.beginObject(flags);
-  bool noValues = flags.contains(ObjLiteralFlag::NoValues);
+  bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
   for (ParseNode* propdef : obj->contents()) {
     BinaryNode* prop = &propdef->as<BinaryNode>();
@@ -8954,13 +8950,13 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
       writer.setPropIndex(i);
     }
 
-    if (noValues) {
-      if (!writer.propWithUndefinedValue(cx)) {
+    if (singleton) {
+      ParseNode* value = prop->right();
+      if (!emitObjLiteralValue(writer, value)) {
         return false;
       }
     } else {
-      ParseNode* value = prop->right();
-      if (!emitObjLiteralValue(writer, value)) {
+      if (!writer.propWithUndefinedValue(cx)) {
         return false;
       }
     }
@@ -8985,13 +8981,9 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
 
 bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
     ListNode* pattern) {
-  // Use |NoValues| to keep the flags consistent with their usage for normal
-  // object literal creation, where |NoValues| is always used in conjunction
-  // with |NewObject|.
-  ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
+  ObjLiteralFlags flags;
 
   ObjLiteralWriter writer;
-
   writer.beginObject(flags);
 
   for (ParseNode* member : pattern->contents()) {
@@ -9678,9 +9670,6 @@ bool BytecodeEmitter::emitInitializeStaticFields(ListNode* classMembers) {
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
 // the comment on emitSwitch.
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
-  bool isSingletonContext = !objNode->hasNonConstInitializer() &&
-                            objNode->head() && checkSingletonContext();
-
   // Note: this method uses the ObjLiteralWriter and emits ObjLiteralStencil
   // objects into the GCThingList, which will evaluate them into real GC objects
   // during JSScript::fullyInitFromEmitter. Eventually we want OBJLITERAL to be
@@ -9717,28 +9706,17 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   isPropertyListObjLiteralCompatible(objNode, &useObjLiteralValues,
                                      &useObjLiteral);
 
-  // We can't rely on the ObjLiteral-constructed object's values to be used if
-  // we're only using ObjLiteral to build a template for JSOp::NewObject instead
-  // of JSOp::Object. This is the case when we're not in singleton
-  // context.
-  if (!isSingletonContext) {
-    useObjLiteralValues = false;
-  }
-
   //                [stack]
   //
   ObjectEmitter oe(this);
   if (useObjLiteral) {
-    // The flags here determine how the object is eventually constructed. The
-    // rules below are made to *exactly match* the frontend/parser behavior
-    // before the ObjLiteral functionality was added. Be very, very careful
-    // changing these rules: any deviation is bound to cause a regression in
-    // some benchmark that depends on the way the object groups are created. Do
-    // not change without running (at least) Speedometer, Octane, Kraken, TP6,
-    // and AWSY tests.
+    bool singleton = checkSingletonContext() && useObjLiteralValues &&
+                     !objNode->hasNonConstInitializer() && objNode->head();
+
     ObjLiteralFlags flags;
-    if (!useObjLiteralValues) {
-      flags += ObjLiteralFlag::NoValues;
+    if (singleton) {
+      // Case 1 above.
+      flags += ObjLiteralFlag::Singleton;
     }
 
     // Use an ObjLiteral op. This will record ObjLiteral insns in the
@@ -9746,8 +9724,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
     // fixups so that at GC-publish time at the end of parse, the full (case 1)
     // or template-without-values (case 2) object can be allocated and the
     // bytecode can be patched to refer to it.
-    bool singleton = isSingletonContext;
-    if (!emitPropertyListObjLiteral(objNode, flags, singleton)) {
+    if (!emitPropertyListObjLiteral(objNode, flags)) {
       //              [stack] OBJ
       return false;
     }
@@ -9758,7 +9735,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
       //              [stack] OBJ
       return false;
     }
-    if (!useObjLiteralValues) {
+    if (!singleton) {
       // Case 2 above: the ObjLiteral only created a template object. We still
       // need to emit bytecode to fill in its values.
       if (!emitPropertyList(objNode, oe, ObjectLiteral)) {
@@ -9767,7 +9744,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
       }
     }
   } else {
-    // No ObjLiteral use, just bytecode to build the object from scratch.
+    // Case 3 above: no ObjLiteral use, just bytecode to build the object from
+    // scratch.
     if (!oe.emitObject(objNode->count())) {
       //              [stack] OBJ
       return false;
