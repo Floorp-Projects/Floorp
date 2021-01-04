@@ -15,6 +15,7 @@ libc = "0.2"
 
 [dependencies.qcms]
 path = ".."
+features = ["c_bindings"]
 
 # Prevent this from interfering with workspaces
 [workspace]
