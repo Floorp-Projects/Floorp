@@ -209,12 +209,6 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-@media (min-resolution: 2dppx) {
-  .urlbarView-favicon {
-      transform: translateY(-1.5px);
-  }
-}
-
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
   width: 24px;
   height: 24px;
