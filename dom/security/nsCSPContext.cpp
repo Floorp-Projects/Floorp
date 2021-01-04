@@ -118,7 +118,6 @@ NS_IMETHODIMP
 nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                          nsICSPEventListener* aCSPEventListener,
                          nsIURI* aContentLocation,
-                         const nsACString& aMimeTypeGuess,
                          nsIURI* aOriginalURIIfRedirect,
                          bool aSendViolationReports, const nsAString& aNonce,
                          bool aParserCreated, int16_t* outDecision) {
