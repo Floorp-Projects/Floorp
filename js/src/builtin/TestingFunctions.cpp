@@ -496,13 +496,6 @@ static bool IsLCovEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool IsTypeInferenceEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  // TODO(no-TI): remove testing function.
-  args.rval().setBoolean(false);
-  return true;
-}
-
 static bool TrialInline(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setUndefined();
@@ -6451,10 +6444,6 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("isLcovEnabled", ::IsLCovEnabled, 0, 0,
 "isLcovEnabled()",
 "  Return true if JS LCov support is enabled."),
-
-    JS_FN_HELP("isTypeInferenceEnabled", ::IsTypeInferenceEnabled, 0, 0,
-"isTypeInferenceEnabled()",
-"  Return true if Type Inference is enabled."),
 
   JS_FN_HELP("trialInline", TrialInline, 0, 0,
 "trialInline()",
