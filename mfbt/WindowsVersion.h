@@ -26,9 +26,9 @@ inline bool IsWindowsVersionOrLater(uint32_t aVersion) {
     return false;
   }
 
-  OSVERSIONINFOEX info;
-  ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
-  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  OSVERSIONINFOEXW info;
+  ZeroMemory(&info, sizeof(OSVERSIONINFOEXW));
+  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
   info.dwMajorVersion = aVersion >> 24;
   info.dwMinorVersion = (aVersion >> 16) & 0xFF;
   info.wServicePackMajor = (aVersion >> 8) & 0xFF;
@@ -40,10 +40,10 @@ inline bool IsWindowsVersionOrLater(uint32_t aVersion) {
   VER_SET_CONDITION(conditionMask, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
   VER_SET_CONDITION(conditionMask, VER_SERVICEPACKMINOR, VER_GREATER_EQUAL);
 
-  if (VerifyVersionInfo(&info,
-                        VER_MAJORVERSION | VER_MINORVERSION |
-                            VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
-                        conditionMask)) {
+  if (VerifyVersionInfoW(&info,
+                         VER_MAJORVERSION | VER_MINORVERSION |
+                             VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
+                         conditionMask)) {
     minVersion = aVersion;
     return true;
   }
@@ -64,15 +64,15 @@ inline bool IsWindowsBuildOrLater(uint32_t aBuild) {
     return false;
   }
 
-  OSVERSIONINFOEX info;
-  ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
-  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  OSVERSIONINFOEXW info;
+  ZeroMemory(&info, sizeof(OSVERSIONINFOEXW));
+  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
   info.dwBuildNumber = aBuild;
 
   DWORDLONG conditionMask = 0;
   VER_SET_CONDITION(conditionMask, VER_BUILDNUMBER, VER_GREATER_EQUAL);
 
-  if (VerifyVersionInfo(&info, VER_BUILDNUMBER, conditionMask)) {
+  if (VerifyVersionInfoW(&info, VER_BUILDNUMBER, conditionMask)) {
     minBuild = aBuild;
     return true;
   }
@@ -93,9 +93,9 @@ inline bool IsWindows10BuildOrLater(uint32_t aBuild) {
     return false;
   }
 
-  OSVERSIONINFOEX info;
-  ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
-  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  OSVERSIONINFOEXW info;
+  ZeroMemory(&info, sizeof(OSVERSIONINFOEXW));
+  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
   info.dwMajorVersion = 10;
   info.dwBuildNumber = aBuild;
 
@@ -106,10 +106,10 @@ inline bool IsWindows10BuildOrLater(uint32_t aBuild) {
   VER_SET_CONDITION(conditionMask, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
   VER_SET_CONDITION(conditionMask, VER_SERVICEPACKMINOR, VER_GREATER_EQUAL);
 
-  if (VerifyVersionInfo(&info,
-                        VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER |
-                            VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
-                        conditionMask)) {
+  if (VerifyVersionInfoW(&info,
+                         VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER |
+                             VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
+                         conditionMask)) {
     minBuild = aBuild;
     return true;
   }
@@ -186,13 +186,13 @@ inline bool IsWin7AndPre2000Compatible() {
     return false;
   }
 
-  OSVERSIONINFOEX info;
-  ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
+  OSVERSIONINFOEXW info;
+  ZeroMemory(&info, sizeof(OSVERSIONINFOEXW));
 
-  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
 #pragma warning(push)
 #pragma warning(disable : 4996)
-  bool success = GetVersionEx((LPOSVERSIONINFO)&info);
+  bool success = GetVersionExW((LPOSVERSIONINFOW)&info);
 #pragma warning(pop)
   if (!success) {
     return false;
