@@ -44,8 +44,8 @@ GamepadEventChannelParent::Create() {
       .forget();
 }
 
-GamepadEventChannelParent::GamepadEventChannelParent() {
-  AssertIsOnBackgroundThread();
+GamepadEventChannelParent::GamepadEventChannelParent() : mIsShutdown{false} {
+  MOZ_DIAGNOSTIC_ASSERT(IsOnBackgroundThread());
 
   mBackgroundEventTarget = GetCurrentEventTarget();
 
@@ -57,7 +57,10 @@ GamepadEventChannelParent::GamepadEventChannelParent() {
 }
 
 void GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
-  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(IsOnBackgroundThread());
+  MOZ_DIAGNOSTIC_ASSERT(!mIsShutdown);
+
+  mIsShutdown = true;
 
   RefPtr<GamepadPlatformService> service =
       GamepadPlatformService::GetParentService();
