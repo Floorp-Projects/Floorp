@@ -51,8 +51,9 @@ inline js::gc::AllocKind js::PlainObject::allocKindForTenure() const {
 
 namespace js {
 
-/* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
-static inline PlainObject* CopyInitializerObject(
+// Create an object based on a template object created for either a NewObject
+// bytecode op or for a constructor call.
+static inline PlainObject* CopyTemplateObject(
     JSContext* cx, JS::Handle<PlainObject*> baseobj,
     NewObjectKind newKind = GenericObject) {
   MOZ_ASSERT(!baseobj->inDictionaryMode());
@@ -62,8 +63,9 @@ static inline PlainObject* CopyInitializerObject(
   allocKind = gc::ForegroundToBackgroundAllocKind(allocKind);
   MOZ_ASSERT_IF(baseobj->isTenured(),
                 allocKind == baseobj->asTenured().getAllocKind());
-  JS::Rooted<PlainObject*> obj(
-      cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind));
+  RootedObject proto(cx, baseobj->staticPrototype());
+  JS::Rooted<PlainObject*> obj(cx, NewObjectWithGivenProtoAndKinds<PlainObject>(
+                                       cx, proto, allocKind, newKind));
   if (!obj) {
     return nullptr;
   }
