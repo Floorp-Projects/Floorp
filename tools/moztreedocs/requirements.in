@@ -40,7 +40,7 @@ sentry-sdk==0.14.3
 singledispatch==3.4.0.3
 six==1.15.0
 snowballstemmer==2.0.0
-Sphinx==3.4.0
+Sphinx==3.4.2
 sphinx-copybutton==0.3.1
 sphinx-js==3.0.1
 sphinx-markdown-tables==0.0.15
