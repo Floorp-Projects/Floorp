@@ -114,7 +114,7 @@ class BlockingIOWatcher {
 #ifdef XP_WIN
 
 BlockingIOWatcher::BlockingIOWatcher() : mThread(NULL), mEvent(NULL) {
-  HMODULE kernel32_dll = GetModuleHandle("kernel32.dll");
+  HMODULE kernel32_dll = GetModuleHandleW(L"kernel32.dll");
   if (!kernel32_dll) {
     return;
   }
