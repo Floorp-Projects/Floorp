@@ -25,6 +25,7 @@
 #include "mozStorageCID.h"
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsEffectiveTLDService.h"

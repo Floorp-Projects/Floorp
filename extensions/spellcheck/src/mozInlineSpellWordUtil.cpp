@@ -219,7 +219,7 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
       return NS_ERROR_FAILURE;
     }
 
-    if (ShadowRoot::FromNode(rootNode)) {
+    if (mozilla::dom::ShadowRoot::FromNode(rootNode)) {
       mRootNode = rootNode;
     }
   }
