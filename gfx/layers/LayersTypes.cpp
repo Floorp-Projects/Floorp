@@ -31,8 +31,8 @@ const char* GetLayersBackendName(LayersBackend aBackend) {
     case LayersBackend::LAYERS_CLIENT:
       return "client";
     case LayersBackend::LAYERS_WR:
-      MOZ_ASSERT(gfxVars::UseWebRender());
-      if (gfxVars::UseSoftwareWebRender()) {
+      MOZ_ASSERT(gfx::gfxVars::UseWebRender());
+      if (gfx::gfxVars::UseSoftwareWebRender()) {
         return "webrender_software";
       }
       return "webrender";

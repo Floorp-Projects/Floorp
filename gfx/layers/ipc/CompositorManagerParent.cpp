@@ -14,6 +14,7 @@
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "gfxPlatform.h"
 #include "VsyncSource.h"
 
 namespace mozilla {

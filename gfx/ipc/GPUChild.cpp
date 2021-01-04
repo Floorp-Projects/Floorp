@@ -10,6 +10,8 @@
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
 #include "VRProcessManager.h"
+#include "mozilla/gfx/Logging.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"

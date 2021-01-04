@@ -9,8 +9,11 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "js/TypeDecls.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/Point.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace layers {

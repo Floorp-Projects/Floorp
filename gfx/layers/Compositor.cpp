@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/CompositionRecorder.h"
 #include "base/message_loop.h"  // for MessageLoop
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent

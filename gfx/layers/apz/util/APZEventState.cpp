@@ -12,6 +12,7 @@
 #include "ActiveElementManager.h"
 #include "TouchManager.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/PositionedEventTargeting.h"
 #include "mozilla/Preferences.h"

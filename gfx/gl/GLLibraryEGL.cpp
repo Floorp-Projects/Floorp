@@ -10,6 +10,8 @@
 #include "gfxUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/ScopeExit.h"
@@ -31,6 +33,7 @@
 #include "prsystem.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "GLLibraryLoader.h"
 #include "GLReadTexImageHelper.h"
 #include "ScopedGLHelpers.h"
 #ifdef MOZ_WIDGET_GTK
@@ -216,7 +219,7 @@ static bool IsAccelAngleSupported(nsACString* const out_failureId) {
     // WebRender-enabled build.
     return true;
   }
-  if (!gfxVars::AllowWebglAccelAngle()) {
+  if (!gfx::gfxVars::AllowWebglAccelAngle()) {
     if (out_failureId->IsEmpty()) {
       *out_failureId = "FEATURE_FAILURE_ACCL_ANGLE_NOT_OK"_ns;
     }

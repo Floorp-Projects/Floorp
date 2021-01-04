@@ -7,6 +7,7 @@
 #include "DragTracker.h"
 
 #include "InputData.h"
+#include "mozilla/Logging.h"
 
 static mozilla::LazyLogModule sApzDrgLog("apz.drag");
 #define DRAG_LOG(...) MOZ_LOG(sApzDrgLog, LogLevel::Debug, (__VA_ARGS__))

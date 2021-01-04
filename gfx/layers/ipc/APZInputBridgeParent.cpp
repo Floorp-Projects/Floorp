@@ -9,6 +9,7 @@
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
+#include "InputData.h"
 
 namespace mozilla {
 namespace layers {
