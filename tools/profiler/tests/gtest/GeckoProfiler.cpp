@@ -2220,7 +2220,7 @@ TEST(GeckoProfiler, CPUUsage)
       {
         EXPECT_EQ_JSON(sampleUnits["time"], String, "ms");
         EXPECT_EQ_JSON(sampleUnits["eventDelay"], String, "ms");
-#if defined(GP_OS_windows)
+#if defined(GP_OS_windows) || defined(GP_OS_darwin)
         // Note: The exact string is not important here.
         EXPECT_TRUE(sampleUnits["threadCPUDelta"].isString())
             << "There should be a sampleUnits.threadCPUDelta on this platform";
@@ -2258,7 +2258,7 @@ TEST(GeckoProfiler, CPUUsage)
             }
           }
 
-#if defined(GP_OS_windows)
+#if defined(GP_OS_windows) || defined(GP_OS_darwin)
           EXPECT_GE(threadCPUDeltaCount, data.size() - 1u)
               << "There should be 'threadCPUDelta' values in all but 1 samples";
 #else
