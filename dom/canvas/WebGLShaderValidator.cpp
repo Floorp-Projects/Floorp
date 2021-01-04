@@ -101,39 +101,38 @@ static ShCompileOptions ChooseValidatorCompileOptions(
 static ShShaderOutput ShaderOutput(gl::GLContext* gl) {
   if (gl->IsGLES()) {
     return SH_ESSL_OUTPUT;
-  } else {
-    uint32_t version = gl->ShadingLanguageVersion();
-    switch (version) {
-      case 100:
-        return SH_GLSL_COMPATIBILITY_OUTPUT;
-      case 120:
-        return SH_GLSL_COMPATIBILITY_OUTPUT;
-      case 130:
-        return SH_GLSL_130_OUTPUT;
-      case 140:
-        return SH_GLSL_140_OUTPUT;
-      case 150:
-        return SH_GLSL_150_CORE_OUTPUT;
-      case 330:
-        return SH_GLSL_330_CORE_OUTPUT;
-      case 400:
-        return SH_GLSL_400_CORE_OUTPUT;
-      case 410:
-        return SH_GLSL_410_CORE_OUTPUT;
-      case 420:
-        return SH_GLSL_420_CORE_OUTPUT;
-      case 430:
-        return SH_GLSL_430_CORE_OUTPUT;
-      case 440:
-        return SH_GLSL_440_CORE_OUTPUT;
-      default:
-        if (version >= 450) {
-          // "OpenGL 4.6 is also guaranteed to support all previous versions of
-          // the OpenGL Shading Language back to version 1.10."
-          return SH_GLSL_450_CORE_OUTPUT;
-        }
-        gfxCriticalNote << "Unexpected GLSL version: " << version;
-    }
+  }
+  uint32_t version = gl->ShadingLanguageVersion();
+  switch (version) {
+    case 100:
+      return SH_GLSL_COMPATIBILITY_OUTPUT;
+    case 120:
+      return SH_GLSL_COMPATIBILITY_OUTPUT;
+    case 130:
+      return SH_GLSL_130_OUTPUT;
+    case 140:
+      return SH_GLSL_140_OUTPUT;
+    case 150:
+      return SH_GLSL_150_CORE_OUTPUT;
+    case 330:
+      return SH_GLSL_330_CORE_OUTPUT;
+    case 400:
+      return SH_GLSL_400_CORE_OUTPUT;
+    case 410:
+      return SH_GLSL_410_CORE_OUTPUT;
+    case 420:
+      return SH_GLSL_420_CORE_OUTPUT;
+    case 430:
+      return SH_GLSL_430_CORE_OUTPUT;
+    case 440:
+      return SH_GLSL_440_CORE_OUTPUT;
+    default:
+      if (version >= 450) {
+        // "OpenGL 4.6 is also guaranteed to support all previous versions of
+        // the OpenGL Shading Language back to version 1.10."
+        return SH_GLSL_450_CORE_OUTPUT;
+      }
+      gfxCriticalNote << "Unexpected GLSL version: " << version;
   }
 
   return SH_GLSL_COMPATIBILITY_OUTPUT;
