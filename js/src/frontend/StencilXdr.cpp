@@ -221,11 +221,11 @@ template <XDRMode mode>
   uint32_t length = 0;
 
   if (mode == XDR_ENCODE) {
-    nextFrameSlot = data->nextFrameSlot;
-    hasParameterExprs = data->hasParameterExprs ? 1 : 0;
-    nonPositionalFormalStart = data->nonPositionalFormalStart;
-    varStart = data->varStart;
-    length = data->length;
+    nextFrameSlot = data->slotInfo.nextFrameSlot;
+    hasParameterExprs = data->slotInfo.hasParameterExprs ? 1 : 0;
+    nonPositionalFormalStart = data->slotInfo.nonPositionalFormalStart;
+    varStart = data->slotInfo.varStart;
+    length = data->slotInfo.length;
   }
 
   MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
@@ -238,12 +238,12 @@ template <XDRMode mode>
   if (mode == XDR_DECODE) {
     stencil.data_ = data = NewEmptyScopeData<FunctionScope>(
         xdr->cx(), xdr->stencilAlloc(), length, [&](auto data) {
-          data->nextFrameSlot = nextFrameSlot;
+          data->slotInfo.nextFrameSlot = nextFrameSlot;
           MOZ_ASSERT(hasParameterExprs <= 1);
-          data->hasParameterExprs = hasParameterExprs;
-          data->nonPositionalFormalStart = nonPositionalFormalStart;
-          data->varStart = varStart;
-          data->length = length;
+          data->slotInfo.hasParameterExprs = hasParameterExprs;
+          data->slotInfo.nonPositionalFormalStart = nonPositionalFormalStart;
+          data->slotInfo.varStart = varStart;
+          data->slotInfo.length = length;
         });
     if (!data) {
       return xdr->fail(JS::TranscodeResult_Throw);
@@ -265,8 +265,8 @@ template <XDRMode mode>
   uint32_t length = 0;
 
   if (mode == XDR_ENCODE) {
-    nextFrameSlot = data->nextFrameSlot;
-    length = data->length;
+    nextFrameSlot = data->slotInfo.nextFrameSlot;
+    length = data->slotInfo.length;
   }
 
   MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
@@ -276,8 +276,8 @@ template <XDRMode mode>
   if (mode == XDR_DECODE) {
     stencil.data_ = data = NewEmptyScopeData<VarScope>(
         xdr->cx(), xdr->stencilAlloc(), length, [&](auto data) {
-          data->nextFrameSlot = nextFrameSlot;
-          data->length = length;
+          data->slotInfo.nextFrameSlot = nextFrameSlot;
+          data->slotInfo.length = length;
         });
     if (!data) {
       return xdr->fail(JS::TranscodeResult_Throw);
@@ -301,9 +301,9 @@ template <XDRMode mode>
   uint32_t length = 0;
 
   if (mode == XDR_ENCODE) {
-    nextFrameSlot = data->nextFrameSlot;
-    constStart = data->constStart;
-    length = data->length;
+    nextFrameSlot = data->slotInfo.nextFrameSlot;
+    constStart = data->slotInfo.constStart;
+    length = data->slotInfo.length;
   }
 
   MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
@@ -314,9 +314,9 @@ template <XDRMode mode>
   if (mode == XDR_DECODE) {
     stencil.data_ = data = NewEmptyScopeData<LexicalScope>(
         xdr->cx(), xdr->stencilAlloc(), length, [&](auto data) {
-          data->nextFrameSlot = nextFrameSlot;
-          data->constStart = constStart;
-          data->length = length;
+          data->slotInfo.nextFrameSlot = nextFrameSlot;
+          data->slotInfo.constStart = constStart;
+          data->slotInfo.length = length;
         });
     if (!data) {
       return xdr->fail(JS::TranscodeResult_Throw);
@@ -340,9 +340,9 @@ template <XDRMode mode>
   uint32_t length = 0;
 
   if (mode == XDR_ENCODE) {
-    letStart = data->letStart;
-    constStart = data->constStart;
-    length = data->length;
+    letStart = data->slotInfo.letStart;
+    constStart = data->slotInfo.constStart;
+    length = data->slotInfo.length;
   }
 
   MOZ_TRY(xdr->codeUint32(&letStart));
@@ -353,9 +353,9 @@ template <XDRMode mode>
   if (mode == XDR_DECODE) {
     stencil.data_ = data = NewEmptyScopeData<GlobalScope>(
         xdr->cx(), xdr->stencilAlloc(), length, [&](auto data) {
-          data->letStart = letStart;
-          data->constStart = constStart;
-          data->length = length;
+          data->slotInfo.letStart = letStart;
+          data->slotInfo.constStart = constStart;
+          data->slotInfo.length = length;
         });
     if (!data) {
       return xdr->fail(JS::TranscodeResult_Throw);
@@ -381,11 +381,11 @@ template <XDRMode mode>
   uint32_t length = 0;
 
   if (mode == XDR_ENCODE) {
-    nextFrameSlot = data->nextFrameSlot;
-    varStart = data->varStart;
-    letStart = data->letStart;
-    constStart = data->constStart;
-    length = data->length;
+    nextFrameSlot = data->slotInfo.nextFrameSlot;
+    varStart = data->slotInfo.varStart;
+    letStart = data->slotInfo.letStart;
+    constStart = data->slotInfo.constStart;
+    length = data->slotInfo.length;
   }
 
   MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
@@ -398,11 +398,11 @@ template <XDRMode mode>
   if (mode == XDR_DECODE) {
     stencil.data_ = data = NewEmptyScopeData<ModuleScope>(
         xdr->cx(), xdr->stencilAlloc(), length, [&](auto data) {
-          data->nextFrameSlot = nextFrameSlot;
-          data->varStart = varStart;
-          data->letStart = letStart;
-          data->constStart = constStart;
-          data->length = length;
+          data->slotInfo.nextFrameSlot = nextFrameSlot;
+          data->slotInfo.varStart = varStart;
+          data->slotInfo.letStart = letStart;
+          data->slotInfo.constStart = constStart;
+          data->slotInfo.length = length;
         });
     if (!data) {
       return xdr->fail(JS::TranscodeResult_Throw);
@@ -424,8 +424,8 @@ template <XDRMode mode>
   uint32_t length = 0;
 
   if (mode == XDR_ENCODE) {
-    nextFrameSlot = data->nextFrameSlot;
-    length = data->length;
+    nextFrameSlot = data->slotInfo.nextFrameSlot;
+    length = data->slotInfo.length;
   }
 
   MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
@@ -435,8 +435,8 @@ template <XDRMode mode>
   if (mode == XDR_DECODE) {
     stencil.data_ = data = NewEmptyScopeData<EvalScope>(
         xdr->cx(), xdr->stencilAlloc(), length, [&](auto data) {
-          data->nextFrameSlot = nextFrameSlot;
-          data->length = length;
+          data->slotInfo.nextFrameSlot = nextFrameSlot;
+          data->slotInfo.length = length;
         });
     if (!data) {
       return xdr->fail(JS::TranscodeResult_Throw);

@@ -142,9 +142,9 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         CopyBindingNames(cx, global.bindings, allAtoms,
                          data->trailingNames.start());
 
-        data->letStart = global.let_start;
-        data->constStart = global.const_start;
-        data->length = numBindings;
+        data->slotInfo.letStart = global.let_start;
+        data->slotInfo.constStart = global.const_start;
+        data->slotInfo.length = numBindings;
 
         if (!ScopeStencil::createForGlobalScope(
                 cx, compilationInfo, ScopeKind::Global, data, &index)) {
@@ -166,9 +166,10 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         CopyBindingNames(cx, var.bindings, allAtoms,
                          data->trailingNames.start());
 
-        // NOTE: data->nextFrameSlot is set in ScopeStencil::createForVarScope.
+        // NOTE: data->slotInfo.nextFrameSlot is set in
+        // ScopeStencil::createForVarScope.
 
-        data->length = numBindings;
+        data->slotInfo.length = numBindings;
 
         uint32_t firstFrameSlot = var.first_frame_slot;
         ScopeIndex enclosingIndex(var.enclosing);
@@ -193,11 +194,11 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         CopyBindingNames(cx, lexical.bindings, allAtoms,
                          data->trailingNames.start());
 
-        // NOTE: data->nextFrameSlot is set in
+        // NOTE: data->slotInfo.nextFrameSlot is set in
         // ScopeStencil::createForLexicalScope.
 
-        data->constStart = lexical.const_start;
-        data->length = numBindings;
+        data->slotInfo.constStart = lexical.const_start;
+        data->slotInfo.length = numBindings;
 
         uint32_t firstFrameSlot = lexical.first_frame_slot;
         ScopeIndex enclosingIndex(lexical.enclosing);
@@ -221,13 +222,14 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         CopyBindingNames(cx, function.bindings, allAtoms,
                          data->trailingNames.start());
 
-        // NOTE: data->nextFrameSlot is set in
+        // NOTE: data->slotInfo.nextFrameSlot is set in
         // ScopeStencil::createForFunctionScope.
 
-        data->hasParameterExprs = function.has_parameter_exprs;
-        data->nonPositionalFormalStart = function.non_positional_formal_start;
-        data->varStart = function.var_start;
-        data->length = numBindings;
+        data->slotInfo.hasParameterExprs = function.has_parameter_exprs;
+        data->slotInfo.nonPositionalFormalStart =
+            function.non_positional_formal_start;
+        data->slotInfo.varStart = function.var_start;
+        data->slotInfo.length = numBindings;
 
         bool hasParameterExprs = function.has_parameter_exprs;
         bool needsEnvironment = function.non_positional_formal_start;

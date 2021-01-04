@@ -1219,22 +1219,23 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
   switch (kind_) {
     case ScopeKind::Function: {
       auto* data = static_cast<ParserFunctionScopeData*>(data_);
-      json.property("nextFrameSlot", data->nextFrameSlot);
-      json.property("hasParameterExprs", data->hasParameterExprs);
-      json.property("nonPositionalFormalStart", data->nonPositionalFormalStart);
-      json.property("varStart", data->varStart);
+      json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
+      json.property("hasParameterExprs", data->slotInfo.hasParameterExprs);
+      json.property("nonPositionalFormalStart",
+                    data->slotInfo.nonPositionalFormalStart);
+      json.property("varStart", data->slotInfo.varStart);
 
       trailingNames = &data->trailingNames;
-      length = data->length;
+      length = data->slotInfo.length;
       break;
     }
 
     case ScopeKind::FunctionBodyVar: {
       auto* data = static_cast<ParserVarScopeData*>(data_);
-      json.property("nextFrameSlot", data->nextFrameSlot);
+      json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
-      length = data->length;
+      length = data->slotInfo.length;
       break;
     }
 
@@ -1246,11 +1247,11 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
       auto* data = static_cast<ParserLexicalScopeData*>(data_);
-      json.property("nextFrameSlot", data->nextFrameSlot);
-      json.property("constStart", data->constStart);
+      json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
+      json.property("constStart", data->slotInfo.constStart);
 
       trailingNames = &data->trailingNames;
-      length = data->length;
+      length = data->slotInfo.length;
       break;
     }
 
@@ -1261,54 +1262,54 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
       auto* data = static_cast<ParserEvalScopeData*>(data_);
-      json.property("nextFrameSlot", data->nextFrameSlot);
+      json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
-      length = data->length;
+      length = data->slotInfo.length;
       break;
     }
 
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
       auto* data = static_cast<ParserGlobalScopeData*>(data_);
-      json.property("letStart", data->letStart);
-      json.property("constStart", data->constStart);
+      json.property("letStart", data->slotInfo.letStart);
+      json.property("constStart", data->slotInfo.constStart);
 
       trailingNames = &data->trailingNames;
-      length = data->length;
+      length = data->slotInfo.length;
       break;
     }
 
     case ScopeKind::Module: {
       auto* data = static_cast<ParserModuleScopeData*>(data_);
-      json.property("nextFrameSlot", data->nextFrameSlot);
-      json.property("varStart", data->varStart);
-      json.property("letStart", data->letStart);
-      json.property("constStart", data->constStart);
+      json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
+      json.property("varStart", data->slotInfo.varStart);
+      json.property("letStart", data->slotInfo.letStart);
+      json.property("constStart", data->slotInfo.constStart);
 
       trailingNames = &data->trailingNames;
-      length = data->length;
+      length = data->slotInfo.length;
       break;
     }
 
     case ScopeKind::WasmInstance: {
       auto* data = static_cast<
           AbstractScopeData<WasmInstanceScope, TaggedParserAtomIndex>*>(data_);
-      json.property("nextFrameSlot", data->nextFrameSlot);
-      json.property("globalsStart", data->globalsStart);
+      json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
+      json.property("globalsStart", data->slotInfo.globalsStart);
 
       trailingNames = &data->trailingNames;
-      length = data->length;
+      length = data->slotInfo.length;
       break;
     }
 
     case ScopeKind::WasmFunction: {
       auto* data = static_cast<
           AbstractScopeData<WasmFunctionScope, TaggedParserAtomIndex>*>(data_);
-      json.property("nextFrameSlot", data->nextFrameSlot);
+      json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
-      length = data->length;
+      length = data->slotInfo.length;
       break;
     }
 
