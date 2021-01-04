@@ -15515,15 +15515,15 @@
   "QM_QUOTA_INFO_LOAD_TIME_V0": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "87",
-    "bug_numbers": [1609625],
+    "expires_in_version": "never",
+    "bug_numbers": [1609625, 1683102],
     "kind": "exponential",
     "keyed": true,
     "high": 180000,
     "n_buckets": 60,
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["ttung@mozilla.com", "storage-telemetry@mozilla.com"],
-    "description": "Time (ms) for the QuotaManager to load quota information."
+    "description": "Time (ms) for the QuotaManager to load quota information. Keyed by conditions during quota info loading, see RecordQuotaInfoLoadTimeHelper::Run in https://searchfox.org/mozilla-central/source/dom/quota/ActorsParent.cpp"
   },
   "QM_FIRST_INITIALIZATION_ATTEMPT": {
     "record_in_processes": ["main"],
