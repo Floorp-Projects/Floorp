@@ -452,6 +452,10 @@ void StringJoinAppend(
     nsTSubstring<CharType>& aOutput,
     const nsTLiteralString<CharType>& aSeparator, const InputRange& aInputRange,
     Func&& aFunc = mozilla::detail::kStringJoinAppendDefault) {
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wrange-loop-analysis"
+#endif
   bool first = true;
   for (const auto& item : aInputRange) {
     if (first) {
@@ -462,6 +466,9 @@ void StringJoinAppend(
 
     aFunc(aOutput, item);
   }
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 }
 
 /**
