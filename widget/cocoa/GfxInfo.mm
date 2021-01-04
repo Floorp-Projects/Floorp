@@ -357,6 +357,7 @@ GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) { return NS_ERROR_FAIL
 /* readonly attribute Array<DOMString> displayInfo; */
 NS_IMETHODIMP
 GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
+  nsAutoreleasePool localPool;
   for (NSScreen* screen in [NSScreen screens]) {
     NSRect rect = [screen frame];
     nsString desc;
@@ -370,6 +371,7 @@ GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
 
 NS_IMETHODIMP
 GfxInfo::GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) {
+  nsAutoreleasePool localPool;
   for (NSScreen* screen in [NSScreen screens]) {
     NSRect rect = [screen frame];
     aDisplayWidth.AppendElement((uint32_t)rect.size.width);
@@ -379,6 +381,7 @@ GfxInfo::GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) {
 
 NS_IMETHODIMP
 GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
+  nsAutoreleasePool localPool;
   for (NSScreen* screen in [NSScreen screens]) {
     NSRect rect = [screen frame];
     aDisplayHeight.AppendElement((uint32_t)rect.size.height);
@@ -495,6 +498,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
 }
 
 nsresult GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
+  nsAutoreleasePool localPool;
   // Getting the refresh rate is a little hard on OS X. We could use
   // CVDisplayLinkGetNominalOutputVideoRefreshPeriod, but that's a little
   // involved. Ideally we could query it from vsync. For now, we leave it out.
