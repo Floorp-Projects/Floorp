@@ -11,11 +11,11 @@ const {
   testTeardown,
   runTest,
   SIMPLE_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 const protocol = require("devtools/shared/protocol");
 const { FrontClassWithSpec } = protocol;
-const { dampTestSpec } = require("./spec");
+const { dampTestSpec } = require("damp-test/tests/server/spec");
 
 // Test parameters
 const ATTRIBUTES = 10;

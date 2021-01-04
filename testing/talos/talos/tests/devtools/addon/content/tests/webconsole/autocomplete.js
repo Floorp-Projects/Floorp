@@ -11,7 +11,7 @@ const {
   testSetup,
   testTeardown,
   waitForTick,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 const TEST_NAME = "console.autocomplete";
 

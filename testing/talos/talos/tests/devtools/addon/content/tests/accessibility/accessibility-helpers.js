@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { openToolboxAndLog, reloadPageAndLog } = require("../head");
+const { openToolboxAndLog, reloadPageAndLog } = require("damp-test/tests/head");
 
 const INITIALIZED_EVENT = "Accessibility:Initialized";
 

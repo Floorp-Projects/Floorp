@@ -11,7 +11,7 @@ const {
   testSetup,
   testTeardown,
   SIMPLE_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 /**
  * Measure the time necessary to perform successive childList mutations in the content
