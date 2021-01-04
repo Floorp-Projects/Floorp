@@ -636,8 +636,7 @@ static void SendStreamAudio(DecodedStreamData* aStream,
   aStream->mNextAudioTime = audio->GetEndTime();
 }
 
-void DecodedStream::SendAudio(double aVolume,
-                              const PrincipalHandle& aPrincipalHandle) {
+void DecodedStream::SendAudio(const PrincipalHandle& aPrincipalHandle) {
   AssertOwnerThread();
 
   if (!mInfo.HasAudio()) {
@@ -920,7 +919,7 @@ void DecodedStream::SendData() {
   }
 
   LOG_DS(LogLevel::Verbose, "SendData()");
-  SendAudio(mVolume, mPrincipalHandle);
+  SendAudio(mPrincipalHandle);
   SendVideo(mPrincipalHandle);
 }
 
