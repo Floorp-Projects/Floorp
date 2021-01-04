@@ -261,9 +261,7 @@ class SmokeTest {
             verifyShortcutNameField(defaultWebPage.title)
             clickAddShortcutButton()
             clickAddAutomaticallyButton()
-        }.openHomeScreenShortcut(defaultWebPage.title) {
-            verifyPageContent(defaultWebPage.content)
-        }
+        }.openHomeScreenShortcut(defaultWebPage.title) {}
     }
 
     @Test
