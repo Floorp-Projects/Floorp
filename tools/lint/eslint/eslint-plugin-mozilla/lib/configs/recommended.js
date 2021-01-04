@@ -14,7 +14,7 @@
 module.exports = {
   env: {
     browser: true,
-    es6: true,
+    es2021: true,
     "mozilla/privileged": true,
   },
 
@@ -77,7 +77,7 @@ module.exports = {
   ],
 
   parserOptions: {
-    ecmaVersion: 11,
+    ecmaVersion: 12,
   },
 
   // When adding items to this file please check for effects on sub-directories.
