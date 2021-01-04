@@ -70,6 +70,12 @@ function test() {
       }
     });
 
+    is(
+      privateWin.gBrowser.tabs[0].label,
+      "Private Browsing",
+      "New tabs in the private browsing windows should have 'Private Browsing' as the title."
+    );
+
     privateWin.close();
 
     Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
@@ -114,6 +120,11 @@ function test() {
         }
       });
 
+      is(
+        privateWin.gBrowser.tabs[0].label,
+        "New Tab",
+        "Normal tab title is used also in the permanent private browsing mode."
+      );
       privateWin.close();
       Services.prefs.clearUserPref("browser.privatebrowsing.autostart");
       finish();
