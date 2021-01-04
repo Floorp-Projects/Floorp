@@ -45,7 +45,7 @@ class nsWebPDecoder final : public Decoder {
   void EndFrame();
 
   LexerResult ReadSingle(const uint8_t* aData, size_t aLength,
-                         const IntRect& aFrameRect);
+                         const gfx::IntRect& aFrameRect);
 
   LexerResult ReadMultiple(WebPDemuxer* aDemuxer, bool aIsComplete);
 
@@ -75,7 +75,7 @@ class nsWebPDecoder final : public Decoder {
   gfx::SurfaceFormat mFormat;
 
   /// Frame rect for the current frame.
-  IntRect mFrameRect;
+  gfx::IntRect mFrameRect;
 
   /// The last row of decoded pixels written to mPipe.
   int mLastRow;

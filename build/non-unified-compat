@@ -106,3 +106,4 @@ gfx/wgpu_bindings/
 gfx/wr/
 gfx/ycbcr/
 hal/
+image/

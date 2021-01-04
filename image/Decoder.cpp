@@ -9,6 +9,7 @@
 #include "GeckoProfiler.h"
 #include "IDecodingTask.h"
 #include "ISurfaceProvider.h"
+#include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/Telemetry.h"

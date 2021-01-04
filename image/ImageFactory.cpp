@@ -10,7 +10,9 @@
 
 #include "mozilla/Likely.h"
 
+#include "nsIChannel.h"
 #include "nsIFileChannel.h"
+#include "nsIObserverService.h"
 #include "nsIFile.h"
 #include "nsMimeTypes.h"
 #include "nsIRequest.h"
