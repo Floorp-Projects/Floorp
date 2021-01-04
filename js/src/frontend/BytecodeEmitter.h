@@ -35,6 +35,7 @@
 #include "frontend/NameCollections.h"      // AtomIndexMap
 #include "frontend/ParseNode.h"            // ParseNode and subclasses
 #include "frontend/Parser.h"               // Parser, PropListType
+#include "frontend/ScriptIndex.h"          // ScriptIndex
 #include "frontend/SharedContext.h"        // SharedContext, TopLevelFunction
 #include "frontend/SourceNotes.h"          // SrcNoteType
 #include "frontend/TokenStream.h"          // TokenPos
@@ -305,7 +306,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                    unsigned errorNumber, ...);
 
   // Fill in a ScriptStencil using this BCE data.
-  bool intoScriptStencil(ScriptStencil* script, FunctionIndex index);
+  bool intoScriptStencil(ScriptStencil* script, ScriptIndex scriptIndex);
 
   // If pn contains a useful expression, return true with *answer set to true.
   // If pn contains a useless expression, return true with *answer set to

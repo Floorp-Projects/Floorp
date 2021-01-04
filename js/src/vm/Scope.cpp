@@ -15,6 +15,7 @@
 #include "builtin/ModuleObject.h"
 #include "frontend/CompilationInfo.h"  // CompiltionAtomCache, CompilationInput, CompilationStencil, CompilationGCOutput
 #include "frontend/Parser.h"           // Copy*ScopeData
+#include "frontend/ScriptIndex.h"      // ScriptIndex
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "gc/Allocator.h"
@@ -1953,7 +1954,7 @@ JS::ubi::Node::Size JS::ubi::Concrete<Scope>::size(
 bool ScopeStencil::createForFunctionScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo,
     ParserFunctionScopeData* data, bool hasParameterExprs,
-    bool needsEnvironment, FunctionIndex functionIndex, bool isArrow,
+    bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {

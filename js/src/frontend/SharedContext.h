@@ -16,7 +16,7 @@
 #include "frontend/AbstractScopePtr.h"    // ScopeIndex
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
-#include "frontend/Stencil.h"          // FunctionIndex
+#include "frontend/ScriptIndex.h"      // ScriptIndex
 #include "js/WasmModule.h"             // JS::WasmModule
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
@@ -350,8 +350,8 @@ class FunctionBox : public SuspendableContext {
   // Any update after the copy should be synced to the ScriptStencil.
   const ParserAtom* atom_ = nullptr;
 
-  // Index into CompilationInfo::{funcData, functions}.
-  FunctionIndex funcDataIndex_ = FunctionIndex(-1);
+  // Index into CompilationStencil::scriptData.
+  ScriptIndex funcDataIndex_ = ScriptIndex(-1);
 
   // See: FunctionFlags
   // This is copied to ScriptStencil.
@@ -409,7 +409,7 @@ class FunctionBox : public SuspendableContext {
   FunctionBox(JSContext* cx, SourceExtent extent,
               CompilationInfo& compilationInfo, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              const ParserAtom* atom, FunctionFlags flags, FunctionIndex index);
+              const ParserAtom* atom, FunctionFlags flags, ScriptIndex index);
 
   ScriptStencil& functionStencil() const;
 
@@ -645,7 +645,7 @@ class FunctionBox : public SuspendableContext {
     }
   }
 
-  FunctionIndex index() { return funcDataIndex_; }
+  ScriptIndex index() { return funcDataIndex_; }
 
   void finishScriptFlags();
   void copyScriptFields(ScriptStencil& script);
