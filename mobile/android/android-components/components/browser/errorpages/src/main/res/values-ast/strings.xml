@@ -171,7 +171,7 @@
     <!-- This string contains markup. The URL should not be localized. -->
     <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
         <li>Les direiciones web suelen escribise asina <strong>https://www.softastur.org/</strong></li>
-        <li>Asegúrate de que tas usando barres inclinaes a la drecha (ye dicir, <strong>/</strong>).</li>
+        <li>Asegúrate de que tas usando barres inclinaes a la derecha (ye dicir, <strong>/</strong>).</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
