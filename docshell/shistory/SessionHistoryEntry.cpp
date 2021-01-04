@@ -5,17 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SessionHistoryEntry.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
+#include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsIHttpChannel.h"
 #include "nsSHEntryShared.h"
+#include "nsSHistory.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/dom/CSPMessageUtils.h"
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/ReferrerInfoUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 
 extern mozilla::LazyLogModule gSHLog;

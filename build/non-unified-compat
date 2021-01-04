@@ -1,3 +1,7 @@
+docshell/base/
+docshell/build/
+docshell/resources/
+docshell/shistory/
 dom/abort/
 dom/animation/
 dom/audiochannel/

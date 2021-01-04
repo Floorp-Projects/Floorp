@@ -11,6 +11,7 @@
 #include "mozilla/dom/SyncedContextInlines.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/UserActivationIPCUtils.h"
 #include "mozilla/PermissionDelegateIPCUtils.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"

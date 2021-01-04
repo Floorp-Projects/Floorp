@@ -21,6 +21,11 @@ class nsIReferrerInfo;
 class nsISHistory;
 class nsIURI;
 
+namespace mozilla::ipc {
+template <typename P>
+struct IPDLParamTraits;
+}
+
 namespace mozilla {
 namespace dom {
 

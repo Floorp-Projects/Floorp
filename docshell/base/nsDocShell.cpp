@@ -25,6 +25,7 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MediaFeatureChange.h"
@@ -8866,7 +8867,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       bool hadActiveEntry = !!mActiveEntry;
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
       mBrowsingContext->SessionHistoryCommit(*mLoadingEntry, mLoadType,
-                                             hadActiveEntry, true , true);
+                                             hadActiveEntry, true, true);
       // FIXME Need to set postdata.
       SetCacheKeyOnHistoryEntry(nullptr, cacheKey);
 
