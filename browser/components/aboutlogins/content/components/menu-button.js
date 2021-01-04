@@ -106,7 +106,10 @@ export default class MenuButton extends HTMLElement {
     } else if (event.key == "Escape" && !this._menu.hidden) {
       this._hideMenu();
       this._menuButton.focus();
-    } else if (event.key == "ArrowDown" || event.key == "ArrowUp") {
+    } else if (
+      (event.key == "ArrowDown" || event.key == "ArrowUp") &&
+      !this._menu.hidden
+    ) {
       event.preventDefault();
       this._focusSuccessor(event.key == "ArrowDown");
     }
