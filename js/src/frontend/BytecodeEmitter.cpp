@@ -9025,11 +9025,12 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   return true;
 }
 
-// TODO(no-TI): currently unused. Consider calling it.
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead) {
+  MOZ_ASSERT(checkSingletonContext());
+
   ObjLiteralWriter writer;
 
-  ObjLiteralFlags flags(ObjLiteralFlag::Array);
+  ObjLiteralFlags flags(ObjLiteralFlag::Array, ObjLiteralFlag::Singleton);
 
   writer.beginObject(flags);
 
@@ -9765,8 +9766,12 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
 }
 
 bool BytecodeEmitter::emitArrayLiteral(ListNode* array) {
-  // TODO(no-TI): remove COW arrays. See if we can use JSOp::Object for arrays
-  // again.
+  // Emit JSOp::Object if the array consists entirely of primitive values and we
+  // are in a singleton context.
+  if (checkSingletonContext() && !array->hasNonConstInitializer() &&
+      array->head() && isArrayObjLiteralCompatible(array->head())) {
+    return emitObjLiteralArray(array->head());
+  }
 
   return emitArray(array->head(), array->count());
 }
