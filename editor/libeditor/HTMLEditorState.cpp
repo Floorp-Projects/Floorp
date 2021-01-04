@@ -82,7 +82,7 @@ ListElementSelectionState::ListElementSelectionState(HTMLEditor& aHTMLEditor,
     } else if (content->IsHTMLElement(nsGkAtoms::ol)) {
       mIsOLElementSelected = true;
     } else if (content->IsHTMLElement(nsGkAtoms::li)) {
-      if (Element* parent = content->GetParentElement()) {
+      if (dom::Element* parent = content->GetParentElement()) {
         if (parent->IsHTMLElement(nsGkAtoms::ul)) {
           mIsULElementSelected = true;
         } else if (parent->IsHTMLElement(nsGkAtoms::ol)) {
@@ -210,7 +210,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     return;
   }
 
-  OwningNonNull<Element> bodyOrDocumentElement = *aHTMLEditor.GetRoot();
+  OwningNonNull<dom::Element> bodyOrDocumentElement = *aHTMLEditor.GetRoot();
   EditorRawDOMPoint atBodyOrDocumentElement(bodyOrDocumentElement);
 
   const nsRange* firstRange = aHTMLEditor.SelectionRefPtr()->GetRangeAt(0);
@@ -281,7 +281,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     editTargetContent = arrayOfContents[0];
   }
 
-  RefPtr<Element> blockElementAtEditTarget =
+  RefPtr<dom::Element> blockElementAtEditTarget =
       HTMLEditUtils::GetInclusiveAncestorBlockElement(*editTargetContent);
   if (NS_WARN_IF(!blockElementAtEditTarget)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -468,7 +468,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
     arrayOfContents.AppendElement(*content);
   }
 
-  Element* bodyOrDocumentElement = aHTMLEditor.GetRoot();
+  dom::Element* bodyOrDocumentElement = aHTMLEditor.GetRoot();
   if (NS_WARN_IF(!bodyOrDocumentElement)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -518,7 +518,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
 // static
 void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
-    Element& aNonFormatBlockElement) {
+    dom::Element& aNonFormatBlockElement) {
   MOZ_ASSERT(HTMLEditUtils::IsBlockElement(aNonFormatBlockElement));
   MOZ_ASSERT(!HTMLEditUtils::IsFormatNode(&aNonFormatBlockElement));
 

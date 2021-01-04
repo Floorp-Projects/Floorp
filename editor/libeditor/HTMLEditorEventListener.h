@@ -7,9 +7,14 @@
 #define HTMLEditorEventListener_h
 
 #include "EditorEventListener.h"
+#include "mozilla/HTMLEditor.h"
 #include "nscore.h"
 
 namespace mozilla {
+
+namespace dom {
+class Element;
+}
 
 class EditorBase;
 
@@ -80,12 +85,12 @@ class HTMLEditorEventListener final : public EditorEventListener {
                                                       bool aForGrabber);
 
   MOZ_CAN_RUN_SCRIPT void MaybeDisplayResizers(HTMLEditor& aHTMLEditor,
-                                               Element& aElement,
-                                               MouseEvent& aMouseEvent);
+                                               dom::Element& aElement,
+                                               dom::MouseEvent& aMouseEvent);
   MOZ_CAN_RUN_SCRIPT nsresult HandlePrimaryMouseButtonDown(
-      HTMLEditor& aHTMLEditor, MouseEvent& aMouseEvent);
+      HTMLEditor& aHTMLEditor, dom::MouseEvent& aMouseEvent);
   MOZ_CAN_RUN_SCRIPT nsresult HandleSecondaryMouseButtonDown(
-      HTMLEditor& aHTMLEditor, MouseEvent& aMouseEvent);
+      HTMLEditor& aHTMLEditor, dom::MouseEvent& aMouseEvent);
 
   bool mListeningToMouseMoveEventForResizers;
   bool mListeningToMouseMoveEventForGrabber;

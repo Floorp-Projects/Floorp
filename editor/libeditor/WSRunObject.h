@@ -22,6 +22,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class Element;
+}
+
 class WSRunScanner;
 
 /**
@@ -348,10 +352,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   template <typename EditorDOMPointType>
   static EditorDOMPointType GetAfterLastVisiblePoint(
-      Text& aTextNode, const Element* aAncestorLimiter);
+      dom::Text& aTextNode, const dom::Element* aAncestorLimiter);
   template <typename EditorDOMPointType>
   static EditorDOMPointType GetFirstVisiblePoint(
-      Text& aTextNode, const Element* aAncestorLimiter);
+      dom::Text& aTextNode, const dom::Element* aAncestorLimiter);
 
   /**
    * GetRangeInTextNodesToForwardDeleteFrom() returns the range to remove
@@ -398,8 +402,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
    *                            Otherwise, must not be set.
    */
   static EditorDOMRange GetRangeForDeletingBlockElementBoundaries(
-      const HTMLEditor& aHTMLEditor, const Element& aLeftBlockElement,
-      const Element& aRightBlockElement,
+      const HTMLEditor& aHTMLEditor, const dom::Element& aLeftBlockElement,
+      const dom::Element& aRightBlockElement,
       const EditorDOMPoint& aPointContainingTheOtherBlock);
 
   /**
@@ -409,7 +413,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   static Result<bool, nsresult> ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
       const HTMLEditor& aHTMLEditor, nsRange& aRange,
-      const Element* aEditingHost);
+      const dom::Element* aEditingHost);
 
   /**
    * GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries() returns
@@ -425,7 +429,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * white-spaces between `<br>` element and aPoint.
    */
   template <typename EditorDOMPointType>
-  MOZ_NEVER_INLINE_DEBUG static HTMLBRElement*
+  MOZ_NEVER_INLINE_DEBUG static dom::HTMLBRElement*
   GetPrecedingBRElementUnlessVisibleContentFound(
       const HTMLEditor& aHTMLEditor, const EditorDOMPointType& aPoint) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
@@ -728,7 +732,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
       static BoundaryData ScanCollapsibleWhiteSpaceStartFrom(
           const EditorDOMPointType& aPoint,
           const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
-          const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
+          const dom::Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
 
       /**
        * ScanCollapsibleWhiteSpaceEndFrom() returns end boundary data of
@@ -748,7 +752,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
       static BoundaryData ScanCollapsibleWhiteSpaceEndFrom(
           const EditorDOMPointType& aPoint,
           const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
-          const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
+          const dom::Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
 
       enum class Preformatted : bool { Yes, No };
       BoundaryData()
@@ -856,7 +860,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     TextFragmentData() = delete;
     template <typename EditorDOMPointType>
     TextFragmentData(const EditorDOMPointType& aPoint,
-                     const Element* aEditingHost);
+                     const dom::Element* aEditingHost);
 
     bool IsInitialized() const {
       return mStart.Initialized() && mEnd.Initialized();
@@ -1185,7 +1189,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     BoundaryData mStart;
     BoundaryData mEnd;
     NoBreakingSpaceData mNBSPData;
-    RefPtr<const Element> mEditingHost;
+    RefPtr<const dom::Element> mEditingHost;
     mutable Maybe<EditorDOMRange> mLeadingWhiteSpaceRange;
     mutable Maybe<EditorDOMRange> mTrailingWhiteSpaceRange;
     mutable Maybe<VisibleWhiteSpacesData> mVisibleWhiteSpacesData;
@@ -1325,8 +1329,9 @@ class WhiteSpaceVisibilityKeeper final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
-      HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
-      Element& aRightBlockElement, const EditorDOMPoint& aAtRightBlockChild,
+      HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
+      dom::Element& aRightBlockElement,
+      const EditorDOMPoint& aAtRightBlockChild,
       const Maybe<nsAtom*>& aListElementTagName,
       const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
 
@@ -1352,8 +1357,8 @@ class WhiteSpaceVisibilityKeeper final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
-      HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
-      Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
+      HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
+      dom::Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
       nsIContent& aLeftContentInBlock,
       const Maybe<nsAtom*>& aListElementTagName,
       const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
@@ -1374,8 +1379,9 @@ class WhiteSpaceVisibilityKeeper final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
-      HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
-      Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName,
+      HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
+      dom::Element& aRightBlockElement,
+      const Maybe<nsAtom*>& aListElementTagName,
       const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
 
   /**
@@ -1391,7 +1397,7 @@ class WhiteSpaceVisibilityKeeper final {
    * @return                The new <br> node.  If failed to create new <br>
    *                        node, returns nullptr.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<RefPtr<Element>, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<RefPtr<dom::Element>, nsresult>
   InsertBRElement(HTMLEditor& aHTMLEditor,
                   const EditorDOMPoint& aPointToInsert);
 
