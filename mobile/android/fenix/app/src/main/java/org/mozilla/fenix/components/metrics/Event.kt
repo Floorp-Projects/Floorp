@@ -195,6 +195,12 @@ sealed class Event {
 
     object RecentlyClosedTabsOpened : Event()
 
+    object ContextMenuLongPressTapped : Event()
+    object ContextMenuCopyTapped : Event()
+    object ContextMenuSearchTapped : Event()
+    object ContextMenuSelectAllTapped : Event()
+    object ContextMenuShareTapped : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {

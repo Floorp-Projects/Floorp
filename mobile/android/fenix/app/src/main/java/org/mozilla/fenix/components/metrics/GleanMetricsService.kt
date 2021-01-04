@@ -22,6 +22,7 @@ import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualHintTrackingProtection
+import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.DownloadNotification
@@ -699,6 +700,21 @@ private val Event.wrapper: EventWrapper<*>?
         )
         Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
             { Tabs.settingOpened.record(it) }
+        )
+        Event.ContextMenuLongPressTapped -> EventWrapper<NoExtraKeys>(
+            { ContextualMenu.longPressTapped.set(true) }
+        )
+        Event.ContextMenuCopyTapped -> EventWrapper<NoExtraKeys>(
+            { ContextualMenu.copyTapped.record(it) }
+        )
+        Event.ContextMenuSearchTapped -> EventWrapper<NoExtraKeys>(
+            { ContextualMenu.searchTapped.record(it) }
+        )
+        Event.ContextMenuSelectAllTapped -> EventWrapper<NoExtraKeys>(
+            { ContextualMenu.selectAllTapped.record(it) }
+        )
+        Event.ContextMenuShareTapped -> EventWrapper<NoExtraKeys>(
+            { ContextualMenu.shareTapped.record(it) }
         )
 
         // Don't record other events in Glean:

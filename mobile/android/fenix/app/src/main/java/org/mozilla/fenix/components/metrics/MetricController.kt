@@ -153,6 +153,15 @@ internal class ReleaseMetricController(
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
             metadata?.get("item")?.let { Event.ContextMenuItemTapped.create(it.toString()) }
         }
+        Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.TEXT_SELECTION_OPTION -> {
+            when (metadata?.get("textSelectionOption")?.toString()) {
+                CONTEXT_MENU_COPY -> Event.ContextMenuCopyTapped
+                CONTEXT_MENU_SEARCH, CONTEXT_MENU_SEARCH_PRIVATELY -> Event.ContextMenuSearchTapped
+                CONTEXT_MENU_SELECT_ALL -> Event.ContextMenuSelectAllTapped
+                CONTEXT_MENU_SHARE -> Event.ContextMenuShareTapped
+                else -> null
+            }
+        }
 
         Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
             metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened }
@@ -234,5 +243,16 @@ internal class ReleaseMetricController(
             Event.ProgressiveWebAppInstallAsShortcut
         }
         else -> null
+    }
+
+    companion object {
+        /**
+         * Text selection long press context items to be tracked.
+         */
+        const val CONTEXT_MENU_COPY = "org.mozilla.geckoview.COPY"
+        const val CONTEXT_MENU_SEARCH = "CUSTOM_CONTEXT_MENU_SEARCH"
+        const val CONTEXT_MENU_SEARCH_PRIVATELY = "CUSTOM_CONTEXT_MENU_SEARCH_PRIVATELY"
+        const val CONTEXT_MENU_SELECT_ALL = "org.mozilla.geckoview.SELECT_ALL"
+        const val CONTEXT_MENU_SHARE = "CUSTOM_CONTEXT_MENU_SHARE"
     }
 }
