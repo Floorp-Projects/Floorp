@@ -21,8 +21,6 @@ webidl Document;
  * one of these per document/principal.
  */
 
-typedef unsigned short CSPDirective;
-
 %{C++
 class nsCSPPolicy;
 %}
@@ -41,28 +39,30 @@ interface nsIContentSecurityPolicy : nsISerializable
    * NOTE: When implementing a new directive, you will need to add it here but also
    * add it to the CSPStrDirectives array in nsCSPUtils.h.
    */
-  const unsigned short NO_DIRECTIVE                   = 0;
-  const unsigned short DEFAULT_SRC_DIRECTIVE          = 1;
-  const unsigned short SCRIPT_SRC_DIRECTIVE           = 2;
-  const unsigned short OBJECT_SRC_DIRECTIVE           = 3;
-  const unsigned short STYLE_SRC_DIRECTIVE            = 4;
-  const unsigned short IMG_SRC_DIRECTIVE              = 5;
-  const unsigned short MEDIA_SRC_DIRECTIVE            = 6;
-  const unsigned short FRAME_SRC_DIRECTIVE            = 7;
-  const unsigned short FONT_SRC_DIRECTIVE             = 8;
-  const unsigned short CONNECT_SRC_DIRECTIVE          = 9;
-  const unsigned short REPORT_URI_DIRECTIVE           = 10;
-  const unsigned short FRAME_ANCESTORS_DIRECTIVE      = 11;
-  const unsigned short REFLECTED_XSS_DIRECTIVE        = 12;
-  const unsigned short BASE_URI_DIRECTIVE             = 13;
-  const unsigned short FORM_ACTION_DIRECTIVE          = 14;
-  const unsigned short WEB_MANIFEST_SRC_DIRECTIVE     = 15;
-  const unsigned short UPGRADE_IF_INSECURE_DIRECTIVE  = 16;
-  const unsigned short CHILD_SRC_DIRECTIVE            = 17;
-  const unsigned short BLOCK_ALL_MIXED_CONTENT        = 18;
-  const unsigned short SANDBOX_DIRECTIVE              = 19;
-  const unsigned short WORKER_SRC_DIRECTIVE           = 20;
-  const unsigned short NAVIGATE_TO_DIRECTIVE          = 21;
+  cenum CSPDirective : 8 {
+    NO_DIRECTIVE                   = 0,
+    DEFAULT_SRC_DIRECTIVE          = 1,
+    SCRIPT_SRC_DIRECTIVE           = 2,
+    OBJECT_SRC_DIRECTIVE           = 3,
+    STYLE_SRC_DIRECTIVE            = 4,
+    IMG_SRC_DIRECTIVE              = 5,
+    MEDIA_SRC_DIRECTIVE            = 6,
+    FRAME_SRC_DIRECTIVE            = 7,
+    FONT_SRC_DIRECTIVE             = 8,
+    CONNECT_SRC_DIRECTIVE          = 9,
+    REPORT_URI_DIRECTIVE           = 10,
+    FRAME_ANCESTORS_DIRECTIVE      = 11,
+    REFLECTED_XSS_DIRECTIVE        = 12,
+    BASE_URI_DIRECTIVE             = 13,
+    FORM_ACTION_DIRECTIVE          = 14,
+    WEB_MANIFEST_SRC_DIRECTIVE     = 15,
+    UPGRADE_IF_INSECURE_DIRECTIVE  = 16,
+    CHILD_SRC_DIRECTIVE            = 17,
+    BLOCK_ALL_MIXED_CONTENT        = 18,
+    SANDBOX_DIRECTIVE              = 19,
+    WORKER_SRC_DIRECTIVE           = 20,
+    NAVIGATE_TO_DIRECTIVE          = 21,
+  };
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -311,7 +311,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   boolean permits(in Element aTriggeringElement,
                   in nsICSPEventListener aCSPEventListener,
                   in nsIURI aURI,
-                  in CSPDirective aDir,
+                  in nsIContentSecurityPolicy_CSPDirective aDir,
                   in boolean aSpecific);
 
   /**
@@ -346,6 +346,8 @@ interface nsIContentSecurityPolicy : nsISerializable
   AString toJSON();
 
 };
+
+typedef nsIContentSecurityPolicy_CSPDirective CSPDirective;
 
 /* Listener for security policy violation event */
 [function, scriptable, uuid(c3163b14-3a8f-46dd-a4af-bd04680364cd)]
