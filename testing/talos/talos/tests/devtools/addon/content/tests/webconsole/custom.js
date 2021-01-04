@@ -10,8 +10,10 @@ const {
   testSetup,
   testTeardown,
   PAGES_BASE_URL,
-} = require("../head");
-const { reloadConsoleAndLog } = require("./webconsole-helpers");
+} = require("damp-test/tests/head");
+const {
+  reloadConsoleAndLog,
+} = require("damp-test/tests/webconsole/webconsole-helpers");
 
 const TEST_URL = PAGES_BASE_URL + "custom/console/index.html";
 

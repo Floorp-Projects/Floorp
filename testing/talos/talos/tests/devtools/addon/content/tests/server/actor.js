@@ -6,7 +6,7 @@
 
 const protocol = require("devtools/shared/protocol");
 
-const { dampTestSpec } = require("./spec");
+const { dampTestSpec } = require("damp-test/tests/server/spec");
 
 exports.DampTestActor = protocol.ActorClassWithSpec(dampTestSpec, {
   initialize(conn) {

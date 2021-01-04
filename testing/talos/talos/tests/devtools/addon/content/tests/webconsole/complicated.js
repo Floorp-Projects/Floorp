@@ -11,8 +11,10 @@ const {
   testSetup,
   testTeardown,
   COMPLICATED_URL,
-} = require("../head");
-const { reloadConsoleAndLog } = require("./webconsole-helpers");
+} = require("damp-test/tests/head");
+const {
+  reloadConsoleAndLog,
+} = require("damp-test/tests/webconsole/webconsole-helpers");
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
 const EXPECTED_MESSAGES = [

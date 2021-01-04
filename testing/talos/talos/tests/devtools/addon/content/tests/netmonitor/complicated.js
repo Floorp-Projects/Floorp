@@ -11,12 +11,12 @@ const {
   testSetup,
   testTeardown,
   COMPLICATED_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 const {
   exportHar,
   waitForNetworkRequests,
   openResponseDetailsPanel,
-} = require("./netmonitor-helpers");
+} = require("damp-test/tests/netmonitor/netmonitor-helpers");
 
 const EXPECTED_REQUESTS = {
   min: 230,

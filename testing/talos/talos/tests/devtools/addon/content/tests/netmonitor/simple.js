@@ -11,8 +11,11 @@ const {
   testSetup,
   testTeardown,
   SIMPLE_URL,
-} = require("../head");
-const { exportHar, waitForNetworkRequests } = require("./netmonitor-helpers");
+} = require("damp-test/tests/head");
+const {
+  exportHar,
+  waitForNetworkRequests,
+} = require("damp-test/tests/netmonitor/netmonitor-helpers");
 
 const EXPECTED_REQUESTS = 1;
 
