@@ -9,6 +9,7 @@
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
 #include "mozilla/EditAction.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/AncestorIterator.h"

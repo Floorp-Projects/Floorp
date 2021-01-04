@@ -78,3 +78,8 @@ dom/xhr/
 dom/xml/
 dom/xslt/
 dom/xul/
+editor/composer/
+editor/libeditor/
+editor/reftests/
+editor/spellchecker/
+editor/txmgr/
