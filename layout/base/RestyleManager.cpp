@@ -1247,12 +1247,11 @@ static nsIContent* NextSiblingWhichMayHaveFrame(nsIContent* aContent) {
   return nullptr;
 }
 
-// If |aFrame| is dirty or has dirty children, or has never been reflowed,
-// then we can skip updating overflows since that will happen when it's
-// reflowed.
+// If |aFrame| is dirty or has dirty children, then we can skip updating
+// overflows since that will happen when it's reflowed.
 static inline bool CanSkipOverflowUpdates(const nsIFrame* aFrame) {
   return aFrame->HasAnyStateBits(
-      NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN | NS_FRAME_FIRST_REFLOW);
+      NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
@@ -1492,7 +1491,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
 
-      if (!frame->FrameMaintainsOverflow() || CanSkipOverflowUpdates(frame)) {
+      if (!frame->FrameMaintainsOverflow()) {
         // frame does not maintain overflow rects, so avoid calling
         // FinishAndStoreOverflow on it:
         hint &=
