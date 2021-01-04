@@ -8,13 +8,13 @@ const {
   openAccessibilityAndLog,
   reloadAccessibilityAndLog,
   shutdownAccessibilityService,
-} = require("./accessibility-helpers");
+} = require("damp-test/tests/accessibility/accessibility-helpers");
 const {
   closeToolboxAndLog,
   testSetup,
   testTeardown,
   SIMPLE_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 module.exports = async function() {
   await testSetup(SIMPLE_URL);

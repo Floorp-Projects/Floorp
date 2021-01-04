@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { reloadPageAndLog } = require("../head");
+const { reloadPageAndLog } = require("damp-test/tests/head");
 
 exports.reloadInspectorAndLog = async function(label, toolbox) {
   let onReload = async function() {

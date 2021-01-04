@@ -11,7 +11,7 @@ const {
   testSetup,
   testTeardown,
   SIMPLE_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 // Log a stream of console messages, 1 per rAF.  Then record the average
 // time per rAF.  The idea is that the console being slow can slow down

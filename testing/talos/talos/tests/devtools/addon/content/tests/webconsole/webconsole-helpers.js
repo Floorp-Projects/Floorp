@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { reloadPageAndLog } = require("../head");
+const { reloadPageAndLog } = require("damp-test/tests/head");
 
 /**
  * @param {String} label: The name of the test.

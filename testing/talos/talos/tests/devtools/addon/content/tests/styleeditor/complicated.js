@@ -11,7 +11,7 @@ const {
   testSetup,
   testTeardown,
   COMPLICATED_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 module.exports = async function() {
   await testSetup(COMPLICATED_URL);

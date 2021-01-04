@@ -12,7 +12,7 @@ const {
   testSetup,
   testTeardown,
   PAGES_BASE_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 module.exports = async function() {
   await testSetup(PAGES_BASE_URL + "custom/panels-in-background/index.html");

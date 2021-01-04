@@ -6,7 +6,7 @@
 
 const { EVENTS } = require("devtools/client/netmonitor/src/constants");
 const Actions = require("devtools/client/netmonitor/src/actions/index");
-const { getToolbox, runTest } = require("../head");
+const { getToolbox, runTest } = require("damp-test/tests/head");
 
 /**
  * Start monitoring all incoming update events about network requests and wait until

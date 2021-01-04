@@ -10,7 +10,7 @@ const {
   testSetup,
   testTeardown,
   SIMPLE_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 // This simple test is only called once using the flag coldRun
 module.exports = async function() {

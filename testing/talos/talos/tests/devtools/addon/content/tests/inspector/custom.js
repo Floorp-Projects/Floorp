@@ -7,7 +7,7 @@
 const {
   reloadInspectorAndLog,
   selectNodeFront,
-} = require("./inspector-helpers");
+} = require("damp-test/tests/inspector/inspector-helpers");
 const {
   closeToolboxAndLog,
   garbageCollect,
@@ -16,7 +16,7 @@ const {
   testSetup,
   testTeardown,
   PAGES_BASE_URL,
-} = require("../head");
+} = require("damp-test/tests/head");
 
 const { gDevTools } = require("devtools/client/framework/devtools");
 

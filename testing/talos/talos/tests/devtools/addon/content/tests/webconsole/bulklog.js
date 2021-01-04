@@ -12,8 +12,10 @@ const {
   testSetup,
   testTeardown,
   SIMPLE_URL,
-} = require("../head");
-const { waitForConsoleOutputChildListChange } = require("./webconsole-helpers");
+} = require("damp-test/tests/head");
+const {
+  waitForConsoleOutputChildListChange,
+} = require("damp-test/tests/webconsole/webconsole-helpers");
 
 module.exports = async function() {
   let TOTAL_MESSAGES = 1000;
