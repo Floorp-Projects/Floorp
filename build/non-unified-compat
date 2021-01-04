@@ -83,3 +83,8 @@ editor/libeditor/
 editor/reftests/
 editor/spellchecker/
 editor/txmgr/
+extensions/auth/
+extensions/permissions/
+extensions/pref/
+extensions/spellcheck/
+extensions/universalchardet/
