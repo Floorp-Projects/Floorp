@@ -113,7 +113,7 @@ nsresult mozSpellChecker::NextMisspelledWord(nsAString& aWord,
   return NS_OK;
 }
 
-RefPtr<CheckWordPromise> mozSpellChecker::CheckWords(
+RefPtr<mozilla::CheckWordPromise> mozSpellChecker::CheckWords(
     const nsTArray<nsString>& aWords) {
   if (XRE_IsContentProcess()) {
     return mEngine->CheckWords(aWords);
@@ -125,11 +125,12 @@ RefPtr<CheckWordPromise> mozSpellChecker::CheckWords(
     bool misspelled;
     nsresult rv = CheckWord(word, &misspelled, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return CheckWordPromise::CreateAndReject(rv, __func__);
+      return mozilla::CheckWordPromise::CreateAndReject(rv, __func__);
     }
     misspells.AppendElement(misspelled);
   }
-  return CheckWordPromise::CreateAndResolve(std::move(misspells), __func__);
+  return mozilla::CheckWordPromise::CreateAndResolve(std::move(misspells),
+                                                     __func__);
 }
 
 nsresult mozSpellChecker::CheckWord(const nsAString& aWord, bool* aIsMisspelled,
