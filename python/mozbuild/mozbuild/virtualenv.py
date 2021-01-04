@@ -619,7 +619,12 @@ class VirtualenvManager(VirtualenvHelper):
         return self._run_pip(args)
 
     def install_pip_requirements(
-        self, path, require_hashes=True, quiet=False, vendored=False
+        self,
+        path,
+        require_hashes=True,
+        quiet=False,
+        vendored=False,
+        legacy_resolver=False,
     ):
         """Install a pip requirements.txt file.
 
@@ -653,6 +658,9 @@ class VirtualenvManager(VirtualenvHelper):
                     "--no-index",
                 ]
             )
+
+        if legacy_resolver:
+            args.append("--use-deprecated=legacy-resolver")
 
         return self._run_pip(args)
 
