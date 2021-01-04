@@ -257,6 +257,24 @@ void nsWaylandDisplay::SyncBegin() {
   wl_display_flush(mDisplay);
 }
 
+static void WaylandDisplayQueueSyncBegin(RefPtr<nsWaylandDisplay> aDisplay) {
+  for (auto& display : gWaylandDisplays) {
+    if (display == aDisplay) {
+      display->SyncBegin();
+      return;
+    }
+  }
+  NS_WARNING("DispatchDisplay was called for released display!");
+}
+
+void nsWaylandDisplay::QueueSyncBegin() {
+  MessageLoop* loop = GetThreadLoop();
+  if (loop) {
+    loop->PostTask(NewRunnableFunction("WaylandSyncBegin",
+                                       &WaylandDisplayQueueSyncBegin, this));
+  }
+}
+
 void nsWaylandDisplay::WaitForSyncEnd() {
   // We're done here
   if (!mSyncCallback) {

@@ -908,12 +908,14 @@ bool WindowSurfaceWayland::CommitImageCacheToWaylandBuffer() {
 
 void WindowSurfaceWayland::FlushPendingCommits() {
   MutexAutoLock lock(mSurfaceLock);
-  FlushPendingCommitsInternal();
+  if (FlushPendingCommitsLocked()) {
+    mWaylandDisplay->QueueSyncBegin();
+  }
 }
 
 // When a new window is created we may not have a valid wl_surface
 // for drawing (Gtk haven't created it yet). All commits are queued
-// and FlushPendingCommitsInternal() is called by timer when wl_surface is ready
+// and FlushPendingCommitsLocked() is called by timer when wl_surface is ready
 // for drawing.
 static int WaylandBufferFlushPendingCommits(void* data) {
   WindowSurfaceWayland* aSurface = static_cast<WindowSurfaceWayland*>(data);
@@ -921,9 +923,9 @@ static int WaylandBufferFlushPendingCommits(void* data) {
   return true;
 }
 
-void WindowSurfaceWayland::FlushPendingCommitsInternal() {
-  LOGWAYLAND(("WindowSurfaceWayland::FlushPendingCommitsInternal [%p]\n",
-              (void*)this));
+bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
+  LOGWAYLAND(
+      ("WindowSurfaceWayland::FlushPendingCommitsLocked [%p]\n", (void*)this));
   LOGWAYLAND(
       ("   mDrawToWaylandBufferDirectly = %d\n", mDrawToWaylandBufferDirectly));
   LOGWAYLAND(("   mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
@@ -933,7 +935,7 @@ void WindowSurfaceWayland::FlushPendingCommitsInternal() {
   LOGWAYLAND(("   mBufferCommitAllowed = %d\n", mBufferCommitAllowed));
 
   if (!mBufferCommitAllowed) {
-    return;
+    return false;
   }
 
   if (CommitImageCacheToWaylandBuffer()) {
@@ -942,7 +944,7 @@ void WindowSurfaceWayland::FlushPendingCommitsInternal() {
 
   // There's nothing to do here
   if (!mBufferPendingCommit) {
-    return;
+    return false;
   }
 
   MOZ_ASSERT(!mWaylandBuffer->IsAttached(),
@@ -964,7 +966,7 @@ void WindowSurfaceWayland::FlushPendingCommitsInternal() {
       mSurfaceReadyTimerID = g_timeout_add(
           EVENT_LOOP_DELAY, &WaylandBufferFlushPendingCommits, this);
     }
-    return;
+    return true;
   }
   if (mSurfaceReadyTimerID) {
     g_source_remove(mSurfaceReadyTimerID);
@@ -984,7 +986,7 @@ void WindowSurfaceWayland::FlushPendingCommitsInternal() {
       LOGWAYLAND(("    [%p] wait for frame callback.\n", (void*)this));
       // We have an active frame callback pending from our recent surface.
       // It means we should defer the commit to FrameCallbackHandler().
-      return;
+      return true;
     }
     // If our stored wl_surface does not match the actual one it means the frame
     // callback is no longer active and we should release it.
@@ -1018,21 +1020,13 @@ void WindowSurfaceWayland::FlushPendingCommitsInternal() {
   mLastCommittedSurface = waylandSurface;
   mLastCommitTime = g_get_monotonic_time() / 1000;
 
-  // Unlock surface now as SyncBegin()
-  moz_container_wayland_surface_unlock(container, &waylandSurface);
-
-  // Ask wl_display to start events synchronization. We're going to wait
-  // until all events are processed before next WindowSurfaceWayland::Lock()
-  // as we hope for free wl_buffer there.
-  mWaylandDisplay->SyncBegin();
-
   // There's no pending commit, all changes are sent to compositor.
   mBufferPendingCommit = false;
+
+  return true;
 }
 
 void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
-  MutexAutoLock lock(mSurfaceLock);
-
 #ifdef MOZ_LOGGING
   {
     gfx::IntRect lockSize = aInvalidRegion.GetBounds().ToUnknownRect();
@@ -1046,6 +1040,8 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
   }
 #endif
 
+  MutexAutoLock lock(mSurfaceLock);
+
   if (mDrawToWaylandBufferDirectly) {
     MOZ_ASSERT(mWaylandBuffer->IsLocked());
     mWaylandBufferDamage.OrWith(aInvalidRegion);
@@ -1055,7 +1051,9 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
   }
 
   mBufferCommitAllowed = true;
-  FlushPendingCommitsInternal();
+  if (FlushPendingCommitsLocked()) {
+    mWaylandDisplay->QueueSyncBegin();
+  }
 }
 
 void WindowSurfaceWayland::FrameCallbackHandler() {
@@ -1071,7 +1069,9 @@ void WindowSurfaceWayland::FrameCallbackHandler() {
   wl_callback_destroy(mFrameCallback);
   mFrameCallback = nullptr;
 
-  FlushPendingCommitsInternal();
+  if (FlushPendingCommitsLocked()) {
+    mWaylandDisplay->QueueSyncBegin();
+  }
 }
 
 }  // namespace widget
