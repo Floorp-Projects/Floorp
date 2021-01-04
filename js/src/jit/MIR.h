@@ -7979,13 +7979,10 @@ class MSpectreMaskIndex
 // array is not known to be packed.
 class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
   bool needsHoleCheck_;
-  bool loadDoubles_;
 
-  MLoadElement(MDefinition* elements, MDefinition* index, bool needsHoleCheck,
-               bool loadDoubles)
+  MLoadElement(MDefinition* elements, MDefinition* index, bool needsHoleCheck)
       : MBinaryInstruction(classOpcode, elements, index),
-        needsHoleCheck_(needsHoleCheck),
-        loadDoubles_(loadDoubles) {
+        needsHoleCheck_(needsHoleCheck) {
     if (needsHoleCheck) {
       // Uses may be optimized away based on this instruction's result
       // type. This means it's invalid to DCE this instruction, as we
@@ -8004,7 +8001,6 @@ class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
   NAMED_OPERANDS((0, elements), (1, index))
 
   bool needsHoleCheck() const { return needsHoleCheck_; }
-  bool loadDoubles() const { return loadDoubles_; }
   bool fallible() const { return needsHoleCheck(); }
 
   bool congruentTo(const MDefinition* ins) const override {
@@ -8013,9 +8009,6 @@ class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
     }
     const MLoadElement* other = ins->toLoadElement();
     if (needsHoleCheck() != other->needsHoleCheck()) {
-      return false;
-    }
-    if (loadDoubles() != other->loadDoubles()) {
       return false;
     }
     return congruentIfOperandsEqual(other);

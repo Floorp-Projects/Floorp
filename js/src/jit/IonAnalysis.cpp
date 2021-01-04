@@ -4218,8 +4218,6 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
         }
         case MDefinition::Opcode::LoadElement: {
           auto* loadIns = load->toLoadElement();
-          MOZ_ASSERT(!loadIns->loadDoubles(),
-                     "Unexpected loadDoubles with MIRType::Value");
           MOZ_ASSERT_IF(loadIns->needsHoleCheck(), unbox->fallible());
           replacement = MLoadElementAndUnbox::New(
               graph.alloc(), loadIns->elements(), loadIns->index(), mode, type,
