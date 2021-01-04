@@ -12,11 +12,8 @@ const {
 } = dampWindow;
 
 const ChromeUtils = require("ChromeUtils");
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
+const Services = require("Services");
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 
 const env = Cc["@mozilla.org/process/environment;1"].getService(
   Ci.nsIEnvironment
@@ -69,9 +66,9 @@ Damp.prototype = {
     // before continuing.
     async function getTalosParentProfiler() {
       try {
-        var { TalosParentProfiler } = ChromeUtils.import(
-          "resource://talos-powers/TalosParentProfiler.jsm"
-        );
+        const {
+          TalosParentProfiler,
+        } = require("resource://talos-powers/TalosParentProfiler.jsm");
         return TalosParentProfiler;
       } catch (err) {
         await new Promise(resolve => setTimeout(resolve, 500));
