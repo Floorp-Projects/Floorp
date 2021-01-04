@@ -4,6 +4,23 @@
 
 "use strict";
 
+function selectedTextEventPromises(stateChangeType) {
+  return [
+    waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
+      return (
+        info.AXTextStateChangeType == stateChangeType &&
+        elem.getAttributeValue("AXDOMIdentifier") == "body"
+      );
+    }),
+    waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
+      return (
+        info.AXTextStateChangeType == stateChangeType &&
+        elem.getAttributeValue("AXDOMIdentifier") == "input"
+      );
+    }),
+  ];
+}
+
 async function testInput(browser, accDoc) {
   let input = getNativeInterface(accDoc, "input");
 
@@ -24,18 +41,16 @@ async function testInput(browser, accDoc) {
 
   let evt = Promise.all([
     waitForMacEvent("AXFocusedUIElementChanged", "input"),
-    waitForMacEvent("AXSelectedTextChanged", "body"),
-    waitForMacEvent("AXSelectedTextChanged", "input"),
+    ...selectedTextEventPromises(AXTextStateChangeTypeSelectionMove),
   ]);
   await SpecialPowers.spawn(browser, [], () => {
     content.document.getElementById("input").focus();
   });
   await evt;
 
-  evt = Promise.all([
-    waitForMacEvent("AXSelectedTextChanged", "body"),
-    waitForMacEvent("AXSelectedTextChanged", "input"),
-  ]);
+  evt = Promise.all(
+    selectedTextEventPromises(AXTextStateChangeTypeSelectionExtend)
+  );
   await SpecialPowers.spawn(browser, [], () => {
     let elm = content.document.getElementById("input");
     if (elm.setSelectionRange) {
@@ -70,10 +85,9 @@ async function testInput(browser, accDoc) {
     "AXSelectedTextRange is settable"
   );
 
-  evt = Promise.all([
-    waitForMacEvent("AXSelectedTextChanged"),
-    waitForMacEvent("AXSelectedTextChanged"),
-  ]);
+  evt = Promise.all(
+    selectedTextEventPromises(AXTextStateChangeTypeSelectionExtend)
+  );
   input.setAttributeValue("AXSelectedTextRange", NSRange(1, 7));
   await evt;
 
