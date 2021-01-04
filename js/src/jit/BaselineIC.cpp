@@ -2611,19 +2611,7 @@ bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "NewArray");
 
-  RootedObject obj(cx);
-  if (stub->templateObject()) {
-    RootedObject templateObject(cx, stub->templateObject());
-    obj = NewArrayOperationWithTemplate(cx, templateObject);
-    if (!obj) {
-      return false;
-    }
-  } else {
-    obj = NewArrayOperation(cx, length);
-    if (!obj) {
-      return false;
-    }
-
+  if (!stub->templateObject()) {
     ArrayObject* templateObject = NewArrayOperation(cx, length, TenuredObject);
     if (!templateObject) {
       return false;
@@ -2631,7 +2619,12 @@ bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
     stub->setTemplateObject(templateObject);
   }
 
-  res.setObject(*obj);
+  ArrayObject* arr = NewArrayOperation(cx, length);
+  if (!arr) {
+    return false;
+  }
+
+  res.setObject(*arr);
   return true;
 }
 

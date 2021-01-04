@@ -5167,16 +5167,6 @@ ArrayObject* js::NewArrayOperation(
   return NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
 }
 
-// TODO(no-TI): try to merge with NewArrayOperation.
-ArrayObject* js::NewArrayOperationWithTemplate(JSContext* cx,
-                                               HandleObject templateObject) {
-  MOZ_ASSERT(!templateObject->isSingleton());
-
-  NewObjectKind newKind = GenericObject;
-  return NewDenseFullyAllocatedArray(
-      cx, templateObject->as<ArrayObject>().length(), nullptr, newKind);
-}
-
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                    HandleId id) {
   MOZ_ASSERT(errorNumber == JSMSG_UNINITIALIZED_LEXICAL ||

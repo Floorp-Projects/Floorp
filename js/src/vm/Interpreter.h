@@ -628,9 +628,6 @@ JSObject* CreateThisWithTemplate(JSContext* cx, HandleObject templateObject);
 ArrayObject* NewArrayOperation(JSContext* cx, uint32_t length,
                                NewObjectKind newKind = GenericObject);
 
-ArrayObject* NewArrayOperationWithTemplate(JSContext* cx,
-                                           HandleObject templateObject);
-
 MOZ_MUST_USE bool GetImportOperation(JSContext* cx, HandleObject envChain,
                                      HandleScript script, jsbytecode* pc,
                                      MutableHandleValue vp);
