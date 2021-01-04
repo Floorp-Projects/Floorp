@@ -104,29 +104,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345365
     });
   }
 
-  function testNotAllowed() {
-    return new Promise(async (resolve, reject) => {
-      let payRequest = new PaymentRequest(defaultMethods, defaultDetails);
-      for (let i = 0; i < 1000; i++) {
-        try {
-          await payRequest.canMakePayment();
-        } catch(err) {
-          is(err.name, "NotAllowedError",
-            "Expected 'NotAllowError', but got '" + err.name + "'");
-          break;
-        }
+  async function testNotAllowed() {
+    let payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+    for (let i = 0; i < 1000; i++) {
+      try {
+        await payRequest.canMakePayment();
+      } catch(err) {
+        is(err.name, "NotAllowedError",
+          "Expected 'NotAllowError', but got '" + err.name + "'");
+        break;
       }
-      for (let i = 0; i < 1000; i++) {
-        try {
-          await new PaymentRequest(defaultMethods, defaultDetails).canMakePayment();
-        } catch(err) {
-          is(err.name, "NotAllowedError",
-            "Expected 'NotAllowError', but got '" + err.name + "'");
-          break;
-        }
+    }
+    for (let i = 0; i < 1000; i++) {
+      try {
+        await new PaymentRequest(defaultMethods, defaultDetails).canMakePayment();
+      } catch(err) {
+        is(err.name, "NotAllowedError",
+          "Expected 'NotAllowError', but got '" + err.name + "'");
+        break;
       }
-      resolve();
-    });
+    }
   }
 
   function teardown() {
