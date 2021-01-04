@@ -59,7 +59,7 @@ static void InterpretObjLiteralValue(JSContext* cx,
 static JSObject* InterpretObjLiteralObj(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
-  bool noValues = flags.contains(ObjLiteralFlag::NoValues);
+  bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
   ObjLiteralReader reader(literalInsns);
   ObjLiteralInsn insn;
@@ -81,7 +81,7 @@ static JSObject* InterpretObjLiteralObj(
     }
 
     JS::Value propVal;
-    if (!noValues) {
+    if (singleton) {
       InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
     }
 
@@ -135,9 +135,9 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
     json.value("Array");
     flags -= ObjLiteralFlag::Array;
   }
-  if (flags.contains(ObjLiteralFlag::NoValues)) {
-    json.value("NoValues");
-    flags -= ObjLiteralFlag::NoValues;
+  if (flags.contains(ObjLiteralFlag::Singleton)) {
+    json.value("Singleton");
+    flags -= ObjLiteralFlag::Singleton;
   }
 
   if (!flags.isEmpty()) {
