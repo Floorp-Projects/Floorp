@@ -59,8 +59,10 @@ class WaterfallBackground {
     }
 
     // Nuke the context.
-    const canvasWidth = (this.canvas.width =
-      state.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH);
+    const canvasWidth = (this.canvas.width = Math.max(
+      state.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH,
+      1
+    ));
     // Awww yeah, 1px, repeats on Y axis.
     const canvasHeight = (this.canvas.height = 1);
 

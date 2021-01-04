@@ -22,7 +22,7 @@ function drawWaterfallBackground(doc, dataScale, waterfallWidth) {
   const ctx = canvas.getContext("2d");
 
   // Nuke the context.
-  const canvasWidth = (canvas.width = waterfallWidth);
+  const canvasWidth = (canvas.width = Math.max(waterfallWidth, 1));
   // Awww yeah, 1px, repeats on Y axis.
   const canvasHeight = (canvas.height = 1);
 
