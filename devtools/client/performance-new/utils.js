@@ -411,6 +411,12 @@ const featureDescriptions = [
     value: "audiocallbacktracing",
     title: "Trace real-time audio callbacks.",
   },
+  {
+    name: "CPU Utilization",
+    value: "cpu",
+    title: "CPU utilization by threads, processes, and other system functions.",
+    experimental: true,
+  },
 ];
 
 module.exports = {

@@ -184,7 +184,9 @@ class SpliceableJSONWriter;
           "Have the IPC layer track cross-process messages")                   \
                                                                                \
     MACRO(18, "audiocallbacktracing", AudioCallbackTracing,                    \
-          "Audio callback tracing")
+          "Audio callback tracing")                                            \
+                                                                               \
+    MACRO(19, "cpu", CPUUtilization, "CPU utilization")
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                     \
