@@ -394,7 +394,7 @@ bool WindowContext::HasBeenUserGestureActivated() {
 }
 
 bool WindowContext::HasValidTransientUserGestureActivation() {
-  MOZ_ASSERT(mInProcess);
+  MOZ_DIAGNOSTIC_ASSERT(mInProcess);
 
   if (GetUserActivationState() != UserActivation::State::FullActivated) {
     MOZ_ASSERT(mUserGestureStart.IsNull(),
@@ -414,7 +414,7 @@ bool WindowContext::HasValidTransientUserGestureActivation() {
 }
 
 bool WindowContext::ConsumeTransientUserGestureActivation() {
-  MOZ_ASSERT(mInProcess);
+  MOZ_DIAGNOSTIC_ASSERT(mInProcess);
   MOZ_ASSERT(!IsCached());
 
   if (!HasValidTransientUserGestureActivation()) {
