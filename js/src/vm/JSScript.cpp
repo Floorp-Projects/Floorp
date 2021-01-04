@@ -3730,7 +3730,8 @@ bool PrivateScriptData::InitFromStencil(
     js::frontend::CompilationInput& input,
     js::frontend::CompilationStencil& stencil,
     js::frontend::CompilationGCOutput& gcOutput,
-    const frontend::ScriptStencil& scriptStencil) {
+    const js::frontend::ScriptIndex scriptIndex) {
+  js::frontend::ScriptStencil& scriptStencil = stencil.scriptData[scriptIndex];
   uint32_t ngcthings = scriptStencil.gcThings.size();
 
   MOZ_ASSERT(ngcthings <= INDEX_LIMIT);
@@ -3822,12 +3823,14 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 }
 
 /* static */
-bool JSScript::fullyInitFromStencil(
-    JSContext* cx, js::frontend::CompilationInput& input,
-    js::frontend::CompilationStencil& stencil,
-    frontend::CompilationGCOutput& gcOutput, HandleScript script,
-    const frontend::ScriptStencil& scriptStencil,
-    SharedImmutableScriptData* sharedData, HandleFunction fun) {
+bool JSScript::fullyInitFromStencil(JSContext* cx,
+                                    js::frontend::CompilationInput& input,
+                                    js::frontend::CompilationStencil& stencil,
+                                    frontend::CompilationGCOutput& gcOutput,
+                                    HandleScript script,
+                                    const js::frontend::ScriptIndex scriptIndex,
+                                    SharedImmutableScriptData* sharedData,
+                                    HandleFunction fun) {
   MutableScriptFlags lazyMutableFlags;
   RootedScope lazyEnclosingScope(cx);
 
@@ -3874,18 +3877,19 @@ bool JSScript::fullyInitFromStencil(
   });
 
   /* The counts of indexed things must be checked during code generation. */
-  MOZ_ASSERT(scriptStencil.gcThings.size() <= INDEX_LIMIT);
+  MOZ_ASSERT(stencil.scriptData[scriptIndex].gcThings.size() <= INDEX_LIMIT);
 
   // Note: These flags should already be correct when the BaseScript was
   // allocated.
-  MOZ_ASSERT(script->immutableFlags() == scriptStencil.immutableFlags);
+  MOZ_ASSERT(script->immutableFlags() ==
+             stencil.scriptData[scriptIndex].immutableFlags);
 
   // Derive initial mutable flags
   script->resetArgsUsageAnalysis();
 
   // Create and initialize PrivateScriptData
   if (!PrivateScriptData::InitFromStencil(cx, script, input, stencil, gcOutput,
-                                          scriptStencil)) {
+                                          scriptIndex)) {
     return false;
   }
 
@@ -3930,7 +3934,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
                                 js::frontend::CompilationInput& input,
                                 js::frontend::CompilationStencil& stencil,
                                 frontend::CompilationGCOutput& gcOutput,
-                                const frontend::ScriptStencil& scriptStencil,
+                                const js::frontend::ScriptIndex scriptIndex,
                                 SharedImmutableScriptData* sharedData,
                                 HandleFunction fun) {
   MOZ_ASSERT(sharedData,
@@ -3941,6 +3945,8 @@ JSScript* JSScript::fromStencil(JSContext* cx,
     functionOrGlobal = fun;
   }
 
+  js::frontend::ScriptStencil& scriptStencil = stencil.scriptData[scriptIndex];
+
   Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
   RootedScript script(
       cx, Create(cx, functionOrGlobal, sourceObject, scriptStencil.extent,
@@ -3949,7 +3955,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
     return nullptr;
   }
 
-  if (!fullyInitFromStencil(cx, input, stencil, gcOutput, script, scriptStencil,
+  if (!fullyInitFromStencil(cx, input, stencil, gcOutput, script, scriptIndex,
                             sharedData, fun)) {
     return nullptr;
   }
