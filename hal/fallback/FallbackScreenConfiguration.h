@@ -23,7 +23,7 @@ inline void GetCurrentScreenConfiguration(
   }
 
   int32_t colorDepth, pixelDepth, x, y, w, h;
-  ScreenOrientation orientation;
+  hal::ScreenOrientation orientation;
   nsCOMPtr<nsIScreen> screen;
 
   screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
