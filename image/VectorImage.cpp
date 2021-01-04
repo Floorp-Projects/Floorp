@@ -5,6 +5,7 @@
 
 #include "VectorImage.h"
 
+#include "GeckoProfiler.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxDrawable.h"
@@ -19,6 +20,7 @@
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/layers/LayerManager.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"

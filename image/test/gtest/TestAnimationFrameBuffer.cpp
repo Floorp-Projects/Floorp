@@ -6,20 +6,23 @@
 #include <utility>
 
 #include "AnimationFrameBuffer.h"
+#include "Common.h"
 #include "gtest/gtest.h"
 
 using namespace mozilla;
 using namespace mozilla::image;
 
 static already_AddRefed<imgFrame> CreateEmptyFrame(
-    const IntSize& aSize = IntSize(1, 1),
-    const IntRect& aFrameRect = IntRect(0, 0, 1, 1), bool aCanRecycle = true) {
+    const gfx::IntSize& aSize = gfx::IntSize(1, 1),
+    const gfx::IntRect& aFrameRect = gfx::IntRect(0, 0, 1, 1),
+    bool aCanRecycle = true) {
   RefPtr<imgFrame> frame = new imgFrame();
   AnimationParams animParams{aFrameRect, FrameTimeout::Forever(),
                              /* aFrameNum */ 1, BlendMethod::OVER,
                              DisposalMethod::NOT_SPECIFIED};
-  nsresult rv = frame->InitForDecoder(aSize, SurfaceFormat::OS_RGBA, false,
-                                      Some(animParams), aCanRecycle);
+  nsresult rv =
+      frame->InitForDecoder(aSize, mozilla::gfx::SurfaceFormat::OS_RGBA, false,
+                            Some(animParams), aCanRecycle);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   RawAccessFrameRef frameRef = frame->RawAccessRef();
   frame->SetRawAccessOnly();
@@ -131,10 +134,9 @@ static void VerifyInsertAndAdvance(
   VerifyAdvance(aQueue, aExpectedFrame, expectedRestartDecoder);
 }
 
-static void VerifyMarkComplete(AnimationFrameBuffer& aQueue,
-                               bool aExpectedContinue,
-                               const IntRect& aRefreshArea = IntRect(0, 0, 1,
-                                                                     1)) {
+static void VerifyMarkComplete(
+    AnimationFrameBuffer& aQueue, bool aExpectedContinue,
+    const gfx::IntRect& aRefreshArea = gfx::IntRect(0, 0, 1, 1)) {
   if (aQueue.IsRecycling() && !aQueue.SizeKnown()) {
     const AnimationFrameRecyclingQueue& queue =
         *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
@@ -258,7 +260,7 @@ TEST_F(ImageAnimationFrameBuffer, FinishUnderBatchAndThreshold) {
 
     if (i == 4) {
       EXPECT_EQ(size_t(15), buffer.PendingDecode());
-      bool keepDecoding = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+      bool keepDecoding = buffer.MarkComplete(gfx::IntRect(0, 0, 1, 1));
       EXPECT_FALSE(keepDecoding);
       EXPECT_TRUE(buffer.SizeKnown());
       EXPECT_EQ(size_t(0), buffer.PendingDecode());
@@ -332,7 +334,7 @@ TEST_F(ImageAnimationFrameBuffer, FinishMultipleBatchesUnderThreshold) {
   // Add the last frame.
   status = buffer.Insert(CreateEmptyFrame());
   EXPECT_EQ(status, AnimationFrameBuffer::InsertStatus::CONTINUE);
-  bool keepDecoding = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  bool keepDecoding = buffer.MarkComplete(gfx::IntRect(0, 0, 1, 1));
   EXPECT_FALSE(keepDecoding);
   EXPECT_TRUE(buffer.SizeKnown());
   EXPECT_EQ(size_t(0), buffer.PendingDecode());
@@ -561,12 +563,12 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingLoop) {
   // All the frames we inserted should have been recycleable.
   ASSERT_FALSE(buffer.Recycle().empty());
   while (!buffer.Recycle().empty()) {
-    IntRect expectedRect(0, 0, 1, 1);
+    gfx::IntRect expectedRect(0, 0, 1, 1);
     RefPtr<imgFrame> expectedFrame = buffer.Recycle().front().mFrame;
     EXPECT_FALSE(expectedRect.IsEmpty());
     EXPECT_TRUE(expectedFrame.get() != nullptr);
 
-    IntRect gotRect;
+    gfx::IntRect gotRect;
     RawAccessFrameRef gotFrame = buffer.RecycleFrame(gotRect);
     EXPECT_EQ(expectedFrame.get(), gotFrame.get());
     EXPECT_EQ(expectedRect, gotRect);
@@ -574,7 +576,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingLoop) {
   }
 
   // Trying to pull a recycled frame when we have nothing should be safe too.
-  IntRect gotRect;
+  gfx::IntRect gotRect;
   RawAccessFrameRef gotFrame = buffer.RecycleFrame(gotRect);
   EXPECT_TRUE(gotFrame.get() == nullptr);
   EXPECT_FALSE(ReinitForRecycle(gotFrame));
@@ -653,7 +655,7 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingTooFewFrames) {
   VerifyInsert(buffer, AnimationFrameBuffer::InsertStatus::YIELD);
 
   // Mark it as complete.
-  bool restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  bool restartDecoder = buffer.MarkComplete(gfx::IntRect(0, 0, 1, 1));
   EXPECT_FALSE(restartDecoder);
   EXPECT_FALSE(buffer.HasRedecodeError());
 
@@ -664,7 +666,7 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingTooFewFrames) {
   VerifyInsertAndAdvance(buffer, 2, AnimationFrameBuffer::InsertStatus::YIELD);
 
   // When we mark it as complete, it should fail due to too few frames.
-  restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  restartDecoder = buffer.MarkComplete(gfx::IntRect(0, 0, 1, 1));
   EXPECT_TRUE(buffer.HasRedecodeError());
   EXPECT_EQ(size_t(0), buffer.PendingDecode());
   EXPECT_EQ(size_t(4), buffer.Size());
@@ -688,7 +690,7 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingTooManyFrames) {
   VerifyInsert(buffer, AnimationFrameBuffer::InsertStatus::YIELD);
 
   // Mark it as complete.
-  bool restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  bool restartDecoder = buffer.MarkComplete(gfx::IntRect(0, 0, 1, 1));
   EXPECT_FALSE(restartDecoder);
   EXPECT_FALSE(buffer.HasRedecodeError());
 
@@ -723,8 +725,8 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete) {
   const size_t kThreshold = 3;
   const size_t kBatch = 1;
   const size_t kStartFrame = 0;
-  const IntSize kImageSize(100, 100);
-  const IntRect kImageRect(IntPoint(0, 0), kImageSize);
+  const gfx::IntSize kImageSize(100, 100);
+  const gfx::IntRect kImageRect(gfx::IntPoint(0, 0), kImageSize);
   AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
 
   // Get the starting buffer to just before the point where we need to switch
@@ -735,15 +737,17 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete) {
   AnimationFrameBuffer::InsertStatus status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)),
-                           false);
+  frame = CreateEmptyFrame(
+      kImageSize, gfx::IntRect(gfx::IntPoint(10, 10), gfx::IntSize(1, 1)),
+      false);
   status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 
   VerifyAdvance(retained, 1, true);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(20, 10), IntSize(1, 1)),
-                           false);
+  frame = CreateEmptyFrame(
+      kImageSize, gfx::IntRect(gfx::IntPoint(20, 10), gfx::IntSize(1, 1)),
+      false);
   status = retained.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::DISCARD_YIELD, status);
 
@@ -754,7 +758,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete) {
   // None of the buffers were recyclable.
   EXPECT_FALSE(buffer.Recycle().empty());
   while (!buffer.Recycle().empty()) {
-    IntRect recycleRect;
+    gfx::IntRect recycleRect;
     RawAccessFrameRef frameRef = buffer.RecycleFrame(recycleRect);
     EXPECT_TRUE(frameRef);
     EXPECT_FALSE(ReinitForRecycle(frameRef));
@@ -765,8 +769,9 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete) {
   status = buffer.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
 
-  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)),
-                           true);
+  frame = CreateEmptyFrame(
+      kImageSize, gfx::IntRect(gfx::IntPoint(10, 10), gfx::IntSize(1, 1)),
+      true);
   status = buffer.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 
@@ -785,8 +790,8 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect) {
   const size_t kThreshold = 5;
   const size_t kBatch = 2;
   const size_t kStartFrame = 0;
-  const IntSize kImageSize(100, 100);
-  const IntRect kImageRect(IntPoint(0, 0), kImageSize);
+  const gfx::IntSize kImageSize(100, 100);
+  const gfx::IntRect kImageRect(gfx::IntPoint(0, 0), kImageSize);
   AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
 
   // Let's get to the recycling state while marking all of the frames as not
@@ -822,7 +827,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect) {
   // not recyclable, we should get nothing.
   VerifyAdvance(buffer, 4, false);
 
-  IntRect recycleRect;
+  gfx::IntRect recycleRect;
   EXPECT_FALSE(buffer.Recycle().empty());
   RawAccessFrameRef frameRef = buffer.RecycleFrame(recycleRect);
   EXPECT_TRUE(frameRef);
@@ -831,7 +836,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect) {
 
   // Insert a recyclable partial frame. Its dirty rect shouldn't matter since
   // the previous frame was not recyclable.
-  frame = CreateEmptyFrame(kImageSize, IntRect(0, 0, 25, 25));
+  frame = CreateEmptyFrame(kImageSize, gfx::IntRect(0, 0, 25, 25));
   status = buffer.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 
@@ -844,7 +849,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect) {
 
   // Insert a recyclable partial frame. Its dirty rect should match the recycle
   // rect since it is the only frame in the buffer.
-  frame = CreateEmptyFrame(kImageSize, IntRect(25, 0, 50, 50));
+  frame = CreateEmptyFrame(kImageSize, gfx::IntRect(25, 0, 50, 50));
   status = buffer.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 
@@ -853,17 +858,17 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect) {
   frameRef = buffer.RecycleFrame(recycleRect);
   EXPECT_TRUE(frameRef);
   EXPECT_TRUE(ReinitForRecycle(frameRef));
-  EXPECT_EQ(IntRect(25, 0, 50, 50), recycleRect);
+  EXPECT_EQ(gfx::IntRect(25, 0, 50, 50), recycleRect);
   EXPECT_TRUE(buffer.Recycle().empty());
 
   // Insert the last frame and mark us as complete. The next recycled frame is
   // producing the first frame again, so we should use the first frame refresh
   // area instead of its dirty rect.
-  frame = CreateEmptyFrame(kImageSize, IntRect(10, 10, 60, 10));
+  frame = CreateEmptyFrame(kImageSize, gfx::IntRect(10, 10, 60, 10));
   status = buffer.Insert(std::move(frame));
   EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
 
-  bool continueDecoding = buffer.MarkComplete(IntRect(0, 0, 75, 50));
+  bool continueDecoding = buffer.MarkComplete(gfx::IntRect(0, 0, 75, 50));
   EXPECT_FALSE(continueDecoding);
 
   VerifyAdvance(buffer, 7, true);
@@ -871,7 +876,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect) {
   frameRef = buffer.RecycleFrame(recycleRect);
   EXPECT_TRUE(frameRef);
   EXPECT_TRUE(ReinitForRecycle(frameRef));
-  EXPECT_EQ(IntRect(0, 0, 75, 50), recycleRect);
+  EXPECT_EQ(gfx::IntRect(0, 0, 75, 50), recycleRect);
   EXPECT_TRUE(buffer.Recycle().empty());
 
   // Now let's reinsert the first frame. The recycle rect should still be the
@@ -886,6 +891,6 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingRect) {
   frameRef = buffer.RecycleFrame(recycleRect);
   EXPECT_TRUE(frameRef);
   EXPECT_TRUE(ReinitForRecycle(frameRef));
-  EXPECT_EQ(IntRect(0, 0, 75, 50), recycleRect);
+  EXPECT_EQ(gfx::IntRect(0, 0, 75, 50), recycleRect);
   EXPECT_TRUE(buffer.Recycle().empty());
 }

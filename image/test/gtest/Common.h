@@ -537,6 +537,11 @@ ImageTestCase PerfRgbLossyWebPTestCase();
 ImageTestCase PerfRgbAlphaLossyWebPTestCase();
 ImageTestCase PerfRgbGIFTestCase();
 
+ImageTestCase CorruptAVIFTestCase();
+ImageTestCase DownscaledAVIFTestCase();
+ImageTestCase LargeAVIFTestCase();
+ImageTestCase MultiLayerAVIFTestCase();
+ImageTestCase TransparentAVIFTestCase();
 }  // namespace image
 }  // namespace mozilla
 

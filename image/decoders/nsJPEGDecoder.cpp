@@ -931,9 +931,10 @@ static void cmyk_convert_bgra(uint32_t* aInput, uint32_t* aOutput,
     const uint8_t g = iM * iK / 255;
     const uint8_t b = iY * iK / 255;
 
-    *aOutput++ = (0xFF << SurfaceFormatBit::OS_A) |
-                 (r << SurfaceFormatBit::OS_R) | (g << SurfaceFormatBit::OS_G) |
-                 (b << SurfaceFormatBit::OS_B);
+    *aOutput++ = (0xFF << mozilla::gfx::SurfaceFormatBit::OS_A) |
+                 (r << mozilla::gfx::SurfaceFormatBit::OS_R) |
+                 (g << mozilla::gfx::SurfaceFormatBit::OS_G) |
+                 (b << mozilla::gfx::SurfaceFormatBit::OS_B);
     input += 4;
   }
 }

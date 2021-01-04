@@ -8,6 +8,7 @@
 
 #include "Image.h"
 #include "nsIStreamListener.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/MemoryReporting.h"
 
 class nsIRequest;
@@ -79,12 +80,13 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
   virtual bool ShouldAnimate() override;
 
  private:
-  Tuple<ImgDrawResult, IntSize, RefPtr<SourceSurface>> GetFrameInternal(
-      const IntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
-      uint32_t aWhichFrame, uint32_t aFlags) override;
+  Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
+  GetFrameInternal(const gfx::IntSize& aSize,
+                   const Maybe<SVGImageContext>& aSVGContext,
+                   uint32_t aWhichFrame, uint32_t aFlags) override;
 
-  Tuple<ImgDrawResult, IntSize> GetImageContainerSize(
-      layers::LayerManager* aManager, const IntSize& aSize,
+  Tuple<ImgDrawResult, gfx::IntSize> GetImageContainerSize(
+      layers::LayerManager* aManager, const gfx::IntSize& aSize,
       uint32_t aFlags) override;
 
   /**
@@ -92,8 +94,8 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
    * cached surface, if found, and the size to rasterize at, if applicable.
    * If we cannot rasterize, it will be the requested size to draw at (aSize).
    */
-  Tuple<RefPtr<SourceSurface>, IntSize> LookupCachedSurface(
-      const IntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
+  Tuple<RefPtr<gfx::SourceSurface>, gfx::IntSize> LookupCachedSurface(
+      const gfx::IntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
       uint32_t aFlags);
 
   bool MaybeRestrictSVGContext(Maybe<SVGImageContext>& aNewSVGContext,
@@ -106,7 +108,7 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
 
   /// Rasterize the SVG into a surface. aWillCache will be set to whether or
   /// not the new surface was put into the cache.
-  already_AddRefed<SourceSurface> CreateSurface(
+  already_AddRefed<gfx::SourceSurface> CreateSurface(
       const SVGDrawingParameters& aParams, gfxDrawable* aSVGDrawable,
       bool& aWillCache);
 

@@ -12,6 +12,7 @@
 #include "prenv.h"
 
 #include "gfx2DGlue.h"
+#include "gfxContext.h"
 #include "gfxPlatform.h"
 
 #include "gfxUtils.h"
@@ -27,6 +28,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "nsMargin.h"
 #include "nsRefreshDriver.h"
 #include "nsThreadUtils.h"

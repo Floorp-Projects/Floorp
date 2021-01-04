@@ -12,6 +12,7 @@
 #include "nsString.h"
 #include "nsINestedURI.h"
 #include "nsIURIMutator.h"
+#include "nsISerializable.h"
 
 #define NS_THIS_ICONURI_IMPLEMENTATION_CID           \
   { /* 0b9bb0c2-fee6-470b-b9b9-9fd9462b5e19 */       \

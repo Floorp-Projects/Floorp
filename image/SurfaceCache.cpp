@@ -35,6 +35,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsSize.h"
 #include "nsTArray.h"
+#include "Orientation.h"
 #include "prsystem.h"
 
 using std::max;
