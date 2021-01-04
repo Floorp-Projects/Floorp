@@ -5,6 +5,8 @@ import {
   MIN_RICH_FAVICON_SIZE,
 } from "content-src/components/TopSites/TopSitesConstants";
 import {
+  INITIAL_STATE,
+  reducers,
   TOP_SITES_DEFAULT_ROWS,
   TOP_SITES_MAX_SITES_PER_ROW,
 } from "common/Reducers.jsm";
@@ -23,6 +25,8 @@ import { TopSiteForm } from "content-src/components/TopSites/TopSiteForm";
 import { TopSiteFormInput } from "content-src/components/TopSites/TopSiteFormInput";
 import { _TopSites as TopSites } from "content-src/components/TopSites/TopSites";
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
+import { Provider } from "react-redux";
+import { combineReducers, createStore } from "redux";
 
 const perfSvc = {
   mark() {},
@@ -56,26 +60,35 @@ describe("<TopSites>", () => {
     assert.ok(wrapper.exists());
   });
   describe("context menu", () => {
+    function mountWithProps(props) {
+      const store = createStore(combineReducers(reducers), INITIAL_STATE);
+      return mount(
+        <Provider store={store}>
+          <TopSites {...props} />
+        </Provider>
+      );
+    }
+
     it("should render a context menu button", () => {
-      const wrapper = mount(<TopSites {...DEFAULT_PROPS} />);
+      const wrapper = mountWithProps(DEFAULT_PROPS);
       assert.equal(
         wrapper.find(".section-top-bar .context-menu-button").length,
         1
       );
     });
     it("should render a section menu when button is clicked", () => {
-      const wrapper = mount(<TopSites {...DEFAULT_PROPS} />);
+      const wrapper = mountWithProps(DEFAULT_PROPS);
       const button = wrapper.find(".section-top-bar .context-menu-button");
       assert.equal(wrapper.find(SectionMenu).length, 0);
       button.simulate("click", { preventDefault: () => {} });
       assert.equal(wrapper.find(SectionMenu).length, 1);
     });
     it("should not render a section menu by default", () => {
-      const wrapper = mount(<TopSites {...DEFAULT_PROPS} />);
+      const wrapper = mountWithProps(DEFAULT_PROPS);
       assert.equal(wrapper.find(SectionMenu).length, 0);
     });
     it("should pass through the correct menu extraOptions to SectionMenu", () => {
-      const wrapper = mount(<TopSites {...DEFAULT_PROPS} />);
+      const wrapper = mountWithProps(DEFAULT_PROPS);
       wrapper
         .find(".section-top-bar .context-menu-button")
         .simulate("click", { preventDefault: () => {} });

@@ -143,6 +143,21 @@ export class _TopSites extends React.PureComponent {
       extraMenuOptions.push("AddSearchShortcut");
     }
 
+    const canShowCustomizationMenu =
+      props.Prefs.values["newNewtabExperience.enabled"] ||
+      props.Prefs.values["customizationMenu.enabled"];
+    const hideTitle =
+      props.Prefs.values.hideTopSitesTitle || canShowCustomizationMenu;
+
+    // `collapsed` should be sent to CollapsibleSection as undefined if
+    // `props.TopSites.pref` is not set to true.
+    let collapsed;
+    if (props.TopSites.pref) {
+      collapsed = canShowCustomizationMenu
+        ? false
+        : props.TopSites.pref.collapsed;
+    }
+
     return (
       <ComponentPerfTimer
         id="topsites"
@@ -154,13 +169,11 @@ export class _TopSites extends React.PureComponent {
           icon="topsites"
           id="topsites"
           title={props.title || { id: "newtab-section-header-topsites" }}
-          hideTitle={props.Prefs.values.hideTopSitesTitle}
+          hideTitle={hideTitle}
           extraMenuOptions={extraMenuOptions}
           showPrefName="feeds.topsites"
           eventSource={TOP_SITES_SOURCE}
-          collapsed={
-            props.TopSites.pref ? props.TopSites.pref.collapsed : undefined
-          }
+          collapsed={collapsed}
           isFixed={props.isFixed}
           isFirst={props.isFirst}
           isLast={props.isLast}

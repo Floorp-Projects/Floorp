@@ -35,8 +35,17 @@
       vertical-align: top;
 
       .click-target {
-        cursor: pointer;
         white-space: nowrap;
+
+        &.click-pointer {
+          cursor: pointer;
+        }
+
+        &.new-header span {
+          cursor: default;
+          font-weight: 700;
+          font-size: 17px;
+        }
       }
     }
 
