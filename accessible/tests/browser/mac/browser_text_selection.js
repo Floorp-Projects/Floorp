@@ -20,7 +20,12 @@ addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
   );
   is(stringForRange(macDoc, range), "Hello World");
 
-  let evt = waitForMacEvent("AXSelectedTextChanged");
+  let evt = waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
+    return (
+      info.AXTextStateChangeType == AXTextStateChangeTypeSelectionExtend &&
+      elem.getAttributeValue("AXRole") == "AXWebArea"
+    );
+  });
   await SpecialPowers.spawn(browser, [], () => {
     let p = content.document.getElementById("p");
     let r = new content.Range();
@@ -41,11 +46,29 @@ addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
   );
   is(stringForRange(macDoc, firstWordRange), "Hello");
 
-  evt = waitForMacEvent("AXSelectedTextChanged");
+  evt = waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
+    return (
+      info.AXTextStateChangeType == AXTextStateChangeTypeSelectionExtend &&
+      elem.getAttributeValue("AXRole") == "AXWebArea"
+    );
+  });
   macDoc.setAttributeValue("AXSelectedTextMarkerRange", firstWordRange);
   await evt;
   range = macDoc.getAttributeValue("AXSelectedTextMarkerRange");
   is(stringForRange(macDoc, range), "Hello");
+
+  // Collapse selection
+  evt = waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
+    return (
+      info.AXTextStateChangeType == AXTextStateChangeTypeSelectionMove &&
+      elem.getAttributeValue("AXRole") == "AXWebArea"
+    );
+  });
+  await SpecialPowers.spawn(browser, [], () => {
+    let s = content.getSelection();
+    s.collapseToEnd();
+  });
+  await evt;
 });
 
 /**

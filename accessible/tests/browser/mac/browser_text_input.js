@@ -11,13 +11,6 @@ loadScripts(
   { name: "states.js", dir: MOCHITESTS_DIR }
 );
 
-// AXTextStateChangeType enum values
-const AXTextStateChangeTypeEdit = 1;
-
-// AXTextEditType enum values
-const AXTextEditTypeDelete = 1;
-const AXTextEditTypeTyping = 3;
-
 function testValueChangedEventData(
   macIface,
   data,
@@ -64,20 +57,23 @@ function testValueChangedEventData(
   is(str, expectedWordAtLeft);
 }
 
-function matchWebArea(expectedId) {
+function matchWebArea(expectedId, expectedStateChangeType) {
   return (iface, data) => {
     return (
       iface.getAttributeValue("AXRole") == "AXWebArea" &&
       !!data &&
       data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier") ==
-        expectedId
+        expectedId &&
+      data.AXTextStateChangeType == expectedStateChangeType
     );
   };
 }
 
-function matchInput(expectedId) {
+function matchInput(expectedId, expectedStateChangeType) {
   return (iface, data) =>
-    iface.getAttributeValue("AXDOMIdentifier") == expectedId && !!data;
+    iface.getAttributeValue("AXDOMIdentifier") == expectedId &&
+    !!data &&
+    data.AXTextStateChangeType == expectedStateChangeType;
 }
 
 async function synthKeyAndTestSelectionChanged(
@@ -86,9 +82,19 @@ async function synthKeyAndTestSelectionChanged(
   expectedId,
   expectedSelectionString
 ) {
+  // If the expected string is empty, it is a caret move/collapse
+  let expectedStateChangeType = expectedSelectionString
+    ? AXTextStateChangeTypeSelectionExtend
+    : AXTextStateChangeTypeSelectionMove;
   let selectionChangedEvents = Promise.all([
-    waitForMacEventWithInfo("AXSelectedTextChanged", matchWebArea(expectedId)),
-    waitForMacEventWithInfo("AXSelectedTextChanged", matchInput(expectedId)),
+    waitForMacEventWithInfo(
+      "AXSelectedTextChanged",
+      matchWebArea(expectedId, expectedStateChangeType)
+    ),
+    waitForMacEventWithInfo(
+      "AXSelectedTextChanged",
+      matchInput(expectedId, expectedStateChangeType)
+    ),
   ]);
 
   EventUtils.synthesizeKey(synthKey, synthEvent);
@@ -137,14 +143,14 @@ async function synthKeyAndTestValueChanged(
   let valueChangedEvents = Promise.all([
     waitForMacEventWithInfo(
       "AXSelectedTextChanged",
-      matchWebArea(expectedTextSelectionId)
+      matchWebArea(expectedTextSelectionId, AXTextStateChangeTypeSelectionMove)
     ),
     waitForMacEventWithInfo(
       "AXSelectedTextChanged",
-      matchInput(expectedTextSelectionId)
+      matchInput(expectedTextSelectionId, AXTextStateChangeTypeSelectionMove)
     ),
-    waitForMacEventWithInfo("AXValueChanged", matchWebArea(expectedId)),
-    waitForMacEventWithInfo("AXValueChanged", matchInput(expectedId)),
+    waitForMacEventWithInfo("AXValueChanged", matchWebArea(expectedId, 1)),
+    waitForMacEventWithInfo("AXValueChanged", matchInput(expectedId, 1)),
   ]);
 
   EventUtils.synthesizeKey(synthKey, synthEvent);
@@ -178,8 +184,14 @@ async function focusIntoInputAndType(accDoc, inputId, innerContainerId) {
       "AXFocusedUIElementChanged",
       iface => iface.getAttributeValue("AXDOMIdentifier") == inputId
     ),
-    waitForMacEventWithInfo("AXSelectedTextChanged", matchWebArea(selectionId)),
-    waitForMacEventWithInfo("AXSelectedTextChanged", matchInput(selectionId)),
+    waitForMacEventWithInfo(
+      "AXSelectedTextChanged",
+      matchWebArea(selectionId, AXTextStateChangeTypeSelectionMove)
+    ),
+    waitForMacEventWithInfo(
+      "AXSelectedTextChanged",
+      matchInput(selectionId, AXTextStateChangeTypeSelectionMove)
+    ),
   ]);
   input.setAttributeValue("AXFocused", true);
   await events;

@@ -5,7 +5,9 @@
 "use strict";
 
 /* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent,
-   NSRange, NSDictionary, stringForRange */
+   NSRange, NSDictionary, stringForRange, AXTextStateChangeTypeEdit,
+   AXTextEditTypeDelete, AXTextEditTypeTyping, AXTextStateChangeTypeSelectionMove,
+   AXTextStateChangeTypeSelectionExtend */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
@@ -20,6 +22,15 @@ loadScripts(
   { name: "common.js", dir: MOCHITESTS_DIR },
   { name: "promisified-events.js", dir: MOCHITESTS_DIR }
 );
+
+// AXTextStateChangeType enum values
+const AXTextStateChangeTypeEdit = 1;
+const AXTextStateChangeTypeSelectionMove = 2;
+const AXTextStateChangeTypeSelectionExtend = 3;
+
+// AXTextEditType enum values
+const AXTextEditTypeDelete = 1;
+const AXTextEditTypeTyping = 3;
 
 function getNativeInterface(accDoc, id) {
   return findAccessibleChildByID(accDoc, id).nativeInterface.QueryInterface(

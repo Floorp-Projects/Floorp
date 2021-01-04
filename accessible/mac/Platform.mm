@@ -120,7 +120,14 @@ void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
   }
 
   if (wrapper) {
-    [wrapper handleAccessibleEvent:nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED];
+    if (mozTextAccessible* textAcc =
+            static_cast<mozTextAccessible*>([wrapper moxEditableAncestor])) {
+      [textAcc
+          handleAccessibleEvent:nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED];
+    } else {
+      [wrapper
+          handleAccessibleEvent:nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED];
+    }
   }
 }
 
