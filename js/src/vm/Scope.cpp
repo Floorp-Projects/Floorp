@@ -910,7 +910,9 @@ bool FunctionScope::prepareForScopeCreation(
     return false;
   }
 
-  data->slotInfo.hasParameterExprs = hasParameterExprs;
+  if (hasParameterExprs) {
+    data->slotInfo.setHasParameterExprs();
+  }
   SetCanonicalFunction(*data, fun);
 
   // An environment may be needed regardless of existence of any closed over
@@ -1005,7 +1007,7 @@ XDRResult FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun,
     uint32_t nextFrameSlot;
     if (mode == XDR_ENCODE) {
       needsEnvironment = scope->hasEnvironment();
-      hasParameterExprs = data->slotInfo.hasParameterExprs;
+      hasParameterExprs = data->slotInfo.hasParameterExprs();
       nextFrameSlot = data->slotInfo.nextFrameSlot;
     }
     MOZ_TRY(xdr->codeUint8(&needsEnvironment));
@@ -1611,7 +1613,8 @@ AbstractBindingIter<JSAtom>::AbstractBindingIter(ScopeKind kind,
       break;
     case ScopeKind::Function: {
       uint8_t flags = IgnoreDestructuredFormalParameters;
-      if (static_cast<FunctionScope::Data*>(data)->slotInfo.hasParameterExprs) {
+      if (static_cast<FunctionScope::Data*>(data)
+              ->slotInfo.hasParameterExprs()) {
         flags |= HasFormalParameterExprs;
       }
       init(*static_cast<FunctionScope::Data*>(data), flags);
