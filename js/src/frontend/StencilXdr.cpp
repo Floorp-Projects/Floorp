@@ -191,10 +191,11 @@ static XDRResult XDRParserTrailingNames(XDRState<mode>* xdr, ScopeDataT& data,
 }
 
 template <typename ScopeT, typename InitF>
-static ParserScopeData<ScopeT>* NewEmptyScopeData(JSContext* cx,
-                                                  LifoAlloc& alloc,
-                                                  uint32_t length, InitF init) {
-  using Data = ParserScopeData<ScopeT>;
+static typename ScopeT::ParserData* NewEmptyScopeData(JSContext* cx,
+                                                      LifoAlloc& alloc,
+                                                      uint32_t length,
+                                                      InitF init) {
+  using Data = typename ScopeT::ParserData;
 
   size_t dataSize = SizeOfScopeData<Data>(length);
   void* raw = alloc.alloc(dataSize);
