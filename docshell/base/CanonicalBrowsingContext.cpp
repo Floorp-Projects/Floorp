@@ -31,6 +31,7 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsSHistory.h"
 #include "nsSecureBrowserUI.h"

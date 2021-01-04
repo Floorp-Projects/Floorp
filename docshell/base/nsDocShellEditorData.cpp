@@ -7,6 +7,7 @@
 #include "nsDocShellEditorData.h"
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/HTMLEditor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
