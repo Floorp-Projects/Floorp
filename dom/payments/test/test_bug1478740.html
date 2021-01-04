@@ -39,25 +39,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1478740
     return `${testName}: Unexpected error(${errName}) when ${timing} the PaymentRequest.`;
   }
 
-  function testMultipleShows() {
-    return new Promise(async (resolve) => {
-      const testName = "testMultipleShows";
-      await requestChromeAction("start-test", testName);
-      let expectedResults = ["successful",
-                             "successful",
-                             "successful",
-                             "AbortError",
-                             "AbortError",
-                             "AbortError"];
-      let nextStatus = ["creating first page",
-                        "creating second page",
-                        "showing first payment",
-                        "showing second payment",
-                        "showing third payment",
-                        "aborting first payment"];
-      let currStatus = nextStatus.shift();
-      let ifr1 = document.createElement('iframe');
-      let ifr2 = document.createElement('iframe');
+  async function testMultipleShows() {
+    const testName = "testMultipleShows";
+    await requestChromeAction("start-test", testName);
+    let expectedResults = ["successful",
+                           "successful",
+                           "successful",
+                           "AbortError",
+                           "AbortError",
+                           "AbortError"];
+    let nextStatus = ["creating first page",
+                      "creating second page",
+                      "showing first payment",
+                      "showing second payment",
+                      "showing third payment",
+                      "aborting first payment"];
+    let currStatus = nextStatus.shift();
+    let ifr1 = document.createElement('iframe');
+    let ifr2 = document.createElement('iframe');
+
+    await new Promise(resolve => {
       let listener = async function(event) {
         let expected = expectedResults.shift();
         is(event.data, expected,
@@ -95,8 +96,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1478740
       gScript.addMessageListener("showing-payment", listener);
       ifr1.src = "bug1478740.html";
       document.body.appendChild(ifr1);
-      await requestChromeAction("finish-test");
     });
+    await requestChromeAction("finish-test");
   }
 
   function teardown() {
