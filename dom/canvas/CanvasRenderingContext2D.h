@@ -243,21 +243,18 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     DrawImage(aImage, aSx, aSy, aSw, aSh, aDx, aDy, aDw, aDh, 6, aError);
   }
 
-  already_AddRefed<ImageData> CreateImageData(JSContext* aCx, double aSw,
-                                              double aSh,
-                                              mozilla::ErrorResult& aError);
-  already_AddRefed<ImageData> CreateImageData(JSContext* aCx,
-                                              ImageData& aImagedata,
-                                              mozilla::ErrorResult& aError);
-  already_AddRefed<ImageData> GetImageData(JSContext* aCx, double aSx,
-                                           double aSy, double aSw, double aSh,
+  already_AddRefed<ImageData> CreateImageData(JSContext*, int32_t aSw,
+                                              int32_t aSh, ErrorResult&);
+  already_AddRefed<ImageData> CreateImageData(JSContext*, ImageData&,
+                                              ErrorResult&);
+  already_AddRefed<ImageData> GetImageData(JSContext*, int32_t aSx, int32_t aSy,
+                                           int32_t aSw, int32_t aSh,
                                            nsIPrincipal& aSubjectPrincipal,
-                                           mozilla::ErrorResult& aError);
-  void PutImageData(ImageData& aImageData, double aDx, double aDy,
-                    mozilla::ErrorResult& aError);
-  void PutImageData(ImageData& aImageData, double aDx, double aDy,
-                    double aDirtyX, double aDirtyY, double aDirtyWidth,
-                    double aDirtyHeight, mozilla::ErrorResult& aError);
+                                           ErrorResult&);
+  void PutImageData(ImageData&, int32_t aDx, int32_t aDy, ErrorResult&);
+  void PutImageData(ImageData&, int32_t aDx, int32_t aDy, int32_t aDirtyX,
+                    int32_t aDirtyY, int32_t aDirtyWidth, int32_t aDirtyHeight,
+                    ErrorResult&);
 
   double LineWidth() override { return CurrentState().lineWidth; }
 

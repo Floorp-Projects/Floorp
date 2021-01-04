@@ -264,18 +264,19 @@ interface mixin CanvasDrawImage {
   void drawImage(CanvasImageSource image, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh);
 };
 
+// See https://github.com/whatwg/html/issues/6262 for [EnforceRange] usage.
 interface mixin CanvasImageData {
   // pixel manipulation
   [NewObject, Throws]
-  ImageData createImageData(double sw, double sh);
+  ImageData createImageData([EnforceRange] long sw, [EnforceRange] long sh);
   [NewObject, Throws]
   ImageData createImageData(ImageData imagedata);
   [NewObject, Throws, NeedsSubjectPrincipal]
-  ImageData getImageData(double sx, double sy, double sw, double sh);
+  ImageData getImageData([EnforceRange] long sx, [EnforceRange] long sy, [EnforceRange] long sw, [EnforceRange] long sh);
   [Throws]
-  void putImageData(ImageData imagedata, double dx, double dy);
+  void putImageData(ImageData imagedata, [EnforceRange] long dx, [EnforceRange] long dy);
   [Throws]
-  void putImageData(ImageData imagedata, double dx, double dy, double dirtyX, double dirtyY, double dirtyWidth, double dirtyHeight);
+  void putImageData(ImageData imagedata, [EnforceRange] long dx, [EnforceRange] long dy, [EnforceRange] long dirtyX, [EnforceRange] long dirtyY, [EnforceRange] long dirtyWidth, [EnforceRange] long dirtyHeight);
 };
 
 interface mixin CanvasPathDrawingStyles {
