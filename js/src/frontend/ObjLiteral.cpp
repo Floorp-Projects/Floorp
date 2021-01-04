@@ -90,7 +90,6 @@ static JSObject* InterpretObjLiteralObj(
     }
   }
 
-  // TODO(no-TI): remove SpecificGroup and Singleton from ObjLiteralFlag.
   return NewPlainObjectWithProperties(cx, properties.begin(),
                                       properties.length(), TenuredObject);
 }
@@ -135,10 +134,6 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
   if (flags.contains(ObjLiteralFlag::Array)) {
     json.value("Array");
     flags -= ObjLiteralFlag::Array;
-  }
-  if (flags.contains(ObjLiteralFlag::SpecificGroup)) {
-    json.value("SpecificGroup");
-    flags -= ObjLiteralFlag::SpecificGroup;
   }
   if (flags.contains(ObjLiteralFlag::Singleton)) {
     json.value("Singleton");

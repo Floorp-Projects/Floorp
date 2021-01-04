@@ -9744,13 +9744,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
     // not change without running (at least) Speedometer, Octane, Kraken, TP6,
     // and AWSY tests.
     ObjLiteralFlags flags;
-    if (isSingletonContext) {
-      // Use `ObjectGroup::newPlainObject` rather than
-      // `NewPlainObjectWithProperties`.
-      flags += ObjLiteralFlag::SpecificGroup;
-      if (!isInner) {
-        flags += ObjLiteralFlag::Singleton;
-      }
+    if (isSingletonContext && !isInner) {
+      flags += ObjLiteralFlag::Singleton;
     }
     if (!useObjLiteralValues) {
       flags += ObjLiteralFlag::NoValues;
