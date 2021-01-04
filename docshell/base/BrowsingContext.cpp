@@ -237,7 +237,7 @@ bool BrowsingContext::IsOwnedByProcess() const {
 }
 
 bool BrowsingContext::SameOriginWithTop() {
-  MOZ_ASSERT(IsInProcess());
+  MOZ_DIAGNOSTIC_ASSERT(IsInProcess());
   // If the top BrowsingContext is not same-process to us, it is cross-origin
   if (!Top()->IsInProcess()) {
     return false;
