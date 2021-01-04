@@ -7,8 +7,9 @@
 #include "ImageBridgeParent.h"
 #include <stdint.h>            // for uint64_t, uint32_t
 #include "CompositableHost.h"  // for CompositableParent, Create
-#include "base/process.h"      // for ProcessId
-#include "base/task.h"         // for CancelableTask, DeleteTask, etc
+#include "GeckoProfiler.h"
+#include "base/process.h"  // for ProcessId
+#include "base/task.h"     // for CancelableTask, DeleteTask, etc
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/Hal.h"        // for hal::SetCurrentThreadPriority()

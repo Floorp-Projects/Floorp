@@ -19,6 +19,7 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/SyncRunnable.h"
+#include "nsProxyRelease.h"
 #ifdef XP_MACOSX
 #  include "nsCocoaFeatures.h"
 #endif

@@ -8,6 +8,7 @@
 #define mozilla_gfx_ipc_VsyncIOThreadHolder_h
 
 #include "mozilla/RefPtr.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

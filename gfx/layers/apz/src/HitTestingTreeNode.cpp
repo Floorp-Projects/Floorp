@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HitTestingTreeNode.h"
+#include <stack>
 
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "mozilla/StaticPrefs_layout.h"

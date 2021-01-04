@@ -9,6 +9,7 @@
 
 #include "LayerManagerMLGPU.h"
 #include "mozilla/layers/ContentHost.h"
+#include "mozilla/layers/LayerMLGPU.h"
 #include "MLGDeviceTypes.h"
 #include "nsRegionFwd.h"
 #include <functional>

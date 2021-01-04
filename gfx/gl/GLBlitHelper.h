@@ -9,11 +9,14 @@
 
 #include "GLContextTypes.h"
 #include "GLConsts.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsSize.h"
+#include "nsTString.h"
 #include "mozilla/ipc/IPCTypes.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"
 #include "../layers/ImageTypes.h"
+#include "nsStringFwd.h"
 
 #include <map>
 

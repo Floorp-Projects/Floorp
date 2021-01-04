@@ -9,6 +9,7 @@
 
 #include "nsAppRunner.h"
 #include "Effects.h"
+#include "Layers.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"

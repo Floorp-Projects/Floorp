@@ -5,6 +5,7 @@
 
 #include "gfxFontEntry.h"
 
+#include "GeckoProfiler.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MathAlgorithms.h"

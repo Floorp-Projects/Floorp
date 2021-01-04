@@ -8,6 +8,7 @@
 
 #include "gfxFeature.h"
 #include "gfxTypes.h"
+#include "nsCOMPtr.h"
 
 class nsIGfxInfo;
 

@@ -14,7 +14,9 @@
 #include "mozilla/layers/SampleTime.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "Units.h"
+#include "VsyncSource.h"
 
 namespace mozilla {
 

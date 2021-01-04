@@ -9,6 +9,7 @@
 #include "ClientTiledPaintedLayer.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
+#include "TiledLayerBuffer.h"
 
 namespace mozilla {
 namespace layers {

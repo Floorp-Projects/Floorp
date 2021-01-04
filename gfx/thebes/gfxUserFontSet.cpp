@@ -20,6 +20,7 @@
 #include "mozilla/PostTraversalTask.h"
 #include "gfxOTSUtils.h"
 #include "nsIFontLoadCompleteCallback.h"
+#include "nsProxyRelease.h"
 
 using namespace mozilla;
 

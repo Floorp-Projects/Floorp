@@ -11,6 +11,7 @@
 #include "nsIInputStream.h"
 #include "nsIBinaryOutputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "prtime.h"
 
 #include <ctime>
 #include <iomanip>

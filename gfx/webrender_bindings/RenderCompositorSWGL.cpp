@@ -6,6 +6,7 @@
 
 #include "RenderCompositorSWGL.h"
 
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
@@ -57,13 +58,13 @@ bool RenderCompositorSWGL::BeginFrame() {
   // Verify that the size at least matches what the widget claims and that
   // the format is BGRA8 as SWGL requires.
   uint8_t* data = nullptr;
-  IntSize size;
+  gfx::IntSize size;
   int32_t stride = 0;
-  SurfaceFormat format = SurfaceFormat::UNKNOWN;
+  gfx::SurfaceFormat format = gfx::SurfaceFormat::UNKNOWN;
   if (!mSurface && mDT->LockBits(&data, &size, &stride, &format) &&
       (size != bounds.Size().ToUnknownSize() ||
-       (format != SurfaceFormat::B8G8R8A8 &&
-        format != SurfaceFormat::B8G8R8X8))) {
+       (format != gfx::SurfaceFormat::B8G8R8A8 &&
+        format != gfx::SurfaceFormat::B8G8R8X8))) {
     // We tried to lock the DT and it succeeded, but the size or format
     // of the data is not compatible, so just release it and fall back below...
     mDT->ReleaseBits(data);
@@ -78,11 +79,11 @@ bool RenderCompositorSWGL::BeginFrame() {
     // that for usage with SWGL.
     size = bounds.Size().ToUnknownSize();
     if (!mSurface || mSurface->GetSize() != size) {
-      mSurface =
-          Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
+      mSurface = gfx::Factory::CreateDataSourceSurface(
+          size, gfx::SurfaceFormat::B8G8R8A8);
     }
     gfx::DataSourceSurface::MappedSurface map = {nullptr, 0};
-    if (!mSurface || !mSurface->Map(DataSourceSurface::READ_WRITE, &map)) {
+    if (!mSurface || !mSurface->Map(gfx::DataSourceSurface::READ_WRITE, &map)) {
       // We failed mapping the data surface, so need to cancel the frame.
       mWidget->EndRemoteDrawingInRegion(mDT, mRegion);
       ClearMappedBuffer();
