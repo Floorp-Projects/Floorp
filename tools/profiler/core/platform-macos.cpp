@@ -73,6 +73,20 @@ Sampler::Sampler(PSLockRef aLock) {}
 
 void Sampler::Disable(PSLockRef aLock) {}
 
+static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
+                                          SpliceableJSONWriter& aWriter) {
+  // TODO
+}
+
+static RunningTimes GetThreadRunningTimesDiff(
+    PSLockRef aLock, const RegisteredThread& aRegisteredThread) {
+  RunningTimes diff;
+
+  // TODO
+
+  return diff;
+}
+
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
     PSLockRef aLock, const RegisteredThread& aRegisteredThread,

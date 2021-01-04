@@ -2215,16 +2215,45 @@ TEST(GeckoProfiler, CPUUsage)
       }
     }
 
-    // Check that the sample schema DOES NOT contain "threadCPUUsage".
-    // TODO: This will change when the feature is implemented.
+    {
+      GET_JSON(sampleUnits, meta["sampleUnits"], Object);
+      {
+        EXPECT_EQ_JSON(sampleUnits["time"], String, "ms");
+        EXPECT_EQ_JSON(sampleUnits["eventDelay"], String, "ms");
+      }
+    }
+
+    // Check that the sample schema contains "threadCPUDelta".
     GET_JSON(threads, aRoot["threads"], Array);
     {
       GET_JSON(thread0, threads[0], Object);
       {
         GET_JSON(samples, thread0["samples"], Object);
         {
+          Json::ArrayIndex threadCPUDeltaIndex = 0;
           GET_JSON(schema, samples["schema"], Object);
-          EXPECT_FALSE(schema.isMember("threadCPUUsage"));
+          {
+            GET_JSON(index, schema["threadCPUDelta"], UInt);
+            threadCPUDeltaIndex = index.asUInt();
+          }
+
+          unsigned threadCPUDeltaCount = 0;
+          GET_JSON(data, samples["data"], Array);
+          EXPECT_GE(data.size(), MinSamplings);
+          for (const Json::Value& sample : data) {
+            ASSERT_TRUE(sample.isArray());
+            if (sample.isValidIndex(threadCPUDeltaIndex)) {
+              if (!sample[threadCPUDeltaIndex].isNull()) {
+                EXPECT_TRUE(sample[threadCPUDeltaIndex].isUInt64());
+                ++threadCPUDeltaCount;
+              }
+            }
+          }
+
+          // All "threadCPUDelta" data should be absent or null on unsupported
+          // platforms.
+          // TODO: Update this test on supported platforms.
+          EXPECT_EQ(threadCPUDeltaCount, 0u);
         }
       }
     }
