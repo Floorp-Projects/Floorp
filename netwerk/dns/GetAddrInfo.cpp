@@ -272,13 +272,13 @@ nsresult GetAddrInfoInit() {
 
 #ifdef DNSQUERY_AVAILABLE
   DWORD namesize = COMPUTER_NAME_BUFFER_SIZE;
-  if (!GetComputerNameEx(ComputerNameDnsHostname, sDNSComputerName,
-                         &namesize)) {
+  if (!GetComputerNameExA(ComputerNameDnsHostname, sDNSComputerName,
+                          &namesize)) {
     sDNSComputerName[0] = 0;
   }
   namesize = MAX_COMPUTERNAME_LENGTH + 1;
-  if (!GetComputerNameEx(ComputerNameNetBIOS, sNETBIOSComputerName,
-                         &namesize)) {
+  if (!GetComputerNameExA(ComputerNameNetBIOS, sNETBIOSComputerName,
+                          &namesize)) {
     sNETBIOSComputerName[0] = 0;
   }
 #endif

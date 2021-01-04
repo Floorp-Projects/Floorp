@@ -66,7 +66,7 @@ decltype(::WlanScan)* WinWLANLibrary::GetWlanScanPtr() const {
 }
 
 bool WinWLANLibrary::Initialize() {
-  mWlanLibrary = LoadLibrary("Wlanapi.dll");
+  mWlanLibrary = LoadLibraryW(L"Wlanapi.dll");
   if (!mWlanLibrary) {
     return false;
   }
