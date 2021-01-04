@@ -5133,32 +5133,20 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   // Extract the template object, if one exists, and copy it.
   if (JSOp(*pc) == JSOp::NewObject) {
     RootedPlainObject baseObject(cx, &script->getObject(pc)->as<PlainObject>());
-    return CopyInitializerObject(cx, baseObject, newKind);
+    return CopyTemplateObject(cx, baseObject, newKind);
   }
 
   MOZ_ASSERT(JSOp(*pc) == JSOp::NewInit);
   return NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
 }
 
-// TODO(no-TI): try to merge with NewObjectOperation. We can't remove the
-// setGroup call yet because CreateThisWithTemplate also calls this.
 JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
                                              HandleObject templateObject) {
-  // This is an optimized version of NewObjectOperation for use when the
-  // object is not a singleton and has had its preliminary objects analyzed,
-  // with the template object a copy of the object to create.
   MOZ_ASSERT(!templateObject->isSingleton());
   MOZ_ASSERT(cx->realm() == templateObject->nonCCWRealm());
 
   NewObjectKind newKind = GenericObject;
-  JSObject* obj =
-      CopyInitializerObject(cx, templateObject.as<PlainObject>(), newKind);
-  if (!obj) {
-    return nullptr;
-  }
-
-  obj->setGroup(templateObject->group());
-  return obj;
+  return CopyTemplateObject(cx, templateObject.as<PlainObject>(), newKind);
 }
 
 JSObject* js::CreateThisWithTemplate(JSContext* cx,
@@ -5169,7 +5157,8 @@ JSObject* js::CreateThisWithTemplate(JSContext* cx,
     ar.emplace(cx, templateObject);
   }
 
-  return NewObjectOperationWithTemplate(cx, templateObject);
+  NewObjectKind newKind = GenericObject;
+  return CopyTemplateObject(cx, templateObject.as<PlainObject>(), newKind);
 }
 
 ArrayObject* js::NewArrayOperation(
