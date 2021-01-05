@@ -127,12 +127,9 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     CSPCONTEXTLOG((">>>>                      aContentType: %d", aContentType));
   }
 
-  bool isPreload = nsContentUtils::IsPreloadType(aContentType);
-
-  // Since we know whether we are dealing with a preload, we have to convert
-  // the internal policytype ot the external policy type before moving on.
-  // We still need to know if this is a worker so child-src can handle that
-  // case correctly.
+  // We have to convert the internal policytype ot the external policy type
+  // before moving on. We still need to know if this is a worker so child-src
+  // can handle that case correctly.
   aContentType =
       nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(aContentType);
 
@@ -154,15 +151,14 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     return NS_OK;
   }
 
-  bool permitted =
-      permitsInternal(dir,
-                      nullptr,  // aTriggeringElement
-                      aCSPEventListener, aContentLocation,
-                      aOriginalURIIfRedirect, aNonce, isPreload,
-                      false,  // allow fallback to default-src
-                      aSendViolationReports,
-                      true,  // send blocked URI in violation reports
-                      aParserCreated);
+  bool permitted = permitsInternal(
+      dir,
+      nullptr,  // aTriggeringElement
+      aCSPEventListener, aContentLocation, aOriginalURIIfRedirect, aNonce,
+      false,  // allow fallback to default-src
+      aSendViolationReports,
+      true,  // send blocked URI in violation reports
+      aParserCreated);
 
   *outDecision =
       permitted ? nsIContentPolicy::ACCEPT : nsIContentPolicy::REJECT_SERVER;
@@ -180,9 +176,9 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
 bool nsCSPContext::permitsInternal(
     CSPDirective aDir, Element* aTriggeringElement,
     nsICSPEventListener* aCSPEventListener, nsIURI* aContentLocation,
-    nsIURI* aOriginalURIIfRedirect, const nsAString& aNonce, bool aIsPreload,
-    bool aSpecific, bool aSendViolationReports,
-    bool aSendContentLocationInViolationReports, bool aParserCreated) {
+    nsIURI* aOriginalURIIfRedirect, const nsAString& aNonce, bool aSpecific,
+    bool aSendViolationReports, bool aSendContentLocationInViolationReports,
+    bool aParserCreated) {
   EnsureIPCPoliciesRead();
   bool permits = true;
 
@@ -198,10 +194,10 @@ bool nsCSPContext::permitsInternal(
         permits = false;
       }
 
-      // Do not send a report or notify observers if this is a preload - the
-      // decision may be wrong due to the inability to get the nonce, and will
-      // incorrectly fail the unit tests.
-      if (!aIsPreload && aSendViolationReports) {
+      // Callers should set |aSendViolationReports| to false if this is a
+      // preload - the decision may be wrong due to the inability to get the
+      // nonce, and will incorrectly fail the unit tests.
+      if (aSendViolationReports) {
         uint32_t lineNumber = 0;
         uint32_t columnNumber = 0;
         nsAutoString spec;
@@ -1618,7 +1614,6 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
                         ancestorsArray[a],
                         nullptr,  // no redirect here.
                         u""_ns,   // no nonce
-                        false,    // not a preload.
                         true,     // specific, do not use default-src
                         true,     // send violation reports
                         okToSendAncestor,
@@ -1655,7 +1650,6 @@ nsCSPContext::Permits(Element* aTriggeringElement,
       permitsInternal(aDir, aTriggeringElement, aCSPEventListener, aURI,
                       nullptr,  // no original (pre-redirect) URI
                       u""_ns,   // no nonce
-                      false,    // not a preload.
                       aSpecific,
                       true,    // send violation reports
                       true,    // send blocked URI in violation reports
