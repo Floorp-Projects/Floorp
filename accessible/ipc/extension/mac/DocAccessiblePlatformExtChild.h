@@ -67,6 +67,11 @@ class DocAccessiblePlatformExtChild : public PDocAccessiblePlatformExtChild {
       const uint64_t& aID, const int32_t& aStartOffset,
       const uint64_t& aEndContainer, const int32_t& aEndOffset);
 
+  mozilla::ipc::IPCResult RecvApplyPostSearchFilter(
+      const nsTArray<uint64_t>& aAccessibles, const int32_t& aLimit,
+      const EWhichPostFilter& aSearchKey, const nsString& aSearchText,
+      nsTArray<uint64_t>* aMatches);
+
  private:
   HyperTextAccessibleWrap* IdToHyperTextAccessibleWrap(
       const uint64_t& aID) const;

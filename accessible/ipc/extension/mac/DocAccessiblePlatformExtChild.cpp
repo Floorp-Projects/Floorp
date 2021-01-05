@@ -211,6 +211,14 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSelectRange(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+DocAccessiblePlatformExtChild::RecvApplyPostSearchFilter(
+    const nsTArray<uint64_t>& aAccessibles, const int32_t& aLimit,
+    const EWhichPostFilter& aSearchKey, const nsString& aSearchText,
+    nsTArray<uint64_t>* aMatches) {
+  return IPC_OK();
+}
+
 HyperTextAccessibleWrap*
 DocAccessiblePlatformExtChild::IdToHyperTextAccessibleWrap(
     const uint64_t& aID) const {

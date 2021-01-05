@@ -7,7 +7,7 @@
 #define mozilla_a11y_HyperTextAccessibleWrap_h__
 
 #include "HyperTextAccessible.h"
-#include "RangeTypes.h"
+#include "PlatformExtTypes.h"
 
 namespace mozilla {
 namespace a11y {
