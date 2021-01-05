@@ -150,7 +150,7 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
 
   const WritingMode wm = aReflowInput.GetWritingMode();
 
-  // Both the sheet and the pages will use this size:
+  // This is the app-unit size of each page (in physical & logical units):
   const nsSize physPageSize = aPresContext->GetPageSize();
   const LogicalSize pageSize(wm, physPageSize);
 
@@ -308,22 +308,44 @@ void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
   nsSize availSpaceOnSheet = pageSize;
   nsMargin uwm = nsPresContext::CSSTwipsToAppUnits(
       mPD->mPrintSettings->GetUnwriteableMarginInTwips());
+
+  if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+    // The pages will be rotated to be orthogonal to the physical sheet.  To
+    // account for that, we rotate the components of availSpaceOnSheet and uwm,
+    // so that we can reason about them here from the perspective of a
+    // "pageSize"-oriented *page*.
+    std::swap(availSpaceOnSheet.width, availSpaceOnSheet.height);
+
+    // Note that the pages are rotated 90 degrees clockwise when placed onto a
+    // sheet (so that, e.g. in a scenario with two side-by-side portait pages
+    // that are rotated & placed onto a sheet, the "left" edge of the first
+    // page is at the "top" of the sheet and hence comes out of the printer
+    // first, etc).  So: given `nsMargin uwm` whose sides correspond to the
+    // physical sheet's sides, we have to rotate 90 degrees *counter-clockwise*
+    // in order to "cancel out" the page rotation and to represent it in the
+    // page's perspective. From a page's perspective, its own "top" side
+    // corresponds to the physical sheet's right side, which is why we're
+    // passing "uwm.right" as the "top" component here; and so on.
+    nsMargin rotated(uwm.right, uwm.bottom, uwm.left, uwm.top);
+    uwm = rotated;
+  }
+
   availSpaceOnSheet.width -= uwm.LeftRight();
   availSpaceOnSheet.height -= uwm.TopBottom();
   nsPoint pageGridOrigin(uwm.left, uwm.top);
 
-  // Compute the full size of the "page grid" that'll we'll be scaling down &
-  // placing onto a given sheet:
+  // If there are a different number of rows vs. cols, we'll aim to put
+  // the larger number of items in the longer axis.
   const auto* ppsInfo = mPD->PagesPerSheetInfo();
+  uint32_t smallerNumTracks = ppsInfo->mNumPages / ppsInfo->mLargerNumTracks;
+  bool pageSizeIsPortraitLike = pageSize.width > pageSize.height;
+  auto numCols =
+      pageSizeIsPortraitLike ? smallerNumTracks : ppsInfo->mLargerNumTracks;
+  auto numRows =
+      pageSizeIsPortraitLike ? ppsInfo->mLargerNumTracks : smallerNumTracks;
 
-  // XXXdholbert Bug 1669905 will add a bit more reasoning around here, to
-  // ensure that we use the larger track-count in the sheet's longer axis, to
-  // make the best use of space. (At this point, we don't have to worry about
-  // that, because we only support pages-per-sheet values that have the same
-  // number of rows and columns.)
-  uint32_t numCols = ppsInfo->mLargerNumTracks;
-  uint32_t numRows = ppsInfo->mNumPages / numCols;
-
+  // Compute the full size of the "page grid" that we'll be scaling down &
+  // placing onto a given sheet:
   nsSize pageGridFullSize(numCols * pageSize.width, numRows * pageSize.height);
 
   if (MOZ_UNLIKELY(availSpaceOnSheet.IsEmpty() || pageGridFullSize.IsEmpty())) {
