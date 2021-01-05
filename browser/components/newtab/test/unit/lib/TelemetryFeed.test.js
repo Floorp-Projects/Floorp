@@ -729,6 +729,18 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "tiles", tiles);
       assert.propertyVal(ping.tiles[0], "shim", tiles[0].shim);
     });
+    it("should not include client_id and session_id", async () => {
+      const tiles = [{ id: 10001 }, { id: 10002 }, { id: 10003 }];
+      const action = ac.ImpressionStats({ source: "POCKET", tiles });
+      const ping = await instance.createImpressionStats(
+        au.getPortIdOfSender(action),
+        action.data
+      );
+
+      assert.validate(ping, ImpressionStatsPing);
+      assert.notProperty(ping, "client_id");
+      assert.notProperty(ping, "session_id");
+    });
   });
   describe("#applyCFRPolicy", () => {
     it("should use client_id and message_id in prerelease", async () => {
