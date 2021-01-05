@@ -846,6 +846,25 @@ mod gtest {
             qcms_profile_release(output);
         }
     }
+
+    #[test]
+    fn gray_smoke_test() {
+        let input = crate::Profile::new_gray_with_gamma(2.2);
+        let output = crate::Profile::new_sRGB();
+        let xfm =
+            transform_create(&input, GrayA8, &output, RGBA8, crate::Intent::default()).unwrap();
+        let src = [20u8, 20u8];
+        let mut dst = [0u8, 0, 0, 0];
+        unsafe {
+            qcms_transform_data(
+                &xfm,
+                src.as_ptr() as *const libc::c_void,
+                dst.as_mut_ptr() as *mut libc::c_void,
+                src.len() / GrayA8.bytes_per_pixel(),
+            );
+        }
+
+    }
 }
 
 #[cfg(test)]
