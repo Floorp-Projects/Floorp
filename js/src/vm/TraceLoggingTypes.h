@@ -86,7 +86,6 @@ class JSLinearString;
   _(GenerateLIR)                               \
   _(RegisterAllocation)                        \
   _(GenerateCode)                              \
-  _(IonBuilderRestartLoop)                     \
   _(VMSpecific)
 
 // Log items, with timestamp only.

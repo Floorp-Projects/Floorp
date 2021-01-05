@@ -1038,7 +1038,7 @@ bool StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc,
       }
       break;
     case Scalar::Uint8Clamped:
-      // IonBuilder should have inserted ClampToUint8.
+      // The transpiler should have inserted MClampToUint8.
       MOZ_ASSERT(value->type() == MIRType::Int32);
       break;
     case Scalar::Float32:

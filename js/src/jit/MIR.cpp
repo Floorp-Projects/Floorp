@@ -2035,7 +2035,7 @@ bool MPhi::typeIncludes(MDefinition* def) {
 }
 
 void MCall::addArg(size_t argnum, MDefinition* arg) {
-  // The operand vector is initialized in reverse order by the IonBuilder.
+  // The operand vector is initialized in reverse order by WarpBuilder.
   // It cannot be checked for consistency until all arguments are added.
   // FixedList doesn't initialize its elements, so do an unchecked init.
   initOperand(argnum + NumNonArgumentOperands, arg);
