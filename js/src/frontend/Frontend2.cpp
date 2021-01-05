@@ -134,7 +134,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         auto& global = scopeData.AsGlobal();
 
         size_t numBindings = global.bindings.len;
-        ParserGlobalScopeData* data =
+        GlobalScope::ParserData* data =
             NewEmptyGlobalScopeData(cx, alloc, numBindings);
         if (!data) {
           return false;
@@ -158,8 +158,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         size_t numBindings = var.bindings.len;
 
-        ParserVarScopeData* data = NewEmptyVarScopeData(cx, alloc, numBindings);
-        ;
+        VarScope::ParserData* data =
+            NewEmptyVarScopeData(cx, alloc, numBindings);
         if (!data) {
           return false;
         }
@@ -186,7 +186,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         auto& lexical = scopeData.AsLexical();
 
         size_t numBindings = lexical.bindings.len;
-        ParserLexicalScopeData* data =
+        LexicalScope::ParserData* data =
             NewEmptyLexicalScopeData(cx, alloc, numBindings);
         if (!data) {
           return false;
@@ -214,7 +214,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         auto& function = scopeData.AsFunction();
 
         size_t numBindings = function.bindings.len;
-        ParserFunctionScopeData* data =
+        FunctionScope::ParserData* data =
             NewEmptyFunctionScopeData(cx, alloc, numBindings);
         if (!data) {
           return false;

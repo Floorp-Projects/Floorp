@@ -556,7 +556,7 @@ template <class ParseHandler>
 bool PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(
     FunctionNodeType funNode, Node destruct) {
   // Append an empty name to the positional formals vector to keep track of
-  // argument slots when making ParserFunctionScopeData.
+  // argument slots when making FunctionScope::ParserData.
   if (!pc_->positionalFormalParameterNames().append(nullptr)) {
     ReportOutOfMemory(cx_);
     return false;
@@ -935,20 +935,21 @@ typename ScopeT::ParserData* NewEmptyBindingData(JSContext* cx,
   return bindings;
 }
 
-ParserGlobalScopeData* NewEmptyGlobalScopeData(JSContext* cx, LifoAlloc& alloc,
-                                               uint32_t numBindings) {
+GlobalScope::ParserData* NewEmptyGlobalScopeData(JSContext* cx,
+                                                 LifoAlloc& alloc,
+                                                 uint32_t numBindings) {
   return NewEmptyBindingData<GlobalScope>(cx, alloc, numBindings);
 }
 
-ParserLexicalScopeData* NewEmptyLexicalScopeData(JSContext* cx,
-                                                 LifoAlloc& alloc,
-                                                 uint32_t numBindings) {
+LexicalScope::ParserData* NewEmptyLexicalScopeData(JSContext* cx,
+                                                   LifoAlloc& alloc,
+                                                   uint32_t numBindings) {
   return NewEmptyBindingData<LexicalScope>(cx, alloc, numBindings);
 }
 
-ParserFunctionScopeData* NewEmptyFunctionScopeData(JSContext* cx,
-                                                   LifoAlloc& alloc,
-                                                   uint32_t numBindings) {
+FunctionScope::ParserData* NewEmptyFunctionScopeData(JSContext* cx,
+                                                     LifoAlloc& alloc,
+                                                     uint32_t numBindings) {
   return NewEmptyBindingData<FunctionScope>(cx, alloc, numBindings);
 }
 
@@ -1005,10 +1006,10 @@ static MOZ_ALWAYS_INLINE void InitializeBindingData(
   data->slotInfo.length = count;
 }
 
-Maybe<ParserGlobalScopeData*> NewGlobalScopeData(JSContext* cx,
-                                                 ParseContext::Scope& scope,
-                                                 LifoAlloc& alloc,
-                                                 ParseContext* pc) {
+Maybe<GlobalScope::ParserData*> NewGlobalScopeData(JSContext* cx,
+                                                   ParseContext::Scope& scope,
+                                                   LifoAlloc& alloc,
+                                                   ParseContext* pc) {
   ParserBindingNameVector vars(cx);
   ParserBindingNameVector lets(cx);
   ParserBindingNameVector consts(cx);
@@ -1048,7 +1049,7 @@ Maybe<ParserGlobalScopeData*> NewGlobalScopeData(JSContext* cx,
     }
   }
 
-  ParserGlobalScopeData* bindings = nullptr;
+  GlobalScope::ParserData* bindings = nullptr;
   uint32_t numBindings = vars.length() + lets.length() + consts.length();
 
   if (numBindings > 0) {
@@ -1066,15 +1067,15 @@ Maybe<ParserGlobalScopeData*> NewGlobalScopeData(JSContext* cx,
   return Some(bindings);
 }
 
-Maybe<ParserGlobalScopeData*> ParserBase::newGlobalScopeData(
+Maybe<GlobalScope::ParserData*> ParserBase::newGlobalScopeData(
     ParseContext::Scope& scope) {
   return NewGlobalScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<ParserModuleScopeData*> NewModuleScopeData(JSContext* cx,
-                                                 ParseContext::Scope& scope,
-                                                 LifoAlloc& alloc,
-                                                 ParseContext* pc) {
+Maybe<ModuleScope::ParserData*> NewModuleScopeData(JSContext* cx,
+                                                   ParseContext::Scope& scope,
+                                                   LifoAlloc& alloc,
+                                                   ParseContext* pc) {
   ParserBindingNameVector imports(cx);
   ParserBindingNameVector vars(cx);
   ParserBindingNameVector lets(cx);
@@ -1112,7 +1113,7 @@ Maybe<ParserModuleScopeData*> NewModuleScopeData(JSContext* cx,
     }
   }
 
-  ParserModuleScopeData* bindings = nullptr;
+  ModuleScope::ParserData* bindings = nullptr;
   uint32_t numBindings =
       imports.length() + vars.length() + lets.length() + consts.length();
 
@@ -1132,15 +1133,15 @@ Maybe<ParserModuleScopeData*> NewModuleScopeData(JSContext* cx,
   return Some(bindings);
 }
 
-Maybe<ParserModuleScopeData*> ParserBase::newModuleScopeData(
+Maybe<ModuleScope::ParserData*> ParserBase::newModuleScopeData(
     ParseContext::Scope& scope) {
   return NewModuleScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<ParserEvalScopeData*> NewEvalScopeData(JSContext* cx,
-                                             ParseContext::Scope& scope,
-                                             LifoAlloc& alloc,
-                                             ParseContext* pc) {
+Maybe<EvalScope::ParserData*> NewEvalScopeData(JSContext* cx,
+                                               ParseContext::Scope& scope,
+                                               LifoAlloc& alloc,
+                                               ParseContext* pc) {
   ParserBindingNameVector vars(cx);
 
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
@@ -1156,7 +1157,7 @@ Maybe<ParserEvalScopeData*> NewEvalScopeData(JSContext* cx,
     }
   }
 
-  ParserEvalScopeData* bindings = nullptr;
+  EvalScope::ParserData* bindings = nullptr;
   uint32_t numBindings = vars.length();
 
   if (numBindings > 0) {
@@ -1171,16 +1172,14 @@ Maybe<ParserEvalScopeData*> NewEvalScopeData(JSContext* cx,
   return Some(bindings);
 }
 
-Maybe<ParserEvalScopeData*> ParserBase::newEvalScopeData(
+Maybe<EvalScope::ParserData*> ParserBase::newEvalScopeData(
     ParseContext::Scope& scope) {
   return NewEvalScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
-                                                     ParseContext::Scope& scope,
-                                                     bool hasParameterExprs,
-                                                     LifoAlloc& alloc,
-                                                     ParseContext* pc) {
+Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
+    JSContext* cx, ParseContext::Scope& scope, bool hasParameterExprs,
+    LifoAlloc& alloc, ParseContext* pc) {
   ParserBindingNameVector positionalFormals(cx);
   ParserBindingNameVector formals(cx);
   ParserBindingNameVector vars(cx);
@@ -1254,7 +1253,7 @@ Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
     }
   }
 
-  ParserFunctionScopeData* bindings = nullptr;
+  FunctionScope::ParserData* bindings = nullptr;
   uint32_t numBindings =
       positionalFormals.length() + formals.length() + vars.length();
 
@@ -1298,20 +1297,21 @@ bool FunctionScopeHasClosedOverBindings(ParseContext* pc) {
   return false;
 }
 
-Maybe<ParserFunctionScopeData*> ParserBase::newFunctionScopeData(
+Maybe<FunctionScope::ParserData*> ParserBase::newFunctionScopeData(
     ParseContext::Scope& scope, bool hasParameterExprs) {
   return NewFunctionScopeData(cx_, scope, hasParameterExprs, stencilAlloc(),
                               pc_);
 }
 
-ParserVarScopeData* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
-                                         uint32_t numBindings) {
+VarScope::ParserData* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
+                                           uint32_t numBindings) {
   return NewEmptyBindingData<VarScope>(cx, alloc, numBindings);
 }
 
-Maybe<ParserVarScopeData*> NewVarScopeData(JSContext* cx,
-                                           ParseContext::Scope& scope,
-                                           LifoAlloc& alloc, ParseContext* pc) {
+Maybe<VarScope::ParserData*> NewVarScopeData(JSContext* cx,
+                                             ParseContext::Scope& scope,
+                                             LifoAlloc& alloc,
+                                             ParseContext* pc) {
   ParserBindingNameVector vars(cx);
 
   bool allBindingsClosedOver =
@@ -1327,7 +1327,7 @@ Maybe<ParserVarScopeData*> NewVarScopeData(JSContext* cx,
     }
   }
 
-  ParserVarScopeData* bindings = nullptr;
+  VarScope::ParserData* bindings = nullptr;
   uint32_t numBindings = vars.length();
 
   if (numBindings > 0) {
@@ -1354,15 +1354,15 @@ static bool VarScopeHasBindings(ParseContext* pc) {
   return false;
 }
 
-Maybe<ParserVarScopeData*> ParserBase::newVarScopeData(
+Maybe<VarScope::ParserData*> ParserBase::newVarScopeData(
     ParseContext::Scope& scope) {
   return NewVarScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<ParserLexicalScopeData*> NewLexicalScopeData(JSContext* cx,
-                                                   ParseContext::Scope& scope,
-                                                   LifoAlloc& alloc,
-                                                   ParseContext* pc) {
+Maybe<LexicalScope::ParserData*> NewLexicalScopeData(JSContext* cx,
+                                                     ParseContext::Scope& scope,
+                                                     LifoAlloc& alloc,
+                                                     ParseContext* pc) {
   ParserBindingNameVector lets(cx);
   ParserBindingNameVector consts(cx);
 
@@ -1388,7 +1388,7 @@ Maybe<ParserLexicalScopeData*> NewLexicalScopeData(JSContext* cx,
     }
   }
 
-  ParserLexicalScopeData* bindings = nullptr;
+  LexicalScope::ParserData* bindings = nullptr;
   uint32_t numBindings = lets.length() + consts.length();
 
   if (numBindings > 0) {
@@ -1430,7 +1430,7 @@ bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
   return false;
 }
 
-Maybe<ParserLexicalScopeData*> ParserBase::newLexicalScopeData(
+Maybe<LexicalScope::ParserData*> ParserBase::newLexicalScopeData(
     ParseContext::Scope& scope) {
   return NewLexicalScopeData(cx_, scope, stencilAlloc(), pc_);
 }
@@ -1453,7 +1453,7 @@ LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
     return nullptr;
   }
 
-  Maybe<ParserLexicalScopeData*> bindings = newLexicalScopeData(scope);
+  Maybe<LexicalScope::ParserData*> bindings = newLexicalScopeData(scope);
   if (!bindings) {
     return nullptr;
   }
@@ -1636,7 +1636,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
     return nullptr;
   }
 
-  Maybe<ParserEvalScopeData*> bindings = newEvalScopeData(pc_->varScope());
+  Maybe<EvalScope::ParserData*> bindings = newEvalScopeData(pc_->varScope());
   if (!bindings) {
     return nullptr;
   }
@@ -1697,7 +1697,8 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
     return nullptr;
   }
 
-  Maybe<ParserGlobalScopeData*> bindings = newGlobalScopeData(pc_->varScope());
+  Maybe<GlobalScope::ParserData*> bindings =
+      newGlobalScopeData(pc_->varScope());
   if (!bindings) {
     return nullptr;
   }
@@ -1830,7 +1831,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     return null();
   }
 
-  Maybe<ParserModuleScopeData*> bindings =
+  Maybe<ModuleScope::ParserData*> bindings =
       newModuleScopeData(modulepc.varScope());
   if (!bindings) {
     return nullptr;
@@ -1932,7 +1933,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   bool hasParameterExprs = funbox->hasParameterExprs;
 
   if (hasParameterExprs) {
-    Maybe<ParserVarScopeData*> bindings = newVarScopeData(pc_->varScope());
+    Maybe<VarScope::ParserData*> bindings = newVarScopeData(pc_->varScope());
     if (!bindings) {
       return false;
     }
@@ -1944,7 +1945,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   {
-    Maybe<ParserFunctionScopeData*> bindings =
+    Maybe<FunctionScope::ParserData*> bindings =
         newFunctionScopeData(pc_->functionScope(), hasParameterExprs);
     if (!bindings) {
       return false;
@@ -1953,7 +1954,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   if (funbox->isNamedLambda() && !isStandaloneFunction) {
-    Maybe<ParserLexicalScopeData*> bindings =
+    Maybe<LexicalScope::ParserData*> bindings =
         newLexicalScopeData(pc_->namedLambdaScope());
     if (!bindings) {
       return false;

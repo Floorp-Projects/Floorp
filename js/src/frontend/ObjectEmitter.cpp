@@ -428,7 +428,7 @@ ClassEmitter::ClassEmitter(BytecodeEmitter* bce)
   isClass_ = true;
 }
 
-bool ClassEmitter::emitScope(ParserLexicalScopeData* scopeBindings) {
+bool ClassEmitter::emitScope(LexicalScope::ParserData* scopeBindings) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start);
 
@@ -446,7 +446,7 @@ bool ClassEmitter::emitScope(ParserLexicalScopeData* scopeBindings) {
   return true;
 }
 
-bool ClassEmitter::emitBodyScope(ParserLexicalScopeData* scopeBindings) {
+bool ClassEmitter::emitBodyScope(LexicalScope::ParserData* scopeBindings) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
              classState_ == ClassState::Scope);
