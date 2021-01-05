@@ -30,31 +30,28 @@ notification[value="translation"] hbox[anonid="details"] {
   overflow: hidden;
 }
 
-notification[value="translation"] button,
-notification[value="translation"] menulist {
-  appearance: none;
-  border-radius: 2px;
-  min-width: 0;
-  box-shadow: 0 1px rgba(255, 255, 255, 0.5), 0 1px rgba(255, 255, 255, 0.5) inset;
-}
-
 notification[value="translation"] menulist::part(dropmarker) {
-  appearance: auto;
-  -moz-default-appearance: toolbarbutton-dropdown;
-  border: none;
-  background-color: transparent;
-  margin: auto;
-  padding: 5px 0;
+  display: -moz-box;
+  appearance: none;
+  width: 12px;
+  height: 12px;
 }
 
-.translation-menupopup arrowscrollbox {
-  padding-bottom: 0;
+notification[value="translation"] menulist::part(dropmarker-icon) {
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+notification[value="translation"] menulist > menupopup {
+  margin: 0; /* override popup.css */
 }
 
 .translation-attribution {
   cursor: pointer;
   -moz-box-align: end;
   font-size: small;
+  padding-block: 5px;
 }
 
 .translation-attribution > label {
@@ -67,6 +64,11 @@ notification[value="translation"] menulist::part(dropmarker) {
 
 .translation-welcome-panel {
   width: 305px;
+}
+
+.translation-welcome-panel::part(arrowcontent) {
+  /* Prevent from stretching logo height */
+  -moz-box-align: start;
 }
 
 .translation-welcome-logo {
@@ -83,6 +85,7 @@ notification[value="translation"] menulist::part(dropmarker) {
 .translation-welcome-headline {
   font-size: larger;
   font-weight: bold;
+  margin-inline-start: 0;
 }
 
 .translation-welcome-body {
