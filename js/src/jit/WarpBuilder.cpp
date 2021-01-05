@@ -2460,11 +2460,9 @@ bool WarpBuilder::build_NewArray(BytecodeLocation loc) {
 
   MNewArray* ins;
   if (useVMCall) {
-    ins = MNewArray::NewVM(alloc(), length, templateConst, heap,
-                           loc.toRawBytecode());
+    ins = MNewArray::NewVM(alloc(), length, templateConst, heap);
   } else {
-    ins = MNewArray::New(alloc(), length, templateConst, heap,
-                         loc.toRawBytecode());
+    ins = MNewArray::New(alloc(), length, templateConst, heap);
   }
   current->add(ins);
   current->push(ins);
@@ -2960,11 +2958,9 @@ bool WarpBuilder::build_Rest(BytecodeLocation loc) {
     MConstant* templateConst = constant(ObjectValue(*templateObject));
     MNewArray* newArray;
     if (numRest > snapshot->maxInlineElements()) {
-      newArray = MNewArray::NewVM(alloc(), numRest, templateConst, heap,
-                                  loc.toRawBytecode());
+      newArray = MNewArray::NewVM(alloc(), numRest, templateConst, heap);
     } else {
-      newArray = MNewArray::New(alloc(), numRest, templateConst, heap,
-                                loc.toRawBytecode());
+      newArray = MNewArray::New(alloc(), numRest, templateConst, heap);
     }
     current->add(newArray);
     current->push(newArray);
