@@ -5013,11 +5013,11 @@ void ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent, ChildView
   if (sLastMouseEventView != oldView) {
     // Send enter and / or exit events.
     WidgetMouseEvent::ExitFrom exitFrom = [sLastMouseEventView window] == [oldView window]
-                                              ? WidgetMouseEvent::eChild
-                                              : WidgetMouseEvent::eTopLevel;
+                                              ? WidgetMouseEvent::ePlatformChild
+                                              : WidgetMouseEvent::ePlatformTopLevel;
     [oldView sendMouseEnterOrExitEvent:aEvent enter:NO exitFrom:exitFrom];
     // After the cursor exits the window set it to a visible regular arrow cursor.
-    if (exitFrom == WidgetMouseEvent::eTopLevel) {
+    if (exitFrom == WidgetMouseEvent::ePlatformTopLevel) {
       [[nsCursorManager sharedInstance] setCursor:eCursor_standard];
     }
     [sLastMouseEventView sendMouseEnterOrExitEvent:aEvent enter:YES exitFrom:exitFrom];
