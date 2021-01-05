@@ -326,9 +326,15 @@ var PrintUtils = {
       !PRINT_ALWAYS_SILENT &&
       (!aOpenWindowInfo || aOpenWindowInfo.isForWindowDotPrint)
     ) {
-      let browsingContext = Services.focus.focusedContentBrowsingContext
-        ? Services.focus.focusedContentBrowsingContext
-        : aBrowsingContext;
+      let browsingContext = aBrowsingContext;
+      let focusedBc = Services.focus.focusedContentBrowsingContext;
+      if (
+        focusedBc &&
+        focusedBc.top.embedderElement == browsingContext.top.embedderElement &&
+        (!aOpenWindowInfo || !aOpenWindowInfo.isForWindowDotPrint)
+      ) {
+        browsingContext = focusedBc;
+      }
       this._openTabModalPrint(
         browsingContext,
         browser,
@@ -455,9 +461,14 @@ var PrintUtils = {
     }
 
     if (PRINT_TAB_MODAL) {
-      let browsingContext = Services.focus.focusedContentBrowsingContext
-        ? Services.focus.focusedContentBrowsingContext
-        : gBrowser.selectedBrowser.browsingContext;
+      let browsingContext = gBrowser.selectedBrowser.browsingContext;
+      let focusedBc = Services.focus.focusedContentBrowsingContext;
+      if (
+        focusedBc &&
+        focusedBc.top.embedderElement == browsingContext.top.embedderElement
+      ) {
+        browsingContext = focusedBc;
+      }
       return this._openTabModalPrint(
         browsingContext,
         /* aExistingPreviewBrowser = */ undefined,
