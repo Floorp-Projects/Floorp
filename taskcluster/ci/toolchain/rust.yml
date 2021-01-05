@@ -135,13 +135,13 @@ linux64-rust-macos-1.48:
         ]
         toolchain-alias: linux64-rust-macos
 
-linux64-rust-macos-beta:
+linux64-rust-macos-1.49:
     description: "rust repack with macos-cross support"
     treeherder:
-        symbol: TL(rust-macos-beta)
+        symbol: TL(rust-macos-1.49)
     run:
         arguments: [
-            '--channel', 'beta-2020-12-10',
+            '--channel', '1.49.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
