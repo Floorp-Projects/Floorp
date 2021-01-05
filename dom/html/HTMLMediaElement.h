@@ -364,6 +364,18 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void NotifyLoadError(const nsACString& aErrorDetails = nsCString());
 
   /**
+   * Called by one of our associated MediaTrackLists (audio/video) when a
+   * MediaTrack is added.
+   */
+  void NotifyMediaTrackAdded(dom::MediaTrack* aTrack);
+
+  /**
+   * Called by one of our associated MediaTrackLists (audio/video) when a
+   * MediaTrack is removed.
+   */
+  void NotifyMediaTrackRemoved(dom::MediaTrack* aTrack);
+
+  /**
    * Called by one of our associated MediaTrackLists (audio/video) when an
    * AudioTrack is enabled or a VideoTrack is selected.
    */
