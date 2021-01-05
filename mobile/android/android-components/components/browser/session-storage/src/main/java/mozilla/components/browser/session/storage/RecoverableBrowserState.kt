@@ -7,7 +7,10 @@ package mozilla.components.browser.session.storage
 import mozilla.components.browser.state.state.recover.RecoverableTab
 
 /**
- * A restored browsing session, read from disk.
+ * A restored browser state, read from disk.
+ *
+ * @param tabs The list of restored tabs.
+ * @param selectedTabId The ID of the selected tab in [tabs]. Or `null` if no selection was restored.
  */
 data class RecoverableBrowserState(
     val tabs: List<RecoverableTab>,
