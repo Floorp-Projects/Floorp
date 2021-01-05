@@ -45,7 +45,7 @@ class SentryErrorReporter(ErrorReporter):
     """Reports errors using Sentry."""
 
     def report_exception(self, exception):
-        sentry_sdk.capture_exception(exception)
+        return sentry_sdk.capture_exception(exception)
 
 
 class NoopErrorReporter(ErrorReporter):
@@ -56,7 +56,7 @@ class NoopErrorReporter(ErrorReporter):
     """
 
     def report_exception(self, exception):
-        pass
+        return None
 
 
 def register_sentry(argv, settings, topsrcdir=None):

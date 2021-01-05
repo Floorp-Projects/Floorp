@@ -388,8 +388,10 @@ To see more help for a specific command, run:
             exc_type, exc_value, exc_tb = sys.exc_info()
             stack = traceback.extract_tb(exc_tb)
 
-            self._print_exception(sys.stdout, exc_type, exc_value, stack)
-            sentry.report_exception(exc_value)
+            sentry_event_id = sentry.report_exception(exc_value)
+            self._print_exception(
+                sys.stdout, exc_type, exc_value, stack, sentry_event_id=sentry_event_id
+            )
 
             return 1
 
@@ -497,7 +499,7 @@ To see more help for a specific command, run:
             return 1
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
-            sentry.report_exception(exc_value)
+            sentry_event_id = sentry.report_exception(exc_value)
 
             # The first two frames are us and are never used.
             stack = traceback.extract_tb(exc_tb)[2:]
@@ -511,7 +513,11 @@ To see more help for a specific command, run:
             if not len(stack):
                 print(COMMAND_ERROR_TEMPLATE % handler.name)
                 self._print_exception(
-                    sys.stdout, exc_type, exc_value, traceback.extract_tb(exc_tb)
+                    sys.stdout,
+                    exc_type,
+                    exc_value,
+                    traceback.extract_tb(exc_tb),
+                    sentry_event_id=sentry_event_id,
                 )
                 return 1
 
@@ -539,7 +545,9 @@ To see more help for a specific command, run:
             else:
                 print(COMMAND_ERROR_TEMPLATE % handler.name)
 
-            self._print_exception(sys.stdout, exc_type, exc_value, stack)
+            self._print_exception(
+                sys.stdout, exc_type, exc_value, stack, sentry_event_id=sentry_event_id
+            )
 
             return 1
 
@@ -553,7 +561,7 @@ To see more help for a specific command, run:
         fh.write(repr(argv))
         fh.write("\n\n")
 
-    def _print_exception(self, fh, exc_type, exc_value, stack):
+    def _print_exception(self, fh, exc_type, exc_value, stack, sentry_event_id=None):
         fh.write(ERROR_FOOTER)
         fh.write("\n")
 
@@ -563,6 +571,11 @@ To see more help for a specific command, run:
         fh.write("\n")
         for l in traceback.format_list(stack):
             fh.write(l)
+
+        if not sentry_event_id:
+            return
+
+        fh.write("\nSentry event ID: {}\n".format(sentry_event_id))
 
     def load_settings(self, paths):
         """Load the specified settings files.
