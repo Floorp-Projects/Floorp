@@ -7270,8 +7270,7 @@ void Document::SetScriptGlobalObject(
   // still test false at this point and no state change will happen) or we're
   // doing the initial document load and don't want to fire the event for this
   // change.
-  dom::VisibilityState oldState = mVisibilityState;
-  mVisibilityState = ComputeVisibilityState();
+  //
   // When the visibility is changed, notify it to observers.
   // Some observers need the notification, for example HTMLMediaElement uses
   // it to update internal media resource allocation.
@@ -7284,9 +7283,7 @@ void Document::SetScriptGlobalObject(
   // not yet necessary. But soon after Document::SetScriptGlobalObject()
   // call, the document becomes not hidden. At the time, MediaDecoder needs
   // to know it and needs to start updating decoding.
-  if (oldState != mVisibilityState) {
-    EnumerateActivityObservers(NotifyActivityChanged);
-  }
+  UpdateVisibilityState(DispatchVisibilityChange::No);
 
   // The global in the template contents owner document should be the same.
   if (mTemplateContentsOwner && mTemplateContentsOwner != this) {
@@ -14855,13 +14852,15 @@ void Document::UnlockPointer(Document* aDoc) {
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
-void Document::UpdateVisibilityState() {
+void Document::UpdateVisibilityState(DispatchVisibilityChange aDispatchEvent) {
   dom::VisibilityState oldState = mVisibilityState;
   mVisibilityState = ComputeVisibilityState();
   if (oldState != mVisibilityState) {
-    nsContentUtils::DispatchTrustedEvent(this, ToSupports(this),
-                                         u"visibilitychange"_ns,
-                                         CanBubble::eYes, Cancelable::eNo);
+    if (aDispatchEvent == DispatchVisibilityChange::Yes) {
+      nsContentUtils::DispatchTrustedEvent(this, ToSupports(this),
+                                           u"visibilitychange"_ns,
+                                           CanBubble::eYes, Cancelable::eNo);
+    }
     EnumerateActivityObservers(NotifyActivityChanged);
   }
 
@@ -14887,9 +14886,9 @@ VisibilityState Document::ComputeVisibilityState() const {
 }
 
 void Document::PostVisibilityUpdateEvent() {
-  nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod("Document::UpdateVisibilityState", this,
-                        &Document::UpdateVisibilityState);
+  nsCOMPtr<nsIRunnable> event = NewRunnableMethod<DispatchVisibilityChange>(
+      "Document::UpdateVisibilityState", this, &Document::UpdateVisibilityState,
+      DispatchVisibilityChange::Yes);
   Dispatch(TaskCategory::Other, event.forget());
 }
 
