@@ -688,6 +688,7 @@ bool DebuggerFrame::getThis(JSContext* cx, HandleDebuggerFrame frame,
 
     AbstractGeneratorObject& genObj =
         frame->generatorInfo()->unwrappedGenerator();
+    AutoRealm ar(cx, &genObj);
     JSScript* script = frame->generatorInfo()->generatorScript();
 
     if (!GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
