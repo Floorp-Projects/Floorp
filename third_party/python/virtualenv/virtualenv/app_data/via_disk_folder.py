@@ -46,15 +46,17 @@ class AppDataDiskFolder(AppData):
     Store the application data on the disk within a folder layout.
     """
 
+    transient = False
+    can_update = True
+
     def __init__(self, folder):
         self.lock = ReentrantFileLock(folder)
 
     def __repr__(self):
-        return "{}".format(self.lock.path)
+        return "{}({})".format(type(self).__name__, self.lock.path)
 
-    @property
-    def transient(self):
-        return False
+    def __str__(self):
+        return str(self.lock.path)
 
     def reset(self):
         logging.debug("reset app data folder %s", self.lock.path)
@@ -137,7 +139,10 @@ class JSONStoreDisk(ContentStore):
         except Exception:  # noqa
             pass
         if bad_format:
-            self.remove()
+            try:
+                self.remove()
+            except OSError:  # reading and writing on the same file may cause race on multiple processes
+                pass
         return None
 
     def remove(self):
@@ -151,10 +156,7 @@ class JSONStoreDisk(ContentStore):
 
     def write(self, content):
         folder = self.file.parent
-        try:
-            folder.mkdir(parents=True, exist_ok=True)
-        except OSError:
-            pass
+        folder.mkdir(parents=True, exist_ok=True)
         self.file.write_text(ensure_text(json.dumps(content, sort_keys=True, indent=2)))
         logging.debug("wrote {} at %s".format(self.msg), *self.msg_args)
 
@@ -168,5 +170,8 @@ class PyInfoStoreDisk(JSONStoreDisk):
 class EmbedDistributionUpdateStoreDisk(JSONStoreDisk):
     def __init__(self, in_folder, distribution):
         super(EmbedDistributionUpdateStoreDisk, self).__init__(
-            in_folder, distribution, "embed update of distribution %s", (distribution,),
+            in_folder,
+            distribution,
+            "embed update of distribution %s",
+            (distribution,),
         )

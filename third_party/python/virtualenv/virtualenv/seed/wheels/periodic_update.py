@@ -22,7 +22,7 @@ from six.moves.urllib.request import urlopen
 from virtualenv.app_data import AppDataDiskFolder
 from virtualenv.info import PY2
 from virtualenv.util.path import Path
-from virtualenv.util.subprocess import DETACHED_PROCESS, Popen
+from virtualenv.util.subprocess import CREATE_NO_WINDOW, Popen
 
 from ..wheels.embed import BUNDLE_SUPPORT
 from ..wheels.util import Wheel
@@ -105,7 +105,10 @@ class NewVersion(object):
 
     def __repr__(self):
         return "{}(filename={}), found_date={}, release_date={})".format(
-            self.__class__.__name__, self.filename, self.found_date, self.release_date,
+            self.__class__.__name__,
+            self.filename,
+            self.found_date,
+            self.release_date,
         )
 
     def __eq__(self, other):
@@ -186,7 +189,7 @@ def trigger_update(distribution, for_py_version, wheel, search_dirs, app_data, p
     pipe = None if debug else subprocess.PIPE
     kwargs = {"stdout": pipe, "stderr": pipe}
     if not debug and sys.platform == "win32":
-        kwargs["creationflags"] = DETACHED_PROCESS
+        kwargs["creationflags"] = CREATE_NO_WINDOW
     process = Popen(cmd, **kwargs)
     logging.info(
         "triggered periodic upgrade of %s%s (for python %s) via background process having PID %d",

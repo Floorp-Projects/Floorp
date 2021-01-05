@@ -6,8 +6,6 @@ import os
 import sys
 from operator import eq, lt
 
-import six
-
 from virtualenv.util.path import Path
 from virtualenv.util.six import ensure_str
 from virtualenv.util.subprocess import Popen, subprocess
@@ -62,7 +60,7 @@ def download_wheel(distribution, version_spec, for_py_version, search_dirs, app_
     out, err = process.communicate()
     if process.returncode != 0:
         kwargs = {"output": out}
-        if six.PY2:
+        if sys.version_info < (3, 5):
             kwargs["output"] += err
         else:
             kwargs["stderr"] = err
