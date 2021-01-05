@@ -149,13 +149,13 @@ class nsCSPContext : public nsIContentSecurityPolicy {
                        mozilla::dom::Element* aTriggeringElement,
                        nsICSPEventListener* aCSPEventListener,
                        nsIURI* aContentLocation, nsIURI* aOriginalURIIfRedirect,
-                       const nsAString& aNonce, bool aSpecific,
+                       const nsAString& aNonce, bool aIsPreload, bool aSpecific,
                        bool aSendViolationReports,
                        bool aSendContentLocationInViolationReports,
                        bool aParserCreated);
 
   // helper to report inline script/style violations
-  void reportInlineViolation(CSPDirective aDirective,
+  void reportInlineViolation(nsContentPolicyType aContentType,
                              mozilla::dom::Element* aTriggeringElement,
                              nsICSPEventListener* aCSPEventListener,
                              const nsAString& aNonce, const nsAString& aContent,

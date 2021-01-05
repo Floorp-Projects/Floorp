@@ -127,6 +127,15 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     CSPCONTEXTLOG((">>>>                      aContentType: %d", aContentType));
   }
 
+  bool isPreload = nsContentUtils::IsPreloadType(aContentType);
+
+  // Since we know whether we are dealing with a preload, we have to convert
+  // the internal policytype ot the external policy type before moving on.
+  // We still need to know if this is a worker so child-src can handle that
+  // case correctly.
+  aContentType =
+      nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(aContentType);
+
   // This ShouldLoad function is called from nsCSPService::ShouldLoad,
   // which already checked a number of things, including:
   // * aContentLocation is not null; we can consume this without further checks
@@ -145,14 +154,15 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     return NS_OK;
   }
 
-  bool permitted = permitsInternal(
-      dir,
-      nullptr,  // aTriggeringElement
-      aCSPEventListener, aContentLocation, aOriginalURIIfRedirect, aNonce,
-      false,  // allow fallback to default-src
-      aSendViolationReports,
-      true,  // send blocked URI in violation reports
-      aParserCreated);
+  bool permitted =
+      permitsInternal(dir,
+                      nullptr,  // aTriggeringElement
+                      aCSPEventListener, aContentLocation,
+                      aOriginalURIIfRedirect, aNonce, isPreload,
+                      false,  // allow fallback to default-src
+                      aSendViolationReports,
+                      true,  // send blocked URI in violation reports
+                      aParserCreated);
 
   *outDecision =
       permitted ? nsIContentPolicy::ACCEPT : nsIContentPolicy::REJECT_SERVER;
@@ -170,9 +180,9 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
 bool nsCSPContext::permitsInternal(
     CSPDirective aDir, Element* aTriggeringElement,
     nsICSPEventListener* aCSPEventListener, nsIURI* aContentLocation,
-    nsIURI* aOriginalURIIfRedirect, const nsAString& aNonce, bool aSpecific,
-    bool aSendViolationReports, bool aSendContentLocationInViolationReports,
-    bool aParserCreated) {
+    nsIURI* aOriginalURIIfRedirect, const nsAString& aNonce, bool aIsPreload,
+    bool aSpecific, bool aSendViolationReports,
+    bool aSendContentLocationInViolationReports, bool aParserCreated) {
   EnsureIPCPoliciesRead();
   bool permits = true;
 
@@ -188,10 +198,10 @@ bool nsCSPContext::permitsInternal(
         permits = false;
       }
 
-      // Callers should set |aSendViolationReports| to false if this is a
-      // preload - the decision may be wrong due to the inability to get the
-      // nonce, and will incorrectly fail the unit tests.
-      if (aSendViolationReports) {
+      // Do not send a report or notify observers if this is a preload - the
+      // decision may be wrong due to the inability to get the nonce, and will
+      // incorrectly fail the unit tests.
+      if (!aIsPreload && aSendViolationReports) {
         uint32_t lineNumber = 0;
         uint32_t columnNumber = 0;
         nsAutoString spec;
@@ -438,8 +448,8 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
   *outAllowsEval = true;
 
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    if (!mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_UNSAFE_EVAL, u""_ns,
-                              false)) {
+    if (!mPolicies[i]->allows(nsIContentPolicy::TYPE_SCRIPT, CSP_UNSAFE_EVAL,
+                              u""_ns, false)) {
       // policy is violated: must report the violation and allow the inline
       // script if the policy is report-only.
       *outShouldReportViolation = true;
@@ -453,7 +463,7 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
 
 // Helper function to report inline violations
 void nsCSPContext::reportInlineViolation(
-    CSPDirective aDirective, Element* aTriggeringElement,
+    nsContentPolicyType aContentType, Element* aTriggeringElement,
     nsICSPEventListener* aCSPEventListener, const nsAString& aNonce,
     const nsAString& aContent, const nsAString& aViolatedDirective,
     uint32_t aViolatedPolicyIndex,  // TODO, use report only flag for that
@@ -463,13 +473,13 @@ void nsCSPContext::reportInlineViolation(
   // let's report the hash error; no need to report the unsafe-inline error
   // anymore.
   if (!aNonce.IsEmpty()) {
-    observerSubject = (aDirective == SCRIPT_SRC_DIRECTIVE)
+    observerSubject = (aContentType == nsIContentPolicy::TYPE_SCRIPT)
                           ? NS_LITERAL_STRING_FROM_CSTRING(
                                 SCRIPT_NONCE_VIOLATION_OBSERVER_TOPIC)
                           : NS_LITERAL_STRING_FROM_CSTRING(
                                 STYLE_NONCE_VIOLATION_OBSERVER_TOPIC);
   } else {
-    observerSubject = (aDirective == SCRIPT_SRC_DIRECTIVE)
+    observerSubject = (aContentType == nsIContentPolicy::TYPE_SCRIPT)
                           ? NS_LITERAL_STRING_FROM_CSTRING(
                                 SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC)
                           : NS_LITERAL_STRING_FROM_CSTRING(
@@ -507,15 +517,22 @@ void nsCSPContext::reportInlineViolation(
 }
 
 NS_IMETHODIMP
-nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
-                              bool aParserCreated, Element* aTriggeringElement,
+nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
+                              const nsAString& aNonce, bool aParserCreated,
+                              Element* aTriggeringElement,
                               nsICSPEventListener* aCSPEventListener,
                               const nsAString& aContentOfPseudoScript,
                               uint32_t aLineNumber, uint32_t aColumnNumber,
                               bool* outAllowsInline) {
   *outAllowsInline = true;
 
-  if (aDirective != SCRIPT_SRC_DIRECTIVE && aDirective != STYLE_SRC_DIRECTIVE) {
+  MOZ_ASSERT(
+      aContentType ==
+          nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+      "We should only see external content policy types here.");
+
+  if (aContentType != nsIContentPolicy::TYPE_SCRIPT &&
+      aContentType != nsIContentPolicy::TYPE_STYLESHEET) {
     MOZ_ASSERT(false, "can only allow inline for script or style");
     return NS_OK;
   }
@@ -526,9 +543,9 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
   // always iterate all policies, otherwise we might not send out all reports
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     bool allowed =
-        mPolicies[i]->allows(aDirective, CSP_UNSAFE_INLINE, u""_ns,
+        mPolicies[i]->allows(aContentType, CSP_UNSAFE_INLINE, u""_ns,
                              aParserCreated) ||
-        mPolicies[i]->allows(aDirective, CSP_NONCE, aNonce, aParserCreated);
+        mPolicies[i]->allows(aContentType, CSP_NONCE, aNonce, aParserCreated);
 
     // If the inlined script or style is allowed by either unsafe-inline or the
     // nonce, go ahead and shortcut this loop so we can avoid allocating
@@ -552,7 +569,7 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
       content = aContentOfPseudoScript;
     }
     allowed =
-        mPolicies[i]->allows(aDirective, CSP_HASH, content, aParserCreated);
+        mPolicies[i]->allows(aContentType, CSP_HASH, content, aParserCreated);
 
     if (!allowed) {
       // policy is violoated: deny the load unless policy is report only and
@@ -563,8 +580,8 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
       nsAutoString violatedDirective;
       bool reportSample = false;
       mPolicies[i]->getDirectiveStringAndReportSampleForContentType(
-          aDirective, violatedDirective, &reportSample);
-      reportInlineViolation(aDirective, aTriggeringElement, aCSPEventListener,
+          aContentType, violatedDirective, &reportSample);
+      reportInlineViolation(aContentType, aTriggeringElement, aCSPEventListener,
                             aNonce, reportSample ? content : EmptyString(),
                             violatedDirective, i, aLineNumber, aColumnNumber);
     }
@@ -687,18 +704,17 @@ nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
  * GetAllowsInline() and do not call this macro, hence we can pass 'false'
  * as the argument _aParserCreated_ to allows().
  */
-#define CASE_CHECK_AND_REPORT(violationType, directive, nonceOrHash, keyword,  \
-                              observerTopic)                                   \
+#define CASE_CHECK_AND_REPORT(violationType, contentPolicyType, nonceOrHash,   \
+                              keyword, observerTopic)                          \
   case nsIContentSecurityPolicy::VIOLATION_TYPE_##violationType:               \
     PR_BEGIN_MACRO                                                             \
-    static_assert(directive##_SRC_DIRECTIVE == SCRIPT_SRC_DIRECTIVE ||         \
-                  directive##_SRC_DIRECTIVE == STYLE_SRC_DIRECTIVE);           \
-    if (!mPolicies[p]->allows(directive##_SRC_DIRECTIVE, keyword, nonceOrHash, \
-                              false)) {                                        \
+    if (!mPolicies[p]->allows(nsIContentPolicy::TYPE_##contentPolicyType,      \
+                              keyword, nonceOrHash, false)) {                  \
       nsAutoString violatedDirective;                                          \
       bool reportSample = false;                                               \
       mPolicies[p]->getDirectiveStringAndReportSampleForContentType(           \
-          directive##_SRC_DIRECTIVE, violatedDirective, &reportSample);        \
+          nsIContentPolicy::TYPE_##contentPolicyType, violatedDirective,       \
+          &reportSample);                                                      \
       AsyncReportViolation(aTriggeringElement, aCSPEventListener, nullptr,     \
                            blockedContentSource, nullptr, violatedDirective,   \
                            p, NS_LITERAL_STRING_FROM_CSTRING(observerTopic),   \
@@ -759,17 +775,17 @@ nsCSPContext::LogViolationDetails(
     switch (aViolationType) {
       CASE_CHECK_AND_REPORT(EVAL, SCRIPT, u""_ns, CSP_UNSAFE_EVAL,
                             EVAL_VIOLATION_OBSERVER_TOPIC);
-      CASE_CHECK_AND_REPORT(INLINE_STYLE, STYLE, u""_ns, CSP_UNSAFE_INLINE,
+      CASE_CHECK_AND_REPORT(INLINE_STYLE, STYLESHEET, u""_ns, CSP_UNSAFE_INLINE,
                             INLINE_STYLE_VIOLATION_OBSERVER_TOPIC);
       CASE_CHECK_AND_REPORT(INLINE_SCRIPT, SCRIPT, u""_ns, CSP_UNSAFE_INLINE,
                             INLINE_SCRIPT_VIOLATION_OBSERVER_TOPIC);
       CASE_CHECK_AND_REPORT(NONCE_SCRIPT, SCRIPT, aNonce, CSP_UNSAFE_INLINE,
                             SCRIPT_NONCE_VIOLATION_OBSERVER_TOPIC);
-      CASE_CHECK_AND_REPORT(NONCE_STYLE, STYLE, aNonce, CSP_UNSAFE_INLINE,
+      CASE_CHECK_AND_REPORT(NONCE_STYLE, STYLESHEET, aNonce, CSP_UNSAFE_INLINE,
                             STYLE_NONCE_VIOLATION_OBSERVER_TOPIC);
       CASE_CHECK_AND_REPORT(HASH_SCRIPT, SCRIPT, aContent, CSP_UNSAFE_INLINE,
                             SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC);
-      CASE_CHECK_AND_REPORT(HASH_STYLE, STYLE, aContent, CSP_UNSAFE_INLINE,
+      CASE_CHECK_AND_REPORT(HASH_STYLE, STYLESHEET, aContent, CSP_UNSAFE_INLINE,
                             STYLE_HASH_VIOLATION_OBSERVER_TOPIC);
 
       default:
@@ -1602,6 +1618,7 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
                         ancestorsArray[a],
                         nullptr,  // no redirect here.
                         u""_ns,   // no nonce
+                        false,    // not a preload.
                         true,     // specific, do not use default-src
                         true,     // send violation reports
                         okToSendAncestor,
@@ -1638,6 +1655,7 @@ nsCSPContext::Permits(Element* aTriggeringElement,
       permitsInternal(aDir, aTriggeringElement, aCSPEventListener, aURI,
                       nullptr,  // no original (pre-redirect) URI
                       u""_ns,   // no nonce
+                      false,    // not a preload.
                       aSpecific,
                       true,    // send violation reports
                       true,    // send blocked URI in violation reports
