@@ -1,4 +1,3 @@
-"""Functions to download, install, setup, and use the mitmproxy playback tool"""
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,7 +9,9 @@ import signal
 import socket
 import sys
 import time
+
 import mozinfo
+import six
 from mozprocess import ProcessHandler
 from mozproxy.backends.base import Playback
 from mozproxy.recordings import RecordingFile
@@ -23,6 +24,7 @@ from mozproxy.utils import (
 )
 
 here = os.path.dirname(__file__)
+mitm_folder = os.path.dirname(os.path.realpath(__file__))
 
 
 def normalize_path(path):
@@ -46,7 +48,9 @@ class Mitmproxy(Playback):
         self.port = None
         self.mitmproxy_proc = None
         self.mitmdump_path = None
-        self.recordings = []
+        self.record_mode = config.get("record", False)
+        self.recording = None
+        self.playback_files = []
 
         self.browser_path = ""
         if config.get("binary", None):
@@ -56,7 +60,37 @@ class Mitmproxy(Playback):
         self.ignore_mitmdump_exit_failure = config.get(
             "ignore_mitmdump_exit_failure", False
         )
-        self.recording_paths = None
+
+        if self.record_mode:
+            if "recording_file" not in self.config:
+                LOG.error(
+                    "recording_file value was not provided. Proxy service wont' start "
+                )
+                raise Exception("Please provide a playback_files list.")
+
+            if not isinstance(self.config.get("recording_file"), six.string_types):
+                LOG.error("recording_file argument type is not str!")
+                raise Exception("recording_file argument type invalid!")
+
+            if not os.path.splitext(self.config.get("recording_file"))[1] == ".zip":
+                LOG.error(
+                    "Recording file type (%s) should be a zip. "
+                    "Please provide a valid file type!"
+                    % self.config.get("recording_file")
+                )
+                raise Exception("Recording file type should be a zip")
+
+            if os.path.exists(self.config.get("recording_file")):
+                LOG.error(
+                    "Recording file (%s) already exists."
+                    "Please provide a valid file path!"
+                    % self.config.get("recording_file")
+                )
+                raise Exception("Recording file already exists.")
+
+            if self.config.get("playback_files", False):
+                LOG.error("Record mode is True and playback_files where provided!")
+                raise Exception("playback_files specified during record!")
 
         if self.config.get("playback_version") is None:
             LOG.error(
@@ -138,11 +172,10 @@ class Mitmproxy(Playback):
             for file in manifest:
                 zip_path = os.path.join(self.mozproxy_dir, file["filename"])
                 LOG.info("Adding %s to recording list" % zip_path)
-                self.recordings.append(RecordingFile(zip_path))
+                self.playback_files.append(RecordingFile(zip_path))
 
     def download_playback_files(self):
         # Detect type of file from playback_files and download accordingly
-
         if "playback_files" not in self.config:
             LOG.error(
                 "playback_files value was not provided. Proxy service wont' start "
@@ -159,9 +192,9 @@ class Mitmproxy(Playback):
                 # URL provided
                 dest = os.path.join(self.mozproxy_dir, os.path.basename(playback_file))
                 download_file_from_url(playback_file, self.mozproxy_dir, extract=False)
-                # Add Downloaded file to recordings list
+                # Add Downloaded file to playback_files list
                 LOG.info("Adding %s to recording list" % dest)
-                self.recordings.append(RecordingFile(dest))
+                self.playback_files.append(RecordingFile(dest))
                 continue
 
             if not os.path.exists(playback_file):
@@ -174,7 +207,7 @@ class Mitmproxy(Playback):
             if os.path.splitext(playback_file)[1] == ".zip":
                 # zip file path provided
                 LOG.info("Adding %s to recording list" % playback_file)
-                self.recordings.append(RecordingFile(playback_file))
+                self.playback_files.append(RecordingFile(playback_file))
             elif os.path.splitext(playback_file)[1] == ".manifest":
                 # manifest file path provided
                 self.download_manifest_file(playback_file)
@@ -185,10 +218,18 @@ class Mitmproxy(Playback):
             os.makedirs(self.mozproxy_dir)
 
         self.download_mitm_bin()
-        self.download_playback_files()
+
+        if self.record_mode:
+            self.recording = RecordingFile(self.config["recording_file"])
+        else:
+            self.download_playback_files()
 
     def stop(self):
+        LOG.info("Mitmproxy stop!!")
         self.stop_mitmproxy_playback()
+        if self.record_mode:
+            LOG.info("Record mode ON. Generating zip file ")
+            self.recording.generate_zip_file()
 
     def wait(self, timeout=1):
         """Wait until the mitmproxy process has terminated."""
@@ -234,41 +275,70 @@ class Mitmproxy(Playback):
         # add proxy host and port options
         command.extend(["--listen-host", self.host, "--listen-port", str(self.port)])
 
-        if self.config.get("playback_record"):
-            command.extend(["-w", self.config.get("playback_record")])
-        elif len(self.recordings) > 0:
-            script = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
+        # record mode
+        if self.record_mode:
+
+            # generate recording script paths
+            inject_deterministic = os.path.join(
+                mitm_folder,
                 "scripts",
-                "alternate-server-replay.py",
+                "inject-deterministic.py",
             )
-            self.recording_paths = [
-                normalize_path(recording.recording_path)
-                for recording in self.recordings
+            http_protocol_extractor = os.path.join(
+                mitm_folder,
+                "scripts",
+                "http_protocol_extractor.py",
+            )
+
+            args = [
+                "--save-stream-file",
+                normalize_path(self.recording.recording_path),
+                "--set",
+                "websocket=false",
+                "--scripts",
+                inject_deterministic,
+                "--scripts",
+                http_protocol_extractor,
             ]
-
-            if self.config["playback_version"] in ["4.0.4", "5.1.1"]:
-                args = [
-                    "-v",  # Verbose mode
-                    "--set",
-                    "upstream_cert=false",
-                    "--set",
-                    "upload_dir=" + normalize_path(self.upload_dir),
-                    "--set",
-                    "websocket=false",
-                    "--set",
-                    "server_replay_files={}".format(",".join(self.recording_paths)),
-                    "--scripts",
-                    normalize_path(script),
-                ]
-                command.extend(args)
-            else:
-                raise Exception("Mitmproxy version is unknown!")
-
+            command.extend(args)
         else:
-            raise Exception(
-                "Mitmproxy can't start playback! Playback settings missing."
-            )
+            # playback mode
+            if len(self.playback_files) > 0:
+                script = os.path.join(
+                    mitm_folder,
+                    "scripts",
+                    "alternate-server-replay.py",
+                )
+
+                if self.config["playback_version"] in ["4.0.4", "5.1.1"]:
+                    args = [
+                        "-v",  # Verbose mode
+                        "--set",
+                        "upstream_cert=false",
+                        "--set",
+                        "upload_dir=" + normalize_path(self.upload_dir),
+                        "--set",
+                        "websocket=false",
+                        "--set",
+                        "server_replay_files={}".format(
+                            ",".join(
+                                [
+                                    normalize_path(playback_file.recording_path)
+                                    for playback_file in self.playback_files
+                                ]
+                            )
+                        ),
+                        "--scripts",
+                        normalize_path(script),
+                    ]
+                    command.extend(args)
+                else:
+                    raise Exception("Mitmproxy version is unknown!")
+
+            else:
+                raise Exception(
+                    "Mitmproxy can't start playback! Playback settings missing."
+                )
 
         # mitmproxy needs some DLL's that are a part of Firefox itself, so add to path
         env = os.environ.copy()
@@ -364,7 +434,7 @@ class Mitmproxy(Playback):
         """Extract confidence metrics from the netlocs file
         and convert them to perftest results
         """
-        if len(self.recordings) == 0:
+        if len(self.playback_files) == 0:
             LOG.warning(
                 "Proxy service did not load a recording file. "
                 "Confidence metrics will nt be generated"
@@ -373,7 +443,9 @@ class Mitmproxy(Playback):
 
         file_name = (
             "mitm_netlocs_%s.json"
-            % os.path.splitext(os.path.basename(self.recordings[0].recording_path))[0]
+            % os.path.splitext(os.path.basename(self.playback_files[0].recording_path))[
+                0
+            ]
         )
         path = os.path.normpath(os.path.join(self.upload_dir, file_name))
         if os.path.exists(path):
