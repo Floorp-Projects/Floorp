@@ -383,9 +383,9 @@
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odjavi se</string>
     <!-- Preference displays and allows changing current FxA device name -->
-    <string name="preferences_sync_device_name">Ime uređaja</string>
+    <string name="preferences_sync_device_name">Naziv uređaja</string>
     <!-- Text shown when user enters empty device name -->
-    <string name="empty_device_name_error">Ime uređaja ne može biti prazno.</string>
+    <string name="empty_device_name_error">Naziv uređaja ne može biti prazan.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sinkroniziranje …</string>
 

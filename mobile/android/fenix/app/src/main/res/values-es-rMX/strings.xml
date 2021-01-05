@@ -19,6 +19,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Tus pestañas privadas aparecerán aquí.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 pestaña abierta. Tocar para cambiar de pestaña.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -90,6 +94,13 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Descartar</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Cambia el diseño de las pestañas abiertas. Ve a Ajustes y selecciona cuadrícula bajo vista de pestañas.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Ir a ajustes</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">Ignorar</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nueva pestaña</string>
@@ -141,8 +152,6 @@
     <string name="browser_menu_find_in_page">Encontrar en página</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Pestaña privada</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Nueva pestaña</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Guardar en colección</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -326,6 +335,8 @@
     <string name="preferences_search_synced_tabs">Buscar pestañas sincronizadas</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Configuración de la cuenta</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Autocompletar URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Abrir enlaces en aplicaciones</string>
     <!-- Preference for open download with an external download manager app -->
@@ -335,6 +346,26 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificaciones</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Colección de complementos personalizada</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Aceptar</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Cancelar</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Nombre de la colección</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Dueño de la colección (ID de usuario)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Colección de complementos modificada. Cerrando la aplicación para aplicar los cambios…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Complemento no compatible</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">El complemento ya está instalado</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -414,6 +445,10 @@
     <string name="preferences_marketing_data">Datos de marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Comparte datos acerca de las funcionalidades que usas en %1$s con Leanplum, nuestro proveedor de marketing para móviles.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Estudios</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Permite a Mozilla instalar y ejecutar estudios</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experimentos</string>
     <!-- Summary for experiments preferences -->
@@ -462,6 +497,16 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seguir el tema del dispositivo</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Arrastrar para actualizar</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Desplazar para ocultar la barra</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Deslizar la barra hacia los lados para cambiar de pestaña</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Deslizar la barra hacia arriba para abrir pestañas</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Sesiones</string>
@@ -507,6 +552,15 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">No hay pestañas recientemente cerradas</string>
 
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Pestañas</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Vista de pestaña</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Lista</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Cuadrícula</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Cerrar pestañas</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -517,6 +571,15 @@
     <string name="close_tabs_after_one_week">Después de una semana</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Después de un mes</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Cerrar manualmente</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Cerrar después de un día</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Cerrar después de una semana</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Cerrar después de un mes</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -535,6 +598,8 @@
     <string name="tab_tray_title">Pestañas abiertas</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Guardar en colección</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Seleccionar</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Compartir todas las pestañas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -549,8 +614,18 @@
     <string name="tab_tray_menu_home">Ir a Inicio</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">Alternar modo de pestaña</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Marcador</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Cerrar</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Compartir pestañas seleccionadas</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Menú de pestañas seleccionadas</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Eliminar la pestaña de la colección</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Seleccionar pestañas</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Cerrar pestaña</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -583,7 +658,11 @@
     <string name="collection_rename">Cambiar nombre a colección</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Abrir pestañas</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Nombre de la colección</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Renombrar</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Eliminar</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -621,6 +700,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Eliminar %1$d elementos</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Hoy</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Ayer</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Últimas 24 horas</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -632,11 +715,26 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">No hay ningún historial</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Eliminar descargas</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">¿Seguro que quieres eliminar tus descargas?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Descargas removidas</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s removido</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">No hay descargas aquí</string>
+    <string name="download_empty_message_1">No hay archivos descargados</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d seleccionadas</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Abrir</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Remover</string>
 
 
     <!-- Crashes -->
@@ -758,6 +856,10 @@
     <string name="preference_phone_feature_location">Ubicación</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Notificación</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Almacenamiento persistente</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Contenido controlado por DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Pedir permiso</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -898,6 +1000,12 @@
     <string name="snackbar_tab_closed">Pestaña cerrada</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Pestañas cerradas</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">¡Pestañas cerradas!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">¡Marcadores guardados!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Ver</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">¡Añadido a sitios favoritos!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1046,6 +1154,10 @@
     <string name="onboarding_account_sign_in_header">Empieza a sincronizar marcadores, contraseñas y más con tu cuenta de Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Saber más</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Te has conectado como %s en otro navegador Firefox en este dispositivo. ¿Quieres conectarte con esta cuenta?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Sí, iniciar sesión</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1136,6 +1248,8 @@
     <string name="sign_in_with_camera">Inicia sesión con tu cámara</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Usar correo electrónico en su lugar</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[¿No tienes cuenta? <u>Crea una</u> para sincronizar Firefox entre dispositivos.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox dejará de sincronizar tu cuenta, pero no se eliminarán los datos de navegación en este dispositivo.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1247,6 +1361,11 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Bibliotecas OSS</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Rastreadores de redirección</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Limpia las cookies creadas por redirecciones a sitios web de seguimiento conocidos.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Ayuda</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1289,6 +1408,9 @@
     <string name="add_to_homescreen_continue">Continuar al sitio web</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nombre del acceso directo</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Puedes añadir fácilmente este sitio web a la pantalla de inicio de tu dispositivo para tener acceso instantáneo y navegar rápidamente, consiguiendo una experiencia similar a la de una aplicación real.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inicios de sesión y contraseñas</string>
@@ -1359,8 +1481,12 @@
     <string name="logins_site_copied">Sitio copiado al portapapeles</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar contraseña</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Borrar contraseña</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar nombre de usuario</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Borrar nombre de usuario</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar sitio</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1533,11 +1659,22 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Límite de sitios frecuentes alcanzado</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Para agregar un nuevo sitio favorito, elimina uno. Toca y mantén presionado el sitio y selecciona eliminar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Vale, entendido</string>
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Mostrar los sitios más visitados</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Nombre</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Nombre del sitio principal</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">Aceptar</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Cancelar</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Eliminar</string>
@@ -1545,6 +1682,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Saca el máximo provecho de %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Clic para más detalles</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Colecciona las cosas que te importan</string>

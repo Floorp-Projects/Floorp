@@ -620,6 +620,8 @@
     <string name="tab_tray_multiselect_menu_content_description">ᱪᱚᱭᱚᱱ ᱟᱠᱟᱱ ᱴᱮᱵ ᱢᱮᱱᱭᱩ ᱠᱚ</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">ᱴᱮᱵ ᱛᱩᱢᱟᱹᱞ ᱠᱷᱚᱱ ᱚᱪᱚᱜ ᱢᱮ</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">ᱴᱮᱵ ᱠᱚ ᱪᱚᱭᱚᱱ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ᱴᱮᱵ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -705,17 +707,13 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">ᱢᱟᱨᱮᱭᱟᱜ</string>
     <!-- Text shown when no history exists -->
-    <string name="history_empty_message">ᱱᱚᱲᱮ ᱦᱤᱛᱟᱹᱞ ᱵᱚᱱᱩ-ᱟ</string>
+    <string name="history_empty_message">ᱱᱚᱰᱮ ᱦᱤᱛᱟᱹᱞ ᱵᱚᱱᱩᱜ-ᱟ</string>
 
     <!-- Downloads -->
     <!-- Text for the button to clear all downloads -->
     <string name="download_delete_all">ᱰᱟᱩᱱᱞᱳᱰ ᱠᱚ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">ᱟᱢ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟ ᱛᱮ ᱟᱢᱟᱜ ᱰᱟᱩᱱᱞᱳᱰ ᱠᱚ ᱢᱮᱴᱟᱣ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">ᱰᱟᱩᱱᱞᱳᱰ ᱠᱚ ᱢᱮᱴᱟᱣ ᱮᱱᱟ</string>
-    <!-- Text shown when no download exists -->
-    <string name="download_empty_message">ᱱᱚᱰᱮ ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱵᱚᱱᱩᱜ-ᱟ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d ᱵᱟᱪᱷᱟᱣᱮᱱᱟ</string>
@@ -723,8 +721,10 @@
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">ᱠᱷᱩᱞᱟᱹ</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">ᱚᱪᱚᱜ</string>
 
 
     <!-- Crashes -->
@@ -807,7 +807,7 @@
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">ᱵᱟᱝ ᱵᱟᱛᱟᱣ URL</string>
     <!-- Bookmark screen message for empty bookmarks folder -->
-    <string name="bookmarks_empty_message">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱱᱚᱲᱮ ᱵᱮᱱᱩ-ᱟ</string>
+    <string name="bookmarks_empty_message">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱱᱚᱰᱮ ᱵᱚᱱᱩᱜ-ᱟ</string>
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
@@ -849,6 +849,8 @@
     <string name="preference_phone_feature_notification">ᱤᱛᱞᱟᱭ</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">ᱛᱟᱦᱮᱸᱱᱠᱟᱱ ᱡᱟᱭᱜᱟ</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-ᱠᱚᱵᱽᱡᱟ ᱡᱤᱱᱤᱥ</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱠᱩᱠᱞᱤ ᱢᱮ</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -990,6 +992,8 @@
     <string name="snackbar_tab_closed">ᱴᱮᱵ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ᱴᱮᱵ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">ᱴᱮᱵ ᱠᱚ ᱵᱚᱸᱫᱽ ᱮᱱᱟ!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">ᱵᱩᱻᱠᱢᱟᱨᱠ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱮᱱᱟ!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->

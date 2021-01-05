@@ -1710,7 +1710,7 @@
     <string name="onboarding_firefox_account_header">Aprovechá %s al máximo.</string>
 
     <!-- Content description radio buttons with a link to more information -->
-    <string name="radio_preference_info_content_description">Hacerclic aquí para más detalles</string>
+    <string name="radio_preference_info_content_description">Hacer clic aquí para más detalles</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Recolectá lo que te importa</string>
