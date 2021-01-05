@@ -41,7 +41,7 @@ async function setup_in_oopif() {
       // Force to flush the first style to avoid the first style is observed.
       target.getAnimations()[0];
       // FIXME: Bug 1578309 use anim.ready instead.
-      waitForFrame().then(() => {
+      promiseFrame().then(() => {
         FissionTestHelper.fireEventInEmbedder("OOPIF:SetupDone", true);
       });
     }

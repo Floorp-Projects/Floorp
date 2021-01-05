@@ -229,7 +229,7 @@ function getLastContentDisplayportFor(elementId) {
 }
 
 // Return a promise that is resolved on the next rAF callback
-function waitForFrame() {
+function promiseFrame() {
   return new Promise(resolve => {
     window.requestAnimationFrame(resolve);
   });
