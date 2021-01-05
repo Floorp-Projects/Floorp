@@ -8894,10 +8894,15 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       MOZ_LOG(gSHLog, LogLevel::Debug,
               ("Creating an active entry on nsDocShell %p to %s", this,
                aLoadState->URI()->GetSpecOrDefault().get()));
-      mActiveEntry = MakeUnique<SessionHistoryInfo>(
-          mActiveEntry.get(), aLoadState->URI(), HistoryID(),
-          newURITriggeringPrincipal, newURIPrincipalToInherit,
-          newURIPartitionedPrincipalToInherit, newCsp, mContentTypeHint);
+      if (mActiveEntry) {
+        mActiveEntry =
+            MakeUnique<SessionHistoryInfo>(*mActiveEntry, aLoadState->URI());
+      } else {
+        mActiveEntry = MakeUnique<SessionHistoryInfo>(
+            aLoadState->URI(), newURITriggeringPrincipal,
+            newURIPrincipalToInherit, newURIPartitionedPrincipalToInherit,
+            newCsp, mContentTypeHint);
+      }
 
       // Save the postData obtained from the previous page in to the session
       // history entry created for the anchor page, so that any history load of
@@ -11624,12 +11629,9 @@ void nsDocShell::UpdateActiveEntry(
   if (mActiveEntry) {
     // Link this entry to the previous active entry.
     mActiveEntry = MakeUnique<SessionHistoryInfo>(*mActiveEntry, aURI);
-    // FIXME Assert that mTriggeringPrincipal/mContentType/mDocShellID/
-    //       mDynamicallyCreated are correct?
   } else {
     mActiveEntry = MakeUnique<SessionHistoryInfo>(
-        nullptr, aURI, HistoryID(), aTriggeringPrincipal, nullptr, nullptr,
-        aCsp, mContentTypeHint);
+        aURI, aTriggeringPrincipal, nullptr, nullptr, aCsp, mContentTypeHint);
   }
   mActiveEntry->SetOriginalURI(aOriginalURI);
   mActiveEntry->SetTitle(aTitle);
