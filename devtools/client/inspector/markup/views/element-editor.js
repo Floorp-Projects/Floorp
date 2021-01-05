@@ -115,59 +115,9 @@ function ElementEditor(container, node) {
   this.onExpandBadgeClick = this.onExpandBadgeClick.bind(this);
   this.onTagEdit = this.onTagEdit.bind(this);
 
-  // Create the main editor
   this.buildMarkup();
 
-  // Make the tag name editable (unless this is a remote node or
-  // a document element)
-  if (!node.isDocumentElement) {
-    // Make the tag optionally tabbable but not by default.
-    this.tag.setAttribute("tabindex", "-1");
-    editableField({
-      element: this.tag,
-      multiline: true,
-      maxWidth: () => getAutocompleteMaxWidth(this.tag, this.container.elt),
-      trigger: "dblclick",
-      stopOnReturn: true,
-      done: this.onTagEdit,
-      cssProperties: this._cssProperties,
-    });
-  }
-
-  // Make the new attribute space editable.
-  this.newAttr.editMode = editableField({
-    element: this.newAttr,
-    multiline: true,
-    maxWidth: () => getAutocompleteMaxWidth(this.newAttr, this.container.elt),
-    trigger: "dblclick",
-    stopOnReturn: true,
-    contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
-    popup: this.markup.popup,
-    done: (val, commit) => {
-      if (!commit) {
-        return;
-      }
-
-      const doMods = this._startModifyingAttributes();
-      const undoMods = this._startModifyingAttributes();
-      this._applyAttributes(val, null, doMods, undoMods);
-      this.container.undo.do(
-        () => {
-          doMods.apply();
-        },
-        function() {
-          undoMods.apply();
-        }
-      );
-    },
-    cssProperties: this._cssProperties,
-  });
-
-  const displayName = this.node.displayName;
-  this.tag.textContent = displayName;
-  this.closeTag.textContent = displayName;
-
-  const isVoidElement = HTML_VOID_ELEMENTS.includes(displayName);
+  const isVoidElement = HTML_VOID_ELEMENTS.includes(this.node.displayName);
   if (node.isInHTMLDocument && isVoidElement) {
     this.elt.classList.add("void-element");
   }
@@ -181,6 +131,28 @@ ElementEditor.prototype = {
     this.elt = this.doc.createElement("span");
     this.elt.classList.add("editor");
 
+    this.renderOpenTag();
+    this.renderEventBadge();
+    this.renderCloseTag();
+
+    // Make the tag name editable (unless this is a remote node or
+    // a document element)
+    if (!this.node.isDocumentElement) {
+      // Make the tag optionally tabbable but not by default.
+      this.tag.setAttribute("tabindex", "-1");
+      editableField({
+        element: this.tag,
+        multiline: true,
+        maxWidth: () => getAutocompleteMaxWidth(this.tag, this.container.elt),
+        trigger: "dblclick",
+        stopOnReturn: true,
+        done: this.onTagEdit,
+        cssProperties: this._cssProperties,
+      });
+    }
+  },
+
+  renderOpenTag: function() {
     const open = this.doc.createElement("span");
     open.classList.add("open");
     open.appendChild(this.doc.createTextNode("<"));
@@ -189,11 +161,24 @@ ElementEditor.prototype = {
     this.tag = this.doc.createElement("span");
     this.tag.classList.add("tag", "theme-fg-color3");
     this.tag.setAttribute("tabindex", "-1");
+    this.tag.textContent = this.node.displayName;
     open.appendChild(this.tag);
 
-    this.attrList = this.doc.createElement("span");
-    open.appendChild(this.attrList);
+    this.renderAttributes(open);
+    this.renderNewAttributeEditor(open);
 
+    const closingBracket = this.doc.createElement("span");
+    closingBracket.classList.add("closing-bracket");
+    closingBracket.textContent = ">";
+    open.appendChild(closingBracket);
+  },
+
+  renderAttributes: function(containerEl) {
+    this.attrList = this.doc.createElement("span");
+    containerEl.appendChild(this.attrList);
+  },
+
+  renderNewAttributeEditor: function(containerEl) {
     this.newAttr = this.doc.createElement("span");
     this.newAttr.classList.add("newattr");
     this.newAttr.setAttribute("tabindex", "-1");
@@ -201,18 +186,46 @@ ElementEditor.prototype = {
       "aria-label",
       INSPECTOR_L10N.getStr("markupView.newAttribute.label")
     );
-    open.appendChild(this.newAttr);
+    containerEl.appendChild(this.newAttr);
 
-    const closingBracket = this.doc.createElement("span");
-    closingBracket.classList.add("closing-bracket");
-    closingBracket.textContent = ">";
-    open.appendChild(closingBracket);
+    // Make the new attribute space editable.
+    this.newAttr.editMode = editableField({
+      element: this.newAttr,
+      multiline: true,
+      maxWidth: () => getAutocompleteMaxWidth(this.newAttr, this.container.elt),
+      trigger: "dblclick",
+      stopOnReturn: true,
+      contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
+      popup: this.markup.popup,
+      done: (val, commit) => {
+        if (!commit) {
+          return;
+        }
 
+        const doMods = this._startModifyingAttributes();
+        const undoMods = this._startModifyingAttributes();
+        this._applyAttributes(val, null, doMods, undoMods);
+        this.container.undo.do(
+          () => {
+            doMods.apply();
+          },
+          function() {
+            undoMods.apply();
+          }
+        );
+      },
+      cssProperties: this._cssProperties,
+    });
+  },
+
+  renderEventBadge: function() {
     this.expandBadge = this.doc.createElement("span");
     this.expandBadge.classList.add("markup-expand-badge");
     this.expandBadge.addEventListener("click", this.onExpandBadgeClick);
     this.elt.appendChild(this.expandBadge);
+  },
 
+  renderCloseTag: function() {
     const close = this.doc.createElement("span");
     close.classList.add("close");
     close.appendChild(this.doc.createTextNode("</"));
@@ -220,6 +233,7 @@ ElementEditor.prototype = {
 
     this.closeTag = this.doc.createElement("span");
     this.closeTag.classList.add("tag", "theme-fg-color3");
+    this.closeTag.textContent = this.node.displayName;
     close.appendChild(this.closeTag);
 
     close.appendChild(this.doc.createTextNode(">"));
