@@ -23,6 +23,9 @@ exclude: true
 - Added [`WebRequest.Builder#body(@Nullable String)`][86.2] which converts a string to direct byte buffer.
 - Removed deprecated `REPLACED_UNSAFE_CONTENT`.
   ([bug 1667471]({{bugzilla}}1667471))
+- Removed deprecated [`GeckoSession#loadUri`][83.6] variants in favor of
+  [`GeckoSession#load`][83.7]. See docs for [`Loader`][83.8].
+  ([bug 1667471]({{bugzilla}}1667471))
 
 [86.1]: {{javadoc_uri}}/WebExtension.DownloadDelegate.html
 [86.2]: {{javadoc_uri}}/WebRequest.Builder#body-java.lang.String-
@@ -869,4 +872,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 604cbae58ecf5cd250c1ee9e75dadf626d601817
+[api-version]: 8e90a38158dffece873b51b23ac9e67a33d62aea

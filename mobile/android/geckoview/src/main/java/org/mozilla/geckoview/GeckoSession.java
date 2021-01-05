@@ -1743,7 +1743,7 @@ public class GeckoSession {
                 : request.mLoadFlags;
 
         // For performance reasons we short-circuit the delegate here
-        // instead of making Gecko call it for direct loadUri calls.
+        // instead of making Gecko call it for direct load calls.
         final NavigationDelegate.LoadRequest loadRequest =
                 new NavigationDelegate.LoadRequest(
                         request.mUri,
@@ -1793,142 +1793,6 @@ public class GeckoSession {
         load(new Loader().uri(uri));
     }
 
-    /**
-     * Load the given URI with specified HTTP request headers.
-     * @param uri The URI of the resource to load.
-     * @param additionalHeaders any additional request headers used with the load
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull String uri, final @Nullable Map<String, String> additionalHeaders) {
-        final Loader loader = new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE);
-
-        if (additionalHeaders != null) {
-            loader.additionalHeaders(additionalHeaders);
-        }
-
-        load(loader);
-    }
-
-    /**
-     * Load the given URI with the specified referrer and load type.
-     *
-     * @param uri the URI to load
-     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull String uri, final @LoadFlags int flags) {
-        load(new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .flags(flags));
-    }
-
-    /**
-     * Load the given URI with the specified referrer and load type.
-     *
-     * @param uri the URI to load
-     * @param referrer the referrer, may be null
-     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull String uri, final @Nullable String referrer,
-                        final @LoadFlags int flags) {
-        load(new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .referrer(referrer)
-                .flags(flags));
-    }
-
-    /**
-     * Load the given URI with the specified referrer, load type and HTTP request headers.
-     *
-     * @param uri the URI to load
-     * @param referrer the referrer, may be null
-     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
-     * @param additionalHeaders any additional request headers used with the load
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull String uri, final @Nullable String referrer,
-                        final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        final Loader loader = new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .referrer(referrer)
-                .flags(flags);
-
-        if (additionalHeaders != null) {
-            loader.additionalHeaders(additionalHeaders);
-        }
-
-        load(loader);
-    }
-
-    /**
-     * Load the given URI with the specified referrer and load type. This method will also do any
-     * applicable checks to ensure that the specified URI is both safe and allowable
-     * according to the referring GeckoSession.
-     *
-     * @param uri the URI to load
-     * @param referrer the referring GeckoSession, may be null
-     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull String uri, final @Nullable GeckoSession referrer,
-                        final @LoadFlags int flags) {
-        load(new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .referrer(referrer)
-                .flags(flags));
-    }
-
-    /**
-     * Load the given URI with the specified referrer, load type and HTTP request headers. This
-     * method will also do any applicable checks to ensure that the specified URI is both safe and
-     * allowable according to the referring GeckoSession.
-     *
-     * @param uri the URI to load
-     * @param referrer the referring GeckoSession, may be null
-     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
-     * @param additionalHeaders any additional request headers used with the load
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull String uri, final @Nullable GeckoSession referrer,
-                        final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        final Loader loader = new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .referrer(referrer)
-                .flags(flags);
-
-        if (additionalHeaders != null) {
-            loader.additionalHeaders(additionalHeaders);
-        }
-
-        load(loader);
-    }
-
     private GeckoResult<AllowOrDeny> shouldLoadUri(final NavigationDelegate.LoadRequest request) {
         final NavigationDelegate delegate = mNavigationHandler.getDelegate();
         if (delegate == null) {
@@ -1952,160 +1816,6 @@ public class GeckoSession {
         });
 
         return result;
-    }
-
-    /**
-     * Load the given URI.
-     * @param uri The URI of the resource to load.
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull Uri uri) {
-        load(new Loader()
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .uri(uri));
-    }
-
-    /**
-     * Load the given URI with specified HTTP request headers.
-     * @param uri The URI of the resource to load.
-     * @param additionalHeaders any additional request headers used with the load
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull Uri uri, final @Nullable Map<String, String> additionalHeaders) {
-        final Loader loader = new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE);
-
-        if (additionalHeaders != null) {
-            loader.additionalHeaders(additionalHeaders);
-        }
-
-        load(loader);
-    }
-
-    /**
-     * Load the given URI with the specified referrer and load type.
-     * @param uri the URI to load
-     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull Uri uri, final @LoadFlags int flags) {
-        load(new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .flags(flags));
-    }
-
-    /**
-     * Load the given URI with the specified referrer and load type.
-     * @param uri the URI to load
-     * @param referrer the Uri to use as the referrer
-     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull Uri uri, final @Nullable Uri referrer,
-                        final @LoadFlags int flags) {
-        load(new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .referrer(referrer)
-                .flags(flags));
-    }
-
-    /**
-     * Load the given URI with the specified referrer, load type and HTTP request headers.
-     * @param uri the URI to load
-     * @param referrer the Uri to use as the referrer
-     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
-     * @param additionalHeaders any additional request headers used with the load
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadUri(final @NonNull Uri uri, final @Nullable Uri referrer,
-                        final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        final Loader loader = new Loader()
-                .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .referrer(referrer)
-                .flags(flags);
-
-        if (additionalHeaders != null) {
-            loader.additionalHeaders(additionalHeaders);
-        }
-
-        load(loader);
-    }
-
-    /**
-     * Load the specified String data. Internally this is converted to a data URI.
-     *
-     * @param data a String representing the data
-     * @param mimeType the mime type of the data, e.g. "text/plain". Maybe be null, in
-     *                 which case the type is guessed.
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadString(@NonNull final String data, @Nullable final String mimeType) {
-        load(new Loader().data(data, mimeType));
-    }
-
-    /**
-     * Load the specified bytes. Internally this is converted to a data URI.
-     *
-     * @param bytes    the data to load
-     * @param mimeType the mime type of the data, e.g. video/mp4. May be null, in which
-     *                 case the type is guessed.
-     * @deprecated Use {@link #load} instead.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public void loadData(@NonNull final byte[] bytes, @Nullable final String mimeType) {
-        load(new Loader().data(bytes, mimeType));
-    }
-
-    /**
-     * Creates a data URI of of the form "data:&lt;mime type&gt;,&lt;base64-encoded data&gt;"
-     * @param bytes the bytes that should be contained in the URL
-     * @param mimeType optional mime type, e.g. text/plain
-     * @return a URI String
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public static @NonNull String createDataUri(@NonNull final byte[] bytes,
-                                                @Nullable final String mimeType) {
-        return Loader.createDataUri(bytes, mimeType);
-    }
-
-    /**
-     * Creates a data URI of of the form "data:&lt;mime type&gt;,&lt;base64-encoded data&gt;"
-     * @param data the String data that should be contained in the URL
-     * @param mimeType optional mime type, e.g. text/plain
-     * @return a URI String
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(version = 86, id = "load-uri-builder")
-    public static @NonNull String createDataUri(@NonNull final String data,
-                                                @Nullable final String mimeType) {
-        return Loader.createDataUri(data, mimeType);
     }
 
     /**
@@ -3493,7 +3203,7 @@ public class GeckoSession {
          * GeckoSession is now closed and unusable. You may call
          * {@link #open(GeckoRuntime)} to recover the session, but no state
          * is preserved. Most applications will want to call
-         * {@link #loadUri(Uri)} or {@link #restoreState(SessionState)} at this point.
+         * {@link #load} or {@link #restoreState(SessionState)} at this point.
          *
          * @param session The GeckoSession for which the content process has crashed.
          */
@@ -3505,7 +3215,7 @@ public class GeckoSession {
          * GeckoSession is now closed and unusable. You may call
          * {@link #open(GeckoRuntime)} to recover the session, but no state
          * is preserved. Most applications will want to call
-         * {@link #loadUri(Uri)} or {@link #restoreState(SessionState)} at this point.
+         * {@link #load} or {@link #restoreState(SessionState)} at this point.
          *
          * @param session The GeckoSession for which the content process has been killed.
          */
@@ -4020,7 +3730,7 @@ public class GeckoSession {
 
             /**
              * This load request was initiated by a direct navigation from the
-             * application. E.g. when calling {@link GeckoSession#loadUri}.
+             * application. E.g. when calling {@link GeckoSession#load}.
              */
             public final boolean isDirectNavigation;
 
@@ -4081,7 +3791,7 @@ public class GeckoSession {
 
         /**
         * A request has been made to open a new session. The URI is provided only for
-        * informational purposes. Do not call GeckoSession.loadUri() here. Additionally, the
+        * informational purposes. Do not call GeckoSession.load here. Additionally, the
         * returned GeckoSession must be a newly-created one.
         *
         * @param session The GeckoSession that initiated the callback.
