@@ -259,7 +259,21 @@ nsresult nsHtml5TreeOperation::Append(nsIContent* aNode, nsIContent* aParent,
 nsresult nsHtml5TreeOperation::Append(nsIContent* aNode, nsIContent* aParent,
                                       mozilla::dom::FromParser aFromParser,
                                       nsHtml5DocumentBuilder* aBuilder) {
-  return Append(aNode, aParent, aBuilder);
+  Maybe<nsHtml5AutoPauseUpdate> autoPause;
+  Maybe<dom::AutoCEReaction> autoCEReaction;
+  dom::DocGroup* docGroup = aParent->OwnerDoc()->GetDocGroup();
+  if (docGroup && aFromParser != mozilla::dom::FROM_PARSER_FRAGMENT) {
+    autoCEReaction.emplace(docGroup->CustomElementReactionsStack(), nullptr);
+  }
+  nsresult rv = Append(aNode, aParent, aBuilder);
+  // Pause the parser only when there are reactions to be invoked to avoid
+  // pausing parsing too aggressive.
+  if (autoCEReaction.isSome() && docGroup &&
+      docGroup->CustomElementReactionsStack()
+          ->IsElementQueuePushedForCurrentRecursionDepth()) {
+    autoPause.emplace(aBuilder);
+  }
+  return rv;
 }
 
 nsresult nsHtml5TreeOperation::AppendToDocument(
