@@ -210,7 +210,7 @@ macosx64-aarch64-devedition/opt:
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     dependencies:
-        linux64-rust-macos-beta: toolchain-linux64-rust-macos-beta
+        linux64-rust-macos-1.49: toolchain-linux64-rust-macos-1.49
     fetches:
         toolchain:
             - linux64-cctools-port
@@ -221,9 +221,9 @@ macosx64-aarch64-devedition/opt:
         # guaranteed order,we need to manually extract to a different
         # directory, and make the build use that instead, until we can use
         # a stable rust.
-        linux64-rust-macos-beta:
+        linux64-rust-macos-1.49:
             - artifact: rustc.tar.zst
-              dest: rustc-beta
+              dest: rustc-1.49
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition Universal"
@@ -476,7 +476,7 @@ macosx64-aarch64-shippable/opt:
         extra-config:
             mozconfig_platform: macosx64-aarch64
     dependencies:
-        linux64-rust-macos-beta: toolchain-linux64-rust-macos-beta
+        linux64-rust-macos-1.49: toolchain-linux64-rust-macos-1.49
     fetches:
         toolchain:
             - linux64-cctools-port
@@ -487,9 +487,9 @@ macosx64-aarch64-shippable/opt:
         # guaranteed order,we need to manually extract to a different
         # directory, and make the build use that instead, until we can use
         # a stable rust.
-        linux64-rust-macos-beta:
+        linux64-rust-macos-1.49:
             - artifact: rustc.tar.zst
-              dest: rustc-beta
+              dest: rustc-1.49
 
 macosx64-shippable/opt:
     description: "MacOS X Universal"
