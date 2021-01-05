@@ -4074,9 +4074,21 @@ nsresult QuotaManager::Init() {
 
 void QuotaManager::MaybeRecordShutdownStep(const Client::Type aClientType,
                                            const nsACString& aStepDescription) {
-  AssertIsOnBackgroundThread();
+  // Callable on any thread.
 
-  if (!mShutdownStartedAt) {
+  MaybeRecordShutdownStep(Some(aClientType), aStepDescription);
+}
+
+void QuotaManager::MaybeRecordQuotaManagerShutdownStep(
+    const nsACString& aStepDescription) {
+  // Callable on any thread.
+
+  MaybeRecordShutdownStep(Nothing{}, aStepDescription);
+}
+
+void QuotaManager::MaybeRecordShutdownStep(
+    const Maybe<Client::Type> aClientType, const nsACString& aStepDescription) {
+  if (!mShutdownStarted) {
     // We are not shutting down yet, we intentionally ignore this here to avoid
     // that every caller has to make a distinction for shutdown vs. non-shutdown
     // situations.
@@ -4090,14 +4102,24 @@ void QuotaManager::MaybeRecordShutdownStep(const Client::Type aClientType,
       nsPrintfCString("%fs: %s", elapsedSinceShutdownStart.ToSeconds(),
                       nsPromiseFlatCString(aStepDescription).get());
 
-  mShutdownSteps[aClientType].Append(stepString + "\n"_ns);
+  if (aClientType) {
+    AssertIsOnBackgroundThread();
+
+    mShutdownSteps[*aClientType].Append(stepString + "\n"_ns);
+  } else {
+    // Callable on any thread.
+    MutexAutoLock lock(mQuotaMutex);
+
+    mQuotaManagerShutdownSteps.Append(stepString + "\n"_ns);
+  }
 
 #ifdef DEBUG
   // XXX Probably this isn't the mechanism that should be used here.
 
   NS_DebugBreak(
       NS_DEBUG_WARNING,
-      nsAutoCString(Client::TypeToText(aClientType) + " shutdown step"_ns)
+      nsAutoCString(aClientType ? Client::TypeToText(*aClientType)
+                                : "quota manager"_ns + " shutdown step"_ns)
           .get(),
       stepString.get(), __FILE__, __LINE__);
 #endif
@@ -4105,6 +4127,7 @@ void QuotaManager::MaybeRecordShutdownStep(const Client::Type aClientType,
 
 void QuotaManager::Shutdown() {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(!mShutdownStarted);
 
   // Setting this flag prevents the service from being recreated and prevents
   // further storagess from being created.
@@ -4115,6 +4138,7 @@ void QuotaManager::Shutdown() {
   StopIdleMaintenance();
 
   mShutdownStartedAt.init(TimeStamp::NowLoRes());
+  mShutdownStarted = true;
 
   const auto& allClientTypes = AllClientTypes();
 
@@ -4147,21 +4171,28 @@ void QuotaManager::Shutdown() {
 
                 nsCString annotation;
 
-                for (Client::Type type : quotaManager->AllClientTypes()) {
-                  auto& quotaClient = *quotaManager->mClients[type];
+                {
+                  for (Client::Type type : quotaManager->AllClientTypes()) {
+                    auto& quotaClient = *quotaManager->mClients[type];
 
-                  if (!quotaClient.IsShutdownCompleted()) {
-                    annotation.AppendPrintf(
-                        "%s: %s\nIntermediate steps:\n%s\n\n",
-                        Client::TypeToText(type).get(),
-                        quotaClient.GetShutdownStatus().get(),
-                        quotaManager->mShutdownSteps[type].get());
+                    if (!quotaClient.IsShutdownCompleted()) {
+                      annotation.AppendPrintf(
+                          "%s: %s\nIntermediate steps:\n%s\n\n",
+                          Client::TypeToText(type).get(),
+                          quotaClient.GetShutdownStatus().get(),
+                          quotaManager->mShutdownSteps[type].get());
+                    }
                   }
-                }
 
-                if (gNormalOriginOps) {
-                  annotation.AppendPrintf("QM: %zu normal origin ops pending\n",
-                                          gNormalOriginOps->Length());
+                  if (gNormalOriginOps) {
+                    MutexAutoLock lock(quotaManager->mQuotaMutex);
+
+                    annotation.AppendPrintf(
+                        "QM: %zu normal origin ops pending\nIntermediate "
+                        "steps:\n%s\n",
+                        gNormalOriginOps->Length(),
+                        quotaManager->mQuotaManagerShutdownSteps.get());
+                  }
                 }
 
                 // We expect that at least one quota client didn't complete its
@@ -9606,6 +9637,11 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
       const auto& directory,
       QM_NewLocalFile(aQuotaManager.GetStoragePath(aPersistenceType)), QM_VOID);
 
+  nsTArray<nsCOMPtr<nsIFile>> directoriesForRemovalRetry;
+
+  aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
+      "ClearRequestBase: Starting deleting files"_ns);
+
   QM_TRY(
       CollectEachFile(
           *directory,
@@ -9624,8 +9660,8 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
                  }
                  return originScope;
                }(),
-           aPersistenceType, &aQuotaManager, this](
-              const nsCOMPtr<nsIFile>& file) -> mozilla::Result<Ok, nsresult> {
+           aPersistenceType, &aQuotaManager, &directoriesForRemovalRetry,
+           this](nsCOMPtr<nsIFile>&& file) -> mozilla::Result<Ok, nsresult> {
             QM_TRY_INSPECT(const bool& isDirectory,
                            MOZ_TO_RESULT_INVOKE(file, IsDirectory));
 
@@ -9672,25 +9708,12 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
               }
             }
 
-            {
-              nsresult rv;
-              for (uint32_t index = 0; index < 10; index++) {
-                // We can't guarantee that this will always succeed on
-                // Windows...
-                if (NS_SUCCEEDED((rv = file->Remove(true)))) {
-                  break;
-                }
+            // We can't guarantee that this will always succeed on
+            // Windows...
+            if (NS_FAILED((file->Remove(true)))) {
+              NS_WARNING("Failed to remove directory, retrying later.");
 
-                NS_WARNING(
-                    "Failed to remove directory, retrying after a short "
-                    "delay.");
-
-                PR_Sleep(PR_MillisecondsToInterval(200));
-              }
-
-              if (NS_FAILED(rv)) {
-                NS_WARNING("Failed to remove directory, giving up!");
-              }
+              directoriesForRemovalRetry.AppendElement(std::move(file));
             }
 
             const bool initialized =
@@ -9719,6 +9742,37 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
             return Ok{};
           }),
       QM_VOID);
+
+  // Retry removing any directories that failed to be removed earlier now.
+  //
+  // XXX This will still block this operation. We might instead dispatch a
+  // runnable to our own thread for each retry round with a timer. We must
+  // ensure that the directory lock is upheld until we complete or give up
+  // though.
+  for (uint32_t index = 0; index < 10; index++) {
+    aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
+        "ClearRequestBase: Retrying directory removal"_ns);
+
+    for (auto&& file : std::exchange(directoriesForRemovalRetry,
+                                     nsTArray<nsCOMPtr<nsIFile>>{})) {
+      if (NS_FAILED((file->Remove(true)))) {
+        directoriesForRemovalRetry.AppendElement(std::move(file));
+      }
+    }
+
+    if (directoriesForRemovalRetry.IsEmpty()) {
+      break;
+    }
+
+    PR_Sleep(PR_MillisecondsToInterval(200));
+  }
+
+  if (!directoriesForRemovalRetry.IsEmpty()) {
+    NS_WARNING("Failed to remove one or more directories, giving up!");
+  }
+
+  aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
+      "ClearRequestBase: Completed deleting files"_ns);
 }
 
 nsresult ClearRequestBase::DoDirectoryWork(QuotaManager& aQuotaManager) {
