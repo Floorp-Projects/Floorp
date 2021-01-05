@@ -287,22 +287,18 @@ class BrowserFragmentTest {
 
     @Test
     fun `WHEN isPullToRefreshEnabledInBrowser is disabled THEN pull down refresh is disabled`() {
-        every { homeActivity.isImmersive } returns false
         every { context.settings().isPullToRefreshEnabledInBrowser } returns true
-        assert(browserFragment.shouldPullToRefreshBeEnabled())
+        assert(browserFragment.shouldPullToRefreshBeEnabled(false))
 
         every { context.settings().isPullToRefreshEnabledInBrowser } returns false
-        assert(!browserFragment.shouldPullToRefreshBeEnabled())
+        assert(!browserFragment.shouldPullToRefreshBeEnabled(false))
     }
 
     @Test
-    fun `WHEN in immersive mode THEN pull down refresh is disabled`() {
-        every { homeActivity.isImmersive } returns false
+    fun `WHEN in fullscreen THEN pull down refresh is disabled`() {
         every { context.settings().isPullToRefreshEnabledInBrowser } returns true
-        assert(browserFragment.shouldPullToRefreshBeEnabled())
-
-        every { homeActivity.isImmersive } returns true
-        assert(!browserFragment.shouldPullToRefreshBeEnabled())
+        assert(browserFragment.shouldPullToRefreshBeEnabled(false))
+        assert(!browserFragment.shouldPullToRefreshBeEnabled(true))
     }
 
     private fun addAndSelectTab(tab: TabSessionState) {
