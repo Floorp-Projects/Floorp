@@ -44,6 +44,11 @@ add_task(async function reload_tab() {
   await tabReloaded;
 
   is(
+    gBrowser.getIcon(customizeTab),
+    "chrome://browser/skin/customize.svg",
+    "Tab should have customize icon"
+  );
+  is(
     customizeTab.getAttribute("customizemode"),
     "true",
     "Tab should be in customize mode"
@@ -71,6 +76,11 @@ add_task(async function reload_tab() {
   await BrowserTestUtils.switchTab(gBrowser, customizeTab);
   await customizePromise;
 
+  is(
+    gBrowser.getIcon(customizeTab),
+    "chrome://browser/skin/customize.svg",
+    "Tab should still have customize icon"
+  );
   is(
     customizeTab.getAttribute("customizemode"),
     "true",
