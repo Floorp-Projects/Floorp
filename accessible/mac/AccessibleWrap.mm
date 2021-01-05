@@ -280,6 +280,16 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+bool AccessibleWrap::ApplyPostFilter(const EWhichPostFilter& aSearchKey,
+                                     const nsString& aSearchText) {
+  // We currently only support the eContainsText post filter.
+  MOZ_ASSERT(aSearchKey == EWhichPostFilter::eContainsText,
+             "Only search text supported");
+  nsAutoString name;
+  Name(name);
+  return name.Find(aSearchText, true) != kNotFound;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // AccessibleWrap protected
 

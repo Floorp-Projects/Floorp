@@ -15,11 +15,15 @@
 using namespace mozilla::a11y;
 
 @interface MOXSearchInfo ()
-- (NSMutableArray*)getMatchesForRule:(PivotRule&)rule;
+- (NSArray*)getMatchesForRule:(PivotRule&)rule;
+
+- (NSArray<mozAccessible*>*)applyPostFilter:(NSArray<mozAccessible*>*)matches;
 
 - (AccessibleOrProxy)rootGeckoAccessible;
 
 - (AccessibleOrProxy)startGeckoAccessible;
+
+- (BOOL)shouldApplyPostFilter;
 @end
 
 @implementation MOXSearchInfo
@@ -48,6 +52,8 @@ using namespace mozilla::a11y;
   mImmediateDescendantsOnly =
       [[params objectForKey:@"AXImmediateDescendantsOnly"] boolValue];
 
+  mSearchText = [params objectForKey:@"AXSearchText"];
+
   return [super init];
 }
 
@@ -69,9 +75,12 @@ using namespace mozilla::a11y;
   return [self rootGeckoAccessible];
 }
 
-- (NSMutableArray*)getMatchesForRule:(PivotRule&)rule {
-  int resultLimit = mResultLimit;
-  NSMutableArray* matches = [[NSMutableArray alloc] init];
+- (NSArray*)getMatchesForRule:(PivotRule&)rule {
+  // If we will apply a post-filter, don't limit search so we
+  // don't come up short on the final result count.
+  int resultLimit = [self shouldApplyPostFilter] ? -1 : mResultLimit;
+
+  NSMutableArray<mozAccessible*>* matches = [[NSMutableArray alloc] init];
   AccessibleOrProxy geckoRootAcc = [self rootGeckoAccessible];
   AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
   Pivot p = Pivot(geckoRootAcc);
@@ -108,7 +117,70 @@ using namespace mozilla::a11y;
     match = mSearchForward ? p.Next(match, rule) : p.Prev(match, rule);
   }
 
-  return matches;
+  return [self applyPostFilter:matches];
+}
+
+- (BOOL)shouldApplyPostFilter {
+  // We currently only support AXSearchText as a post-search filter.
+  return !!mSearchText;
+}
+
+- (NSArray<mozAccessible*>*)applyPostFilter:(NSArray<mozAccessible*>*)matches {
+  if (![self shouldApplyPostFilter]) {
+    return matches;
+  }
+
+  NSMutableArray<mozAccessible*>* postMatches = [[NSMutableArray alloc] init];
+
+  nsString searchText;
+  nsCocoaUtils::GetStringForNSString(mSearchText, searchText);
+
+  [matches enumerateObjectsUsingBlock:^(mozAccessible* match, NSUInteger idx,
+                                        BOOL* stop) {
+    AccessibleOrProxy geckoAcc = [match geckoAccessible];
+    if (geckoAcc.IsNull()) {
+      return;
+    }
+
+    switch (geckoAcc.Role()) {
+      case roles::LANDMARK:
+      case roles::COMBOBOX:
+      case roles::LISTITEM:
+      case roles::COMBOBOX_LIST:
+      case roles::MENUBAR:
+      case roles::MENUPOPUP:
+      case roles::DOCUMENT:
+      case roles::APPLICATION:
+        // XXX: These roles either have AXTitle/AXDescription overridden as
+        // empty, or should never be returned in search text results. This
+        // should be integrated into a pivot rule in the future, and possibly
+        // better mapped somewhere.
+        return;
+      default:
+        break;
+    }
+
+    if (geckoAcc.IsAccessible()) {
+      AccessibleWrap* acc =
+          static_cast<AccessibleWrap*>(geckoAcc.AsAccessible());
+      if (acc->ApplyPostFilter(EWhichPostFilter::eContainsText, searchText)) {
+        if (mozAccessible* nativePostMatch =
+                GetNativeFromGeckoAccessible(acc)) {
+          [postMatches addObject:nativePostMatch];
+          if (mResultLimit > 0 &&
+              [postMatches count] >= static_cast<NSUInteger>(mResultLimit)) {
+            // If we reached the result limit, alter the `stop` pointer to YES
+            // to stop iteration.
+            *stop = YES;
+          }
+        }
+      }
+    }
+
+    // XXX: Proxy implementation in next patch.
+  }];
+
+  return postMatches;
 }
 
 - (NSArray*)performSearch {

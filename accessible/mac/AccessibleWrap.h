@@ -15,6 +15,7 @@
 #include <objc/objc.h>
 
 #include "Accessible.h"
+#include "PlatformExtTypes.h"
 #include "States.h"
 
 #include "nsCOMPtr.h"
@@ -48,6 +49,9 @@ class AccessibleWrap : public Accessible {
   virtual void Shutdown() override;
 
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
+
+  bool ApplyPostFilter(const EWhichPostFilter& aSearchKey,
+                       const nsString& aSearchText);
 
  protected:
   friend class xpcAccessibleMacInterface;
