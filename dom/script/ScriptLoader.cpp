@@ -1643,11 +1643,11 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
       aElement->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER;
 
   bool allowInlineScript = false;
-  rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT, nonce, parserCreated,
-                            scriptContent, nullptr /* nsICSPEventListener */,
-                            u""_ns, aElement->GetScriptLineNumber(),
-                            aElement->GetScriptColumnNumber(),
-                            &allowInlineScript);
+  rv = csp->GetAllowsInline(
+      nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE, nonce, parserCreated,
+      scriptContent, nullptr /* nsICSPEventListener */, u""_ns,
+      aElement->GetScriptLineNumber(), aElement->GetScriptColumnNumber(),
+      &allowInlineScript);
   return NS_SUCCEEDED(rv) && allowInlineScript;
 }
 
