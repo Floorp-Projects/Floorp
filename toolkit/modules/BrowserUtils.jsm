@@ -955,22 +955,22 @@ var BrowserUtils = {
     // enrolling users in the experiment if they have a history of
     // exceeding our origin cap.
     if (!this._checkedInitialExperimentQualification) {
-        this._checkedInitialExperimentQualification = true;
-        if (
-          !Services.prefs.prefHasUserValue(
-            FISSION_EXPERIMENT_PREF_LAST_DISQUALIFIED
-          )
-        ) {
-          for (let [bucketStr, entryCount] of Object.entries(
-            histogram.snapshot().values
-          )) {
-            let bucket = Number(bucketStr);
-            if (bucket > originCount && entryCount > 0) {
-              originCount = bucket;
-            }
+      this._checkedInitialExperimentQualification = true;
+      if (
+        !Services.prefs.prefHasUserValue(
+          FISSION_EXPERIMENT_PREF_LAST_DISQUALIFIED
+        )
+      ) {
+        for (let [bucketStr, entryCount] of Object.entries(
+          histogram.snapshot().values
+        )) {
+          let bucket = Number(bucketStr);
+          if (bucket > originCount && entryCount > 0) {
+            originCount = bucket;
           }
-          Services.prefs.setIntPref(FISSION_EXPERIMENT_PREF_LAST_DISQUALIFIED, 0);
         }
+        Services.prefs.setIntPref(FISSION_EXPERIMENT_PREF_LAST_DISQUALIFIED, 0);
+      }
     }
 
     let currentTimeSec = currentTime / 1000;
