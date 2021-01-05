@@ -33,68 +33,53 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
   MOZ_DIAGNOSTIC_ASSERT(StringEndsWith(nativeLeafName, "morgue"_ns));
 #endif
 
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  rv = aBodyDir->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   bool isEmpty = true;
-  nsCOMPtr<nsIFile> file;
-  while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
-         file) {
-    bool isDir = false;
-    rv = file->IsDirectory(&isDir);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  CACHE_TRY(quota::CollectEachFile(
+      *aBodyDir,
+      [&isEmpty, &aQuotaInfo, aTrackQuota, &aHandleFileFunc,
+       aCanRemoveFiles](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
+        CACHE_TRY_INSPECT(const bool& isDir,
+                          MOZ_TO_RESULT_INVOKE(file, IsDirectory));
 
-    // If it's a directory somehow, try to remove it and move on
-    if (NS_WARN_IF(isDir)) {
-      DebugOnly<nsresult> result =
-          RemoveNsIFileRecursively(aQuotaInfo, file, /* aTrackQuota */ false);
-      MOZ_ASSERT(NS_SUCCEEDED(result));
-      continue;
-    }
+        // If it's a directory somehow, try to remove it and move on
+        if (NS_WARN_IF(isDir)) {
+          DebugOnly<nsresult> result = RemoveNsIFileRecursively(
+              aQuotaInfo, file, /* aTrackQuota */ false);
+          MOZ_ASSERT(NS_SUCCEEDED(result));
+          return Ok{};
+        }
 
-    nsAutoCString leafName;
-    rv = file->GetNativeLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        nsAutoCString leafName;
+        CACHE_TRY(file->GetNativeLeafName(leafName));
 
-    // Delete all tmp files regardless of known bodies. These are all
-    // considered orphans.
-    if (StringEndsWith(leafName, ".tmp"_ns)) {
-      if (aCanRemoveFiles) {
-        DebugOnly<nsresult> result =
-            RemoveNsIFile(aQuotaInfo, file, aTrackQuota);
-        MOZ_ASSERT(NS_SUCCEEDED(result));
-        continue;
-      }
-    } else if (NS_WARN_IF(!StringEndsWith(leafName, ".final"_ns))) {
-      // Otherwise, it must be a .final file.  If its not, then try to remove it
-      // and move on
-      DebugOnly<nsresult> result =
-          RemoveNsIFile(aQuotaInfo, file, /* aTrackQuota */ false);
-      MOZ_ASSERT(NS_SUCCEEDED(result));
-      continue;
-    }
+        // Delete all tmp files regardless of known bodies. These are all
+        // considered orphans.
+        if (StringEndsWith(leafName, ".tmp"_ns)) {
+          if (aCanRemoveFiles) {
+            DebugOnly<nsresult> result =
+                RemoveNsIFile(aQuotaInfo, file, aTrackQuota);
+            MOZ_ASSERT(NS_SUCCEEDED(result));
+            return Ok{};
+          }
+        } else if (NS_WARN_IF(!StringEndsWith(leafName, ".final"_ns))) {
+          // Otherwise, it must be a .final file.  If its not, then try to
+          // remove it and move on
+          DebugOnly<nsresult> result =
+              RemoveNsIFile(aQuotaInfo, file, /* aTrackQuota */ false);
+          MOZ_ASSERT(NS_SUCCEEDED(result));
+          return Ok{};
+        }
 
-    bool fileDeleted;
-    rv = aHandleFileFunc(file, leafName, fileDeleted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (fileDeleted) {
-      continue;
-    }
+        CACHE_TRY_INSPECT(const bool& fileDeleted,
+                          aHandleFileFunc(file, leafName));
+        if (fileDeleted) {
+          return Ok{};
+        }
 
-    isEmpty = false;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        isEmpty = false;
+
+        return Ok{};
+      }));
 
   if (isEmpty && aCanRemoveFiles) {
     DebugOnly<nsresult> result =

@@ -15,6 +15,7 @@
 #include <utility>
 #include "mozIStorageStatement.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
@@ -26,7 +27,9 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsIEventTarget.h"
+#include "nsIFile.h"
 #include "nsLiteralString.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
@@ -704,13 +707,6 @@ class NotNull;
         mozilla::dom::quota::_key,                  \
         mozilla::Telemetry::LABELS_QM_INIT_TELEMETRY_ERROR::_label);
 
-#  define REPORT_TELEMETRY_ERR_IN_INIT(_initializing, _key, _label) \
-    do {                                                            \
-      if (_initializing) {                                          \
-        REPORT_TELEMETRY_INIT_ERR(_key, _label)                     \
-      }                                                             \
-    } while (0)
-
 #  define RECORD_IN_NIGHTLY(_recorder, _status) \
     do {                                        \
       if (NS_SUCCEEDED(_recorder)) {            \
@@ -718,23 +714,21 @@ class NotNull;
       }                                         \
     } while (0)
 
-#  define CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(_dummy) continue
+#  define OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS \
+    Ok {}
 
 #  define RETURN_STATUS_OR_RESULT(_status, _rv) \
-    return NS_FAILED(_status) ? _status : _rv
+    return Err(NS_FAILED(_status) ? (_status) : (_rv))
 #else
 #  define REPORT_TELEMETRY_INIT_ERR(_key, _label) \
-    {}
-
-#  define REPORT_TELEMETRY_ERR_IN_INIT(_initializing, _key, _label) \
     {}
 
 #  define RECORD_IN_NIGHTLY(_dummy, _status) \
     {}
 
-#  define CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(_rv) return _rv
+#  define OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS QM_PROPAGATE
 
-#  define RETURN_STATUS_OR_RESULT(_status, _rv) return _rv
+#  define RETURN_STATUS_OR_RESULT(_status, _rv) return Err(_rv)
 #endif
 
 class mozIStorageConnection;
@@ -1166,6 +1160,62 @@ auto CollectElementsWhileHasResultTyped(mozIStorageStatement& aStmt,
                                         StepFunc&& aStepFunc) {
   return CollectElementsWhileHasResult<StepFunc, ArrayType>(
       aStmt, std::forward<StepFunc>(aStepFunc));
+}
+
+namespace detail {
+template <typename Cancel, typename Body>
+Result<mozilla::Ok, nsresult> CollectEachFile(nsIFile& aDirectory,
+                                              const Cancel& aCancel,
+                                              const Body& aBody) {
+  QM_TRY_INSPECT(const auto& entries,
+                 MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                            aDirectory, GetDirectoryEntries));
+
+  return CollectEach(
+      [&entries, &aCancel]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+        if (aCancel()) {
+          return nsCOMPtr<nsIFile>{};
+        }
+
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
+                                                 GetNextFile));
+      },
+      aBody);
+}
+}  // namespace detail
+
+template <typename Body>
+Result<mozilla::Ok, nsresult> CollectEachFile(nsIFile& aDirectory,
+                                              const Body& aBody) {
+  return detail::CollectEachFile(
+      aDirectory, [] { return false; }, aBody);
+}
+
+template <typename Body>
+Result<mozilla::Ok, nsresult> CollectEachFileAtomicCancelable(
+    nsIFile& aDirectory, const Atomic<bool>& aCanceled, const Body& aBody) {
+  return detail::CollectEachFile(
+      aDirectory, [&aCanceled] { return static_cast<bool>(aCanceled); }, aBody);
+}
+
+template <typename T, typename Body>
+auto ReduceEachFileAtomicCancelable(nsIFile& aDirectory,
+                                    const Atomic<bool>& aCanceled, T aInit,
+                                    const Body& aBody) -> Result<T, nsresult> {
+  QM_TRY_INSPECT(const auto& entries,
+                 MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                            aDirectory, GetDirectoryEntries));
+
+  return ReduceEach(
+      [&entries, &aCanceled]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+        if (aCanceled) {
+          return nsCOMPtr<nsIFile>{};
+        }
+
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
+                                                 GetNextFile));
+      },
+      std::move(aInit), aBody);
 }
 
 }  // namespace quota
