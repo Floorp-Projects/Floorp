@@ -324,7 +324,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   void discardDef(MDefinition* def);
   void discardAllInstructions();
   void discardAllInstructionsStartingAt(MInstructionIterator iter);
-  void discardAllPhiOperands();
   void discardAllPhis();
   void discardAllResumePoints(bool discardEntry = true);
   void clear();
@@ -738,7 +737,6 @@ class MIRGraph {
   }
   ReversePostorderIterator rpoEnd() { return blocks_.end(); }
   void removeBlock(MBasicBlock* block);
-  void removeBlockIncludingPhis(MBasicBlock* block);
   void moveBlockToEnd(MBasicBlock* block) {
     blocks_.remove(block);
     MOZ_ASSERT_IF(!blocks_.empty(), block->id());
