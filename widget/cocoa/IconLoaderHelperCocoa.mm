@@ -99,7 +99,7 @@ nsresult IconLoaderHelperCocoa::OnComplete(imgIContainer* aImage, const nsIntRec
                 drawingHandler:^BOOL(NSRect subImageRect) {
                   [newImage drawInRect:NSMakeRect(0, 0, mIconWidth, mIconHeight)
                               fromRect:NSMakeRect(aRect.x, aRect.y, aRect.width, aRect.height)
-                             operation:NSCompositeCopy
+                             operation:NSCompositingOperationCopy
                               fraction:1.0f];
                   return YES;
                 }];

@@ -435,7 +435,7 @@ nsresult nsMenuBarX::Paint() {
 // localized) cmd+key shortcut, and belongs to a keyset containing similar
 // objects.  For example "key_selectAll".  Returns a value that can be
 // compared to the first character of [NSEvent charactersIgnoringModifiers]
-// when [NSEvent modifierFlags] == NSCommandKeyMask.
+// when [NSEvent modifierFlags] == NSEventModifierFlagCommand.
 char nsMenuBarX::GetLocalizedAccelKey(const char* shortcutID) {
   if (!sLastGeckoMenuBarPainted) return 0;
 

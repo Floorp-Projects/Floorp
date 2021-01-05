@@ -60,7 +60,7 @@ bool FireAndWaitForTracerEvent() {
 
   // Post an application-defined event to the main thread's event queue
   // and wait for it to get processed.
-  [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
+  [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
                                       location:NSMakePoint(0, 0)
                                  modifierFlags:0
                                      timestamp:0

@@ -352,16 +352,16 @@ static unsigned int WindowMaskForBorderStyle(nsBorderStyle aBorderStyle) {
   bool allOrDefault = (aBorderStyle == eBorderStyle_all || aBorderStyle == eBorderStyle_default);
 
   /* Apple's docs on NSWindow styles say that "a window's style mask should
-   * include NSTitledWindowMask if it includes any of the others [besides
-   * NSBorderlessWindowMask]".  This implies that a borderless window
-   * shouldn't have any other styles than NSBorderlessWindowMask.
+   * include NSWindowStyleMaskTitled if it includes any of the others [besides
+   * NSWindowStyleMaskBorderless]".  This implies that a borderless window
+   * shouldn't have any other styles than NSWindowStyleMaskBorderless.
    */
-  if (!allOrDefault && !(aBorderStyle & eBorderStyle_title)) return NSBorderlessWindowMask;
+  if (!allOrDefault && !(aBorderStyle & eBorderStyle_title)) return NSWindowStyleMaskBorderless;
 
-  unsigned int mask = NSTitledWindowMask;
-  if (allOrDefault || aBorderStyle & eBorderStyle_close) mask |= NSClosableWindowMask;
-  if (allOrDefault || aBorderStyle & eBorderStyle_minimize) mask |= NSMiniaturizableWindowMask;
-  if (allOrDefault || aBorderStyle & eBorderStyle_resizeh) mask |= NSResizableWindowMask;
+  unsigned int mask = NSWindowStyleMaskTitled;
+  if (allOrDefault || aBorderStyle & eBorderStyle_close) mask |= NSWindowStyleMaskClosable;
+  if (allOrDefault || aBorderStyle & eBorderStyle_minimize) mask |= NSWindowStyleMaskMiniaturizable;
+  if (allOrDefault || aBorderStyle & eBorderStyle_resizeh) mask |= NSWindowStyleMaskResizable;
 
   return mask;
 }
@@ -374,8 +374,8 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
                                            bool aRectIsFrameRect) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // We default to NSBorderlessWindowMask, add features if needed.
-  unsigned int features = NSBorderlessWindowMask;
+  // We default to NSWindowStyleMaskBorderless, add features if needed.
+  unsigned int features = NSWindowStyleMaskBorderless;
 
   // Configure the window we will create based on the window type.
   switch (mWindowType) {
@@ -385,9 +385,9 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
       break;
     case eWindowType_popup:
       if (aBorderStyle != eBorderStyle_default && mBorderStyle & eBorderStyle_title) {
-        features |= NSTitledWindowMask;
+        features |= NSWindowStyleMaskTitled;
         if (aBorderStyle & eBorderStyle_close) {
-          features |= NSClosableWindowMask;
+          features |= NSWindowStyleMaskClosable;
         }
       }
       break;
@@ -397,11 +397,11 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
       break;
     case eWindowType_sheet:
       if (mParent->WindowType() != eWindowType_invisible && aBorderStyle & eBorderStyle_resizeh) {
-        features = NSResizableWindowMask;
+        features = NSWindowStyleMaskResizable;
       } else {
-        features = NSMiniaturizableWindowMask;
+        features = NSWindowStyleMaskMiniaturizable;
       }
-      features |= NSTitledWindowMask;
+      features |= NSWindowStyleMaskTitled;
       break;
     default:
       NS_ERROR("Unhandled window type!");
@@ -450,14 +450,14 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
   // Note that we need to check the window type because we mark sheets as
   // having titlebars.
   if ((mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) &&
-      (features & NSTitledWindowMask))
+      (features & NSWindowStyleMaskTitled))
     windowClass = [ToolbarWindow class];
   // If we're a popup window we need to use the PopupWindow class.
   else if (mWindowType == eWindowType_popup)
     windowClass = [PopupWindow class];
   // If we're a non-popup borderless window we need to use the
   // BorderlessWindow class.
-  else if (features == NSBorderlessWindowMask)
+  else if (features == NSWindowStyleMaskBorderless)
     windowClass = [BorderlessWindow class];
 
   // Create the window
@@ -1533,7 +1533,7 @@ static bool AlwaysUsesNativeFullScreen() {
   NSScreen* cocoaScreen = ScreenHelperCocoa::CocoaScreenForScreen(widgetScreen);
 
   NSWindow* win = [[NSWindow alloc] initWithContentRect:[cocoaScreen frame]
-                                              styleMask:NSBorderlessWindowMask
+                                              styleMask:NSWindowStyleMaskBorderless
                                                 backing:NSBackingStoreBuffered
                                                   defer:YES];
   [win setBackgroundColor:[NSColor blackColor]];
@@ -2013,7 +2013,7 @@ nsresult nsCocoaWindow::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aSta
 static nsSizeMode GetWindowSizeMode(NSWindow* aWindow, bool aFullScreen) {
   if (aFullScreen) return nsSizeMode_Fullscreen;
   if ([aWindow isMiniaturized]) return nsSizeMode_Minimized;
-  if (([aWindow styleMask] & NSResizableWindowMask) && [aWindow isZoomed])
+  if (([aWindow styleMask] & NSWindowStyleMaskResizable) && [aWindow isZoomed])
     return nsSizeMode_Maximized;
   return nsSizeMode_Normal;
 }
@@ -2244,7 +2244,7 @@ LayoutDeviceIntSize nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize&
   // This is the same thing the windows widget does, but we probably should fix
   // that, see bug 1445738.
   NSUInteger styleMask = [mWindow styleMask];
-  styleMask &= ~NSFullSizeContentViewWindowMask;
+  styleMask &= ~NSWindowStyleMaskFullSizeContentView;
   NSRect inflatedRect = [NSWindow frameRectForContentRect:rect styleMask:styleMask];
   r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(inflatedRect, backingScale);
   return r.Size();
@@ -3282,7 +3282,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     return aFrameRect;
   }
   NSUInteger styleMask = [self styleMask];
-  styleMask &= ~NSFullSizeContentViewWindowMask;
+  styleMask &= ~NSWindowStyleMaskFullSizeContentView;
   return [NSWindow contentRectForFrameRect:aFrameRect styleMask:styleMask];
 }
 
@@ -3291,7 +3291,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     return aChildViewRect;
   }
   NSUInteger styleMask = [self styleMask];
-  styleMask &= ~NSFullSizeContentViewWindowMask;
+  styleMask &= ~NSWindowStyleMaskFullSizeContentView;
   return [NSWindow frameRectForContentRect:aChildViewRect styleMask:styleMask];
 }
 
@@ -3501,8 +3501,8 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 - (void)mouseUp:(NSEvent*)event {
   if ([event clickCount] == 2) {
     // Handle titlebar double click. We don't get the window's default behavior here because the
-    // window uses NSFullSizeContentViewWindowMask, and this view (the titlebar gradient view) is
-    // technically part of the window "contents" (it's a subview of the content view).
+    // window uses NSWindowStyleMaskFullSizeContentView, and this view (the titlebar gradient view)
+    // is technically part of the window "contents" (it's a subview of the content view).
     if (nsCocoaUtils::ShouldZoomOnTitlebarDoubleClick()) {
       [[self window] performZoom:nil];
     } else if (nsCocoaUtils::ShouldMinimizeOnTitlebarDoubleClick()) {
@@ -3562,7 +3562,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   // CoreAnimation on for the entire window, which causes glitches in combination with our
   // non-CoreAnimation drawing. (Specifically, on macOS versions up until at least 10.14.0,
   // layer-backed NSOpenGLViews have extremely glitchy resizing behavior.)
-  aStyle |= NSFullSizeContentViewWindowMask;
+  aStyle |= NSWindowStyleMaskFullSizeContentView;
 
   // -[NSWindow initWithContentRect:styleMask:backing:defer:] calls
   // [self frameRectForContentRect:styleMask:] to convert the supplied content
@@ -3642,7 +3642,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 - (void)setContentView:(NSView*)aView {
   [super setContentView:aView];
 
-  if (!([self styleMask] & NSFullSizeContentViewWindowMask)) {
+  if (!([self styleMask] & NSWindowStyleMaskFullSizeContentView)) {
     // Move the contentView to the bottommost layer so that it's guaranteed
     // to be under the window buttons.
     // When the window uses the NSFullSizeContentViewMask, this manual
@@ -3685,7 +3685,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   // titlebarHeight of zero.
   NSRect frameRect = [self frame];
   NSUInteger styleMask = [self styleMask];
-  styleMask &= ~NSFullSizeContentViewWindowMask;
+  styleMask &= ~NSWindowStyleMaskFullSizeContentView;
   NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:styleMask];
   return NSMaxY(frameRect) - NSMaxY(originalContentRect);
 }
@@ -3751,8 +3751,8 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 - (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition {
   NSInteger styleMask = [self styleMask];
-  if ([self drawsContentsIntoWindowFrame] && !(styleMask & NSFullScreenWindowMask) &&
-      (styleMask & NSTitledWindowMask)) {
+  if ([self drawsContentsIntoWindowFrame] && !(styleMask & NSWindowStyleMaskFullScreen) &&
+      (styleMask & NSWindowStyleMaskTitled)) {
     if (NSIsEmptyRect(mWindowButtonsRect)) {
       // Empty rect. Let's hide the buttons.
       // Position is in non-flipped window coordinates. Using frame's height
@@ -3823,17 +3823,17 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   NSEventType type = [anEvent type];
 
   switch (type) {
-    case NSScrollWheel:
-    case NSLeftMouseDown:
-    case NSLeftMouseUp:
-    case NSRightMouseDown:
-    case NSRightMouseUp:
-    case NSOtherMouseDown:
-    case NSOtherMouseUp:
-    case NSMouseMoved:
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged: {
+    case NSEventTypeScrollWheel:
+    case NSEventTypeLeftMouseDown:
+    case NSEventTypeLeftMouseUp:
+    case NSEventTypeRightMouseDown:
+    case NSEventTypeRightMouseUp:
+    case NSEventTypeOtherMouseDown:
+    case NSEventTypeOtherMouseUp:
+    case NSEventTypeMouseMoved:
+    case NSEventTypeLeftMouseDragged:
+    case NSEventTypeRightMouseDragged:
+    case NSEventTypeOtherMouseDragged: {
       // Drop all mouse events if a modal window has appeared above us.
       // This helps make us behave as if the OS were running a "real" modal
       // event loop.
@@ -3912,17 +3912,17 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   NSEventType type = [anEvent type];
 
   switch (type) {
-    case NSScrollWheel:
-    case NSLeftMouseDown:
-    case NSLeftMouseUp:
-    case NSRightMouseDown:
-    case NSRightMouseUp:
-    case NSOtherMouseDown:
-    case NSOtherMouseUp:
-    case NSMouseMoved:
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged: {
+    case NSEventTypeScrollWheel:
+    case NSEventTypeLeftMouseDown:
+    case NSEventTypeLeftMouseUp:
+    case NSEventTypeRightMouseDown:
+    case NSEventTypeRightMouseUp:
+    case NSEventTypeOtherMouseDown:
+    case NSEventTypeOtherMouseUp:
+    case NSEventTypeMouseMoved:
+    case NSEventTypeLeftMouseDragged:
+    case NSEventTypeRightMouseDragged:
+    case NSEventTypeOtherMouseDragged: {
       // Drop all mouse events if a modal window has appeared above us.
       // This helps make us behave as if the OS were running a "real" modal
       // event loop.
