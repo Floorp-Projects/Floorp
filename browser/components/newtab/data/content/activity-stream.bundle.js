@@ -750,7 +750,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     const {
       mayHaveSponsoredTopSites
     } = prefs;
-    const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", showLogo && "visible-logo"].filter(v => v).join(" ");
+    const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", showLogo && "visible-logo", newNewtabExperienceEnabled && "newtab-experience"].filter(v => v).join(" ");
     return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", null, canShowCustomizationMenu ? react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PersonalizeButton, {
       onClick: this.openCustomizationMenu
     }) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
@@ -8626,6 +8626,8 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
       showSearchShortcutsForm
     } = props.TopSites;
     const extraMenuOptions = ["AddTopSite"];
+    const newNewtabExperienceEnabled = props.Prefs.values["newNewtabExperience.enabled"];
+    const colors = props.Prefs.values["newNewtabExperience.colors"];
 
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
       extraMenuOptions.push("AddSearchShortcut");
@@ -8665,7 +8667,9 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
       TopSites: props.TopSites,
       TopSitesRows: props.TopSitesRows,
       dispatch: props.dispatch,
-      topSiteIconType: topSiteIconType
+      topSiteIconType: topSiteIconType,
+      newNewtabExperienceEnabled: newNewtabExperienceEnabled,
+      colors: colors
     }), react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("div", {
       className: "edit-topsites-wrapper"
     }, editForm && react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("div", {
@@ -8678,7 +8682,9 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
       site: props.TopSites.rows[editForm.index],
       onClose: this.onEditFormClose,
       dispatch: this.props.dispatch
-    }, editForm)))), showSearchShortcutsForm && react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("div", {
+    }, editForm, {
+      newNewtabExperienceEnabled: newNewtabExperienceEnabled
+    })))), showSearchShortcutsForm && react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("div", {
       className: "edit-search-shortcuts"
     }, react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_asrouter_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_5__["ModalOverlayWrapper"], {
       unstyled: true,
@@ -9078,33 +9084,65 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
       this.props.onClick(event);
     }
   }
+  /*
+   * Takes the url as a string, runs it through a simple (non-secure) hash turning it into a random number
+   * Apply that random number to the color array. The same url will always generate the same color.
+   */
 
-  render() {
-    const {
-      children,
-      className,
-      defaultStyle,
-      isDraggable,
-      link,
-      onClick,
-      title
+
+  generateColor() {
+    let {
+      title,
+      colors
     } = this.props;
-    const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
+
+    if (!colors) {
+      return "";
+    }
+
+    let colorArray = colors.split(",");
+
+    const hashStr = str => {
+      let hash = 0;
+
+      for (let i = 0; i < str.length; i++) {
+        let charCode = str.charCodeAt(i);
+        hash += charCode;
+      }
+
+      return hash;
+    };
+
+    let hash = hashStr(title);
+    let index = hash % colorArray.length;
+    return colorArray[index];
+  }
+
+  calculateStyle() {
+    const {
+      defaultStyle,
+      link,
+      newNewtabExperienceEnabled
+    } = this.props;
     const {
       tippyTopIcon,
       faviconSize
     } = link;
-    const [letterFallback] = title;
     let imageClassName;
     let imageStyle;
     let showSmallFavicon = false;
     let smallFaviconStyle;
     let smallFaviconFallback;
     let hasScreenshotImage = this.state.screenshotImage && this.state.screenshotImage.url;
+    let selectedColor;
 
     if (defaultStyle) {
       // force no styles (letter fallback) even if the link has imagery
       smallFaviconFallback = false;
+
+      if (newNewtabExperienceEnabled) {
+        selectedColor = this.generateColor();
+      }
     } else if (link.searchTopSite) {
       imageClassName = "top-site-icon rich-icon";
       imageStyle = {
@@ -9142,6 +9180,9 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
         smallFaviconStyle = {
           backgroundImage: `url(${link.favicon})`
         };
+      } else if (newNewtabExperienceEnabled) {
+        selectedColor = this.generateColor();
+        imageClassName = "";
       } else if (hasScreenshotImage) {
         // Don't show a small favicon if there is no screenshot, because that
         // would result in two fallback icons
@@ -9150,6 +9191,36 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
       }
     }
 
+    return {
+      showSmallFavicon,
+      smallFaviconFallback,
+      smallFaviconStyle,
+      imageStyle,
+      imageClassName,
+      selectedColor
+    };
+  }
+
+  render() {
+    const {
+      children,
+      className,
+      isDraggable,
+      link,
+      onClick,
+      title,
+      newNewtabExperienceEnabled
+    } = this.props;
+    const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
+    const [letterFallback] = title;
+    const {
+      showSmallFavicon,
+      smallFaviconFallback,
+      smallFaviconStyle,
+      imageStyle,
+      imageClassName,
+      selectedColor
+    } = this.calculateStyle();
     let draggableProps = {};
 
     if (isDraggable) {
@@ -9176,7 +9247,25 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
       onKeyPress: this.onKeyPress,
       onClick: onClick,
       draggable: true
+    }, newNewtabExperienceEnabled && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: "tile",
+      "aria-hidden": true
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: selectedColor ? "icon-wrapper letter-fallback" : "icon-wrapper",
+      "data-fallback": letterFallback,
+      style: selectedColor ? {
+        backgroundColor: selectedColor
+      } : {}
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: imageClassName,
+      style: imageStyle
+    }), showSmallFavicon && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: "top-site-icon default-icon",
+      "data-fallback": smallFaviconFallback && letterFallback,
+      style: smallFaviconStyle
+    })), link.searchTopSite && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: "top-site-icon search-topsite"
+    })) || react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "tile",
       "aria-hidden": true,
       "data-fallback": letterFallback
@@ -9191,14 +9280,21 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
       style: smallFaviconStyle
     })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: `title${link.isPinned ? " has-icon pinned" : ""}${link.type === SPOC_TYPE || link.sponsored_position ? " sponsored" : ""}`
+    }, newNewtabExperienceEnabled && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
+      dir: "auto"
     }, link.isPinned && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: "icon icon-pin-small"
+    }), title || react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
+      className: "sponsored-label",
+      "data-l10n-id": "newtab-topsite-sponsored"
+    })) || react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, link.isPinned && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "icon icon-pin-small"
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
       dir: "auto"
     }, title || react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
       className: "sponsored-label",
       "data-l10n-id": "newtab-topsite-sponsored"
-    }))), children, link.type === SPOC_TYPE ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__["ImpressionStats"], {
+    })))), children, link.type === SPOC_TYPE ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__["ImpressionStats"], {
       flightId: link.flightId,
       rows: [{
         id: link.id,
@@ -9583,7 +9679,8 @@ class TopSiteList extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
     const topSitesUI = [];
     const commonProps = {
       onDragEvent: this.onDragEvent,
-      dispatch: props.dispatch
+      dispatch: props.dispatch,
+      newNewtabExperienceEnabled: props.newNewtabExperienceEnabled
     }; // We assign a key to each placeholder slot. We need it to be independent
     // of the slot index (i below) so that the keys used stay the same during
     // drag and drop reordering and the underlying DOM nodes are reused.
@@ -9611,7 +9708,9 @@ class TopSiteList extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
         link: link,
         activeIndex: this.state.activeIndex,
         onActivate: this.onActivate
-      }, slotProps, commonProps)));
+      }, slotProps, commonProps, {
+        colors: props.colors
+      })));
     }
 
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("ul", {
@@ -15788,7 +15887,8 @@ class TopSiteForm_TopSiteForm extends external_React_default.a.PureComponent {
     }), this._renderCustomScreenshotInput()), external_React_default.a.createElement(TopSite["TopSiteLink"], {
       link: previewLink,
       defaultStyle: requestFailed,
-      title: this.state.label
+      title: this.state.label,
+      newNewtabExperienceEnabled: this.props.newNewtabExperienceEnabled
     }))), external_React_default.a.createElement("section", {
       className: "actions"
     }, external_React_default.a.createElement("button", {

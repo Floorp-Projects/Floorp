@@ -1,29 +1,62 @@
 // ds topsites wraps the original topsites, with a few css changes.
-.ds-top-sites {
-  // This is the override layer.
-  .top-sites {
-    .top-site-outer {
-      padding: 0 12px;
+.outer-wrapper:not(.newtab-experience) {
+  .ds-top-sites {
+    // This is the override layer.
+    .top-sites {
+      .top-site-outer {
+        padding: 0 12px;
 
-      .top-site-inner > a:is(.active, :focus) .tile {
-        @include ds-fade-in;
+        .top-site-inner > a:is(.active, :focus) .tile {
+          @include ds-fade-in;
 
-        @include dark-theme-only {
-          @include ds-fade-in($blue-40-40);
+          @include dark-theme-only {
+            @include ds-fade-in($blue-40-40);
+          }
+        }
+
+        .top-site-inner > a:is(:hover) .tile {
+
+          @include ds-fade-in($grey-30);
+
+          @include dark-theme-only {
+            @include ds-fade-in($grey-60);
+          }
         }
       }
 
-      .top-site-inner > a:is(:hover) .tile {
-        @include ds-fade-in($grey-30);
-
-        @include dark-theme-only {
-          @include ds-fade-in($grey-60);
-        }
+      .top-sites-list {
+        margin: 0 -12px;
       }
     }
+  }
+}
 
-    .top-sites-list {
-      margin: 0 -12px;
+.outer-wrapper.newtab-experience {
+  .ds-top-sites {
+    // This is the override layer.
+    .top-sites {
+      .top-site-outer {
+        .top-site-inner > a:is(.active, :focus) .top-site-inner {
+          @include ds-fade-in;
+
+          @include dark-theme-only {
+            @include ds-fade-in($blue-40-40);
+          }
+        }
+
+        .top-site-inner > a:is(:hover) .top-site-inner {
+
+          @include ds-fade-in($grey-30);
+
+          @include dark-theme-only {
+            @include ds-fade-in($grey-60);
+          }
+        }
+      }
+
+      .top-sites-list {
+        margin: 0 -12px;
+      }
     }
   }
 }

@@ -89,7 +89,7 @@ $about-welcome-extra-links: #676F7E;
 $firefox-wordmark-default-color: #363959;
 $firefox-wordmark-darktheme-color: $white;
 
-// New new tab experience colors.
+// New New Tab Experience colors.
 $newtab-background-button-default-color: rgba(223, 223, 223, 0.5);
 $newtab-background-button-darktheme-color: rgba(80, 80, 80, 0.5);
 $newtab-background-button-default-text-color: #484848;
@@ -121,6 +121,10 @@ $newtab-card-darktheme-secondary-action-background: #515156;
 $newtab-card-darktheme-secondary-action-background-hover: #606065;
 $newtab-card-secondary-action-background-active: #E2E2E6;
 $newtab-card-darktheme-secondary-action-background-active: #6F6F74;
+$newtab-card-darktheme-hover-color: rgba(180, 180, 180, 0.1);
+$newtab-card-hover-color: rgba(0, 0, 0, 0.05);
+$newtab-tile-shadow-secondary: rgba(29, 17, 51, 0.2);
+$newtab-tile-darktheme-shadow-secondary: rgba(21, 20, 26, 0.75);
 
 // Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
 $photon-easing: cubic-bezier(0.07, 0.95, 0, 1);
@@ -133,6 +137,8 @@ $section-horizontal-padding: 25px;
 $section-vertical-padding: 10px;
 $section-spacing: 40px - $section-vertical-padding * 2;
 $grid-unit: 96px; // 1 top site
+// New Tab Experience grid unit needs to be smaller, but for now we are changing this UI with a pref, so requires duplication.
+$grid-unit-small: 80px; // 1 top site 
 
 $icon-size: 16px;
 $smaller-icon-size: 12px;
@@ -161,6 +167,8 @@ $break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-w
 $section-title-font-size: 13px;
 
 $card-width: $grid-unit * 2 + $base-gutter;
+$card-width-nte: $grid-unit-small * 2 + $base-gutter;
+
 $card-height: 266px;
 $card-preview-image-height: 122px;
 $card-title-margin: 2px;
@@ -196,7 +204,6 @@ $customize-menu-slide-bezier: cubic-bezier(0.46, 0.03, 0.52, 0.96);
 $customize-menu-expand-bezier: cubic-bezier(0.82, 0.085, 0.395, 0.895);
 $customize-menu-border-tint: 1px solid $newtab-card-tint;
 
-
 @mixin fade-in {
   box-shadow: inset $inner-box-shadow, $shadow-primary;
   transition: box-shadow 150ms;
@@ -205,6 +212,25 @@ $customize-menu-border-tint: 1px solid $newtab-card-tint;
 @mixin fade-in-card {
   box-shadow: $shadow-primary;
   transition: box-shadow 150ms;
+}
+
+@mixin context-menu-button-newtab-experience {
+  .context-menu-button {
+    background-image: url('chrome://global/skin/icons/more.svg');
+    border: 0;
+    cursor: pointer;
+    fill: var(--newtab-icon-primary-color);
+    height: 20px;
+    inset-inline-end: -9px;
+    opacity: 0;
+    position: absolute;
+    top: -20px;
+
+    &:is(:active, :focus) {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 @mixin context-menu-button {
@@ -240,6 +266,13 @@ $customize-menu-border-tint: 1px solid $newtab-card-tint;
     opacity: 1;
     transform: scale(1);
     transition-delay: 333ms;
+  }
+}
+
+@mixin nt-experience-context-menu-button-hover {
+  .context-menu-button {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
