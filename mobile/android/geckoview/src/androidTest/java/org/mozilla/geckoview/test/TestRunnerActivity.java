@@ -329,7 +329,7 @@ public class TestRunnerActivity extends Activity {
         // If we were passed a URI in the Intent, open it
         final Uri uri = intent.getData();
         if (uri != null) {
-            mSession.loadUri(uri);
+            mSession.loadUri(uri.toString());
         }
 
         mView = new GeckoView(this);
