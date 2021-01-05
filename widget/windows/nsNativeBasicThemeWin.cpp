@@ -15,18 +15,20 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicThemeWin::ComputeCheckboxColors(
 
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isChecked = aState.HasState(NS_EVENT_STATE_CHECKED);
+  bool isIndeterminate = aAppearance == StyleAppearance::Checkbox &&
+                         aState.HasState(NS_EVENT_STATE_INDETERMINATE);
 
   sRGBColor backgroundColor = sRGBColor::FromABGR(
       LookAndFeel::GetColor(LookAndFeel::ColorID::TextBackground));
   sRGBColor borderColor = sRGBColor::FromABGR(
       LookAndFeel::GetColor(LookAndFeel::ColorID::Buttontext));
-  if (isDisabled && isChecked) {
+  if (isDisabled && (isChecked || isIndeterminate)) {
     backgroundColor = borderColor = sRGBColor::FromABGR(
         LookAndFeel::GetColor(LookAndFeel::ColorID::Graytext));
   } else if (isDisabled) {
     borderColor = sRGBColor::FromABGR(
         LookAndFeel::GetColor(LookAndFeel::ColorID::Graytext));
-  } else if (isChecked) {
+  } else if (isChecked || isIndeterminate) {
     backgroundColor = borderColor = sRGBColor::FromABGR(
         LookAndFeel::GetColor(LookAndFeel::ColorID::Highlight));
   }
