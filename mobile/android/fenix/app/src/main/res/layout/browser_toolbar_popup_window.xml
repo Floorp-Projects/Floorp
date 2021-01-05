@@ -15,7 +15,7 @@
 
     <Button
         android:id="@+id/copy"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
+        style="?android:attr/buttonBarButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:background="?selectableItemBackground"
@@ -28,7 +28,7 @@
 
     <Button
         android:id="@+id/paste"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
+        style="?android:attr/buttonBarButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:background="?selectableItemBackground"
@@ -41,7 +41,7 @@
 
     <Button
         android:id="@+id/paste_and_go"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
+        style="?android:attr/buttonBarButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:background="?selectableItemBackground"
