@@ -14,7 +14,7 @@ using namespace js::frontend;
 LexicalScopeEmitter::LexicalScopeEmitter(BytecodeEmitter* bce) : bce_(bce) {}
 
 bool LexicalScopeEmitter::emitScope(ScopeKind kind,
-                                    ParserLexicalScopeData* bindings) {
+                                    LexicalScope::ParserData* bindings) {
   MOZ_ASSERT(state_ == State::Start);
   MOZ_ASSERT(bindings);
 
