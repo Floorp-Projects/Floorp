@@ -57,6 +57,15 @@ class StencilXDR;
 using BaseParserScopeData = AbstractBaseScopeData<TaggedParserAtomIndex>;
 using ParserBindingName = AbstractBindingName<TaggedParserAtomIndex>;
 
+using ParserGlobalScopeData = GlobalScope::ParserData;
+using ParserEvalScopeData = EvalScope::ParserData;
+using ParserLexicalScopeData = LexicalScope::ParserData;
+using ParserFunctionScopeData = FunctionScope::ParserData;
+using ParserModuleScopeData = ModuleScope::ParserData;
+using ParserVarScopeData = VarScope::ParserData;
+using ParserWasmInstanceScopeData = WasmInstanceScope::ParserData;
+using ParserWasmFunctionScopeData = WasmFunctionScope::ParserData;
+
 template <typename Scope>
 using ParserScopeSlotInfo = typename Scope::SlotInfo;
 using ParserGlobalScopeSlotInfo = ParserScopeSlotInfo<GlobalScope>;
@@ -209,18 +218,18 @@ class ScopeStencil {
 
   static bool createForFunctionScope(
       JSContext* cx, CompilationInfo& compilationInfo,
-      FunctionScope::ParserData* dataArg, bool hasParameterExprs,
+      ParserFunctionScopeData* dataArg, bool hasParameterExprs,
       bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   static bool createForLexicalScope(
       JSContext* cx, CompilationInfo& compilationInfo, ScopeKind kind,
-      LexicalScope::ParserData* dataArg, uint32_t firstFrameSlot,
+      ParserLexicalScopeData* dataArg, uint32_t firstFrameSlot,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   static bool createForVarScope(JSContext* cx,
                                 frontend::CompilationInfo& compilationInfo,
-                                ScopeKind kind, VarScope::ParserData* dataArg,
+                                ScopeKind kind, ParserVarScopeData* dataArg,
                                 uint32_t firstFrameSlot, bool needsEnvironment,
                                 mozilla::Maybe<ScopeIndex> enclosing,
                                 ScopeIndex* index);
@@ -228,18 +237,18 @@ class ScopeStencil {
   static bool createForGlobalScope(JSContext* cx,
                                    CompilationInfo& compilationInfo,
                                    ScopeKind kind,
-                                   GlobalScope::ParserData* dataArg,
+                                   ParserGlobalScopeData* dataArg,
                                    ScopeIndex* index);
 
   static bool createForEvalScope(JSContext* cx,
                                  CompilationInfo& compilationInfo,
-                                 ScopeKind kind, EvalScope::ParserData* dataArg,
+                                 ScopeKind kind, ParserEvalScopeData* dataArg,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
   static bool createForModuleScope(JSContext* cx,
                                    CompilationInfo& compilationInfo,
-                                   ModuleScope::ParserData* dataArg,
+                                   ParserModuleScopeData* dataArg,
                                    mozilla::Maybe<ScopeIndex> enclosing,
                                    ScopeIndex* index);
 
@@ -286,7 +295,7 @@ class ScopeStencil {
 
   // Transfer ownership into a new UniquePtr.
   template <typename SpecificScopeType>
-  UniquePtr<typename SpecificScopeType::RuntimeData> createSpecificScopeData(
+  UniquePtr<typename SpecificScopeType::Data> createSpecificScopeData(
       JSContext* cx, CompilationAtomCache& atomCache,
       CompilationGCOutput& gcOutput) const;
 

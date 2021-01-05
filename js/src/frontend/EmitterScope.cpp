@@ -496,7 +496,7 @@ void EmitterScope::dump(BytecodeEmitter* bce) {
 }
 
 bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
-                                LexicalScope::ParserData* bindings) {
+                                ParserLexicalScopeData* bindings) {
   MOZ_ASSERT(kind != ScopeKind::NamedLambda &&
              kind != ScopeKind::StrictNamedLambda);
   MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
@@ -920,7 +920,7 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
   // Resolve body-level bindings, if there are any.
   TDZCheckCache* tdzCache = bce->innermostTDZCheckCache;
   Maybe<uint32_t> firstLexicalFrameSlot;
-  if (ModuleScope::ParserData* bindings = modulesc->bindings) {
+  if (ParserModuleScopeData* bindings = modulesc->bindings) {
     ParserBindingIter bi(*bindings);
     for (; bi; bi++) {
       if (!checkSlotLimits(bce, bi)) {

@@ -26,7 +26,7 @@ struct CompilationInfo;
 
 class MOZ_STACK_CLASS ModuleSharedContext : public SuspendableContext {
  public:
-  ModuleScope::ParserData* bindings;
+  ParserModuleScopeData* bindings;
   ModuleBuilder& builder;
 
   ModuleSharedContext(JSContext* cx, CompilationInfo& compilationInfo,

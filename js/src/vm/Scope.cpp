@@ -179,15 +179,15 @@ Shape* js::CreateEnvironmentShape(
   return shape;
 }
 
-template <class DataT>
-inline size_t SizeOfAllocatedData(DataT* data) {
-  return SizeOfScopeData<DataT>(data->slotInfo.length);
+template <class Data>
+inline size_t SizeOfAllocatedData(Data* data) {
+  return SizeOfScopeData<Data>(data->slotInfo.length);
 }
 
 template <typename ConcreteScope>
-static UniquePtr<typename ConcreteScope::RuntimeData> CopyScopeData(
-    JSContext* cx, typename ConcreteScope::RuntimeData* data) {
-  using Data = typename ConcreteScope::RuntimeData;
+static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
+    JSContext* cx, typename ConcreteScope::Data* data) {
+  using Data = typename ConcreteScope::Data;
 
   // Make sure the binding names are marked in the context's zone, if we are
   // copying data from another zone.
@@ -311,10 +311,10 @@ static UniquePtr<AbstractScopeData<ConcreteScope, AtomT>> NewEmptyScopeData(
 }
 
 template <typename ConcreteScope>
-static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
+static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     typename ConcreteScope::ParserData* data) {
-  using ConcreteData = typename ConcreteScope::RuntimeData;
+  using ConcreteData = typename ConcreteScope::Data;
 
   // Convert all scope ParserAtoms to rooted JSAtoms.
   // Rooting is necessary as conversion can gc.
@@ -399,7 +399,7 @@ template <typename ConcreteScope, XDRMode mode>
 /* static */
 XDRResult Scope::XDRSizedBindingNames(
     XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
-    MutableHandle<typename ConcreteScope::RuntimeData*> data) {
+    MutableHandle<typename ConcreteScope::Data*> data) {
   MOZ_ASSERT(!data);
 
   JSContext* cx = xdr->cx();
@@ -453,7 +453,7 @@ template <typename ConcreteScope>
 /* static */
 ConcreteScope* Scope::create(
     JSContext* cx, ScopeKind kind, HandleScope enclosing, HandleShape envShape,
-    MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data) {
+    MutableHandle<UniquePtr<typename ConcreteScope::Data>> data) {
   Scope* scope = create(cx, kind, enclosing, envShape);
   if (!scope) {
     return nullptr;
@@ -469,7 +469,7 @@ ConcreteScope* Scope::create(
 
 template <typename ConcreteScope>
 inline void Scope::initData(
-    MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data) {
+    MutableHandle<UniquePtr<typename ConcreteScope::Data>> data) {
   MOZ_ASSERT(!rawData());
 
   AddCellMemory(this, SizeOfAllocatedData(data.get().get()),
@@ -585,7 +585,7 @@ Scope* Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing) {
     }
 
     case ScopeKind::FunctionBodyVar: {
-      Rooted<UniquePtr<VarScope::RuntimeData>> dataClone(cx);
+      Rooted<UniquePtr<VarScope::Data>> dataClone(cx);
       dataClone = CopyScopeData<VarScope>(cx, &scope->as<VarScope>().data());
       if (!dataClone) {
         return nullptr;
@@ -601,7 +601,7 @@ Scope* Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing) {
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      Rooted<UniquePtr<LexicalScope::RuntimeData>> dataClone(cx);
+      Rooted<UniquePtr<LexicalScope::Data>> dataClone(cx);
       dataClone =
           CopyScopeData<LexicalScope>(cx, &scope->as<LexicalScope>().data());
       if (!dataClone) {
@@ -616,7 +616,7 @@ Scope* Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing) {
 
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      Rooted<UniquePtr<EvalScope::RuntimeData>> dataClone(cx);
+      Rooted<UniquePtr<EvalScope::Data>> dataClone(cx);
       dataClone = CopyScopeData<EvalScope>(cx, &scope->as<EvalScope>().data());
       if (!dataClone) {
         return nullptr;
@@ -808,9 +808,10 @@ bool LexicalScope::prepareForScopeCreation(
 }
 
 /* static */
-LexicalScope* LexicalScope::createWithData(
-    JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
-    uint32_t firstFrameSlot, HandleScope enclosing) {
+LexicalScope* LexicalScope::createWithData(JSContext* cx, ScopeKind kind,
+                                           MutableHandle<UniquePtr<Data>> data,
+                                           uint32_t firstFrameSlot,
+                                           HandleScope enclosing) {
   RootedShape envShape(cx);
 
   if (!prepareForScopeCreation<JSAtom>(cx, kind, firstFrameSlot, data,
@@ -840,12 +841,12 @@ XDRResult LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
                             HandleScope enclosing, MutableHandleScope scope) {
   JSContext* cx = xdr->cx();
 
-  Rooted<RuntimeData*> data(cx);
+  Rooted<Data*> data(cx);
   MOZ_TRY(
       XDRSizedBindingNames<LexicalScope>(xdr, scope.as<LexicalScope>(), &data));
 
   {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
+    Maybe<Rooted<UniquePtr<Data>>> uniqueData;
     if (mode == XDR_DECODE) {
       uniqueData.emplace(cx, data);
     }
@@ -889,7 +890,7 @@ template
     LexicalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
                       HandleScope enclosing, MutableHandleScope scope);
 
-static void SetCanonicalFunction(FunctionScope::RuntimeData& data,
+static void SetCanonicalFunction(FunctionScope::Data& data,
                                  HandleFunction fun) {
   data.canonicalFunction.init(fun);
 }
@@ -927,9 +928,8 @@ bool FunctionScope::prepareForScopeCreation(
 
 /* static */
 FunctionScope* FunctionScope::createWithData(
-    JSContext* cx, MutableHandle<UniquePtr<RuntimeData>> data,
-    bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
-    HandleScope enclosing) {
+    JSContext* cx, MutableHandle<UniquePtr<Data>> data, bool hasParameterExprs,
+    bool needsEnvironment, HandleFunction fun, HandleScope enclosing) {
   MOZ_ASSERT(data);
   MOZ_ASSERT(fun->isTenured());
 
@@ -975,8 +975,8 @@ FunctionScope* FunctionScope::clone(JSContext* cx, Handle<FunctionScope*> scope,
     }
   }
 
-  Rooted<RuntimeData*> dataOriginal(cx, &scope->as<FunctionScope>().data());
-  Rooted<UniquePtr<RuntimeData>> dataClone(
+  Rooted<Data*> dataOriginal(cx, &scope->as<FunctionScope>().data());
+  Rooted<UniquePtr<Data>> dataClone(
       cx, CopyScopeData<FunctionScope>(cx, dataOriginal));
   if (!dataClone) {
     return nullptr;
@@ -993,12 +993,12 @@ template <XDRMode mode>
 XDRResult FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun,
                              HandleScope enclosing, MutableHandleScope scope) {
   JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
+  Rooted<Data*> data(cx);
   MOZ_TRY(XDRSizedBindingNames<FunctionScope>(xdr, scope.as<FunctionScope>(),
                                               &data));
 
   {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
+    Maybe<Rooted<UniquePtr<Data>>> uniqueData;
     if (mode == XDR_DECODE) {
       uniqueData.emplace(cx, data);
     }
@@ -1072,7 +1072,7 @@ bool VarScope::prepareForScopeCreation(
 
 /* static */
 VarScope* VarScope::createWithData(JSContext* cx, ScopeKind kind,
-                                   MutableHandle<UniquePtr<RuntimeData>> data,
+                                   MutableHandle<UniquePtr<Data>> data,
                                    uint32_t firstFrameSlot,
                                    bool needsEnvironment,
                                    HandleScope enclosing) {
@@ -1092,11 +1092,11 @@ template <XDRMode mode>
 XDRResult VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
                         HandleScope enclosing, MutableHandleScope scope) {
   JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
+  Rooted<Data*> data(cx);
   MOZ_TRY(XDRSizedBindingNames<VarScope>(xdr, scope.as<VarScope>(), &data));
 
   {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
+    Maybe<Rooted<UniquePtr<Data>>> uniqueData;
     if (mode == XDR_DECODE) {
       uniqueData.emplace(cx, data);
     }
@@ -1147,10 +1147,10 @@ template
 
 /* static */
 GlobalScope* GlobalScope::create(JSContext* cx, ScopeKind kind,
-                                 Handle<RuntimeData*> dataArg) {
+                                 Handle<Data*> dataArg) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
-  Rooted<UniquePtr<RuntimeData>> data(
+  Rooted<UniquePtr<Data>> data(
       cx, dataArg ? CopyScopeData<GlobalScope>(cx, dataArg)
                   : NewEmptyScopeData<GlobalScope, JSAtom>(cx));
   if (!data) {
@@ -1161,8 +1161,8 @@ GlobalScope* GlobalScope::create(JSContext* cx, ScopeKind kind,
 }
 
 /* static */
-GlobalScope* GlobalScope::createWithData(
-    JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data) {
+GlobalScope* GlobalScope::createWithData(JSContext* cx, ScopeKind kind,
+                                         MutableHandle<UniquePtr<Data>> data) {
   MOZ_ASSERT(data);
 
   // The global scope has no environment shape. Its environment is the
@@ -1175,8 +1175,8 @@ GlobalScope* GlobalScope::createWithData(
 /* static */
 GlobalScope* GlobalScope::clone(JSContext* cx, Handle<GlobalScope*> scope,
                                 ScopeKind kind) {
-  Rooted<RuntimeData*> dataOriginal(cx, &scope->as<GlobalScope>().data());
-  Rooted<UniquePtr<RuntimeData>> dataClone(
+  Rooted<Data*> dataOriginal(cx, &scope->as<GlobalScope>().data());
+  Rooted<UniquePtr<Data>> dataClone(
       cx, CopyScopeData<GlobalScope>(cx, dataOriginal));
   if (!dataClone) {
     return nullptr;
@@ -1191,12 +1191,12 @@ XDRResult GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
   MOZ_ASSERT((mode == XDR_DECODE) == !scope);
 
   JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
+  Rooted<Data*> data(cx);
   MOZ_TRY(
       XDRSizedBindingNames<GlobalScope>(xdr, scope.as<GlobalScope>(), &data));
 
   {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
+    Maybe<Rooted<UniquePtr<Data>>> uniqueData;
     if (mode == XDR_DECODE) {
       uniqueData.emplace(cx, data);
     }
@@ -1289,7 +1289,7 @@ bool EvalScope::prepareForScopeCreation(
 
 /* static */
 EvalScope* EvalScope::createWithData(JSContext* cx, ScopeKind scopeKind,
-                                     MutableHandle<UniquePtr<RuntimeData>> data,
+                                     MutableHandle<UniquePtr<Data>> data,
                                      HandleScope enclosing) {
   MOZ_ASSERT(data);
 
@@ -1322,10 +1322,10 @@ template <XDRMode mode>
 XDRResult EvalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
                          HandleScope enclosing, MutableHandleScope scope) {
   JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
+  Rooted<Data*> data(cx);
 
   {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
+    Maybe<Rooted<UniquePtr<Data>>> uniqueData;
     if (mode == XDR_DECODE) {
       uniqueData.emplace(cx, data);
     }
@@ -1358,11 +1358,9 @@ template
     EvalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
                    HandleScope enclosing, MutableHandleScope scope);
 
-ModuleScope::RuntimeData::RuntimeData(size_t nameCount)
-    : trailingNames(nameCount) {}
+ModuleScope::Data::Data(size_t nameCount) : trailingNames(nameCount) {}
 
-static void InitModule(ModuleScope::RuntimeData& data,
-                       HandleModuleObject module) {
+static void InitModule(ModuleScope::Data& data, HandleModuleObject module) {
   data.module.init(module);
 }
 
@@ -1392,9 +1390,10 @@ bool ModuleScope::prepareForScopeCreation(
 }
 
 /* static */
-ModuleScope* ModuleScope::createWithData(
-    JSContext* cx, MutableHandle<UniquePtr<RuntimeData>> data,
-    HandleModuleObject module, HandleScope enclosing) {
+ModuleScope* ModuleScope::createWithData(JSContext* cx,
+                                         MutableHandle<UniquePtr<Data>> data,
+                                         HandleModuleObject module,
+                                         HandleScope enclosing) {
   MOZ_ASSERT(data);
   MOZ_ASSERT(enclosing->is<GlobalScope>());
 
@@ -1427,12 +1426,12 @@ template <XDRMode mode>
 XDRResult ModuleScope::XDR(XDRState<mode>* xdr, HandleModuleObject module,
                            HandleScope enclosing, MutableHandleScope scope) {
   JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
+  Rooted<Data*> data(cx);
   MOZ_TRY(
       XDRSizedBindingNames<ModuleScope>(xdr, scope.as<ModuleScope>(), &data));
 
   {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
+    Maybe<Rooted<UniquePtr<Data>>> uniqueData;
     if (mode == XDR_DECODE) {
       uniqueData.emplace(cx, data);
     }
@@ -1487,15 +1486,14 @@ static void InitializeTrailingName(
   new (trailingName) BindingName(name, false);
 }
 
-template <class DataT>
-static void InitializeNextTrailingName(const Rooted<UniquePtr<DataT>>& data,
+template <class Data>
+static void InitializeNextTrailingName(const Rooted<UniquePtr<Data>>& data,
                                        JSAtom* name) {
   InitializeTrailingName(data->trailingNames, data->slotInfo.length, name);
   data->slotInfo.length++;
 }
 
-WasmInstanceScope::RuntimeData::RuntimeData(size_t nameCount)
-    : trailingNames(nameCount) {}
+WasmInstanceScope::Data::Data(size_t nameCount) : trailingNames(nameCount) {}
 
 /* static */
 WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
@@ -1508,7 +1506,7 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
   size_t globalsCount = instance->instance().metadata().globals.length();
   namesCount += globalsCount;
 
-  Rooted<UniquePtr<RuntimeData>> data(
+  Rooted<UniquePtr<Data>> data(
       cx, NewEmptyScopeData<WasmInstanceScope, JSAtom>(cx, namesCount));
   if (!data) {
     return nullptr;
@@ -1564,7 +1562,7 @@ WasmFunctionScope* WasmFunctionScope::create(JSContext* cx,
   }
   uint32_t namesCount = locals.length();
 
-  Rooted<UniquePtr<RuntimeData>> data(
+  Rooted<UniquePtr<Data>> data(
       cx, NewEmptyScopeData<WasmFunctionScope, JSAtom>(cx, namesCount));
   if (!data) {
     return nullptr;
@@ -1602,11 +1600,11 @@ AbstractBindingIter<JSAtom>::AbstractBindingIter(ScopeKind kind,
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody:
-      init(*static_cast<LexicalScope::RuntimeData*>(data), firstFrameSlot, 0);
+      init(*static_cast<LexicalScope::Data*>(data), firstFrameSlot, 0);
       break;
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
-      init(*static_cast<LexicalScope::RuntimeData*>(data), LOCALNO_LIMIT,
+      init(*static_cast<LexicalScope::Data*>(data), LOCALNO_LIMIT,
            IsNamedLambda);
       break;
     case ScopeKind::With:
@@ -1616,33 +1614,32 @@ AbstractBindingIter<JSAtom>::AbstractBindingIter(ScopeKind kind,
       break;
     case ScopeKind::Function: {
       uint8_t flags = IgnoreDestructuredFormalParameters;
-      if (static_cast<FunctionScope::RuntimeData*>(data)
+      if (static_cast<FunctionScope::Data*>(data)
               ->slotInfo.hasParameterExprs()) {
         flags |= HasFormalParameterExprs;
       }
-      init(*static_cast<FunctionScope::RuntimeData*>(data), flags);
+      init(*static_cast<FunctionScope::Data*>(data), flags);
       break;
     }
     case ScopeKind::FunctionBodyVar:
-      init(*static_cast<VarScope::RuntimeData*>(data), firstFrameSlot);
+      init(*static_cast<VarScope::Data*>(data), firstFrameSlot);
       break;
     case ScopeKind::Eval:
     case ScopeKind::StrictEval:
-      init(*static_cast<EvalScope::RuntimeData*>(data),
-           kind == ScopeKind::StrictEval);
+      init(*static_cast<EvalScope::Data*>(data), kind == ScopeKind::StrictEval);
       break;
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic:
-      init(*static_cast<GlobalScope::RuntimeData*>(data));
+      init(*static_cast<GlobalScope::Data*>(data));
       break;
     case ScopeKind::Module:
-      init(*static_cast<ModuleScope::RuntimeData*>(data));
+      init(*static_cast<ModuleScope::Data*>(data));
       break;
     case ScopeKind::WasmInstance:
-      init(*static_cast<WasmInstanceScope::RuntimeData*>(data));
+      init(*static_cast<WasmInstanceScope::Data*>(data));
       break;
     case ScopeKind::WasmFunction:
-      init(*static_cast<WasmFunctionScope::RuntimeData*>(data));
+      init(*static_cast<WasmFunctionScope::Data*>(data));
       break;
   }
 }
@@ -1956,7 +1953,7 @@ JS::ubi::Node::Size JS::ubi::Concrete<Scope>::size(
 /* static */
 bool ScopeStencil::createForFunctionScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo,
-    FunctionScope::ParserData* data, bool hasParameterExprs,
+    ParserFunctionScopeData* data, bool hasParameterExprs,
     bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
@@ -1997,7 +1994,7 @@ bool ScopeStencil::createForFunctionScope(
 /* static */
 bool ScopeStencil::createForLexicalScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
-    LexicalScope::ParserData* data, uint32_t firstFrameSlot,
+    ParserLexicalScopeData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
@@ -2030,7 +2027,7 @@ bool ScopeStencil::createForLexicalScope(
 
 bool ScopeStencil::createForVarScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
-    VarScope::ParserData* data, uint32_t firstFrameSlot, bool needsEnvironment,
+    ParserVarScopeData* data, uint32_t firstFrameSlot, bool needsEnvironment,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
@@ -2064,7 +2061,7 @@ bool ScopeStencil::createForVarScope(
 /* static */
 bool ScopeStencil::createForGlobalScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
-    GlobalScope::ParserData* data, ScopeIndex* index) {
+    ParserGlobalScopeData* data, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
     MarkParserScopeData<GlobalScope>(cx, data, stencil);
@@ -2100,7 +2097,7 @@ bool ScopeStencil::createForGlobalScope(
 /* static */
 bool ScopeStencil::createForEvalScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
-    EvalScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
+    ParserEvalScopeData* data, mozilla::Maybe<ScopeIndex> enclosing,
     ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
@@ -2135,7 +2132,7 @@ bool ScopeStencil::createForEvalScope(
 /* static */
 bool ScopeStencil::createForModuleScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo,
-    ModuleScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
+    ParserModuleScopeData* data, mozilla::Maybe<ScopeIndex> enclosing,
     ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
@@ -2221,46 +2218,43 @@ bool ScopeStencil::createForWithScope(JSContext* cx,
 }
 
 template <typename SpecificScopeT>
-UniquePtr<typename SpecificScopeT::RuntimeData>
-ScopeStencil::createSpecificScopeData(JSContext* cx,
-                                      CompilationAtomCache& atomCache,
-                                      CompilationGCOutput& gcOutput) const {
+UniquePtr<typename SpecificScopeT::Data> ScopeStencil::createSpecificScopeData(
+    JSContext* cx, CompilationAtomCache& atomCache,
+    CompilationGCOutput& gcOutput) const {
   return LiftParserScopeData<SpecificScopeT>(cx, atomCache,
                                              &data<SpecificScopeT>());
 }
 
 template <>
-UniquePtr<FunctionScope::RuntimeData>
+UniquePtr<FunctionScope::Data>
 ScopeStencil::createSpecificScopeData<FunctionScope>(
     JSContext* cx, CompilationAtomCache& atomCache,
     CompilationGCOutput& gcOutput) const {
   // Allocate a new vm function-scope.
-  UniquePtr<FunctionScope::RuntimeData> data =
-      LiftParserScopeData<FunctionScope>(cx, atomCache,
-                                         &this->data<FunctionScope>());
+  UniquePtr<FunctionScope::Data> data = LiftParserScopeData<FunctionScope>(
+      cx, atomCache, &this->data<FunctionScope>());
   if (!data) {
     return nullptr;
   }
 
-  // Initialize the HeapPtr in the FunctionScope::RuntimeData.
+  // Initialize the HeapPtr in the FunctionScope::Data.
   data->canonicalFunction = gcOutput.functions[*functionIndex_];
 
   return data;
 }
 
 template <>
-UniquePtr<ModuleScope::RuntimeData>
-ScopeStencil::createSpecificScopeData<ModuleScope>(
+UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
     JSContext* cx, CompilationAtomCache& atomCache,
     CompilationGCOutput& gcOutput) const {
   // Allocate a new vm module-scope.
-  UniquePtr<ModuleScope::RuntimeData> data = LiftParserScopeData<ModuleScope>(
+  UniquePtr<ModuleScope::Data> data = LiftParserScopeData<ModuleScope>(
       cx, atomCache, &this->data<ModuleScope>());
   if (!data) {
     return nullptr;
   }
 
-  // Initialize the HeapPtr in the ModuleScope::RuntimeData.
+  // Initialize the HeapPtr in the ModuleScope::Data.
   data->module = gcOutput.module;
 
   return data;
@@ -2280,7 +2274,7 @@ template <>
 Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
     JSContext* cx, CompilationInput& input,
     CompilationGCOutput& gcOutput) const {
-  Rooted<UniquePtr<GlobalScope::RuntimeData>> rootedData(
+  Rooted<UniquePtr<GlobalScope::Data>> rootedData(
       cx, createSpecificScopeData<GlobalScope>(cx, input.atomCache, gcOutput));
   if (!rootedData) {
     return nullptr;
@@ -2296,7 +2290,7 @@ Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
 template <typename SpecificScopeT, typename SpecificEnvironmentT>
 Scope* ScopeStencil::createSpecificScope(JSContext* cx, CompilationInput& input,
                                          CompilationGCOutput& gcOutput) const {
-  Rooted<UniquePtr<typename SpecificScopeT::RuntimeData>> rootedData(
+  Rooted<UniquePtr<typename SpecificScopeT::Data>> rootedData(
       cx,
       createSpecificScopeData<SpecificScopeT>(cx, input.atomCache, gcOutput));
   if (!rootedData) {

@@ -212,7 +212,7 @@ using BindingName = AbstractBindingName<JSAtom>;
 const size_t ScopeDataAlignBytes = size_t(1) << gc::CellFlagBitsReservedForGC;
 
 /**
- * Empty base class for scope {Runtime,Parser}Data classes to inherit from.
+ * Empty base class for scope Data classes to inherit from.
  *
  * Scope GC things store a pointer to these in their first word so they must be
  * suitably aligned to allow storing GC flags in the low bits.
@@ -241,14 +241,13 @@ inline void PoisonNames(
 }
 
 /**
- * The various {Global,Module,...}Scope::{Runtime,Parser}Data classes consist
- * of always-present bits, then a trailing array of BindingNames.  The various
- * {Runtime,Parser}Data classes all end in a TrailingNamesArray that contains
- * sized/aligned space for *one* BindingName.  {Runtime,Parser}Data instances
- * that contain N BindingNames, are then allocated in
- * sizeof({Runtime,Parser}Data) + (space for (N - 1) BindingNames).
- * Because this class's |data_| field is properly sized/aligned, the
- * N-BindingName array can start at |data_|.
+ * The various {Global,Module,...}Scope::Data classes consist of always-present
+ * bits, then a trailing array of BindingNames.  The various Data classes all
+ * end in a TrailingNamesArray that contains sized/aligned space for *one*
+ * BindingName.  Data instances that contain N BindingNames, are then allocated
+ * in sizeof(Data) + (space for (N - 1) BindingNames).  Because this class's
+ * |data_| field is properly sized/aligned, the N-BindingName array can start
+ * at |data_|.
  *
  * This is concededly a very low-level representation, but we want to only
  * allocate once for data+bindings both, and this does so approximately as
@@ -339,13 +338,12 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   template <typename ConcreteScope, XDRMode mode>
   static XDRResult XDRSizedBindingNames(
       XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
-      MutableHandle<typename ConcreteScope::RuntimeData*> data);
+      MutableHandle<typename ConcreteScope::Data*> data);
 
   Shape* maybeCloneEnvironmentShape(JSContext* cx);
 
   template <typename ConcreteScope>
-  void initData(
-      MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data);
+  void initData(MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
 
   template <typename F>
   void applyScopeDataTyped(F&& f);
@@ -364,7 +362,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   static ConcreteScope* create(
       JSContext* cx, ScopeKind kind, HandleScope enclosing,
       HandleShape envShape,
-      MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data);
+      MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Scope;
 
@@ -445,18 +443,10 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 };
 
-template <class DataT>
+template <class Data>
 inline size_t SizeOfScopeData(uint32_t numBindings) {
-  static_assert(sizeof(DataT) ==
-                    offsetof(DataT, trailingNames) +
-                        sizeof(AbstractBindingName<typename DataT::NameType>),
-                "Unexpected default number of inlined elements");
-
-  // -1 because AbstractTrailingNamesArray (trailingNames field in DataT)
-  // contains one inlined element in data_ field.
-  return sizeof(DataT) +
-         ((numBindings ? numBindings - 1 : 0) *
-          sizeof(AbstractBindingName<typename DataT::NameType>));
+  return sizeof(Data) + ((numBindings ? numBindings - 1 : 0) *
+                         sizeof(AbstractBindingName<typename Data::NameType>));
 }
 
 //
@@ -470,18 +460,8 @@ using AbstractScopeData = typename ScopeT::template AbstractData<AtomT>;
 template <typename ScopeT, typename AtomT>
 using MaybeRootedScopeData = std::conditional_t<
     std::is_same_v<AtomT, JSAtom>,
-    MaybeRooted<UniquePtr<typename ScopeT::RuntimeData>, AllowGC::CanGC>,
+    MaybeRooted<UniquePtr<typename ScopeT::Data>, AllowGC::CanGC>,
     MaybeRooted<AbstractScopeData<ScopeT, AtomT>*, AllowGC::NoGC>>;
-
-template <typename SlotInfo>
-struct ParserScopeData
-    : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-  SlotInfo slotInfo;
-  AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-  explicit ParserScopeData(size_t nameCount) : trailingNames(nameCount) {}
-  ParserScopeData() = delete;
-};
 
 //
 // A lexical scope that holds let and const bindings. There are 4 kinds of
@@ -524,32 +504,40 @@ class LexicalScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct alignas(ScopeDataAlignBytes) RuntimeData
+  struct alignas(ScopeDataAlignBytes) Data
       : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
-    RuntimeData() = delete;
+    explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+    Data() = delete;
 
     void trace(JSTracer* trc);
   };
 
-  using ParserData = ParserScopeData<SlotInfo>;
+  struct ParserData
+      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+    SlotInfo slotInfo;
+    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
+    ParserData() = delete;
+  };
 
   template <typename NameT>
   using AbstractData =
-      typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
-                                  RuntimeData, ParserData>;
+      typename std::conditional_t<std::is_same<NameT, JSAtom>::value, Data,
+                                  ParserData>;
 
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
                        HandleScope enclosing, MutableHandleScope scope);
 
  private:
-  static LexicalScope* createWithData(
-      JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
-      uint32_t firstFrameSlot, HandleScope enclosing);
+  static LexicalScope* createWithData(JSContext* cx, ScopeKind kind,
+                                      MutableHandle<UniquePtr<Data>> data,
+                                      uint32_t firstFrameSlot,
+                                      HandleScope enclosing);
 
   template <typename AtomT, typename ShapeT>
   static bool prepareForScopeCreation(
@@ -558,10 +546,8 @@ class LexicalScope : public Scope {
           data,
       ShapeT envShape);
 
-  RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
-  const RuntimeData& data() const {
-    return *static_cast<const RuntimeData*>(rawData());
-  }
+  Data& data() { return *static_cast<Data*>(rawData()); }
+  const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
   static uint32_t nextFrameSlot(const AbstractScopePtr& scope);
 
@@ -656,7 +642,7 @@ class FunctionScope : public Scope {
     void setHasParameterExprs() { flags |= HasParameterExprsFlag; }
   };
 
-  struct alignas(ScopeDataAlignBytes) RuntimeData
+  struct alignas(ScopeDataAlignBytes) Data
       : public AbstractBaseScopeData<JSAtom> {
     // The canonical function of the scope, as during a scope walk we
     // often query properties of the JSFunction (e.g., is the function an
@@ -665,18 +651,25 @@ class FunctionScope : public Scope {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
-    RuntimeData() = delete;
+    explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+    Data() = delete;
 
     void trace(JSTracer* trc);
   };
 
-  using ParserData = ParserScopeData<SlotInfo>;
+  struct ParserData
+      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+    SlotInfo slotInfo;
+    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
+    ParserData() = delete;
+  };
 
   template <typename NameT>
   using AbstractData =
-      typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
-                                  RuntimeData, ParserData>;
+      typename std::conditional_t<std::is_same<NameT, JSAtom>::value, Data,
+                                  ParserData>;
 
   template <typename AtomT, typename ShapeT>
   static bool prepareForScopeCreation(
@@ -694,16 +687,16 @@ class FunctionScope : public Scope {
                        HandleScope enclosing, MutableHandleScope scope);
 
  private:
-  static FunctionScope* createWithData(
-      JSContext* cx, MutableHandle<UniquePtr<RuntimeData>> data,
-      bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
-      HandleScope enclosing);
+  static FunctionScope* createWithData(JSContext* cx,
+                                       MutableHandle<UniquePtr<Data>> data,
+                                       bool hasParameterExprs,
+                                       bool needsEnvironment,
+                                       HandleFunction fun,
+                                       HandleScope enclosing);
 
-  RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(rawData()); }
 
-  const RuntimeData& data() const {
-    return *static_cast<const RuntimeData*>(rawData());
-  }
+  const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
   uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
@@ -750,23 +743,30 @@ class VarScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct alignas(ScopeDataAlignBytes) RuntimeData
+  struct alignas(ScopeDataAlignBytes) Data
       : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
-    RuntimeData() = delete;
+    explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+    Data() = delete;
 
     void trace(JSTracer* trc);
   };
 
-  using ParserData = ParserScopeData<SlotInfo>;
+  struct ParserData
+      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+    SlotInfo slotInfo;
+    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
+    ParserData() = delete;
+  };
 
   template <typename NameT>
   using AbstractData =
-      typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
-                                  RuntimeData, ParserData>;
+      typename std::conditional_t<std::is_same<NameT, JSAtom>::value, Data,
+                                  ParserData>;
 
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
@@ -774,7 +774,7 @@ class VarScope : public Scope {
 
  private:
   static VarScope* createWithData(JSContext* cx, ScopeKind kind,
-                                  MutableHandle<UniquePtr<RuntimeData>> data,
+                                  MutableHandle<UniquePtr<Data>> data,
                                   uint32_t firstFrameSlot,
                                   bool needsEnvironment, HandleScope enclosing);
 
@@ -784,11 +784,9 @@ class VarScope : public Scope {
       typename MaybeRootedScopeData<VarScope, AtomT>::MutableHandleType data,
       uint32_t firstFrameSlot, bool needsEnvironment, ShapeT envShape);
 
-  RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(rawData()); }
 
-  const RuntimeData& data() const {
-    return *static_cast<const RuntimeData*>(rawData());
-  }
+  const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
   uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
@@ -837,26 +835,32 @@ class GlobalScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct alignas(ScopeDataAlignBytes) RuntimeData
+  struct alignas(ScopeDataAlignBytes) Data
       : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
-    RuntimeData() = delete;
+    explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+    Data() = delete;
 
     void trace(JSTracer* trc);
   };
 
-  using ParserData = ParserScopeData<SlotInfo>;
+  struct ParserData
+      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+    SlotInfo slotInfo;
+    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
+    ParserData() = delete;
+  };
 
   template <typename NameT>
   using AbstractData =
-      typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
-                                  RuntimeData, ParserData>;
+      typename std::conditional_t<std::is_same<NameT, JSAtom>::value, Data,
+                                  ParserData>;
 
-  static GlobalScope* create(JSContext* cx, ScopeKind kind,
-                             Handle<RuntimeData*> data);
+  static GlobalScope* create(JSContext* cx, ScopeKind kind, Handle<Data*> data);
 
   static GlobalScope* createEmpty(JSContext* cx, ScopeKind kind) {
     return create(cx, kind, nullptr);
@@ -870,15 +874,12 @@ class GlobalScope : public Scope {
                        MutableHandleScope scope);
 
  private:
-  static GlobalScope* createWithData(
-      JSContext* cx, ScopeKind kind,
-      MutableHandle<UniquePtr<RuntimeData>> data);
+  static GlobalScope* createWithData(JSContext* cx, ScopeKind kind,
+                                     MutableHandle<UniquePtr<Data>> data);
 
-  RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(rawData()); }
 
-  const RuntimeData& data() const {
-    return *static_cast<const RuntimeData*>(rawData());
-  }
+  const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
   bool isSyntactic() const { return kind() != ScopeKind::NonSyntactic; }
@@ -942,23 +943,30 @@ class EvalScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct alignas(ScopeDataAlignBytes) RuntimeData
+  struct alignas(ScopeDataAlignBytes) Data
       : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
-    RuntimeData() = delete;
+    explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+    Data() = delete;
 
     void trace(JSTracer* trc);
   };
 
-  using ParserData = ParserScopeData<SlotInfo>;
+  struct ParserData
+      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+    SlotInfo slotInfo;
+    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
+    ParserData() = delete;
+  };
 
   template <typename NameT>
   using AbstractData =
-      typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
-                                  RuntimeData, ParserData>;
+      typename std::conditional_t<std::is_same<NameT, JSAtom>::value, Data,
+                                  ParserData>;
 
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
@@ -966,7 +974,7 @@ class EvalScope : public Scope {
 
  private:
   static EvalScope* createWithData(JSContext* cx, ScopeKind kind,
-                                   MutableHandle<UniquePtr<RuntimeData>> data,
+                                   MutableHandle<UniquePtr<Data>> data,
                                    HandleScope enclosing);
 
   template <typename AtomT, typename ShapeT>
@@ -975,11 +983,9 @@ class EvalScope : public Scope {
       typename MaybeRootedScopeData<EvalScope, AtomT>::MutableHandleType data,
       ShapeT envShape);
 
-  RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(rawData()); }
 
-  const RuntimeData& data() const {
-    return *static_cast<const RuntimeData*>(rawData());
-  }
+  const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
   // Starting a scope, the nearest var scope that a direct eval can
@@ -1039,25 +1045,32 @@ class ModuleScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct alignas(ScopeDataAlignBytes) RuntimeData
+  struct alignas(ScopeDataAlignBytes) Data
       : public AbstractBaseScopeData<JSAtom> {
     // The module of the scope.
     HeapPtr<ModuleObject*> module = {};
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount);
-    RuntimeData() = delete;
+    explicit Data(size_t nameCount);
+    Data() = delete;
 
     void trace(JSTracer* trc);
   };
 
-  using ParserData = ParserScopeData<SlotInfo>;
+  struct ParserData
+      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+    SlotInfo slotInfo;
+    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
+    ParserData() = delete;
+  };
 
   template <typename NameT>
   using AbstractData =
-      typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
-                                  RuntimeData, ParserData>;
+      typename std::conditional_t<std::is_same<NameT, JSAtom>::value, Data,
+                                  ParserData>;
 
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, HandleModuleObject module,
@@ -1065,7 +1078,7 @@ class ModuleScope : public Scope {
 
  private:
   static ModuleScope* createWithData(JSContext* cx,
-                                     MutableHandle<UniquePtr<RuntimeData>> data,
+                                     MutableHandle<UniquePtr<Data>> data,
                                      Handle<ModuleObject*> module,
                                      HandleScope enclosing);
   template <typename AtomT, typename ShapeT>
@@ -1074,11 +1087,9 @@ class ModuleScope : public Scope {
       typename MaybeRootedScopeData<ModuleScope, AtomT>::MutableHandleType data,
       HandleModuleObject module, ShapeT envShape);
 
-  RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(rawData()); }
 
-  const RuntimeData& data() const {
-    return *static_cast<const RuntimeData*>(rawData());
-  }
+  const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
   uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
@@ -1111,34 +1122,39 @@ class WasmInstanceScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct alignas(ScopeDataAlignBytes) RuntimeData
+  struct alignas(ScopeDataAlignBytes) Data
       : public AbstractBaseScopeData<JSAtom> {
     // The wasm instance of the scope.
     HeapPtr<WasmInstanceObject*> instance = {};
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount);
-    RuntimeData() = delete;
+    explicit Data(size_t nameCount);
+    Data() = delete;
 
     void trace(JSTracer* trc);
   };
 
-  using ParserData = ParserScopeData<SlotInfo>;
+  struct ParserData
+      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+    SlotInfo slotInfo;
+    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
+    ParserData() = delete;
+  };
 
   template <typename NameT>
   using AbstractData =
-      typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
-                                  RuntimeData, ParserData>;
+      typename std::conditional_t<std::is_same<NameT, JSAtom>::value, Data,
+                                  ParserData>;
 
   static WasmInstanceScope* create(JSContext* cx, WasmInstanceObject* instance);
 
  private:
-  RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(rawData()); }
 
-  const RuntimeData& data() const {
-    return *static_cast<const RuntimeData*>(rawData());
-  }
+  const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
   WasmInstanceObject* instance() const { return data().instance; }
@@ -1172,33 +1188,38 @@ class WasmFunctionScope : public Scope {
     uint32_t length = 0;
   };
 
-  struct alignas(ScopeDataAlignBytes) RuntimeData
+  struct alignas(ScopeDataAlignBytes) Data
       : public AbstractBaseScopeData<JSAtom> {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
-    RuntimeData() = delete;
+    explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+    Data() = delete;
 
     void trace(JSTracer* trc);
   };
 
-  using ParserData = ParserScopeData<SlotInfo>;
+  struct ParserData
+      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+    SlotInfo slotInfo;
+    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
+    ParserData() = delete;
+  };
 
   template <typename NameT>
   using AbstractData =
-      typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
-                                  RuntimeData, ParserData>;
+      typename std::conditional_t<std::is_same<NameT, JSAtom>::value, Data,
+                                  ParserData>;
 
   static WasmFunctionScope* create(JSContext* cx, HandleScope enclosing,
                                    uint32_t funcIndex);
 
  private:
-  RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(rawData()); }
 
-  const RuntimeData& data() const {
-    return *static_cast<const RuntimeData*>(rawData());
-  }
+  const Data& data() const { return *static_cast<const Data*>(rawData()); }
 };
 
 template <typename F>
@@ -1259,8 +1280,7 @@ template <typename NameT>
 class BaseAbstractBindingIter {
  protected:
   // Bindings are sorted by kind. Because different Scopes have differently
-  // laid out {Runtime,Parser}Data for packing, BindingIter must handle all
-  // binding kinds.
+  // laid out Data for packing, BindingIter must handle all binding kinds.
   //
   // Kind ranges:
   //
@@ -1763,13 +1783,13 @@ struct ScopeDataGCPolicy : public NonGCPointerPolicy<T> {};
   template <>                                         \
   struct GCPolicy<Data*> : public ScopeDataGCPolicy<Data*> {}
 
-DEFINE_SCOPE_DATA_GCPOLICY(js::LexicalScope::RuntimeData);
-DEFINE_SCOPE_DATA_GCPOLICY(js::FunctionScope::RuntimeData);
-DEFINE_SCOPE_DATA_GCPOLICY(js::VarScope::RuntimeData);
-DEFINE_SCOPE_DATA_GCPOLICY(js::GlobalScope::RuntimeData);
-DEFINE_SCOPE_DATA_GCPOLICY(js::EvalScope::RuntimeData);
-DEFINE_SCOPE_DATA_GCPOLICY(js::ModuleScope::RuntimeData);
-DEFINE_SCOPE_DATA_GCPOLICY(js::WasmFunctionScope::RuntimeData);
+DEFINE_SCOPE_DATA_GCPOLICY(js::LexicalScope::Data);
+DEFINE_SCOPE_DATA_GCPOLICY(js::FunctionScope::Data);
+DEFINE_SCOPE_DATA_GCPOLICY(js::VarScope::Data);
+DEFINE_SCOPE_DATA_GCPOLICY(js::GlobalScope::Data);
+DEFINE_SCOPE_DATA_GCPOLICY(js::EvalScope::Data);
+DEFINE_SCOPE_DATA_GCPOLICY(js::ModuleScope::Data);
+DEFINE_SCOPE_DATA_GCPOLICY(js::WasmFunctionScope::Data);
 
 #undef DEFINE_SCOPE_DATA_GCPOLICY
 

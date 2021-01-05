@@ -7539,7 +7539,7 @@ bool BytecodeEmitter::isRestParameter(ParseNode* expr) {
   const ParserAtom* name = expr->as<NameNode>().name();
   Maybe<NameLocation> paramLoc = locationOfNameBoundInFunctionScope(name);
   if (paramLoc && lookupName(name) == *paramLoc) {
-    FunctionScope::ParserData* bindings = funbox->functionScopeBindings();
+    ParserFunctionScopeData* bindings = funbox->functionScopeBindings();
     if (bindings->slotInfo.nonPositionalFormalStart > 0) {
       auto index =
           bindings
