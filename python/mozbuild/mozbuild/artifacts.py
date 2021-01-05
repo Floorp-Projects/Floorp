@@ -1265,7 +1265,7 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
             raise Exception(
                 "Could not find any candidate pushheads in the last {num} revisions.\n"
                 "Search started with {rev}, which must be known to Mozilla automation.\n\n"
-                "see https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html".format(
+                "see https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html".format(  # noqa E501
                     rev=last_revs[0], num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT
                 )
             )
