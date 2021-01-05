@@ -14,7 +14,7 @@
   </div>
 </body>
 <script type="text/javascript">
-function* test(testDriver) {
+async function test() {
   // Note that this pref is a read-once-on-startup pref so we can't change it
   // and have the change take effect. Instead we just use the value to determine
   // what the expected behaviour is.
@@ -35,7 +35,9 @@ function* test(testDriver) {
   }
 
   // register a scroll listener for the initial drag
-  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
+  let scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
 
   var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
   var mouseX = scrollableDiv.clientWidth + (verticalScrollbarWidth / 2);
@@ -44,14 +46,14 @@ function* test(testDriver) {
   dump("Starting drag at " + mouseX + ", " + mouseY + " from top-left of #" + scrollableDiv.id + "\n");
 
   // Move the mouse to the scrollbar thumb and drag it down
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg(), testDriver);
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseDownEventMsg(), testDriver);
+  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg());
+  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseDownEventMsg());
   // drag down by 100 pixels
   mouseY += 100;
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg(), testDriver);
+  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg());
 
   // wait here until the scroll event listener is triggered.
-  yield;
+  await scrollPromise;
   var savedScrollPos = scrollableDiv.scrollTop;
   ok(savedScrollPos > 0, "Scrolled to " + savedScrollPos);
 
@@ -61,13 +63,15 @@ function* test(testDriver) {
   // the mouse to. This allows us to wait for a scroll event in either case.
   // If we only triggered the snapback case then waiting for the scroll to
   // "not happen" in the other case would be more error-prone.
-  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
+  scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
   // Add 2 to snapMultipler just to make sure we get far enough away from the scrollbar
   var snapBackDistance = (snapMultiplier + 2) * verticalScrollbarWidth;
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX + snapBackDistance, mouseY + 10, nativeMouseMoveEventMsg(), testDriver);
+  await promiseNativeMouseEvent(scrollableDiv, mouseX + snapBackDistance, mouseY + 10, nativeMouseMoveEventMsg());
 
   // wait here until the scroll happens
-  yield;
+  await scrollPromise;
   if (snapMultiplier > 0) {
     ok(scrollableDiv.scrollTop == 0, "Scroll position snapped back to " + scrollableDiv.scrollTop);
   } else {
@@ -76,23 +80,25 @@ function* test(testDriver) {
 
   // Now we move the mouse back to the old position to ensure the scroll position
   // gets restored properly
-  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg(), testDriver);
+  scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
+  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg());
 
   // wait here until the scroll happens
-  yield;
+  await scrollPromise;
   ok(scrollableDiv.scrollTop == savedScrollPos, "Scroll position was restored to " + scrollableDiv.scrollTop);
 
   // Release mouse and ensure the scroll position stuck
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseUpEventMsg(), testDriver);
+  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseUpEventMsg());
   // Flush everything just to be safe
-  yield flushApzRepaints(testDriver);
+  await promiseApzRepaintsFlushed();
 
   ok(scrollableDiv.scrollTop == savedScrollPos, "Final scroll position was " + scrollableDiv.scrollTop);
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
 </script>
