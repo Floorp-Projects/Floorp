@@ -2144,7 +2144,8 @@ bool WarpBuilder::build_FinalYieldRval(BytecodeLocation loc) {
   MDefinition* gen = current->pop();
 
   auto setSlotNull = [this, gen](size_t slot) {
-    auto* ins = MStoreFixedSlot::New(alloc(), gen, slot, constant(NullValue()));
+    auto* ins = MStoreFixedSlot::NewBarriered(alloc(), gen, slot,
+                                              constant(NullValue()));
     current->add(ins);
   };
 
@@ -2290,12 +2291,17 @@ bool WarpBuilder::buildSuspend(BytecodeLocation loc, MDefinition* gen,
 
   // Update Generator Object state
   uint32_t resumeIndex = loc.getResumeIndex();
+
+  // This store is unbarriered, as it's only ever storing an integer, and as
+  // such doesn't partake of object tracing.
   current->add(MStoreFixedSlot::New(alloc(), genObj,
                                     AbstractGeneratorObject::resumeIndexSlot(),
                                     constant(Int32Value(resumeIndex))));
-  current->add(MStoreFixedSlot::New(alloc(), genObj,
-                                    AbstractGeneratorObject::envChainSlot(),
-                                    current->environmentChain()));
+
+  // This store is barriered because it stores an object value.
+  current->add(MStoreFixedSlot::NewBarriered(
+      alloc(), genObj, AbstractGeneratorObject::envChainSlot(),
+      current->environmentChain()));
 
   // GeneratorReturn will return from the method, however to support MIR
   // generation isn't treated like the end of a block
