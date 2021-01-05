@@ -123,6 +123,7 @@ nsTransformingTextRunFactory::MakeTextRun(
 void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
                               const bool* aCharsToMerge,
                               const bool* aDeletedChars) {
+  MOZ_ASSERT(!aDest->TrailingGlyphRun(), "unexpected glyphRuns in aDest!");
   gfxTextRun::GlyphRunIterator iter(aSrc, gfxTextRun::Range(aSrc));
   uint32_t offset = 0;
   AutoTArray<gfxTextRun::DetailedGlyph, 2> glyphs;
