@@ -678,6 +678,7 @@ void MathMLTextRunFactory::RebuildTextRun(
     transformedChild->FinishSettingProperties(aRefDrawTarget, aMFR);
   }
 
+  aTextRun->ResetGlyphRuns();
   if (mergeNeeded) {
     // Now merge multiple characters into one multi-glyph character as required
     NS_ASSERTION(charsToMergeArray.Length() == child->GetLength(),
@@ -690,7 +691,6 @@ void MathMLTextRunFactory::RebuildTextRun(
     // No merging to do, so just copy; this produces a more optimized textrun.
     // We can't steal the data because the child may be cached and stealing
     // the data would break the cache.
-    aTextRun->ResetGlyphRuns();
     aTextRun->CopyGlyphDataFrom(child, Range(child), 0);
   }
 }
