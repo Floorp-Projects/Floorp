@@ -55,6 +55,7 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       document.documentElement.classList.remove(
         "master-password-auth-required"
       );
+      document.documentElement.classList.remove("login-selected");
       setKeyboardAccessForNonDialogElements(true);
       handleAllLogins(event.detail.value);
       break;
