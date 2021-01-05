@@ -2546,15 +2546,6 @@ void LIRGenerator::visitToObject(MToObject* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitToObjectOrNull(MToObjectOrNull* ins) {
-  MOZ_ASSERT(ins->input()->type() == MIRType::Value);
-
-  LValueToObjectOrNull* lir =
-      new (alloc()) LValueToObjectOrNull(useBox(ins->input()));
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitRegExp(MRegExp* ins) {
   LRegExp* lir = new (alloc()) LRegExp(temp());
   define(lir, ins);

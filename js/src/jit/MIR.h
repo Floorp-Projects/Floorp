@@ -4402,27 +4402,6 @@ class MToObject : public MUnaryInstruction, public BoxInputsPolicy::Data {
   ALLOW_CLONE(MToObject)
 };
 
-// Converts any type to an object or null value, throwing on undefined.
-class MToObjectOrNull : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MToObjectOrNull(MDefinition* def)
-      : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::ObjectOrNull);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ToObjectOrNull)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  ALLOW_CLONE(MToObjectOrNull)
-};
-
 class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
  protected:
   explicit MBitNot(MDefinition* input) : MUnaryInstruction(classOpcode, input) {
