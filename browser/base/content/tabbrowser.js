@@ -6202,10 +6202,13 @@
           // Don't clear the favicon if this tab is in the pending
           // state, as SessionStore will have set the icon for us even
           // though we're pointed at an about:blank. Also don't clear it
+          // if the tab is in customize mode, to keep the one set by
+          // gCustomizeMode.setTab (bug 1551239). Also don't clear it
           // if onLocationChange was triggered by a pushState or a
           // replaceState (bug 550565) or a hash change (bug 408415).
           if (
             !this.mTab.hasAttribute("pending") &&
+            !this.mTab.hasAttribute("customizemode") &&
             aWebProgress.isLoadingDocument
           ) {
             // Removing the tab's image here causes flickering, wait until the
