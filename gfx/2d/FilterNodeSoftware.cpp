@@ -2937,6 +2937,7 @@ already_AddRefed<DataSourceSurface> FilterNodeCompositeSoftware::Render(
         case COMPOSITE_OPERATOR_OVER:
         case COMPOSITE_OPERATOR_ATOP:
         case COMPOSITE_OPERATOR_XOR:
+        case COMPOSITE_OPERATOR_LIGHTER:
           // dest is unchanged.
           break;
         case COMPOSITE_OPERATOR_OUT:

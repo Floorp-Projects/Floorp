@@ -779,6 +779,22 @@ static inline u16x8_t CompositeTwoPixels(u16x8_t source, u16x8_t sourceAlpha,
                                           simd::FastDivideBy255(result2));
     }
 
+    case COMPOSITE_OPERATOR_LIGHTER: {
+      // val = dest * sourceAlpha + source * destAlpha;
+      u16x8_t destSourceInterleaved1 = simd::InterleaveLo16(dest, source);
+      u16x8_t rightFactor1 = simd::InterleaveLo16(sourceAlpha, destAlpha);
+      i32x4_t result1 =
+          simd::MulAdd16x8x2To32x4(destSourceInterleaved1, rightFactor1);
+
+      u16x8_t destSourceInterleaved2 = simd::InterleaveHi16(dest, source);
+      u16x8_t rightFactor2 = simd::InterleaveHi16(sourceAlpha, destAlpha);
+      i32x4_t result2 =
+          simd::MulAdd16x8x2To32x4(destSourceInterleaved2, rightFactor2);
+
+      return simd::PackAndSaturate32ToU16(simd::FastDivideBy255(result1),
+                                          simd::FastDivideBy255(result2));
+    }
+
     default:
       return simd::FromU16<u16x8_t>(0);
   }
@@ -848,6 +864,10 @@ static void ApplyComposition_SIMD(DataSourceSurface* aSource,
       break;
     case COMPOSITE_OPERATOR_XOR:
       ApplyComposition<i32x4_t, i16x8_t, u8x16_t, COMPOSITE_OPERATOR_XOR>(
+          aSource, aDest);
+      break;
+    case COMPOSITE_OPERATOR_LIGHTER:
+      ApplyComposition<i32x4_t, i16x8_t, u8x16_t, COMPOSITE_OPERATOR_LIGHTER>(
           aSource, aDest);
       break;
     default:
