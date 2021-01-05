@@ -729,9 +729,13 @@ class MediaDecoderStateMachine
   // should not suspend the decoder.
   Mirror<RefPtr<VideoFrameContainer>> mSecondaryVideoContainer;
 
-  // Whether all output should be captured into mOutputTracks. While true, the
-  // media sink will only play if there are output tracks.
-  Mirror<bool> mOutputCaptured;
+  // Whether all output should be captured into mOutputTracks, halted, or not
+  // captured.
+  Mirror<MediaDecoder::OutputCaptureState> mOutputCaptureState;
+
+  // A dummy track used to access the right MediaTrackGraph instance. Needed
+  // since there's no guarantee that output tracks are present.
+  Mirror<nsMainThreadPtrHandle<SharedDummyTrack>> mOutputDummyTrack;
 
   // Tracks to capture data into.
   Mirror<CopyableTArray<RefPtr<ProcessedMediaTrack>>> mOutputTracks;

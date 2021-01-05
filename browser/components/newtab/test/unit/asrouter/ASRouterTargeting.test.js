@@ -178,6 +178,52 @@ describe("#CachedTargetingGetter", () => {
     });
   });
 });
+describe("#isTriggerMatch", () => {
+  let trigger;
+  let message;
+  beforeEach(() => {
+    trigger = { id: "openURL" };
+    message = { id: "openURL" };
+  });
+  it("should return false if trigger and candidate ids are different", () => {
+    trigger.id = "trigger";
+    message.id = "message";
+
+    assert.isFalse(ASRouterTargeting.isTriggerMatch(trigger, message));
+    assert.isTrue(
+      ASRouterTargeting.isTriggerMatch({ id: "foo" }, { id: "foo" })
+    );
+  });
+  it("should return true if the message we check doesn't have trigger params or patterns", () => {
+    // No params or patterns defined
+    assert.isTrue(ASRouterTargeting.isTriggerMatch(trigger, message));
+  });
+  it("should return false if the trigger does not have params defined", () => {
+    message.params = {};
+
+    // trigger.param is undefined
+    assert.isFalse(ASRouterTargeting.isTriggerMatch(trigger, message));
+  });
+  it("should return true if message params includes trigger host", () => {
+    message.params = ["mozilla.org"];
+    trigger.param = { host: "mozilla.org" };
+
+    assert.isTrue(ASRouterTargeting.isTriggerMatch(trigger, message));
+  });
+  it("should return true if message params includes trigger param.type", () => {
+    message.params = ["ContentBlockingMilestone"];
+    trigger.param = { type: "ContentBlockingMilestone" };
+
+    assert.isTrue(Boolean(ASRouterTargeting.isTriggerMatch(trigger, message)));
+  });
+  it("should return true if message params match trigger mask", () => {
+    // STATE_BLOCKED_FINGERPRINTING_CONTENT
+    message.params = [0x00000040];
+    trigger.param = { type: 538091584 };
+
+    assert.isTrue(Boolean(ASRouterTargeting.isTriggerMatch(trigger, message)));
+  });
+});
 describe("#CacheListAttachedOAuthClients", () => {
   const fourHours = 4 * 60 * 60 * 1000;
   let sandbox;

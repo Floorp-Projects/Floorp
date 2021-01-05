@@ -1823,7 +1823,19 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
          adjSize.width, adjSize.height));
 
   aPO->mPresShell->BeginObservingDocument();
-  aPO->mPresContext->SetPageSize(adjSize);
+
+  // Here, we inform nsPresContext of the page size. Note that 'adjSize' is
+  // *usually* the page size, but we need to check. Strictly speaking, adjSize
+  // is the *device output size*, which is really the dimensions of a "sheet"
+  // rather than a "page" (an important distinction in an N-pages-per-sheet
+  // scenario). For some pages-per-sheet values, the pages are orthogonal to
+  // the sheet; we adjust for that here by swapping the width with the height.
+  nsSize pageSize = adjSize;
+  if (printData->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+    std::swap(pageSize.width, pageSize.height);
+  }
+
+  aPO->mPresContext->SetPageSize(pageSize);
 
   int32_t p2a = aPO->mPresContext->DeviceContext()->AppUnitsPerDevPixel();
   if (documentIsTopLevel && mIsCreatingPrintPreview) {

@@ -67,7 +67,7 @@ NS_IMPL_ISUPPORTS(nsDeviceContextSpecGTK, nsIDeviceContextSpec)
 
 already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
   double width, height;
-  mPrintSettings->GetEffectivePageSize(&width, &height);
+  mPrintSettings->GetEffectiveSheetSize(&width, &height);
 
   // convert twips to points
   width /= TWIPS_PER_POINT_FLOAT;
@@ -117,8 +117,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
     return PrintTargetPDF::CreateOrNull(stream, size);
   }
 
-  int32_t orientation;
-  mPrintSettings->GetOrientation(&orientation);
+  int32_t orientation = mPrintSettings->GetSheetOrientation();
   return PrintTargetPS::CreateOrNull(
       stream, size,
       orientation == nsIPrintSettings::kPortraitOrientation

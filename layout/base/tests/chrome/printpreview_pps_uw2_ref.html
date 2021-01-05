@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!-- This is a reference case for a "2-pages-per-sheet" scenario with nonzero
+     unwriteable margins. We expect the pages to have a 0.5x scale-down
+     factor. That 0.5 scale-factor comes from the fact that, when rendering the
+     testcase, we'll need to scale the page-width (8in) down enough to fit
+     side-by-side into half of the sheet's available width (with the sheet
+     having been rotated to landscape mode), with the sheet's unwritable margin
+     having already been subtracted out. The sheet's width (in landscape mode)
+     is 10in, and its unwriteable margin in that axis is 2in, so it's got 8in
+     of available width to hold two side-by-side pages, i.e. 4in per page.
+     Since the page width was 8in, that makes for a 0.5x scale. -->
+<style>
+html { height: 100%; }
+body {
+  height: 100%;
+  margin: 0;
+  box-sizing: border-box;
+
+  /* The testcase (rendered at 2-pages-per-sheet) will have 2in of extra space
+     in the vertical axis, which will be distributed equally with 1in on the
+     top and the bottom of the page grid (separately from the sheet's
+     unwriteable margin). We mock that up as padding here: */
+  padding: 1in 0;
+
+  /* We lay out the body as a row-oriented flex container, with two
+     side-by-side children which correspond to the two pages per sheet: */
+  display: flex;
+}
+.swatch {
+  box-sizing: border-box;
+
+  /* This represents the 240px border in the testcase, scaled down 0.5x: */
+  border: 120px solid;
+
+  /* Share the width equally among the swatches. (The height will be
+     automatically set to the flex container's row height, via default
+     'align-self' behavior.) */
+  flex: 1;
+
+  /* This margin is meant to mock up the unwriteable margin for each page on
+     our sheet; it's exactly 0.5x the unwriteableMargin values specified for
+     the testcase in printpreview_helper.xhtml. */
+  margin: 0.4in 0.3in 0.6in 0.2in;
+}
+.swatch:nth-child(1) { border-color: cyan; }
+.swatch:nth-child(2) { border-color: pink; }
+</style>
+<div class="swatch"></div>
+<div class="swatch"></div>
