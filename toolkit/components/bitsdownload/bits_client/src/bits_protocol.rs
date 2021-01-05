@@ -5,18 +5,19 @@
 //! Command, response, and status types.
 
 use std::ffi::OsString;
+use std::error::Error as StdError;
 use std::fmt;
 use std::result;
 
-use failure::Fail;
 use guid_win::Guid;
+use thiserror::Error;
 
 use super::{BitsErrorContext, BitsJobProgress, BitsJobState, BitsJobTimes, BitsProxyUsage};
 
 type HRESULT = i32;
 
 /// An HRESULT with a descriptive message
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug)]
 pub struct HResultMessage {
     pub hr: HRESULT,
     pub message: String,
@@ -27,6 +28,8 @@ impl fmt::Display for HResultMessage {
         self.message.fmt(f)
     }
 }
+
+impl StdError for HResultMessage {}
 
 /// Commands which can be sent to the server.
 ///
@@ -49,7 +52,7 @@ pub enum Command {
 #[doc(hidden)]
 pub trait CommandType {
     type Success;
-    type Failure: Fail;
+    type Failure: StdError;
     fn wrap(command: Self) -> Command;
 }
 
@@ -84,23 +87,23 @@ pub struct StartJobSuccess {
     pub guid: Guid,
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum StartJobFailure {
-    #[fail(display = "Argument validation failed: {}", _0)]
+    #[error("Argument validation failed: {0}")]
     ArgumentValidation(String),
-    #[fail(display = "Create job: {}", _0)]
+    #[error("Create job: {0}")]
     Create(HResultMessage),
-    #[fail(display = "Add file to job: {}", _0)]
+    #[error("Add file to job: {0}")]
     AddFile(HResultMessage),
-    #[fail(display = "Apply settings to job: {}", _0)]
+    #[error("Apply settings to job: {0}")]
     ApplySettings(HResultMessage),
-    #[fail(display = "Resume job: {}", _0)]
+    #[error("Resume job: {0}")]
     Resume(HResultMessage),
-    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    #[error("Connect to BackgroundCopyManager: {0}")]
     ConnectBcm(HResultMessage),
-    #[fail(display = "BITS error: {}", _0)]
+    #[error("BITS error: {0}")]
     OtherBITS(HResultMessage),
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -120,19 +123,19 @@ impl CommandType for MonitorJobCommand {
     }
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum MonitorJobFailure {
-    #[fail(display = "Argument validation failed: {}", _0)]
+    #[error("Argument validation failed: {0}")]
     ArgumentValidation(String),
-    #[fail(display = "Job not found")]
+    #[error("Job not found")]
     NotFound,
-    #[fail(display = "Get job: {}", _0)]
+    #[error("Get job: {0}")]
     GetJob(HResultMessage),
-    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    #[error("Connect to BackgroundCopyManager: {0}")]
     ConnectBcm(HResultMessage),
-    #[fail(display = "BITS error: {}", _0)]
+    #[error("BITS error: {0}")]
     OtherBITS(HResultMessage),
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -151,19 +154,19 @@ impl CommandType for SuspendJobCommand {
     }
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum SuspendJobFailure {
-    #[fail(display = "Job not found")]
+    #[error("Job not found")]
     NotFound,
-    #[fail(display = "Get job: {}", _0)]
+    #[error("Get job: {0}")]
     GetJob(HResultMessage),
-    #[fail(display = "Suspend job: {}", _0)]
+    #[error("Suspend job: {0}")]
     SuspendJob(HResultMessage),
-    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    #[error("Connect to BackgroundCopyManager: {0}")]
     ConnectBcm(HResultMessage),
-    #[fail(display = "BITS error: {}", _0)]
+    #[error("BITS error: {0}")]
     OtherBITS(HResultMessage),
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -182,19 +185,19 @@ impl CommandType for ResumeJobCommand {
     }
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum ResumeJobFailure {
-    #[fail(display = "Job not found")]
+    #[error("Job not found")]
     NotFound,
-    #[fail(display = "Get job: {}", _0)]
+    #[error("Get job: {0}")]
     GetJob(HResultMessage),
-    #[fail(display = "Resume job: {}", _0)]
+    #[error("Resume job: {0}")]
     ResumeJob(HResultMessage),
-    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    #[error("Connect to BackgroundCopyManager: {0}")]
     ConnectBcm(HResultMessage),
-    #[fail(display = "BITS error: {}", _0)]
+    #[error("BITS error: {0}")]
     OtherBITS(HResultMessage),
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -214,19 +217,19 @@ impl CommandType for SetJobPriorityCommand {
     }
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum SetJobPriorityFailure {
-    #[fail(display = "Job not found")]
+    #[error("Job not found")]
     NotFound,
-    #[fail(display = "Get job: {}", _0)]
+    #[error("Get job: {0}")]
     GetJob(HResultMessage),
-    #[fail(display = "Apply settings to job: {}", _0)]
+    #[error("Apply settings to job: {0}")]
     ApplySettings(HResultMessage),
-    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    #[error("Connect to BackgroundCopyManager: {0}")]
     ConnectBcm(HResultMessage),
-    #[fail(display = "BITS error: {}", _0)]
+    #[error("BITS error: {0}")]
     OtherBITS(HResultMessage),
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -246,19 +249,19 @@ impl CommandType for SetNoProgressTimeoutCommand {
     }
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum SetNoProgressTimeoutFailure {
-    #[fail(display = "Job not found")]
+    #[error("Job not found")]
     NotFound,
-    #[fail(display = "Get job: {}", _0)]
+    #[error("Get job: {0}")]
     GetJob(HResultMessage),
-    #[fail(display = "Apply settings to job: {}", _0)]
+    #[error("Apply settings to job: {0}")]
     ApplySettings(HResultMessage),
-    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    #[error("Connect to BackgroundCopyManager: {0}")]
     ConnectBcm(HResultMessage),
-    #[fail(display = "BITS error: {}", _0)]
+    #[error("BITS error: {0}")]
     OtherBITS(HResultMessage),
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -278,13 +281,13 @@ impl CommandType for SetUpdateIntervalCommand {
     }
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum SetUpdateIntervalFailure {
-    #[fail(display = "Argument validation: {}", _0)]
+    #[error("Argument validation: {0}")]
     ArgumentValidation(String),
-    #[fail(display = "Monitor not found")]
+    #[error("Monitor not found")]
     NotFound,
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -303,21 +306,21 @@ impl CommandType for CompleteJobCommand {
     }
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum CompleteJobFailure {
-    #[fail(display = "Job not found")]
+    #[error("Job not found")]
     NotFound,
-    #[fail(display = "Get job: {}", _0)]
+    #[error("Get job: {0}")]
     GetJob(HResultMessage),
-    #[fail(display = "Complete job: {}", _0)]
+    #[error("Complete job: {0}")]
     CompleteJob(HResultMessage),
-    #[fail(display = "Job only partially completed")]
+    #[error("Job only partially completed")]
     PartialComplete,
-    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    #[error("Connect to BackgroundCopyManager: {0}")]
     ConnectBcm(HResultMessage),
-    #[fail(display = "BITS error: {}", _0)]
+    #[error("BITS error: {0}")]
     OtherBITS(HResultMessage),
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -336,19 +339,19 @@ impl CommandType for CancelJobCommand {
     }
 }
 
-#[derive(Clone, Debug, Fail)]
+#[derive(Clone, Debug, Error)]
 pub enum CancelJobFailure {
-    #[fail(display = "Job not found")]
+    #[error("Job not found")]
     NotFound,
-    #[fail(display = "Get job: {}", _0)]
+    #[error("Get job: {0}")]
     GetJob(HResultMessage),
-    #[fail(display = "Cancel job: {}", _0)]
+    #[error("Cancel job: {0}")]
     CancelJob(HResultMessage),
-    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    #[error("Connect to BackgroundCopyManager: {0}")]
     ConnectBcm(HResultMessage),
-    #[fail(display = "BITS error: {}", _0)]
+    #[error("BITS error: {0}")]
     OtherBITS(HResultMessage),
-    #[fail(display = "Other failure: {}", _0)]
+    #[error("Other failure: {0}")]
     Other(String),
 }
 
@@ -368,8 +371,8 @@ pub struct JobStatus {
 }
 
 /// Job error report
-#[derive(Clone, Debug, Fail)]
-#[fail(display = "Job error in context {}: {}", context_str, error)]
+#[derive(Clone, Debug, Error)]
+#[error("Job error in context {context_str}: {error}")]
 pub struct JobError {
     pub context: BitsErrorContext,
     pub context_str: String,
