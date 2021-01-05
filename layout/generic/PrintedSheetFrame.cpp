@@ -92,15 +92,25 @@ void PrintedSheetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
-  const nsRect visible = aBuilder->GetVisibleRect();
-
   // Let each of our children (pages) draw itself, with a supplemental
   // transform to shrink it & place it in its pages-per-sheet cell:
   for (auto* frame : mFrames) {
     if (!frame->HasAnyStateBits(NS_PAGE_SKIPPED_BY_CUSTOM_RANGE)) {
+      // We'll be drawing our nsPageFrame children with a (usually-trivial)
+      // N-pages-per-sheet transform applied, so our passed-in visible rect
+      // isn't meaningful while we're drawing our children, because the
+      // transform could scale down content whose coordinates are off-screen
+      // such that it ends up on-screen. So: we temporarily update the visible
+      // rect to be the child nsPageFrame's whole frame-rect (represented in
+      // this PrintedSheetFrame's coordinate space.
       nsDisplayList content;
+      {
+        nsRect visibleRect = frame->GetRect();
+        nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
+            aBuilder, this, visibleRect, visibleRect);
 
-      frame->BuildDisplayListForStackingContext(aBuilder, &content);
+        frame->BuildDisplayListForStackingContext(aBuilder, &content);
+      }
       content.AppendNewToTop<nsDisplayTransform>(aBuilder, frame, &content,
                                                  content.GetBuildingRect(),
                                                  ComputePagesPerSheetTransform);
