@@ -4718,6 +4718,12 @@ nsresult XREMain::XRE_mainRun() {
   // it here.
   nsCOMPtr<nsIAppStartup> appStartup;
   {
+#ifdef XP_MACOSX
+    // In this scope, create an autorelease pool that will leave scope with
+    // it just before entering our event loop.
+    mozilla::MacAutoreleasePool pool;
+#endif
+
 #if defined(XP_WIN)
     RefPtr<mozilla::DllServices> dllServices(mozilla::DllServices::Get());
     dllServices->StartUntrustedModulesProcessor();
