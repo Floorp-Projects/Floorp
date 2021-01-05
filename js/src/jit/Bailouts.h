@@ -42,7 +42,7 @@ namespace jit {
 //     invalidated while it was on the stack. See "OSI" below. Ion code can be
 //     invalidated for several reasons: when GC evicts Ion code to save memory,
 //     for example, or when assumptions baked into the jitted code are
-//     invalidated by the VM (see callers of IonBuilder::constraints()).
+//     invalidated by the VM.
 //
 // (Some stack inspection can be done without bailing out, including GC stack
 // marking, Error object construction, and Gecko profiler sampling.)

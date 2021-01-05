@@ -5237,22 +5237,22 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       if (value == 0) {
         jit::JitOptions.forceInlineCaches = false;
         JitSpew(js::jit::JitSpew_IonScripts,
-                "IonBuilder: Enable non-IC optimizations.");
+                "Ion: Enable non-IC optimizations.");
       } else {
         jit::JitOptions.forceInlineCaches = true;
         JitSpew(js::jit::JitSpew_IonScripts,
-                "IonBuilder: Disable non-IC optimizations.");
+                "Ion: Disable non-IC optimizations.");
       }
       break;
     case JSJITCOMPILER_ION_CHECK_RANGE_ANALYSIS:
       if (value == 0) {
         jit::JitOptions.checkRangeAnalysis = false;
         JitSpew(js::jit::JitSpew_IonScripts,
-                "IonBuilder: Enable range analysis checks.");
+                "Ion: Enable range analysis checks.");
       } else {
         jit::JitOptions.checkRangeAnalysis = true;
         JitSpew(js::jit::JitSpew_IonScripts,
-                "IonBuilder: Disable range analysis checks.");
+                "Ion: Disable range analysis checks.");
       }
       break;
     case JSJITCOMPILER_ION_ENABLE:

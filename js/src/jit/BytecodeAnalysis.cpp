@@ -32,9 +32,9 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
   mozilla::PodZero(infos_.begin(), infos_.length());
   infos_[0].init(/*stackDepth=*/0);
 
-  // Because IonBuilder and WarpBuilder can compile try-blocks but don't compile
-  // the catch-body, we need some special machinery to prevent OSR into Ion/Warp
-  // in the following cases:
+  // Because WarpBuilder can compile try-blocks but doesn't compile the
+  // catch-body, we need some special machinery to prevent OSR into Warp code in
+  // the following cases:
   //
   // (1) Loops in catch/finally blocks:
   //

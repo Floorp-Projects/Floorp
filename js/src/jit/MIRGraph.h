@@ -610,35 +610,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
     return trackedSite_ ? trackedSite_->tree() : nullptr;
   }
 
-  // This class is used for reverting the graph within IonBuilder.
-  class BackupPoint {
-    friend MBasicBlock;
-
-    MBasicBlock* current_;
-    MInstruction* lastIns_;
-    uint32_t stackPosition_;
-    FixedList<MDefinition*> slots_;
-#ifdef DEBUG
-    // The following fields should remain identical during IonBuilder
-    // construction, these are used for assertions.
-    MPhi* lastPhi_;
-    uintptr_t predecessorsCheckSum_;
-    HashNumber instructionsCheckSum_;
-    uint32_t id_;
-    MResumePoint* callerResumePoint_;
-    MResumePoint* entryResumePoint_;
-
-    size_t computePredecessorsCheckSum(MBasicBlock* block);
-    HashNumber computeInstructionsCheckSum(MBasicBlock* block);
-#endif
-   public:
-    explicit BackupPoint(MBasicBlock* current);
-    [[nodiscard]] bool init(TempAllocator& alloc);
-    MBasicBlock* restore();
-  };
-
-  friend BackupPoint;
-
  private:
   MIRGraph& graph_;
   const CompileInfo& info_;  // Each block originates from a particular script.
@@ -766,7 +737,6 @@ class MIRGraph {
     return blocks_.begin(at);
   }
   ReversePostorderIterator rpoEnd() { return blocks_.end(); }
-  [[nodiscard]] bool removeSuccessorBlocks(MBasicBlock* block);
   void removeBlock(MBasicBlock* block);
   void removeBlockIncludingPhis(MBasicBlock* block);
   void moveBlockToEnd(MBasicBlock* block) {

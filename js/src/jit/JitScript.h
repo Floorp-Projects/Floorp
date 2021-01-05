@@ -23,7 +23,7 @@ namespace jit {
 
 class JitZone;
 
-// Information about a script's bytecode, used by IonBuilder. This is cached
+// Information about a script's bytecode, used by WarpBuilder. This is cached
 // in JitScript.
 struct IonBytecodeInfo {
   bool usesEnvironmentChain = false;
@@ -238,8 +238,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   const char* profileString_ = nullptr;
 
   // Data allocated lazily the first time this script is compiled, inlined, or
-  // analyzed by IonBuilder. This is done lazily to improve performance and
-  // memory usage as most scripts are never Ion-compiled.
+  // analyzed by WarpBuilder. This is done lazily to improve performance and
+  // memory usage as most scripts are never Warp-compiled.
   struct CachedIonData {
     // For functions with a call object, template objects to use for the call
     // object and decl env object (linked via the call object's enclosing

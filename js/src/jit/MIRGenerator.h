@@ -79,7 +79,7 @@ class MIRGenerator final {
                                                     va_list ap)
       MOZ_FORMAT_PRINTF(3, 0);
 
-  // Collect the evaluation result of phases after IonBuilder, such that
+  // Collect the evaluation result of phases after WarpOracle, such that
   // off-thread compilation can report what error got encountered.
   void setOffThreadStatus(AbortReasonOr<Ok>&& result) {
     MOZ_ASSERT(offThreadStatus_.isOk());

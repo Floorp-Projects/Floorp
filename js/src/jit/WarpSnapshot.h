@@ -538,9 +538,7 @@ class WarpScriptSnapshot
 };
 
 // Captures information from previous bailouts to prevent bailout/recompile
-// loops. This mostly exists for compatibility with IonBuilder and the MIR
-// backend.
-// TODO: overhaul bailout tracking once IonBuilder is gone.
+// loops.
 class WarpBailoutInfo {
   // True if any script in the compilation has the failedBoundsCheck flag. In
   // this case mark bounds checks as non-movable to prevent hoisting them in

@@ -1606,8 +1606,7 @@ bool WarpCacheIRTranspiler::emitLoadArrayBufferByteLengthInt32Result(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(
-    ObjOperandId objId, uint32_t getterOffset) {
+bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
   auto* length = MArrayBufferViewLength::New(alloc(), obj);
