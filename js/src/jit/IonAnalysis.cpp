@@ -3159,13 +3159,13 @@ static MathSpace ExtractMathSpace(MDefinition* ins) {
     arith = ins->toSub();
   }
   switch (arith->truncateKind()) {
-    case MDefinition::NoTruncate:
-    case MDefinition::TruncateAfterBailouts:
+    case TruncateKind::NoTruncate:
+    case TruncateKind::TruncateAfterBailouts:
       // TruncateAfterBailouts is considered as infinite space because the
       // LinearSum will effectively remove the bailout check.
       return MathSpace::Infinite;
-    case MDefinition::IndirectTruncate:
-    case MDefinition::Truncate:
+    case TruncateKind::IndirectTruncate:
+    case TruncateKind::Truncate:
       return MathSpace::Modulo;
   }
   MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown TruncateKind");

@@ -453,6 +453,38 @@ class StoreDependency : public TempObject {
   MStoreVector& get() { return all_; }
 };
 
+// When a floating-point value is used by nodes which would prefer to
+// recieve integer inputs, we may be able to help by computing our result
+// into an integer directly.
+//
+// A value can be truncated in 4 differents ways:
+//   1. Ignore Infinities (x / 0 --> 0).
+//   2. Ignore overflow (INT_MIN / -1 == (INT_MAX + 1) --> INT_MIN)
+//   3. Ignore negative zeros. (-0 --> 0)
+//   4. Ignore remainder. (3 / 4 --> 0)
+//
+// Indirect truncation is used to represent that we are interested in the
+// truncated result, but only if it can safely flow into operations which
+// are computed modulo 2^32, such as (2) and (3). Infinities are not safe,
+// as they would have absorbed other math operations. Remainders are not
+// safe, as fractions can be scaled up by multiplication.
+//
+// Division is a particularly interesting node here because it covers all 4
+// cases even when its own operands are integers.
+//
+// Note that these enum values are ordered from least value-modifying to
+// most value-modifying, and code relies on this ordering.
+enum class TruncateKind {
+  // No correction.
+  NoTruncate = 0,
+  // An integer is desired, but we can't skip bailout checks.
+  TruncateAfterBailouts = 1,
+  // The value will be truncated after some arithmetic (see above).
+  IndirectTruncate = 2,
+  // Direct and infallible truncation to int32.
+  Truncate = 3
+};
+
 // An MDefinition is an SSA name.
 class MDefinition : public MNode {
   friend class MBasicBlock;
@@ -628,53 +660,6 @@ class MDefinition : public MNode {
   virtual MDefinition* foldsTo(TempAllocator& alloc);
   virtual void analyzeEdgeCasesForward();
   virtual void analyzeEdgeCasesBackward();
-
-  // When a floating-point value is used by nodes which would prefer to
-  // recieve integer inputs, we may be able to help by computing our result
-  // into an integer directly.
-  //
-  // A value can be truncated in 4 differents ways:
-  //   1. Ignore Infinities (x / 0 --> 0).
-  //   2. Ignore overflow (INT_MIN / -1 == (INT_MAX + 1) --> INT_MIN)
-  //   3. Ignore negative zeros. (-0 --> 0)
-  //   4. Ignore remainder. (3 / 4 --> 0)
-  //
-  // Indirect truncation is used to represent that we are interested in the
-  // truncated result, but only if it can safely flow into operations which
-  // are computed modulo 2^32, such as (2) and (3). Infinities are not safe,
-  // as they would have absorbed other math operations. Remainders are not
-  // safe, as fractions can be scaled up by multiplication.
-  //
-  // Division is a particularly interesting node here because it covers all 4
-  // cases even when its own operands are integers.
-  //
-  // Note that these enum values are ordered from least value-modifying to
-  // most value-modifying, and code relies on this ordering.
-  enum TruncateKind {
-    // No correction.
-    NoTruncate = 0,
-    // An integer is desired, but we can't skip bailout checks.
-    TruncateAfterBailouts = 1,
-    // The value will be truncated after some arithmetic (see above).
-    IndirectTruncate = 2,
-    // Direct and infallible truncation to int32.
-    Truncate = 3
-  };
-
-  static const char* TruncateKindString(TruncateKind kind) {
-    switch (kind) {
-      case NoTruncate:
-        return "NoTruncate";
-      case TruncateAfterBailouts:
-        return "TruncateAfterBailouts";
-      case IndirectTruncate:
-        return "IndirectTruncate";
-      case Truncate:
-        return "Truncate";
-      default:
-        MOZ_CRASH("Unknown truncate kind.");
-    }
-  }
 
   // |needTruncation| records the truncation kind of the results, such that it
   // can be used to truncate the operands of this instruction.  If
@@ -1377,7 +1362,7 @@ class MLimitedTruncate : public MUnaryInstruction,
  protected:
   MLimitedTruncate(MDefinition* input, TruncateKind limit)
       : MUnaryInstruction(classOpcode, input),
-        truncate_(NoTruncate),
+        truncate_(TruncateKind::NoTruncate),
         truncateLimit_(limit) {
     setResultType(MIRType::Int32);
     setMovable();
@@ -3584,7 +3569,7 @@ class MToDouble : public MToFPInstruction {
   explicit MToDouble(MDefinition* def,
                      ConversionKind conversion = NonStringPrimitives)
       : MToFPInstruction(classOpcode, def, conversion),
-        implicitTruncate_(NoTruncate) {
+        implicitTruncate_(TruncateKind::NoTruncate) {
     setResultType(MIRType::Double);
     setMovable();
 
@@ -4798,7 +4783,7 @@ class MBinaryArithInstruction : public MBinaryInstruction,
   MBinaryArithInstruction(Opcode op, MDefinition* left, MDefinition* right,
                           MIRType type)
       : MBinaryInstruction(op, left, right),
-        implicitTruncate_(NoTruncate),
+        implicitTruncate_(TruncateKind::NoTruncate),
         mustPreserveNaN_(false) {
     MOZ_ASSERT(IsNumberType(type));
     setResultType(type);
@@ -4837,7 +4822,9 @@ class MBinaryArithInstruction : public MBinaryInstruction,
   }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
-  bool isTruncated() const { return implicitTruncate_ == Truncate; }
+  bool isTruncated() const {
+    return implicitTruncate_ == TruncateKind::Truncate;
+  }
   TruncateKind truncateKind() const { return implicitTruncate_; }
   void setTruncateKind(TruncateKind kind) {
     implicitTruncate_ = std::max(implicitTruncate_, kind);
@@ -5349,7 +5336,7 @@ class MAdd : public MBinaryArithInstruction {
                        MDefinition* right, MIRType type) {
     auto* ret = new (alloc) MAdd(left, right, type);
     if (type == MIRType::Int32) {
-      ret->setTruncateKind(Truncate);
+      ret->setTruncateKind(TruncateKind::Truncate);
     }
     return ret;
   }
@@ -5384,7 +5371,7 @@ class MSub : public MBinaryArithInstruction {
     auto* ret = new (alloc) MSub(left, right, type);
     ret->setMustPreserveNaN(mustPreserveNaN);
     if (type == MIRType::Int32) {
-      ret->setTruncateKind(Truncate);
+      ret->setTruncateKind(TruncateKind::Truncate);
     }
     return ret;
   }
@@ -5428,7 +5415,7 @@ class MMul : public MBinaryArithInstruction {
       // This implements the required behavior for Math.imul, which
       // can never fail and always truncates its output to int32.
       canBeNegativeZero_ = false;
-      setTruncateKind(Truncate);
+      setTruncateKind(TruncateKind::Truncate);
     }
     MOZ_ASSERT_IF(mode != Integer, mode == Normal);
   }
@@ -5542,7 +5529,7 @@ class MDiv : public MBinaryArithInstruction {
     }
     div->setMustPreserveNaN(mustPreserveNaN);
     if (type == MIRType::Int32) {
-      div->setTruncateKind(Truncate);
+      div->setTruncateKind(TruncateKind::Truncate);
     }
     return div;
   }
@@ -5579,7 +5566,7 @@ class MDiv : public MBinaryArithInstruction {
   bool isUnsigned() const { return unsigned_; }
 
   bool isTruncatedIndirectly() const {
-    return truncateKind() >= IndirectTruncate;
+    return truncateKind() >= TruncateKind::IndirectTruncate;
   }
 
   bool canTruncateInfinities() const { return isTruncated(); }
@@ -5737,7 +5724,7 @@ class MMod : public MBinaryArithInstruction {
       mod->setNotMovable();
     }
     if (type == MIRType::Int32) {
-      mod->setTruncateKind(Truncate);
+      mod->setTruncateKind(TruncateKind::Truncate);
     }
     return mod;
   }
@@ -6523,7 +6510,7 @@ class MPhi final : public MDefinition,
   MPhi(TempAllocator& alloc, MIRType resultType)
       : MDefinition(classOpcode),
         inputs_(alloc),
-        truncateKind_(NoTruncate),
+        truncateKind_(TruncateKind::NoTruncate),
         triedToSpecialize_(false),
         isIterator_(false),
         canProduceFloat32_(false),
