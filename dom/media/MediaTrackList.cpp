@@ -57,6 +57,10 @@ void MediaTrackList::AddTrack(MediaTrack* aTrack) {
   aTrack->SetTrackList(this);
   CreateAndDispatchTrackEventRunner(aTrack, u"addtrack"_ns);
 
+  if (HTMLMediaElement* element = GetMediaElement()) {
+    element->NotifyMediaTrackAdded(aTrack);
+  }
+
   if ((!aTrack->AsAudioTrack() || !aTrack->AsAudioTrack()->Enabled()) &&
       (!aTrack->AsVideoTrack() || !aTrack->AsVideoTrack()->Selected())) {
     // Track not enabled, no need to notify media element.
@@ -73,6 +77,9 @@ void MediaTrackList::RemoveTrack(const RefPtr<MediaTrack>& aTrack) {
   aTrack->SetEnabledInternal(false, MediaTrack::FIRE_NO_EVENTS);
   aTrack->SetTrackList(nullptr);
   CreateAndDispatchTrackEventRunner(aTrack, u"removetrack"_ns);
+  if (HTMLMediaElement* element = GetMediaElement()) {
+    element->NotifyMediaTrackRemoved(aTrack);
+  }
 }
 
 void MediaTrackList::RemoveTracks() {

@@ -48,6 +48,7 @@ class VideoFrameContainer;
 class MediaFormatReader;
 class MediaDecoderStateMachine;
 struct MediaPlaybackEvent;
+struct SharedDummyTrack;
 
 enum class Visibility : uint8_t;
 
@@ -173,13 +174,18 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
-  // Turn output capturing of this decoder on or off. If it is on, the
-  // MediaDecoderStateMachine's media sink will only play after output tracks
-  // have been set. This is to ensure that it doesn't skip over any data
-  // while the owner has intended to capture the full output, thus missing to
-  // capture some of it. The owner of the MediaDecoder is responsible for adding
-  // output tracks in a timely fashion while the output is captured.
-  void SetOutputCaptured(bool aCaptured);
+  enum class OutputCaptureState { Capture, Halt, None };
+  // Set the output capture state of this decoder.
+  // @param aState Capture: Output is captured into output tracks, and
+  //                        aDummyTrack must be provided.
+  //               Halt:    A capturing media sink is used, but capture is
+  //                        halted.
+  //               None:    Output is not captured.
+  // @param aDummyTrack A SharedDummyTrack the capturing media sink can use to
+  //                    access a MediaTrackGraph, so it can create tracks even
+  //                    when there are no output tracks available.
+  void SetOutputCaptureState(OutputCaptureState aState,
+                             SharedDummyTrack* aDummyTrack = nullptr);
   // Add an output track. All decoder output for the track's media type will be
   // sent to the track.
   // Note that only one audio track and one video track is supported by
@@ -636,9 +642,13 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // should not suspend the decoder.
   Canonical<RefPtr<VideoFrameContainer>> mSecondaryVideoContainer;
 
-  // Whether this MediaDecoder's output is captured. When captured, all decoded
-  // data must be played out through mOutputTracks.
-  Canonical<bool> mOutputCaptured;
+  // Whether this MediaDecoder's output is captured, halted or not captured.
+  // When captured, all decoded data must be played out through mOutputTracks.
+  Canonical<OutputCaptureState> mOutputCaptureState;
+
+  // A dummy track used to access the right MediaTrackGraph instance. Needed
+  // since there's no guarantee that output tracks are present.
+  Canonical<nsMainThreadPtrHandle<SharedDummyTrack>> mOutputDummyTrack;
 
   // Tracks that, if set, will get data routed through them.
   Canonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>> mOutputTracks;
@@ -690,8 +700,12 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   CanonicalSecondaryVideoContainer() {
     return &mSecondaryVideoContainer;
   }
-  AbstractCanonical<bool>* CanonicalOutputCaptured() {
-    return &mOutputCaptured;
+  AbstractCanonical<OutputCaptureState>* CanonicalOutputCaptureState() {
+    return &mOutputCaptureState;
+  }
+  AbstractCanonical<nsMainThreadPtrHandle<SharedDummyTrack>>*
+  CanonicalOutputDummyTrack() {
+    return &mOutputDummyTrack;
   }
   AbstractCanonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>>*
   CanonicalOutputTracks() {

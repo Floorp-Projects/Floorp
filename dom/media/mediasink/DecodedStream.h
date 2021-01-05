@@ -36,6 +36,7 @@ class MediaQueue;
 class DecodedStream : public MediaSink {
  public:
   DecodedStream(MediaDecoderStateMachine* aStateMachine,
+                nsMainThreadPtrHandle<SharedDummyTrack> aDummyTrack,
                 CopyableTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
                 double aVolume, double aPlaybackRate, bool aPreservesPitch,
                 MediaQueue<AudioData>& aAudioQueue,
@@ -89,6 +90,9 @@ class DecodedStream : public MediaSink {
   void DisconnectListener();
 
   const RefPtr<AbstractThread> mOwnerThread;
+
+  // Used to access the graph.
+  const nsMainThreadPtrHandle<SharedDummyTrack> mDummyTrack;
 
   /*
    * Worker thread only members.

@@ -230,10 +230,17 @@ RefPtr<GenericPromise> MediaDecoder::SetSink(AudioDeviceInfo* aSinkDevice) {
   return GetStateMachine()->InvokeSetSink(aSinkDevice);
 }
 
-void MediaDecoder::SetOutputCaptured(bool aCaptured) {
+void MediaDecoder::SetOutputCaptureState(OutputCaptureState aState,
+                                         SharedDummyTrack* aDummyTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  mOutputCaptured = aCaptured;
+  MOZ_ASSERT_IF(aState == OutputCaptureState::Capture, aDummyTrack);
+  mOutputCaptureState = aState;
+  if (mOutputDummyTrack.Ref().get() != aDummyTrack) {
+    mOutputDummyTrack = nsMainThreadPtrHandle<SharedDummyTrack>(
+        MakeAndAddRef<nsMainThreadPtrHolder<SharedDummyTrack>>(
+            "MediaDecoder::mOutputDummyTrack", aDummyTrack));
+  }
 }
 
 void MediaDecoder::AddOutputTrack(RefPtr<ProcessedMediaTrack> aTrack) {
@@ -303,7 +310,8 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       INIT_CANONICAL(mLooping, aInit.mLooping),
       INIT_CANONICAL(mSinkDevice, nullptr),
       INIT_CANONICAL(mSecondaryVideoContainer, nullptr),
-      INIT_CANONICAL(mOutputCaptured, false),
+      INIT_CANONICAL(mOutputCaptureState, OutputCaptureState::None),
+      INIT_CANONICAL(mOutputDummyTrack, nullptr),
       INIT_CANONICAL(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_CANONICAL(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
       INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING),

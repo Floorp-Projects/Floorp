@@ -374,10 +374,12 @@ void DecodedStreamData::GetDebugInfo(dom::DecodedStreamDataDebugInfo& aInfo) {
 
 DecodedStream::DecodedStream(
     MediaDecoderStateMachine* aStateMachine,
+    nsMainThreadPtrHandle<SharedDummyTrack> aDummyTrack,
     CopyableTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks, double aVolume,
     double aPlaybackRate, bool aPreservesPitch,
     MediaQueue<AudioData>& aAudioQueue, MediaQueue<VideoData>& aVideoQueue)
     : mOwnerThread(aStateMachine->OwnerThread()),
+      mDummyTrack(std::move(aDummyTrack)),
       mWatchManager(this, mOwnerThread),
       mPlaying(false, "DecodedStream::mPlaying"),
       mPrincipalHandle(aStateMachine->OwnerThread(), PRINCIPAL_HANDLE_NONE,
@@ -428,11 +430,13 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   class R : public Runnable {
    public:
     R(PlaybackInfoInit&& aInit,
+      nsMainThreadPtrHandle<SharedDummyTrack> aDummyTrack,
       nsTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
       MozPromiseHolder<MediaSink::EndedPromise>&& aAudioEndedPromise,
       MozPromiseHolder<MediaSink::EndedPromise>&& aVideoEndedPromise)
         : Runnable("CreateDecodedStreamData"),
           mInit(std::move(aInit)),
+          mDummyTrack(std::move(aDummyTrack)),
           mOutputTracks(std::move(aOutputTracks)),
           mAudioEndedPromise(std::move(aAudioEndedPromise)),
           mVideoEndedPromise(std::move(aVideoEndedPromise)) {}
@@ -455,16 +459,22 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
           MOZ_CRASH("Unknown media type");
         }
       }
-      if ((!audioOutputTrack && !videoOutputTrack) ||
-          (audioOutputTrack && audioOutputTrack->IsDestroyed()) ||
+      if (!mDummyTrack) {
+        // No dummy track - no graph. This could be intentional as the owning
+        // media element needs access to the tracks on main thread to set up
+        // forwarding of them before playback starts. MDSM will re-create
+        // DecodedStream once a dummy track is available. This effectively halts
+        // playback for this DecodedStream.
+        return NS_OK;
+      }
+      if ((audioOutputTrack && audioOutputTrack->IsDestroyed()) ||
           (videoOutputTrack && videoOutputTrack->IsDestroyed())) {
-        // No output tracks yet, or they're going away. Halt playback by not
-        // creating DecodedStreamData. MDSM will try again with a new
-        // DecodedStream sink when tracks are available.
+        // A track has been destroyed and we'll soon get re-created with a
+        // proper one. This effectively halts playback for this DecodedStream.
         return NS_OK;
       }
       mData = MakeUnique<DecodedStreamData>(
-          std::move(mInit), mOutputTracks[0]->Graph(),
+          std::move(mInit), mDummyTrack->mTrack->Graph(),
           std::move(audioOutputTrack), std::move(videoOutputTrack),
           std::move(mAudioEndedPromise), std::move(mVideoEndedPromise));
       return NS_OK;
@@ -473,6 +483,7 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
 
    private:
     PlaybackInfoInit mInit;
+    nsMainThreadPtrHandle<SharedDummyTrack> mDummyTrack;
     const nsTArray<RefPtr<ProcessedMediaTrack>> mOutputTracks;
     MozPromiseHolder<MediaSink::EndedPromise> mAudioEndedPromise;
     MozPromiseHolder<MediaSink::EndedPromise> mVideoEndedPromise;
@@ -483,8 +494,8 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   MozPromiseHolder<DecodedStream::EndedPromise> videoEndedHolder;
   PlaybackInfoInit init{aStartTime, aInfo};
   nsCOMPtr<nsIRunnable> r =
-      new R(std::move(init), mOutputTracks.Clone(), std::move(audioEndedHolder),
-            std::move(videoEndedHolder));
+      new R(std::move(init), mDummyTrack, mOutputTracks.Clone(),
+            std::move(audioEndedHolder), std::move(videoEndedHolder));
   SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), r);
   mData = static_cast<R*>(r.get())->ReleaseData();
 
