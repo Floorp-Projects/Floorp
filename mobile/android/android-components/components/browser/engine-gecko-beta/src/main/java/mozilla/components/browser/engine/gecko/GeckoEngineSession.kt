@@ -84,6 +84,8 @@ class GeckoEngineSession(
     // It mimics GeckoView debug log statements, hence the unintuitive tag and messages.
     private val fnprmsLogger = Logger("GeckoSession")
 
+    private val logger = Logger("GeckoEngineSession")
+
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var lastLoadRequestUri: String? = null
@@ -143,6 +145,12 @@ class GeckoEngineSession(
         flags: LoadUrlFlags,
         additionalHeaders: Map<String, String>?
     ) {
+        val scheme = Uri.parse(url).normalizeScheme().scheme
+        if (BLOCKED_SCHEMES.contains(scheme)) {
+            logger.error("URL scheme not allowed. Aborting load.")
+            return
+        }
+
         if (initialLoad) {
             initialLoadRequest = LoadRequest(url, parent, flags, additionalHeaders)
         }
@@ -1068,6 +1076,7 @@ class GeckoEngineSession(
         internal const val PROGRESS_STOP = 100
         internal const val MOZ_NULL_PRINCIPAL = "moz-nullprincipal:"
         internal const val ABOUT_BLANK = "about:blank"
+        internal val BLOCKED_SCHEMES = listOf("content", "file", "resource") // See 1684761 and 1684947
 
         /**
          * Provides an ErrorType corresponding to the error code provided.
