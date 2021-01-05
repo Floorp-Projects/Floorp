@@ -61,21 +61,14 @@ SessionHistoryInfo::SessionHistoryInfo(
 }
 
 SessionHistoryInfo::SessionHistoryInfo(
-    const SessionHistoryInfo* aSharedStateFrom, nsIURI* aURI,
-    const nsID& aDocShellID, nsIPrincipal* aTriggeringPrincipal,
+    nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
     nsIPrincipal* aPrincipalToInherit,
     nsIPrincipal* aPartitionedPrincipalToInherit,
     nsIContentSecurityPolicy* aCsp, const nsACString& aContentType)
     : mURI(aURI),
-      mSharedState(aSharedStateFrom ? SomeRef(aSharedStateFrom->mSharedState)
-                                    : Nothing()) {
-  mSharedState.Get()->mTriggeringPrincipal = aTriggeringPrincipal;
-  mSharedState.Get()->mPrincipalToInherit = aPrincipalToInherit;
-  mSharedState.Get()->mPartitionedPrincipalToInherit =
-      aPartitionedPrincipalToInherit;
-  mSharedState.Get()->mCsp = aCsp;
-  mSharedState.Get()->mContentType = aContentType;
-
+      mSharedState(SharedState::Create(
+          aTriggeringPrincipal, aPrincipalToInherit,
+          aPartitionedPrincipalToInherit, aCsp, aContentType)) {
   MaybeUpdateTitleFromURI();
 }
 

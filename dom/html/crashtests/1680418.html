@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+window.addEventListener("hashchange", function() {
+  document.documentElement.removeAttribute("class");
+});
+
+async function runTest() {
+  document.getElementById("a").click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  document.location.hash = "#foo";
+}
+</script>
+<body onload="runTest()">
+<a id='a' type='text/html' href='telnet://'>
+</body>
+</html>
