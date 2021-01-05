@@ -116,7 +116,7 @@ class EmitterScope : public Nestable<EmitterScope> {
   void dump(BytecodeEmitter* bce);
 
   MOZ_MUST_USE bool enterLexical(BytecodeEmitter* bce, ScopeKind kind,
-                                 ParserLexicalScopeData* bindings);
+                                 LexicalScope::ParserData* bindings);
   MOZ_MUST_USE bool enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox);
   MOZ_MUST_USE bool enterFunction(BytecodeEmitter* bce, FunctionBox* funbox);
   MOZ_MUST_USE bool enterFunctionExtraBodyVar(BytecodeEmitter* bce,
