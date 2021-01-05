@@ -123,52 +123,14 @@ function channelOpenPromise(chan) {
   });
 }
 
-// This is for testing when the HTTPSSVC record is already available before
+// This is for testing when the HTTPSSVC record is not available when
 // the transaction is added in connection manager.
-add_task(async function testUseHTTPSSVC() {
+add_task(async function testUseHTTPSSVCForHttpsUpgrade() {
   // use the h2 server as DOH provider
   prefs.setCharPref(
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/httpssvc_as_altsvc"
   );
-
-  let listener = new DNSListener();
-
-  // Do DNS resolution before creating the channel, so the HTTPSSVC record will
-  // be resolved from the cache.
-  let request = dns.asyncResolve(
-    "test.httpssvc.com",
-    dns.RESOLVE_TYPE_HTTPSSVC,
-    0,
-    null, // resolverInfo
-    listener,
-    mainThread,
-    defaultOriginAttributes
-  );
-
-  let [inRequest, inRecord, inStatus] = await listener;
-  Assert.equal(inRequest, request, "correct request was used");
-  Assert.equal(inStatus, Cr.NS_OK, "status OK");
-
-  // We need to skip the security check, since our test cert is signed for
-  // foo.example.com, not test.httpssvc.com.
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
-  let chan = makeChan(`https://test.httpssvc.com:8888`);
-  let [req, resp] = await channelOpenPromise(chan);
-  // Test if this request is done by h2.
-  Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
-});
-
-// This is for testing when the HTTPSSVC record is not available when
-// the transaction is added in connection manager.
-add_task(async function testUseHTTPSSVC1() {
   dns.clearCache(true);
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
@@ -205,12 +167,19 @@ EventSinkListener.prototype.QueryInterface = ChromeUtils.generateQI([
 
 // Test if the request is upgraded to https with a HTTPSSVC record.
 add_task(async function testUseHTTPSSVCAsHSTS() {
+  // use the h2 server as DOH provider
+  prefs.setCharPref(
+    "network.trr.uri",
+    "https://foo.example.com:" + h2Port + "/httpssvc_as_altsvc"
+  );
   dns.clearCache(true);
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
     true
   );
 
+  // At this time, the DataStorage is not ready, so MaybeUseHTTPSRRForUpgrade()
+  // is called from the callback of NS_ShouldSecureUpgrade().
   let chan = makeChan(`http://test.httpssvc.com:80/`);
   let listener = new EventSinkListener();
   chan.notificationCallbacks = listener;
@@ -218,6 +187,60 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
   let [req, resp] = await channelOpenPromise(chan);
 
   req.QueryInterface(Ci.nsIHttpChannel);
+  Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
+
+  // At this time, the DataStorage is ready, so MaybeUseHTTPSRRForUpgrade()
+  // is called from nsHttpChannel::OnBeforeConnect().
+  chan = makeChan(`http://test.httpssvc.com:80/`);
+  listener = new EventSinkListener();
+  chan.notificationCallbacks = listener;
+
+  [req, resp] = await channelOpenPromise(chan);
+
+  req.QueryInterface(Ci.nsIHttpChannel);
+  Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    false
+  );
+});
+
+// This is for testing when the HTTPSSVC record is already available before
+// the transaction is added in connection manager.
+add_task(async function testUseHTTPSSVC() {
+  // use the h2 server as DOH provider
+  prefs.setCharPref(
+    "network.trr.uri",
+    "https://foo.example.com:" + h2Port + "/httpssvc_as_altsvc"
+  );
+
+  let listener = new DNSListener();
+
+  // Do DNS resolution before creating the channel, so the HTTPSSVC record will
+  // be resolved from the cache.
+  let request = dns.asyncResolve(
+    "test.httpssvc.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+
+  // We need to skip the security check, since our test cert is signed for
+  // foo.example.com, not test.httpssvc.com.
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    true
+  );
+
+  let chan = makeChan(`https://test.httpssvc.com:8888`);
+  let [req, resp] = await channelOpenPromise(chan);
+  // Test if this request is done by h2.
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(

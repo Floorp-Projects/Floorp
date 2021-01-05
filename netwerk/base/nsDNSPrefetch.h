@@ -6,6 +6,8 @@
 #ifndef nsDNSPrefetch_h___
 #define nsDNSPrefetch_h___
 
+#include <functional>
+
 #include "nsIWeakReferenceUtils.h"
 #include "nsString.h"
 #include "mozilla/TimeStamp.h"
@@ -44,7 +46,8 @@ class nsDNSPrefetch final : public nsIDNSListener {
   nsresult PrefetchMedium(bool refreshDNS = false);
   nsresult PrefetchLow(bool refreshDNS = false);
 
-  nsresult FetchHTTPSSVC(bool aRefreshDNS);
+  nsresult FetchHTTPSSVC(
+      bool aRefreshDNS, std::function<void(nsIDNSHTTPSSVCRecord*)>&& aCallback);
 
  private:
   nsCString mHostname;
