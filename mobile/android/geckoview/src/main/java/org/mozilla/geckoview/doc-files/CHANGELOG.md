@@ -21,6 +21,8 @@ exclude: true
   implement the WebExtension `downloads` API.
   ([bug 1656336]({{bugzilla}}1656336))
 - Added [`WebRequest.Builder#body(@Nullable String)`][86.2] which converts a string to direct byte buffer.
+- Removed deprecated `REPLACED_UNSAFE_CONTENT`.
+  ([bug 1667471]({{bugzilla}}1667471))
 
 [86.1]: {{javadoc_uri}}/WebExtension.DownloadDelegate.html
 [86.2]: {{javadoc_uri}}/WebRequest.Builder#body-java.lang.String-
