@@ -41,7 +41,6 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
-import java.lang.Deprecated;
 import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
@@ -71,7 +70,6 @@ import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
-import org.mozilla.geckoview.DeprecationSchedule;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -463,7 +461,6 @@ package org.mozilla.geckoview {
     field public static final int LOADED_LEVEL_2_TRACKING_CONTENT = 1048576;
     field public static final int LOADED_SOCIALTRACKING_CONTENT = 131072;
     field public static final int REPLACED_TRACKING_CONTENT = 16;
-    field @Deprecated @DeprecationSchedule(version=86,id="unsafe-content") public static final int REPLACED_UNSAFE_CONTENT = 16;
   }
 
   @AnyThread public static class ContentBlockingController.LogEntry {
