@@ -161,7 +161,14 @@ nsresult nsHTMLDNSPrefetch::Prefetch(
     return rv;
   }
 
-  // TODO: Fetch HTTPS RRs in bug 1652723.
+  if (StaticPrefs::network_dns_upgrade_with_https_rr() ||
+      StaticPrefs::network_dns_use_https_rr_as_altsvc()) {
+    Unused << sDNSService->AsyncResolveNative(
+        NS_ConvertUTF16toUTF8(hostname), nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
+        flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener,
+        nullptr, aPartitionedPrincipalOriginAttributes,
+        getter_AddRefs(tmpOutstanding));
+  }
 
   return NS_OK;
 }
@@ -247,7 +254,14 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(
       nullptr,  // resolverInfo
       sDNSListener, aReason, aPartitionedPrincipalOriginAttributes);
 
-  // TODO: Fetch HTTPS RRs in bug 1652723.
+  if (StaticPrefs::network_dns_upgrade_with_https_rr() ||
+      StaticPrefs::network_dns_use_https_rr_as_altsvc()) {
+    Unused << sDNSService->CancelAsyncResolveNative(
+        NS_ConvertUTF16toUTF8(hostname), nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
+        flags | nsIDNSService::RESOLVE_SPECULATE,
+        nullptr,  // resolverInfo
+        sDNSListener, aReason, aPartitionedPrincipalOriginAttributes);
+  }
   return rv;
 }
 
@@ -392,7 +406,16 @@ void nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue() {
                 mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
                 nullptr, sDNSListener, nullptr, oa,
                 getter_AddRefs(tmpOutstanding));
-            // TODO: Fetch HTTPS RRs in bug 1652723.
+            // Fetch HTTPS RR if needed.
+            if (NS_SUCCEEDED(rv) &&
+                (StaticPrefs::network_dns_upgrade_with_https_rr() ||
+                 StaticPrefs::network_dns_use_https_rr_as_altsvc())) {
+              sDNSService->AsyncResolveNative(
+                  hostName, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
+                  mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
+                  nullptr, sDNSListener, nullptr, oa,
+                  getter_AddRefs(tmpOutstanding));
+            }
 
             // Tell link that deferred prefetch was requested
             if (NS_SUCCEEDED(rv)) link->OnDNSPrefetchRequested();
