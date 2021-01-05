@@ -40,7 +40,6 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "nsIObserverService.h"
 #include "WidgetUtils.h"
 
 #include "mozilla/java/EventDispatcherWrappers.h"
@@ -568,8 +567,7 @@ jobject AndroidBridge::GetGlobalContextRef() {
 }
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS(nsAndroidBridge, nsIAndroidEventDispatcher, nsIAndroidBridge,
-                  nsIObserver)
+NS_IMPL_ISUPPORTS(nsAndroidBridge, nsIAndroidEventDispatcher, nsIAndroidBridge)
 
 nsAndroidBridge::nsAndroidBridge() {
   if (jni::IsAvailable()) {
@@ -578,8 +576,6 @@ nsAndroidBridge::nsAndroidBridge() {
                        /* window */ nullptr);
     mEventDispatcher = dispatcher;
   }
-
-  AddObservers();
 }
 
 NS_IMETHODIMP
@@ -608,29 +604,6 @@ NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(
     mozIDOMWindowProxy* aWindow, bool* aRet) {
   *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed(aWindow);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAndroidBridge::Observe(nsISupports* aSubject, const char* aTopic,
-                         const char16_t* aData) {
-  if (!strcmp(aTopic, "xpcom-shutdown")) {
-    RemoveObservers();
-  }
-  return NS_OK;
-}
-
-void nsAndroidBridge::AddObservers() {
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    obs->AddObserver(this, "xpcom-shutdown", false);
-  }
-}
-
-void nsAndroidBridge::RemoveObservers() {
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    obs->RemoveObserver(this, "xpcom-shutdown");
-  }
 }
 
 uint32_t AndroidBridge::GetScreenOrientation() {
