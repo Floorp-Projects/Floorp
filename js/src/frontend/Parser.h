@@ -395,17 +395,17 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   }
 
  public:
-  mozilla::Maybe<GlobalScope::ParserData*> newGlobalScopeData(
+  mozilla::Maybe<ParserGlobalScopeData*> newGlobalScopeData(
       ParseContext::Scope& scope);
-  mozilla::Maybe<ModuleScope::ParserData*> newModuleScopeData(
+  mozilla::Maybe<ParserModuleScopeData*> newModuleScopeData(
       ParseContext::Scope& scope);
-  mozilla::Maybe<EvalScope::ParserData*> newEvalScopeData(
+  mozilla::Maybe<ParserEvalScopeData*> newEvalScopeData(
       ParseContext::Scope& scope);
-  mozilla::Maybe<FunctionScope::ParserData*> newFunctionScopeData(
+  mozilla::Maybe<ParserFunctionScopeData*> newFunctionScopeData(
       ParseContext::Scope& scope, bool hasParameterExprs);
-  mozilla::Maybe<VarScope::ParserData*> newVarScopeData(
+  mozilla::Maybe<ParserVarScopeData*> newVarScopeData(
       ParseContext::Scope& scope);
-  mozilla::Maybe<LexicalScope::ParserData*> newLexicalScopeData(
+  mozilla::Maybe<ParserLexicalScopeData*> newLexicalScopeData(
       ParseContext::Scope& scope);
 
  protected:
@@ -1835,38 +1835,38 @@ class MOZ_STACK_CLASS AutoInParametersOfAsyncFunction {
   }
 };
 
-GlobalScope::ParserData* NewEmptyGlobalScopeData(JSContext* cx,
+ParserGlobalScopeData* NewEmptyGlobalScopeData(JSContext* cx, LifoAlloc& alloc,
+                                               uint32_t numBindings);
+
+ParserVarScopeData* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
+                                         uint32_t numBindings);
+
+ParserLexicalScopeData* NewEmptyLexicalScopeData(JSContext* cx,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings);
 
-VarScope::ParserData* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
-                                           uint32_t numBindings);
-
-LexicalScope::ParserData* NewEmptyLexicalScopeData(JSContext* cx,
+ParserFunctionScopeData* NewEmptyFunctionScopeData(JSContext* cx,
                                                    LifoAlloc& alloc,
                                                    uint32_t numBindings);
 
-FunctionScope::ParserData* NewEmptyFunctionScopeData(JSContext* cx,
-                                                     LifoAlloc& alloc,
-                                                     uint32_t numBindings);
-
-mozilla::Maybe<GlobalScope::ParserData*> NewGlobalScopeData(
+mozilla::Maybe<ParserGlobalScopeData*> NewGlobalScopeData(
     JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc);
 
-mozilla::Maybe<EvalScope::ParserData*> NewEvalScopeData(
+mozilla::Maybe<ParserEvalScopeData*> NewEvalScopeData(
     JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc);
 
-mozilla::Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
+mozilla::Maybe<ParserFunctionScopeData*> NewFunctionScopeData(
     JSContext* context, ParseContext::Scope& scope, bool hasParameterExprs,
     LifoAlloc& alloc, ParseContext* pc);
 
-mozilla::Maybe<VarScope::ParserData*> NewVarScopeData(
-    JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
-    ParseContext* pc);
+mozilla::Maybe<ParserVarScopeData*> NewVarScopeData(JSContext* context,
+                                                    ParseContext::Scope& scope,
+                                                    LifoAlloc& alloc,
+                                                    ParseContext* pc);
 
-mozilla::Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
+mozilla::Maybe<ParserLexicalScopeData*> NewLexicalScopeData(
     JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc);
 
