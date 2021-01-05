@@ -30,7 +30,7 @@
 </body>
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
@@ -40,7 +40,7 @@ function* test(testDriver) {
   // Also apply an async scroll offset in the y-direction large enough
   // to make the scrollframe checkerboard.
   // Note: We have to be careful with the numbers here.
-  //   moveMouseAndScrollWheelOver() relies on the main thread receiving
+  //   promiseMoveMouseAndScrollWheelOver() relies on the main thread receiving
   //   the synthesized mouse-move and wheel events. However, the async
   //   transform created by setAsyncScrollOffset() will cause an untransform
   //   to be applied to the synthesized events' coordinates before they're
@@ -52,7 +52,7 @@ function* test(testDriver) {
   //   so we can keep the async scroll offset small enough (300 in this case)
   //   that the untransformed coordinates are still in-bounds for the window.
   utils.setDisplayPortForElement(0, 0, 100, 100, subframe, 1);
-  yield waitForAllPaints(testDriver);
+  await promiseAllPaintsDone();
   var scrollY = 300;
   utils.setAsyncScrollOffset(subframe, 0, scrollY);
   if (config.isWebRender) {
@@ -66,13 +66,13 @@ function* test(testDriver) {
   // Scroll over the subframe, and make sure that the page does not scroll,
   // i.e. overscroll-behavior is respected.
   var waitForScroll = false; // don't wait for a scroll event, it will never come
-  yield moveMouseAndScrollWheelOver(subframe, 50, 50, testDriver, waitForScroll);
+  await promiseMoveMouseAndScrollWheelOver(subframe, 50, 50, waitForScroll);
   is(window.scrollY, 0, "overscroll-behavior was respected");
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
