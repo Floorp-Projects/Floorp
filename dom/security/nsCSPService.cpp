@@ -153,7 +153,8 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
       rv = preloadCsp->ShouldLoad(
           contentType, cspEventListener, aContentLocation,
           nullptr,  // no redirect, aOriginal URL is null.
-          false, cspNonce, parserCreatedScript, aDecision);
+          aLoadInfo->GetSendCSPViolationEvents(), cspNonce, parserCreatedScript,
+          aDecision);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // if the preload policy already denied the load, then there
@@ -341,9 +342,11 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
   bool isPreload = nsContentUtils::IsPreloadType(policyType);
 
   /* On redirect, if the content policy is a preload type, rejecting the
-   * preload results in the load silently failing, so we pass true to
-   * the aSendViolationReports parameter. See Bug 1219453.
+   * preload results in the load silently failing, so we convert preloads to
+   * the actual type. See Bug 1219453.
    */
+  policyType =
+      nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(policyType);
 
   int16_t decision = nsIContentPolicy::ACCEPT;
   bool parserCreatedScript = aLoadInfo->GetParserCreatedScript();
