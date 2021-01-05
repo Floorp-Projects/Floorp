@@ -49,7 +49,7 @@ must read::
   ``~/.mozbuild/clang-dist-toolchain.tar.xz`` and
   ``~/.mozbuild/rustc-dist-toolchain.tar.xz``. This is an example of the paths
   that should be added to your client config to specify toolchains to build on
-  macOS, located at ``~/Library/Preferences/Mozilla.sccache/config``::
+  macOS, located at ``~/Library/Application Support/Mozilla.sccache/config``::
 
     [[dist.toolchains]]
     type = "path_override"
