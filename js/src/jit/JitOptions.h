@@ -39,7 +39,6 @@ struct DefaultJitOptions {
 #endif
   bool checkRangeAnalysis;
   bool runExtraChecks;
-  bool disableInlineBacktracking;
   bool disableAma;
   bool disableEaa;
   bool disableEdgeCaseAnalysis;
