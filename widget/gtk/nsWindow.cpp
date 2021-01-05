@@ -3262,8 +3262,8 @@ void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
   event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
   event.mExitFrom = Some(is_top_level_mouse_exit(mGdkWindow, aEvent)
-                             ? WidgetMouseEvent::eTopLevel
-                             : WidgetMouseEvent::eChild);
+                             ? WidgetMouseEvent::ePlatformTopLevel
+                             : WidgetMouseEvent::ePlatformChild);
 
   LOG(("OnLeaveNotify: %p\n", (void*)this));
 
