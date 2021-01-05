@@ -39,6 +39,7 @@ class TestInterfaceMaplike final : public nsISupports, public nsWrapperCache {
   void ClearInternal();
   bool DeleteInternal(const nsAString& aKey);
   bool HasInternal(const nsAString& aKey);
+  int32_t GetInternal(const nsAString& aKey, ErrorResult& aRv);
 
  private:
   virtual ~TestInterfaceMaplike() = default;

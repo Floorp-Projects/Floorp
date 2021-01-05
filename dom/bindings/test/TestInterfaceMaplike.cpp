@@ -67,4 +67,8 @@ bool TestInterfaceMaplike::HasInternal(const nsAString& aKey) {
   return TestInterfaceMaplike_Binding::MaplikeHelpers::Has(this, aKey, rv);
 }
 
+int32_t TestInterfaceMaplike::GetInternal(const nsAString& aKey,
+                                          ErrorResult& aRv) {
+  return TestInterfaceMaplike_Binding::MaplikeHelpers::Get(this, aKey, aRv);
+}
 }  // namespace mozilla::dom
