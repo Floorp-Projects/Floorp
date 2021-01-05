@@ -49,12 +49,15 @@ nsPageSequenceFrame* NS_NewPageSequenceFrame(PresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsPageSequenceFrame)
 
 static const nsPagesPerSheetInfo kSupportedPagesPerSheet[] = {
-    {1, 1},  // Note: we default to this if no match is found.
-    // {2, ... }, // XXXdholbert Coming in bug 1669905.
+    /* Members are: {mNumPages, mLargerNumTracks} */
+    // clang-format off
+    {1, 1},
+    {2, 2},
     {4, 2},
-    // {6, ... }, // XXXdholbert Coming in bug 1669905.
+    {6, 3},
     {9, 3},
     {16, 4},
+    // clang-format on
 };
 
 inline void SanityCheckPagesPerSheetInfo() {
@@ -314,6 +317,14 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   nscoord maxInflatedSheetWidth = 0;
   nscoord maxInflatedSheetHeight = 0;
 
+  // Determine the app-unit size of each printed sheet. This is normally the
+  // same as the app-unit size of a page, but it might need the components
+  // swapped, depending on what HasOrthogonalSheetsAndPages says.
+  nsSize sheetSize = aPresContext->GetPageSize();
+  if (mPageData->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+    std::swap(sheetSize.width, sheetSize.height);
+  }
+
   // Tile the sheets vertically
   for (nsIFrame* kidFrame : mFrames) {
     // Set the shared data into the page frame before reflow
@@ -325,7 +336,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     // Reflow the sheet
     ReflowInput kidReflowInput(
         aPresContext, aReflowInput, kidFrame,
-        LogicalSize(kidFrame->GetWritingMode(), aPresContext->GetPageSize()));
+        LogicalSize(kidFrame->GetWritingMode(), sheetSize));
     ReflowOutput kidReflowOutput(kidReflowInput);
     nsReflowStatus status;
 
