@@ -14,6 +14,7 @@
 #include "nsAccUtils.h"
 #include "nsDeckFrame.h"
 #include "nsEventShell.h"
+#include "nsLayoutUtils.h"
 #include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "RootAccessible.h"

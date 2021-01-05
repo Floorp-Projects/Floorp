@@ -6,6 +6,7 @@
 
 #include "Accessible-inl.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsIAccessible.h"
 #include "nsIMutableArray.h"
 #include "xpcAccessibleDocument.h"
