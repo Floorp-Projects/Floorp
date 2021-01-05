@@ -99,6 +99,41 @@ interface nsIPrintSettings : nsISupports
   void GetEffectivePageSize(out double aWidth, out double aHeight);
 
   /**
+   * Get the printed sheet size in twips, considering both the user-specified
+   * orientation (portrait or landscape) *as well as* the fact that we might be
+   * inverting the orientation to account for 2 or 6 pages-per-sheet.
+   *
+   * This API will usually behave the same (& return the same thing) as
+   * GetEffectivePageSize, *except for* when we are printing with 2 or 6
+   * pages-per-sheet, in which case the return values (aWidth & aHeight) will
+   * be swapped with respect to what GetEffectivePageSize would return.
+   *
+   * Callers should use this method rather than GetEffectivePageSize when they
+   * really do want the size of the sheet of paper to be printed, rather than
+   * the possibly-"virtualized"-via-pages-per-sheet page size.
+   */
+  [noscript, notxpcom, nostdcall] void GetEffectiveSheetSize(out double aWidth,
+                                                             out double aHeight);
+
+  /**
+   * Get the orientation of a printed sheet. This is usually the same as the
+   * 'orientation' attribute (which is the orientation of individual pages),
+   * except when we're printing with 2 or 6 pages-per-sheet, in which case
+   * it'll be the opposite value.
+   *
+   * Note that this value is not independently settable. Its value is fully
+   * determined by the 'orientation' and 'numPagesPerSheet' attributes.
+   */
+  [noscript, notxpcom, nostdcall] long GetSheetOrientation();
+
+  /**
+   * Convenience getter, which returns true IFF the sheet orientation and the
+   * page orientation are orthogonal. (In other words, returns true IFF we
+   * are printing with 2 or 6 pages-per-sheet.)
+   */
+  [noscript, notxpcom, nostdcall] bool HasOrthogonalSheetsAndPages();
+
+  /**
    * Makes a new copy
    */
   nsIPrintSettings clone();
