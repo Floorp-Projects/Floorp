@@ -6247,27 +6247,31 @@ class MOZ_RAII AutoMinimumScaleSizeChangeDetector final {
 };
 
 nsSize ScrollFrameHelper::TrueOuterSize(nsDisplayListBuilder* aBuilder) const {
-  if (RefPtr<MobileViewportManager> manager =
-          mOuter->PresShell()->GetMobileViewportManager()) {
-    LayoutDeviceIntSize displaySize = manager->DisplaySize();
-
-    MOZ_ASSERT(aBuilder);
-    // In case of WebRender, we expand the outer size to include the dynamic
-    // toolbar area here.
-    // In case of non WebRender, we expand the size dynamically in
-    // MoveScrollbarForLayerMargin in AsyncCompositionManager.cpp.
-    LayerManager* layerManager = aBuilder->GetWidgetLayerManager();
-    if (layerManager &&
-        layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
-      displaySize.height += ViewAs<LayoutDevicePixel>(
-          mOuter->PresContext()->GetDynamicToolbarMaxHeight(),
-          PixelCastJustification::LayoutDeviceIsScreenForBounds);
-    }
-
-    return LayoutDeviceSize::ToAppUnits(
-        displaySize, mOuter->PresContext()->AppUnitsPerDevPixel());
+  if (!mOuter->PresShell()->UsesMobileViewportSizing()) {
+    return mOuter->GetSize();
   }
-  return mOuter->GetSize();
+
+  RefPtr<MobileViewportManager> manager =
+      mOuter->PresShell()->GetMobileViewportManager();
+  MOZ_ASSERT(manager);
+
+  LayoutDeviceIntSize displaySize = manager->DisplaySize();
+
+  MOZ_ASSERT(aBuilder);
+  // In case of WebRender, we expand the outer size to include the dynamic
+  // toolbar area here.
+  // In case of non WebRender, we expand the size dynamically in
+  // MoveScrollbarForLayerMargin in AsyncCompositionManager.cpp.
+  LayerManager* layerManager = aBuilder->GetWidgetLayerManager();
+  if (layerManager &&
+      layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    displaySize.height += ViewAs<LayoutDevicePixel>(
+        mOuter->PresContext()->GetDynamicToolbarMaxHeight(),
+        PixelCastJustification::LayoutDeviceIsScreenForBounds);
+  }
+
+  return LayoutDeviceSize::ToAppUnits(
+      displaySize, mOuter->PresContext()->AppUnitsPerDevPixel());
 }
 
 void ScrollFrameHelper::UpdateMinimumScaleSize(
