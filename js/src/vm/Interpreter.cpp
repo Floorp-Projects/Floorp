@@ -3915,7 +3915,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(NewArray) {
       uint32_t length = GET_UINT32(REGS.pc);
-      ArrayObject* obj = NewArrayOperation(cx, script, REGS.pc, length);
+      ArrayObject* obj = NewArrayOperation(cx, length);
       if (!obj) {
         goto error;
       }
@@ -5162,11 +5162,8 @@ JSObject* js::CreateThisWithTemplate(JSContext* cx,
 }
 
 ArrayObject* js::NewArrayOperation(
-    JSContext* cx, HandleScript script, jsbytecode* pc, uint32_t length,
+    JSContext* cx, uint32_t length,
     NewObjectKind newKind /* = GenericObject */) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::NewArray);
-  MOZ_ASSERT(newKind != SingletonObject);
-
   return NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
 }
 

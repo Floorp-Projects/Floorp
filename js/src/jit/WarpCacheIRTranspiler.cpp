@@ -3422,11 +3422,9 @@ bool WarpCacheIRTranspiler::emitNewArrayFromLengthResult(
 
       MNewArray* obj;
       if (len > inlineLength) {
-        obj = MNewArray::NewVM(alloc(), len, templateConst, heap,
-                               loc_.toRawBytecode());
+        obj = MNewArray::NewVM(alloc(), len, templateConst, heap);
       } else {
-        obj = MNewArray::New(alloc(), len, templateConst, heap,
-                             loc_.toRawBytecode());
+        obj = MNewArray::New(alloc(), len, templateConst, heap);
       }
       add(obj);
       pushResult(obj);

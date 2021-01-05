@@ -4326,13 +4326,11 @@ MArgumentState* MArgumentState::Copy(TempAllocator& alloc,
   return res;
 }
 
-MNewArray::MNewArray(TempAllocator& alloc, uint32_t length,
-                     MConstant* templateConst, gc::InitialHeap initialHeap,
-                     jsbytecode* pc, bool vmCall)
+MNewArray::MNewArray(uint32_t length, MConstant* templateConst,
+                     gc::InitialHeap initialHeap, bool vmCall)
     : MUnaryInstruction(classOpcode, templateConst),
       length_(length),
       initialHeap_(initialHeap),
-      pc_(pc),
       vmCall_(vmCall) {
   setResultType(MIRType::Object);
 }

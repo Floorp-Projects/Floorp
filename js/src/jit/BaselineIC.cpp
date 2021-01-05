@@ -2619,22 +2619,16 @@ bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
       return false;
     }
   } else {
-    RootedScript script(cx, frame->script());
-    jsbytecode* pc = stub->icEntry()->pc(script);
-
-    obj = NewArrayOperation(cx, script, pc, length);
+    obj = NewArrayOperation(cx, length);
     if (!obj) {
       return false;
     }
 
-    if (!obj->isSingleton()) {
-      ArrayObject* templateObject =
-          NewArrayOperation(cx, script, pc, length, TenuredObject);
-      if (!templateObject) {
-        return false;
-      }
-      stub->setTemplateObject(templateObject);
+    ArrayObject* templateObject = NewArrayOperation(cx, length, TenuredObject);
+    if (!templateObject) {
+      return false;
     }
+    stub->setTemplateObject(templateObject);
   }
 
   res.setObject(*obj);
