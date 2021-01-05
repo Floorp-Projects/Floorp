@@ -3,8 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::sync::{
-    atomic::{AtomicU64, Ordering},
+    atomic::{AtomicUsize, Ordering},
     Arc, RwLock,
 };
 
@@ -41,7 +42,7 @@ pub struct TimingDistributionMetricImpl {
 #[derive(Debug)]
 pub struct TimingDistributionMetricIpc {
     metric_id: MetricId,
-    next_timer_id: AtomicU64,
+    next_timer_id: AtomicUsize,
     instants: RwLock<HashMap<u64, std::time::Instant>>,
 }
 
@@ -51,7 +52,7 @@ impl TimingDistributionMetric {
         if need_ipc() {
             TimingDistributionMetric::Child(TimingDistributionMetricIpc {
                 metric_id: id,
-                next_timer_id: AtomicU64::new(0),
+                next_timer_id: AtomicUsize::new(0),
                 instants: RwLock::new(HashMap::new()),
             })
         } else {
@@ -66,7 +67,7 @@ impl TimingDistributionMetric {
             TimingDistributionMetric::Parent { id, .. } => {
                 TimingDistributionMetric::Child(TimingDistributionMetricIpc {
                     metric_id: *id,
-                    next_timer_id: AtomicU64::new(0),
+                    next_timer_id: AtomicUsize::new(0),
                     instants: RwLock::new(HashMap::new()),
                 })
             }
@@ -93,7 +94,11 @@ impl TimingDistributionMetric {
             TimingDistributionMetric::Child(c) => {
                 // There is no glean-core on this process to give us a TimerId,
                 // so we'll have to make our own and do our own bookkeeping.
-                let id = c.next_timer_id.fetch_add(1, Ordering::SeqCst);
+                let id = c
+                    .next_timer_id
+                    .fetch_add(1, Ordering::SeqCst)
+                    .try_into()
+                    .unwrap();
                 let mut map = c
                     .instants
                     .write()
