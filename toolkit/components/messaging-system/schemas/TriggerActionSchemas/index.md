@@ -95,11 +95,16 @@ let type = "update" | "save";
 
 ### `contentBlocking`
 
-Happens every time there is a content blocked event. Provides a context of the
-number of pages loaded in the current browsing session that can be used in targeting.
+Happens at the and of a document load and for every subsequent content blocked event.
+Provides a context of the number of pages loaded in the current browsing session that can be used in targeting.
 
 Does not filter by host or patterns.
 
+The event it reports back is a flag or a combination of flags merged together by
+ANDing the various STATE_BLOCKED_* flags.
+
 ```typescript
+// https://searchfox.org/mozilla-central/rev/2fcab997046ba9e068c5391dc7d8848e121d84f8/uriloader/base/nsIWebProgressListener.idl#260
+let event: ContentBlockingEventFlag;
 let pageLoad = number;
 ```
