@@ -289,11 +289,11 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 }
 
 - (void)addLabel:(const char*)aLabel withFrame:(NSRect)aRect {
-  [self addLabel:aLabel withFrame:aRect alignment:NSRightTextAlignment];
+  [self addLabel:aLabel withFrame:aRect alignment:NSTextAlignmentRight];
 }
 
 - (void)addCenteredLabel:(const char*)aLabel withFrame:(NSRect)aRect {
-  [self addLabel:aLabel withFrame:aRect alignment:NSCenterTextAlignment];
+  [self addLabel:aLabel withFrame:aRect alignment:NSTextAlignmentCenter];
 }
 
 - (NSButton*)checkboxWithLabel:(const char*)aLabel andFrame:(NSRect)aRect {
@@ -310,7 +310,7 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
                                    selectedItem:(const nsAString&)aCurrentString {
   NSPopUpButton* list = [[[NSPopUpButton alloc] initWithFrame:aRect pullsDown:NO] autorelease];
   [list setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
-  [[list cell] setControlSize:NSSmallControlSize];
+  [[list cell] setControlSize:NSControlSizeSmall];
   NSArray* items = [NSArray arrayWithObjects:[self localizedString:"headerFooterBlank"],
                                              [self localizedString:"headerFooterTitle"],
                                              [self localizedString:"headerFooterURL"],

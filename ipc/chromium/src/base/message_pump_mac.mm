@@ -626,7 +626,7 @@ void MessagePumpNSApplication::DoRun(Delegate* delegate) {
     NSDate* distant_future = [NSDate distantFuture];
     while (keep_running_) {
       MessagePumpScopedAutoreleasePool autorelease_pool(this);
-      NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask
+      NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
                                           untilDate:distant_future
                                              inMode:NSDefaultRunLoopMode
                                             dequeue:YES];
@@ -648,7 +648,7 @@ void MessagePumpNSApplication::Quit() {
   }
 
   // Send a fake event to wake the loop up.
-  [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
+  [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
                                       location:NSMakePoint(0, 0)
                                  modifierFlags:0
                                      timestamp:0

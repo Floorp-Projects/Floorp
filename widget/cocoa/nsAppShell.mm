@@ -132,7 +132,7 @@ static bool gAppShellMethodsSwizzled = false;
 
   mozilla::BackgroundHangMonitor().NotifyActivity();
 
-  if ([anEvent type] == NSApplicationDefined && [anEvent subtype] == kEventSubtypeTrace) {
+  if ([anEvent type] == NSEventTypeApplicationDefined && [anEvent subtype] == kEventSubtypeTrace) {
     mozilla::SignalTracerThread();
     return;
   }
@@ -393,7 +393,7 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
     // destroyed).  Setting windowNumber to '0' seems to work fine -- this
     // seems to prevent the OS from ever trying to associate our bogus event
     // with a particular NSWindow object.
-    [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
+    [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
                                         location:NSMakePoint(0, 0)
                                    modifierFlags:0
                                        timestamp:0
@@ -414,7 +414,7 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
   }
 
   // Still needed to avoid crashes on quit in most Mochitests.
-  [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
+  [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
                                       location:NSMakePoint(0, 0)
                                  modifierFlags:0
                                      timestamp:0
@@ -577,7 +577,7 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
     if (aMayWait) {
       currentMode = [currentRunLoop currentMode];
       if (!currentMode) currentMode = NSDefaultRunLoopMode;
-      NSEvent* nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+      NSEvent* nextEvent = [NSApp nextEventMatchingMask:NSEventMaskAny
                                               untilDate:waitUntil
                                                  inMode:currentMode
                                                 dequeue:YES];
@@ -598,8 +598,9 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
       EventAttributes attrs = GetEventAttributes(currentEvent);
       UInt32 eventKind = GetEventKind(currentEvent);
       UInt32 eventClass = GetEventClass(currentEvent);
-      bool osCocoaEvent = ((eventClass == 'appl') || (eventClass == kEventClassAppleEvent) ||
-                           ((eventClass == 'cgs ') && (eventKind != NSApplicationDefined)));
+      bool osCocoaEvent =
+          ((eventClass == 'appl') || (eventClass == kEventClassAppleEvent) ||
+           ((eventClass == 'cgs ') && (eventKind != NSEventTypeApplicationDefined)));
       // If attrs is kEventAttributeUserEvent or kEventAttributeMonitored
       // (i.e. a user input event), we shouldn't process it here while
       // aMayWait is false.  Likewise if currentEvent will eventually be
@@ -848,7 +849,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread, bool aEventWasProc
   NSEvent* currentEvent = [NSApp currentEvent];
   if (currentEvent) {
     TextInputHandler::sLastModifierState =
-        [currentEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+        [currentEvent modifierFlags] & NSEventModifierFlagDeviceIndependentFlagsMask;
   }
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();

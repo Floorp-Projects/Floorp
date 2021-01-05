@@ -82,10 +82,10 @@ uint8_t nsMenuUtilsX::GeckoModifiersForNodeAttribute(const nsString& modifiersAt
 unsigned int nsMenuUtilsX::MacModifiersForGeckoModifiers(uint8_t geckoModifiers) {
   unsigned int macModifiers = 0;
 
-  if (geckoModifiers & knsMenuItemShiftModifier) macModifiers |= NSShiftKeyMask;
-  if (geckoModifiers & knsMenuItemAltModifier) macModifiers |= NSAlternateKeyMask;
-  if (geckoModifiers & knsMenuItemControlModifier) macModifiers |= NSControlKeyMask;
-  if (geckoModifiers & knsMenuItemCommandModifier) macModifiers |= NSCommandKeyMask;
+  if (geckoModifiers & knsMenuItemShiftModifier) macModifiers |= NSEventModifierFlagShift;
+  if (geckoModifiers & knsMenuItemAltModifier) macModifiers |= NSEventModifierFlagOption;
+  if (geckoModifiers & knsMenuItemControlModifier) macModifiers |= NSEventModifierFlagControl;
+  if (geckoModifiers & knsMenuItemCommandModifier) macModifiers |= NSEventModifierFlagCommand;
 
   return macModifiers;
 }

@@ -127,7 +127,7 @@ NSPoint nsCocoaUtils::ScreenLocationForEvent(NSEvent* anEvent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   // Don't trust mouse locations of mouse move events, see bug 443178.
-  if (!anEvent || [anEvent type] == NSMouseMoved) return [NSEvent mouseLocation];
+  if (!anEvent || [anEvent type] == NSEventTypeMouseMoved) return [NSEvent mouseLocation];
 
   // Pin momentum scroll events to the location of the last user-controlled
   // scroll event.
@@ -189,7 +189,7 @@ NSEventPhase nsCocoaUtils::EventMomentumPhase(NSEvent* aEvent) {
 }
 
 BOOL nsCocoaUtils::IsMomentumScrollEvent(NSEvent* aEvent) {
-  return [aEvent type] == NSScrollWheel && EventMomentumPhase(aEvent) != NSEventPhaseNone;
+  return [aEvent type] == NSEventTypeScrollWheel && EventMomentumPhase(aEvent) != NSEventPhaseNone;
 }
 
 @interface NSEvent (HasPreciseScrollingDeltas)
@@ -641,16 +641,18 @@ NSEvent* nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(const WidgetKeyboardEve
 
   NSEventType eventType;
   if (aKeyEvent.mMessage == eKeyUp) {
-    eventType = NSKeyUp;
+    eventType = NSEventTypeKeyUp;
   } else {
-    eventType = NSKeyDown;
+    eventType = NSEventTypeKeyDown;
   }
 
-  static const uint32_t sModifierFlagMap[][2] = {
-      {MODIFIER_SHIFT, NSShiftKeyMask},       {MODIFIER_CONTROL, NSControlKeyMask},
-      {MODIFIER_ALT, NSAlternateKeyMask},     {MODIFIER_ALTGRAPH, NSAlternateKeyMask},
-      {MODIFIER_META, NSCommandKeyMask},      {MODIFIER_CAPSLOCK, NSAlphaShiftKeyMask},
-      {MODIFIER_NUMLOCK, NSNumericPadKeyMask}};
+  static const uint32_t sModifierFlagMap[][2] = {{MODIFIER_SHIFT, NSEventModifierFlagShift},
+                                                 {MODIFIER_CONTROL, NSEventModifierFlagControl},
+                                                 {MODIFIER_ALT, NSEventModifierFlagOption},
+                                                 {MODIFIER_ALTGRAPH, NSEventModifierFlagOption},
+                                                 {MODIFIER_META, NSEventModifierFlagCommand},
+                                                 {MODIFIER_CAPSLOCK, NSEventModifierFlagCapsLock},
+                                                 {MODIFIER_NUMLOCK, NSEventModifierFlagNumericPad}};
 
   NSUInteger modifierFlags = 0;
   for (uint32_t i = 0; i < ArrayLength(sModifierFlagMap); ++i) {
@@ -704,24 +706,24 @@ void nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent, NSEvent* aNativ
 Modifiers nsCocoaUtils::ModifiersForEvent(NSEvent* aNativeEvent) {
   NSUInteger modifiers = aNativeEvent ? [aNativeEvent modifierFlags] : [NSEvent modifierFlags];
   Modifiers result = 0;
-  if (modifiers & NSShiftKeyMask) {
+  if (modifiers & NSEventModifierFlagShift) {
     result |= MODIFIER_SHIFT;
   }
-  if (modifiers & NSControlKeyMask) {
+  if (modifiers & NSEventModifierFlagControl) {
     result |= MODIFIER_CONTROL;
   }
-  if (modifiers & NSAlternateKeyMask) {
+  if (modifiers & NSEventModifierFlagOption) {
     result |= MODIFIER_ALT;
     // Mac's option key is similar to other platforms' AltGr key.
     // Let's set AltGr flag when option key is pressed for consistency with
     // other platforms.
     result |= MODIFIER_ALTGRAPH;
   }
-  if (modifiers & NSCommandKeyMask) {
+  if (modifiers & NSEventModifierFlagCommand) {
     result |= MODIFIER_META;
   }
 
-  if (modifiers & NSAlphaShiftKeyMask) {
+  if (modifiers & NSEventModifierFlagCapsLock) {
     result |= MODIFIER_CAPSLOCK;
   }
   // Mac doesn't have NumLock key.  We can assume that NumLock is always locked
@@ -732,11 +734,11 @@ Modifiers nsCocoaUtils::ModifiersForEvent(NSEvent* aNativeEvent) {
   // We should notify locked state only when keys in numpad are pressed.
   // By this, web applications may not be confused by unexpected numpad key's
   // key event with unlocked state.
-  if (modifiers & NSNumericPadKeyMask) {
+  if (modifiers & NSEventModifierFlagNumericPad) {
     result |= MODIFIER_NUMLOCK;
   }
 
-  // Be aware, NSFunctionKeyMask is included when arrow keys, home key or some
+  // Be aware, NSEventModifierFlagFunction is included when arrow keys, home key or some
   // other keys are pressed. We cannot check whether 'fn' key is pressed or
   // not by the flag.
 
@@ -746,25 +748,25 @@ Modifiers nsCocoaUtils::ModifiersForEvent(NSEvent* aNativeEvent) {
 // static
 UInt32 nsCocoaUtils::ConvertToCarbonModifier(NSUInteger aCocoaModifier) {
   UInt32 carbonModifier = 0;
-  if (aCocoaModifier & NSAlphaShiftKeyMask) {
+  if (aCocoaModifier & NSEventModifierFlagCapsLock) {
     carbonModifier |= alphaLock;
   }
-  if (aCocoaModifier & NSControlKeyMask) {
+  if (aCocoaModifier & NSEventModifierFlagControl) {
     carbonModifier |= controlKey;
   }
-  if (aCocoaModifier & NSAlternateKeyMask) {
+  if (aCocoaModifier & NSEventModifierFlagOption) {
     carbonModifier |= optionKey;
   }
-  if (aCocoaModifier & NSShiftKeyMask) {
+  if (aCocoaModifier & NSEventModifierFlagShift) {
     carbonModifier |= shiftKey;
   }
-  if (aCocoaModifier & NSCommandKeyMask) {
+  if (aCocoaModifier & NSEventModifierFlagCommand) {
     carbonModifier |= cmdKey;
   }
-  if (aCocoaModifier & NSNumericPadKeyMask) {
+  if (aCocoaModifier & NSEventModifierFlagNumericPad) {
     carbonModifier |= kEventKeyModifierNumLockMask;
   }
-  if (aCocoaModifier & NSFunctionKeyMask) {
+  if (aCocoaModifier & NSEventModifierFlagFunction) {
     carbonModifier |= kEventKeyModifierFnMask;
   }
   return carbonModifier;

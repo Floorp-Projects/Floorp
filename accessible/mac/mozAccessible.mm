@@ -949,9 +949,7 @@ struct RoleDescrComparator {
       LayoutDeviceIntPoint(geckoRect.X() + (geckoRect.Width() / 2),
                            geckoRect.Y() + (geckoRect.Height() / 2));
   nsIWidget* widget = [objOrView widget];
-  // XXX: NSRightMouseDown is depreciated in 10.12, should be
-  // changed to NSEventTypeRightMouseDown after refactoring.
-  widget->SynthesizeNativeMouseEvent(p, NSRightMouseDown, 0, nullptr);
+  widget->SynthesizeNativeMouseEvent(p, NSEventTypeRightMouseDown, 0, nullptr);
 }
 
 - (void)moxPerformPress {

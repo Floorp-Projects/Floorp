@@ -1581,7 +1581,8 @@ class nsIWidget : public nsISupports {
    * @param aPoint screen location of the mouse, in device
    * pixels, with origin at the top left
    * @param aNativeMessage *platform-specific* event type (e.g. on Mac,
-   * NSMouseMoved; on Windows, MOUSEEVENTF_MOVE, MOUSEEVENTF_LEFTDOWN etc)
+   * NSEventTypeMouseMoved; on Windows, MOUSEEVENTF_MOVE, MOUSEEVENTF_LEFTDOWN
+   * etc)
    * @param aModifierFlags *platform-specific* modifier flags (ignored
    * on Windows)
    * @param aObserver the observer that will get notified once the events

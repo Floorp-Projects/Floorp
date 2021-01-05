@@ -18,10 +18,10 @@
 <script type="application/javascript">
 
 function synthesizeNativeMouseClickWithControl(aTarget, aOffsetX, aOffsetY) {
-  const NSLeftMouseDown = 1;
-  const NSLeftMouseUp = 2;
+  const NSEventTypeLeftMouseDown = 1;
+  const NSEventTypeLeftMouseUp = 2;
 
-  const NSControlKeyMask = 1 << 18;
+  const NSEventModifierFlagControl = 1 << 18;
 
   let utils = SpecialPowers.getDOMWindowUtils(window);
 
@@ -30,8 +30,8 @@ function synthesizeNativeMouseClickWithControl(aTarget, aOffsetX, aOffsetY) {
   let y = aOffsetY + window.mozInnerScreenY + rect.top;
   let scale = utils.screenPixelsPerCSSPixel;
 
-  utils.sendNativeMouseEvent(x * scale, y * scale, NSLeftMouseDown, NSControlKeyMask, aTarget);
-  utils.sendNativeMouseEvent(x * scale, y * scale, NSLeftMouseUp, NSControlKeyMask, aTarget);
+  utils.sendNativeMouseEvent(x * scale, y * scale, NSEventTypeLeftMouseDown, NSEventModifierFlagControl, aTarget);
+  utils.sendNativeMouseEvent(x * scale, y * scale, NSEventTypeLeftMouseUp, NSEventModifierFlagControl, aTarget);
 }
 
 function waitAndCheckMouseEvents(aTarget, aExpectedEvents) {

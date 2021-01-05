@@ -4,7 +4,7 @@
 
 /*
  * This file defines constants to be used in the "subtype" field of
- * NSApplicationDefined type NSEvents.
+ * NSEventTypeApplicationDefined type NSEvents.
  */
 
 #ifndef WIDGET_COCOA_CUSTOMCOCOAEVENTS_H_

@@ -627,7 +627,7 @@ static bool RestartApplication() {
   mPlaceHolderString = [[NSMutableAttributedString alloc] initWithString:placeholder
                                                               attributes:txtDict];
   if (gRTLlayout)
-    [mPlaceHolderString setAlignment:NSRightTextAlignment
+    [mPlaceHolderString setAlignment:NSTextAlignmentRight
                                range:NSMakeRange(0, [placeholder length])];
 }
 

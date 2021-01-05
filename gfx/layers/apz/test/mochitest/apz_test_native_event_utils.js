@@ -105,7 +105,7 @@ function nativeMouseDownEventMsg() {
     case "windows":
       return 2; // MOUSEEVENTF_LEFTDOWN
     case "mac":
-      return 1; // NSLeftMouseDown
+      return 1; // NSEventTypeLeftMouseDown
     case "linux":
       return 4; // GDK_BUTTON_PRESS
     case "android":
@@ -121,7 +121,7 @@ function nativeMouseMoveEventMsg() {
     case "windows":
       return 1; // MOUSEEVENTF_MOVE
     case "mac":
-      return 5; // NSMouseMoved
+      return 5; // NSEventTypeMouseMoved
     case "linux":
       return 3; // GDK_MOTION_NOTIFY
     case "android":
@@ -137,7 +137,7 @@ function nativeMouseUpEventMsg() {
     case "windows":
       return 4; // MOUSEEVENTF_LEFTUP
     case "mac":
-      return 2; // NSLeftMouseUp
+      return 2; // NSEventTypeLeftMouseUp
     case "linux":
       return 7; // GDK_BUTTON_RELEASE
     case "android":

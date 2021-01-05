@@ -189,7 +189,7 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
 
   NSEvent* cocoaEvent = reinterpret_cast<NSEvent*>(aEvent.mNativeKeyEvent);
 
-  if (!cocoaEvent || [cocoaEvent type] != NSKeyDown) {
+  if (!cocoaEvent || [cocoaEvent type] != NSEventTypeKeyDown) {
     MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
             ("%p NativeKeyBindings::GetEditCommands, no Cocoa key down event", this));
 
