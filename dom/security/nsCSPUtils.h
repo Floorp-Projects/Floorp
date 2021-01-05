@@ -104,7 +104,6 @@ inline CSPDirective CSP_StringToCSPDirective(const nsAString& aDir) {
       return static_cast<CSPDirective>(i);
     }
   }
-  NS_ASSERTION(false, "Can not convert unknown Directive to Integer");
   return nsIContentSecurityPolicy::NO_DIRECTIVE;
 }
 
@@ -198,7 +197,6 @@ class nsCSPHostSrc;
 
 nsCSPHostSrc* CSP_CreateHostSrcFromSelfURI(nsIURI* aSelfURI);
 bool CSP_IsEmptyDirective(const nsAString& aValue, const nsAString& aDir);
-bool CSP_IsValidDirective(const nsAString& aDir);
 bool CSP_IsDirective(const nsAString& aValue, CSPDirective aDir);
 bool CSP_IsKeyword(const nsAString& aValue, enum CSPKeyword aKey);
 bool CSP_IsQuotelessKeyword(const nsAString& aKey);
