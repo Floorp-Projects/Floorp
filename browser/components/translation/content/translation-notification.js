@@ -8,7 +8,7 @@ class MozTranslationNotification extends MozElements.Notification {
   static get markup() {
     return `
       <hbox anonid="details" align="center" flex="1">
-        <image class="translate-infobar-element messageImage"/>
+        <image class="messageImage"/>
         <panel anonid="welcomePanel" class="translation-welcome-panel" type="arrow" align="start">
           <image class="translation-welcome-logo"/>
           <vbox flex="1" class="translation-welcome-content">
@@ -17,53 +17,52 @@ class MozTranslationNotification extends MozElements.Notification {
             <hbox align="center">
               <label anonid="learnMore" class="plain" onclick="openTrustedLinkIn('https://support.mozilla.org/kb/automatic-translation', 'tab'); this.parentNode.parentNode.parentNode.hidePopup();" is="text-link"/>
               <spacer flex="1"/>
-              <button class="translate-infobar-element" anonid="thanksButton" onclick="this.parentNode.parentNode.parentNode.hidePopup();"/>
+              <button anonid="thanksButton" onclick="this.parentNode.parentNode.parentNode.hidePopup();"/>
             </hbox>
           </vbox>
         </panel>
         <deck anonid="translationStates" selectedIndex="0">
           <hbox class="translate-offer-box" align="center">
-            <label class="translate-infobar-element" value="&translation.thisPageIsIn.label;"/>
-            <menulist class="translate-infobar-element" anonid="detectedLanguage">
+            <label value="&translation.thisPageIsIn.label;"/>
+            <menulist class="notification-button" anonid="detectedLanguage">
               <menupopup/>
             </menulist>
-            <label class="translate-infobar-element" value="&translation.translateThisPage.label;"/>
-            <button class="translate-infobar-element" label="&translation.translate.button;" anonid="translate" oncommand="this.closest('notification').translate();"/>
-            <button class="translate-infobar-element" label="&translation.notNow.button;" anonid="notNow" oncommand="this.closest('notification').closeCommand();"/>
+            <label value="&translation.translateThisPage.label;"/>
+            <button class="notification-button primary" label="&translation.translate.button;" anonid="translate" oncommand="this.closest('notification').translate();"/>
+            <button class="notification-button" label="&translation.notNow.button;" anonid="notNow" oncommand="this.closest('notification').closeCommand();"/>
           </hbox>
           <vbox class="translating-box" pack="center">
-            <label class="translate-infobar-element" value="&translation.translatingContent.label;"/>
+            <label value="&translation.translatingContent.label;"/>
           </vbox>
           <hbox class="translated-box" align="center">
-            <label class="translate-infobar-element" value="&translation.translatedFrom.label;"/>
-            <menulist class="translate-infobar-element" anonid="fromLanguage" oncommand="this.closest('notification').translate();">
+            <label value="&translation.translatedFrom.label;"/>
+            <menulist class="notification-button" anonid="fromLanguage" oncommand="this.closest('notification').translate();">
               <menupopup/>
             </menulist>
-            <label class="translate-infobar-element" value="&translation.translatedTo.label;"/>
-            <menulist class="translate-infobar-element" anonid="toLanguage" oncommand="this.closest('notification').translate();">
+            <label value="&translation.translatedTo.label;"/>
+            <menulist class="notification-button" anonid="toLanguage" oncommand="this.closest('notification').translate();">
               <menupopup/>
             </menulist>
-            <label class="translate-infobar-element" value="&translation.translatedToSuffix.label;"/>
-            <button anonid="showOriginal" class="translate-infobar-element" label="&translation.showOriginal.button;" oncommand="this.closest('notification').showOriginal();"/>
-            <button anonid="showTranslation" class="translate-infobar-element" label="&translation.showTranslation.button;" oncommand="this.closest('notification').showTranslation();"/>
+            <label value="&translation.translatedToSuffix.label;"/>
+            <button anonid="showOriginal" class="notification-button" label="&translation.showOriginal.button;" oncommand="this.closest('notification').showOriginal();"/>
+            <button anonid="showTranslation" class="notification-button" label="&translation.showTranslation.button;" oncommand="this.closest('notification').showTranslation();"/>
           </hbox>
           <hbox class="translation-error" align="center">
-            <label class="translate-infobar-element" value="&translation.errorTranslating.label;"/>
-            <button class="translate-infobar-element" label="&translation.tryAgain.button;" anonid="tryAgain" oncommand="this.closest('notification').translate();"/>
+            <label value="&translation.errorTranslating.label;"/>
+            <button class="notification-button" label="&translation.tryAgain.button;" anonid="tryAgain" oncommand="this.closest('notification').translate();"/>
           </hbox>
           <vbox class="translation-unavailable" pack="center">
-            <label class="translate-infobar-element" value="&translation.serviceUnavailable.label;"/>
+            <label value="&translation.serviceUnavailable.label;"/>
           </vbox>
         </deck>
         <spacer flex="1"/>
-        <button type="menu" class="translate-infobar-element options-menu-button" anonid="options" label="&translation.options.menu;">
-          <menupopup class="translation-menupopup cui-widget-panel cui-widget-panelview
-                                cui-widget-panelWithFooter PanelUI-subView" onpopupshowing="this.closest('notification').optionsShowing();">
+        <button type="menu" class="notification-button" anonid="options" label="&translation.options.menu;">
+          <menupopup class="translation-menupopup" onpopupshowing="this.closest('notification').optionsShowing();">
             <menuitem anonid="neverForLanguage" oncommand="this.closest('notification').neverForLanguage();"/>
             <menuitem anonid="neverForSite" oncommand="this.closest('notification').neverForSite();" label="&translation.options.neverForSite.label;" accesskey="&translation.options.neverForSite.accesskey;"/>
             <menuseparator/>
             <menuitem oncommand="openPreferences('paneGeneral');" label="&translation.options.preferences.label;" accesskey="&translation.options.preferences.accesskey;"/>
-            <menuitem class="subviewbutton panel-subview-footer" oncommand="this.closest('notification').openProviderAttribution();">
+            <menuitem oncommand="this.closest('notification').openProviderAttribution();">
               <deck anonid="translationEngine" selectedIndex="0">
                 <hbox class="translation-attribution">
                   <label/>
@@ -188,13 +187,7 @@ class MozTranslationNotification extends MozElements.Notification {
       attributionNode.selectedIndex = engineIndex;
     } else {
       // Hide the attribution menuitem
-      let footer = attributionNode.parentNode;
-      footer.hidden = true;
-      // Make the 'Translation preferences' item the new footer.
-      footer = footer.previousSibling;
-      footer.setAttribute("class", "subviewbutton panel-subview-footer");
-      // And hide the menuseparator.
-      footer.previousSibling.hidden = true;
+      attributionNode.parentNode.hidden = true;
     }
 
     const kWelcomePref = "browser.translation.ui.welcomeMessageShown";
