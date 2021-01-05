@@ -454,7 +454,7 @@ class StoreDependency : public TempObject {
 };
 
 // When a floating-point value is used by nodes which would prefer to
-// recieve integer inputs, we may be able to help by computing our result
+// receive integer inputs, we may be able to help by computing our result
 // into an integer directly.
 //
 // A value can be truncated in 4 differents ways:
