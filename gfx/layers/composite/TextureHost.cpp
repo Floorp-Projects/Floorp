@@ -818,11 +818,14 @@ bool BufferTextureHost::EnsureWrappingTextureSource() {
   if (mFormat == gfx::SurfaceFormat::YUV) {
     mFirstSource = mProvider->CreateDataTextureSourceAroundYCbCr(this);
   } else {
+    uint8_t* data = GetBuffer();
+    if (!data) {
+      return false;
+    }
     RefPtr<gfx::DataSourceSurface> surf =
         gfx::Factory::CreateWrappingDataSourceSurface(
-            GetBuffer(),
-            ImageDataSerializer::ComputeRGBStride(mFormat, mSize.width), mSize,
-            mFormat);
+            data, ImageDataSerializer::ComputeRGBStride(mFormat, mSize.width),
+            mSize, mFormat);
     if (!surf) {
       return false;
     }
