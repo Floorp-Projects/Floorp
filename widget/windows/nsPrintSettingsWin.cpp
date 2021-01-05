@@ -176,9 +176,18 @@ void nsPrintSettingsWin::InitWithInitializer(
       aSettings.mDevmodeWStorage.Elements())));
 
   if (mDevMode->dmFields & DM_ORIENTATION) {
-    SetOrientation(mDevMode->dmOrientation == DMORIENT_PORTRAIT
-                       ? kPortraitOrientation
-                       : kLandscapeOrientation);
+    const bool areSheetsOfPaperPortraitMode =
+        (mDevMode->dmOrientation == DMORIENT_PORTRAIT);
+
+    // If our Windows print settings say that we're producing portrait-mode
+    // sheets of paper, then our page format must also be portrait-mode; unless
+    // we've got a pages-per-sheet value with orthogonal pages/sheets, in which
+    // case it's reversed.
+    const bool arePagesPortraitMode =
+        (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
+
+    SetOrientation(arePagesPortraitMode ? kPortraitOrientation
+                                        : kLandscapeOrientation);
   }
 
   if (mDevMode->dmFields & DM_COPIES) {
@@ -315,9 +324,18 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
 
   mIsInitedFromPrinter = true;
   if (aDevMode->dmFields & DM_ORIENTATION) {
-    mOrientation = int32_t(aDevMode->dmOrientation == DMORIENT_PORTRAIT
-                               ? kPortraitOrientation
-                               : kLandscapeOrientation);
+    const bool areSheetsOfPaperPortraitMode =
+        (aDevMode->dmOrientation == DMORIENT_PORTRAIT);
+
+    // If our Windows print settings say that we're producing portrait-mode
+    // sheets of paper, then our page format must also be portrait-mode; unless
+    // we've got a pages-per-sheet value with orthogonal pages/sheets, in which
+    // case it's reversed.
+    const bool arePagesPortraitMode =
+        (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
+
+    mOrientation = int32_t(arePagesPortraitMode ? kLandscapeOrientation
+                                                : kPortraitOrientation);
   }
 
   if (aDevMode->dmFields & DM_COPIES) {
@@ -447,7 +465,7 @@ void nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode) {
   }
 
   // Setup Orientation
-  aDevMode->dmOrientation = mOrientation == kPortraitOrientation
+  aDevMode->dmOrientation = GetSheetOrientation() == kPortraitOrientation
                                 ? DMORIENT_PORTRAIT
                                 : DMORIENT_LANDSCAPE;
   aDevMode->dmFields |= DM_ORIENTATION;

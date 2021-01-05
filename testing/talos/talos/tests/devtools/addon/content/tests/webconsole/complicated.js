@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {
   openToolboxAndLog,
   closeToolboxAndLog,
@@ -53,11 +54,18 @@ const EXPECTED_MESSAGES = [
 );
 
 module.exports = async function() {
+  // Disable overlay scrollbars to display the message "Layout was forced before the page was fully loaded"
+  // consistently. See Bug 1684963.
+  Services.prefs.setIntPref("ui.useOverlayScrollbars", 0);
+
   await testSetup(COMPLICATED_URL);
 
   let toolbox = await openToolboxAndLog("complicated.webconsole", "webconsole");
   await reloadConsoleAndLog("complicated", toolbox, EXPECTED_MESSAGES);
   await closeToolboxAndLog("complicated.webconsole", toolbox);
+
+  // Restore (most likely delete) the overlay scrollbars preference.
+  Services.prefs.clearUserPref("ui.useOverlayScrollbars");
 
   await testTeardown();
 };
