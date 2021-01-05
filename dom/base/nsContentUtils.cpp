@@ -8111,10 +8111,10 @@ nsresult nsContentUtils::SendMouseEvent(
     msg = eMouseEnterIntoWidget;
   } else if (aType.EqualsLiteral("mouseout")) {
     msg = eMouseExitFromWidget;
-    exitFrom = Some(WidgetMouseEvent::eChild);
+    exitFrom = Some(WidgetMouseEvent::ePlatformChild);
   } else if (aType.EqualsLiteral("mousecancel")) {
     msg = eMouseExitFromWidget;
-    exitFrom = Some(XRE_IsParentProcess() ? WidgetMouseEvent::eTopLevel
+    exitFrom = Some(XRE_IsParentProcess() ? WidgetMouseEvent::ePlatformTopLevel
                                           : WidgetMouseEvent::ePuppet);
   } else if (aType.EqualsLiteral("mouselongtap")) {
     msg = eMouseLongTap;

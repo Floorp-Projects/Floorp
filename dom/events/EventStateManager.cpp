@@ -653,7 +653,8 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // If the event is not a top-level window or puppet widget exit, then it's
       // not really an exit --- we may have traversed widget boundaries but
       // we're still in our toplevel window or puppet widget.
-      if (mouseEvent->mExitFrom.value() != WidgetMouseEvent::eTopLevel &&
+      if (mouseEvent->mExitFrom.value() !=
+              WidgetMouseEvent::ePlatformTopLevel &&
           mouseEvent->mExitFrom.value() != WidgetMouseEvent::ePuppet) {
         // Treat it as a synthetic move so we don't generate spurious
         // "exit" or "move" events.  Any necessary "out" or "over" events
@@ -662,8 +663,9 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mouseEvent->mReason = WidgetMouseEvent::eSynthesized;
         // then fall through...
       } else {
-        MOZ_ASSERT_IF(XRE_IsParentProcess(), mouseEvent->mExitFrom.value() ==
-                                                 WidgetMouseEvent::eTopLevel);
+        MOZ_ASSERT_IF(XRE_IsParentProcess(),
+                      mouseEvent->mExitFrom.value() ==
+                          WidgetMouseEvent::ePlatformTopLevel);
         MOZ_ASSERT_IF(XRE_IsContentProcess(), mouseEvent->mExitFrom.value() ==
                                                   WidgetMouseEvent::ePuppet);
         // We should synthetize corresponding pointer events

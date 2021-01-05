@@ -350,7 +350,7 @@ WidgetMouseEvent MouseInput::ToWidgetEvent(nsIWidget* aWidget) const {
       break;
     case MOUSE_WIDGET_EXIT:
       msg = eMouseExitFromWidget;
-      exitFrom = Some(WidgetMouseEvent::eChild);
+      exitFrom = Some(WidgetMouseEvent::ePlatformChild);
       break;
     case MOUSE_HITTEST:
       msg = eMouseHitTest;

@@ -4654,8 +4654,8 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       break;
     case eMouseExitFromWidget:
       event.mExitFrom =
-          Some(IsTopLevelMouseExit(mWnd) ? WidgetMouseEvent::eTopLevel
-                                         : WidgetMouseEvent::eChild);
+          Some(IsTopLevelMouseExit(mWnd) ? WidgetMouseEvent::ePlatformTopLevel
+                                         : WidgetMouseEvent::ePlatformChild);
       break;
     default:
       break;
