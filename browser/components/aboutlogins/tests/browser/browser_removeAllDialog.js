@@ -545,3 +545,16 @@ add_task(async function test_remove_all_when_creating_new_login() {
   });
   await removeAllPromise;
 });
+
+add_task(async function test_ensure_icons_are_not_draggable() {
+  TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
+  let browser = gBrowser.selectedBrowser;
+  await openRemoveAllDialog(browser);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let dialog = content.document.querySelector("remove-logins-dialog");
+    let warningIcon = dialog.shadowRoot.querySelector(".warning-icon");
+    ok(!warningIcon.draggable, "Warning icon should not be draggable");
+    let dismissIcon = dialog.shadowRoot.querySelector(".dismiss-icon");
+    ok(!dismissIcon.draggable, "Dismiss icon should not be draggable");
+  });
+});
