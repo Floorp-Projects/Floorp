@@ -2361,7 +2361,7 @@ bool jit::RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph,
       for (size_t i = 0, e = block->numSuccessors(); i != e; ++i) {
         block->getSuccessor(i)->removePredecessor(block);
       }
-      graph.removeBlockIncludingPhis(block);
+      graph.removeBlock(block);
     }
   }
 
