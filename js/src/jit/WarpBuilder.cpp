@@ -2309,6 +2309,9 @@ bool WarpBuilder::buildSuspend(BytecodeLocation loc, MDefinition* gen,
       alloc(), genObj, AbstractGeneratorObject::envChainSlot(),
       current->environmentChain()));
 
+  current->add(
+      MPostWriteBarrier::New(alloc(), genObj, current->environmentChain()));
+
   // GeneratorReturn will return from the method, however to support MIR
   // generation isn't treated like the end of a block
   MGeneratorReturn* ret = MGeneratorReturn::New(alloc(), retVal);
