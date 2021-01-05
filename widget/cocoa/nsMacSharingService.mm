@@ -14,12 +14,6 @@
 
 NS_IMPL_ISUPPORTS(nsMacSharingService, nsIMacSharingService)
 
-// List of sharingProviders that we do not want to expose to
-// the user, because they are duplicates or do not work correctly
-// within the context
-NSArray* filteredProviderNames =
-    @[ @"com.apple.share.System.add-to-safari-reading-list", @"com.apple.share.Mail.compose" ];
-
 NSString* const remindersServiceName = @"com.apple.reminders.RemindersShareExtension";
 
 // These are some undocumented constants also used by Safari
@@ -35,6 +29,13 @@ NSString* const openSharingSubpaneProtocolValue = @"com.apple.share-services";
 @interface NSSharingService (ExposeName)
 - (id)name;
 @end
+
+// Filter providers that we do not want to expose to the user, because they are duplicates or do not
+// work correctly within the context
+static bool ShouldIgnoreProvider(NSString* aProviderName) {
+  return [aProviderName isEqualToString:@"com.apple.share.System.add-to-safari-reading-list"] ||
+         [aProviderName isEqualToString:@"com.apple.share.Mail.compose"];
+}
 
 // Clean up the activity once the share is complete
 @interface SharingServiceDelegate : NSObject <NSSharingServiceDelegate> {
@@ -108,7 +109,7 @@ nsresult nsMacSharingService::GetSharingProviders(const nsAString& aPageUrl, JSC
   int32_t serviceCount = 0;
 
   for (NSSharingService* currentService in sharingService) {
-    if ([filteredProviderNames containsObject:[currentService name]]) {
+    if (ShouldIgnoreProvider([currentService name])) {
       continue;
     }
     JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
