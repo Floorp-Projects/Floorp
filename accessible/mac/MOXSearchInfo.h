@@ -30,6 +30,8 @@ using namespace mozilla::a11y;
 
   // Set to YES if we should match on immediate descendants only, NO otherwise
   BOOL mImmediateDescendantsOnly;
+
+  NSString* mSearchText;
 }
 
 - (id)initWithParameters:(NSDictionary*)params andRoot:(MOXAccessibleBase*)root;
