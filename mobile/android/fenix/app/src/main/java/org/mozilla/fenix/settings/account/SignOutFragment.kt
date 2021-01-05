@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -21,6 +20,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 
 class SignOutFragment : AppCompatDialogFragment() {
     private lateinit var accountManager: FxaAccountManager

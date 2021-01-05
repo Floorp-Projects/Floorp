@@ -25,6 +25,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 
 /**
  * An activity to show the details of a installed add-on.

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.addons
 
 import android.view.View
-import androidx.fragment.app.Fragment
 import org.mozilla.fenix.components.FenixSnackbar
 
 /**
@@ -22,15 +21,4 @@ internal fun showSnackBar(view: View, text: String, duration: Int = FenixSnackba
     )
         .setText(text)
         .show()
-}
-
-/**
- * Run the [block] only if the [Fragment] is attached.
- *
- * @param block A callback to be executed if the container [Fragment] is attached.
- */
-internal inline fun Fragment.runIfFragmentIsAttached(block: () -> Unit) {
-    context?.let {
-        block()
-    }
 }

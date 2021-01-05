@@ -39,6 +39,17 @@ fun Fragment.showToolbar(title: String) {
 }
 
 /**
+ * Run the [block] only if the [Fragment] is attached.
+ *
+ * @param block A callback to be executed if the container [Fragment] is attached.
+ */
+internal inline fun Fragment.runIfFragmentIsAttached(block: () -> Unit) {
+    context?.let {
+        block()
+    }
+}
+
+/**
  * Hides the activity toolbar.
  * Throws if the fragment is not attached to an [AppCompatActivity].
  */

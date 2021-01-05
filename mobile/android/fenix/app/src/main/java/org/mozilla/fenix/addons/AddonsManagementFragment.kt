@@ -37,6 +37,7 @@ import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.theme.ThemeManager
 import java.lang.ref.WeakReference
 import java.util.concurrent.CancellationException

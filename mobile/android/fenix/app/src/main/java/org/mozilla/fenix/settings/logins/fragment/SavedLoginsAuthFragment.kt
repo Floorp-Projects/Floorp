@@ -24,13 +24,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
-import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.logins.biometric.BiometricPromptFeature
 import org.mozilla.fenix.settings.logins.SyncLoginsPreferenceView
