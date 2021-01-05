@@ -24,8 +24,6 @@
 #  endif /* XP_UNIX */
 #endif   /* XP_WIN */
 
-extern const char16_t kIsoLatin1ToUCS2[256];
-
 /// This is a wrapper class around all the C runtime functions.
 
 class nsCRT {
@@ -88,9 +86,6 @@ class nsCRT {
   static char ToUpper(char aChar) { return NS_ToUpper(aChar); }
   static char ToLower(char aChar) { return NS_ToLower(aChar); }
 
-  static bool IsUpper(char aChar) { return NS_IsUpper(aChar); }
-  static bool IsLower(char aChar) { return NS_IsLower(aChar); }
-
   static bool IsAsciiSpace(char16_t aChar) {
     return NS_IsAsciiWhitespace(aChar);
   }
@@ -99,14 +94,5 @@ class nsCRT {
 inline bool NS_IS_SPACE(char16_t aChar) {
   return ((int(aChar) & 0x7f) == int(aChar)) && isspace(int(aChar));
 }
-
-#define NS_IS_CNTRL(i) ((((unsigned int)(i)) > 0x7f) ? (int)0 : iscntrl(i))
-#define NS_IS_DIGIT(i) ((((unsigned int)(i)) > 0x7f) ? (int)0 : isdigit(i))
-#if defined(XP_WIN)
-#  define NS_IS_ALPHA(VAL) (isascii((int)(VAL)) && isalpha((int)(VAL)))
-#else
-#  define NS_IS_ALPHA(VAL) \
-    ((((unsigned int)(VAL)) > 0x7f) ? (int)0 : isalpha((int)(VAL)))
-#endif
 
 #endif /* nsCRT_h___ */
