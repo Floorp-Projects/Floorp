@@ -1,0 +1,10 @@
+[
+  {
+    "algorithm": "sha512",
+    "visibility": "internal",
+    "filename": "com.android.chrome-v.87.0.4280.86.apk",
+    "unpack": false,
+    "digest": "1d84f52ccce55f7ca73ec205bdda2a560a15b532a992c6748f51d6703083db96bf35fab3a686edcc64708e2d4013031b2f8f89eb441b5ab6b150e3e8ed0a61e8",
+    "size": 144747152
+  }
+]
