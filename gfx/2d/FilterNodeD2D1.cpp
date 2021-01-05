@@ -120,6 +120,8 @@ D2D1_COMPOSITE_MODE D2DFilterCompositionMode(uint32_t aMode) {
       return D2D1_COMPOSITE_MODE_SOURCE_ATOP;
     case COMPOSITE_OPERATOR_XOR:
       return D2D1_COMPOSITE_MODE_XOR;
+    case COMPOSITE_OPERATOR_LIGHTER:
+      return D2D1_COMPOSITE_MODE_PLUS;
   }
 
   MOZ_CRASH("GFX: Unknown enum value D2DFilterCompositionMode!");

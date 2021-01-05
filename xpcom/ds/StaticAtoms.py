@@ -1431,6 +1431,7 @@ STATIC_ATOMS = [
     Atom("lengthAdjust", "lengthAdjust"),
     Atom("letter_spacing", "letter-spacing"),
     Atom("lighten", "lighten"),
+    Atom("lighter", "lighter"),
     Atom("lighting_color", "lighting-color"),
     Atom("limitingConeAngle", "limitingConeAngle"),
     Atom("linear", "linear"),
