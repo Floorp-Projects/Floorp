@@ -149,7 +149,7 @@ static void AnalyzeLoadUnboxedScalar(MLoadUnboxedScalar* load) {
   MAdd* add = load->getOperand(1)->toAdd();
 
   if (add->type() != MIRType::Int32 || !add->hasUses() ||
-      add->truncateKind() != MDefinition::TruncateKind::Truncate) {
+      add->truncateKind() != TruncateKind::Truncate) {
     return;
   }
 
