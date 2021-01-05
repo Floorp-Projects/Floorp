@@ -1641,3 +1641,57 @@ addAccessibleTask(
     );
   }
 );
+
+/**
+ * Test search text
+ */
+addAccessibleTask(
+  `
+  <p>It's about the future, isn't it?</p>
+  <p>Okay, alright, Saturday is good, Saturday's good, I could spend a week in 1955.</p>
+  <ul>
+    <li>I could hang out, you could show me around.</li>
+    <li>There's that word again, heavy.</li>
+  </ul>
+  `,
+  async (browser, f, accDoc) => {
+    let searchPred = {
+      AXSearchKey: "AXAnyTypeSearchKey",
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+      AXSearchText: "could",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const textSearchCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(textSearchCount, 2, "Found 2 matching items in text search");
+
+    const results = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    info(results.map(r => r.getAttributeValue("AXMozDebugDescription")));
+
+    Assert.deepEqual(
+      results.map(r => r.getAttributeValue("AXValue")),
+      [
+        "Okay, alright, Saturday is good, Saturday's good, I could spend a week in 1955.",
+        "I could hang out, you could show me around.",
+      ],
+      "Correct text search results"
+    );
+  },
+  { topLevel: false, iframe: true, remoteIframe: true }
+);
