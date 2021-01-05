@@ -396,7 +396,7 @@ class nsChildView final : public nsBaseWidget {
 
   virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override {
-    return SynthesizeNativeMouseEvent(aPoint, NSMouseMoved, 0, aObserver);
+    return SynthesizeNativeMouseEvent(aPoint, NSEventTypeMouseMoved, 0, aObserver);
   }
   virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
                                                     uint32_t aNativeMessage, double aDeltaX,

@@ -144,7 +144,7 @@ void nsToolkit::MonitorAllProcessMouseEvents() {
 
   if (mAllProcessMouseMonitor == nil) {
     mAllProcessMouseMonitor = [NSEvent
-        addGlobalMonitorForEventsMatchingMask:NSLeftMouseDownMask | NSOtherMouseDownMask
+        addGlobalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown | NSEventMaskLeftMouseDown
                                       handler:^(NSEvent* evt) {
                                         if ([NSApp isActive]) {
                                           return;

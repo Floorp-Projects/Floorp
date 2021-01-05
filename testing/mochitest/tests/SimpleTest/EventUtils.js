@@ -162,7 +162,7 @@ function _EU_nativeMouseDownEventMsg() {
     case "windows":
       return 2; // MOUSEEVENTF_LEFTDOWN
     case "mac":
-      return 1; // NSLeftMouseDown
+      return 1; // NSEventTypeLeftMouseDown
     case "linux":
       return 4; // GDK_BUTTON_PRESS
     case "android":
@@ -178,7 +178,7 @@ function _EU_nativeMouseUpEventMsg() {
     case "windows":
       return 4; // MOUSEEVENTF_LEFTUP
     case "mac":
-      return 2; // NSLeftMouseUp
+      return 2; // NSEventTypeLeftMouseUp
     case "linux":
       return 7; // GDK_BUTTON_RELEASE
     case "android":

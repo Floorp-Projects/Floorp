@@ -36,7 +36,7 @@ function startTest() {
     let widgetToolkit = SpecialPowers.Services.appinfo.widgetToolkit;
 
     if (widgetToolkit == "cocoa") {
-        nativeMouseMove = 5; // NSMouseMoved
+        nativeMouseMove = 5; // NSEventTypeMouseMoved
     } else if (widgetToolkit == "windows") {
         nativeMouseMove = 1; // MOUSEEVENTF_MOVE
     } else if (/^gtk/.test(widgetToolkit)) {

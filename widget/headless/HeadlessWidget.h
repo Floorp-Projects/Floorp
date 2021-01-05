@@ -29,9 +29,9 @@
 #  define MOZ_HEADLESS_SCROLL_DELTA_MODE \
     mozilla::dom::WheelEvent_Binding::DOM_DELTA_LINE
 #elif defined(XP_MACOSX)
-#  define MOZ_HEADLESS_MOUSE_MOVE 5  // NSMouseMoved
-#  define MOZ_HEADLESS_MOUSE_DOWN 1  // NSLeftMouseDown
-#  define MOZ_HEADLESS_MOUSE_UP 2    // NSLeftMouseUp
+#  define MOZ_HEADLESS_MOUSE_MOVE 5  // NSEventTypeMouseMoved
+#  define MOZ_HEADLESS_MOUSE_DOWN 1  // NSEventTypeLeftMouseDown
+#  define MOZ_HEADLESS_MOUSE_UP 2    // NSEventTypeLeftMouseUp
 #  define MOZ_HEADLESS_SCROLL_MULTIPLIER 1
 #  define MOZ_HEADLESS_SCROLL_DELTA_MODE \
     mozilla::dom::WheelEvent_Binding::DOM_DELTA_PIXEL

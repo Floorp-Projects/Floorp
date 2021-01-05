@@ -242,10 +242,10 @@ static void DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView*
       [self controlTint] == NSClearControlTint ? kThemeTrackInactive : kThemeTrackActive;
 
   NSControlSize size = [self controlSize];
-  if (size == NSRegularControlSize) {
+  if (size == NSControlSizeRegular) {
     tdi.kind = mIsIndeterminate ? kThemeLargeIndeterminateBar : kThemeLargeProgressBar;
   } else {
-    NS_ASSERTION(size == NSSmallControlSize,
+    NS_ASSERTION(size == NSControlSizeSmall,
                  "We shouldn't have another size than small and regular for the moment");
     tdi.kind = mIsIndeterminate ? kThemeMediumIndeterminateBar : kThemeMediumProgressBar;
   }
@@ -323,9 +323,9 @@ enum { miniControlSize, smallControlSize, regularControlSize };
 enum { leftMargin, topMargin, rightMargin, bottomMargin };
 
 static size_t EnumSizeForCocoaSize(NSControlSize cocoaControlSize) {
-  if (cocoaControlSize == NSMiniControlSize)
+  if (cocoaControlSize == NSControlSizeMini)
     return miniControlSize;
-  else if (cocoaControlSize == NSSmallControlSize)
+  else if (cocoaControlSize == NSControlSizeSmall)
     return smallControlSize;
   else
     return regularControlSize;
@@ -333,17 +333,17 @@ static size_t EnumSizeForCocoaSize(NSControlSize cocoaControlSize) {
 
 static NSControlSize CocoaSizeForEnum(int32_t enumControlSize) {
   if (enumControlSize == miniControlSize)
-    return NSMiniControlSize;
+    return NSControlSizeMini;
   else if (enumControlSize == smallControlSize)
-    return NSSmallControlSize;
+    return NSControlSizeSmall;
   else
-    return NSRegularControlSize;
+    return NSControlSizeRegular;
 }
 
 static NSString* CUIControlSizeForCocoaSize(NSControlSize aControlSize) {
-  if (aControlSize == NSRegularControlSize)
+  if (aControlSize == NSControlSizeRegular)
     return @"regular";
-  else if (aControlSize == NSSmallControlSize)
+  else if (aControlSize == NSControlSizeSmall)
     return @"small";
   else
     return @"mini";
@@ -686,7 +686,7 @@ struct CellRenderSettings {
  * sizes - An array with the all the width/height of the element for its
  *         different sizes.
  * tolerance - The tolerance as passed to DrawCellWithSnapping.
- * NOTE: returns NSRegularControlSize if all values in 'sizes' are zero.
+ * NOTE: returns NSControlSizeRegular if all values in 'sizes' are zero.
  */
 static NSControlSize FindControlSize(CGFloat size, const CGFloat* sizes, CGFloat tolerance) {
   for (uint32_t i = miniControlSize; i <= regularControlSize; ++i) {
@@ -738,9 +738,9 @@ static void DrawCellWithSnapping(NSCell* cell, CGContextRef cgContext, const HIR
 
   const float rectWidth = destRect.size.width, rectHeight = destRect.size.height;
   const NSSize* sizes = settings.naturalSizes;
-  const NSSize miniSize = sizes[EnumSizeForCocoaSize(NSMiniControlSize)];
-  const NSSize smallSize = sizes[EnumSizeForCocoaSize(NSSmallControlSize)];
-  const NSSize regularSize = sizes[EnumSizeForCocoaSize(NSRegularControlSize)];
+  const NSSize miniSize = sizes[EnumSizeForCocoaSize(NSControlSizeMini)];
+  const NSSize smallSize = sizes[EnumSizeForCocoaSize(NSControlSizeSmall)];
+  const NSSize regularSize = sizes[EnumSizeForCocoaSize(NSControlSizeRegular)];
 
   HIRect drawRect = destRect;
 
@@ -749,7 +749,7 @@ static void DrawCellWithSnapping(NSCell* cell, CGContextRef cgContext, const HIR
   CGFloat controlHeights[3] = {miniSize.height, smallSize.height, regularSize.height};
   NSControlSize controlSizeY = FindControlSize(rectHeight, controlHeights, snapTolerance);
 
-  NSControlSize controlSize = NSRegularControlSize;
+  NSControlSize controlSize = NSControlSizeRegular;
   size_t sizeIndex = 0;
 
   // At some sizes, don't scale but snap.
@@ -1243,7 +1243,7 @@ void nsNativeThemeCocoa::DrawSquareBezelPushButton(CGContextRef cgContext, const
 
   ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
   [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
-  DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, NSRegularControlSize, NSZeroSize,
+  DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, NSControlSizeRegular, NSZeroSize,
                       NSMakeSize(14, 0), NULL, mCellDrawView, aControlParams.rtl);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1254,7 +1254,7 @@ void nsNativeThemeCocoa::DrawHelpButton(CGContextRef cgContext, const HIRect& in
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mHelpButtonCell);
-  DrawCellWithScaling(mHelpButtonCell, cgContext, inBoxRect, NSRegularControlSize, NSZeroSize,
+  DrawCellWithScaling(mHelpButtonCell, cgContext, inBoxRect, NSControlSizeRegular, NSZeroSize,
                       kHelpButtonSize, NULL, mCellDrawView,
                       false);  // Don't mirror icon in RTL.
 
@@ -1268,7 +1268,7 @@ void nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext, const HIRe
 
   ApplyControlParamsToNSCell(aControlParams, mDisclosureButtonCell);
   [mDisclosureButtonCell setState:aCellState];
-  DrawCellWithScaling(mDisclosureButtonCell, cgContext, inBoxRect, NSRegularControlSize, NSZeroSize,
+  DrawCellWithScaling(mDisclosureButtonCell, cgContext, inBoxRect, NSControlSizeRegular, NSZeroSize,
                       kDisclosureButtonSize, NULL, mCellDrawView,
                       false);  // Don't mirror icon in RTL.
 
@@ -3443,7 +3443,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
         ::GetThemeMetric(kThemeMetricLittleArrowsWidth, &buttonWidth);
         ::GetThemeMetric(kThemeMetricLittleArrowsHeight, &buttonHeight);
       } else {
-        NSSize size = spinnerSettings.minimumSizes[EnumSizeForCocoaSize(NSMiniControlSize)];
+        NSSize size = spinnerSettings.minimumSizes[EnumSizeForCocoaSize(NSControlSizeMini)];
         buttonWidth = size.width;
         buttonHeight = size.height;
         if (aAppearance != StyleAppearance::Spinner) {

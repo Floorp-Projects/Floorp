@@ -900,15 +900,15 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
     // Tracking area events don't end up in their tracking areas when sent
     // through [NSApp sendEvent:], so pass them directly to the right methods.
     BaseWindow* window = (BaseWindow*)[mView window];
-    if (aNativeMessage == NSMouseEntered) {
+    if (aNativeMessage == NSEventTypeMouseEntered) {
       [window mouseEntered:event];
       return NS_OK;
     }
-    if (aNativeMessage == NSMouseExited) {
+    if (aNativeMessage == NSEventTypeMouseExited) {
       [window mouseExited:event];
       return NS_OK;
     }
-    if (aNativeMessage == NSMouseMoved) {
+    if (aNativeMessage == NSEventTypeMouseMoved) {
       [window mouseMoved:event];
       return NS_OK;
     }
@@ -1923,7 +1923,7 @@ void nsChildView::UpdateBoundsFromView() {
   return nil;
 }
 - (NSRect)_opaqueRectForWindowMoveWhenInTitlebar {
-  // In NSWindows that use NSFullSizeContentViewWindowMask, NSViews which
+  // In NSWindows that use NSWindowStyleMaskFullSizeContentView, NSViews which
   // overlap the titlebar do not disable window dragging in the overlapping
   // areas even if they return NO from mouseDownCanMoveWindow. This can have
   // unfortunate effects: For example, dragging tabs in a browser window would
@@ -2612,7 +2612,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
       bool shouldRollup = true;
 
       // check to see if scroll/zoom events should roll up the popup
-      if ([theEvent type] == NSScrollWheel || [theEvent type] == NSEventTypeMagnify) {
+      if ([theEvent type] == NSEventTypeScrollWheel || [theEvent type] == NSEventTypeMagnify) {
         shouldRollup = rollupListener->ShouldRollupOnMouseWheelEvent();
         // consume scroll events that aren't over the popup
         // unless the popup is an arrow panel
@@ -2643,7 +2643,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
       }
 
       if (shouldRollup) {
-        if ([theEvent type] == NSLeftMouseDown) {
+        if ([theEvent type] == NSEventTypeLeftMouseDown) {
           NSPoint point = [NSEvent mouseLocation];
           FlipCocoaScreenCoordinate(point);
           LayoutDeviceIntPoint devPoint = mGeckoChild->CocoaPointsToDevPixels(point);
@@ -2934,7 +2934,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   // otherwise a scroll to one side of the page can have a swipe tacked on
   // to it.
   NSEventPhase eventPhase = nsCocoaUtils::EventPhase(anEvent);
-  if ([anEvent type] != NSScrollWheel || eventPhase != NSEventPhaseBegan ||
+  if ([anEvent type] != NSEventTypeScrollWheel || eventPhase != NSEventPhaseBegan ||
       ![anEvent hasPreciseScrollingDeltas]) {
     return false;
   }
@@ -3022,7 +3022,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   geckoEvent.mClickCount = clickCount;
 
   if (!StaticPrefs::dom_event_treat_ctrl_click_as_right_click_disabled() &&
-      ([theEvent modifierFlags] & NSControlKeyMask)) {
+      ([theEvent modifierFlags] & NSEventModifierFlagControl)) {
     geckoEvent.mButton = MouseButton::eSecondary;
   } else {
     geckoEvent.mButton = MouseButton::ePrimary;
@@ -3052,7 +3052,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   if (!StaticPrefs::dom_event_treat_ctrl_click_as_right_click_disabled() &&
-      ([theEvent modifierFlags] & NSControlKeyMask)) {
+      ([theEvent modifierFlags] & NSEventModifierFlagControl)) {
     geckoEvent.mButton = MouseButton::eSecondary;
   } else {
     geckoEvent.mButton = MouseButton::ePrimary;
@@ -3185,7 +3185,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
   if (StaticPrefs::ui_context_menus_after_mouseup()) {
     // Let the superclass do the context menu stuff, but pretend it's rightMouseDown.
-    NSEvent* dupeEvent = [NSEvent mouseEventWithType:NSRightMouseDown
+    NSEvent* dupeEvent = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown
                                             location:theEvent.locationInWindow
                                        modifierFlags:theEvent.modifierFlags
                                            timestamp:theEvent.timestamp
@@ -3413,7 +3413,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     if (panEvent.mType == PanGestureInput::PANGESTURE_END) {
       // Check if there's a momentum start event in the event queue, so that we
       // can annotate this event.
-      NSEvent* nextWheelEvent = [NSApp nextEventMatchingMask:NSScrollWheelMask
+      NSEvent* nextWheelEvent = [NSApp nextEventMatchingMask:NSEventMaskScrollWheel
                                                    untilDate:[NSDate distantPast]
                                                       inMode:NSDefaultRunLoopMode
                                                      dequeue:NO];
@@ -3485,7 +3485,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   // depends on what we return from menuForEvent:. Gecko always expects one
   // and expects the mouse down event before the context menu event, so
   // get that event sent first if this is a left mouse click.
-  if ([theEvent type] == NSLeftMouseDown) {
+  if ([theEvent type] == NSEventTypeLeftMouseDown) {
     [self mouseDown:theEvent];
     if (!mGeckoChild) return nil;
   }
@@ -3493,7 +3493,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   WidgetMouseEvent geckoEvent(true, eContextMenu, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   if (StaticPrefs::dom_event_treat_ctrl_click_as_right_click_disabled() &&
-      [theEvent type] == NSLeftMouseDown) {
+      [theEvent type] == NSEventTypeLeftMouseDown) {
     geckoEvent.mContextMenuTrigger = WidgetMouseEvent::eControlClick;
     geckoEvent.mButton = MouseButton::ePrimary;
   } else {
@@ -3559,17 +3559,17 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   }
 
   switch ([aMouseEvent type]) {
-    case NSLeftMouseDown:
-    case NSLeftMouseUp:
-    case NSLeftMouseDragged:
-    case NSRightMouseDown:
-    case NSRightMouseUp:
-    case NSRightMouseDragged:
-    case NSOtherMouseDown:
-    case NSOtherMouseUp:
-    case NSOtherMouseDragged:
-    case NSMouseMoved:
-      if ([aMouseEvent subtype] == NSTabletPointEventSubtype) {
+    case NSEventTypeLeftMouseDown:
+    case NSEventTypeLeftMouseUp:
+    case NSEventTypeLeftMouseDragged:
+    case NSEventTypeRightMouseDown:
+    case NSEventTypeRightMouseUp:
+    case NSEventTypeRightMouseDragged:
+    case NSEventTypeOtherMouseDown:
+    case NSEventTypeOtherMouseUp:
+    case NSEventTypeOtherMouseDragged:
+    case NSEventTypeMouseMoved:
+      if ([aMouseEvent subtype] == NSEventSubtypeTabletPoint) {
         [self convertCocoaTabletPointerEvent:aMouseEvent toGeckoEvent:mouseEvent->AsMouseEvent()];
       }
       break;
@@ -3588,7 +3588,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   if (!aOutGeckoEvent || !sIsTabletPointerActivated) {
     return;
   }
-  if ([aPointerEvent type] != NSMouseMoved) {
+  if ([aPointerEvent type] != NSEventTypeMouseMoved) {
     aOutGeckoEvent->mPressure = [aPointerEvent pressure];
     MOZ_ASSERT(aOutGeckoEvent->mPressure >= 0.0 && aOutGeckoEvent->mPressure <= 1.0);
   }
@@ -4289,8 +4289,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     unsigned int modifierFlags = [[NSApp currentEvent] modifierFlags];
     uint32_t action = nsIDragService::DRAGDROP_ACTION_MOVE;
     // force copy = option, alias = cmd-option, default is move
-    if (modifierFlags & NSAlternateKeyMask) {
-      if (modifierFlags & NSCommandKeyMask)
+    if (modifierFlags & NSEventModifierFlagOption) {
+      if (modifierFlags & NSEventModifierFlagCommand)
         action = nsIDragService::DRAGDROP_ACTION_LINK;
       else
         action = nsIDragService::DRAGDROP_ACTION_COPY;
@@ -4418,7 +4418,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   gDraggedTransferables = nullptr;
 
   NSEvent* currentEvent = [NSApp currentEvent];
-  gUserCancelledDrag = ([currentEvent type] == NSKeyDown && [currentEvent keyCode] == kVK_Escape);
+  gUserCancelledDrag =
+      ([currentEvent type] == NSEventTypeKeyDown && [currentEvent keyCode] == kVK_Escape);
 
   if (!mDragService) {
     CallGetService(kDragServiceContractID, &mDragService);
@@ -5065,7 +5066,7 @@ BOOL ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEven
                                                BOOL aIsClickThrough) {
   // Right mouse down events may get through to all windows, even to a top level
   // window with an open sheet.
-  if (!aWindow || [aEvent type] == NSRightMouseDown) return YES;
+  if (!aWindow || [aEvent type] == NSEventTypeRightMouseDown) return YES;
 
   id delegate = [aWindow delegate];
   if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) return YES;
@@ -5102,8 +5103,9 @@ BOOL ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEven
   }
 
   if (!topLevelWindow || ([topLevelWindow isMainWindow] && !aIsClickThrough) ||
-      [aEvent type] == NSOtherMouseDown ||
-      (([aEvent modifierFlags] & NSCommandKeyMask) != 0 && [aEvent type] != NSMouseMoved))
+      [aEvent type] == NSEventTypeOtherMouseDown ||
+      (([aEvent modifierFlags] & NSEventModifierFlagCommand) != 0 &&
+       [aEvent type] != NSEventTypeMouseMoved))
     return YES;
 
   // If we're here then we're dealing with a left click or mouse move on an

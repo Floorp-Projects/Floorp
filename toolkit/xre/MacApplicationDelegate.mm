@@ -110,7 +110,7 @@ void ProcessPendingGetURLAppleEvents() {
   bool keepSpinning = true;
   while (keepSpinning) {
     sProcessedGetURLEvent = false;
-    NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask
+    NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
                                         untilDate:nil
                                            inMode:NSDefaultRunLoopMode
                                           dequeue:YES];
