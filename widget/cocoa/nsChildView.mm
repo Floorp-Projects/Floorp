@@ -160,8 +160,6 @@ static bool sIsTabletPointerActivated = false;
 
 static uint32_t sUniqueKeyEventId = 0;
 
-static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionary];
-
 // The view that will do our drawing or host our NSOpenGLContext or Core Animation layer.
 @interface PixelHostingView : NSView {
 }
@@ -1054,7 +1052,8 @@ void nsChildView::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) {
   // not handled we give menu items a chance to act. This allows for handling of
   // custom shortcuts. Note that existing shortcuts cannot be reassigned yet and
   // will have been handled by keyDown: before we get here.
-  NSEvent* cocoaEvent = [sNativeKeyEventsMap objectForKey:@(aEvent->mUniqueId)];
+  NSMutableDictionary* nativeKeyEventsMap = [ChildView sNativeKeyEventsMap];
+  NSEvent* cocoaEvent = [nativeKeyEventsMap objectForKey:@(aEvent->mUniqueId)];
   if (!cocoaEvent) {
     return;
   }
@@ -1062,7 +1061,7 @@ void nsChildView::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) {
   if (SendEventToNativeMenuSystem(cocoaEvent)) {
     aEvent->PreventDefault();
   }
-  [sNativeKeyEventsMap removeObjectForKey:@(aEvent->mUniqueId)];
+  [nativeKeyEventsMap removeObjectForKey:@(aEvent->mUniqueId)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3815,10 +3814,11 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   if (mGeckoChild) {
     if (mTextInputHandler) {
       sUniqueKeyEventId++;
-      [sNativeKeyEventsMap setObject:theEvent forKey:@(sUniqueKeyEventId)];
+      NSMutableDictionary* nativeKeyEventsMap = [ChildView sNativeKeyEventsMap];
+      [nativeKeyEventsMap setObject:theEvent forKey:@(sUniqueKeyEventId)];
       // Purge old native events, in case we're still holding on to them. We
       // keep at most 10 references to 10 different native events.
-      [sNativeKeyEventsMap removeObjectForKey:@(sUniqueKeyEventId - 10)];
+      [nativeKeyEventsMap removeObjectForKey:@(sUniqueKeyEventId - 10)];
       mTextInputHandler->HandleKeyDownEvent(theEvent, sUniqueKeyEventId);
     } else {
       // There was no text input handler. Offer the event to the native menu
@@ -4937,6 +4937,8 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 }
 
 + (NSMutableDictionary*)sNativeKeyEventsMap {
+  // This dictionary is "leaked".
+  static NSMutableDictionary* sNativeKeyEventsMap = [[NSMutableDictionary alloc] init];
   return sNativeKeyEventsMap;
 }
 
