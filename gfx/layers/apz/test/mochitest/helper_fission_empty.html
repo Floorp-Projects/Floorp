@@ -23,8 +23,8 @@ async function loaded() {
   // instead of things like flushApzRepaints and/or waitForAllPaints because
   // this page is running without SpecialPowers and I couldn't figure out a good
   // way to get a hold of a things like Services.obs or DOMWindowUtils easily.
-  await waitForFrame();
-  await waitForFrame();
+  await promiseFrame();
+  await promiseFrame();
   FissionTestHelper.fireEventInEmbedder("OOPIF:Load", {content: window.location.href});
 }
  </script>

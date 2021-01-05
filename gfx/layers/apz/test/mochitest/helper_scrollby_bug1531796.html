@@ -14,7 +14,7 @@ async function test() {
   let scrollPerStep = 40;
   for (let step = 0; step < maxSteps; step++) {
     window.scrollBy(0, scrollPerStep);
-    await waitForFrame();
+    await promiseFrame();
   }
   is(window.scrollY, maxSteps * scrollPerStep, "Scrolled by the expected amount");
 }

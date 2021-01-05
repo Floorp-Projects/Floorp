@@ -34,8 +34,8 @@
       await waitUntilApzStable();
 
       // Waits two frames to get a chance to deliver scroll events.
-      await waitForFrame();
-      await waitForFrame();
+      await promiseFrame();
+      await promiseFrame();
 
       ok(!receivedScrollEvent, "Scroll should never happen");
       is(visualViewport.offsetLeft, 0,
