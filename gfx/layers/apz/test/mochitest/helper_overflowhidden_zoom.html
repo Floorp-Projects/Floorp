@@ -18,7 +18,7 @@
   <script type="application/javascript">
     const utils = SpecialPowers.getDOMWindowUtils(window);
 
-    function* test(testDriver) {
+    async function test() {
       is(getResolution(), 1.0, "should not be zoomed (1)");
 
       is(window.scrollX, 0, "shouldn't have scrolled (2)");
@@ -41,7 +41,7 @@
 
       // Zoom in
       SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(4.0);
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
       is(getResolution(), 4.0, "should be zoomed (11)");
 
@@ -54,7 +54,7 @@
       utils.scrollToVisual(20000, 20000, utils.UPDATE_TYPE_MAIN_THREAD,
                            utils.SCROLL_MODE_INSTANT);
 
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
       is(getResolution(), 4.0, "should be zoomed (16)");
 
@@ -65,7 +65,7 @@
 
       // Zoom back out
       SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(1.0);
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
       is(getResolution(), 1.0, "should not be zoomed (21)");
 
@@ -75,7 +75,9 @@
       is(visualViewport.pageLeft, 0, "shouldn't have scrolled (25)");
     }
 
-    waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>
