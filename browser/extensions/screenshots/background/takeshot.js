@@ -12,17 +12,11 @@ this.takeshot = (function() {
   const { sendEvent, incrementCount } = analytics;
   const MAX_CANVAS_DIMENSION = 32767;
 
-  communication.register("screenshotPage", (sender, selectedPos, scroll, isFullPage, devicePixelRatio) => {
-    return screenshotPage(selectedPos, scroll, isFullPage, devicePixelRatio);
+  communication.register("screenshotPage", (sender, selectedPos, isFullPage, devicePixelRatio) => {
+    return screenshotPage(selectedPos, isFullPage, devicePixelRatio);
   });
 
-  function screenshotPage(pos, scroll, isFullPage, devicePixelRatio) {
-    pos = {
-      top: pos.top - scroll.scrollY,
-      left: pos.left - scroll.scrollX,
-      bottom: pos.bottom - scroll.scrollY,
-      right: pos.right - scroll.scrollX,
-    };
+  function screenshotPage(pos, isFullPage, devicePixelRatio) {
     pos.width = Math.min(pos.right - pos.left, MAX_CANVAS_DIMENSION);
     pos.height = Math.min(pos.bottom - pos.top, MAX_CANVAS_DIMENSION);
 
@@ -41,6 +35,14 @@ this.takeshot = (function() {
       // To avoid creating extremely large images (which causes
       // performance problems), we set the scale to 1.
       devicePixelRatio = options.scale = 1;
+    } else {
+      let rectangle = {
+        x: pos.left,
+        y: pos.top,
+        width: pos.width,
+        height: pos.height,
+      }
+      options.rect = rectangle
     }
 
     return catcher.watchPromise(browser.tabs.captureTab(
@@ -59,7 +61,7 @@ this.takeshot = (function() {
           const context = canvas.getContext("2d");
           context.drawImage(
             image,
-            pos.left * xScale, pos.top * yScale,
+            0, 0,
             pos.width * xScale, pos.height * yScale,
             0, 0,
             pos.width * xScale, pos.height * yScale
