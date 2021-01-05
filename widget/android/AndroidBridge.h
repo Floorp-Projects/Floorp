@@ -32,7 +32,6 @@
 #include "mozilla/Types.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/jni/Utils.h"
-#include "nsIObserver.h"
 #include "nsDataHashtable.h"
 
 #include "Units.h"
@@ -343,11 +342,10 @@ class AutoLocalJNIFrame {
     }                                                \
   }
 
-class nsAndroidBridge final : public nsIAndroidBridge, public nsIObserver {
+class nsAndroidBridge final : public nsIAndroidBridge {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIANDROIDBRIDGE
-  NS_DECL_NSIOBSERVER
 
   NS_FORWARD_SAFE_NSIANDROIDEVENTDISPATCHER(mEventDispatcher)
 
@@ -355,9 +353,6 @@ class nsAndroidBridge final : public nsIAndroidBridge, public nsIObserver {
 
  private:
   ~nsAndroidBridge();
-
-  void AddObservers();
-  void RemoveObservers();
 
   nsCOMPtr<nsIAndroidEventDispatcher> mEventDispatcher;
 
