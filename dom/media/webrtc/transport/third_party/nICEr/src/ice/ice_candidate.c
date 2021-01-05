@@ -271,7 +271,7 @@ int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_c
 
 static void nr_ice_candidate_mark_done(nr_ice_candidate *cand, int state)
   {
-    if (!cand || !cand->done_cb) {
+    if (!cand) {
       assert(0);
       return;
     }
@@ -294,7 +294,9 @@ static void nr_ice_candidate_mark_done(nr_ice_candidate *cand, int state)
     cand->done_cb=0;
     cand->state=state;
     /* This might destroy cand! */
-    done_cb(0,0,cand->cb_arg);
+    if (done_cb) {
+      done_cb(0,0,cand->cb_arg);
+    }
   }
 
 int nr_ice_candidate_destroy(nr_ice_candidate **candp)

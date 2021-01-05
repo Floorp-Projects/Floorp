@@ -870,10 +870,16 @@ std::unique_ptr<NrSocketProxyConfig> PeerConnectionMedia::GetProxyConfig()
     return nullptr;
   }
 
+  Document* doc = mParent->GetWindow()->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    NS_WARNING("Unable to get document from window");
+    return nullptr;
+  }
+
   TabId id = browserChild->GetTabId();
   nsCOMPtr<nsILoadInfo> loadInfo =
-      new net::LoadInfo(nsContentUtils::GetSystemPrincipal(), nullptr, nullptr,
-                        0, nsIContentPolicy::TYPE_INVALID);
+      new net::LoadInfo(doc->NodePrincipal(), doc->NodePrincipal(), doc, 0,
+                        nsIContentPolicy::TYPE_INVALID);
 
   Maybe<net::LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(

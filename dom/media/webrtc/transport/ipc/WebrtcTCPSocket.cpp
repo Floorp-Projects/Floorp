@@ -14,6 +14,7 @@
 #include "nsILoadInfo.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIURIMutator.h"
+#include "nsICookieJarSettings.h"
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "mozilla/dom/ContentProcessManager.h"
@@ -386,7 +387,7 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
       // Proxy flags are overridden by SetConnectOnly()
       0, loadInfo->LoadingNode(), loadInfo->GetLoadingPrincipal(),
       loadInfo->TriggeringPrincipal(),
-      nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS | nsILoadInfo::SEC_COOKIES_OMIT |
+      nsILoadInfo::SEC_COOKIES_OMIT |
           // We need this flag to allow loads from any origin since this channel
           // is being used to CONNECT to an HTTP proxy.
           nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
@@ -395,6 +396,11 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
     LOG(("WebrtcTCPSocket %p: bad open channel\n", this));
     return rv;
   }
+
+  nsCOMPtr<nsILoadInfo> channelLoadInfo = localChannel->LoadInfo();
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  channelLoadInfo->SetCookieJarSettings(cookieJarSettings);
 
   RefPtr<nsHttpChannel> httpChannel;
   CallQueryInterface(localChannel, httpChannel.StartAssignment());
