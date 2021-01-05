@@ -400,7 +400,11 @@ void e() {
     SmartPtr<R> sp;
     return ([&](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}}
       R* localptr;
+#if __clang_major__ >= 12
+      ptr->method(); // expected-note{{implicitly captured by reference due to use here}}
+#else
       ptr->method();
+#endif
       argptr->method();
       localptr->method();
     });
@@ -410,7 +414,11 @@ void e() {
     SmartPtr<R> sp;
     return ([&](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}}
       SmartPtr<R> localsp;
+#if __clang_major__ >= 12
+      sp->method(); // expected-note{{implicitly captured by reference due to use here}}
+#else
       sp->method();
+#endif
       argsp->method();
       localsp->method();
     });
@@ -420,7 +428,11 @@ void e() {
     SmartPtr<R> sp;
     return ([&](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}}
       R* localptr;
+#if __clang_major__ >= 12
+      take(ptr); // expected-note{{implicitly captured by reference due to use here}}
+#else
       take(ptr);
+#endif
       take(argptr);
       take(localptr);
     });
@@ -430,7 +442,11 @@ void e() {
     SmartPtr<R> sp;
     return ([&](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}}
       SmartPtr<R> localsp;
+#if __clang_major__ >= 12
+      take(sp); // expected-note{{implicitly captured by reference due to use here}}
+#else
       take(sp);
+#endif
       take(argsp);
       take(localsp);
     });
@@ -518,42 +534,78 @@ void e() {
   auto e14 = []() {
     R* ptr;
     SmartPtr<R> sp;
+#if __clang_major__ >= 12
+    return ([&ptr](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}} expected-note{{captured by reference here}}
+      R* localptr;
+      ptr->method();
+      argptr->method();
+      localptr->method();
+    });
+#else
     return ([&ptr](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}}
       R* localptr;
       ptr->method();
       argptr->method();
       localptr->method();
     });
+#endif
   };
   auto e15 = []() {
     R* ptr;
     SmartPtr<R> sp;
+#if __clang_major__ >= 12
+    return ([&sp](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}} expected-note{{captured by reference here}}
+      SmartPtr<R> localsp;
+      sp->method();
+      argsp->method();
+      localsp->method();
+    });
+#else
     return ([&sp](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}}
       SmartPtr<R> localsp;
       sp->method();
       argsp->method();
       localsp->method();
     });
+#endif
   };
   auto e16 = []() {
     R* ptr;
     SmartPtr<R> sp;
+#if __clang_major__ >= 12
+    return ([&ptr](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}} expected-note{{captured by reference here}}
+      R* localptr;
+      take(ptr);
+      take(argptr);
+      take(localptr);
+    });
+#else
     return ([&ptr](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}}
       R* localptr;
       take(ptr);
       take(argptr);
       take(localptr);
     });
+#endif
   };
   auto e17 = []() {
     R* ptr;
     SmartPtr<R> sp;
+#if __clang_major__ >= 12
+    return ([&sp](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}} expected-note{{captured by reference here}}
+      SmartPtr<R> localsp;
+      take(sp);
+      take(argsp);
+      take(localsp);
+    });
+#else
     return ([&sp](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}}
       SmartPtr<R> localsp;
       take(sp);
       take(argsp);
       take(localsp);
     });
+#endif
   };
 }
 
