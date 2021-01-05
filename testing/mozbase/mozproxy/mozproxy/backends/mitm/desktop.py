@@ -146,7 +146,8 @@ class MitmproxyDesktop(Mitmproxy):
         return True
 
     def stop(self):
-        self.stop_mitmproxy_playback()
+        LOG.info("MitmproxyDesktop stop!!")
+        super(MitmproxyDesktop, self).stop()
         self.turn_off_browser_proxy()
 
     def turn_off_browser_proxy(self):

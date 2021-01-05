@@ -24,7 +24,7 @@ def main():
     parser.add_argument(
         "--local", action="store_true", help="run this locally (i.e. not in production)"
     )
-    parser.add_argument("--record", help="generate a proxy recording")
+    parser.add_argument("--record", default=False, help="generate a proxy recording")
     parser.add_argument(
         "--tool",
         default="mitmproxy",
@@ -91,15 +91,14 @@ def main():
                 "binary": args.binary,
                 "obj_path": args.objdir,
                 "platform": mozinfo.os,
-                "playback_record": args.record,
                 "playback_tool": args.tool,
                 "playback_version": args.tool_version,
                 "playback_files": args.playback,
+                "record": args.record,
                 "app": args.app,
             }
         )
         playback.start()
-
         LOG.info("Proxy running on port %d" % playback.port)
         # Wait for a keyboard interrupt from the caller so we know when to
         # terminate.
