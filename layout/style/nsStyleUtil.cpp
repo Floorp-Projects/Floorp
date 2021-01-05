@@ -317,11 +317,11 @@ bool nsStyleUtil::CSPAllowsInlineStyle(
   }
 
   bool allowInlineStyle = true;
-  rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_STYLESHEET, nonce,
-                            false,  // aParserCreated only applies to scripts
-                            aElement, nullptr,  // nsICSPEventListener
-                            aStyleText, aLineNumber, aColumnNumber,
-                            &allowInlineStyle);
+  rv = csp->GetAllowsInline(
+      nsIContentSecurityPolicy::STYLE_SRC_DIRECTIVE, nonce,
+      false,              // aParserCreated only applies to scripts
+      aElement, nullptr,  // nsICSPEventListener
+      aStyleText, aLineNumber, aColumnNumber, &allowInlineStyle);
   NS_ENSURE_SUCCESS(rv, false);
 
   return allowInlineStyle;
