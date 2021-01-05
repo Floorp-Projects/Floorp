@@ -50,12 +50,6 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       promise = callBackground(
         "screenshotPage",
         selectedPos.toJSON(),
-        {
-          scrollX: isFullPage ? 0 : window.scrollX,
-          scrollY: isFullPage ? 0 : window.scrollY,
-          innerHeight: window.innerHeight,
-          innerWidth: window.innerWidth,
-        },
         isFullPage,
         window.devicePixelRatio);
     }
