@@ -51,3 +51,14 @@ jobs:
                 - 'gfx/wr/**'
         treeherder:
             symbol: GhS(wr)
+
+    qcms:
+        description: Sync qcms to github mirror
+        secret: gecko/gfx-github-sync/token
+        run:
+            command: '$GECKO_PATH/tools/github-sync/sync-to-github.sh qcms gfx/qcms FirefoxGraphics/qcms @jrmuizel'
+        when:
+            files-changed:
+                - 'gfx/qcms/**'
+        treeherder:
+            symbol: GhS(qcms)
