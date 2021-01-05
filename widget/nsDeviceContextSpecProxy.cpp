@@ -71,8 +71,8 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecProxy::MakePrintTarget() {
   MOZ_ASSERT(mRealDeviceContextSpec);
 
   double width, height;
-  nsresult rv = mPrintSettings->GetEffectivePageSize(&width, &height);
-  if (NS_WARN_IF(NS_FAILED(rv)) || width <= 0 || height <= 0) {
+  mPrintSettings->GetEffectiveSheetSize(&width, &height);
+  if (width <= 0 || height <= 0) {
     return nullptr;
   }
 
