@@ -12,14 +12,14 @@
 
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var iframe = document.getElementById("scroll");
   var iframeWindow = iframe.contentWindow;
 
   // scroll the iframe to the bottom, such that a subsequent scroll on it
   // _would_ hand off to the page if overscroll-behavior allowed it
   iframeWindow.scrollTo(0, iframeWindow.scrollMaxY);
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
   is(iframeWindow.scrollY, iframeWindow.scrollMaxY, "iframe has scrolled to the bottom");
 
   // Scroll over the iframe, and make sure that the page
@@ -28,16 +28,16 @@ function* test(testDriver) {
   // behaviour we are testing is correct (overscroll-behavior is respected),
   // one will never arrive.
   var waitForScroll = false;
-  yield moveMouseAndScrollWheelOver(iframeWindow, 100, 100, testDriver, waitForScroll);
+  await promiseMoveMouseAndScrollWheelOver(iframeWindow, 100, 100, waitForScroll);
   // However, we need to give a potential "scroll" event a chance to be dispatched,
   // so that if the platform behaviour we are testing is incorrect (overscroll-behavior)
   // is not respected, we catch it.
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
   is(window.scrollY, 0, "overscroll-behavior was respected");
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
