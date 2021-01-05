@@ -762,8 +762,8 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
  public:
   explicit ClassEmitter(BytecodeEmitter* bce);
 
-  bool emitScope(LexicalScope::ParserData* scopeBindings);
-  bool emitBodyScope(LexicalScope::ParserData* scopeBindings);
+  bool emitScope(ParserLexicalScopeData* scopeBindings);
+  bool emitBodyScope(ParserLexicalScopeData* scopeBindings);
 
   // @param name
   //        Name of the class (nullptr if this is anonymous class)

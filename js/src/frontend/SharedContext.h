@@ -275,7 +275,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
   ScopeKind scopeKind_;
 
  public:
-  GlobalScope::ParserData* bindings;
+  ParserGlobalScopeData* bindings;
 
   GlobalSharedContext(JSContext* cx, ScopeKind scopeKind,
                       CompilationInfo& compilationInfo, Directives directives,
@@ -291,7 +291,7 @@ inline GlobalSharedContext* SharedContext::asGlobalContext() {
 
 class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
  public:
-  EvalScope::ParserData* bindings;
+  ParserEvalScopeData* bindings;
 
   EvalSharedContext(JSContext* cx, CompilationInfo& compilationInfo,
                     CompilationState& compilationState, SourceExtent extent);
@@ -335,14 +335,14 @@ class FunctionBox : public SuspendableContext {
   mozilla::Maybe<ScopeIndex> enclosingScopeIndex_;
 
   // Names from the named lambda scope, if a named lambda.
-  LexicalScope::ParserData* namedLambdaBindings_ = nullptr;
+  ParserLexicalScopeData* namedLambdaBindings_ = nullptr;
 
   // Names from the function scope.
-  FunctionScope::ParserData* functionScopeBindings_ = nullptr;
+  ParserFunctionScopeData* functionScopeBindings_ = nullptr;
 
   // Names from the extra 'var' scope of the function, if the parameter list
   // has expressions.
-  VarScope::ParserData* extraVarScopeBindings_ = nullptr;
+  ParserVarScopeData* extraVarScopeBindings_ = nullptr;
 
   // The explicit or implicit name of the function. The FunctionFlags indicate
   // the kind of name.
@@ -413,24 +413,20 @@ class FunctionBox : public SuspendableContext {
 
   ScriptStencil& functionStencil() const;
 
-  LexicalScope::ParserData* namedLambdaBindings() {
-    return namedLambdaBindings_;
-  }
-  void setNamedLambdaBindings(LexicalScope::ParserData* bindings) {
+  ParserLexicalScopeData* namedLambdaBindings() { return namedLambdaBindings_; }
+  void setNamedLambdaBindings(ParserLexicalScopeData* bindings) {
     namedLambdaBindings_ = bindings;
   }
 
-  FunctionScope::ParserData* functionScopeBindings() {
+  ParserFunctionScopeData* functionScopeBindings() {
     return functionScopeBindings_;
   }
-  void setFunctionScopeBindings(FunctionScope::ParserData* bindings) {
+  void setFunctionScopeBindings(ParserFunctionScopeData* bindings) {
     functionScopeBindings_ = bindings;
   }
 
-  VarScope::ParserData* extraVarScopeBindings() {
-    return extraVarScopeBindings_;
-  }
-  void setExtraVarScopeBindings(VarScope::ParserData* bindings) {
+  ParserVarScopeData* extraVarScopeBindings() { return extraVarScopeBindings_; }
+  void setExtraVarScopeBindings(ParserVarScopeData* bindings) {
     extraVarScopeBindings_ = bindings;
   }
 
