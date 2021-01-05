@@ -321,12 +321,9 @@ class DefaultSessionControlController(
                 setTitle(R.string.rename_top_site)
                 setView(customLayout)
                 setPositiveButton(R.string.top_sites_rename_dialog_ok) { dialog, _ ->
-                    val newTitle = topSiteLabelEditText.text.toString()
-                    if (newTitle.isNotBlank()) {
-                        viewLifecycleScope.launch(Dispatchers.IO) {
-                            with(activity.components.useCases.topSitesUseCase) {
-                                renameTopSites(topSite, newTitle)
-                            }
+                    viewLifecycleScope.launch(Dispatchers.IO) {
+                        with(activity.components.useCases.topSitesUseCase) {
+                            renameTopSites(topSite, topSiteLabelEditText.text.toString())
                         }
                     }
                     dialog.dismiss()
