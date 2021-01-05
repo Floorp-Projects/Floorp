@@ -64,6 +64,23 @@ test_only:
     send_in_pings:
       - test-ping
 
+  cheesy_string_list:
+    type: string_list
+    description: |
+      Only the cheesiest of strings. In list form!
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1682960
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1682960#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - test-ping
+
   what_a_date:
     type: datetime
     time_unit: second

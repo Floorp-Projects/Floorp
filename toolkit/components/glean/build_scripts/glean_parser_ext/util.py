@@ -61,6 +61,7 @@ IMPLEMENTED_CPP_TYPES = [
     "event",
     "memory_distribution",
     "string",
+    "string_list",
     "timespan",
     "uuid",
 ]

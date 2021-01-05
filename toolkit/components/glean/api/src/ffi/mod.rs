@@ -5,8 +5,9 @@
 #![cfg(feature = "with_gecko")]
 
 use crate::pings;
+use nsstring::{nsACString, nsCString};
 use thin_vec::ThinVec;
-use {nsstring::nsACString, uuid::Uuid};
+use uuid::Uuid;
 
 #[macro_use]
 mod macros;
@@ -89,6 +90,38 @@ pub extern "C" fn fog_string_test_get_value(
 pub extern "C" fn fog_string_set(id: u32, value: &nsACString) {
     let metric = metric_get!(STRING_MAP, id);
     metric.set(value.to_utf8());
+}
+
+// String List Functions:
+
+#[no_mangle]
+pub extern "C" fn fog_string_list_test_has_value(id: u32, storage_name: &nsACString) -> bool {
+    test_has!(STRING_LIST_MAP, id, storage_name)
+}
+
+#[no_mangle]
+pub extern "C" fn fog_string_list_test_get_value(
+    id: u32,
+    storage_name: &nsACString,
+    value: &mut ThinVec<nsCString>,
+) {
+    let val = test_get!(STRING_LIST_MAP, id, storage_name);
+    for v in val {
+        value.push(v.into());
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn fog_string_list_add(id: u32, value: &nsACString) {
+    let metric = metric_get!(STRING_LIST_MAP, id);
+    metric.add(value.to_utf8());
+}
+
+#[no_mangle]
+pub extern "C" fn fog_string_list_set(id: u32, value: &ThinVec<nsCString>) {
+    let metric = metric_get!(STRING_LIST_MAP, id);
+    let value = value.iter().map(|s| s.to_utf8().into()).collect();
+    metric.set(value);
 }
 
 // The Uuid functions are custom because test_get needs to use an outparam.

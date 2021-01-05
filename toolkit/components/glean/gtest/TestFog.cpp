@@ -169,3 +169,26 @@ TEST(FOG, TestCppPings)
   // For a test that actually submits the ping, we have integration tests.
   // See also bug 1681742.
 }
+
+TEST(FOG, TestCppStringLists)
+{
+  auto kValue = "cheez!"_ns;
+  auto kValue2 = "cheezier!"_ns;
+  auto kValue3 = "cheeziest."_ns;
+
+  nsTArray<nsCString> cheezList;
+  cheezList.EmplaceBack(kValue);
+  cheezList.EmplaceBack(kValue2);
+
+  test_only::cheesy_string_list.Set(cheezList);
+
+  auto val = test_only::cheesy_string_list.TestGetValue().value();
+  // Note: This is fragile if the order is ever not preserved.
+  ASSERT_STREQ(kValue.get(), val[0].get());
+  ASSERT_STREQ(kValue2.get(), val[1].get());
+
+  test_only::cheesy_string_list.Add(kValue3);
+
+  val = test_only::cheesy_string_list.TestGetValue().value();
+  ASSERT_STREQ(kValue3.get(), val[2].get());
+}
