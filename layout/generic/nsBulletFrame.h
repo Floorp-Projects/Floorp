@@ -21,6 +21,8 @@ class imgRequestProxy;
 class nsBulletFrame;
 class BulletRenderer;
 
+class nsFontMetrics;
+
 class nsBulletListener final : public imgINotificationObserver {
  public:
   nsBulletListener();

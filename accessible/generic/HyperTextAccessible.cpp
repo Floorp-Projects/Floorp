@@ -12,6 +12,7 @@
 #include "nsIAccessibleTypes.h"
 #include "DocAccessible.h"
 #include "HTMLListAccessible.h"
+#include "Pivot.h"
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"

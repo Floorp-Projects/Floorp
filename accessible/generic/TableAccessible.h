@@ -7,6 +7,9 @@
 #ifndef TABLE_ACCESSIBLE_H
 #define TABLE_ACCESSIBLE_H
 
+#include "TableCellAccessible.h"
+#include "nsPointerHashKeys.h"
+#include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
 

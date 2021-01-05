@@ -22,6 +22,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/Selection.h"

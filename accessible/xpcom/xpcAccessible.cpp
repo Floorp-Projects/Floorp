@@ -7,6 +7,7 @@
 #include "Accessible-inl.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "nsAccUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIAccessibleRole.h"
 #include "nsAccessibleRelation.h"
