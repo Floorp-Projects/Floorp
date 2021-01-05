@@ -49,6 +49,10 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
     {
       return MakeAndAddRef<GleanString>(metricId);
     }
+    case 7: /* StringList */
+    {
+      return MakeAndAddRef<GleanStringList>(metricId);
+    }
     case 8: /* Timespan */
     {
       return MakeAndAddRef<GleanTimespan>(metricId);

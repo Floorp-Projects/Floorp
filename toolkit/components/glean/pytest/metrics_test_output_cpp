@@ -45,6 +45,15 @@ namespace test {
     constexpr impl::StringMetric string_metric(7);
 
     /**
+     * generated from test.string_list_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::StringListMetric string_list_metric(10);
+
+    /**
      * generated from test.timespan_metric
      */
     /**
