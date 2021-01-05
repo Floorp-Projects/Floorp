@@ -16,6 +16,8 @@ cat <<EOT >> $MOZCONFIG
 ac_add_options --enable-debug
 # Enable GC zeal, a testing and debugging feature that helps find GC-related bugs in JSAPI applications.
 ac_add_options --enable-gczeal
+# Do not treat warnings as errors
+ac_add_options --disable-warnings-as-errors
 EOT
 
 # Mach lookup clang-tidy in clang-tools

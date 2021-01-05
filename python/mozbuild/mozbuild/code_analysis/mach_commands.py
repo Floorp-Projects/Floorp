@@ -2162,6 +2162,7 @@ class StaticAnalysis(MachCommandBase):
 
         max_workers = multiprocessing.cpu_count()
 
+        rc = 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
             for command in commands:
@@ -2174,6 +2175,11 @@ class StaticAnalysis(MachCommandBase):
                         ensure_exit_code=False,
                     )
                 )
+            for thread in concurrent.futures.as_completed(futures):
+                if thread.result() != 0:
+                    rc = thread.result()
+
+        return rc
 
     @Command(
         "clang-format",

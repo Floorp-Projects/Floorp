@@ -99,3 +99,19 @@ external:
             - type: file
               name: public/code-review/clang-tidy.json
               path: /builds/worker/clang-tidy.json
+
+non-unified:
+    description: Run syntax test for non-unified build on C/C++ files.
+    treeherder:
+        symbol: cpp(non-unified)
+    attributes:
+        code-review: false
+    run-on-projects: [mozilla-central]
+    run:
+        cwd: '{checkout}'
+        command: >-
+            source taskcluster/scripts/misc/source-test-clang-setup.sh &&
+            taskcluster/scripts/misc/source-test-clang-non-unified.sh
+    fetches:
+        toolchain:
+            - linux64-clang-tidy
