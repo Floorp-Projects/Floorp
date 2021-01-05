@@ -1194,7 +1194,17 @@ bool Predictor::RunPredictions(nsIURI* referrer,
         nullptr, mDNSListener, nullptr, originAttributes,
         getter_AddRefs(tmpCancelable));
 
-    // TODO: Fetch HTTPS RRs in bug 1652723.
+    // Fetch HTTPS RR if needed.
+    if (StaticPrefs::network_dns_upgrade_with_https_rr() ||
+        StaticPrefs::network_dns_use_https_rr_as_altsvc()) {
+      mDnsService->AsyncResolveNative(
+          hostname, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
+          (nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
+           nsIDNSService::RESOLVE_SPECULATE),
+          nullptr, mDNSListener, nullptr, originAttributes,
+          getter_AddRefs(tmpCancelable));
+    }
+
     predicted = true;
     if (verifier) {
       PREDICTOR_LOG(("    sending preresolve verification"));
