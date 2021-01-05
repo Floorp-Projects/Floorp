@@ -17,7 +17,7 @@ class nsNativeBasicThemeWin : public nsNativeBasicTheme {
   virtual ~nsNativeBasicThemeWin() = default;
 
   std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(
-      const EventStates& aState) override;
+      const EventStates& aState, StyleAppearance aAppearance) override;
   sRGBColor ComputeCheckmarkColor(const EventStates& aState) override;
   std::pair<sRGBColor, sRGBColor> ComputeRadioCheckmarkColors(
       const EventStates& aState) override;

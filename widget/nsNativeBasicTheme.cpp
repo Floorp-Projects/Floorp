@@ -101,13 +101,17 @@ void nsNativeBasicTheme::GetFocusStrokeRect(DrawTarget* aDrawTarget,
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
-    const EventStates& aState) {
+    const EventStates& aState, StyleAppearance aAppearance) {
+  MOZ_ASSERT(aAppearance == StyleAppearance::Checkbox ||
+             aAppearance == StyleAppearance::Radio);
+
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
                                                       NS_EVENT_STATE_ACTIVE);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
   bool isChecked = aState.HasState(NS_EVENT_STATE_CHECKED);
-  bool isIndeterminate = aState.HasState(NS_EVENT_STATE_INDETERMINATE);
+  bool isIndeterminate = aAppearance == StyleAppearance::Checkbox &&
+                         aState.HasState(NS_EVENT_STATE_INDETERMINATE);
 
   sRGBColor backgroundColor = sColorWhite;
   sRGBColor borderColor = sColorGrey40;
@@ -149,7 +153,8 @@ sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState) {
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRadioCheckmarkColors(
     const EventStates& aState) {
-  auto [unusedColor, checkColor] = ComputeCheckboxColors(aState);
+  auto [unusedColor, checkColor] =
+      ComputeCheckboxColors(aState, StyleAppearance::Radio);
   (void)unusedColor;
 
   return std::make_pair(sColorWhite, checkColor);
@@ -435,7 +440,8 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
                                               DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 2.0f;
   const CSSCoord radius = 2.0f;
-  auto [backgroundColor, borderColor] = ComputeCheckboxColors(aState);
+  auto [backgroundColor, borderColor] =
+      ComputeCheckboxColors(aState, StyleAppearance::Checkbox);
   PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
                              borderWidth, radius, aDpiRatio);
 
@@ -565,7 +571,8 @@ void nsNativeBasicTheme::PaintRadioControl(DrawTarget* aDrawTarget,
                                            const EventStates& aState,
                                            DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 2.0f;
-  auto [backgroundColor, borderColor] = ComputeCheckboxColors(aState);
+  auto [backgroundColor, borderColor] =
+      ComputeCheckboxColors(aState, StyleAppearance::Radio);
 
   PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
                       borderWidth, aDpiRatio);
