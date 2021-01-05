@@ -496,6 +496,16 @@ using MaybeRootedScopeData = std::conditional_t<
     MaybeRooted<UniquePtr<typename ScopeT::RuntimeData>, AllowGC::CanGC>,
     MaybeRooted<AbstractScopeData<ScopeT, AtomT>*, AllowGC::NoGC>>;
 
+template <typename SlotInfo>
+struct ParserScopeData
+    : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
+  SlotInfo slotInfo;
+  AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
+
+  explicit ParserScopeData(size_t nameCount) : trailingNames(nameCount) {}
+  ParserScopeData() = delete;
+};
+
 //
 // A lexical scope that holds let and const bindings. There are 4 kinds of
 // LexicalScopes.
@@ -548,14 +558,7 @@ class LexicalScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  struct ParserData
-      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-    SlotInfo slotInfo;
-    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
-    ParserData() = delete;
-  };
+  using ParserData = ParserScopeData<SlotInfo>;
 
   template <typename NameT>
   using AbstractData =
@@ -691,14 +694,7 @@ class FunctionScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  struct ParserData
-      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-    SlotInfo slotInfo;
-    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
-    ParserData() = delete;
-  };
+  using ParserData = ParserScopeData<SlotInfo>;
 
   template <typename NameT>
   using AbstractData =
@@ -788,14 +784,7 @@ class VarScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  struct ParserData
-      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-    SlotInfo slotInfo;
-    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
-    ParserData() = delete;
-  };
+  using ParserData = ParserScopeData<SlotInfo>;
 
   template <typename NameT>
   using AbstractData =
@@ -882,14 +871,7 @@ class GlobalScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  struct ParserData
-      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-    SlotInfo slotInfo;
-    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
-    ParserData() = delete;
-  };
+  using ParserData = ParserScopeData<SlotInfo>;
 
   template <typename NameT>
   using AbstractData =
@@ -994,14 +976,7 @@ class EvalScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  struct ParserData
-      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-    SlotInfo slotInfo;
-    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
-    ParserData() = delete;
-  };
+  using ParserData = ParserScopeData<SlotInfo>;
 
   template <typename NameT>
   using AbstractData =
@@ -1100,14 +1075,7 @@ class ModuleScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  struct ParserData
-      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-    SlotInfo slotInfo;
-    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
-    ParserData() = delete;
-  };
+  using ParserData = ParserScopeData<SlotInfo>;
 
   template <typename NameT>
   using AbstractData =
@@ -1179,14 +1147,7 @@ class WasmInstanceScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  struct ParserData
-      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-    SlotInfo slotInfo;
-    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
-    ParserData() = delete;
-  };
+  using ParserData = ParserScopeData<SlotInfo>;
 
   template <typename NameT>
   using AbstractData =
@@ -1245,14 +1206,7 @@ class WasmFunctionScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  struct ParserData
-      : public AbstractBaseScopeData<frontend::TaggedParserAtomIndex> {
-    SlotInfo slotInfo;
-    AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
-
-    explicit ParserData(size_t nameCount) : trailingNames(nameCount) {}
-    ParserData() = delete;
-  };
+  using ParserData = ParserScopeData<SlotInfo>;
 
   template <typename NameT>
   using AbstractData =
