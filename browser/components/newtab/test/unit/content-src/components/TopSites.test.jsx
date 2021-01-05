@@ -686,6 +686,65 @@ describe("<TopSiteLink>", () => {
       assert.notOk(event.prevented);
     });
   });
+
+  describe("#generateColor", () => {
+    let colors;
+    beforeEach(() => {
+      colors = "#0090ED,#FF4F5F,#2AC3A2";
+    });
+
+    it("should generate a random color but always pick the same color for the same string", async () => {
+      let wrapper = shallow(
+        <TopSiteLink
+          newNewtabExperienceEnabled={true}
+          colors={colors}
+          title={"food"}
+          link={link}
+        />
+      );
+
+      assert.equal(wrapper.find(".icon-wrapper").prop("data-fallback"), "f");
+      assert.equal(
+        wrapper.find(".icon-wrapper").prop("style").backgroundColor,
+        colors.split(",")[1]
+      );
+      assert.ok(true);
+    });
+
+    it("should generate a different random color", async () => {
+      let wrapper = shallow(
+        <TopSiteLink
+          newNewtabExperienceEnabled={true}
+          colors={colors}
+          title={"fam"}
+          link={link}
+        />
+      );
+
+      assert.equal(
+        wrapper.find(".icon-wrapper").prop("style").backgroundColor,
+        colors.split(",")[2]
+      );
+      assert.ok(true);
+    });
+
+    it("should generate a third random color", async () => {
+      let wrapper = shallow(
+        <TopSiteLink
+          newNewtabExperienceEnabled={true}
+          colors={colors}
+          title={"foo"}
+        />
+      );
+
+      assert.equal(wrapper.find(".icon-wrapper").prop("data-fallback"), "f");
+      assert.equal(
+        wrapper.find(".icon-wrapper").prop("style").backgroundColor,
+        colors.split(",")[0]
+      );
+      assert.ok(true);
+    });
+  });
 });
 
 describe("<TopSite>", () => {

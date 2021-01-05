@@ -280,6 +280,7 @@ export class TopSiteForm extends React.PureComponent {
               link={previewLink}
               defaultStyle={requestFailed}
               title={this.state.label}
+              newNewtabExperienceEnabled={this.props.newNewtabExperienceEnabled}
             />
           </div>
         </div>

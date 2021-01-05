@@ -139,6 +139,10 @@ export class _TopSites extends React.PureComponent {
     const { props } = this;
     const { editForm, showSearchShortcutsForm } = props.TopSites;
     const extraMenuOptions = ["AddTopSite"];
+    const newNewtabExperienceEnabled =
+      props.Prefs.values["newNewtabExperience.enabled"];
+    const colors = props.Prefs.values["newNewtabExperience.colors"];
+
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
       extraMenuOptions.push("AddSearchShortcut");
     }
@@ -184,6 +188,8 @@ export class _TopSites extends React.PureComponent {
             TopSitesRows={props.TopSitesRows}
             dispatch={props.dispatch}
             topSiteIconType={topSiteIconType}
+            newNewtabExperienceEnabled={newNewtabExperienceEnabled}
+            colors={colors}
           />
           <div className="edit-topsites-wrapper">
             {editForm && (
@@ -198,6 +204,7 @@ export class _TopSites extends React.PureComponent {
                     onClose={this.onEditFormClose}
                     dispatch={this.props.dispatch}
                     {...editForm}
+                    newNewtabExperienceEnabled={newNewtabExperienceEnabled}
                   />
                 </ModalOverlayWrapper>
               </div>

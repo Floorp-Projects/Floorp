@@ -1,13 +1,18 @@
 $top-sites-size: $grid-unit;
+$top-sites-size-nte: $grid-unit-small;
 $top-sites-border-radius: 4px;
+$nt-experience-top-sites-border-radius: 8px;
 $top-sites-vertical-space: 8px;
 $screenshot-size: cover;
 $rich-icon-size: 96px;
 $default-icon-wrapper-size: 42px;
+$nt-experience-default-icon-wrapper-size: 32px;
+$search-icon-wrapper-size: 42px;
 $default-icon-size: 32px;
 $default-icon-offset: 6px;
 $half-base-gutter: $base-gutter / 2;
 $hover-transition-duration: 150ms;
+$letter-fallback-color: $white;
 
 .top-sites-list {
   list-style: none;
@@ -82,20 +87,6 @@ $hover-transition-duration: 150ms;
       display: inline-block;
     }
   }
-
-  li {
-    margin: 0 0 $top-sites-vertical-space;
-  }
-
-  &:not(.dnd-active) {
-    .top-site-outer:is(.active, :focus, :hover) {
-      .tile {
-        @include fade-in;
-      }
-
-      @include context-menu-button-hover;
-    }
-  }
 }
 
 // container for drop zone
@@ -111,24 +102,14 @@ $hover-transition-duration: 150ms;
       color: inherit;
       display: block;
       outline: none;
-
-      &:is(.active, :focus) {
-        .tile {
-          @include fade-in;
-        }
-      }
     }
   }
-
-  @include context-menu-button;
 
   .tile { // sass-lint:disable-block property-sort-order
     border-radius: $top-sites-border-radius;
     box-shadow: inset $inner-box-shadow, var(--newtab-card-shadow);
     cursor: pointer;
-    height: $top-sites-size;
     position: relative;
-    width: $top-sites-size;
 
     // For letter fallback
     align-items: center;
@@ -140,27 +121,29 @@ $hover-transition-duration: 150ms;
     text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
     transition: box-shadow $hover-transition-duration;
 
-    &::before {
-      content: attr(data-fallback);
-    }
-  }
+    .icon-wrapper {
+      border-radius: 4px;
+      width: 48px;
+      height: 48px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-  .screenshot {
-    background-color: $white;
-    background-position: top left;
-    background-size: $screenshot-size;
-    border-radius: $top-sites-border-radius;
-    box-shadow: inset $inner-box-shadow;
-    height: 100%;
-    left: 0;
-    opacity: 0;
-    position: absolute;
-    top: 0;
-    transition: opacity 1s;
-    width: 100%;
-
-    &.active {
-      opacity: 1;
+      &.letter-fallback::before {
+        content: attr(data-fallback);
+        text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 64px;
+        font-weight: 800;
+        transform: rotate(-10deg);
+        top: 6px;
+        position: relative;
+        color: $letter-fallback-color;
+      }
     }
   }
 
@@ -170,7 +153,6 @@ $hover-transition-duration: 150ms;
     background-position: center center;
     background-repeat: no-repeat;
     border-radius: $top-sites-border-radius;
-    box-shadow: var(--newtab-topsites-icon-shadow);
     position: absolute;
   }
 
@@ -185,9 +167,7 @@ $hover-transition-duration: 150ms;
   .default-icon,
   .search-topsite {
     background-size: $default-icon-size;
-    bottom: -$default-icon-offset;
     height: $default-icon-wrapper-size;
-    inset-inline-end: -$default-icon-offset;
     width: $default-icon-wrapper-size;
 
     // for corner letter fallback
@@ -211,25 +191,10 @@ $hover-transition-duration: 150ms;
     box-shadow: var(--newtab-card-shadow);
     transition-duration: $hover-transition-duration;
     transition-property: background-size, bottom, inset-inline-end, height, width;
-  }
-
-  &:hover .search-topsite {
-    $hover-icon-wrapper-size: $default-icon-wrapper-size + 4;
-    $hover-icon-offset: -$default-icon-offset - 3;
-
-    background-size: 28px;
-    border-radius: $hover-icon-wrapper-size;
-    bottom: $hover-icon-offset;
-    height: $hover-icon-wrapper-size;
-    inset-inline-end: $hover-icon-offset;
-    width: $hover-icon-wrapper-size;
-  }
-
-  // We want all search shortcuts to have a white background in case they have transparency.
-  &.search-shortcut {
-    .rich-icon {
-      background-color: $white;
-    }
+    height: $search-icon-wrapper-size;
+    width: $search-icon-wrapper-size;
+    bottom: -$default-icon-offset;
+    inset-inline-end: -$default-icon-offset;
   }
 
   .title {
@@ -237,14 +202,10 @@ $hover-transition-duration: 150ms;
     font: message-box;
     padding-top: 4px;
     text-align: center;
-    width: $top-sites-size;
     position: relative;
 
     .icon {
       fill: var(--newtab-icon-tertiary-color);
-      inset-inline-start: 0;
-      position: absolute;
-      top: 0.5em;
     }
 
     span {
@@ -254,19 +215,20 @@ $hover-transition-duration: 150ms;
       white-space: nowrap;
     }
 
-    &.has-icon {
-      span {
-        padding: 0 13px;
-      }
-    }
-
     .sponsored-label {
       color: $grey-50;
       font-size: 0.9em;
     }
 
-    &:not(.sponsored) > .sponsored-label {
+    &:not(.sponsored) .sponsored-label {
       visibility: hidden;
+    }
+  }
+
+  // We want all search shortcuts to have a white background in case they have transparency.
+  &.search-shortcut {
+    .rich-icon {
+      background-color: $white;
     }
   }
 
@@ -275,10 +237,6 @@ $hover-transition-duration: 150ms;
   }
 
   &.placeholder {
-    .tile {
-      box-shadow: inset $inner-box-shadow;
-    }
-
     .screenshot {
       display: none;
     }
@@ -453,11 +411,6 @@ $hover-transition-duration: 150ms;
         width: 100%;
         font-size: 15px;
 
-        &:focus {
-          border: $input-border-active;
-          box-shadow: var(--newtab-textbox-focus-boxshadow);
-        }
-
         &[disabled] {
           border: $input-border;
           box-shadow: none;
@@ -604,6 +557,228 @@ $hover-transition-duration: 150ms;
   [type='checkbox']:not(:checked):focus + label::before {
     border: 1px dotted var(--newtab-link-primary-color);
   }
+}
+
+.outer-wrapper {
+  // Special styling for when we are using the old new tab styling,
+  // this is to be removed once the changes are made permanent
+  &:not(.newtab-experience) {
+    .top-site-outer {
+      @include context-menu-button;
+
+      .tile {
+        height: $top-sites-size;
+        width: $top-sites-size;
+      }
+
+      .top-site-icon {
+        box-shadow: var(--newtab-topsites-icon-shadow);
+      }
+
+      .title {
+        width: $top-sites-size;
+
+        &.has-icon {
+          span {
+            padding: 0 13px;
+          }
+        }
+
+        .icon {
+          inset-inline-start: 0;
+          position: absolute;
+          top: 0.5em;
+        }
+      }
+
+      // container for context menu
+      .top-site-inner {
+        position: relative;
+
+        > a {
+          color: inherit;
+          display: block;
+          outline: none;
+
+          &:is(.active, :focus) {
+            .tile {
+              @include fade-in;
+            }
+          }
+        }
+      }
+
+      .screenshot {
+        background-color: $white;
+        background-position: top left;
+        background-size: $screenshot-size;
+        border-radius: $top-sites-border-radius;
+        box-shadow: inset $inner-box-shadow;
+        height: 100%;
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transition: opacity 1s;
+        width: 100%;
+
+        &.active {
+          opacity: 1;
+        }
+      }
+
+      .default-icon,
+      .search-topsite {
+        bottom: -$default-icon-offset;
+        inset-inline-end: -$default-icon-offset;
+      }
+
+      &:hover .search-topsite {
+        $hover-icon-wrapper-size: $default-icon-wrapper-size + 4;
+        $hover-icon-offset: -$default-icon-offset - 3;
+
+        background-size: 28px;
+        border-radius: $hover-icon-wrapper-size;
+        bottom: $hover-icon-offset;
+        height: $hover-icon-wrapper-size;
+        inset-inline-end: $hover-icon-offset;
+        width: $hover-icon-wrapper-size;
+      }
+
+      &.placeholder {
+        .tile {
+          box-shadow: inset $inner-box-shadow;
+        }
+      }
+
+      &:not(.dnd-active) {
+        .top-site-outer:is(.active, :focus, :hover) {
+          .tile {
+            @include fade-in;
+          }
+
+          @include context-menu-button-hover;
+        }
+      }
+    }
+
+    .top-sites-list li{
+      margin: 0 0 $top-sites-vertical-space;
+    }
+  }
+
+  // Special styling for the New Tab Experience styles,
+  // This is to be incorporated once the styles are made permanent
+  &.newtab-experience {
+    .top-site-outer {
+      @include context-menu-button-newtab-experience;
+      width: 120px;
+      padding-block: 20px 4px;
+      border-radius: 8px;
+
+      .edit-button {
+        background-image: url('#{$image-path}glyph-edit-16.svg');
+      }
+
+      .tile {
+        border-radius: $nt-experience-top-sites-border-radius;
+        box-shadow: $inner-box-shadow-nte, $tile-shadow-second;
+        background-color: var(--newtab-topsites-background-color);
+        justify-content: center;
+        transition: box-shadow $hover-transition-duration;
+        margin: 0 auto;
+        height: $top-sites-size-nte;
+        width: $top-sites-size-nte;
+      }
+
+      .title {
+        width: $top-sites-size-nte;
+
+        .icon {
+          margin-inline-end: 2px;
+        }
+      }
+
+      .default-icon,
+      .search-topsite {
+        height: $nt-experience-default-icon-wrapper-size;
+        width: $nt-experience-default-icon-wrapper-size;
+      }
+
+      .search-topsite {
+        background-size: 16px;
+        height: 32px;
+        width: 32px;
+      }
+
+      &:hover .search-topsite {
+        $hover-icon-wrapper-size: $search-icon-wrapper-size + 4;
+      }
+
+      &.placeholder {
+        .tile {
+          box-shadow: $inner-box-shadow;
+        }
+      }
+    }
+
+    .top-sites-list {
+      // Two columns
+      @media (max-width: $break-point-medium) {
+        > :nth-child(2n+1) {
+          @include context-menu-open-middle;
+        }
+
+        > :nth-child(2n) {
+          @include context-menu-open-left;
+        }
+      }
+
+      // Four columns
+      @media (min-width: $break-point-medium) and (max-width: $break-point-large) {
+        :nth-child(4n) {
+          @include context-menu-open-left;
+        }
+      }
+      @media (min-width: $break-point-medium) and (max-width: $break-point-medium + $card-width-nte) {
+        :nth-child(4n+3) {
+          @include context-menu-open-left;
+        }
+      }
+
+      // Six columns
+      @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width-nte) {
+        :nth-child(6n) {
+          @include context-menu-open-left;
+        }
+      }
+      @media (min-width: $break-point-large) and (max-width: $break-point-large + $card-width-nte) {
+        :nth-child(6n+5) {
+          @include context-menu-open-left;
+        }
+      }
+
+      // Eight columns
+      @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width-nte) {
+        :nth-child(8n) {
+          @include context-menu-open-left;
+        }
+      }
+      @media (min-width: $break-point-widest) and (max-width: $break-point-widest + $card-width-nte) {
+        :nth-child(8n+7) {
+          @include context-menu-open-left;
+        }
+      }
+    }
+
+    &:not(.dnd-active) {
+      .top-site-outer:is(.active, :focus, :hover) {
+        @include nt-experience-context-menu-button-hover;
+        background: var(--newtab-topsites-outer-card-hover);
+      }
+    }
+  }
+
 }
 
 //used for tooltips below form element
