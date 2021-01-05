@@ -8,7 +8,9 @@
 
 #include "FormControlAccessible.h"
 #include "HyperTextAccessibleWrap.h"
+#include "mozilla/dom/Element.h"
 #include "nsAccUtils.h"
+#include "nsIPersistentProperties2.h"
 #include "Relation.h"
 
 namespace mozilla {

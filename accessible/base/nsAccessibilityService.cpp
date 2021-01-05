@@ -25,6 +25,7 @@
 #include "nsArrayUtils.h"
 #include "nsAttrName.h"
 #include "nsDOMTokenList.h"
+#include "nsCRT.h"
 #include "nsEventShell.h"
 #include "nsIFrameInlines.h"
 #include "nsServiceManagerUtils.h"

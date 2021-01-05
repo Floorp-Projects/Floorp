@@ -360,7 +360,7 @@ bool nsCoreUtils::IsContentDocument(Document* aDocument) {
 }
 
 bool nsCoreUtils::IsTopLevelContentDocInProcess(Document* aDocumentNode) {
-  BrowsingContext* bc = aDocumentNode->GetBrowsingContext();
+  mozilla::dom::BrowsingContext* bc = aDocumentNode->GetBrowsingContext();
   return bc->IsContent() && (
                                 // Tab document.
                                 bc->IsTop() ||

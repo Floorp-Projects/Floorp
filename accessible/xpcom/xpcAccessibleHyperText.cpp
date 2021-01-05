@@ -10,6 +10,7 @@
 #include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/PDocAccessible.h"
 #include "TextRange.h"
+#include "nsComponentManagerUtils.h"
 #include "xpcAccessibleDocument.h"
 #include "xpcAccessibleTextRange.h"
 

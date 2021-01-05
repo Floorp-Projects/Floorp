@@ -14,6 +14,7 @@
 #include "States.h"
 
 #include "nsServiceManagerUtils.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Services.h"
 #include "nsGlobalWindow.h"
 #include "nsIStringBundle.h"
