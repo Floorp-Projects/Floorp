@@ -1205,7 +1205,7 @@ class Artifacts(object):
 There are no public revisions.
 This can happen if the repository is created from bundle file and never pulled
 from remote.  Please run `hg pull` and build again.
-see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles\
+https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
 """
             )
 
@@ -1265,7 +1265,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             raise Exception(
                 "Could not find any candidate pushheads in the last {num} revisions.\n"
                 "Search started with {rev}, which must be known to Mozilla automation.\n\n"
-                "see https://developer.mozilla.org/en-US/docs/Artifact_builds".format(
+                "see https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html".format(
                     rev=last_revs[0], num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT
                 )
             )

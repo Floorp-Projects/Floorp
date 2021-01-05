@@ -61,7 +61,7 @@ them locally. Artifact builds are faster!
 Artifact builds are recommended for people working on Firefox or
 Firefox for Android frontends, or the GeckoView Java API. They are unsuitable
 for those working on C++ code. For more information see:
-https://developer.mozilla.org/en-US/docs/Artifact_builds.
+https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html.
 
 Please choose the version of Firefox you want to build:
 %s
