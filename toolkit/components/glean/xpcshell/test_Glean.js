@@ -13,6 +13,9 @@ Cu.importGlobalProperties(["Glean", "GleanPings"]);
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
+const { ObjectUtils } = ChromeUtils.import(
+  "resource://gre/modules/ObjectUtils.jsm"
+);
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 /**
@@ -96,6 +99,23 @@ add_task(async function test_fog_string_works() {
   Glean.testOnly.cheesyString.set(value);
 
   Assert.equal(value, Glean.testOnly.cheesyString.testGetValue("test-ping"));
+});
+
+add_task(async function test_fog_string_list_works() {
+  const value = "a cheesy string!";
+  const value2 = "a cheesier string!";
+  const value3 = "the cheeziest of strings.";
+
+  const cheeseList = [value, value2];
+  Glean.testOnly.cheesyStringList.set(cheeseList);
+
+  let val = Glean.testOnly.cheesyStringList.testGetValue();
+  // Note: This is incredibly fragile and will break if we ever rearrange items
+  // in the string list.
+  Assert.deepEqual(cheeseList, val);
+
+  Glean.testOnly.cheesyStringList.add(value3);
+  Assert.ok(Glean.testOnly.cheesyStringList.testGetValue().includes(value3));
 });
 
 add_task(async function test_fog_timespan_works() {
