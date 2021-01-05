@@ -149,3 +149,42 @@ add_task(async function test_print_on_sandboxed_frame() {
     }
   );
 });
+
+add_task(async function test_focused_browsing_context() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", true]],
+  });
+
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    `${TEST_PATH}longerArticle.html`
+  );
+
+  let tabCount = gBrowser.tabs.length;
+  document.getElementById("cmd_newNavigatorTab").doCommand();
+  await TestUtils.waitForCondition(() => gBrowser.tabs.length == tabCount + 1);
+  let newTabBrowser = gBrowser.selectedBrowser;
+  is(newTabBrowser.documentURI.spec, "about:newtab", "newtab is loaded");
+
+  let menuButton = document.getElementById("PanelUI-menu-button");
+  menuButton.click();
+  await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
+  document.getElementById("appMenu-print-button").click();
+
+  let dialog = await TestUtils.waitForCondition(
+    () =>
+      gBrowser
+        .getTabDialogBox(newTabBrowser)
+        ._dialogManager._dialogs.find(dlg =>
+          dlg._box.querySelector(".printSettingsBrowser")
+        ),
+    "Wait for dialog"
+  );
+  await dialog._dialogReady;
+  ok(dialog, "Dialog is available");
+  await dialog._frame.contentWindow._initialized;
+  await dialog.close();
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
