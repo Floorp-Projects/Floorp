@@ -55,17 +55,21 @@ class GeckoEngineSessionState internal constructor(
         fun from(reader: JsonReader): GeckoEngineSessionState = try {
             reader.beginObject()
 
-            val key = reader.nextName()
-            if (key != GECKO_STATE_KEY) {
-                throw AssertionError("Unknown state key: $key")
-            }
+            val rawState = if (reader.hasNext()) {
+                val key = reader.nextName()
+                if (key != GECKO_STATE_KEY) {
+                    throw AssertionError("Unknown state key: $key")
+                }
 
-            val rawState = reader.nextString()
+                reader.nextString()
+            } else {
+                null
+            }
 
             reader.endObject()
 
             GeckoEngineSessionState(
-                GeckoSession.SessionState.fromString(rawState)
+                rawState?.let { GeckoSession.SessionState.fromString(it) }
             )
         } catch (e: IOException) {
             GeckoEngineSessionState(null)
