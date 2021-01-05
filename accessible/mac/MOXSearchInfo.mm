@@ -135,6 +135,9 @@ using namespace mozilla::a11y;
   nsString searchText;
   nsCocoaUtils::GetStringForNSString(mSearchText, searchText);
 
+  __block DocAccessibleParent* ipcDoc = nullptr;
+  __block nsTArray<uint64_t> accIds;
+
   [matches enumerateObjectsUsingBlock:^(mozAccessible* match, NSUInteger idx,
                                         BOOL* stop) {
     AccessibleOrProxy geckoAcc = [match geckoAccessible];
@@ -175,9 +178,45 @@ using namespace mozilla::a11y;
           }
         }
       }
+
+      return;
     }
 
-    // XXX: Proxy implementation in next patch.
+    ProxyAccessible* proxy = geckoAcc.AsProxy();
+    if (ipcDoc &&
+        ((ipcDoc != proxy->Document()) || (idx + 1 == [matches count]))) {
+      // If the ipcDoc doesn't match the current proxy's doc, we crossed into a
+      // new document. ..or this is the last match. Apply the filter on the list
+      // of the current ipcDoc.
+      nsTArray<uint64_t> matchIds;
+      Unused << ipcDoc->GetPlatformExtension()->SendApplyPostSearchFilter(
+          accIds, mResultLimit, EWhichPostFilter::eContainsText, searchText,
+          &matchIds);
+      for (size_t i = 0; i < matchIds.Length(); i++) {
+        if (ProxyAccessible* postMatch =
+                ipcDoc->GetAccessible(matchIds.ElementAt(i))) {
+          if (mozAccessible* nativePostMatch =
+                  GetNativeFromGeckoAccessible(postMatch)) {
+            [postMatches addObject:nativePostMatch];
+            if (mResultLimit > 0 &&
+                [postMatches count] >= static_cast<NSUInteger>(mResultLimit)) {
+              // If we reached the result limit, alter the `stop` pointer to YES
+              // to stop iteration.
+              *stop = YES;
+              return;
+            }
+          }
+        }
+      }
+
+      ipcDoc = nullptr;
+      accIds.Clear();
+    }
+
+    if (!ipcDoc) {
+      ipcDoc = proxy->Document();
+    }
+    accIds.AppendElement(proxy->ID());
   }];
 
   return postMatches;
