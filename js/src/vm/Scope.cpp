@@ -1953,7 +1953,7 @@ JS::ubi::Node::Size JS::ubi::Concrete<Scope>::size(
 /* static */
 bool ScopeStencil::createForFunctionScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo,
-    ParserFunctionScopeData* data, bool hasParameterExprs,
+    FunctionScope::ParserData* data, bool hasParameterExprs,
     bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
@@ -1994,7 +1994,7 @@ bool ScopeStencil::createForFunctionScope(
 /* static */
 bool ScopeStencil::createForLexicalScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
-    ParserLexicalScopeData* data, uint32_t firstFrameSlot,
+    LexicalScope::ParserData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
@@ -2027,7 +2027,7 @@ bool ScopeStencil::createForLexicalScope(
 
 bool ScopeStencil::createForVarScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
-    ParserVarScopeData* data, uint32_t firstFrameSlot, bool needsEnvironment,
+    VarScope::ParserData* data, uint32_t firstFrameSlot, bool needsEnvironment,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
@@ -2061,7 +2061,7 @@ bool ScopeStencil::createForVarScope(
 /* static */
 bool ScopeStencil::createForGlobalScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
-    ParserGlobalScopeData* data, ScopeIndex* index) {
+    GlobalScope::ParserData* data, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
     MarkParserScopeData<GlobalScope>(cx, data, stencil);
@@ -2097,7 +2097,7 @@ bool ScopeStencil::createForGlobalScope(
 /* static */
 bool ScopeStencil::createForEvalScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
-    ParserEvalScopeData* data, mozilla::Maybe<ScopeIndex> enclosing,
+    EvalScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
     ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
@@ -2132,7 +2132,7 @@ bool ScopeStencil::createForEvalScope(
 /* static */
 bool ScopeStencil::createForModuleScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo,
-    ParserModuleScopeData* data, mozilla::Maybe<ScopeIndex> enclosing,
+    ModuleScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
     ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {

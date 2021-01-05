@@ -441,7 +441,7 @@ class MOZ_STACK_CLASS SwitchEmitter {
 
   // `bindings` is a lexical scope for the entire switch, in case there's
   // let/const effectively directly under case or default blocks.
-  MOZ_MUST_USE bool emitLexical(ParserLexicalScopeData* bindings);
+  MOZ_MUST_USE bool emitLexical(LexicalScope::ParserData* bindings);
 
   MOZ_MUST_USE bool emitCond();
   MOZ_MUST_USE bool emitTable(const TableGenerator& tableGen);
