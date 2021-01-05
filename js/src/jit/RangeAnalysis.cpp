@@ -3085,6 +3085,34 @@ static void AdjustTruncatedInputs(TempAllocator& alloc,
   }
 }
 
+bool RangeAnalysis::canTruncate(MDefinition* def, TruncateKind kind) const {
+  if (kind == TruncateKind::NoTruncate) {
+    return false;
+  }
+
+  // Range Analysis is sometimes eager to do optimizations, even if we
+  // are not able to truncate an instruction. In such case, we
+  // speculatively compile the instruction to an int32 instruction
+  // while adding a guard. This is what is implied by
+  // TruncateAfterBailout.
+  //
+  // If a previous compilation was invalidated because a speculative
+  // truncation bailed out, we no longer attempt to make this kind of
+  // eager optimization.
+  if (mir->outerInfo().hadEagerTruncationBailout()) {
+    if (kind == TruncateKind::TruncateAfterBailouts) {
+      return false;
+    }
+    for (uint32_t i = 0; i < def->numOperands(); i++) {
+      if (def->operandTruncateKind(i) <= TruncateKind::TruncateAfterBailouts) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 // Iterate backward on all instruction and attempt to truncate operations for
 // each instruction which respect the following list of predicates: Has been
 // analyzed by range analysis, the range has no rounding errors, all uses cases
@@ -3141,26 +3169,9 @@ bool RangeAnalysis::truncate() {
 
       bool shouldClone = false;
       TruncateKind kind = ComputeTruncateKind(*iter, &shouldClone);
-      if (kind == TruncateKind::NoTruncate) {
-        continue;
-      }
-
-      // Range Analysis is sometimes eager to do optimizations, even if we
-      // are not be able to truncate an instruction. In such case, we
-      // speculatively compile the instruction to an int32 instruction
-      // while adding a guard. This is what is implied by
-      // TruncateAfterBailout.
-      //
-      // If we already experienced an overflow bailout while executing
-      // code within the current JSScript, we no longer attempt to make
-      // this kind of eager optimizations.
-      if (kind <= TruncateKind::TruncateAfterBailouts &&
-          mir->outerInfo().hadEagerTruncationBailout()) {
-        continue;
-      }
 
       // Truncate this instruction if possible.
-      if (!iter->needTruncation(kind)) {
+      if (!canTruncate(*iter, kind) || !iter->needTruncation(kind)) {
         continue;
       }
 
@@ -3186,12 +3197,10 @@ bool RangeAnalysis::truncate() {
          iter != end; ++iter) {
       bool shouldClone = false;
       TruncateKind kind = ComputeTruncateKind(*iter, &shouldClone);
-      if (kind == TruncateKind::NoTruncate) {
-        continue;
-      }
 
       // Truncate this phi if possible.
-      if (shouldClone || !iter->needTruncation(kind)) {
+      if (shouldClone || !canTruncate(*iter, kind) ||
+          !iter->needTruncation(kind)) {
         continue;
       }
 

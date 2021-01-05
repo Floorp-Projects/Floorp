@@ -38,6 +38,8 @@ class MIRGraph;
 class MPhi;
 class MTest;
 
+enum class TruncateKind;
+
 // An upper bound computed on the number of backedges a loop will take.
 // This count only includes backedges taken while running Ion code: for OSR
 // loops, this will exclude iterations that executed in the interpreter or in
@@ -122,6 +124,8 @@ class RangeAnalysis {
   [[nodiscard]] bool tryRemovingGuards();
   [[nodiscard]] bool truncate();
   [[nodiscard]] bool removeUnnecessaryBitops();
+
+  bool canTruncate(MDefinition* def, TruncateKind kind) const;
 
   // Any iteration bounds discovered for loops in the graph.
   LoopIterationBoundVector loopIterationBounds;
