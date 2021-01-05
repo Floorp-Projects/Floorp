@@ -21,7 +21,6 @@ DIRS += [
     "chrome",
     "components",
     "modules",
-    "themes/core",
     "themes/geckoview",
     "geckoview/src/androidTest/assets",
     "app",
