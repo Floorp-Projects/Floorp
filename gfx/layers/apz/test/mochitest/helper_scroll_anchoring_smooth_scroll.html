@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width, minimum-scale=1.0">
 <title>Tests scroll anchoring interaction with smooth visual scrolling.</title>
 <script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
 <script src="/tests/SimpleTest/paint_listener.js"></script>
 <style>
   body { margin: 0 }
@@ -16,7 +17,7 @@
   const utils = SpecialPowers.DOMWindowUtils;
   const targetElement = document.getElementById("target");
 
-  function* test(testDriver) {
+  async function test() {
     const destY = window.scrollMaxY;
     ok(destY > 0, "Should have some scroll range");
 
@@ -27,7 +28,7 @@
 
     // Register a TransformEnd observer so we can tell when the smooth scroll
     // animation stops.
-    SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
+    let transformEndPromise = promiseTransformEnd();
 
     // Trigger smooth scrolling, and quickly insert an element which takes
     // space into the DOM.
@@ -38,15 +39,16 @@
     targetElement.appendChild(document.createElement("div"));
 
     // Wait for the TransformEnd.
-    yield true;
-    SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+    await transformEndPromise;
 
     // Give scroll offsets a chance to sync.
-    yield waitForApzFlushedRepaints(testDriver);
+    await promiseApzFlushedRepaints();
 
     // Check that the async smooth scroll finished.
     is(window.scrollY, 0, "Should've completed the smooth scroll without getting interrupted by scroll anchoring");
   }
 
-  waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
 </script>
