@@ -127,12 +127,6 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     CSPCONTEXTLOG((">>>>                      aContentType: %d", aContentType));
   }
 
-  // We have to convert the internal policytype ot the external policy type
-  // before moving on. We still need to know if this is a worker so child-src
-  // can handle that case correctly.
-  aContentType =
-      nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(aContentType);
-
   // This ShouldLoad function is called from nsCSPService::ShouldLoad,
   // which already checked a number of things, including:
   // * aContentLocation is not null; we can consume this without further checks
