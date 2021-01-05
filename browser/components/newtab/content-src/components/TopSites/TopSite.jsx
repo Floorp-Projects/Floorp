@@ -144,23 +144,36 @@ export class TopSiteLink extends React.PureComponent {
     }
   }
 
-  render() {
-    const {
-      children,
-      className,
-      defaultStyle,
-      isDraggable,
-      link,
-      onClick,
-      title,
-    } = this.props;
-    const topSiteOuterClassName = `top-site-outer${
-      className ? ` ${className}` : ""
-    }${link.isDragged ? " dragged" : ""}${
-      link.searchTopSite ? " search-shortcut" : ""
-    }`;
+  /*
+   * Takes the url as a string, runs it through a simple (non-secure) hash turning it into a random number
+   * Apply that random number to the color array. The same url will always generate the same color.
+   */
+  generateColor() {
+    let { title, colors } = this.props;
+    if (!colors) {
+      return "";
+    }
+
+    let colorArray = colors.split(",");
+
+    const hashStr = str => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        let charCode = str.charCodeAt(i);
+        hash += charCode;
+      }
+      return hash;
+    };
+
+    let hash = hashStr(title);
+    let index = hash % colorArray.length;
+    return colorArray[index];
+  }
+
+  calculateStyle() {
+    const { defaultStyle, link, newNewtabExperienceEnabled } = this.props;
+
     const { tippyTopIcon, faviconSize } = link;
-    const [letterFallback] = title;
     let imageClassName;
     let imageStyle;
     let showSmallFavicon = false;
@@ -168,9 +181,14 @@ export class TopSiteLink extends React.PureComponent {
     let smallFaviconFallback;
     let hasScreenshotImage =
       this.state.screenshotImage && this.state.screenshotImage.url;
+    let selectedColor;
+
     if (defaultStyle) {
       // force no styles (letter fallback) even if the link has imagery
       smallFaviconFallback = false;
+      if (newNewtabExperienceEnabled) {
+        selectedColor = this.generateColor();
+      }
     } else if (link.searchTopSite) {
       imageClassName = "top-site-icon rich-icon";
       imageStyle = {
@@ -207,11 +225,13 @@ export class TopSiteLink extends React.PureComponent {
           ? `url(${this.state.screenshotImage.url})`
           : "none",
       };
-
       // only show a favicon in top left if it's greater than 16x16
       if (faviconSize >= MIN_CORNER_FAVICON_SIZE) {
         showSmallFavicon = true;
         smallFaviconStyle = { backgroundImage: `url(${link.favicon})` };
+      } else if (newNewtabExperienceEnabled) {
+        selectedColor = this.generateColor();
+        imageClassName = "";
       } else if (hasScreenshotImage) {
         // Don't show a small favicon if there is no screenshot, because that
         // would result in two fallback icons
@@ -219,6 +239,42 @@ export class TopSiteLink extends React.PureComponent {
         smallFaviconFallback = true;
       }
     }
+
+    return {
+      showSmallFavicon,
+      smallFaviconFallback,
+      smallFaviconStyle,
+      imageStyle,
+      imageClassName,
+      selectedColor,
+    };
+  }
+
+  render() {
+    const {
+      children,
+      className,
+      isDraggable,
+      link,
+      onClick,
+      title,
+      newNewtabExperienceEnabled,
+    } = this.props;
+    const topSiteOuterClassName = `top-site-outer${
+      className ? ` ${className}` : ""
+    }${link.isDragged ? " dragged" : ""}${
+      link.searchTopSite ? " search-shortcut" : ""
+    }`;
+    const [letterFallback] = title;
+    const {
+      showSmallFavicon,
+      smallFaviconFallback,
+      smallFaviconStyle,
+      imageStyle,
+      imageClassName,
+      selectedColor,
+    } = this.calculateStyle();
+
     let draggableProps = {};
     if (isDraggable) {
       draggableProps = {
@@ -228,6 +284,7 @@ export class TopSiteLink extends React.PureComponent {
         onMouseDown: this.onDragEvent,
       };
     }
+
     return (
       <li
         className={topSiteOuterClassName}
@@ -248,23 +305,51 @@ export class TopSiteLink extends React.PureComponent {
             onClick={onClick}
             draggable={true}
           >
-            <div
-              className="tile"
-              aria-hidden={true}
-              data-fallback={letterFallback}
-            >
-              <div className={imageClassName} style={imageStyle} />
-              {link.searchTopSite && (
-                <div className="top-site-icon search-topsite" />
-              )}
-              {showSmallFavicon && (
+            {(newNewtabExperienceEnabled && (
+              <div className="tile" aria-hidden={true}>
                 <div
-                  className="top-site-icon default-icon"
-                  data-fallback={smallFaviconFallback && letterFallback}
-                  style={smallFaviconStyle}
-                />
-              )}
-            </div>
+                  className={
+                    selectedColor
+                      ? "icon-wrapper letter-fallback"
+                      : "icon-wrapper"
+                  }
+                  data-fallback={letterFallback}
+                  style={
+                    selectedColor ? { backgroundColor: selectedColor } : {}
+                  }
+                >
+                  <div className={imageClassName} style={imageStyle} />
+                  {showSmallFavicon && (
+                    <div
+                      className="top-site-icon default-icon"
+                      data-fallback={smallFaviconFallback && letterFallback}
+                      style={smallFaviconStyle}
+                    />
+                  )}
+                </div>
+                {link.searchTopSite && (
+                  <div className="top-site-icon search-topsite" />
+                )}
+              </div>
+            )) || (
+              <div
+                className="tile"
+                aria-hidden={true}
+                data-fallback={letterFallback}
+              >
+                <div className={imageClassName} style={imageStyle} />
+                {link.searchTopSite && (
+                  <div className="top-site-icon search-topsite" />
+                )}
+                {showSmallFavicon && (
+                  <div
+                    className="top-site-icon default-icon"
+                    data-fallback={smallFaviconFallback && letterFallback}
+                    style={smallFaviconStyle}
+                  />
+                )}
+              </div>
+            )}
             <div
               className={`title${link.isPinned ? " has-icon pinned" : ""}${
                 link.type === SPOC_TYPE || link.sponsored_position
@@ -272,12 +357,25 @@ export class TopSiteLink extends React.PureComponent {
                   : ""
               }`}
             >
-              {link.isPinned && <div className="icon icon-pin-small" />}
-              <span dir="auto">{title || <br />}</span>
-              <span
-                className="sponsored-label"
-                data-l10n-id="newtab-topsite-sponsored"
-              />
+              {(newNewtabExperienceEnabled && (
+                <span dir="auto">
+                  {link.isPinned && <div className="icon icon-pin-small" />}
+                  {title || <br />}
+                  <span
+                    className="sponsored-label"
+                    data-l10n-id="newtab-topsite-sponsored"
+                  />
+                </span>
+              )) || (
+                <div>
+                  {link.isPinned && <div className="icon icon-pin-small" />}
+                  <span dir="auto">{title || <br />}</span>
+                  <span
+                    className="sponsored-label"
+                    data-l10n-id="newtab-topsite-sponsored"
+                  />
+                </div>
+              )}
             </div>
           </a>
           {children}
@@ -672,6 +770,7 @@ export class TopSiteList extends React.PureComponent {
     const commonProps = {
       onDragEvent: this.onDragEvent,
       dispatch: props.dispatch,
+      newNewtabExperienceEnabled: props.newNewtabExperienceEnabled,
     };
     // We assign a key to each placeholder slot. We need it to be independent
     // of the slot index (i below) so that the keys used stay the same during
@@ -706,6 +805,7 @@ export class TopSiteList extends React.PureComponent {
             onActivate={this.onActivate}
             {...slotProps}
             {...commonProps}
+            colors={props.colors}
           />
         )
       );

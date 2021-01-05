@@ -11,6 +11,8 @@
 $border-primary: 1px solid var(--newtab-border-primary-color);
 $border-secondary: 1px solid var(--newtab-border-secondary-color);
 $inner-box-shadow: 0 0 0 1px var(--newtab-inner-box-shadow-color);
+$inner-box-shadow-nte: 0 3px 8px var(--newtab-inner-box-shadow-color-nte);
+$tile-shadow-second: 0 0 2px var(--newtab-tile-shadow-secondary);
 $input-border: 1px solid var(--newtab-textbox-border);
 $input-border-active: 1px solid var(--newtab-textbox-focus-color);
 $input-error-border: 1px solid $red-60;
@@ -31,6 +33,9 @@ body {
   --newtab-icon-secondary-color: #{$grey-90-60};
   --newtab-icon-tertiary-color: #{$grey-30};
   --newtab-inner-box-shadow-color: #{$black-10};
+  --newtab-inner-box-shadow-color-nte: #{$newtab-card-firstshadow};
+  --newtab-tile-shadow-secondary: #{$newtab-tile-shadow-secondary};
+
   --newtab-link-primary-color: #{$blue-60};
   --newtab-link-secondary-color: #{$teal-70};
   --newtab-text-conditional-color: #{$grey-60};
@@ -82,6 +87,7 @@ body {
   --newtab-topsites-background-color: #{$white};
   --newtab-topsites-icon-shadow: inset #{$inner-box-shadow};
   --newtab-topsites-label-color: inherit;
+  --newtab-topsites-outer-card-hover: #{$newtab-card-hover-color};
 
   // Cards
   --newtab-card-active-outline-color: #{$grey-30};
@@ -125,6 +131,8 @@ body {
     --newtab-icon-secondary-color: #{$grey-10-40};
     --newtab-icon-tertiary-color: #{$grey-10-40};
     --newtab-inner-box-shadow-color: #{$grey-10-20};
+    --newtab-inner-box-shadow-color-nte: #{$newtab-card-darktheme-firstshadow};
+    --newtab-tile-shadow-secondary: #{$newtab-tile-darktheme-shadow-secondary};
     --newtab-link-primary-color: #{$blue-40};
     --newtab-link-secondary-color: #{$pocket-teal};
     --newtab-text-conditional-color: #{$grey-10};
@@ -172,6 +180,7 @@ body {
     --newtab-topsites-background-color: #{$grey-70};
     --newtab-topsites-icon-shadow: none;
     --newtab-topsites-label-color: #{$grey-10-80};
+    --newtab-topsites-outer-card-hover: #{$newtab-card-darktheme-hover-color};
 
     // Cards
     --newtab-card-active-outline-color: #{$grey-60};

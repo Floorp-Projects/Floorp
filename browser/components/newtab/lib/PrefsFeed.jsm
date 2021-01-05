@@ -216,6 +216,7 @@ this.PrefsFeed = class PrefsFeed {
     this._setIntPref(values, "discoverystream.personalization.version", 1);
     this._setIntPref(values, "discoverystream.personalization.overrideVersion");
     this._setStringPref(values, "discoverystream.spocs-endpoint", "");
+    this._setStringPref(values, "newNewtabExperience.colors", "");
 
     // Set the initial state of all prefs in redux
     this.store.dispatch(
