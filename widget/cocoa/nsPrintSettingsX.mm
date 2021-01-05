@@ -194,7 +194,7 @@ NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
   NSPrintInfo* printInfo = [[NSPrintInfo sharedPrintInfo] copy];
 
   NSSize paperSize;
-  if (mOrientation == kPortraitOrientation) {
+  if (GetSheetOrientation() == kPortraitOrientation) {
     [printInfo setOrientation:NSPaperOrientationPortrait];
     paperSize.width = CocoaPointsFromPaperSize(mPaperWidth);
     paperSize.height = CocoaPointsFromPaperSize(mPaperHeight);
@@ -309,7 +309,16 @@ NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
 
 void nsPrintSettingsX::SetPageFormatFromPrintInfo(const NSPrintInfo* aPrintInfo) {
   NSSize paperSize = [aPrintInfo paperSize];
-  if ([aPrintInfo orientation] == NSPaperOrientationPortrait) {
+  const bool areSheetsOfPaperPortraitMode =
+      ([aPrintInfo orientation] == NSPaperOrientationPortrait);
+
+  // If our MacOS print settings say that we're producing portrait-mode sheets
+  // of paper, then our page format must also be portrait-mode; unless we've
+  // got a pages-per-sheet value with orthogonal pages/sheets, in which case
+  // it's reversed.
+  const bool arePagesPortraitMode = (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
+
+  if (arePagesPortraitMode) {
     mOrientation = nsIPrintSettings::kPortraitOrientation;
     SetPaperWidth(PaperSizeFromCocoaPoints(paperSize.width));
     SetPaperHeight(PaperSizeFromCocoaPoints(paperSize.height));

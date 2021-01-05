@@ -670,6 +670,7 @@ add_task(
       0,
       "Should have removed the notification"
     );
+    await SpecialPowers.popPrefEnv();
   }
 );
 
@@ -1069,4 +1070,65 @@ add_task(async function test_heartbeat_tactic_2() {
   document.getElementById("contextual-feature-recommendation").click();
 
   await newTabPromise;
+});
+
+add_task(async function test_cfr_tracking_protection_fingerprint_doorhanger() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.asrouter.providers.cfr",
+        `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","updateCycleInMs":0}`,
+      ],
+    ],
+  });
+
+  // addRecommendation checks that scheme starts with http and host matches
+  let browser = gBrowser.selectedBrowser;
+  BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  const showPanel = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+
+  Services.obs.notifyObservers(
+    {
+      wrappedJSObject: {
+        // Combination of multiple content blocking events
+        // https://searchfox.org/mozilla-central/rev/2fcab997046ba9e068c5391dc7d8848e121d84f8/uriloader/base/nsIWebProgressListener.idl#340
+        event: 538091584,
+        host: "example.com",
+        browser,
+      },
+    },
+    "SiteProtection:ContentBlockingEvent"
+  );
+
+  await showPanel;
+
+  const notification = document.getElementById(
+    "contextual-feature-recommendation-notification"
+  );
+
+  checkCFRSocialTrackingProtection(notification);
+
+  Assert.ok(notification.secondaryButton);
+  let hidePanel = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popuphidden"
+  );
+
+  document
+    .getElementById("contextual-feature-recommendation-notification")
+    .secondaryButton.click();
+  await hidePanel;
+  Assert.equal(
+    PopupNotifications._currentNotifications.length,
+    0,
+    "Should have removed the notification"
+  );
+  // Secondary button will block the message, we need to undo
+  await ASRouter.unblockMessageById("FINGERPRINTERS_PROTECTION");
+  await SpecialPowers.popPrefEnv();
 });

@@ -277,7 +277,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
     mPrintSettings->GetToFileName(filename);
 
     double width, height;
-    mPrintSettings->GetEffectivePageSize(&width, &height);
+    mPrintSettings->GetEffectiveSheetSize(&width, &height);
     if (width <= 0 || height <= 0) {
       return nullptr;
     }

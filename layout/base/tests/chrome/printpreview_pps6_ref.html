@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!-- This is a reference case for a "6-pages-per-sheet" scenario. This file is
+     a mockup of a sheet with 6 pages, with the pages all having a 0.4x scale
+     scale factor applied. -->
+<style>
+html { height: 100%; }
+body {
+  height: 100%;
+  margin: 0;
+  box-sizing: border-box;
+
+  /* The testcase (rendered at 6-pages-per-sheet) will have 0.2in of extra
+     space in the horizontal axis, which will be distributed equally with
+     0.1in to the left and right of the page grid. We mock that up as padding
+     here: */
+  padding: 0 0.1in;
+
+  /* We lay out the body as a column-oriented flex container (whose children,
+     in turn, are rows). */
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  /* Give each row an equal share of the available height: */
+  flex: 1;
+
+  /* ...and render them as row-oriented (by default) flex containers: */
+  display: flex;
+}
+
+.swatch {
+  box-sizing: border-box;
+
+  /* This represents the 120px border in the testcase, scaled down 0.4x: */
+  border: 48px solid;
+
+  /* Share the width equally among the swatches. (The height will be
+     automatically set to the flex container's row height, via default
+     'align-self' behavior.) */
+  flex: 1;
+}
+.row:nth-child(1) > .swatch:nth-child(1) { border-color: cyan; }
+.row:nth-child(1) > .swatch:nth-child(2) { border-color: yellow; }
+.row:nth-child(2) > .swatch:nth-child(1) { border-color: pink; }
+.row:nth-child(2) > .swatch:nth-child(2) { border-color: orange; }
+.row:nth-child(3) > .swatch:nth-child(1) { border-color: purple; }
+.row:nth-child(3) > .swatch:nth-child(2) { border-color: olive; }
+</style>
+<div class="row">
+  <div class="swatch"></div>
+  <div class="swatch"></div>
+</div>
+<div class="row">
+  <div class="swatch"></div>
+  <div class="swatch"></div>
+</div>
+<div class="row">
+  <div class="swatch"></div>
+  <div class="swatch"></div>
+</div>

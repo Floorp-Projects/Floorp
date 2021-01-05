@@ -14,7 +14,6 @@
 //
 //  For tests that need duplicate copies of headers to be sent, see
 //  test_duplicate_headers.js
-/* global globalThis */
 
 "use strict";
 

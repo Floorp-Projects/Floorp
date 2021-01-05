@@ -3,7 +3,6 @@
 
 "use strict";
 
-/* global globalThis */
 console.log("[WORKER] started", globalThis.location.toString(), globalThis);
 
 globalThis.onmessage = function(e) {

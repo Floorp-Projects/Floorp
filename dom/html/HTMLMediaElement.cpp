@@ -2629,6 +2629,16 @@ void HTMLMediaElement::NotifyLoadError(const nsACString& aErrorDetails) {
   }
 }
 
+void HTMLMediaElement::NotifyMediaTrackAdded(dom::MediaTrack* aTrack) {
+  // The set of tracks changed.
+  mWatchManager.ManualNotify(&HTMLMediaElement::UpdateOutputTrackSources);
+}
+
+void HTMLMediaElement::NotifyMediaTrackRemoved(dom::MediaTrack* aTrack) {
+  // The set of tracks changed.
+  mWatchManager.ManualNotify(&HTMLMediaElement::UpdateOutputTrackSources);
+}
+
 void HTMLMediaElement::NotifyMediaTrackEnabled(dom::MediaTrack* aTrack) {
   MOZ_ASSERT(aTrack);
   if (!aTrack) {
@@ -3560,7 +3570,15 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
   }
 
   if (mDecoder) {
-    mDecoder->SetOutputCaptured(mTracksCaptured.Ref());
+    if (!mTracksCaptured.Ref()) {
+      mDecoder->SetOutputCaptureState(MediaDecoder::OutputCaptureState::None);
+    } else if (!AudioTracks() || !VideoTracks() || !shouldHaveTrackSources) {
+      // We've been unlinked, or tracks are not yet known.
+      mDecoder->SetOutputCaptureState(MediaDecoder::OutputCaptureState::Halt);
+    } else {
+      mDecoder->SetOutputCaptureState(MediaDecoder::OutputCaptureState::Capture,
+                                      mTracksCaptured.Ref().get());
+    }
   }
 
   // Start with all MediaTracks
