@@ -1751,6 +1751,13 @@
   mirror: always
 #endif
 
+# Whether .offset{X,Y} for events targeted at SVG nodes returns bounds relative
+# to the outer SVG.
+- name: dom.events.offset-in-svg-relative-to-svg-root
+  type: bool
+  value: true
+  mirror: always
+
 # Enable clipboard readText() and writeText() by default
 - name: dom.events.asyncClipboard
   type: bool

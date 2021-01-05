@@ -26,6 +26,9 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/SVGUtils.h"
+#include "mozilla/SVGOuterSVGFrame.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
@@ -622,20 +625,30 @@ CSSIntPoint Event::GetOffsetCoords(nsPresContext* aPresContext,
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->mTarget);
   if (!content || !aPresContext) {
-    return CSSIntPoint(0, 0);
+    return CSSIntPoint();
   }
   RefPtr<PresShell> presShell = aPresContext->GetPresShell();
   if (!presShell) {
-    return CSSIntPoint(0, 0);
+    return CSSIntPoint();
   }
   presShell->FlushPendingNotifications(FlushType::Layout);
   nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame) {
-    return CSSIntPoint(0, 0);
+    return CSSIntPoint();
+  }
+  // For compat, see https://github.com/w3c/csswg-drafts/issues/1508. In SVG we
+  // just return the coordinates of the outer SVG box. This is all kinda
+  // unfortunate.
+  if (frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) &&
+      StaticPrefs::dom_events_offset_in_svg_relative_to_svg_root()) {
+    frame = SVGUtils::GetOuterSVGFrame(frame);
+    if (!frame) {
+      return CSSIntPoint();
+    }
   }
   nsIFrame* rootFrame = presShell->GetRootFrame();
   if (!rootFrame) {
-    return CSSIntPoint(0, 0);
+    return CSSIntPoint();
   }
   CSSIntPoint clientCoords =
       GetClientCoords(aPresContext, aEvent, aPoint, aDefaultPoint);
@@ -645,7 +658,7 @@ CSSIntPoint Event::GetOffsetCoords(nsPresContext* aPresContext,
     pt -= frame->GetPaddingRectRelativeToSelf().TopLeft();
     return CSSPixel::FromAppUnitsRounded(pt);
   }
-  return CSSIntPoint(0, 0);
+  return CSSIntPoint();
 }
 
 // To be called ONLY by Event::GetType (which has the additional
