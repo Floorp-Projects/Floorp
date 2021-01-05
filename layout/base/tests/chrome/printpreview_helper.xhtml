@@ -718,8 +718,13 @@ async function runTest29() {
 // rendering -- it's just a hack to ensure that the URIs themselves are
 // different, so that compareFiles() sees the two URIs as different and gets
 // the "load" notification that it depends on after switching between them.
+// We also include numPages in the tested URL/content here, so that if we get
+// a test-failure, it's easy to figure out which call to this function had the
+// failure.
 async function checkTrivialPagesPerSheetValue(numPages) {
-  await compareFiles("data:text/html,Page", "data:text/html,<body>Page", {
+    let stringToDisplay = "TrivialPagesPerSheetVal" + numPages;
+    await compareFiles("data:text/html," + stringToDisplay,
+                       "data:text/html,<body>" + stringToDisplay, {
     test: {
       settings: {
         numPagesPerSheet: numPages,
@@ -735,12 +740,6 @@ async function runTest30() {
   await checkTrivialPagesPerSheetValue(-5);
   await checkTrivialPagesPerSheetValue(7);
   await checkTrivialPagesPerSheetValue(500);
-
-  // XXXdholbert These ones are unsupported (& treated as 1) for now, but we
-  // intend to support them in bug 1669905. After that, we'll want to give them
-  // real tiling tests like we have for the other supported values.
-  await checkTrivialPagesPerSheetValue(2);
-  await checkTrivialPagesPerSheetValue(6);
 
   requestAnimationFrame(() => setTimeout(runTest31));
 }
@@ -782,8 +781,11 @@ async function checkSupportedPagesPerSheetValue(src1, src2, numPages, fuzz) {
   });
 }
 
-// Pages-per-sheet: supported values (4, 9, 16)
-// And eventually 2 and 6, per bug 1669905.
+// Pages-per-sheet: test the supported values.
+// First we test the perfect-square values: 4, 9, 16.
+// Then we test the other values, 2 and 6. (They require some extra bespoke
+// configuration to mock up their page-rotation, so their runTest functions are
+// a bit more verbose.)
 async function runTest31() {
   // XXXdholbert On windows, our zero-margin settings aren't reliably respected
   // for some reason; see bug 1680838. For now, we just account for that with a
@@ -820,6 +822,99 @@ async function runTest33() {
   requestAnimationFrame(() => setTimeout(runTest34));
 }
 
+async function runTest34() {
+  let fuzz = navigator.platform.includes("Win") ? // Workaround for bug 1680838
+      { maxDifferent: 44256, maxDifference: 255 } :
+      { maxDifferent: 0, maxDifference: 0 };
+
+  let test = "printpreview_pps2.html";
+  let ref = "printpreview_pps2_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 8,
+        paperHeight: 10,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+        numPagesPerSheet: 2,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 8,
+        paperHeight: 10,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+        orientation: 1, /* Landscape mode */
+      },
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest35));
+}
+
+async function runTest35() {
+  let fuzz = navigator.platform.includes("Win") ? // Workaround for bug 1680838
+      { maxDifferent: 88751, maxDifference: 255 } :
+      { maxDifferent: 0, maxDifference: 0 };
+
+  let test = "printpreview_pps6.html";
+  let ref = "printpreview_pps6_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 6,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+        numPagesPerSheet: 6,
+        orientation: 1, /* Landscape mode */
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 6,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+      },
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest36));
+}
+
 // Testcases for pages-per-sheet with nonzero unwriteable margin values:
 // ---------------------------------------------------------------------
     
@@ -827,7 +922,7 @@ async function runTest33() {
 // "winning", and we have a bit of extra space in the horizontal axis which we
 // distribute equally on either side (see the _ref.html file used below for
 // more details).
-async function runTest34() {
+async function runTest36() {
   let fuzz = navigator.platform.includes("Win") ?
       { maxDifferent: 139464, maxDifference: 255 } :
       { maxDifferent: 0, maxDifference: 0 };
@@ -857,6 +952,7 @@ async function runTest34() {
       settings: {
         paperWidth: 4,
         paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
         marginTop: 0,
         marginRight: 0,
         marginBottom: 0,
@@ -869,14 +965,14 @@ async function runTest34() {
     },
   });
 
-  requestAnimationFrame(() => setTimeout(runTest35));
+  requestAnimationFrame(() => setTimeout(runTest37));
 }
 
 // In this subtest, the horizontal scale-factor is more-severe and hence ends
 // up "winning", and we have a bit of extra space in the vertical axis which we
 // distribute equally on either side (see the _ref.html file used below for
 // more details).
-async function runTest35() {
+async function runTest37() {
   let fuzz = navigator.platform.includes("Win") ?
       { maxDifferent: 151350, maxDifference: 255 } :
       { maxDifferent: 0, maxDifference: 0 };
@@ -918,14 +1014,64 @@ async function runTest35() {
     },
   });
 
-  requestAnimationFrame(() => setTimeout(runTest36));
+  requestAnimationFrame(() => setTimeout(runTest38));
+}
+
+async function runTest38() {
+  let fuzz = navigator.platform.includes("Win") ? // Workaround for bug 1680838
+      { maxDifferent: 117744, maxDifference: 255 } :
+      { maxDifferent: 0, maxDifference: 0 };
+
+  let test = "printpreview_pps_uw2.html";
+  let ref = "printpreview_pps_uw2_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 8,
+        paperHeight: 10,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0.8,
+        unwriteableMarginRight: 0.6,
+        unwriteableMarginBottom: 1.2,
+        unwriteableMarginLeft: 0.4,
+        numPagesPerSheet: 2,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 8,
+        paperHeight: 10,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        /* Note: These are the same values we used for 'test' above, except
+           that here we've rotated the margins counterclockwise through the
+           sides, to account for the fact that we're specifying these margins
+           for a landscape-orientation page here vs. portrait-mode above.*/
+        unwriteableMarginTop: 0.6,
+        unwriteableMarginRight: 1.2,
+        unwriteableMarginBottom: 0.4,
+        unwriteableMarginLeft: 0.8,
+        orientation: 1, /* Landscape mode */
+      },
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest39));
 }
 
 // In this subtest, the vertical unwriteable margins exactly consume the full
 // pageHeight, so we don't have any space available for printing and we just
 // print a blank sheet. (This is mostly a stress test to be sure we don't
 // crash, hang, divide-by-zero, etc. in this edge case.)
-async function runTest36() {
+async function runTest39() {
   let fuzz = navigator.platform.includes("Win") ?
       { maxDifferent: 254, maxDifference: 255 } :
       { maxDifferent: 0, maxDifference: 0 };
@@ -953,14 +1099,14 @@ async function runTest36() {
     },
   });
 
-  requestAnimationFrame(() => setTimeout(runTest37));
+  requestAnimationFrame(() => setTimeout(runTest40));
 }
 
 // In this subtest, the horizontal unwriteable margins consume more than the
 // full pageWidth, so we don't have any space available for printing and we
 // just print a blank sheet. (This is mostly a stress test to be sure we don't
 // crash, hang, divide-by-zero, etc. in this edge case.)
-async function runTest37() {
+async function runTest40() {
   let fuzz = navigator.platform.includes("Win") ?
       { maxDifferent: 172, maxDifference: 255 } :
       { maxDifferent: 0, maxDifference: 0 };
