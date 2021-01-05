@@ -6,18 +6,18 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var subframe = document.getElementById("scroll");
 
   // scroll over the middle of the subframe, and make sure that the page
   // does not scroll.
   var waitForScroll = false; // don't wait for a scroll event, it will never come
-  yield moveMouseAndScrollWheelOver(subframe, 100, 100, testDriver, waitForScroll);
+  await promiseMoveMouseAndScrollWheelOver(subframe, 100, 100, waitForScroll);
   ok(window.scrollY == 0, "overscroll-behavior was respected");
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
