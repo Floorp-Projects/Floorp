@@ -134,7 +134,7 @@ impl DataType {
             RGBA8 => 4,
             BGRA8 => 4,
             Gray8 => 1,
-            GrayA8 => 1,
+            GrayA8 => 2,
         }
     }
 }
