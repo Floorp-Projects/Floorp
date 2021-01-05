@@ -5,7 +5,7 @@
 package org.mozilla.fenix.trackingprotection
 
 import androidx.annotation.StringRes
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
@@ -55,7 +55,7 @@ sealed class TrackingProtectionAction : Action {
  *           accessibly focus after returning from details_moode
  */
 data class TrackingProtectionState(
-    val session: Session?,
+    val tab: SessionState?,
     val url: String,
     val isTrackingProtectionEnabled: Boolean,
     val listTrackers: List<TrackerLog>,

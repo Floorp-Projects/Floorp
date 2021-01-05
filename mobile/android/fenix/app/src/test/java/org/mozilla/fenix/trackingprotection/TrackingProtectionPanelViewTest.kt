@@ -29,7 +29,7 @@ class TrackingProtectionPanelViewTest {
     private lateinit var interactor: TrackingProtectionPanelInteractor
     private lateinit var view: TrackingProtectionPanelView
     private val baseState = TrackingProtectionState(
-        session = null,
+        tab = null,
         url = "",
         isTrackingProtectionEnabled = false,
         listTrackers = emptyList(),

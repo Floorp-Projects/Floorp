@@ -18,8 +18,8 @@ import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.details_blocking_header
-import kotlinx.android.synthetic.main.fragment_tracking_protection_blocking.*
 import kotlinx.android.synthetic.main.switch_with_description.view.*
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -107,7 +107,7 @@ class TrackingProtectionPanelView(
     private fun setUIForNormalMode(state: TrackingProtectionState) {
         details_mode.visibility = View.GONE
         normal_mode.visibility = View.VISIBLE
-        protection_settings.isGone = state.session?.customTabConfig != null
+        protection_settings.isGone = state.tab is CustomTabSessionState
 
         not_blocking_header.isGone = bucketedTrackers.loadedIsEmpty()
         bindUrl(state.url)
