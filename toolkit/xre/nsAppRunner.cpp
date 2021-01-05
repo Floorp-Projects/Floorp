@@ -2239,9 +2239,9 @@ nsresult LaunchChild(bool aBlankCommandLine) {
   PRStatus failed = PR_WaitProcess(process, &exitCode);
   if (failed || exitCode) return NS_ERROR_FAILURE;
 #      endif  // XP_UNIX
-#    endif  // WP_WIN
-#  endif  // WP_MACOSX
-#endif  // MOZ_WIDGET_ANDROID
+#    endif    // WP_WIN
+#  endif      // WP_MACOSX
+#endif        // MOZ_WIDGET_ANDROID
 
   return NS_ERROR_LAUNCHED_CHILD_PROCESS;
 }
@@ -4186,7 +4186,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     }
   }
 #  endif /* DEBUG */
-#endif /* FUZZING */
+#endif   /* FUZZING */
 
 #if defined(XP_WIN)
   // Enable the HeapEnableTerminationOnCorruption exploit mitigation. We ignore
@@ -4714,425 +4714,434 @@ nsresult XREMain::XRE_mainRun() {
   nsresult rv = NS_OK;
   NS_ASSERTION(mScopedXPCOM, "Scoped xpcom not initialized.");
 
+  // We need the appStartup pointer to span multiple scopes, so we declare
+  // it here.
+  nsCOMPtr<nsIAppStartup> appStartup;
+  {
 #if defined(XP_WIN)
-  RefPtr<mozilla::DllServices> dllServices(mozilla::DllServices::Get());
-  dllServices->StartUntrustedModulesProcessor();
-  auto dllServicesDisable =
-      MakeScopeExit([&dllServices]() { dllServices->DisableFull(); });
+    RefPtr<mozilla::DllServices> dllServices(mozilla::DllServices::Get());
+    dllServices->StartUntrustedModulesProcessor();
+    auto dllServicesDisable =
+        MakeScopeExit([&dllServices]() { dllServices->DisableFull(); });
 
 #  if defined(MOZ_GECKO_PROFILER)
-  mozilla::mscom::InitProfilerMarkers();
+    mozilla::mscom::InitProfilerMarkers();
 #  endif  // defined(MOZ_GECKO_PROFILER)
-#endif  // defined(XP_WIN)
+#endif    // defined(XP_WIN)
 
-  rv = mScopedXPCOM->SetWindowCreator(mNativeApp);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    rv = mScopedXPCOM->SetWindowCreator(mNativeApp);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-  // tell the crash reporter to also send the release channel
-  nsCOMPtr<nsIPrefService> prefs =
-      do_GetService("@mozilla.org/preferences-service;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPrefBranch> defaultPrefBranch;
-    rv = prefs->GetDefaultBranch(nullptr, getter_AddRefs(defaultPrefBranch));
-
+    // tell the crash reporter to also send the release channel
+    nsCOMPtr<nsIPrefService> prefs =
+        do_GetService("@mozilla.org/preferences-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
-      nsAutoCString sval;
-      rv = defaultPrefBranch->GetCharPref("app.update.channel", sval);
+      nsCOMPtr<nsIPrefBranch> defaultPrefBranch;
+      rv = prefs->GetDefaultBranch(nullptr, getter_AddRefs(defaultPrefBranch));
+
       if (NS_SUCCEEDED(rv)) {
-        CrashReporter::AnnotateCrashReport(
-            CrashReporter::Annotation::ReleaseChannel, sval);
+        nsAutoCString sval;
+        rv = defaultPrefBranch->GetCharPref("app.update.channel", sval);
+        if (NS_SUCCEEDED(rv)) {
+          CrashReporter::AnnotateCrashReport(
+              CrashReporter::Annotation::ReleaseChannel, sval);
+        }
       }
     }
-  }
-  // Needs to be set after xpcom initialization.
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::FramePoisonBase,
-      nsPrintfCString("%.16" PRIu64, uint64_t(gMozillaPoisonBase)));
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::FramePoisonSize,
-                                     uint32_t(gMozillaPoisonSize));
+    // Needs to be set after xpcom initialization.
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::FramePoisonBase,
+        nsPrintfCString("%.16" PRIu64, uint64_t(gMozillaPoisonBase)));
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::FramePoisonSize,
+        uint32_t(gMozillaPoisonSize));
 
-  bool includeContextHeap =
-      Preferences::GetBool("toolkit.crashreporter.include_context_heap", false);
-  CrashReporter::SetIncludeContextHeap(includeContextHeap);
+    bool includeContextHeap = Preferences::GetBool(
+        "toolkit.crashreporter.include_context_heap", false);
+    CrashReporter::SetIncludeContextHeap(includeContextHeap);
 
 #ifdef XP_WIN
-  PR_CreateThread(PR_USER_THREAD, AnnotateWMIData_ThreadStart, 0,
-                  PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+    PR_CreateThread(PR_USER_THREAD, AnnotateWMIData_ThreadStart, 0,
+                    PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
 #endif
 
 #if defined(XP_LINUX) && !defined(ANDROID)
-  PR_CreateThread(PR_USER_THREAD, AnnotateLSBRelease, 0, PR_PRIORITY_LOW,
-                  PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+    PR_CreateThread(PR_USER_THREAD, AnnotateLSBRelease, 0, PR_PRIORITY_LOW,
+                    PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
 #endif
 
-  if (mStartOffline) {
-    nsCOMPtr<nsIIOService> io(
-        do_GetService("@mozilla.org/network/io-service;1"));
-    NS_ENSURE_TRUE(io, NS_ERROR_FAILURE);
-    io->SetManageOfflineStatus(false);
-    io->SetOffline(true);
-  }
+    if (mStartOffline) {
+      nsCOMPtr<nsIIOService> io(
+          do_GetService("@mozilla.org/network/io-service;1"));
+      NS_ENSURE_TRUE(io, NS_ERROR_FAILURE);
+      io->SetManageOfflineStatus(false);
+      io->SetOffline(true);
+    }
 
 #ifdef XP_WIN
-  mozilla::DllPrefetchExperimentRegistryInfo prefetchRegInfo;
-  mozilla::AlteredDllPrefetchMode dllPrefetchMode =
-      prefetchRegInfo.GetAlteredDllPrefetchMode();
+    mozilla::DllPrefetchExperimentRegistryInfo prefetchRegInfo;
+    mozilla::AlteredDllPrefetchMode dllPrefetchMode =
+        prefetchRegInfo.GetAlteredDllPrefetchMode();
 
-  if (!PR_GetEnv("XRE_NO_DLL_READAHEAD") &&
-      dllPrefetchMode != mozilla::AlteredDllPrefetchMode::NoPrefetch) {
-    nsCOMPtr<nsIFile> greDir = mDirProvider.GetGREDir();
-    nsAutoString path;
-    rv = greDir->GetPath(path);
-    if (NS_SUCCEEDED(rv)) {
-      PRThread* readAheadThread;
-      wchar_t* pathRaw;
+    if (!PR_GetEnv("XRE_NO_DLL_READAHEAD") &&
+        dllPrefetchMode != mozilla::AlteredDllPrefetchMode::NoPrefetch) {
+      nsCOMPtr<nsIFile> greDir = mDirProvider.GetGREDir();
+      nsAutoString path;
+      rv = greDir->GetPath(path);
+      if (NS_SUCCEEDED(rv)) {
+        PRThread* readAheadThread;
+        wchar_t* pathRaw;
 
-      // We use the presence of a path argument inside the thread to determine
-      // which list of Dlls to use. The old list does not need access to the
-      // GRE dir, so the path argument is set to a null pointer.
-      if (dllPrefetchMode ==
-          mozilla::AlteredDllPrefetchMode::OptimizedPrefetch) {
-        pathRaw = new wchar_t[MAX_PATH];
-        wcscpy_s(pathRaw, MAX_PATH, path.get());
-      } else {
-        pathRaw = nullptr;
-      }
-      readAheadThread = PR_CreateThread(
-          PR_USER_THREAD, ReadAheadDlls_ThreadStart, (void*)pathRaw,
-          PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
-      if (readAheadThread == NULL) {
-        delete[] pathRaw;
+        // We use the presence of a path argument inside the thread to determine
+        // which list of Dlls to use. The old list does not need access to the
+        // GRE dir, so the path argument is set to a null pointer.
+        if (dllPrefetchMode ==
+            mozilla::AlteredDllPrefetchMode::OptimizedPrefetch) {
+          pathRaw = new wchar_t[MAX_PATH];
+          wcscpy_s(pathRaw, MAX_PATH, path.get());
+        } else {
+          pathRaw = nullptr;
+        }
+        readAheadThread = PR_CreateThread(
+            PR_USER_THREAD, ReadAheadDlls_ThreadStart, (void*)pathRaw,
+            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+        if (readAheadThread == NULL) {
+          delete[] pathRaw;
+        }
       }
     }
-  }
 #endif
 
-  if (gDoMigration) {
-    nsCOMPtr<nsIFile> file;
-    mDirProvider.GetAppDir()->Clone(getter_AddRefs(file));
-    file->AppendNative("override.ini"_ns);
-    nsINIParser parser;
-    nsresult rv = parser.Init(file);
-    // if override.ini doesn't exist, also check for distribution.ini
-    if (NS_FAILED(rv)) {
-      bool persistent;
-      mDirProvider.GetFile(XRE_APP_DISTRIBUTION_DIR, &persistent,
-                           getter_AddRefs(file));
-      file->AppendNative("distribution.ini"_ns);
-      rv = parser.Init(file);
-    }
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoCString buf;
-      rv = parser.GetString("XRE", "EnableProfileMigrator", buf);
+    if (gDoMigration) {
+      nsCOMPtr<nsIFile> file;
+      mDirProvider.GetAppDir()->Clone(getter_AddRefs(file));
+      file->AppendNative("override.ini"_ns);
+      nsINIParser parser;
+      nsresult rv = parser.Init(file);
+      // if override.ini doesn't exist, also check for distribution.ini
+      if (NS_FAILED(rv)) {
+        bool persistent;
+        mDirProvider.GetFile(XRE_APP_DISTRIBUTION_DIR, &persistent,
+                             getter_AddRefs(file));
+        file->AppendNative("distribution.ini"_ns);
+        rv = parser.Init(file);
+      }
       if (NS_SUCCEEDED(rv)) {
-        if (buf[0] == '0' || buf[0] == 'f' || buf[0] == 'F') {
-          gDoMigration = false;
+        nsAutoCString buf;
+        rv = parser.GetString("XRE", "EnableProfileMigrator", buf);
+        if (NS_SUCCEEDED(rv)) {
+          if (buf[0] == '0' || buf[0] == 'f' || buf[0] == 'F') {
+            gDoMigration = false;
+          }
         }
       }
     }
-  }
 
-  // We'd like to initialize the JSContext *after* reading the user prefs.
-  // Unfortunately that's not possible if we have to do profile migration
-  // because that requires us to execute JS before reading user prefs.
-  // Restarting the browser after profile migration would fix this. See
-  // bug 1592523.
-  bool initializedJSContext = false;
+    // We'd like to initialize the JSContext *after* reading the user prefs.
+    // Unfortunately that's not possible if we have to do profile migration
+    // because that requires us to execute JS before reading user prefs.
+    // Restarting the browser after profile migration would fix this. See
+    // bug 1592523.
+    bool initializedJSContext = false;
 
-  {
-    // Profile Migration
-    if (mAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
-      gDoMigration = false;
+    {
+      // Profile Migration
+      if (mAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
+        gDoMigration = false;
 
-      xpc::InitializeJSContext();
-      initializedJSContext = true;
-
-      nsCOMPtr<nsIProfileMigrator> pm(
-          do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
-      if (pm) {
-        nsAutoCString aKey;
-        nsAutoCString aName;
-        if (gDoProfileReset) {
-          // Automatically migrate from the current application if we just
-          // reset the profile.
-          aKey = MOZ_APP_NAME;
-          gResetOldProfile->GetName(aName);
-        }
-        pm->Migrate(&mDirProvider, aKey, aName);
-      }
-    }
-
-    if (gDoProfileReset) {
-      if (!initializedJSContext) {
         xpc::InitializeJSContext();
         initializedJSContext = true;
+
+        nsCOMPtr<nsIProfileMigrator> pm(
+            do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
+        if (pm) {
+          nsAutoCString aKey;
+          nsAutoCString aName;
+          if (gDoProfileReset) {
+            // Automatically migrate from the current application if we just
+            // reset the profile.
+            aKey = MOZ_APP_NAME;
+            gResetOldProfile->GetName(aName);
+          }
+          pm->Migrate(&mDirProvider, aKey, aName);
+        }
       }
 
-      nsresult backupCreated =
-          ProfileResetCleanup(mProfileSvc, gResetOldProfile);
-      if (NS_FAILED(backupCreated)) {
-        NS_WARNING("Could not cleanup the profile that was reset");
+      if (gDoProfileReset) {
+        if (!initializedJSContext) {
+          xpc::InitializeJSContext();
+          initializedJSContext = true;
+        }
+
+        nsresult backupCreated =
+            ProfileResetCleanup(mProfileSvc, gResetOldProfile);
+        if (NS_FAILED(backupCreated)) {
+          NS_WARNING("Could not cleanup the profile that was reset");
+        }
       }
     }
-  }
 
 #ifndef XP_WIN
-  nsCOMPtr<nsIFile> profileDir;
-  nsAutoCString path;
-  rv = mDirProvider.GetProfileStartupDir(getter_AddRefs(profileDir));
-  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(profileDir->GetNativePath(path)) &&
-      !IsUtf8(path)) {
-    PR_fprintf(
-        PR_STDERR,
-        "Error: The profile path is not valid UTF-8. Unable to continue.\n");
-    return NS_ERROR_FAILURE;
-  }
+    nsCOMPtr<nsIFile> profileDir;
+    nsAutoCString path;
+    rv = mDirProvider.GetProfileStartupDir(getter_AddRefs(profileDir));
+    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(profileDir->GetNativePath(path)) &&
+        !IsUtf8(path)) {
+      PR_fprintf(
+          PR_STDERR,
+          "Error: The profile path is not valid UTF-8. Unable to continue.\n");
+      return NS_ERROR_FAILURE;
+    }
 #endif
 
-  // Initialize user preferences before notifying startup observers so they're
-  // ready in time for early consumers, such as the component loader.
-  mDirProvider.InitializeUserPrefs();
+    // Initialize user preferences before notifying startup observers so they're
+    // ready in time for early consumers, such as the component loader.
+    mDirProvider.InitializeUserPrefs();
 
-  // Now that all (user) prefs have been loaded we can initialize the main
-  // thread's JSContext.
-  if (!initializedJSContext) {
-    xpc::InitializeJSContext();
-  }
+    // Now that all (user) prefs have been loaded we can initialize the main
+    // thread's JSContext.
+    if (!initializedJSContext) {
+      xpc::InitializeJSContext();
+    }
 
-  // Finally, now that JS has been initialized, we can finish pref loading. This
-  // needs to happen after JS and XPConnect initialization because AutoConfig
-  // files require JS execution. Note that this means AutoConfig files can't
-  // override JS engine start-up prefs.
-  mDirProvider.FinishInitializingUserPrefs();
+    // Finally, now that JS has been initialized, we can finish pref loading.
+    // This needs to happen after JS and XPConnect initialization because
+    // AutoConfig files require JS execution. Note that this means AutoConfig
+    // files can't override JS engine start-up prefs.
+    mDirProvider.FinishInitializingUserPrefs();
 
-  nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
+    nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
 
-  nsCOMPtr<nsIAppStartup> appStartup(components::AppStartup::Service());
-  NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
+    appStartup = components::AppStartup::Service();
+    NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
 
-  mDirProvider.DoStartup();
+    mDirProvider.DoStartup();
 
 #ifdef MOZ_THUNDERBIRD
-  if (Preferences::GetBool("security.prompt_for_master_password_on_startup",
-                           false)) {
-    // Prompt for the master password prior to opening application windows,
-    // to avoid the race that triggers multiple prompts (see bug 177175).
-    // We use this code until we have a better solution, possibly as
-    // described in bug 177175 comment 384.
-    nsCOMPtr<nsIPK11TokenDB> db =
-        do_GetService("@mozilla.org/security/pk11tokendb;1");
-    nsCOMPtr<nsIPK11Token> token;
-    if (NS_SUCCEEDED(db->GetInternalKeyToken(getter_AddRefs(token)))) {
-      Unused << token->Login(false);
+    if (Preferences::GetBool("security.prompt_for_master_password_on_startup",
+                             false)) {
+      // Prompt for the master password prior to opening application windows,
+      // to avoid the race that triggers multiple prompts (see bug 177175).
+      // We use this code until we have a better solution, possibly as
+      // described in bug 177175 comment 384.
+      nsCOMPtr<nsIPK11TokenDB> db =
+          do_GetService("@mozilla.org/security/pk11tokendb;1");
+      nsCOMPtr<nsIPK11Token> token;
+      if (NS_SUCCEEDED(db->GetInternalKeyToken(getter_AddRefs(token)))) {
+        Unused << token->Login(false);
+      }
     }
-  }
 #endif
 
-  // As FilePreferences need the profile directory, we must initialize right
-  // here.
-  mozilla::FilePreferences::InitDirectoriesWhitelist();
-  mozilla::FilePreferences::InitPrefs();
+    // As FilePreferences need the profile directory, we must initialize right
+    // here.
+    mozilla::FilePreferences::InitDirectoriesWhitelist();
+    mozilla::FilePreferences::InitPrefs();
 
-  OverrideDefaultLocaleIfNeeded();
+    OverrideDefaultLocaleIfNeeded();
 
-  nsCString userAgentLocale;
-  LocaleService::GetInstance()->GetAppLocaleAsBCP47(userAgentLocale);
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::useragent_locale, userAgentLocale);
+    nsCString userAgentLocale;
+    LocaleService::GetInstance()->GetAppLocaleAsBCP47(userAgentLocale);
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::useragent_locale, userAgentLocale);
 
-  appStartup->GetShuttingDown(&mShuttingDown);
+    appStartup->GetShuttingDown(&mShuttingDown);
 
-  nsCOMPtr<nsICommandLineRunner> cmdLine;
+    nsCOMPtr<nsICommandLineRunner> cmdLine;
 
-  nsCOMPtr<nsIFile> workingDir;
-  rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
-                              getter_AddRefs(workingDir));
-  if (NS_FAILED(rv)) {
-    // No working dir? This can happen if it gets deleted before we start.
-    workingDir = nullptr;
-  }
-
-  if (!mShuttingDown) {
-    cmdLine = new nsCommandLine();
-
-    rv = cmdLine->Init(gArgc, gArgv, workingDir,
-                       nsICommandLine::STATE_INITIAL_LAUNCH);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-    /* Special-case services that need early access to the command
-        line. */
-    nsCOMPtr<nsIObserverService> obsService =
-        mozilla::services::GetObserverService();
-    if (obsService) {
-      obsService->NotifyObservers(cmdLine, "command-line-startup", nullptr);
+    nsCOMPtr<nsIFile> workingDir;
+    rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
+                                getter_AddRefs(workingDir));
+    if (NS_FAILED(rv)) {
+      // No working dir? This can happen if it gets deleted before we start.
+      workingDir = nullptr;
     }
-  }
 
-#ifdef XP_WIN
-  // Hack to sync up the various environment storages. XUL_APP_FILE is special
-  // in that it comes from a different CRT (firefox.exe's static-linked copy).
-  // Ugly details in http://bugzil.la/1175039#c27
-  char appFile[MAX_PATH];
-  if (GetEnvironmentVariableA("XUL_APP_FILE", appFile, sizeof(appFile))) {
-    SmprintfPointer saved = mozilla::Smprintf("XUL_APP_FILE=%s", appFile);
-    // We intentionally leak the string here since it is required by PR_SetEnv.
-    PR_SetEnv(saved.release());
-  }
-#endif
+    if (!mShuttingDown) {
+      cmdLine = new nsCommandLine();
 
-  mozilla::AppShutdown::SaveEnvVarsForPotentialRestart();
-
-  // clear out any environment variables which may have been set
-  // during the relaunch process now that we know we won't be relaunching.
-  SaveToEnv("XRE_PROFILE_PATH=");
-  SaveToEnv("XRE_PROFILE_LOCAL_PATH=");
-  SaveToEnv("XRE_START_OFFLINE=");
-  SaveToEnv("XUL_APP_FILE=");
-  SaveToEnv("XRE_BINARY_PATH=");
-  SaveToEnv("XRE_RESTARTED_BY_PROFILE_MANAGER=");
-
-  if (!mShuttingDown) {
-#ifdef XP_MACOSX
-    bool lazyHiddenWindow = false;
-#else
-    bool lazyHiddenWindow =
-        Preferences::GetBool("toolkit.lazyHiddenWindow", false);
-#endif
-
-    if (!lazyHiddenWindow) {
-      rv = appStartup->CreateHiddenWindow();
+      rv = cmdLine->Init(gArgc, gArgv, workingDir,
+                         nsICommandLine::STATE_INITIAL_LAUNCH);
       NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+      /* Special-case services that need early access to the command
+          line. */
+      nsCOMPtr<nsIObserverService> obsService =
+          mozilla::services::GetObserverService();
+      if (obsService) {
+        obsService->NotifyObservers(cmdLine, "command-line-startup", nullptr);
+      }
     }
 
 #ifdef XP_WIN
-    Preferences::RegisterCallbackAndCall(RegisterApplicationRestartChanged,
-                                         PREF_WIN_REGISTER_APPLICATION_RESTART);
-    SetupAlteredPrefetchPref();
-    SetupSkeletonUIPrefs();
+    // Hack to sync up the various environment storages. XUL_APP_FILE is special
+    // in that it comes from a different CRT (firefox.exe's static-linked copy).
+    // Ugly details in http://bugzil.la/1175039#c27
+    char appFile[MAX_PATH];
+    if (GetEnvironmentVariableA("XUL_APP_FILE", appFile, sizeof(appFile))) {
+      SmprintfPointer saved = mozilla::Smprintf("XUL_APP_FILE=%s", appFile);
+      // We intentionally leak the string here since it is required by
+      // PR_SetEnv.
+      PR_SetEnv(saved.release());
+    }
+#endif
+
+    mozilla::AppShutdown::SaveEnvVarsForPotentialRestart();
+
+    // clear out any environment variables which may have been set
+    // during the relaunch process now that we know we won't be relaunching.
+    SaveToEnv("XRE_PROFILE_PATH=");
+    SaveToEnv("XRE_PROFILE_LOCAL_PATH=");
+    SaveToEnv("XRE_START_OFFLINE=");
+    SaveToEnv("XUL_APP_FILE=");
+    SaveToEnv("XRE_BINARY_PATH=");
+    SaveToEnv("XRE_RESTARTED_BY_PROFILE_MANAGER=");
+
+    if (!mShuttingDown) {
+#ifdef XP_MACOSX
+      bool lazyHiddenWindow = false;
+#else
+      bool lazyHiddenWindow =
+          Preferences::GetBool("toolkit.lazyHiddenWindow", false);
+#endif
+
+      if (!lazyHiddenWindow) {
+        rv = appStartup->CreateHiddenWindow();
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+      }
+
+#ifdef XP_WIN
+      Preferences::RegisterCallbackAndCall(
+          RegisterApplicationRestartChanged,
+          PREF_WIN_REGISTER_APPLICATION_RESTART);
+      SetupAlteredPrefetchPref();
+      SetupSkeletonUIPrefs();
 #  if defined(MOZ_LAUNCHER_PROCESS)
-    SetupLauncherProcessPref();
+      SetupLauncherProcessPref();
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
 #  if defined(MOZ_DEFAULT_BROWSER_AGENT)
-    Preferences::RegisterCallbackAndCall(&OnDefaultAgentTelemetryPrefChanged,
-                                         kPrefHealthReportUploadEnabled);
-    Preferences::RegisterCallbackAndCall(&OnDefaultAgentTelemetryPrefChanged,
-                                         kPrefDefaultAgentEnabled);
+      Preferences::RegisterCallbackAndCall(&OnDefaultAgentTelemetryPrefChanged,
+                                           kPrefHealthReportUploadEnabled);
+      Preferences::RegisterCallbackAndCall(&OnDefaultAgentTelemetryPrefChanged,
+                                           kPrefDefaultAgentEnabled);
 
-    Preferences::RegisterCallbackAndCall(
-        &OnDefaultAgentRemoteSettingsPrefChanged, kPrefServicesSettingsServer);
-    Preferences::RegisterCallbackAndCall(
-        &OnDefaultAgentRemoteSettingsPrefChanged,
-        kPrefSecurityContentSignatureRootHash);
-    SetDefaultAgentLastRunTime();
+      Preferences::RegisterCallbackAndCall(
+          &OnDefaultAgentRemoteSettingsPrefChanged,
+          kPrefServicesSettingsServer);
+      Preferences::RegisterCallbackAndCall(
+          &OnDefaultAgentRemoteSettingsPrefChanged,
+          kPrefSecurityContentSignatureRootHash);
+      SetDefaultAgentLastRunTime();
 #  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 #endif
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK)
-    // Clear the environment variable so it won't be inherited by
-    // child processes and confuse things.
-    g_unsetenv("DESKTOP_STARTUP_ID");
+      // Clear the environment variable so it won't be inherited by
+      // child processes and confuse things.
+      g_unsetenv("DESKTOP_STARTUP_ID");
 #endif
 
 #ifdef XP_MACOSX
-    // we re-initialize the command-line service and do appleevents munging
-    // after we are sure that we're not restarting
-    cmdLine = new nsCommandLine();
+      // we re-initialize the command-line service and do appleevents munging
+      // after we are sure that we're not restarting
+      cmdLine = new nsCommandLine();
 
-    char** tempArgv = static_cast<char**>(malloc(gArgc * sizeof(char*)));
-    for (int i = 0; i < gArgc; i++) {
-      tempArgv[i] = strdup(gArgv[i]);
-    }
-    CommandLineServiceMac::SetupMacCommandLine(gArgc, tempArgv, false);
-    rv = cmdLine->Init(gArgc, tempArgv, workingDir,
-                       nsICommandLine::STATE_INITIAL_LAUNCH);
-    free(tempArgv);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+      char** tempArgv = static_cast<char**>(malloc(gArgc * sizeof(char*)));
+      for (int i = 0; i < gArgc; i++) {
+        tempArgv[i] = strdup(gArgv[i]);
+      }
+      CommandLineServiceMac::SetupMacCommandLine(gArgc, tempArgv, false);
+      rv = cmdLine->Init(gArgc, tempArgv, workingDir,
+                         nsICommandLine::STATE_INITIAL_LAUNCH);
+      free(tempArgv);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 #endif
 
-    nsCOMPtr<nsIObserverService> obsService =
-        mozilla::services::GetObserverService();
-    if (obsService)
-      obsService->NotifyObservers(nullptr, "final-ui-startup", nullptr);
+      nsCOMPtr<nsIObserverService> obsService =
+          mozilla::services::GetObserverService();
+      if (obsService)
+        obsService->NotifyObservers(nullptr, "final-ui-startup", nullptr);
 
-    (void)appStartup->DoneStartingUp();
+      (void)appStartup->DoneStartingUp();
 
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::StartupCrash,
-                                       false);
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::StartupCrash, false);
 
-    appStartup->GetShuttingDown(&mShuttingDown);
-  }
-
-  if (!mShuttingDown) {
-    rv = cmdLine->Run();
-    NS_ENSURE_SUCCESS_LOG(rv, NS_ERROR_FAILURE);
-
-    appStartup->GetShuttingDown(&mShuttingDown);
-  }
-
-  if (!mShuttingDown) {
-#if defined(MOZ_HAS_REMOTE)
-    // if we have X remote support, start listening for requests on the
-    // proxy window.
-    if (mRemoteService && !mDisableRemoteServer) {
-      mRemoteService->StartupServer();
-      mRemoteService->UnlockStartup();
+      appStartup->GetShuttingDown(&mShuttingDown);
     }
+
+    if (!mShuttingDown) {
+      rv = cmdLine->Run();
+      NS_ENSURE_SUCCESS_LOG(rv, NS_ERROR_FAILURE);
+
+      appStartup->GetShuttingDown(&mShuttingDown);
+    }
+
+    if (!mShuttingDown) {
+#if defined(MOZ_HAS_REMOTE)
+      // if we have X remote support, start listening for requests on the
+      // proxy window.
+      if (mRemoteService && !mDisableRemoteServer) {
+        mRemoteService->StartupServer();
+        mRemoteService->UnlockStartup();
+      }
 #endif /* MOZ_WIDGET_GTK */
 
-    mNativeApp->Enable();
-  }
+      mNativeApp->Enable();
+    }
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
-  if (PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP")) {
-    bool logToConsole = true;
-    mozilla::InitEventTracing(logToConsole);
-  }
+    if (PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP")) {
+      bool logToConsole = true;
+      mozilla::InitEventTracing(logToConsole);
+    }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
 
-  // Send Telemetry about Gecko version and buildid
-  Telemetry::ScalarSet(Telemetry::ScalarID::GECKO_VERSION,
-                       NS_ConvertASCIItoUTF16(gAppData->version));
-  Telemetry::ScalarSet(Telemetry::ScalarID::GECKO_BUILD_ID,
-                       NS_ConvertASCIItoUTF16(gAppData->buildID));
+    // Send Telemetry about Gecko version and buildid
+    Telemetry::ScalarSet(Telemetry::ScalarID::GECKO_VERSION,
+                         NS_ConvertASCIItoUTF16(gAppData->version));
+    Telemetry::ScalarSet(Telemetry::ScalarID::GECKO_BUILD_ID,
+                         NS_ConvertASCIItoUTF16(gAppData->buildID));
 
 #if defined(MOZ_SANDBOX) && defined(XP_LINUX)
-  // If we're on Linux, we now have information about the OS capabilities
-  // available to us.
-  SandboxInfo sandboxInfo = SandboxInfo::Get();
-  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_SECCOMP_BPF,
-                        sandboxInfo.Test(SandboxInfo::kHasSeccompBPF));
-  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_SECCOMP_TSYNC,
-                        sandboxInfo.Test(SandboxInfo::kHasSeccompTSync));
-  Telemetry::Accumulate(
-      Telemetry::SANDBOX_HAS_USER_NAMESPACES_PRIVILEGED,
-      sandboxInfo.Test(SandboxInfo::kHasPrivilegedUserNamespaces));
-  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_USER_NAMESPACES,
-                        sandboxInfo.Test(SandboxInfo::kHasUserNamespaces));
-  Telemetry::Accumulate(Telemetry::SANDBOX_CONTENT_ENABLED,
-                        sandboxInfo.Test(SandboxInfo::kEnabledForContent));
-  Telemetry::Accumulate(Telemetry::SANDBOX_MEDIA_ENABLED,
-                        sandboxInfo.Test(SandboxInfo::kEnabledForMedia));
-  nsAutoCString flagsString;
-  flagsString.AppendInt(sandboxInfo.AsInteger());
+    // If we're on Linux, we now have information about the OS capabilities
+    // available to us.
+    SandboxInfo sandboxInfo = SandboxInfo::Get();
+    Telemetry::Accumulate(Telemetry::SANDBOX_HAS_SECCOMP_BPF,
+                          sandboxInfo.Test(SandboxInfo::kHasSeccompBPF));
+    Telemetry::Accumulate(Telemetry::SANDBOX_HAS_SECCOMP_TSYNC,
+                          sandboxInfo.Test(SandboxInfo::kHasSeccompTSync));
+    Telemetry::Accumulate(
+        Telemetry::SANDBOX_HAS_USER_NAMESPACES_PRIVILEGED,
+        sandboxInfo.Test(SandboxInfo::kHasPrivilegedUserNamespaces));
+    Telemetry::Accumulate(Telemetry::SANDBOX_HAS_USER_NAMESPACES,
+                          sandboxInfo.Test(SandboxInfo::kHasUserNamespaces));
+    Telemetry::Accumulate(Telemetry::SANDBOX_CONTENT_ENABLED,
+                          sandboxInfo.Test(SandboxInfo::kEnabledForContent));
+    Telemetry::Accumulate(Telemetry::SANDBOX_MEDIA_ENABLED,
+                          sandboxInfo.Test(SandboxInfo::kEnabledForMedia));
+    nsAutoCString flagsString;
+    flagsString.AppendInt(sandboxInfo.AsInteger());
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::ContentSandboxCapabilities, flagsString);
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::ContentSandboxCapabilities, flagsString);
 #endif /* MOZ_SANDBOX && XP_LINUX */
 
 #if defined(XP_WIN)
-  LauncherResult<bool> isAdminWithoutUac = IsAdminWithoutUac();
-  if (isAdminWithoutUac.isOk()) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::OS_ENVIRONMENT_IS_ADMIN_WITHOUT_UAC,
-        isAdminWithoutUac.unwrap());
-  }
+    LauncherResult<bool> isAdminWithoutUac = IsAdminWithoutUac();
+    if (isAdminWithoutUac.isOk()) {
+      Telemetry::ScalarSet(
+          Telemetry::ScalarID::OS_ENVIRONMENT_IS_ADMIN_WITHOUT_UAC,
+          isAdminWithoutUac.unwrap());
+    }
 #endif /* XP_WIN */
 
 #if defined(MOZ_SANDBOX)
-  AddSandboxAnnotations();
+    AddSandboxAnnotations();
 #endif /* MOZ_SANDBOX */
 
-  mProfileSvc->CompleteStartup();
+    mProfileSvc->CompleteStartup();
+  }
 
   {
     rv = appStartup->Run();
