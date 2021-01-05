@@ -1976,22 +1976,19 @@ class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
   // Heap where the array should be allocated.
   gc::InitialHeap initialHeap_;
 
-  jsbytecode* pc_;
-
   bool vmCall_;
 
-  MNewArray(TempAllocator& alloc, uint32_t length, MConstant* templateConst,
-            gc::InitialHeap initialHeap, jsbytecode* pc, bool vmCall = false);
+  MNewArray(uint32_t length, MConstant* templateConst,
+            gc::InitialHeap initialHeap, bool vmCall = false);
 
  public:
   INSTRUCTION_HEADER(NewArray)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  TRIVIAL_NEW_WRAPPERS
 
   static MNewArray* NewVM(TempAllocator& alloc, uint32_t length,
-                          MConstant* templateConst, gc::InitialHeap initialHeap,
-                          jsbytecode* pc) {
-    return new (alloc)
-        MNewArray(alloc, length, templateConst, initialHeap, pc, true);
+                          MConstant* templateConst,
+                          gc::InitialHeap initialHeap) {
+    return new (alloc) MNewArray(length, templateConst, initialHeap, true);
   }
 
   uint32_t length() const { return length_; }
@@ -2001,8 +1998,6 @@ class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
   }
 
   gc::InitialHeap initialHeap() const { return initialHeap_; }
-
-  jsbytecode* pc() const { return pc_; }
 
   bool isVMCall() const { return vmCall_; }
 
