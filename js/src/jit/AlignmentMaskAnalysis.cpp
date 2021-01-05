@@ -69,7 +69,7 @@ static void AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph) {
   // The pattern was matched! Produce the replacement expression.
   MInstruction* and_ = MBitAnd::New(graph.alloc(), op0, rhs, MIRType::Int32);
   ptr->block()->insertBefore(ptr->toBitAnd(), and_);
-  auto* add = MAdd::New(graph.alloc(), and_, op1, MDefinition::Truncate);
+  auto* add = MAdd::New(graph.alloc(), and_, op1, TruncateKind::Truncate);
   ptr->block()->insertBefore(ptr->toBitAnd(), add);
   ptr->replaceAllUsesWith(add);
   ptr->block()->discard(ptr->toBitAnd());

@@ -2523,7 +2523,7 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
     if (!isMax() && constant->isTypeRepresentableAsDouble() &&
         constant->numberToDouble() >= INT32_MAX) {
       MLimitedTruncate* limit = MLimitedTruncate::New(
-          alloc, operand->getOperand(0), MDefinition::NoTruncate);
+          alloc, operand->getOperand(0), TruncateKind::NoTruncate);
       block()->insertBefore(this, limit);
       MToDouble* toDouble = MToDouble::New(alloc, limit);
       return toDouble;
@@ -2533,7 +2533,7 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
     if (isMax() && constant->isTypeRepresentableAsDouble() &&
         constant->numberToDouble() <= INT32_MIN) {
       MLimitedTruncate* limit = MLimitedTruncate::New(
-          alloc, operand->getOperand(0), MDefinition::NoTruncate);
+          alloc, operand->getOperand(0), TruncateKind::NoTruncate);
       block()->insertBefore(this, limit);
       MToDouble* toDouble = MToDouble::New(alloc, limit);
       return toDouble;
@@ -2832,7 +2832,7 @@ MHypot* MHypot::New(TempAllocator& alloc, const MDefinitionVector& vector) {
 bool MAdd::fallible() const {
   // the add is fallible if range analysis does not say that it is finite, AND
   // either the truncation analysis shows that there are non-truncated uses.
-  if (truncateKind() >= IndirectTruncate) {
+  if (truncateKind() >= TruncateKind::IndirectTruncate) {
     return false;
   }
   if (range() && range()->hasInt32Bounds()) {
@@ -2843,7 +2843,7 @@ bool MAdd::fallible() const {
 
 bool MSub::fallible() const {
   // see comment in MAdd::fallible()
-  if (truncateKind() >= IndirectTruncate) {
+  if (truncateKind() >= TruncateKind::IndirectTruncate) {
     return false;
   }
   if (range() && range()->hasInt32Bounds()) {
@@ -3912,7 +3912,7 @@ bool MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result) {
       }
       if (replaced) {
         MLimitedTruncate* limit = MLimitedTruncate::New(
-            alloc, operand->getOperand(0), MDefinition::NoTruncate);
+            alloc, operand->getOperand(0), TruncateKind::NoTruncate);
         limit->setGuardUnchecked();
         block()->insertBefore(this, limit);
         return true;

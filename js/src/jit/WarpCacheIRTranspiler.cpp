@@ -2146,7 +2146,7 @@ void WarpCacheIRTranspiler::addDataViewData(MDefinition* obj, Scalar::Type type,
     add(byteSizeMinusOne);
 
     length = MSub::New(alloc(), length, byteSizeMinusOne, MIRType::Int32);
-    length->toSub()->setTruncateKind(MDefinition::Truncate);
+    length->toSub()->setTruncateKind(TruncateKind::Truncate);
     add(length);
 
     // |length| mustn't be negative for MBoundsCheck.
