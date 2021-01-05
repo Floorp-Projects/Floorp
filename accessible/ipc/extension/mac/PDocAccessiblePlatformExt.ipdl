@@ -9,6 +9,7 @@ include protocol PDocAccessible;
 include "mozilla/GfxMessageUtils.h";
 
 using mozilla::a11y::EWhichRange from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::EWhichPostFilter from "mozilla/a11y/IPCTypes.h";
 using nsIntRect from "nsRect.h";
 
 namespace mozilla {
@@ -49,6 +50,12 @@ child:
       returns(uint64_t aLeaf);
 
   async SelectRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset);
+
+  // A filter that can be applied to search predicate results.
+  nested(inside_sync) sync ApplyPostSearchFilter(uint64_t[] aAccessibles, int32_t aLimit,
+                                             EWhichPostFilter aSearchKey, nsString aSearchText)
+      returns(uint64_t[] aMatches);
+
 };
 
 }  // namespace a11y
