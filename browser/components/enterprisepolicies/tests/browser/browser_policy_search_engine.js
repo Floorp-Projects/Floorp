@@ -283,6 +283,7 @@ add_task(async function test_install_and_remove() {
   isnot(engine, null, "Specified search engine should be installed");
 
   is(engine.wrappedJSObject.iconURI.spec, iconURL, "Icon should be present");
+  is(engine.wrappedJSObject.queryCharset, "UTF-8", "Should default to utf-8");
 
   await setupPolicyEngineWithJson({
     policies: {
@@ -353,5 +354,42 @@ add_task(async function test_install_post_method_engine() {
       },
     },
   });
+  EnterprisePolicyTesting.resetRunOnceState();
+});
+
+add_task(async function test_install_with_encoding() {
+  // Make sure we are starting in an expected state to avoid false positive
+  // test results.
+  is(
+    Services.search.getEngineByName("Encoding"),
+    null,
+    'Engine "Foo" should not be present when test starts'
+  );
+
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Add: [
+          {
+            Name: "Encoding",
+            Encoding: "windows-1252",
+            URLTemplate: "http://example.com/?q={searchTerms}",
+          },
+        ],
+      },
+    },
+  });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
+
+  let engine = Services.search.getEngineByName("Encoding");
+  is(
+    engine.wrappedJSObject.queryCharset,
+    "windows-1252",
+    "Should have correct encoding"
+  );
+
+  // Clean up
+  await Services.search.removeEngine(engine);
   EnterprisePolicyTesting.resetRunOnceState();
 });
