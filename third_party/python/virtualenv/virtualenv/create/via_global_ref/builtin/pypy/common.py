@@ -4,7 +4,7 @@ import abc
 
 from six import add_metaclass
 
-from virtualenv.create.via_global_ref.builtin.ref import PathRefToDest
+from virtualenv.create.via_global_ref.builtin.ref import PathRefToDest, RefMust, RefWhen
 from virtualenv.util.path import Path
 
 from ..via_global_self_do import ViaGlobalRefVirtualenvBuiltin
@@ -20,7 +20,8 @@ class PyPy(ViaGlobalRefVirtualenvBuiltin):
     def _executables(cls, interpreter):
         host = Path(interpreter.system_executable)
         targets = sorted("{}{}".format(name, PyPy.suffix) for name in cls.exe_names(interpreter))
-        yield host, targets
+        must = RefMust.COPY if interpreter.version_info.major == 2 else RefMust.NA
+        yield host, targets, must, RefWhen.ANY
 
     @classmethod
     def exe_names(cls, interpreter):

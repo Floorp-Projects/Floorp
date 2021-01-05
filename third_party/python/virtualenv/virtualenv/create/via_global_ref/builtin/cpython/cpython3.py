@@ -55,8 +55,21 @@ class CPython3Windows(CPythonWindows, CPython3):
     def sources(cls, interpreter):
         for src in super(CPython3Windows, cls).sources(interpreter):
             yield src
-        for src in cls.include_dll_and_pyd(interpreter):
-            yield src
+        if not cls.venv_37p(interpreter):
+            for src in cls.include_dll_and_pyd(interpreter):
+                yield src
+
+    @staticmethod
+    def venv_37p(interpreter):
+        return interpreter.version_info.minor >= 7
+
+    @classmethod
+    def host_python(cls, interpreter):
+        if cls.venv_37p(interpreter):
+            # starting with CPython 3.7 Windows ships with a venvlauncher.exe that avoids the need for dll/pyd copies
+            # it also means the wrapper must be copied to avoid bugs such as https://bugs.python.org/issue42013
+            return Path(interpreter.system_stdlib) / "venv" / "scripts" / "nt" / "python.exe"
+        return super(CPython3Windows, cls).host_python(interpreter)
 
     @classmethod
     def include_dll_and_pyd(cls, interpreter):

@@ -9,6 +9,9 @@ from .via_disk_folder import AppDataDiskFolder
 
 
 class TempAppData(AppDataDiskFolder):
+    transient = True
+    can_update = False
+
     def __init__(self):
         super(TempAppData, self).__init__(folder=mkdtemp())
         logging.debug("created temporary app data folder %s", self.lock.path)
@@ -21,8 +24,4 @@ class TempAppData(AppDataDiskFolder):
         safe_delete(self.lock.path)
 
     def embed_update_log(self, distribution, for_py_version):
-        return None
-
-    @property
-    def transient(self):
-        return True
+        raise NotImplementedError
