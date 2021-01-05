@@ -73,4 +73,9 @@ bool TestInterfaceMaplikeObject::HasInternal(const nsAString& aKey) {
                                                                  rv);
 }
 
+already_AddRefed<TestInterfaceMaplike> TestInterfaceMaplikeObject::GetInternal(
+    const nsAString& aKey, ErrorResult& aRv) {
+  return TestInterfaceMaplikeObject_Binding::MaplikeHelpers::Get(this, aKey,
+                                                                 aRv);
+}
 }  // namespace mozilla::dom
