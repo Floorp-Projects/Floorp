@@ -1820,8 +1820,9 @@ var Policies = {
                   chrome_settings_overrides: {
                     search_provider: {
                       name: newEngine.Name,
-                      // Policies currently only use this encoding, see bug 1649164.
-                      encoding: "windows-1252",
+                      // If the encoding is not specified or is falsy, the
+                      // search service will fall back to the default encoding.
+                      encoding: newEngine.Encoding,
                       search_url: encodeURI(newEngine.URLTemplate),
                       keyword: newEngine.Alias,
                       search_url_post_params:

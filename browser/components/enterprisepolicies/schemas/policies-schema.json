@@ -1093,6 +1093,9 @@
               "Description": {
                 "type": "string"
               },
+              "Encoding": {
+                "type": "string"
+              },
               "Method": {
                 "type": "string",
                 "enum": ["GET", "POST"]
@@ -1208,4 +1211,3 @@
     }
   }
 }
-
