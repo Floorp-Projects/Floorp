@@ -102,9 +102,6 @@ Schema definitions/validations that can be used for tests can be found in `syste
 
 ```js
 {
-  "action": "activity_stream_impression_stats",
-  "client_id": "n/a",
-  "session_id": "n/a",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "addon_version": "20180710100040",
   "locale": "en-US",
@@ -117,9 +114,6 @@ Schema definitions/validations that can be used for tests can be found in `syste
 
 ```js
 {
-  "action": "activity_stream_impression_stats",
-  "client_id": "n/a",
-  "session_id": "n/a",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "addon_version": "20180710100040",
   "locale": "en-US",

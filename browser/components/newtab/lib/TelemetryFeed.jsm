@@ -548,12 +548,13 @@ this.TelemetryFeed = class TelemetryFeed {
    * @return {obj}    A telemetry ping
    */
   createImpressionStats(portID, data) {
-    return Object.assign(this.createPing(portID), data, {
-      action: "activity_stream_impression_stats",
+    let ping = Object.assign(this.createPing(portID), data, {
       impression_id: this._impressionId,
-      client_id: "n/a",
-      session_id: "n/a",
     });
+    // Make sure `session_id` and `client_id` are not in the ping.
+    delete ping.session_id;
+    delete ping.client_id;
+    return ping;
   }
 
   createUserEvent(action) {
