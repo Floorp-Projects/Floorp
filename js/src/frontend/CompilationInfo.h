@@ -43,53 +43,50 @@ namespace frontend {
 // ScopeContext hold information derivied from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
 struct ScopeContext {
-  // Whether the enclosing scope allows certain syntax. Eval and arrow scripts
-  // inherit this from their enclosing scipt so we track it here.
+  // If this eval is in response to Debugger.Frame.eval, we may have an
+  // incomplete scope chain. In order to provide a better debugging experience,
+  // we inspect the (optional) environment chain to determine it's enclosing
+  // FunctionScope if there is one. If there is no such scope, we use the
+  // orignal scope provided.
+  //
+  // NOTE: This is used to compute the ThisBinding kind and to allow access to
+  //       private fields, while other contextual information only uses the
+  //       actual scope passed to the compile.
+  JS::Rooted<Scope*> effectiveScope;
+
+  // The type of binding required for `this` of the top level context, as
+  // indicated by the enclosing scopes of this parse.
+  //
+  // NOTE: This is computed based on the effective scope (defined above).
+  ThisBinding thisBinding = ThisBinding::Global;
+
+  // Eval and arrow scripts inherit certain syntax allowances from their
+  // enclosing scripts.
   bool allowNewTarget = false;
   bool allowSuperProperty = false;
   bool allowSuperCall = false;
   bool allowArguments = true;
 
-  // The type of binding required for `this` of the top level context, as
-  // indicated by the enclosing scopes of this parse.
-  ThisBinding thisBinding = ThisBinding::Global;
-
-  // Somewhere on the scope chain this parse is embedded within is a 'With'
-  // scope.
-  bool inWith = false;
-
-  // Somewhere on the scope chain this parse is embedded within a class scope.
-  bool inClass = false;
-
   // Class field initializer info if we are nested within a class constructor.
   // We may be an combination of arrow and eval context within the constructor.
   mozilla::Maybe<MemberInitializers> memberInitializers = {};
 
-  // If this eval is in response to Debugger.Frame.eval, we may have an
-  // incomplete scope chain. In order to determine a better 'this' binding, as
-  // well as to ensure we can provide better static error semantics for private
-  // names, we use the environment chain to attempt to find a more effective
-  // scope than the enclosing scope.
-  // If there is no more effective scope, this will just be the scope given in
-  // the constructor.
-  JS::Rooted<Scope*> effectiveScope;
+  // Indicates there is a 'class' or 'with' scope on enclosing scope chain.
+  bool inClass = false;
+  bool inWith = false;
 
   explicit ScopeContext(JSContext* cx, Scope* scope,
                         JSObject* enclosingEnv = nullptr)
       : effectiveScope(cx, determineEffectiveScope(scope, enclosingEnv)) {
-    computeAllowSyntax(scope);
     computeThisBinding(effectiveScope);
-    computeInWith(scope);
-    computeExternalInitializers(scope);
-    computeInClass(scope);
+    computeThisEnvironment(scope);
+    computeInScope(scope);
   }
 
  private:
-  void computeAllowSyntax(Scope* scope);
   void computeThisBinding(Scope* scope);
-  void computeInWith(Scope* scope);
-  void computeExternalInitializers(Scope* scope);
-  void computeInClass(Scope* scope);
+  void computeThisEnvironment(Scope* scope);
+  void computeInScope(Scope* scope);
 
   static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 };
