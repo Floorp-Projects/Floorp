@@ -1713,6 +1713,15 @@ class BuildDriver(MozbuildObject):
         )
 
     def _check_clobber(self, mozconfig, env):
+        """Run `Clobberer.maybe_do_clobber`, log the result and return a status bool.
+
+        Wraps the clobbering logic in `Clobberer.maybe_do_clobber` to provide logging,
+        handling of the `AUTOCLOBBER` mozconfig option and metrics gathering.
+
+        Return a bool indicating whether the clobber reached an error state. For example,
+        return `True` if the clobber was required but not completed, and return `False` if
+        the clobber was not required and not completed.
+        """
         auto_clobber = any(
             [
                 env.get("AUTOCLOBBER", False),
