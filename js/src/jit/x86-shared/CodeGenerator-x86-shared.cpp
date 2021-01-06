@@ -2982,6 +2982,11 @@ void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
       masm.interleaveHighInt32x4(rhs, lhsDest);
       break;
     }
+    case LWasmShuffleSimd128::INTERLEAVE_HIGH_64x2: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.interleaveHighInt64x2(rhs, lhsDest);
+      break;
+    }
     case LWasmShuffleSimd128::INTERLEAVE_LOW_8x16: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveLowInt8x16(rhs, lhsDest);
@@ -2995,6 +3000,11 @@ void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
     case LWasmShuffleSimd128::INTERLEAVE_LOW_32x4: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveLowInt32x4(rhs, lhsDest);
+      break;
+    }
+    case LWasmShuffleSimd128::INTERLEAVE_LOW_64x2: {
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      masm.interleaveLowInt64x2(rhs, lhsDest);
       break;
     }
     case LWasmShuffleSimd128::SHUFFLE_BLEND_8x16: {
