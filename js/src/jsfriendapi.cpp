@@ -110,18 +110,15 @@ JS_FRIEND_API JSFunction* JS_GetObjectFunction(JSObject* obj) {
   return nullptr;
 }
 
-JS_FRIEND_API bool JS_SplicePrototype(JSContext* cx, HandleObject obj,
+JS_FRIEND_API bool JS_SplicePrototype(JSContext* cx, HandleObject global,
                                       HandleObject proto) {
-  /*
-   * Change the prototype of an object which hasn't been used anywhere
-   * and does not share its type with another object. Unlike JS_SetPrototype,
-   * does not nuke type information for the object.
-   */
   CHECK_THREAD(cx);
-  cx->check(obj, proto);
+  cx->check(global, proto);
+
+  MOZ_ASSERT(global->is<GlobalObject>());
 
   Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-  return JSObject::splicePrototype(cx, obj, tagged);
+  return GlobalObject::splicePrototype(cx, global.as<GlobalObject>(), tagged);
 }
 
 JS_FRIEND_API JSObject* JS_NewObjectWithoutMetadata(

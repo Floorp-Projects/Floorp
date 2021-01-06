@@ -43,8 +43,19 @@ extern JS_FRIEND_API JSObject* JS_FindCompilationScope(JSContext* cx,
 
 extern JS_FRIEND_API JSFunction* JS_GetObjectFunction(JSObject* obj);
 
+/**
+ * Initialize the prototype of a global object which hasn't been used anywhere.
+ *
+ * For other objects the correct prototype is typically passed when the object
+ * is allocated, but that doesn't work for the global object because the global
+ * is created before other objects are allocated. JS_SplicePrototype is a way to
+ * break this cycle.
+ *
+ * This is more efficient than JS_SetPrototype because it does not set the
+ * uncacheable-proto flag on the shape.
+ */
 extern JS_FRIEND_API bool JS_SplicePrototype(JSContext* cx,
-                                             JS::HandleObject obj,
+                                             JS::HandleObject global,
                                              JS::HandleObject proto);
 
 /**
