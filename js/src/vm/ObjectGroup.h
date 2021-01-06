@@ -90,15 +90,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   void setProtoUnchecked(TaggedProto proto);
 
-  // TODO(no-TI): remove.
-  bool hasUncacheableProto() const {
-    // We allow singletons to mutate their prototype after the group has
-    // been created. If true, the JIT must re-check prototype even if group
-    // has been seen before.
-    MOZ_ASSERT(!hasDynamicPrototype());
-    return false;
-  }
-
   JS::Compartment* compartment() const {
     return JS::GetCompartmentForRealm(realm_);
   }
