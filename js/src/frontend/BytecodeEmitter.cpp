@@ -1576,26 +1576,16 @@ bool BytecodeEmitter::emitThisEnvironmentCallee() {
 
   // We have to load the callee from the environment chain.
   unsigned numHops = 0;
-  EmitterScope* es = innermostEmitterScope();
-  for (; es; es = es->enclosingInFrame()) {
-    if (es->scope(this).is<FunctionScope>()) {
-      if (!es->scope(this).isArrow()) {
-        // The Parser is responsible for marking the environment as either
-        // closed-over or used-by-eval which ensure that is must exist.
-        MOZ_ASSERT(es->scope(this).hasEnvironment());
+  for (AbstractScopePtrIter si(innermostScope()); si; si++) {
+    if (si.hasSyntacticEnvironment() &&
+        si.abstractScopePtr().is<FunctionScope>()) {
+      if (!si.abstractScopePtr().isArrow()) {
         break;
       }
     }
-    if (es->scope(this).hasEnvironment()) {
+    if (si.abstractScopePtr().hasEnvironment()) {
       numHops++;
     }
-  }
-  if (!es) {
-    // The "this" environment exists outside of the compilation, but the
-    // `ScopeContext` recorded the number of additional hops needed, so add
-    // those in now.
-    MOZ_ASSERT(sc->allowSuperProperty());
-    numHops += compilationState.scopeContext.enclosingThisEnvironmentHops;
   }
 
   static_assert(
