@@ -22,19 +22,24 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   const highlighters = view.highlighters;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#grid", inspector);
   const container = getRuleViewProperty(view, "#grid", "display").valueSpan;
-  let gridToggle = container.querySelector(".ruleview-grid");
+  let gridToggle = container.querySelector(".js-toggle-grid-highlighter");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   gridToggle.click();
   await onHighlighterShown;
 
   info("Edit the 'grid' property value to 'block'.");
   const editor = await focusEditableField(view, container);
-  const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   const onDone = view.once("ruleview-changed");
   editor.input.value = "block;";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
@@ -42,7 +47,7 @@ add_task(async function() {
   await onDone;
 
   info("Check the grid highlighter and grid toggle button are hidden.");
-  gridToggle = container.querySelector(".ruleview-grid");
+  gridToggle = container.querySelector(".js-toggle-grid-highlighter");
   ok(!gridToggle, "Grid highlighter toggle is not visible.");
   ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
 });
