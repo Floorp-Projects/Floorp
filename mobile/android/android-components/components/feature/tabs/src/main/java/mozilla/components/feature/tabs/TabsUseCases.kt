@@ -324,9 +324,20 @@ class TabsUseCases(
         /**
          * Restores the browsing session from the given [SessionStorage]. Also dispatches
          * [RestoreCompleteAction] on the [BrowserStore] once restore has been completed.
+         *
+         * @param storage the [SessionStorage] to restore state from.
+         * @param tabTimeoutInMs the amount of time in milliseconds after which inactive
+         * tabs will be discarded and not restored. Defaults to Long.MAX_VALUE, meaning
+         * all tabs will be restored by default.
          */
-        suspend operator fun invoke(storage: SessionStorage) = withContext(Dispatchers.IO) {
-            val state = storage.restore()
+        suspend operator fun invoke(
+            storage: SessionStorage,
+            tabTimeoutInMs: Long = Long.MAX_VALUE
+        ) = withContext(Dispatchers.IO) {
+            val now = System.currentTimeMillis()
+            val state = storage.restore {
+                now - it.lastAccess <= tabTimeoutInMs
+            }
             if (state != null) {
                 withContext(Dispatchers.Main) {
                     invoke(state)

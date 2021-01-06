@@ -39,7 +39,7 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class SessionStorageTest {
     @Test
-    fun `Restored browsing session should contain tabs of saved state`() {
+    fun `Restored browser state should contain tabs of saved state`() {
         // Build the state
 
         val engineSessionState1 = FakeEngineSessionState("engineState1")
@@ -65,15 +65,59 @@ class SessionStorageTest {
 
         // Read it back
 
-        val browsingSession = storage.restore()
-        assertNotNull(browsingSession!!)
+        val restoredState = storage.restore()
+        assertNotNull(restoredState!!)
 
-        assertEquals(3, browsingSession.tabs.size)
-        assertEquals("tab1", browsingSession.selectedTabId)
+        assertEquals(3, restoredState.tabs.size)
+        assertEquals("tab1", restoredState.selectedTabId)
 
-        tab1.assertSameAs(browsingSession.tabs[0])
-        tab2.assertSameAs(browsingSession.tabs[1])
-        tab3.assertSameAs(browsingSession.tabs[2])
+        tab1.assertSameAs(restoredState.tabs[0])
+        tab2.assertSameAs(restoredState.tabs[1])
+        tab3.assertSameAs(restoredState.tabs[2])
+    }
+
+    @Test
+    fun `Predicate is applied when restoring browser state`() {
+        // Build the state
+
+        val engineSessionState1 = FakeEngineSessionState("engineState1")
+
+        val tab1 = createTab("https://www.mozilla.org", id = "tab1").copy(
+            engineState = EngineState(engineSessionState = engineSessionState1)
+        )
+        val tab2 = createTab("https://getpocket.com", id = "tab2", contextId = "context")
+        val tab3 = createTab("https://www.firefox.com", id = "tab3", parent = tab1)
+        val tab4 = createTab("https://example.com", id = "tab4", contextId = "context",
+            lastAccess = System.currentTimeMillis()
+        )
+
+        val state = BrowserState(
+            tabs = listOf(tab1, tab2, tab3, tab4),
+            selectedTabId = tab1.id
+        )
+
+        // Persist the state
+
+        val engine = FakeEngine()
+
+        val storage = SessionStorage(testContext, engine)
+        val persisted = storage.save(state)
+        assertTrue(persisted)
+
+        // Read it back and filter using predicate
+        val restoredState = storage.restore {
+            it.contextId == "context"
+        }
+        assertNotNull(restoredState!!)
+
+        // Only the two "context" tabs should be restored
+        assertEquals(2, restoredState.tabs.size)
+        tab2.assertSameAs(restoredState.tabs[0])
+        tab4.assertSameAs(restoredState.tabs[1])
+
+        // The selected tab was not restored so the most recently accessed restored tab
+        // should be selected.
+        assertEquals("tab4", restoredState.selectedTabId)
     }
 
     @Test
@@ -89,7 +133,7 @@ class SessionStorageTest {
     }
 
     @Test
-    fun `Should return empty browsing session after clearing`() {
+    fun `Should return empty browser state after clearing`() {
         val engine = FakeEngine()
 
         val tab1 = createTab("https://www.mozilla.org", id = "tab1")
@@ -110,8 +154,8 @@ class SessionStorageTest {
 
         // Read it back. Expect null, indicating empty.
 
-        val browsingSession = storage.restore()
-        assertNull(browsingSession)
+        val restoredState = storage.restore()
+        assertNull(restoredState)
     }
 
     /**
@@ -300,10 +344,13 @@ class SessionStorageTest {
         val browsingSession = storage.restore()
         assertNotNull(browsingSession!!)
 
-        assertNull(browsingSession.selectedTabId)
         assertEquals(2, browsingSession.tabs.size)
         assertEquals("https://www.mozilla.org", browsingSession.tabs[0].url)
         assertEquals("https://getpocket.com", browsingSession.tabs[1].url)
+
+        // Selected tab doesn't exist so we take to most recently accessed one, or
+        // the first one if all tabs have the same last access value.
+        assertEquals("mozilla", browsingSession.selectedTabId)
     }
 }
 

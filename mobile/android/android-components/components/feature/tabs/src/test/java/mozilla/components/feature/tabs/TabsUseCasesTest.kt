@@ -4,27 +4,38 @@
 
 package mozilla.components.feature.tabs
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.state.SessionState.Source
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.toRecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
+const val DAY_IN_MS = 24 * 60 * 60 * 1000L
+
 class TabsUseCasesTest {
+    private val dispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(dispatcher)
 
     @Test
     fun `SelectTabUseCase - session will be selected in session manager`() {
@@ -275,5 +286,29 @@ class TabsUseCasesTest {
         assertEquals(1, sessionManager.size)
 
         assertTrue(sessionManager.all[0].isCustomTabSession())
+    }
+
+    @Test
+    fun `RestoreUseCase - filters based on tab timeout`() = runBlocking {
+        val sessionManager: SessionManager = mock()
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
+
+        val now = System.currentTimeMillis()
+        val tabs = listOf(
+            createTab("https://mozilla.org", lastAccess = now).toRecoverableTab(),
+            createTab("https://firefox.com", lastAccess = now - 2 * DAY_IN_MS).toRecoverableTab(),
+            createTab("https://getpocket.com", lastAccess = now - 3 * DAY_IN_MS).toRecoverableTab()
+        )
+
+        val sessionStorage: SessionStorage = mock()
+        useCases.restore(sessionStorage, tabTimeoutInMs = DAY_IN_MS)
+
+        val predicateCaptor = argumentCaptor<(RecoverableTab) -> Boolean>()
+        verify(sessionStorage).restore(predicateCaptor.capture())
+
+        // Only the first tab should be restored, all others "timed out."
+        val restoredTabs = tabs.filter(predicateCaptor.value)
+        assertEquals(1, restoredTabs.size)
+        assertEquals(tabs.first(), restoredTabs.first())
     }
 }

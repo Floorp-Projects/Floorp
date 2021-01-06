@@ -26,15 +26,21 @@ import java.util.UUID
 class BrowserStateReader {
     /**
      * Reads a serialized [RecoverableBrowserState] from the given [AtomicFile].
+     *
+     * @param engine The [Engine] implementation for restoring the engine state.
+     * @param file The [AtomicFile] to read the the recoverable state from.
+     * @param predicate an optional predicate applied to each tab to determine if it should be restored.
      */
     fun read(
         engine: Engine,
-        file: AtomicFile
+        file: AtomicFile,
+        predicate: (RecoverableTab) -> Boolean = { true }
     ): RecoverableBrowserState? {
         return file.readJSON { browsingSession(
             engine,
             restoreSessionId = true,
-            restoreParentId = true)
+            restoreParentId = true,
+            predicate = predicate)
         }
     }
 
@@ -61,7 +67,8 @@ class BrowserStateReader {
 private fun JsonReader.browsingSession(
     engine: Engine,
     restoreSessionId: Boolean = true,
-    restoreParentId: Boolean = true
+    restoreParentId: Boolean = true,
+    predicate: (RecoverableTab) -> Boolean = { true }
 ): RecoverableBrowserState? {
     beginObject()
 
@@ -75,7 +82,7 @@ private fun JsonReader.browsingSession(
             Keys.VERSION_KEY -> version = nextInt()
             Keys.SELECTED_SESSION_INDEX_KEY -> selectedIndex = nextInt()
             Keys.SELECTED_TAB_ID_KEY -> selectedTabId = nextStringOrNull()
-            Keys.SESSION_STATE_TUPLES_KEY -> tabs = tabs(engine, restoreSessionId, restoreParentId)
+            Keys.SESSION_STATE_TUPLES_KEY -> tabs = tabs(engine, restoreSessionId, restoreParentId, predicate)
         }
     }
 
@@ -89,6 +96,12 @@ private fun JsonReader.browsingSession(
     }
 
     return if (tabs != null && tabs.isNotEmpty()) {
+        // Check if selected tab still exists after restoring/filtering and
+        // use most recently accessed tab otherwise.
+        if (tabs.find { it.id == selectedTabId } == null) {
+            selectedTabId = tabs.sortedByDescending { it.lastAccess }.first().id
+        }
+
         RecoverableBrowserState(tabs, selectedTabId)
     } else {
         null
@@ -98,14 +111,15 @@ private fun JsonReader.browsingSession(
 private fun JsonReader.tabs(
     engine: Engine,
     restoreSessionId: Boolean = true,
-    restoreParentId: Boolean = true
+    restoreParentId: Boolean = true,
+    predicate: (RecoverableTab) -> Boolean = { true }
 ): List<RecoverableTab> {
     beginArray()
 
     val tabs = mutableListOf<RecoverableTab>()
     while (peek() != JsonToken.END_ARRAY) {
         val tab = tab(engine, restoreSessionId, restoreParentId)
-        if (tab != null) {
+        if (tab != null && predicate(tab)) {
             tabs.add(tab)
         }
     }

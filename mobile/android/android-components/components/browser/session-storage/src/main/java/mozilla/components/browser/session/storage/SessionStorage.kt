@@ -14,6 +14,7 @@ import mozilla.components.browser.session.storage.serialize.BrowserStateWriter
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.base.crash.CrashReporting
@@ -40,12 +41,14 @@ class SessionStorage(
 
     /**
      * Reads the saved state from disk. Returns null if no state was found on disk or if reading the file failed.
+     *
+     * @param predicate an optional predicate applied to each tab to determine if it should be restored.
      */
     @WorkerThread
-    fun restore(): RecoverableBrowserState? {
+    fun restore(predicate: (RecoverableTab) -> Boolean = { true }): RecoverableBrowserState? {
         synchronized(sessionFileLock) {
             val file = getFileForEngine(context, engine)
-            return stateReader.read(engine, file)
+            return stateReader.read(engine, file, predicate)
         }
     }
 
