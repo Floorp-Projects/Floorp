@@ -686,7 +686,7 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 
   // Rewind to starting position to retry.
   parser->tokenStream.rewind(startPosition);
-  compilationInfo.rewind(startObj);
+  compilationInfo.rewind(compilationState_, startObj);
 
   // Assignment must be monotonic to prevent reparsing iloops
   MOZ_ASSERT_IF(compilationState_.directives.strict(), newDirectives.strict());
@@ -702,9 +702,9 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
   TokenStreamPosition startPosition(parser->tokenStream);
 
   // Emplace the topLevel stencil
-  MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
+  MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationInfo::TopLevelIndex);
-  if (!compilationInfo.stencil.scriptData.emplaceBack()) {
+  if (!compilationState_.scriptData.emplaceBack()) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -761,9 +761,9 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
   }
 
   // Emplace the topLevel stencil
-  MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
+  MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationInfo::TopLevelIndex);
-  if (!compilationInfo.stencil.scriptData.emplaceBack()) {
+  if (!compilationState_.scriptData.emplaceBack()) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -814,7 +814,8 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
   assertSourceAndParserCreated(compilationInfo.input);
 
   TokenStreamPosition startPosition(parser->tokenStream);
-  CompilationInfo::RewindToken startObj = compilationInfo.getRewindToken();
+  CompilationInfo::RewindToken startObj =
+      compilationInfo.getRewindToken(compilationState_);
 
   // Speculatively parse using the default directives implied by the context.
   // If a directive is encountered (e.g., "use strict") that changes how the
@@ -863,7 +864,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     // we want the SourceExtent used in the final standalone script to
     // start from the beginning of the buffer, and use the provided
     // line and column.
-    compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex].extent =
+    compilationState_.scriptData[CompilationInfo::TopLevelIndex].extent =
         SourceExtent{/* sourceStart = */ 0,
                      sourceBuffer_.length(),
                      funbox->extent().toStringStart,
@@ -883,9 +884,8 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     // allocate the JSFunction that wraps it.
     MOZ_ASSERT(funbox->isAsmJSModule());
     MOZ_ASSERT(compilationInfo.stencil.asmJS.has(funbox->index()));
-    MOZ_ASSERT(
-        compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex]
-            .functionFlags.isAsmJSNative());
+    MOZ_ASSERT(compilationState_.scriptData[CompilationInfo::TopLevelIndex]
+                   .functionFlags.isAsmJSNative());
   }
 
   if (!CompilationInfo::instantiateStencils(cx, compilationInfo, gcOutput)) {
@@ -1081,8 +1081,8 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   // This excludes non-leaf functions and all script class constructors.
   bool hadLazyScriptData = lazy->hasPrivateScriptData();
   bool isRelazifiableAfterDelazify = lazy->isRelazifiableAfterDelazify();
-  compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex]
-      .allowRelazify = isRelazifiableAfterDelazify && !hadLazyScriptData;
+  compilationState.scriptData[CompilationInfo::TopLevelIndex].allowRelazify =
+      isRelazifiableAfterDelazify && !hadLazyScriptData;
 
   if (!compilationState.finish(cx, compilationInfo)) {
     return false;

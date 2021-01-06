@@ -386,12 +386,12 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   Mark mark() const {
     Mark m;
     m.mark = alloc_.mark();
-    m.token = compilationInfo_.getRewindToken();
+    m.token = compilationInfo_.getRewindToken(compilationState_);
     return m;
   }
   void release(Mark m) {
     alloc_.release(m.mark);
-    compilationInfo_.rewind(m.token);
+    compilationInfo_.rewind(compilationState_, m.token);
   }
 
  public:

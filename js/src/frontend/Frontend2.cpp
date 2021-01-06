@@ -604,15 +604,22 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     return false;
   }
 
-  if (result.scripts.len > TaggedScriptThingIndex::IndexLimit) {
+  auto len = result.scripts.len;
+  if (len == 0) {
+    return true;
+  }
+
+  if (len > TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;
   }
 
-  if (!compilationInfo.stencil.scriptData.reserve(result.scripts.len)) {
+  auto* p = compilationInfo.alloc.newArrayUninitialized<ScriptStencil>(len);
+  if (!p) {
     js::ReportOutOfMemory(cx);
     return false;
   }
+  compilationInfo.stencil.scriptData = mozilla::Span(p, len);
 
   // NOTE: Currently we don't support delazification or standalone function.
   //       Once we support, fix the following loop to include 0-th item
@@ -625,11 +632,11 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     }
   }
 
-  compilationInfo.stencil.prepareStorageFor(
-      cx, compilationState.nonLazyFunctionCount);
+  compilationInfo.stencil.prepareStorageFor(cx, compilationState);
 
-  for (size_t i = 0; i < result.scripts.len; i++) {
-    compilationInfo.stencil.scriptData.infallibleEmplaceBack();
+  for (size_t i = 0; i < len; i++) {
+    new (mozilla::KnownNotNull, &compilationInfo.stencil.scriptData[i])
+        CompilationStencil();
 
     if (!ConvertScriptStencil(cx, result, result.scripts.data[i], allAtoms,
                               compilationInfo, ScriptIndex(i))) {
