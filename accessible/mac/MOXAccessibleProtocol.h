@@ -124,6 +124,9 @@
 // AXRequired
 - (NSNumber* _Nullable)moxRequired;
 
+// AXElementBusy
+- (NSNumber* _Nullable)moxElementBusy;
+
 // AXDOMIdentifier
 - (NSString* _Nullable)moxDOMIdentifier;
 
