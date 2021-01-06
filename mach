@@ -14,7 +14,6 @@
 py2commands="
     awsy-test
     firefox-ui-functional
-    geckodriver-test
     jsshell-bench
     marionette-test
     jstests
