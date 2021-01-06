@@ -155,11 +155,6 @@ class AbstractScopePtrIter {
     scope_ = scope_.enclosing();
   }
 
-  // Returns whether this scope has a syntactic environment (i.e., an
-  // Environment that isn't a non-syntactic With or NonSyntacticVariables)
-  // on the environment chain.
-  bool hasSyntacticEnvironment() const;
-
   void trace(JSTracer* trc) {
     if (scope_) {
       scope_.trace(trc);
