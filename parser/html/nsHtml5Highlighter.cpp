@@ -651,7 +651,7 @@ void nsHtml5Highlighter::Push(
   MOZ_ASSERT(mStack.Length() >= 1, "Pushing without root.");
   nsIContent** elt = CreateElement(aName, aAttributes, CurrentNode(),
                                    aCreator);  // Don't inline below!
-  opAppend operation(elt, CurrentNode());
+  opAppend operation(elt, CurrentNode(), mozilla::dom::FROM_PARSER_NETWORK);
   mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
   mStack.AppendElement(elt);
 }
