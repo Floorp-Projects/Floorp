@@ -63,9 +63,6 @@ main-context-menu-page-save =
     .label = Save Page As…
     .accesskey = P
 
-toolbar-button-page-save =
-    .label = { main-context-menu-page-save.label }
-
 ## Simple menu items
 
 main-context-menu-bookmark-add =

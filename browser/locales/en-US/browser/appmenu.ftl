@@ -9,18 +9,27 @@ appmenuitem-update-banner =
 appmenuitem-protection-dashboard-title = Protections Dashboard
 appmenuitem-customize-mode =
     .label = Customize…
+appmenuitem-new-window =
+    .label = New Window
+appmenuitem-new-private-window =
+    .label = New Private Window
 
-## Zoom Controls
+## Zoom and Fullscreen Controls
 
 appmenuitem-zoom-enlarge =
   .label = Zoom in
 appmenuitem-zoom-reduce =
   .label = Zoom out
+appmenuitem-fullscreen =
+  .label = Full Screen
 
 ## Firefox Account toolbar button and Sync panel in App menu.
 
 fxa-toolbar-sync-now =
     .label = Sync Now
+
+appmenuitem-save-page =
+    .label = Save Page As…
 
 ## What's New panel in App menu.
 
