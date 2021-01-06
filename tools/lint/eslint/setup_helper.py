@@ -190,8 +190,8 @@ def expected_eslint_modules():
     expected_modules_path = os.path.join(get_project_root(), "package.json")
     with open(expected_modules_path, "r", encoding="utf-8") as f:
         sections = json.load(f)
-        expected_modules = sections["dependencies"]
-        expected_modules.update(sections["devDependencies"])
+        expected_modules = sections.get("dependencies", {})
+        expected_modules.update(sections.get("devDependencies", {}))
 
     # Also read the in-tree ESLint plugin mozilla information, to ensure the
     # dependencies are up to date.
@@ -199,7 +199,7 @@ def expected_eslint_modules():
         get_eslint_module_path(), "eslint-plugin-mozilla", "package.json"
     )
     with open(mozilla_json_path, "r", encoding="utf-8") as f:
-        expected_modules.update(json.load(f)["dependencies"])
+        expected_modules.update(json.load(f).get("dependencies", {}))
 
     # Also read the in-tree ESLint plugin spidermonkey information, to ensure the
     # dependencies are up to date.
@@ -207,7 +207,7 @@ def expected_eslint_modules():
         get_eslint_module_path(), "eslint-plugin-spidermonkey-js", "package.json"
     )
     with open(mozilla_json_path, "r", encoding="utf-8") as f:
-        expected_modules.update(json.load(f)["dependencies"])
+        expected_modules.update(json.load(f).get("dependencies", {}))
 
     return expected_modules
 
