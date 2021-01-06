@@ -301,7 +301,7 @@ template <XDRMode mode>
 static XDRResult ParserAtomTable(XDRState<mode>* xdr,
                                  frontend::CompilationStencil& stencil) {
   if (mode == XDR_ENCODE) {
-    uint32_t atomVectorLength = stencil.parserAtomData.length();
+    uint32_t atomVectorLength = stencil.parserAtomData.size();
     MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
 
     uint32_t atomCount = 0;
@@ -332,7 +332,8 @@ static XDRResult ParserAtomTable(XDRState<mode>* xdr,
   uint32_t atomVectorLength;
   MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
 
-  if (!xdr->frontendAtoms().resize(xdr->cx(), atomVectorLength)) {
+  if (!xdr->frontendAtoms().allocate(xdr->cx(), xdr->stencilAlloc(),
+                                     atomVectorLength)) {
     return xdr->fail(JS::TranscodeResult_Throw);
   }
 
@@ -737,7 +738,7 @@ XDRResult XDRStencilDecoder::codeStencils(
     frontend::CompilationInfoVector& compilationInfos) {
   MOZ_ASSERT(compilationInfos.delazifications.length() == 0);
 
-  frontend::ParserAtomVectorBuilder parserAtomBuilder(
+  frontend::ParserAtomSpanBuilder parserAtomBuilder(
       cx()->runtime(), compilationInfos.initial.stencil.parserAtomData);
   parserAtomBuilder_ = &parserAtomBuilder;
   stencilAlloc_ = &compilationInfos.initial.alloc;
@@ -758,7 +759,7 @@ XDRResult XDRStencilDecoder::codeStencils(
 
     hasFinishedAtomTable_ = false;
 
-    frontend::ParserAtomVectorBuilder parserAtomBuilder(
+    frontend::ParserAtomSpanBuilder parserAtomBuilder(
         cx()->runtime(), delazification.parserAtomData);
     parserAtomBuilder_ = &parserAtomBuilder;
 

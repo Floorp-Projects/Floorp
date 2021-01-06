@@ -773,7 +773,7 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
 /* static */
 bool CompilationInfo::prepareInputAndStencilForInstantiate(
     JSContext* cx, CompilationInput& input, CompilationStencil& stencil) {
-  if (!input.atomCache.allocate(cx, stencil.parserAtomData.length())) {
+  if (!input.atomCache.allocate(cx, stencil.parserAtomData.size())) {
     return false;
   }
 
@@ -824,8 +824,8 @@ bool CompilationInfoVector::prepareForInstantiate(
   size_t maxScopeDataLength = 0;
   size_t maxParserAtomDataLength = 0;
   for (auto& delazification : delazifications) {
-    if (maxParserAtomDataLength < delazification.parserAtomData.length()) {
-      maxParserAtomDataLength = delazification.parserAtomData.length();
+    if (maxParserAtomDataLength < delazification.parserAtomData.size()) {
+      maxParserAtomDataLength = delazification.parserAtomData.size();
     }
     if (maxScriptDataLength < delazification.scriptData.size()) {
       maxScriptDataLength = delazification.scriptData.size();
@@ -923,8 +923,7 @@ CompilationState::CompilationState(
       usedNames(cx),
       allocScope(frontendAllocScope),
       input(compilationInfo.input),
-      parserAtoms(cx->runtime(), compilationInfo.alloc,
-                  compilationInfo.stencil.parserAtomData) {}
+      parserAtoms(cx->runtime(), compilationInfo.alloc) {}
 
 bool SharedDataContainer::prepareStorageFor(JSContext* cx,
                                             size_t nonLazyScriptCount,
@@ -1053,6 +1052,12 @@ bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
 
   if (!CopyVectorToSpan(cx, compilationInfo.alloc,
                         compilationInfo.stencil.scopeData, scopeData)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
+                        compilationInfo.stencil.parserAtomData,
+                        parserAtoms.entries())) {
     return false;
   }
 
@@ -1917,13 +1922,9 @@ void CompilationAtomCache::returnBuffer(AtomCacheVector& atoms) {
   atoms = std::move(atoms_);
 }
 
-const ParserAtom* CompilationStencil::getParserAtomAt(
-    JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
-  if (taggedIndex.isParserAtomIndex()) {
-    auto index = taggedIndex.toParserAtomIndex();
-    MOZ_ASSERT(index < parserAtomData.length());
-    return parserAtomData[index]->asAtom();
-  }
+const ParserAtom* GetWellKnownParserAtomAt(JSContext* cx,
+                                           TaggedParserAtomIndex taggedIndex) {
+  MOZ_ASSERT(!taggedIndex.isParserAtomIndex());
 
   if (taggedIndex.isWellKnownAtomId()) {
     auto index = taggedIndex.toWellKnownAtomId();
@@ -1938,4 +1939,26 @@ const ParserAtom* CompilationStencil::getParserAtomAt(
   MOZ_ASSERT(taggedIndex.isStaticParserString2());
   auto index = taggedIndex.toStaticParserString2();
   return WellKnownParserAtoms::getStatic2(index);
+}
+
+const ParserAtom* CompilationState::getParserAtomAt(
+    JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
+  if (taggedIndex.isParserAtomIndex()) {
+    auto index = taggedIndex.toParserAtomIndex();
+    MOZ_ASSERT(index < parserAtoms.entries().length());
+    return parserAtoms.entries()[index]->asAtom();
+  }
+
+  return GetWellKnownParserAtomAt(cx, taggedIndex);
+}
+
+const ParserAtom* CompilationStencil::getParserAtomAt(
+    JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
+  if (taggedIndex.isParserAtomIndex()) {
+    auto index = taggedIndex.toParserAtomIndex();
+    MOZ_ASSERT(index < parserAtomData.size());
+    return parserAtomData[index]->asAtom();
+  }
+
+  return GetWellKnownParserAtomAt(cx, taggedIndex);
 }

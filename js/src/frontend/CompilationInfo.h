@@ -256,6 +256,9 @@ struct MOZ_RAII CompilationState {
                    JSObject* enclosingEnv = nullptr);
 
   bool finish(JSContext* cx, CompilationInfo& compilationInfo);
+
+  const ParserAtom* getParserAtomAt(JSContext* cx,
+                                    TaggedParserAtomIndex taggedIndex) const;
 };
 
 // Store shared data for non-lazy script.
@@ -316,7 +319,7 @@ struct CompilationStencil {
   // List of parser atoms for this compilation.
   // This may contain nullptr entries when round-tripping with XDR if the atom
   // was generated in original parse but not used by stencil.
-  ParserAtomVector parserAtomData;
+  ParserAtomSpan parserAtomData;
 
   CompilationStencil() = default;
 

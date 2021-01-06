@@ -10,6 +10,8 @@
 #include "mozilla/DebugOnly.h"      // mozilla::DebugOnly
 #include "mozilla/HashFunctions.h"  // HashString
 #include "mozilla/Range.h"          // mozilla::Range
+#include "mozilla/Span.h"           // mozilla::Span
+#include "mozilla/Variant.h"        // mozilla::Variant
 
 #include "ds/LifoAlloc.h"         // LifoAlloc
 #include "frontend/TypedIndex.h"  // TypedIndex
@@ -604,6 +606,7 @@ class WellKnownParserAtoms_ROM {
 };
 
 using ParserAtomVector = Vector<ParserAtomEntry*, 0, js::SystemAllocPolicy>;
+using ParserAtomSpan = mozilla::Span<ParserAtomEntry*>;
 
 /**
  * WellKnownParserAtoms reserves a set of common ParserAtoms on the JSRuntime
@@ -665,7 +668,7 @@ class WellKnownParserAtoms {
   static const ParserAtom* getStatic2(StaticParserString2 s);
 };
 
-bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,
+bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache);
 
 /**
@@ -682,10 +685,10 @@ class ParserAtomsTable {
   using EntrySet = HashSet<const ParserAtomEntry*, ParserAtomLookupHasher,
                            js::SystemAllocPolicy>;
   EntrySet entrySet_;
-  ParserAtomVector& entries_;
+  ParserAtomVector entries_;
 
  public:
-  ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc, ParserAtomVector& entries);
+  ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc);
   ParserAtomsTable(ParserAtomsTable&&) = default;
 
  private:
@@ -724,21 +727,23 @@ class ParserAtomsTable {
   const ParserAtom* getStatic2(StaticParserString2 s) const;
   const ParserAtom* getParserAtom(ParserAtomIndex index) const;
   const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
+
+  const ParserAtomVector& entries() const { return entries_; }
 };
 
 // Lightweight version of ParserAtomsTable.
 // This doesn't support deduplication.
 // Used while decoding XDR.
-class ParserAtomVectorBuilder {
+class ParserAtomSpanBuilder {
  private:
   const WellKnownParserAtoms& wellKnownTable_;
-  ParserAtomVector& entries_;
+  ParserAtomSpan& entries_;
 
  public:
-  ParserAtomVectorBuilder(JSRuntime* rt, ParserAtomVector& entries);
+  ParserAtomSpanBuilder(JSRuntime* rt, ParserAtomSpan& entries);
 
-  bool resize(JSContext* cx, size_t count);
-  size_t length() const { return entries_.length(); }
+  bool allocate(JSContext* cx, LifoAlloc& alloc, size_t count);
+  size_t size() const { return entries_.size(); }
 
   void set(ParserAtomIndex index, const ParserAtomEntry* atom) {
     entries_[index] = const_cast<ParserAtomEntry*>(atom);

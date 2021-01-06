@@ -7566,8 +7566,7 @@ bool BytecodeEmitter::isRestParameter(ParseNode* expr) {
         // used: `function f(...[]) {}`.
         return false;
       }
-      const ParserAtom* paramName =
-          compilationInfo.stencil.getParserAtomAt(cx, index);
+      const ParserAtom* paramName = compilationState.getParserAtomAt(cx, index);
       return name == paramName;
     }
   }

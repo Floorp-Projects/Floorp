@@ -6,6 +6,7 @@
 
 #include "frontend/ParserAtom.h"
 
+#include <memory>  // std::uninitialized_fill_n
 #include <type_traits>
 
 #include "jsnum.h"
@@ -328,11 +329,8 @@ void ParserAtomEntry::dumpCharsNoQuote(js::GenericPrinter& out) const {
 }
 #endif
 
-ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc,
-                                   ParserAtomVector& entries)
-    : wellKnownTable_(*rt->commonParserNames),
-      alloc_(alloc),
-      entries_(entries) {}
+ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
+    : wellKnownTable_(*rt->commonParserNames), alloc_(alloc) {}
 
 const ParserAtom* ParserAtomsTable::addEntry(JSContext* cx,
                                              EntrySet::AddPtr& addPtr,
@@ -403,19 +401,25 @@ const ParserAtom* ParserAtomsTable::internLatin1(JSContext* cx,
   return internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq, length);
 }
 
-ParserAtomVectorBuilder::ParserAtomVectorBuilder(JSRuntime* rt,
-                                                 ParserAtomVector& entries)
+ParserAtomSpanBuilder::ParserAtomSpanBuilder(JSRuntime* rt,
+                                             ParserAtomSpan& entries)
     : wellKnownTable_(*rt->commonParserNames), entries_(entries) {}
 
-bool ParserAtomVectorBuilder::resize(JSContext* cx, size_t count) {
+bool ParserAtomSpanBuilder::allocate(JSContext* cx, LifoAlloc& alloc,
+                                     size_t count) {
   if (count >= TaggedParserAtomIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;
   }
-  if (!entries_.resize(count)) {
-    ReportOutOfMemory(cx);
+
+  auto* p = alloc.newArrayUninitialized<ParserAtomEntry*>(count);
+  if (!p) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
+  std::uninitialized_fill_n(p, count, nullptr);
+
+  entries_ = mozilla::Span(p, count);
   return true;
 }
 
@@ -621,22 +625,22 @@ const ParserAtom* WellKnownParserAtoms::getStatic2(StaticParserString2 s) {
   return WellKnownParserAtoms::rom_.length2Table[size_t(s)].asAtom();
 }
 
-const ParserAtom* ParserAtomVectorBuilder::getWellKnown(
+const ParserAtom* ParserAtomSpanBuilder::getWellKnown(
     WellKnownAtomId atomId) const {
   return wellKnownTable_.getWellKnown(atomId);
 }
 
-const ParserAtom* ParserAtomVectorBuilder::getStatic1(
+const ParserAtom* ParserAtomSpanBuilder::getStatic1(
     StaticParserString1 s) const {
   return WellKnownParserAtoms::getStatic1(s);
 }
 
-const ParserAtom* ParserAtomVectorBuilder::getStatic2(
+const ParserAtom* ParserAtomSpanBuilder::getStatic2(
     StaticParserString2 s) const {
   return WellKnownParserAtoms::getStatic2(s);
 }
 
-const ParserAtom* ParserAtomVectorBuilder::getParserAtom(
+const ParserAtom* ParserAtomSpanBuilder::getParserAtom(
     ParserAtomIndex index) const {
   return entries_[index]->asAtom();
 }
@@ -663,7 +667,7 @@ const ParserAtom* GetParserAtom(T self, TaggedParserAtomIndex index) {
   return nullptr;
 }
 
-const ParserAtom* ParserAtomVectorBuilder::getParserAtom(
+const ParserAtom* ParserAtomSpanBuilder::getParserAtom(
     TaggedParserAtomIndex index) const {
   return GetParserAtom(this, index);
 }
@@ -689,7 +693,7 @@ const ParserAtom* ParserAtomsTable::getParserAtom(
   return GetParserAtom(this, index);
 }
 
-bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,
+bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache) {
   for (const auto& entry : entries) {
     if (!entry) {
