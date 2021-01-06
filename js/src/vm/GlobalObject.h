@@ -276,6 +276,10 @@ class GlobalObject : public NativeObject {
    */
   bool shouldSplicePrototype();
 
+  /* Set a new prototype for the global object during bootstrapping. */
+  static bool splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
+                              Handle<TaggedProto> proto);
+
   /*
    * Create a constructor function with the specified name and length using
    * ctor, a method which creates objects with the given class.

@@ -93,6 +93,7 @@ class JSObject
  private:
   friend class js::DictionaryShapeLink;
   friend class js::GCMarker;
+  friend class js::GlobalObject;
   friend class js::NewObjectCache;
   friend class js::Nursery;
   friend class js::gc::RelocationOverlay;
@@ -334,10 +335,6 @@ class JSObject
   inline bool staticPrototypeIsImmutable() const;
 
   inline void setGroup(js::ObjectGroup* group);
-
-  /* Set a new prototype for an object with a singleton type. */
-  static bool splicePrototype(JSContext* cx, js::HandleObject obj,
-                              js::Handle<js::TaggedProto> proto);
 
   /*
    * Environment chains.
