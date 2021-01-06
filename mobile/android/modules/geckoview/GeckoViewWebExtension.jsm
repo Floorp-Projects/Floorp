@@ -95,14 +95,6 @@ class ExtensionActionHelper {
     return window.WindowEventDispatcher;
   }
 
-  sendRequestForResult(aTabId, aData) {
-    return this.eventDispatcherFor(aTabId).sendRequestForResult({
-      ...aData,
-      aTabId,
-      extensionId: this.extension.id,
-    });
-  }
-
   sendRequest(aTabId, aData) {
     return this.eventDispatcherFor(aTabId).sendRequest({
       ...aData,

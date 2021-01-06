@@ -1888,6 +1888,12 @@ public class GeckoSessionTestRule implements TestRule {
         return new ExtensionPromise(UUID.randomUUID(), session, js);
     }
 
+    public Object evaluateExtensionJS(final @NonNull String js) {
+        return webExtensionApiCall("Eval", args -> {
+            args.put("code", js);
+        });
+    }
+
     public Object evaluateJS(final @NonNull GeckoSession session, final @NonNull String js) {
         // Let's make sure we have the port already
         UiThreadUtils.waitForCondition(() -> mPorts.containsKey(session), mTimeoutMillis);
