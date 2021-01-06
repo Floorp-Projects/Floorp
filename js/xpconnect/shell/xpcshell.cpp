@@ -33,6 +33,10 @@
 #  include <gtk/gtk.h>
 #endif
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "BaseProfiler.h"
+#endif
+
 int main(int argc, char** argv, char** envp) {
 #ifdef MOZ_WIDGET_GTK
   // A default display may or may not be required for xpcshell tests, and so
@@ -53,6 +57,11 @@ int main(int argc, char** argv, char** envp) {
   DllBlocklist_Initialize();
 #endif
 
+#ifdef MOZ_GECKO_PROFILER
+  char aLocal;
+  mozilla::baseprofiler::profiler_init(&aLocal);
+#endif
+
   XREShellData shellData;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   shellData.sandboxBrokerServices =
@@ -65,6 +74,10 @@ int main(int argc, char** argv, char** envp) {
   }
 
   int result = bootstrap->XRE_XPCShellMain(argc, argv, envp, &shellData);
+
+#ifdef MOZ_GECKO_PROFILER
+  mozilla::baseprofiler::profiler_shutdown();
+#endif
 
 #if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
   DllBlocklist_Shutdown();

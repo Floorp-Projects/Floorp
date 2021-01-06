@@ -1053,8 +1053,6 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
 #ifdef MOZ_GECKO_PROFILER
   char aLocal;
-  // The baseprofiler must be nested outside of the Gecko Profiler.
-  mozilla::baseprofiler::profiler_init(&aLocal);
   profiler_init(&aLocal);
 #endif
 
@@ -1395,7 +1393,6 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
   // This must precede NS_LogTerm(), otherwise xpcshell return non-zero
   // during some tests, which causes failures.
   profiler_shutdown();
-  mozilla::baseprofiler::profiler_shutdown();
 #endif
 
   NS_LogTerm();
