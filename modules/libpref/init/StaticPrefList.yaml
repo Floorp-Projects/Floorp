@@ -1005,6 +1005,11 @@
   value: @IS_NOT_MOZILLA_OFFICIAL@
   mirror: always
 
+- name: browser.download.sanitize_non_media_extensions
+  type: bool
+  value: true
+  mirror: always
+
 # Image document's automatic image sizing.
 - name: browser.enable_automatic_image_resizing
   type: bool
