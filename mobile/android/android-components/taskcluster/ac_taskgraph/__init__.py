@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 
 from importlib import import_module
+from mozilla_version.maven import MavenVersion
 from taskgraph.parameters import extend_parameters_schema
 from voluptuous import All, Any, Range, Required
 
@@ -56,3 +57,11 @@ def get_decision_parameters(graph_config, parameters):
                 "{} from buildconfig.yml".format(head_tag[1:], version)
             )
         parameters["target_tasks_method"] = "release"
+        version_string = parameters["version"]
+        version = MavenVersion.parse(version_string)
+        if version.is_release:
+            next_version = version.bump("patch_number")
+        else:
+            raise ValueError("Unsupported version type: {}".format(version.version_type))
+
+        parameters["next_version"] = str(next_version).decode("utf-8")
