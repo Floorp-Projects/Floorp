@@ -741,27 +741,6 @@ class LCreateThis : public LCallInstructionHelper<BOX_PIECES, 2, 0> {
   MCreateThis* mir() const { return mir_->toCreateThis(); }
 };
 
-// Allocate an object for |new| on the caller-side,
-// when the prototype is known.
-class LCreateThisWithProto : public LCallInstructionHelper<1, 3, 0> {
- public:
-  LIR_HEADER(CreateThisWithProto)
-
-  LCreateThisWithProto(const LAllocation& callee, const LAllocation& newTarget,
-                       const LAllocation& prototype)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, callee);
-    setOperand(1, newTarget);
-    setOperand(2, prototype);
-  }
-
-  const LAllocation* getCallee() { return getOperand(0); }
-  const LAllocation* getNewTarget() { return getOperand(1); }
-  const LAllocation* getPrototype() { return getOperand(2); }
-
-  MCreateThis* mir() const { return mir_->toCreateThis(); }
-};
-
 // Allocate an object for |new| on the caller-side.
 // Always performs object initialization with a fast path.
 class LCreateThisWithTemplate : public LInstructionHelper<1, 0, 1> {

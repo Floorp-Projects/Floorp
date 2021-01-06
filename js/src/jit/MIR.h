@@ -3311,27 +3311,6 @@ class MCreateThisWithTemplate : public MUnaryInstruction,
 };
 
 // Caller-side allocation of |this| for |new|:
-// Given a prototype operand, construct |this| for JSOp::New or JSOp::SuperCall.
-class MCreateThisWithProto : public MTernaryInstruction,
-                             public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>,
-                                              ObjectPolicy<2>>::Data {
-  MCreateThisWithProto(MDefinition* callee, MDefinition* newTarget,
-                       MDefinition* prototype)
-      : MTernaryInstruction(classOpcode, callee, newTarget, prototype) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(CreateThisWithProto)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, getCallee), (1, getNewTarget), (2, getPrototype))
-
-  // Although creation of |this| modifies global state, it is safely repeatable.
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-  bool possiblyCalls() const override { return true; }
-};
-
-// Caller-side allocation of |this| for |new|:
 // Constructs |this| when possible, else MagicValue(JS_IS_CONSTRUCTING).
 class MCreateThis : public MBinaryInstruction,
                     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>::Data {
