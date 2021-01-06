@@ -262,12 +262,24 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
                        CompilationInfo& compilationInfo,
                        CompilationState& compilationState) {
-  if (result.regexps.len > TaggedScriptThingIndex::IndexLimit) {
+  auto len = result.regexps.len;
+  if (len == 0) {
+    return true;
+  }
+
+  if (len > TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;
   }
 
-  for (size_t i = 0; i < result.regexps.len; i++) {
+  auto* p = compilationInfo.alloc.newArrayUninitialized<RegExpStencil>(len);
+  if (!p) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  compilationInfo.stencil.regExpData = mozilla::Span(p, len);
+
+  for (size_t i = 0; i < len; i++) {
     SmooshRegExpItem& item = result.regexps.data[i];
     auto s = smoosh_get_slice_at(result, item.pattern);
     auto len = smoosh_get_slice_len_at(result, item.pattern);
@@ -323,15 +335,8 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
     }
     atom->markUsedByStencil();
 
-    RegExpIndex index(compilationInfo.stencil.regExpData.length());
-    if (!compilationInfo.stencil.regExpData.emplaceBack(
-            atom->toIndex(), JS::RegExpFlags(flags))) {
-      js::ReportOutOfMemory(cx);
-      return false;
-    }
-
-    // `ConvertGCThings` depends on this condition.
-    MOZ_ASSERT(index.index == i);
+    new (mozilla::KnownNotNull, &compilationInfo.stencil.regExpData[i])
+        RegExpStencil(atom->toIndex(), JS::RegExpFlags(flags));
   }
 
   return true;
