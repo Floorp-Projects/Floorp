@@ -116,7 +116,7 @@ pub struct qcms_transform {
 
 pub type transform_fn_t =
     Option<unsafe extern "C" fn(_: &qcms_transform, _: *const u8, _: *mut u8, _: usize) -> ()>;
-//XXX: I don't really like the _DATA_ prefix
+/// The format of pixel data
 #[repr(u32)]
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DataType {
@@ -1338,13 +1338,14 @@ pub fn transform_create(
     debug_assert!(transform.transform_fn.is_some());
     Some(transform)
 }
-
+ /// A transform from an input profile to an output one.
 pub struct Transform {
     ty: DataType,
     xfm: Box<qcms_transform>,
 }
 
 impl Transform {
+    /// Create a new transform from `input` to `output` for pixels of `DataType` `ty` with `intent`
     pub fn new(
         input: &Profile,
         output: &Profile,
@@ -1354,6 +1355,7 @@ impl Transform {
         transform_create(input, ty, output, ty, intent).map(|xfm| Transform { ty, xfm })
     }
 
+    /// Apply the color space transform to `data`
     pub fn apply(&self, data: &mut [u8]) {
         if data.len() % self.ty.bytes_per_pixel() != 0 {
             panic!(
