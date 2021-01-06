@@ -14,7 +14,6 @@ var { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
 );
 var promise = require("promise");
-var defer = require("devtools/shared/defer");
 var Services = require("Services");
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { DevToolsClient } = require("devtools/client/devtools-client");
