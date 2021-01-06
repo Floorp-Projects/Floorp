@@ -86,8 +86,7 @@ class JitContext {
 
 #ifdef DEBUG
   // Whether this thread is actively Ion compiling (does not include Wasm or
-  // IonBuilder).
-  // TODO(no-TI): fix IonBuilder references in comments.
+  // WarpOracle).
   bool inIonBackend_ = false;
 
   bool isCompilingWasm_ = false;

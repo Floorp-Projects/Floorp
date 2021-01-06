@@ -15,6 +15,7 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 using moveonly mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
 using moveonly mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
 using moveonly mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
+using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
 
 namespace mozilla {
 
@@ -58,6 +59,10 @@ child:
 
   async GetModulesTrust(ModulePaths aModPaths, bool aRunAtNormalPriority)
       returns (ModulesMapResult? modMapResult);
+
+  // Update the cached list of codec supported following a check in the
+  // RDD parent.
+  async UpdateMediaCodecsSupported(MediaCodecsSupported aSupported);
 };
 
 } // namespace mozilla

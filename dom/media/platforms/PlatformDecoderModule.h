@@ -315,6 +315,8 @@ class PlatformDecoderModule {
   virtual nsresult Startup() { return NS_OK; }
 
   // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
+  // The answer to both SupportsMimeType and Supports doesn't guarantee that
+  // creation of a decoder will actually succeed.
   virtual bool SupportsMimeType(
       const nsACString& aMimeType,
       DecoderDoctorDiagnostics* aDiagnostics) const = 0;

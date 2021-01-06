@@ -167,9 +167,18 @@ function onExpressionEvaluated(response) {
 }
 
 function handleHelperResult(response) {
+  // eslint-disable-next-line complexity
   return async ({ dispatch, hud, toolbox, webConsoleUI }) => {
     const { result, helperResult } = response;
     const helperHasRawOutput = !!helperResult?.rawOutput;
+    const hasNetworkResourceWatcherSupport = hud.resourceWatcher.hasResourceWatcherSupport(
+      hud.resourceWatcher.TYPES.NETWORK_EVENT
+    );
+    let networkFront = null;
+    // @backward-compat { version 86 } default network events watcher support
+    if (hasNetworkResourceWatcherSupport) {
+      networkFront = await hud.resourceWatcher.watcherFront.getNetworkParentActor();
+    }
 
     if (helperResult?.type) {
       switch (helperResult.type) {
@@ -212,7 +221,14 @@ function handleHelperResult(response) {
           break;
         case "blockURL":
           const blockURL = helperResult.args.url;
-
+          // The console actor isn't able to block the request as the console actor runs in the content
+          // process, while the request has to be blocked from the parent process.
+          // Then, calling the Netmonitor action will only update the visual state of the Netmonitor,
+          // but we also have to block the request via the NetworkParentActor.
+          // @backward-compat { version 86 } default network events watcher support
+          if (hasNetworkResourceWatcherSupport && networkFront) {
+            await networkFront.blockRequest({ url: blockURL });
+          }
           toolbox
             .getPanel("netmonitor")
             ?.panelWin.store.dispatch(
@@ -233,6 +249,10 @@ function handleHelperResult(response) {
           break;
         case "unblockURL":
           const unblockURL = helperResult.args.url;
+          // @backward-compat { version 86 } see related comments in block url above
+          if (hasNetworkResourceWatcherSupport && networkFront) {
+            await networkFront.unblockRequest({ url: unblockURL });
+          }
           toolbox
             .getPanel("netmonitor")
             ?.panelWin.store.dispatch(

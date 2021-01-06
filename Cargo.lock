@@ -334,13 +334,12 @@ version = "0.2.0"
 dependencies = [
  "bits",
  "comedy",
- "failure",
- "failure_derive",
  "guid_win",
  "lazy_static",
  "rand",
  "regex",
  "tempfile",
+ "thiserror",
 ]
 
 [[package]]
@@ -350,8 +349,6 @@ dependencies = [
  "bits_client",
  "comedy",
  "crossbeam-utils 0.6.5",
- "failure",
- "failure_derive",
  "libc",
  "log",
  "moz_task",

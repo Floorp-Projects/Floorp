@@ -5692,7 +5692,7 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
 
   // Check whether the provided arguments satisfy target argc.
   // We cannot have lowered to LCallGeneric with a known target. Assert that we
-  // didn't add any undefineds in IonBuilder. NB: MCall::numStackArgs includes
+  // didn't add any undefineds in WarpBuilder. NB: MCall::numStackArgs includes
   // |this|.
   DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
   MOZ_ASSERT(call->numActualArgs() ==
@@ -5757,7 +5757,7 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
   // Native single targets (except wasm) are handled by LCallNative.
   MOZ_ASSERT(target->hasJitEntry());
 
-  // Missing arguments must have been explicitly appended by the IonBuilder.
+  // Missing arguments must have been explicitly appended by WarpBuilder.
   DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
   MOZ_ASSERT(target->nargs() <=
              call->mir()->numStackArgs() - numNonArgsOnStack);

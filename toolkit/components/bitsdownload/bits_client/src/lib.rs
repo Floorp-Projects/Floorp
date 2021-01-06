@@ -17,19 +17,17 @@
 
 extern crate bits;
 extern crate comedy;
-extern crate failure;
-extern crate failure_derive;
 extern crate guid_win;
+extern crate thiserror;
 
 pub mod bits_protocol;
 
 mod in_process;
 
-use std::convert;
 use std::ffi;
 
 use bits_protocol::*;
-use failure::Fail;
+use thiserror::Error;
 
 pub use bits::status::{BitsErrorContext, BitsJobState, BitsJobTimes};
 pub use bits::{BitsJobProgress, BitsJobStatus, BitsProxyUsage};
@@ -39,22 +37,16 @@ pub use guid_win::Guid;
 
 // These errors would come from a Local Service client but are mostly unused currently.
 // PipeError properly lives in the crate that deals with named pipes, but it isn't in use now.
-#[derive(Clone, Debug, Eq, Fail, PartialEq)]
+#[derive(Clone, Debug, Eq, Error, PartialEq)]
 pub enum PipeError {
-    #[fail(display = "Pipe is not connected")]
+    #[error("Pipe is not connected")]
     NotConnected,
-    #[fail(display = "Operation timed out")]
+    #[error("Operation timed out")]
     Timeout,
-    #[fail(display = "Should have written {} bytes, wrote {}", _0, _1)]
+    #[error("Should have written {0} bytes, wrote {1}")]
     WriteCount(usize, u32),
-    #[fail(display = "Windows API error")]
-    Api(#[fail(cause)] HResult),
-}
-
-impl convert::From<HResult> for PipeError {
-    fn from(err: HResult) -> PipeError {
-        PipeError::Api(err)
-    }
+    #[error("Windows API error")]
+    Api(#[from] HResult),
 }
 
 pub use PipeError as Error;

@@ -222,7 +222,6 @@ void TraceLoggerThreadState::enableIonLogging() {
   enabledTextIds[TraceLogger_RegisterAllocation] = true;
   enabledTextIds[TraceLogger_GenerateCode] = true;
   enabledTextIds[TraceLogger_Scripts] = true;
-  enabledTextIds[TraceLogger_IonBuilderRestartLoop] = true;
 }
 
 void TraceLoggerThreadState::enableFrontendLogging() {
@@ -1155,7 +1154,7 @@ bool TraceLoggerThreadState::init() {
           "                 EdgeCaseAnalysis, EliminateRedundantChecks,\n"
           "                 AddKeepAliveInstructions, GenerateLIR, "
           "RegisterAllocation,\n"
-          "                 GenerateCode, Scripts, IonBuilderRestartLoop\n"
+          "                 GenerateCode, Scripts\n"
           "\n"
           "  VMSpecific     Output the specific name of the VM call\n"
           "\n"

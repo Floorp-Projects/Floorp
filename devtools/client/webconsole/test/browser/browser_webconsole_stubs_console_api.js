@@ -188,6 +188,17 @@ function getCommands() {
   `,
     },
     {
+      keys: ['console.trace("%cHello%c|%cWorld")'],
+      code: `
+    console.trace(
+      "%cHello%c|%cWorld",
+      "color:red",
+      "",
+      "color: blue"
+    );
+  `,
+    },
+    {
       keys: [
         "console.time('bar')",
         "timerAlreadyExists",

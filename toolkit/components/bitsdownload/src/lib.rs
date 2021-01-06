@@ -13,7 +13,6 @@
 extern crate bits_client;
 extern crate comedy;
 extern crate crossbeam_utils;
-extern crate failure;
 extern crate libc;
 extern crate log;
 extern crate moz_task;
