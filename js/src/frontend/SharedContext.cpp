@@ -71,6 +71,7 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
 }
 
 void ScopeContext::computeThisEnvironment(Scope* scope) {
+  uint32_t envCount = 0;
   for (ScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
       JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
@@ -79,7 +80,11 @@ void ScopeContext::computeThisEnvironment(Scope* scope) {
       // so continue ignore them.
       if (!fun->isArrow()) {
         allowNewTarget = true;
-        allowSuperProperty = fun->allowSuperProperty();
+
+        if (fun->allowSuperProperty()) {
+          allowSuperProperty = true;
+          enclosingThisEnvironmentHops = envCount;
+        }
 
         if (fun->isClassConstructor()) {
           memberInitializers =
@@ -98,6 +103,10 @@ void ScopeContext::computeThisEnvironment(Scope* scope) {
         // Found the effective "this" environment, so stop.
         return;
       }
+    }
+
+    if (si.scope()->hasEnvironment()) {
+      envCount++;
     }
   }
 }
