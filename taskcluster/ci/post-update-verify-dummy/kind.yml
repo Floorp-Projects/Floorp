@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+    - taskgraph.transforms.per_platform_dummy:transforms
+    - taskgraph.transforms.reverse_chunk_deps:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - release-update-verify
+
+job-template:
+    description: Dummy task to deal with max_dependencies
+    run-on-projects: []
+    shipping-phase: promote
+    worker-type: succeed
+    worker:
+        implementation: succeed
