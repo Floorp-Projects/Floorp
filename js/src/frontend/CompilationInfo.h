@@ -246,6 +246,8 @@ struct MOZ_RAII CompilationState {
                    InheritThis inheritThis = InheritThis::No,
                    Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr);
+
+  bool finish(JSContext* cx, CompilationInfo& compilationInfo);
 };
 
 // Store shared data for non-lazy script.

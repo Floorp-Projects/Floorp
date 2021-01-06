@@ -1021,6 +1021,10 @@ bool SharedDataContainer::addAndShare(JSContext* cx, ScriptIndex index,
   return storage.match(m);
 }
 
+bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
+  return true;
+}
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
 void frontend::DumpTaggedParserAtomIndex(
