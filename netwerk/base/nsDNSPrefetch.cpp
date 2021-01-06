@@ -80,41 +80,7 @@ nsresult nsDNSPrefetch::PrefetchHigh(bool refreshDNS) {
   return Prefetch(refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0);
 }
 
-namespace {
-
-class HTTPSRRListener final : public nsIDNSListener {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIDNSLISTENER
-
-  explicit HTTPSRRListener(
-      std::function<void(nsIDNSHTTPSSVCRecord*)>&& aCallback)
-      : mResultCallback(std::move(aCallback)) {}
-
- private:
-  ~HTTPSRRListener() = default;
-  std::function<void(nsIDNSHTTPSSVCRecord*)> mResultCallback;
-};
-
-NS_IMPL_ISUPPORTS(HTTPSRRListener, nsIDNSListener)
-
-NS_IMETHODIMP
-HTTPSRRListener::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
-                                  nsresult aStatus) {
-  if (NS_FAILED(aStatus)) {
-    mResultCallback(nullptr);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDNSHTTPSSVCRecord> httpsRecord = do_QueryInterface(aRec);
-  mResultCallback(httpsRecord);
-  return NS_OK;
-}
-
-};  // namespace
-
-nsresult nsDNSPrefetch::FetchHTTPSSVC(
-    bool aRefreshDNS, std::function<void(nsIDNSHTTPSSVCRecord*)>&& aCallback) {
+nsresult nsDNSPrefetch::FetchHTTPSSVC(bool aRefreshDNS) {
   if (!sDNSService) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -127,9 +93,8 @@ nsresult nsDNSPrefetch::FetchHTTPSSVC(
   }
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
-  nsCOMPtr<nsIDNSListener> listener = new HTTPSRRListener(std::move(aCallback));
   return sDNSService->AsyncResolveNative(
-      mHostname, nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags, nullptr, listener,
+      mHostname, nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags, nullptr, this,
       target, mOriginAttributes, getter_AddRefs(tmpOutstanding));
 }
 
@@ -138,7 +103,9 @@ NS_IMPL_ISUPPORTS(nsDNSPrefetch, nsIDNSListener)
 NS_IMETHODIMP
 nsDNSPrefetch::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                 nsresult status) {
-  if (mStoreTiming) {
+  nsCOMPtr<nsIDNSHTTPSSVCRecord> httpsRecord = do_QueryInterface(rec);
+
+  if (mStoreTiming && !httpsRecord) {
     mEndTimestamp = mozilla::TimeStamp::Now();
   }
   nsCOMPtr<nsIDNSListener> listener = do_QueryReferent(mListener);
