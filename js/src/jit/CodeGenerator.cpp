@@ -7508,37 +7508,6 @@ void CodeGenerator::visitCreateThis(LCreateThis* lir) {
   callVM<Fn, jit::CreateThisFromIon>(lir);
 }
 
-void CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir) {
-  const LAllocation* callee = lir->getCallee();
-  const LAllocation* newTarget = lir->getNewTarget();
-  const LAllocation* proto = lir->getPrototype();
-
-  pushArg(Imm32(GenericObject));
-
-  if (proto->isConstant()) {
-    pushArg(ImmGCPtr(&proto->toConstant()->toObject()));
-  } else {
-    pushArg(ToRegister(proto));
-  }
-
-  if (newTarget->isConstant()) {
-    pushArg(ImmGCPtr(&newTarget->toConstant()->toObject()));
-  } else {
-    pushArg(ToRegister(newTarget));
-  }
-
-  if (callee->isConstant()) {
-    pushArg(ImmGCPtr(&callee->toConstant()->toObject()));
-  } else {
-    pushArg(ToRegister(callee));
-  }
-
-  using Fn = PlainObject* (*)(JSContext * cx, HandleFunction callee,
-                              HandleObject newTarget, HandleObject proto,
-                              NewObjectKind newKind);
-  callVM<Fn, CreateThisForFunctionWithProto>(lir);
-}
-
 void CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate* lir) {
   JSObject* templateObject = lir->mir()->templateObject();
   Register objReg = ToRegister(lir->output());
