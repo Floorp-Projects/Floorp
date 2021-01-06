@@ -510,7 +510,7 @@ uint32_t Scope::firstFrameSlot() const {
     case ScopeKind::ClassBody:
       // For intra-frame scopes, find the enclosing scope's next frame slot.
       MOZ_ASSERT(is<LexicalScope>());
-      return LexicalScope::nextFrameSlot(AbstractScopePtr(enclosing()));
+      return LexicalScope::nextFrameSlot(enclosing());
 
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
@@ -762,8 +762,8 @@ bool Scope::dumpForDisassemble(JSContext* cx, JS::Handle<Scope*> scope,
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 /* static */
-uint32_t LexicalScope::nextFrameSlot(const AbstractScopePtr& scope) {
-  for (AbstractScopePtrIter si(scope); si; si++) {
+uint32_t LexicalScope::nextFrameSlot(Scope* scope) {
+  for (ScopeIter si(scope); si; si++) {
     switch (si.kind()) {
       case ScopeKind::With:
         continue;
@@ -783,7 +783,7 @@ uint32_t LexicalScope::nextFrameSlot(const AbstractScopePtr& scope) {
       case ScopeKind::Module:
       case ScopeKind::WasmInstance:
       case ScopeKind::WasmFunction:
-        return si.abstractScopePtr().nextFrameSlot();
+        return AbstractScopePtr(si.scope()).nextFrameSlot();
     }
   }
   MOZ_CRASH("Not an enclosing intra-frame Scope");
