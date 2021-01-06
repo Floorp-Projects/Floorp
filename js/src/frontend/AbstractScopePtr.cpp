@@ -105,8 +105,3 @@ uint32_t AbstractScopePtr::nextFrameSlot() const {
 void AbstractScopePtr::trace(JSTracer* trc) {
   JS::GCPolicy<ScopeType>::trace(trc, &scope_, "AbstractScopePtr");
 }
-
-bool AbstractScopePtrIter::hasSyntacticEnvironment() const {
-  return abstractScopePtr().hasEnvironment() &&
-         abstractScopePtr().kind() != ScopeKind::NonSyntactic;
-}
