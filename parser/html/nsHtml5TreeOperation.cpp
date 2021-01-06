@@ -256,6 +256,12 @@ nsresult nsHtml5TreeOperation::Append(nsIContent* aNode, nsIContent* aParent,
   return rv;
 }
 
+nsresult nsHtml5TreeOperation::Append(nsIContent* aNode, nsIContent* aParent,
+                                      mozilla::dom::FromParser aFromParser,
+                                      nsHtml5DocumentBuilder* aBuilder) {
+  return Append(aNode, aParent, aBuilder);
+}
+
 nsresult nsHtml5TreeOperation::AppendToDocument(
     nsIContent* aNode, nsHtml5DocumentBuilder* aBuilder) {
   MOZ_ASSERT(aBuilder);
@@ -762,7 +768,8 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     bool* mStreamEnded;
 
     nsresult operator()(const opAppend& aOperation) {
-      return Append(*(aOperation.mChild), *(aOperation.mParent), mBuilder);
+      return Append(*(aOperation.mChild), *(aOperation.mParent),
+                    aOperation.mFromNetwork, mBuilder);
     }
 
     nsresult operator()(const opDetach& aOperation) {
