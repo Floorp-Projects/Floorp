@@ -40,7 +40,8 @@ using namespace js;
 /////////////////////////////////////////////////////////////////////
 
 static ObjectGroup* MakeGroup(JSContext* cx, const JSClass* clasp,
-                              Handle<TaggedProto> proto) {
+                              Handle<TaggedProto> proto,
+                              HandleTypeDescr descr) {
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
 
@@ -48,14 +49,17 @@ static ObjectGroup* MakeGroup(JSContext* cx, const JSClass* clasp,
   if (!group) {
     return nullptr;
   }
-  new (group) ObjectGroup(clasp, proto, cx->realm());
+  new (group) ObjectGroup(clasp, proto, cx->realm(), descr);
 
   return group;
 }
 
 ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
-                         JS::Realm* realm)
-    : TenuredCellWithNonGCPointer(clasp), proto_(proto), realm_(realm) {
+                         JS::Realm* realm, TypeDescr* descr)
+    : TenuredCellWithNonGCPointer(clasp),
+      proto_(proto),
+      realm_(realm),
+      typeDescr_(descr) {
   /* Windows may not appear on prototype chains. */
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
   MOZ_ASSERT(JS::StringIsASCII(clasp->name));
@@ -100,7 +104,8 @@ bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
     }
   }
 
-  ObjectGroup* group = MakeGroup(cx, global->getClass(), proto);
+  ObjectGroup* group = MakeGroup(cx, global->getClass(), proto,
+                                 /* descr = */ nullptr);
   if (!group) {
     return false;
   }
@@ -233,7 +238,8 @@ MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
 
 /* static */
 ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
-                                          TaggedProto proto, TypeDescr* descr) {
+                                          TaggedProto proto,
+                                          Handle<TypeDescr*> descr) {
   MOZ_ASSERT(clasp);
   MOZ_ASSERT_IF(descr, proto.isObject());
   MOZ_ASSERT_IF(proto.isObject(),
@@ -275,7 +281,7 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
   }
 
   Rooted<TaggedProto> protoRoot(cx, proto);
-  ObjectGroup* group = MakeGroup(cx, clasp, protoRoot);
+  ObjectGroup* group = MakeGroup(cx, clasp, protoRoot, descr);
   if (!group) {
     return nullptr;
   }
@@ -283,10 +289,6 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
   if (!table->add(p, ObjectGroupRealm::NewEntry(group, descr))) {
     ReportOutOfMemory(cx);
     return nullptr;
-  }
-
-  if (descr) {
-    group->setTypeDescr(descr);
   }
 
   groups.defaultNewGroupCache.put(group, descr);
