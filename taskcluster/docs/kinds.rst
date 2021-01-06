@@ -611,6 +611,10 @@ post-langpack-dummy
 -------------------
 Dummy tasks to consolidate language pack beetmover dependencies to avoid taskcluster limits on number of dependencies per task.
 
+post-update-verify-dummy
+------------------------
+Dummy tasks to consolidate update verify dependencies to avoid taskcluster limits on number of dependencies per task.
+
 fetch
 -----
 Tasks that obtain something from a remote service and re-expose it as a
