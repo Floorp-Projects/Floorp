@@ -444,33 +444,61 @@ CssRuleView.prototype = {
    *        Object with data associated with the highlighter event.
    */
   handleHighlighterEvent(eventName, data) {
-    const handlers = {};
+    switch (data.type) {
+      // Toggle the "highlighted" class on selector icons in the Rules view when
+      // the SelectorHighlighter is shown/hidden for a certain CSS selector.
+      case this.inspector.highlighters.TYPES.SELECTOR:
+        {
+          const selector = data?.options?.selector;
+          if (!selector) {
+            return;
+          }
 
-    // Toggle the "highlighted" class on selector icons in the Rules view when
-    // the SelectorHighlighter is shown/hidden for a certain CSS selector.
-    handlers[this.inspector.highlighters.TYPES.SELECTOR] = () => {
-      const selector = data?.options?.selector;
-      if (!selector) {
-        return;
-      }
+          const query = `.js-toggle-selector-highlighter[data-selector='${selector}']`;
+          for (const node of this.styleDocument.querySelectorAll(query)) {
+            node.classList.toggle(
+              "highlighted",
+              eventName == "highlighter-shown"
+            );
+          }
+        }
+        break;
 
-      const query = `.js-toggle-selector-highlighter[data-selector='${selector}']`;
-      for (const node of this.styleDocument.querySelectorAll(query)) {
-        node.classList.toggle("highlighted", eventName == "highlighter-shown");
-      }
-    };
+      // Toggle the "active" class on swatches next to flex and inline-flex CSS properties
+      // when the FlexboxHighlighter is shown/hidden for the currently selected node.
+      case this.inspector.highlighters.TYPES.FLEXBOX:
+        {
+          const query = ".js-toggle-flexbox-highlighter";
+          for (const node of this.styleDocument.querySelectorAll(query)) {
+            node.classList.toggle("active", eventName == "highlighter-shown");
+          }
+        }
+        break;
 
-    // Toggle the "active" class on swatches next to flex and inline-flex CSS properties
-    // when the FlexboxHighlighter is shown/hidden for the currently selected node.
-    handlers[this.inspector.highlighters.TYPES.FLEXBOX] = () => {
-      const query = ".js-toggle-flexbox-highlighter";
-      for (const node of this.styleDocument.querySelectorAll(query)) {
-        node.classList.toggle("active", eventName == "highlighter-shown");
-      }
-    };
+      // Toggle the "active" class on swatches next to grid CSS properties
+      // when the GridHighlighter is shown/hidden for the currently selected node.
+      case this.inspector.highlighters.TYPES.GRID:
+        {
+          const query = ".js-toggle-grid-highlighter";
+          for (const node of this.styleDocument.querySelectorAll(query)) {
+            // From the Layout panel, we can toggle grid highlighters for nodes which are
+            // not currently selected. The Rules view shows `display: grid` declarations
+            // only for the selected node. Avoid mistakenly marking them as "active".
+            if (data.nodeFront === this.inspector.selection.nodeFront) {
+              node.classList.toggle("active", eventName == "highlighter-shown");
+            }
 
-    if (typeof handlers[data.type] === "function") {
-      handlers[data.type].call(this);
+            // When the max limit of grid highlighters is reached (default 3),
+            // mark inactive grid swatches as disabled.
+            node.toggleAttribute(
+              "disabled",
+              !this.inspector.highlighters.canGridHighlighterToggle(
+                this.inspector.selection.nodeFront
+              )
+            );
+          }
+        }
+        break;
     }
   },
 
