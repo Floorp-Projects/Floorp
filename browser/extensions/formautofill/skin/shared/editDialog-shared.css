@@ -69,7 +69,6 @@ form :is(label, div) .label-text[field-populated] {
   font-size: var(--in-field-label-size);
 }
 
-
 form :is(input, select, textarea):focus ~ .label-text {
   color: var(--in-content-item-selected);
   opacity: 1;
@@ -90,8 +89,7 @@ form :is(label, div)[required] .label-text::after {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-top: var(--grid-column-row-gap);
-  margin-bottom: var(--grid-column-row-gap);
+  margin-block: var(--grid-column-row-gap);
 }
 
 dialog[subdialog] form {
@@ -102,7 +100,6 @@ dialog[subdialog] form {
 }
 
 #controls-container {
-  flex: 0 1 100%;
   display: flex;
   justify-content: end;
   margin: 1em 0 0;

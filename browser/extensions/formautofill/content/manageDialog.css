@@ -16,7 +16,7 @@ button {
 }
 
 fieldset {
-  margin: 0;
+  margin: 0 4px;
   padding: 0;
   border: none;
 }
@@ -41,6 +41,7 @@ option:nth-child(even) {
   width: 100%;
   height: 16.6em;
   margin: 0;
+  padding-inline: 0;
   border-top: none;
   border-radius: 0 0 2px 2px;
 }
@@ -54,17 +55,11 @@ option:nth-child(even) {
 }
 
 #controls-container {
-  flex: 0 1 100%;
-  justify-content: end;
   margin-top: 1em;
 }
 
 #remove {
-  margin-inline: 0 auto;
-}
-
-#edit {
-  margin-inline-end: 0;
+  margin-inline-end: auto;
 }
 
 #credit-cards > option::before {
@@ -75,6 +70,8 @@ option:nth-child(even) {
   width: 16px;
   height: 16px;
   padding-inline-end: 10px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 /*

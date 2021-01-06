@@ -17,7 +17,7 @@
   <script src="chrome://formautofill/content/autofillEditForms.js"></script>
 </head>
 <body dir="&locale.dir;">
-  <form id="form" class="editCreditCardForm" autocomplete="off">
+  <form id="form" class="editCreditCardForm contentPane" autocomplete="off">
     <!--
         The <span class="label-text" …/> needs to be after the form field in the same element in
         order to get proper label styling with :focus and :moz-ui-invalid.
@@ -63,7 +63,7 @@
   </form>
   <div id="controls-container">
     <button id="cancel" data-localization="cancelBtnLabel"/>
-    <button id="save" data-localization="saveBtnLabel"/>
+    <button id="save" class="primary" data-localization="saveBtnLabel"/>
   </div>
   <script><![CDATA[
     "use strict";
