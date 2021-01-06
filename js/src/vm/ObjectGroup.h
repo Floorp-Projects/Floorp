@@ -109,7 +109,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   GCPtr<TaggedProto>& proto() { return proto_; }
 
-  void setProto(TaggedProto proto);
   void setProtoUnchecked(TaggedProto proto);
 
   bool hasUncacheableProto() const {
