@@ -222,12 +222,14 @@ SuspendableContext::SuspendableContext(JSContext* cx, Kind kind,
 
 FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
                          CompilationInfo& compilationInfo,
+                         CompilationState& compilationState,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, const ParserAtom* atom,
                          FunctionFlags flags, ScriptIndex index)
     : SuspendableContext(cx, Kind::FunctionBox, compilationInfo, directives,
                          extent, generatorKind == GeneratorKind::Generator,
                          asyncKind == FunctionAsyncKind::AsyncFunction),
+      compilationState_(compilationState),
       atom_(atom),
       funcDataIndex_(index),
       flags_(FunctionFlags::clearMutableflags(flags)),
@@ -382,7 +384,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx,
 }
 
 ScriptStencil& FunctionBox::functionStencil() const {
-  return compilationInfo_.stencil.scriptData[funcDataIndex_];
+  return compilationState_.scriptData[funcDataIndex_];
 }
 
 void SharedContext::copyScriptFields(ScriptStencil& script) {
