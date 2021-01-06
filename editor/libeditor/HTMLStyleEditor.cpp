@@ -326,7 +326,7 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
         }
       }
 
-      // Finally, if end node is a text node, apply new style to a part ot it.
+      // Finally, if end node is a text node, apply new style to a part of it.
       if (endOfRange.IsInTextNode() &&
           EditorUtils::IsEditableContent(*endOfRange.GetContainerAsText(),
                                          EditorType::HTML)) {

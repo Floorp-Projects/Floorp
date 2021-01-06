@@ -10,7 +10,7 @@ const RUNTIME_APP_NAME = "TestApp";
 const OTHER_RUNTIME_ID = "other-runtime-id";
 const OTHER_RUNTIME_APP_NAME = "OtherApp";
 
-// Test that USB runtimes are ot disconnected on refresh.
+// Test that USB runtimes are not disconnected on refresh.
 add_task(async function() {
   const mocks = new Mocks();
 

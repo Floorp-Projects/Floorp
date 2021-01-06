@@ -279,7 +279,7 @@ nscoord nsPageFrame::GetXPosition(gfxContext& aRenderingContext,
 }
 
 // Draw a header or footer
-// @param aRenderingContext - rendering content ot draw into
+// @param aRenderingContext - rendering content to draw into
 // @param aHeaderFooter - indicates whether it is a header or footer
 // @param aStrLeft - string for the left header or footer; can be empty
 // @param aStrCenter - string for the center header or footer; can be empty

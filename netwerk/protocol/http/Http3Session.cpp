@@ -1647,7 +1647,7 @@ void Http3Session::Finish0Rtt(bool aRestart) {
   for (size_t i = 0; i < m0RTTStreams.Length(); ++i) {
     if (m0RTTStreams[i]) {
       if (aRestart) {
-        // When we need ot restart transactions remove them from all lists.
+        // When we need to restart transactions remove them from all lists.
         if (m0RTTStreams[i]->HasStreamId()) {
           mStreamIdHash.Remove(m0RTTStreams[i]->StreamId());
         }

@@ -2036,7 +2036,7 @@ void PluginInstanceChild::InitImm32Hook() {
     return;
   }
 
-  // When using windowless plugin, IMM API won't work due ot OOP.
+  // When using windowless plugin, IMM API won't work due to OOP.
   //
   // ImmReleaseContext on Windows 7+ just returns TRUE only, so we don't
   // need to hook this.
