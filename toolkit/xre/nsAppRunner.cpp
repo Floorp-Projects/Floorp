@@ -3456,6 +3456,8 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   }
 
 #ifdef XP_MACOSX
+  mozilla::MacAutoreleasePool pool;
+
   DisableAppNap();
 #endif
 
