@@ -30,4 +30,13 @@
         <item>@string/all</item>
         <item>@string/private_string</item>
     </string-array>
+
+    <string name="resource_scheme">"resource://"</string>
+    <string name="chrome_scheme">"chrome://</string>
+    <string name="about_scheme">"about:"</string>
+    <string-array name="mozac_url_schemes_blocklist" >
+        <item>@string/resource_scheme</item>
+        <item>@string/chrome_scheme</item>
+        <item>@string/about_scheme</item>
+    </string-array>
 </resources>

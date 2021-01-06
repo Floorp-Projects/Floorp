@@ -7,7 +7,9 @@ package org.mozilla.fenix.utils
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.getSystemService
+import mozilla.components.support.utils.SafeUrl
 import mozilla.components.support.utils.WebURLFinder
 
 private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
@@ -16,7 +18,7 @@ private const val MIME_TYPE_TEXT_HTML = "text/html"
 /**
  * A clipboard utility class that allows copying and pasting links/text to & from the clipboard
  */
-class ClipboardHandler(context: Context) {
+class ClipboardHandler(val context: Context) {
     private val clipboard = context.getSystemService<ClipboardManager>()!!
 
     var text: String?
@@ -25,7 +27,7 @@ class ClipboardHandler(context: Context) {
                 (clipboard.isPrimaryClipPlainText() ||
                         clipboard.isPrimaryClipHtmlText())
             ) {
-                return clipboard.firstPrimaryClipItem?.text.toString()
+                return firstSafePrimaryClipItemText
             }
             return null
         }
@@ -51,4 +53,8 @@ class ClipboardHandler(context: Context) {
 
     private val ClipboardManager.firstPrimaryClipItem: ClipData.Item?
         get() = primaryClip?.getItemAt(0)
+
+    @VisibleForTesting
+    internal val firstSafePrimaryClipItemText: String?
+        get() = SafeUrl.stripUnsafeUrlSchemes(context, clipboard.firstPrimaryClipItem?.text)
 }
