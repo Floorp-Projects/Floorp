@@ -36,6 +36,7 @@ pub const GRAY_SIGNATURE: u32 = 0x47524159;
 pub const XYZ_SIGNATURE: u32 = 0x58595A20;
 pub const LAB_SIGNATURE: u32 = 0x4C616220;
 
+/// A color profile
 #[repr(C)]
 #[derive(Default)]
 pub struct Profile {
@@ -122,6 +123,7 @@ pub struct XYZNumber {
     pub Z: s15Fixed16Number,
 }
 
+/// A color in the CIE xyY color space
 /* the names for the following two types are sort of ugly */
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -131,6 +133,7 @@ pub struct qcms_CIE_xyY {
     pub Y: f64,
 }
 
+/// a set of CIE_xyY values that can use to describe the primaries of a color space
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct qcms_CIE_xyYTRIPLE {
