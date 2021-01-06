@@ -1021,7 +1021,30 @@ bool SharedDataContainer::addAndShare(JSContext* cx, ScriptIndex index,
   return storage.match(m);
 }
 
+template <typename T, typename VectorT>
+bool CopyVectorToSpan(JSContext* cx, LifoAlloc& alloc, mozilla::Span<T>& span,
+                      VectorT& vec) {
+  auto len = vec.length();
+  if (len == 0) {
+    return true;
+  }
+
+  auto* p = alloc.newArrayUninitialized<T>(len);
+  if (!p) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  span = mozilla::Span(p, len);
+  memcpy(span.data(), vec.begin(), sizeof(T) * len);
+  return true;
+}
+
 bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
+                        compilationInfo.stencil.regExpData, regExpData)) {
+    return false;
+  }
+
   return true;
 }
 

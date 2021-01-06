@@ -10363,13 +10363,12 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   }
   atom->markUsedByStencil();
 
-  RegExpIndex index(this->getCompilationInfo().stencil.regExpData.length());
+  RegExpIndex index(this->compilationState_.regExpData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx_);
     return nullptr;
   }
-  if (!this->getCompilationInfo().stencil.regExpData.emplaceBack(
-          atom->toIndex(), flags)) {
+  if (!this->compilationState_.regExpData.emplaceBack(atom->toIndex(), flags)) {
     js::ReportOutOfMemory(cx_);
     return nullptr;
   }

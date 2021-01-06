@@ -230,6 +230,10 @@ struct MOZ_RAII CompilationState {
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
 
+  // Temporary space to accumulate stencil data.
+  // Copied to CompilationStencil by `finish` method.
+  Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
+
   // Table of parser atoms for this compilation.
   ParserAtomsTable parserAtoms;
 
@@ -285,7 +289,7 @@ struct SharedDataContainer {
 struct CompilationStencil {
   // Hold onto the RegExpStencil, BigIntStencil, and ObjLiteralStencil that are
   // allocated during parse to ensure correct destruction.
-  Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
+  mozilla::Span<RegExpStencil> regExpData;
   Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;
   Vector<ObjLiteralStencil, 0, js::SystemAllocPolicy> objLiteralData;
 
