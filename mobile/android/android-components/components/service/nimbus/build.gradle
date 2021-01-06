@@ -46,6 +46,8 @@ android {
 dependencies {
     api Dependencies.mozilla_nimbus
 
+    implementation Dependencies.androidx_coordinatorlayout
+    implementation Dependencies.androidx_recyclerview
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
     implementation project(':support-base')

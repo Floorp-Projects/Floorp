@@ -46,6 +46,9 @@ permalink: /changelog/
 * **service-firefox-accounts**
   * ⚠️ **This is a breaking change**: Removed the currently unused `authorizeOAuthCode` from FirefoxAccount API surface.
 
+* **service-nimbus**
+  * Added UI components for displaying a list of active Nimbus experiments.
+
 # 73.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v72.0.0...v73.0.0)
