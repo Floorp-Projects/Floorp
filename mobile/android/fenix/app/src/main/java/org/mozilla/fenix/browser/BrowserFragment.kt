@@ -52,6 +52,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
+    private val trackingProtectionOverlayObserver = ViewBoundFeatureWrapper<TrackingProtectionOverlay>()
 
     private var readerModeAvailable = false
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
@@ -158,6 +159,20 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     view = view
                 )
             }
+            if (context.settings().shouldShowTrackingProtectionCfr) {
+                trackingProtectionOverlayObserver.set(
+                    feature = TrackingProtectionOverlay(
+                        context = context,
+                        store = context.components.core.store,
+                        lifecycleOwner = viewLifecycleOwner,
+                        settings = context.settings(),
+                        metrics = context.components.analytics.metrics,
+                        getToolbar = { browserToolbarView.view }
+                    ),
+                    owner = this,
+                    view = view
+                )
+            }
         }
     }
 
@@ -165,19 +180,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         super.onStart()
         val context = requireContext()
         val settings = context.settings()
-        val session = getSessionById()
-
-        val toolbarSessionObserver = TrackingProtectionOverlay(
-            context = context,
-            settings = settings,
-            metrics = context.components.analytics.metrics
-        ) {
-            browserToolbarView.view
-        }
-
-        @Suppress("DEPRECATION")
-        // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16945
-        session?.register(toolbarSessionObserver, viewLifecycleOwner, autoPause = true)
 
         if (!settings.userKnowsAboutPwas) {
             pwaOnboardingObserver = PwaOnboardingObserver(

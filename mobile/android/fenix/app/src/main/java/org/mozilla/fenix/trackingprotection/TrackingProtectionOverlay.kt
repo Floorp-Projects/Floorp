@@ -13,12 +13,24 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
+import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.appbar.AppBarLayout
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.*
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
-import mozilla.components.browser.session.Session
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -30,22 +42,49 @@ import org.mozilla.fenix.utils.Settings
  * Displays an overlay above the tracking protection button in the browser toolbar
  * to onboard the user about tracking protection.
  */
+@ExperimentalCoroutinesApi
 class TrackingProtectionOverlay(
     private val context: Context,
     private val settings: Settings,
     private val metrics: MetricController,
+    private val store: BrowserStore,
+    private val lifecycleOwner: LifecycleOwner,
     private val getToolbar: () -> View
-) : Session.Observer {
+) : LifecycleAwareFeature {
 
-    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-        if (!loading && shouldShowTrackingProtectionOnboarding(session)) {
+    @VisibleForTesting
+    internal var scope: CoroutineScope? = null
+
+    override fun start() {
+        store.flowScoped(lifecycleOwner) { flow ->
+            flow.mapNotNull { state ->
+                state.selectedTab
+            }.ifChanged { tab ->
+                tab.content.loading
+            }
+            .collect { tab ->
+                onLoadingStateChanged(tab)
+            }
+        }
+    }
+
+    override fun stop() {
+        cancelScope()
+    }
+
+    @VisibleForTesting
+    internal fun cancelScope() = scope?.cancel()
+
+    @VisibleForTesting
+    internal fun onLoadingStateChanged(tab: SessionState) {
+        if (!tab.content.loading && shouldShowTrackingProtectionOnboarding(tab)) {
             showTrackingProtectionOnboarding()
         }
     }
 
-    private fun shouldShowTrackingProtectionOnboarding(session: Session) =
-        session.trackerBlockingEnabled &&
-            session.trackersBlocked.isNotEmpty() &&
+    private fun shouldShowTrackingProtectionOnboarding(tab: SessionState) =
+        tab.trackingProtection.enabled &&
+                tab.trackingProtection.blockedTrackers.isNotEmpty() &&
             settings.shouldShowTrackingProtectionCfr
 
     @Suppress("MagicNumber", "InflateParams")
