@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #ifndef include_dom_media_ipc_RemoteDecoderManagerChild_h
 #define include_dom_media_ipc_RemoteDecoderManagerChild_h
+
 #include "GPUVideoImage.h"
+#include "ipc/EnumSerializer.h"
+#include "mozilla/EnumTypeTraits.h"
 #include "mozilla/PRemoteDecoderManagerChild.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
 
@@ -17,6 +20,8 @@ enum class RemoteDecodeIn {
   Unspecified,
   RddProcess,
   GpuProcess,
+
+  SENTINEL,
 };
 
 class RemoteDecoderManagerChild final
@@ -32,6 +37,8 @@ class RemoteDecoderManagerChild final
   static RemoteDecoderManagerChild* GetSingleton(RemoteDecodeIn aLocation);
 
   static void Init();
+  static void SetSupported(RemoteDecodeIn aLocation,
+                           const PDMFactory::MediaCodecsSupported& aSupported);
 
   // Can be called from any thread.
   static bool Supports(RemoteDecodeIn aLocation,
@@ -113,5 +120,13 @@ class RemoteDecoderManagerChild final
 };
 
 }  // namespace mozilla
+
+namespace IPC {
+template <>
+struct ParamTraits<mozilla::RemoteDecodeIn>
+    : public ContiguousEnumSerializer<mozilla::RemoteDecodeIn,
+                                      mozilla::RemoteDecodeIn::Unspecified,
+                                      mozilla::RemoteDecodeIn::SENTINEL> {};
+}  // namespace IPC
 
 #endif  // include_dom_media_ipc_RemoteDecoderManagerChild_h

@@ -3172,8 +3172,7 @@ bool CacheIRCompiler::emitLoadArrayBufferByteLengthInt32Result(
   return true;
 }
 
-bool CacheIRCompiler::emitLoadTypedArrayLengthResult(ObjOperandId objId,
-                                                     uint32_t getterOffset) {
+bool CacheIRCompiler::emitLoadTypedArrayLengthResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);

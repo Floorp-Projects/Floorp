@@ -2361,7 +2361,7 @@ bool jit::RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph,
       for (size_t i = 0, e = block->numSuccessors(); i != e; ++i) {
         block->getSuccessor(i)->removePredecessor(block);
       }
-      graph.removeBlockIncludingPhis(block);
+      graph.removeBlock(block);
     }
   }
 
@@ -3395,20 +3395,7 @@ static bool TryEliminateBoundsCheck(BoundsCheckMap& checks, size_t blockIndex,
   return true;
 }
 
-static bool TryOptimizeLoadObjectOrNull(MDefinition* def,
-                                        MDefinitionVector* peliminateList) {
-  if (def->type() != MIRType::Value) {
-    return true;
-  }
-
-  // TODO(no-TI): remove more code.
-  return true;
-}
-
 // Eliminate checks which are redundant given each other or other instructions.
-//
-// A type barrier is considered redundant if all missing types have been tested
-// for by earlier control instructions.
 //
 // A bounds check is considered redundant if it's dominated by another bounds
 // check with the same length and the indexes differ by only a constant amount.
@@ -3453,23 +3440,14 @@ bool jit::EliminateRedundantChecks(MIRGraph& graph) {
     for (MDefinitionIterator iter(block); iter;) {
       MDefinition* def = *iter++;
 
-      bool eliminated = false;
+      if (!def->isBoundsCheck()) {
+        continue;
+      }
 
-      switch (def->op()) {
-        case MDefinition::Opcode::BoundsCheck:
-          if (!TryEliminateBoundsCheck(checks, index, def->toBoundsCheck(),
-                                       &eliminated)) {
-            return false;
-          }
-          break;
-        case MDefinition::Opcode::LoadFixedSlot:
-        case MDefinition::Opcode::LoadDynamicSlot:
-          if (!TryOptimizeLoadObjectOrNull(def, &eliminateList)) {
-            return false;
-          }
-          break;
-        default:
-          break;
+      bool eliminated = false;
+      if (!TryEliminateBoundsCheck(checks, index, def->toBoundsCheck(),
+                                   &eliminated)) {
+        return false;
       }
 
       if (eliminated) {

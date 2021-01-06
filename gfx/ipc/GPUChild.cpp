@@ -4,28 +4,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUChild.h"
-#include "gfxConfig.h"
-#include "GfxInfoBase.h"
-#include "gfxPlatform.h"
+
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
+#include "GfxInfoBase.h"
 #include "VRProcessManager.h"
-#include "mozilla/gfx/Logging.h"
+#include "gfxConfig.h"
+#include "gfxPlatform.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/dom/CheckerboardReportService.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #if defined(XP_WIN)
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
+#include "mozilla/HangDetails.h"
+#include "mozilla/RemoteDecoderManagerChild.h"  // For RemoteDecodeIn
+#include "mozilla/Unused.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/APZInputBridgeChild.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
-#include "mozilla/Unused.h"
-#include "mozilla/HangDetails.h"
 #include "nsIGfxInfo.h"
 #include "nsIObserverService.h"
 
@@ -296,6 +299,13 @@ mozilla::ipc::IPCResult GPUChild::RecvBHRThreadHang(
         new nsHangDetails(HangDetails(aDetails), PersistedToDisk::No);
     obs->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUChild::RecvUpdateMediaCodecsSupported(
+    const PDMFactory::MediaCodecsSupported& aSupported) {
+  dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
+      RemoteDecodeIn::GpuProcess, aSupported);
   return IPC_OK();
 }
 

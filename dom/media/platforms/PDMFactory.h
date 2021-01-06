@@ -44,11 +44,6 @@ class PDMFactory final {
 
   PDMFactory();
 
-  // To be called in the content process only, used to determine which PDMs are
-  // usable in their respective process.
-  static already_AddRefed<PDMFactory> PDMFactoryForRdd();
-  static already_AddRefed<PDMFactory> PDMFactoryForGpu();
-
   // Factory method that creates the appropriate PlatformDecoderModule for
   // the platform we're running on.
   RefPtr<PDMCreateDecoderPromise> CreateDecoder(
@@ -92,15 +87,12 @@ class PDMFactory final {
 
   using MediaCodecsSupported = EnumSet<MediaCodecs>;
 
-  static MediaCodecsSupported Supported();
-  static void SetSupported(const MediaCodecsSupported& aSupported);
+  static MediaCodecsSupported Supported(bool aForceRefresh = false);
+  static bool SupportsMimeType(const nsACString& aMimeType,
+                               const MediaCodecsSupported& aSupported);
 
  private:
   virtual ~PDMFactory();
-  // Will set PDM list for the required process.
-  // This is used to determine which PDMs are available on the given process
-  // from the content process.
-  explicit PDMFactory(const RemoteDecodeIn& aProcess);
 
   void CreatePDMs();
   void CreateNullPDM();

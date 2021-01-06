@@ -21,6 +21,7 @@ interface SVGFECompositeElement : SVGElement {
   const unsigned short SVG_FECOMPOSITE_OPERATOR_ATOP = 4;
   const unsigned short SVG_FECOMPOSITE_OPERATOR_XOR = 5;
   const unsigned short SVG_FECOMPOSITE_OPERATOR_ARITHMETIC = 6;
+  const unsigned short SVG_FECOMPOSITE_OPERATOR_LIGHTER = 7;
 
   [Constant]
   readonly attribute SVGAnimatedString in1;

@@ -68,15 +68,16 @@ WMFDecoderModule::~WMFDecoderModule() {
   }
 }
 
-static bool IsRemoteAcceleratedCompositor(const SupportDecoderParams& aParams) {
-  if (!aParams.mKnowsCompositor) {
+static bool IsRemoteAcceleratedCompositor(
+    layers::KnowsCompositor* aKnowsCompositor) {
+  if (!aKnowsCompositor) {
     return false;
   }
 
   TextureFactoryIdentifier ident =
-      aParams.mKnowsCompositor->GetTextureFactoryIdentifier();
+      aKnowsCompositor->GetTextureFactoryIdentifier();
   return ident.mParentBackend != LayersBackend::LAYERS_BASIC &&
-         !aParams.mKnowsCompositor->UsingSoftwareWebRender() &&
+         !aKnowsCompositor->UsingSoftwareWebRender() &&
          ident.mParentProcessType == GeckoProcessType_GPU;
 }
 
@@ -172,6 +173,13 @@ nsresult WMFDecoderModule::Startup() {
 
 already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
+  // In GPU process, only support decoding if an accelerated compositor is
+  // known.
+  if (XRE_IsGPUProcess() &&
+      !IsRemoteAcceleratedCompositor(aParams.mKnowsCompositor)) {
+    return nullptr;
+  }
+
   UniquePtr<WMFVideoMFTManager> manager(new WMFVideoMFTManager(
       aParams.VideoConfig(), aParams.mKnowsCompositor, aParams.mImageContainer,
       aParams.mRate.mValue, aParams.mOptions, sDXVAEnabled));
@@ -201,6 +209,11 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
+  if (XRE_IsGPUProcess()) {
+    // Only allow video in the GPU process.
+    return nullptr;
+  }
+
   UniquePtr<WMFAudioMFTManager> manager(
       new WMFAudioMFTManager(aParams.AudioConfig()));
 
@@ -236,41 +249,26 @@ static bool CanCreateWMFDecoder() {
 
 /* static */
 bool WMFDecoderModule::HasH264() {
-  if (XRE_IsContentProcess()) {
-    return PDMFactory::Supported().contains(PDMFactory::MediaCodecs::H264);
-  }
   return CanCreateWMFDecoder<CLSID_CMSH264DecoderMFT>();
 }
 
 /* static */
 bool WMFDecoderModule::HasVP8() {
-  if (XRE_IsContentProcess()) {
-    return PDMFactory::Supported().contains(PDMFactory::MediaCodecs::VP8);
-  }
   return sUsableVPXMFT && CanCreateWMFDecoder<CLSID_WebmMfVpxDec>();
 }
 
 /* static */
 bool WMFDecoderModule::HasVP9() {
-  if (XRE_IsContentProcess()) {
-    return PDMFactory::Supported().contains(PDMFactory::MediaCodecs::VP9);
-  }
   return sUsableVPXMFT && CanCreateWMFDecoder<CLSID_WebmMfVpxDec>();
 }
 
 /* static */
 bool WMFDecoderModule::HasAAC() {
-  if (XRE_IsContentProcess()) {
-    return PDMFactory::Supported().contains(PDMFactory::MediaCodecs::AAC);
-  }
   return CanCreateWMFDecoder<CLSID_CMSAACDecMFT>();
 }
 
 /* static */
 bool WMFDecoderModule::HasMP3() {
-  if (XRE_IsContentProcess()) {
-    return PDMFactory::Supported().contains(PDMFactory::MediaCodecs::MP3);
-  }
   return CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>();
 }
 
@@ -285,13 +283,14 @@ bool WMFDecoderModule::SupportsMimeType(
 
 bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
                                 DecoderDoctorDiagnostics* aDiagnostics) const {
-  // In GPU process, only support decoding if an accelerated compositor is
-  // known.
-  if (XRE_IsGPUProcess() && !IsRemoteAcceleratedCompositor(aParams)) {
+  // In GPU process, only support decoding if video. This only gives a hint of
+  // what the GPU decoder *may* support. The actual check will occur in
+  // CreateVideoDecoder.
+  const auto& trackInfo = aParams.mConfig;
+  if (XRE_IsGPUProcess() && !trackInfo.GetAsVideoInfo()) {
     return false;
   }
 
-  const auto& trackInfo = aParams.mConfig;
   const auto* videoInfo = trackInfo.GetAsVideoInfo();
   // Temporary - forces use of VPXDecoder when alpha is present.
   // Bug 1263836 will handle alpha scenario once implemented. It will shift

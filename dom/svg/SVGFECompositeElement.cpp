@@ -32,6 +32,7 @@ SVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
     {nsGkAtoms::atop, SVG_FECOMPOSITE_OPERATOR_ATOP},
     {nsGkAtoms::xor_, SVG_FECOMPOSITE_OPERATOR_XOR},
     {nsGkAtoms::arithmetic, SVG_FECOMPOSITE_OPERATOR_ARITHMETIC},
+    {nsGkAtoms::lighter, SVG_FECOMPOSITE_OPERATOR_LIGHTER},
     {nullptr, 0}};
 
 SVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] = {

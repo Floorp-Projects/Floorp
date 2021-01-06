@@ -6493,10 +6493,6 @@ class MPhi final : public MDefinition,
 
  protected:
   MUse* getUseFor(size_t index) override {
-    // Note: after the initial IonBuilder pass, it is OK to change phi
-    // operands such that they do not include the type sets of their
-    // operands. This can arise during e.g. value numbering, where
-    // definitions producing the same value may have different type sets.
     MOZ_ASSERT(index < numOperands());
     return &inputs_[index];
   }
@@ -11491,8 +11487,7 @@ class MResumePoint final : public MNode
   friend class MBasicBlock;
   friend void AssertBasicGraphCoherency(MIRGraph& graph, bool force);
 
-  // List of stack slots needed to reconstruct the frame corresponding to the
-  // function which is compiled by IonBuilder.
+  // List of stack slots needed to reconstruct the BaselineFrame.
   FixedList<MUse> operands_;
 
   // List of stores needed to reconstruct the content of objects which are

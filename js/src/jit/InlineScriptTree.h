@@ -19,8 +19,8 @@ namespace jit {
 // current inline path (the sequence of scripts and call-pcs that lead to the
 // current function being inlined).
 //
-// To support this, the top-level IonBuilder keeps a tree that records the
-// inlinings done during compilation.
+// To support this, use a tree that records the inlinings done during
+// compilation.
 class InlineScriptTree {
   // InlineScriptTree for the caller
   InlineScriptTree* caller_;
