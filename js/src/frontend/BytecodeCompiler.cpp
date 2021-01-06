@@ -742,6 +742,10 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
     if (!emitter->emitScript(pn)) {
       return false;
     }
+
+    if (!compilationState_.finish(cx, compilationInfo)) {
+      return false;
+    }
   }
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
@@ -786,8 +790,13 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
     return false;
   }
 
+  if (!compilationState_.finish(cx, compilationInfo)) {
+    return false;
+  }
+
   StencilModuleMetadata& moduleMetadata =
       *compilationInfo.stencil.moduleMetadata;
+
   builder.finishFunctionDecls(moduleMetadata);
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
@@ -861,7 +870,15 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
                      funbox->extent().toStringEnd,
                      compilationInfo.input.options.lineno,
                      compilationInfo.input.options.column};
+
+    if (!compilationState_.finish(cx, compilationInfo)) {
+      return false;
+    }
   } else {
+    if (!compilationState_.finish(cx, compilationInfo)) {
+      return false;
+    }
+
     // The asm.js module was created by parser. Instantiation below will
     // allocate the JSFunction that wraps it.
     MOZ_ASSERT(funbox->isAsmJSModule());
@@ -1066,6 +1083,10 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   bool isRelazifiableAfterDelazify = lazy->isRelazifiableAfterDelazify();
   compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex]
       .allowRelazify = isRelazifiableAfterDelazify && !hadLazyScriptData;
+
+  if (!compilationState.finish(cx, compilationInfo)) {
+    return false;
+  }
 
   assertException.reset();
   return true;
