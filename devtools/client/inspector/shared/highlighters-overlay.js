@@ -1585,17 +1585,6 @@ class HighlightersOverlay {
   }
 
   /**
-   * Is the current clicked node a grid display property value in the
-   * rule-view.
-   *
-   * @param  {DOMNode} node
-   * @return {Boolean}
-   */
-  _isRuleViewDisplayGrid(node) {
-    return this.isRuleView(node) && node.classList.contains("ruleview-grid");
-  }
-
-  /**
    * Does the current clicked node have the shapes highlighter toggle in the
    * rule-view.
    *
@@ -1655,11 +1644,6 @@ class HighlightersOverlay {
   }
 
   onClick(event) {
-    if (this._isRuleViewDisplayGrid(event.target)) {
-      event.stopPropagation();
-      this.toggleGridHighlighter(this.inspector.selection.nodeFront, "rule");
-    }
-
     if (this._isRuleViewShapeSwatch(event.target)) {
       event.stopPropagation();
 
