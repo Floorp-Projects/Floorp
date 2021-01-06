@@ -157,9 +157,9 @@ nsNativeBasicThemeWin::ComputeProgressTrackColors() {
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicThemeWin::ComputeMeterchunkColors(
-    const double aValue, const double aOptimum, const double aLow) {
+    const EventStates& aMeterState) {
   if (!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
-    return nsNativeBasicTheme::ComputeMeterchunkColors(aValue, aOptimum, aLow);
+    return nsNativeBasicTheme::ComputeMeterchunkColors(aMeterState);
   }
 
   return std::make_pair(sRGBColor::FromABGR(LookAndFeel::GetColor(

@@ -285,18 +285,16 @@ nsNativeBasicTheme::ComputeProgressTrackColors() {
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
-    const double aValue, const double aOptimum, const double aLow) {
+    const EventStates& aMeterState) {
   sRGBColor borderColor = sColorMeterGreen20;
   sRGBColor chunkColor = sColorMeterGreen10;
 
-  if (aValue < aOptimum) {
-    if (aValue < aLow) {
-      borderColor = sColorMeterRed20;
-      chunkColor = sColorMeterRed10;
-    } else {
-      borderColor = sColorMeterYellow20;
-      chunkColor = sColorMeterYellow10;
-    }
+  if (aMeterState.HasState(NS_EVENT_STATE_SUB_OPTIMUM)) {
+    borderColor = sColorMeterYellow20;
+    chunkColor = sColorMeterYellow10;
+  } else if (aMeterState.HasState(NS_EVENT_STATE_SUB_SUB_OPTIMUM)) {
+    borderColor = sColorMeterRed20;
+    chunkColor = sColorMeterRed10;
   }
 
   return std::make_pair(chunkColor, borderColor);
@@ -931,7 +929,6 @@ void nsNativeBasicTheme::PaintMeter(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintMeterchunk(nsIFrame* aFrame,
                                          DrawTarget* aDrawTarget,
                                          const LayoutDeviceRect& aRect,
-                                         const EventStates& aState,
                                          DPIRatio aDpiRatio) {
   // TODO: Address artifacts when position is between 0 and (radius + border).
   nsMeterFrame* meterFrame = do_QueryFrame(aFrame->GetParent());
@@ -968,8 +965,7 @@ void nsNativeBasicTheme::PaintMeterchunk(nsIFrame* aFrame,
         RectCornerRadii(radius, progressEndRadius, progressEndRadius, radius);
   }
 
-  auto [chunkColor, borderColor] =
-      ComputeMeterchunkColors(value, meter->Optimum(), meter->Low());
+  auto [chunkColor, borderColor] = ComputeMeterchunkColors(meter->State());
 
   PaintRoundedRect(aDrawTarget, rect, chunkColor, borderColor, borderWidth,
                    radii, aDpiRatio);
@@ -1247,7 +1243,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       PaintMeter(dt, devPxRect, eventState, dpiRatio);
       break;
     case StyleAppearance::Meterchunk:
-      PaintMeterchunk(aFrame, dt, devPxRect, eventState, dpiRatio);
+      PaintMeterchunk(aFrame, dt, devPxRect, dpiRatio);
       break;
     case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbarthumbVertical: {
