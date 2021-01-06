@@ -1658,6 +1658,31 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#addEndpointQuery", () => {
+    const url = "https://spocs.getpocket.com/spocs";
+
+    it("should return same url with no query", () => {
+      const result = feed.addEndpointQuery(url, "");
+      assert.equal(result, url);
+    });
+
+    it("should add multiple query params to standard url", () => {
+      const params = "?first=first&second=second";
+      const result = feed.addEndpointQuery(url, params);
+      assert.equal(result, url + params);
+    });
+
+    it("should add multiple query params to url with a query already", () => {
+      const params = "first=first&second=second";
+      const initialParams = "?zero=zero";
+      const result = feed.addEndpointQuery(
+        `${url}${initialParams}`,
+        `?${params}`
+      );
+      assert.equal(result, `${url}${initialParams}&${params}`);
+    });
+  });
+
   describe("#readDataPref", () => {
     it("should return what's in Services.prefs.getStringPref", () => {
       const fakeImpressions = {
