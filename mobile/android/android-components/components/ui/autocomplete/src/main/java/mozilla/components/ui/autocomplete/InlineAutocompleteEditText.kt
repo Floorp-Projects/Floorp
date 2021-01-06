@@ -4,6 +4,7 @@
 
 package mozilla.components.ui.autocomplete
 
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Context.INPUT_METHOD_SERVICE
 import android.graphics.Rect
@@ -13,6 +14,7 @@ import android.provider.Settings.Secure.getString
 import android.text.Editable
 import android.text.NoCopySpan
 import android.text.Selection
+import android.text.Spannable
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.TextWatcher
@@ -30,6 +32,7 @@ import android.view.inputmethod.InputConnectionWrapper
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatEditText
+import mozilla.components.support.utils.SafeUrl
 
 typealias OnCommitListener = () -> Unit
 typealias OnFilterListener = (String) -> Unit
@@ -716,11 +719,27 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     }
 
     override fun onTextContextMenuItem(id: Int): Boolean {
-        var newId = id
-        if (newId == android.R.id.paste && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            newId = android.R.id.pasteAsPlainText
+        // Ensure more control over what gets pasted from the framework floating menu.
+        // Behavior closely following the default implementation from TextView#onTextContextMenuItem().
+        if (id == android.R.id.paste || id == android.R.id.pasteAsPlainText) {
+            val selectionStart = selectionStart
+            val selectionEnd = selectionEnd
+
+            val min = 0.coerceAtLeast(selectionStart.coerceAtMost(selectionEnd))
+            val max = 0.coerceAtLeast(selectionStart.coerceAtLeast(selectionEnd))
+
+            if (id == android.R.id.pasteAsPlainText ||
+                (id == android.R.id.paste && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            ) {
+                paste(min, max, false)
+            } else {
+                paste(min, max, true)
+            }
+
+            return true // action was performed
         }
-        return super.onTextContextMenuItem(newId)
+
+        return callOnTextContextMenuItemSuper(id)
     }
 
     @Suppress("ClickableViewAccessibility")
@@ -747,6 +766,49 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
             }
         } else {
             super.onTouchEvent(event)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun callOnTextContextMenuItemSuper(id: Int) = super.onTextContextMenuItem(id)
+
+    /**
+     * Paste clipboard content between min and max positions.
+     *
+     * Method matching TextView#paste() but which also strips unwanted schemes before actually pasting.
+     */
+    @Suppress("NestedBlockDepth")
+    @VisibleForTesting
+    internal fun paste(min: Int, max: Int, withFormatting: Boolean) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = clipboard.primaryClip
+
+        if (clip != null) {
+            var didFirst = false
+            for (i in 0 until clip.itemCount) {
+                val textToBePasted: CharSequence?
+                textToBePasted = if (withFormatting) {
+                    clip.getItemAt(i).coerceToStyledText(context)
+                } else {
+                    // Get an item as text and remove all spans by toString().
+                    val text = clip.getItemAt(i).coerceToText(context)
+                    (text as? Spanned)?.toString() ?: text
+                }
+
+                // Actually stripping unwanted schemes
+                val safeTextToBePasted = SafeUrl.stripUnsafeUrlSchemes(context, textToBePasted)
+
+                if (safeTextToBePasted != null) {
+                    if (!didFirst) {
+                        Selection.setSelection(editableText as Spannable?, max)
+                        editableText.replace(min, max, safeTextToBePasted)
+                        didFirst = true
+                    } else {
+                        editableText.insert(selectionEnd, "\n")
+                        editableText.insert(selectionEnd, safeTextToBePasted)
+                    }
+                }
+            }
         }
     }
 
