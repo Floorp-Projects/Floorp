@@ -31,6 +31,8 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
 
   using EnsureRDDPromise =
       MozPromise<ipc::Endpoint<PRemoteDecoderManagerChild>, nsresult, true>;
+  // Launch a new RDD process asynchronously
+  RefPtr<GenericNonExclusivePromise> LaunchRDDProcess();
   // If not using a RDD process, launch a new RDD process asynchronously and
   // create a RemoteDecoderManager bridge
   RefPtr<EnsureRDDPromise> EnsureRDDProcessAndCreateBridge(
@@ -104,6 +106,9 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
   // the initial map is passed in command-line arguments) to be sent
   // when the process can receive IPC messages.
   nsTArray<dom::Pref> mQueuedPrefs;
+  // Promise will be resolved when the RDD process has been fully started and
+  // VideoBridge configured. Only accessed on the main thread.
+  RefPtr<GenericNonExclusivePromise> mLaunchRDDPromise;
 };
 
 }  // namespace mozilla
