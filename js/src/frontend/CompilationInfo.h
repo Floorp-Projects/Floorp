@@ -67,6 +67,13 @@ struct ScopeContext {
   bool allowSuperCall = false;
   bool allowArguments = true;
 
+  // Eval and arrow scripts also inherit the "this" environment -- used by
+  // `super` expressions -- from their enclosing script. We count the number of
+  // environment hops needed to get from enclosing scope to the nearest
+  // appropriate environment. This value is undefined if the script we are
+  // compiling is not an eval or arrow-function.
+  uint32_t enclosingThisEnvironmentHops = 0;
+
   // Class field initializer info if we are nested within a class constructor.
   // We may be an combination of arrow and eval context within the constructor.
   mozilla::Maybe<MemberInitializers> memberInitializers = {};
