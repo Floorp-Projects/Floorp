@@ -586,7 +586,7 @@ class LexicalScope : public Scope {
     return *static_cast<const RuntimeData*>(rawData());
   }
 
-  static uint32_t nextFrameSlot(const AbstractScopePtr& scope);
+  static uint32_t nextFrameSlot(Scope* scope);
 
  public:
   uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
