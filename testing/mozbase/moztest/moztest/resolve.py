@@ -73,12 +73,6 @@ TEST_SUITES = {
         "mach_command": "firefox-ui-update",
         "kwargs": {},
     },
-    # TODO(ato): integrate geckodriver tests with moz.build
-    "geckodriver": {
-        "aliases": ("testing/geckodriver",),
-        "mach_command": "geckodriver-test",
-        "kwargs": {},
-    },
     "marionette": {
         "aliases": ("mn",),
         "mach_command": "marionette-test",

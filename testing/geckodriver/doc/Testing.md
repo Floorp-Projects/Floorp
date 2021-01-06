@@ -14,9 +14,10 @@ tell mach to build these by adding the following line to your [mozconfig]:
 
 	ac_add_options --enable-rust-tests
 
-Tests can then be run like this:
+Tests can then be run by using `cargo test` in the specific source folder:
 
-	% ./mach test testing/geckodriver
+	% cd testing/geckodriver/src
+    % cargo test
 
 To run the more extensive WPT tests you can use mach, but first
 make sure you have built Firefox:

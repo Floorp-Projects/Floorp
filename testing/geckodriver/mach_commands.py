@@ -125,29 +125,3 @@ class GeckoDriver(MachCommandBase):
             args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
 
         return self.run_process(args=args, ensure_exit_code=False, pass_thru=True)
-
-
-@CommandProvider
-class GeckoDriverTest(MachCommandBase):
-    @Command(
-        "geckodriver-test",
-        category="post-build",
-        description="Run geckodriver unit tests.",
-    )
-    @CommandArgument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Verbose output for what" " commands the build is running.",
-    )
-    def test(self, verbose=False, **kwargs):
-        from mozbuild.controller.building import BuildDriver
-
-        self.log_manager.enable_all_structured_loggers()
-
-        driver = self._spawn(BuildDriver)
-        return driver.build(
-            what=["testing/geckodriver/check"],
-            verbose=verbose,
-            mach_context=self._mach_context,
-        )
