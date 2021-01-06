@@ -69,9 +69,11 @@ def init_device(options):
 
         bin_dir = posixpath.join(options.remote_test_root, "bin")
         tests_dir = posixpath.join(options.remote_test_root, "tests")
+        temp_dir = posixpath.join(options.remote_test_root, "tmp")
         # Push js shell and libraries.
         init_remote_dir(DEVICE, tests_dir)
         init_remote_dir(DEVICE, bin_dir)
+        init_remote_dir(DEVICE, temp_dir)
         push_libs(options, DEVICE, bin_dir)
         push_progs(options, DEVICE, [options.js_shell], bin_dir)
         # update options.js_shell to point to the js binary on the device

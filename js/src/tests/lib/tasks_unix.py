@@ -16,14 +16,15 @@ from .results import (
     TestOutput,
     escape_cmdline,
 )
+from .adaptor import xdr_annotate
 
 PY2 = sys.version_info.major == 2
 
 
 class Task(object):
-    def __init__(self, test, prefix, pid, stdout, stderr):
+    def __init__(self, test, prefix, tempdir, pid, stdout, stderr):
         self.test = test
-        self.cmd = test.get_command(prefix)
+        self.cmd = test.get_command(prefix, tempdir)
         self.pid = pid
         self.stdout = stdout
         self.stderr = stderr
@@ -32,12 +33,12 @@ class Task(object):
         self.err = []
 
 
-def spawn_test(test, prefix, passthrough, run_skipped, show_cmd):
+def spawn_test(test, prefix, tempdir, passthrough, run_skipped, show_cmd):
     """Spawn one child, return a task struct."""
     if not test.enable and not run_skipped:
         return None
 
-    cmd = test.get_command(prefix)
+    cmd = test.get_command(prefix, tempdir)
     if show_cmd:
         print(escape_cmdline(cmd))
 
@@ -51,7 +52,7 @@ def spawn_test(test, prefix, passthrough, run_skipped, show_cmd):
         if rv:
             os.close(wout)
             os.close(werr)
-            return Task(test, prefix, rv, rout, rerr)
+            return Task(test, prefix, tempdir, rv, rout, rerr)
 
         # Child.
         os.close(rout)
@@ -233,7 +234,7 @@ def kill_undead(tasks, timeout):
                 os.kill(task.pid, signal.SIGKILL)
 
 
-def run_all_tests(tests, prefix, pb, options):
+def run_all_tests(tests, prefix, tempdir, pb, options):
     # Copy and reverse for fast pop off end.
     tests = list(tests)
     tests = tests[:]
@@ -242,11 +243,30 @@ def run_all_tests(tests, prefix, pb, options):
     # The set of currently running tests.
     tasks = []
 
+    # Piggy back on the first test to generate the XDR content needed for all
+    # other tests to run. To avoid read/write races, we temporarily limit the
+    # number of workers.
+    wait_for_encoding = False
+    worker_count = options.worker_count
+    if options.use_xdr and len(tests) > 1:
+        # The next loop pops tests, thus we iterate over the tests in reversed
+        # order.
+        tests = list(xdr_annotate(reversed(tests), options))
+        tests = tests[:]
+        tests.reverse()
+        wait_for_encoding = True
+        worker_count = 1
+
     while len(tests) or len(tasks):
-        while len(tests) and len(tasks) < options.worker_count:
+        while len(tests) and len(tasks) < worker_count:
             test = tests.pop()
             task = spawn_test(
-                test, prefix, options.passthrough, options.run_skipped, options.show_cmd
+                test,
+                prefix,
+                tempdir,
+                options.passthrough,
+                options.run_skipped,
+                options.show_cmd,
             )
             if task:
                 tasks.append(task)
@@ -262,6 +282,10 @@ def run_all_tests(tests, prefix, pb, options):
         # With Python3.4+ we could use yield from to remove this loop.
         for out in finished:
             yield out
+            if wait_for_encoding and out.test == test:
+                assert test.selfhosted_xdr_mode == "encode"
+                wait_for_encoding = False
+                worker_count = options.worker_count
 
         # If we did not finish any tasks, poke the progress bar to show that
         # the test harness is at least not frozen.
