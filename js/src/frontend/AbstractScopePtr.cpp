@@ -18,12 +18,12 @@ using namespace js::frontend;
 
 ScopeStencil& AbstractScopePtr::scopeData() const {
   const Deferred& data = scope_.as<Deferred>();
-  return data.compilationInfo.stencil.scopeData[data.index.index];
+  return data.compilationState.scopeData[data.index.index];
 }
 
-CompilationInfo& AbstractScopePtr::compilationInfo() const {
+CompilationState& AbstractScopePtr::compilationState() const {
   const Deferred& data = scope_.as<Deferred>();
-  return data.compilationInfo;
+  return data.compilationState;
 }
 
 ScopeKind AbstractScopePtr::kind() const {
@@ -37,7 +37,7 @@ ScopeKind AbstractScopePtr::kind() const {
 AbstractScopePtr AbstractScopePtr::enclosing() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeStencil()) {
-    return scopeData().enclosing(compilationInfo());
+    return scopeData().enclosing(compilationState());
   }
   return AbstractScopePtr(scope()->enclosing());
 }

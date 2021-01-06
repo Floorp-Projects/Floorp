@@ -41,12 +41,12 @@ using namespace js;
 using namespace js::frontend;
 
 AbstractScopePtr ScopeStencil::enclosing(
-    CompilationInfo& compilationInfo) const {
+    CompilationState& compilationState) const {
   if (enclosing_) {
-    return AbstractScopePtr(compilationInfo, *enclosing_);
+    return AbstractScopePtr(compilationState, *enclosing_);
   }
 
-  return AbstractScopePtr(compilationInfo.input.enclosingScope);
+  return AbstractScopePtr(compilationState.input.enclosingScope);
 }
 
 Scope* ScopeStencil::enclosingExistingScope(
@@ -787,7 +787,7 @@ bool CompilationInfo::prepareGCOutputForInstantiate(
     ReportOutOfMemory(cx);
     return false;
   }
-  if (!gcOutput.scopes.reserve(stencil.scopeData.length())) {
+  if (!gcOutput.scopes.reserve(stencil.scopeData.size())) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -830,8 +830,8 @@ bool CompilationInfoVector::prepareForInstantiate(
     if (maxScriptDataLength < delazification.scriptData.size()) {
       maxScriptDataLength = delazification.scriptData.size();
     }
-    if (maxScopeDataLength < delazification.scopeData.length()) {
-      maxScopeDataLength = delazification.scopeData.length();
+    if (maxScopeDataLength < delazification.scopeData.size()) {
+      maxScopeDataLength = delazification.scopeData.size();
     }
   }
 
@@ -922,6 +922,7 @@ CompilationState::CompilationState(
       scopeContext(cx, inheritThis, enclosingScope, enclosingEnv),
       usedNames(cx),
       allocScope(frontendAllocScope),
+      input(compilationInfo.input),
       parserAtoms(cx->runtime(), compilationInfo.alloc,
                   compilationInfo.stencil.parserAtomData) {}
 
@@ -1047,6 +1048,11 @@ bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
 
   if (!CopyVectorToSpan(cx, compilationInfo.alloc,
                         compilationInfo.stencil.scriptData, scriptData)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
+                        compilationInfo.stencil.scopeData, scopeData)) {
     return false;
   }
 
