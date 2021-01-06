@@ -73,6 +73,10 @@ class GeckoEngineSessionState internal constructor(
             )
         } catch (e: IOException) {
             GeckoEngineSessionState(null)
+        } catch (e: JSONException) {
+            // Internally GeckoView uses org.json and currently may throw JSONException in certain cases
+            // https://github.com/mozilla-mobile/android-components/issues/9332
+            GeckoEngineSessionState(null)
         }
     }
 }
