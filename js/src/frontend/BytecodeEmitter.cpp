@@ -1577,9 +1577,11 @@ bool BytecodeEmitter::emitThisEnvironmentCallee() {
   // We have to load the callee from the environment chain.
   unsigned numHops = 0;
   for (AbstractScopePtrIter si(innermostScope()); si; si++) {
-    if (si.hasSyntacticEnvironment() &&
-        si.abstractScopePtr().is<FunctionScope>()) {
+    if (si.abstractScopePtr().is<FunctionScope>()) {
       if (!si.abstractScopePtr().isArrow()) {
+        // The Parser is responsible for marking the environment as either
+        // closed-over or used-by-eval which ensure that is must exist.
+        MOZ_ASSERT(si.abstractScopePtr().hasEnvironment());
         break;
       }
     }
