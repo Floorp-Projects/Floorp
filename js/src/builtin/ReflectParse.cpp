@@ -3795,6 +3795,10 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
+  if (!compilationState.finish(cx, compilationInfo.get())) {
+    return false;
+  }
+
   serialize.setParser(&parser);
 
   ParseNode* pn;
