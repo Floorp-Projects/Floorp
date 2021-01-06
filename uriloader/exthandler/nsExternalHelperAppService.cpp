@@ -604,15 +604,18 @@ static const char* forcedExtensionMimetypes[] = {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 
+    // Note: zip and json mimetypes are commonly used with a variety of
+    // extensions; don't add them here. It's a similar story for text/xml,
+    // but slightly worse because we can use it when sniffing for a mimetype
+    // if one hasn't been provided, so don't re-add that here either.
+
     APPLICATION_PDF,
 
     APPLICATION_OGG,
 
-    APPLICATION_ZIP,
+    APPLICATION_WASM,
 
-    APPLICATION_JSON, APPLICATION_WASM,
-
-    TEXT_CALENDAR, TEXT_CSS, TEXT_VCARD, TEXT_XML};
+    TEXT_CALENDAR, TEXT_CSS, TEXT_VCARD};
 
 /**
  * Primary extensions of types whose descriptions should be overwritten.
@@ -1340,7 +1343,8 @@ bool nsExternalAppHandler::ShouldForceExtension(const nsString& aFileExt) {
                   StringBeginsWith(MIMEType, "audio/"_ns) ||
                   StringBeginsWith(MIMEType, "video/"_ns);
 
-  if (!canForce) {
+  if (!canForce &&
+      StaticPrefs::browser_download_sanitize_non_media_extensions()) {
     for (const char* mime : forcedExtensionMimetypes) {
       if (MIMEType.Equals(mime)) {
         canForce = true;
