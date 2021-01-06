@@ -656,6 +656,47 @@ ElementEditor.prototype = {
 
     inner.appendChild(this.doc.createTextNode('"'));
 
+    this._setupAttributeEditor(attribute, attr, inner, name, val);
+
+    // Figure out where we should place the attribute.
+    if (attribute.name == "id") {
+      before = this.attrList.firstChild;
+    } else if (attribute.name == "class") {
+      const idNode = this.attrElements.get("id");
+      before = idNode ? idNode.nextSibling : this.attrList.firstChild;
+    }
+    this.attrList.insertBefore(attr, before);
+
+    this.removeAttribute(attribute.name);
+    this.attrElements.set(attribute.name, attr);
+
+    this._appendAttributeValue(attribute, val);
+
+    return attr;
+  },
+
+  /**
+   * Setup the editable field for the given attribute.
+   *
+   * @param  {Object} attribute
+   *         An object containing the name and value of a DOM attribute.
+   * @param  {Element} attrEditorEl
+   *         The attribute container <span class="attreditor"> element.
+   * @param  {Element} editableEl
+   *         The editable <span class="editable"> element that is setup to be
+   *         an editable field.
+   * @param  {Element} attrNameEl
+   *         The attribute name <span class="attr-name"> element.
+   * @param  {Element} attrValueEl
+   *         The attribute value <span class="attr-value"> element.
+   */
+  _setupAttributeEditor: function(
+    attribute,
+    attrEditorEl,
+    editableEl,
+    attrNameEl,
+    attrValueEl
+  ) {
     // Double quotes need to be handled specially to prevent DOMParser failing.
     // name="v"a"l"u"e" when editing -> name='v"a"l"u"e"'
     // name="v'a"l'u"e" when editing -> name="v'a&quot;l'u&quot;e"
@@ -676,22 +717,22 @@ ElementEditor.prototype = {
     }
 
     // Make the attribute editable.
-    attr.editMode = editableField({
-      element: inner,
+    attrEditorEl.editMode = editableField({
+      element: editableEl,
       trigger: "dblclick",
       stopOnReturn: true,
       selectAll: false,
       initial: initial,
       multiline: true,
-      maxWidth: () => getAutocompleteMaxWidth(inner, this.container.elt),
+      maxWidth: () => getAutocompleteMaxWidth(editableEl, this.container.elt),
       contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
       popup: this.markup.popup,
       start: (editor, event) => {
         // If the editing was started inside the name or value areas,
         // select accordingly.
-        if (event && event.target === name) {
-          editor.input.setSelectionRange(0, name.textContent.length);
-        } else if (event && event.target.closest(".attr-value") === val) {
+        if (event?.target === attrNameEl) {
+          editor.input.setSelectionRange(0, attrNameEl.textContent.length);
+        } else if (event?.target.closest(".attr-value") === attrValueEl) {
           const length = editValueDisplayed.length;
           const editorLength = editor.input.value.length;
           const start = editorLength - (length + 1);
@@ -711,10 +752,10 @@ ElementEditor.prototype = {
         // Remove the attribute stored in this editor and re-add any attributes
         // parsed out of the input element. Restore original attribute if
         // parsing fails.
-        this.refocusOnEdit(attribute.name, attr, direction);
+        this.refocusOnEdit(attribute.name, attrEditorEl, direction);
         this._saveAttribute(attribute.name, undoMods);
         doMods.removeAttribute(attribute.name);
-        this._applyAttributes(newValue, attr, doMods, undoMods);
+        this._applyAttributes(newValue, attrEditorEl, doMods, undoMods);
         this.container.undo.do(
           () => {
             doMods.apply();
@@ -726,22 +767,6 @@ ElementEditor.prototype = {
       },
       cssProperties: this._cssProperties,
     });
-
-    // Figure out where we should place the attribute.
-    if (attribute.name == "id") {
-      before = this.attrList.firstChild;
-    } else if (attribute.name == "class") {
-      const idNode = this.attrElements.get("id");
-      before = idNode ? idNode.nextSibling : this.attrList.firstChild;
-    }
-    this.attrList.insertBefore(attr, before);
-
-    this.removeAttribute(attribute.name);
-    this.attrElements.set(attribute.name, attr);
-
-    this._appendAttributeValue(attribute, val);
-
-    return attr;
   },
 
   /**
