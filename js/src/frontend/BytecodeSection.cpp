@@ -41,7 +41,7 @@ AbstractScopePtr GCThingList::getScope(size_t index) const {
         !compilationInfo.input.enclosingScope->as<GlobalScope>().hasBindings());
     return AbstractScopePtr(compilationInfo.input.enclosingScope);
   }
-  return AbstractScopePtr(compilationInfo, elem.toScope());
+  return AbstractScopePtr(compilationState, elem.toScope());
 }
 
 mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
@@ -190,8 +190,9 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
 }
 
 PerScriptData::PerScriptData(JSContext* cx,
-                             frontend::CompilationInfo& compilationInfo)
-    : gcThingList_(cx, compilationInfo),
+                             frontend::CompilationInfo& compilationInfo,
+                             frontend::CompilationState& compilationState)
+    : gcThingList_(cx, compilationInfo, compilationState),
       atomIndices_(cx->frontendCollectionPool()) {}
 
 bool PerScriptData::init(JSContext* cx) { return atomIndices_.acquire(cx); }
