@@ -1281,6 +1281,46 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.waitForPageStop()
     }
 
+    @Test fun evaluateExtensionJS() {
+        assertThat("JS string result should be correct",
+                sessionRule.evaluateExtensionJS("return 'foo';") as String, equalTo("foo"))
+
+        assertThat("JS number result should be correct",
+                sessionRule.evaluateExtensionJS("return 1+1;") as Double, equalTo(2.0))
+
+        assertThat("JS boolean result should be correct",
+                sessionRule.evaluateExtensionJS("return !0;") as Boolean, equalTo(true))
+
+        val expected = JSONObject("{bar:42,baz:true,foo:'bar'}")
+        val actual = sessionRule.evaluateExtensionJS("return {foo:'bar',bar:42,baz:true};") as JSONObject
+        for (key in expected.keys()) {
+            assertThat("JS object result should be correct",
+                    actual.get(key), equalTo(expected.get(key)))
+        }
+
+        assertThat("JS array result should be correct",
+                sessionRule.evaluateExtensionJS("return [1,2,3];") as JSONArray,
+                equalTo(JSONArray("[1,2,3]")))
+
+        assertThat("Can access extension APIS",
+                sessionRule.evaluateExtensionJS("return !!browser.runtime;") as Boolean,
+                equalTo(true))
+
+        assertThat("Can access extension APIS",
+                sessionRule.evaluateExtensionJS("""
+                    return true;
+                    // Comments at the end are allowed""".trimIndent()) as Boolean,
+                equalTo(true))
+
+        try {
+            sessionRule.evaluateExtensionJS("test({ what")
+            assertThat("Should fail", true, equalTo(false))
+        } catch (e: RejectedPromiseException) {
+            assertThat("Syntax errors are reported",
+                    e.message,  containsString("SyntaxError"))
+        }
+    }
+
     @Test fun evaluateJS() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH);
         sessionRule.session.waitForPageStop();

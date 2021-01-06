@@ -8,6 +8,12 @@ const APIS = {
   AddHistogram({ id, value }) {
     browser.test.addHistogram(id, value);
   },
+  Eval({ code }) {
+    // eslint-disable-next-line no-eval
+    return eval(`(async () => {
+      ${code}
+    })()`);
+  },
   SetScalar({ id, value }) {
     browser.test.setScalar(id, value);
   },
@@ -59,10 +65,14 @@ browser.runtime.onConnect.addListener(contentPort => {
 
 function apiCall(message, impl) {
   const { id, args } = message;
-  sendResponse(id, impl(args));
+  try {
+    sendResponse(id, impl(args));
+  } catch (error) {
+    sendResponse(id, Promise.reject(error));
+  }
 }
 
-function sendResponse(id, response, exception) {
+function sendResponse(id, response) {
   Promise.resolve(response).then(
     value => sendSyncResponse(id, value),
     reason => sendSyncResponse(id, null, reason)

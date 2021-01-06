@@ -1075,7 +1075,7 @@ public class WebExtensionController {
         if (delegate != null) {
             delegate.onOpenOptionsPage(extension);
         } else {
-            // TODO: Save as pending?
+            message.callback.sendError("runtime.openOptionsPage is not supported");
         }
 
         message.callback.sendSuccess(null);
@@ -1102,10 +1102,9 @@ public class WebExtensionController {
             return;
         }
 
-        result.accept(session -> {
+        message.callback.resolveTo(result.map(session -> {
             if (session == null) {
-                message.callback.sendSuccess(null);
-                return;
+                return null;
             }
 
             if (session.isOpen()) {
@@ -1114,8 +1113,8 @@ public class WebExtensionController {
 
             session.open(mListener.runtime);
 
-            message.callback.sendSuccess(session.getId());
-        });
+            return session.getId();
+        }));
     }
 
     /* package */ void updateTab(final Message message, final WebExtension extension) {
@@ -1124,19 +1123,21 @@ public class WebExtensionController {
         final EventCallback callback = message.callback;
 
         if (delegate == null) {
-            callback.sendError(null);
+            callback.sendError("tabs.update is not supported");
             return;
         }
 
-        delegate.onUpdateTab(extension, message.session,
-            new WebExtension.UpdateTabDetails(message.bundle.getBundle("updateProperties")))
-            .accept(value -> {
+        final WebExtension.UpdateTabDetails details =
+                new WebExtension.UpdateTabDetails(message.bundle.getBundle("updateProperties"));
+        callback.resolveTo(delegate
+            .onUpdateTab(extension, message.session, details)
+            .map(value -> {
                 if (value == AllowOrDeny.ALLOW) {
-                    callback.sendSuccess(null);
+                    return null;
                 } else {
-                    callback.sendError(null);
+                    throw new Exception("tabs.update is not supported");
                 }
-            });
+            }));
     }
 
     /* package */ void closeTab(final Message message,
@@ -1151,13 +1152,13 @@ public class WebExtensionController {
             result = GeckoResult.fromValue(AllowOrDeny.DENY);
         }
 
-        result.accept(value -> {
+        message.callback.resolveTo(result.map(value -> {
             if (value == AllowOrDeny.ALLOW) {
-                message.callback.sendSuccess(null);
+                return null;
             } else {
-                message.callback.sendError(null);
+                throw new Exception("tabs.remove is not supported");
             }
-        });
+        }));
     }
 
     /**
@@ -1325,7 +1326,7 @@ public class WebExtensionController {
         try {
             content = message.bundle.toJSONObject().get("data");
         } catch (JSONException ex) {
-            callback.sendError(ex);
+            callback.sendError(ex.getMessage());
             return;
         }
 

@@ -21,6 +21,7 @@ import org.mozilla.geckoview.WebExtensionController.EnableSource
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import org.mozilla.geckoview.test.util.UiThreadUtils
@@ -137,6 +138,42 @@ class WebExtensionTest : BaseSessionTest() {
         assertThat("blocklistDisabled should match",
                 extension.metaData.disabledFlags and DisabledFlags.BLOCKLIST > 0,
                 equalTo(blocklistDisabled))
+    }
+
+    @Test
+    fun noDelegateErrorMessage() {
+        try {
+            sessionRule.evaluateExtensionJS("""
+                const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+                await browser.tabs.update(tab.id, { url: "www.google.com" });
+            """)
+            assertThat("tabs.update should not succeed", true, equalTo(false))
+        } catch (ex: RejectedPromiseException) {
+            assertThat("Error message matches", ex.message,
+                    equalTo("Error: tabs.update is not supported"))
+        }
+
+        try {
+            sessionRule.evaluateExtensionJS("""
+                const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+                await browser.tabs.remove(tab.id);
+            """)
+            assertThat("tabs.remove should not succeed", true, equalTo(false))
+        } catch (ex: RejectedPromiseException) {
+            assertThat("Error message matches", ex.message,
+                    equalTo("Error: tabs.remove is not supported"))
+        }
+
+        try {
+            sessionRule.evaluateExtensionJS("""
+                await browser.runtime.openOptionsPage();
+            """)
+            assertThat("runtime.openOptionsPage should not succeed",
+                    true, equalTo(false))
+        } catch (ex: RejectedPromiseException) {
+            assertThat("Error message matches", ex.message,
+                    equalTo("Error: runtime.openOptionsPage is not supported"))
+        }
     }
 
     @Test
