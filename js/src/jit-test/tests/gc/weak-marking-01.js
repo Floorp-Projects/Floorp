@@ -129,6 +129,9 @@ function weakKeysRealloc() {
     wm3.set(Object.create(null), wm2);
   }
   wm3.set(Object.create(null), makeFinalizeObserver());
+
+  finishgc();  // In case we triggerd one creating all those WeakMaps.
+
   wm2 = undefined;
   wm3 = undefined;
   obj2 = undefined;
