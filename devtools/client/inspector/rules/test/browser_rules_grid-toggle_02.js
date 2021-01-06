@@ -25,10 +25,15 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   const highlighters = view.highlighters;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#grid", inspector);
   const container = getRuleViewProperty(view, "#grid", "display").valueSpan;
-  const gridToggle = container.querySelector(".ruleview-grid");
+  const gridToggle = container.querySelector(".js-toggle-grid-highlighter");
   const overriddenContainer = getRuleViewProperty(view, "div, ul", "display")
     .valueSpan;
   const overriddenGridToggle = overriddenContainer.querySelector(
@@ -54,7 +59,7 @@ add_task(async function() {
   info(
     "Toggling ON the CSS grid highlighter from the overridden rule in the rule-view."
   );
-  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   overriddenGridToggle.click();
   await onHighlighterShown;
 
@@ -73,7 +78,7 @@ add_task(async function() {
     "Toggling off the CSS grid highlighter from the normal grid declaration in the " +
       "rule-view."
   );
-  const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   gridToggle.click();
   await onHighlighterHidden;
 
