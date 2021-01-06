@@ -3207,11 +3207,7 @@ class Document : public nsINode,
 
   // This method may fire a DOM event; if it does so it will happen
   // synchronously.
-  //
-  // Whether the event fires is controlled by the argument.
-  enum class DispatchVisibilityChange { No, Yes };
-  void UpdateVisibilityState(
-      DispatchVisibilityChange = DispatchVisibilityChange::Yes);
+  void UpdateVisibilityState();
 
   // Posts an event to call UpdateVisibilityState.
   void PostVisibilityUpdateEvent();
