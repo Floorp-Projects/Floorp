@@ -615,7 +615,7 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
 bool CompilationInfo::instantiateStencilsAfterPreparation(
     JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
     CompilationGCOutput& gcOutput) {
-  if (!gcOutput.functions.resize(stencil.scriptData.length())) {
+  if (!gcOutput.functions.resize(stencil.scriptData.size())) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -705,7 +705,7 @@ bool CompilationInfoVector::buildDelazificationIndices(JSContext* cx) {
 
   MOZ_ASSERT(keyToIndex.count() == delazifications.length());
 
-  for (size_t i = 1; i < initial.stencil.scriptData.length(); i++) {
+  for (size_t i = 1; i < initial.stencil.scriptData.size(); i++) {
     auto key = toFunctionKey(initial.stencil.scriptData[i].extent);
     auto ptr = keyToIndex.lookup(key);
     if (!ptr) {
@@ -783,7 +783,7 @@ bool CompilationInfo::prepareInputAndStencilForInstantiate(
 /* static */
 bool CompilationInfo::prepareGCOutputForInstantiate(
     JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
-  if (!gcOutput.functions.reserve(stencil.scriptData.length())) {
+  if (!gcOutput.functions.reserve(stencil.scriptData.size())) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -827,8 +827,8 @@ bool CompilationInfoVector::prepareForInstantiate(
     if (maxParserAtomDataLength < delazification.parserAtomData.length()) {
       maxParserAtomDataLength = delazification.parserAtomData.length();
     }
-    if (maxScriptDataLength < delazification.scriptData.length()) {
-      maxScriptDataLength = delazification.scriptData.length();
+    if (maxScriptDataLength < delazification.scriptData.size()) {
+      maxScriptDataLength = delazification.scriptData.size();
     }
     if (maxScopeDataLength < delazification.scopeData.length()) {
       maxScopeDataLength = delazification.scopeData.length();
@@ -1042,6 +1042,11 @@ bool CopyVectorToSpan(JSContext* cx, LifoAlloc& alloc, mozilla::Span<T>& span,
 bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
   if (!CopyVectorToSpan(cx, compilationInfo.alloc,
                         compilationInfo.stencil.regExpData, regExpData)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
+                        compilationInfo.stencil.scriptData, scriptData)) {
     return false;
   }
 
