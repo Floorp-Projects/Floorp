@@ -1297,6 +1297,11 @@ void MacroAssembler::interleaveHighInt32x4(FloatRegister rhs,
   vpunpckhdq(rhs, lhsDest, lhsDest);
 }
 
+void MacroAssembler::interleaveHighInt64x2(FloatRegister rhs,
+                                           FloatRegister lhsDest) {
+  vpunpckhqdq(rhs, lhsDest, lhsDest);
+}
+
 void MacroAssembler::interleaveHighInt8x16(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   vpunpckhbw(rhs, lhsDest, lhsDest);
@@ -1310,6 +1315,11 @@ void MacroAssembler::interleaveLowInt16x8(FloatRegister rhs,
 void MacroAssembler::interleaveLowInt32x4(FloatRegister rhs,
                                           FloatRegister lhsDest) {
   vpunpckldq(rhs, lhsDest, lhsDest);
+}
+
+void MacroAssembler::interleaveLowInt64x2(FloatRegister rhs,
+                                          FloatRegister lhsDest) {
+  vpunpcklqdq(rhs, lhsDest, lhsDest);
 }
 
 void MacroAssembler::interleaveLowInt8x16(FloatRegister rhs,

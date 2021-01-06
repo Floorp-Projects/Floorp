@@ -404,6 +404,34 @@ for ( let [lhs, rhs, expected] of
     }
 }
 
+// Interleave i64x2s
+for ( let [lhs, rhs, expected] of
+  [[[0], [2], "shuffle -> interleave-low 64x2"],
+   [[1], [3], "shuffle -> interleave-high 64x2"]] ) {
+    for (let swap of [false, true]) {
+        if (swap)
+            [lhs, rhs] = [rhs, lhs];
+        let interleave_pattern = i64ToI2(interleave(lhs, rhs));
+        let ins = wasmCompile(`
+(module
+  (memory (export "mem") 1 1)
+  (func (export "run")
+    (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
+  (func $f (param v128) (param v128) (result v128)
+    (i8x16.shuffle ${interleave_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+
+        assertEq(wasmSimdAnalysis(), expected);
+
+        let mem = new Int8Array(ins.exports.mem.buffer);
+        let lhsval = iota(16);
+        let rhsval = iota(16).map(x => x+16);
+        set(mem, 16, lhsval);
+        set(mem, 32, rhsval);
+        ins.exports.run();
+        assertSame(get(mem, 0, 16), interleave_pattern);
+    }
+}
+
 // Interleave i16x8s
 for ( let [lhs, rhs, expected] of
       [[[0, 1, 2, 3], [8, 9, 10, 11], "shuffle -> interleave-low 16x8"],
@@ -835,6 +863,11 @@ function interleave(xs, ys) {
 
 function i32ToI8(xs) {
     return xs.map(x => [x*4, x*4+1, x*4+2, x*4+3]).flat();
+}
+
+function i64ToI2(xs) {
+  return xs.map(x => [x*8, x*8+1, x*8+2, x*8+3,
+                      x*8+4, x*8+5, x*8+6, x*8+7]).flat();
 }
 
 function i16ToI8(xs) {

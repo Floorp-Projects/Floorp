@@ -453,15 +453,17 @@ class LWasmShuffleSimd128 : public LInstructionHelper<1, 2, 1> {
     // the low 16 bytes; control_[0] has the shift count.
     CONCAT_RIGHT_SHIFT_8x16,
 
-    // Interleave dwords/words/bytes from high/low halves of operands.  The
-    // lhsDest gets the low-order item, then the rhs gets the next, then the
-    // lhsDest the one after that, and so on.  control_ is garbage.
+    // Interleave dwords/qwords/words/bytes from high/low halves of operands.
+    // The lhsDest gets the low-order item, then the rhs gets the next, then
+    // the lhsDest the one after that, and so on.  control_ is garbage.
     INTERLEAVE_HIGH_8x16,
     INTERLEAVE_HIGH_16x8,
     INTERLEAVE_HIGH_32x4,
+    INTERLEAVE_HIGH_64x2,
     INTERLEAVE_LOW_8x16,
     INTERLEAVE_LOW_16x8,
     INTERLEAVE_LOW_32x4,
+    INTERLEAVE_LOW_64x2,
 
     // Fully general shuffle+blend.  control_ has the shuffle mask.
     SHUFFLE_BLEND_8x16,
