@@ -1,4 +1,7 @@
 # qcms
+[![Crates.io](https://img.shields.io/crates/v/qcms.svg)](https://crates.io/crates/qcms)
+[![Documentation](https://docs.rs/qcms/badge.svg)](https://docs.rs/qcms)
+
 
 Firefox's library for transforming image data between ICC profiles.
 
@@ -28,3 +31,6 @@ Firefox's library for transforming image data between ICC profiles.
     let mut writer = encoder.write_header().unwrap();
     writer.write_image_data(&data).unwrap(); // Save
 ```
+
+This library was originally written in C, was converted to Rust using [c2rust](https://c2rust.com/), and then refactored to be mostly
+safe and more idiomatic Rust.
