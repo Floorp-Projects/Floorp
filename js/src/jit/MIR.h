@@ -8213,15 +8213,9 @@ class MArrayPopShift : public MUnaryInstruction,
 
  private:
   Mode mode_;
-  bool needsHoleCheck_;
-  bool maybeUndefined_;
 
-  MArrayPopShift(MDefinition* object, Mode mode, bool needsHoleCheck,
-                 bool maybeUndefined)
-      : MUnaryInstruction(classOpcode, object),
-        mode_(mode),
-        needsHoleCheck_(needsHoleCheck),
-        maybeUndefined_(maybeUndefined) {
+  MArrayPopShift(MDefinition* object, Mode mode)
+      : MUnaryInstruction(classOpcode, object), mode_(mode) {
     setResultType(MIRType::Value);
   }
 
@@ -8230,8 +8224,6 @@ class MArrayPopShift : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
-  bool needsHoleCheck() const { return needsHoleCheck_; }
-  bool maybeUndefined() const { return maybeUndefined_; }
   bool mode() const { return mode_; }
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::ObjectFields | AliasSet::Element);
@@ -8290,11 +8282,8 @@ class MArraySlice : public MTernaryInstruction,
 
 class MArrayJoin : public MBinaryInstruction,
                    public MixPolicy<ObjectPolicy<0>, StringPolicy<1>>::Data {
-  bool optimizeForArray_;
-
-  MArrayJoin(MDefinition* array, MDefinition* sep, bool optimizeForArray)
-      : MBinaryInstruction(classOpcode, array, sep),
-        optimizeForArray_(optimizeForArray) {
+  MArrayJoin(MDefinition* array, MDefinition* sep)
+      : MBinaryInstruction(classOpcode, array, sep) {
     setResultType(MIRType::String);
   }
 
@@ -8307,7 +8296,6 @@ class MArrayJoin : public MBinaryInstruction,
   // might coerce the elements of the Array to strings. This coercion might
   // cause the evaluation of JavaScript code.
 
-  bool optimizeForArray() const { return optimizeForArray_; }
   bool possiblyCalls() const override { return true; }
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };

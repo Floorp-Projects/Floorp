@@ -3561,14 +3561,9 @@ void LIRGenerator::visitArrayJoin(MArrayJoin* ins) {
   MOZ_ASSERT(ins->array()->type() == MIRType::Object);
   MOZ_ASSERT(ins->sep()->type() == MIRType::String);
 
-  LDefinition tempDef = LDefinition::BogusTemp();
-  if (ins->optimizeForArray()) {
-    tempDef = tempFixed(CallTempReg0);
-  }
-
-  LArrayJoin* lir =
-      new (alloc()) LArrayJoin(useRegisterAtStart(ins->array()),
-                               useRegisterAtStart(ins->sep()), tempDef);
+  auto* lir = new (alloc())
+      LArrayJoin(useRegisterAtStart(ins->array()),
+                 useRegisterAtStart(ins->sep()), tempFixed(CallTempReg0));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
