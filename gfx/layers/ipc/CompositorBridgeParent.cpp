@@ -393,7 +393,8 @@ void CompositorBridgeParent::Initialize() {
     MOZ_ASSERT(!mApzcTreeManager);
     MOZ_ASSERT(!mApzSampler);
     MOZ_ASSERT(!mApzUpdater);
-    mApzcTreeManager = new APZCTreeManager(mRootLayerTreeID);
+    mApzcTreeManager =
+        new APZCTreeManager(mRootLayerTreeID, mOptions.UseWebRender());
     mApzSampler = new APZSampler(mApzcTreeManager, mOptions.UseWebRender());
     mApzUpdater = new APZUpdater(mApzcTreeManager, mOptions.UseWebRender());
   }
