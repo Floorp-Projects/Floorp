@@ -449,11 +449,6 @@ bool MinidumpContext::Read(uint32_t expected_size) {
   valid_ = false;
 
   // Certain raw context types are currently assumed to have unique sizes.
-  if (!IsContextSizeUnique(sizeof(MDRawContextAMD64))) {
-    BPLOG(ERROR) << "sizeof(MDRawContextAMD64) cannot match the size of any "
-                 << "other raw context";
-    return false;
-  }
   if (!IsContextSizeUnique(sizeof(MDRawContextPPC64))) {
     BPLOG(ERROR) << "sizeof(MDRawContextPPC64) cannot match the size of any "
                  << "other raw context";
@@ -467,112 +462,7 @@ bool MinidumpContext::Read(uint32_t expected_size) {
 
   FreeContext();
 
-  // First, figure out what type of CPU this context structure is for.
-  // For some reason, the AMD64 Context doesn't have context_flags
-  // at the beginning of the structure, so special case it here.
-  if (expected_size == sizeof(MDRawContextAMD64)) {
-    BPLOG(INFO) << "MinidumpContext: looks like AMD64 context";
-
-    scoped_ptr<MDRawContextAMD64> context_amd64(new MDRawContextAMD64());
-    if (!minidump_->ReadBytes(context_amd64.get(),
-                              sizeof(MDRawContextAMD64))) {
-      BPLOG(ERROR) << "MinidumpContext could not read amd64 context";
-      return false;
-    }
-
-    if (minidump_->swap())
-      Swap(&context_amd64->context_flags);
-
-    uint32_t cpu_type = context_amd64->context_flags & MD_CONTEXT_CPU_MASK;
-    if (cpu_type == 0) {
-      if (minidump_->GetContextCPUFlagsFromSystemInfo(&cpu_type)) {
-        context_amd64->context_flags |= cpu_type;
-      } else {
-        BPLOG(ERROR) << "Failed to preserve the current stream position";
-        return false;
-      }
-    }
-
-    if (cpu_type != MD_CONTEXT_AMD64) {
-      // TODO: Fall through to switch below.
-      // https://bugs.chromium.org/p/google-breakpad/issues/detail?id=550
-      BPLOG(ERROR) << "MinidumpContext not actually amd64 context";
-      return false;
-    }
-
-    // Do this after reading the entire MDRawContext structure because
-    // GetSystemInfo may seek minidump to a new position.
-    if (!CheckAgainstSystemInfo(cpu_type)) {
-      BPLOG(ERROR) << "MinidumpContext amd64 does not match system info";
-      return false;
-    }
-
-    // Normalize the 128-bit types in the dump.
-    // Since this is AMD64, by definition, the values are little-endian.
-    for (unsigned int vr_index = 0;
-         vr_index < MD_CONTEXT_AMD64_VR_COUNT;
-         ++vr_index)
-      Normalize128(&context_amd64->vector_register[vr_index], false);
-
-    if (minidump_->swap()) {
-      Swap(&context_amd64->p1_home);
-      Swap(&context_amd64->p2_home);
-      Swap(&context_amd64->p3_home);
-      Swap(&context_amd64->p4_home);
-      Swap(&context_amd64->p5_home);
-      Swap(&context_amd64->p6_home);
-      // context_flags is already swapped
-      Swap(&context_amd64->mx_csr);
-      Swap(&context_amd64->cs);
-      Swap(&context_amd64->ds);
-      Swap(&context_amd64->es);
-      Swap(&context_amd64->fs);
-      Swap(&context_amd64->ss);
-      Swap(&context_amd64->eflags);
-      Swap(&context_amd64->dr0);
-      Swap(&context_amd64->dr1);
-      Swap(&context_amd64->dr2);
-      Swap(&context_amd64->dr3);
-      Swap(&context_amd64->dr6);
-      Swap(&context_amd64->dr7);
-      Swap(&context_amd64->rax);
-      Swap(&context_amd64->rcx);
-      Swap(&context_amd64->rdx);
-      Swap(&context_amd64->rbx);
-      Swap(&context_amd64->rsp);
-      Swap(&context_amd64->rbp);
-      Swap(&context_amd64->rsi);
-      Swap(&context_amd64->rdi);
-      Swap(&context_amd64->r8);
-      Swap(&context_amd64->r9);
-      Swap(&context_amd64->r10);
-      Swap(&context_amd64->r11);
-      Swap(&context_amd64->r12);
-      Swap(&context_amd64->r13);
-      Swap(&context_amd64->r14);
-      Swap(&context_amd64->r15);
-      Swap(&context_amd64->rip);
-      // FIXME: I'm not sure what actually determines
-      // which member of the union {flt_save, sse_registers}
-      // is valid.  We're not currently using either,
-      // but it would be good to have them swapped properly.
-
-      for (unsigned int vr_index = 0;
-           vr_index < MD_CONTEXT_AMD64_VR_COUNT;
-           ++vr_index)
-        Swap(&context_amd64->vector_register[vr_index]);
-      Swap(&context_amd64->vector_control);
-      Swap(&context_amd64->debug_control);
-      Swap(&context_amd64->last_branch_to_rip);
-      Swap(&context_amd64->last_branch_from_rip);
-      Swap(&context_amd64->last_exception_to_rip);
-      Swap(&context_amd64->last_exception_from_rip);
-    }
-
-    SetContextFlags(context_amd64->context_flags);
-
-    SetContextAMD64(context_amd64.release());
-  } else if (expected_size == sizeof(MDRawContextPPC64)) {
+  if (expected_size == sizeof(MDRawContextPPC64)) {
     // |context_flags| of MDRawContextPPC64 is 64 bits, but other MDRawContext
     // in the else case have 32 bits |context_flags|, so special case it here.
     uint64_t context_flags;
@@ -744,33 +634,36 @@ bool MinidumpContext::Read(uint32_t expected_size) {
     SetContextFlags(new_context->context_flags);
     SetContextARM64(new_context.release());
   } else {
-    uint32_t context_flags;
-    if (!minidump_->ReadBytes(&context_flags, sizeof(context_flags))) {
-      BPLOG(ERROR) << "MinidumpContext could not read context flags";
+    uint32_t cpu_type = 0;
+    if (!minidump_->GetContextCPUFlagsFromSystemInfo(&cpu_type)) {
+      BPLOG(ERROR) << "Failed to preserve the current stream position";
       return false;
     }
-    if (minidump_->swap())
-      Swap(&context_flags);
 
-    uint32_t cpu_type = context_flags & MD_CONTEXT_CPU_MASK;
-    if (cpu_type == 0) {
-      // Unfortunately the flag for MD_CONTEXT_ARM that was taken
-      // from a Windows CE SDK header conflicts in practice with
-      // the CONTEXT_XSTATE flag. MD_CONTEXT_ARM has been renumbered,
-      // but handle dumps with the legacy value gracefully here.
-      if (context_flags & MD_CONTEXT_ARM_OLD) {
-        context_flags |= MD_CONTEXT_ARM;
-        context_flags &= ~MD_CONTEXT_ARM_OLD;
-        cpu_type = MD_CONTEXT_ARM;
-      }
-    }
-
-    if (cpu_type == 0) {
-      if (minidump_->GetContextCPUFlagsFromSystemInfo(&cpu_type)) {
-        context_flags |= cpu_type;
-      } else {
-        BPLOG(ERROR) << "Failed to preserve the current stream position";
+    uint32_t context_flags = 0;
+    if ((cpu_type == 0) || cpu_type != MD_CONTEXT_AMD64) {
+      if (!minidump_->ReadBytes(&context_flags, sizeof(context_flags))) {
+        BPLOG(ERROR) << "MinidumpContext could not read context flags";
         return false;
+      }
+
+      if (minidump_->swap())
+        Swap(&context_flags);
+
+      if ((context_flags & MD_CONTEXT_CPU_MASK) == 0) {
+        // Unfortunately the flag for MD_CONTEXT_ARM that was taken
+        // from a Windows CE SDK header conflicts in practice with
+        // the CONTEXT_XSTATE flag. MD_CONTEXT_ARM has been renumbered,
+        // but handle dumps with the legacy value gracefully here.
+        if (context_flags & MD_CONTEXT_ARM_OLD) {
+          context_flags |= MD_CONTEXT_ARM;
+          context_flags &= ~MD_CONTEXT_ARM_OLD;
+          cpu_type = MD_CONTEXT_ARM;
+        } else {
+          context_flags |= cpu_type;
+        }
+      } else {
+        cpu_type = context_flags & MD_CONTEXT_CPU_MASK;
       }
     }
 
@@ -779,11 +672,104 @@ bool MinidumpContext::Read(uint32_t expected_size) {
     // maintain a separate pointer for each type of CPU context structure
     // when only one of them will be used.
     switch (cpu_type) {
+      case MD_CONTEXT_AMD64: {
+        if (expected_size != sizeof(MDRawContextAMD64)) {
+          BPLOG(INFO) << "MinidumpContext AMD64 size mismatch, " <<
+            expected_size << " != " << sizeof(MDRawContextAMD64);
+        }
+        BPLOG(INFO) << "MinidumpContext: looks like AMD64 context";
+
+        scoped_ptr<MDRawContextAMD64> context_amd64(new MDRawContextAMD64());
+        if (!minidump_->ReadBytes(context_amd64.get(),
+                                  sizeof(MDRawContextAMD64))) {
+          BPLOG(ERROR) << "MinidumpContext could not read amd64 context";
+          return false;
+        }
+
+        if (minidump_->swap())
+          Swap(&context_amd64->context_flags);
+
+        // Update context_flags since we haven't done it yet
+        context_flags = context_amd64->context_flags;
+
+        if (cpu_type != (context_flags & MD_CONTEXT_CPU_MASK)) {
+          BPLOG(ERROR) << "MinidumpContext amd64 does not match system info";
+          return false;
+        }
+
+        // Normalize the 128-bit types in the dump.
+        // Since this is AMD64, by definition, the values are little-endian.
+        for (unsigned int vr_index = 0;
+             vr_index < MD_CONTEXT_AMD64_VR_COUNT;
+             ++vr_index)
+          Normalize128(&context_amd64->vector_register[vr_index], false);
+
+        if (minidump_->swap()) {
+          Swap(&context_amd64->p1_home);
+          Swap(&context_amd64->p2_home);
+          Swap(&context_amd64->p3_home);
+          Swap(&context_amd64->p4_home);
+          Swap(&context_amd64->p5_home);
+          Swap(&context_amd64->p6_home);
+          // context_flags is already swapped
+          Swap(&context_amd64->mx_csr);
+          Swap(&context_amd64->cs);
+          Swap(&context_amd64->ds);
+          Swap(&context_amd64->es);
+          Swap(&context_amd64->fs);
+          Swap(&context_amd64->ss);
+          Swap(&context_amd64->eflags);
+          Swap(&context_amd64->dr0);
+          Swap(&context_amd64->dr1);
+          Swap(&context_amd64->dr2);
+          Swap(&context_amd64->dr3);
+          Swap(&context_amd64->dr6);
+          Swap(&context_amd64->dr7);
+          Swap(&context_amd64->rax);
+          Swap(&context_amd64->rcx);
+          Swap(&context_amd64->rdx);
+          Swap(&context_amd64->rbx);
+          Swap(&context_amd64->rsp);
+          Swap(&context_amd64->rbp);
+          Swap(&context_amd64->rsi);
+          Swap(&context_amd64->rdi);
+          Swap(&context_amd64->r8);
+          Swap(&context_amd64->r9);
+          Swap(&context_amd64->r10);
+          Swap(&context_amd64->r11);
+          Swap(&context_amd64->r12);
+          Swap(&context_amd64->r13);
+          Swap(&context_amd64->r14);
+          Swap(&context_amd64->r15);
+          Swap(&context_amd64->rip);
+          // FIXME: I'm not sure what actually determines
+          // which member of the union {flt_save, sse_registers}
+          // is valid.  We're not currently using either,
+          // but it would be good to have them swapped properly.
+
+          for (unsigned int vr_index = 0;
+               vr_index < MD_CONTEXT_AMD64_VR_COUNT;
+               ++vr_index)
+            Swap(&context_amd64->vector_register[vr_index]);
+          Swap(&context_amd64->vector_control);
+          Swap(&context_amd64->debug_control);
+          Swap(&context_amd64->last_branch_to_rip);
+          Swap(&context_amd64->last_branch_from_rip);
+          Swap(&context_amd64->last_exception_to_rip);
+          Swap(&context_amd64->last_exception_from_rip);
+        }
+
+        SetContextFlags(context_amd64->context_flags);
+
+        SetContextAMD64(context_amd64.release());
+        minidump_->SeekSet(
+          (minidump_->Tell() - sizeof(MDRawContextAMD64)) + expected_size);
+        break;
+      }
       case MD_CONTEXT_X86: {
         if (expected_size != sizeof(MDRawContextX86)) {
-          BPLOG(ERROR) << "MinidumpContext x86 size mismatch, " <<
+          BPLOG(INFO) << "MinidumpContext x86 size mismatch, " <<
             expected_size << " != " << sizeof(MDRawContextX86);
-          return false;
         }
 
         scoped_ptr<MDRawContextX86> context_x86(new MDRawContextX86());
@@ -848,6 +834,8 @@ bool MinidumpContext::Read(uint32_t expected_size) {
         }
 
         SetContextX86(context_x86.release());
+        minidump_->SeekSet(
+          (minidump_->Tell() - sizeof(MDRawContextX86)) + expected_size);
 
         break;
       }
