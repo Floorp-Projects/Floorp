@@ -107,12 +107,17 @@ fn determine_font_smoothing_mode() -> Option<FontRenderMode> {
     gray_context.set_should_smooth_fonts(false);
     gray_context.set_should_antialias(true);
     gray_context.set_rgb_fill_color(1.0, 1.0, 1.0, 1.0);
-    // Lucida Grande 12 is the default fallback font in Firefox
-    let ct_font = core_text::font::new_from_name("Lucida Grande", 12.).unwrap();
-    let point = CGPoint { x: 0., y: 0. };
-    let glyph = 'X' as CGGlyph;
-    ct_font.draw_glyphs(&[glyph], &[point], smooth_context.clone());
-    ct_font.draw_glyphs(&[glyph], &[point], gray_context.clone());
+
+    // Autorelease pool for CTFont
+    objc::rc::autoreleasepool(|| {
+        // Lucida Grande 12 is the default fallback font in Firefox
+        let ct_font = core_text::font::new_from_name("Lucida Grande", 12.).unwrap();
+        let point = CGPoint { x: 0., y: 0. };
+        let glyph = 'X' as CGGlyph;
+        ct_font.draw_glyphs(&[glyph], &[point], smooth_context.clone());
+        ct_font.draw_glyphs(&[glyph], &[point], gray_context.clone());
+    });
+
     let mut mode = None;
     for (smooth, gray) in smooth_context.data().chunks(4).zip(gray_context.data().chunks(4)) {
         if smooth[0] != smooth[1] || smooth[1] != smooth[2] {
