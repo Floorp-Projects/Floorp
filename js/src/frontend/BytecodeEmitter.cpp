@@ -125,7 +125,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       cx(sc->cx_),
       parent(parent),
       bytecodeSection_(cx, sc->extent().lineno, sc->extent().column),
-      perScriptData_(cx, compilationInfo),
+      perScriptData_(cx, compilationInfo, compilationState),
       compilationInfo(compilationInfo),
       compilationState(compilationState),
       emitterMode(emitterMode) {}

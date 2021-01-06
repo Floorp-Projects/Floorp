@@ -25,7 +25,7 @@ struct MemberInitializers;
 class GCMarker;
 
 namespace frontend {
-struct CompilationInfo;
+struct CompilationState;
 struct CompilationGCOutput;
 class ScopeStencil;
 }  // namespace frontend
@@ -43,11 +43,11 @@ using HeapPtrScope = HeapPtr<Scope*>;
 // may occur to ensure that the scope is traced.
 class AbstractScopePtr {
  public:
-  // Used to hold index and the compilationInfo together to avoid having a
-  // potentially nullable compilationInfo.
+  // Used to hold index and the compilationState together to avoid having a
+  // potentially nullable compilationState.
   struct Deferred {
     ScopeIndex index;
-    frontend::CompilationInfo& compilationInfo;
+    frontend::CompilationState& compilationState;
   };
 
   // To make writing code and managing invariants easier, we require that
@@ -66,8 +66,9 @@ class AbstractScopePtr {
 
   explicit AbstractScopePtr(Scope* scope) : scope_(HeapPtrScope(scope)) {}
 
-  AbstractScopePtr(frontend::CompilationInfo& compilationInfo, ScopeIndex scope)
-      : scope_(Deferred{scope, compilationInfo}) {}
+  AbstractScopePtr(frontend::CompilationState& compilationState,
+                   ScopeIndex scope)
+      : scope_(Deferred{scope, compilationState}) {}
 
   bool isNullptr() const {
     if (isScopeStencil()) {
@@ -84,9 +85,9 @@ class AbstractScopePtr {
 
   bool isScopeStencil() const { return scope_.is<Deferred>(); }
 
-  // Note: this handle is rooted in the CompilationInfo.
+  // Note: this handle is rooted in the CompilationState.
   frontend::ScopeStencil& scopeData() const;
-  frontend::CompilationInfo& compilationInfo() const;
+  frontend::CompilationState& compilationState() const;
 
   // This allows us to check whether or not this provider wraps
   // or otherwise would reify to a particular scope type.

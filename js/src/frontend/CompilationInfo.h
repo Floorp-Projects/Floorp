@@ -230,10 +230,13 @@ struct MOZ_RAII CompilationState {
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
 
+  CompilationInput& input;
+
   // Temporary space to accumulate stencil data.
   // Copied to CompilationStencil by `finish` method.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
+  Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
 
   // Table of parser atoms for this compilation.
   ParserAtomsTable parserAtoms;
@@ -300,7 +303,7 @@ struct CompilationStencil {
   mozilla::Span<ScriptStencil> scriptData;
   SharedDataContainer sharedData;
 
-  Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
+  mozilla::Span<ScopeStencil> scopeData;
 
   // Module metadata if this is a module compile.
   mozilla::Maybe<StencilModuleMetadata> moduleMetadata;
