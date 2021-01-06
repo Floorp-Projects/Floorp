@@ -2331,19 +2331,11 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
   }
   TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
 
-  // Ensure the index is in-bounds so the element type gets monitored.
-  if (index >= tarr->length().get()) {
-    return AttachDecision::NoAction;
-  }
-
   writer.guardShapeForClass(objId, tarr->shape());
 
-  // Don't handle out-of-bounds accesses here because we have to ensure the
-  // |undefined| type is monitored. See also tryAttachTypedArrayNonInt32Index.
-  // TODO(no-TI): Monitoring?
+  bool handleOOB = index >= tarr->length().get();
   bool allowDoubleForUint32 = AllowDoubleForUint32Array(tarr, index);
-  writer.loadTypedArrayElementResult(objId, indexId, tarr->type(),
-                                     /* handleOOB = */ false,
+  writer.loadTypedArrayElementResult(objId, indexId, tarr->type(), handleOOB,
                                      allowDoubleForUint32);
   writer.returnFromIC();
 
