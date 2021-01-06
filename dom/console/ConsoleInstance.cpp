@@ -25,43 +25,6 @@ NS_INTERFACE_MAP_END
 
 namespace {
 
-ConsoleLogLevel PrefToValue(const nsAString& aPref,
-                            const ConsoleLogLevel aLevel) {
-  if (!NS_IsMainThread()) {
-    NS_WARNING("Console.maxLogLevelPref is not supported on workers!");
-    return ConsoleLogLevel::All;
-  }
-
-  NS_ConvertUTF16toUTF8 pref(aPref);
-  nsAutoCString value;
-  nsresult rv = Preferences::GetCString(pref.get(), value);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    nsString message;
-    message.AssignLiteral(
-        "Console.maxLogLevelPref used with a non-existing pref: ");
-    message.Append(aPref);
-
-    nsContentUtils::LogSimpleConsoleError(message, "chrome", false,
-                                          true /* from chrome context*/);
-    return aLevel;
-  }
-
-  int index = FindEnumStringIndexImpl(value.get(), value.Length(),
-                                      ConsoleLogLevelValues::strings);
-  if (NS_WARN_IF(index < 0)) {
-    nsString message;
-    message.AssignLiteral("Invalid Console.maxLogLevelPref value: ");
-    message.Append(NS_ConvertUTF8toUTF16(value));
-
-    nsContentUtils::LogSimpleConsoleError(message, "chrome", false,
-                                          true /* from chrome context*/);
-    return aLevel;
-  }
-
-  MOZ_ASSERT(index < (int)ConsoleLogLevelValues::Count);
-  return static_cast<ConsoleLogLevel>(index);
-}
-
 ConsoleUtils::Level WebIDLevelToConsoleUtilsLevel(ConsoleLevel aLevel) {
   switch (aLevel) {
     case ConsoleLevel::Log:
@@ -99,8 +62,19 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
   }
 
   if (!aOptions.mMaxLogLevelPref.IsEmpty()) {
-    mConsole->mMaxLogLevel =
-        PrefToValue(aOptions.mMaxLogLevelPref, mConsole->mMaxLogLevel);
+    mConsole->mMaxLogLevelPref = aOptions.mMaxLogLevelPref;
+    NS_ConvertUTF16toUTF8 pref(aOptions.mMaxLogLevelPref);
+    nsAutoCString value;
+    nsresult rv = Preferences::GetCString(pref.get(), value);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      nsString message;
+      message.AssignLiteral(
+          "Console.maxLogLevelPref used with a non-existing pref: ");
+      message.Append(aOptions.mMaxLogLevelPref);
+
+      nsContentUtils::LogSimpleConsoleError(message, "chrome", false,
+                                            true /* from chrome context*/);
+    }
   }
 }
 
