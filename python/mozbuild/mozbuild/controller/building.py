@@ -1100,6 +1100,9 @@ class BuildDriver(MozbuildObject):
 
             monitor.start_resource_recording()
 
+            if self._check_clobber(self.mozconfig, os.environ):
+                return 1
+
             self.mach_context.command_attrs["clobber"] = False
             self.metrics.mozbuild.clobber.set(False)
             config = None
@@ -1632,9 +1635,6 @@ class BuildDriver(MozbuildObject):
 
         mozconfig = self.mozconfig
 
-        if self._check_clobber(mozconfig, os.environ):
-            return 1
-
         mozconfig_make_lines = []
         for arg in mozconfig["make_extra"] or []:
             mozconfig_make_lines.append(arg)
@@ -1715,8 +1715,8 @@ class BuildDriver(MozbuildObject):
     def _check_clobber(self, mozconfig, env):
         """Run `Clobberer.maybe_do_clobber`, log the result and return a status bool.
 
-        Wraps the clobbering logic in `Clobberer.maybe_do_clobber` to provide logging,
-        handling of the `AUTOCLOBBER` mozconfig option and metrics gathering.
+        Wraps the clobbering logic in `Clobberer.maybe_do_clobber` to provide logging
+        and handling of the `AUTOCLOBBER` mozconfig option.
 
         Return a bool indicating whether the clobber reached an error state. For example,
         return `True` if the clobber was required but not completed, and return `False` if
@@ -1745,20 +1745,17 @@ class BuildDriver(MozbuildObject):
             self.log(logging.WARNING, "clobber", {"msg": line.rstrip()}, "{msg}")
 
         clobber_required, clobber_performed, clobber_message = res
-        if self.mach_context is not None and clobber_performed:
-            self.mach_context.command_attrs["clobber"] = True
-            self.metrics.mozbuild.clobber.set(True)
-        if not clobber_required or clobber_performed:
-            if clobber_performed and env.get("TINDERBOX_OUTPUT"):
-                self.log(
-                    logging.WARNING,
-                    "clobber",
-                    {"msg": "TinderboxPrint: auto clobber"},
-                    "{msg}",
-                )
-        else:
+        if clobber_required and not clobber_performed:
             for line in clobber_message.splitlines():
                 self.log(logging.WARNING, "clobber", {"msg": line.rstrip()}, "{msg}")
             return True
+
+        if clobber_performed and env.get("TINDERBOX_OUTPUT"):
+            self.log(
+                logging.WARNING,
+                "clobber",
+                {"msg": "TinderboxPrint: auto clobber"},
+                "{msg}",
+            )
 
         return False
