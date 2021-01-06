@@ -228,8 +228,7 @@ class Clobberer(object):
                 ),
             )
 
-        objdir = self.topobjdir.encode("utf-8", "replace")
-        print("Automatically clobbering %s" % objdir, file=fh)
+        print("Automatically clobbering %s" % self.topobjdir, file=fh)
         try:
             self.remove_objdir(False)
             print("Successfully completed auto clobber.", file=fh)
