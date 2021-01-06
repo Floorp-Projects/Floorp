@@ -2077,7 +2077,7 @@ static bool FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor,
    */
   Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
   if (global->shouldSplicePrototype()) {
-    if (!JSObject::splicePrototype(cx, global, tagged)) {
+    if (!GlobalObject::splicePrototype(cx, global, tagged)) {
       return false;
     }
   }

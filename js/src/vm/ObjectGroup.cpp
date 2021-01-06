@@ -86,10 +86,9 @@ bool GlobalObject::shouldSplicePrototype() {
 }
 
 /* static */
-bool JSObject::splicePrototype(JSContext* cx, HandleObject obj,
-                               Handle<TaggedProto> proto) {
-  MOZ_ASSERT(obj->is<GlobalObject>());
-  MOZ_ASSERT(cx->realm() == obj->nonCCWRealm());
+bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
+                                   Handle<TaggedProto> proto) {
+  MOZ_ASSERT(cx->realm() == global->realm());
 
   // Windows may not appear on prototype chains.
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
@@ -101,12 +100,12 @@ bool JSObject::splicePrototype(JSContext* cx, HandleObject obj,
     }
   }
 
-  ObjectGroup* group = MakeGroup(cx, obj->getClass(), proto);
+  ObjectGroup* group = MakeGroup(cx, global->getClass(), proto);
   if (!group) {
     return false;
   }
 
-  obj->setGroupRaw(group);
+  global->setGroupRaw(group);
   return true;
 }
 
