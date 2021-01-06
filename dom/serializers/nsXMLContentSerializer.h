@@ -287,7 +287,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   /**
    * This method can be redefine to serialize additional things just after
-   * after the serialization ot the start tag.
+   * the serialization of the start tag.
    * (called at the end of AppendElementStart)
    */
   MOZ_MUST_USE
@@ -311,7 +311,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   /**
    * This method can be redefine to serialize additional things just after
-   * after the serialization ot the end tag.
+   * the serialization of the end tag.
    * (called at the end of AppendElementStart)
    */
   virtual void AfterElementEnd(nsIContent* aContent, nsAString& aStr){};
