@@ -114,7 +114,7 @@ add_task(async function test_import_with_duplicate_columns() {
   // One row has different values and the other has the same.
   let csvFilePath = await setupCsv([
     "url,login_uri,username,login_password",
-    "https://example.com/path,https://example.org,john@example.com,azerty",
+    "https://example.com/path,https://example.com,john@example.com,azerty",
     "https://mozilla.org,https://mozilla.org,jdoe@example.com,qwerty",
   ]);
 
@@ -345,7 +345,7 @@ add_task(async function test_import_from_firefox_form_empty_formActionOrigin() {
 add_task(async function test_import_from_firefox_form_with_formActionOrigin() {
   let csvFilePath = await setupCsv([
     "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
-    "http://example.com,joe@example.com,s3cret1,,https://other.example.org,{5ec0d12f-e194-4279-ae1b-d7d281bb46f1},1589617814635,1589710449871,1589617846802",
+    "http://example.com,joe@example.com,s3cret1,,https://other.example.com,{5ec0d12f-e194-4279-ae1b-d7d281bb46f1},1589617814635,1589710449871,1589617846802",
   ]);
 
   await LoginCSVImport.importFromCSV(csvFilePath);
@@ -353,7 +353,7 @@ add_task(async function test_import_from_firefox_form_with_formActionOrigin() {
   LoginTestUtils.checkLogins(
     [
       TestData.formLogin({
-        formActionOrigin: "https://other.example.org",
+        formActionOrigin: "https://other.example.com",
         httpRealm: null,
         origin: "http://example.com",
         password: "s3cret1",
@@ -468,5 +468,98 @@ add_task(async function test_import_from_keepassxc_csv() {
       a.equals(e) &&
       checkMetaInfo(a, e, ["timesUsed"]) &&
       checkLoginNewlyCreated(a)
+  );
+});
+
+/**
+ * Imports login data summary contains added logins.
+ */
+add_task(async function test_import_summary_contains_added_login() {
+  let csvFilePath = await setupCsv([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://added.example.com,jane@example.com,added_passwordd,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0003},1589617814635,1589710449871,1589617846802",
+  ]);
+
+  let [added] = await LoginCSVImport.importFromCSV(csvFilePath);
+
+  equal(added.result, "added", `Check that the login was added`);
+});
+
+/**
+ * Imports login data summary contains modified logins.
+ */
+add_task(async function test_import_summary_contains_modified_login() {
+  let initialDataFile = await setupCsv([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://modifiedwithguid.example.com,jane@example.com,initial_password,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0001},1589617814635,1589710449871,1589617846802",
+    "https://modifiedwithoutguid.example.com,jane@example.com,initial_password,My realm,,,1589617814635,1589710449871,1589617846802",
+  ]);
+  await LoginCSVImport.importFromCSV(initialDataFile);
+
+  let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://modified.example.com,jane@example.com,modified_password,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0001},1589617814635,1589710449871,1589617846999",
+    "https://modifiedwithoutguid.example.com,jane@example.com,modified_password,My realm,,,1589617814635,1589710449871,1589617846999",
+  ]);
+
+  let [
+    modifiedWithGuid,
+    modifiedWithoutGuid,
+  ] = await LoginCSVImport.importFromCSV(csvFile.path);
+
+  equal(
+    modifiedWithGuid.result,
+    "modified",
+    `Check that the login was modified when it had the same guid`
+  );
+  equal(
+    modifiedWithoutGuid.result,
+    "modified",
+    `Check that the login was modified when there was no guid data`
+  );
+});
+
+/**
+ * Imports login data summary contains unchanged logins.
+ */
+add_task(async function test_import_summary_contains_unchanged_login() {
+  let initialDataFile = await setupCsv([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://nochange.example.com,jane@example.com,nochange_password,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0002},1589617814635,1589710449871,1589617846802",
+  ]);
+  await LoginCSVImport.importFromCSV(initialDataFile);
+
+  let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://nochange.example.com,jane@example.com,nochange_password,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0002},1589617814635,1589710449871,1589617846802",
+  ]);
+
+  let [noChange] = await LoginCSVImport.importFromCSV(csvFile.path);
+
+  equal(noChange.result, "no_change", `Check that the login was not changed`);
+});
+
+/**
+ * Imports login data summary contains logins with errors.
+ */
+add_task(async function test_import_summary_contains_logins_with_errors() {
+  let csvFilePath = await setupCsv([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://invalid.password.example.com,jane@example.com,,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0002},1589617814635,1589710449871,1589617846802",
+    ",jane@example.com,invalid_origin,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0002},1589617814635,1589710449871,1589617846802",
+  ]);
+  let [invalidPassword, invalidOrigin] = await LoginCSVImport.importFromCSV(
+    csvFilePath
+  );
+
+  equal(
+    invalidPassword.result,
+    "error_invalid_password",
+    `Check that the invalid password error is reported`
+  );
+  equal(
+    invalidOrigin.result,
+    "error_invalid_origin",
+    `Check that the invalid origin error is reported`
   );
 });
