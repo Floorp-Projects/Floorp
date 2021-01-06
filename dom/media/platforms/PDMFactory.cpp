@@ -678,9 +678,11 @@ bool PDMFactory::SupportsMimeType(const nsACString& aMimeType,
   if (VPXDecoder::IsVP8(aMimeType)) {
     return aSupported.contains(MediaCodecs::VP8);
   }
+#ifdef MOZ_AV1
   if (AOMDecoder::IsAV1(aMimeType)) {
     return aSupported.contains(MediaCodecs::AV1);
   }
+#endif
   if (TheoraDecoder::IsTheora(aMimeType)) {
     return aSupported.contains(MediaCodecs::Theora);
   }
