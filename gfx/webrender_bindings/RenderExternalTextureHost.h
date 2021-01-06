@@ -31,6 +31,7 @@ class RenderExternalTextureHost final : public RenderTextureHost {
   size_t Bytes() override {
     return mSize.width * mSize.height * BytesPerPixel(mFormat);
   }
+
  private:
   ~RenderExternalTextureHost();
 

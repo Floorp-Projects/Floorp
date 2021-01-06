@@ -24,4 +24,4 @@ enum class EWhichPostFilter { eContainsText };
 }  // namespace a11y
 }  // namespace mozilla
 
-#endif // mozilla_a11y_PlatformExtTypes_h__
+#endif  // mozilla_a11y_PlatformExtTypes_h__

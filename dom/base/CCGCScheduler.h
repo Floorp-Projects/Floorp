@@ -379,7 +379,8 @@ js::SliceBudget CCGCScheduler::ComputeCCSliceBudget(
   // Note: We may have already overshot the deadline, in which case
   // baseBudget will be negative and we will end up returning
   // laterSliceBudget.
-  return js::SliceBudget(std::max({delaySliceBudget, laterSliceBudget, baseBudget}));
+  return js::SliceBudget(
+      std::max({delaySliceBudget, laterSliceBudget, baseBudget}));
 }
 
 inline TimeDuration CCGCScheduler::ComputeInterSliceGCBudget(

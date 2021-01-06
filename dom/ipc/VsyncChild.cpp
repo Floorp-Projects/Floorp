@@ -13,8 +13,7 @@
 namespace mozilla::dom {
 
 VsyncChild::VsyncChild()
-    : mIsShutdown(false),
-      mVsyncRate(TimeDuration::Forever()) {
+    : mIsShutdown(false), mVsyncRate(TimeDuration::Forever()) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -71,8 +70,6 @@ mozilla::ipc::IPCResult VsyncChild::RecvNotify(const VsyncEvent& aVsync,
   return IPC_OK();
 }
 
-TimeDuration VsyncChild::GetVsyncRate() {
-  return mVsyncRate;
-}
+TimeDuration VsyncChild::GetVsyncRate() { return mVsyncRate; }
 
 }  // namespace mozilla::dom

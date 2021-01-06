@@ -120,7 +120,6 @@ class nsDocShellLoadState final {
 
   void SetPrincipalIsExplicit(bool aPrincipalIsExplicit);
 
-
   // If true, "beforeunload" event listeners were notified by the creater of the
   // LoadState and given the chance to abort the navigation, and should not be
   // notified again.
