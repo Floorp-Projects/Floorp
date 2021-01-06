@@ -3984,9 +3984,28 @@ class BaseAssembler : public GenericAssembler {
   void vpunpckldq_mr(const void* addr, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ_VdqWdq, addr, src0, dst);
   }
+  void vpunpcklqdq_rr(XMMRegisterID src1, XMMRegisterID src0,
+                      XMMRegisterID dst) {
+    twoByteOpSimd("vpunpcklqdq", VEX_PD, OP2_PUNPCKLQDQ_VdqWdq, src1, src0,
+                  dst);
+  }
+  void vpunpcklqdq_mr(int32_t offset, RegisterID base, XMMRegisterID src0,
+                      XMMRegisterID dst) {
+    twoByteOpSimd("vpunpcklqdq", VEX_PD, OP2_PUNPCKLQDQ_VdqWdq, offset, base,
+                  src0, dst);
+  }
+  void vpunpcklqdq_mr(const void* addr, XMMRegisterID src0, XMMRegisterID dst) {
+    twoByteOpSimd("vpunpcklqdq", VEX_PD, OP2_PUNPCKLQDQ_VdqWdq, addr, src0,
+                  dst);
+  }
   void vpunpckhdq_rr(XMMRegisterID src1, XMMRegisterID src0,
                      XMMRegisterID dst) {
     twoByteOpSimd("vpunpckhdq", VEX_PD, OP2_PUNPCKHDQ_VdqWdq, src1, src0, dst);
+  }
+  void vpunpckhqdq_rr(XMMRegisterID src1, XMMRegisterID src0,
+                      XMMRegisterID dst) {
+    twoByteOpSimd("vpunpckhqdq", VEX_PD, OP2_PUNPCKHQDQ_VdqWdq, src1, src0,
+                  dst);
   }
   void vpunpcklwd_rr(XMMRegisterID src1, XMMRegisterID src0,
                      XMMRegisterID dst) {

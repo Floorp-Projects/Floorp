@@ -1197,6 +1197,24 @@ static bool ByteMaskToDWordMask(SimdConstant* control) {
   return true;
 }
 
+// Reduce a 0..31 byte mask to a 0..3 qword mask if possible and if so return
+// true, updating *control.
+static bool ByteMaskToQWordMask(SimdConstant* control) {
+  const SimdConstant::I8x16& lanes = control->asInt8x16();
+  int64_t controlQWords[2];
+  for (int i = 0; i < 16; i += 8) {
+    if (!((lanes[i] & 7) == 0 && lanes[i + 1] == lanes[i] + 1 &&
+          lanes[i + 2] == lanes[i] + 2 && lanes[i + 3] == lanes[i] + 3 &&
+          lanes[i + 4] == lanes[i] + 4 && lanes[i + 5] == lanes[i] + 5 &&
+          lanes[i + 6] == lanes[i] + 6 && lanes[i + 7] == lanes[i] + 7)) {
+      return false;
+    }
+    controlQWords[i / 8] = lanes[i] / 8;
+  }
+  *control = SimdConstant::CreateX2(controlQWords);
+  return true;
+}
+
 // Skip across consecutive values in lanes starting at i, returning the index
 // after the last element.  Lane values must be <= len-1 ("masked").
 //
@@ -1603,6 +1621,18 @@ static Maybe<LWasmShuffleSimd128::Op> TryInterleave(
   return Nothing();
 }
 
+static Maybe<LWasmShuffleSimd128::Op> TryInterleave64x2(SimdConstant* control,
+                                                        bool* swapOperands) {
+  SimdConstant tmp = *control;
+  if (!ByteMaskToQWordMask(&tmp)) {
+    return Nothing();
+  }
+  const SimdConstant::I64x2& lanes = tmp.asInt64x2();
+  return TryInterleave(lanes, 0, 2, swapOperands,
+                       LWasmShuffleSimd128::INTERLEAVE_LOW_64x2,
+                       LWasmShuffleSimd128::INTERLEAVE_HIGH_64x2);
+}
+
 static Maybe<LWasmShuffleSimd128::Op> TryInterleave32x4(SimdConstant* control,
                                                         bool* swapOperands) {
   SimdConstant tmp = *control;
@@ -1644,6 +1674,9 @@ static LWasmShuffleSimd128::Op AnalyzeTwoArgShuffle(SimdConstant* control,
   }
   if (!op) {
     op = TryBlendInt8x16(control);
+  }
+  if (!op) {
+    op = TryInterleave64x2(control, swapOperands);
   }
   if (!op) {
     op = TryInterleave32x4(control, swapOperands);
@@ -1767,6 +1800,9 @@ static void ReportShuffleSpecialization(const Shuffle& s) {
         case LWasmShuffleSimd128::INTERLEAVE_HIGH_32x4:
           js::wasm::ReportSimdAnalysis("shuffle -> interleave-high 32x4");
           break;
+        case LWasmShuffleSimd128::INTERLEAVE_HIGH_64x2:
+          js::wasm::ReportSimdAnalysis("shuffle -> interleave-high 64x2");
+          break;
         case LWasmShuffleSimd128::INTERLEAVE_LOW_8x16:
           js::wasm::ReportSimdAnalysis("shuffle -> interleave-low 8x16");
           break;
@@ -1775,6 +1811,9 @@ static void ReportShuffleSpecialization(const Shuffle& s) {
           break;
         case LWasmShuffleSimd128::INTERLEAVE_LOW_32x4:
           js::wasm::ReportSimdAnalysis("shuffle -> interleave-low 32x4");
+          break;
+        case LWasmShuffleSimd128::INTERLEAVE_LOW_64x2:
+          js::wasm::ReportSimdAnalysis("shuffle -> interleave-low 64x2");
           break;
         default:
           MOZ_CRASH("Unexpected shuffle op");

@@ -2108,6 +2108,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void interleaveHighInt32x4(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
 
+  inline void interleaveHighInt64x2(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
   inline void interleaveLowInt8x16(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
 
@@ -2115,6 +2118,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared);
 
   inline void interleaveLowInt32x4(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void interleaveLowInt64x2(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
 
   // Permute - permute with immediate indices.
