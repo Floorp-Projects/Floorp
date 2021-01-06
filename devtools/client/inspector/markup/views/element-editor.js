@@ -644,6 +644,7 @@ ElementEditor.prototype = {
     const name = this.doc.createElement("span");
     name.classList.add("attr-name");
     name.classList.add("theme-fg-color1");
+    name.textContent = attribute.name;
     inner.appendChild(name);
 
     inner.appendChild(this.doc.createTextNode('="'));
@@ -738,6 +739,21 @@ ElementEditor.prototype = {
     this.removeAttribute(attribute.name);
     this.attrElements.set(attribute.name, attr);
 
+    this._appendAttributeValue(attribute, val);
+
+    return attr;
+  },
+
+  /**
+   * Appends the attribute value to the given attribute value <span> element.
+   *
+   * @param  {Object} attribute
+   *         An object containing the name and value of a DOM attribute.
+   * @param  {Element} attributeValueEl
+   *         The attribute value <span class="attr-value"> element to append
+   *         the parsed attribute values to.
+   */
+  _appendAttributeValue: function(attribute, attributeValueEl) {
     // Parse the attribute value to detect whether there are linkable parts in
     // it (make sure to pass a complete list of existing attributes to the
     // parseAttribute function, by concatenating attribute, because this could
@@ -745,8 +761,8 @@ ElementEditor.prototype = {
     const attributes = this.node.attributes.filter(
       existingAttribute => existingAttribute.name !== attribute.name
     );
-
     attributes.push(attribute);
+
     const parsedLinksData = parseAttribute(
       this.node.namespaceURI,
       this.node.tagName,
@@ -755,13 +771,13 @@ ElementEditor.prototype = {
       attribute.value
     );
 
-    val.innerHTML = "";
+    attributeValueEl.innerHTML = "";
 
     // Create links in the attribute value, and truncate long attribute values if
     // needed.
     for (const token of parsedLinksData) {
       if (token.type === "string") {
-        val.appendChild(
+        attributeValueEl.appendChild(
           this.doc.createTextNode(this._truncateAttributeValue(token.value))
         );
       } else {
@@ -770,13 +786,9 @@ ElementEditor.prototype = {
         link.setAttribute("data-type", token.type);
         link.setAttribute("data-link", token.value);
         link.textContent = this._truncateAttributeValue(token.value);
-        val.appendChild(link);
+        attributeValueEl.appendChild(link);
       }
     }
-
-    name.textContent = attribute.name;
-
-    return attr;
   },
 
   /**
