@@ -4174,6 +4174,10 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   if (!aExitFlag) return 1;
   *aExitFlag = false;
 
+#ifdef XP_MACOSX
+  mozilla::MacAutoreleasePool pool;
+#endif
+
   // Enable Telemetry IO Reporting on DEBUG, nightly and local builds,
   // but disable it on FUZZING builds.
 #ifndef FUZZING
