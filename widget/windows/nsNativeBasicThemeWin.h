@@ -35,7 +35,7 @@ class nsNativeBasicThemeWin : public nsNativeBasicTheme {
   std::pair<sRGBColor, sRGBColor> ComputeProgressColors() override;
   std::pair<sRGBColor, sRGBColor> ComputeProgressTrackColors() override;
   std::pair<sRGBColor, sRGBColor> ComputeMeterchunkColors(
-      const double aValue, const double aOptimum, const double aLow) override;
+      const EventStates& aMeterState) override;
   std::pair<sRGBColor, sRGBColor> ComputeMeterTrackColors() override;
   sRGBColor ComputeMenulistArrowButtonColor(const EventStates& aState) override;
   std::array<sRGBColor, 3> ComputeFocusRectColors() override;
