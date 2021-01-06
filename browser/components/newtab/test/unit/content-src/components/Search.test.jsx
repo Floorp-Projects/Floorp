@@ -3,7 +3,7 @@ import { mount, shallow } from "enzyme";
 import React from "react";
 import { _Search as Search } from "content-src/components/Search/Search";
 
-const DEFAULT_PROPS = { dispatch() {} };
+const DEFAULT_PROPS = { dispatch() {}, Prefs: { values: {} } };
 
 describe("<Search>", () => {
   let globals;
