@@ -427,6 +427,7 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   nsString mPrefix;
   bool mChromeInstance;
   ConsoleLogLevel mMaxLogLevel;
+  nsString mMaxLogLevelPref;
 
   enum { eUnknown, eInitialized, eShuttingDown } mStatus;
 
