@@ -216,7 +216,7 @@ static UniquePtr<typename ConcreteScope::RuntimeData> CopyScopeData(
 template <typename ConcreteScope>
 static void MarkParserScopeData(JSContext* cx,
                                 typename ConcreteScope::ParserData* data,
-                                frontend::CompilationStencil& stencil) {
+                                frontend::CompilationState& compilationState) {
   auto* names = data->trailingNames.start();
   uint32_t length = data->slotInfo.length;
   for (size_t i = 0; i < length; i++) {
@@ -224,7 +224,7 @@ static void MarkParserScopeData(JSContext* cx,
     if (!index) {
       continue;
     }
-    stencil.getParserAtomAt(cx, index)->markUsedByStencil();
+    compilationState.getParserAtomAt(cx, index)->markUsedByStencil();
   }
 }
 
@@ -1977,9 +1977,8 @@ bool ScopeStencil::createForFunctionScope(
     FunctionScope::ParserData* data, bool hasParameterExprs,
     bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
-  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<FunctionScope>(cx, data, stencil);
+    MarkParserScopeData<FunctionScope>(cx, data, compilationState);
   } else {
     data = NewEmptyParserScopeData<FunctionScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2018,9 +2017,8 @@ bool ScopeStencil::createForLexicalScope(
     frontend::CompilationState& compilationState, ScopeKind kind,
     LexicalScope::ParserData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
-  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<LexicalScope>(cx, data, stencil);
+    MarkParserScopeData<LexicalScope>(cx, data, compilationState);
   } else {
     data = NewEmptyParserScopeData<LexicalScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2052,9 +2050,8 @@ bool ScopeStencil::createForVarScope(
     frontend::CompilationState& compilationState, ScopeKind kind,
     VarScope::ParserData* data, uint32_t firstFrameSlot, bool needsEnvironment,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
-  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<VarScope>(cx, data, stencil);
+    MarkParserScopeData<VarScope>(cx, data, compilationState);
   } else {
     data = NewEmptyParserScopeData<VarScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2086,9 +2083,8 @@ bool ScopeStencil::createForGlobalScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo,
     frontend::CompilationState& compilationState, ScopeKind kind,
     GlobalScope::ParserData* data, ScopeIndex* index) {
-  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<GlobalScope>(cx, data, stencil);
+    MarkParserScopeData<GlobalScope>(cx, data, compilationState);
   } else {
     data = NewEmptyParserScopeData<GlobalScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2124,9 +2120,8 @@ bool ScopeStencil::createForEvalScope(
     frontend::CompilationState& compilationState, ScopeKind kind,
     EvalScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
     ScopeIndex* index) {
-  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<EvalScope>(cx, data, stencil);
+    MarkParserScopeData<EvalScope>(cx, data, compilationState);
   } else {
     data = NewEmptyParserScopeData<EvalScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2159,9 +2154,8 @@ bool ScopeStencil::createForModuleScope(
     JSContext* cx, frontend::CompilationInfo& compilationInfo,
     frontend::CompilationState& compilationState, ModuleScope::ParserData* data,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
-  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<ModuleScope>(cx, data, stencil);
+    MarkParserScopeData<ModuleScope>(cx, data, compilationState);
   } else {
     data = NewEmptyParserScopeData<ModuleScope>(cx, compilationInfo.alloc);
     if (!data) {
