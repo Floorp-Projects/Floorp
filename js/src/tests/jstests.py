@@ -36,6 +36,8 @@ from lib.tests import (
 )
 from lib.results import ResultsSink, TestOutput
 from lib.progressbar import ProgressBar
+from lib.adaptor import xdr_annotate
+from lib.tempfile import TemporaryDirectory
 
 if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
     from lib.tasks_unix import run_all_tests
@@ -251,6 +253,12 @@ def parse_args():
         action="store",
         type=str,
         help="The location of libraries to push -- preferably" " stripped",
+    )
+    harness_og.add_argument(
+        "--no-xdr",
+        dest="use_xdr",
+        action="store_false",
+        help="Whether to disable caching of self-hosted parsed content in XDR format.",
     )
 
     input_og = op.add_argument_group("Inputs", "Change what tests are run.")
@@ -761,10 +769,12 @@ def main():
                 print("    {}".format(tc.path))
             return 2
 
-        cmd = next(test_gen).get_command(prefix)
-        if options.show_cmd:
-            print(list2cmdline(cmd))
-        with changedir(test_dir), change_env(test_environment):
+        with changedir(test_dir), change_env(
+            test_environment
+        ), TemporaryDirectory() as tempdir:
+            cmd = next(test_gen).get_command(prefix, tempdir)
+            if options.show_cmd:
+                print(list2cmdline(cmd))
             call(cmd)
         return 0
 
@@ -786,13 +796,16 @@ def main():
             from lib.remote import init_remote_dir, init_device
 
             device = init_device(options)
+            tempdir = posixpath.join(options.remote_test_root, "tmp")
             jtd_tests = posixpath.join(options.remote_test_root, "tests", "tests")
             init_remote_dir(device, jtd_tests)
             device.push(test_dir, jtd_tests, timeout=600)
             device.chmod(jtd_tests, recursive=True)
             prefix[0] = options.js_shell
+            if options.use_xdr:
+                test_gen = xdr_annotate(test_gen, options)
             for test in test_gen:
-                out = run_test_remote(test, device, prefix, options)
+                out = run_test_remote(test, device, prefix, tempdir, options)
                 results.push(out)
             results.finish(True)
         except KeyboardInterrupt:
@@ -800,10 +813,12 @@ def main():
 
         return 0 if results.all_passed() else 1
 
-    with changedir(test_dir), change_env(test_environment):
+    with changedir(test_dir), change_env(
+        test_environment
+    ), TemporaryDirectory() as tempdir:
         results = ResultsSink("jstests", options, test_count)
         try:
-            for out in run_all_tests(test_gen, prefix, results.pb, options):
+            for out in run_all_tests(test_gen, prefix, tempdir, results.pb, options):
                 results.push(out)
             results.finish(True)
         except KeyboardInterrupt:
@@ -814,10 +829,10 @@ def main():
     return 0
 
 
-def run_test_remote(test, device, prefix, options):
+def run_test_remote(test, device, prefix, tempdir, options):
     from mozdevice import ADBDevice, ADBProcessError
 
-    cmd = test.get_command(prefix)
+    cmd = test.get_command(prefix, tempdir)
     test_root_parent = os.path.dirname(test.root)
     jtd_tests = posixpath.join(options.remote_test_root, "tests")
     cmd = [_.replace(test_root_parent, jtd_tests) for _ in cmd]

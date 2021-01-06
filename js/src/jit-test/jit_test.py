@@ -38,6 +38,7 @@ from lib.tests import (
     get_environment_overlay,
     change_env,
 )
+from lib.tempfile import TemporaryDirectory
 
 
 def which(name):
@@ -273,6 +274,12 @@ def main(argv):
         const="ion",
         help="Run tests once with --ion-eager and once with"
         " --baseline-eager (equivalent to --jitflags=ion)",
+    )
+    op.add_argument(
+        "--no-xdr",
+        dest="use_xdr",
+        action="store_false",
+        help="Whether to disable caching of self-hosted parsed content in XDR format.",
     )
     op.add_argument(
         "--tbpl",
@@ -527,18 +534,23 @@ def main(argv):
             debug_cmd = options.debugger.split()
 
         with change_env(test_environment):
-            if options.debugger == "rr":
-                subprocess.call(
-                    debug_cmd
-                    + tc.command(prefix, jittests.LIB_DIR, jittests.MODULE_DIR)
-                )
-                os.execvp("rr", ["rr", "replay"])
-            else:
-                os.execvp(
-                    debug_cmd[0],
-                    debug_cmd
-                    + tc.command(prefix, jittests.LIB_DIR, jittests.MODULE_DIR),
-                )
+            with TemporaryDirectory() as tempdir:
+                if options.debugger == "rr":
+                    subprocess.call(
+                        debug_cmd
+                        + tc.command(
+                            prefix, jittests.LIB_DIR, jittests.MODULE_DIR, tempdir
+                        )
+                    )
+                    os.execvp("rr", ["rr", "replay"])
+                else:
+                    os.execvp(
+                        debug_cmd[0],
+                        debug_cmd
+                        + tc.command(
+                            prefix, jittests.LIB_DIR, jittests.MODULE_DIR, tempdir
+                        ),
+                    )
         sys.exit()
 
     try:

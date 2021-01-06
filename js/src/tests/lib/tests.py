@@ -213,6 +213,13 @@ class RefTestCase(object):
         # bool: True => test may run slowly
         self.slow = False
 
+        # Use self-hosted XDR instead of parsing the source stored in the binary.
+        # str?: Path computed when generating the command
+        self.selfhosted_xdr_path = None
+        # str: XDR mode (= "off", "encode", "decode") to use with the
+        # self-hosted code.
+        self.selfhosted_xdr_mode = "off"
+
         # The terms parsed to produce the above properties.
         self.terms = None
 
@@ -247,8 +254,20 @@ class RefTestCase(object):
     def abs_path(self):
         return os.path.join(self.root, self.path)
 
-    def get_command(self, prefix):
+    def get_command(self, prefix, tempdir):
         cmd = prefix + self.jitflags + self.options + self.prefix_command()
+        # Note: The tempdir provided as argument is managed by the caller
+        # should remain alive as long as the test harness. Therefore, the XDR
+        # content of the self-hosted code would be accessible to all JS Shell
+        # instances.
+        if self.selfhosted_xdr_mode != "off":
+            self.selfhosted_xdr_path = os.path.join(tempdir, "shell.xdr")
+            cmd += [
+                "--selfhosted-xdr-path",
+                self.selfhosted_xdr_path,
+                "--selfhosted-xdr-mode",
+                self.selfhosted_xdr_mode,
+            ]
         if self.test_reflect_stringify is not None:
             cmd += [self.test_reflect_stringify, "--check", self.abs_path()]
         elif self.is_module:
