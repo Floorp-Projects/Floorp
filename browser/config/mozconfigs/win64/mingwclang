@@ -2,10 +2,7 @@
 #    MOZ_AUTOMATION flags
 #    SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE - shouldn't be used?
 #    TOOLTOOL_DIR
-#    DUMP_SYMS - isn't used.
 . "$topsrcdir/build/mozconfig.win-common"
-
-unset DUMP_SYMS
 
 # Sets:
 #  build/mozconfig.common
@@ -30,7 +27,6 @@ ac_add_options --target=x86_64-w64-mingw32
 ac_add_options --with-toolchain-prefix=x86_64-w64-mingw32-
 
 ac_add_options --disable-warnings-as-errors
-MOZ_COPY_PDBS=1
 mk_add_options "export WIDL_TIME_OVERRIDE=0"
 
 # This replicates Tor's configuration
