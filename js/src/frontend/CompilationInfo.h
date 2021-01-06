@@ -43,59 +43,53 @@ namespace frontend {
 // ScopeContext hold information derivied from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
 struct ScopeContext {
-  // If this eval is in response to Debugger.Frame.eval, we may have an
-  // incomplete scope chain. In order to provide a better debugging experience,
-  // we inspect the (optional) environment chain to determine it's enclosing
-  // FunctionScope if there is one. If there is no such scope, we use the
-  // orignal scope provided.
-  //
-  // NOTE: This is used to compute the ThisBinding kind and to allow access to
-  //       private fields, while other contextual information only uses the
-  //       actual scope passed to the compile.
-  JS::Rooted<Scope*> effectiveScope;
-
-  // The type of binding required for `this` of the top level context, as
-  // indicated by the enclosing scopes of this parse.
-  //
-  // NOTE: This is computed based on the effective scope (defined above).
-  ThisBinding thisBinding = ThisBinding::Global;
-
-  // Eval and arrow scripts inherit certain syntax allowances from their
-  // enclosing scripts.
+  // Whether the enclosing scope allows certain syntax. Eval and arrow scripts
+  // inherit this from their enclosing scipt so we track it here.
   bool allowNewTarget = false;
   bool allowSuperProperty = false;
   bool allowSuperCall = false;
   bool allowArguments = true;
 
-  // Eval and arrow scripts also inherit the "this" environment -- used by
-  // `super` expressions -- from their enclosing script. We count the number of
-  // environment hops needed to get from enclosing scope to the nearest
-  // appropriate environment. This value is undefined if the script we are
-  // compiling is not an eval or arrow-function.
-  uint32_t enclosingThisEnvironmentHops = 0;
+  // The type of binding required for `this` of the top level context, as
+  // indicated by the enclosing scopes of this parse.
+  ThisBinding thisBinding = ThisBinding::Global;
+
+  // Somewhere on the scope chain this parse is embedded within is a 'With'
+  // scope.
+  bool inWith = false;
+
+  // Somewhere on the scope chain this parse is embedded within a class scope.
+  bool inClass = false;
 
   // Class field initializer info if we are nested within a class constructor.
   // We may be an combination of arrow and eval context within the constructor.
   mozilla::Maybe<MemberInitializers> memberInitializers = {};
 
-  // Indicates there is a 'class' or 'with' scope on enclosing scope chain.
-  bool inClass = false;
-  bool inWith = false;
+  // If this eval is in response to Debugger.Frame.eval, we may have an
+  // incomplete scope chain. In order to determine a better 'this' binding, as
+  // well as to ensure we can provide better static error semantics for private
+  // names, we use the environment chain to attempt to find a more effective
+  // scope than the enclosing scope.
+  // If there is no more effective scope, this will just be the scope given in
+  // the constructor.
+  JS::Rooted<Scope*> effectiveScope;
 
-  explicit ScopeContext(JSContext* cx, InheritThis inheritThis, Scope* scope,
+  explicit ScopeContext(JSContext* cx, Scope* scope,
                         JSObject* enclosingEnv = nullptr)
       : effectiveScope(cx, determineEffectiveScope(scope, enclosingEnv)) {
-    if (inheritThis == InheritThis::Yes) {
-      computeThisBinding(effectiveScope);
-      computeThisEnvironment(scope);
-    }
-    computeInScope(scope);
+    computeAllowSyntax(scope);
+    computeThisBinding(effectiveScope);
+    computeInWith(scope);
+    computeExternalInitializers(scope);
+    computeInClass(scope);
   }
 
  private:
+  void computeAllowSyntax(Scope* scope);
   void computeThisBinding(Scope* scope);
-  void computeThisEnvironment(Scope* scope);
-  void computeInScope(Scope* scope);
+  void computeInWith(Scope* scope);
+  void computeExternalInitializers(Scope* scope);
+  void computeInClass(Scope* scope);
 
   static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 };
@@ -243,7 +237,6 @@ struct MOZ_RAII CompilationState {
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
                    const JS::ReadOnlyCompileOptions& options,
                    CompilationInfo& compilationInfo,
-                   InheritThis inheritThis = InheritThis::No,
                    Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr);
 };

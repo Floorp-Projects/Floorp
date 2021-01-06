@@ -102,11 +102,10 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
                                const JS::ReadOnlyCompileOptions& options,
                                CompilationInfo& compilationInfo,
                                SourceText<Unit>& sourceBuffer,
-                               InheritThis inheritThis = InheritThis::No,
                                js::Scope* enclosingScope = nullptr,
                                JSObject* enclosingEnv = nullptr)
       : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, allocScope, options, compilationInfo, inheritThis,
+        compilationState_(cx, allocScope, options, compilationInfo,
                           enclosingScope, enclosingEnv) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
@@ -164,11 +163,10 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
                           const JS::ReadOnlyCompileOptions& options,
                           CompilationInfo& compilationInfo,
                           SourceText<Unit>& sourceBuffer,
-                          InheritThis inheritThis = InheritThis::No,
                           js::Scope* enclosingScope = nullptr,
                           JSObject* enclosingEnv = nullptr)
       : Base(cx, allocScope, options, compilationInfo, sourceBuffer,
-             inheritThis, enclosingScope, enclosingEnv) {}
+             enclosingScope, enclosingEnv) {}
 
   using Base::createSourceAndParser;
 
@@ -455,8 +453,7 @@ static JSScript* CompileEvalScriptImpl(
 
   frontend::ScriptCompiler<Unit> compiler(
       cx, allocScope, compilationInfo.get().input.options,
-      compilationInfo.get(), srcBuf, InheritThis::Yes, enclosingScope,
-      enclosingEnv);
+      compilationInfo.get(), srcBuf, enclosingScope, enclosingEnv);
   if (!compiler.createSourceAndParser(cx, compilationInfo.get())) {
     return nullptr;
   }
@@ -508,7 +505,7 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
                           js::Scope* enclosingScope = nullptr,
                           JSObject* enclosingEnv = nullptr)
       : Base(cx, allocScope, options, compilationInfo, sourceBuffer,
-             InheritThis::No, enclosingScope, enclosingEnv) {}
+             enclosingScope, enclosingEnv) {}
 
   bool compile(JSContext* cx, CompilationInfo& compilationInfo);
 };
@@ -533,11 +530,10 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
                                       const JS::ReadOnlyCompileOptions& options,
                                       CompilationInfo& compilationInfo,
                                       SourceText<Unit>& sourceBuffer,
-                                      InheritThis inheritThis = InheritThis::No,
                                       js::Scope* enclosingScope = nullptr,
                                       JSObject* enclosingEnv = nullptr)
       : Base(cx, allocScope, options, compilationInfo, sourceBuffer,
-             inheritThis, enclosingScope, enclosingEnv) {}
+             enclosingScope, enclosingEnv) {}
 
   using Base::createSourceAndParser;
 
@@ -1024,12 +1020,10 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
 
   Rooted<JSFunction*> fun(cx, lazy->function());
 
-  InheritThis inheritThis = fun->isArrow() ? InheritThis::Yes : InheritThis::No;
-
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(
       cx, allocScope, compilationInfo.input.options, compilationInfo,
-      inheritThis, fun->enclosingScope());
+      fun->enclosingScope());
 
   Parser<FullParseHandler, Unit> parser(
       cx, compilationInfo.input.options, units, length,
@@ -1127,12 +1121,9 @@ static JSFunction* CompileStandaloneFunction(
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  InheritThis inheritThis = (syntaxKind == FunctionSyntaxKind::Arrow)
-                                ? InheritThis::Yes
-                                : InheritThis::No;
   StandaloneFunctionCompiler<char16_t> compiler(
       cx, allocScope, compilationInfo.get().input.options,
-      compilationInfo.get(), srcBuf, inheritThis, enclosingScope);
+      compilationInfo.get(), srcBuf, enclosingScope);
   if (!compiler.createSourceAndParser(cx, compilationInfo.get())) {
     return nullptr;
   }
