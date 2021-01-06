@@ -399,6 +399,8 @@ CssRuleView.prototype = {
 
   /**
    * Delegate handler for click events happening within the DOM tree of the Rules view.
+   * Stop propagation of click event wrapping a CSS rule or CSS declaration to avoid
+   * triggering the prompt to add a new CSS declaration or to edit the existing one.
    *
    * @param {MouseEvent} event
    */
@@ -408,8 +410,6 @@ CssRuleView.prototype = {
     // Handle click on the icon next to a CSS selector.
     if (target.classList.contains("js-toggle-selector-highlighter")) {
       this.toggleSelectorHighlighter(target.dataset.selector);
-      // Prevent the click on the element wrapping the CSS rule
-      // from triggering the prompt to add a new CSS declaration
       event.stopPropagation();
     }
 
@@ -419,8 +419,15 @@ CssRuleView.prototype = {
         this.inspector.selection.nodeFront,
         "rule"
       );
-      // Prevent the click on the element wrapping the CSS rule
-      // from triggering the prompt to add a new CSS declaration
+      event.stopPropagation();
+    }
+
+    // Handle click on swatches next to grid CSS properties
+    if (target.classList.contains("js-toggle-grid-highlighter")) {
+      this.inspector.highlighters.toggleGridHighlighter(
+        this.inspector.selection.nodeFront,
+        "rule"
+      );
       event.stopPropagation();
     }
   },
