@@ -3009,10 +3009,7 @@ bool WarpCacheIRTranspiler::emitArrayJoinResult(ObjOperandId objId,
   MDefinition* obj = getOperand(objId);
   MDefinition* sep = getOperand(sepId);
 
-  // TODO(Warp): This flag only make sense for the Ion implementation. Remove it
-  // when IonBuilder is gone.
-  bool optimizeForArray = true;
-  auto* join = MArrayJoin::New(alloc(), obj, sep, optimizeForArray);
+  auto* join = MArrayJoin::New(alloc(), obj, sep);
   addEffectful(join);
 
   pushResult(join);
@@ -3022,12 +3019,7 @@ bool WarpCacheIRTranspiler::emitArrayJoinResult(ObjOperandId objId,
 bool WarpCacheIRTranspiler::emitPackedArrayPopResult(ObjOperandId arrayId) {
   MDefinition* array = getOperand(arrayId);
 
-  // TODO(post-Warp): these flags only make sense for the Ion implementation.
-  // Remove them when IonBuilder is gone.
-  bool needsHoleCheck = true;
-  bool maybeUndefined = true;
-  auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Pop,
-                                  needsHoleCheck, maybeUndefined);
+  auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Pop);
   addEffectful(ins);
 
   pushResult(ins);
@@ -3037,12 +3029,7 @@ bool WarpCacheIRTranspiler::emitPackedArrayPopResult(ObjOperandId arrayId) {
 bool WarpCacheIRTranspiler::emitPackedArrayShiftResult(ObjOperandId arrayId) {
   MDefinition* array = getOperand(arrayId);
 
-  // TODO(post-Warp): these flags only make sense for the Ion implementation.
-  // Remove them when IonBuilder is gone.
-  bool needsHoleCheck = true;
-  bool maybeUndefined = true;
-  auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Shift,
-                                  needsHoleCheck, maybeUndefined);
+  auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Shift);
   addEffectful(ins);
 
   pushResult(ins);
