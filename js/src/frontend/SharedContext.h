@@ -105,10 +105,6 @@ enum class ThisBinding : uint8_t {
   DerivedConstructor
 };
 
-// If Yes, the script inherits it's "this" environment and binding from the
-// enclosing script. This is true for arrow-functions and eval scripts.
-enum class InheritThis { No, Yes };
-
 class GlobalSharedContext;
 class EvalSharedContext;
 class ModuleSharedContext;
