@@ -209,21 +209,11 @@ macosx64-aarch64-devedition/opt:
             mozconfig_platform: macosx64-aarch64
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
-    dependencies:
-        linux64-rust-macos-1.49: toolchain-linux64-rust-macos-1.49
     fetches:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-macosx-aarch64-cross
             - macosx64-sdk-11.0
-        # Because job-defaults contain linux64-rust-macos, which we can't
-        # remove, and that would extract to the same directory, with no
-        # guaranteed order,we need to manually extract to a different
-        # directory, and make the build use that instead, until we can use
-        # a stable rust.
-        linux64-rust-macos-1.49:
-            - artifact: rustc.tar.zst
-              dest: rustc-1.49
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition Universal"
@@ -475,21 +465,11 @@ macosx64-aarch64-shippable/opt:
             - taskcluster_nightly.py
         extra-config:
             mozconfig_platform: macosx64-aarch64
-    dependencies:
-        linux64-rust-macos-1.49: toolchain-linux64-rust-macos-1.49
     fetches:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-macosx-aarch64-cross
             - macosx64-sdk-11.0
-        # Because job-defaults contain linux64-rust-macos, which we can't
-        # remove, and that would extract to the same directory, with no
-        # guaranteed order,we need to manually extract to a different
-        # directory, and make the build use that instead, until we can use
-        # a stable rust.
-        linux64-rust-macos-1.49:
-            - artifact: rustc.tar.zst
-              dest: rustc-1.49
 
 macosx64-shippable/opt:
     description: "MacOS X Universal"

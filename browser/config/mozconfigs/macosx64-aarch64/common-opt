@@ -28,8 +28,3 @@ export MACOS_SDK_DIR=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
 # CPU features. TODO: this should be done by configure.
 export CFLAGS="$CFLAGS -mcpu=apple-a12"
 export CXXFLAGS="$CXXFLAGS -mcpu=apple-a12"
-
-RUSTC="$MOZ_FETCHES_DIR/rustc-1.49/rustc/bin/rustc"
-CARGO="$MOZ_FETCHES_DIR/rustc-1.49/rustc/bin/cargo"
-RUSTDOC="$MOZ_FETCHES_DIR/rustc-1.49/rustc/bin/rustdoc"
-RUSTFMT="$MOZ_FETCHES_DIR/rustc-1.49/rustc/bin/rustfmt"
