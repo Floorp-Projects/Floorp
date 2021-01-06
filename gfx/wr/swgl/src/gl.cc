@@ -3740,26 +3740,39 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
 template <XYZW AXIS>
 static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
                      Interpolants* outInterp) {
+  // Potential mask bits of which side of a plane a coordinate falls on.
+  enum SIDE { POSITIVE = 1, NEGATIVE = 2 };
   int numClip = 0;
   Point3D prev = p[nump - 1];
   Interpolants prevInterp = interp[nump - 1];
   float prevCoord = prev.select(AXIS);
   // Coordinate must satisfy -W <= C <= W. Determine if it is outside, and
-  // if so, remember which side it is outside of.
-  int prevSide = prevCoord < -prev.w ? -1 : (prevCoord > prev.w ? 1 : 0);
+  // if so, remember which side it is outside of. In the special case that W is
+  // negative and |C| < |W|, both -W <= C and C <= W will be false, such that
+  // we must consider the coordinate as falling outside of both plane sides
+  // simultaneously. We test each condition separately and combine them to form
+  // a mask of which plane sides we exceeded. If we neglect to consider both
+  // sides simultaneously, points can erroneously oscillate from one plane side
+  // to the other and exceed the supported maximum number of clip outputs.
+  int prevMask = (prevCoord < -prev.w ? NEGATIVE : 0) |
+                 (prevCoord > prev.w ? POSITIVE : 0);
   // Loop through points, finding edges that cross the planes by evaluating
   // the side at each point.
   for (int i = 0; i < nump; i++) {
     Point3D cur = p[i];
     Interpolants curInterp = interp[i];
     float curCoord = cur.select(AXIS);
-    int curSide = curCoord < -cur.w ? -1 : (curCoord > cur.w ? 1 : 0);
-    // Check if the previous and current end points are on different sides.
-    if (curSide != prevSide) {
+    int curMask =
+        (curCoord < -cur.w ? NEGATIVE : 0) | (curCoord > cur.w ? POSITIVE : 0);
+    // Check if the previous and current end points are on different sides. If
+    // the masks of sides intersect, then we consider them to be on the same
+    // side. So in the case the masks do not intersect, we then consider them
+    // to fall on different sides.
+    if (!(curMask & prevMask)) {
       // One of the edge's end points is outside the plane with the other
       // inside the plane. Find the offset where it crosses the plane and
       // adjust the point and interpolants to there.
-      if (prevSide) {
+      if (prevMask) {
         // Edge that was previously outside crosses inside.
         // Evaluate plane equation for previous and current end-point
         // based on previous side and calculate relative offset.
@@ -3769,6 +3782,22 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
           assert(false);
           return 0;
         }
+        // The positive plane is assigned the sign 1, and the negative plane is
+        // assigned -1. If the point falls outside both planes, that means W is
+        // negative. To compensate for this, we must interpolate the coordinate
+        // till W=0, at which point we can choose a single plane side for the
+        // coordinate to fall on since W will no longer be negative. To compute
+        // the coordinate where W=0, we compute K = prev.w / (prev.w-cur.w) and
+        // interpolate C = prev.C + K*(cur.C - prev.C). The sign of C will be
+        // the side of the plane we need to consider. Substituting K into the
+        // comparison C < 0, we can then avoid the division in K with a
+        // cross-multiplication.
+        float prevSide =
+            (prevMask & NEGATIVE) && (!(prevMask & POSITIVE) ||
+                                      prevCoord * (cur.w - prev.w) <
+                                          prev.w * (curCoord - prevCoord))
+                ? -1
+                : 1;
         float prevDist = prevCoord - prevSide * prev.w;
         float curDist = curCoord - prevSide * cur.w;
         // It may happen that after we interpolate by the weight k that due to
@@ -3787,7 +3816,7 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         outInterp[numClip] = prevInterp + (curInterp - prevInterp) * k;
         numClip++;
       }
-      if (curSide) {
+      if (curMask) {
         // Edge that was previously inside crosses outside.
         // Evaluate plane equation for previous and current end-point
         // based on current side and calculate relative offset.
@@ -3795,6 +3824,17 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
           assert(false);
           return 0;
         }
+        // In the case the coordinate falls on both plane sides, the computation
+        // here is much the same as for prevSide, but since we are going from a
+        // previous W that is positive to current W that is negative, then the
+        // sign of cur.w - prev.w will flip in the equation. The resulting sign
+        // is negated to compensate for this.
+        float curSide =
+            (curMask & POSITIVE) && (!(curMask & NEGATIVE) ||
+                                     prevCoord * (cur.w - prev.w) <
+                                         prev.w * (curCoord - prevCoord))
+                ? 1
+                : -1;
         float prevDist = prevCoord - curSide * prev.w;
         float curDist = curCoord - curSide * cur.w;
         // Calculate interpolation weight k and the nudge it inside clipping
@@ -3812,7 +3852,7 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         numClip++;
       }
     }
-    if (!curSide) {
+    if (!curMask) {
       // The current end point is inside the plane, so output point unmodified.
       if (numClip >= nump + 2) {
         assert(false);
@@ -3825,7 +3865,7 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
     prev = cur;
     prevInterp = curInterp;
     prevCoord = curCoord;
-    prevSide = curSide;
+    prevMask = curMask;
   }
   return numClip;
 }
