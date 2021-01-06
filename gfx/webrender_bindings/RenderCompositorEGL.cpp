@@ -146,6 +146,10 @@ bool RenderCompositorEGL::Resume() {
     // Destroy EGLSurface if it exists.
     DestroyEGLSurface();
     mEGLSurface = CreateEGLSurface();
+    if (mEGLSurface == EGL_NO_SURFACE) {
+      RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+      return false;
+    }
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -179,6 +183,7 @@ bool RenderCompositorEGL::Resume() {
       egl->fSwapInterval(0);
     } else {
       RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+      return false;
     }
   }
   return true;
