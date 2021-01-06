@@ -88,7 +88,13 @@ function getUnicodeUrl(url) {
       return url;
     }
     const readableHostname = getUnicodeHostname(hostname);
-    url = decodeURI(url);
+
+    /* We use `decodeURIComponent` instead of decodeURI as the
+     * later does not decode some characters, it only can decode characters
+     * previously encoded by the encodeURI. See
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI#Description
+     */
+    url = decodeURIComponent(url);
     return url.replace(hostname, readableHostname);
   } catch (err) {}
   return url;
