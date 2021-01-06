@@ -295,11 +295,13 @@ nsresult nsHttpHeaderArray::VisitHeaders(
     if (filter == eFilterSkipDefault &&
         entry.variety == eVarietyRequestDefault) {
       continue;
-    } else if (filter == eFilterResponse &&
-               entry.variety == eVarietyResponseNetOriginal) {
+    }
+    if (filter == eFilterResponse &&
+        entry.variety == eVarietyResponseNetOriginal) {
       continue;
-    } else if (filter == eFilterResponseOriginal &&
-               entry.variety == eVarietyResponse) {
+    }
+    if (filter == eFilterResponseOriginal &&
+        entry.variety == eVarietyResponse) {
       continue;
     }
 
