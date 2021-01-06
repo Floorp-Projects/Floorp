@@ -245,13 +245,16 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
 #ifdef ANDROID
   cubeb_device_type type = CUBEB_DEVICE_TYPE_UNKNOWN;
   uint32_t channels = 0;
+  nsAutoString name;
   if (aSide == Side::INPUT) {
     type = CUBEB_DEVICE_TYPE_INPUT;
     channels = 1;
+    name = u"Default audio input device"_ns;
   } else {
     MOZ_ASSERT(aSide == Side::OUTPUT);
     type = CUBEB_DEVICE_TYPE_OUTPUT;
     channels = 2;
+    name = u"Default audio output device"_ns;
   }
 
   if (devices.IsEmpty()) {
@@ -259,11 +262,13 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
     // simply state that there is a single sink, that it is the default, and has
     // a single channel. All the other values are made up and are not to be
     // used.
+    // Bug 1660391: we can't use fluent here yet to get localized strings, so
+    // those are hard-coded en_US strings for now.
     RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(
-        nullptr, NS_ConvertUTF8toUTF16(""), NS_ConvertUTF8toUTF16(""),
-        NS_ConvertUTF8toUTF16(""), type, CUBEB_DEVICE_STATE_ENABLED,
-        CUBEB_DEVICE_PREF_ALL, CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE,
-        channels, 44100, 44100, 44100, 441, 128);
+        nullptr, name, u""_ns, u""_ns,
+        type, CUBEB_DEVICE_STATE_ENABLED, CUBEB_DEVICE_PREF_ALL,
+        CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE, channels, 44100, 44100,
+        44100, 441, 128);
     devices.AppendElement(info);
   }
 #else
