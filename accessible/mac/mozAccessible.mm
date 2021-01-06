@@ -111,7 +111,7 @@ using namespace mozilla::a11y;
 static const uint64_t kCachedStates =
     states::CHECKED | states::PRESSED | states::MIXED | states::EXPANDED |
     states::CURRENT | states::SELECTED | states::TRAVERSED | states::LINKED |
-    states::HASPOPUP;
+    states::HASPOPUP | states::BUSY;
 static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
 - (uint64_t)state {
@@ -143,19 +143,20 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 }
 
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
-  if ((state & kCachedStates) == 0) {
-    return;
+  if ((state & kCachedStates) != 0) {
+    if (!(mCachedState & kCacheInitialized)) {
+      [self state];
+    } else {
+      if (enabled) {
+        mCachedState |= state;
+      } else {
+        mCachedState &= ~state;
+      }
+    }
   }
 
-  if (!(mCachedState & kCacheInitialized)) {
-    [self state];
-    return;
-  }
-
-  if (enabled) {
-    mCachedState |= state;
-  } else {
-    mCachedState &= ~state;
+  if (state == states::BUSY) {
+    [self moxPostNotification:@"AXElementBusyChanged"];
   }
 }
 
@@ -787,6 +788,10 @@ struct RoleDescrComparator {
 
 - (NSNumber*)moxRequired {
   return @([self stateWithMask:states::REQUIRED] != 0);
+}
+
+- (NSNumber*)moxElementBusy {
+  return @([self stateWithMask:states::BUSY] != 0);
 }
 
 - (mozAccessible*)topWebArea {

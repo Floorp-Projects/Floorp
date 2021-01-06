@@ -223,7 +223,21 @@ using namespace mozilla::a11y;
     return YES;
   }
 
+  if (selector == @selector(moxElementBusy)) {
+    // Don't confuse aria-busy with a document's busy state.
+    return YES;
+  }
+
   return [super moxBlockSelector:selector];
+}
+
+- (void)moxPostNotification:(NSString*)notification {
+  if (![notification isEqualToString:@"AXElementBusyChanged"]) {
+    // Suppress AXElementBusyChanged since it uses gecko's BUSY state
+    // to tell VoiceOver about aria-busy changes. We use that state
+    // differently in documents.
+    [super moxPostNotification:notification];
+  }
 }
 
 - (id)rootGroup {
