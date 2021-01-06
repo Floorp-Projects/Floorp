@@ -37,13 +37,6 @@ using js::PlainObject;
 using js::TaggedProto;
 using js::TenuredObject;
 
-static PlainObject* CreateThisForFunctionWithGroup(JSContext* cx,
-                                                   Handle<ObjectGroup*> group,
-                                                   NewObjectKind newKind) {
-  js::gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
-  return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
-}
-
 PlainObject* js::CreateThisForFunction(JSContext* cx,
                                        Handle<JSFunction*> callee,
                                        Handle<JSObject*> newTarget,
@@ -56,7 +49,7 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
     return nullptr;
   }
 
-  Rooted<PlainObject*> res(cx);
+  PlainObject* res;
   if (proto) {
     Rooted<ObjectGroup*> group(
         cx, ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
@@ -64,7 +57,8 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
     if (!group) {
       return nullptr;
     }
-    res = CreateThisForFunctionWithGroup(cx, group, newKind);
+    js::gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
+    res = NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
   } else {
     res = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
   }
