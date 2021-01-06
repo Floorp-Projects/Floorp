@@ -969,6 +969,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     override fun onBackPressed(): Boolean {
         return findInPageIntegration.onBackPressed() ||
                 fullScreenFeature.onBackPressed() ||
+                promptsFeature.onBackPressed() ||
                 sessionFeature.onBackPressed() ||
                 removeSessionIfNeeded()
     }
