@@ -1535,11 +1535,7 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
     TraceManuallyBarrieredEdge(trc, &global, "group_global");
   }
 
-  if (JSObject* descr = maybeTypeDescr()) {
-    TraceManuallyBarrieredEdge(trc, &descr, "group_type_descr");
-    MOZ_ASSERT(MaybeForwardedObjectClass(descr) == &js::TypeDescr::class_);
-    setTypeDescr(static_cast<TypeDescr*>(descr));
-  }
+  TraceNullableEdge(trc, &typeDescr_, "group_typedescr");
 }
 
 void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
