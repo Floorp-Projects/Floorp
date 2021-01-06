@@ -64,11 +64,11 @@ consoleListener.prototype  = {
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
         is(obj.arguments[0], "Hello world!", "Message matches");
         is(obj.prefix, "", "prefix is empty by default");
-        // We expect to see 1 message from this innerID.
+        // We expect to see 2 messages from this innerID.
         ++this.count;
       }
 
-      if (this.count == 7) {
+      if (this.count == 8) {
         is(dumpCalled, 2, "Dump has been called!");
         Services.obs.removeObserver(this, "console-api-log-event");
         SimpleTest.finish();
@@ -76,14 +76,18 @@ consoleListener.prototype  = {
     }
   }
 }
-function test() {
+async function test() {
   SimpleTest.waitForExplicitFinish();
 
-  SpecialPowers.pushPrefEnv({set: [["pref.test.console", "log"]]}).then(() => {
-    var cl = new consoleListener();
-    ChromeUtils.import(JSM, window);
-    ConsoleTest.go(dumpFunction);
+  var cl = new consoleListener();
+  ChromeUtils.import(JSM, window);
+  await SpecialPowers.pushPrefEnv({set: [["pref.test.console", "log"]]})
+  ConsoleTest.go(dumpFunction);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["pref.test.console.notset", "Log"]],
   });
+  ConsoleTest.go2();
 }
 
   ]]>
