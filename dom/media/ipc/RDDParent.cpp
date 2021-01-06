@@ -6,16 +6,19 @@
 #include "RDDParent.h"
 
 #if defined(XP_WIN)
-#  include "mozilla/gfx/DeviceManagerDx.h"
-#  include "WMF.h"
-#  include <process.h>
 #  include <dwrite.h>
+#  include <process.h>
+
+#  include "WMF.h"
 #  include "mozilla/WinDllServices.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #else
 #  include <unistd.h>
 #endif
 
+#include "PDMFactory.h"
 #include "chrome/common/ipc_channel.h"
+#include "gfxConfig.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/Preferences.h"
@@ -23,10 +26,9 @@
 #include "mozilla/RemoteDecoderManagerParent.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
-#include "mozilla/gfx/gfxVars.h"
-#include "gfxConfig.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
@@ -37,14 +39,14 @@
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#  include "RDDProcessHost.h"
 #  include "mozilla/Sandbox.h"
 #  include "nsMacUtilsImpl.h"
-#  include "RDDProcessHost.h"
 #endif
 
+#include "ProcessUtils.h"
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"
-#include "ProcessUtils.h"
 
 namespace mozilla {
 
@@ -119,6 +121,9 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
+
+  auto supported = PDMFactory::Supported();
+  Unused << SendUpdateMediaCodecsSupported(supported);
 
 #if defined(MOZ_SANDBOX)
 #  if defined(XP_MACOSX)
