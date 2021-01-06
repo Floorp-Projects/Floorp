@@ -336,9 +336,9 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
             return GeckoResult.fromValue(null);
         }
 
-        return mRuntime.getWebExtensionController().update(extension).then((newExtension) -> {
+        return mRuntime.getWebExtensionController().update(extension).map(newExtension -> {
             registerExtension(newExtension);
-            return GeckoResult.fromValue(newExtension);
+            return newExtension;
         });
     }
 

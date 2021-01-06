@@ -367,6 +367,40 @@ public class GeckoResult<T> {
     }
 
     /**
+     * Convenience method for {@link #map(OnValueMapper, OnExceptionMapper)}.
+     *
+     * @param valueMapper An instance of {@link OnValueMapper}, called when
+     *                    the {@link GeckoResult} is completed with a value.
+     * @param <U> Type of the new value that is returned by the mapper.
+     * @return A new {@link GeckoResult} that will contain the mapped value.
+     */
+    public @NonNull <U> GeckoResult<U> map(@Nullable final OnValueMapper<T, U> valueMapper) {
+        return map(valueMapper, null);
+    }
+
+    /**
+     * Transform the value and error of this {@link GeckoResult}.
+     *
+     * @param valueMapper An instance of {@link OnValueMapper}, called when
+     *                    the {@link GeckoResult} is completed with a value.
+     * @param exceptionMapper An instance of {@link OnExceptionMapper}, called
+     *                        when the {@link GeckoResult} is completed with an
+     *                        exception.
+     * @param <U> Type of the new value that is returned by the mapper.
+     * @return A new {@link GeckoResult} that will contain the mapped value.
+     */
+    public @NonNull <U> GeckoResult<U> map(@Nullable final OnValueMapper<T, U> valueMapper,
+                                           @Nullable final OnExceptionMapper exceptionMapper) {
+        final OnValueListener<T, U> valueListener = valueMapper != null
+                ? value -> GeckoResult.fromValue(valueMapper.onValue(value))
+                : null;
+        final OnExceptionListener<U> exceptionListener = exceptionMapper != null
+                ? error -> GeckoResult.fromException(exceptionMapper.onException(error))
+                : null;
+        return then(valueListener, exceptionListener);
+    }
+
+    /**
      * Convenience method for {@link #then(OnValueListener, OnExceptionListener)}.
      *
      * @param exceptionListener An instance of {@link OnExceptionListener}, called when the
@@ -844,6 +878,43 @@ public class GeckoResult<T> {
          */
         @AnyThread
         @Nullable GeckoResult<U> onValue(@Nullable T value) throws Throwable;
+    }
+
+    /**
+     * An interface used to map {@link GeckoResult} values.
+     *
+     * @param <T> Type of the value delivered via {@link #onValue}
+     * @param <U> Type of the new value returned by {@link #onValue}
+     */
+    public interface OnValueMapper<T, U> {
+        /**
+         * Called when a {@link GeckoResult} is completed with a value.
+         * Will be called on the same thread where the GeckoResult was created
+         * or on the {@link Handler} provided via {@link #withHandler(Handler)}.
+         *
+         * @param value The value of the {@link GeckoResult}
+         * @return Value used to complete the next result in the chain. May be null.
+         * @throws Throwable Exception used to complete next result in the chain.
+         */
+        @AnyThread
+        @Nullable U onValue(@Nullable T value) throws Throwable;
+    }
+
+    /**
+     * An interface used to map {@link GeckoResult} exceptions.
+     */
+    public interface OnExceptionMapper {
+        /**
+         * Called when a {@link GeckoResult} is completed with an exception.
+         * Will be called on the same thread where the GeckoResult was created
+         * or on the {@link Handler} provided via {@link #withHandler(Handler)}.
+         *
+         * @param exception Exception that completed the result.
+         * @return Exception used to complete the next result in the chain. May be null.
+         * @throws Throwable Exception used to complete next result in the chain.
+         */
+        @AnyThread
+        @Nullable Throwable onException(@NonNull Throwable exception) throws Throwable;
     }
 
     /**

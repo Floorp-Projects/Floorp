@@ -254,6 +254,31 @@ public class GeckoResultTest {
 
     @UiThreadTest
     @Test
+    public void resultMapChaining() {
+        assertThat("We're on the UI thread", Thread.currentThread(), equalTo(Looper.getMainLooper().getThread()));
+
+        GeckoResult.fromValue(42).map(value -> {
+            assertThat("Value should match", value, equalTo(42));
+            return "hello";
+        }).map(value -> {
+            assertThat("Value should match", value, equalTo("hello"));
+            return 42.0f;
+        }).map(value -> {
+            assertThat("Value should match", value, equalTo(42.0f));
+            throw new Exception("boom");
+        }).map(null, error -> {
+            assertThat("Error message should match", error.getMessage(), equalTo("boom"));
+            return new MockException();
+        }).accept(null, exception -> {
+            assertThat("Exception should be MockException", exception, instanceOf(MockException.class));
+            done();
+        });
+
+        waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test
     public void resultChaining() {
         assertThat("We're on the UI thread", Thread.currentThread(), equalTo(Looper.getMainLooper().getThread()));
 
