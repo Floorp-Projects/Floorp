@@ -1645,6 +1645,7 @@ bool Console::PopulateConsoleNotificationInTheTargetScope(
     case MethodAssert:
     case MethodGroup:
     case MethodGroupCollapsed:
+    case MethodTrace:
       event.mArguments.Construct();
       event.mStyles.Construct();
       if (NS_WARN_IF(!ProcessArguments(aCx, aArguments,

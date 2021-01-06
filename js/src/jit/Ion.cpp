@@ -1811,7 +1811,7 @@ static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
 
   if (script->hasNonSyntacticScope() && !script->function()) {
     // Support functions with a non-syntactic global scope but not other
-    // scripts. For global scripts, IonBuilder currently uses the global
+    // scripts. For global scripts, WarpBuilder currently uses the global
     // object as scope chain, this is not valid when the script has a
     // non-syntactic global scope.
     *reason = "has non-syntactic global scope";

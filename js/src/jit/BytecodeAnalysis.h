@@ -77,7 +77,7 @@ class BytecodeAnalysis {
   void checkWarpSupport(JSOp op);
 };
 
-// Bytecode analysis pass necessary for IonBuilder. The result is cached in
+// Bytecode analysis pass necessary for WarpBuilder. The result is cached in
 // JitScript.
 struct IonBytecodeInfo;
 IonBytecodeInfo AnalyzeBytecodeForIon(JSContext* cx, JSScript* script);

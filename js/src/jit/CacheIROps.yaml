@@ -1751,7 +1751,6 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    getter: ObjectField
 
 - name: LoadStringCharResult
   shared: false

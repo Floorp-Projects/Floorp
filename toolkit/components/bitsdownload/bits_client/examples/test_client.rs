@@ -5,58 +5,32 @@
 extern crate bits_client;
 extern crate comedy;
 //extern crate ctrlc;
-extern crate failure;
-extern crate failure_derive;
 extern crate guid_win;
+extern crate thiserror;
 
-use std::convert;
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::process;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
-use failure::{AsFail, Fail};
+use thiserror::Error;
 
 use bits_client::bits_protocol::HResultMessage;
 use bits_client::{BitsClient, BitsJobState, BitsMonitorClient, BitsProxyUsage, Guid, PipeError};
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 enum MyError {
-    #[fail(display = "{}", _0)]
+    #[error("{0}")]
     Msg(String),
-    #[fail(display = "HResult")]
-    HResult(#[fail(cause)] comedy::HResult),
-    #[fail(display = "Win32Error")]
-    Win32Error(#[fail(cause)] comedy::Win32Error),
-    #[fail(display = "PipeError")]
-    PipeError(#[fail(cause)] PipeError),
-    #[fail(display = "HResultMessage")]
-    HResultMessage(#[fail(cause)] HResultMessage),
-}
-
-impl convert::From<PipeError> for MyError {
-    fn from(err: PipeError) -> MyError {
-        MyError::PipeError(err)
-    }
-}
-
-impl convert::From<comedy::HResult> for MyError {
-    fn from(err: comedy::HResult) -> MyError {
-        MyError::HResult(err)
-    }
-}
-
-impl convert::From<comedy::Win32Error> for MyError {
-    fn from(err: comedy::Win32Error) -> MyError {
-        MyError::Win32Error(err)
-    }
-}
-
-impl convert::From<HResultMessage> for MyError {
-    fn from(err: HResultMessage) -> MyError {
-        MyError::HResultMessage(err)
-    }
+    #[error("HResult")]
+    HResult(#[from] comedy::HResult),
+    #[error("Win32Error")]
+    Win32Error(#[from] comedy::Win32Error),
+    #[error("PipeError")]
+    PipeError(#[from] PipeError),
+    #[error("HResultMessage")]
+    HResultMessage(#[from] HResultMessage),
 }
 
 macro_rules! bail {
@@ -73,8 +47,10 @@ type Result = std::result::Result<(), MyError>;
 pub fn main() {
     if let Err(err) = entry() {
         eprintln!("{}", err);
-        for cause in err.as_fail().iter_causes() {
-            eprintln!("caused by {}", cause);
+        let mut err: &dyn std::error::Error = &err;
+        while let Some(source) = err.source() {
+            eprintln!("caused by {}", source);
+            err = source;
         }
 
         process::exit(1);

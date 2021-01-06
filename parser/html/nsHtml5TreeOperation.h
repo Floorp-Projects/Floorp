@@ -36,8 +36,11 @@ struct opDetach {
 struct opAppend {
   nsIContent** mChild;
   nsIContent** mParent;
+  mozilla::dom::FromParser mFromNetwork;
 
-  explicit opAppend(nsIContentHandle* aChild, nsIContentHandle* aParent) {
+  explicit opAppend(nsIContentHandle* aChild, nsIContentHandle* aParent,
+                    mozilla::dom::FromParser aFromNetwork)
+      : mFromNetwork(aFromNetwork) {
     mChild = static_cast<nsIContent**>(aChild);
     mParent = static_cast<nsIContent**>(aParent);
   };
@@ -515,6 +518,10 @@ class nsHtml5TreeOperation final {
                              nsHtml5DocumentBuilder* aBuilder);
 
   static nsresult Append(nsIContent* aNode, nsIContent* aParent,
+                         nsHtml5DocumentBuilder* aBuilder);
+
+  static nsresult Append(nsIContent* aNode, nsIContent* aParent,
+                         mozilla::dom::FromParser aFromParser,
                          nsHtml5DocumentBuilder* aBuilder);
 
   static nsresult AppendToDocument(nsIContent* aNode,

@@ -100,75 +100,96 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
   }
 }
 
+RefPtr<GenericNonExclusivePromise> RDDProcessManager::LaunchRDDProcess() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!Get()) {
+    // Shutdown?
+    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                       __func__);
+  }
+
+  if (mNumProcessAttempts && !StaticPrefs::media_rdd_retryonfailure_enabled()) {
+    // We failed to start the RDD process earlier, abort now.
+    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                       __func__);
+  }
+
+  if (mLaunchRDDPromise && mProcess) {
+    return mLaunchRDDPromise;
+  }
+
+  std::vector<std::string> extraArgs;
+  nsCString parentBuildID(mozilla::PlatformBuildID());
+  extraArgs.push_back("-parentBuildID");
+  extraArgs.push_back(parentBuildID.get());
+
+  // The subprocess is launched asynchronously, so we
+  // wait for the promise to be resolved to acquire the IPDL actor.
+  mProcess = new RDDProcessHost(this);
+  if (!mProcess->Launch(extraArgs)) {
+    mNumProcessAttempts++;
+    DestroyProcess();
+    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                       __func__);
+  }
+
+  mLaunchRDDPromise = mProcess->LaunchPromise()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [this](bool) {
+        if (!Get()) {
+          // Shutdown?
+          return GenericNonExclusivePromise::CreateAndReject(
+              NS_ERROR_NOT_AVAILABLE, __func__);
+        }
+
+        mRDDChild = mProcess->GetActor();
+        mProcessToken = mProcess->GetProcessToken();
+
+        // Flush any pref updates that happened during
+        // launch and weren't included in the blobs set
+        // up in LaunchRDDProcess.
+        for (const mozilla::dom::Pref& pref : mQueuedPrefs) {
+          Unused << NS_WARN_IF(!mRDDChild->SendPreferenceUpdate(pref));
+        }
+        mQueuedPrefs.Clear();
+
+        CrashReporter::AnnotateCrashReport(
+            CrashReporter::Annotation::RDDProcessStatus, "Running"_ns);
+
+        if (!CreateVideoBridge()) {
+          mNumProcessAttempts++;
+          DestroyProcess();
+          return GenericNonExclusivePromise::CreateAndReject(
+              NS_ERROR_NOT_AVAILABLE, __func__);
+        }
+        return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
+      },
+      [this](nsresult aError) {
+        if (Get()) {
+          mNumProcessAttempts++;
+          DestroyProcess();
+        }
+        return GenericNonExclusivePromise::CreateAndReject(aError, __func__);
+      });
+  return mLaunchRDDPromise;
+}
+
 auto RDDProcessManager::EnsureRDDProcessAndCreateBridge(
     base::ProcessId aOtherProcess) -> RefPtr<EnsureRDDPromise> {
   return InvokeAsync(
       GetMainThreadSerialEventTarget(), __func__,
       [aOtherProcess, this]() -> RefPtr<EnsureRDDPromise> {
-        if (!Get()) {
-          // Shutdown?
-          return EnsureRDDPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
-                                                   __func__);
-        }
-        if (mProcess) {
-          return mProcess->LaunchPromise()->Then(
-              GetMainThreadSerialEventTarget(), __func__,
-              [aOtherProcess, this](bool) {
-                ipc::Endpoint<PRemoteDecoderManagerChild> endpoint;
-                if (!CreateContentBridge(aOtherProcess, &endpoint)) {
-                  return EnsureRDDPromise::CreateAndReject(
-                      NS_ERROR_NOT_AVAILABLE, __func__);
-                }
-                return EnsureRDDPromise::CreateAndResolve(std::move(endpoint),
-                                                          __func__);
-              },
-              [](nsresult aError) {
-                return EnsureRDDPromise::CreateAndReject(aError, __func__);
-              });
-        }
-
-        if (mNumProcessAttempts &&
-            !StaticPrefs::media_rdd_retryonfailure_enabled()) {
-          // We failed to start the RDD process earlier, abort now.
-          return EnsureRDDPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
-                                                   __func__);
-        }
-        // Launch the RDD process.
-        std::vector<std::string> extraArgs;
-        nsCString parentBuildID(mozilla::PlatformBuildID());
-        extraArgs.push_back("-parentBuildID");
-        extraArgs.push_back(parentBuildID.get());
-
-        // The subprocess is launched asynchronously, so we
-        // wait for the promise to be resolved to acquire the IPDL actor.
-        mProcess = new RDDProcessHost(this);
-        if (!mProcess->Launch(extraArgs)) {
-          DestroyProcess();
-          return EnsureRDDPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
-                                                   __func__);
-        }
-        return mProcess->LaunchPromise()->Then(
+        return LaunchRDDProcess()->Then(
             GetMainThreadSerialEventTarget(), __func__,
-            [aOtherProcess, this](bool) {
-              mRDDChild = mProcess->GetActor();
-              mProcessToken = mProcess->GetProcessToken();
-
-              // Flush any pref updates that happened during
-              // launch and weren't included in the blobs set
-              // up in LaunchRDDProcess.
-              for (const mozilla::dom::Pref& pref : mQueuedPrefs) {
-                Unused << NS_WARN_IF(!mRDDChild->SendPreferenceUpdate(pref));
+            [aOtherProcess, this]() {
+              if (!Get()) {
+                // Shutdown?
+                return EnsureRDDPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                         __func__);
               }
-              mQueuedPrefs.Clear();
-
-              CrashReporter::AnnotateCrashReport(
-                  CrashReporter::Annotation::RDDProcessStatus, "Running"_ns);
-
               ipc::Endpoint<PRemoteDecoderManagerChild> endpoint;
-
-              if (!CreateVideoBridge() ||
-                  !CreateContentBridge(aOtherProcess, &endpoint)) {
-                mNumProcessAttempts++;
+              if (!CreateContentBridge(aOtherProcess, &endpoint)) {
                 return EnsureRDDPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                          __func__);
               }
@@ -176,9 +197,7 @@ auto RDDProcessManager::EnsureRDDProcessAndCreateBridge(
               return EnsureRDDPromise::CreateAndResolve(std::move(endpoint),
                                                         __func__);
             },
-            [this](nsresult aError) {
-              mNumProcessAttempts++;
-              DestroyProcess();
+            [](nsresult aError) {
               return EnsureRDDPromise::CreateAndReject(aError, __func__);
             });
       });
@@ -267,6 +286,11 @@ bool RDDProcessManager::CreateVideoBridge() {
   GPUProcessManager* gpuManager = GPUProcessManager::Get();
   base::ProcessId gpuProcessPid = gpuManager ? gpuManager->GPUProcessPid() : -1;
 
+  // Build content device data first; this ensure that the GPU process is fully
+  // ready.
+  ContentDeviceData contentDeviceData;
+  gfxPlatform::GetPlatform()->BuildContentDeviceData(&contentDeviceData);
+
   // The child end is the producer of video frames; the parent end is the
   // consumer.
   base::ProcessId childPid = RDDProcessPid();
@@ -278,12 +302,8 @@ bool RDDProcessManager::CreateVideoBridge() {
   if (NS_FAILED(rv)) {
     MOZ_LOG(sPDMLog, LogLevel::Debug,
             ("Could not create video bridge: %d", int(rv)));
-    DestroyProcess();
     return false;
   }
-
-  ContentDeviceData contentDeviceData;
-  gfxPlatform::GetPlatform()->BuildContentDeviceData(&contentDeviceData);
 
   mRDDChild->SendInitVideoBridge(std::move(childPipe),
                                  mNumUnexpectedCrashes == 0, contentDeviceData);

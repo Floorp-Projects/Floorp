@@ -36,7 +36,6 @@ class AppleDecoderModule : public PlatformDecoderModule {
 
   static void Init();
 
-  static bool sCanUseHardwareVideoDecoder;
   static bool sCanUseVP9Decoder;
 
   static constexpr int kCMVideoCodecType_VP9{'vp09'};

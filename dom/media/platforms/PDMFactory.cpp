@@ -6,6 +6,9 @@
 
 #include "PDMFactory.h"
 
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "AgnosticDecoderModule.h"
 #include "AudioTrimmer.h"
 #include "BlankDecoderModule.h"
@@ -16,8 +19,12 @@
 #include "MP4Decoder.h"
 #include "MediaChangeMonitor.h"
 #include "MediaInfo.h"
-#include "VideoUtils.h"
+#include "OpusDecoder.h"
+#include "TheoraDecoder.h"
 #include "VPXDecoder.h"
+#include "VideoUtils.h"
+#include "VorbisDecoder.h"
+#include "WAVDecoder.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderModule.h"
@@ -54,10 +61,6 @@
 
 namespace mozilla {
 
-// Set on the main thread, in content processes before any PDMFactory will ever
-// be created; never modified after.
-static Maybe<PDMFactory::MediaCodecsSupported> sSupported;
-
 extern already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule();
 
 class PDMFactoryImpl final {
@@ -68,8 +71,6 @@ class PDMFactoryImpl final {
     } else if (XRE_IsRDDProcess()) {
       InitRddPDMs();
     } else if (XRE_IsContentProcess()) {
-      MOZ_DIAGNOSTIC_ASSERT(sSupported.isSome(),
-                            "PDMFactory accessed while not initialized");
       InitContentPDMs();
     } else {
       MOZ_DIAGNOSTIC_ASSERT(
@@ -231,31 +232,6 @@ PDMFactory::PDMFactory() {
 
 PDMFactory::~PDMFactory() = default;
 
-PDMFactory::PDMFactory(const RemoteDecodeIn& aProcess) {
-  switch (aProcess) {
-    case RemoteDecodeIn::RddProcess:
-      CreateRddPDMs();
-      break;
-    case RemoteDecodeIn::GpuProcess:
-      CreateGpuPDMs();
-      break;
-    default:
-      MOZ_CRASH("Not to be used for any other process");
-  }
-}
-
-/* static */
-already_AddRefed<PDMFactory> PDMFactory::PDMFactoryForRdd() {
-  RefPtr<PDMFactory> pdm = new PDMFactory(RemoteDecodeIn::RddProcess);
-  return pdm.forget();
-}
-
-/* static */
-already_AddRefed<PDMFactory> PDMFactory::PDMFactoryForGpu() {
-  RefPtr<PDMFactory> pdm = new PDMFactory(RemoteDecodeIn::GpuProcess);
-  return pdm.forget();
-}
-
 /* static */
 void PDMFactory::EnsureInit() {
   {
@@ -413,15 +389,6 @@ bool PDMFactory::Supports(const SupportDecoderParams& aParams,
                           DecoderDoctorDiagnostics* aDiagnostics) const {
   if (mEMEPDM) {
     return mEMEPDM->Supports(aParams, aDiagnostics);
-  }
-  if (VPXDecoder::IsVPX(aParams.MimeType(),
-                        VPXDecoder::VP8 | VPXDecoder::VP9) &&
-      !aParams.mConfig.GetAsVideoInfo()->HasAlpha()) {
-    // Work around bug 1521370, where trying to instantiate an external decoder
-    // could cause a crash.
-    // We always ship a VP8/VP9 decoder (libvpx) and optionally we have ffvpx.
-    // So we can speed up the test by assuming that this codec is supported.
-    return true;
   }
 
   RefPtr<PlatformDecoderModule> current =
@@ -642,13 +609,10 @@ void PDMFactory::SetCDMProxy(CDMProxy* aProxy) {
 }
 
 /* static */
-PDMFactory::MediaCodecsSupported PDMFactory::Supported() {
-  if (XRE_IsContentProcess()) {
-    return *sSupported;
-  }
-  MOZ_ASSERT(XRE_IsParentProcess());
+PDMFactory::MediaCodecsSupported PDMFactory::Supported(bool aForceRefresh) {
+  MOZ_ASSERT(NS_IsMainThread());
 
-  static MediaCodecsSupported supported = []() {
+  static auto calculate = []() {
     auto pdm = MakeRefPtr<PDMFactory>();
     MediaCodecsSupported supported;
     // H264 and AAC depends on external framework that must be dynamically
@@ -662,6 +626,18 @@ PDMFactory::MediaCodecsSupported PDMFactory::Supported() {
     if (pdm->SupportsMimeType("video/avc"_ns, nullptr)) {
       supported += MediaCodecs::H264;
     }
+    if (pdm->SupportsMimeType("video/vp9"_ns, nullptr)) {
+      supported += MediaCodecs::VP9;
+    }
+    if (pdm->SupportsMimeType("video/vp8"_ns, nullptr)) {
+      supported += MediaCodecs::VP8;
+    }
+    if (pdm->SupportsMimeType("video/av1"_ns, nullptr)) {
+      supported += MediaCodecs::AV1;
+    }
+    if (pdm->SupportsMimeType("video/theora"_ns, nullptr)) {
+      supported += MediaCodecs::Theora;
+    }
     if (pdm->SupportsMimeType("audio/mp4a-latm"_ns, nullptr)) {
       supported += MediaCodecs::AAC;
     }
@@ -669,28 +645,64 @@ PDMFactory::MediaCodecsSupported PDMFactory::Supported() {
     if (pdm->SupportsMimeType("audio/mpeg"_ns, nullptr)) {
       supported += MediaCodecs::MP3;
     }
-    // The codecs below are potentially always supported as we ship native
-    // support for them. If they are disabled through pref, it will be handled
-    // in MediaDecoder class that could use those.
-    supported += MediaCodecs::VP9;
-    supported += MediaCodecs::VP8;
-    supported += MediaCodecs::AV1;
-    supported += MediaCodecs::Theora;
-    supported += MediaCodecs::Opus;
-    supported += MediaCodecs::Vorbis;
-    supported += MediaCodecs::Flac;
-    supported += MediaCodecs::Wave;
-
+    if (pdm->SupportsMimeType("audio/opus"_ns, nullptr)) {
+      supported += MediaCodecs::Opus;
+    }
+    if (pdm->SupportsMimeType("audio/vorbis"_ns, nullptr)) {
+      supported += MediaCodecs::Vorbis;
+    }
+    if (pdm->SupportsMimeType("audio/flac"_ns, nullptr)) {
+      supported += MediaCodecs::Flac;
+    }
+    if (pdm->SupportsMimeType("audio/x-wav"_ns, nullptr)) {
+      supported += MediaCodecs::Wave;
+    }
     return supported;
-  }();
+  };
+  static MediaCodecsSupported supported = calculate();
+  if (aForceRefresh) {
+    supported = calculate();
+  }
   return supported;
 }
 
 /* static */
-void PDMFactory::SetSupported(const MediaCodecsSupported& aSupported) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  sSupported = Some(aSupported);
+bool PDMFactory::SupportsMimeType(const nsACString& aMimeType,
+                                  const MediaCodecsSupported& aSupported) {
+  if (MP4Decoder::IsH264(aMimeType)) {
+    return aSupported.contains(MediaCodecs::H264);
+  }
+  if (VPXDecoder::IsVP9(aMimeType)) {
+    return aSupported.contains(MediaCodecs::VP9);
+  }
+  if (VPXDecoder::IsVP8(aMimeType)) {
+    return aSupported.contains(MediaCodecs::VP8);
+  }
+  if (AOMDecoder::IsAV1(aMimeType)) {
+    return aSupported.contains(MediaCodecs::AV1);
+  }
+  if (TheoraDecoder::IsTheora(aMimeType)) {
+    return aSupported.contains(MediaCodecs::Theora);
+  }
+  if (MP4Decoder::IsAAC(aMimeType)) {
+    return aSupported.contains(MediaCodecs::AAC);
+  }
+  if (aMimeType.EqualsLiteral("audio/mpeg")) {
+    return aSupported.contains(MediaCodecs::MP3);
+  }
+  if (OpusDataDecoder::IsOpus(aMimeType)) {
+    return aSupported.contains(MediaCodecs::Opus);
+  }
+  if (VorbisDataDecoder::IsVorbis(aMimeType)) {
+    return aSupported.contains(MediaCodecs::Vorbis);
+  }
+  if (aMimeType.EqualsLiteral("audio/flac")) {
+    return aSupported.contains(MediaCodecs::Flac);
+  }
+  if (WaveDataDecoder::IsWave(aMimeType)) {
+    return aSupported.contains(MediaCodecs::Wave);
+  }
+  return false;
 }
 
 }  // namespace mozilla

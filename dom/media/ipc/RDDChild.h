@@ -6,11 +6,10 @@
 #ifndef _include_dom_media_ipc_RDDChild_h_
 #define _include_dom_media_ipc_RDDChild_h_
 #include "mozilla/PRDDChild.h"
-
-#include "mozilla/ipc/CrashReporterHelper.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/gfx/GPUProcessListener.h"
+#include "mozilla/gfx/gfxVarReceiver.h"
+#include "mozilla/ipc/CrashReporterHelper.h"
 
 namespace mozilla {
 
@@ -45,6 +44,8 @@ class RDDChild final : public PRDDChild,
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
+      const PDMFactory::MediaCodecsSupported& aSupported);
 
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,

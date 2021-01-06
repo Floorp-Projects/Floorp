@@ -1829,8 +1829,6 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
 /**
  * Switch to a given frame within the current window.
  *
- * @param {boolean=} focus
- *     Focus the frame if set to true. Defaults to false.
  * @param {(string|Object)=} element
  *     A web element reference of the frame or its element id.
  * @param {number=} id
@@ -1843,7 +1841,7 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.switchToFrame = async function(cmd) {
-  const { element: el, focus = false, id } = cmd.parameters;
+  const { element: el, id } = cmd.parameters;
 
   if (typeof id == "number") {
     assert.unsignedShort(id, `Expected id to be unsigned short, got ${id}`);
@@ -1917,10 +1915,6 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
 
     const frameWindow = browsingContext.window;
     await checkLoad(frameWindow);
-
-    if (focus) {
-      frameWindow.focus();
-    }
   } else if (this.context == Context.Content) {
     cmd.commandID = cmd.id;
     await this.listener.switchToFrame(cmd.parameters);
