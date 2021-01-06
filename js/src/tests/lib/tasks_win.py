@@ -12,6 +12,7 @@ from six.moves.queue import Queue, Empty
 
 from .progressbar import ProgressBar
 from .results import NullTestOutput, TestOutput, escape_cmdline
+from .adaptor import xdr_annotate
 
 
 class EndMarker:
@@ -22,7 +23,7 @@ class TaskFinishedMarker:
     pass
 
 
-def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout, show_cmd):
+def _do_work(qTasks, qResults, qWatch, prefix, tempdir, run_skipped, timeout, show_cmd):
     while True:
         test = qTasks.get()
         if test is EndMarker:
@@ -35,7 +36,7 @@ def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout, show_cmd):
             continue
 
         # Spawn the test task.
-        cmd = test.get_command(prefix)
+        cmd = test.get_command(prefix, tempdir)
         if show_cmd:
             print(escape_cmdline(cmd))
         tStart = datetime.now()
@@ -91,7 +92,7 @@ def _do_watch(qWatch, timeout):
             assert fin is TaskFinishedMarker, "invalid finish marker"
 
 
-def run_all_tests(tests, prefix, pb, options):
+def run_all_tests(tests, prefix, tempdir, pb, options):
     """
     Uses scatter-gather to a thread-pool to manage children.
     """
@@ -112,6 +113,7 @@ def run_all_tests(tests, prefix, pb, options):
                 qResults,
                 qWatch,
                 prefix,
+                tempdir,
                 options.run_skipped,
                 options.timeout,
                 options.show_cmd,
@@ -120,6 +122,25 @@ def run_all_tests(tests, prefix, pb, options):
         worker.setDaemon(True)
         worker.start()
         workers.append(worker)
+
+    delay = ProgressBar.update_granularity().total_seconds()
+
+    # Before inserting all the tests cases, to be checked in parallel, we are
+    # only queueing the XDR encoding test case which would be responsible for
+    # recording the self-hosted code. Once completed, we will proceed by
+    # queueing the rest of the test cases.
+    if options.use_xdr:
+        tests = xdr_annotate(tests, options)
+        # This loop consumes the first elements of the `tests` iterator, until
+        # it reaches the self-hosted encoding test case, and leave the
+        # remaining tests in the iterator to be scheduled on multiple threads.
+        for test in tests:
+            if test.selfhosted_xdr_mode == "encode":
+                qTasks.put(test)
+                yield qResults.get(block=True)
+                break
+            assert not test.enable and not options.run_skipped
+            yield NullTestOutput(test)
 
     # Insert all jobs into the queue, followed by the queue-end
     # marker, one per worker. This will not block on growing the
@@ -138,7 +159,6 @@ def run_all_tests(tests, prefix, pb, options):
 
     # Read from the results.
     ended = 0
-    delay = ProgressBar.update_granularity().total_seconds()
     while ended < len(workers):
         try:
             result = qResults.get(block=True, timeout=delay)

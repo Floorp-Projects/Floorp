@@ -24,6 +24,8 @@ from .progressbar import ProgressBar, NullProgressBar
 from .remote import init_remote_dir, init_device
 from .results import TestOutput, escape_cmdline
 from .structuredlog import TestLogger
+from .adaptor import xdr_annotate
+from .tempfile import TemporaryDirectory
 
 TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
@@ -32,6 +34,7 @@ TEST_DIR = os.path.join(JS_DIR, "jit-test", "tests")
 LIB_DIR = os.path.join(JS_DIR, "jit-test", "lib") + os.path.sep
 MODULE_DIR = os.path.join(JS_DIR, "jit-test", "modules") + os.path.sep
 JS_TESTS_DIR = posixpath.join(JS_DIR, "tests")
+SHELL_XDR = "shell.xdr"
 
 # Backported from Python 3.1 posixpath.py
 
@@ -155,6 +158,9 @@ class JitTest:
         self.is_module = False
         # Reflect.stringify implementation to test
         self.test_reflect_stringify = None
+        # Use self-hosted XDR instead of parsing the source stored in the binary.
+        self.selfhosted_xdr_path = None
+        self.selfhosted_xdr_mode = "off"
 
         # Skip-if condition. We don't have a xulrunner, but we can ask the shell
         # directly.
@@ -181,6 +187,8 @@ class JitTest:
         t.expect_status = self.expect_status
         t.expect_crash = self.expect_crash
         t.test_reflect_stringify = self.test_reflect_stringify
+        t.selfhosted_xdr_path = self.selfhosted_xdr_path
+        t.selfhosted_xdr_mode = self.selfhosted_xdr_mode
         t.enable = True
         t.is_module = self.is_module
         t.skip_if_cond = self.skip_if_cond
@@ -349,7 +357,7 @@ class JitTest:
 
         return test
 
-    def command(self, prefix, libdir, moduledir, remote_prefix=None):
+    def command(self, prefix, libdir, moduledir, tempdir, remote_prefix=None):
         path = self.path
         if remote_prefix:
             path = self.path.replace(TEST_DIR, remote_prefix)
@@ -357,6 +365,12 @@ class JitTest:
         scriptdir_var = os.path.dirname(path)
         if not scriptdir_var.endswith("/"):
             scriptdir_var += "/"
+
+        # Note: The tempdir provided as argument is managed by the caller
+        # should remain alive as long as the test harness. Therefore, the XDR
+        # content of the self-hosted code would be accessible to all JS Shell
+        # instances.
+        self.selfhosted_xdr_path = os.path.join(tempdir, SHELL_XDR)
 
         # Platforms where subprocess immediately invokes exec do not care
         # whether we use double or single quotes. On windows and when using
@@ -379,6 +393,14 @@ class JitTest:
         # via the "|jit-test|" line.  Remove dups because they are toggles.
         cmd = prefix + []
         cmd += list(set(self.jitflags))
+        # Handle selfhosted XDR file.
+        if self.selfhosted_xdr_mode != "off":
+            cmd += [
+                "--selfhosted-xdr-path",
+                self.selfhosted_xdr_path,
+                "--selfhosted-xdr-mode",
+                self.selfhosted_xdr_mode,
+            ]
         for expr in exprs:
             cmd += ["-e", expr]
         for inc in self.other_lib_includes:
@@ -409,9 +431,9 @@ class JitTest:
     # The test runner expects this to be set to give to get_command.
     js_cmd_prefix = None
 
-    def get_command(self, prefix):
+    def get_command(self, prefix, tempdir):
         """Shim for the test runner."""
-        return self.command(prefix, LIB_DIR, MODULE_DIR)
+        return self.command(prefix, LIB_DIR, MODULE_DIR, tempdir)
 
 
 def find_tests(substring=None):
@@ -433,7 +455,7 @@ def find_tests(substring=None):
     return ans
 
 
-def run_test_remote(test, device, prefix, options):
+def run_test_remote(test, device, prefix, tempdir, options):
     from mozdevice import ADBDevice, ADBProcessError
 
     if options.test_reflect_stringify:
@@ -442,6 +464,7 @@ def run_test_remote(test, device, prefix, options):
         prefix,
         posixpath.join(options.remote_test_root, "lib/"),
         posixpath.join(options.remote_test_root, "modules/"),
+        tempdir,
         posixpath.join(options.remote_test_root, "tests"),
     )
     if options.show_cmd:
@@ -813,6 +836,7 @@ def run_tests_local(tests, num_tests, prefix, options, slog):
             "hide_progress",
             "run_skipped",
             "show_cmd",
+            "use_xdr",
         ],
     )
     shim_options = AdaptorOptions(
@@ -823,22 +847,26 @@ def run_tests_local(tests, num_tests, prefix, options, slog):
         False,
         True,
         options.show_cmd,
+        options.use_xdr,
     )
 
     # The test runner wants the prefix as a static on the Test class.
     JitTest.js_cmd_prefix = prefix
 
-    pb = create_progressbar(num_tests, options)
-    gen = run_all_tests(tests, prefix, pb, shim_options)
-    ok = process_test_results(gen, num_tests, pb, options, slog)
+    with TemporaryDirectory() as tempdir:
+        pb = create_progressbar(num_tests, options)
+        gen = run_all_tests(tests, prefix, tempdir, pb, shim_options)
+        ok = process_test_results(gen, num_tests, pb, options, slog)
     return ok
 
 
-def get_remote_results(tests, device, prefix, options):
+def get_remote_results(tests, device, prefix, tempdir, options):
     try:
-        for i in range(0, options.repeat):
-            for test in tests:
-                yield run_test_remote(test, device, prefix, options)
+        if options.use_xdr:
+            tests = xdr_annotate(tests, options)
+        tests = list(tests)
+        for test in tests:
+            yield run_test_remote(test, device, prefix, tempdir, options)
     except Exception as e:
         # After a device error, the device is typically in a
         # state where all further tests will fail so there is no point in
@@ -854,6 +882,7 @@ def run_tests_remote(tests, num_tests, prefix, options, slog):
         device = init_device(options)
 
         prefix[0] = posixpath.join(options.remote_test_root, "bin", "js")
+        tempdir = posixpath.join(options.remote_test_root, "tmp")
         # Update the test root to point to our test directory.
         jit_tests_dir = posixpath.join(options.remote_test_root, "tests")
         options.remote_test_root = posixpath.join(jit_tests_dir, "tests")
@@ -872,7 +901,7 @@ def run_tests_remote(tests, num_tests, prefix, options, slog):
     # Run all tests.
     pb = create_progressbar(num_tests, options)
     try:
-        gen = get_remote_results(tests, device, prefix, options)
+        gen = get_remote_results(tests, device, prefix, tempdir, options)
         ok = process_test_results(gen, num_tests, pb, options, slog)
     except (ADBError, ADBTimeoutError):
         print("TEST-UNEXPECTED-FAIL | jit_test.py" + " : Device error during test")
