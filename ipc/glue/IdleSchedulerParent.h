@@ -96,7 +96,7 @@ class IdleSchedulerParent final
   // is zero),
   static LinkedList<IdleSchedulerParent> sWaitingForIdle;
 
-  static Atomic<int32_t> sCPUsForChildProcesses;
+  static Atomic<int32_t> sMaxConcurrentIdleTasksInChildProcesses;
 
   // Counting all the child processes which have at least one prioritized
   // operation.
