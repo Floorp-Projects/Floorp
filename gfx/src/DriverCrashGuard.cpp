@@ -25,7 +25,9 @@ namespace gfx {
 
 static const size_t NUM_CRASH_GUARD_TYPES = size_t(CrashGuardType::NUM_TYPES);
 static const char* sCrashGuardNames[] = {
-    "d3d11layers", "glcontext", "wmfvpxvideo",
+    "d3d11layers",
+    "glcontext",
+    "wmfvpxvideo",
 };
 static_assert(MOZ_ARRAY_LENGTH(sCrashGuardNames) == NUM_CRASH_GUARD_TYPES,
               "CrashGuardType updated without a name string");

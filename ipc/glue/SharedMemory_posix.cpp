@@ -10,7 +10,7 @@
 #include "mozilla/ipc/SharedMemory.h"
 
 #if defined(XP_MACOSX) && defined(__x86_64__)
-#include "prenv.h"
+#  include "prenv.h"
 #endif
 
 namespace mozilla {

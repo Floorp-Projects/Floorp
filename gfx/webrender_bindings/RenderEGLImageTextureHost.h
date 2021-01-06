@@ -27,6 +27,7 @@ class RenderEGLImageTextureHost final : public RenderTextureHost {
     // XXX: we don't have a format so we can't get bpp.
     return mSize.width * mSize.height;
   }
+
  private:
   virtual ~RenderEGLImageTextureHost();
   void DeleteTextureHandle();

@@ -421,7 +421,7 @@ static MOZ_MUST_USE PromiseObject* ReadableByteStreamControllerPullSteps(
 
     MOZ_RELEASE_ASSERT(unwrappedStream->mode() ==
                        JS::ReadableStreamMode::ExternalSource);
-#if 0  // disable user-defined byte streams
+#if 0   // disable user-defined byte streams
         if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource)
 #endif  // user-defined byte streams
     {
@@ -448,7 +448,7 @@ static MOZ_MUST_USE PromiseObject* ReadableByteStreamControllerPullSteps(
       queueTotalSize = queueTotalSize - bytesWritten;
     }
 
-#if 0  // disable user-defined byte streams
+#if 0   // disable user-defined byte streams
         else {
             // Step 3.b: Let entry be the first element of this.[[queue]].
             // Step 3.c: Remove entry from this.[[queue]], shifting all other

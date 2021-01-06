@@ -1262,10 +1262,10 @@ void js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     uint64_t zoneTenuredStrings =
         zone->stringStats.ref().liveNurseryStrings -
         zone->previousGCStringStats.ref().liveNurseryStrings;
-    double tenuredRate = allocThreshold
-                             ? double(zoneTenuredStrings) /
-                                   double(zone->nurseryAllocatedStrings)
-                             : 0.0;
+    double tenuredRate =
+        allocThreshold
+            ? double(zoneTenuredStrings) / double(zone->nurseryAllocatedStrings)
+            : 0.0;
     bool disableNurseryStrings =
         pretenureStr && zone->allocNurseryStrings &&
         tenuredRate > tunables().pretenureStringThreshold();
