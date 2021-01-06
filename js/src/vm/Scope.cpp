@@ -767,23 +767,40 @@ uint32_t LexicalScope::nextFrameSlot(Scope* scope) {
     switch (si.kind()) {
       case ScopeKind::With:
         continue;
+
       case ScopeKind::Function:
+        return si.scope()->as<FunctionScope>().nextFrameSlot();
+
       case ScopeKind::FunctionBodyVar:
+        return si.scope()->as<VarScope>().nextFrameSlot();
+
       case ScopeKind::Lexical:
       case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
       case ScopeKind::FunctionLexical:
       case ScopeKind::ClassBody:
+        return si.scope()->as<LexicalScope>().nextFrameSlot();
+
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
+        // Named lambda scopes cannot have frame slots.
+        return 0;
+
       case ScopeKind::Eval:
       case ScopeKind::StrictEval:
+        return si.scope()->as<EvalScope>().nextFrameSlot();
+
       case ScopeKind::Global:
       case ScopeKind::NonSyntactic:
+        return 0;
+
       case ScopeKind::Module:
+        return si.scope()->as<ModuleScope>().nextFrameSlot();
+
       case ScopeKind::WasmInstance:
       case ScopeKind::WasmFunction:
-        return AbstractScopePtr(si.scope()).nextFrameSlot();
+        // Invalid; MOZ_CRASH below.
+        break;
     }
   }
   MOZ_CRASH("Not an enclosing intra-frame Scope");
