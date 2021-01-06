@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
@@ -66,6 +67,7 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import java.lang.ref.WeakReference
@@ -124,7 +126,7 @@ class PromptFeature private constructor(
     private val loginPickerView: LoginPickerView? = null,
     private val onManageLogins: () -> Unit = {},
     onNeedToRequestPermissions: OnNeedToRequestPermissions
-) : LifecycleAwareFeature, PermissionsFeature, Prompter {
+) : LifecycleAwareFeature, PermissionsFeature, Prompter, UserInteractionHandler {
     // These three scopes have identical lifetimes. We do not yet have a way of combining scopes
     private var handlePromptScope: CoroutineScope? = null
     private var dismissPromptScope: CoroutineScope? = null
@@ -288,6 +290,10 @@ class PromptFeature private constructor(
 
         // Dismisses the logins prompt so that it can appear on another tab
         dismissLoginSelectPrompt()
+    }
+
+    override fun onBackPressed(): Boolean {
+        return dismissLoginSelectPrompt()
     }
 
     /**
@@ -674,13 +680,20 @@ class PromptFeature private constructor(
     }
 
     /**
-     * Dismisses the select login prompt if it is active.
+     * Dismisses the select login prompt if it is active and visible.
+     * @returns true if dismissCurrentLoginSelect is called otherwise false.
      */
     @VisibleForTesting
-    fun dismissLoginSelectPrompt() {
-        (activePromptRequest as? SelectLoginPrompt)?.let {
-            loginPicker?.dismissCurrentLoginSelect(it)
+    fun dismissLoginSelectPrompt(): Boolean {
+        (activePromptRequest as? SelectLoginPrompt)?.let { selectLoginPrompt ->
+            loginPicker?.let { loginPicker ->
+                if (loginPickerView?.asView()?.isVisible == true) {
+                    loginPicker.dismissCurrentLoginSelect(selectLoginPrompt)
+                    return true
+                }
+            }
         }
+        return false
     }
 }
 
