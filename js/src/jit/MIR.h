@@ -2038,7 +2038,6 @@ class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
                  gc::InitialHeap initialHeap)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap) {
-    MOZ_ASSERT(!templateObject()->isSingleton());
     setResultType(MIRType::Object);
   }
 
@@ -2069,7 +2068,6 @@ class MNewTypedArrayDynamicLength : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, length),
         templateObject_(templateObject),
         initialHeap_(initialHeap) {
-    MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Need to throw if length is negative.
     setResultType(MIRType::Object);
   }
@@ -2099,7 +2097,6 @@ class MNewTypedArrayFromArray : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, array),
         templateObject_(templateObject),
         initialHeap_(initialHeap) {
-    MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Can throw during construction.
     setResultType(MIRType::Object);
   }
@@ -2129,7 +2126,6 @@ class MNewTypedArrayFromArrayBuffer
       : MTernaryInstruction(classOpcode, arrayBuffer, byteOffset, length),
         templateObject_(templateObject),
         initialHeap_(initialHeap) {
-    MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Can throw during construction.
     setResultType(MIRType::Object);
   }
@@ -11378,7 +11374,6 @@ class MNewCallObject : public MUnaryInstruction,
 
   explicit MNewCallObject(MConstant* templateObj)
       : MUnaryInstruction(classOpcode, templateObj) {
-    MOZ_ASSERT(!templateObject()->isSingleton());
     setResultType(MIRType::Object);
   }
 

@@ -1390,26 +1390,6 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 }
 
 /* static */
-void NativeObject::clear(JSContext* cx, HandleNativeObject obj) {
-  Shape* shape = obj->lastProperty();
-  MOZ_ASSERT(obj->inDictionaryMode() == shape->inDictionary());
-
-  while (shape->parent) {
-    shape = shape->parent;
-    MOZ_ASSERT(obj->inDictionaryMode() == shape->inDictionary());
-  }
-  MOZ_ASSERT(shape->isEmptyShape());
-
-  if (obj->inDictionaryMode()) {
-    shape->setDictionaryObject(obj);
-  }
-
-  MOZ_ALWAYS_TRUE(obj->setLastProperty(cx, shape));
-
-  obj->checkShapeConsistency();
-}
-
-/* static */
 Shape* NativeObject::replaceWithNewEquivalentShape(JSContext* cx,
                                                    HandleNativeObject obj,
                                                    Shape* oldShape,

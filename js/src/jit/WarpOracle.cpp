@@ -410,9 +410,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
           return abort(AbortReason::Disable, "asm.js module function lambda");
         }
 
-        // WarpBuilder relies on this.
-        MOZ_ASSERT(!fun->isSingleton());
-
         if (!AddOpSnapshot<WarpLambda>(alloc_, opSnapshots, offset,
                                        fun->baseScript(), fun->flags(),
                                        fun->nargs())) {

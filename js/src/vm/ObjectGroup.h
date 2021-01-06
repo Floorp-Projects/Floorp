@@ -41,26 +41,12 @@ enum NewObjectKind {
   GenericObject,
 
   /*
-   * Singleton objects are treated specially by the type system. This flag
-   * ensures that the new object is automatically set up correctly as a
-   * singleton and is allocated in the tenured heap.
-   */
-  SingletonObject,
-
-  /*
    * Objects which will not benefit from being allocated in the nursery
    * (e.g. because they are known to have a long lifetime) may be allocated
    * with this kind to place them immediately into the tenured generation.
    */
   TenuredObject
 };
-
-// Flags stored in ObjectGroup::Flags.
-enum : uint32_t {
-  /* Whether this group is associated with a single object. */
-  OBJECT_FLAG_SINGLETON = 0x2,
-};
-using ObjectGroupFlags = uint32_t;
 
 class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
  public:
@@ -73,9 +59,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   /* Realm shared by objects in this group. */
   JS::Realm* realm_;  // set by constructor
-
-  /* Flags for this group. */
-  ObjectGroupFlags flags_;  // set by constructor
 
   // Non-null only for typed objects.
   TypeDescr* typeDescr_ = nullptr;
@@ -93,10 +76,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
     return offsetof(ObjectGroup, realm_);
   }
 
-  static inline uint32_t offsetOfFlags() {
-    return offsetof(ObjectGroup, flags_);
-  }
-
   friend class gc::GCRuntime;
 
   // See JSObject::offsetOfGroup() comment.
@@ -111,15 +90,14 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   void setProtoUnchecked(TaggedProto proto);
 
+  // TODO(no-TI): remove.
   bool hasUncacheableProto() const {
     // We allow singletons to mutate their prototype after the group has
     // been created. If true, the JIT must re-check prototype even if group
     // has been seen before.
     MOZ_ASSERT(!hasDynamicPrototype());
-    return singleton();
+    return false;
   }
-
-  bool singleton() const { return flags() & OBJECT_FLAG_SINGLETON; }
 
   JS::Compartment* compartment() const {
     return JS::GetCompartmentForRealm(realm_);
@@ -127,10 +105,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   JS::Compartment* maybeCompartment() const { return compartment(); }
   JS::Realm* realm() const { return realm_; }
 
- private:
-  ObjectGroupFlags flags() const { return flags_; }
-
- public:
   TypeDescr* maybeTypeDescr() {
     // Note: there is no need to sweep when accessing the type descriptor
     // of an object, as it is strongly held and immutable.
@@ -145,8 +119,7 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   void setTypeDescr(TypeDescr* descr) { typeDescr_ = descr; }
 
  public:
-  inline ObjectGroup(const JSClass* clasp, TaggedProto proto, JS::Realm* realm,
-                     ObjectGroupFlags initialFlags);
+  inline ObjectGroup(const JSClass* clasp, TaggedProto proto, JS::Realm* realm);
 
   /* Helpers */
 

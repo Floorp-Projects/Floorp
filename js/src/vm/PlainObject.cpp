@@ -34,7 +34,6 @@ using js::NewObjectKind;
 using js::NewObjectWithGroup;
 using js::ObjectGroup;
 using js::PlainObject;
-using js::SingletonObject;
 using js::TaggedProto;
 using js::TenuredObject;
 
@@ -42,9 +41,6 @@ static PlainObject* CreateThisForFunctionWithGroup(JSContext* cx,
                                                    Handle<ObjectGroup*> group,
                                                    NewObjectKind newKind) {
   js::gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
-
-  MOZ_ASSERT(newKind != SingletonObject);
-
   return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
 }
 
@@ -90,17 +86,5 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
     return nullptr;
   }
 
-  PlainObject* obj =
-      CreateThisForFunctionWithProto(cx, callee, newTarget, proto, newKind);
-
-  if (obj && newKind == SingletonObject) {
-    Rooted<PlainObject*> nobj(cx, obj);
-
-    /* Reshape the singleton before passing it as the 'this' value. */
-    NativeObject::clear(cx, nobj);
-
-    return nobj;
-  }
-
-  return obj;
+  return CreateThisForFunctionWithProto(cx, callee, newTarget, proto, newKind);
 }

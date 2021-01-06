@@ -5128,8 +5128,6 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
                                  jsbytecode* pc,
                                  NewObjectKind newKind /* = GenericObject */) {
-  MOZ_ASSERT(newKind != SingletonObject);
-
   // Extract the template object, if one exists, and copy it.
   if (JSOp(*pc) == JSOp::NewObject) {
     RootedPlainObject baseObject(cx, &script->getObject(pc)->as<PlainObject>());
@@ -5142,7 +5140,6 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
 
 JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
                                              HandleObject templateObject) {
-  MOZ_ASSERT(!templateObject->isSingleton());
   MOZ_ASSERT(cx->realm() == templateObject->nonCCWRealm());
 
   NewObjectKind newKind = GenericObject;

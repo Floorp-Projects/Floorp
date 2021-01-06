@@ -124,8 +124,6 @@ static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
 
 CallObject* CallObject::create(JSContext* cx, HandleShape shape,
                                HandleObjectGroup group) {
-  MOZ_ASSERT(!group->singleton());
-
   gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
   return CreateEnvironmentObject<CallObject>(cx, shape, group, heap);
 }
