@@ -11497,9 +11497,10 @@ void CodeGenerator::visitArrayJoin(LArrayJoin* lir) {
   Register output = ToRegister(lir->output());
   Register sep = ToRegister(lir->separator());
   Register array = ToRegister(lir->array());
-  if (lir->mir()->optimizeForArray()) {
-    Register temp = ToRegister(lir->temp());
+  Register temp = ToRegister(lir->temp());
 
+  // Fast path for simple length <= 1 cases.
+  {
     masm.loadPtr(Address(array, NativeObject::offsetOfElements()), temp);
     Address length(temp, ObjectElements::offsetOfLength());
     Address initLength(temp, ObjectElements::offsetOfInitializedLength());
