@@ -132,36 +132,6 @@ inline bool AbstractScopePtr::is<EvalScope>() const {
          (kind() == ScopeKind::Eval || kind() == ScopeKind::StrictEval);
 }
 
-// Iterate over abstract scopes rather than scopes.
-class AbstractScopePtrIter {
-  AbstractScopePtr scope_;
-
- public:
-  explicit AbstractScopePtrIter(const AbstractScopePtr& f) : scope_(f) {}
-  explicit operator bool() const { return !done(); }
-
-  bool done() const { return !scope_; }
-
-  ScopeKind kind() const {
-    MOZ_ASSERT(!done());
-    MOZ_ASSERT(scope_);
-    return scope_.kind();
-  }
-
-  AbstractScopePtr abstractScopePtr() const { return scope_; }
-
-  void operator++(int) {
-    MOZ_ASSERT(!done());
-    scope_ = scope_.enclosing();
-  }
-
-  void trace(JSTracer* trc) {
-    if (scope_) {
-      scope_.trace(trc);
-    }
-  };
-};
-
 }  // namespace js
 
 namespace JS {
