@@ -528,6 +528,8 @@ package org.mozilla.geckoview {
     method @NonNull public static <T> GeckoResult<T> fromException(@NonNull Throwable);
     method @NonNull public static <U> GeckoResult<U> fromValue(@Nullable U);
     method @Nullable public Looper getLooper();
+    method @NonNull public <U> GeckoResult<U> map(@Nullable GeckoResult.OnValueMapper<T,U>);
+    method @NonNull public <U> GeckoResult<U> map(@Nullable GeckoResult.OnValueMapper<T,U>, @Nullable GeckoResult.OnExceptionMapper);
     method @Nullable public synchronized T poll();
     method @Nullable public synchronized T poll(long);
     method public void setCancellationDelegate(@Nullable GeckoResult.CancellationDelegate);
@@ -550,8 +552,16 @@ package org.mozilla.geckoview {
     method @AnyThread @Nullable public GeckoResult<V> onException(@NonNull Throwable);
   }
 
+  public static interface GeckoResult.OnExceptionMapper {
+    method @AnyThread @Nullable public Throwable onException(@NonNull Throwable);
+  }
+
   public static interface GeckoResult.OnValueListener<T,U> {
     method @AnyThread @Nullable public GeckoResult<U> onValue(@Nullable T);
+  }
+
+  public static interface GeckoResult.OnValueMapper<T,U> {
+    method @AnyThread @Nullable public U onValue(@Nullable T);
   }
 
   public static final class GeckoResult.UncaughtException extends RuntimeException {
