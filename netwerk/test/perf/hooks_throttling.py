@@ -31,6 +31,8 @@ if TASK_CLUSTER:
     _SECRET.update(get_tc_secret())
 
 if _SECRET["throttler_key"] == "":
+    if TASK_CLUSTER:
+        raise Exception("throttler_key not found in secret")
     raise Exception("WEBNETEM_KEY not set")
 
 _TIMEOUT = 30
