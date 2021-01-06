@@ -1,12 +1,13 @@
 [package]
 name = "qcms"
 authors = ["Jeff Muizelaar", "Benoit Girard", "Andrew Osmond"]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 include = ["src/**/*", "build.rs"]
 description = "lightweight color management"
 documentation = "https://docs.rs/qcms"
 license = "MIT"
+repository = "https://github.com/FirefoxGraphics/qcms"
 keywords = ["color"]
 categories = ["graphics"]
 
