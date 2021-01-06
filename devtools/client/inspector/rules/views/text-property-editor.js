@@ -494,7 +494,7 @@ TextPropertyEditor.prototype = {
       filterClass: "ruleview-filter",
       filterSwatchClass: SHARED_SWATCH_CLASS + " " + FILTER_SWATCH_CLASS,
       flexClass: "ruleview-flex js-toggle-flexbox-highlighter",
-      gridClass: "ruleview-grid",
+      gridClass: "ruleview-grid js-toggle-grid-highlighter",
       shapeClass: "ruleview-shape",
       shapeSwatchClass: SHAPE_SWATCH_CLASS,
       // Only ask the parser to convert colors to the default color type specified by the
