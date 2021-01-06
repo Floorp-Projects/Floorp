@@ -229,7 +229,7 @@ class MockContentControllerDelayed : public MockContentController {
 class TestAPZCTreeManager : public APZCTreeManager {
  public:
   explicit TestAPZCTreeManager(MockContentControllerDelayed* aMcc)
-      : APZCTreeManager(LayersId{0}), mcc(aMcc) {}
+      : APZCTreeManager(LayersId{0}, gfx::gfxVars::UseWebRender()), mcc(aMcc) {}
 
   RefPtr<InputQueue> GetInputQueue() const { return mInputQueue; }
 
