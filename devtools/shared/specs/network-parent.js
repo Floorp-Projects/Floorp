@@ -37,6 +37,18 @@ const networkParentSpec = generateActorSpec({
         urls: RetVal("array:string"),
       },
     },
+    blockRequest: {
+      request: {
+        filters: Arg(0, "json"),
+      },
+      response: {},
+    },
+    unblockRequest: {
+      request: {
+        filters: Arg(0, "json"),
+      },
+      response: {},
+    },
   },
 });
 

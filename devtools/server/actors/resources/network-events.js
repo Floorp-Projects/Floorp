@@ -68,6 +68,22 @@ class NetworkEventWatcher {
   }
 
   /**
+   * Block requests based on the filters
+   * @param {Object} filters
+   */
+  blockRequest(filters) {
+    this.listener.blockRequest(filters);
+  }
+
+  /**
+   * Unblock requests based on the fitlers
+   * @param {Object} filters
+   */
+  unblockRequest(filters) {
+    this.listener.unblockRequest(filters);
+  }
+
+  /**
    * Calls the listener to set blocked urls
    *
    * @param {Array} urls
