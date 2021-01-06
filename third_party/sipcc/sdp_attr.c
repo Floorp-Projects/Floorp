@@ -2856,7 +2856,7 @@ sdp_result_e sdp_parse_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
     sdp_mca_t    *cap_p;
     sdp_attr_t   *cap_attr_p = NULL;
     sdp_attr_t   *prev_attr_p;
-    char          tmp[SDP_MAX_STRING_LEN];
+    char          tmp[SDP_MAX_STRING_LEN] = {0};
 
     /* Make sure we've processed a valid X-cap/cdsc attr prior to this and
      * if so, get the cap pointer. */
@@ -2913,8 +2913,8 @@ sdp_result_e sdp_parse_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     if ((result != SDP_SUCCESS) || (tmp[0] != 'a') || (tmp[1] != '\0')) {
         sdp_parse_error(sdp_p,
-            "%s Warning: Invalid token type (%s) in %s "
-            "attribute, unable to parse", sdp_p->debug_str, tmp,
+            "%s Warning: Invalid token type in %s "
+            "attribute, unable to parse", sdp_p->debug_str,
             sdp_get_attr_name(attr_p->type));
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
