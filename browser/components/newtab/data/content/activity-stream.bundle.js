@@ -10379,7 +10379,6 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
 
   render() {
     const wrapperClassName = ["search-wrapper", this.props.hide && "search-hidden", this.props.fakeFocus && "fake-focus"].filter(v => v).join(" ");
-    const isNewNewtabExperienceEnabled = this.props.Prefs.values["newNewtabExperience.enabled"];
     return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: wrapperClassName
     }, this.props.showLogo && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
@@ -10392,11 +10391,10 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
       className: "search-inner-wrapper"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
       id: "newtab-search-text",
-      "data-l10n-id": isNewNewtabExperienceEnabled ? "newtab-search-box-input" : "newtab-search-box-search-the-web-input",
+      "data-l10n-id": "newtab-search-box-search-the-web-input",
       maxLength: "256",
       ref: this.onInputMount,
-      type: "search",
-      className: `${isNewNewtabExperienceEnabled ? " search-bar-new" : ""}`
+      type: "search"
     }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
       id: "searchSubmit",
       className: "search-button",
@@ -10405,14 +10403,14 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
     })), this.props.handoffEnabled && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "search-inner-wrapper"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
-      className: `search-handoff-button ${isNewNewtabExperienceEnabled ? " search-handoff-button-new" : ""}`,
-      "data-l10n-id": isNewNewtabExperienceEnabled ? "newtab-search-box-input" : "newtab-search-box-search-the-web-input",
+      className: "search-handoff-button",
+      "data-l10n-id": "newtab-search-box-search-the-web-input",
       ref: this.onSearchHandoffButtonMount,
       onClick: this.onSearchHandoffClick,
       tabIndex: "-1"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "fake-textbox",
-      "data-l10n-id": isNewNewtabExperienceEnabled ? "newtab-search-box-text" : "newtab-search-box-search-the-web-text"
+      "data-l10n-id": "newtab-search-box-search-the-web-text"
     }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
       type: "search",
       className: "fake-editable",
@@ -10427,9 +10425,7 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
   }
 
 }
-const Search = Object(react_redux__WEBPACK_IMPORTED_MODULE_1__["connect"])(state => ({
-  Prefs: state.Prefs
-}))(_Search);
+const Search = Object(react_redux__WEBPACK_IMPORTED_MODULE_1__["connect"])()(_Search);
 
 /***/ }),
 /* 65 */
