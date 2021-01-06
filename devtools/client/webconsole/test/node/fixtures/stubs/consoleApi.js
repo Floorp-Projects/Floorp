@@ -19,6 +19,7 @@ const {
 
 const rawPackets = new Map();
 rawPackets.set(`console.log('foobar', 'test')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -42,11 +43,11 @@ rawPackets.set(`console.log('foobar', 'test')`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log(undefined)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -71,11 +72,11 @@ rawPackets.set(`console.log(undefined)`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.warn('danger, will robinson!')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -98,11 +99,11 @@ rawPackets.set(`console.warn('danger, will robinson!')`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log(NaN)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -127,11 +128,11 @@ rawPackets.set(`console.log(NaN)`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log(null)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -156,11 +157,11 @@ rawPackets.set(`console.log(null)`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log('鼬')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -183,11 +184,11 @@ rawPackets.set(`console.log('鼬')`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.clear()`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -208,11 +209,11 @@ rawPackets.set(`console.clear()`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count('bar')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -238,11 +239,11 @@ rawPackets.set(`console.count('bar')`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -301,11 +302,11 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log('úṇĩçödê țĕșť')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -328,11 +329,11 @@ rawPackets.set(`console.log('úṇĩçödê țĕșť')`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.dirxml(window)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -371,11 +372,11 @@ rawPackets.set(`console.dirxml(window)`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -420,11 +421,11 @@ rawPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log('myregex', /a.b.c/)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -461,11 +462,11 @@ rawPackets.set(`console.log('myregex', /a.b.c/)`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.table(['red', 'green', 'blue']);`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -521,11 +522,11 @@ rawPackets.set(`console.table(['red', 'green', 'blue']);`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -588,11 +589,11 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.debug('debug message');`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -615,11 +616,11 @@ rawPackets.set(`console.debug('debug message');`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.info('info message');`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -642,11 +643,11 @@ rawPackets.set(`console.info('info message');`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.error('error message');`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -678,11 +679,11 @@ rawPackets.set(`console.error('error message');`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log('mymap')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -732,11 +733,11 @@ rawPackets.set(`console.log('mymap')`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log('myset')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -780,11 +781,11 @@ rawPackets.set(`console.log('myset')`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.trace()`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -799,6 +800,7 @@ rawPackets.set(`console.trace()`, {
     "prefix": "",
     "private": false,
     "sourceId": "server0.conn0.child1/source50",
+    "styles": [],
     "timeStamp": 1572867483805,
     "timer": null,
     "stacktrace": [
@@ -825,14 +827,13 @@ rawPackets.set(`console.trace()`, {
       }
     ],
     "workerType": "none",
-    "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -899,6 +900,7 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
     "prefix": "",
     "private": false,
     "sourceId": "server0.conn0.child1/source51",
+    "styles": [],
     "timeStamp": 1572867483805,
     "timer": null,
     "stacktrace": [
@@ -925,14 +927,55 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
       }
     ],
     "workerType": "none",
-    "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
+});
+
+rawPackets.set(`console.trace("%cHello%c|%cWorld")`, {
+  "resourceType": "console-message",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "Hello",
+      "|",
+      "World"
+    ],
+    "chromeContext": false,
+    "columnNumber": 13,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "trace",
+    "lineNumber": 2,
+    "prefix": "",
+    "private": false,
+    "sourceId": "server0.conn0.child3/source57",
+    "styles": [
+      "color:red",
+      "",
+      "color: blue"
+    ],
+    "timeStamp": 1572867483805,
+    "timer": null,
+    "stacktrace": [
+      {
+        "columnNumber": 13,
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "functionName": "triggerPacket",
+        "lineNumber": 2,
+        "sourceId": "server0.conn0.child3/source57"
+      }
+    ],
+    "workerType": "none",
+    "category": "webdev",
+    "innerWindowID": 10737418241
+  }
 });
 
 rawPackets.set(`console.time('bar')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -957,11 +1000,11 @@ rawPackets.set(`console.time('bar')`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`timerAlreadyExists`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -987,11 +1030,11 @@ rawPackets.set(`timerAlreadyExists`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.timeLog('bar') - 1`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1017,11 +1060,11 @@ rawPackets.set(`console.timeLog('bar') - 1`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.timeLog('bar') - 2`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1076,11 +1119,11 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.timeEnd('bar')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1106,11 +1149,11 @@ rawPackets.set(`console.timeEnd('bar')`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`timeEnd.timerDoesntExist`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1136,11 +1179,11 @@ rawPackets.set(`timeEnd.timerDoesntExist`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`timeLog.timerDoesntExist`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1166,11 +1209,11 @@ rawPackets.set(`timeLog.timerDoesntExist`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.table('bar')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1193,11 +1236,11 @@ rawPackets.set(`console.table('bar')`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.table(['a', 'b', 'c'])`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1253,11 +1296,11 @@ rawPackets.set(`console.table(['a', 'b', 'c'])`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.group('bar')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1280,11 +1323,11 @@ rawPackets.set(`console.group('bar')`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.groupEnd('bar')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -1305,11 +1348,11 @@ rawPackets.set(`console.groupEnd('bar')`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.groupCollapsed('foo')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1332,11 +1375,11 @@ rawPackets.set(`console.groupCollapsed('foo')`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.groupEnd('foo')`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -1357,11 +1400,11 @@ rawPackets.set(`console.groupEnd('foo')`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.group()`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -1382,11 +1425,11 @@ rawPackets.set(`console.group()`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.groupEnd()`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -1407,11 +1450,11 @@ rawPackets.set(`console.groupEnd()`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log(%cfoobar)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1438,11 +1481,11 @@ rawPackets.set(`console.log(%cfoobar)`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log("%cHello%c|%cWorld")`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1471,11 +1514,11 @@ rawPackets.set(`console.log("%cHello%c|%cWorld")`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.group(%cfoo%cbar)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1502,11 +1545,11 @@ rawPackets.set(`console.group(%cfoo%cbar)`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.groupEnd(%cfoo%cbar)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -1527,11 +1570,11 @@ rawPackets.set(`console.groupEnd(%cfoo%cbar)`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.groupCollapsed(%cfoo%cbaz)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1558,11 +1601,11 @@ rawPackets.set(`console.groupCollapsed(%cfoo%cbaz)`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.groupEnd(%cfoo%cbaz)`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -1583,11 +1626,11 @@ rawPackets.set(`console.groupEnd(%cfoo%cbaz)`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.dir({C, M, Y, K})`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1655,11 +1698,11 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count | default: 1`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1685,11 +1728,11 @@ rawPackets.set(`console.count | default: 1`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count | default: 2`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1715,11 +1758,11 @@ rawPackets.set(`console.count | default: 2`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count | test counter: 1`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1745,11 +1788,11 @@ rawPackets.set(`console.count | test counter: 1`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count | test counter: 2`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1775,11 +1818,11 @@ rawPackets.set(`console.count | test counter: 2`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count | default: 3`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1805,11 +1848,11 @@ rawPackets.set(`console.count | default: 3`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count | clear`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -1830,11 +1873,11 @@ rawPackets.set(`console.count | clear`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count | default: 4`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1860,11 +1903,11 @@ rawPackets.set(`console.count | default: 4`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.count | test counter: 3`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1890,11 +1933,11 @@ rawPackets.set(`console.count | test counter: 3`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.countReset | test counter: 0`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1920,11 +1963,11 @@ rawPackets.set(`console.countReset | test counter: 0`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.countReset | counterDoesntExist`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1950,11 +1993,11 @@ rawPackets.set(`console.countReset | counterDoesntExist`, {
     "styles": [],
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 rawPackets.set(`console.log escaped characters`, {
+  "resourceType": "console-message",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1977,8 +2020,7 @@ rawPackets.set(`console.log escaped characters`, {
     "workerType": "none",
     "category": "webdev",
     "innerWindowID": 8589934593
-  },
-  "resourceType": "console-message"
+  }
 });
 
 
