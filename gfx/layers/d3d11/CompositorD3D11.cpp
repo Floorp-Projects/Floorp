@@ -1285,8 +1285,12 @@ void CompositorD3D11::EndFrame() {
   }
 
   RefPtr<ID3D11Query> query;
-  CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
-  mDevice->CreateQuery(&desc, getter_AddRefs(query));
+  if (mRecycledQuery) {
+    query = mRecycledQuery.forget();
+  } else {
+    CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
+    mDevice->CreateQuery(&desc, getter_AddRefs(query));
+  }
   if (query) {
     mContext->End(query);
   }
@@ -1304,6 +1308,8 @@ void CompositorD3D11::EndFrame() {
   if (mQuery) {
     BOOL result;
     WaitForFrameGPUQuery(mDevice, mContext, mQuery, &result);
+    // Store the query for recycling
+    mRecycledQuery = mQuery;
   }
   // Store the query for this frame so we can flush it next time.
   mQuery = query;

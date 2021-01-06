@@ -254,6 +254,7 @@ class CompositorD3D11 : public Compositor {
   mutable RefPtr<CompositingRenderTargetD3D11> mWindowRTCopy;
 
   RefPtr<ID3D11Query> mQuery;
+  RefPtr<ID3D11Query> mRecycledQuery;
 
   RefPtr<DeviceAttachmentsD3D11> mAttachments;
   UniquePtr<DiagnosticsD3D11> mDiagnostics;
