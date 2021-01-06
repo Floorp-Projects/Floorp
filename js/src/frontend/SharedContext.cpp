@@ -70,29 +70,34 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
   setFlag(ImmutableFlags::Strict, directives.strict());
 }
 
-void ScopeContext::computeAllowSyntax(Scope* scope) {
+void ScopeContext::computeThisEnvironment(Scope* scope) {
   for (ScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
-      FunctionScope* funScope = &si.scope()->as<FunctionScope>();
-      JSFunction* fun = funScope->canonicalFunction();
+      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
 
-      // Arrow function inherit syntax restrictions of enclosing scope.
-      if (fun->isArrow()) {
-        continue;
+      // Arrow function inherit the "this" environment of the enclosing script,
+      // so continue ignore them.
+      if (!fun->isArrow()) {
+        allowNewTarget = true;
+        allowSuperProperty = fun->allowSuperProperty();
+
+        if (fun->isClassConstructor()) {
+          memberInitializers =
+              mozilla::Some(fun->baseScript()->getMemberInitializers());
+          MOZ_ASSERT(memberInitializers->valid);
+        }
+
+        if (fun->isDerivedClassConstructor()) {
+          allowSuperCall = true;
+        }
+
+        if (fun->isFieldInitializer()) {
+          allowArguments = false;
+        }
+
+        // Found the effective "this" environment, so stop.
+        return;
       }
-
-      allowNewTarget = true;
-      allowSuperProperty = fun->allowSuperProperty();
-
-      if (fun->isDerivedClassConstructor()) {
-        allowSuperCall = true;
-      }
-
-      if (fun->isFieldInitializer()) {
-        allowArguments = false;
-      }
-
-      return;
     }
   }
 }
@@ -129,42 +134,14 @@ void ScopeContext::computeThisBinding(Scope* scope) {
   thisBinding = ThisBinding::Global;
 }
 
-void ScopeContext::computeInWith(Scope* scope) {
-  for (ScopeIter si(scope); si; si++) {
-    if (si.kind() == ScopeKind::With) {
-      inWith = true;
-      break;
-    }
-  }
-}
-
-void ScopeContext::computeInClass(Scope* scope) {
+void ScopeContext::computeInScope(Scope* scope) {
   for (ScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::ClassBody) {
       inClass = true;
-      break;
     }
-  }
-}
 
-void ScopeContext::computeExternalInitializers(Scope* scope) {
-  for (ScopeIter si(scope); si; si++) {
-    if (si.scope()->is<FunctionScope>()) {
-      FunctionScope& funcScope = si.scope()->as<FunctionScope>();
-      JSFunction* fun = funcScope.canonicalFunction();
-
-      // Arrows can call `super()` on behalf on parent so keep searching.
-      if (fun->isArrow()) {
-        continue;
-      }
-
-      if (fun->isClassConstructor()) {
-        memberInitializers =
-            mozilla::Some(fun->baseScript()->getMemberInitializers());
-        MOZ_ASSERT(memberInitializers->valid);
-      }
-
-      break;
+    if (si.kind() == ScopeKind::With) {
+      inWith = true;
     }
   }
 }
