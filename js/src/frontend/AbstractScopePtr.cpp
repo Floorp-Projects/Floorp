@@ -61,47 +61,6 @@ bool AbstractScopePtr::isArrow() const {
   return scope()->as<FunctionScope>().canonicalFunction()->isArrow();
 }
 
-uint32_t AbstractScopePtr::nextFrameSlot() const {
-  if (isScopeStencil()) {
-    return scopeData().nextFrameSlot();
-  }
-
-  switch (kind()) {
-    case ScopeKind::Function:
-      return scope()->as<FunctionScope>().nextFrameSlot();
-    case ScopeKind::FunctionBodyVar:
-      return scope()->as<VarScope>().nextFrameSlot();
-    case ScopeKind::Lexical:
-    case ScopeKind::SimpleCatch:
-    case ScopeKind::Catch:
-    case ScopeKind::FunctionLexical:
-    case ScopeKind::ClassBody:
-      return scope()->as<LexicalScope>().nextFrameSlot();
-    case ScopeKind::NamedLambda:
-    case ScopeKind::StrictNamedLambda:
-      // Named lambda scopes cannot have frame slots.
-      return 0;
-    case ScopeKind::Eval:
-    case ScopeKind::StrictEval:
-      return scope()->as<EvalScope>().nextFrameSlot();
-    case ScopeKind::Global:
-    case ScopeKind::NonSyntactic:
-      return 0;
-    case ScopeKind::Module:
-      return scope()->as<ModuleScope>().nextFrameSlot();
-    case ScopeKind::WasmInstance:
-      MOZ_CRASH("WasmInstanceScope doesn't have nextFrameSlot()");
-      return 0;
-    case ScopeKind::WasmFunction:
-      MOZ_CRASH("WasmFunctionScope doesn't have nextFrameSlot()");
-      return 0;
-    case ScopeKind::With:
-      MOZ_CRASH("With Scopes don't get nextFrameSlot()");
-      return 0;
-  }
-  MOZ_CRASH("Not an enclosing intra-frame scope");
-}
-
 void AbstractScopePtr::trace(JSTracer* trc) {
   JS::GCPolicy<ScopeType>::trace(trc, &scope_, "AbstractScopePtr");
 }
