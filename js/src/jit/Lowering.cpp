@@ -249,15 +249,6 @@ void LIRGenerator::visitCreateThisWithTemplate(MCreateThisWithTemplate* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitCreateThisWithProto(MCreateThisWithProto* ins) {
-  LCreateThisWithProto* lir = new (alloc())
-      LCreateThisWithProto(useRegisterOrConstantAtStart(ins->getCallee()),
-                           useRegisterOrConstantAtStart(ins->getNewTarget()),
-                           useRegisterOrConstantAtStart(ins->getPrototype()));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitCreateThis(MCreateThis* ins) {
   LCreateThis* lir = new (alloc())
       LCreateThis(useRegisterOrConstantAtStart(ins->getCallee()),
