@@ -73,6 +73,8 @@ jobs:
         shipping-product: firefox
         attributes:
             build_platform: macosx64-shippable
+        extra:
+            chunks: 30
 
     devedition-linux64:
         description: linux64 update verify
@@ -109,3 +111,5 @@ jobs:
         shipping-product: devedition
         attributes:
             build_platform: macosx64-devedition
+        extra:
+            chunks: 30
