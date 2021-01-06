@@ -75,11 +75,13 @@ struct ScopeContext {
   bool inClass = false;
   bool inWith = false;
 
-  explicit ScopeContext(JSContext* cx, Scope* scope,
+  explicit ScopeContext(JSContext* cx, InheritThis inheritThis, Scope* scope,
                         JSObject* enclosingEnv = nullptr)
       : effectiveScope(cx, determineEffectiveScope(scope, enclosingEnv)) {
-    computeThisBinding(effectiveScope);
-    computeThisEnvironment(scope);
+    if (inheritThis == InheritThis::Yes) {
+      computeThisBinding(effectiveScope);
+      computeThisEnvironment(scope);
+    }
     computeInScope(scope);
   }
 
@@ -234,6 +236,7 @@ struct MOZ_RAII CompilationState {
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
                    const JS::ReadOnlyCompileOptions& options,
                    CompilationInfo& compilationInfo,
+                   InheritThis inheritThis = InheritThis::No,
                    Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr);
 };
