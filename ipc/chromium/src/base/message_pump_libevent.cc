@@ -307,7 +307,8 @@ bool MessagePumpLibevent::CatchSignal(int sig, SignalEvent* sigevent,
 
 void MessagePumpLibevent::OnLibeventSignalNotification(int sig, short flags,
                                                        void* context) {
-  AUTO_PROFILER_LABEL("MessagePumpLibevent::OnLibeventSignalNotification", OTHER);
+  AUTO_PROFILER_LABEL("MessagePumpLibevent::OnLibeventSignalNotification",
+                      OTHER);
 
   DCHECK(sig > 0);
   DCHECK(EV_SIGNAL == flags);

@@ -30,6 +30,7 @@ class RenderSharedSurfaceTextureHost final : public RenderTextureHost {
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
   size_t Bytes() override;
+
  private:
   virtual ~RenderSharedSurfaceTextureHost();
 

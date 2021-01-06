@@ -60,11 +60,12 @@ class RenderTextureHostSWGL : public RenderTextureHost {
 
   size_t Bytes() override {
     size_t bytes = 0;
-    for (auto &plane : mPlanes) {
+    for (auto& plane : mPlanes) {
       bytes += plane.mStride * plane.mSize.height;
     }
     return bytes;
   }
+
  protected:
   bool mLocked = false;
   void* mContext = nullptr;
