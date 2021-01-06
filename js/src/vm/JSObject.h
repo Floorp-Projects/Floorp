@@ -139,11 +139,6 @@ class JSObject
 
   void initGroup(js::ObjectGroup* group) { initHeaderPtr(group); }
 
-  /*
-   * Whether this is the only object which has its specified group.
-   */
-  bool isSingleton() const { return group()->singleton(); }
-
   JS::Compartment* compartment() const { return group()->compartment(); }
   JS::Compartment* maybeCompartment() const { return compartment(); }
 
@@ -276,10 +271,6 @@ class JSObject
   // in the nursery may have those bits and pieces allocated in the nursery
   // along with them, and are not each their own malloc blocks.
   size_t sizeOfIncludingThisInNursery() const;
-
-  // Marks this object as having a singleton group. This should only be called
-  // for an object that was just created.
-  static bool setSingleton(JSContext* cx, js::HandleObject obj);
 
 #ifdef DEBUG
   static void debugCheckNewObject(js::ObjectGroup* group, js::Shape* shape,

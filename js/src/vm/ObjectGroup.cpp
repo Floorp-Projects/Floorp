@@ -40,8 +40,7 @@ using namespace js;
 /////////////////////////////////////////////////////////////////////
 
 static ObjectGroup* MakeGroup(JSContext* cx, const JSClass* clasp,
-                              Handle<TaggedProto> proto,
-                              ObjectGroupFlags initialFlags = 0) {
+                              Handle<TaggedProto> proto) {
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
 
@@ -49,17 +48,14 @@ static ObjectGroup* MakeGroup(JSContext* cx, const JSClass* clasp,
   if (!group) {
     return nullptr;
   }
-  new (group) ObjectGroup(clasp, proto, cx->realm(), initialFlags);
+  new (group) ObjectGroup(clasp, proto, cx->realm());
 
   return group;
 }
 
 ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
-                         JS::Realm* realm, ObjectGroupFlags initialFlags)
-    : TenuredCellWithNonGCPointer(clasp),
-      proto_(proto),
-      realm_(realm),
-      flags_(initialFlags) {
+                         JS::Realm* realm)
+    : TenuredCellWithNonGCPointer(clasp), proto_(proto), realm_(realm) {
   /* Windows may not appear on prototype chains. */
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
   MOZ_ASSERT(JS::StringIsASCII(clasp->name));
@@ -389,27 +385,6 @@ void ObjectGroupRealm::fixupNewTableAfterMovingGC(NewTable* table) {
       }
     }
   }
-}
-
-/* static */
-bool JSObject::setSingleton(JSContext* cx, js::HandleObject obj) {
-  MOZ_ASSERT(!IsInsideNursery(obj));
-  MOZ_ASSERT(!obj->isSingleton());
-  MOZ_ASSERT(cx->realm() == obj->nonCCWRealm());
-
-  // At this point singleton groups are only used for the global object. We can
-  // remove this after replacing JS_SplicePrototype.
-  MOZ_ASSERT(obj->is<GlobalObject>());
-
-  ObjectGroupFlags initialFlags = OBJECT_FLAG_SINGLETON;
-  Rooted<TaggedProto> proto(cx, obj->taggedProto());
-  ObjectGroup* group = MakeGroup(cx, obj->getClass(), proto, initialFlags);
-  if (!group) {
-    return false;
-  }
-
-  obj->setGroupRaw(group);
-  return true;
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS

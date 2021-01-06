@@ -142,7 +142,6 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old) {
 
 inline void JSObject::setGroup(js::ObjectGroup* group) {
   MOZ_RELEASE_ASSERT(group);
-  MOZ_ASSERT(!isSingleton());
   MOZ_ASSERT(maybeCCWRealm() == group->realm());
   setGroupRaw(group);
 }
@@ -447,13 +446,6 @@ inline JSObject* NewTenuredObjectWithGivenProto(JSContext* cx,
                                                 HandleObject proto) {
   return NewObjectWithGivenTaggedProto<TenuredObject>(cx, clasp,
                                                       AsTaggedProto(proto));
-}
-
-inline JSObject* NewSingletonObjectWithGivenProto(JSContext* cx,
-                                                  const JSClass* clasp,
-                                                  HandleObject proto) {
-  return NewObjectWithGivenTaggedProto<SingletonObject>(cx, clasp,
-                                                        AsTaggedProto(proto));
 }
 
 template <typename T>
