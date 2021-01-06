@@ -6,11 +6,12 @@
 #include "RDDChild.h"
 
 #include "mozilla/RDDProcessManager.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/Endpoint.h"
-#include "mozilla/gfx/gfxVars.h"
-#include "mozilla/gfx/GPUProcessManager.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxBroker.h"
@@ -136,6 +137,13 @@ mozilla::ipc::IPCResult RDDChild::RecvGetModulesTrust(
 #else
   return IPC_FAIL(this, "Unsupported on this platform");
 #endif  // defined(XP_WIN)
+}
+
+mozilla::ipc::IPCResult RDDChild::RecvUpdateMediaCodecsSupported(
+    const PDMFactory::MediaCodecsSupported& aSupported) {
+  dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
+      RemoteDecodeIn::RddProcess, aSupported);
+  return IPC_OK();
 }
 
 void RDDChild::ActorDestroy(ActorDestroyReason aWhy) {
