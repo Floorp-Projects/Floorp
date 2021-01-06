@@ -35,19 +35,20 @@ add_task(async function() {
 
   info("Check that the grid highlighter can be displayed");
   const { inspector, view } = await openRuleView();
-  const { highlighters } = view;
+  const { highlighters } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
   const {
+    waitForHighlighterTypeShown,
     waitForHighlighterTypeRestored,
     waitForHighlighterTypeDiscarded,
   } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#grid", inspector);
   const container = getRuleViewProperty(view, "#grid", "display").valueSpan;
-  const gridToggle = container.querySelector(".ruleview-grid");
+  const gridToggle = container.querySelector(".js-toggle-grid-highlighter");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   gridToggle.click();
   await onHighlighterShown;
 
