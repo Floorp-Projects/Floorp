@@ -762,8 +762,6 @@ function switchToParentFrame(msg) {
 /**
  * Switch to the specified frame.
  *
- * @param {boolean=} focus
- *     Focus the frame if set to true. Defaults to false.
  * @param {(string|Object)=} element
  *     A web element reference of the frame or its element id.
  * @param {number=} id
@@ -771,7 +769,7 @@ function switchToParentFrame(msg) {
  *     If both element and id are not defined, switch to top-level frame.
  */
 function switchToFrame({ json }) {
-  let { commandID, element, focus, id } = json;
+  let { commandID, element, id } = json;
 
   let foundFrame;
   let wantedFrame = null;
@@ -792,10 +790,6 @@ function switchToFrame({ json }) {
     sendSyncMessage("Marionette:switchedToFrame", {
       browsingContextId: curContainer.id,
     });
-
-    if (focus) {
-      curContainer.frame.focus();
-    }
 
     sendOk(commandID);
     return;
@@ -858,10 +852,6 @@ function switchToFrame({ json }) {
               browsingContextId: curContainer.id,
             });
 
-            if (focus) {
-              curContainer.frame.focus();
-            }
-
             sendOk(commandID);
             return;
           }
@@ -892,10 +882,6 @@ function switchToFrame({ json }) {
   sendSyncMessage("Marionette:switchedToFrame", {
     browsingContextId: curContainer.id,
   });
-
-  if (focus) {
-    curContainer.frame.focus();
-  }
 
   sendOk(commandID);
 }
