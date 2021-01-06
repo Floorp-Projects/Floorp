@@ -978,9 +978,6 @@ class NativeObject : public JSObject {
   /* Remove the property named by id from this object. */
   static bool removeProperty(JSContext* cx, HandleNativeObject obj, jsid id);
 
-  /* Clear the scope, making it empty. */
-  static void clear(JSContext* cx, HandleNativeObject obj);
-
  protected:
   /*
    * Internal helper that adds a shape not yet mapped by this object.

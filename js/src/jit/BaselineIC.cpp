@@ -2658,7 +2658,7 @@ bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
     jsbytecode* pc = stub->icEntry()->pc(script);
     obj = NewObjectOperation(cx, script, pc);
 
-    if (obj && !obj->isSingleton()) {
+    if (obj) {
       templateObject = NewObjectOperation(cx, script, pc, TenuredObject);
       if (!templateObject) {
         return false;
