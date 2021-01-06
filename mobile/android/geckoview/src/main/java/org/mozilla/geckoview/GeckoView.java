@@ -171,6 +171,14 @@ public class GeckoView extends FrameLayout {
 
         public void setDynamicToolbarMaxHeight(final int height) {
             mDynamicToolbarMaxHeight = height;
+
+            // Reset the vertical clipping value to zero whenever we change
+            // the dynamic toolbar __max__ height so that it can be properly
+            // propagated to both the main thread and the compositor thread,
+            // thus we will be able to reset the __current__ toolbar height
+            // on the both threads whatever the __current__ toolbar height is.
+            setVerticalClipping(0);
+
             if (mDisplay != null) {
                 mDisplay.setDynamicToolbarMaxHeight(height);
             }
