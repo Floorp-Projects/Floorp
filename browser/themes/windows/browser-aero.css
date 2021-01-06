@@ -305,46 +305,6 @@
     color: white;
   }
 
-  /* Show borders on Win 7 & 8, but not on 10 and later: */
-  @media (-moz-os-version: windows-win7),
-         (-moz-os-version: windows-win8) {
-    /* Vertical toolbar border */
-    #main-window[sizemode=normal] .browser-toolbar:not(.titlebar-color, :-moz-lwtheme),
-    #main-window[sizemode=normal] .browser-toolbar:-moz-lwtheme {
-      border-inline: 1px solid @glassShadowColor@;
-      background-clip: padding-box;
-    }
-
-    #navigator-toolbox::after {
-      content: "";
-      display: -moz-box;
-      border-bottom: 1px solid var(--chrome-content-separator-color);
-    }
-
-    #navigator-toolbox,
-    :root[customizing] #navigator-toolbox::after {
-      border-bottom-style: none;
-    }
-
-    :root[sizemode=normal] #navigator-toolbox::after {
-      box-shadow: 1px 0 0 @glassShadowColor@, -1px 0 0 @glassShadowColor@;
-      margin-inline: 1px;
-    }
-
-    #main-window[sizemode=normal] #browser-border-start,
-    #main-window[sizemode=normal] #browser-border-end {
-      display: -moz-box;
-      background-color: @glassShadowColor@;
-      width: 1px;
-    }
-
-    #main-window[sizemode=normal] #browser-bottombox {
-      border: 1px solid @glassShadowColor@;
-      border-top-style: none;
-      background-clip: padding-box;
-    }
-  }
-
   #appcontent:not(:-moz-lwtheme) {
     background-color: -moz-dialog;
   }
