@@ -237,6 +237,7 @@ struct MOZ_RAII CompilationState {
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
   Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
+  Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
 
   // Table of parser atoms for this compilation.
   ParserAtomsTable parserAtoms;
@@ -259,6 +260,15 @@ struct MOZ_RAII CompilationState {
 
   const ParserAtom* getParserAtomAt(JSContext* cx,
                                     TaggedParserAtomIndex taggedIndex) const;
+
+  // Allocate space for `length` gcthings, and return the address of the
+  // first element to `cursor` to initialize on the caller.
+  bool allocateGCThingsUninitialized(JSContext* cx, ScriptIndex scriptIndex,
+                                     size_t length,
+                                     TaggedScriptThingIndex** cursor);
+
+  bool appendGCThings(JSContext* cx, ScriptIndex scriptIndex,
+                      mozilla::Span<const TaggedScriptThingIndex> things);
 };
 
 // Store shared data for non-lazy script.
@@ -305,6 +315,7 @@ struct CompilationStencil {
   // function.
   mozilla::Span<ScriptStencil> scriptData;
   SharedDataContainer sharedData;
+  mozilla::Span<TaggedScriptThingIndex> gcThingData;
 
   mozilla::Span<ScopeStencil> scopeData;
 
@@ -598,10 +609,6 @@ struct CompilationInfoVector {
 
   void trace(JSTracer* trc);
 };
-
-// Allocate an uninitialized script-things array using the Stencil's allocator.
-mozilla::Span<TaggedScriptThingIndex> NewScriptThingSpanUninitialized(
-    JSContext* cx, LifoAlloc& alloc, uint32_t ngcthings);
 
 }  // namespace frontend
 }  // namespace js

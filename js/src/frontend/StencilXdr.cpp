@@ -36,7 +36,8 @@ template <XDRMode mode>
   struct XdrFields {
     uint32_t immutableFlags;
     uint32_t numMemberInitializers;
-    uint32_t numGcThings;
+    uint32_t gcThingsOffset;
+    uint32_t gcThingsLength;
     uint16_t functionFlags;
     uint16_t nargs;
     uint32_t scopeIndex;
@@ -56,7 +57,8 @@ template <XDRMode mode>
             .map([](auto i) { return i.numMemberInitializers; })
             .valueOr(0);
 
-    xdrFields.numGcThings = stencil.gcThings.size();
+    xdrFields.gcThingsOffset = stencil.gcThingsOffset.index;
+    xdrFields.gcThingsLength = stencil.gcThingsLength;
 
     if (stencil.functionAtom) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasFunctionAtom);
@@ -114,17 +116,8 @@ template <XDRMode mode>
       stencil.memberInitializers.emplace(xdrFields.numMemberInitializers);
     }
 
-    MOZ_ASSERT(stencil.gcThings.empty());
-    if (xdrFields.numGcThings > 0) {
-      // Allocated TaggedScriptThingIndex array and initialize to safe value.
-      mozilla::Span<TaggedScriptThingIndex> stencilThings =
-          NewScriptThingSpanUninitialized(xdr->cx(), xdr->stencilAlloc(),
-                                          xdrFields.numGcThings);
-      if (stencilThings.empty()) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-      stencil.gcThings = stencilThings;
-    }
+    stencil.gcThingsOffset = CompilationGCThingIndex(xdrFields.gcThingsOffset);
+    stencil.gcThingsLength = xdrFields.gcThingsLength;
 
     stencil.functionFlags = FunctionFlags(xdrFields.functionFlags);
     stencil.nargs = xdrFields.nargs;
@@ -143,18 +136,6 @@ template <XDRMode mode>
       stencil.hasSharedData = true;
     }
   }
-
-#ifdef __cpp_lib_has_unique_object_representations
-  // We check endianess before decoding so if structures are fully packed, we
-  // may transcode them directly as raw bytes.
-  static_assert(
-      std::has_unique_object_representations<TaggedScriptThingIndex>(),
-      "TaggedScriptThingIndex structure must be fully packed");
-#endif
-
-  MOZ_TRY(xdr->codeBytes(
-      const_cast<TaggedScriptThingIndex*>(stencil.gcThings.data()),
-      sizeof(TaggedScriptThingIndex) * xdrFields.numGcThings));
 
   if (xdrFlags & (1 << uint8_t(XdrFlags::HasFunctionAtom))) {
     MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &stencil.functionAtom));
@@ -298,7 +279,9 @@ static XDRResult XDRSpanContent(XDRState<mode>* xdr, mozilla::Span<T>& span) {
 
   uint32_t size;
   MOZ_TRY(XDRSpanUninitialized(xdr, span, size));
-  MOZ_TRY(xdr->codeBytes(span.data(), sizeof(T) * size));
+  if (size) {
+    MOZ_TRY(xdr->codeBytes(span.data(), sizeof(T) * size));
+  }
 
   return Ok();
 }
@@ -760,6 +743,8 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   }
 
   MOZ_TRY(XDRSharedDataContainer(xdr, stencil.sharedData));
+
+  MOZ_TRY(XDRSpanContent(xdr, stencil.gcThingData));
 
   // Now serialize the vector of ScriptStencils.
 
