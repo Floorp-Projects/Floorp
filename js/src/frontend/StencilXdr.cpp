@@ -199,27 +199,7 @@ static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
   MOZ_TRY(XDRVectorContent(xdr, stencil.localExportEntries));
   MOZ_TRY(XDRVectorContent(xdr, stencil.indirectExportEntries));
   MOZ_TRY(XDRVectorContent(xdr, stencil.starExportEntries));
-
-  {
-    uint64_t length;
-
-    if (mode == XDR_ENCODE) {
-      length = stencil.functionDecls.length();
-    }
-
-    MOZ_TRY(xdr->codeUint64(&length));
-
-    if (mode == XDR_DECODE) {
-      MOZ_ASSERT(stencil.functionDecls.empty());
-      if (!stencil.functionDecls.resize(length)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-    }
-
-    for (GCThingIndex& entry : stencil.functionDecls) {
-      MOZ_TRY(xdr->codeUint32(&entry.index));
-    }
-  }
+  MOZ_TRY(XDRVectorContent(xdr, stencil.functionDecls));
 
   uint8_t isAsync = 0;
   if (mode == XDR_ENCODE) {
