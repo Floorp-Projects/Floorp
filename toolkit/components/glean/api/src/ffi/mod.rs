@@ -169,7 +169,7 @@ pub extern "C" fn fog_datetime_test_get_value(
     value: &mut nsACString,
 ) {
     let val = test_get!(DATETIME_MAP, id, storage_name);
-    value.assign(&val);
+    value.assign(&val.to_rfc3339());
 }
 
 #[no_mangle]
