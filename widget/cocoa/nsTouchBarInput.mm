@@ -234,4 +234,12 @@
   return [TouchBarInput nativeIdentifierWithType:type withKey:key];
 }
 
++ (NSTouchBarItemIdentifier)shareScrubberIdentifier {
+  return [TouchBarInput nativeIdentifierWithType:@"scrubber" withKey:@"share"];
+}
+
++ (NSTouchBarItemIdentifier)searchPopoverIdentifier {
+  return [TouchBarInput nativeIdentifierWithType:@"popover" withKey:@"search-popover"];
+}
+
 @end
