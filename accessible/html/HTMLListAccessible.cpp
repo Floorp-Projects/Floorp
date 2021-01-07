@@ -42,8 +42,7 @@ HTMLLIAccessible::HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc)
   if (nsBulletFrame* bulletFrame =
           do_QueryFrame(nsLayoutUtils::GetMarkerFrame(aContent))) {
     const nsStyleList* styleList = bulletFrame->StyleList();
-    if (!styleList->mListStyleImage.IsNone() ||
-        !styleList->mCounterStyle.IsNone()) {
+    if (styleList->GetListStyleImage() || !styleList->mCounterStyle.IsNone()) {
       mBullet = new HTMLListBulletAccessible(mContent, mDoc);
       Document()->BindToDocument(mBullet, nullptr);
       AppendChild(mBullet);
@@ -143,7 +142,7 @@ ENameValueFlag HTMLListBulletAccessible::Name(nsString& aName) const {
     return eNameOK;
   }
 
-  if (!frame->StyleList()->mListStyleImage.IsNone()) {
+  if (frame->StyleList()->GetListStyleImage()) {
     // Bullet is an image, so use default bullet character.
     const char16_t kDiscCharacter = 0x2022;
     aName.Assign(kDiscCharacter);
