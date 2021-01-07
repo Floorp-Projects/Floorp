@@ -10,10 +10,11 @@
 
 "use strict";
 
-importScripts("resource://gre/modules/workers/require.js");
+importScripts("resource://gre/modules/osfile.jsm");
 
 var PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
 
+var File = OS.File;
 var Encoder = new TextEncoder();
 var Decoder = new TextDecoder();
 
@@ -136,7 +137,7 @@ var Agent = {
    *  - isFinalWrite If |true|, write to Paths.clean instead of
    *    Paths.recovery
    */
-  async write(state, options = {}) {
+  write(state, options = {}) {
     let exn;
     let telemetry = {};
 
@@ -168,21 +169,21 @@ var Agent = {
         // The backups directory may not exist yet. In all other cases,
         // we have either already read from or already written to this
         // directory, so we are satisfied that it exists.
-        await IOUtils.makeDirectory(this.Paths.backups);
+        File.makeDir(this.Paths.backups);
       }
 
       if (this.state == STATE_CLEAN) {
         // Move $Path.clean out of the way, to avoid any ambiguity as
         // to which file is more recent.
         if (!this.useOldExtension) {
-          await IOUtils.move(this.Paths.clean, this.Paths.cleanBackup);
+          File.move(this.Paths.clean, this.Paths.cleanBackup);
         } else {
           // Since we are migrating from .js to .jsonlz4,
           // we need to compress the deprecated $Path.clean
           // and write it to $Path.cleanBackup.
           let oldCleanPath = this.Paths.clean.replace("jsonlz4", "js");
-          let d = await IOUtils.read(oldCleanPath);
-          await IOUtils.write(this.Paths.cleanBackup, d, { compress: true });
+          let d = File.read(oldCleanPath);
+          File.writeAtomic(this.Paths.cleanBackup, d, { compression: "lz4" });
         }
       }
 
@@ -195,11 +196,11 @@ var Agent = {
         // originally present and valid, it has been moved to
         // $Paths.cleanBackup a long time ago. We can therefore write
         // with the guarantees that we erase no important data.
-        await IOUtils.write(this.Paths.clean, data, {
+        File.writeAtomic(this.Paths.clean, data, {
           tmpPath: this.Paths.clean + ".tmp",
-          compress: true,
+          compression: "lz4",
         });
-        fileStat = await IOUtils.stat(this.Paths.clean);
+        fileStat = File.stat(this.Paths.clean);
       } else if (this.state == STATE_RECOVERY) {
         // At this stage, either $Paths.recovery was written >= 15
         // seconds ago during this session or we have just started
@@ -207,21 +208,21 @@ var Agent = {
         // way, $Paths.recovery is good. We can move $Path.backup to
         // $Path.recoveryBackup without erasing a good file with a bad
         // file.
-        await IOUtils.write(this.Paths.recovery, data, {
+        File.writeAtomic(this.Paths.recovery, data, {
           tmpPath: this.Paths.recovery + ".tmp",
-          backupFile: this.Paths.recoveryBackup,
-          compress: true,
+          backupTo: this.Paths.recoveryBackup,
+          compression: "lz4",
         });
-        fileStat = await IOUtils.stat(this.Paths.recovery);
+        fileStat = File.stat(this.Paths.recovery);
       } else {
         // In other cases, either $Path.recovery is not necessary, or
         // it doesn't exist or it has been corrupted. Regardless,
         // don't backup $Path.recovery.
-        await IOUtils.write(this.Paths.recovery, data, {
+        File.writeAtomic(this.Paths.recovery, data, {
           tmpPath: this.Paths.recovery + ".tmp",
-          compress: true,
+          compression: "lz4",
         });
-        fileStat = await IOUtils.stat(this.Paths.recovery);
+        fileStat = File.stat(this.Paths.recovery);
       }
 
       telemetry.FX_SESSION_RESTORE_WRITE_FILE_MS = Date.now() - startWriteMs;
@@ -243,7 +244,7 @@ var Agent = {
           this.state == STATE_CLEAN
             ? this.Paths.cleanBackup
             : this.Paths.upgradeBackup;
-        await IOUtils.copy(path, this.Paths.nextUpgradeBackup);
+        File.copy(path, this.Paths.nextUpgradeBackup);
         this.upgradeBackupNeeded = false;
         upgradeBackupComplete = true;
       } catch (ex) {
@@ -252,29 +253,35 @@ var Agent = {
       }
 
       // Find all backups
+      let iterator;
       let backups = []; // array that will contain the paths to all upgrade backup
       let upgradeBackupPrefix = this.Paths.upgradeBackupPrefix; // access for forEach callback
 
       try {
-        let children = await IOUtils.getChildren(this.Paths.backups);
-        backups = children.filter(path => path.startsWith(upgradeBackupPrefix));
+        iterator = new File.DirectoryIterator(this.Paths.backups);
+        iterator.forEach(function(file) {
+          if (file.path.startsWith(upgradeBackupPrefix)) {
+            backups.push(file.path);
+          }
+        }, this);
       } catch (ex) {
         // Don't throw immediately
         exn = exn || ex;
+      } finally {
+        if (iterator) {
+          iterator.close();
+        }
       }
 
       // If too many backups exist, delete them
       if (backups.length > this.maxUpgradeBackups) {
         // Use alphanumerical sort since dates are in YYYYMMDDHHMMSS format
-        backups.sort();
-        // remove backup file if it is among the first (n-maxUpgradeBackups) files
-        for (let i = 0; i < backups.length - this.maxUpgradeBackups; i++) {
-          try {
-            await IOUtils.remove(backups[i]);
-          } catch (ex) {
-            exn = exn || ex;
+        backups.sort().forEach((file, i) => {
+          // remove backup file if it is among the first (n-maxUpgradeBackups) files
+          if (i < backups.length - this.maxUpgradeBackups) {
+            File.remove(file);
           }
-        }
+        });
       }
     }
 
@@ -286,8 +293,8 @@ var Agent = {
 
       // If an exception was raised, we assume that we still need
       // these files.
-      await IOUtils.remove(this.Paths.recoveryBackup);
-      await IOUtils.remove(this.Paths.recovery);
+      File.remove(this.Paths.recoveryBackup);
+      File.remove(this.Paths.recovery);
     }
 
     this.state = STATE_RECOVERY;
@@ -307,15 +314,17 @@ var Agent = {
   /**
    * Wipes all files holding session data from disk.
    */
-  async wipe() {
+  wipe() {
     // Don't stop immediately in case of error.
     let exn = null;
 
     // Erase main session state file
     try {
-      await IOUtils.remove(this.Paths.clean);
+      File.remove(this.Paths.clean);
       // Remove old extension ones.
-      await IOUtils.remove(this.Paths.oldClean);
+      File.remove(this.Paths.clean.replace("jsonlz4", "js"), {
+        ignoreAbsent: true,
+      });
     } catch (ex) {
       // Don't stop immediately.
       exn = exn || ex;
@@ -323,20 +332,20 @@ var Agent = {
 
     // Wipe the Session Restore directory
     try {
-      await this._wipeFromDir(this.Paths.backups, null);
+      this._wipeFromDir(this.Paths.backups, null);
     } catch (ex) {
       exn = exn || ex;
     }
 
     try {
-      await IOUtils.remove(this.Paths.backups);
+      File.removeDir(this.Paths.backups);
     } catch (ex) {
       exn = exn || ex;
     }
 
     // Wipe legacy Ression Restore files from the profile directory
     try {
-      await this._wipeFromDir(this.Paths.profileDir, "sessionstore.bak");
+      this._wipeFromDir(OS.Constants.Path.profileDir, "sessionstore.bak");
     } catch (ex) {
       exn = exn || ex;
     }
@@ -356,7 +365,7 @@ var Agent = {
    * @param {string|null} prefix If provided, only remove files whose
    * name starts with a specific prefix.
    */
-  async _wipeFromDir(path, prefix) {
+  _wipeFromDir(path, prefix) {
     // Sanity check
     if (typeof prefix == "undefined" || prefix == "") {
       throw new TypeError();
@@ -364,34 +373,37 @@ var Agent = {
 
     let exn = null;
 
+    let iterator = new File.DirectoryIterator(path);
     try {
-      let children = await IOUtils.getChildren(path);
-
-      for (const entry of children) {
-        if (!prefix || PathUtils.filename(entry).startsWith(prefix)) {
+      if (!iterator.exists()) {
+        return;
+      }
+      for (let entry of iterator) {
+        if (entry.isDir) {
+          continue;
+        }
+        if (!prefix || entry.name.startsWith(prefix)) {
           try {
-            let stat = await IOUtils.stat(entry);
-            if (stat.type == "directory") {
-              continue;
-            }
-            await IOUtils.remove(entry);
+            File.remove(entry.path);
           } catch (ex) {
             // Don't stop immediately
             exn = exn || ex;
           }
         }
       }
-    } catch (ex) {
-      if (ex.name == "NotFoundError") {
-        return;
+
+      if (exn) {
+        throw exn;
       }
-      throw ex;
-    }
-    if (exn) {
-      throw exn;
+    } finally {
+      iterator.close();
     }
   },
 };
+
+function isNoSuchFileEx(aReason) {
+  return aReason instanceof OS.File.Error && aReason.becauseNoSuchFile;
+}
 
 /**
  * Estimate the number of bytes that a data structure will use on disk

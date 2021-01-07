@@ -10,6 +10,7 @@ var { SessionWorker } = ChromeUtils.import(
   "resource:///modules/sessionstore/SessionWorker.jsm"
 );
 
+var File = OS.File;
 var Paths;
 var SessionFile;
 
@@ -48,7 +49,7 @@ function promise_check_exist(path, shouldExist) {
     info(
       "Ensuring that " + path + (shouldExist ? " exists" : " does not exist")
     );
-    if ((await IOUtils.exists(path)) != shouldExist) {
+    if ((await OS.File.exists(path)) != shouldExist) {
       throw new Error(
         "File " + path + " should " + (shouldExist ? "exist" : "not exist")
       );
@@ -59,8 +60,9 @@ function promise_check_exist(path, shouldExist) {
 function promise_check_contents(path, expect) {
   return (async function() {
     info("Checking whether " + path + " has the right contents");
-    let actual = await IOUtils.readUTF8(path, {
-      decompress: true,
+    let actual = await OS.File.read(path, {
+      encoding: "utf-8",
+      compression: "lz4",
     });
     Assert.deepEqual(
       JSON.parse(actual),
@@ -85,9 +87,10 @@ add_task(async function test_first_write_backup() {
   info("Before the first write, none of the files should exist");
   await promise_check_exist(Paths.backups, false);
 
-  await IOUtils.makeDirectory(Paths.backups);
-  await IOUtils.writeUTF8(Paths.clean, JSON.stringify(initial_content), {
-    compress: true,
+  await File.makeDir(Paths.backups);
+  await File.writeAtomic(Paths.clean, JSON.stringify(initial_content), {
+    encoding: "utf-8",
+    compression: "lz4",
   });
   await SessionFile.write(new_content);
 
@@ -109,12 +112,13 @@ add_task(async function test_first_write_backup() {
 // - $Path.recoveryBackup contains the previous data
 add_task(async function test_second_write_no_backup() {
   let new_content = generateFileContents("test_2");
-  let previous_backup_content = await IOUtils.readUTF8(Paths.recovery, {
-    decompress: true,
+  let previous_backup_content = await File.read(Paths.recovery, {
+    encoding: "utf-8",
+    compression: "lz4",
   });
   previous_backup_content = JSON.parse(previous_backup_content);
 
-  await IOUtils.remove(Paths.cleanBackup);
+  await OS.File.remove(Paths.cleanBackup);
 
   await SessionFile.write(new_content);
 
@@ -133,15 +137,15 @@ add_task(async function test_second_write_no_backup() {
 add_task(async function test_shutdown() {
   let output = generateFileContents("test_3");
 
-  await IOUtils.writeUTF8(Paths.recovery, "I should disappear");
-  await IOUtils.writeUTF8(Paths.recoveryBackup, "I should also disappear");
+  await File.writeAtomic(Paths.recovery, "I should disappear");
+  await File.writeAtomic(Paths.recoveryBackup, "I should also disappear");
 
   await SessionWorker.post("write", [
     output,
     { isFinalWrite: true, performShutdownCleanup: true },
   ]);
 
-  Assert.equal(false, await IOUtils.exists(Paths.recovery));
-  Assert.equal(false, await IOUtils.exists(Paths.recoveryBackup));
+  Assert.equal(false, await File.exists(Paths.recovery));
+  Assert.equal(false, await File.exists(Paths.recoveryBackup));
   await promise_check_contents(Paths.clean, output);
 });
