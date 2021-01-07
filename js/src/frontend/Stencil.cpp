@@ -154,9 +154,10 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
                              CompilationStencil& stencil,
                              CompilationGCOutput& gcOutput,
                              const ScriptStencil& script,
-                             HandleFunction function) {
+                             ScriptIndex scriptIndex, HandleFunction function) {
   Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
-  size_t ngcthings = script.gcThings.size();
+
+  size_t ngcthings = script.gcThingsLength;
 
   Rooted<BaseScript*> lazy(
       cx, BaseScript::CreateRawLazy(cx, ngcthings, function, sourceObject,
@@ -165,9 +166,12 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
     return false;
   }
 
-  if (!EmitScriptThingsVector(cx, input, stencil, gcOutput, script.gcThings,
-                              lazy->gcthingsForInit())) {
-    return false;
+  if (ngcthings) {
+    if (!EmitScriptThingsVector(cx, input, stencil, gcOutput,
+                                script.gcthings(stencil),
+                                lazy->gcthingsForInit())) {
+      return false;
+    }
   }
 
   function->initScript(lazy);
@@ -374,7 +378,8 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
       MOZ_ASSERT(fun->isAsmJSNative());
     } else {
       MOZ_ASSERT(fun->isIncomplete());
-      if (!CreateLazyScript(cx, input, stencil, gcOutput, scriptStencil, fun)) {
+      if (!CreateLazyScript(cx, input, stencil, gcOutput, scriptStencil, index,
+                            fun)) {
         return false;
       }
     }
@@ -395,6 +400,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   if (scriptStencil.functionFlags.isAsmJSNative()) {
     return true;
   }
+
+  MOZ_ASSERT(stencil.sharedData.get(CompilationInfo::TopLevelIndex));
 
   if (input.lazy) {
     gcOutput.script = JSScript::CastFromLazy(input.lazy);
@@ -1061,7 +1068,17 @@ bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
     return false;
   }
 
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
+                        compilationInfo.stencil.gcThingData, gcThingData)) {
+    return false;
+  }
+
   return true;
+}
+
+mozilla::Span<TaggedScriptThingIndex> ScriptStencil::gcthings(
+    CompilationStencil& stencil) const {
+  return stencil.gcThingData.Subspan(gcThingsOffset, gcThingsLength);
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -1683,11 +1700,17 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
     json.property("memberInitializers", "Nothing");
   }
 
-  json.beginListProperty("gcThings");
-  for (auto& thing : gcThings) {
-    DumpScriptThing(json, compilationStencil, thing);
+  json.formatProperty("gcThingsOffset", "CompilationGCThingIndex(%u)",
+                      gcThingsOffset.index);
+  json.property("gcThingsLength", gcThingsLength);
+
+  if (compilationStencil) {
+    json.beginListProperty("gcThings");
+    for (auto& thing : gcthings(*compilationStencil)) {
+      DumpScriptThing(json, compilationStencil, thing);
+    }
+    json.endList();
   }
-  json.endList();
 
   json.boolProperty("hasSharedData", hasSharedData);
 
@@ -1827,21 +1850,6 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
 
-mozilla::Span<TaggedScriptThingIndex>
-js::frontend::NewScriptThingSpanUninitialized(JSContext* cx, LifoAlloc& alloc,
-                                              uint32_t ngcthings) {
-  MOZ_ASSERT(ngcthings > 0);
-
-  TaggedScriptThingIndex* stencilThings =
-      alloc.newArrayUninitialized<TaggedScriptThingIndex>(ngcthings);
-  if (!stencilThings) {
-    js::ReportOutOfMemory(cx);
-    return mozilla::Span<TaggedScriptThingIndex>();
-  }
-
-  return mozilla::Span<TaggedScriptThingIndex>(stencilThings, ngcthings);
-}
-
 JSAtom* CompilationAtomCache::getExistingAtomAt(ParserAtomIndex index) const {
   return atoms_[index];
 }
@@ -1950,6 +1958,66 @@ const ParserAtom* CompilationState::getParserAtomAt(
   }
 
   return GetWellKnownParserAtomAt(cx, taggedIndex);
+}
+
+bool CompilationState::allocateGCThingsUninitialized(
+    JSContext* cx, ScriptIndex scriptIndex, size_t length,
+    TaggedScriptThingIndex** cursor) {
+  MOZ_ASSERT(gcThingData.length() <= UINT32_MAX);
+
+  auto gcThingsOffset = CompilationGCThingIndex(gcThingData.length());
+
+  if (length > INDEX_LIMIT) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+  uint32_t gcThingsLength = length;
+
+  if (!gcThingData.growByUninitialized(length)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+
+  if (gcThingData.length() > UINT32_MAX) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
+  ScriptStencil& script = scriptData[scriptIndex];
+  script.gcThingsOffset = gcThingsOffset;
+  script.gcThingsLength = gcThingsLength;
+
+  *cursor = gcThingData.begin() + gcThingsOffset;
+  return true;
+}
+
+bool CompilationState::appendGCThings(
+    JSContext* cx, ScriptIndex scriptIndex,
+    mozilla::Span<const TaggedScriptThingIndex> things) {
+  MOZ_ASSERT(gcThingData.length() <= UINT32_MAX);
+
+  auto gcThingsOffset = CompilationGCThingIndex(gcThingData.length());
+
+  if (things.size() > INDEX_LIMIT) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+  uint32_t gcThingsLength = uint32_t(things.size());
+
+  if (!gcThingData.append(things.data(), things.size())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+
+  if (gcThingData.length() > UINT32_MAX) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
+  ScriptStencil& script = scriptData[scriptIndex];
+  script.gcThingsOffset = gcThingsOffset;
+  script.gcThingsLength = gcThingsLength;
+  return true;
 }
 
 const ParserAtom* CompilationStencil::getParserAtomAt(

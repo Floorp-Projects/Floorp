@@ -2008,15 +2008,13 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   // If there are no script-things, we can return early without allocating.
   if (ngcthings.value() == 0) {
-    MOZ_ASSERT(script.gcThings.empty());
+    MOZ_ASSERT(!script.hasGCThings());
     return true;
   }
 
-  // Allocate the `stencilThings` array without initializing it yet.
-  mozilla::Span<TaggedScriptThingIndex> stencilThings =
-      NewScriptThingSpanUninitialized(cx_, compilationInfo_.alloc,
-                                      ngcthings.value());
-  if (stencilThings.empty()) {
+  TaggedScriptThingIndex* cursor = nullptr;
+  if (!this->compilationState_.allocateGCThingsUninitialized(
+          cx_, funbox->index(), ngcthings.value(), &cursor)) {
     return false;
   }
 
@@ -2027,7 +2025,6 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   //
   // See: FullParseHandler::nextLazyInnerFunction(),
   //      FullParseHandler::nextLazyClosedOverBinding()
-  auto cursor = stencilThings.begin();
   for (const ScriptIndex& index : pc_->innerFunctionIndexesForLazy) {
     void* raw = &(*cursor++);
     new (raw) TaggedScriptThingIndex(index);
@@ -2041,9 +2038,6 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
       new (raw) TaggedScriptThingIndex();
     }
   }
-  MOZ_ASSERT(cursor == stencilThings.end());
-
-  script.gcThings = stencilThings;
 
   return true;
 }
