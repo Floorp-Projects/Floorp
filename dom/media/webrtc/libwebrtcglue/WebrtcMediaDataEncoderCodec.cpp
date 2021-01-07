@@ -76,11 +76,10 @@ static MediaDataEncoder::H264Specific GetCodecSpecific(
 }
 
 WebrtcMediaDataEncoder::WebrtcMediaDataEncoder()
-    : mCallbackMutex("WebrtcMediaDataEncoderCodec encoded callback mutex"),
-      mThreadPool(GetMediaThreadPool(MediaThreadType::SUPERVISOR)),
-      mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
+    : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
                                "WebrtcMediaDataEncoder::mTaskQueue")),
       mFactory(new PEMFactory()),
+      mCallbackMutex("WebrtcMediaDataEncoderCodec encoded callback mutex"),
       // Use the same lower and upper bound as h264_video_toolbox_encoder which
       // is an encoder from webrtc's upstream codebase.
       // 0.5 is set as a mininum to prevent overcompensating for large temporary
@@ -98,12 +97,24 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
   MOZ_ASSERT(
       aCodecSettings->codecType == webrtc::VideoCodecType::kVideoCodecH264,
       "Only support h264 for now.");
-  if (!CreateEncoder(aCodecSettings)) {
+
+  if (mEncoder) {
+    // Clean existing encoder.
+    Shutdown();
+  }
+
+  RefPtr<MediaDataEncoder> encoder = CreateEncoder(aCodecSettings);
+  if (!encoder) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+
   LOG("Init encode, mimeType %s, mode %s", mInfo.mMimeType.get(),
       GetModeName(mMode));
-  return InitEncoder() ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
+  if (!media::Await(do_AddRef(mTaskQueue), encoder->Init()).IsResolve()) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  mEncoder = std::move(encoder);
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 bool WebrtcMediaDataEncoder::SetupConfig(
@@ -128,18 +139,15 @@ bool WebrtcMediaDataEncoder::SetupConfig(
   return true;
 }
 
-bool WebrtcMediaDataEncoder::CreateEncoder(
+already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
     const webrtc::VideoCodec* aCodecSettings) {
   if (!SetupConfig(aCodecSettings)) {
-    return false;
-  }
-  if (mEncoder) {
-    Release();
+    return nullptr;
   }
   LOG("Request platform encoder for %s, bitRate=%u bps, frameRate=%u",
       mInfo.mMimeType.get(), mBitrateAdjuster.GetTargetBitrateBps(),
       aCodecSettings->maxFramerate);
-  mEncoder = mFactory->CreateEncoder(CreateEncoderParams(
+  return mFactory->CreateEncoder(CreateEncoderParams(
       mInfo, MediaDataEncoder::Usage::Realtime,
       MakeRefPtr<TaskQueue>(
           GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
@@ -147,17 +155,6 @@ bool WebrtcMediaDataEncoder::CreateEncoder(
       MediaDataEncoder::PixelFormat::YUV420P, aCodecSettings->maxFramerate,
       mBitrateAdjuster.GetTargetBitrateBps(),
       GetCodecSpecific(aCodecSettings)));
-  return !!mEncoder;
-}
-
-bool WebrtcMediaDataEncoder::InitEncoder() {
-  LOG("Wait until encoder successfully initialize");
-  MutexAutoLock lock(mCallbackMutex);
-  media::Await(
-      do_AddRef(mThreadPool), mEncoder->Init(),
-      [&](TrackInfo::TrackType) { mError = NS_OK; },
-      [&](const MediaResult& aError) { mError = aError; });
-  return NS_SUCCEEDED(mError);
 }
 
 int32_t WebrtcMediaDataEncoder::RegisterEncodeCompleteCallback(
@@ -174,17 +171,16 @@ int32_t WebrtcMediaDataEncoder::Shutdown() {
     mCallback = nullptr;
     mError = NS_OK;
   }
-  mThreadPool->Dispatch(NS_NewRunnableFunction(
-      "WebrtcMediaDataEncoder::Shutdown",
-      [self = RefPtr<WebrtcMediaDataEncoder>(this),
-       encoder = RefPtr<MediaDataEncoder>(std::move(mEncoder))]() {
-        encoder->Shutdown();
-      }));
+  if (mEncoder) {
+    media::Await(do_AddRef(mTaskQueue), mEncoder->Shutdown());
+    mEncoder = nullptr;
+  }
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-RefPtr<MediaData> WebrtcMediaDataEncoder::CreateVideoDataFromWebrtcVideoFrame(
-    const webrtc::VideoFrame& aFrame, bool aIsKeyFrame) {
+static already_AddRefed<VideoData> CreateVideoDataFromWebrtcVideoFrame(
+    const webrtc::VideoFrame& aFrame, const bool aIsKeyFrame,
+    const TimeUnit aDuration) {
   MOZ_ASSERT(aFrame.video_frame_buffer()->type() ==
                  webrtc::VideoFrameBuffer::Type::kI420,
              "Only support YUV420!");
@@ -206,28 +202,29 @@ RefPtr<MediaData> WebrtcMediaDataEncoder::CreateVideoDataFromWebrtcVideoFrame(
       new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
   image->CopyData(yCbCrData);
 
-  RefPtr<MediaData> data = VideoData::CreateFromImage(
+  return VideoData::CreateFromImage(
       image->GetSize(), 0, TimeUnit::FromMicroseconds(aFrame.timestamp_us()),
-      TimeUnit::FromSeconds(1.0 / mMaxFrameRate), image, aIsKeyFrame,
+      aDuration, image, aIsKeyFrame,
       TimeUnit::FromMicroseconds(aFrame.timestamp()));
-  return data;
 }
 
 int32_t WebrtcMediaDataEncoder::Encode(
     const webrtc::VideoFrame& aInputFrame,
     const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
     const std::vector<webrtc::FrameType>* aFrameTypes) {
-  if (!mCallback || !mEncoder) {
-    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
-  }
-
   if (!aInputFrame.size() || !aInputFrame.video_frame_buffer() ||
       aFrameTypes->empty()) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
+  if (!mEncoder) {
+    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  }
   {
     MutexAutoLock lock(mCallbackMutex);
+    if (!mCallback) {
+      return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+    }
     if (NS_FAILED(mError)) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -236,89 +233,68 @@ int32_t WebrtcMediaDataEncoder::Encode(
   LOG_V("Encode frame, type %d size %u", (*aFrameTypes)[0], aInputFrame.size());
   MOZ_ASSERT(aInputFrame.video_frame_buffer()->type() ==
              webrtc::VideoFrameBuffer::Type::kI420);
-  RefPtr<MediaData> data = CreateVideoDataFromWebrtcVideoFrame(
-      aInputFrame, (*aFrameTypes)[0] == webrtc::FrameType::kVideoFrameKey);
-  OwnerThread()->Dispatch(NS_NewRunnableFunction(
-      "WebrtcMediaDataEncoder::Encode",
-      [self = RefPtr<WebrtcMediaDataEncoder>(this), data]() {
-        if (!self->mEncoder) {
-          return;
+  RefPtr<VideoData> data = CreateVideoDataFromWebrtcVideoFrame(
+      aInputFrame, (*aFrameTypes)[0] == webrtc::FrameType::kVideoFrameKey,
+      TimeUnit::FromSeconds(1.0 / mMaxFrameRate));
+  const gfx::IntSize displaySize = data->mDisplay;
+
+  mEncoder->Encode(data)->Then(
+      mTaskQueue, __func__,
+      [self = RefPtr<WebrtcMediaDataEncoder>(this), this,
+       displaySize](MediaDataEncoder::EncodedData aFrames) {
+        LOG_V("Received encoded frame, nums %zu width %d height %d",
+              aFrames.Length(), displaySize.width, displaySize.height);
+        for (auto& frame : aFrames) {
+          MutexAutoLock lock(mCallbackMutex);
+          if (!mCallback) {
+            break;
+          }
+          webrtc::EncodedImage image(const_cast<uint8_t*>(frame->Data()),
+                                     frame->Size(), frame->Size());
+          image._encodedWidth = displaySize.width;
+          image._encodedHeight = displaySize.height;
+          CheckedInt64 time =
+              TimeUnitToFrames(frame->mTime, cricket::kVideoCodecClockrate);
+          if (!time.isValid()) {
+            self->mError = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                       "invalid timestamp from encoder");
+            break;
+          }
+          image._timeStamp = time.value();
+          image._frameType = frame->mKeyframe
+                                 ? webrtc::FrameType::kVideoFrameKey
+                                 : webrtc::FrameType::kVideoFrameDelta;
+          image._completeFrame = true;
+
+          nsTArray<AnnexB::NALEntry> entries;
+          AnnexB::ParseNALEntries(
+              Span<const uint8_t>(frame->Data(), frame->Size()), entries);
+          const size_t nalNums = entries.Length();
+          LOG_V("NAL nums %zu", nalNums);
+          MOZ_ASSERT(nalNums, "Should have at least 1 NALU in encoded frame!");
+
+          webrtc::RTPFragmentationHeader header;
+          header.VerifyAndAllocateFragmentationHeader(nalNums);
+          for (size_t idx = 0; idx < nalNums; idx++) {
+            header.fragmentationOffset[idx] = entries[idx].mOffset;
+            header.fragmentationLength[idx] = entries[idx].mSize;
+            LOG_V("NAL offset %" PRId64 " size %" PRId64, entries[idx].mOffset,
+                  entries[idx].mSize);
+          }
+
+          webrtc::CodecSpecificInfo codecSpecific;
+          codecSpecific.codecType = webrtc::kVideoCodecH264;
+          codecSpecific.codecSpecific.H264.packetization_mode = mMode;
+
+          LOG_V("Send encoded image");
+          self->mCallback->OnEncodedImage(image, &codecSpecific, &header);
+          self->mBitrateAdjuster.Update(image._size);
         }
-        self->ProcessEncode(data);
-      }));
+      },
+      [self = RefPtr<WebrtcMediaDataEncoder>(this)](const MediaResult aError) {
+        self->mError = aError;
+      });
   return WEBRTC_VIDEO_CODEC_OK;
-}
-
-void WebrtcMediaDataEncoder::ProcessEncode(
-    const RefPtr<MediaData>& aInputData) {
-  const gfx::IntSize display = aInputData->As<VideoData>()->mDisplay;
-  mEncoder->Encode(aInputData)
-      ->Then(
-          OwnerThread(), __func__,
-          [display, self = RefPtr<WebrtcMediaDataEncoder>(this),
-           // capture this for printing address in LOG.
-           this](const MediaDataEncoder::EncodedData& aData) {
-            MutexAutoLock lock(mCallbackMutex);
-            // Callback has been unregistered.
-            if (!mCallback) {
-              return;
-            }
-            // The encoder haven't finished encoding yet.
-            if (aData.IsEmpty()) {
-              return;
-            }
-
-            LOG_V("Received encoded frame, nums %zu width %d height %d",
-                  aData.Length(), display.width, display.height);
-            for (auto& frame : aData) {
-              webrtc::EncodedImage image(const_cast<uint8_t*>(frame->Data()),
-                                         frame->Size(), frame->Size());
-              image._encodedWidth = display.width;
-              image._encodedHeight = display.height;
-              CheckedInt64 time =
-                  TimeUnitToFrames(frame->mTime, cricket::kVideoCodecClockrate);
-              if (!time.isValid()) {
-                mError = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                     "invalid timestamp from encoder");
-                return;
-              }
-              image._timeStamp = time.value();
-              image._frameType = frame->mKeyframe
-                                     ? webrtc::FrameType::kVideoFrameKey
-                                     : webrtc::FrameType::kVideoFrameDelta;
-              image._completeFrame = true;
-
-              nsTArray<AnnexB::NALEntry> entries;
-              AnnexB::ParseNALEntries(
-                  Span<const uint8_t>(frame->Data(), frame->Size()), entries);
-              const size_t nalNums = entries.Length();
-              LOG_V("NAL nums %zu", nalNums);
-              MOZ_ASSERT(nalNums,
-                         "Should have at least 1 NALU in encoded frame!");
-
-              webrtc::RTPFragmentationHeader header;
-              header.VerifyAndAllocateFragmentationHeader(nalNums);
-              for (size_t idx = 0; idx < nalNums; idx++) {
-                header.fragmentationOffset[idx] = entries[idx].mOffset;
-                header.fragmentationLength[idx] = entries[idx].mSize;
-                LOG_V("NAL offset %" PRId64 " size %" PRId64,
-                      entries[idx].mOffset, entries[idx].mSize);
-              }
-
-              webrtc::CodecSpecificInfo codecSpecific;
-              codecSpecific.codecType = webrtc::kVideoCodecH264;
-              codecSpecific.codecSpecific.H264.packetization_mode = mMode;
-
-              LOG_V("Send encoded image");
-              mCallback->OnEncodedImage(image, &codecSpecific, &header);
-              mBitrateAdjuster.Update(image._size);
-            }
-          },
-          [self = RefPtr<WebrtcMediaDataEncoder>(this)](
-              const MediaResult& aError) {
-            MutexAutoLock lock(self->mCallbackMutex);
-            self->mError = aError;
-          });
 }
 
 int32_t WebrtcMediaDataEncoder::SetChannelParameters(uint32_t aPacketLoss,
@@ -328,19 +304,8 @@ int32_t WebrtcMediaDataEncoder::SetChannelParameters(uint32_t aPacketLoss,
 
 int32_t WebrtcMediaDataEncoder::SetRates(uint32_t aNewBitrateKbps,
                                          uint32_t aFrameRate) {
-  if (!mEncoder) {
-    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
-  }
-
   if (!aFrameRate) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
-  }
-
-  {
-    MutexAutoLock lock(mCallbackMutex);
-    if (NS_FAILED(mError)) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
   }
 
   const uint32_t newBitrateBps = aNewBitrateKbps * 1000;
@@ -352,11 +317,21 @@ int32_t WebrtcMediaDataEncoder::SetRates(uint32_t aNewBitrateKbps,
   if (mBitrateAdjuster.GetAdjustedBitrateBps() == newBitrateBps) {
     return WEBRTC_VIDEO_CODEC_OK;
   }
+
+  if (!mEncoder) {
+    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  }
+  {
+    MutexAutoLock lock(mCallbackMutex);
+    if (NS_FAILED(mError)) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+  }
   mBitrateAdjuster.SetTargetBitrateBps(newBitrateBps);
   LOG("Set bitrate %u bps, minBitrate %u bps, maxBitrate %u bps", newBitrateBps,
       mMinBitrateBps, mMaxBitrateBps);
   auto rv =
-      media::Await(do_AddRef(mThreadPool), mEncoder->SetBitrate(newBitrateBps));
+      media::Await(do_AddRef(mTaskQueue), mEncoder->SetBitrate(newBitrateBps));
   return rv.IsResolve() ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
 }
 
