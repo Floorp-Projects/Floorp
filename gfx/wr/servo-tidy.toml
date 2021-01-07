@@ -6,6 +6,7 @@ check-alphabetical-order = false
 [ignore]
 # Ignored packages with duplicated versions
 packages = [
+    "cfg-if",
     "core-foundation",
     "core-foundation-sys",
     "core-graphics",

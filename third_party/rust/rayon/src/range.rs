@@ -16,8 +16,9 @@
 //!
 //! [std::range]: https://doc.rust-lang.org/core/ops/struct.Range.html
 
-use iter::plumbing::*;
-use iter::*;
+use crate::iter::plumbing::*;
+use crate::iter::*;
+use std::char;
 use std::ops::Range;
 use std::usize;
 
@@ -223,6 +224,75 @@ unindexed_range_impl! {i64, u64}
 unindexed_range_impl! {u128, u128}
 unindexed_range_impl! {i128, u128}
 
+// char is special because of the surrogate range hole
+macro_rules! convert_char {
+    ( $self:ident . $method:ident ( $( $arg:expr ),* ) ) => {{
+        let start = $self.range.start as u32;
+        let end = $self.range.end as u32;
+        if start < 0xD800 && 0xE000 < end {
+            // chain the before and after surrogate range fragments
+            (start..0xD800)
+                .into_par_iter()
+                .chain(0xE000..end)
+                .map(|codepoint| unsafe { char::from_u32_unchecked(codepoint) })
+                .$method($( $arg ),*)
+        } else {
+            // no surrogate range to worry about
+            (start..end)
+                .into_par_iter()
+                .map(|codepoint| unsafe { char::from_u32_unchecked(codepoint) })
+                .$method($( $arg ),*)
+        }
+    }};
+}
+
+impl ParallelIterator for Iter<char> {
+    type Item = char;
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+    where
+        C: UnindexedConsumer<Self::Item>,
+    {
+        convert_char!(self.drive(consumer))
+    }
+
+    fn opt_len(&self) -> Option<usize> {
+        Some(self.len())
+    }
+}
+
+impl IndexedParallelIterator for Iter<char> {
+    // Split at the surrogate range first if we're allowed to
+    fn drive<C>(self, consumer: C) -> C::Result
+    where
+        C: Consumer<Self::Item>,
+    {
+        convert_char!(self.drive(consumer))
+    }
+
+    fn len(&self) -> usize {
+        // Taken from <char as Step>::steps_between
+        let start = self.range.start as u32;
+        let end = self.range.end as u32;
+        if start < end {
+            let mut count = end - start;
+            if start < 0xD800 && 0xE000 <= end {
+                count -= 0x800
+            }
+            count as usize
+        } else {
+            0
+        }
+    }
+
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
+    where
+        CB: ProducerCallback<Self::Item>,
+    {
+        convert_char!(self.with_producer(callback))
+    }
+}
+
 #[test]
 fn check_range_split_at_overflow() {
     // Note, this split index overflows i8!
@@ -286,8 +356,8 @@ fn test_u128_opt_len() {
 #[test]
 #[cfg(target_pointer_width = "64")]
 fn test_usize_i64_overflow() {
+    use crate::ThreadPoolBuilder;
     use std::i64;
-    use ThreadPoolBuilder;
 
     let iter = (-2..i64::MAX).into_par_iter();
     assert_eq!(iter.opt_len(), Some(i64::MAX as usize + 2));

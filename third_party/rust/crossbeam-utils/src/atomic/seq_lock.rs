@@ -1,6 +1,7 @@
+use core::mem;
 use core::sync::atomic::{self, AtomicUsize, Ordering};
 
-use Backoff;
+use crate::Backoff;
 
 /// A simple stamped lock.
 pub struct SeqLock {
@@ -12,9 +13,11 @@ pub struct SeqLock {
 }
 
 impl SeqLock {
-    pub const INIT: Self = Self {
-        state: AtomicUsize::new(0),
-    };
+    pub const fn new() -> Self {
+        Self {
+            state: AtomicUsize::new(0),
+        }
+    }
 
     /// If not locked, returns the current stamp.
     ///
@@ -74,6 +77,10 @@ impl SeqLockWriteGuard {
     #[inline]
     pub fn abort(self) {
         self.lock.state.store(self.state, Ordering::Release);
+
+        // We specifically don't want to call drop(), since that's
+        // what increments the stamp.
+        mem::forget(self);
     }
 }
 
@@ -84,5 +91,22 @@ impl Drop for SeqLockWriteGuard {
         self.lock
             .state
             .store(self.state.wrapping_add(2), Ordering::Release);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SeqLock;
+
+    #[test]
+    fn test_abort() {
+        static LK: SeqLock = SeqLock::new();
+        let before = LK.optimistic_read().unwrap();
+        {
+            let guard = LK.write();
+            guard.abort();
+        }
+        let after = LK.optimistic_read().unwrap();
+        assert_eq!(before, after, "aborted write does not update the stamp");
     }
 }

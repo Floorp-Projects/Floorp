@@ -12,7 +12,7 @@
 
 [package]
 name = "memoffset"
-version = "0.5.1"
+version = "0.6.1"
 authors = ["Gilad Naaman <gilad.naaman@gmail.com>"]
 description = "offset_of functionality for Rust structs."
 readme = "README.md"
@@ -20,5 +20,12 @@ keywords = ["mem", "offset", "offset_of", "offsetof"]
 categories = ["no-std"]
 license = "MIT"
 repository = "https://github.com/Gilnaa/memoffset"
-[build-dependencies.rustc_version]
-version = "0.2.3"
+[dev-dependencies.doc-comment]
+version = "0.3"
+[build-dependencies.autocfg]
+version = "1"
+
+[features]
+default = []
+unstable_const = []
+unstable_raw = []

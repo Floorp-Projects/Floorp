@@ -8,6 +8,7 @@ use super::{metrics::*, CommonMetricData, Lifetime};
 pub struct CoreMetrics {
     pub client_id: UuidMetric,
     pub first_run_date: DatetimeMetric,
+    pub first_run_hour: DatetimeMetric,
     pub os: StringMetric,
 }
 
@@ -33,6 +34,18 @@ impl CoreMetrics {
                     dynamic_label: None,
                 },
                 TimeUnit::Day,
+            ),
+
+            first_run_hour: DatetimeMetric::new(
+                CommonMetricData {
+                    name: "first_run_hour".into(),
+                    category: "glean.validation".into(),
+                    send_in_pings: vec!["metrics".into(), "baseline".into()],
+                    lifetime: Lifetime::User,
+                    disabled: false,
+                    dynamic_label: None,
+                },
+                TimeUnit::Hour,
             ),
 
             os: StringMetric::new(CommonMetricData {

@@ -3,15 +3,17 @@
 //! Usable with any number of producers and consumers.
 //!
 //! Michael and Scott.  Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue
-//! Algorithms.  PODC 1996.  http://dl.acm.org/citation.cfm?id=248106
+//! Algorithms.  PODC 1996.  <http://dl.acm.org/citation.cfm?id=248106>
+//!
+//! Simon Doherty, Lindsay Groves, Victor Luchangco, and Mark Moir. 2004b. Formal Verification of a
+//! Practical Lock-Free Queue Algorithm. <https://doi.org/10.1007/978-3-540-30232-2_7>
 
-use core::mem::{self, ManuallyDrop};
-use core::ptr;
+use core::mem::MaybeUninit;
 use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 
 use crossbeam_utils::CachePadded;
 
-use {unprotected, Atomic, Guard, Owned, Shared};
+use crate::{unprotected, Atomic, Guard, Owned, Shared};
 
 // The representation here is a singly-linked list, with a sentinel node at the front. In general
 // the `tail` pointer may lag behind the actual tail. Non-sentinel nodes are either all `Data` or
@@ -22,15 +24,14 @@ pub struct Queue<T> {
     tail: CachePadded<Atomic<Node<T>>>,
 }
 
-#[derive(Debug)]
 struct Node<T> {
     /// The slot in which a value of type `T` can be stored.
     ///
-    /// The type of `data` is `ManuallyDrop<T>` because a `Node<T>` doesn't always contain a `T`.
+    /// The type of `data` is `MaybeUninit<T>` because a `Node<T>` doesn't always contain a `T`.
     /// For example, the sentinel node in a queue never contains a value: its slot is always empty.
     /// Other nodes start their life with a push operation and contain a value until it gets popped
     /// out. After that such empty nodes get added to the collector for destruction.
-    data: ManuallyDrop<T>,
+    data: MaybeUninit<T>,
 
     next: Atomic<Node<T>>,
 }
@@ -46,15 +47,12 @@ impl<T> Queue<T> {
             head: CachePadded::new(Atomic::null()),
             tail: CachePadded::new(Atomic::null()),
         };
-        // TODO(taiki-e): when the minimum supported Rust version is bumped to 1.36+,
-        // replace this with `mem::MaybeUninit`.
-        #[allow(deprecated)]
         let sentinel = Owned::new(Node {
-            data: unsafe { mem::uninitialized() },
+            data: MaybeUninit::uninit(),
             next: Atomic::null(),
         });
         unsafe {
-            let guard = &unprotected();
+            let guard = unprotected();
             let sentinel = sentinel.into_shared(guard);
             q.head.store(sentinel, Relaxed);
             q.tail.store(sentinel, Relaxed);
@@ -65,7 +63,12 @@ impl<T> Queue<T> {
     /// Attempts to atomically place `n` into the `next` pointer of `onto`, and returns `true` on
     /// success. The queue's `tail` pointer may be updated.
     #[inline(always)]
-    fn push_internal(&self, onto: Shared<Node<T>>, new: Shared<Node<T>>, guard: &Guard) -> bool {
+    fn push_internal(
+        &self,
+        onto: Shared<'_, Node<T>>,
+        new: Shared<'_, Node<T>>,
+        guard: &Guard,
+    ) -> bool {
         // is `onto` the actual tail?
         let o = unsafe { onto.deref() };
         let next = o.next.load(Acquire, guard);
@@ -90,7 +93,7 @@ impl<T> Queue<T> {
     /// Adds `t` to the back of the queue, possibly waking up threads blocked on `pop`.
     pub fn push(&self, t: T, guard: &Guard) {
         let new = Owned::new(Node {
-            data: ManuallyDrop::new(t),
+            data: MaybeUninit::new(t),
             next: Atomic::null(),
         });
         let new = Owned::into_shared(new, guard);
@@ -117,8 +120,14 @@ impl<T> Queue<T> {
                 self.head
                     .compare_and_set(head, next, Release, guard)
                     .map(|_| {
+                        let tail = self.tail.load(Relaxed, guard);
+                        // Advance the tail so that we don't retire a pointer to a reachable node.
+                        if head == tail {
+                            let _ = self.tail.compare_and_set(tail, next, Release, guard);
+                        }
                         guard.defer_destroy(head);
-                        Some(ManuallyDrop::into_inner(ptr::read(&n.data)))
+                        // TODO: Replace with MaybeUninit::read when api is stable
+                        Some(n.data.as_ptr().read())
                     })
                     .map_err(|_| ())
             },
@@ -138,12 +147,17 @@ impl<T> Queue<T> {
         let h = unsafe { head.deref() };
         let next = h.next.load(Acquire, guard);
         match unsafe { next.as_ref() } {
-            Some(n) if condition(&n.data) => unsafe {
+            Some(n) if condition(unsafe { &*n.data.as_ptr() }) => unsafe {
                 self.head
                     .compare_and_set(head, next, Release, guard)
                     .map(|_| {
+                        let tail = self.tail.load(Relaxed, guard);
+                        // Advance the tail so that we don't retire a pointer to a reachable node.
+                        if head == tail {
+                            let _ = self.tail.compare_and_set(tail, next, Release, guard);
+                        }
                         guard.defer_destroy(head);
-                        Some(ManuallyDrop::into_inner(ptr::read(&n.data)))
+                        Some(n.data.as_ptr().read())
                     })
                     .map_err(|_| ())
             },
@@ -182,9 +196,9 @@ impl<T> Queue<T> {
 impl<T> Drop for Queue<T> {
     fn drop(&mut self) {
         unsafe {
-            let guard = &unprotected();
+            let guard = unprotected();
 
-            while let Some(_) = self.try_pop(guard) {}
+            while self.try_pop(guard).is_some() {}
 
             // Destroy the remaining sentinel node.
             let sentinel = self.head.load(Relaxed, guard);
@@ -196,8 +210,8 @@ impl<T> Drop for Queue<T> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::pin;
     use crossbeam_utils::thread;
-    use pin;
 
     struct Queue<T> {
         queue: super::Queue<T>,

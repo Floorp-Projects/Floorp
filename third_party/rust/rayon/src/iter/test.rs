@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::*;
-use prelude::*;
+use crate::prelude::*;
 use rayon_core::*;
 
 use rand::distributions::Standard;
@@ -180,6 +180,30 @@ fn fold_is_full() {
         .find_any(|_| true);
     assert!(a.is_some());
     assert!(counter.load(Ordering::SeqCst) < 2048); // should not have visited every single one
+}
+
+#[test]
+fn check_step_by() {
+    let a: Vec<i32> = (0..1024).step_by(2).collect();
+    let b: Vec<i32> = (0..1024).into_par_iter().step_by(2).collect();
+
+    assert_eq!(a, b);
+}
+
+#[test]
+fn check_step_by_unaligned() {
+    let a: Vec<i32> = (0..1029).step_by(10).collect();
+    let b: Vec<i32> = (0..1029).into_par_iter().step_by(10).collect();
+
+    assert_eq!(a, b)
+}
+
+#[test]
+fn check_step_by_rev() {
+    let a: Vec<i32> = (0..1024).step_by(2).rev().collect();
+    let b: Vec<i32> = (0..1024).into_par_iter().step_by(2).rev().collect();
+
+    assert_eq!(a, b);
 }
 
 #[test]
@@ -399,6 +423,7 @@ fn check_cmp_to_seq() {
 #[test]
 fn check_cmp_rng_to_seq() {
     let mut rng = seeded_rng();
+    let rng = &mut rng;
     let a: Vec<i32> = rng.sample_iter(&Standard).take(1024).collect();
     let b: Vec<i32> = rng.sample_iter(&Standard).take(1024).collect();
     for i in 0..a.len() {
@@ -552,6 +577,7 @@ fn check_partial_cmp_to_seq() {
 #[test]
 fn check_partial_cmp_rng_to_seq() {
     let mut rng = seeded_rng();
+    let rng = &mut rng;
     let a: Vec<i32> = rng.sample_iter(&Standard).take(1024).collect();
     let b: Vec<i32> = rng.sample_iter(&Standard).take(1024).collect();
     for i in 0..a.len() {
@@ -1522,7 +1548,7 @@ fn par_iter_unindexed_flat_map() {
 
 #[test]
 fn min_max() {
-    let mut rng = seeded_rng();
+    let rng = seeded_rng();
     let a: Vec<i32> = rng.sample_iter(&Standard).take(1024).collect();
     for i in 0..=a.len() {
         let slice = &a[..i];
@@ -1533,7 +1559,7 @@ fn min_max() {
 
 #[test]
 fn min_max_by() {
-    let mut rng = seeded_rng();
+    let rng = seeded_rng();
     // Make sure there are duplicate keys, for testing sort stability
     let r: Vec<i32> = rng.sample_iter(&Standard).take(512).collect();
     let a: Vec<(i32, u16)> = r.iter().chain(&r).cloned().zip(0..).collect();
@@ -1552,7 +1578,7 @@ fn min_max_by() {
 
 #[test]
 fn min_max_by_key() {
-    let mut rng = seeded_rng();
+    let rng = seeded_rng();
     // Make sure there are duplicate keys, for testing sort stability
     let r: Vec<i32> = rng.sample_iter(&Standard).take(512).collect();
     let a: Vec<(i32, u16)> = r.iter().chain(&r).cloned().zip(0..).collect();
@@ -1851,7 +1877,7 @@ fn check_partition_map() {
 
 #[test]
 fn check_either() {
-    type I = ::vec::IntoIter<i32>;
+    type I = crate::vec::IntoIter<i32>;
     type E = Either<I, I>;
 
     let v: Vec<i32> = (0..1024).collect();

@@ -15,19 +15,17 @@
 
 use std::cell::UnsafeCell;
 use std::marker::PhantomData;
-use std::mem;
+use std::mem::{self, MaybeUninit};
 use std::ptr;
 use std::sync::atomic::{self, AtomicUsize, Ordering};
 use std::time::Instant;
 
 use crossbeam_utils::{Backoff, CachePadded};
 
-use maybe_uninit::MaybeUninit;
-
-use context::Context;
-use err::{RecvTimeoutError, SendTimeoutError, TryRecvError, TrySendError};
-use select::{Operation, SelectHandle, Selected, Token};
-use waker::SyncWaker;
+use crate::context::Context;
+use crate::err::{RecvTimeoutError, SendTimeoutError, TryRecvError, TrySendError};
+use crate::select::{Operation, SelectHandle, Selected, Token};
+use crate::waker::SyncWaker;
 
 /// A slot in a channel.
 struct Slot<T> {
@@ -114,22 +112,22 @@ impl<T> Channel<T> {
         // Tail is initialized to `{ lap: 0, mark: 0, index: 0 }`.
         let tail = 0;
 
-        // Allocate a buffer of `cap` slots.
+        // Allocate a buffer of `cap` slots initialized
+        // with stamps.
         let buffer = {
-            let mut v = Vec::<Slot<T>>::with_capacity(cap);
-            let ptr = v.as_mut_ptr();
-            mem::forget(v);
+            let mut boxed: Box<[Slot<T>]> = (0..cap)
+                .map(|i| {
+                    // Set the stamp to `{ lap: 0, mark: 0, index: i }`.
+                    Slot {
+                        stamp: AtomicUsize::new(i),
+                        msg: UnsafeCell::new(MaybeUninit::uninit()),
+                    }
+                })
+                .collect();
+            let ptr = boxed.as_mut_ptr();
+            mem::forget(boxed);
             ptr
         };
-
-        // Initialize stamps in the slots.
-        for i in 0..cap {
-            unsafe {
-                // Set the stamp to `{ lap: 0, mark: 0, index: i }`.
-                let slot = buffer.add(i);
-                ptr::write(&mut (*slot).stamp, AtomicUsize::new(i));
-            }
-        }
 
         Channel {
             buffer,
@@ -145,12 +143,12 @@ impl<T> Channel<T> {
     }
 
     /// Returns a receiver handle to the channel.
-    pub fn receiver(&self) -> Receiver<T> {
+    pub fn receiver(&self) -> Receiver<'_, T> {
         Receiver(self)
     }
 
     /// Returns a sender handle to the channel.
-    pub fn sender(&self) -> Sender<T> {
+    pub fn sender(&self) -> Sender<'_, T> {
         Sender(self)
     }
 
@@ -555,18 +553,22 @@ impl<T> Drop for Channel<T> {
 
         // Finally, deallocate the buffer, but don't run any destructors.
         unsafe {
-            Vec::from_raw_parts(self.buffer, 0, self.cap);
+            // Create a slice from the buffer to make
+            // a fat pointer. Then, use Box::from_raw
+            // to deallocate it.
+            let ptr = std::slice::from_raw_parts_mut(self.buffer, self.cap) as *mut [Slot<T>];
+            Box::from_raw(ptr);
         }
     }
 }
 
 /// Receiver handle to a channel.
-pub struct Receiver<'a, T: 'a>(&'a Channel<T>);
+pub struct Receiver<'a, T>(&'a Channel<T>);
 
 /// Sender handle to a channel.
-pub struct Sender<'a, T: 'a>(&'a Channel<T>);
+pub struct Sender<'a, T>(&'a Channel<T>);
 
-impl<'a, T> SelectHandle for Receiver<'a, T> {
+impl<T> SelectHandle for Receiver<'_, T> {
     fn try_select(&self, token: &mut Token) -> bool {
         self.0.start_recv(token)
     }
@@ -602,7 +604,7 @@ impl<'a, T> SelectHandle for Receiver<'a, T> {
     }
 }
 
-impl<'a, T> SelectHandle for Sender<'a, T> {
+impl<T> SelectHandle for Sender<'_, T> {
     fn try_select(&self, token: &mut Token) -> bool {
         self.0.start_send(token)
     }
