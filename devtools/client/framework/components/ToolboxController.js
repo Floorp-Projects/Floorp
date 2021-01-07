@@ -42,6 +42,7 @@ class ToolboxController extends Component {
       checkedButtonsUpdated: () => {
         this.forceUpdate();
       },
+      errorCount: 0,
     };
 
     this.setFocusedButton = this.setFocusedButton.bind(this);
@@ -60,6 +61,7 @@ class ToolboxController extends Component {
     this.updateButtonIds = this.updateButtonIds.bind(this);
     this.updateFocusedButton = this.updateFocusedButton.bind(this);
     this.setDebugTargetData = this.setDebugTargetData.bind(this);
+    this.setErrorCount = this.setErrorCount.bind(this);
   }
 
   shouldComponentUpdate() {
@@ -192,6 +194,10 @@ class ToolboxController extends Component {
 
   setDebugTargetData(data) {
     this.setState({ debugTargetData: data });
+  }
+
+  setErrorCount(errorCount) {
+    this.setState({ errorCount });
   }
 
   render() {

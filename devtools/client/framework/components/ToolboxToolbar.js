@@ -119,6 +119,8 @@ class ToolboxToolbar extends Component {
         runtimeInfo: PropTypes.object.isRequired,
         targetType: PropTypes.string.isRequired,
       }),
+      // Number of errors in page
+      errorCount: PropTypes.number.isRequired,
     };
   }
 
@@ -183,7 +185,10 @@ class ToolboxToolbar extends Component {
       return isVisible && (isStart ? isInStartContainer : !isInStartContainer);
     });
 
-    if (visibleButtons.length === 0) {
+    // Add the error icon
+    const errorIcon = isStart ? null : this.renderErrorIcon();
+
+    if (visibleButtons.length === 0 && !errorIcon) {
       return null;
     }
 
@@ -231,6 +236,12 @@ class ToolboxToolbar extends Component {
       });
     });
 
+    if (errorIcon) {
+      // The error icon is unconditionally added before the other buttons of the "end"
+      // toolbox buttons container.
+      renderedButtons.unshift(errorIcon);
+    }
+
     // Add the appropriate separator, if needed.
     const children = renderedButtons;
     if (renderedButtons.length) {
@@ -238,7 +249,7 @@ class ToolboxToolbar extends Component {
         children.push(this.renderSeparator());
         // For the end group we add a separator *before* the RDM button if it
         // exists, but only if it is not the only button.
-      } else if (rdmIndex !== -1 && visibleButtons.length > 1) {
+      } else if (rdmIndex !== -1 && renderedButtons.length > 1) {
         children.splice(children.length - 1, 0, this.renderSeparator());
       }
     }
@@ -275,6 +286,33 @@ class ToolboxToolbar extends Component {
         },
       },
       this.createFrameList
+    );
+  }
+
+  renderErrorIcon() {
+    let { errorCount } = this.props;
+
+    if (!errorCount) {
+      return null;
+    }
+
+    if (errorCount > 99) {
+      errorCount = "99+";
+    }
+    return button(
+      {
+        className: "devtools-tabbar-button command-button toolbox-error",
+        onClick: () => {
+          if (this.props.currentToolId !== "webconsole") {
+            this.props.toolbox.openSplitConsole();
+          }
+        },
+        title:
+          this.props.currentToolId !== "webconsole"
+            ? this.props.L10N.getStr("toolbox.errorCountButton.tooltip")
+            : null,
+      },
+      errorCount
     );
   }
 
