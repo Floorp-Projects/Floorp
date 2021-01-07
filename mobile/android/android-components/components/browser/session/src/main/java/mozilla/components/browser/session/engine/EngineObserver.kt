@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Environment
 import androidx.core.net.toUri
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.ext.toElement
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
@@ -19,6 +18,7 @@ import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
+import mozilla.components.browser.state.state.AppIntentState
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -122,7 +122,7 @@ internal class EngineObserver(
     }
 
     override fun onLaunchIntentRequest(url: String, appIntent: Intent?) {
-        session.launchIntentMetadata = LaunchIntentMetadata(url, appIntent)
+        store?.dispatch(ContentAction.UpdateAppIntentAction(session.id, AppIntentState(url, appIntent)))
     }
 
     override fun onTitleChange(title: String) {

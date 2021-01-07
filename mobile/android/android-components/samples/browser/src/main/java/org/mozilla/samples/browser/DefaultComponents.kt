@@ -208,8 +208,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             interceptLinkClicks = true,
             launchInApp = {
                 applicationContext.components.preferences.getBoolean(PREF_LAUNCH_EXTERNAL_APP, false)
-            },
-            launchFromInterceptor = true
+            }
         )
     }
 

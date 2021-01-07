@@ -17,6 +17,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.AppIntentState
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.store.BrowserStore
@@ -1148,19 +1149,16 @@ class EngineObserverTest {
     }
 
     @Test
-    fun `onLaunchIntentRequest is set to launchIntentMetadata`() {
+    fun `onLaunchIntentRequest dispatches UpdateAppIntentAction`() {
         val url = "https://www.mozilla.org"
         val session = Session(url)
 
-        val observer = EngineObserver(session, mock())
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
         val intent: Intent = mock()
         observer.onLaunchIntentRequest(url = url, appIntent = intent)
 
-        val appUrl = session.launchIntentMetadata.url
-        val appIntent = session.launchIntentMetadata.appIntent
-
-        assertEquals(url, appUrl)
-        assertEquals(intent, appIntent)
+        verify(store).dispatch(ContentAction.UpdateAppIntentAction(session.id, AppIntentState(url, intent)))
     }
 
     @Test

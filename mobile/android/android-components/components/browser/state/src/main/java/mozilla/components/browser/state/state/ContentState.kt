@@ -57,6 +57,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property recordingDevices List of recording devices (e.g. camera or microphone) currently in use
  * by web content.
  * @property desktopMode true if desktop mode is enabled, otherwise false.
+ * @property appIntent the last received [AppIntentState].
  */
 data class ContentState(
     val url: String,
@@ -88,5 +89,6 @@ data class ContentState(
     val loadRequest: LoadRequestState? = null,
     val refreshCanceled: Boolean = false,
     val recordingDevices: List<RecordingDevice> = emptyList(),
-    val desktopMode: Boolean = false
+    val desktopMode: Boolean = false,
+    val appIntent: AppIntentState? = null
 )

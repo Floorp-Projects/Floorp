@@ -6,9 +6,7 @@
 
 package mozilla.components.browser.session
 
-import android.content.Intent
 import android.graphics.Bitmap
-import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.state.action.ContentAction.RemoveWebAppManifestAction
@@ -82,7 +80,6 @@ class Session(
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) = Unit
-        fun onLaunchIntentRequest(session: Session, url: String, appIntent: Intent?) = Unit
     }
 
     /**
@@ -145,19 +142,6 @@ class Session(
     var canGoForward: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onNavigationStateChanged(this@Session, canGoBack, new) }
         store?.syncDispatch(UpdateForwardNavigationStateAction(id, canGoForward))
-    }
-
-    /**
-     * Set when a launch intent is received.
-     */
-    var launchIntentMetadata: LaunchIntentMetadata by Delegates.observable(LaunchIntentMetadata.blank) { _, _, new ->
-        notifyObservers {
-            onLaunchIntentRequest(
-                this@Session,
-                new.url,
-                new.appIntent
-            )
-        }
     }
 
     /**

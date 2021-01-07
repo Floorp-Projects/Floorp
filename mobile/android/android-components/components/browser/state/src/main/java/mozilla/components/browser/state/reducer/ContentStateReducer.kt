@@ -204,6 +204,12 @@ internal object ContentStateReducer {
             is ContentAction.UpdatePermissionHighlightsStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(permissionHighlights = action.highlights)
             }
+            is ContentAction.UpdateAppIntentAction -> updateContentState(state, action.sessionId) {
+                it.copy(appIntent = action.appIntent)
+            }
+            is ContentAction.ConsumeAppIntentAction -> updateContentState(state, action.sessionId) {
+                it.copy(appIntent = null)
+            }
         }
     }
 }

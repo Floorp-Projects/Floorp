@@ -9,7 +9,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.SessionState.Source
-import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction
@@ -185,22 +184,6 @@ class SessionTest {
 
         assertEquals("https://www.mozilla.org", session.url)
         verify(observer, never()).onUrlChanged(eq(session), eq("https://www.mozilla.org"))
-        verifyNoMoreInteractions(observer)
-    }
-
-    @Test
-    fun `observer is notified when launch intent request is triggered`() {
-        val observer = mock(Session.Observer::class.java)
-
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-
-        session.launchIntentMetadata = LaunchIntentMetadata(
-            "https://www.mozilla.org", mock()
-        )
-
-        verify(observer, times(1)).onLaunchIntentRequest(eq(session), eq("https://www.mozilla.org"),
-            any())
         verifyNoMoreInteractions(observer)
     }
 
@@ -525,7 +508,6 @@ class SessionTest {
         defaultObserver.onLoadingStateChanged(session, true)
         defaultObserver.onNavigationStateChanged(session, true, true)
         defaultObserver.onLoadRequest(session, "https://www.mozilla.org", true, true)
-        defaultObserver.onLaunchIntentRequest(session, "https://www.mozilla.org", null)
         defaultObserver.onSearch(session, "")
         defaultObserver.onSecurityChanged(session, Session.SecurityInfo())
         defaultObserver.onCustomTabConfigChanged(session, null)

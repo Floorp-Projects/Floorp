@@ -33,6 +33,9 @@ permalink: /changelog/
 * **feature-qr**
   * QR Scanner can now scan inverted QR codes, by decoding inverted source when the decoding the original source fails.
 
+* **feature-app-links**
+  * ⚠️ **This is a breaking change**: Migrated this component to use `browser-state` instead of `browser-session`. It is now required to pass a `BrowserStore` instance (instead of `SessionManager`) to `AppLinksFeature`.
+
 # 70.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v69.0.0...v70.0.0)

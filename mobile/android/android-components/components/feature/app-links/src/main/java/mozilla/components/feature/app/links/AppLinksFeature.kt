@@ -8,12 +8,20 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.app.links.RedirectDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * This feature implements observer for handling redirects to external apps. The users are asked to
@@ -23,7 +31,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * It requires: a [Context], and a [FragmentManager].
  *
  * @param context Context the feature is associated with.
- * @param sessionManager Provides access to a centralized registry of all active sessions.
+ * @param store Reference to the application's [BrowserStore].
  * @param sessionId The session ID to observe.
  * @param fragmentManager FragmentManager for interacting with fragments.
  * @param dialog The dialog for redirect.
@@ -37,7 +45,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 @Suppress("LongParameterList")
 class AppLinksFeature(
     private val context: Context,
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val sessionId: String? = null,
     private val fragmentManager: FragmentManager? = null,
     private var dialog: RedirectDialogFragment? = null,
@@ -47,65 +55,69 @@ class AppLinksFeature(
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null
 ) : LifecycleAwareFeature {
 
-    @Suppress("DEPRECATION")
-    // TODO migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/8913
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val observer = object : mozilla.components.browser.session.SelectionAwareSessionObserver(sessionManager) {
-            override fun onLaunchIntentRequest(
-                session: Session,
-                url: String,
-                appIntent: Intent?
-            ) {
-                if (appIntent == null) {
-                    return
-                }
-
-                val doNotOpenApp = {
-                    loadUrlUseCase?.invoke(url, session.id, EngineSession.LoadUrlFlags.none())
-                }
-
-                val loadUrlAction = {
-                    loadUrlUseCase?.invoke(url, session.id, EngineSession.LoadUrlFlags.none())
-                }
-
-                val doOpenApp = {
-                    useCases.openAppLink(
-                        appIntent,
-                        failedToLaunchAction = failedToLaunchAction,
-                        loadUrlAction = loadUrlAction
-                    )
-                }
-
-                if (!session.private || fragmentManager == null) {
-                    doOpenApp()
-                    return
-                }
-
-                val dialog = getOrCreateDialog()
-                dialog.setAppLinkRedirectUrl(url)
-                dialog.onConfirmRedirect = doOpenApp
-                dialog.onCancelRedirect = doNotOpenApp
-
-                if (!isAlreadyADialogCreated()) {
-                    dialog.showNow(fragmentManager, FRAGMENT_TAG)
-                }
-
-                return
-            }
-    }
+    private var scope: CoroutineScope? = null
 
     /**
      * Starts observing app links on the selected session.
      */
     override fun start() {
-        observer.observeIdOrSelected(sessionId)
+        scope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(sessionId) }
+                .ifChanged {
+                    it.content.appIntent
+                }
+                .collect { tab ->
+                    tab.content.appIntent?.let {
+                        handleAppIntent(tab, it.url, it.appIntent)
+                        store.dispatch(ContentAction.ConsumeAppIntentAction(tab.id))
+                    }
+                }
+            }
+
         findPreviousDialogFragment()?.let {
             fragmentManager?.beginTransaction()?.remove(it)?.commit()
         }
     }
 
     override fun stop() {
-        observer.stop()
+        scope?.cancel()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun handleAppIntent(tab: SessionState, url: String, appIntent: Intent?) {
+        if (appIntent == null) {
+            return
+        }
+
+        val doNotOpenApp = {
+            loadUrlUseCase?.invoke(url, tab.id, EngineSession.LoadUrlFlags.none())
+        }
+
+        val loadUrlAction = {
+            loadUrlUseCase?.invoke(url, tab.id, EngineSession.LoadUrlFlags.none())
+        }
+
+        val doOpenApp = {
+            useCases.openAppLink(
+                appIntent,
+                failedToLaunchAction = failedToLaunchAction,
+                loadUrlAction = loadUrlAction
+            )
+        }
+
+        if (!tab.content.private || fragmentManager == null) {
+            doOpenApp()
+            return
+        }
+
+        val dialog = getOrCreateDialog()
+        dialog.setAppLinkRedirectUrl(url)
+        dialog.onConfirmRedirect = doOpenApp
+        dialog.onCancelRedirect = doNotOpenApp
+
+        if (!isAlreadyADialogCreated()) {
+            dialog.showNow(fragmentManager, FRAGMENT_TAG)
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

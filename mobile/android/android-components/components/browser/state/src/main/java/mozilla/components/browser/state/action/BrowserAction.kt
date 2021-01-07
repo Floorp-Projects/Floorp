@@ -8,6 +8,7 @@ import android.content.ComponentCallbacks2
 import android.graphics.Bitmap
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.AppIntentState
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ClosedTab
 import mozilla.components.browser.state.state.ClosedTabSessionState
@@ -523,6 +524,17 @@ sealed class ContentAction : BrowserAction() {
      * Updates the [ContentState] of the given [sessionId] to indicate whether or not desktop mode is enabled.
      */
     data class UpdateDesktopModeAction(val sessionId: String, val enabled: Boolean) : ContentAction()
+
+    /**
+     * Updates the [AppIntentState] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateAppIntentAction(val sessionId: String, val appIntent: AppIntentState) :
+        ContentAction()
+
+    /**
+     * Removes the [AppIntentState] of the [ContentState] with the given [sessionId].
+     */
+    data class ConsumeAppIntentAction(val sessionId: String) : ContentAction()
 }
 
 /**

@@ -7,6 +7,7 @@ package mozilla.components.browser.state.action
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.state.AppIntentState
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.SecurityInfoState
@@ -697,5 +698,43 @@ class ContentActionTest {
         ).joinBlocking()
 
         assertTrue(tab.content.permissionHighlights.isAutoPlayBlocking)
+    }
+
+    @Test
+    fun `UpdateAppIntentAction updates request`() {
+        assertNull(tab.content.promptRequest)
+
+        val appIntent1: AppIntentState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateAppIntentAction(tab.id, appIntent1)
+        ).joinBlocking()
+
+        assertEquals(appIntent1, tab.content.appIntent)
+
+        val appIntent2: AppIntentState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateAppIntentAction(tab.id, appIntent2)
+        ).joinBlocking()
+
+        assertEquals(appIntent2, tab.content.appIntent)
+    }
+
+    @Test
+    fun `ConsumeAppIntentAction removes request`() {
+        val appIntent: AppIntentState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateAppIntentAction(tab.id, appIntent)
+        ).joinBlocking()
+
+        assertEquals(appIntent, tab.content.appIntent)
+
+        store.dispatch(
+            ContentAction.ConsumeAppIntentAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.appIntent)
     }
 }
