@@ -189,6 +189,8 @@ bool RenderCompositorEGL::Resume() {
   return true;
 }
 
+bool RenderCompositorEGL::IsPaused() { return mEGLSurface == EGL_NO_SURFACE; }
+
 gl::GLContext* RenderCompositorEGL::gl() const {
   return RenderThread::Get()->SharedGL();
 }
