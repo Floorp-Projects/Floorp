@@ -197,8 +197,6 @@ user_pref("privacy.trackingprotection.introURL", "http://{server}/trackingprotec
 user_pref("security.default_personal_cert", "Select Automatically"); // Need to client auth test be w/o any dialogs
 // Existing tests don't wait for the notification button security delay
 user_pref("security.notification_enable_delay", 0);
-// Make sure SSL Error reports don't hit the network
-user_pref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/ssl_error_reports.sjs?succeed");
 user_pref("security.warn_viewing_mixed", false);
 // Ensure blocklist updates don't hit the network
 user_pref("services.settings.server", "http://{server}/dummy-kinto/v1");

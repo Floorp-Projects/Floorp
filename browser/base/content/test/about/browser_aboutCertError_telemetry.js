@@ -49,7 +49,6 @@ add_task(async function checkTelemetryClickEvents() {
     let recordedObjects = [
       "advanced_button",
       "learn_more_link",
-      "auto_report_cb",
       "error_code_link",
       "clipboard_button_top",
       "clipboard_button_bot",
