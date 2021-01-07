@@ -787,10 +787,6 @@ template <XDRMode mode>
 XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 template <XDRMode mode>
-XDRResult XDRTaggedParserAtomIndex(
-    XDRState<mode>* xdr, frontend::TaggedParserAtomIndex* taggedIndex);
-
-template <XDRMode mode>
 XDRResult XDRParserAtomEntry(XDRState<mode>* xdr,
                              frontend::ParserAtomEntry** atomp);
 
