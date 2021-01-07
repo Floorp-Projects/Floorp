@@ -14,7 +14,7 @@
   <script type="application/javascript">
     const utils = SpecialPowers.getDOMWindowUtils(window);
 
-    function* test(testDriver) {
+    async function test() {
       is(getResolution(), 1.0, "should not be zoomed (1)");
 
       is(window.scrollX, 0, "shouldn't have scrolled (2)");
@@ -24,7 +24,7 @@
 
       // Zoom in
       SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
       is(getResolution(), 2.0, "should have zoomed (6)");
 
@@ -35,7 +35,7 @@
 
       window.synthesizeKey("KEY_ArrowRight");
 
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
       is(getResolution(), 2.0, "should be zoomed (11)");
 
@@ -46,7 +46,7 @@
 
       window.synthesizeKey("KEY_ArrowDown");
 
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
       is(getResolution(), 2.0, "should be zoomed (16)");
 
@@ -57,12 +57,14 @@
 
       // Zoom back out
       SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(1.0);
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
       is(getResolution(), 1.0, "should not be zoomed (21)");
     }
 
-    waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>
