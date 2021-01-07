@@ -412,11 +412,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.dbg.allowUnobservedAsmJS = !this._options.observeAsmJS;
     }
 
-    // Send the response to the attach request now (rather than
-    // returning it), because protocol.js contains a hack just for this one method.
-    // But this is no longer needed and this can be removed in a dedicated followup.
-    this.conn.send({ from: this.actorID });
-
     // Set everything up so that breakpoint can work
     this._setupForBreaking();
 
