@@ -182,7 +182,7 @@
     .switch input:focus-visible + .slider {
       border: 1px solid var(--newtab-focus-border-selected);
       outline: 0;
-      box-shadow: $newtab-focus-outline;
+      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
     }
 
     .switch input:not(:checked):focus-visible + .slider {
@@ -272,5 +272,5 @@
 .close-button:focus-visible {
   border: 1px solid var(--newtab-focus-border);
   outline: 0;
-  box-shadow: $newtab-focus-outline;
+  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
 }

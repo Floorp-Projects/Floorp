@@ -19,7 +19,6 @@ $input-error-border: 1px solid $red-60;
 $input-error-boxshadow: textbox-shadow($red-60);
 $shadow-primary: 0 0 0 5px var(--newtab-card-active-outline-color);
 $shadow-secondary: 0 1px 4px 0 $grey-90-20;
-$newtab-focus-outline: 0 0 0 2px var(--newtab-focus-outline);
 
 // Default theme
 body {
@@ -117,6 +116,10 @@ body {
   --customize-menu-second-shadow: #{$newtab-card-secondshadow};
   --customize-menu-primary-action-text: #{$white};
   --customize-menu-line-color: #{$newtab-card-line-color};
+  --newtab-search-first-shadow: #{$newtab-card-firstshadow};
+  --newtab-search-second-shadow: #{$newtab-card-secondshadow};
+  --newtab-search-text-color: #{$newtab-card-secondary-text-color};
+  --newtab-search-new-border-color: #{$newtab-card-separator-line-color};
 
   &[lwt-newtab-brighttext] {
     // General styles
@@ -210,5 +213,9 @@ body {
     --customize-menu-second-shadow: #{$newtab-darktheme-card-secondshadow};
     --customize-menu-primary-action-text: #{$newtab-card-darktheme-primary-text-color};
     --customize-menu-line-color: #{$newtab-card-darktheme-line-color};
+    --newtab-search-first-shadow: #{$newtab-card-darktheme-firstshadow};
+    --newtab-search-second-shadow: #{$newtab-darktheme-card-secondshadow};
+    --newtab-search-text-color: #{$newtab-card-darktheme-secondary-text-color};
+    --newtab-search-new-border-color: #{$grey-70};
   }
 }

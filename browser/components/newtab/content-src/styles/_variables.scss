@@ -98,7 +98,6 @@ $newtab-background-button-default-hover-color: rgba(151, 151, 151, 0.5);
 $newtab-background-button-darktheme-hover-color: rgba(173, 173, 173, 0.5);
 $newtab-background-button-default-active-color: rgba(196, 196, 196, 0.5);
 $newtab-background-button-darktheme-active-color: rgba(114, 114, 114, 0.5);
-$newtab-background-button-focus-boxshadow-color: rgba(0, 96, 223, 0.25);
 $newtab-card-primary-text-color: #20123A;
 $newtab-card-darktheme-primary-text-color: #E0E0E6;
 $newtab-card-line-color: #716F87;
@@ -125,6 +124,8 @@ $newtab-card-darktheme-hover-color: rgba(180, 180, 180, 0.1);
 $newtab-card-hover-color: rgba(0, 0, 0, 0.05);
 $newtab-tile-shadow-secondary: rgba(29, 17, 51, 0.2);
 $newtab-tile-darktheme-shadow-secondary: rgba(21, 20, 26, 0.75);
+$newtab-card-secondary-text-color: #585165;
+$newtab-card-darktheme-secondary-text-color: #B1B1BD;
 
 // Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
 $photon-easing: cubic-bezier(0.07, 0.95, 0, 1);
