@@ -265,11 +265,12 @@ CSSSizeOrRatio nsImageRenderer::ComputeIntrinsicSize() {
       }
       break;
     }
+    case StyleImage::Tag::ImageSet:  // TODO
+    // Bug 546052 cross-fade not yet implemented.
+    case StyleImage::Tag::CrossFade:
     // Per <http://dev.w3.org/csswg/css3-images/#gradients>, gradients have no
     // intrinsic dimensions.
     case StyleImage::Tag::Gradient:
-    // Bug 546052 cross-fade not yet implemented.
-    case StyleImage::Tag::CrossFade:
     case StyleImage::Tag::None:
       break;
   }
@@ -522,6 +523,7 @@ ImgDrawResult nsImageRenderer::Draw(nsPresContext* aPresContext,
     // See bug 546052 - cross-fade implementation still being worked
     // on.
     case StyleImage::Tag::CrossFade:
+    case StyleImage::Tag::ImageSet:  // TODO
     case StyleImage::Tag::None:
       break;
   }
