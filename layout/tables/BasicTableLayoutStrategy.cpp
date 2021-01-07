@@ -126,11 +126,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   // columns.
   if (iSize.ConvertsToLength()) {
     hasSpecifiedISize = true;
-    // Note: since ComputeISizeValue was designed to return content-box
-    // isize, it will (in some cases) subtract the box-sizing edges.
-    // We prevent this unwanted behavior by calling it with
-    // aContentEdgeToBoxSizing and aBoxSizingToMarginEdge set to 0.
-    nscoord c = aFrame->ComputeISizeValue(aRenderingContext, 0, 0, 0, iSize);
+    nscoord c = iSize.ToLength();
     // Quirk: A cell with "nowrap" set and a coord value for the
     // isize which is bigger than the intrinsic minimum isize uses
     // that coord value as the minimum isize.
