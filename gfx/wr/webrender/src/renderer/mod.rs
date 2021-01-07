@@ -89,11 +89,11 @@ use crate::resource_cache::ResourceCache;
 use crate::scene_builder_thread::{SceneBuilderThread, SceneBuilderThreadChannels, LowPrioritySceneBuilderThread};
 use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::shade::{Shaders, WrShaders};
-use crate::guillotine_allocator::{GuillotineAllocator, FreeRectSlice};
-use crate::texture_cache::{TextureCache, TextureCacheConfig};
 use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
+use crate::texture_cache::{TextureCache, TextureCacheConfig};
+use crate::texture_pack::{GuillotineAllocator, FreeRectSlice};
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::util::drain_filter;
 
