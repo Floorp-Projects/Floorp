@@ -10,6 +10,7 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser-enable-popup-new-user.ini",
     "test/browser-telemetry-startup.ini",
     "test/browser.ini",
+    "test/metrics/browser_metrics.ini",
     "test/metrics/browser_metrics_debugger.ini",
     "test/metrics/browser_metrics_inspector.ini",
     "test/metrics/browser_metrics_netmonitor.ini",
