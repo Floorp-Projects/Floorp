@@ -46,25 +46,19 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   virtual ~WebrtcMediaDataEncoder() = default;
 
   bool SetupConfig(const webrtc::VideoCodec* aCodecSettings);
-  bool CreateEncoder(const webrtc::VideoCodec* aCodecSettings);
+  already_AddRefed<MediaDataEncoder> CreateEncoder(
+      const webrtc::VideoCodec* aCodecSettings);
   bool InitEncoder();
-  RefPtr<MediaData> CreateVideoDataFromWebrtcVideoFrame(
-      const webrtc::VideoFrame& aFrame, bool aIsKeyFrame);
 
-  void ProcessEncode(const RefPtr<MediaData>& aInputData);
-
-  AbstractThread* OwnerThread() const { return mTaskQueue; }
-  bool OnTaskQueue() const { return OwnerThread()->IsCurrentThreadIn(); };
-
-  Mutex mCallbackMutex;
-  const RefPtr<SharedThreadPool> mThreadPool;
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<PEMFactory> mFactory;
   RefPtr<MediaDataEncoder> mEncoder;
+
+  Mutex mCallbackMutex;  // Protects mCallback and mError.
   webrtc::EncodedImageCallback* mCallback = nullptr;
+  MediaResult mError = NS_OK;
 
   VideoInfo mInfo;
-  MediaResult mError = NS_OK;
   webrtc::H264PacketizationMode mMode;
   webrtc::BitrateAdjuster mBitrateAdjuster;
   uint32_t mMaxFrameRate;
