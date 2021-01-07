@@ -26,8 +26,8 @@ GV_CONFIG=b'''env:
 '''
 
 def print_usage_and_exit():
-    print('USAGE: ./{} [push|remove] [nightly|beta|release|debug]'.format(SCRIPT_NAME), file=sys.stderr)
-    print('example: ./{} push nightly'.format(SCRIPT_NAME), file=sys.stderr)
+    print('USAGE: ./{} [activate|deactivate] [nightly|beta|release|debug]'.format(SCRIPT_NAME), file=sys.stderr)
+    print('example: ./{} activate nightly'.format(SCRIPT_NAME), file=sys.stderr)
     sys.exit(1)
 
 def push(id, filename):
@@ -41,7 +41,7 @@ def push(id, filename):
         print('Pushing {} to device.'.format(filename))
         run(['adb', 'push', config.name, os.path.join(PATH_PREFIX, filename)])
         run(['adb', 'shell', 'am', 'set-debug-app', '--persistent', id])
-        print('Startup profiling enabled on all future start ups, possibly even after reinstall. Call script with `remove` to disable it.')
+        print('Startup profiling enabled on all future start ups, possibly even after reinstall. Call script with `deactivate` to disable it.')
     finally:
         os.remove(config.name)
 
@@ -71,9 +71,9 @@ def main():
 
     filename = id + '-geckoview-config.yaml'
 
-    if cmd == 'push':
+    if cmd == 'activate':
         push(id, filename)
-    elif cmd == 'remove':
+    elif cmd == 'deactivate':
         remove(filename)
     else:
         print_usage_and_exit()
