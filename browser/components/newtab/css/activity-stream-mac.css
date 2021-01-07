@@ -51,8 +51,8 @@ body {
   --newtab-textbox-focus-boxshadow: 0 0 0 1px #0060DF, 0 0 0 4px rgba(0, 96, 223, 0.3);
   --newtab-background-button-color: rgba(223, 223, 223, 0.5);
   --newtab-background-button-text-color: #484848;
-  --newtab-background-button-hover-color: rgba(151, 151, 151, 0.5);
-  --newtab-background-button-active-color: rgba(196, 196, 196, 0.5);
+  --newtab-background-button-hover-color: rgba(196, 196, 196, 0.5);
+  --newtab-background-button-active-color: rgba(151, 151, 151, 0.5);
   --newtab-button-primary-color: #0060DF;
   --newtab-button-secondary-color: inherit;
   --newtab-feed-button-background: #EDEDF0;
@@ -122,8 +122,8 @@ body {
     --newtab-textbox-focus-boxshadow: 0 0 0 1px #45A1FF, 0 0 0 4px rgba(69, 161, 255, 0.3);
     --newtab-background-button-color: rgba(80, 80, 80, 0.5);
     --newtab-background-button-text-color: #CDCDD4;
-    --newtab-background-button-hover-color: rgba(173, 173, 173, 0.5);
-    --newtab-background-button-active-color: rgba(114, 114, 114, 0.5);
+    --newtab-background-button-hover-color: rgba(114, 114, 114, 0.5);
+    --newtab-background-button-active-color: rgba(173, 173, 173, 0.5);
     --newtab-feed-button-background: #38383D;
     --newtab-feed-button-text: #F9F9FA;
     --newtab-feed-button-background-faded: rgba(56, 56, 61, 0.6);
