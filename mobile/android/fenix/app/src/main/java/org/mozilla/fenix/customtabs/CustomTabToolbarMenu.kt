@@ -7,6 +7,7 @@ package org.mozilla.fenix.customtabs
 import android.content.Context
 import android.graphics.Typeface
 import androidx.annotation.ColorRes
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuHighlight
@@ -17,8 +18,8 @@ import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
@@ -46,7 +47,8 @@ class CustomTabToolbarMenu(
     override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     /** Gets the current custom tab session */
-    private val session: TabSessionState? get() = sessionId?.let { store.state.findTab(it) }
+    @VisibleForTesting
+    internal val session: CustomTabSessionState? get() = sessionId?.let { store.state.findCustomTab(it) }
     private val appName = context.getString(R.string.app_name)
 
     override val menuToolbar by lazy {
