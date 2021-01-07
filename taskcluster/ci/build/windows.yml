@@ -941,6 +941,7 @@ win64-asan/debug:
             - linux64-wine
             - linux64-liblowercase
             - linux64-winchecksec
+            - win64-llvm-symbolizer
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -994,6 +995,7 @@ win64-asan/opt:
             - linux64-wine
             - linux64-liblowercase
             - linux64-winchecksec
+            - win64-llvm-symbolizer
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -1056,6 +1058,7 @@ win64-asan-reporter-shippable/opt:
             - linux64-wine
             - linux64-liblowercase
             - linux64-winchecksec
+            - win64-llvm-symbolizer
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -1105,6 +1108,7 @@ win64-asan-fuzzing/opt:
             - linux64-wine
             - linux64-liblowercase
             - linux64-winchecksec
+            - win64-llvm-symbolizer
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
