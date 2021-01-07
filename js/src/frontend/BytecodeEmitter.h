@@ -277,6 +277,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   bool needsImplicitThis();
 
+  size_t countThisEnvironmentHops();
   MOZ_MUST_USE bool emitThisEnvironmentCallee();
   MOZ_MUST_USE bool emitSuperBase();
 
