@@ -4679,6 +4679,19 @@ bool CacheIRCompiler::emitMathFunctionNumberResult(NumberOperandId inputId,
   return emitMathFunctionNumberResultShared(fun, scratch, output.valueReg());
 }
 
+static void EmitStoreDenseElement(MacroAssembler& masm,
+                                  const ConstantOrRegister& value,
+                                  BaseObjectElementIndex target) {
+  if (value.constant()) {
+    Value v = value.value();
+    masm.storeValue(v, target);
+    return;
+  }
+
+  TypedOrValueRegister reg = value.reg();
+  masm.storeTypedOrValue(reg, target);
+}
+
 bool CacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
                                             Int32OperandId indexId,
                                             ValOperandId rhsId) {
@@ -4686,7 +4699,7 @@ bool CacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
 
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -4710,7 +4723,7 @@ bool CacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
 
   // Perform the store.
   EmitPreBarrier(masm, element, MIRType::Value);
-  masm.storeValue(val, element);
+  EmitStoreDenseElement(masm, val, element);
 
   emitPostBarrierElement(obj, val, scratch, index);
   return true;
@@ -4751,7 +4764,7 @@ bool CacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
 
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -4839,7 +4852,7 @@ bool CacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
   EmitPreBarrier(masm, element, MIRType::Value);
 
   masm.bind(&storeSkipPreBarrier);
-  masm.storeValue(val, element);
+  EmitStoreDenseElement(masm, val, element);
 
   emitPostBarrierElement(obj, val, scratch, index);
   return true;
