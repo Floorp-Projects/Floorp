@@ -26,7 +26,6 @@ class MockGfxInfo final : public nsIGfxInfo {
   bool mHasMixedRefreshRate;
   Maybe<bool> mHasBattery;
   const char* mVendorId;
-  const char* mDeviceId;
 
   // Default allows WebRender + compositor, and is desktop NVIDIA.
   MockGfxInfo()
@@ -36,8 +35,7 @@ class MockGfxInfo final : public nsIGfxInfo {
         mMaxRefreshRate(-1),
         mHasMixedRefreshRate(false),
         mHasBattery(Some(false)),
-        mVendorId("0x10de"),
-        mDeviceId("") {}
+        mVendorId("0x10de") {}
 
   NS_IMETHOD GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
                               int32_t* _retval) override {
@@ -70,14 +68,6 @@ class MockGfxInfo final : public nsIGfxInfo {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
     aAdapterVendorID.AssignASCII(mVendorId);
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetAdapterDeviceID(nsAString& aAdapterDeviceID) override {
-    if (!mDeviceId) {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-    aAdapterDeviceID.AssignASCII(mDeviceId);
     return NS_OK;
   }
 
@@ -172,6 +162,9 @@ class MockGfxInfo final : public nsIGfxInfo {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   NS_IMETHOD GetAdapterDriver(nsAString& aAdapterDriver) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD GetAdapterDeviceID(nsAString& aAdapterDeviceID) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   NS_IMETHOD GetAdapterSubsysID(nsAString& aAdapterSubsysID) override {
@@ -338,14 +331,6 @@ TEST_F(GfxConfigManager, WebRenderNoPartialPresent) {
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderPartialPresentMali) {
-  mWrPartialPresent = true;
-  mMockGfxInfo->mDeviceId = "Mali-G77";
-  ConfigureWebRender();
-
-  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
 }
 
 TEST_F(GfxConfigManager, WebRenderScaledResolutionWithHwStretching) {
