@@ -1174,10 +1174,4 @@ impl Shaders {
     }
 }
 
-// A wrapper around a strong reference to a Shaders
-// object. We have this so that external (ffi)
-// consumers can own a reference to a shared Shaders
-// instance without understanding rust's refcounting.
-pub struct WrShaders {
-    pub shaders: Rc<RefCell<Shaders>>,
-}
+pub type SharedShaders = Rc<RefCell<Shaders>>;

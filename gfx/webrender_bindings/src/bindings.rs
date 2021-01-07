@@ -37,8 +37,8 @@ use webrender::{
     api::units::*, api::*, render_api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor,
     CompositorCapabilities, CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, NativeSurfaceId,
     NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo, ProfilerHooks, RecordedFrameHandle,
-    Renderer, RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, TextureCacheConfig,
-    ThreadListener, UploadMethod, WrShaders, ONE_TIME_USAGE_HINT,
+    Renderer, RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, SharedShaders,
+    TextureCacheConfig, ThreadListener, UploadMethod, ONE_TIME_USAGE_HINT,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1450,6 +1450,9 @@ impl WrCompositor {
     }
 }
 
+/// A wrapper around a strong reference to a Shaders object.
+pub struct WrShaders(SharedShaders);
+
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern "C" fn wr_window_new(
@@ -1647,7 +1650,7 @@ pub extern "C" fn wr_window_new(
 
     let window_size = DeviceIntSize::new(window_width, window_height);
     let notifier = Box::new(CppNotifier { window_id });
-    let (renderer, sender) = match Renderer::new(gl, notifier, opts, shaders) {
+    let (renderer, sender) = match Renderer::new(gl, notifier, opts, shaders.map(|sh| &sh.0)) {
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             warn!(" Failed to create a Renderer: {:?}", e);
@@ -3958,7 +3961,7 @@ pub extern "C" fn wr_shaders_new(
         }
     }));
 
-    let shaders = WrShaders { shaders };
+    let shaders = WrShaders(shaders);
 
     device.end_frame();
     Box::into_raw(Box::new(shaders))
@@ -3968,7 +3971,7 @@ pub extern "C" fn wr_shaders_new(
 pub unsafe extern "C" fn wr_shaders_delete(shaders: *mut WrShaders, gl_context: *mut c_void) {
     let mut device = wr_device_new(gl_context, None);
     let shaders = Box::from_raw(shaders);
-    if let Ok(shaders) = Rc::try_unwrap(shaders.shaders) {
+    if let Ok(shaders) = Rc::try_unwrap(shaders.0) {
         shaders.into_inner().deinit(&mut device);
     }
     // let shaders go out of scope and get dropped
