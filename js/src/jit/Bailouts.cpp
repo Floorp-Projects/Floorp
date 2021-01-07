@@ -278,31 +278,6 @@ bool jit::EnsureHasEnvironmentObjects(JSContext* cx, AbstractFramePtr fp) {
   return true;
 }
 
-void jit::CheckFrequentBailouts(JSContext* cx, JSScript* script,
-                                BailoutKind bailoutKind) {
-  if (script->hasIonScript()) {
-    // Invalidate if this script keeps bailing out without invalidation. Next
-    // time we compile this script LICM will be disabled.
-    IonScript* ionScript = script->ionScript();
-
-    if (ionScript->bailoutExpected()) {
-      // If we bailout because of the first execution of a basic block,
-      // then we should record which basic block we are returning in,
-      // which should prevent this from happening again.  Also note that
-      // the first execution bailout can be related to an inlined script,
-      // so there is no need to penalize the caller.
-      if (bailoutKind != BailoutKind::FirstExecution &&
-          !script->hadLICMInvalidation()) {
-        script->setHadLICMInvalidation();
-      }
-
-      JitSpew(JitSpew_IonInvalidate, "Invalidating due to too many bailouts");
-
-      Invalidate(cx, script);
-    }
-  }
-}
-
 void BailoutFrameInfo::attachOnJitActivation(
     const JitActivationIterator& jitActivations) {
   MOZ_ASSERT(jitActivations->asJit()->jsExitFP() == FAKE_EXITFP_FOR_BAILOUT);
