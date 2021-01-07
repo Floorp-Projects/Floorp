@@ -20,14 +20,19 @@ use crate::lru_cache::LRUCache;
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{FrameStamp, FrameId};
 use crate::resource_cache::{CacheItem, CachedImageData};
-use crate::atlas_allocator::*;
-use crate::slab_allocator::*;
+use crate::texture_pack::{
+    AllocatorList,
+    AllocId,
+    AtlasAllocatorList,
+    ShelfAllocator,
+    ShelfAllocatorOptions,
+    SlabAllocator, SlabAllocatorParameters,
+};
 use smallvec::SmallVec;
 use std::cell::Cell;
 use std::{cmp, mem};
 use std::rc::Rc;
 use euclid::size2;
-
 
 /// Information about which shader will use the entry.
 ///
