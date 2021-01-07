@@ -15,16 +15,15 @@
 interface nsIAddonPolicyService : nsISupports
 {
   /**
-   * Returns the base content security policy, which is applied to all
-   * extension documents, in addition to any custom policies.
-   */
-  readonly attribute AString baseCSP;
-
-  /**
    * Returns the default content security policy which applies to extension
    * documents which do not specify any custom policies.
    */
   readonly attribute AString defaultCSP;
+
+  /**
+   * Returns the base content security policy which applies to all extension resources.
+   */
+  AString getBaseCSP(in AString aAddonId);
 
   /**
    * Returns the content security policy which applies to documents belonging
@@ -32,13 +31,6 @@ interface nsIAddonPolicyService : nsISupports
    * if one was supplied, or the default policy if one was not.
    */
   AString getExtensionPageCSP(in AString aAddonId);
-
-  /**
-   * Returns the content security policy which applies to content scripts belonging
-   * to the extension with the given ID. This may be either a custom policy,
-   * if one was supplied, or the default policy if one was not.
-   */
-  AString getContentScriptCSP(in AString aAddonId);
 
   /**
    * Returns the generated background page as a data-URI, if any. If the addon

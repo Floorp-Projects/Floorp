@@ -17,6 +17,38 @@ add_task(async function test_simple() {
   await extension.unload();
 });
 
+add_task(async function test_manifest_V3_disabled() {
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", false);
+  let extensionData = {
+    manifest: {
+      manifest_version: 3,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await Assert.rejects(
+    extension.startup(),
+    /Unsupported manifest version: 3/,
+    "manifest V3 cannot be loaded"
+  );
+  Services.prefs.clearUserPref("extensions.manifestV3.enabled");
+});
+
+add_task(async function test_manifest_V3_enabled() {
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+  let extensionData = {
+    manifest: {
+      manifest_version: 3,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  equal(extension.extension.manifest.manifest_version, 3, "manifest V3 loads");
+  await extension.unload();
+  Services.prefs.clearUserPref("extensions.manifestV3.enabled");
+});
+
 add_task(async function test_background() {
   function background() {
     browser.test.log("running background script");

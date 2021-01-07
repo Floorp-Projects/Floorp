@@ -290,6 +290,19 @@ const POSTPROCESSORS = {
     context.logError(context.makeError(msg));
     throw new Error(msg);
   },
+
+  manifestVersionCheck(value, context) {
+    if (
+      value == 2 ||
+      (value == 3 &&
+        Services.prefs.getBoolPref("extensions.manifestV3.enabled", false))
+    ) {
+      return value;
+    }
+    const msg = `Unsupported manifest version: ${value}`;
+    context.logError(context.makeError(msg));
+    throw new Error(msg);
+  },
 };
 
 // Parses a regular expression, with support for the Python extended
@@ -1088,11 +1101,11 @@ const FORMATS = {
   contentSecurityPolicy(string, context) {
     let error = contentPolicyService.validateAddonCSP(string);
     if (error != null) {
-      // The SyntaxError raised below is not reported as part of the "choices" error message,
+      // The CSP validation error is not reported as part of the "choices" error message,
       // we log the CSP validation error explicitly here to make it easier for the addon developers
       // to see and fix the extension CSP.
       context.logError(`Error processing ${context.currentTarget}: ${error}`);
-      throw new SyntaxError(error);
+      return null;
     }
     return string;
   },
