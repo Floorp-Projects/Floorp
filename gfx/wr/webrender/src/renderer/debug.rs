@@ -120,9 +120,9 @@ impl DebugRenderer {
             &DESC_COLOR,
         )?;
 
-        let font_vao = device.create_vao(&DESC_FONT);
-        let line_vao = device.create_vao(&DESC_COLOR);
-        let tri_vao = device.create_vao(&DESC_COLOR);
+        let font_vao = device.create_vao(&DESC_FONT, 1);
+        let line_vao = device.create_vao(&DESC_COLOR, 1);
+        let tri_vao = device.create_vao(&DESC_COLOR, 1);
 
         let font_texture = device.create_texture(
             ImageBufferKind::Texture2D,

@@ -971,7 +971,7 @@ pub struct BlitJob {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct LineDecorationJob {
     pub task_rect: DeviceRect,
     pub local_size: LayoutSize,
@@ -983,6 +983,7 @@ pub struct LineDecorationJob {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
+#[derive(Clone, Debug)]
 pub struct GradientJob {
     pub task_rect: DeviceRect,
     pub stops: [f32; GRADIENT_FP_STOPS],
