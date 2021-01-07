@@ -185,6 +185,8 @@ class RenderCompositor {
     return ipc::FileDescriptor();
   }
 
+  virtual bool IsPaused() { return false; }
+
  protected:
   // We default this to 2, so that mLatestRenderFrameId.Prev() is always valid.
   RenderedFrameId mLatestRenderFrameId = RenderedFrameId{2};

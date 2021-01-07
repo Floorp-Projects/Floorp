@@ -26,6 +26,7 @@ class RenderCompositorEGL : public RenderCompositor {
   RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
   void Pause() override;
   bool Resume() override;
+  bool IsPaused() override;
 
   gl::GLContext* gl() const override;
 

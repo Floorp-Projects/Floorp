@@ -466,6 +466,10 @@ void RenderThread::UpdateAndRender(
 
   auto& renderer = it->second;
 
+  if (renderer->IsPaused()) {
+    aRender = false;
+  }
+
   layers::CompositorThread()->Dispatch(
       NewRunnableFunction("NotifyDidStartRenderRunnable", &NotifyDidStartRender,
                           renderer->GetCompositorBridge()));
