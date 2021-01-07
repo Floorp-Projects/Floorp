@@ -808,17 +808,6 @@ bool WellKnownParserAtoms::init(JSContext* cx) {
 namespace js {
 
 template <XDRMode mode>
-XDRResult XDRTaggedParserAtomIndex(XDRState<mode>* xdr,
-                                   TaggedParserAtomIndex* taggedIndex) {
-  return xdr->codeUint32(taggedIndex->rawData());
-}
-
-template XDRResult XDRTaggedParserAtomIndex(XDRState<XDR_ENCODE>* xdr,
-                                            TaggedParserAtomIndex* taggedIndex);
-template XDRResult XDRTaggedParserAtomIndex(XDRState<XDR_DECODE>* xdr,
-                                            TaggedParserAtomIndex* taggedIndex);
-
-template <XDRMode mode>
 XDRResult XDRParserAtomEntry(XDRState<mode>* xdr, ParserAtomEntry** entryp) {
   static_assert(CanCopyDataToDisk<ParserAtomEntry>::value,
                 "ParserAtomEntry cannot be bulk-copied to disk.");
