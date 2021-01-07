@@ -163,7 +163,9 @@ Simulator* Simulator::Current() {
   if (!rt) {
     return nullptr;
   }
-  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
+  if (!js::CurrentThreadCanAccessRuntime(rt)) {
+      return nullptr;
+  }
   return cx->simulator();
 }
 
