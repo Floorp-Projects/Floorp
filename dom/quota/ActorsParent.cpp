@@ -108,6 +108,7 @@
 #include "nsHashKeys.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIBinaryOutputStream.h"
+#include "nsIConsoleService.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIEventTarget.h"
 #include "nsIFile.h"
@@ -5383,7 +5384,35 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
                                          /* aCanceled */ Atomic<bool>(false)));
 
                       MOZ_ASSERT(!clientUsages[clientType]);
-                      clientUsages[clientType] = usageInfo.TotalUsage();
+
+                      if (usageInfo.TotalUsage()) {
+                        // XXX(Bug 1683863) Until we identify the root cause of
+                        // seemingly converted-from-negative usage values, we
+                        // will just treat them as unset here, but log a warning
+                        // to the browser console.
+                        if (static_cast<int64_t>(*usageInfo.TotalUsage()) >=
+                            0) {
+                          clientUsages[clientType] = usageInfo.TotalUsage();
+                        } else {
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+                          const nsCOMPtr<nsIConsoleService> console =
+                              do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+                          if (console) {
+                            console->LogStringMessage(
+                                nsString(
+                                    u"QuotaManager warning: client "_ns +
+                                    leafName +
+                                    u" reported negative usage for group "_ns +
+                                    NS_ConvertUTF8toUTF16(
+                                        aGroupAndOrigin.mGroup) +
+                                    u", origin "_ns +
+                                    NS_ConvertUTF8toUTF16(
+                                        aGroupAndOrigin.mOrigin))
+                                    .get());
+                          }
+#endif
+                        }
+                      }
                     } else {
                       QM_TRY(mClients[clientType]->InitOriginWithoutTracking(
                           aPersistenceType, aGroupAndOrigin,
