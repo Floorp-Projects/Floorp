@@ -1010,9 +1010,9 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
     mSendPort = nullptr;
   }
 
-  if (aDomTrack && mDomTrack && !aDomTrack->Ended() && !mDomTrack->Ended() &&
-      aDomTrack->Graph() != mDomTrack->Graph() && mSendTrack) {
-    // Recreate the send track if the new stream resides in different MTG.
+  if (aDomTrack && !aDomTrack->Ended() && mSendTrack &&
+      aDomTrack->Graph() != mSendTrack->Graph()) {
+    // Recreate the send track if the new stream resides in a different MTG.
     // Stopping and re-starting will result in removing and re-adding the
     // listener BUT in different threads, since tracks belong to different MTGs.
     // This can create thread races so we wait here for the stop to happen
