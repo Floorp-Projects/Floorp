@@ -102,11 +102,6 @@ function toggleDisplay(node) {
   return (node.style.display = toggle[node.style.display]);
 }
 
-function showCertificateErrorReporting() {
-  // Display error reporting UI
-  document.getElementById("certificateErrorReporting").style.display = "block";
-}
-
 function showBlockingErrorReporting() {
   // Display blocking error reporting UI for XFO error and CSP error.
   document.getElementById("blockingErrorReporting").style.display = "block";
@@ -369,7 +364,7 @@ function initPage() {
 
   // Pinning errors are of type nssFailure2
   if (err == "nssFailure2") {
-    setupErrorUI();
+    document.getElementById("learnMoreContainer").style.display = "block";
 
     const errorCode = document.getNetErrorInfo().errorCodeString;
     const isTlsVersionError =
@@ -434,30 +429,6 @@ function initPage() {
     for (var span of container.querySelectorAll("span.hostname")) {
       span.textContent = HOST_NAME;
     }
-  }
-}
-
-function setupErrorUI() {
-  document.getElementById("learnMoreContainer").style.display = "block";
-
-  let checkbox = document.getElementById("automaticallyReportInFuture");
-  checkbox.addEventListener("change", function({ target: { checked } }) {
-    onSetAutomatic(checked);
-  });
-
-  let errorReportingEnabled = RPMGetBoolPref(
-    "security.ssl.errorReporting.enabled"
-  );
-  if (errorReportingEnabled) {
-    showCertificateErrorReporting();
-    RPMAddToHistogram(
-      "TLS_ERROR_REPORT_UI",
-      TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN
-    );
-    let errorReportingAutomatic = RPMGetBoolPref(
-      "security.ssl.errorReporting.automatic"
-    );
-    checkbox.checked = !!errorReportingAutomatic;
   }
 }
 
@@ -528,23 +499,6 @@ function reportBlockingError() {
     path: document.location.pathname,
     xfoAndCspInfo,
   });
-}
-
-function onSetAutomatic(checked) {
-  let bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED;
-  if (checked) {
-    bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_CHECKED;
-  }
-  RPMAddToHistogram("TLS_ERROR_REPORT_UI", bin);
-
-  RPMSetBoolPref("security.ssl.errorReporting.automatic", checked);
-  // If we're enabling reports, send a report for this failure.
-  if (checked) {
-    RPMSendAsyncMessage("ReportTLSError", {
-      host: document.location.host,
-      port: parseInt(document.location.port) || -1,
-    });
-  }
 }
 
 function onSetBlockingReportAutomatic(checked) {
@@ -652,7 +606,7 @@ function initPageCertError() {
 
   addAutofocus("#returnButton");
   setupAdvancedButton();
-  setupErrorUI();
+  document.getElementById("learnMoreContainer").style.display = "block";
 
   let hideAddExceptionButton = RPMGetBoolPref(
     "security.certerror.hideAddException",
@@ -974,8 +928,6 @@ function setCertErrorDetails(event) {
         let clockErrDesc = document.getElementById("ed_clockSkewError");
         desc = document.getElementById("errorShortDescText");
         document.getElementById("errorShortDesc").style.display = "block";
-        document.getElementById("certificateErrorReporting").style.display =
-          "none";
         if (desc) {
           // eslint-disable-next-line no-unsanitized/property
           desc.innerHTML = clockErrDesc.innerHTML;

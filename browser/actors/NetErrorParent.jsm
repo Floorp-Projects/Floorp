@@ -106,18 +106,6 @@ class NetErrorParent extends JSWindowActorParent {
     return false;
   }
 
-  async reportTLSError(bcID, host, port) {
-    let securityInfo = await BrowsingContext.get(
-      bcID
-    ).currentWindowGlobal.getSecurityInfo();
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-
-    let errorReporter = Cc["@mozilla.org/securityreporter;1"].getService(
-      Ci.nsISecurityReporter
-    );
-    errorReporter.reportTLSError(securityInfo, host, port);
-  }
-
   async ReportBlockingError(bcID, scheme, host, port, path, xfoAndCspInfo) {
     // For reporting X-Frame-Options error and CSP: frame-ancestors errors, We
     // are collecting 4 pieces of information.
@@ -315,13 +303,6 @@ class NetErrorParent extends JSWindowActorParent {
         this.sendAsyncMessage("HasChangedCertPrefs", {
           hasChangedCertPrefs,
         });
-        break;
-      case "ReportTLSError":
-        this.reportTLSError(
-          this.browsingContext.id,
-          message.data.host,
-          message.data.port
-        );
         break;
       case "ReportBlockingError":
         this.ReportBlockingError(
