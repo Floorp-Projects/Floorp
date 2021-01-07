@@ -97,16 +97,13 @@ var SessionFile = {
 Object.freeze(SessionFile);
 
 var Path = OS.Path;
-var profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+var profileDir = OS.Constants.Path.profileDir;
 
 var SessionFileInternal = {
   Paths: Object.freeze({
-    profileDir,
     // The path to the latest version of sessionstore written during a clean
     // shutdown. After startup, it is renamed `cleanBackup`.
     clean: Path.join(profileDir, "sessionstore.jsonlz4"),
-
-    oldClean: Path.join(profileDir, "sessionstore.js"),
 
     // The path at which we store the previous version of `clean`. Updated
     // whenever we successfully load from `clean`.

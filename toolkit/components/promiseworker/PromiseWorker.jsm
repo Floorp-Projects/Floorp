@@ -102,10 +102,6 @@ const EXCEPTION_CONSTRUCTORS = {
     result.stack = error.stack;
     return result;
   },
-  DOMException(error) {
-    let result = new DOMException(error.message, error.name);
-    return result;
-  },
 };
 
 /**
