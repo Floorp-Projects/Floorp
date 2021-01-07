@@ -40,7 +40,6 @@ add_task(async function() {
   const packet = await onFooDotComNewSource;
   ok(true, "Received the custom script source: " + packet.source.url);
 
-  await threadFront.resume();
   await client.close();
 });
 

@@ -40,7 +40,6 @@ async function testChromeTab() {
   await target.attach();
 
   const threadFront = await target.attachThread();
-  await threadFront.resume();
 
   const { sources } = await threadFront.getSources();
   ok(
@@ -109,7 +108,6 @@ async function testMainProcess() {
   await target.attach();
 
   const threadFront = await target.attachThread();
-  await threadFront.resume();
   const { sources } = await threadFront.getSources();
   ok(
     sources.find(

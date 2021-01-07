@@ -56,9 +56,7 @@ add_task(async function test_webextension_addon_debugging_connect() {
   const threadFront = await addonTarget.attachThread();
 
   ok(threadFront, "Got a threadFront for the target addon");
-  is(threadFront.paused, true, "The addon threadActor is paused");
-  await threadFront.resume();
-  is(threadFront.paused, false, "The addon threadActor has been resumed");
+  is(threadFront.paused, false, "The addon threadActor isn't paused");
 
   const waitTransportClosed = new Promise(resolve => {
     client._transport.once("close", resolve);

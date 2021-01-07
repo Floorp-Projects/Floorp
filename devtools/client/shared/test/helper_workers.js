@@ -243,14 +243,6 @@ this.removeTab = function removeTab(tab, win) {
   });
 };
 
-async function attachThreadActorForTab(tab) {
-  const target = await TargetFactory.forTab(tab);
-  await target.attach();
-  const threadFront = await target.attachThread();
-  await threadFront.resume();
-  return { client: target.client, threadFront };
-}
-
 function pushPrefs(...aPrefs) {
   return new Promise(resolve => {
     SpecialPowers.pushPrefEnv({ set: aPrefs }, resolve);
