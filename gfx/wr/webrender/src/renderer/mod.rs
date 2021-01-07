@@ -49,6 +49,7 @@ use api::units::*;
 use api::channel::{unbounded_channel, Sender, Receiver};
 pub use api::DebugFlags;
 use core::time::Duration;
+
 use crate::render_api::{RenderApiSender, DebugCommand, ApiMsg, FrameMsg, MemoryReport};
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -58,16 +59,14 @@ use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeSurfac
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
 use crate::c_str;
 use crate::debug_colors;
-use crate::debug_render::{DebugItem, DebugRenderer};
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId};
 use crate::device::{ProgramCache, ReadTarget, ShaderError, Texture, TextureFilter, TextureFlags, TextureSlot};
 use crate::device::{UploadMethod, UploadPBOPool, UploadStagingBuffer, VertexUsageHint};
 use crate::device::query::{GpuSampler, GpuTimer};
 #[cfg(feature = "capture")]
 use crate::device::FBOId;
-use euclid::{rect, Transform3D, Scale, default};
+use crate::debug_item::DebugItem;
 use crate::frame_builder::{Frame, ChasePrimitive, FrameBuilderConfig};
-use gleam::gl;
 use crate::glyph_cache::GlyphCache;
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
@@ -78,13 +77,11 @@ use crate::internal_types::{TextureSource, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use crate::internal_types::{RenderTargetInfo, Swizzle, DeferredResolveIndex};
-use malloc_size_of::MallocSizeOfOps;
 use crate::picture::{self, ResolvedSurfaceTexture};
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{self, GpuProfileTag, TransactionProfile};
 use crate::profiler::{Profiler, add_event_marker, add_text_marker, thread_is_being_profiled};
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
-use rayon::{ThreadPool, ThreadPoolBuilder};
 use crate::render_backend::{FrameId, RenderBackend};
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task::{RenderTask, RenderTaskKind};
@@ -99,6 +96,11 @@ use crate::render_target::{RenderTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::util::drain_filter;
+
+use euclid::{rect, Transform3D, Scale, default};
+use gleam::gl;
+use malloc_size_of::MallocSizeOfOps;
+use rayon::{ThreadPool, ThreadPoolBuilder};
 
 use std::{
     cell::RefCell,
@@ -124,9 +126,11 @@ cfg_if! {
     }
 }
 
+mod debug;
 mod gpu_cache;
 mod vertex;
 
+pub use debug::DebugRenderer;
 pub use vertex::{desc, VertexArrayKind, MAX_VERTEX_TEXTURE_WIDTH};
 
 /// Use this hint for all vertex data re-initialization. This allows
@@ -625,48 +629,6 @@ struct TargetSelector {
     format: ImageFormat,
 }
 
-struct LazyInitializedDebugRenderer {
-    debug_renderer: Option<DebugRenderer>,
-    failed: bool,
-}
-
-impl LazyInitializedDebugRenderer {
-    pub fn new() -> Self {
-        Self {
-            debug_renderer: None,
-            failed: false,
-        }
-    }
-
-    pub fn get_mut<'a>(&'a mut self, device: &mut Device) -> Option<&'a mut DebugRenderer> {
-        if self.failed {
-            return None;
-        }
-        if self.debug_renderer.is_none() {
-            match DebugRenderer::new(device) {
-                Ok(renderer) => { self.debug_renderer = Some(renderer); }
-                Err(_) => {
-                    // The shader compilation code already logs errors.
-                    self.failed = true;
-                }
-            }
-        }
-
-        self.debug_renderer.as_mut()
-    }
-
-    /// Returns mut ref to `DebugRenderer` if one already exists, otherwise returns `None`.
-    pub fn try_get_mut<'a>(&'a mut self) -> Option<&'a mut DebugRenderer> {
-        self.debug_renderer.as_mut()
-    }
-
-    pub fn deinit(self, device: &mut Device) {
-        if let Some(debug_renderer) = self.debug_renderer {
-            debug_renderer.deinit(device);
-        }
-    }
-}
-
 /// Information about the state of the debugging / profiler overlay in native compositing mode.
 struct DebugOverlayState {
     /// True if any of the current debug flags will result in drawing a debug overlay.
@@ -759,7 +721,7 @@ pub struct Renderer {
     enable_advanced_blend_barriers: bool,
     clear_caches_with_quads: bool,
 
-    debug: LazyInitializedDebugRenderer,
+    debug: debug::LazyInitializedDebugRenderer,
     debug_flags: DebugFlags,
     profile: TransactionProfile,
     frame_counter: u64,
@@ -1330,7 +1292,7 @@ impl Renderer {
             pending_gpu_cache_clear: false,
             pending_shader_updates: Vec::new(),
             shaders,
-            debug: LazyInitializedDebugRenderer::new(),
+            debug: debug::LazyInitializedDebugRenderer::new(),
             debug_flags: DebugFlags::empty(),
             profile: TransactionProfile::new(),
             frame_counter: 0,

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorU, ColorF, ImageFormat, ImageBufferKind};
+use api::{ColorU, ImageFormat, ImageBufferKind};
 use api::units::*;
 use crate::debug_font_data;
 use crate::device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
@@ -10,21 +10,6 @@ use crate::device::{TextureFilter, VertexAttribute, VertexAttributeKind, VertexU
 use euclid::{Point2D, Rect, Size2D, Transform3D, default};
 use crate::internal_types::Swizzle;
 use std::f32;
-
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum DebugItem {
-    Text {
-        msg: String,
-        color: ColorF,
-        position: DevicePoint,
-    },
-    Rect {
-        outer_color: ColorF,
-        inner_color: ColorF,
-        rect: DeviceRect,
-    },
-}
 
 #[derive(Debug, Copy, Clone)]
 enum DebugSampler {
@@ -385,5 +370,47 @@ impl DebugRenderer {
         self.line_vertices.clear();
         self.tri_vertices.clear();
         self.tri_indices.clear();
+    }
+}
+
+pub struct LazyInitializedDebugRenderer {
+    debug_renderer: Option<DebugRenderer>,
+    failed: bool,
+}
+
+impl LazyInitializedDebugRenderer {
+    pub fn new() -> Self {
+        Self {
+            debug_renderer: None,
+            failed: false,
+        }
+    }
+
+    pub fn get_mut<'a>(&'a mut self, device: &mut Device) -> Option<&'a mut DebugRenderer> {
+        if self.failed {
+            return None;
+        }
+        if self.debug_renderer.is_none() {
+            match DebugRenderer::new(device) {
+                Ok(renderer) => { self.debug_renderer = Some(renderer); }
+                Err(_) => {
+                    // The shader compilation code already logs errors.
+                    self.failed = true;
+                }
+            }
+        }
+
+        self.debug_renderer.as_mut()
+    }
+
+    /// Returns mut ref to `debug::DebugRenderer` if one already exists, otherwise returns `None`.
+    pub fn try_get_mut<'a>(&'a mut self) -> Option<&'a mut DebugRenderer> {
+        self.debug_renderer.as_mut()
+    }
+
+    pub fn deinit(self, device: &mut Device) {
+        if let Some(debug_renderer) = self.debug_renderer {
+            debug_renderer.deinit(device);
+        }
     }
 }
