@@ -204,13 +204,18 @@ class GeckoViewNavigation extends GeckoViewModule {
           );
         } else {
           try {
+            // External apps are treated like web pages, so they should not get
+            // a privileged principal.
+            const isExternal =
+              navFlags & Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
             parsedUri = Services.io.newURI(uri);
             if (
-              parsedUri.schemeIs("about") ||
-              parsedUri.schemeIs("data") ||
-              parsedUri.schemeIs("file") ||
-              parsedUri.schemeIs("resource") ||
-              parsedUri.schemeIs("moz-extension")
+              !isExternal &&
+              (parsedUri.schemeIs("about") ||
+                parsedUri.schemeIs("data") ||
+                parsedUri.schemeIs("file") ||
+                parsedUri.schemeIs("resource") ||
+                parsedUri.schemeIs("moz-extension"))
             ) {
               // Only allow privileged loading for certain URIs.
               triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
