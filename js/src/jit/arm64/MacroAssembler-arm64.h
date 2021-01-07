@@ -964,6 +964,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     storePtr(ImmWord(imm.value), address);
   }
 
+  void store64(Imm64 imm, const Address& address) {
+    storePtr(ImmWord(imm.value), address);
+  }
+
   template <typename S, typename T>
   void store64Unaligned(const S& src, const T& dest) {
     store64(src, dest);

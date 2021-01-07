@@ -2221,6 +2221,14 @@ void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
                       op, mem, value.reg, temp.reg, output.reg);
 }
 
+void MacroAssembler::wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access,
+                                          AtomicOp op, Register64 value,
+                                          const BaseIndex& mem,
+                                          Register64 temp) {
+  AtomicFetchOp<false>(*this, &access, Scalar::Int64, Width::_64, access.sync(),
+                       op, mem, value.reg, temp.reg, temp.reg);
+}
+
 // ========================================================================
 // JS atomic operations.
 
@@ -2686,6 +2694,21 @@ void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
   negateDouble(scratch);
 
   moveDouble(lhs, output);
+
+  bit(ARMFPRegister(output.encoding(), vixl::VectorFormat::kFormat8B),
+      ARMFPRegister(rhs.encoding(), vixl::VectorFormat::kFormat8B),
+      ARMFPRegister(scratch.encoding(), vixl::VectorFormat::kFormat8B));
+}
+
+void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
+                                     FloatRegister output) {
+  ScratchFloat32Scope scratch(*this);
+
+  // Float with only the sign bit set (= negative zero).
+  loadConstantFloat32(0, scratch);
+  negateFloat(scratch);
+
+  moveFloat32(lhs, output);
 
   bit(ARMFPRegister(output.encoding(), vixl::VectorFormat::kFormat8B),
       ARMFPRegister(rhs.encoding(), vixl::VectorFormat::kFormat8B),
