@@ -2,6 +2,6 @@
 
 argparse
 babel==2.4
-lxml==3.8.0
+lxml==4.6.2
 ordereddict
 termcolor
