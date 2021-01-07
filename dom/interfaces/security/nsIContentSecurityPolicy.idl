@@ -137,7 +137,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    *     Whether or not the effects of the inline style should be allowed
    *     (block the rules if false).
    */
-  boolean getAllowsInline(in nsContentPolicyType aContentPolicyType,
+  boolean getAllowsInline(in nsIContentSecurityPolicy_CSPDirective aDirective,
                           in AString aNonce,
                           in boolean aParserCreated,
                           in Element aTriggeringElement,

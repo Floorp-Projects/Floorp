@@ -137,15 +137,16 @@ static bool AllowedByCSP(nsIContentSecurityPolicy* aCSP,
   }
 
   bool allowsInlineScript = true;
-  nsresult rv = aCSP->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
-                                      u""_ns,   // aNonce
-                                      true,     // aParserCreated
-                                      nullptr,  // aElement,
-                                      nullptr,  // nsICSPEventListener
-                                      aContentOfPseudoScript,  // aContent
-                                      0,                       // aLineNumber
-                                      0,                       // aColumnNumber
-                                      &allowsInlineScript);
+  nsresult rv =
+      aCSP->GetAllowsInline(nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE,
+                            u""_ns,                  // aNonce
+                            true,                    // aParserCreated
+                            nullptr,                 // aElement,
+                            nullptr,                 // nsICSPEventListener
+                            aContentOfPseudoScript,  // aContent
+                            0,                       // aLineNumber
+                            0,                       // aColumnNumber
+                            &allowsInlineScript);
 
   return (NS_SUCCEEDED(rv) && allowsInlineScript);
 }
