@@ -16,6 +16,26 @@
 namespace js {
 namespace frontend {
 
+// Check that we can copy data to disk and restore it in another instance of
+// the program in a different address space.
+template <typename DataT>
+struct CanCopyDataToDisk {
+  // Check that the object is fully packed, to save disk space.
+#ifdef __cpp_lib_has_unique_object_representations
+  static constexpr bool unique_repr =
+      std::has_unique_object_representations<DataT>();
+#else
+  static constexpr bool unique_repr = true;
+#endif
+
+  // Approximation which assumes that 32bits variant of the class would not
+  // have pointers if the 64bits variant does not have pointer.
+  static constexpr bool no_pointer =
+      alignof(DataT) < alignof(void*) || sizeof(void*) == sizeof(uint32_t);
+
+  static constexpr bool value = unique_repr && no_pointer;
+};
+
 // This is just a namespace class that can be used in friend declarations,
 // so that the statically declared XDR methods within have access to the
 // relevant struct internals.

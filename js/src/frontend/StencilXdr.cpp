@@ -38,11 +38,8 @@ template <XDRMode mode, typename ScopeT>
   using ScopeDataT = typename ScopeT::ParserData;
 
   static_assert(CanEncodeNameType<typename ScopeDataT::NameType>::value);
-
-#ifdef __cpp_lib_has_unique_object_representations
-  static_assert(std::has_unique_object_representations<ScopeDataT>(),
-                "ScopeData structure must be fully packed");
-#endif
+  static_assert(CanCopyDataToDisk<ScopeDataT>::value,
+                "ScopeData cannot be bulk-copied to disk");
 
   static_assert(offsetof(ScopeDataT, slotInfo) == 0,
                 "slotInfo should be the first field");
@@ -85,10 +82,31 @@ template <XDRMode mode, typename ScopeT>
   return Ok();
 }
 
-template <XDRMode mode, typename VecType>
-static XDRResult XDRVector(XDRState<mode>* xdr, VecType& vec) {
-  uint32_t length;
+template <XDRMode mode, typename T, size_t N, class AP>
+static XDRResult XDRVectorUninitialized(XDRState<mode>* xdr,
+                                        Vector<T, N, AP>& vec,
+                                        uint32_t& length) {
+  if (mode == XDR_ENCODE) {
+    MOZ_ASSERT(vec.length() <= UINT32_MAX);
+    length = vec.length();
+  }
 
+  MOZ_TRY(xdr->codeUint32(&length));
+
+  if (mode == XDR_DECODE) {
+    MOZ_ASSERT(vec.empty());
+    if (!vec.resizeUninitialized(length)) {
+      js::ReportOutOfMemory(xdr->cx());
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+  }
+
+  return Ok();
+}
+
+template <XDRMode mode, typename T, size_t N, class AP>
+static XDRResult XDRVector(XDRState<mode>* xdr, Vector<T, N, AP>& vec) {
+  uint32_t length;
   if (mode == XDR_ENCODE) {
     MOZ_ASSERT(vec.length() <= UINT32_MAX);
     length = vec.length();
@@ -103,6 +121,18 @@ static XDRResult XDRVector(XDRState<mode>* xdr, VecType& vec) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
   }
+
+  return Ok();
+}
+
+template <XDRMode mode, typename T, size_t N, class AP>
+static XDRResult XDRVectorContent(XDRState<mode>* xdr, Vector<T, N, AP>& vec) {
+  static_assert(CanCopyDataToDisk<T>::value,
+                "Vector content cannot be bulk-copied to disk.");
+
+  uint32_t length;
+  MOZ_TRY(XDRVectorUninitialized(xdr, vec, length));
+  MOZ_TRY(xdr->codeBytes(vec.begin(), sizeof(T) * length));
 
   return Ok();
 }
@@ -149,10 +179,8 @@ static XDRResult XDRSpanInitialized(XDRState<mode>* xdr,
 
 template <XDRMode mode, typename T>
 static XDRResult XDRSpanContent(XDRState<mode>* xdr, mozilla::Span<T>& span) {
-#ifdef __cpp_lib_has_unique_object_representations
-  static_assert(std::has_unique_object_representations<T>(),
-                "span item structure must be fully packed");
-#endif
+  static_assert(CanCopyDataToDisk<T>::value,
+                "Span cannot be bulk-copied to disk.");
 
   uint32_t size;
   MOZ_TRY(XDRSpanUninitialized(xdr, span, size));
@@ -164,44 +192,13 @@ static XDRResult XDRSpanContent(XDRState<mode>* xdr, mozilla::Span<T>& span) {
 }
 
 template <XDRMode mode>
-static XDRResult XDRStencilModuleEntryVector(
-    XDRState<mode>* xdr, StencilModuleMetadata::EntryVector& vec) {
-  uint64_t length;
-
-  if (mode == XDR_ENCODE) {
-    length = vec.length();
-  }
-
-  MOZ_TRY(xdr->codeUint64(&length));
-
-  if (mode == XDR_DECODE) {
-    MOZ_ASSERT(vec.empty());
-    if (!vec.resize(length)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
-  }
-
-  for (StencilModuleEntry& entry : vec) {
-    MOZ_TRY(xdr->codeUint32(&entry.lineno));
-    MOZ_TRY(xdr->codeUint32(&entry.column));
-
-    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry.specifier));
-    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry.localName));
-    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry.importName));
-    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry.exportName));
-  }
-
-  return Ok();
-}
-
-template <XDRMode mode>
 static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
                                           StencilModuleMetadata& stencil) {
-  MOZ_TRY(XDRStencilModuleEntryVector(xdr, stencil.requestedModules));
-  MOZ_TRY(XDRStencilModuleEntryVector(xdr, stencil.importEntries));
-  MOZ_TRY(XDRStencilModuleEntryVector(xdr, stencil.localExportEntries));
-  MOZ_TRY(XDRStencilModuleEntryVector(xdr, stencil.indirectExportEntries));
-  MOZ_TRY(XDRStencilModuleEntryVector(xdr, stencil.starExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.importEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.localExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.indirectExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.starExportEntries));
 
   {
     uint64_t length;
