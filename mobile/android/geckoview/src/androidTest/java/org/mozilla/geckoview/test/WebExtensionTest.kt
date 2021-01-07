@@ -1072,7 +1072,7 @@ class WebExtensionTest : BaseSessionTest() {
                 : WebExtension.SessionTabDelegate {
             override fun onCloseTab(source: WebExtension?,
                                     session: GeckoSession): GeckoResult<AllowOrDeny> {
-                assertEquals(extension, source)
+                assertEquals(extension.id, source!!.id)
                 assertEquals(expectedSession, session)
                 result.complete(null)
                 return GeckoResult.ALLOW

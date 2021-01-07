@@ -953,14 +953,7 @@ public class GeckoSession {
      */
     @AnyThread
     public @NonNull GeckoResult<String> getUserAgent() {
-        final CallbackResult<String> result = new CallbackResult<String>() {
-            @Override
-            public void sendSuccess(final Object value) {
-                complete((String) value);
-            }
-        };
-        mEventDispatcher.dispatch("GeckoView:GetUserAgent", null, result);
-        return result;
+        return mEventDispatcher.queryString("GeckoView:GetUserAgent");
     }
 
     /**
