@@ -6131,7 +6131,7 @@ nsBrowserAccess.prototype = {
         let browser = PrintUtils.startPrintWindow(
           "window_print",
           aOpenWindowInfo.parent,
-          aOpenWindowInfo
+          { openWindowInfo: aOpenWindowInfo }
         );
         if (browser) {
           browsingContext = browser.browsingContext;
@@ -6215,7 +6215,7 @@ nsBrowserAccess.prototype = {
       return PrintUtils.startPrintWindow(
         "window_print",
         aParams.openWindowInfo.parent,
-        aParams.openWindowInfo
+        { openWindowInfo: aParams.openWindowInfo }
       );
     }
 

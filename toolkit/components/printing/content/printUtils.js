@@ -217,6 +217,8 @@ var PrintUtils = {
    * @param aPrintSelectionOnly
    *        Whether to print only the active selection of the given browsing
    *        context.
+   * @param aPrintFrameOnly
+   *        Whether to print the selected frame only
    * @return promise resolving when the dialog is open, rejected if the preview
    *         fails.
    */
@@ -224,7 +226,8 @@ var PrintUtils = {
     aBrowsingContext,
     aExistingPreviewBrowser,
     aPrintInitiationTime,
-    aPrintSelectionOnly
+    aPrintSelectionOnly,
+    aPrintFrameOnly
   ) {
     let hasSelection = aPrintSelectionOnly;
     if (!aPrintSelectionOnly) {
@@ -256,6 +259,7 @@ var PrintUtils = {
       previewBrowser: aExistingPreviewBrowser,
       printSelectionOnly: !!aPrintSelectionOnly,
       hasSelection,
+      printFrameOnly: !!aPrintFrameOnly,
     });
     let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
     return dialogBox.open(
@@ -275,31 +279,34 @@ var PrintUtils = {
    *        The BrowsingContext of the window to print.
    *        Note that the browsing context could belong to a subframe of the
    *        tab that called window.print, or similar shenanigans.
-   * @param aOpenWindowInfo
-   *        Non-null if this call comes from window.print(). This is the
-   *        nsIOpenWindowInfo object that has to be passed down to
-   *        createBrowser in order for the child process to clone into it.
+   * @param aOptions
+   *        {openWindowInfo}      Non-null if this call comes from window.print().
+   *                              This is the nsIOpenWindowInfo object that has to
+   *                              be passed down to createBrowser in order for the
+   *                              child process to clone into it.
+   *        {printSelectionOnly}  Whether to print only the active selection of
+   *                              the given browsing context.
+   *        {printFrameOnly}      Whether to print the selected frame.
    */
-  startPrintWindow(
-    aTrigger,
-    aBrowsingContext,
-    aOpenWindowInfo,
-    aPrintSelectionOnly
-  ) {
+  startPrintWindow(aTrigger, aBrowsingContext, aOptions) {
     const printInitiationTime = Date.now();
+    let openWindowInfo, printSelectionOnly, printFrameOnly;
+    if (aOptions) {
+      ({ openWindowInfo, printSelectionOnly, printFrameOnly } = aOptions);
+    }
 
-    // When we have a non-null aOpenWindowInfo, we only want to record
+    // When we have a non-null openWindowInfo, we only want to record
     // telemetry if we're triggered by window.print() itself, otherwise it's an
     // internal print (like the one we do when we actually print from the
     // preview dialog, etc.), and that'd cause us to overcount.
-    if (!aOpenWindowInfo || aOpenWindowInfo.isForWindowDotPrint) {
+    if (!openWindowInfo || openWindowInfo.isForWindowDotPrint) {
       Services.telemetry.keyedScalarAdd("printing.trigger", aTrigger, 1);
     }
 
     let browser = null;
-    if (aOpenWindowInfo) {
+    if (openWindowInfo) {
       browser = document.createXULElement("browser");
-      browser.openWindowInfo = aOpenWindowInfo;
+      browser.openWindowInfo = openWindowInfo;
       browser.setAttribute("type", "content");
       let remoteType = aBrowsingContext.currentRemoteType;
       if (remoteType) {
@@ -324,14 +331,15 @@ var PrintUtils = {
     if (
       PRINT_TAB_MODAL &&
       !PRINT_ALWAYS_SILENT &&
-      (!aOpenWindowInfo || aOpenWindowInfo.isForWindowDotPrint)
+      (!openWindowInfo || openWindowInfo.isForWindowDotPrint)
     ) {
       let browsingContext = aBrowsingContext;
       let focusedBc = Services.focus.focusedContentBrowsingContext;
       if (
         focusedBc &&
         focusedBc.top.embedderElement == browsingContext.top.embedderElement &&
-        (!aOpenWindowInfo || !aOpenWindowInfo.isForWindowDotPrint)
+        (!openWindowInfo || !openWindowInfo.isForWindowDotPrint) &&
+        !printFrameOnly
       ) {
         browsingContext = focusedBc;
       }
@@ -339,7 +347,8 @@ var PrintUtils = {
         browsingContext,
         browser,
         printInitiationTime,
-        aPrintSelectionOnly
+        printSelectionOnly,
+        printFrameOnly
       ).catch(() => {});
       return browser;
     }
@@ -351,7 +360,7 @@ var PrintUtils = {
     }
 
     let settings = this.getPrintSettings();
-    settings.printSelectionOnly = aPrintSelectionOnly;
+    settings.printSelectionOnly = printSelectionOnly;
     this.printWindow(aBrowsingContext, settings);
     return null;
   },
