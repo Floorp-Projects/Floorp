@@ -1,8 +1,12 @@
 Trailing whitespaces
 ====================
 
-This linter verifies if a file has unnecessary trailing whitespaces, Windows
-carriage return or empty lines at the end of file.
+This linter verifies if a file has:
+
+* unnecessary trailing whitespaces,
+* Windows carriage return,
+* empty lines at the end of file,
+* if file ends with a newline or not
 
 
 Run Locally
@@ -26,7 +30,6 @@ Autofix
 -------
 
 This linter provides a ``--fix`` option. The python script is doing the change itself.
-For now, fix empty lines at end of file isn't supported.
 
 Sources
 -------
