@@ -179,3 +179,99 @@ add_task(async () => {
     }
   );
 });
+
+/**
+ * Test context menu
+ */
+add_task(async () => {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url:
+        'data:text/html,<a id="exampleLink" href="https://example.com">link</a>',
+    },
+    async browser => {
+      // synthesize a right click on the link to open the link context menu
+      let menu = document.getElementById("contentAreaContextMenu");
+      await BrowserTestUtils.synthesizeMouse(
+        "#exampleLink",
+        2,
+        2,
+        { type: "contextmenu" },
+        browser
+      );
+      await BrowserTestUtils.waitForPopupEvent(menu, "shown");
+      menu = await getMacAccessible(menu);
+      const menuChildren = menu.getAttributeValue("AXChildren");
+      // menu contains 11 items and 3 splitters for 14 items total
+      is(
+        menuChildren.length,
+        14,
+        "Context menu on link contains fourteen items"
+      );
+
+      for (let i = 0; i < menuChildren.length; i++) {
+        // items at indicies 4, 9, and 11 are the splitters, everything else should be a menu item
+        if (i == 4 || i == 9 || i == 11) {
+          is(
+            menuChildren[i].getAttributeValue("AXRole"),
+            "AXSplitter",
+            "found splitter in menu"
+          );
+        } else {
+          is(
+            menuChildren[i].getAttributeValue("AXRole"),
+            "AXMenuItem",
+            "found menu item in menu"
+          );
+        }
+      }
+
+      // submenus are at indicies 1 and 10
+      // first check they have no children when hidden
+      is(
+        menuChildren[1].getAttributeValue("AXChildren").length,
+        0,
+        "Submenu 1 has no chldren when hidden"
+      );
+      is(
+        menuChildren[10].getAttributeValue("AXChildren").length,
+        0,
+        "Submenu 2 has no chldren when hidden"
+      );
+
+      // focus the first submenu
+      const contextMenu = document.getElementById(
+        "context-openlinkinusercontext-menu"
+      );
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+      EventUtils.synthesizeKey("KEY_ArrowRight");
+      await BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+
+      // verify submenu-menuitem's attributes
+      is(
+        menuChildren[1].getAttributeValue("AXChildren").length,
+        1,
+        "Submenu 1 has one child when open"
+      );
+      const subMenu = menuChildren[1].getAttributeValue("AXChildren")[0];
+      is(
+        subMenu.getAttributeValue("AXRole"),
+        "AXMenu",
+        "submenu has role of menu"
+      );
+      const subMenuChildren = subMenu.getAttributeValue("AXChildren");
+      is(subMenuChildren.length, 4, "sub menu has 4 children");
+      is(
+        subMenu.getAttributeValue("AXVisibleChildren").length,
+        4,
+        "submenu has 4 visible children"
+      );
+
+      // close context menu
+      EventUtils.synthesizeKey("KEY_Escape");
+      EventUtils.synthesizeKey("KEY_Escape");
+    }
+  );
+});
