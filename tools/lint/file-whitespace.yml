@@ -175,6 +175,13 @@ file-whitespace:
         - xpcom/reflect/xptcall/status.html
         - xpcom/tests/test.properties
         - xpcom/tests/unit/data/bug121341.properties
+        # Excluded below files because tests were failing unexpectedly
+        - dom/bindings/test/test_barewordGetsWindow.html
+        - devtools/client/styleeditor/test/sourcemap-css/sourcemaps.css
+        - devtools/client/styleeditor/test/sourcemap-css/contained.css
+        - devtools/client/styleeditor/test/sourcemap-css/test-stylus.css
+        - dom/bindings/test/file_barewordGetsWindow_frame1.html
+        - dom/bindings/test/file_barewordGetsWindow_frame2.html
     extensions:
         - .c
         - .cc
