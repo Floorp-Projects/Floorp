@@ -95,7 +95,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   RootedShape shape(cx);
   if (!realm->newProxyCache.lookup(clasp, proto, group.address(),
                                    shape.address())) {
-    group = ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr);
+    group = ObjectGroup::defaultNewGroup(cx, clasp, proto);
     if (!group) {
       return nullptr;
     }

@@ -53,7 +53,7 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
   if (proto) {
     Rooted<ObjectGroup*> group(
         cx, ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
-                                         TaggedProto(proto), newTarget));
+                                         TaggedProto(proto)));
     if (!group) {
       return nullptr;
     }

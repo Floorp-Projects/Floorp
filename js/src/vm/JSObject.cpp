@@ -837,8 +837,7 @@ JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
     }
   }
 
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr));
+  RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, proto));
   if (!group) {
     return nullptr;
   }
