@@ -102,6 +102,8 @@ class AccessibleCaretManager {
   virtual void OnBlur();
 
   // Handle NotifySelectionChanged event from nsISelectionListener.
+  // @param aReason potentially multiple of the reasons defined in
+  //                nsISelectionListener.idl.
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult OnSelectionChanged(dom::Document* aDoc, dom::Selection* aSel,
                                       int16_t aReason);
