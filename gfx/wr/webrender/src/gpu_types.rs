@@ -83,7 +83,7 @@ pub enum BlurDirection {
     Vertical,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -93,7 +93,7 @@ pub struct BlurInstance {
     pub blur_direction: BlurDirection,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -103,7 +103,7 @@ pub struct ScalingInstance {
     pub source_layer: i32,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -160,7 +160,7 @@ pub struct ClipMaskInstanceCommon {
     pub prim_transform_id: TransformPaletteId,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
@@ -171,7 +171,7 @@ pub struct ClipMaskInstanceImage {
     pub local_rect: LayoutRect,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
@@ -181,7 +181,7 @@ pub struct ClipMaskInstanceRect {
     pub clip_data: ClipData,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
@@ -193,7 +193,7 @@ pub struct BoxShadowData {
     pub dest_rect: LayoutRect,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
@@ -234,7 +234,7 @@ pub struct PrimitiveInstanceData {
 /// Vertex format for picture cache composite shader.
 /// When editing the members, update desc::COMPOSITE
 /// so its list of instance_attributes matches:
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub struct CompositeInstance {
     // Device space rectangle of surface
