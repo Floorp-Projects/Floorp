@@ -263,7 +263,7 @@ impl DebugStats {
 
     /// Logs the stats for the given serialized slice
     #[cfg(feature = "display_list_stats")]
-    fn log_slice<T: Peek>(
+    fn log_slice<T: Copy + Default + peek_poke::Peek>(
         &mut self,
         slice_name: &'static str,
         range: &ItemRange<T>,

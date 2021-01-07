@@ -20,7 +20,7 @@
 //! - A '_' token to start a new row.
 
 use api::{ColorF, ColorU};
-use crate::debug_render::DebugRenderer;
+use crate::renderer::DebugRenderer;
 use crate::device::query::GpuTimer;
 use euclid::{Point2D, Rect, Size2D, vec2, default};
 use crate::internal_types::FastHashMap;
