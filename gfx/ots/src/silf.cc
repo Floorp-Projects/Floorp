@@ -42,9 +42,10 @@ bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
         if (decompressed_size == 0) {
           return DropGraphite("Decompressed size is set to 0");
         }
-        // decompressed table must be <= 30MB
-        if (decompressed_size > 30 * 1024 * 1024) {
-          return DropGraphite("Decompressed size exceeds 30MB: %gMB",
+        // decompressed table must be <= OTS_MAX_DECOMPRESSED_TABLE_SIZE
+        if (decompressed_size > OTS_MAX_DECOMPRESSED_TABLE_SIZE) {
+          return DropGraphite("Decompressed size exceeds %gMB: %gMB",
+                              OTS_MAX_DECOMPRESSED_TABLE_SIZE / (1024.0 * 1024.0),
                               decompressed_size / (1024.0 * 1024.0));
         }
         std::vector<uint8_t> decompressed(decompressed_size);
