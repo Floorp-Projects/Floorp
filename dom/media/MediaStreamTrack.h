@@ -267,8 +267,8 @@ class MediaStreamTrackSource : public nsISupports {
     MOZ_ASSERT(NS_IsMainThread());
     for (auto& sink : mSinks.Clone()) {
       if (!sink) {
-        MOZ_ASSERT_UNREACHABLE("Sink was not explicitly removed");
-        mSinks.RemoveElement(sink);
+        DebugOnly<bool> removed = mSinks.RemoveElement(sink);
+        MOZ_ASSERT(!removed, "Sink was not explicitly removed");
         continue;
       }
       sink->PrincipalChanged();
@@ -284,8 +284,8 @@ class MediaStreamTrackSource : public nsISupports {
     MOZ_ASSERT(NS_IsMainThread());
     for (auto& sink : mSinks.Clone()) {
       if (!sink) {
-        MOZ_ASSERT_UNREACHABLE("Sink was not explicitly removed");
-        mSinks.RemoveElement(sink);
+        DebugOnly<bool> removed = mSinks.RemoveElement(sink);
+        MOZ_ASSERT(!removed, "Sink was not explicitly removed");
         continue;
       }
       sink->MutedChanged(aNewState);
@@ -300,8 +300,8 @@ class MediaStreamTrackSource : public nsISupports {
     MOZ_ASSERT(NS_IsMainThread());
     for (auto& sink : mSinks.Clone()) {
       if (!sink) {
-        MOZ_ASSERT_UNREACHABLE("Sink was not explicitly removed");
-        mSinks.RemoveElement(sink);
+        DebugOnly<bool> removed = mSinks.RemoveElement(sink);
+        MOZ_ASSERT(!removed, "Sink was not explicitly removed");
         continue;
       }
       sink->OverrideEnded();
