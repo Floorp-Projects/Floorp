@@ -103,7 +103,6 @@ class AbstractScopePtr {
   ScopeKind kind() const;
   AbstractScopePtr enclosing() const;
   bool hasEnvironment() const;
-  uint32_t nextFrameSlot() const;
   // Valid iff is<FunctionScope>
   bool isArrow() const;
 
