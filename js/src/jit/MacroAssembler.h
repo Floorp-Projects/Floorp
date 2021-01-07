@@ -1119,7 +1119,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void copySignDouble(FloatRegister lhs, FloatRegister rhs,
                       FloatRegister output) PER_SHARED_ARCH;
   void copySignFloat32(FloatRegister lhs, FloatRegister rhs,
-                       FloatRegister output) DEFINED_ON(x86_shared);
+                       FloatRegister output) DEFINED_ON(x86_shared, arm64);
 
   // Returns a random double in range [0, 1) in |dest|. The |rng| register must
   // hold a pointer to a mozilla::non_crypto::XorShift128PlusRNG.
@@ -3460,6 +3460,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access, AtomicOp op,
                             Register64 value, const BaseIndex& mem)
       DEFINED_ON(x64);
+
+  void wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                            Register64 value, const BaseIndex& mem,
+                            Register64 temp) DEFINED_ON(arm64);
 
   // ========================================================================
   // JS atomic operations.
