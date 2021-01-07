@@ -725,18 +725,22 @@
     <string name="download_delete_all">احذف التنزيلات</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">أمتاكّد من مسح كل التنزيلات؟</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">حُذفت التنزيلات</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">أُزيلت التنزيلات</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">أُزيل %1$s</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">لا تنزيلات هنا</string>
+    <string name="download_empty_message_1">ما من ملفات منزّلة</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">حدّدتَ %1$d</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">افتح</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">احذف</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">أزِل</string>
 
 
     <!-- Crashes -->
@@ -862,6 +866,8 @@
     <string name="preference_phone_feature_notification">التنبيهات</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">التخزين الدائم</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">المحتوى الخاضع لإدارة الحقوق الرقمية</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">اطلب السماح</string>
     <!-- Label that indicates that a permission must be blocked -->

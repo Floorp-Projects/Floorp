@@ -1243,9 +1243,7 @@
     <string name="onboarding_privacy_notice_header">Ihre Privatsphäre</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Wir haben %s so konzipiert, dass Sie die Kontrolle darüber haben, was Sie
-        im Internet und was Sie mit uns teilen.
-    </string>
+    <string name="onboarding_privacy_notice_description">Wir haben %s so konzipiert, dass Sie die Kontrolle darüber haben, was Sie im Internet und was Sie mit uns teilen.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lesen Sie unseren Datenschutzhinweis</string>
 

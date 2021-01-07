@@ -1436,10 +1436,16 @@
 
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar la contraseña</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Llimpiar la contraseña</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar el nome d\'usuariu</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Llimpiar el nome d\'usuariu</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar el sitiu</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Abrir el sitiu nel restolador</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Amosar la contraseña</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1583,6 +1589,9 @@
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Yá esiste un aniciu de sesión con esi nome d\'usuariu</string>
 
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Conecta otru preséu.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Volvi autenticate, por favor.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
@@ -1601,6 +1610,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Algamóse la llende de sitios destacaos</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">P\'amestar un sitiu destacáu nuevu, desanicia otru. Ten primíu\'l sitiu y esbilla desaniciar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Val, entendílo</string>
 
