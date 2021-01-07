@@ -7,21 +7,23 @@
 A script to set up startup profiling with the Firefox Profiler. See
 https://profiler.firefox.com/docs/#/./guide-remote-profiling?id=startup-profiling
 for more information.
-
-TODO: This script is a little janky and could be improved. For example, we
-should probably avoid having a separate config directory.
 """
 
 import os
-import pathlib
 import sys
+import tempfile
 from subprocess import run
 
 SCRIPT_NAME=os.path.basename(__file__)
-SCRIPT_DIR=pathlib.Path(__file__).parent.absolute()
-CONFIG_DIR=os.path.join(SCRIPT_DIR, 'startup-profiling-configs')
 
 PATH_PREFIX='/data/local/tmp'
+
+GV_CONFIG=b'''env:
+  MOZ_PROFILER_STARTUP: 1
+  MOZ_PROFILER_STARTUP_INTERVAL: 5
+  MOZ_PROFILER_STARTUP_FEATURES: threads,js,stackwalk,leaf,screenshots,ipcmessages,java
+  MOZ_PROFILER_STARTUP_FILTERS: GeckoMain,Compositor,Renderer,IPDL Background
+'''
 
 def print_usage_and_exit():
     print('USAGE: ./{} [push|remove] <app-id>'.format(SCRIPT_NAME), file=sys.stderr)
@@ -29,9 +31,18 @@ def print_usage_and_exit():
     sys.exit(1)
 
 def push(id, filename):
-    run(['adb', 'push', os.path.join(CONFIG_DIR, filename), PATH_PREFIX])
-    run(['adb', 'shell', 'am', 'set-debug-app', '--persistent', id])
-    print('Startup profiling enabled on all future start ups, possibly even after reinstall. Call script with `remove` to disable it.')
+    config = tempfile.NamedTemporaryFile(delete=False)
+    try:
+        # I think the file needs to be closed to save its contents for adb push to
+        # work correctly so we close it here and later delete it manually.
+        with config.file as f:
+            f.write(GV_CONFIG)
+
+        run(['adb', 'push', config.name, os.path.join(PATH_PREFIX, filename)])
+        run(['adb', 'shell', 'am', 'set-debug-app', '--persistent', id])
+        print('Startup profiling enabled on all future start ups, possibly even after reinstall. Call script with `remove` to disable it.')
+    finally:
+        os.remove(config.name)
 
 def remove(filename):
     run(['adb', 'shell', 'rm', PATH_PREFIX + '/' + filename])
