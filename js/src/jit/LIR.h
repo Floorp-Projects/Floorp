@@ -205,8 +205,14 @@ class LUse : public LAllocation {
   static const uint32_t USED_AT_START_SHIFT = REG_SHIFT + REG_BITS;
   static const uint32_t USED_AT_START_MASK = (1 << USED_AT_START_BITS) - 1;
 
+  // The REG field will hold the register code for any Register or
+  // FloatRegister, though not for an AnyRegister.
+  static_assert(std::max(Registers::Total, FloatRegisters::Total) <=
+                    REG_MASK + 1,
+                "The field must be able to represent any register code");
+
  public:
-  // Virtual registers get the remaining 19 bits.
+  // Virtual registers get the remaining bits.
   static const uint32_t VREG_BITS =
       DATA_BITS - (USED_AT_START_SHIFT + USED_AT_START_BITS);
   static const uint32_t VREG_SHIFT = USED_AT_START_SHIFT + USED_AT_START_BITS;
@@ -240,6 +246,7 @@ class LUse : public LAllocation {
   };
 
   void set(Policy policy, uint32_t reg, bool usedAtStart) {
+    MOZ_ASSERT(reg <= REG_MASK, "Register code must fit in field");
     setKindAndData(USE, (policy << POLICY_SHIFT) | (reg << REG_SHIFT) |
                             ((usedAtStart ? 1 : 0) << USED_AT_START_SHIFT));
   }
