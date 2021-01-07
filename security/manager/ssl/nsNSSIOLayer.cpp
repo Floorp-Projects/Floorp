@@ -193,7 +193,6 @@ nsNSSSocketInfo::SetClientCert(nsIX509Cert* aClientCert) {
 }
 
 void nsNSSSocketInfo::NoteTimeUntilReady() {
-  MutexAutoLock lock(mMutex);
   if (mNotedTimeUntilReady) return;
 
   mNotedTimeUntilReady = true;
@@ -219,7 +218,7 @@ void nsNSSSocketInfo::SetHandshakeCompleted() {
                                   : mFalseStartCallbackCalled
                                       ? ChoseNotToFalseStart
                                       : NotAllowedToFalseStart;
-    MutexAutoLock lock(mMutex);
+
     // This will include TCP and proxy tunnel wait time
     Telemetry::AccumulateTimeDelta(
         Telemetry::SSL_TIME_UNTIL_HANDSHAKE_FINISHED_KEYED_BY_KA, mKeaGroup,
@@ -255,7 +254,6 @@ void nsNSSSocketInfo::SetHandshakeCompleted() {
 }
 
 void nsNSSSocketInfo::SetNegotiatedNPN(const char* value, uint32_t length) {
-  MutexAutoLock lock(mMutex);
   if (!value) {
     mNegotiatedNPN.Truncate();
   } else {

@@ -18,7 +18,6 @@
 #include "mozpkix/pkixtypes.h"
 #include "nsDataHashtable.h"
 #include "nsIClassInfo.h"
-#include "nsIObjectInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsNSSCertificate.h"
@@ -57,10 +56,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
     return result;
   }
 
-  const nsACString& GetHostName() const {
-    MutexAutoLock lock(mMutex);
-    return mHostName;
-  }
+  const nsACString& GetHostName() const { return mHostName; }
 
   void SetHostName(const char* host);
 
@@ -68,7 +64,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   void SetPort(int32_t aPort);
 
   const OriginAttributes& GetOriginAttributes() const {
-    MutexAutoLock lock(mMutex);
     return mOriginAttributes;
   }
   void SetOriginAttributes(const OriginAttributes& aOriginAttributes);
@@ -84,10 +79,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   nsresult SetSucceededCertChain(nsTArray<nsTArray<uint8_t>>&& certList);
 
-  bool HasServerCert() {
-    MutexAutoLock lock(mMutex);
-    return mServerCert != nullptr;
-  }
+  bool HasServerCert() { return mServerCert != nullptr; }
 
   static uint16_t ConvertCertificateTransparencyInfoToStatus(
       const mozilla::psm::CertificateTransparencyInfo& info);
@@ -100,7 +92,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   void SetCertificateTransparencyStatus(
       uint16_t aCertificateTransparencyStatus) {
-    MutexAutoLock lock(mMutex);
     mCertificateTransparencyStatus = aCertificateTransparencyStatus;
   }
 
@@ -112,19 +103,19 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   nsCString mKeaGroup;
   nsCString mSignatureSchemeName;
 
-  Atomic<bool> mIsAcceptedEch;
-  Atomic<bool> mIsDelegatedCredential;
-  Atomic<bool> mIsDomainMismatch;
-  Atomic<bool> mIsNotValidAtThisTime;
-  Atomic<bool> mIsUntrusted;
-  Atomic<bool> mIsEV;
+  bool mIsAcceptedEch;
+  bool mIsDelegatedCredential;
+  bool mIsDomainMismatch;
+  bool mIsNotValidAtThisTime;
+  bool mIsUntrusted;
+  bool mIsEV;
 
-  Atomic<bool> mHasIsEVStatus;
-  Atomic<bool> mHaveCipherSuiteAndProtocol;
+  bool mHasIsEVStatus;
+  bool mHaveCipherSuiteAndProtocol;
 
   /* mHaveCertErrrorBits is relied on to determine whether or not a SPDY
      connection is eligible for joining in nsNSSSocketInfo::JoinConnection() */
-  Atomic<bool> mHaveCertErrorBits;
+  bool mHaveCertErrorBits;
 
  private:
   // True if SetCanceled has been called (or if this was deserialized with a
@@ -137,51 +128,17 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain;
-  Atomic<bool> mNPNCompleted;
+  bool mNPNCompleted;
   nsCString mNegotiatedNPN;
-  Atomic<bool> mResumed;
-  Atomic<bool> mIsBuiltCertChainRootBuiltInRoot;
+  bool mResumed;
+  bool mIsBuiltCertChainRootBuiltInRoot;
 
  private:
-  static nsresult ReadBoolAndSetAtomicFieldHelper(nsIObjectInputStream* stream,
-                                                  Atomic<bool>& atomic) {
-    bool tmpBool;
-    nsresult rv = stream->ReadBoolean(&tmpBool);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    atomic = tmpBool;
-    return rv;
-  }
+  uint32_t mSecurityState;
 
-  static nsresult ReadUint32AndSetAtomicFieldHelper(
-      nsIObjectInputStream* stream, Atomic<uint32_t>& atomic) {
-    uint32_t tmpInt;
-    nsresult rv = stream->Read32(&tmpInt);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    atomic = tmpInt;
-    return rv;
-  }
+  PRErrorCode mErrorCode;
 
-  template <typename P>
-  static bool ReadParamAtomicHelper(const IPC::Message* aMsg,
-                                    PickleIterator* aIter, Atomic<P>& atomic) {
-    P tmpStore;
-    bool result = ReadParam(aMsg, aIter, &tmpStore);
-    if (result == false) {
-      return result;
-    }
-    atomic = tmpStore;
-    return result;
-  }
-
-  Atomic<uint32_t> mSecurityState;
-
-  Atomic<PRErrorCode> mErrorCode;
-
-  Atomic<int32_t> mPort;
+  int32_t mPort;
   nsCString mHostName;
   OriginAttributes mOriginAttributes;
 
@@ -190,18 +147,15 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   /* Peer cert chain for failed connections (for error reporting) */
   nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain;
 
-  nsresult ReadSSLStatus(nsIObjectInputStream* aStream,
-                         MutexAutoLock& aProofOfLock);
+  nsresult ReadSSLStatus(nsIObjectInputStream* aStream);
 
   // This function is used to read the binary that are serialized
   // by using nsIX509CertList
   nsresult ReadCertList(nsIObjectInputStream* aStream,
-                        nsTArray<RefPtr<nsIX509Cert>>& aCertList,
-                        MutexAutoLock& aProofOfLock);
+                        nsTArray<RefPtr<nsIX509Cert>>& aCertList);
   nsresult ReadCertificatesFromStream(nsIObjectInputStream* aStream,
                                       uint32_t aSize,
-                                      nsTArray<RefPtr<nsIX509Cert>>& aCertList,
-                                      MutexAutoLock& aProofOfLock);
+                                      nsTArray<RefPtr<nsIX509Cert>>& aCertList);
 };
 
 class RememberCertErrorsTable {
