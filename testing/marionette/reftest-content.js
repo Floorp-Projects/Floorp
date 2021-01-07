@@ -26,7 +26,7 @@ BrowserDOMWindow.prototype = {
       return PrintUtils.startPrintWindow(
         "window_print",
         aOpenWindowInfo.parent,
-        aOpenWindowInfo
+        { openWindowInfo: aOpenWindowInfo }
       );
     }
     return null;

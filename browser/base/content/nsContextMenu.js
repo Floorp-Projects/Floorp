@@ -1937,7 +1937,8 @@ class nsContextMenu {
   printFrame() {
     PrintUtils.startPrintWindow(
       "context_print_frame",
-      this.actor.browsingContext
+      this.actor.browsingContext,
+      { printFrameOnly: true }
     );
   }
 
@@ -1945,8 +1946,7 @@ class nsContextMenu {
     PrintUtils.startPrintWindow(
       "context_print_selection",
       this.actor.browsingContext,
-      /* aOpenWindowInfo = */ null,
-      /* aPrintSelectionOnly = */ true
+      { printSelectionOnly: true }
     );
   }
 

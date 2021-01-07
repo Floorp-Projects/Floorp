@@ -44,12 +44,9 @@ add_task(async function print_selection() {
         let helper = new PrintHelper(browser);
 
         // If you change this, change nsContextMenu.printSelection() too.
-        PrintUtils.startPrintWindow(
-          "tests",
-          frameBC,
-          null,
-          /* aSelectionOnly = */ true
-        );
+        PrintUtils.startPrintWindow("tests", frameBC, {
+          printSelectionOnly: true,
+        });
 
         await BrowserTestUtils.waitForCondition(
           () => !!document.querySelector(".printPreviewBrowser")

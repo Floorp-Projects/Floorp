@@ -170,7 +170,7 @@ class BrowserDOMWindow {
       return PrintUtils.startPrintWindow(
         "window_print",
         params.openWindowInfo.parent,
-        params.openWindowInfo
+        { openWindowInfo: params.openWindowInfo }
       );
     }
 
