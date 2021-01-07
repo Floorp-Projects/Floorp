@@ -126,18 +126,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     this.traits = {
       networkMonitor: true,
-      // Whether root actor exposes chrome target actors and access to any window.
-      // If allowChromeProcess is true, you can:
-      // * get a ParentProcessTargetActor instance to debug chrome and any non-content
-      //   resource via getProcess requests
-      // * get a ChromeWindowTargetActor instance to debug windows which could be chrome,
-      //   like browser windows via getWindow requests
-      // If allowChromeProcess is defined, but not true, it means that root actor
-      // no longer expose chrome target actors, but also that the above requests are
-      // forbidden for security reasons.
-      get allowChromeProcess() {
-        return DevToolsServer.allowChromeProcess;
-      },
       // @backward-compat { version 84 } Expose the pref value to the client.
       // Services.prefs is undefined in xpcshell tests.
       workerConsoleApiMessagesDispatchedToMainThread: Services.prefs
