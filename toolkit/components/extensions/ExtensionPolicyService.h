@@ -123,7 +123,6 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
 
   nsCOMPtr<nsIObserverService> mObs;
 
-  nsString mBaseCSP;
   nsString mDefaultCSP;
 };
 

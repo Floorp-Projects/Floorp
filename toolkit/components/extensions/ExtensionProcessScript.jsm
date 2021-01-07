@@ -222,8 +222,8 @@ ExtensionManager = {
         allowedOrigins: extension.allowedOrigins,
         webAccessibleResources: extension.webAccessibleResources,
 
+        manifestVersion: extension.manifestVersion,
         extensionPageCSP: extension.extensionPageCSP,
-        contentScriptCSP: extension.contentScriptCSP,
 
         localizeCallback,
 

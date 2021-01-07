@@ -12,39 +12,27 @@ const aps = Cc["@mozilla.org/addons/policy-service;1"].getService(
   Ci.nsIAddonPolicyService
 );
 
-let policy = null;
+const v2_csp = Preferences.get(
+  "extensions.webextensions.base-content-security-policy"
+);
+const v3_csp = Preferences.get(
+  "extensions.webextensions.base-content-security-policy.v3"
+);
 
-function setExtensionCSP(csp) {
-  if (policy) {
-    policy.active = false;
-  }
-
-  policy = new WebExtensionPolicy({
-    id: ADDON_ID,
-    mozExtensionHostname: ADDON_ID,
-    baseURL: "file:///",
-
-    allowedOrigins: new MatchPatternSet([]),
-    localizeCallback() {},
-
-    extensionPageCSP: csp,
-    contentScriptCSP: csp,
-  });
-
-  policy.active = true;
-}
-
-registerCleanupFunction(() => {
-  policy.active = false;
+add_task(async function test_invalid_addon_csp() {
+  await Assert.throws(
+    () => aps.getBaseCSP("invalid@missing"),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "no base csp for non-existent addon"
+  );
+  await Assert.throws(
+    () => aps.getExtensionPageCSP("invalid@missing"),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "no extension page csp for non-existent addon"
+  );
 });
 
-add_task(async function test_addon_csp() {
-  equal(
-    aps.baseCSP,
-    Preferences.get("extensions.webextensions.base-content-security-policy"),
-    "Expected base CSP value"
-  );
-
+add_task(async function test_policy_csp() {
   equal(
     aps.defaultCSP,
     Preferences.get("extensions.webextensions.default-content-security-policy"),
@@ -54,101 +42,177 @@ add_task(async function test_addon_csp() {
   const CUSTOM_POLICY =
     "script-src: 'self' https://xpcshell.test.custom.csp; object-src: 'none'";
 
-  setExtensionCSP(CUSTOM_POLICY);
+  let tests = [
+    {
+      name: "manifest version 2, no custom policy",
+      policyData: {},
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest version 2, no custom policy",
+      policyData: {
+        manifestVersion: 2,
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "version 2 custom extension policy",
+      policyData: {
+        extensionPageCSP: CUSTOM_POLICY,
+      },
+      expectedPolicy: CUSTOM_POLICY,
+    },
+    {
+      name: "manifest version 2 set, custom extension policy",
+      policyData: {
+        manifestVersion: 2,
+        extensionPageCSP: CUSTOM_POLICY,
+      },
+      expectedPolicy: CUSTOM_POLICY,
+    },
+    {
+      name: "manifest version 3, no custom policy",
+      policyData: {
+        manifestVersion: 3,
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest 3 version set, custom extensionPage policy",
+      policyData: {
+        manifestVersion: 3,
+        extensionPageCSP: CUSTOM_POLICY,
+      },
+      expectedPolicy: CUSTOM_POLICY,
+    },
+  ];
 
-  equal(
-    aps.getExtensionPageCSP(ADDON_ID),
-    CUSTOM_POLICY,
-    "CSP should point to add-on's custom extension page policy"
-  );
+  let policy = null;
 
-  equal(
-    aps.getContentScriptCSP(ADDON_ID),
-    CUSTOM_POLICY,
-    "CSP should point to add-on's custom content script policy"
-  );
+  function setExtensionCSP({ manifestVersion, extensionPageCSP }) {
+    if (policy) {
+      policy.active = false;
+    }
 
-  setExtensionCSP(null);
+    policy = new WebExtensionPolicy({
+      id: ADDON_ID,
+      mozExtensionHostname: ADDON_ID,
+      baseURL: "file:///",
 
-  equal(
-    aps.getExtensionPageCSP(ADDON_ID),
-    aps.defaultCSP,
-    "extension page CSP should be default when set to null"
-  );
+      allowedOrigins: new MatchPatternSet([]),
+      localizeCallback() {},
 
-  equal(
-    aps.getContentScriptCSP(ADDON_ID),
-    aps.defaultCSP,
-    "content script CSP should be default when set to null"
-  );
+      manifestVersion,
+      extensionPageCSP,
+    });
+
+    policy.active = true;
+  }
+
+  for (let test of tests) {
+    info(test.name);
+    setExtensionCSP(test.policyData);
+    equal(
+      aps.getBaseCSP(ADDON_ID),
+      test.policyData.manifestVersion == 3 ? v3_csp : v2_csp,
+      "baseCSP is correct"
+    );
+    equal(
+      aps.getExtensionPageCSP(ADDON_ID),
+      test.expectedPolicy,
+      "extensionPageCSP is correct"
+    );
+  }
 });
 
-add_task(async function test_invalid_csp() {
-  let defaultPolicy = Preferences.get(
-    "extensions.webextensions.default-content-security-policy"
-  );
+add_task(async function test_extension_csp() {
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+
   ExtensionTestUtils.failOnSchemaWarnings(false);
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      content_security_policy: {
-        extension_pages: `script-src 'none'`,
-        content_scripts: `script-src 'none'`,
+
+  let extension_pages = "script-src 'self'; object-src 'none'; img-src 'none'";
+
+  let tests = [
+    {
+      name: "manifest_v2 invalid csp results in default csp used",
+      manifest: {
+        content_security_policy: `script-src 'none'`,
       },
+      expectedPolicy: aps.defaultCSP,
     },
-  });
-  await extension.startup();
-  let policy = WebExtensionPolicy.getByID(extension.id);
-  equal(
-    policy.extensionPageCSP,
-    defaultPolicy,
-    "csp is default when invalid csp is provided."
-  );
-  equal(
-    policy.contentScriptCSP,
-    defaultPolicy,
-    "csp is default when invalid csp is provided."
-  );
-  await extension.unload();
+    {
+      name: "manifest_v3 invalid csp results in default csp used",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: {
+          extension_pages: `script-src 'none'`,
+        },
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest_v2 csp",
+      manifest: {
+        manifest_version: 2,
+        content_security_policy: extension_pages,
+      },
+      expectedPolicy: extension_pages,
+    },
+    {
+      name: "manifest_v2 with no csp, expect default",
+      manifest: {
+        manifest_version: 2,
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest_v3 used with no csp, expect default",
+      manifest: {
+        manifest_version: 3,
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest_v3 used with v2 syntax",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: extension_pages,
+      },
+      expectedPolicy: extension_pages,
+    },
+    {
+      name: "manifest_v3 syntax used",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: {
+          extension_pages,
+        },
+      },
+      expectedPolicy: extension_pages,
+    },
+  ];
+
+  for (let test of tests) {
+    info(test.name);
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: test.manifest,
+    });
+    await extension.startup();
+    let policy = WebExtensionPolicy.getByID(extension.id);
+    equal(
+      policy.baseCSP,
+      test.manifest.manifest_version == 3 ? v3_csp : v2_csp,
+      "baseCSP is correct"
+    );
+    equal(
+      policy.extensionPageCSP,
+      test.expectedPolicy,
+      "extensionPageCSP is correct."
+    );
+    await extension.unload();
+  }
+
   ExtensionTestUtils.failOnSchemaWarnings(true);
-});
 
-add_task(async function test_isolated_world() {
-  const test_policy = "script-src 'self'; object-src 'none'; img-src 'none'";
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      content_security_policy: {
-        isolated_world: test_policy,
-      },
-    },
-  });
-  await extension.startup();
-  let policy = WebExtensionPolicy.getByID(extension.id);
-  equal(
-    policy.contentScriptCSP,
-    test_policy,
-    "csp is is correct when using isolated_world."
-  );
-  await extension.unload();
-});
-
-// If both isolated_world and content_scripts is provided, content_scripts is used.
-add_task(async function test_isolated_world_overridden() {
-  const test_policy =
-    "script-src 'self'; object-src 'none'; img-src https://xpcshell.test.custom.csp";
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      content_security_policy: {
-        content_scripts: test_policy,
-        isolated_world: "script-src 'self'; object-src 'none'; img-src 'none'",
-      },
-    },
-  });
-  await extension.startup();
-  let policy = WebExtensionPolicy.getByID(extension.id);
-  equal(
-    policy.contentScriptCSP,
-    test_policy,
-    "csp is is correct when using isolated_world and content_scripts."
-  );
-  await extension.unload();
+  Services.prefs.clearUserPref("extensions.manifestV3.enabled");
 });

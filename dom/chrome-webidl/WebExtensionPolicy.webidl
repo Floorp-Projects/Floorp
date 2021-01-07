@@ -50,6 +50,21 @@ interface WebExtensionPolicy {
   readonly attribute boolean isPrivileged;
 
   /**
+   * The manifest version in use by the extension.
+   */
+  [Constant]
+  readonly attribute unsigned long manifestVersion;
+
+  /**
+   * The base content security policy string to apply on extension
+   * pages for this extension.  The baseCSP is specific to the
+   * manifest version.  If the manifest version is 3 or higher it
+   * is also applied to content scripts.
+   */
+  [Constant]
+  readonly attribute DOMString baseCSP;
+
+  /**
    * The content security policy string to apply to all pages loaded from the
    * extension's moz-extension: protocol.  If one is not provided by the
    * extension the default value from preferences is used.
@@ -57,18 +72,6 @@ interface WebExtensionPolicy {
    */
   [Constant]
   readonly attribute DOMString extensionPageCSP;
-
-  /**
-   * The content security policy string to apply to all the content scripts
-   * belonging to the extension.  If one is not provided by the
-   * extension the default value from preferences is used.
-   * See extensions.webextensions.default-content-security-policy.
-   *
-   * This is currently disabled, see bug 1578284.  Developers may enable it
-   * for testing using extensions.content_script_csp.enabled.
-   */
-  [Constant]
-  readonly attribute DOMString contentScriptCSP;
 
   /**
    * The list of currently-active permissions for the extension, as specified
@@ -276,8 +279,9 @@ dictionary WebExtensionInit {
 
   sequence<WebExtensionContentScriptInit> contentScripts = [];
 
+  // The use of a content script csp is determined by the manifest version.
+  unsigned long manifestVersion = 2;
   DOMString? extensionPageCSP = null;
-  DOMString? contentScriptCSP = null;
 
   sequence<DOMString>? backgroundScripts = null;
   DOMString? backgroundWorkerScript = null;
