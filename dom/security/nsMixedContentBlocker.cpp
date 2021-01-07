@@ -518,10 +518,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       // but still using the same loading principal.
 
     case TYPE_SAVEAS_DOWNLOAD:
-      if (!StaticPrefs::dom_block_download_insecure()) {
-        *aDecision = ACCEPT;
-        return NS_OK;
-      }
+      *aDecision = ACCEPT;
+      return NS_OK;
       break;
 
     // Static display content is considered moderate risk for mixed content so
