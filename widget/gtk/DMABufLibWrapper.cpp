@@ -241,7 +241,7 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::media_ffmpeg_vaapi_enabled() &&
-         gfx::gfxVars::CanUseHardwareVideoDecoding();
+         gfx::gfxVars::CanUseHardwareVideoDecoding() && !XRE_IsRDDProcess();
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
