@@ -41,7 +41,7 @@ pub struct FreeRectSlice(pub u32);
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-struct FreeRect {
+pub struct FreeRect {
     slice: FreeRectSlice,
     rect: DeviceIntRect,
 }
