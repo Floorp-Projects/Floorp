@@ -650,7 +650,9 @@ $letter-fallback-color: $white;
           box-shadow: inset $inner-box-shadow;
         }
       }
+    }
 
+    .top-sites-list {
       &:not(.dnd-active) {
         .top-site-outer:is(.active, :focus, :hover) {
           .tile {
@@ -660,10 +662,10 @@ $letter-fallback-color: $white;
           @include context-menu-button-hover;
         }
       }
-    }
 
-    .top-sites-list li {
-      margin: 0 0 $top-sites-vertical-space;
+      li {
+        margin: 0 0 $top-sites-vertical-space;
+      }
     }
   }
 
