@@ -1739,6 +1739,64 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
 }
 
 // static
+void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
+                                             JS::GCReason aReason) {
+  if (!aDocShell || !XRE_IsContentProcess()) {
+    return;
+  }
+
+  BrowsingContext* bc = aDocShell->GetBrowsingContext();
+  if (!bc) {
+    return;
+  }
+
+  BrowsingContext* root = bc->Top();
+  if (bc == root) {
+    // We don't want to run collectors when loading the top level page.
+    return;
+  }
+
+  nsIDocShell* rootDocShell = root->GetDocShell();
+  if (!rootDocShell) {
+    return;
+  }
+
+  Document* rootDocument = rootDocShell->GetDocument();
+  if (!rootDocument ||
+      rootDocument->GetReadyStateEnum() != Document::READYSTATE_COMPLETE ||
+      rootDocument->IsInBackgroundWindow()) {
+    return;
+  }
+
+  PresShell* presShell = rootDocument->GetPresShell();
+  if (!presShell) {
+    return;
+  }
+
+  nsViewManager* vm = presShell->GetViewManager();
+  if (!vm) {
+    return;
+  }
+
+  // GetLastUserEventTime returns microseconds.
+  uint32_t lastEventTime = 0;
+  vm->GetLastUserEventTime(lastEventTime);
+  uint32_t currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  // Only try to trigger collectors more often if user hasn't interacted with
+  // the page for awhile.
+  if ((currentTime - lastEventTime) >
+      (StaticPrefs::dom_events_user_interaction_interval() *
+       PR_USEC_PER_MSEC)) {
+    Maybe<TimeStamp> next = nsRefreshDriver::GetNextTickHint();
+    // Try to not delay the next RefreshDriver tick, so give a reasonable
+    // deadline for collectors.
+    if (next.isSome()) {
+      nsJSContext::RunNextCollectorTimer(aReason, next.value());
+    }
+  }
+}
+
+// static
 void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
                          uint32_t aDelay) {
   if (sShuttingDown) {
