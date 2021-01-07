@@ -227,6 +227,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       canAllocateBigInts_(true),
       reportDeduplications_(false),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
+      hasRecentGrowthData(false),
       smoothedGrowthFactor(1.0),
       decommitTask(gc)
 #ifdef JS_GC_ZEAL
@@ -910,15 +911,34 @@ inline void js::Nursery::endProfile(ProfileKey key) {
   totalDurations_[key] += profileDurations_[key];
 }
 
-bool js::Nursery::shouldCollect() const {
-  if (isEmpty()) {
-    return false;
-  }
+inline TimeStamp js::Nursery::collectionStartTime() const {
+  return startTimes_[ProfileKey::Total];
+}
 
+inline TimeStamp js::Nursery::lastCollectionEndTime() const {
+  return previousGC.endTime;
+}
+
+bool js::Nursery::shouldCollect() const {
   if (minorGCRequested()) {
     return true;
   }
 
+  if (isEmpty() && capacity() == tunables().gcMinNurseryBytes()) {
+    return false;
+  }
+
+  // Eagerly collect the nursery in idle time if it's nearly full.
+  if (isNearlyFull()) {
+    return true;
+  }
+
+  // If the nursery is not being collected often then it may be taking up more
+  // space than necessary.
+  return isUnderused();
+}
+
+inline bool js::Nursery::isNearlyFull() const {
   bool belowBytesThreshold =
       freeSpace() < tunables().nurseryFreeThresholdForIdleCollection();
   bool belowFractionThreshold =
@@ -944,6 +964,25 @@ bool js::Nursery::shouldCollect() const {
   //   1MB = 256KB / 0.25
   //
   return belowBytesThreshold && belowFractionThreshold;
+}
+
+// If the nursery is above its minimum size, collect it at least this often if
+// we have idle time. This allows the nursery to shrink when it's not being
+// used. There are other heuristics we could use for this, but this is the
+// simplest.
+static const TimeDuration UnderuseTimeout = TimeDuration::FromSeconds(2.0);
+
+inline bool js::Nursery::isUnderused() const {
+  if (js::SupportDifferentialTesting() || !previousGC.endTime) {
+    return false;
+  }
+
+  if (capacity() == tunables().gcMinNurseryBytes()) {
+    return false;
+  }
+
+  TimeDuration timeSinceLastCollection = ReallyNow() - previousGC.endTime;
+  return timeSinceLastCollection > UnderuseTimeout;
 }
 
 // typeReason is the gcReason for specified type, for example,
@@ -1044,6 +1083,7 @@ void js::Nursery::collect(JSGCInvocationKind kind, JS::GCReason reason) {
     disable();
   }
 
+  previousGC.endTime = ReallyNow();  // Must happen after maybeResizeNursery.
   endProfile(ProfileKey::Total);
   gc->incMinorGcNumber();
 
@@ -1095,7 +1135,7 @@ void js::Nursery::printCollectionProfile(JS::GCReason reason,
                                          double promotionRate) {
   stats().maybePrintProfileHeaders();
 
-  TimeDuration ts = startTimes_[ProfileKey::Total] - stats().creationTime();
+  TimeDuration ts = collectionStartTime() - stats().creationTime();
 
   fprintf(stderr, "MinorGC: %10.6f %-20.20s %4.1f%% %5zu %6" PRIu32,
           ts.ToSeconds(), JS::ExplainGCReason(reason), promotionRate * 100,
@@ -1539,6 +1579,14 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
 
   TimeStamp now = ReallyNow();
 
+  // If the nursery is completely unused then minimise it.
+  if (hasRecentGrowthData && previousGC.nurseryUsedBytes == 0 &&
+      now - lastCollectionEndTime() > UnderuseTimeout &&
+      !js::SupportDifferentialTesting()) {
+    clearRecentGrowthData();
+    return 0;
+  }
+
   // Calculate the fraction of the nursery promoted out of its entire
   // capacity. This gives better results than using the promotion rate (based on
   // the amount of nursery used) in cases where we collect before the nursery is
@@ -1548,9 +1596,9 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
 
   // Calculate the fraction of time spent collecting the nursery.
   double timeFraction = 0.0;
-  if (lastResizeTime && !js::SupportDifferentialTesting()) {
+  if (hasRecentGrowthData && !js::SupportDifferentialTesting()) {
     TimeDuration collectorTime = now - collectionStartTime();
-    TimeDuration totalTime = now - lastResizeTime;
+    TimeDuration totalTime = now - lastCollectionEndTime();
     timeFraction = collectorTime.ToSeconds() / totalTime.ToSeconds();
   }
 
@@ -1568,13 +1616,13 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
 
   // Use exponential smoothing on the desired growth rate to take into account
   // the promotion rate from recent previous collections.
-  if (lastResizeTime &&
-      now - lastResizeTime < TimeDuration::FromMilliseconds(200) &&
+  if (hasRecentGrowthData &&
+      now - lastCollectionEndTime() < TimeDuration::FromMilliseconds(200) &&
       !js::SupportDifferentialTesting()) {
     growthFactor = 0.75 * smoothedGrowthFactor + 0.25 * growthFactor;
   }
 
-  lastResizeTime = now;
+  hasRecentGrowthData = true;
   smoothedGrowthFactor = growthFactor;
 
   // Leave size untouched if we are close to the promotion goal.
@@ -1596,7 +1644,7 @@ void js::Nursery::clearRecentGrowthData() {
     return;
   }
 
-  lastResizeTime = TimeStamp();
+  hasRecentGrowthData = false;
   smoothedGrowthFactor = 1.0;
 }
 

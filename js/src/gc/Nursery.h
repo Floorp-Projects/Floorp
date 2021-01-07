@@ -405,6 +405,8 @@ class Nursery {
   }
 
   bool shouldCollect() const;
+  bool isNearlyFull() const;
+  bool isUnderused() const;
 
   bool enableProfiling() const { return enableProfiling_; }
 
@@ -515,10 +517,11 @@ class Nursery {
     size_t nurseryUsedBytes = 0;
     size_t tenuredBytes = 0;
     size_t tenuredCells = 0;
+    mozilla::TimeStamp endTime;
   };
   PreviousGC previousGC;
 
-  mozilla::TimeStamp lastResizeTime;
+  bool hasRecentGrowthData;
   double smoothedGrowthFactor;
 
   // Calculate the promotion rate of the most recent minor GC.
@@ -743,6 +746,9 @@ class Nursery {
   void startProfile(ProfileKey key);
   void endProfile(ProfileKey key);
   static void printProfileDurations(const ProfileDurations& times);
+
+  mozilla::TimeStamp collectionStartTime() const;
+  mozilla::TimeStamp lastCollectionEndTime() const;
 
   friend class TenuringTracer;
   friend class gc::MinorCollectionTracer;
