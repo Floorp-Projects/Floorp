@@ -52,10 +52,10 @@ ${helpers.single_keyword(
 
 ${helpers.predefined_type(
     "list-style-image",
-    "Image",
+    "url::ImageUrlOrNone",
     engines="gecko servo-2013",
-    initial_value="computed::Image::None",
-    initial_specified_value="specified::Image::None",
+    initial_value="computed::url::ImageUrlOrNone::none()",
+    initial_specified_value="specified::url::ImageUrlOrNone::none()",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-lists/#propdef-list-style-image",
     servo_restyle_damage="rebuild_and_reflow",

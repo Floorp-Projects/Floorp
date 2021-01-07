@@ -603,7 +603,7 @@ nsChangeHint nsStyleOutline::CalcDifference(
 nsStyleList::nsStyleList(const Document& aDocument)
     : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
       mQuotes(StyleQuotes::Auto()),
-      mListStyleImage(StyleImage::None()),
+      mListStyleImage(StyleImageUrlOrNone::None()),
       mImageRegion(StyleClipRectOrAuto::Auto()),
       mMozListReversed(StyleMozListReversed::False) {
   MOZ_COUNT_CTOR(nsStyleList);
@@ -627,8 +627,14 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
 void nsStyleList::TriggerImageLoads(Document& aDocument,
                                     const nsStyleList* aOldStyle) {
   MOZ_ASSERT(NS_IsMainThread());
-  mListStyleImage.ResolveImage(
-      aDocument, aOldStyle ? &aOldStyle->mListStyleImage : nullptr);
+
+  if (mListStyleImage.IsUrl() && !mListStyleImage.AsUrl().IsImageResolved()) {
+    auto* oldUrl = aOldStyle && aOldStyle->mListStyleImage.IsUrl()
+                       ? &aOldStyle->mListStyleImage.AsUrl()
+                       : nullptr;
+    const_cast<StyleComputedImageUrl&>(mListStyleImage.AsUrl())
+        .ResolveImage(aDocument, oldUrl);
+  }
 }
 
 nsChangeHint nsStyleList::CalcDifference(
