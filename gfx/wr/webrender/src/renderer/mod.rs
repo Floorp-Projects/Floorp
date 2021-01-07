@@ -1951,7 +1951,7 @@ impl Renderer {
     }
 
     /// Bind a draw target for the debug / profiler overlays, if required.
-    fn bind_debug_overlay(&mut self) {
+    fn bind_debug_overlay(&mut self, device_size: DeviceIntSize) -> Option<DrawTarget> {
         // Debug overlay setup are only required in native compositing mode
         if self.debug_overlay_state.is_enabled {
             if let CompositorKind::Native { .. } = self.current_compositor_kind {
@@ -1985,7 +1985,16 @@ impl Renderer {
                     None, // debug renderer does not use depth
                     None,
                 );
+
+                Some(draw_target)
+            } else {
+                // If we're not using the native compositor, then the default
+                // frame buffer is already bound. Create a DrawTarget for it and
+                // return it.
+                Some(DrawTarget::new_default(device_size, self.device.surface_origin_is_top_left()))
             }
+        } else {
+            None
         }
     }
 
@@ -2153,13 +2162,13 @@ impl Renderer {
 
         if let Some(device_size) = device_size {
             // Bind a surface to draw the debug / profiler information to.
-            self.bind_debug_overlay();
-
-            self.draw_render_target_debug(device_size);
-            self.draw_texture_cache_debug(device_size);
-            self.draw_gpu_cache_debug(device_size);
-            self.draw_zoom_debug(device_size);
-            self.draw_epoch_debug();
+            if let Some(draw_target) = self.bind_debug_overlay(device_size) {
+                self.draw_render_target_debug(&draw_target);
+                self.draw_texture_cache_debug(&draw_target);
+                self.draw_gpu_cache_debug(device_size);
+                self.draw_zoom_debug(device_size);
+                self.draw_epoch_debug();
+            }
         }
 
         self.profile.end_time(profiler::RENDERER_TIME);
@@ -4890,7 +4899,7 @@ impl Renderer {
         }
     }
 
-    fn draw_render_target_debug(&mut self, device_size: DeviceIntSize) {
+    fn draw_render_target_debug(&mut self, draw_target: &DrawTarget) {
         if !self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) {
             return;
         }
@@ -4910,7 +4919,7 @@ impl Renderer {
             &mut self.device,
             debug_renderer,
             textures,
-            device_size,
+            draw_target,
             0,
             &|_| [0.0, 1.0, 0.0, 1.0], // Use green for all RTs.
         );
@@ -5005,7 +5014,7 @@ impl Renderer {
         );
     }
 
-    fn draw_texture_cache_debug(&mut self, device_size: DeviceIntSize) {
+    fn draw_texture_cache_debug(&mut self, draw_target: &DrawTarget) {
         if !self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG) {
             return;
         }
@@ -5030,7 +5039,7 @@ impl Renderer {
             &mut self.device,
             debug_renderer,
             textures,
-            device_size,
+            draw_target,
             if self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) { 544 } else { 0 },
             &select_color,
         );
@@ -5040,13 +5049,14 @@ impl Renderer {
         device: &mut Device,
         debug_renderer: &mut DebugRenderer,
         mut textures: Vec<&Texture>,
-        device_size: DeviceIntSize,
+        draw_target: &DrawTarget,
         bottom: i32,
         select_color: &dyn Fn(&Texture) -> [f32; 4],
     ) {
         let mut spacing = 16;
         let mut size = 512;
 
+        let device_size = draw_target.dimensions();
         let fb_width = device_size.width;
         let fb_height = device_size.height;
         let num_layers: i32 = textures.iter()
@@ -5119,14 +5129,14 @@ impl Renderer {
                     device.blit_render_target_invert_y(
                         ReadTarget::from_texture(texture, layer),
                         src_rect,
-                        DrawTarget::new_default(device_size, device.surface_origin_is_top_left()),
+                        *draw_target,
                         FramebufferIntRect::from_untyped(&dest_rect),
                     );
                 } else {
                     device.blit_render_target(
                         ReadTarget::from_texture(texture, layer),
                         src_rect,
-                        DrawTarget::new_default(device_size, device.surface_origin_is_top_left()),
+                        *draw_target,
                         FramebufferIntRect::from_untyped(&dest_rect),
                         TextureFilter::Linear,
                     );
