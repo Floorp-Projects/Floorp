@@ -11,7 +11,7 @@ trait UnzipOp<T>: Sync + Send {
     /// The type of item expected by the right consumer.
     type Right: Send;
 
-    /// Consume one item and feed it to one or both of the underlying folders.
+    /// Consumes one item and feeds it to one or both of the underlying folders.
     fn consume<FA, FB>(&self, item: T, left: FA, right: FB) -> (FA, FB)
     where
         FA: Folder<Self::Left>,
@@ -25,7 +25,7 @@ trait UnzipOp<T>: Sync + Send {
     }
 }
 
-/// Run an unzip-like operation into default `ParallelExtend` collections.
+/// Runs an unzip-like operation into default `ParallelExtend` collections.
 fn execute<I, OP, FromA, FromB>(pi: I, op: OP) -> (FromA, FromB)
 where
     I: ParallelIterator,
@@ -39,7 +39,7 @@ where
     (a, b)
 }
 
-/// Run an unzip-like operation into `ParallelExtend` collections.
+/// Runs an unzip-like operation into `ParallelExtend` collections.
 fn execute_into<I, OP, FromA, FromB>(a: &mut FromA, b: &mut FromB, pi: I, op: OP)
 where
     I: ParallelIterator,
@@ -69,7 +69,7 @@ where
     execute(pi, Unzip)
 }
 
-/// Unzip an `IndexedParallelIterator` into two arbitrary `Consumer`s.
+/// Unzips an `IndexedParallelIterator` into two arbitrary `Consumer`s.
 ///
 /// This is called by `super::collect::unzip_into_vecs`.
 pub(super) fn unzip_indexed<I, A, B, CA, CB>(pi: I, left: CA, right: CB) -> (CA::Result, CB::Result)
@@ -191,7 +191,7 @@ where
 }
 
 /// A fake iterator to intercept the `Consumer` for type `A`.
-struct UnzipA<'b, I, OP, FromB: 'b> {
+struct UnzipA<'b, I, OP, FromB> {
     base: I,
     op: OP,
     b: &'b mut FromB,
@@ -283,7 +283,7 @@ where
 }
 
 /// `Consumer` that unzips into two other `Consumer`s
-struct UnzipConsumer<'a, OP: 'a, CA, CB> {
+struct UnzipConsumer<'a, OP, CA, CB> {
     op: &'a OP,
     left: CA,
     right: CB,
@@ -358,7 +358,7 @@ where
 }
 
 /// `Folder` that unzips into two other `Folder`s
-struct UnzipFolder<'a, OP: 'a, FA, FB> {
+struct UnzipFolder<'a, OP, FA, FB> {
     op: &'a OP,
     left: FA,
     right: FB,

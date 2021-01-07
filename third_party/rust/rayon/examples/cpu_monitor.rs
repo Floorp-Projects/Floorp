@@ -1,9 +1,3 @@
-extern crate docopt;
-extern crate rayon;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-
 use docopt::Docopt;
 use std::io;
 use std::process;
@@ -28,7 +22,7 @@ Options:
     -d N, --depth N              Control how hard the dummy task works [default: 27]
 ";
 
-#[derive(Deserialize)]
+#[derive(serde::Deserialize)]
 pub struct Args {
     arg_scenario: String,
     flag_depth: usize,

@@ -4,10 +4,10 @@
 
 use std::collections::BinaryHeap;
 
-use iter::plumbing::*;
-use iter::*;
+use crate::iter::plumbing::*;
+use crate::iter::*;
 
-use vec;
+use crate::vec;
 
 /// Parallel iterator over a binary heap
 #[derive(Debug, Clone)]
@@ -33,7 +33,7 @@ delegate_indexed_iterator! {
 
 /// Parallel iterator over an immutable reference to a binary heap
 #[derive(Debug)]
-pub struct Iter<'a, T: Ord + Sync + 'a> {
+pub struct Iter<'a, T: Ord + Sync> {
     inner: vec::IntoIter<&'a T>,
 }
 
@@ -56,3 +56,65 @@ delegate_indexed_iterator! {
 }
 
 // `BinaryHeap` doesn't have a mutable `Iterator`
+
+/// Draining parallel iterator that moves out of a binary heap,
+/// but keeps the total capacity.
+#[derive(Debug)]
+pub struct Drain<'a, T: Ord + Send> {
+    heap: &'a mut BinaryHeap<T>,
+}
+
+impl<'a, T: Ord + Send> ParallelDrainFull for &'a mut BinaryHeap<T> {
+    type Iter = Drain<'a, T>;
+    type Item = T;
+
+    fn par_drain(self) -> Self::Iter {
+        Drain { heap: self }
+    }
+}
+
+impl<'a, T: Ord + Send> ParallelIterator for Drain<'a, T> {
+    type Item = T;
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+    where
+        C: UnindexedConsumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn opt_len(&self) -> Option<usize> {
+        Some(self.len())
+    }
+}
+
+impl<'a, T: Ord + Send> IndexedParallelIterator for Drain<'a, T> {
+    fn drive<C>(self, consumer: C) -> C::Result
+    where
+        C: Consumer<Self::Item>,
+    {
+        bridge(self, consumer)
+    }
+
+    fn len(&self) -> usize {
+        self.heap.len()
+    }
+
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
+    where
+        CB: ProducerCallback<Self::Item>,
+    {
+        super::DrainGuard::new(self.heap)
+            .par_drain(..)
+            .with_producer(callback)
+    }
+}
+
+impl<'a, T: Ord + Send> Drop for Drain<'a, T> {
+    fn drop(&mut self) {
+        if !self.heap.is_empty() {
+            // We must not have produced, so just call a normal drain to remove the items.
+            self.heap.drain();
+        }
+    }
+}

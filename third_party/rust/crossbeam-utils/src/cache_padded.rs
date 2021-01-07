@@ -4,7 +4,7 @@ use core::ops::{Deref, DerefMut};
 /// Pads and aligns a value to the length of a cache line.
 ///
 /// In concurrent programming, sometimes it is desirable to make sure commonly accessed pieces of
-/// data are not placed into the same cache line. Updating an atomic value invalides the whole
+/// data are not placed into the same cache line. Updating an atomic value invalidates the whole
 /// cache line it belongs to, which makes the next access to the same cache line slower for other
 /// CPU cores. Use `CachePadded` to ensure updating one piece of data doesn't invalidate other
 /// cached data.
@@ -13,7 +13,7 @@ use core::ops::{Deref, DerefMut};
 ///
 /// Cache lines are assumed to be N bytes long, depending on the architecture:
 ///
-/// * On x86-64, N = 128.
+/// * On x86-64 and aarch64, N = 128.
 /// * On all others, N = 64.
 ///
 /// Note that N is just a reasonable guess and is not guaranteed to match the actual cache line
@@ -63,8 +63,16 @@ use core::ops::{Deref, DerefMut};
 // Sources:
 // - https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf
 // - https://github.com/facebook/folly/blob/1b5288e6eea6df074758f877c849b6e73bbb9fbb/folly/lang/Align.h#L107
-#[cfg_attr(target_arch = "x86_64", repr(align(128)))]
-#[cfg_attr(not(target_arch = "x86_64"), repr(align(64)))]
+//
+// ARM's big.LITTLE architecture has asymmetric cores and "big" cores have 128 byte cache line size
+// Sources:
+// - https://www.mono-project.com/news/2016/09/12/arm64-icache/
+//
+#[cfg_attr(any(target_arch = "x86_64", target_arch = "aarch64"), repr(align(128)))]
+#[cfg_attr(
+    not(any(target_arch = "x86_64", target_arch = "aarch64")),
+    repr(align(64))
+)]
 pub struct CachePadded<T> {
     value: T,
 }
@@ -82,7 +90,7 @@ impl<T> CachePadded<T> {
     ///
     /// let padded_value = CachePadded::new(1);
     /// ```
-    pub fn new(t: T) -> CachePadded<T> {
+    pub const fn new(t: T) -> CachePadded<T> {
         CachePadded::<T> { value: t }
     }
 
@@ -117,7 +125,7 @@ impl<T> DerefMut for CachePadded<T> {
 }
 
 impl<T: fmt::Debug> fmt::Debug for CachePadded<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("CachePadded")
             .field("value", &self.value)
             .finish()

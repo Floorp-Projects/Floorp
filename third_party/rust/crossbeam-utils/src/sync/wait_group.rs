@@ -1,3 +1,6 @@
+// Necessary for using `Mutex<usize>` for conditional variables
+#![allow(clippy::mutex_atomic)]
+
 use std::fmt;
 use std::sync::{Arc, Condvar, Mutex};
 
@@ -7,13 +10,13 @@ use std::sync::{Arc, Condvar, Mutex};
 ///
 /// `WaitGroup` is very similar to [`Barrier`], but there are a few differences:
 ///
-/// * `Barrier` needs to know the number of threads at construction, while `WaitGroup` is cloned to
+/// * [`Barrier`] needs to know the number of threads at construction, while `WaitGroup` is cloned to
 ///   register more threads.
 ///
-/// * A `Barrier` can be reused even after all threads have synchronized, while a `WaitGroup`
+/// * A [`Barrier`] can be reused even after all threads have synchronized, while a `WaitGroup`
 ///   synchronizes threads only once.
 ///
-/// * All threads wait for others to reach the `Barrier`. With `WaitGroup`, each thread can choose
+/// * All threads wait for others to reach the [`Barrier`]. With `WaitGroup`, each thread can choose
 ///   to either wait for other threads or to continue without blocking.
 ///
 /// # Examples
@@ -41,7 +44,7 @@ use std::sync::{Arc, Condvar, Mutex};
 /// wg.wait();
 /// ```
 ///
-/// [`Barrier`]: https://doc.rust-lang.org/std/sync/struct.Barrier.html
+/// [`Barrier`]: std::sync::Barrier
 pub struct WaitGroup {
     inner: Arc<Inner>,
 }
@@ -50,6 +53,17 @@ pub struct WaitGroup {
 struct Inner {
     cvar: Condvar,
     count: Mutex<usize>,
+}
+
+impl Default for WaitGroup {
+    fn default() -> Self {
+        Self {
+            inner: Arc::new(Inner {
+                cvar: Condvar::new(),
+                count: Mutex::new(1),
+            }),
+        }
+    }
 }
 
 impl WaitGroup {
@@ -62,13 +76,8 @@ impl WaitGroup {
     ///
     /// let wg = WaitGroup::new();
     /// ```
-    pub fn new() -> WaitGroup {
-        WaitGroup {
-            inner: Arc::new(Inner {
-                cvar: Condvar::new(),
-                count: Mutex::new(1),
-            }),
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Drops this reference and waits until all other references are dropped.
@@ -130,10 +139,8 @@ impl Clone for WaitGroup {
 }
 
 impl fmt::Debug for WaitGroup {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let count: &usize = &*self.inner.count.lock().unwrap();
-        f.debug_struct("WaitGroup")
-            .field("count", count)
-            .finish()
+        f.debug_struct("WaitGroup").field("count", count).finish()
     }
 }

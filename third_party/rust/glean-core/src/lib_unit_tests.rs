@@ -169,7 +169,7 @@ fn experiments_status_is_correctly_toggled() {
 }
 
 #[test]
-fn client_id_and_first_run_date_must_be_regenerated() {
+fn client_id_and_first_run_date_and_first_run_hour_must_be_regenerated() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
     {
@@ -187,6 +187,11 @@ fn client_id_and_first_run_date_must_be_regenerated() {
             .first_run_date
             .test_get_value_as_string(&glean, "glean_client_info")
             .is_none());
+        assert!(glean
+            .core_metrics
+            .first_run_hour
+            .test_get_value_as_string(&glean, "metrics")
+            .is_none());
     }
 
     {
@@ -200,6 +205,11 @@ fn client_id_and_first_run_date_must_be_regenerated() {
             .core_metrics
             .first_run_date
             .test_get_value_as_string(&glean, "glean_client_info")
+            .is_some());
+        assert!(glean
+            .core_metrics
+            .first_run_hour
+            .test_get_value_as_string(&glean, "metrics")
             .is_some());
     }
 }
@@ -254,6 +264,34 @@ fn first_run_date_is_managed_correctly_when_toggling_uploading() {
             .core_metrics
             .first_run_date
             .get_value(&glean, "glean_client_info")
+    );
+}
+
+#[test]
+fn first_run_hour_is_managed_correctly_when_toggling_uploading() {
+    let (mut glean, _) = new_glean(None);
+
+    let original_first_run_hour = glean
+        .core_metrics
+        .first_run_hour
+        .get_value(&glean, "metrics");
+
+    glean.set_upload_enabled(false);
+    assert_eq!(
+        original_first_run_hour,
+        glean
+            .core_metrics
+            .first_run_hour
+            .get_value(&glean, "metrics")
+    );
+
+    glean.set_upload_enabled(true);
+    assert_eq!(
+        original_first_run_hour,
+        glean
+            .core_metrics
+            .first_run_hour
+            .get_value(&glean, "metrics")
     );
 }
 

@@ -40,7 +40,7 @@ impl<I> PanicFuse<I>
 where
     I: ParallelIterator,
 {
-    /// Create a new `PanicFuse` iterator.
+    /// Creates a new `PanicFuse` iterator.
     pub(super) fn new(base: I) -> PanicFuse<I> {
         PanicFuse { base }
     }
@@ -306,7 +306,7 @@ where
     where
         I: IntoIterator<Item = T>,
     {
-        fn cool<'a, T>(fuse: &'a Fuse) -> impl Fn(&T) -> bool + 'a {
+        fn cool<'a, T>(fuse: &'a Fuse<'_>) -> impl Fn(&T) -> bool + 'a {
             move |_| !fuse.panicked()
         }
 

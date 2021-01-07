@@ -3,7 +3,7 @@ use super::*;
 
 use std::fmt::{self, Debug};
 
-/// `FlatMap` maps each element to an iterator, then flattens these iterators together.
+/// `FlatMap` maps each element to a parallel iterator, then flattens these iterators together.
 /// This struct is created by the [`flat_map()`] method on [`ParallelIterator`]
 ///
 /// [`flat_map()`]: trait.ParallelIterator.html#method.flat_map
@@ -22,7 +22,7 @@ impl<I: ParallelIterator + Debug, F> Debug for FlatMap<I, F> {
 }
 
 impl<I: ParallelIterator, F> FlatMap<I, F> {
-    /// Create a new `FlatMap` iterator.
+    /// Creates a new `FlatMap` iterator.
     pub(super) fn new(base: I, map_op: F) -> Self {
         FlatMap { base, map_op }
     }
@@ -40,10 +40,7 @@ where
     where
         C: UnindexedConsumer<Self::Item>,
     {
-        let consumer = FlatMapConsumer {
-            base: consumer,
-            map_op: &self.map_op,
-        };
+        let consumer = FlatMapConsumer::new(consumer, &self.map_op);
         self.base.drive_unindexed(consumer)
     }
 }
@@ -51,7 +48,7 @@ where
 /// ////////////////////////////////////////////////////////////////////////
 /// Consumer implementation
 
-struct FlatMapConsumer<'f, C, F: 'f> {
+struct FlatMapConsumer<'f, C, F> {
     base: C,
     map_op: &'f F,
 }
@@ -109,7 +106,7 @@ where
     }
 }
 
-struct FlatMapFolder<'f, C, F: 'f, R> {
+struct FlatMapFolder<'f, C, F, R> {
     base: C,
     map_op: &'f F,
     previous: Option<R>,
@@ -126,10 +123,9 @@ where
     fn consume(self, item: T) -> Self {
         let map_op = self.map_op;
         let par_iter = map_op(item).into_par_iter();
-        let result = par_iter.drive_unindexed(self.base.split_off_left());
+        let consumer = self.base.split_off_left();
+        let result = par_iter.drive_unindexed(consumer);
 
-        // We expect that `previous` is `None`, because we drive
-        // the cost up so high, but just in case.
         let previous = match self.previous {
             None => Some(result),
             Some(previous) => {

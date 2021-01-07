@@ -21,7 +21,7 @@ pub trait TimingDistribution {
     /// # Returns
     ///
     /// A unique [`TimerId`] for the new timer.
-    fn start(&mut self) -> TimerId;
+    fn start(&self) -> TimerId;
 
     /// Stops tracking time for the provided metric and associated timer id.
     ///
@@ -34,7 +34,7 @@ pub trait TimingDistribution {
     /// * `id` - The [`TimerId`] to associate with this timing. This allows
     ///   for concurrent timing of events associated with different ids to the
     ///   same timespan metric.
-    fn stop_and_accumulate(&mut self, id: TimerId);
+    fn stop_and_accumulate(&self, id: TimerId);
 
     /// Aborts a previous [`start`](TimingDistribution::start) call. No
     /// error is recorded if no [`start`](TimingDistribution::start) was
@@ -45,11 +45,11 @@ pub trait TimingDistribution {
     /// * `id` - The [`TimerId`] to associate with this timing. This allows
     ///   for concurrent timing of events associated with different ids to the
     ///   same timing distribution metric.
-    fn cancel(&mut self, id: TimerId);
+    fn cancel(&self, id: TimerId);
 
     /// **Exported for test purposes.**
     ///
-    /// Gets the currently stored value as an integer.
+    /// Gets the currently stored value of the metric.
     ///
     /// This doesn't clear the stored value.
     ///

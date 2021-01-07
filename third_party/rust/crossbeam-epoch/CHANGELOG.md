@@ -1,3 +1,24 @@
+# Version 0.9.1
+
+- Bump `memoffset` dependency to version 0.6. (#592)
+
+# Version 0.9.0
+
+- Bump the minimum supported Rust version to 1.36.
+- Support dynamically sized types.
+
+# Version 0.8.2
+
+- Fix bug in release (yanking 0.8.1)
+
+# Version 0.8.1
+
+- Bump `autocfg` dependency to version 1.0. (#460)
+- Reduce stall in list iteration. (#376)
+- Stop stealing from the same deque. (#448)
+- Fix unsoundness issues by adopting `MaybeUninit`. (#458)
+- Fix use-after-free in lock-free queue. (#466)
+
 # Version 0.8.0
 
 - Bump the minimum required version to 1.28.
