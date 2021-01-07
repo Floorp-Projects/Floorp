@@ -169,25 +169,38 @@ class BigIntStencil {
 class ScopeStencil {
   friend class StencilXDR;
 
-  // The enclosing scope. If Nothing, then the enclosing scope of the
+  // The enclosing scope. Valid only if HasEnclosing flag is set.
   // compilation applies.
-  mozilla::Maybe<ScopeIndex> enclosing_;
-
-  // The kind determines the corresponding BaseParserScopeData.
-  ScopeKind kind_{UINT8_MAX};
+  ScopeIndex enclosing_;
 
   // First frame slot to use, or LOCALNO_LIMIT if none are allowed.
   uint32_t firstFrameSlot_ = UINT32_MAX;
 
-  // If Some, then an environment Shape must be created. The shape itself may
-  // have no slots if the environment may be extensible later.
-  mozilla::Maybe<uint32_t> numEnvironmentSlots_;
+  // The number of environment shape's slots.  Valid only if
+  // HasEnvironmentShape flag is set.
+  uint32_t numEnvironmentSlots_;
 
-  // Canonical function if this is a FunctionScope.
-  mozilla::Maybe<ScriptIndex> functionIndex_;
+  // Canonical function if this is a FunctionScope. Valid only if
+  // kind_ is ScopeKind::Function.
+  ScriptIndex functionIndex_;
+
+  // The kind determines the corresponding BaseParserScopeData.
+  ScopeKind kind_{UINT8_MAX};
+
+  // True if this scope has enclosing scope.
+  static constexpr uint8_t HasEnclosing = 1 << 0;
+
+  // If true, an environment Shape must be created. The shape itself may
+  // have no slots if the environment may be extensible later.
+  static constexpr uint8_t HasEnvironmentShape = 1 << 1;
 
   // True if this is a FunctionScope for an arrow function.
-  bool isArrow_ = false;
+  static constexpr uint8_t IsArrow = 1 << 2;
+
+  uint8_t flags_ = 0;
+
+  // To make this struct packed, add explicit field for padding.
+  uint16_t padding_ = 0;
 
  public:
   // For XDR only.
@@ -198,12 +211,18 @@ class ScopeStencil {
                mozilla::Maybe<uint32_t> numEnvironmentSlots,
                mozilla::Maybe<ScriptIndex> functionIndex = mozilla::Nothing(),
                bool isArrow = false)
-      : enclosing_(enclosing),
-        kind_(kind),
+      : enclosing_(enclosing.valueOr(ScopeIndex(0))),
         firstFrameSlot_(firstFrameSlot),
-        numEnvironmentSlots_(numEnvironmentSlots),
-        functionIndex_(functionIndex),
-        isArrow_(isArrow) {}
+        numEnvironmentSlots_(numEnvironmentSlots.valueOr(0)),
+        functionIndex_(functionIndex.valueOr(ScriptIndex(0))),
+        kind_(kind),
+        flags_((enclosing.isSome() ? HasEnclosing : 0) |
+               (numEnvironmentSlots.isSome() ? HasEnvironmentShape : 0) |
+               (isArrow ? IsArrow : 0)) {
+    MOZ_ASSERT((kind == ScopeKind::Function) == functionIndex.isSome());
+    // Silence -Wunused-private-field warnings.
+    mozilla::Unused << padding_;
+  }
 
  private:
   // Create ScopeStencil with `args`, and append ScopeStencil and `data` to
@@ -265,16 +284,37 @@ class ScopeStencil {
   js::Scope* enclosingExistingScope(const CompilationInput& input,
                                     const CompilationGCOutput& gcOutput) const;
 
+ private:
+  bool hasEnclosing() const { return flags_ & HasEnclosing; }
+
+  ScopeIndex enclosing() const {
+    MOZ_ASSERT(hasEnclosing());
+    return enclosing_;
+  }
+
+  uint32_t firstFrameSlot() const { return firstFrameSlot_; }
+
+  bool hasEnvironmentShape() const { return flags_ & HasEnvironmentShape; }
+
+  uint32_t numEnvironmentSlots() const {
+    MOZ_ASSERT(hasEnvironmentShape());
+    return numEnvironmentSlots_;
+  }
+
+  bool isFunction() const { return kind_ == ScopeKind::Function; }
+
+  ScriptIndex functionIndex() const { return functionIndex_; }
+
+ public:
   ScopeKind kind() const { return kind_; }
 
   bool hasEnvironment() const {
     // Check if scope kind alone means we have an env shape, and
     // otherwise check if we have one created.
-    bool hasEnvironmentShape = numEnvironmentSlots_.isSome();
-    return Scope::hasEnvironment(kind(), hasEnvironmentShape);
+    return Scope::hasEnvironment(kind(), hasEnvironmentShape());
   }
 
-  bool isArrow() const { return isArrow_; }
+  bool isArrow() const { return flags_ & IsArrow; }
 
   Scope* createScope(JSContext* cx, CompilationInput& input,
                      CompilationGCOutput& gcOutput,

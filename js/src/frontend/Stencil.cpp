@@ -42,8 +42,8 @@ using namespace js::frontend;
 
 AbstractScopePtr ScopeStencil::enclosing(
     CompilationState& compilationState) const {
-  if (enclosing_) {
-    return AbstractScopePtr(compilationState, *enclosing_);
+  if (hasEnclosing()) {
+    return AbstractScopePtr(compilationState, enclosing());
   }
 
   return AbstractScopePtr(compilationState.input.enclosingScope);
@@ -51,8 +51,8 @@ AbstractScopePtr ScopeStencil::enclosing(
 
 Scope* ScopeStencil::enclosingExistingScope(
     const CompilationInput& input, const CompilationGCOutput& gcOutput) const {
-  if (enclosing_) {
-    Scope* result = gcOutput.scopes[*enclosing_];
+  if (hasEnclosing()) {
+    Scope* result = gcOutput.scopes[enclosing()];
     MOZ_ASSERT(result, "Scope must already exist to use this method");
     return result;
   }
@@ -1222,34 +1222,35 @@ void ScopeStencil::dump(js::JSONPrinter& json,
 void ScopeStencil::dumpFields(js::JSONPrinter& json,
                               BaseParserScopeData* baseScopeData,
                               CompilationStencil* compilationStencil) {
-  if (enclosing_) {
-    json.formatProperty("enclosing", "Some(ScopeIndex(%zu))",
-                        size_t(*enclosing_));
-  } else {
-    json.property("enclosing", "Nothing");
-  }
-
   json.property("kind", ScopeKindString(kind_));
+
+  if (hasEnclosing()) {
+    json.formatProperty("enclosing", "ScopeIndex(%zu)", size_t(enclosing()));
+  }
 
   json.property("firstFrameSlot", firstFrameSlot_);
 
-  if (numEnvironmentSlots_) {
-    json.formatProperty("numEnvironmentSlots", "Some(%zu)",
-                        size_t(*numEnvironmentSlots_));
-  } else {
-    json.property("numEnvironmentSlots", "Nothing");
+  if (hasEnvironmentShape()) {
+    json.formatProperty("numEnvironmentSlots", "%zu",
+                        size_t(numEnvironmentSlots_));
   }
 
-  if (kind_ == ScopeKind::Function) {
-    if (functionIndex_.isSome()) {
-      json.formatProperty("functionIndex", "ScriptIndex(%zu)",
-                          size_t(*functionIndex_));
-    } else {
-      json.property("functionIndex", "Nothing");
-    }
-
-    json.boolProperty("isArrow", isArrow_);
+  if (isFunction()) {
+    json.formatProperty("functionIndex", "ScriptIndex(%zu)",
+                        size_t(functionIndex_));
   }
+
+  json.beginListProperty("flags_");
+  if (flags_ & HasEnclosing) {
+    json.value("HasEnclosing");
+  }
+  if (flags_ & HasEnvironmentShape) {
+    json.value("HasEnvironmentShape");
+  }
+  if (flags_ & IsArrow) {
+    json.value("IsArrow");
+  }
+  json.endList();
 
   if (!baseScopeData) {
     return;

@@ -32,7 +32,7 @@ struct CanEncodeNameType<TaggedParserAtomIndex> {
 };
 
 template <XDRMode mode, typename ScopeT>
-/* static */ XDRResult StencilXDR::ScopeData(
+/* static */ XDRResult StencilXDR::ScopeSpecificData(
     XDRState<mode>* xdr, BaseParserScopeData*& baseScopeData) {
   using SlotInfo = typename ScopeT::SlotInfo;
   using ScopeDataT = typename ScopeT::ParserData;
@@ -218,69 +218,9 @@ static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
 }
 
 template <XDRMode mode>
-/* static */ XDRResult StencilXDR::Scope(XDRState<mode>* xdr,
-                                         ScopeStencil& stencil,
-                                         BaseParserScopeData*& baseScopeData) {
-  enum class XdrFlags {
-    HasEnclosing,
-    HasEnvironment,
-    IsArrow,
-  };
-
-  uint8_t xdrFlags = 0;
-  uint8_t kind;
-
-  if (mode == XDR_ENCODE) {
-    kind = static_cast<uint8_t>(stencil.kind_);
-    if (stencil.enclosing_.isSome()) {
-      xdrFlags |= 1 << uint8_t(XdrFlags::HasEnclosing);
-    }
-    if (stencil.numEnvironmentSlots_.isSome()) {
-      xdrFlags |= 1 << uint8_t(XdrFlags::HasEnvironment);
-    }
-    if (stencil.isArrow_) {
-      xdrFlags |= 1 << uint8_t(XdrFlags::IsArrow);
-    }
-  }
-
-  MOZ_TRY(xdr->codeUint8(&xdrFlags));
-  MOZ_TRY(xdr->codeUint8(&kind));
-  MOZ_TRY(xdr->codeUint32(&stencil.firstFrameSlot_));
-
-  if (mode == XDR_DECODE) {
-    stencil.kind_ = static_cast<ScopeKind>(kind);
-  }
-
-  if (xdrFlags & (1 << uint8_t(XdrFlags::HasEnclosing))) {
-    if (mode == XDR_DECODE) {
-      stencil.enclosing_ = mozilla::Some(ScopeIndex());
-    }
-    MOZ_ASSERT(stencil.enclosing_.isSome());
-    MOZ_TRY(xdr->codeUint32(&stencil.enclosing_->index));
-  }
-
-  if (xdrFlags & (1 << uint8_t(XdrFlags::HasEnvironment))) {
-    if (mode == XDR_DECODE) {
-      stencil.numEnvironmentSlots_ = mozilla::Some(0);
-    }
-    MOZ_ASSERT(stencil.numEnvironmentSlots_.isSome());
-    MOZ_TRY(xdr->codeUint32(&stencil.numEnvironmentSlots_.ref()));
-  }
-
-  if (xdrFlags & (1 << uint8_t(XdrFlags::IsArrow))) {
-    if (mode == XDR_DECODE) {
-      stencil.isArrow_ = true;
-    }
-  }
-
-  if (stencil.kind_ == ScopeKind::Function) {
-    if (mode == XDR_DECODE) {
-      stencil.functionIndex_ = mozilla::Some(ScriptIndex());
-    }
-    MOZ_ASSERT(stencil.functionIndex_.isSome());
-    MOZ_TRY(xdr->codeUint32(&stencil.functionIndex_->index));
-  }
-
+/* static */ XDRResult StencilXDR::ScopeData(
+    XDRState<mode>* xdr, ScopeStencil& stencil,
+    BaseParserScopeData*& baseScopeData) {
   // In both decoding and encoding, stencil.kind_ is now known, and
   // can be assumed.  This allows the encoding to write out the bytes
   // for the specialized scope-data type without needing to encode
@@ -289,13 +229,15 @@ template <XDRMode mode>
     // FunctionScope
     case ScopeKind::Function: {
       // Extra parentheses is for template parameters inside macro.
-      MOZ_TRY((StencilXDR::ScopeData<mode, FunctionScope>(xdr, baseScopeData)));
+      MOZ_TRY((StencilXDR::ScopeSpecificData<mode, FunctionScope>(
+          xdr, baseScopeData)));
       break;
     }
 
     // VarScope
     case ScopeKind::FunctionBodyVar: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, VarScope>(xdr, baseScopeData)));
+      MOZ_TRY(
+          (StencilXDR::ScopeSpecificData<mode, VarScope>(xdr, baseScopeData)));
       break;
     }
 
@@ -307,7 +249,8 @@ template <XDRMode mode>
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, LexicalScope>(xdr, baseScopeData)));
+      MOZ_TRY((StencilXDR::ScopeSpecificData<mode, LexicalScope>(
+          xdr, baseScopeData)));
       break;
     }
 
@@ -320,20 +263,23 @@ template <XDRMode mode>
     // EvalScope
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, EvalScope>(xdr, baseScopeData)));
+      MOZ_TRY(
+          (StencilXDR::ScopeSpecificData<mode, EvalScope>(xdr, baseScopeData)));
       break;
     }
 
     // GlobalScope
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, GlobalScope>(xdr, baseScopeData)));
+      MOZ_TRY((StencilXDR::ScopeSpecificData<mode, GlobalScope>(
+          xdr, baseScopeData)));
       break;
     }
 
     // ModuleScope
     case ScopeKind::Module: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, ModuleScope>(xdr, baseScopeData)));
+      MOZ_TRY((StencilXDR::ScopeSpecificData<mode, ModuleScope>(
+          xdr, baseScopeData)));
       break;
     }
 
@@ -580,13 +526,13 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   // All of the vector-indexed data elements referenced by the
   // main script tree must be materialized first.
 
-  MOZ_TRY(XDRSpanInitialized(xdr, stencil.scopeData));
+  MOZ_TRY(XDRSpanContent(xdr, stencil.scopeData));
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.scopeNames));
   MOZ_ASSERT(stencil.scopeData.size() == stencil.scopeNames.size());
   size_t scopeCount = stencil.scopeData.size();
   for (size_t i = 0; i < scopeCount; i++) {
-    MOZ_TRY(
-        StencilXDR::Scope(xdr, stencil.scopeData[i], stencil.scopeNames[i]));
+    MOZ_TRY(StencilXDR::ScopeData(xdr, stencil.scopeData[i],
+                                  stencil.scopeNames[i]));
   }
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.regExpData));

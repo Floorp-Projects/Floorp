@@ -42,12 +42,12 @@ struct CanCopyDataToDisk {
 class StencilXDR {
  public:
   template <XDRMode mode>
-  static XDRResult Scope(XDRState<mode>* xdr, ScopeStencil& stencil,
-                         BaseParserScopeData*& baseScopeData);
+  static XDRResult ScopeData(XDRState<mode>* xdr, ScopeStencil& stencil,
+                             BaseParserScopeData*& baseScopeData);
 
   template <XDRMode mode, typename ScopeT>
-  static XDRResult ScopeData(XDRState<mode>* xdr,
-                             BaseParserScopeData*& baseScopeData);
+  static XDRResult ScopeSpecificData(XDRState<mode>* xdr,
+                                     BaseParserScopeData*& baseScopeData);
 
   template <XDRMode mode>
   static XDRResult ObjLiteral(XDRState<mode>* xdr, ObjLiteralStencil& stencil);
