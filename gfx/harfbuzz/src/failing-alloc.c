@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2020  Ebrahim Byagowi
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -20,47 +20,38 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_H_IN
-#error "Include <hb.h> instead."
-#endif
+#include <stdlib.h>
+#include <stdio.h>
 
-#ifndef HB_VERSION_H
-#define HB_VERSION_H
+int alloc_state = 0;
 
-#include "hb-common.h"
+__attribute__((no_sanitize("integer")))
+static int fastrand ()
+{
+  if (!alloc_state) return 1;
+  /* Based on https://software.intel.com/content/www/us/en/develop/articles/fast-random-number-generator-on-the-intel-pentiumr-4-processor.html */
+  alloc_state = (214013 * alloc_state + 2531011);
+  return (alloc_state >> 16) & 0x7FFF;
+}
 
-HB_BEGIN_DECLS
+void* hb_malloc_impl (size_t size)
+{
+  return (fastrand () % 16) ? malloc (size) : NULL;
+}
 
+void* hb_calloc_impl (size_t nmemb, size_t size)
+{
+  return (fastrand () % 16) ? calloc (nmemb, size) : NULL;
+}
 
-#define HB_VERSION_MAJOR 2
-#define HB_VERSION_MINOR 7
-#define HB_VERSION_MICRO 4
+void* hb_realloc_impl (void *ptr, size_t size)
+{
+  return (fastrand () % 16) ? realloc (ptr, size) : NULL;
+}
 
-#define HB_VERSION_STRING "2.7.4"
-
-#define HB_VERSION_ATLEAST(major,minor,micro) \
-	((major)*10000+(minor)*100+(micro) <= \
-	 HB_VERSION_MAJOR*10000+HB_VERSION_MINOR*100+HB_VERSION_MICRO)
-
-
-HB_EXTERN void
-hb_version (unsigned int *major,
-	    unsigned int *minor,
-	    unsigned int *micro);
-
-HB_EXTERN const char *
-hb_version_string (void);
-
-HB_EXTERN hb_bool_t
-hb_version_atleast (unsigned int major,
-		    unsigned int minor,
-		    unsigned int micro);
-
-
-HB_END_DECLS
-
-#endif /* HB_VERSION_H */
+void  hb_free_impl (void *ptr)
+{
+  return free (ptr);
+}

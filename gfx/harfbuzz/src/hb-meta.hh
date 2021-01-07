@@ -343,7 +343,6 @@ using hb_is_move_assignable = hb_is_assignable<hb_add_lvalue_reference<T>,
 
 template <typename T> union hb_trivial { T value; };
 
-/* Don't know how to do the following. */
 template <typename T>
 using hb_is_trivially_destructible= hb_is_destructible<hb_trivial<T>>;
 #define hb_is_trivially_destructible(T) hb_is_trivially_destructible<T>::value

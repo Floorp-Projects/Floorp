@@ -215,6 +215,8 @@ struct name
     this->count = it.len ();
 
     NameRecord *name_records = (NameRecord *) calloc (it.len (), NameRecord::static_size);
+    if (unlikely (!name_records)) return_trace (false);
+
     hb_array_t<NameRecord> records (name_records, it.len ());
 
     for (const NameRecord& record : it)

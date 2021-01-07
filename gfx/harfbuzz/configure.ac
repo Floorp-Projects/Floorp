@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [2.6.8],
+        [2.7.4],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -25,7 +25,7 @@ AM_PROG_CC_C_O
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX(11)
 AC_SYS_LARGEFILE
-PKG_PROG_PKG_CONFIG([0.20])
+PKG_PROG_PKG_CONFIG([0.28])
 AM_MISSING_PROG([RAGEL], [ragel])
 AM_MISSING_PROG([GIT], [git])
 
@@ -46,16 +46,7 @@ AC_SUBST(HB_VERSION)
 # Libtool version
 m4_define([hb_version_int],
 	  m4_eval(hb_version_major*10000 + hb_version_minor*100 + hb_version_micro))
-m4_if(m4_eval(hb_version_minor % 2), [1],
-      dnl for unstable releases
-      [m4_define([hb_libtool_revision], 0)],
-      dnl for stable releases
-      [m4_define([hb_libtool_revision], hb_version_micro)])
-m4_define([hb_libtool_age],
-	  m4_eval(hb_version_int - hb_libtool_revision))
-m4_define([hb_libtool_current],
-	  m4_eval(hb_libtool_age))
-HB_LIBTOOL_VERSION_INFO=hb_libtool_current:hb_libtool_revision:hb_libtool_age
+HB_LIBTOOL_VERSION_INFO=hb_version_int:0:hb_version_int
 AC_SUBST(HB_LIBTOOL_VERSION_INFO)
 
 AC_ARG_WITH([libstdc++],
@@ -77,7 +68,7 @@ GTK_DOC_CHECK([1.15],[--flavour no-tmpl])
 ])
 
 # Functions and headers
-AC_CHECK_FUNCS(atexit mprotect sysconf getpagesize mmap isatty roundf)
+AC_CHECK_FUNCS(atexit mprotect sysconf getpagesize mmap isatty)
 AC_CHECK_HEADERS(unistd.h sys/mman.h stdbool.h)
 
 # Compiler flags
@@ -248,25 +239,6 @@ AC_ARG_WITH(icu,
 have_icu=false
 if test "x$with_icu" = "xyes" -o "x$with_icu" = "xbuiltin" -o "x$with_icu" = "xauto"; then
 	PKG_CHECK_MODULES(ICU, icu-uc, have_icu=true, :)
-
-	dnl Fallback to icu-config if ICU pkg-config files could not be found
-	if test "$have_icu" != "true"; then
-		AC_CHECK_TOOL(ICU_CONFIG, icu-config, no)
-		AC_MSG_CHECKING([for ICU by using icu-config fallback])
-		if test "$ICU_CONFIG" != "no" && "$ICU_CONFIG" --version >/dev/null; then
-			have_icu=true
-			# We don't use --cflags as this gives us a lot of things that we don't
-			# necessarily want, like debugging and optimization flags
-			# See man (1) icu-config for more info.
-			ICU_CFLAGS=`$ICU_CONFIG --cppflags`
-			ICU_LIBS=`$ICU_CONFIG --ldflags-searchpath --ldflags-libsonly`
-			AC_SUBST(ICU_CFLAGS)
-			AC_SUBST(ICU_LIBS)
-			AC_MSG_RESULT([yes])
-		else
-			AC_MSG_RESULT([no])
-		fi
-	fi
 fi
 if test \( "x$with_icu" = "xyes" -o "x$with_icu" = "xbuiltin" \) -a "x$have_icu" != "xtrue"; then
 	AC_MSG_ERROR([icu support requested but icu-uc not found])
@@ -512,11 +484,8 @@ echo
 
 AC_MSG_NOTICE([
 
-Autotools still is our main and recommended build system for
-building *nix package out of the library yet we encourage
-packagers to experiment with our brand new meson port and
-give us feedback as our effort to migrate and unify all
-the other build systems we have tools to meson.
+Autotools is no longer our supported build system for building the library
+for *nix distributions, please migrate to meson.
 
 ])
 

@@ -2,8 +2,8 @@
 
 import sys, os, shutil, subprocess, glob, re
 
-builddir = os.environ.get ('builddir', os.path.dirname (__file__))
-libs = os.environ.get ('libs', '.libs')
+builddir = os.getenv ('builddir', os.path.dirname (__file__))
+libs = os.getenv ('libs', '.libs')
 
 objdump = shutil.which ('objdump')
 if not objdump:
