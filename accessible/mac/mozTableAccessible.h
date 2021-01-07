@@ -139,6 +139,9 @@
 - (NSNumber*)moxDisclosing;
 
 // override
+- (void)moxSetDisclosing:(NSNumber*)disclosing;
+
+// override
 - (NSNumber*)moxExpanded;
 
 // override

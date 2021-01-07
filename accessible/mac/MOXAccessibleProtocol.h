@@ -307,6 +307,9 @@
 
 #pragma mark - AttributeSetters
 
+// AXDisclosing
+- (void)moxSetDisclosing:(NSNumber* _Nullable)disclosing;
+
 // AXValue
 - (void)moxSetValue:(id _Nullable)value;
 
