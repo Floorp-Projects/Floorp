@@ -69,8 +69,7 @@ nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {
     nscoord spacing = mTableFrame->GetColSpacing(col);
     const auto* styleISize = &colFrame->StylePosition()->ISize(wm);
     if (styleISize->ConvertsToLength()) {
-      result +=
-          colFrame->ComputeISizeValue(aRenderingContext, 0, 0, 0, *styleISize);
+      result += styleISize->ToLength();
     } else if (styleISize->ConvertsToPercentage()) {
       // do nothing
     } else {
@@ -209,8 +208,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
     const auto* styleISize = &colFrame->StylePosition()->ISize(wm);
     nscoord colISize;
     if (styleISize->ConvertsToLength()) {
-      colISize = colFrame->ComputeISizeValue(aReflowInput.mRenderingContext, 0,
-                                             0, 0, *styleISize);
+      colISize = styleISize->ToLength();
       specTotal += colISize;
     } else if (styleISize->ConvertsToPercentage()) {
       float pct = styleISize->ToPercentage();
