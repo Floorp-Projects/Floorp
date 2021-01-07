@@ -26,8 +26,8 @@ GV_CONFIG=b'''env:
 '''
 
 def print_usage_and_exit():
-    print('USAGE: ./{} [push|remove] <app-id>'.format(SCRIPT_NAME), file=sys.stderr)
-    print('example: ./{} push org.mozilla.fenix'.format(SCRIPT_NAME), file=sys.stderr)
+    print('USAGE: ./{} [push|remove] [nightly|beta|release|debug]'.format(SCRIPT_NAME), file=sys.stderr)
+    print('example: ./{} push nightly'.format(SCRIPT_NAME), file=sys.stderr)
     sys.exit(1)
 
 def push(id, filename):
@@ -38,6 +38,7 @@ def push(id, filename):
         with config.file as f:
             f.write(GV_CONFIG)
 
+        print('Pushing {} to device.'.format(filename))
         run(['adb', 'push', config.name, os.path.join(PATH_PREFIX, filename)])
         run(['adb', 'shell', 'am', 'set-debug-app', '--persistent', id])
         print('Startup profiling enabled on all future start ups, possibly even after reinstall. Call script with `remove` to disable it.')
@@ -45,14 +46,27 @@ def push(id, filename):
         os.remove(config.name)
 
 def remove(filename):
+    print('Removing {} from device.'.format(filename))
     run(['adb', 'shell', 'rm', PATH_PREFIX + '/' + filename])
     run(['adb', 'shell', 'am', 'clear-debug-app'])
+
+def convert_channel_to_id(channel):
+    # Users might want to use custom app IDs in the future
+    # but we don't know that's a need yet: let's add it if it is.
+    mapping = {
+        'release': 'org.mozilla.firefox',
+        'beta': 'org.mozilla.firefox_beta',
+        'nightly': 'org.mozilla.fenix',
+        'debug': 'org.mozilla.fenix.debug'
+    }
+    return mapping[channel]
 
 def main():
     try:
         cmd = sys.argv[1]
-        id = sys.argv[2]
-    except IndexError as e:
+        channel = sys.argv[2]
+        id = convert_channel_to_id(channel)
+    except (IndexError, KeyError) as e:
         print_usage_and_exit()
 
     filename = id + '-geckoview-config.yaml'
