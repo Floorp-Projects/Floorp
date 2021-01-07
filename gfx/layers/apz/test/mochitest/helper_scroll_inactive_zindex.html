@@ -6,19 +6,19 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var subframe = document.getElementById("scroll");
 
   // scroll over the middle of the subframe, and make sure that it scrolls,
   // not the page
   var scrollPos = subframe.scrollTop;
-  yield moveMouseAndScrollWheelOver(subframe, 100, 100, testDriver);
+  await promiseMoveMouseAndScrollWheelOver(subframe, 100, 100);
   dump("after scroll, subframe.scrollTop = " + subframe.scrollTop + "\n");
   ok(subframe.scrollTop > scrollPos, "subframe scrolled after wheeling over it");
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
