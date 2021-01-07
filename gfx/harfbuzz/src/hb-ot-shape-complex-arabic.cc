@@ -228,8 +228,6 @@ collect_features_arabic (hb_ot_shape_planner_t *plan)
   map->enable_feature (HB_TAG('c','a','l','t'), F_MANUAL_ZWJ);
   map->add_gsub_pause (nullptr);
 
-  /* And undo here. */
-
   /* The spec includes 'cswh'.  Earlier versions of Windows
    * used to enable this by default, but testing suggests
    * that Windows 8 and later do not enable it by default,

@@ -2,9 +2,9 @@
 
 import sys, os, shutil, subprocess
 
-os.chdir (os.environ.get ('srcdir', os.path.dirname (__file__)))
+os.chdir (os.getenv ('srcdir', os.path.dirname (__file__)))
 
-libs = os.environ.get ('libs', '.libs')
+libs = os.getenv ('libs', '.libs')
 
 ldd = shutil.which ('ldd')
 if ldd:

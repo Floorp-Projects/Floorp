@@ -303,13 +303,13 @@ struct cff2_subset_plan {
     if (acc.fdSelect != &Null (CFF2FDSelect))
     {
       if (unlikely (!hb_plan_subset_cff_fdselect (plan,
-				  orig_fdcount,
-				  *(const FDSelect *)acc.fdSelect,
-				  subset_fdcount,
-				  subset_fdselect_size,
-				  subset_fdselect_format,
-				  subset_fdselect_ranges,
-				  fdmap)))
+						  orig_fdcount,
+						  *(const FDSelect *)acc.fdSelect,
+						  subset_fdcount,
+						  subset_fdselect_size,
+						  subset_fdselect_format,
+						  subset_fdselect_ranges,
+						  fdmap)))
 	return false;
     }
     else

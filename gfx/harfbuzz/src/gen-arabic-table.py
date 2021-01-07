@@ -181,7 +181,6 @@ def print_shaping_table(f):
 			if items not in ligatures:
 				ligatures[items] = {}
 			ligatures[items][shape] = c
-			pass
 		else:
 			# Save shape
 			if items[0] not in names:

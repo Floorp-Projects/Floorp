@@ -49,7 +49,7 @@ struct AttachPoint : ArrayOf<HBUINT16>
     TRACE_SUBSET (this);
     auto *out = c->serializer->start_embed (*this);
     if (unlikely (!out)) return_trace (false);
-    
+
     return_trace (out->serialize (c->serializer, + iter ()));
   }
 };
@@ -205,7 +205,7 @@ struct CaretValueFormat3
     if (unlikely (!out)) return_trace (false);
 
     return_trace (out->deviceTable.serialize_copy (c->serializer, deviceTable, this, c->serializer->to_bias (out),
-                                                   hb_serialize_context_t::Head, c->plan->layout_variation_idx_map));
+						   hb_serialize_context_t::Head, c->plan->layout_variation_idx_map));
   }
 
   void collect_variation_indices (hb_set_t *layout_variation_indices) const
@@ -231,9 +231,9 @@ struct CaretValueFormat3
 struct CaretValue
 {
   hb_position_t get_caret_value (hb_font_t *font,
-					hb_direction_t direction,
-					hb_codepoint_t glyph_id,
-					const VariationStore &var_store) const
+				 hb_direction_t direction,
+				 hb_codepoint_t glyph_id,
+				 const VariationStore &var_store) const
   {
     switch (u.format) {
     case 1: return u.format1.get_caret_value (font, direction);
@@ -626,8 +626,8 @@ struct GDEF
       if (major >= (this+varStore).get_sub_table_count ()) break;
       if (major != last_major)
       {
-        new_minor = 0;
-        ++new_major;
+	new_minor = 0;
+	++new_major;
       }
 
       unsigned new_idx = (new_major << 16) + new_minor;
@@ -653,8 +653,8 @@ struct GDEF
     {
       subset_markglyphsetsdef = out->markGlyphSetsDef.serialize_subset (c, markGlyphSetsDef, this);
       if (!subset_markglyphsetsdef &&
-          version.to_int () == 0x00010002u)
-        out->version.minor = 0;
+	  version.to_int () == 0x00010002u)
+	out->version.minor = 0;
     }
 
     bool subset_varstore = true;
@@ -662,13 +662,13 @@ struct GDEF
     {
       subset_varstore = out->varStore.serialize_subset (c, varStore, this);
       if (!subset_varstore && version.to_int () == 0x00010003u)
-        out->version.minor = 2;
+	out->version.minor = 2;
     }
 
     return_trace (subset_glyphclassdef || subset_attachlist ||
-                  subset_ligcaretlist || subset_markattachclassdef ||
-                  (out->version.to_int () >= 0x00010002u && subset_markglyphsetsdef) ||
-                  (out->version.to_int () >= 0x00010003u && subset_varstore));
+		  subset_ligcaretlist || subset_markattachclassdef ||
+		  (out->version.to_int () >= 0x00010002u && subset_markglyphsetsdef) ||
+		  (out->version.to_int () >= 0x00010003u && subset_varstore));
   }
 
   bool sanitize (hb_sanitize_context_t *c) const

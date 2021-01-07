@@ -7,7 +7,6 @@ Input file:
 """
 
 import sys
-import os.path
 from collections import OrderedDict
 import packTab
 

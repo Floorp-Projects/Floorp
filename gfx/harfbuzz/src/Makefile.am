@@ -98,7 +98,12 @@ BUILT_SOURCES += \
 	hb-version.h
 
 $(srcdir)/hb-version.h: hb-version.h.in $(top_srcdir)/configure.ac
-	$(AM_V_GEN) $(srcdir)/gen-hb-version.py $(HB_VERSION) hb-version.h.in hb-version.h
+	$(AM_V_GEN) $(SED) \
+		-e 's/[@]HB_VERSION_MAJOR@/$(HB_VERSION_MAJOR)/' \
+		-e 's/[@]HB_VERSION_MINOR@/$(HB_VERSION_MINOR)/' \
+		-e 's/[@]HB_VERSION_MICRO@/$(HB_VERSION_MICRO)/' \
+		-e 's/[@]HB_VERSION@/$(HB_VERSION)/' \
+		"$<" > "$@" || ($(RM) "$@"; false)
 
 # Put the library together
 
@@ -243,6 +248,7 @@ harfbuzz-deprecated-symbols.txt: $(srcdir)/hb-deprecated.h
 
 
 GENERATORS = \
+	gen-arabic-joining-list.py \
 	gen-arabic-table.py \
 	gen-def.py \
 	gen-emoji-table.py \
@@ -277,8 +283,7 @@ $(srcdir)/%.hh: $(srcdir)/%.rl
 
 harfbuzz.cc: Makefile.sources
 	$(AM_V_GEN) \
-	$(srcdir)/gen-harfbuzzcc.py \
-		$(srcdir)/harfbuzz.cc \
+	for f in \
 		$(HB_BASE_sources) \
 		$(HB_GLIB_sources) \
 		$(HB_FT_sources) \
@@ -286,7 +291,10 @@ harfbuzz.cc: Makefile.sources
 		$(HB_UNISCRIBE_sources) \
 		$(HB_GDI_sources) \
 		$(HB_DIRECTWRITE_sources) \
-		$(HB_CORETEXT_sources)
+		$(HB_CORETEXT_sources) \
+		; do echo '#include "'$$f'"'; done | \
+	grep '[.]cc"' > $(srcdir)/harfbuzz.cc \
+	|| ($(RM) $(srcdir)/harfbuzz.cc; false)
 BUILT_SOURCES += harfbuzz.cc
 
 noinst_PROGRAMS = \

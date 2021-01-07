@@ -229,9 +229,7 @@ struct KerxSubTableFormat1
 
     bool is_actionable (StateTableDriver<Types, EntryData> *driver HB_UNUSED,
 			const Entry<EntryData> &entry)
-    {
-      return Format1EntryT::performAction (entry);
-    }
+    { return Format1EntryT::performAction (entry); }
     void transition (StateTableDriver<Types, EntryData> *driver,
 		     const Entry<EntryData> &entry)
     {
@@ -484,7 +482,7 @@ struct KerxSubTableFormat4
     };
 
     driver_context_t (const KerxSubTableFormat4 *table,
-			     hb_aat_apply_context_t *c_) :
+		      hb_aat_apply_context_t *c_) :
 	c (c_),
 	action_type ((table->flags & ActionType) >> 30),
 	ankrData ((HBUINT16 *) ((const char *) &table->machine + (table->flags & Offset))),
@@ -493,9 +491,7 @@ struct KerxSubTableFormat4
 
     bool is_actionable (StateTableDriver<Types, EntryData> *driver HB_UNUSED,
 			const Entry<EntryData> &entry)
-    {
-      return entry.data.ankrActionIndex != 0xFFFF;
-    }
+    { return entry.data.ankrActionIndex != 0xFFFF; }
     void transition (StateTableDriver<Types, EntryData> *driver,
 		     const Entry<EntryData> &entry)
     {
@@ -630,7 +626,7 @@ struct KerxSubTableFormat6
   bool is_long () const { return flags & ValuesAreLong; }
 
   int get_kerning (hb_codepoint_t left, hb_codepoint_t right,
-			  hb_aat_apply_context_t *c) const
+		   hb_aat_apply_context_t *c) const
   {
     unsigned int num_glyphs = c->sanitizer.get_num_glyphs ();
     if (is_long ())

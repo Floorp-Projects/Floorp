@@ -14,11 +14,9 @@ Input file:
 """
 
 import collections
-from html.parser import HTMLParser
 def write (s):
 	sys.stdout.flush ()
 	sys.stdout.buffer.write (s.encode ('utf-8'))
-import itertools
 import sys
 
 if len (sys.argv) != 3:

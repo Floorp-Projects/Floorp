@@ -1087,7 +1087,8 @@ struct cff1
       if (num_glyphs != sc.get_num_glyphs ())
       { fini (); return; }
 
-      privateDicts.resize (fdCount);
+      if (unlikely (!privateDicts.resize (fdCount)))
+      { fini (); return; }
       for (unsigned int i = 0; i < fdCount; i++)
 	privateDicts[i].init ();
 
