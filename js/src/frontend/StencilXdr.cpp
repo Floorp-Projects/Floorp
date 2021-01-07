@@ -49,7 +49,7 @@ template <XDRMode mode>
   if (mode == XDR_ENCODE) {
     xdrFields.immutableFlags = stencil.immutableFlags;
 
-    if (stencil.hasMemberInitializers) {
+    if (stencil.hasMemberInitializers()) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasMemberInitializers);
       xdrFields.numMemberInitializers = stencil.memberInitializers_;
     }
@@ -64,18 +64,18 @@ template <XDRMode mode>
     xdrFields.functionFlags = stencil.functionFlags.toRaw();
     xdrFields.nargs = stencil.nargs;
 
-    if (stencil.hasLazyFunctionEnclosingScopeIndex) {
+    if (stencil.hasLazyFunctionEnclosingScopeIndex()) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasScopeIndex);
     }
     xdrFields.scopeIndex = stencil.lazyFunctionEnclosingScopeIndex_;
 
-    if (stencil.wasFunctionEmitted) {
+    if (stencil.wasFunctionEmitted()) {
       xdrFlags |= 1 << uint8_t(XdrFlags::WasFunctionEmitted);
     }
-    if (stencil.allowRelazify) {
+    if (stencil.allowRelazify()) {
       xdrFlags |= 1 << uint8_t(XdrFlags::AllowRelazify);
     }
-    if (stencil.hasSharedData) {
+    if (stencil.hasSharedData()) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasSharedData);
     }
   }
@@ -125,13 +125,13 @@ template <XDRMode mode>
     }
 
     if (xdrFlags & (1 << uint8_t(XdrFlags::WasFunctionEmitted))) {
-      stencil.wasFunctionEmitted = true;
+      stencil.setWasFunctionEmitted();
     }
     if (xdrFlags & (1 << uint8_t(XdrFlags::AllowRelazify))) {
-      stencil.allowRelazify = true;
+      stencil.setAllowRelazify();
     }
     if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
-      stencil.hasSharedData = true;
+      stencil.setHasSharedData();
     }
   }
 

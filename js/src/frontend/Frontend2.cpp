@@ -480,7 +480,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
       return false;
     }
 
-    script.hasSharedData = true;
+    script.setHasSharedData();
   }
 
   script.extent.sourceStart = smooshScript.extent.source_start;
@@ -500,7 +500,9 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
       script.setLazyFunctionEnclosingScopeIndex(ScopeIndex(
           smooshScript.lazy_function_enclosing_scope_index.AsSome()));
     }
-    script.wasFunctionEmitted = smooshScript.was_function_emitted;
+    if (smooshScript.was_function_emitted) {
+      script.setWasFunctionEmitted();
+    }
   }
 
   if (!ConvertGCThings(cx, result, smooshScript, compilationInfo,
