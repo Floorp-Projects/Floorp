@@ -144,6 +144,9 @@ if CONFIG["OS_TARGET"] == "Android":
     ]
     if CONFIG["ANDROID_VERSION"]:
         sandbox_vars["CFLAGS"] += ["-DANDROID_VERSION=" + CONFIG["ANDROID_VERSION"]]
+if CONFIG["MOZ_FOLD_LIBS"]:
+    # NSS libs would export NSPR functions rather than importing them.
+    sandbox_vars["CFLAGS"] += ["-D_NSPR_BUILD_"]
 if CONFIG["MOZ_SYSTEM_NSS"]:
     sandbox_vars["CXXFLAGS"] = CONFIG["NSS_CFLAGS"]
 GYP_DIRS["nss"].sandbox_vars = sandbox_vars
