@@ -461,6 +461,14 @@ using namespace mozilla::a11y;
   return @([self stateWithMask:states::EXPANDED] != 0);
 }
 
+- (void)moxSetDisclosing:(NSNumber*)disclosing {
+  // VoiceOver requires this to be settable, but doesn't
+  // require it actually affect our disclosing state.
+  // We expose the attr as settable with this method
+  // but do nothing to actually set it.
+  return;
+}
+
 - (NSNumber*)moxExpanded {
   return @([self stateWithMask:states::EXPANDED] != 0);
 }
