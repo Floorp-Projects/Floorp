@@ -869,10 +869,26 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   json.endObject();
 }
 
+void js::Nursery::printCollectionProfile(JS::GCReason reason,
+                                         double promotionRate) {
+  stats().maybePrintProfileHeaders();
+
+  TimeDuration ts = collectionStartTime() - stats().creationTime();
+
+  fprintf(stderr, "MinorGC: %12p %10.6f %-20.20s %4.1f%% %5zu %5zu %6" PRIu32,
+          runtime(),
+          ts.ToSeconds(), JS::ExplainGCReason(reason), promotionRate * 100,
+          previousGC.nurseryCapacity / 1024,
+          capacity() / 1024,
+          stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED));
+
+  printProfileDurations(profileDurations_);
+}
+
 // static
 void js::Nursery::printProfileHeader() {
   fprintf(stderr,
-          "MinorGC: Timestamp  Reason               PRate  Size  Dedup");
+          "MinorGC: Runtime      Timestamp  Reason               PRate OldSz NewSz  Dedup");
 #define PRINT_HEADER(name, text) fprintf(stderr, " %6s", text);
   FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
 #undef PRINT_HEADER
@@ -890,7 +906,7 @@ void js::Nursery::printProfileDurations(const ProfileDurations& times) {
 void js::Nursery::printTotalProfileTimes() {
   if (enableProfiling_) {
     fprintf(stderr,
-            "MinorGC TOTALS: %7" PRIu64 " collections:       %16" PRIu64,
+            "MinorGC TOTALS: %7" PRIu64 " collections:                          %16" PRIu64,
             gc->stringStats.deduplicatedStrings, gc->minorGCCount());
     printProfileDurations(totalDurations_);
   }
@@ -1129,20 +1145,6 @@ void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
     rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE,
                      promotionRate * 100);
   }
-}
-
-void js::Nursery::printCollectionProfile(JS::GCReason reason,
-                                         double promotionRate) {
-  stats().maybePrintProfileHeaders();
-
-  TimeDuration ts = collectionStartTime() - stats().creationTime();
-
-  fprintf(stderr, "MinorGC: %10.6f %-20.20s %4.1f%% %5zu %6" PRIu32,
-          ts.ToSeconds(), JS::ExplainGCReason(reason), promotionRate * 100,
-          previousGC.nurseryCapacity / 1024,
-          stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED));
-
-  printProfileDurations(profileDurations_);
 }
 
 void js::Nursery::printDeduplicationData(js::StringStats& prev,
