@@ -845,7 +845,7 @@
     numNewSlots: RawInt32Field
 
 - name: StoreDenseElement
-  shared: false
+  shared: true
   transpile: true
   cost_estimate: 6
   args:
@@ -854,7 +854,7 @@
     rhs: ValId
 
 - name: StoreDenseElementHole
-  shared: false
+  shared: true
   transpile: true
   cost_estimate: 6
   args:
@@ -864,7 +864,7 @@
     handleAdd: BoolImm
 
 - name: ArrayPush
-  shared: false
+  shared: true
   transpile: true
   cost_estimate: 6
   args:
