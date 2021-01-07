@@ -6,7 +6,7 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var subframe = document.getElementById("scroll");
 
   // scroll over the scrollbar, and make sure the subframe scrolls
@@ -18,13 +18,13 @@ function* test(testDriver) {
     return;
   }
   var scrollbarX = (200 + subframe.clientWidth) / 2;
-  yield synthesizeNativeWheelAndWaitForScrollEvent(subframe, scrollbarX, 100,
-      0, -10, testDriver);
+  await promiseNativeWheelAndWaitForScrollEvent(subframe, scrollbarX, 100,
+      0, -10);
   ok(subframe.scrollTop > scrollPos, "subframe scrolled after wheeling over scrollbar");
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
