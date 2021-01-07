@@ -7,7 +7,7 @@
 //!  - vertex layout descriptors
 //!  - textures bound at vertex stage
 
-use std::{marker::PhantomData, mem, ops};
+use std::{marker::PhantomData, mem, num::NonZeroUsize, ops};
 use api::units::*;
 use crate::{
     device::{
@@ -23,12 +23,6 @@ pub const VERTEX_TEXTURE_EXTRA_ROWS: i32 = 10;
 
 pub const MAX_VERTEX_TEXTURE_WIDTH: usize = webrender_build::MAX_VERTEX_TEXTURE_WIDTH;
 
-#[derive(Debug, Clone, Copy)]
-#[repr(C)]
-pub struct PackedVertex {
-    pub pos: [f32; 2],
-}
-
 pub mod desc {
     use crate::device::{VertexAttribute, VertexAttributeKind, VertexDescriptor};
 
@@ -36,7 +30,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[VertexAttribute {
             name: "aData",
@@ -49,7 +43,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -74,7 +68,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -109,7 +103,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -163,7 +157,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -218,7 +212,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -243,7 +237,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             // common clip attributes
@@ -330,7 +324,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             // common clip attributes
@@ -387,7 +381,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             // common clip attributes
@@ -450,7 +444,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[VertexAttribute {
             name: "aRect",
@@ -463,7 +457,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -508,7 +502,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -558,7 +552,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -588,7 +582,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -638,7 +632,7 @@ pub mod desc {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
-            kind: VertexAttributeKind::F32,
+            kind: VertexAttributeKind::U8Norm,
         }],
         instance_attributes: &[
             VertexAttribute {
@@ -898,24 +892,31 @@ pub struct RendererVAOs {
 }
 
 impl RendererVAOs {
-    pub fn new(device: &mut Device) -> Self {
-        let x0 = 0.0;
-        let y0 = 0.0;
-        let x1 = 1.0;
-        let y1 = 1.0;
+    pub fn new(device: &mut Device, indexed_quads: Option<NonZeroUsize>) -> Self {
+        const QUAD_INDICES: [u16; 6] = [0, 1, 2, 2, 1, 3];
+        const QUAD_VERTICES: [[u8; 2]; 4] = [[0, 0], [0xFF, 0], [0, 0xFF], [0xFF, 0xFF]];
 
-        let quad_indices: [u16; 6] = [0, 1, 2, 2, 1, 3];
-        let quad_vertices = [
-            PackedVertex { pos: [x0, y0] },
-            PackedVertex { pos: [x1, y0] },
-            PackedVertex { pos: [x0, y1] },
-            PackedVertex { pos: [x1, y1] },
-        ];
+        let instance_divisor = if indexed_quads.is_some() { 0 } else { 1 };
+        let prim_vao = device.create_vao(&desc::PRIM_INSTANCES, instance_divisor);
 
-        let prim_vao = device.create_vao(&desc::PRIM_INSTANCES);
         device.bind_vao(&prim_vao);
-        device.update_vao_indices(&prim_vao, &quad_indices, VertexUsageHint::Static);
-        device.update_vao_main_vertices(&prim_vao, &quad_vertices, VertexUsageHint::Static);
+        match indexed_quads {
+            Some(count) => {
+                assert!(count.get() < u16::MAX as usize);
+                let quad_indices = (0 .. count.get() as u16)
+                    .flat_map(|instance| QUAD_INDICES.iter().map(move |&index| instance * 4 + index))
+                    .collect::<Vec<_>>();
+                device.update_vao_indices(&prim_vao, &quad_indices, VertexUsageHint::Static);
+                let quad_vertices = (0 .. count.get() as u16)
+                    .flat_map(|_| QUAD_VERTICES.iter().cloned())
+                    .collect::<Vec<_>>();
+                device.update_vao_main_vertices(&prim_vao, &quad_vertices, VertexUsageHint::Static);
+            }
+            None => {
+                device.update_vao_indices(&prim_vao, &QUAD_INDICES, VertexUsageHint::Static);
+                device.update_vao_main_vertices(&prim_vao, &QUAD_VERTICES, VertexUsageHint::Static);
+            }
+        }
 
         RendererVAOs {
             blur_vao: device.create_vao_with_new_instances(&desc::BLUR, &prim_vao),
