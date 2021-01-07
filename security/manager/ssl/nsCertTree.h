@@ -12,7 +12,6 @@
 #include "nsNSSComponent.h"
 #include "nsTArray.h"
 #include "PLDHashTable.h"
-#include "nsCertOverrideService.h"
 #include "mozilla/Attributes.h"
 
 /* Disable the "base class XXX should be explicitly initialized
@@ -77,12 +76,6 @@ class nsCertTreeDispInfo : public nsICertTreeItem {
   nsCertTreeDispInfo(nsCertTreeDispInfo& other);
 
   RefPtr<nsCertAddonInfo> mAddonInfo;
-  enum { direct_db, host_port_override } mTypeOfEntry;
-  nsCString mAsciiHost;
-  int32_t mPort;
-  nsCertOverride::OverrideBits mOverrideBits;
-  bool mIsTemporary;
-  nsCOMPtr<nsIX509Cert> mCert;
 };
 
 class nsCertTree : public nsICertTree {
@@ -120,7 +113,6 @@ class nsCertTree : public nsICertTree {
   static int32_t CmpBy(void* cache, nsIX509Cert* a, nsIX509Cert* b,
                        sortCriterion c0, sortCriterion c1, sortCriterion c2);
   static int32_t CmpCACert(void* cache, nsIX509Cert* a, nsIX509Cert* b);
-  static int32_t CmpWebSiteCert(void* cache, nsIX509Cert* a, nsIX509Cert* b);
   static int32_t CmpUserCert(void* cache, nsIX509Cert* a, nsIX509Cert* b);
   static int32_t CmpEmailCert(void* cache, nsIX509Cert* a, nsIX509Cert* b);
   nsCertCompareFunc GetCompareFuncFromCertType(uint32_t aType);
@@ -136,8 +128,6 @@ class nsCertTree : public nsICertTree {
   int32_t mNumOrgs;
   int32_t mNumRows;
   PLDHashTable mCompareCache;
-  nsCOMPtr<nsICertOverrideService> mOverrideService;
-  RefPtr<nsCertOverrideService> mOriginalOverrideService;
 
   treeArrayEl* GetThreadDescAtIndex(int32_t _index);
   already_AddRefed<nsIX509Cert> GetCertAtIndex(
@@ -152,11 +142,6 @@ class nsCertTree : public nsICertTree {
       nsCertCompareFunc aCertCmpFn, void* aCertCmpFnArg);
 
   nsCOMPtr<nsIMutableArray> mCellText;
-
-#ifdef DEBUG_CERT_TREE
-  /* for debugging purposes */
-  void dumpMap();
-#endif
 };
 
 #endif /* _NS_CERTTREE_H_ */

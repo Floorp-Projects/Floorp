@@ -750,28 +750,6 @@ nsCertOverrideService::
   return NS_OK;
 }
 
-nsresult nsCertOverrideService::EnumerateCertOverrides(
-    nsIX509Cert* aCert, CertOverrideEnumerator aEnumerator, void* aUserData) {
-  MutexAutoLock lock(mMutex);
-  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
-    const RefPtr<nsCertOverride> settings = iter.Get()->mSettings;
-
-    if (!aCert) {
-      aEnumerator(settings, aUserData);
-    } else {
-      if (matchesDBKey(aCert, settings->mDBKey)) {
-        nsAutoCString certFingerprint;
-        nsresult rv = GetCertSha256Fingerprint(aCert, certFingerprint);
-        if (NS_SUCCEEDED(rv) &&
-            settings->mFingerprint.Equals(certFingerprint)) {
-          aEnumerator(settings, aUserData);
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsCertOverrideService::GetOverrides(
     /*out*/ nsTArray<RefPtr<nsICertOverride>>& retval) {
