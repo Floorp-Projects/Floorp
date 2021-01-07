@@ -133,7 +133,9 @@ async function testToggleToolboxButtons() {
 
   const visibleToolbarButtons = toolbarButtons.filter(tool => tool.isVisible);
 
-  const toolbarButtonNodes = [...doc.querySelectorAll(".command-button")];
+  const toolbarButtonNodes = [
+    ...doc.querySelectorAll(".command-button:not(.toolbox-error)"),
+  ];
 
   is(
     checkNodes.length,
