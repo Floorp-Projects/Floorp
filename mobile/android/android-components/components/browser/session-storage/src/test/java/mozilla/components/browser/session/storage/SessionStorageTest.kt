@@ -402,8 +402,6 @@ class FakeEngine(
 private class FakeEngineSessionState(
     val value: String
 ) : EngineSessionState {
-    override fun toJSON(): JSONObject = throw NotImplementedError()
-
     override fun writeTo(writer: JsonWriter) {
         writer.beginObject()
 

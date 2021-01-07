@@ -241,6 +241,5 @@ class RecentlyClosedTabsStorageTest {
             writer.beginObject()
             writer.endObject()
         }
-        override fun toJSON() = JSONObject()
     }
 }

@@ -378,7 +378,6 @@ class FakeEngine : Engine {
 }
 
 class FakeEngineSessionState : EngineSessionState {
-    override fun toJSON() = JSONObject()
     override fun writeTo(writer: JsonWriter) {
         writer.beginObject()
         writer.endObject()

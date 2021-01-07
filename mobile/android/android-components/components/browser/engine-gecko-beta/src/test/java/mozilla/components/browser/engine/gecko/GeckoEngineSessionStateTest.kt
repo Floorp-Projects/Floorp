@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.util.JsonWriter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.json.JSONObject
@@ -14,19 +15,22 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mozilla.geckoview.GeckoSession
+import java.io.ByteArrayOutputStream
 
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineSessionStateTest {
 
     @Test
-    @Suppress("DEPRECATION")
-    fun toJSON() {
+    fun writeTo() {
         val geckoState: GeckoSession.SessionState = mock()
         doReturn("<state>").`when`(geckoState).toString()
 
         val state = GeckoEngineSessionState(geckoState)
 
-        val json = state.toJSON()
+        val stream = ByteArrayOutputStream()
+        val writer = JsonWriter(stream.writer())
+        state.writeTo(writer)
+        val json = JSONObject(stream.toString())
 
         assertEquals(1, json.length())
         assertTrue(json.has("GECKO_STATE"))

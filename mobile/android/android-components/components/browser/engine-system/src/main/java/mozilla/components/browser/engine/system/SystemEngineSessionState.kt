@@ -14,22 +14,6 @@ import org.json.JSONObject
 class SystemEngineSessionState(
     internal val bundle: Bundle?
 ) : EngineSessionState {
-    override fun toJSON(): JSONObject {
-        if (bundle == null) {
-            return JSONObject()
-        }
-
-        return JSONObject().apply {
-            bundle.keySet().forEach { key ->
-                val value = bundle[key]
-
-                if (shouldSerialize(value)) {
-                    put(key, value)
-                }
-            }
-        }
-    }
-
     override fun writeTo(writer: JsonWriter) {
         writer.beginObject()
 

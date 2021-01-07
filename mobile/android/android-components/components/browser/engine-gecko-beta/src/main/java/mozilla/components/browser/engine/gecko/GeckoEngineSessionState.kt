@@ -17,15 +17,6 @@ private const val GECKO_STATE_KEY = "GECKO_STATE"
 class GeckoEngineSessionState internal constructor(
     internal val actualState: GeckoSession.SessionState?
 ) : EngineSessionState {
-    override fun toJSON() = JSONObject().apply {
-        if (actualState != null) {
-            // GeckoView provides a String representing the entire session state. We
-            // store this String using a single Map entry with key GECKO_STATE_KEY.
-
-            put(GECKO_STATE_KEY, actualState.toString())
-        }
-    }
-
     override fun writeTo(writer: JsonWriter) {
         with(writer) {
             beginObject()
