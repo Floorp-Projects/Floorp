@@ -235,7 +235,7 @@ struct SharedTextures {
     alpha8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     alpha16_linear: AllocatorList<SlabAllocator, TextureParameters>,
     color8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
-    color8_glyphs: AllocatorList<ShelfAllocator, TextureParameters>,
+    color8_glyphs: AllocatorList<BucketedShelfAllocator, TextureParameters>,
 }
 
 impl SharedTextures {
