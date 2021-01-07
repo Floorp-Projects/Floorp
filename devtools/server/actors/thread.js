@@ -219,13 +219,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this._firstStatementBreakpoint = null;
     this._debuggerNotificationObserver = new DebuggerNotificationObserver();
-
-    if (Services.obs) {
-      // Set a wrappedJSObject property so |this| can be sent via the observer svc
-      // for the xpcshell harness.
-      this.wrappedJSObject = this;
-      Services.obs.notifyObservers(this, "devtools-thread-instantiated");
-    }
   },
 
   // Used by the ObjectActor to keep track of the depth of grip() calls.
@@ -244,16 +237,19 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._dbg;
   },
 
+  // Current state of the thread actor:
+  //  - detached: state, before ThreadActor.attach is called,
+  //  - exited: state, after the actor is destroyed,
+  // States possible in between these two states:
+  //  - running: default state, when the thread isn't paused,
+  //  - paused: state, when paused on any type of breakpoint, or, when the client requested an interrupt.
   get state() {
     return this._state;
   },
 
+  // XXX: soon to be equivalent to !isDestroyed once the thread actor is initialized on target creation.
   get attached() {
-    return (
-      this.state == "attached" ||
-      this.state == "running" ||
-      this.state == "paused"
-    );
+    return this.state == "running" || this.state == "paused";
   },
 
   get threadLifetimePool() {
@@ -388,7 +384,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       };
     }
 
-    this._state = "attached";
     this.dbg.onDebuggerStatement = this.onDebuggerStatement;
     this.dbg.onNewScript = this.onNewScript;
     this.dbg.onNewDebuggee = this._onNewDebuggee;
@@ -417,42 +412,25 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.dbg.allowUnobservedAsmJS = !this._options.observeAsmJS;
     }
 
+    // Send the response to the attach request now (rather than
+    // returning it), because protocol.js contains a hack just for this one method.
+    // But this is no longer needed and this can be removed in a dedicated followup.
+    this.conn.send({ from: this.actorID });
+
+    // Set everything up so that breakpoint can work
+    this._setupForBreaking();
+
     // Notify the parent that we've finished attaching. If this is a worker
     // thread which was paused until attaching, this will allow content to
     // begin executing.
     if (this._parent.onThreadAttached) {
       this._parent.onThreadAttached();
     }
-
-    try {
-      // Put ourselves in the paused state.
-      const packet = this._paused();
-      if (!packet) {
-        throw {
-          error: "notAttached",
-          message: "cannot attach, could not create pause packet",
-        };
-      }
-      packet.why = { type: "attached" };
-
-      // Send the response to the attach request now (rather than
-      // returning it), because we're going to start a nested event
-      // loop here.
-      this.conn.send({ from: this.actorID });
-      this.emit("paused", packet);
-
-      // Start a nested event loop.
-      this._pushThreadPause();
-
-      // We already sent a response to this request via this.conn.send(), don't send one now.
-      // There is a hack in protocol/Actor.js's generateRequestHandlers in order
-      // to avoid sending duplicated response packet, just and only for this one method.
-    } catch (e) {
-      reportException("DBG-SERVER", e);
-      throw {
-        error: "notAttached",
-        message: e.toString(),
-      };
+    if (Services.obs) {
+      // Set a wrappedJSObject property so |this| can be sent via the observer service
+      // for the xpcshell harness.
+      this.wrappedJSObject = this;
+      Services.obs.notifyObservers(this, "devtools-thread-ready");
     }
   },
 
@@ -1294,29 +1272,30 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
   },
 
+  _setupForBreaking() {
+    this.maybePauseOnExceptions();
+    this._state = "running";
+  },
+
   /**
    * Only resume and notify necessary observers. This should be used in cases
    * when we do not want to notify the front end of a resume, for example when
    * we are shutting down.
    */
   doResume({ resumeLimit } = {}) {
-    this.maybePauseOnExceptions();
-    this._state = "running";
+    this._setupForBreaking();
 
     // Drop the actors in the pause actor pool.
     this._pausePool.destroy();
-
     this._pausePool = null;
+
     this._pauseActor = null;
     this._popThreadPause();
+
     // Tell anyone who cares of the resume (as of now, that's the xpcshell harness and
     // devtools-startup.js when handling the --wait-for-jsdebugger flag)
     this.emit("resumed");
     this.hideOverlay();
-
-    if (Services.obs) {
-      Services.obs.notifyObservers(this, "devtools-thread-resumed");
-    }
   },
 
   /**
