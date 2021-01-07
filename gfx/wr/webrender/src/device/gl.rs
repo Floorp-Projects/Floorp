@@ -1243,12 +1243,16 @@ impl DrawTarget {
                     fb_rect.origin.x += rect.origin.x;
                 }
             }
-            DrawTarget::Texture { .. } | DrawTarget::External { .. } => (),
-            DrawTarget::NativeSurface { .. } => {
-                panic!("bug: is this ever used for native surfaces?");
-            }
+            DrawTarget::Texture { .. } | DrawTarget::External { .. } | DrawTarget::NativeSurface { .. } => (),
         }
         fb_rect
+    }
+
+    pub fn surface_origin_is_top_left(&self) -> bool {
+        match *self {
+            DrawTarget::Default { surface_origin_is_top_left, .. } => surface_origin_is_top_left,
+            DrawTarget::Texture { .. } | DrawTarget::External { .. } | DrawTarget::NativeSurface { .. } => true,
+        }
     }
 
     /// Given a scissor rect, convert it to the right coordinate space

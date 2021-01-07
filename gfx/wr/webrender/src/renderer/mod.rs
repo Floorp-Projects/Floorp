@@ -5059,6 +5059,8 @@ impl Renderer {
         let device_size = draw_target.dimensions();
         let fb_width = device_size.width;
         let fb_height = device_size.height;
+        let surface_origin_is_top_left = draw_target.surface_origin_is_top_left();
+
         let num_layers: i32 = textures.iter()
             .map(|texture| texture.get_layer_count())
             .sum();
@@ -5069,6 +5071,12 @@ impl Renderer {
             spacing = (spacing as f32 * factor) as i32;
         }
 
+        let text_height = 14; // Visually approximated.
+        let text_margin = 1;
+        let tag_height = text_height + text_margin * 2;
+        let tag_y = fb_height - (bottom + spacing + tag_height);
+        let image_y = tag_y - size;
+
         // Sort the display by layer size (in bytes), so that left-to-right is
         // largest-to-smallest.
         //
@@ -5078,7 +5086,6 @@ impl Renderer {
 
         let mut i = 0;
         for texture in textures.iter() {
-            let y = spacing + bottom;
             let dimensions = texture.get_dimensions();
             let src_rect = FramebufferIntRect::new(
                 FramebufferIntPoint::zero(),
@@ -5094,51 +5101,45 @@ impl Renderer {
                     return;
                 }
 
-                //TODO: properly use FramebufferPixel coordinates
-
                 // Draw the info tag.
-                let text_margin = 1;
-                let text_height = 14; // Visually aproximated.
-                let tag_height = text_height + text_margin * 2;
-                let tag_rect = rect(x, y, size, tag_height);
+                let tag_rect = rect(x, tag_y, size, tag_height);
                 let tag_color = select_color(texture);
                 device.clear_target(
                     Some(tag_color),
                     None,
-                    Some(tag_rect.cast_unit()),
+                    Some(draw_target.to_framebuffer_rect(tag_rect)),
                 );
 
                 // Draw the dimensions onto the tag.
                 let dim = texture.get_dimensions();
-                let mut text_rect = tag_rect;
-                text_rect.origin.y =
-                    fb_height - text_rect.origin.y - text_rect.size.height; // Top-relative.
+                let text_rect = tag_rect.inflate(-text_margin, -text_margin);
                 debug_renderer.add_text(
-                    (x + text_margin) as f32,
-                    (fb_height - y - text_margin) as f32, // Top-relative.
+                    text_rect.min_x() as f32,
+                    text_rect.max_y() as f32, // Top-relative.
                     &format!("{}x{}", dim.width, dim.height),
                     ColorU::new(0, 0, 0, 255),
-                    Some(text_rect.to_f32())
+                    Some(tag_rect.to_f32())
                 );
 
-                // Blit the contents of the layer. We need to invert Y because
-                // we're blitting from a texture to the main framebuffer, which
-                // use different conventions.
-                let dest_rect = rect(x, y + tag_height, size, size);
-                if !device.surface_origin_is_top_left() {
-                    device.blit_render_target_invert_y(
-                        ReadTarget::from_texture(texture, layer),
+                // Blit the contents of the layer.
+                let dest_rect = draw_target.to_framebuffer_rect(rect(x, image_y, size, size));
+                let read_target = ReadTarget::from_texture(texture, layer);
+
+                if surface_origin_is_top_left {
+                    device.blit_render_target(
+                        read_target,
                         src_rect,
                         *draw_target,
-                        FramebufferIntRect::from_untyped(&dest_rect),
+                        dest_rect,
+                        TextureFilter::Linear,
                     );
                 } else {
-                    device.blit_render_target(
-                        ReadTarget::from_texture(texture, layer),
+                     // Invert y.
+                     device.blit_render_target_invert_y(
+                        read_target,
                         src_rect,
                         *draw_target,
-                        FramebufferIntRect::from_untyped(&dest_rect),
-                        TextureFilter::Linear,
+                        dest_rect,
                     );
                 }
                 i += 1;
