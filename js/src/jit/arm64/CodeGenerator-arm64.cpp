@@ -1675,13 +1675,13 @@ void CodeGenerator::visitNegI(LNegI* ins) {
 
 void CodeGenerator::visitNegD(LNegD* ins) {
   const ARMFPRegister input(ToFloatRegister(ins->input()), 64);
-  const ARMFPRegister output(ToFloatRegister(ins->input()), 64);
+  const ARMFPRegister output(ToFloatRegister(ins->output()), 64);
   masm.Fneg(output, input);
 }
 
 void CodeGenerator::visitNegF(LNegF* ins) {
   const ARMFPRegister input(ToFloatRegister(ins->input()), 32);
-  const ARMFPRegister output(ToFloatRegister(ins->input()), 32);
+  const ARMFPRegister output(ToFloatRegister(ins->output()), 32);
   masm.Fneg(output, input);
 }
 
