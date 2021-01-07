@@ -481,8 +481,8 @@ static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
       Scope* scope = gcOutput.scopes[index];
       script->setEnclosingScope(scope);
 
-      if (scriptStencil.memberInitializers) {
-        script->setMemberInitializers(*scriptStencil.memberInitializers);
+      if (scriptStencil.hasMemberInitializers) {
+        script->setMemberInitializers(scriptStencil.memberInitializers());
       }
 
       // Inferred and Guessed names are computed by BytecodeEmitter and so may
@@ -1693,11 +1693,8 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   DumpImmutableScriptFlags(json, immutableFlags);
   json.endList();
 
-  if (memberInitializers) {
-    json.formatProperty("memberInitializers", "Some(%u)",
-                        (*memberInitializers).numMemberInitializers);
-  } else {
-    json.property("memberInitializers", "Nothing");
+  if (hasMemberInitializers) {
+    json.property("memberInitializers", memberInitializers_);
   }
 
   json.formatProperty("gcThingsOffset", "CompilationGCThingIndex(%u)",
@@ -1722,6 +1719,8 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   json.property("lineno", extent.lineno);
   json.property("column", extent.column);
   json.endObject();
+
+  json.boolProperty("hasMemberInitializers", hasMemberInitializers);
 
   if (isFunction()) {
     json.beginObjectProperty("functionAtom");

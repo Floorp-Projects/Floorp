@@ -408,7 +408,9 @@ void FunctionBox::copyScriptFields(ScriptStencil& script) {
 
   SharedContext::copyScriptFields(script);
 
-  script.memberInitializers = memberInitializers_;
+  if (memberInitializers_) {
+    script.setMemberInitializers(*memberInitializers_);
+  }
 
   isScriptFieldCopiedToStencil = true;
 }
@@ -441,7 +443,9 @@ void FunctionBox::copyUpdatedExtent() {
 
 void FunctionBox::copyUpdatedMemberInitializers() {
   ScriptStencil& script = functionStencil();
-  script.memberInitializers = memberInitializers_;
+  if (memberInitializers_) {
+    script.setMemberInitializers(*memberInitializers_);
+  }
 }
 
 void FunctionBox::copyUpdatedEnclosingScopeIndex() {

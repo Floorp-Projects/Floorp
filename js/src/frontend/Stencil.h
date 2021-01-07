@@ -571,7 +571,7 @@ class ScriptStencil {
   // See `BaseScript::immutableFlags_`.
   ImmutableScriptFlags immutableFlags;
 
-  mozilla::Maybe<MemberInitializers> memberInitializers;
+  uint32_t memberInitializers_ = 0;
 
   // GCThings are stored into {CompilationState,CompilationStencil}.gcThingData,
   // in [gcThingsOffset, gcThingsOffset + gcThingsLength) range.
@@ -620,10 +620,17 @@ class ScriptStencil {
   // The shared data is stored into CompilationStencil.sharedData.
   bool hasSharedData : 1;
 
+  // True if this script has member initializer.
+  // `memberInitializers_` is valid only if this field is true.
+  bool hasMemberInitializers : 1;
+
   // End of fields.
 
   ScriptStencil()
-      : wasFunctionEmitted(false), allowRelazify(false), hasSharedData(false) {}
+      : wasFunctionEmitted(false),
+        allowRelazify(false),
+        hasSharedData(false),
+        hasMemberInitializers(false) {}
 
   bool isFunction() const {
     bool result = functionFlags.toRaw() != 0x0000;
@@ -642,6 +649,16 @@ class ScriptStencil {
 
   mozilla::Span<TaggedScriptThingIndex> gcthings(
       CompilationStencil& stencil) const;
+
+  void setMemberInitializers(MemberInitializers member) {
+    memberInitializers_ = member.serialize();
+    hasMemberInitializers = true;
+  }
+
+  MemberInitializers memberInitializers() const {
+    MOZ_ASSERT(hasMemberInitializers);
+    return MemberInitializers(memberInitializers_);
+  }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
