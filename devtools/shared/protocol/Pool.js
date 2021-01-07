@@ -30,14 +30,16 @@ class Pool extends EventEmitter {
       this.conn = conn;
     }
     this.label = label;
-    this.__poolMap = null;
   }
+
+  __poolMap = null;
+  parentPool = null;
 
   /**
    * Return the parent pool for this client.
    */
   getParent() {
-    return this.conn.poolFor(this.actorID);
+    return this.parentPool;
   }
 
   /**
@@ -93,6 +95,7 @@ class Pool extends EventEmitter {
       }
     }
     this._poolMap.set(actor.actorID, actor);
+    actor.parentPool = this;
   }
 
   unmanageChildren(FrontType) {
@@ -107,7 +110,11 @@ class Pool extends EventEmitter {
    * Remove an actor as a child of this pool.
    */
   unmanage(actor) {
-    this.__poolMap && this.__poolMap.delete(actor.actorID);
+    if (!this.__poolMap) {
+      return;
+    }
+    this.__poolMap.delete(actor.actorID);
+    actor.parentPool = null;
   }
 
   // true if the given actor ID exists in the pool.
