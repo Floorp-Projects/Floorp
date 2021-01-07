@@ -28,7 +28,7 @@ static const CGFloat kHiDPIScalingFactor = 2.0f;
 nsTouchBarInputIcon::nsTouchBarInputIcon(RefPtr<Document> aDocument, TouchBarInput* aInput,
                                          NSTouchBarItem* aItem)
     : mDocument(aDocument), mSetIcon(false), mButton(nil), mShareScrubber(nil), mPopoverItem(nil) {
-  if ([[aInput nativeIdentifier] isEqualToString:ShareScrubberIdentifier]) {
+  if ([[aInput nativeIdentifier] isEqualToString:[TouchBarInput shareScrubberIdentifier]]) {
     mShareScrubber = (NSSharingServicePickerTouchBarItem*)aItem;
   } else if ([aInput baseType] == TouchBarInputBaseType::kPopover) {
     mPopoverItem = (NSPopoverTouchBarItem*)aItem;

@@ -76,6 +76,15 @@ class nsTouchBarInputIcon;
 + (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey;
 + (NSTouchBarItemIdentifier)nativeIdentifierWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput;
 
+// Non-JS scrubber implemention for the Share Scrubber,
+// since it is defined by an Apple API.
++ (NSTouchBarItemIdentifier)shareScrubberIdentifier;
+
+// The search popover needs to show/hide depending on if the Urlbar is focused
+// when it is created. We keep track of its identifier to accommodate this
+// special handling.
++ (NSTouchBarItemIdentifier)searchPopoverIdentifier;
+
 @end
 
 #endif  // nsTouchBarInput_h_
