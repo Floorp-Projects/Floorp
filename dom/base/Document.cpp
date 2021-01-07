@@ -3642,10 +3642,7 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 
   // ----- if the doc is an addon, apply its CSP.
   if (addonPolicy) {
-    nsAutoString extensionPageCSP;
-    Unused << ExtensionPolicyService::GetSingleton().GetBaseCSP(
-        extensionPageCSP);
-    mCSP->AppendPolicy(extensionPageCSP, false, false);
+    mCSP->AppendPolicy(addonPolicy->BaseCSP(), false, false);
 
     mCSP->AppendPolicy(addonPolicy->ExtensionPageCSP(), false, false);
     // Bug 1548468: Move CSP off ExpandedPrincipal

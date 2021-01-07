@@ -47,12 +47,6 @@ using dom::ContentFrameMessageManager;
 using dom::Document;
 using dom::Promise;
 
-#define BASE_CSP_PREF "extensions.webextensions.base-content-security-policy"
-#define DEFAULT_BASE_CSP                                          \
-  "script-src 'self' https://* moz-extension: blob: filesystem: " \
-  "'unsafe-eval' 'unsafe-inline'; "                               \
-  "object-src 'self' https://* moz-extension: blob: filesystem:;"
-
 #define DEFAULT_CSP_PREF \
   "extensions.webextensions.default-content-security-policy"
 #define DEFAULT_DEFAULT_CSP "script-src 'self'; object-src 'self';"
@@ -94,7 +88,6 @@ ExtensionPolicyService::ExtensionPolicyService() {
   mObs = services::GetObserverService();
   MOZ_RELEASE_ASSERT(mObs);
 
-  mBaseCSP.SetIsVoid(true);
   mDefaultCSP.SetIsVoid(true);
 
   RegisterObservers();
@@ -228,7 +221,6 @@ void ExtensionPolicyService::RegisterObservers() {
     mObs->AddObserver(this, "document-on-opening-request", false);
   }
 
-  Preferences::AddStrongObserver(this, BASE_CSP_PREF);
   Preferences::AddStrongObserver(this, DEFAULT_CSP_PREF);
 }
 
@@ -240,7 +232,6 @@ void ExtensionPolicyService::UnregisterObservers() {
     mObs->RemoveObserver(this, "document-on-opening-request");
   }
 
-  Preferences::RemoveObserver(this, BASE_CSP_PREF);
   Preferences::RemoveObserver(this, DEFAULT_CSP_PREF);
 }
 
@@ -268,9 +259,7 @@ nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
   } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     const nsCString converted = NS_ConvertUTF16toUTF8(aData);
     const char* pref = converted.get();
-    if (!strcmp(pref, BASE_CSP_PREF)) {
-      mBaseCSP.SetIsVoid(true);
-    } else if (!strcmp(pref, DEFAULT_CSP_PREF)) {
+    if (!strcmp(pref, DEFAULT_CSP_PREF)) {
       mDefaultCSP.SetIsVoid(true);
     }
   }
@@ -550,19 +539,6 @@ void ExtensionPolicyService::CheckContentScripts(const DocInfo& aDocInfo,
  * nsIAddonPolicyService
  *****************************************************************************/
 
-nsresult ExtensionPolicyService::GetBaseCSP(nsAString& aBaseCSP) {
-  if (mBaseCSP.IsVoid()) {
-    nsresult rv = Preferences::GetString(BASE_CSP_PREF, mBaseCSP);
-    if (NS_FAILED(rv)) {
-      mBaseCSP.AssignLiteral(DEFAULT_BASE_CSP);
-    }
-    mBaseCSP.SetIsVoid(false);
-  }
-
-  aBaseCSP.Assign(mBaseCSP);
-  return NS_OK;
-}
-
 nsresult ExtensionPolicyService::GetDefaultCSP(nsAString& aDefaultCSP) {
   if (mDefaultCSP.IsVoid()) {
     nsresult rv = Preferences::GetString(DEFAULT_CSP_PREF, mDefaultCSP);
@@ -576,19 +552,19 @@ nsresult ExtensionPolicyService::GetDefaultCSP(nsAString& aDefaultCSP) {
   return NS_OK;
 }
 
-nsresult ExtensionPolicyService::GetExtensionPageCSP(const nsAString& aAddonId,
-                                                     nsAString& aResult) {
+nsresult ExtensionPolicyService::GetBaseCSP(const nsAString& aAddonId,
+                                            nsAString& aResult) {
   if (WebExtensionPolicy* policy = GetByID(aAddonId)) {
-    policy->GetExtensionPageCSP(aResult);
+    policy->GetBaseCSP(aResult);
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
 }
 
-nsresult ExtensionPolicyService::GetContentScriptCSP(const nsAString& aAddonId,
+nsresult ExtensionPolicyService::GetExtensionPageCSP(const nsAString& aAddonId,
                                                      nsAString& aResult) {
   if (WebExtensionPolicy* policy = GetByID(aAddonId)) {
-    policy->GetContentScriptCSP(aResult);
+    policy->GetExtensionPageCSP(aResult);
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;

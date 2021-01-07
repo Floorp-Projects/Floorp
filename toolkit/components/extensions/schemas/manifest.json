@@ -11,7 +11,8 @@
           "manifest_version": {
             "type": "integer",
             "minimum": 2,
-            "maximum": 2
+            "maximum": 3,
+            "postprocess": "manifestVersionCheck"
           },
 
           "applications": {
@@ -203,18 +204,6 @@
                     "optional": true,
                     "format": "contentSecurityPolicy",
                     "description": "The Content Security Policy used for extension pages."
-                  },
-                  "content_scripts": {
-                    "type": "string",
-                    "optional": true,
-                    "format": "contentSecurityPolicy",
-                    "description": "The Content Security Policy used for content scripts."
-                  },
-                  "isolated_world": {
-                    "type": "string",
-                    "optional": true,
-                    "format": "contentSecurityPolicy",
-                    "description": "An alias for content_scripts to support Chrome compatibility.  Content Security Policy implementations may differ between Firefox and Chrome.  If both isolated_world and content_scripts exist, the value from content_scripts will be used."
                   }
                 }
               }

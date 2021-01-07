@@ -2182,8 +2182,14 @@ class Extension extends ExtensionData {
     return manifest;
   }
 
+  get manifestVersion() {
+    return this.manifest.manifest_version;
+  }
+
   get extensionPageCSP() {
     const { content_security_policy } = this.manifest;
+    // While only manifest v3 should contain an object,
+    // we'll remain lenient here.
     if (
       content_security_policy &&
       typeof content_security_policy === "object"
@@ -2191,19 +2197,6 @@ class Extension extends ExtensionData {
       return content_security_policy.extension_pages;
     }
     return content_security_policy;
-  }
-
-  get contentScriptCSP() {
-    let { content_security_policy } = this.manifest;
-    if (
-      content_security_policy &&
-      typeof content_security_policy === "object"
-    ) {
-      return (
-        content_security_policy.content_scripts ||
-        content_security_policy.isolated_world
-      );
-    }
   }
 
   get backgroundScripts() {
@@ -2234,8 +2227,8 @@ class Extension extends ExtensionData {
       id: this.id,
       uuid: this.uuid,
       name: this.name,
+      manifestVersion: this.manifestVersion,
       extensionPageCSP: this.extensionPageCSP,
-      contentScriptCSP: this.contentScriptCSP,
       instanceId: this.instanceId,
       resourceURL: this.resourceURL,
       contentScripts: this.contentScripts,
