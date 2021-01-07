@@ -7394,7 +7394,7 @@ bool nsBlockFrame::MarkerIsEmpty() const {
                "should only care when we have an outside ::marker");
   nsIFrame* marker = GetMarker();
   const nsStyleList* list = marker->StyleList();
-  return list->mCounterStyle.IsNone() && !list->GetListStyleImage() &&
+  return list->mCounterStyle.IsNone() && list->mListStyleImage.IsNone() &&
          marker->StyleContent()->ContentCount() == 0;
 }
 
