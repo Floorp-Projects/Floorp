@@ -572,16 +572,7 @@ nsresult nsHttpChannel::OnBeforeConnect() {
       auto resultCallback = [self(self)](bool aResult, nsresult aStatus) {
         MOZ_ASSERT(NS_IsMainThread());
 
-        // We need to wait for HTTPSSVC record if there is no AltSvc or HSTS
-        // upgrade for this request.
-        if (!aResult && NS_SUCCEEDED(aStatus) && self->LoadUseHTTPSSVC()) {
-          LOG(("nsHttpChannel Wait for HTTPSSVC record [this=%p]\n",
-               self.get()));
-          self->StoreWaitHTTPSSVCRecord(true);
-          return;
-        }
-
-        nsresult rv = self->ContinueOnBeforeConnect(aResult, aStatus);
+        nsresult rv = self->MaybeUseHTTPSRRForUpgrade(aResult, aStatus);
         if (NS_FAILED(rv)) {
           self->CloseCacheEntry(false);
           Unused << self->AsyncAbort(rv);
@@ -618,7 +609,30 @@ nsresult nsHttpChannel::OnBeforeConnect() {
     }
   }
 
-  return ContinueOnBeforeConnect(shouldUpgrade, NS_OK);
+  return MaybeUseHTTPSRRForUpgrade(shouldUpgrade, NS_OK);
+}
+
+nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
+                                                  nsresult aStatus) {
+  if (NS_FAILED(aStatus)) {
+    return aStatus;
+  }
+
+  if (mURI->SchemeIs("https") || aShouldUpgrade || !LoadUseHTTPSSVC()) {
+    return ContinueOnBeforeConnect(aShouldUpgrade, aStatus);
+  }
+
+  if (mHTTPSSVCRecord) {
+    LOG(("nsHttpChannel::MaybeUseHTTPSRRForUpgrade [%p] already got HTTPS RR",
+         this));
+    StoreWaitHTTPSSVCRecord(false);
+    return ContinueOnBeforeConnect(true, aStatus);
+  }
+
+  LOG(("nsHttpChannel::MaybeUseHTTPSRRForUpgrade [%p] wait for HTTPS RR",
+       this));
+  StoreWaitHTTPSSVCRecord(true);
+  return NS_OK;
 }
 
 nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
@@ -627,6 +641,8 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
       ("nsHttpChannel::ContinueOnBeforeConnect "
        "[this=%p aShouldUpgrade=%d rv=%" PRIx32 "]\n",
        this, aShouldUpgrade, static_cast<uint32_t>(aStatus)));
+
+  MOZ_ASSERT(!LoadWaitHTTPSSVCRecord());
 
   if (NS_FAILED(aStatus)) {
     return aStatus;
@@ -6817,6 +6833,12 @@ nsresult nsHttpChannel::BeginConnect() {
 }
 
 nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
+  bool httpssvcQueried = false;
+  // If https rr is not queried sucessfully, we have to reset mUseHTTPSSVC to
+  // false. Otherwise, this channel may wait https rr forever.
+  auto resetUsHTTPSSVC =
+      MakeScopeExit([&] { StoreUseHTTPSSVC(httpssvcQueried); });
+
   // Start a DNS lookup very early in case the real open is queued the DNS can
   // happen in parallel. Do not do so in the presence of an HTTP proxy as
   // all lookups other than for the proxy itself are done by the proxy.
@@ -6867,10 +6889,22 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
 
     if (LoadUseHTTPSSVC() ||
         gHttpHandler->UseHTTPSRRForSpeculativeConnection()) {
-      rv = mDNSPrefetch->FetchHTTPSSVC(mCaps & NS_HTTP_REFRESH_DNS);
+      nsWeakPtr weakPtrThis(
+          do_GetWeakReference(static_cast<nsIHttpChannel*>(this)));
+      rv = mDNSPrefetch->FetchHTTPSSVC(
+          mCaps & NS_HTTP_REFRESH_DNS,
+          [weakPtrThis](nsIDNSHTTPSSVCRecord* aRecord) {
+            nsCOMPtr<nsIHttpChannel> channel = do_QueryReferent(weakPtrThis);
+            RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(channel);
+            if (httpChannelImpl) {
+              httpChannelImpl->OnHTTPSRRAvailable(aRecord);
+            }
+          });
       if (NS_FAILED(rv)) {
         LOG(("  FetchHTTPSSVC failed with 0x%08" PRIx32,
              static_cast<uint32_t>(rv)));
+      } else {
+        httpssvcQueried = true;
       }
     }
   }
@@ -9007,52 +9041,57 @@ nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                 nsresult status) {
   MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
 
-  nsCOMPtr<nsIDNSHTTPSSVCRecord> httpSSVCRecord = do_QueryInterface(rec);
   LOG(
       ("nsHttpChannel::OnLookupComplete [this=%p] prefetch complete%s: "
-       "%s status[0x%" PRIx32 "], isHTTPSSVC=%d\n",
+       "%s status[0x%" PRIx32 "]\n",
        this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : "",
        NS_SUCCEEDED(status) ? "success" : "failure",
-       static_cast<uint32_t>(status), !!httpSSVCRecord));
+       static_cast<uint32_t>(status)));
 
-  if (!httpSSVCRecord) {
-    // Unset DNS cache refresh if it was requested,
-    if (mCaps & NS_HTTP_REFRESH_DNS) {
-      mCaps &= ~NS_HTTP_REFRESH_DNS;
-      if (mTransaction) {
-        mTransaction->SetDNSWasRefreshed();
-      }
+  // Unset DNS cache refresh if it was requested,
+  if (mCaps & NS_HTTP_REFRESH_DNS) {
+    mCaps &= ~NS_HTTP_REFRESH_DNS;
+    if (mTransaction) {
+      mTransaction->SetDNSWasRefreshed();
     }
-
-    if (!mDNSBlockingPromise.IsEmpty()) {
-      if (NS_SUCCEEDED(status)) {
-        nsCOMPtr<nsIDNSRecord> record(rec);
-        mDNSBlockingPromise.Resolve(record, __func__);
-      } else {
-        mDNSBlockingPromise.Reject(status, __func__);
-      }
-    }
-
-    return NS_OK;
   }
+
+  if (!mDNSBlockingPromise.IsEmpty()) {
+    if (NS_SUCCEEDED(status)) {
+      nsCOMPtr<nsIDNSRecord> record(rec);
+      mDNSBlockingPromise.Resolve(record, __func__);
+    } else {
+      mDNSBlockingPromise.Reject(status, __func__);
+    }
+  }
+
+  return NS_OK;
+}
+
+void nsHttpChannel::OnHTTPSRRAvailable(nsIDNSHTTPSSVCRecord* aRecord) {
+  MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
+
+  LOG(("nsHttpChannel::OnHTTPSRRAvailable [this=%p, aRecord=%p]\n", this,
+       aRecord));
+  // This record will be used in the new redirect channel.
+  MOZ_ASSERT(!mHTTPSSVCRecord);
+  mHTTPSSVCRecord = aRecord;
 
   if (LoadWaitHTTPSSVCRecord()) {
     MOZ_ASSERT(mURI->SchemeIs("http"));
-    MOZ_ASSERT(!mHTTPSSVCRecord);
 
-    // This record will be used in the new redirect channel.
-    mHTTPSSVCRecord = httpSSVCRecord;
-    nsresult rv = ContinueOnBeforeConnect(true, status);
+    StoreWaitHTTPSSVCRecord(false);
+    nsresult rv = ContinueOnBeforeConnect(!!mHTTPSSVCRecord, mStatus);
     if (NS_FAILED(rv)) {
       CloseCacheEntry(false);
       Unused << AsyncAbort(rv);
     }
   } else {
     // This channel is not canceled and the transaction is not created.
-    if (NS_SUCCEEDED(mStatus) && !mTransaction &&
+    if (mHTTPSSVCRecord && NS_SUCCEEDED(mStatus) && !mTransaction &&
         (mFirstResponseSource != RESPONSE_FROM_CACHE)) {
       bool hasIPAddress = false;
-      Unused << httpSSVCRecord->GetHasIPAddresses(&hasIPAddress);
+      Unused << mHTTPSSVCRecord->GetHasIPAddresses(&hasIPAddress);
       Telemetry::Accumulate(Telemetry::DNS_HTTPSSVC_RECORD_RECEIVING_STAGE,
                             hasIPAddress
                                 ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_0
@@ -9060,8 +9099,6 @@ nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
       StoreHTTPSSVCTelemetryReported(true);
     }
   }
-
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

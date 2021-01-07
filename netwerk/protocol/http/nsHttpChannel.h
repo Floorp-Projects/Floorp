@@ -334,6 +334,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult OnBeforeConnect();
   [[nodiscard]] nsresult ContinueOnBeforeConnect(bool aShouldUpgrade,
                                                  nsresult aStatus);
+  nsresult MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade, nsresult aStatus);
+  void OnHTTPSRRAvailable(nsIDNSHTTPSSVCRecord* aRecord);
   void OnBeforeConnectContinue();
   [[nodiscard]] nsresult Connect();
   void SpeculativeConnect();
