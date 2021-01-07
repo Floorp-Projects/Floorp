@@ -112,7 +112,6 @@ body:not(.neterror) #advancedButton {
   display: block;
 }
 
-#certificateErrorReporting,
 #blockingErrorReporting {
   display: none;
   padding-bottom: 10px;
@@ -148,13 +147,6 @@ body:not(.neterror) #advancedButton {
   font-weight: bold;
 }
 
-#automaticallyReportInFuture {
-  cursor: pointer;
-  /* Prevent the checkbox from looking super
-   * squeezed on small viewports */
-  flex-shrink: 0;
-}
-
 #errorCode {
   cursor: pointer;
   white-space: nowrap;
@@ -168,10 +160,6 @@ body:not(.neterror) #advancedButton {
   margin: 3em 3em 1em;
   overflow: auto;
   white-space: pre-wrap;
-}
-
-#certificateErrorReporting {
-  display: none;
 }
 
 #certificateErrorDebugInformation {
