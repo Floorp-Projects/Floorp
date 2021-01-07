@@ -78,26 +78,15 @@ static const PLDHashTableOps gMapOps = {
     PLDHashTable::HashVoidPtrKeyStub, CompareCacheMatchEntry,
     PLDHashTable::MoveEntryStub, CompareCacheClearEntry, CompareCacheInitEntry};
 
-NS_IMPL_ISUPPORTS0(nsCertAddonInfo)
 NS_IMPL_ISUPPORTS(nsCertTreeDispInfo, nsICertTreeItem)
-
-nsCertTreeDispInfo::nsCertTreeDispInfo() : mAddonInfo(nullptr) {}
-
-nsCertTreeDispInfo::nsCertTreeDispInfo(nsCertTreeDispInfo& other) {
-  mAddonInfo = other.mAddonInfo;
-}
 
 nsCertTreeDispInfo::~nsCertTreeDispInfo() = default;
 
 NS_IMETHODIMP
-nsCertTreeDispInfo::GetCert(nsIX509Cert** _cert) {
-  NS_ENSURE_ARG(_cert);
-  if (mAddonInfo) {
-    *_cert = mAddonInfo->mCert.get();
-    NS_IF_ADDREF(*_cert);
-  } else {
-    *_cert = nullptr;
-  }
+nsCertTreeDispInfo::GetCert(nsIX509Cert** aCert) {
+  NS_ENSURE_ARG(aCert);
+  nsCOMPtr<nsIX509Cert> cert = mCert;
+  cert.forget(aCert);
   return NS_OK;
 }
 
@@ -137,19 +126,11 @@ int32_t nsCertTree::CountOrganizations() {
   uint32_t i, certCount;
   certCount = mDispInfo.Length();
   if (certCount == 0) return 0;
-  nsCOMPtr<nsIX509Cert> orgCert = nullptr;
-  nsCertAddonInfo* addonInfo = mDispInfo.ElementAt(0)->mAddonInfo;
-  if (addonInfo) {
-    orgCert = addonInfo->mCert;
-  }
+  nsCOMPtr<nsIX509Cert> orgCert = mDispInfo.ElementAt(0)->mCert;
   nsCOMPtr<nsIX509Cert> nextCert = nullptr;
   int32_t orgCount = 1;
   for (i = 1; i < certCount; i++) {
-    nextCert = nullptr;
-    addonInfo = mDispInfo.SafeElementAt(i, nullptr)->mAddonInfo;
-    if (addonInfo) {
-      nextCert = addonInfo->mCert;
-    }
+    nextCert = mDispInfo.SafeElementAt(i, nullptr)->mCert;
     // XXX we assume issuer org is always criterion 1
     if (CmpBy(&mCompareCache, orgCert, nextCert, sort_IssuerOrg, sort_None,
               sort_None) != 0) {
@@ -189,10 +170,7 @@ already_AddRefed<nsIX509Cert> nsCertTree::GetCertAtIndex(
       GetDispInfoAtIndex(index, outAbsoluteCertOffset));
   if (!certdi) return nullptr;
 
-  nsCOMPtr<nsIX509Cert> ret;
-  if (certdi->mAddonInfo) {
-    ret = certdi->mAddonInfo->mCert;
-  }
+  nsCOMPtr<nsIX509Cert> ret = certdi->mCert;
   return ret.forget();
 }
 
@@ -263,26 +241,20 @@ nsresult nsCertTree::GetCertsByTypeFromCertList(
       }
     }
 
-    RefPtr<nsCertAddonInfo> certai(new nsCertAddonInfo);
-    certai->mCert = cert;
-    certai->mUsageCount = 0;
-
     if (wantThisCert) {
       int InsertPosition = 0;
       for (; InsertPosition < count; ++InsertPosition) {
         nsCOMPtr<nsIX509Cert> otherCert = nullptr;
         RefPtr<nsCertTreeDispInfo> elem(
             mDispInfo.SafeElementAt(InsertPosition, nullptr));
-        if (elem && elem->mAddonInfo) {
-          otherCert = elem->mAddonInfo->mCert;
+        if (elem) {
+          otherCert = elem->mCert;
         }
         if ((*aCertCmpFn)(aCertCmpFnArg, cert, otherCert) < 0) {
           break;
         }
       }
-      nsCertTreeDispInfo* certdi = new nsCertTreeDispInfo;
-      certdi->mAddonInfo = certai;
-      certai->mUsageCount++;
+      nsCertTreeDispInfo* certdi = new nsCertTreeDispInfo(cert);
       mDispInfo.InsertElementAt(InsertPosition, certdi);
       ++count;
       ++InsertPosition;
@@ -324,11 +296,7 @@ nsresult nsCertTree::UpdateUIContents() {
 
   if (count) {
     uint32_t j = 0;
-    nsCOMPtr<nsIX509Cert> orgCert = nullptr;
-    nsCertAddonInfo* addonInfo = mDispInfo.ElementAt(j)->mAddonInfo;
-    if (addonInfo) {
-      orgCert = addonInfo->mCert;
-    }
+    nsCOMPtr<nsIX509Cert> orgCert = mDispInfo.ElementAt(j)->mCert;
     for (int32_t i = 0; i < mNumOrgs; i++) {
       nsString& orgNameRef = mTreeArray[i].orgName;
       if (!orgCert) {
@@ -341,21 +309,13 @@ nsresult nsCertTree::UpdateUIContents() {
       mTreeArray[i].certIndex = j;
       mTreeArray[i].numChildren = 1;
       if (++j >= count) break;
-      nsCOMPtr<nsIX509Cert> nextCert = nullptr;
-      nsCertAddonInfo* addonInfo =
-          mDispInfo.SafeElementAt(j, nullptr)->mAddonInfo;
-      if (addonInfo) {
-        nextCert = addonInfo->mCert;
-      }
+      nsCOMPtr<nsIX509Cert> nextCert =
+          mDispInfo.SafeElementAt(j, nullptr)->mCert;
       while (0 == CmpBy(&mCompareCache, orgCert, nextCert, sort_IssuerOrg,
                         sort_None, sort_None)) {
         mTreeArray[i].numChildren++;
         if (++j >= count) break;
-        nextCert = nullptr;
-        addonInfo = mDispInfo.SafeElementAt(j, nullptr)->mAddonInfo;
-        if (addonInfo) {
-          nextCert = addonInfo->mCert;
-        }
+        nextCert = mDispInfo.SafeElementAt(j, nullptr)->mCert;
       }
       orgCert = nextCert;
     }
@@ -391,47 +351,15 @@ nsCertTree::DeleteEntryObject(uint32_t index) {
     if (index < idx + nc) {  // cert is within range of this thread
       int32_t certIndex = cIndex + index - idx;
 
-      bool canRemoveEntry = false;
       RefPtr<nsCertTreeDispInfo> certdi(
           mDispInfo.SafeElementAt(certIndex, nullptr));
-
-      // We will remove the element from the visual tree.
-      // Only if we have a certdi, then we can check for additional actions.
-      nsCOMPtr<nsIX509Cert> cert = nullptr;
       if (certdi) {
-        if (certdi->mAddonInfo) {
-          cert = certdi->mAddonInfo->mCert;
-        }
-        nsCertAddonInfo* addonInfo =
-            certdi->mAddonInfo ? certdi->mAddonInfo.get() : nullptr;
-        if (addonInfo && addonInfo->mUsageCount > 1) {
-          // user is trying to delete a perm trusted cert,
-          // although there are still overrides stored,
-          // so, we keep the cert, but remove the trust
-
-          UniqueCERTCertificate nsscert(cert->GetCert());
-
-          if (nsscert) {
-            CERTCertTrust trust;
-            memset((void*)&trust, 0, sizeof(trust));
-
-            SECStatus srv = CERT_DecodeTrustString(&trust, "");  // no override
-            if (srv == SECSuccess) {
-              ChangeCertTrustWithPossibleAuthentication(nsscert, trust,
-                                                        nullptr);
-            }
-          }
-        } else {
-          canRemoveEntry = true;
-        }
-      }
-
-      mDispInfo.RemoveElementAt(certIndex);
-
-      if (canRemoveEntry) {
+        nsCOMPtr<nsIX509Cert> cert = certdi->mCert;
         RemoveCacheEntry(cert);
         certdb->DeleteCertificate(cert);
       }
+
+      mDispInfo.RemoveElementAt(certIndex);
 
       delete[] mTreeArray;
       mTreeArray = nullptr;
@@ -628,10 +556,7 @@ nsCertTree::GetCellText(int32_t row, nsTreeColumn* col, nsAString& _retval) {
       GetDispInfoAtIndex(row, &absoluteCertOffset));
   if (!certdi) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIX509Cert> cert;
-  if (certdi->mAddonInfo) {
-    cert = certdi->mAddonInfo->mCert;
-  }
+  nsCOMPtr<nsIX509Cert> cert = certdi->mCert;
 
   int32_t colIndex = col->Index();
   uint32_t arrayIndex = absoluteCertOffset + colIndex * (mNumRows - mNumOrgs);

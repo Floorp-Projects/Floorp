@@ -49,33 +49,17 @@ struct CompareCacheHashEntryPtr : PLDHashEntryHdr {
   CompareCacheHashEntry* entry;
 };
 
-class nsCertAddonInfo final : public nsISupports {
- private:
-  ~nsCertAddonInfo() = default;
-
- public:
-  NS_DECL_ISUPPORTS
-
-  nsCertAddonInfo() : mUsageCount(0) {}
-
-  RefPtr<nsIX509Cert> mCert;
-  // how many display entries reference this?
-  // (and therefore depend on the underlying cert)
-  int32_t mUsageCount;
-};
-
 class nsCertTreeDispInfo : public nsICertTreeItem {
  protected:
   virtual ~nsCertTreeDispInfo();
 
  public:
+  explicit nsCertTreeDispInfo(nsIX509Cert* aCert) : mCert(aCert) {}
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSICERTTREEITEM
 
-  nsCertTreeDispInfo();
-  nsCertTreeDispInfo(nsCertTreeDispInfo& other);
-
-  RefPtr<nsCertAddonInfo> mAddonInfo;
+  nsCOMPtr<nsIX509Cert> mCert;
 };
 
 class nsCertTree : public nsICertTree {
