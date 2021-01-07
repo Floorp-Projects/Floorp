@@ -11291,7 +11291,7 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
   }
 
   ScriptStencil& script = compilationState.scriptData[scriptIndex];
-  script.hasSharedData = true;
+  script.setHasSharedData();
 
   // Update flags specific to functions.
   if (sc->isFunctionBox()) {

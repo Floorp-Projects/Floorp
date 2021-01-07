@@ -428,7 +428,9 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
   if (enclosingScopeIndex_) {
     script.setLazyFunctionEnclosingScopeIndex(*enclosingScopeIndex_);
   }
-  script.wasFunctionEmitted = wasEmitted_;
+  if (wasEmitted_) {
+    script.setWasFunctionEmitted();
+  }
 
   isFunctionFieldCopiedToStencil = true;
 }
@@ -468,7 +470,9 @@ void FunctionBox::copyUpdatedAtomAndFlags() {
 
 void FunctionBox::copyUpdatedWasEmitted() {
   ScriptStencil& script = functionStencil();
-  script.wasFunctionEmitted = wasEmitted_;
+  if (wasEmitted_) {
+    script.setWasFunctionEmitted();
+  }
 }
 
 }  // namespace frontend
