@@ -18,9 +18,9 @@ add_task(async function() {
 
   // _setupDevToolsServer is from xpcshell-test's head.js
   /* global _setupDevToolsServer */
-  let testResumed = false;
+  let testInitialized = false;
   const { DevToolsServer } = _setupDevToolsServer([testFile.path], () => {
-    testResumed = true;
+    testInitialized = true;
   });
   const transport = DevToolsServer.connectPipe();
   const client = new DevToolsClient(transport);
@@ -38,29 +38,36 @@ add_task(async function() {
   // Even though we have no tabs, getMainProcess gives us the chrome debugger.
   const targetDescriptor = await client.mainRoot.getMainProcess();
   const front = await targetDescriptor.getTarget();
+
   const threadFront = await front.attachThread();
 
-  // tell the thread to do the initial resume. This would cause the
-  // xpcshell test harness to resume and load the file under test.
-  threadFront.resume().then(() => {
-    // should have been told to resume the test itself.
-    ok(testResumed);
-    // Now load our test script.
+  // Checks that the thread actor initializes immediately and that _setupDevToolsServer
+  // callback gets called.
+  ok(testInitialized);
+
+  const onPause = waitForPause(threadFront);
+
+  // Now load our test script,
+  // in another event loop so that the test can keep running!
+  Services.tm.dispatchToMainThread(() => {
     load(testFile.path);
-    // and our "paused" listener below should get hit.
   });
 
-  const packet1 = await waitForPause(threadFront);
+  // and our "paused" listener should get hit.
+  info("Wait for first paused event");
+  const packet1 = await onPause;
   equal(
     packet1.why.type,
     "breakpoint",
     "yay - hit the breakpoint at the first line in our script"
   );
 
+  const onPause2 = waitForPause(threadFront);
   // Resume again - next stop should be our "debugger" statement.
   threadFront.resume();
 
-  const packet2 = await waitForPause(threadFront);
+  info("Wait for second pause event");
+  const packet2 = await onPause2;
   equal(
     packet2.why.type,
     "debuggerStatement",

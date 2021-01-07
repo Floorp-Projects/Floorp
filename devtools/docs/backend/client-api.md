@@ -120,9 +120,6 @@ client.attachThread(response.threadActor).then(function(threadFront) {
   threadFront.on("paused", onPause);
   threadFront.on("resumed", fooListener);
 
-  // Resume the thread.
-  threadFront.resume();
-
   // Debugger is now ready and debuggee is running.
 });
 ```
@@ -167,25 +164,19 @@ function shutdownDebugger() {
 /**
  * Start debugging the current tab.
  */
-function debugTab() {
+async function debugTab() {
   // Get the list of tabs to find the one to attach to.
-  client.mainRoot.listTabs().then(tabs => {
-    // Find the active tab.
-    let targetFront = tabs.find(tab => tab.selected);
-    // Attach to the tab.
-    targetFront.attach().then(() => {
-      // Attach to the thread (context).
-      targetFront.attachThread().then((threadFront) => {
-        // Attach listeners for thread events.
-        threadFront.on("paused", onPause);
-        threadFront.on("resumed", fooListener);
-
-        // Resume the thread.
-        threadFront.resume();
-        // Debugger is now ready and debuggee is running.
-      });
-    });
-  });
+  const tabs = await client.mainRoot.listTabs();
+  // Find the active tab.
+  let targetFront = tabs.find(tab => tab.selected);
+  // Attach to the tab.
+  await targetFront.attach();
+  // Attach to the thread (context).
+  const threadFront = await targetFront.attachThread();
+  // Attach listeners for thread events.
+  threadFront.on("paused", onPause);
+  threadFront.on("resumed", fooListener);
+  // Debugger is now ready and debuggee is running.
 }
 
 /**
