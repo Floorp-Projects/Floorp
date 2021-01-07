@@ -51,6 +51,28 @@ def lint(paths, config, fix=None, **lintargs):
             # return file pointer to first
             open_file.seek(0)
 
+            lines = open_file.readlines()
+            # Detect missing newline at the end of the file
+            if lines[:].__len__() != 0 and not lines[-1].endswith(b"\n"):
+                if fix:
+                    with open(f, "wb") as write_file:
+                        # add a newline character at end of file
+                        lines[-1] = lines[-1] + b"\n"
+                        # write content to file
+                        for e in lines:
+                            write_file.write(e)
+                else:
+                    res = {
+                        "path": f,
+                        "message": "File does not end with newline character",
+                        "level": "error",
+                        "lineno": lines.__len__(),
+                    }
+                    results.append(result.from_config(config, **res))
+
+            # return file pointer to first
+            open_file.seek(0)
+
             for i, line in enumerate(open_file):
                 if line.endswith(b" \n"):
                     # We found a trailing whitespace
