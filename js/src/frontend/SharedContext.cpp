@@ -425,7 +425,9 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
   }
   script.functionFlags = flags_;
   script.nargs = nargs_;
-  script.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
+  if (enclosingScopeIndex_) {
+    script.setLazyFunctionEnclosingScopeIndex(*enclosingScopeIndex_);
+  }
   script.wasFunctionEmitted = wasEmitted_;
 
   isFunctionFieldCopiedToStencil = true;
@@ -450,7 +452,9 @@ void FunctionBox::copyUpdatedMemberInitializers() {
 
 void FunctionBox::copyUpdatedEnclosingScopeIndex() {
   ScriptStencil& script = functionStencil();
-  script.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
+  if (enclosingScopeIndex_) {
+    script.setLazyFunctionEnclosingScopeIndex(*enclosingScopeIndex_);
+  }
 }
 
 void FunctionBox::copyUpdatedAtomAndFlags() {

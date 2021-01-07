@@ -472,12 +472,12 @@ static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
     if (scriptStencil.functionFlags.isAsmJSNative() ||
         fun->baseScript()->hasBytecode()) {
       // Non-lazy inner functions don't use the enclosingScope_ field.
-      MOZ_ASSERT(scriptStencil.lazyFunctionEnclosingScopeIndex_.isNothing());
+      MOZ_ASSERT(!scriptStencil.hasLazyFunctionEnclosingScopeIndex);
     } else {
       // Apply updates from FunctionEmitter::emitLazy().
       BaseScript* script = fun->baseScript();
 
-      ScopeIndex index = *scriptStencil.lazyFunctionEnclosingScopeIndex_;
+      ScopeIndex index = scriptStencil.lazyFunctionEnclosingScopeIndex();
       Scope* scope = gcOutput.scopes[index];
       script->setEnclosingScope(scope);
 
@@ -1733,14 +1733,13 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
 
     json.property("nargs", nargs);
 
-    if (lazyFunctionEnclosingScopeIndex_) {
-      json.formatProperty("lazyFunctionEnclosingScopeIndex",
-                          "Some(ScopeIndex(%zu))",
-                          size_t(*lazyFunctionEnclosingScopeIndex_));
-    } else {
-      json.property("lazyFunctionEnclosingScopeIndex", "Nothing");
+    if (hasLazyFunctionEnclosingScopeIndex) {
+      json.formatProperty("lazyFunctionEnclosingScopeIndex", "ScopeIndex(%zu)",
+                          size_t(lazyFunctionEnclosingScopeIndex_));
     }
 
+    json.boolProperty("hasLazyFunctionEnclosingScopeIndex",
+                      hasLazyFunctionEnclosingScopeIndex);
     json.boolProperty("wasFunctionEmitted", wasFunctionEmitted);
     json.boolProperty("allowRelazify", allowRelazify);
   }
