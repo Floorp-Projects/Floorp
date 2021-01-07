@@ -3562,6 +3562,17 @@ impl Renderer {
         self.device.enable_depth(DepthFunction::LessEqual);
         self.device.enable_depth_write();
 
+        // If using KHR_partial_update, call eglSetDamageRegion.
+        // This must be called exactly once per frame, and prior to any rendering to the main
+        // framebuffer. Additionally, on Mali-G77 we encountered rendering issues when calling
+        // this earlier in the frame, during offscreen render passes. So call it now, immediately
+        // before rendering to the main framebuffer. See bug 1685276 for details.
+        if let Some(partial_present) = self.compositor_config.partial_present() {
+            if let Some(PartialPresentMode::Single { dirty_rect }) = partial_present_mode {
+                partial_present.set_buffer_damage_region(&[dirty_rect.to_i32()]);
+            }
+        }
+
         // Clear the framebuffer
         let clear_color = self.clear_color.map(|color| color.to_array());
 
@@ -4353,10 +4364,6 @@ impl Renderer {
                 partial_present_mode = Some(PartialPresentMode::Single {
                     dirty_rect: total_dirty_rect,
                 });
-
-                if let Some(partial_present) = self.compositor_config.partial_present() {
-                    partial_present.set_buffer_damage_region(&[total_dirty_rect.to_i32()]);
-                }
             } else {
                 // If we don't have a valid partial present scenario, return a single
                 // dirty rect to the client that covers the entire framebuffer.
