@@ -64,11 +64,10 @@ template <XDRMode mode>
     xdrFields.functionFlags = stencil.functionFlags.toRaw();
     xdrFields.nargs = stencil.nargs;
 
-    if (stencil.lazyFunctionEnclosingScopeIndex_.isSome()) {
+    if (stencil.hasLazyFunctionEnclosingScopeIndex) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasScopeIndex);
     }
-    xdrFields.scopeIndex =
-        stencil.lazyFunctionEnclosingScopeIndex_.valueOr(ScopeIndex());
+    xdrFields.scopeIndex = stencil.lazyFunctionEnclosingScopeIndex_;
 
     if (stencil.wasFunctionEmitted) {
       xdrFlags |= 1 << uint8_t(XdrFlags::WasFunctionEmitted);
@@ -121,7 +120,8 @@ template <XDRMode mode>
     stencil.nargs = xdrFields.nargs;
 
     if (xdrFlags & (1 << uint8_t(XdrFlags::HasScopeIndex))) {
-      stencil.lazyFunctionEnclosingScopeIndex_.emplace(xdrFields.scopeIndex);
+      stencil.setLazyFunctionEnclosingScopeIndex(
+          ScopeIndex(xdrFields.scopeIndex));
     }
 
     if (xdrFlags & (1 << uint8_t(XdrFlags::WasFunctionEmitted))) {

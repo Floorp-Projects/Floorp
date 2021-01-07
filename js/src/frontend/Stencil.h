@@ -604,7 +604,7 @@ class ScriptStencil {
   // partially initialized enclosing scopes, so we must avoid storing the
   // scope in the BaseScript until compilation has completed
   // successfully.)
-  mozilla::Maybe<ScopeIndex> lazyFunctionEnclosingScopeIndex_;
+  ScopeIndex lazyFunctionEnclosingScopeIndex_;
 
   // This is set by the BytecodeEmitter of the enclosing script when a reference
   // to this function is generated.
@@ -624,13 +624,18 @@ class ScriptStencil {
   // `memberInitializers_` is valid only if this field is true.
   bool hasMemberInitializers : 1;
 
+  // True if this script is lazy function and has enclosing scope.
+  // `lazyFunctionEnclosingScopeIndex_` is valid only if this field is true.
+  bool hasLazyFunctionEnclosingScopeIndex : 1;
+
   // End of fields.
 
   ScriptStencil()
       : wasFunctionEmitted(false),
         allowRelazify(false),
         hasSharedData(false),
-        hasMemberInitializers(false) {}
+        hasMemberInitializers(false),
+        hasLazyFunctionEnclosingScopeIndex(false) {}
 
   bool isFunction() const {
     bool result = functionFlags.toRaw() != 0x0000;
@@ -658,6 +663,16 @@ class ScriptStencil {
   MemberInitializers memberInitializers() const {
     MOZ_ASSERT(hasMemberInitializers);
     return MemberInitializers(memberInitializers_);
+  }
+
+  void setLazyFunctionEnclosingScopeIndex(ScopeIndex index) {
+    lazyFunctionEnclosingScopeIndex_ = index;
+    hasLazyFunctionEnclosingScopeIndex = true;
+  }
+
+  ScopeIndex lazyFunctionEnclosingScopeIndex() const {
+    MOZ_ASSERT(hasLazyFunctionEnclosingScopeIndex);
+    return lazyFunctionEnclosingScopeIndex_;
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)

@@ -497,7 +497,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     script.functionFlags = FunctionFlags(smooshScript.fun_flags);
     script.nargs = smooshScript.fun_nargs;
     if (smooshScript.lazy_function_enclosing_scope_index.IsSome()) {
-      script.lazyFunctionEnclosingScopeIndex_ = mozilla::Some(ScopeIndex(
+      script.setLazyFunctionEnclosingScopeIndex(ScopeIndex(
           smooshScript.lazy_function_enclosing_scope_index.AsSome()));
     }
     script.wasFunctionEmitted = smooshScript.was_function_emitted;
