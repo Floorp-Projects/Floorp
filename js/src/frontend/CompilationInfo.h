@@ -234,9 +234,12 @@ struct MOZ_RAII CompilationState {
 
   // Temporary space to accumulate stencil data.
   // Copied to CompilationStencil by `finish` method.
+  //
+  // See corresponding CompilationStencil fields for desription.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
   Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
+  Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
   Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
 
   // Table of parser atoms for this compilation.
@@ -317,7 +320,10 @@ struct CompilationStencil {
   SharedDataContainer sharedData;
   mozilla::Span<TaggedScriptThingIndex> gcThingData;
 
+  // scopeData and scopeNames have the same size, and i-th scopeNames contains
+  // the names for the bindings contained in the slot defined by i-th scopeData.
   mozilla::Span<ScopeStencil> scopeData;
+  mozilla::Span<BaseParserScopeData*> scopeNames;
 
   // Module metadata if this is a module compile.
   mozilla::Maybe<StencilModuleMetadata> moduleMetadata;
