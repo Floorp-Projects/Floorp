@@ -675,10 +675,10 @@ void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
     masm.Add(output64, lhs64, Operand(output64, vixl::LSR, 32));
 
     // (M * n) >> (32 + shift) is the truncated division answer.
-    masm.Asr(output64, output64, rmc.shiftAmount);
+    masm.Lsr(output64, output64, rmc.shiftAmount);
   } else {
     // (M * n) >> (32 + shift) is the truncated division answer.
-    masm.Asr(output64, output64, 32 + rmc.shiftAmount);
+    masm.Lsr(output64, output64, 32 + rmc.shiftAmount);
   }
 
   // We now have the truncated division value. We are checking whether the
