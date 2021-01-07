@@ -1064,9 +1064,9 @@ DevToolsStartup.prototype = {
     if (pauseOnStartup) {
       const observe = function(subject, topic, data) {
         devtoolsThreadResumed = true;
-        Services.obs.removeObserver(observe, "devtools-thread-resumed");
+        Services.obs.removeObserver(observe, "devtools-thread-ready");
       };
-      Services.obs.addObserver(observe, "devtools-thread-resumed");
+      Services.obs.addObserver(observe, "devtools-thread-ready");
     }
 
     const { BrowserToolboxLauncher } = ChromeUtils.import(

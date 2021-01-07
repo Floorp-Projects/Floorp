@@ -145,6 +145,9 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
             "dom.worker.console.dispatch_events_to_main_thread"
           )
         : true,
+      // @backward-compat { version 86 } ThreadActor.attach no longer pause the thread,
+      //                                 so that we no longer have to resume.
+      noPauseOnThreadActorAttach: true,
     };
   },
 

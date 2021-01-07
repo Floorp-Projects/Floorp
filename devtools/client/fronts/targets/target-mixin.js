@@ -488,6 +488,12 @@ function TargetMixin(parentClass) {
       }
       const threadFront = await this.attachThread(options);
 
+      // @backward-compat { version 86 } ThreadActor.attach no longer pause the thread,
+      //                                 so that we no longer have to resume.
+      // Once 86 is in release, we can remove the rest of this method.
+      if (this.getTrait("noPauseOnThreadActorAttach")) {
+        return;
+      }
       try {
         if (this.isDestroyedOrBeingDestroyed() || threadFront.isDestroyed()) {
           return;
