@@ -124,7 +124,6 @@ mod scene_builder_thread;
 mod scene_building;
 mod screen_capture;
 mod segment;
-mod shade;
 mod spatial_node;
 mod storage;
 mod texture_pack;
@@ -221,13 +220,12 @@ pub use crate::profiler::{ProfilerHooks, set_profiler_hooks};
 pub use crate::renderer::{
     AsyncPropertySampler, CpuProfile, DebugFlags, GpuProfile, GraphicsApi,
     GraphicsApiInfo, PipelineInfo, Renderer, RendererError, RendererOptions, RenderResults,
-    RendererStats, SceneBuilderHooks, ThreadListener, ShaderPrecacheFlags,
+    RendererStats, SceneBuilderHooks, Shaders, SharedShaders, ThreadListener, ShaderPrecacheFlags,
     MAX_VERTEX_TEXTURE_WIDTH, ONE_TIME_USAGE_HINT,
 };
 pub use crate::hit_test::SharedHitTester;
 pub use crate::internal_types::FastHashMap;
 pub use crate::screen_capture::{AsyncScreenshotHandle, RecordedFrameHandle};
-pub use crate::shade::{Shaders, WrShaders};
 pub use crate::texture_cache::TextureCacheConfig;
 pub use api as webrender_api;
 pub use webrender_build::shader::ProgramSourceDigest;

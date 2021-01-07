@@ -88,7 +88,6 @@ use crate::render_task::{RenderTask, RenderTaskKind};
 use crate::resource_cache::ResourceCache;
 use crate::scene_builder_thread::{SceneBuilderThread, SceneBuilderThreadChannels, LowPrioritySceneBuilderThread};
 use crate::screen_capture::AsyncScreenshotGrabber;
-use crate::shade::{Shaders, WrShaders};
 use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
@@ -129,9 +128,11 @@ cfg_if! {
 
 mod debug;
 mod gpu_cache;
+mod shade;
 mod vertex;
 
 pub use debug::DebugRenderer;
+pub use shade::{Shaders, SharedShaders};
 pub use vertex::{desc, VertexArrayKind, MAX_VERTEX_TEXTURE_WIDTH};
 
 /// Use this hint for all vertex data re-initialization. This allows
@@ -873,7 +874,7 @@ impl Renderer {
         gl: Rc<dyn gl::Gl>,
         notifier: Box<dyn RenderNotifier>,
         mut options: RendererOptions,
-        shaders: Option<&mut WrShaders>,
+        shaders: Option<&SharedShaders>,
     ) -> Result<(Self, RenderApiSender), RendererError> {
         if !wr_has_been_initialized() {
             // If the profiler feature is enabled, try to load the profiler shared library
@@ -942,7 +943,7 @@ impl Renderer {
         device.begin_frame();
 
         let shaders = match shaders {
-            Some(shaders) => Rc::clone(&shaders.shaders),
+            Some(shaders) => Rc::clone(shaders),
             None => Rc::new(RefCell::new(Shaders::new(&mut device, gl_type, &options)?)),
         };
 
