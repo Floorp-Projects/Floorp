@@ -191,15 +191,33 @@ void gfxAndroidPlatform::GetCommonFallbackFonts(
         break;
       case 0x09:
         aFontList.AppendElement("Noto Sans Devanagari");
+        aFontList.AppendElement("Noto Sans Bengali");
         aFontList.AppendElement("Droid Sans Devanagari");
+        break;
+      case 0x0a:
+        aFontList.AppendElement("Noto Sans Gurmukhi");
+        aFontList.AppendElement("Noto Sans Gujarati");
         break;
       case 0x0b:
         aFontList.AppendElement("Noto Sans Tamil");
+        aFontList.AppendElement("Noto Sans Oriya");
         aFontList.AppendElement("Droid Sans Tamil");
+        break;
+      case 0x0c:
+        aFontList.AppendElement("Noto Sans Telugu");
+        aFontList.AppendElement("Noto Sans Kannada");
+        break;
+      case 0x0d:
+        aFontList.AppendElement("Noto Sans Malayalam");
+        aFontList.AppendElement("Noto Sans Sinhala");
         break;
       case 0x0e:
         aFontList.AppendElement("Noto Sans Thai");
+        aFontList.AppendElement("Noto Sans Lao");
         aFontList.AppendElement("Droid Sans Thai");
+        break;
+      case 0x0f:
+        aFontList.AppendElement("Noto Sans Tibetan");
         break;
       case 0x10:
       case 0x2d:
