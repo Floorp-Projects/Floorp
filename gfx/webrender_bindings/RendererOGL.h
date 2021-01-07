@@ -104,6 +104,9 @@ class RendererOGL {
   bool Resume();
 
   /// This can be called on the render thread only.
+  bool IsPaused();
+
+  /// This can be called on the render thread only.
   void CheckGraphicsResetStatus(const char* aCaller, bool aForce);
 
   layers::SyncObjectHost* GetSyncObject() const;

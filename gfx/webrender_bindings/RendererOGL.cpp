@@ -280,6 +280,8 @@ void RendererOGL::Pause() { mCompositor->Pause(); }
 
 bool RendererOGL::Resume() { return mCompositor->Resume(); }
 
+bool RendererOGL::IsPaused() { return mCompositor->IsPaused(); }
+
 layers::SyncObjectHost* RendererOGL::GetSyncObject() const {
   return mCompositor->GetSyncObject();
 }
