@@ -829,7 +829,7 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
     if (csp) {
       bool allowsInlineScript = true;
       rv = csp->GetAllowsInline(
-          nsIContentPolicy::TYPE_SCRIPT,
+          nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE,
           u""_ns,  // aNonce
           true,    // aParserCreated (true because attribute event handler)
           aElement,

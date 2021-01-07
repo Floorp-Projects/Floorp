@@ -454,8 +454,6 @@ class nsCSPDirective {
     mSrcs = aSrcs.Clone();
   }
 
-  virtual bool restrictsContentType(nsContentPolicyType aContentType) const;
-
   inline bool isDefaultDirective() const {
     return mDirective == nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE;
   }
@@ -492,9 +490,6 @@ class nsCSPChildSrcDirective : public nsCSPDirective {
 
   void setRestrictWorkers() { mRestrictWorkers = true; }
 
-  virtual bool restrictsContentType(
-      nsContentPolicyType aContentType) const override;
-
   virtual bool equals(CSPDirective aDirective) const override;
 
  private:
@@ -515,9 +510,6 @@ class nsCSPScriptSrcDirective : public nsCSPDirective {
   virtual ~nsCSPScriptSrcDirective();
 
   void setRestrictWorkers() { mRestrictWorkers = true; }
-
-  virtual bool restrictsContentType(
-      nsContentPolicyType aContentType) const override;
 
   virtual bool equals(CSPDirective aDirective) const override;
 
@@ -622,10 +614,8 @@ class nsCSPPolicy {
   bool permits(CSPDirective aDirective, nsIURI* aUri, const nsAString& aNonce,
                bool aWasRedirected, bool aSpecific, bool aParserCreated,
                nsAString& outViolatedDirective) const;
-  bool permits(CSPDirective aDir, nsIURI* aUri, bool aSpecific) const;
-  bool allows(nsContentPolicyType aContentType, enum CSPKeyword aKeyword,
+  bool allows(CSPDirective aDirective, enum CSPKeyword aKeyword,
               const nsAString& aHashOrNonce, bool aParserCreated) const;
-  bool allows(nsContentPolicyType aContentType, enum CSPKeyword aKeyword) const;
   void toString(nsAString& outStr) const;
   void toDomCSPStruct(mozilla::dom::CSP& outCSP) const;
 
@@ -655,7 +645,7 @@ class nsCSPPolicy {
   void getReportURIs(nsTArray<nsString>& outReportURIs) const;
 
   void getDirectiveStringAndReportSampleForContentType(
-      nsContentPolicyType aContentType, nsAString& outDirective,
+      CSPDirective aDirective, nsAString& outDirective,
       bool* aReportSample) const;
 
   void getDirectiveAsString(CSPDirective aDir, nsAString& outDirective) const;
