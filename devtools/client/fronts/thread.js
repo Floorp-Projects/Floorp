@@ -41,7 +41,15 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     this.client = client;
     this._pauseGrips = {};
     this._threadGrips = {};
-    this._state = "paused";
+    // Note that this isn't matching ThreadActor state field.
+    // ThreadFront is only using two values: paused or attached.
+    // @backward-compat { version 86 } ThreadActor.attach no longer pauses the thread,
+    //                                 so that the default state is "attached" by default.
+    if (this.targetFront.getTrait("noPauseOnThreadActorAttach")) {
+      this._state = "attached";
+    } else {
+      this._state = "paused";
+    }
     this._beforePaused = this._beforePaused.bind(this);
     this._beforeResumed = this._beforeResumed.bind(this);
     this.before("paused", this._beforePaused);
@@ -195,9 +203,17 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
    * attach to the thread actor.
    */
   async attach(options) {
-    const onPaused = this.once("paused");
+    const noPauseOnThreadActorAttach = this.targetFront.getTrait(
+      "noPauseOnThreadActorAttach"
+    );
+    const onPaused = noPauseOnThreadActorAttach ? null : this.once("paused");
     await super.attach(options);
-    await onPaused;
+    // @backward-compat { version 86 } ThreadActor.attach no longer pause the thread,
+    //                                 so that we shouldn't wait for the paused event,
+    //                                 since it won't be emitted anymore.
+    if (!noPauseOnThreadActorAttach) {
+      await onPaused;
+    }
   }
 
   /**

@@ -27,13 +27,13 @@ async function testChromeTab() {
 
   const onThreadActorInstantiated = new Promise(resolve => {
     const observe = function(subject, topic, data) {
-      if (topic === "devtools-thread-instantiated") {
-        Services.obs.removeObserver(observe, "devtools-thread-instantiated");
+      if (topic === "devtools-thread-ready") {
+        Services.obs.removeObserver(observe, "devtools-thread-ready");
         const threadActor = subject.wrappedJSObject;
         resolve(threadActor);
       }
     };
-    Services.obs.addObserver(observe, "devtools-thread-instantiated");
+    Services.obs.addObserver(observe, "devtools-thread-ready");
   });
 
   const target = await TargetFactory.forTab(tab);
@@ -95,13 +95,13 @@ async function testMainProcess() {
 
   const onThreadActorInstantiated = new Promise(resolve => {
     const observe = function(subject, topic, data) {
-      if (topic === "devtools-thread-instantiated") {
-        Services.obs.removeObserver(observe, "devtools-thread-instantiated");
+      if (topic === "devtools-thread-ready") {
+        Services.obs.removeObserver(observe, "devtools-thread-ready");
         const threadActor = subject.wrappedJSObject;
         resolve(threadActor);
       }
     };
-    Services.obs.addObserver(observe, "devtools-thread-instantiated");
+    Services.obs.addObserver(observe, "devtools-thread-ready");
   });
 
   const targetDescriptor = await client.mainRoot.getMainProcess();
