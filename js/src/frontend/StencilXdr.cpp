@@ -49,13 +49,10 @@ template <XDRMode mode>
   if (mode == XDR_ENCODE) {
     xdrFields.immutableFlags = stencil.immutableFlags;
 
-    if (stencil.memberInitializers.isSome()) {
+    if (stencil.hasMemberInitializers) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasMemberInitializers);
+      xdrFields.numMemberInitializers = stencil.memberInitializers_;
     }
-    xdrFields.numMemberInitializers =
-        stencil.memberInitializers
-            .map([](auto i) { return i.numMemberInitializers; })
-            .valueOr(0);
 
     xdrFields.gcThingsOffset = stencil.gcThingsOffset.index;
     xdrFields.gcThingsLength = stencil.gcThingsLength;
@@ -113,7 +110,8 @@ template <XDRMode mode>
     stencil.immutableFlags = xdrFields.immutableFlags;
 
     if (xdrFlags & (1 << uint8_t(XdrFlags::HasMemberInitializers))) {
-      stencil.memberInitializers.emplace(xdrFields.numMemberInitializers);
+      stencil.setMemberInitializers(
+          MemberInitializers(xdrFields.numMemberInitializers));
     }
 
     stencil.gcThingsOffset = CompilationGCThingIndex(xdrFields.gcThingsOffset);

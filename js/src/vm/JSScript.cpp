@@ -3750,8 +3750,8 @@ bool PrivateScriptData::InitFromStencil(
     }
   }
 
-  if (scriptStencil.memberInitializers) {
-    script->setMemberInitializers(*scriptStencil.memberInitializers);
+  if (scriptStencil.hasMemberInitializers) {
+    script->setMemberInitializers(scriptStencil.memberInitializers());
   }
 
   return true;
