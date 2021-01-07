@@ -152,6 +152,7 @@ struct ModuleEnvironment {
   ElemSegmentVector elemSegments;
   MaybeSectionRange codeSection;
   SparseBitmap validForRefFunc;
+  bool usesDuplicateImports;
 
   // Fields decoded as part of the wasm module tail:
   DataSegmentEnvVector dataSegments;
@@ -166,7 +167,8 @@ struct ModuleEnvironment {
         features(features),
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0),
-        types(features, TypeDefVector()) {}
+        types(features, TypeDefVector()),
+        usesDuplicateImports(false) {}
 
   size_t numTables() const { return tables.length(); }
   size_t numTypes() const { return types.length(); }

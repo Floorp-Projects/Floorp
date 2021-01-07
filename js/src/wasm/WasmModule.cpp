@@ -1347,6 +1347,11 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
       metadata().isAsmJS() ? JSUseCounter::ASMJS : JSUseCounter::WASM;
   cx->runtime()->setUseCounter(instance, useCounter);
 
+  if (metadata().usesDuplicateImports) {
+    cx->runtime()->setUseCounter(instance,
+                                 JSUseCounter::WASM_DUPLICATE_IMPORTS);
+  }
+
   if (cx->options().testWasmAwaitTier2()) {
     testingBlockOnTier2Complete();
   }
