@@ -38,6 +38,7 @@
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -6822,6 +6823,9 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 
     for (const auto& browsingContext : topLevelContext) {
       if (browsingContext != mBrowsingContext) {
+        if (StaticPrefs::docshell_shistory_bfcache_require_no_opener()) {
+          canSavePresentation = false;
+        }
         bfCacheCombo |= BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG;
         break;
       }
@@ -6840,8 +6844,7 @@ void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
   // we need to adjust them when necessary.
   enum BFCacheStatusCombo : uint16_t {
     BFCACHE_SUCCESS,
-    SUCCESS_NOT_ONLY_TOPLEVEL =
-        mozilla::dom::BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG,
+    NOT_ONLY_TOPLEVEL = mozilla::dom::BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG,
     UNLOAD = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER,
     UNLOAD_REQUEST = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
                      mozilla::dom::BFCacheStatus::REQUEST,
@@ -6870,7 +6873,12 @@ void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_BFCACHE_COMBO::BFCache_Success);
       break;
-    case SUCCESS_NOT_ONLY_TOPLEVEL:
+    case NOT_ONLY_TOPLEVEL:
+      if (StaticPrefs::docshell_shistory_bfcache_require_no_opener()) {
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_BFCACHE_COMBO::Other);
+        break;
+      }
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_BFCACHE_COMBO::BFCache_Success);
       Telemetry::AccumulateCategorical(

@@ -111,6 +111,7 @@
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -10719,7 +10720,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
 
   // Check our event listener manager for unload/beforeunload listeners.
   nsCOMPtr<EventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
-  if (piTarget) {
+  if (!StaticPrefs::docshell_shistory_bfcache_allow_unload_listeners() &&
+      piTarget) {
     EventListenerManager* manager = piTarget->GetExistingListenerManager();
     if (manager && manager->HasUnloadListeners()) {
       MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
