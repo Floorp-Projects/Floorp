@@ -9,8 +9,9 @@
  *       user to confirm whether to delete certain certificates.
  * @argument {String} window.arguments[0]
  *           One of the tab IDs listed in certManager.xhtml.
- * @argument {nsICertTreeItem[]} window.arguments[1]
- *           An array of cert tree items representing the certs to delete.
+ * @argument {Object[]} window.arguments[1]
+ *           An array of objects representing the certs to delete.
+ *           Each must have a 'cert' property or a 'hostPort' property.
  * @argument {DeleteCertReturnValues} window.arguments[2]
  *           Object holding the return values of calling the dialog.
  */
@@ -24,17 +25,17 @@
  */
 
 /**
- * Returns the element to represent the given nsICertTreeItem.
- * @param {nsICertTreeItem} certTreeItem
+ * Returns the element to represent the given cert to delete.
+ * @param {Object} certToDelete
  *        The item to represent.
  * @returns {Element}
  *          A element of each cert tree item.
  */
-function getLabelForCertTreeItem(certTreeItem) {
+function getLabelForCertToDelete(certToDelete) {
   let element = document.createXULElement("label");
-  let cert = certTreeItem.cert;
+  let cert = certToDelete.cert;
   if (!cert) {
-    element.setAttribute("value", certTreeItem.hostPort);
+    element.setAttribute("value", certToDelete.hostPort);
     return element;
   }
 
@@ -93,10 +94,10 @@ function onLoad() {
   document.addEventListener("dialogcancel", onDialogCancel);
 
   let box = document.getElementById("certlist");
-  let certTreeItems = window.arguments[1];
-  for (let certTreeItem of certTreeItems) {
+  let certsToDelete = window.arguments[1];
+  for (let certToDelete of certsToDelete) {
     let listItem = document.createXULElement("richlistitem");
-    let label = getLabelForCertTreeItem(certTreeItem);
+    let label = getLabelForCertToDelete(certToDelete);
     listItem.appendChild(label);
     box.appendChild(listItem);
   }
