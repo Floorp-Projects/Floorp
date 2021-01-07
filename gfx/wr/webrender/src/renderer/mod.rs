@@ -4741,15 +4741,6 @@ impl Renderer {
             present_mode,
         );
 
-        if let Some(device_size) = device_size {
-            self.draw_frame_debug_items(&frame.debug_items);
-            self.draw_render_target_debug(device_size);
-            self.draw_texture_cache_debug(device_size);
-            self.draw_gpu_cache_debug(device_size);
-            self.draw_zoom_debug(device_size);
-        }
-        self.draw_epoch_debug();
-
         frame.has_been_rendered = true;
     }
 
