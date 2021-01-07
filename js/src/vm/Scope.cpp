@@ -2188,10 +2188,10 @@ bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
   const JSClass* cls = &SpecificEnvironmentT::class_;
   uint32_t baseShapeFlags = SpecificEnvironmentT::BASESHAPE_FLAGS;
 
-  if (numEnvironmentSlots_.isSome()) {
-    if (*numEnvironmentSlots_ > 0) {
+  if (hasEnvironmentShape()) {
+    if (numEnvironmentSlots() > 0) {
       BindingIter bi(kind, scopeData, firstFrameSlot_);
-      shape.set(CreateEnvironmentShape(cx, bi, cls, *numEnvironmentSlots_,
+      shape.set(CreateEnvironmentShape(cx, bi, cls, numEnvironmentSlots(),
                                        baseShapeFlags));
       return shape;
     }
@@ -2241,7 +2241,7 @@ ScopeStencil::createSpecificScopeData<FunctionScope>(
   }
 
   // Initialize the HeapPtr in the FunctionScope::RuntimeData.
-  data->canonicalFunction = gcOutput.functions[*functionIndex_];
+  data->canonicalFunction = gcOutput.functions[functionIndex()];
 
   return data;
 }
