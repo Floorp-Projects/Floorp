@@ -387,6 +387,20 @@
   --menuitem-icon-image: url("chrome://devtools/skin/images/settings.svg");
 }
 
+.toolbox-error {
+  background-color: transparent !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbox-error::before {
+  background-image: url("chrome://devtools/skin/images/error-small.svg");
+  fill: var(--theme-icon-error-color) !important;
+}
+
+.toolbox-error:hover {
+  background-color: var(--toolbarbutton-hover-background) !important;
+}
+
 /* Command buttons */
 
 #command-button-pick {
