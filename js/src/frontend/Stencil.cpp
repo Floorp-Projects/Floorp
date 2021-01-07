@@ -61,12 +61,15 @@ Scope* ScopeStencil::enclosingExistingScope(
 }
 
 Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
-                                 CompilationGCOutput& gcOutput) const {
+                                 CompilationGCOutput& gcOutput,
+                                 BaseParserScopeData* baseScopeData) const {
   Scope* scope = nullptr;
   switch (kind()) {
     case ScopeKind::Function: {
-      scope =
-          createSpecificScope<FunctionScope, CallObject>(cx, input, gcOutput);
+      using ScopeType = FunctionScope;
+      MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
+      scope = createSpecificScope<ScopeType, CallObject>(cx, input, gcOutput,
+                                                         baseScopeData);
       break;
     }
     case ScopeKind::Lexical:
@@ -76,35 +79,47 @@ Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      scope = createSpecificScope<LexicalScope, LexicalEnvironmentObject>(
-          cx, input, gcOutput);
+      using ScopeType = LexicalScope;
+      MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
+      scope = createSpecificScope<ScopeType, LexicalEnvironmentObject>(
+          cx, input, gcOutput, baseScopeData);
       break;
     }
     case ScopeKind::FunctionBodyVar: {
-      scope = createSpecificScope<VarScope, VarEnvironmentObject>(cx, input,
-                                                                  gcOutput);
+      using ScopeType = VarScope;
+      MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
+      scope = createSpecificScope<ScopeType, VarEnvironmentObject>(
+          cx, input, gcOutput, baseScopeData);
       break;
     }
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      scope =
-          createSpecificScope<GlobalScope, std::nullptr_t>(cx, input, gcOutput);
+      using ScopeType = GlobalScope;
+      MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
+      scope = createSpecificScope<ScopeType, std::nullptr_t>(
+          cx, input, gcOutput, baseScopeData);
       break;
     }
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      scope = createSpecificScope<EvalScope, VarEnvironmentObject>(cx, input,
-                                                                   gcOutput);
+      using ScopeType = EvalScope;
+      MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
+      scope = createSpecificScope<ScopeType, VarEnvironmentObject>(
+          cx, input, gcOutput, baseScopeData);
       break;
     }
     case ScopeKind::Module: {
-      scope = createSpecificScope<ModuleScope, ModuleEnvironmentObject>(
-          cx, input, gcOutput);
+      using ScopeType = ModuleScope;
+      MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
+      scope = createSpecificScope<ScopeType, ModuleEnvironmentObject>(
+          cx, input, gcOutput, baseScopeData);
       break;
     }
     case ScopeKind::With: {
-      scope =
-          createSpecificScope<WithScope, std::nullptr_t>(cx, input, gcOutput);
+      using ScopeType = WithScope;
+      MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
+      scope = createSpecificScope<ScopeType, std::nullptr_t>(
+          cx, input, gcOutput, baseScopeData);
       break;
     }
     case ScopeKind::WasmFunction:
@@ -113,41 +128,6 @@ Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
     }
   }
   return scope;
-}
-
-uint32_t ScopeStencil::nextFrameSlot() const {
-  switch (kind()) {
-    case ScopeKind::Function:
-      return nextFrameSlot<FunctionScope>();
-    case ScopeKind::FunctionBodyVar:
-      return nextFrameSlot<VarScope>();
-    case ScopeKind::Lexical:
-    case ScopeKind::SimpleCatch:
-    case ScopeKind::Catch:
-    case ScopeKind::FunctionLexical:
-    case ScopeKind::ClassBody:
-      return nextFrameSlot<LexicalScope>();
-    case ScopeKind::NamedLambda:
-    case ScopeKind::StrictNamedLambda:
-      // Named lambda scopes cannot have frame slots.
-      return 0;
-    case ScopeKind::Eval:
-    case ScopeKind::StrictEval:
-      return nextFrameSlot<EvalScope>();
-    case ScopeKind::Global:
-    case ScopeKind::NonSyntactic:
-      return 0;
-    case ScopeKind::Module:
-      return nextFrameSlot<ModuleScope>();
-    case ScopeKind::WasmInstance:
-    case ScopeKind::WasmFunction:
-    case ScopeKind::With:
-      MOZ_CRASH(
-          "With, WasmInstance and WasmFunction Scopes don't get "
-          "nextFrameSlot()");
-      return 0;
-  }
-  MOZ_CRASH("Not an enclosing intra-frame scope");
 }
 
 static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
@@ -328,8 +308,11 @@ static bool InstantiateScopes(JSContext* cx, CompilationInput& input,
   //
   // If the enclosing scope is Scope*, it's CompilationInput.enclosingScope.
 
-  for (const ScopeStencil& scd : stencil.scopeData) {
-    Scope* scope = scd.createScope(cx, input, gcOutput);
+  MOZ_ASSERT(stencil.scopeData.size() == stencil.scopeNames.size());
+  size_t scopeCount = stencil.scopeData.size();
+  for (size_t i = 0; i < scopeCount; i++) {
+    Scope* scope = stencil.scopeData[i].createScope(cx, input, gcOutput,
+                                                    stencil.scopeNames[i]);
     if (!scope) {
       return false;
     }
@@ -1064,6 +1047,11 @@ bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
   }
 
   if (!CopyVectorToSpan(cx, compilationInfo.alloc,
+                        compilationInfo.stencil.scopeNames, scopeNames)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
                         compilationInfo.stencil.parserAtomData,
                         parserAtoms.entries())) {
     return false;
@@ -1220,17 +1208,19 @@ void BigIntStencil::dump(js::JSONPrinter& json) {
 void ScopeStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
-  dump(json, nullptr);
+  dump(json, nullptr, nullptr);
 }
 
 void ScopeStencil::dump(js::JSONPrinter& json,
+                        BaseParserScopeData* baseScopeData,
                         CompilationStencil* compilationStencil) {
   json.beginObject();
-  dumpFields(json, compilationStencil);
+  dumpFields(json, baseScopeData, compilationStencil);
   json.endObject();
 }
 
 void ScopeStencil::dumpFields(js::JSONPrinter& json,
+                              BaseParserScopeData* baseScopeData,
                               CompilationStencil* compilationStencil) {
   if (enclosing_) {
     json.formatProperty("enclosing", "Some(ScopeIndex(%zu))",
@@ -1261,6 +1251,10 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     json.boolProperty("isArrow", isArrow_);
   }
 
+  if (!baseScopeData) {
+    return;
+  }
+
   json.beginObjectProperty("data");
 
   AbstractTrailingNamesArray<TaggedParserAtomIndex>* trailingNames = nullptr;
@@ -1268,7 +1262,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
   switch (kind_) {
     case ScopeKind::Function: {
-      auto* data = static_cast<FunctionScope::ParserData*>(data_);
+      auto* data = static_cast<FunctionScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("hasParameterExprs", data->slotInfo.hasParameterExprs());
       json.property("nonPositionalFormalStart",
@@ -1281,7 +1275,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::FunctionBodyVar: {
-      auto* data = static_cast<VarScope::ParserData*>(data_);
+      auto* data = static_cast<VarScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -1296,7 +1290,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      auto* data = static_cast<LexicalScope::ParserData*>(data_);
+      auto* data = static_cast<LexicalScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("constStart", data->slotInfo.constStart);
 
@@ -1311,7 +1305,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      auto* data = static_cast<EvalScope::ParserData*>(data_);
+      auto* data = static_cast<EvalScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -1321,7 +1315,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      auto* data = static_cast<GlobalScope::ParserData*>(data_);
+      auto* data = static_cast<GlobalScope::ParserData*>(baseScopeData);
       json.property("letStart", data->slotInfo.letStart);
       json.property("constStart", data->slotInfo.constStart);
 
@@ -1331,7 +1325,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::Module: {
-      auto* data = static_cast<ModuleScope::ParserData*>(data_);
+      auto* data = static_cast<ModuleScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("varStart", data->slotInfo.varStart);
       json.property("letStart", data->slotInfo.letStart);
@@ -1343,7 +1337,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::WasmInstance: {
-      auto* data = static_cast<WasmInstanceScope::ParserData*>(data_);
+      auto* data = static_cast<WasmInstanceScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("globalsStart", data->slotInfo.globalsStart);
 
@@ -1353,7 +1347,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::WasmFunction: {
-      auto* data = static_cast<WasmFunctionScope::ParserData*>(data_);
+      auto* data = static_cast<WasmFunctionScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -1838,8 +1832,9 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
   json.endList();
 
   json.beginListProperty("scopeData");
-  for (auto& data : scopeData) {
-    data.dump(json, this);
+  MOZ_ASSERT(scopeData.size() == scopeNames.size());
+  for (size_t i = 0; i < scopeData.size(); i++) {
+    scopeData[i].dump(json, scopeNames[i], this);
   }
   json.endList();
 

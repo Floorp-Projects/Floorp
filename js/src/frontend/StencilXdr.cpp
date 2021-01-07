@@ -32,8 +32,8 @@ struct CanEncodeNameType<TaggedParserAtomIndex> {
 };
 
 template <XDRMode mode, typename ScopeT>
-/* static */ XDRResult StencilXDR::ScopeData(XDRState<mode>* xdr,
-                                             ScopeStencil& stencil) {
+/* static */ XDRResult StencilXDR::ScopeData(
+    XDRState<mode>* xdr, BaseParserScopeData*& baseScopeData) {
   using SlotInfo = typename ScopeT::SlotInfo;
   using ScopeDataT = typename ScopeT::ParserData;
 
@@ -53,7 +53,7 @@ template <XDRMode mode, typename ScopeT>
   };
 
   if (mode == XDR_ENCODE) {
-    ScopeDataT* scopeData = static_cast<ScopeDataT*>(stencil.data_);
+    ScopeDataT* scopeData = static_cast<ScopeDataT*>(baseScopeData);
     const SlotInfo* slotInfo = &scopeData->slotInfo;
     uint32_t totalLength = ComputeTotalLength(slotInfo->length);
     MOZ_TRY(xdr->codeBytes(scopeData, totalLength));
@@ -76,7 +76,7 @@ template <XDRMode mode, typename ScopeT>
 
     // Decode SlotInfo and trailing names at once.
     MOZ_TRY(xdr->codeBytes(scopeData, totalLength));
-    stencil.data_ = scopeData;
+    baseScopeData = scopeData;
   }
 
   return Ok();
@@ -219,7 +219,8 @@ static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
 
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::Scope(XDRState<mode>* xdr,
-                                         ScopeStencil& stencil) {
+                                         ScopeStencil& stencil,
+                                         BaseParserScopeData*& baseScopeData) {
   enum class XdrFlags {
     HasEnclosing,
     HasEnvironment,
@@ -288,13 +289,13 @@ template <XDRMode mode>
     // FunctionScope
     case ScopeKind::Function: {
       // Extra parentheses is for template parameters inside macro.
-      MOZ_TRY((StencilXDR::ScopeData<mode, FunctionScope>(xdr, stencil)));
+      MOZ_TRY((StencilXDR::ScopeData<mode, FunctionScope>(xdr, baseScopeData)));
       break;
     }
 
     // VarScope
     case ScopeKind::FunctionBodyVar: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, VarScope>(xdr, stencil)));
+      MOZ_TRY((StencilXDR::ScopeData<mode, VarScope>(xdr, baseScopeData)));
       break;
     }
 
@@ -306,7 +307,7 @@ template <XDRMode mode>
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, LexicalScope>(xdr, stencil)));
+      MOZ_TRY((StencilXDR::ScopeData<mode, LexicalScope>(xdr, baseScopeData)));
       break;
     }
 
@@ -319,20 +320,20 @@ template <XDRMode mode>
     // EvalScope
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, EvalScope>(xdr, stencil)));
+      MOZ_TRY((StencilXDR::ScopeData<mode, EvalScope>(xdr, baseScopeData)));
       break;
     }
 
     // GlobalScope
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, GlobalScope>(xdr, stencil)));
+      MOZ_TRY((StencilXDR::ScopeData<mode, GlobalScope>(xdr, baseScopeData)));
       break;
     }
 
     // ModuleScope
     case ScopeKind::Module: {
-      MOZ_TRY((StencilXDR::ScopeData<mode, ModuleScope>(xdr, stencil)));
+      MOZ_TRY((StencilXDR::ScopeData<mode, ModuleScope>(xdr, baseScopeData)));
       break;
     }
 
@@ -580,8 +581,12 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   // main script tree must be materialized first.
 
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.scopeData));
-  for (auto& entry : stencil.scopeData) {
-    MOZ_TRY(StencilXDR::Scope(xdr, entry));
+  MOZ_TRY(XDRSpanInitialized(xdr, stencil.scopeNames));
+  MOZ_ASSERT(stencil.scopeData.size() == stencil.scopeNames.size());
+  size_t scopeCount = stencil.scopeData.size();
+  for (size_t i = 0; i < scopeCount; i++) {
+    MOZ_TRY(
+        StencilXDR::Scope(xdr, stencil.scopeData[i], stencil.scopeNames[i]));
   }
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.regExpData));

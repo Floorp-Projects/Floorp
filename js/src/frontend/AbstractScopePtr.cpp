@@ -18,7 +18,7 @@ using namespace js::frontend;
 
 ScopeStencil& AbstractScopePtr::scopeData() const {
   const Deferred& data = scope_.as<Deferred>();
-  return data.compilationState.scopeData[data.index.index];
+  return data.compilationState.scopeData[data.index];
 }
 
 CompilationState& AbstractScopePtr::compilationState() const {
