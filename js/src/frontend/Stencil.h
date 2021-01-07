@@ -173,7 +173,7 @@ class ScopeStencil {
   // compilation applies.
   mozilla::Maybe<ScopeIndex> enclosing_;
 
-  // The kind determines data_.
+  // The kind determines the corresponding BaseParserScopeData.
   ScopeKind kind_{UINT8_MAX};
 
   // First frame slot to use, or LOCALNO_LIMIT if none are allowed.
@@ -189,10 +189,6 @@ class ScopeStencil {
   // True if this is a FunctionScope for an arrow function.
   bool isArrow_ = false;
 
-  // The list of binding and scope-specific data.
-  // Note: This allocation is owned by CompilationStencil.
-  BaseParserScopeData* data_ = nullptr;
-
  public:
   // For XDR only.
   ScopeStencil() = default;
@@ -200,7 +196,6 @@ class ScopeStencil {
   ScopeStencil(ScopeKind kind, mozilla::Maybe<ScopeIndex> enclosing,
                uint32_t firstFrameSlot,
                mozilla::Maybe<uint32_t> numEnvironmentSlots,
-               BaseParserScopeData* data = {},
                mozilla::Maybe<ScriptIndex> functionIndex = mozilla::Nothing(),
                bool isArrow = false)
       : enclosing_(enclosing),
@@ -208,9 +203,18 @@ class ScopeStencil {
         firstFrameSlot_(firstFrameSlot),
         numEnvironmentSlots_(numEnvironmentSlots),
         functionIndex_(functionIndex),
-        isArrow_(isArrow),
-        data_(data) {}
+        isArrow_(isArrow) {}
 
+ private:
+  // Create ScopeStencil with `args`, and append ScopeStencil and `data` to
+  // `compilationState`, and return the index of them as `indexOut`.
+  template <typename... Args>
+  static bool appendScopeStencilAndData(JSContext* cx,
+                                        CompilationState& compilationState,
+                                        BaseParserScopeData* data,
+                                        ScopeIndex* indexOut, Args&&... args);
+
+ public:
   static bool createForFunctionScope(
       JSContext* cx, CompilationInfo& compilationInfo,
       CompilationState& compilationState, FunctionScope::ParserData* dataArg,
@@ -273,38 +277,23 @@ class ScopeStencil {
   bool isArrow() const { return isArrow_; }
 
   Scope* createScope(JSContext* cx, CompilationInput& input,
-                     CompilationGCOutput& gcOutput) const;
-
-  uint32_t nextFrameSlot() const;
+                     CompilationGCOutput& gcOutput,
+                     BaseParserScopeData* baseScopeData) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, BaseParserScopeData* baseScopeData,
+            CompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json, BaseParserScopeData* baseScopeData,
+                  CompilationStencil* compilationStencil);
 #endif
 
  private:
-  // Non owning reference to data
-  template <typename SpecificScopeType>
-  typename SpecificScopeType::ParserData& data() const {
-    using Data = typename SpecificScopeType ::ParserData;
-
-    MOZ_ASSERT(data_);
-    return *static_cast<Data*>(data_);
-  }
-
   // Transfer ownership into a new UniquePtr.
   template <typename SpecificScopeType>
   UniquePtr<typename SpecificScopeType::RuntimeData> createSpecificScopeData(
       JSContext* cx, CompilationAtomCache& atomCache,
-      CompilationGCOutput& gcOutput) const;
-
-  template <typename SpecificScopeType>
-  uint32_t nextFrameSlot() const {
-    // If a scope has been allocated for the ScopeStencil we no longer own data,
-    // so defer to scope
-    return data<SpecificScopeType>().slotInfo.nextFrameSlot;
-  }
+      CompilationGCOutput& gcOutput, BaseParserScopeData* baseData) const;
 
   template <typename SpecificEnvironmentType>
   MOZ_MUST_USE bool createSpecificShape(JSContext* cx, ScopeKind kind,
@@ -313,7 +302,48 @@ class ScopeStencil {
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
   Scope* createSpecificScope(JSContext* cx, CompilationInput& input,
-                             CompilationGCOutput& gcOutput) const;
+                             CompilationGCOutput& gcOutput,
+                             BaseParserScopeData* baseData) const;
+
+  template <typename ScopeT>
+  static constexpr bool matchScopeKind(ScopeKind kind) {
+    switch (kind) {
+      case ScopeKind::Function: {
+        return std::is_same_v<ScopeT, FunctionScope>;
+      }
+      case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
+      case ScopeKind::Catch:
+      case ScopeKind::NamedLambda:
+      case ScopeKind::StrictNamedLambda:
+      case ScopeKind::FunctionLexical:
+      case ScopeKind::ClassBody: {
+        return std::is_same_v<ScopeT, LexicalScope>;
+      }
+      case ScopeKind::FunctionBodyVar: {
+        return std::is_same_v<ScopeT, VarScope>;
+      }
+      case ScopeKind::Global:
+      case ScopeKind::NonSyntactic: {
+        return std::is_same_v<ScopeT, GlobalScope>;
+      }
+      case ScopeKind::Eval:
+      case ScopeKind::StrictEval: {
+        return std::is_same_v<ScopeT, EvalScope>;
+      }
+      case ScopeKind::Module: {
+        return std::is_same_v<ScopeT, ModuleScope>;
+      }
+      case ScopeKind::With: {
+        return std::is_same_v<ScopeT, WithScope>;
+      }
+      case ScopeKind::WasmFunction:
+      case ScopeKind::WasmInstance: {
+        return false;
+      }
+    }
+    return false;
+  }
 };
 
 // See JSOp::Lambda for interepretation of this index.
