@@ -233,31 +233,16 @@ MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
 
 /* static */
 ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
-                                          TaggedProto proto,
-                                          JSObject* associated) {
+                                          TaggedProto proto, TypeDescr* descr) {
   MOZ_ASSERT(clasp);
-  MOZ_ASSERT_IF(associated, proto.isObject());
+  MOZ_ASSERT_IF(descr, proto.isObject());
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
-
-  if (associated && !associated->is<TypeDescr>()) {
-    associated = nullptr;
-  }
-
-  if (associated) {
-    MOZ_ASSERT(associated->is<TypeDescr>());
-    if (!IsTypedObjectClass(clasp)) {
-      // This can happen when we call Reflect.construct with a TypeDescr as
-      // newTarget argument. We're not creating a TypedObject in this case, so
-      // don't set the TypeDescr on the group.
-      associated = nullptr;
-    }
-  }
 
   ObjectGroupRealm& groups = ObjectGroupRealm::getForNewObject(cx);
 
   if (ObjectGroup* group =
-          groups.defaultNewGroupCache.lookup(clasp, proto, associated)) {
+          groups.defaultNewGroupCache.lookup(clasp, proto, descr)) {
     return group;
   }
 
@@ -280,12 +265,12 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
   }
 
   ObjectGroupRealm::NewTable::AddPtr p = table->lookupForAdd(
-      ObjectGroupRealm::NewEntry::Lookup(clasp, proto, associated));
+      ObjectGroupRealm::NewEntry::Lookup(clasp, proto, descr));
   if (p) {
     ObjectGroup* group = p->group;
     MOZ_ASSERT(group->clasp() == clasp);
     MOZ_ASSERT(group->proto() == proto);
-    groups.defaultNewGroupCache.put(group, associated);
+    groups.defaultNewGroupCache.put(group, descr);
     return group;
   }
 
@@ -295,16 +280,16 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
     return nullptr;
   }
 
-  if (!table->add(p, ObjectGroupRealm::NewEntry(group, associated))) {
+  if (!table->add(p, ObjectGroupRealm::NewEntry(group, descr))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  if (associated) {
-    group->setTypeDescr(&associated->as<TypeDescr>());
+  if (descr) {
+    group->setTypeDescr(descr);
   }
 
-  groups.defaultNewGroupCache.put(group, associated);
+  groups.defaultNewGroupCache.put(group, descr);
   return group;
 }
 
