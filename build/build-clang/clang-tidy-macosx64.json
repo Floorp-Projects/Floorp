@@ -18,7 +18,6 @@
       "clang-tidy-ci.patch",
       "clang-tidy-no-errors.patch",
       "compiler-rt-cross-compile.patch",
-      "compiler-rt-no-codesign.patch",
-      "clang-format-11.patch"
+      "compiler-rt-no-codesign.patch"
     ]
 }

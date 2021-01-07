@@ -50,7 +50,6 @@
       "static-llvm-symbolizer.patch",
       "find_symbolizer_linux_clang_10.patch",
       "rename_gcov_flush_clang_11.patch",
-      "stack-clash-fix-probing.patch",
       "revert-r362047-and-r362065.patch"
     ]
 }
