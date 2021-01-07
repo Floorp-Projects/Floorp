@@ -11,14 +11,14 @@ import re
 
 def write_map(fd, name, text):
     matches = re.findall(r"^//\s(AX\w+)\n-\s?\(.*?\)([\w:]+)", text, re.MULTILINE)
-    entries = ['  @"%s" : @"%s"' % (a, s) for [a, s] in matches]
-
-    fd.write("static NSDictionary* g%s = @{\n" % name)
-    fd.write(",\n".join(entries))
-    fd.write("\n};\n\n")
+    entries = ['    @"%s" : @"%s"' % (a, s) for [a, s] in matches]
 
     fd.write("NSDictionary* %s() {\n" % name)
-    fd.write("  return g%s;\n" % name)
+    fd.write("  // Create an autoreleased NSDictionary object once, and leak it.\n")
+    fd.write("  static NSDictionary* s%s = [@{\n" % name)
+    fd.write(",\n".join(entries))
+    fd.write("\n  } retain];\n\n")
+    fd.write("  return s%s;\n" % name)
     fd.write("}\n\n")
 
 
