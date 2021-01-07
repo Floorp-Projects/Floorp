@@ -26,7 +26,6 @@ const ALLOWED_CSS_URL_PREFIXES = [
   "https://img-getpocket.cdn.mozilla.net/",
 ];
 const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
-let rollCache = []; // Cache of random probability values for a spoc position
 
 /**
  * Validate a CSS declaration. The values are assumed to be normalized by CSSOM.
@@ -251,18 +250,11 @@ export class _DiscoveryStreamBase extends React.PureComponent {
     return <style key={json} data-styles={json} ref={this.onStyleMount} />;
   }
 
-  componentWillReceiveProps(oldProps) {
-    if (this.props.DiscoveryStream.layout !== oldProps.DiscoveryStream.layout) {
-      rollCache = [];
-    }
-  }
-
   render() {
     // Select layout render data by adding spocs and position to recommendations
     const { layoutRender } = selectLayoutRender({
       state: this.props.DiscoveryStream,
       prefs: this.props.Prefs.values,
-      rollCache,
       locale: this.props.locale,
     });
     const { config } = this.props.DiscoveryStream;

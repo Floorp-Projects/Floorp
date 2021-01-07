@@ -2,42 +2,46 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export const selectLayoutRender = ({
-  state = {},
-  prefs = {},
-  rollCache = [],
-  locale = "",
-}) => {
+export const selectLayoutRender = ({ state = {}, prefs = {}, locale = "" }) => {
   const { layout, feeds, spocs } = state;
-  let spocIndexMap = {};
-  let bufferRollCache = [];
+  let spocIndexPlacementMap = {};
 
-  function rollForSpocs(data, spocsConfig, spocsData, placementName) {
-    if (!spocIndexMap[placementName] && spocIndexMap[placementName] !== 0) {
-      spocIndexMap[placementName] = 0;
+  /* This function fills spoc positions on a per placement basis with available spocs.
+   * It does this by looping through each position for a placement and replacing a rec with a spoc.
+   * If it runs out of spocs or positions, it stops.
+   * If it sees the same placement again, it remembers the previous spoc index, and continues.
+   * If it sees a blocked spoc, it skips that position leaving in a regular story.
+   */
+  function fillSpocPositionsForPlacement(
+    data,
+    spocsConfig,
+    spocsData,
+    placementName
+  ) {
+    if (
+      !spocIndexPlacementMap[placementName] &&
+      spocIndexPlacementMap[placementName] !== 0
+    ) {
+      spocIndexPlacementMap[placementName] = 0;
     }
     const results = [...data];
     for (let position of spocsConfig.positions) {
-      const spoc = spocsData[spocIndexMap[placementName]];
+      const spoc = spocsData[spocIndexPlacementMap[placementName]];
+      // If there are no spocs left, we can stop filling positions.
       if (!spoc) {
         break;
       }
 
-      // Cache random number for a position
-      let rickRoll;
-      if (!rollCache.length) {
-        rickRoll = Math.random();
-        bufferRollCache.push(rickRoll);
-      } else {
-        rickRoll = rollCache.shift();
-        bufferRollCache.push(rickRoll);
-      }
+      // A placement could be used in two sections.
+      // In these cases, we want to maintain the index of the previous section.
+      // If we didn't do this, it might duplicate spocs.
+      spocIndexPlacementMap[placementName]++;
 
-      if (rickRoll <= spocsConfig.probability) {
-        spocIndexMap[placementName]++;
-        if (!spocs.blocked.includes(spoc.url)) {
-          results.splice(position.index, 0, spoc);
-        }
+      // A spoc that's blocked is removed from the source for subsequent newtab loads.
+      // If we have a spoc in the source that's blocked, it means it was *just* blocked,
+      // and in this case, we skip this position, and show a regular spoc instead.
+      if (!spocs.blocked.includes(spoc.url)) {
+        results.splice(position.index, 0, spoc);
       }
     }
 
@@ -118,7 +122,7 @@ export const selectLayoutRender = ({
         spocsData.items &&
         spocsData.items.length
       ) {
-        result = rollForSpocs(
+        result = fillSpocPositionsForPlacement(
           result,
           component.spocs,
           spocsData.items,
@@ -251,11 +255,6 @@ export const selectLayoutRender = ({
   };
 
   const layoutRender = renderLayout();
-
-  // If empty, fill rollCache with random probability values from bufferRollCache
-  if (!rollCache.length) {
-    rollCache.push(...bufferRollCache);
-  }
 
   return { layoutRender };
 };
