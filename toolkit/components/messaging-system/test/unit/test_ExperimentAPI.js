@@ -9,6 +9,7 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
+const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 
 /**
  * #getExperiment
@@ -221,6 +222,7 @@ add_task(async function test_isFeatureEnabled() {
 add_task(async function test_getRecipe() {
   const sandbox = sinon.createSandbox();
   const RECIPE = ExperimentFakes.recipe("foo");
+  const collectionName = Services.prefs.getStringPref(COLLECTION_ID_PREF);
   sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").resolves([RECIPE]);
 
   const recipe = await ExperimentAPI.getRecipe("foo");
@@ -228,6 +230,11 @@ add_task(async function test_getRecipe() {
     recipe,
     RECIPE,
     "should return an experiment recipe if found"
+  );
+  Assert.equal(
+    ExperimentAPI._remoteSettingsClient.collectionName,
+    collectionName,
+    "Loaded the expected collection"
   );
 
   sandbox.restore();
