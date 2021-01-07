@@ -608,34 +608,31 @@ class ScriptStencil {
 
   // This is set by the BytecodeEmitter of the enclosing script when a reference
   // to this function is generated.
-  bool wasFunctionEmitted : 1;
+  static constexpr uint32_t WasFunctionEmittedFlag = 1 << 0;
 
   // If this is for the root of delazification, this represents
   // MutableScriptFlagsEnum::AllowRelazify value of the script *after*
   // delazification.
   // False otherwise.
-  bool allowRelazify : 1;
+  static constexpr uint32_t AllowRelazifyFlag = 1 << 1;
 
-  // True if this is non-lazy script and shared data is created.
+  // Set if this is non-lazy script and shared data is created.
   // The shared data is stored into CompilationStencil.sharedData.
-  bool hasSharedData : 1;
+  static constexpr uint32_t HasSharedDataFlag = 1 << 2;
 
-  // True if this script has member initializer.
-  // `memberInitializers_` is valid only if this field is true.
-  bool hasMemberInitializers : 1;
+  // Set if this script has member initializer.
+  // `memberInitializers_` is valid only if this flag is set.
+  static constexpr uint32_t HasMemberInitializersFlag = 1 << 3;
 
   // True if this script is lazy function and has enclosing scope.
-  // `lazyFunctionEnclosingScopeIndex_` is valid only if this field is true.
-  bool hasLazyFunctionEnclosingScopeIndex : 1;
+  // `lazyFunctionEnclosingScopeIndex_` is valid only if this flag is set.
+  static constexpr uint32_t HasLazyFunctionEnclosingScopeIndexFlag = 1 << 4;
+
+  uint32_t flags_ = 0;
 
   // End of fields.
 
-  ScriptStencil()
-      : wasFunctionEmitted(false),
-        allowRelazify(false),
-        hasSharedData(false),
-        hasMemberInitializers(false),
-        hasLazyFunctionEnclosingScopeIndex(false) {}
+  ScriptStencil() = default;
 
   bool isFunction() const {
     bool result = functionFlags.toRaw() != 0x0000;
@@ -655,23 +652,53 @@ class ScriptStencil {
   mozilla::Span<TaggedScriptThingIndex> gcthings(
       CompilationStencil& stencil) const;
 
+  bool wasFunctionEmitted() const { return flags_ & WasFunctionEmittedFlag; }
+
+  void setWasFunctionEmitted() { flags_ |= WasFunctionEmittedFlag; }
+
+  bool allowRelazify() const { return flags_ & AllowRelazifyFlag; }
+
+  void setAllowRelazify() { flags_ |= AllowRelazifyFlag; }
+
+  bool hasSharedData() const { return flags_ & HasSharedDataFlag; }
+
+  void setHasSharedData() { flags_ |= HasSharedDataFlag; }
+
+  bool hasMemberInitializers() const {
+    return flags_ & HasMemberInitializersFlag;
+  }
+
+ private:
+  void setHasMemberInitializers() { flags_ |= HasMemberInitializersFlag; }
+
+ public:
   void setMemberInitializers(MemberInitializers member) {
     memberInitializers_ = member.serialize();
-    hasMemberInitializers = true;
+    setHasMemberInitializers();
   }
 
   MemberInitializers memberInitializers() const {
-    MOZ_ASSERT(hasMemberInitializers);
+    MOZ_ASSERT(hasMemberInitializers());
     return MemberInitializers(memberInitializers_);
   }
 
+  bool hasLazyFunctionEnclosingScopeIndex() const {
+    return flags_ & HasLazyFunctionEnclosingScopeIndexFlag;
+  }
+
+ private:
+  void setHasLazyFunctionEnclosingScopeIndex() {
+    flags_ |= HasLazyFunctionEnclosingScopeIndexFlag;
+  }
+
+ public:
   void setLazyFunctionEnclosingScopeIndex(ScopeIndex index) {
     lazyFunctionEnclosingScopeIndex_ = index;
-    hasLazyFunctionEnclosingScopeIndex = true;
+    setHasLazyFunctionEnclosingScopeIndex();
   }
 
   ScopeIndex lazyFunctionEnclosingScopeIndex() const {
-    MOZ_ASSERT(hasLazyFunctionEnclosingScopeIndex);
+    MOZ_ASSERT(hasLazyFunctionEnclosingScopeIndex());
     return lazyFunctionEnclosingScopeIndex_;
   }
 

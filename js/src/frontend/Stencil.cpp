@@ -352,13 +352,13 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
     auto& scriptStencil = item.script;
     fun = item.function;
     auto index = item.index;
-    if (scriptStencil.hasSharedData) {
+    if (scriptStencil.hasSharedData()) {
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
       //
       // `wasFunctionEmitted` is false also for standalone functions. They are
       // handled in InstantiateTopLevel.
-      if (!scriptStencil.wasFunctionEmitted) {
+      if (!scriptStencil.wasFunctionEmitted()) {
         continue;
       }
 
@@ -370,7 +370,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
 
       // NOTE: Inner functions can be marked `allowRelazify` after merging
       // a stencil for delazification into the top-level stencil.
-      if (scriptStencil.allowRelazify) {
+      if (scriptStencil.allowRelazify()) {
         MOZ_ASSERT(script->isRelazifiable());
         script->setAllowRelazify();
       }
@@ -401,6 +401,7 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return true;
   }
 
+  MOZ_ASSERT(scriptStencil.hasSharedData());
   MOZ_ASSERT(stencil.sharedData.get(CompilationInfo::TopLevelIndex));
 
   if (input.lazy) {
@@ -412,7 +413,7 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
       return false;
     }
 
-    if (scriptStencil.allowRelazify) {
+    if (scriptStencil.allowRelazify()) {
       MOZ_ASSERT(gcOutput.script->isRelazifiable());
       gcOutput.script->setAllowRelazify();
     }
@@ -426,7 +427,7 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return false;
   }
 
-  if (scriptStencil.allowRelazify) {
+  if (scriptStencil.allowRelazify()) {
     MOZ_ASSERT(gcOutput.script->isRelazifiable());
     gcOutput.script->setAllowRelazify();
   }
@@ -465,14 +466,14 @@ static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
     auto& fun = item.function;
-    if (!scriptStencil.wasFunctionEmitted) {
+    if (!scriptStencil.wasFunctionEmitted()) {
       continue;
     }
 
     if (scriptStencil.functionFlags.isAsmJSNative() ||
         fun->baseScript()->hasBytecode()) {
       // Non-lazy inner functions don't use the enclosingScope_ field.
-      MOZ_ASSERT(!scriptStencil.hasLazyFunctionEnclosingScopeIndex);
+      MOZ_ASSERT(!scriptStencil.hasLazyFunctionEnclosingScopeIndex());
     } else {
       // Apply updates from FunctionEmitter::emitLazy().
       BaseScript* script = fun->baseScript();
@@ -481,7 +482,7 @@ static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
       Scope* scope = gcOutput.scopes[index];
       script->setEnclosingScope(scope);
 
-      if (scriptStencil.hasMemberInitializers) {
+      if (scriptStencil.hasMemberInitializers()) {
         script->setMemberInitializers(scriptStencil.memberInitializers());
       }
 
@@ -572,13 +573,13 @@ static void AssertDelazificationFieldsMatch(CompilationStencil& stencil,
 
     // Delazification shouldn't delazify inner scripts.
     MOZ_ASSERT_IF(item.index == CompilationInfo::TopLevelIndex,
-                  scriptStencil.hasSharedData);
+                  scriptStencil.hasSharedData());
     MOZ_ASSERT_IF(item.index > CompilationInfo::TopLevelIndex,
-                  !scriptStencil.hasSharedData);
+                  !scriptStencil.hasSharedData());
 
     // FIXME: If this function is lazily parsed again, nargs isn't set to
     //        correct value (bug 1666978).
-    MOZ_ASSERT_IF(scriptStencil.hasSharedData,
+    MOZ_ASSERT_IF(scriptStencil.hasSharedData(),
                   fun->nargs() == scriptStencil.nargs);
   }
 }
@@ -1693,7 +1694,7 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   DumpImmutableScriptFlags(json, immutableFlags);
   json.endList();
 
-  if (hasMemberInitializers) {
+  if (hasMemberInitializers()) {
     json.property("memberInitializers", memberInitializers_);
   }
 
@@ -1709,8 +1710,6 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
     json.endList();
   }
 
-  json.boolProperty("hasSharedData", hasSharedData);
-
   json.beginObjectProperty("extent");
   json.property("sourceStart", extent.sourceStart);
   json.property("sourceEnd", extent.sourceEnd);
@@ -1720,7 +1719,23 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   json.property("column", extent.column);
   json.endObject();
 
-  json.boolProperty("hasMemberInitializers", hasMemberInitializers);
+  json.beginListProperty("flags_");
+  if (flags_ & WasFunctionEmittedFlag) {
+    json.value("WasFunctionEmittedFlag");
+  }
+  if (flags_ & AllowRelazifyFlag) {
+    json.value("AllowRelazifyFlag");
+  }
+  if (flags_ & HasSharedDataFlag) {
+    json.value("HasSharedDataFlag");
+  }
+  if (flags_ & HasMemberInitializersFlag) {
+    json.value("HasMemberInitializersFlag");
+  }
+  if (flags_ & HasLazyFunctionEnclosingScopeIndexFlag) {
+    json.value("HasLazyFunctionEnclosingScopeIndexFlag");
+  }
+  json.endList();
 
   if (isFunction()) {
     json.beginObjectProperty("functionAtom");
@@ -1733,15 +1748,10 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
 
     json.property("nargs", nargs);
 
-    if (hasLazyFunctionEnclosingScopeIndex) {
+    if (hasLazyFunctionEnclosingScopeIndex()) {
       json.formatProperty("lazyFunctionEnclosingScopeIndex", "ScopeIndex(%zu)",
                           size_t(lazyFunctionEnclosingScopeIndex_));
     }
-
-    json.boolProperty("hasLazyFunctionEnclosingScopeIndex",
-                      hasLazyFunctionEnclosingScopeIndex);
-    json.boolProperty("wasFunctionEmitted", wasFunctionEmitted);
-    json.boolProperty("allowRelazify", allowRelazify);
   }
 }
 
