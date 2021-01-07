@@ -132,16 +132,27 @@ public class ContentBlockingController {
      */
     @UiThread
     public @NonNull GeckoResult<Boolean> checkException(final @NonNull GeckoSession session) {
-        final CallbackResult<Boolean> result = new CallbackResult<Boolean>() {
-            @Override
-            public void sendSuccess(final Object value) {
-                complete((Boolean) value);
-            }
-        };
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putString("sessionId", session.getId());
-        EventDispatcher.getInstance().dispatch("ContentBlocking:CheckException", msg, result);
-        return result;
+        return EventDispatcher.getInstance()
+                .queryBoolean("ContentBlocking:CheckException", msg);
+    }
+
+    private List<ContentBlockingException> exceptionListFromBundle(final GeckoBundle value) {
+        final String[] principals = value.getStringArray("principals");
+        final String[] uris = value.getStringArray("uris");
+
+        if (principals == null || uris == null) {
+            throw new RuntimeException("Received invalid content blocking exception list");
+        }
+
+        final ArrayList<ContentBlockingException> res = new ArrayList<>(principals.length);
+
+        for (int i = 0; i < principals.length; i++) {
+            res.add(new ContentBlockingException(principals[i], uris[i]));
+        }
+
+        return Collections.unmodifiableList(res);
     }
 
     /**
@@ -152,28 +163,9 @@ public class ContentBlockingController {
      */
     @UiThread
     public @NonNull GeckoResult<List<ContentBlockingException>> saveExceptionList() {
-        final CallbackResult<List<ContentBlockingException>> result = new CallbackResult<List<ContentBlockingException>>() {
-            @Override
-            public void sendSuccess(final Object value) {
-                final String[] principals = ((GeckoBundle) value).getStringArray("principals");
-                final String[] uris = ((GeckoBundle) value).getStringArray("uris");
-
-                if (principals == null || uris == null) {
-                    completeExceptionally(new RuntimeException("Received invalid content blocking exception list"));
-                    return;
-                }
-
-                final ArrayList<ContentBlockingException> res = new ArrayList<ContentBlockingException>(principals.length);
-
-                for (int i = 0; i < principals.length; i++) {
-                    res.add(new ContentBlockingException(principals[i], uris[i]));
-                }
-
-                complete(Collections.unmodifiableList(res));
-            }
-        };
-        EventDispatcher.getInstance().dispatch("ContentBlocking:SaveList", null, result);
-        return result;
+        return EventDispatcher.getInstance()
+                .queryBundle("ContentBlocking:SaveList")
+                .map(this::exceptionListFromBundle);
     }
 
     /**
@@ -401,6 +393,15 @@ public class ContentBlockingController {
         }
     }
 
+    private List<LogEntry> logFromBundle(final GeckoBundle value) {
+        final GeckoBundle[] bundles = value.getBundleArray("log");
+        final ArrayList<LogEntry> logArray = new ArrayList<>(bundles.length);
+        for (GeckoBundle b : bundles) {
+            logArray.add(new LogEntry(b));
+        }
+        return Collections.unmodifiableList(logArray);
+    }
+
     /**
      * Get a log of all content blocking information for the site currently loaded by the
      * supplied {@link GeckoSession}.
@@ -411,18 +412,8 @@ public class ContentBlockingController {
      */
     @UiThread
     public @NonNull GeckoResult<List<LogEntry>> getLog(final @NonNull GeckoSession session) {
-        final CallbackResult<List<LogEntry>> result = new CallbackResult<List<LogEntry>>() {
-            @Override
-            public void sendSuccess(final Object value) {
-                final GeckoBundle[] bundles = ((GeckoBundle) value).getBundleArray("log");
-                final ArrayList<LogEntry> logArray = new ArrayList<LogEntry>(bundles.length);
-                for (GeckoBundle b : bundles) {
-                    logArray.add(new LogEntry(b));
-                }
-                complete(Collections.unmodifiableList(logArray));
-            }
-        };
-        session.getEventDispatcher().dispatch("ContentBlocking:RequestLog", null, result);
-        return result;
+        return session.getEventDispatcher()
+                .queryBundle("ContentBlocking:RequestLog")
+                .map(this::logFromBundle);
     }
 }
