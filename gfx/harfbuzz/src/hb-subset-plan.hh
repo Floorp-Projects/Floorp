@@ -39,6 +39,7 @@ struct hb_subset_plan_t
 {
   hb_object_header_t header;
 
+  bool successful : 1;
   bool drop_hints : 1;
   bool desubroutinize : 1;
   bool retain_gids : 1;
@@ -88,6 +89,14 @@ struct hb_subset_plan_t
   hb_map_t *layout_variation_idx_map;
 
  public:
+
+  bool in_error () const { return !successful; }
+
+  bool check_success(bool success)
+  {
+    successful = (successful && success);
+    return successful;
+  }
 
   /*
    * The set of input glyph ids which will be retained in the subset.

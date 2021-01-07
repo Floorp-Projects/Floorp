@@ -129,20 +129,27 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
   template <typename T>
   Type *lsearch (const T &x, Type *not_found = nullptr)
   {
-    unsigned int count = length;
-    for (unsigned int i = 0; i < count; i++)
-      if (!this->arrayZ[i].cmp (x))
-	return &this->arrayZ[i];
-    return not_found;
+    unsigned i;
+    return lfind (x, &i) ? &this->arrayZ[i] : not_found;
   }
   template <typename T>
   const Type *lsearch (const T &x, const Type *not_found = nullptr) const
   {
-    unsigned int count = length;
-    for (unsigned int i = 0; i < count; i++)
+    unsigned i;
+    return lfind (x, &i) ? &this->arrayZ[i] : not_found;
+  }
+  template <typename T>
+  bool lfind (const T &x, unsigned *pos = nullptr) const
+  {
+    for (unsigned i = 0; i < length; ++i)
       if (!this->arrayZ[i].cmp (x))
-	return &this->arrayZ[i];
-    return not_found;
+      {
+	if (pos)
+	  *pos = i;
+	return true;
+      }
+
+    return false;
   }
 
   hb_sorted_array_t<Type> qsort (int (*cmp_)(const void*, const void*))

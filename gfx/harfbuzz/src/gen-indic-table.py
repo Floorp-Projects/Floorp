@@ -41,8 +41,8 @@ files = [open (x, encoding='utf-8') for x in sys.argv[1:]]
 
 headers = [[f.readline () for i in range (2)] for f in files]
 
-data = [{} for f in files]
-values = [{} for f in files]
+data = [{} for _ in files]
+values = [{} for _ in files]
 for i, f in enumerate (files):
 	for line in f:
 
@@ -82,7 +82,6 @@ for i,d in enumerate (data):
 combined = {k:v for k,v in combined.items() if k in ALLOWED_SINGLES or v[2] in ALLOWED_BLOCKS}
 data = combined
 del combined
-num = len (data)
 
 # Move the outliers NO-BREAK SPACE and DOTTED CIRCLE out
 singles = {}
@@ -216,7 +215,6 @@ for u in uu:
 	if start != last + 1:
 		if start - last <= 1+16*3:
 			print_block (None, last+1, start-1, data)
-			last = start-1
 		else:
 			if last >= 0:
 				ends.append (last + 1)

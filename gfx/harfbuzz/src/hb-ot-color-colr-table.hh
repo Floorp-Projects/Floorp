@@ -174,7 +174,7 @@ struct COLR
     baseGlyphsZ = COLR::min_size;
     layersZ = COLR::min_size + numBaseGlyphs * BaseGlyphRecord::min_size;
 
-    for (const hb_item_type<BaseIterator>& _ : + base_it.iter ())
+    for (const hb_item_type<BaseIterator> _ : + base_it.iter ())
     {
       auto* record = c->embed (_);
       if (unlikely (!record)) return_trace (false);

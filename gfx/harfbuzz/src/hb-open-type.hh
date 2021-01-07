@@ -433,8 +433,6 @@ struct UnsizedArrayOf
   { return hb_array (arrayZ, len); }
   hb_array_t<const Type> as_array (unsigned int len) const
   { return hb_array (arrayZ, len); }
-  operator hb_array_t<      Type> ()       { return as_array (); }
-  operator hb_array_t<const Type> () const { return as_array (); }
 
   template <typename T>
   Type &lsearch (unsigned int len, const T &x, Type &not_found = Crap (Type))
@@ -442,6 +440,9 @@ struct UnsizedArrayOf
   template <typename T>
   const Type &lsearch (unsigned int len, const T &x, const Type &not_found = Null (Type)) const
   { return *as_array (len).lsearch (x, &not_found); }
+  template <typename T>
+  bool lfind (unsigned int len, const T &x, unsigned *pos = nullptr) const
+  { return as_array (len).lfind (x, pos); }
 
   void qsort (unsigned int len, unsigned int start = 0, unsigned int end = (unsigned int) -1)
   { as_array (len).qsort (start, end); }
@@ -549,8 +550,8 @@ struct SortedUnsizedArrayOf : UnsizedArrayOf<Type>
   { return *as_array (len).bsearch (x, &not_found); }
   template <typename T>
   bool bfind (unsigned int len, const T &x, unsigned int *i = nullptr,
-		     hb_bfind_not_found_t not_found = HB_BFIND_NOT_FOUND_DONT_STORE,
-		     unsigned int to_store = (unsigned int) -1) const
+	      hb_bfind_not_found_t not_found = HB_BFIND_NOT_FOUND_DONT_STORE,
+	      unsigned int to_store = (unsigned int) -1) const
   { return as_array (len).bfind (x, i, not_found, to_store); }
 };
 
@@ -667,6 +668,9 @@ struct ArrayOf
   template <typename T>
   const Type &lsearch (const T &x, const Type &not_found = Null (Type)) const
   { return *as_array ().lsearch (x, &not_found); }
+  template <typename T>
+  bool lfind (const T &x, unsigned *pos = nullptr) const
+  { return as_array ().lfind (x, pos); }
 
   void qsort (unsigned int start = 0, unsigned int end = (unsigned int) -1)
   { as_array ().qsort (start, end); }

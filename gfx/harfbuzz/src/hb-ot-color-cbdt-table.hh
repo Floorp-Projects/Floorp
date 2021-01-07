@@ -455,7 +455,9 @@ struct IndexSubtableRecord
     unsigned int old_cbdt_prime_length = bitmap_size_context->cbdt_prime->length;
 
     // Set to invalid state to indicate filling glyphs is not yet started.
-    records->resize (records->length + 1);
+    if (unlikely (!records->resize (records->length + 1)))
+      return_trace (c->serializer->check_success (false));
+
     (*records)[records->length - 1].firstGlyphIndex = 1;
     (*records)[records->length - 1].lastGlyphIndex = 0;
     bitmap_size_context->size += IndexSubtableRecord::min_size;
@@ -565,6 +567,8 @@ struct IndexSubtableArray
 
     hb_vector_t<hb_pair_t<hb_codepoint_t, const IndexSubtableRecord*>> lookup;
     build_lookup (c, bitmap_size_context, &lookup);
+    if (unlikely (lookup.in_error ()))
+      return c->serializer->check_success (false);
 
     bitmap_size_context->size = 0;
     bitmap_size_context->num_tables = 0;

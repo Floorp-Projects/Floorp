@@ -92,7 +92,7 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
 				       hb_array (substitutes, num_glyphs));
   c.end_serialize ();
 
-  return ret ? c.copy<OT::SubstLookup> () : nullptr;
+  return ret && !c.in_error () ? c.copy<OT::SubstLookup> () : nullptr;
 }
 
 static OT::SubstLookup *
@@ -170,7 +170,7 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
   c.end_serialize ();
   /* TODO sanitize the results? */
 
-  return ret ? c.copy<OT::SubstLookup> () : nullptr;
+  return ret && !c.in_error () ? c.copy<OT::SubstLookup> () : nullptr;
 }
 
 static OT::SubstLookup *

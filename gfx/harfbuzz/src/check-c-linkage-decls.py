@@ -2,11 +2,11 @@
 
 import sys, os
 
-os.chdir (os.environ.get ('srcdir', os.path.dirname (__file__)))
+os.chdir (os.getenv ('srcdir', os.path.dirname (__file__)))
 
-HBHEADERS = os.environ.get ('HBHEADERS', '').split () or \
+HBHEADERS = [os.path.basename (x) for x in os.getenv ('HBHEADERS', '').split ()] or \
 	[x for x in os.listdir ('.') if x.startswith ('hb') and x.endswith ('.h')]
-HBSOURCES = os.environ.get ('HBSOURCES', '').split () or \
+HBSOURCES = [os.path.basename (x) for x in os.getenv ('HBSOURCES', '').split ()] or \
 	[x for x in os.listdir ('.') if x.startswith ('hb') and x.endswith (('.cc', '.hh'))]
 
 stat = 0

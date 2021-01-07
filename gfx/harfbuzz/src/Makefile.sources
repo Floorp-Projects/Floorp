@@ -1,14 +1,12 @@
 # Base and default-included sources and headers
 
 HB_BASE_sources = \
-	hb-aat-fdsc-table.hh \
 	hb-aat-layout-ankr-table.hh \
 	hb-aat-layout-bsln-table.hh \
 	hb-aat-layout-common.hh \
 	hb-aat-layout-feat-table.hh \
 	hb-aat-layout-just-table.hh \
 	hb-aat-layout-kerx-table.hh \
-	hb-aat-layout-lcar-table.hh \
 	hb-aat-layout-morx-table.hh \
 	hb-aat-layout-opbd-table.hh \
 	hb-aat-layout-trak-table.hh \
@@ -107,6 +105,7 @@ HB_BASE_sources = \
 	hb-ot-post-macroman.hh \
 	hb-ot-post-table.hh \
 	hb-ot-shape-complex-arabic-fallback.hh \
+	hb-ot-shape-complex-arabic-joining-list.hh \
 	hb-ot-shape-complex-arabic-table.hh \
 	hb-ot-shape-complex-arabic-win1256.hh \
 	hb-ot-shape-complex-arabic.cc \
@@ -119,6 +118,7 @@ HB_BASE_sources = \
 	hb-ot-shape-complex-indic.hh \
 	hb-ot-shape-complex-khmer.cc \
 	hb-ot-shape-complex-khmer.hh \
+	hb-ot-shape-complex-machine-index.hh \
 	hb-ot-shape-complex-myanmar.cc \
 	hb-ot-shape-complex-myanmar.hh \
 	hb-ot-shape-complex-thai.cc \

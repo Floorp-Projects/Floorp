@@ -78,7 +78,7 @@ struct MathConstants
   }
 
   hb_position_t get_value (hb_ot_math_constant_t constant,
-				  hb_font_t *font) const
+			   hb_font_t *font) const
   {
     switch (constant) {
 
@@ -616,12 +616,12 @@ struct MathVariants
 	   .get_variants (direction, font, start_offset, variants_count, variants); }
 
   unsigned int get_glyph_parts (hb_codepoint_t glyph,
-				       hb_direction_t direction,
-				       hb_font_t *font,
-				       unsigned int start_offset,
-				       unsigned int *parts_count, /* IN/OUT */
-				       hb_ot_math_glyph_part_t *parts /* OUT */,
-				       hb_position_t *italics_correction /* OUT */) const
+				hb_direction_t direction,
+				hb_font_t *font,
+				unsigned int start_offset,
+				unsigned int *parts_count, /* IN/OUT */
+				hb_ot_math_glyph_part_t *parts /* OUT */,
+				hb_position_t *italics_correction /* OUT */) const
   { return get_glyph_construction (glyph, direction, font)
 	   .get_assembly ()
 	   .get_parts (direction, font,
@@ -701,7 +701,7 @@ struct MATH
   }
 
   hb_position_t get_constant (hb_ot_math_constant_t  constant,
-				     hb_font_t		   *font) const
+			      hb_font_t		   *font) const
   { return (this+mathConstants).get_value (constant, font); }
 
   const MathGlyphInfo &get_glyph_info () const { return this+mathGlyphInfo; }

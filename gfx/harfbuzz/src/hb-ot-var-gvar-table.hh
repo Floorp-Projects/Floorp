@@ -138,10 +138,10 @@ struct TupleVariationHeader
     return scalar;
   }
 
-  bool           has_peak () const { return (tupleIndex & TuppleIndex::EmbeddedPeakTuple); }
-  bool   has_intermediate () const { return (tupleIndex & TuppleIndex::IntermediateRegion); }
-  bool has_private_points () const { return (tupleIndex & TuppleIndex::PrivatePointNumbers); }
-  unsigned int  get_index () const { return (tupleIndex & TuppleIndex::TupleIndexMask); }
+  bool           has_peak () const { return tupleIndex & TuppleIndex::EmbeddedPeakTuple; }
+  bool   has_intermediate () const { return tupleIndex & TuppleIndex::IntermediateRegion; }
+  bool has_private_points () const { return tupleIndex & TuppleIndex::PrivatePointNumbers; }
+  unsigned      get_index () const { return tupleIndex & TuppleIndex::TupleIndexMask; }
 
   protected:
   struct TuppleIndex : HBUINT16
@@ -483,15 +483,10 @@ struct gvar
     return likely (var_data.length >= GlyphVariationData::min_size) ? var_data : hb_bytes_t ();
   }
 
-  bool is_long_offset () const { return (flags & 1) != 0; }
+  bool is_long_offset () const { return flags & 1; }
 
-  unsigned int get_offset (unsigned int i) const
-  {
-    if (is_long_offset ())
-      return get_long_offset_array ()[i];
-    else
-      return get_short_offset_array ()[i] * 2;
-  }
+  unsigned get_offset (unsigned i) const
+  { return is_long_offset () ? get_long_offset_array ()[i] : get_short_offset_array ()[i] * 2; }
 
   const HBUINT32 * get_long_offset_array () const { return (const HBUINT32 *) &offsetZ; }
   const HBUINT16 *get_short_offset_array () const { return (const HBUINT16 *) &offsetZ; }
@@ -540,12 +535,14 @@ struct gvar
       /* num_coords should exactly match gvar's axisCount due to how GlyphVariationData tuples are aligned */
       if (!font->num_coords || font->num_coords != table->axisCount) return true;
 
+      if (unlikely (glyph >= table->glyphCount)) return true;
+
       hb_bytes_t var_data_bytes = table->get_glyph_var_data_bytes (table.get_blob (), glyph);
       if (!var_data_bytes.as<GlyphVariationData> ()->has_data ()) return true;
       hb_vector_t<unsigned int> shared_indices;
       GlyphVariationData::tuple_iterator_t iterator;
       if (!GlyphVariationData::get_tuple_iterator (var_data_bytes, table->axisCount,
-					     shared_indices, &iterator))
+						   shared_indices, &iterator))
 	return true; /* so isn't applied at all */
 
       /* Save original points for inferred delta calculation */
@@ -655,8 +652,8 @@ no_more_gaps:
 	/* apply specified / inferred deltas to points */
 	for (unsigned int i = 0; i < points.length; i++)
 	{
-	  points[i].x += (float) roundf (deltas[i].x);
-	  points[i].y += (float) roundf (deltas[i].y);
+	  points[i].x += roundf (deltas[i].x);
+	  points[i].y += roundf (deltas[i].y);
 	}
       } while (iterator.move_to_next ());
 

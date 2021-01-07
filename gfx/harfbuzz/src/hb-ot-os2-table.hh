@@ -174,27 +174,32 @@ struct OS2
     if (unlikely (!os2_prime)) return_trace (false);
 
     hb_set_t unicodes;
-    hb_map_t unicode_glyphid_map;
-    
-    OT::cmap::accelerator_t cmap;
-    cmap.init (c->plan->source);
-    cmap.collect_mapping (&unicodes, &unicode_glyphid_map);
-    cmap.fini ();
-    
-    if (c->plan->unicodes->is_empty ()) unicodes.clear ();
-    else hb_set_set (&unicodes, c->plan->unicodes);
-
-    + unicode_glyphid_map.iter ()
-    | hb_filter (c->plan->glyphs_requested, hb_second)
-    | hb_map (hb_first)
-    | hb_sink (unicodes)
-    ;
+    if (!c->plan->glyphs_requested->is_empty ())
+    {
+      hb_map_t unicode_glyphid_map;
+      
+      OT::cmap::accelerator_t cmap;
+      cmap.init (c->plan->source);
+      cmap.collect_mapping (&unicodes, &unicode_glyphid_map);
+      cmap.fini ();
+      
+      if (c->plan->unicodes->is_empty ()) unicodes.clear ();
+      else hb_set_set (&unicodes, c->plan->unicodes);
+  
+      + unicode_glyphid_map.iter ()
+      | hb_filter (c->plan->glyphs_requested, hb_second)
+      | hb_map (hb_first)
+      | hb_sink (unicodes)
+      ;
+    }
+    /* when --gids option is not used, no need to do collect_mapping that is
+       * iterating all codepoints in each subtable, which is not efficient */
     uint16_t min_cp, max_cp;
-    find_min_and_max_codepoint (&unicodes, &min_cp, &max_cp);
+    find_min_and_max_codepoint (unicodes.is_empty () ? c->plan->unicodes : &unicodes, &min_cp, &max_cp);
     os2_prime->usFirstCharIndex = min_cp;
     os2_prime->usLastCharIndex = max_cp;
 
-    _update_unicode_ranges (&unicodes, os2_prime->ulUnicodeRange);
+    _update_unicode_ranges (unicodes.is_empty () ? c->plan->unicodes : &unicodes, os2_prime->ulUnicodeRange);
 
     return_trace (true);
   }

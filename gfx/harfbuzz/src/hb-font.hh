@@ -339,7 +339,7 @@ struct hb_font_t
   }
 
   hb_bool_t get_glyph_contour_point (hb_codepoint_t glyph, unsigned int point_index,
-					    hb_position_t *x, hb_position_t *y)
+				     hb_position_t *x, hb_position_t *y)
   {
     *x = *y = 0;
     return klass->get.f.glyph_contour_point (this, user_data,

@@ -277,6 +277,9 @@ struct hb_vector_t
   template <typename T>
   const Type *lsearch (const T &x, const Type *not_found = nullptr) const
   { return as_array ().lsearch (x, not_found); }
+  template <typename T>
+  bool lfind (const T &x, unsigned *pos = nullptr) const
+  { return as_array ().lfind (x, pos); }
 };
 
 template <typename Type>

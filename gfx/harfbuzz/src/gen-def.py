@@ -41,7 +41,7 @@ hb_font_get_var_coords_design""".splitlines ()
 	symbols = [x for x in symbols if x not in experimental_symbols]
 symbols = "\n".join (symbols)
 
-result = symbols if os.environ.get('PLAIN_LIST', '') else """EXPORTS
+result = symbols if os.getenv ('PLAIN_LIST', '') else """EXPORTS
 %s
 LIBRARY lib%s-0.dll""" % (symbols, output_file.replace ('src/', '').replace ('.def', ''))
 

@@ -725,6 +725,7 @@ struct InsertionSubtable
       if (entry.data.markedInsertIndex != 0xFFFF)
       {
 	unsigned int count = (flags & MarkedInsertCount);
+	if (unlikely ((buffer->max_ops -= count) <= 0)) return;
 	unsigned int start = entry.data.markedInsertIndex;
 	const HBGlyphID *glyphs = &insertionAction[start];
 	if (unlikely (!c->sanitizer.check_array (glyphs, count))) count = 0;
@@ -753,6 +754,7 @@ struct InsertionSubtable
       if (entry.data.currentInsertIndex != 0xFFFF)
       {
 	unsigned int count = (flags & CurrentInsertCount) >> 5;
+	if (unlikely ((buffer->max_ops -= count) <= 0)) return;
 	unsigned int start = entry.data.currentInsertIndex;
 	const HBGlyphID *glyphs = &insertionAction[start];
 	if (unlikely (!c->sanitizer.check_array (glyphs, count))) count = 0;
@@ -969,7 +971,7 @@ struct Chain
   }
 
   void apply (hb_aat_apply_context_t *c,
-		     hb_mask_t flags) const
+	      hb_mask_t flags) const
   {
     const ChainSubtable<Types> *subtable = &StructAfter<ChainSubtable<Types>> (featureZ.as_array (featureCount));
     unsigned int count = subtableCount;

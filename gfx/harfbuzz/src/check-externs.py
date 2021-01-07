@@ -2,9 +2,9 @@
 
 import sys, os, re
 
-os.chdir (os.environ.get ('srcdir', os.path.dirname (__file__)))
+os.chdir (os.getenv ('srcdir', os.path.dirname (__file__)))
 
-HBHEADERS = os.environ.get ('HBHEADERS', '').split () or \
+HBHEADERS = [os.path.basename (x) for x in os.getenv ('HBHEADERS', '').split ()] or \
 	[x for x in os.listdir ('.') if x.startswith ('hb') and x.endswith ('.h')]
 
 stat = 0

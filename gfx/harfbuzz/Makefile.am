@@ -26,9 +26,22 @@ EXTRA_DIST = \
 	subprojects/libffi.wrap \
 	subprojects/proxy-libintl.wrap \
 	subprojects/zlib.wrap \
+	subprojects/google-benchmark.wrap \
+	perf/meson.build \
+	perf/perf-draw.hh \
+	perf/perf-extents.hh \
+	perf/perf-shaping.hh \
+	perf/perf.cc \
+	perf/fonts/Amiri-Regular.ttf \
+	perf/fonts/NotoNastaliqUrdu-Regular.ttf \
+	perf/fonts/NotoSansDevanagari-Regular.ttf \
+	perf/fonts/Roboto-Regular.ttf \
+	perf/texts/en-thelittleprince.txt \
+	perf/texts/en-words.txt \
+	perf/texts/fa-monologue.txt \
+	perf/texts/fa-thelittleprince.txt \
 	meson-cc-tests/intel-atomic-primitives-test.c \
 	meson-cc-tests/solaris-atomic-operations.c \
-	write-tarball-revision.py \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \
