@@ -132,8 +132,6 @@ mod guillotine_allocator;
 mod slab_allocator;
 mod texture_cache;
 mod tile_cache;
-#[cfg(test)]
-mod tests;
 mod util;
 mod visibility;
 mod api_resources;
