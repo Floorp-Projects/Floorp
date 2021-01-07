@@ -1862,8 +1862,7 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
   } else {
     // Obtain the URL from the ComputedStyle.
     aAllowImageRegions = true;
-    styleRequest =
-        aComputedStyle->StyleList()->mListStyleImage.GetImageRequest();
+    styleRequest = aComputedStyle->StyleList()->GetListStyleImage();
     if (!styleRequest) return NS_OK;
     nsCOMPtr<nsIURI> uri;
     styleRequest->GetURI(getter_AddRefs(uri));
