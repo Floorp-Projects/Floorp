@@ -87,6 +87,15 @@
 - (NSString*)moxLabel;
 
 // override
+- (NSArray*)moxChildren;
+
+// override
+- (NSArray*)moxVisibleChildren;
+
+// override
+- (id)moxTitleUIElement;
+
+// override
 - (void)moxPostNotification:(NSString*)notification;
 
 // override
