@@ -514,9 +514,10 @@ bool ProcessWOFF2(ots::FontFile *header,
   if (decompressed_size == 0) {
     return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 is set to 0");
   }
-  // decompressed font must be <= 30MB
-  if (decompressed_size > 30 * 1024 * 1024) {
-    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 font exceeds 30MB");
+  // decompressed font must be <= OTS_MAX_DECOMPRESSED_FILE_SIZE
+  if (decompressed_size > OTS_MAX_DECOMPRESSED_FILE_SIZE) {
+    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 font exceeds %gMB",
+                               OTS_MAX_DECOMPRESSED_FILE_SIZE / (1024.0 * 1024.0));
   }
 
   std::string buf(decompressed_size, 0);
@@ -630,12 +631,14 @@ bool ProcessGeneric(ots::FontFile *header,
     if (tables[i].uncompressed_length > tables[i].length) {
       // We'll probably be decompressing this table.
 
-      // disallow all tables which uncompress to > 30 MB
-      if (tables[i].uncompressed_length > 30 * 1024 * 1024) {
-        return OTS_FAILURE_MSG_TAG("uncompressed length exceeds 30MB", tables[i].tag);
+      // disallow all tables which decompress to > OTS_MAX_DECOMPRESSED_TABLE_SIZE
+      if (tables[i].uncompressed_length > OTS_MAX_DECOMPRESSED_TABLE_SIZE) {
+        return OTS_FAILURE_MSG_HDR("%c%c%c%c: decompressed table length exceeds %gMB",
+                                   OTS_UNTAG(tables[i].tag),
+                                   OTS_MAX_DECOMPRESSED_TABLE_SIZE / (1024.0 * 1024.0));        
       }
       if (uncompressed_sum + tables[i].uncompressed_length < uncompressed_sum) {
-        return OTS_FAILURE_MSG_TAG("overflow of uncompressed sum", tables[i].tag);
+        return OTS_FAILURE_MSG_TAG("overflow of decompressed sum", tables[i].tag);
       }
 
       uncompressed_sum += tables[i].uncompressed_length;
@@ -652,9 +655,10 @@ bool ProcessGeneric(ots::FontFile *header,
     }
   }
 
-  // All decompressed tables uncompressed must be <= 30MB.
-  if (uncompressed_sum > 30 * 1024 * 1024) {
-    return OTS_FAILURE_MSG_HDR("uncompressed sum exceeds 30MB");
+  // All decompressed tables decompressed must be <= OTS_MAX_DECOMPRESSED_FILE_SIZE.
+  if (uncompressed_sum > OTS_MAX_DECOMPRESSED_FILE_SIZE) {
+    return OTS_FAILURE_MSG_HDR("decompressed sum exceeds %gMB",
+                               OTS_MAX_DECOMPRESSED_FILE_SIZE / (1024.0 * 1024.0));        
   }
 
   // check that the tables are not overlapping.

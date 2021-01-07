@@ -35,11 +35,11 @@ bool OpenTypeMetricsHeader::Parse(const uint8_t *data, size_t length) {
   }
 
   if (this->ascent < 0) {
-    Warning("bad ascent: %d", this->ascent);
+    Warning("Negative ascent, setting to 0: %d", this->ascent);
     this->ascent = 0;
   }
   if (this->linegap < 0) {
-    Warning("bad linegap: %d", this->linegap);
+    Warning("Negative linegap, setting to: %d", this->linegap);
     this->linegap = 0;
   }
 
@@ -52,7 +52,7 @@ bool OpenTypeMetricsHeader::Parse(const uint8_t *data, size_t length) {
   // if the font is non-slanted, caret_offset should be zero.
   if (!(head->mac_style & 2) &&
       (this->caret_offset != 0)) {
-    Warning("bad caret offset: %d", this->caret_offset);
+    Warning("Non-zero caretOffset but head.macStyle italic bit is not set, setting to caretOffset to 0: %d", this->caret_offset);
     this->caret_offset = 0;
   }
 
@@ -66,7 +66,7 @@ bool OpenTypeMetricsHeader::Parse(const uint8_t *data, size_t length) {
     return Error("Failed to read metricDataFormat");
   }
   if (data_format) {
-    return Error("Bad metricDataFormat: %d", data_format);
+    return Error("Unsupported metricDataFormat: %d", data_format);
   }
 
   if (!table.ReadU16(&this->num_metrics)) {
