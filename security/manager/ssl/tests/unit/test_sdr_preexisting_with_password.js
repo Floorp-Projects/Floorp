@@ -6,13 +6,9 @@
 "use strict";
 
 // Tests that the SDR implementation is able to decrypt strings encrypted using
-// a preexisting NSS key database that a) has a password and b) is in the old
-// dbm format.
-// To create such a database, run a version Firefox (or xpcshell) where the
-// default database format is the old dbm format (i.e. pre-bug 783994), set a
-// master password, and then encrypt something using nsISecretDecoderRing.
-// This does not apply to Android as the dbm implementation was never enabled on
-// that platform.
+// a preexisting NSS key database that has a password.
+// To create such a database, run Firefox (or xpcshell), set a primary
+// password, and then encrypt something using nsISecretDecoderRing.
 
 var gMockPrompter = {
   passwordToTry: "password",
@@ -73,8 +69,6 @@ function run_test() {
     "the profile path should contain a non-ASCII character"
   );
 
-  let key3DBFile = do_get_file("test_sdr_preexisting_with_password/key3.db");
-  key3DBFile.copyTo(profile, "key3.db");
   let key4DBFile = do_get_file("test_sdr_preexisting_with_password/key4.db");
   key4DBFile.copyTo(profile, "key4.db");
 
@@ -140,12 +134,5 @@ function run_test() {
     gMockPrompter.numPrompts,
     1,
     "Should have been prompted for a password once"
-  );
-
-  let key3DBInProfile = do_get_profile();
-  key3DBInProfile.append("key3.db");
-  ok(
-    !key3DBInProfile.exists(),
-    "key3.db should not exist after running with key4.db with a password"
   );
 }
