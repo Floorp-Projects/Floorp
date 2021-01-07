@@ -217,6 +217,9 @@
 // AXIdentifier
 - (NSString* _Nullable)moxIdentifier;
 
+// AXVisibleChildren
+- (NSArray* _Nullable)moxVisibleChildren;
+
 // Outline Attributes
 
 // AXDisclosing

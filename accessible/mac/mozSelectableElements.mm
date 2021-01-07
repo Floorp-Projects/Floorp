@@ -154,6 +154,48 @@ using namespace mozilla::a11y;
   return @"";
 }
 
+- (NSArray*)moxChildren {
+  // We differ from Webkit and Apple-native menus here; they expose
+  // all children regardless of whether or not the menu is open.
+  // In testing, VoiceOver doesn't seem to actually care what happens
+  // here as long as AXVisibleChildren is exposed correctly, so
+  // we expose children only when the menu is open to avoid
+  // changing ignoreWithParent/ignoreChild and/or isAccessibilityElement
+  if (mIsOpened) {
+    return [super moxChildren];
+  }
+  return nil;
+}
+
+- (NSArray*)moxVisibleChildren {
+  // VO expects us to expose two lists of children on menus: all children
+  // (done above in moxChildren), and children which are visible (here).
+  // In our code, these are essentially the same list, since at the time of
+  // wiritng we filter for visibility in isAccessibilityElement before
+  // passing anything to VO.
+  return [[self moxChildren]
+      filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(
+                                                   mozAccessible* child,
+                                                   NSDictionary* bindings) {
+        if (Accessible* acc = [child geckoAccessible].AsAccessible()) {
+          if (acc->IsContent() && acc->GetContent()->IsXULElement()) {
+            return ((acc->VisibilityState() & states::INVISIBLE) == 0);
+          }
+        }
+        return true;
+      }]];
+}
+
+- (id)moxTitleUIElement {
+  id parent = [self moxUnignoredParent];
+  if ([parent isKindOfClass:[mozAccessible class]] &&
+      [parent geckoAccessible].Role() == roles::PARENT_MENUITEM) {
+    return parent;
+  }
+
+  return nil;
+}
+
 - (void)moxPostNotification:(NSString*)notification {
   [super moxPostNotification:notification];
 
