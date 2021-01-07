@@ -90,7 +90,7 @@ mod spatial_tree;
 mod composite;
 mod debug_colors;
 mod debug_font_data;
-mod debug_render;
+mod debug_item;
 #[cfg(feature = "debugger")]
 mod debug_server;
 mod device;
