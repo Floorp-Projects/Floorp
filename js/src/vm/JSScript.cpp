@@ -3732,7 +3732,7 @@ bool PrivateScriptData::InitFromStencil(
     js::frontend::CompilationGCOutput& gcOutput,
     const js::frontend::ScriptIndex scriptIndex) {
   js::frontend::ScriptStencil& scriptStencil = stencil.scriptData[scriptIndex];
-  uint32_t ngcthings = scriptStencil.gcThings.size();
+  uint32_t ngcthings = scriptStencil.gcThingsLength;
 
   MOZ_ASSERT(ngcthings <= INDEX_LIMIT);
 
@@ -3744,7 +3744,8 @@ bool PrivateScriptData::InitFromStencil(
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
     if (!EmitScriptThingsVector(cx, input, stencil, gcOutput,
-                                scriptStencil.gcThings, data->gcthings())) {
+                                scriptStencil.gcthings(stencil),
+                                data->gcthings())) {
       return false;
     }
   }
@@ -3875,7 +3876,7 @@ bool JSScript::fullyInitFromStencil(
 
   /* The counts of indexed things must be checked during code generation. */
   js::frontend::ScriptStencil& scriptStencil = stencil.scriptData[scriptIndex];
-  MOZ_ASSERT(scriptStencil.gcThings.size() <= INDEX_LIMIT);
+  MOZ_ASSERT(scriptStencil.gcThingsLength <= INDEX_LIMIT);
 
   // Note: These flags should already be correct when the BaseScript was
   // allocated.
