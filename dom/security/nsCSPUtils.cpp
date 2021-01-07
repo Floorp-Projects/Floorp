@@ -255,9 +255,14 @@ void CSP_LogLocalizedStr(const char* aName, const nsTArray<nsString>& aParams,
 
 /* ===== Helpers ============================ */
 CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
+  // We need to know if this is a worker so child-src  can handle that case
+  // correctly.
   switch (aType) {
     case nsIContentPolicy::TYPE_IMAGE:
     case nsIContentPolicy::TYPE_IMAGESET:
+    case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
+    case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
+    case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
       return nsIContentSecurityPolicy::IMG_SRC_DIRECTIVE;
 
     // BLock XSLT as script, see bug 910139
@@ -275,6 +280,8 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
       return nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_STYLESHEET:
+    case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
+    case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
       return nsIContentSecurityPolicy::STYLE_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_FONT:
@@ -282,6 +289,9 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
       return nsIContentSecurityPolicy::FONT_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_MEDIA:
+    case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
+    case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
+    case nsIContentPolicy::TYPE_INTERNAL_TRACK:
       return nsIContentSecurityPolicy::MEDIA_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_WEB_MANIFEST:
@@ -293,6 +303,8 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
       return nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_SUBDOCUMENT:
+    case nsIContentPolicy::TYPE_INTERNAL_FRAME:
+    case nsIContentPolicy::TYPE_INTERNAL_IFRAME:
       return nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_WEBSOCKET:
@@ -301,11 +313,14 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_PING:
     case nsIContentPolicy::TYPE_FETCH:
     case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
+    case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
     case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
       return nsIContentSecurityPolicy::CONNECT_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_OBJECT:
     case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
+    case nsIContentPolicy::TYPE_INTERNAL_EMBED:
+    case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
       return nsIContentSecurityPolicy::OBJECT_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_DTD:
@@ -327,7 +342,8 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
 
     // Fall through to error for all other directives
     // Note that we should never end up here for navigate-to
-    default:
+    case nsIContentPolicy::TYPE_INVALID:
+    case nsIContentPolicy::TYPE_REFRESH:
       MOZ_ASSERT(false, "Can not map nsContentPolicyType to CSPDirective");
   }
   return nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE;
