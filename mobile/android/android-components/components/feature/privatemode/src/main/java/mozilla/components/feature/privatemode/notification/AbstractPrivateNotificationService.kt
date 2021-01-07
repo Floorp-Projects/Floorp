@@ -115,6 +115,16 @@ abstract class AbstractPrivateNotificationService : Service() {
     final override fun onBind(intent: Intent?): IBinder? = null
 
     final override fun onTaskRemoved(rootIntent: Intent) {
+        if (rootIntent.action in ignoreTaskActions) {
+            // The app may have multiple tasks (e.g. for PWAs). If tasks get removed that are not
+            // the main browser task then we do not want to remove all private tabs here.
+            // I am not sure whether we can reliably identify the main task since it can be launched
+            // from multiple entry points (e.g. the launcher, VIEW intents, ..).
+            // So instead we ignore tasks with root intents that we absolutely do not want to handle
+            // here (e.g. PWAs) and then extend the list if needed.
+            return
+        }
+
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction)
         stopService()
     }
@@ -133,6 +143,12 @@ abstract class AbstractPrivateNotificationService : Service() {
             id = "browsing-session",
             name = R.string.mozac_feature_privatemode_notification_channel_name,
             importance = IMPORTANCE_LOW
+        )
+
+        // List of Intent actions that will get ignored when they are in the root intent that gets
+        // passed to onTaskRemoved().
+        private val ignoreTaskActions = listOf(
+            "mozilla.components.feature.pwa.VIEW_PWA"
         )
     }
 }
