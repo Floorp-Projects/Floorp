@@ -326,7 +326,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         closeTabsAfterOneDay -> ONE_DAY_MS
         closeTabsAfterOneWeek -> ONE_WEEK_MS
         closeTabsAfterOneMonth -> ONE_MONTH_MS
-        else -> System.currentTimeMillis()
+        else -> Long.MAX_VALUE
     }
 
     enum class TabView {

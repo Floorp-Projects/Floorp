@@ -236,27 +236,28 @@ class SettingsTest {
         // When just created
         // Then
         assertTrue(settings.manuallyCloseTabs)
+        assertEquals(Long.MAX_VALUE, settings.getTabTimeout())
 
         // When
         settings.manuallyCloseTabs = false
         settings.closeTabsAfterOneDay = true
 
         // Then
-        assertEquals(settings.getTabTimeout(), Settings.ONE_DAY_MS)
+        assertEquals(Settings.ONE_DAY_MS, settings.getTabTimeout())
 
         // When
         settings.closeTabsAfterOneDay = false
         settings.closeTabsAfterOneWeek = true
 
         // Then
-        assertEquals(settings.getTabTimeout(), Settings.ONE_WEEK_MS)
+        assertEquals(Settings.ONE_WEEK_MS, settings.getTabTimeout())
 
         // When
         settings.closeTabsAfterOneWeek = false
         settings.closeTabsAfterOneMonth = true
 
         // Then
-        assertEquals(settings.getTabTimeout(), Settings.ONE_MONTH_MS)
+        assertEquals(Settings.ONE_MONTH_MS, settings.getTabTimeout())
     }
 
     @Test

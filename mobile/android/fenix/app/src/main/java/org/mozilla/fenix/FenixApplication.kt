@@ -132,8 +132,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
             initializeWebExtensionSupport()
             restoreBrowserState()
-            removeTimedOutTabs()
-
             restoreDownloads()
 
             // Just to make sure it is impossible for any application-services pieces
@@ -166,7 +164,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         val store = components.core.store
         val sessionStorage = components.core.sessionStorage
 
-        components.useCases.tabsUseCases.restore(sessionStorage)
+        components.useCases.tabsUseCases.restore(sessionStorage, settings().getTabTimeout())
 
         // Now that we have restored our previous state (if there's one) let's setup auto saving the state while
         // the app is used.
@@ -174,25 +172,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
             .whenGoingToBackground()
             .whenSessionsChange()
-    }
-
-    private fun removeTimedOutTabs() {
-        val store = components.core.store
-        val tabsUseCases = components.useCases.tabsUseCases
-
-        // Now that we have restored our previous state (if there's one) let's remove timed out tabs
-        if (!settings().manuallyCloseTabs) {
-            val now = System.currentTimeMillis()
-            val tabTimeout = settings().getTabTimeout()
-
-            val tabsToRemove = store.state.tabs
-                .filter { tab -> now - tab.lastAccess > tabTimeout }
-                .map { tab -> tab.id }
-
-            if (tabsToRemove.isNotEmpty()) {
-                tabsUseCases.removeTabs(tabsToRemove)
-            }
-        }
     }
 
     private fun restoreDownloads() {
