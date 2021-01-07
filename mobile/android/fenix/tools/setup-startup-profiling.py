@@ -48,17 +48,21 @@ def remove(filename):
     run(['adb', 'shell', 'rm', PATH_PREFIX + '/' + filename])
     run(['adb', 'shell', 'am', 'clear-debug-app'])
 
-try:
-    cmd = sys.argv[1]
-    id = sys.argv[2]
-except IndexError as e:
-    print_usage_and_exit()
+def main():
+    try:
+        cmd = sys.argv[1]
+        id = sys.argv[2]
+    except IndexError as e:
+        print_usage_and_exit()
 
-filename = id + '-geckoview-config.yaml'
+    filename = id + '-geckoview-config.yaml'
 
-if cmd == 'push':
-    push(id, filename)
-elif cmd == 'remove':
-    remove(filename)
-else:
-    print_usage_and_exit()
+    if cmd == 'push':
+        push(id, filename)
+    elif cmd == 'remove':
+        remove(filename)
+    else:
+        print_usage_and_exit()
+
+if __name__ == '__main__':
+    main()
