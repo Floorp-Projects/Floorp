@@ -1128,10 +1128,10 @@ long nsContentSecurityUtils::ClassifyDownload(
     loadingPrincipal = loadInfo->TriggeringPrincipal();
   }
   // Creating a fake Loadinfo that is just used for the MCB check.
-  nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new mozilla::net::LoadInfo(
-      loadingPrincipal, loadInfo->TriggeringPrincipal(), nullptr,
-      nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-      nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD);
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+      new LoadInfo(loadingPrincipal, loadInfo->TriggeringPrincipal(), nullptr,
+                   nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                   nsIContentPolicy::TYPE_FETCH);
 
   int16_t decission = nsIContentPolicy::ACCEPT;
   nsMixedContentBlocker::ShouldLoad(false,  //  aHadInsecureImageRedirect
