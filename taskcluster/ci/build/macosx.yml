@@ -109,6 +109,7 @@ macosx64-asan-fuzzing/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-llvm-symbolizer
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
