@@ -11,13 +11,15 @@ add_task(async function() {
   initTestDevToolsServer();
   addTestGlobal(GLOBAL_NAME);
   addTestGlobal(GLOBAL_NAME);
-  // Conect the first client to the first debuggee.
+
+  // Connect two thread actors, debugging the same debuggee, and both being paused.
   const firstClient = new DevToolsClient(DevToolsServer.connectPipe());
   await firstClient.connect();
   const { threadFront: firstThreadFront } = await attachTestThread(
     firstClient,
     GLOBAL_NAME
   );
+  await firstThreadFront.interrupt();
 
   const secondClient = new DevToolsClient(DevToolsServer.connectPipe());
   await secondClient.connect();
@@ -25,7 +27,9 @@ add_task(async function() {
     secondClient,
     GLOBAL_NAME
   );
+  await secondThreadFront.interrupt();
 
+  // Then check how concurrent resume work
   let result;
   try {
     result = await firstThreadFront.resume();
