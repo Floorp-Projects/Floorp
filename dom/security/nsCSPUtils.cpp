@@ -1207,15 +1207,6 @@ void nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const {
   }
 }
 
-bool nsCSPDirective::restrictsContentType(
-    nsContentPolicyType aContentType) const {
-  // make sure we do not check for the default src before any other sources
-  if (isDefaultDirective()) {
-    return false;
-  }
-  return mDirective == CSP_ContentTypeToDirective(aContentType);
-}
-
 void nsCSPDirective::getReportURIs(nsTArray<nsString>& outReportURIs) const {
   NS_ASSERTION((mDirective == nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE),
                "not a report-uri directive");
@@ -1265,19 +1256,6 @@ nsCSPChildSrcDirective::nsCSPChildSrcDirective(CSPDirective aDirective)
 
 nsCSPChildSrcDirective::~nsCSPChildSrcDirective() = default;
 
-bool nsCSPChildSrcDirective::restrictsContentType(
-    nsContentPolicyType aContentType) const {
-  if (aContentType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    return mRestrictFrames;
-  }
-  if (aContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-      aContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
-      aContentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER) {
-    return mRestrictWorkers;
-  }
-  return false;
-}
-
 bool nsCSPChildSrcDirective::equals(CSPDirective aDirective) const {
   if (aDirective == nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE) {
     return mRestrictFrames;
@@ -1294,16 +1272,6 @@ nsCSPScriptSrcDirective::nsCSPScriptSrcDirective(CSPDirective aDirective)
     : nsCSPDirective(aDirective), mRestrictWorkers(false) {}
 
 nsCSPScriptSrcDirective::~nsCSPScriptSrcDirective() = default;
-
-bool nsCSPScriptSrcDirective::restrictsContentType(
-    nsContentPolicyType aContentType) const {
-  if (aContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-      aContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
-      aContentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER) {
-    return mRestrictWorkers;
-  }
-  return mDirective == CSP_ContentTypeToDirective(aContentType);
-}
 
 bool nsCSPScriptSrcDirective::equals(CSPDirective aDirective) const {
   if (aDirective == nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE) {
@@ -1365,12 +1333,6 @@ nsCSPPolicy::~nsCSPPolicy() {
 }
 
 bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
-                          bool aSpecific) const {
-  nsString outp;
-  return this->permits(aDir, aUri, u""_ns, false, aSpecific, false, outp);
-}
-
-bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
                           const nsAString& aNonce, bool aWasRedirected,
                           bool aSpecific, bool aParserCreated,
                           nsAString& outViolatedDirective) const {
@@ -1418,8 +1380,7 @@ bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
   return true;
 }
 
-bool nsCSPPolicy::allows(nsContentPolicyType aContentType,
-                         enum CSPKeyword aKeyword,
+bool nsCSPPolicy::allows(CSPDirective aDirective, enum CSPKeyword aKeyword,
                          const nsAString& aHashOrNonce,
                          bool aParserCreated) const {
   CSPUTILSLOG(("nsCSPPolicy::allows, aKeyWord: %s, a HashOrNonce: %s",
@@ -1430,14 +1391,15 @@ bool nsCSPPolicy::allows(nsContentPolicyType aContentType,
 
   // Try to find a matching directive
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
-    if (mDirectives[i]->restrictsContentType(aContentType)) {
+    if (mDirectives[i]->isDefaultDirective()) {
+      defaultDir = mDirectives[i];
+      continue;
+    }
+    if (mDirectives[i]->equals(aDirective)) {
       if (mDirectives[i]->allows(aKeyword, aHashOrNonce, aParserCreated)) {
         return true;
       }
       return false;
-    }
-    if (mDirectives[i]->isDefaultDirective()) {
-      defaultDir = mDirectives[i];
     }
   }
 
@@ -1463,11 +1425,6 @@ bool nsCSPPolicy::allows(nsContentPolicyType aContentType,
   // b) inline styles should only be blocked
   //    if there is a [style-src] or [default-src]
   return true;
-}
-
-bool nsCSPPolicy::allows(nsContentPolicyType aContentType,
-                         enum CSPKeyword aKeyword) const {
-  return allows(aContentType, aKeyword, u""_ns, false);
 }
 
 void nsCSPPolicy::toString(nsAString& outStr) const {
@@ -1525,20 +1482,21 @@ bool nsCSPPolicy::allowsNavigateTo(nsIURI* aURI, bool aWasRedirected,
  * for the ::permits() function family.
  */
 void nsCSPPolicy::getDirectiveStringAndReportSampleForContentType(
-    nsContentPolicyType aContentType, nsAString& outDirective,
+    CSPDirective aDirective, nsAString& outDirective,
     bool* aReportSample) const {
   MOZ_ASSERT(aReportSample);
   *aReportSample = false;
 
   nsCSPDirective* defaultDir = nullptr;
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
-    if (mDirectives[i]->restrictsContentType(aContentType)) {
+    if (mDirectives[i]->isDefaultDirective()) {
+      defaultDir = mDirectives[i];
+      continue;
+    }
+    if (mDirectives[i]->equals(aDirective)) {
       mDirectives[i]->getDirName(outDirective);
       *aReportSample = mDirectives[i]->hasReportSampleKeyword();
       return;
-    }
-    if (mDirectives[i]->isDefaultDirective()) {
-      defaultDir = mDirectives[i];
     }
   }
   // if we haven't found a matching directive yet,
