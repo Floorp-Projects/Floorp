@@ -23,6 +23,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/Logging.h"
 #include "mozilla/layers/ScrollInputMethods.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
@@ -79,6 +80,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::layers::ScrollInputMethod;
+
+static LazyLogModule sSelectionLog("Selection");
 
 //#define DEBUG_TABLE 1
 
@@ -3101,6 +3104,9 @@ nsresult Selection::NotifySelectionListeners() {
   if (!mFrameSelection) {
     return NS_OK;  // nothing to do
   }
+
+  MOZ_LOG(sSelectionLog, LogLevel::Debug,
+          ("%s: selection=%p", __FUNCTION__, this));
 
   // Our internal code should not move focus with using this class while
   // this moves focus nor from selection listeners.
