@@ -13,6 +13,7 @@ import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
@@ -28,10 +29,12 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -42,6 +45,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class FilePickerTest {
@@ -280,6 +284,70 @@ class FilePickerTest {
 
         assertEquals(request, filePicker.currentRequest)
         assertArrayEquals(permissions.toTypedArray(), permissionsRequested)
+    }
+
+    @Test
+    fun `handleFilePickerIntentResult called with null Intent will make captureUri null`() {
+        stubContext()
+        captureUri = "randomSaveLocationOnDisk".toUri()
+        val onSingleFileSelection: (Context, Uri) -> Unit = { _, _ -> Unit }
+        val promptRequest = mock<PromptRequest.File>()
+        doReturn(onSingleFileSelection).`when`(promptRequest).onSingleFileSelected
+
+        filePicker.handleFilePickerIntentResult(null, promptRequest)
+
+        assertNull(captureUri)
+    }
+
+    @Test
+    fun `handleFilePickerIntentResult called with valid Intent will make captureUri null also if request is dismissed`() {
+        stubContext()
+        captureUri = "randomSaveLocationOnDisk".toUri()
+        val promptRequest = mock<PromptRequest.File>()
+        doReturn({ }).`when`(promptRequest).onDismiss
+        // A private file cannot be picked so the request will be dismissed.
+        val intent = Intent().apply {
+            data = ("file://" + File(testContext.applicationInfo.dataDir, "randomFile").canonicalPath).toUri()
+        }
+
+        filePicker.handleFilePickerIntentResult(intent, promptRequest)
+
+        assertNull(captureUri)
+    }
+
+    @Test
+    fun `handleFilePickerIntentResult for multiple files selection will make captureUri null`() {
+        stubContext()
+        captureUri = "randomSaveLocationOnDisk".toUri()
+        val onMultipleFilesSelected: (Context, Array<Uri>) -> Unit = { _, _ -> Unit }
+        val promptRequest = mock<PromptRequest.File>()
+        doReturn(onMultipleFilesSelected).`when`(promptRequest).onMultipleFilesSelected
+        doReturn(true).`when`(promptRequest).isMultipleFilesSelection
+        val intent = Intent().apply {
+            clipData = (ClipData.newRawUri("Test", "https://www.mozilla.org".toUri()))
+        }
+
+        filePicker.handleFilePickerIntentResult(intent, promptRequest)
+
+        assertNull(captureUri)
+    }
+
+    @Test
+    fun `handleFilePickerIntentResult for multiple files selection will make captureUri null also if request is dismissed`() {
+        stubContext()
+        captureUri = "randomSaveLocationOnDisk".toUri()
+        val promptRequest = mock<PromptRequest.File>()
+        doReturn({ }).`when`(promptRequest).onDismiss
+        doReturn(true).`when`(promptRequest).isMultipleFilesSelection
+        // A private file cannot be picked so the request will be dismissed.
+        val intent = Intent().apply {
+            clipData = (ClipData.newRawUri("Test",
+                ("file://" + File(testContext.applicationInfo.dataDir, "randomFile").canonicalPath).toUri()))
+        }
+
+        filePicker.handleFilePickerIntentResult(intent, promptRequest)
+
+        assertNull(captureUri)
     }
 
     private fun prepareSelectedSession(request: PromptRequest? = null): TabSessionState {

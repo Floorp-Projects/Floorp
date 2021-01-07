@@ -28,6 +28,15 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.net.isUnderPrivateAppDirectory
 
 /**
+ * The image capture intent doesn't return the URI where the image is saved,
+ * so we track it here.
+ *
+ * Top-level scoped to survive activity recreation in the "Don't keep activities" scenario.
+ */
+@VisibleForTesting
+internal var captureUri: Uri? = null
+
+/**
  * @property container The [Activity] or [Fragment] which hosts the file picker.
  * @property store The [BrowserStore] this feature should subscribe to.
  * @property onNeedToRequestPermissions a callback invoked when permissions
@@ -42,12 +51,6 @@ internal class FilePicker(
 ) : PermissionsFeature {
 
     private val logger = Logger("FilePicker")
-
-    /**
-     * The image capture intent doesn't return the URI where the image is saved,
-     * so we track it here.
-     */
-    private var captureUri: Uri? = null
 
     /**
      * Cache of the current request to be used after permission is granted.
@@ -197,6 +200,8 @@ internal class FilePicker(
                 }
             } ?: request.onDismiss()
         }
+
+        captureUri = null
     }
 
     private fun saveCaptureUriIfPresent(intent: Intent) =
