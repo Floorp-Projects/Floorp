@@ -4,7 +4,7 @@
 
 #![deny(unconditional_recursion)]
 
-use super::{AtlasAllocator, AllocId};
+use crate::atlas_allocator::{AtlasAllocator, AllocId};
 use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use euclid::{point2, size2, default::Box2D};
 use std::cmp;
