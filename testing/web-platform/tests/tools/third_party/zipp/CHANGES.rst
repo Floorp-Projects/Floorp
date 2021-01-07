@@ -1,51 +1,3 @@
-v3.4.0
-======
-
-#68 and bpo-42090: ``Path.joinpath`` now takes arbitrary
-positional arguments and no longer accepts ``add`` as a
-keyword argument.
-
-v3.3.2
-======
-
-Updated project metadata including badges.
-
-v3.3.1
-======
-
-bpo-42043: Add tests capturing subclassing requirements.
-
-v3.3.0
-======
-
-#9: ``Path`` objects now expose a ``.filename`` attribute
-and rely on that to resolve ``.name`` and ``.parent`` when
-the ``Path`` object is at the root of the zipfile.
-
-v3.2.0
-======
-
-#57 and bpo-40564: Mutate the passed ZipFile object
-type instead of making a copy. Prevents issues when
-both the local copy and the caller's copy attempt to
-close the same file handle.
-
-#56 and bpo-41035: ``Path._next`` now honors
-subclasses.
-
-#55: ``Path.is_file()`` now returns False for non-existent names.
-
-v3.1.0
-======
-
-#47: ``.open`` now raises ``FileNotFoundError`` and
-``IsADirectoryError`` when appropriate.
-
-v3.0.0
-======
-
-#44: Merge with v1.2.0.
-
 v1.2.0
 ======
 
@@ -58,26 +10,10 @@ longer accepts ``pwd`` as a positional argument and does not
 accept the ``force_zip64`` parameter at all. This change is
 a backward-incompatible change for that single function.
 
-v2.2.1
-======
-
-#43: Merge with v1.1.1.
-
 v1.1.1
 ======
 
 #43: Restored performance of implicit dir computation.
-
-v2.2.0
-======
-
-#36: Rebuild package with minimum Python version declared both
-in package metadata and in the python tag.
-
-v2.1.0
-======
-
-#32: Merge with v1.1.0.
 
 v1.1.0
 ======
@@ -87,16 +23,6 @@ v1.1.0
 quadratic time in common use-cases and rendering large
 zip files unusable for Path. Big thanks to Benjy Weinberger
 for the bug report and contributed fix (#33).
-
-v2.0.1
-======
-
-#30: Corrected version inference (from jaraco/skeleton#12).
-
-v2.0.0
-======
-
-Require Python 3.6 or later.
 
 v1.0.0
 ======

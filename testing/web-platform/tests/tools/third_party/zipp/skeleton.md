@@ -2,9 +2,9 @@
 
 This project is merged with [skeleton](https://github.com/jaraco/skeleton). What is skeleton? It's the scaffolding of a Python project jaraco [introduced in his blog](https://blog.jaraco.com/a-project-skeleton-for-python-projects/). It seeks to provide a means to re-use techniques and inherit advances when managing projects for distribution.
 
-## An SCM-Managed Approach
+## An SCM Managed Approach
 
-While maintaining dozens of projects in PyPI, jaraco derives best practices for project distribution and publishes them in the [skeleton repo](https://github.com/jaraco/skeleton), a Git repo capturing the evolution and culmination of these best practices.
+While maintaining dozens of projects in PyPI, jaraco derives best practices for project distribution and publishes them in the [skeleton repo](https://github.com/jaraco/skeleton), a git repo capturing the evolution and culmination of these best practices.
 
 It's intended to be used by a new or existing project to adopt these practices and honed and proven techniques. Adopters are encouraged to use the project directly and maintain a small deviation from the technique, make their own fork for more substantial changes unique to their environment or preferences, or simply adopt the skeleton once and abandon it thereafter.
 
@@ -38,11 +38,7 @@ The `--allow-unrelated-histories` is necessary because the history from the skel
 
 ## Updating
 
-Whenever a change is needed or desired for the general technique for packaging, it can be made in the skeleton project and then merged into each of the derived projects as needed, recommended before each release. As a result, features and best practices for packaging are centrally maintained and readily trickle into a whole suite of packages. This technique lowers the amount of tedious work necessary to create or maintain a project, and coupled with other techniques like continuous integration and deployment, lowers the cost of creating and maintaining refined Python projects to just a few, familiar Git operations.
-
-For example, here's a session of the [path project](https://pypi.org/project/path) pulling non-conflicting changes from the skeleton:
-
-<img src="https://raw.githubusercontent.com/jaraco/skeleton/gh-pages/docs/refresh.svg">
+Whenever a change is needed or desired for the general technique for packaging, it can be made in the skeleton project and then merged into each of the derived projects as needed, recommended before each release. As a result, features and best practices for packaging are centrally maintained and readily trickle into a whole suite of packages. This technique lowers the amount of tedious work necessary to create or maintain a project, and coupled with other techniques like continuous integration and deployment, lowers the cost of creating and maintaining refined Python projects to just a few, familiar git operations.
 
 Thereafter, the target project can make whatever customizations it deems relevant to the scaffolding. The project may even at some point decide that the divergence is too great to merit renewed merging with the original skeleton. This approach applies maximal guidance while creating minimal constraints.
 
@@ -50,17 +46,16 @@ Thereafter, the target project can make whatever customizations it deems relevan
 
 The features/techniques employed by the skeleton include:
 
-- PEP 517/518-based build relying on Setuptools as the build tool
-- Setuptools declarative configuration using setup.cfg
+- PEP 517/518 based build relying on setuptools as the build tool
+- setuptools declarative configuration using setup.cfg
 - tox for running tests
-- A README.rst as reStructuredText with some popular badges, but with Read the Docs and AppVeyor badges commented out
+- A README.rst as reStructuredText with some popular badges, but with readthedocs and appveyor badges commented out
 - A CHANGES.rst file intended for publishing release notes about the project
-- Use of [Black](https://black.readthedocs.io/en/stable/) for code formatting (disabled on unsupported Python 3.5 and earlier)
-- Integrated type checking through [mypy](https://github.com/python/mypy/).
+- Use of [black](https://black.readthedocs.io/en/stable/) for code formatting (disabled on unsupported Python 3.5 and earlier)
 
 ## Packaging Conventions
 
-A pyproject.toml is included to enable PEP 517 and PEP 518 compatibility and declares the requirements necessary to build the project on Setuptools (a minimum version compatible with setup.cfg declarative config).
+A pyproject.toml is included to enable PEP 517 and PEP 518 compatibility and declares the requirements necessary to build the project on setuptools (a minimum version compatible with setup.cfg declarative config).
 
 The setup.cfg file implements the following features:
 
@@ -90,48 +85,46 @@ The skeleton assumes the developer has [tox](https://pypi.org/project/tox) insta
 
 Other environments (invoked with `tox -e {name}`) supplied include:
 
-  - a `docs` environment to build the documentation
+  - a `build-docs` environment to build the documentation
   - a `release` environment to publish the package to PyPI
 
 A pytest.ini is included to define common options around running tests. In particular:
 
 - rely on default test discovery in the current directory
 - avoid recursing into common directories not containing tests
-- run doctests on modules and invoke Flake8 tests
-- in doctests, allow Unicode literals and regular literals to match, allowing for doctests to run on Python 2 and 3. Also enable ELLIPSES, a default that would be undone by supplying the prior option.
+- run doctests on modules and invoke flake8 tests
+- in doctests, allow unicode literals and regular literals to match, allowing for doctests to run on Python 2 and 3. Also enable ELLIPSES, a default that would be undone by supplying the prior option.
 - filters out known warnings caused by libraries/functionality included by the skeleton
 
-Relies on a .flake8 file to correct some default behaviors:
+Relies a .flake8 file to correct some default behaviors:
 
 - disable mutually incompatible rules W503 and W504
-- support for Black format
+- support for black format
 
 ## Continuous Integration
 
-The project is pre-configured to run Continuous Integration tests.
-
-### Github Actions
-
-[Github Actions](https://docs.github.com/en/free-pro-team@latest/actions) are the preferred provider as they provide free, fast, multi-platform services with straightforward configuration. Configured in `.github/workflows`.
+The project is pre-configured to run tests in [Travis-CI](https://travis-ci.org) (.travis.yml). Any new project must be enabled either through their web site or with the `travis enable` command.
 
 Features include:
-- test against multiple Python versions
-- run on late (and updated) platform versions
-- automated releases of tagged commits
+- test against Python 2 and 3
+- run on Ubuntu Xenial
+- correct for broken IPv6
+
+Also provided is a minimal template for running under Appveyor (Windows).
 
 ### Continuous Deployments
 
-In addition to running tests, an additional publish stage is configured to automatically release tagged commits to PyPI using [API tokens](https://pypi.org/help/#apitoken). The release process expects an authorized token to be configured with each Github project (or org) `PYPI_TOKEN` [secret](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets). Example:
+In addition to running tests, an additional deploy stage is configured to automatically release tagged commits to PyPI using [API tokens](https://pypi.org/help/#apitoken). The release process expects an authorized token to be configured with Travis as the TWINE_PASSWORD environment variable. After the Travis project is created, configure the token through the web UI or with a command like the following (bash syntax):
 
 ```
-pip-run -q jaraco.develop -- -m jaraco.develop.add-github-secrets
+TWINE_PASSWORD={token} travis env copy TWINE_PASSWORD
 ```
 
 ## Building Documentation
 
-Documentation is automatically built by [Read the Docs](https://readthedocs.org) when the project is registered with it, by way of the .readthedocs.yml file. To test the docs build manually, a tox env may be invoked as `tox -e docs`. Both techniques rely on the dependencies declared in `setup.cfg/options.extras_require.docs`.
+Documentation is automatically built by [Read the Docs](https://readthedocs.org) when the project is registered with it, by way of the .readthedocs.yml file. To test the docs build manually, a tox env may be invoked as `tox -e build-docs`. Both techniques rely on the dependencies declared in `setup.cfg/options.extras_require.docs`.
 
-In addition to building the Sphinx docs scaffolded in `docs/`, the docs build a `history.html` file that first injects release dates and hyperlinks into the CHANGES.rst before incorporating it as history in the docs.
+In addition to building the sphinx docs scaffolded in `docs/`, the docs build a `history.html` file that first injects release dates and hyperlinks into the CHANGES.rst before incorporating it as history in the docs.
 
 ## Cutting releases
 
