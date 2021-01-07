@@ -85,14 +85,8 @@ public final class SessionFinder {
         bundle.putString("searchString", searchString);
         addFlagsToBundle(flags, bundle);
 
-        final CallbackResult<FinderResult> result = new CallbackResult<FinderResult>() {
-            @Override
-            public void sendSuccess(final Object response) {
-                complete(new FinderResult((GeckoBundle) response));
-            }
-        };
-        mDispatcher.dispatch("GeckoView:FindInPage", bundle, result);
-        return result;
+        return mDispatcher.queryBundle("GeckoView:FindInPage", bundle)
+                .map(response -> new FinderResult(response));
     }
 
     /**
