@@ -33,7 +33,6 @@ CommonSocketControl::CommonSocketControl(uint32_t aProviderFlags)
 NS_IMETHODIMP
 CommonSocketControl::GetNotificationCallbacks(
     nsIInterfaceRequestor** aCallbacks) {
-  MutexAutoLock lock(mMutex);
   *aCallbacks = mCallbacks;
   NS_IF_ADDREF(*aCallbacks);
   return NS_OK;
@@ -42,7 +41,6 @@ CommonSocketControl::GetNotificationCallbacks(
 NS_IMETHODIMP
 CommonSocketControl::SetNotificationCallbacks(
     nsIInterfaceRequestor* aCallbacks) {
-  MutexAutoLock lock(mMutex);
   mCallbacks = aCallbacks;
   return NS_OK;
 }
@@ -92,11 +90,8 @@ CommonSocketControl::TestJoinConnection(const nsACString& npnProtocol,
   // Different ports may not be joined together
   if (port != GetPort()) return NS_OK;
 
-  {
-    MutexAutoLock lock(mMutex);
-    // Make sure NPN has been completed and matches requested npnProtocol
-    if (!mNPNCompleted || !mNegotiatedNPN.Equals(npnProtocol)) return NS_OK;
-  }
+  // Make sure NPN has been completed and matches requested npnProtocol
+  if (!mNPNCompleted || !mNegotiatedNPN.Equals(npnProtocol)) return NS_OK;
 
   IsAcceptableForHost(hostname, _retval);  // sets _retval
   return NS_OK;
