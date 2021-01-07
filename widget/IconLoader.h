@@ -9,6 +9,7 @@
 #include "imgINotificationObserver.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIContentPolicy.h"
 #include "nsISupports.h"
 
