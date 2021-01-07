@@ -6,6 +6,7 @@ C-Like `offset_of` functionality for Rust structs.
 
 Introduces the following macros:
  * `offset_of!` for obtaining the offset of a member of a struct.
+ * `offset_of_tuple!` for obtaining the offset of a member of a tuple. (Requires Rust 1.20+)
  * `span_of!` for obtaining the range that a field, or fields, span.
 
 `memoffset` works under `no_std` environments.
@@ -15,40 +16,65 @@ Add the following dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-memoffset = "0.3"
+memoffset = "0.6"
 ```
 
-Versions ">= 0.3" can be used in a constant expression context (though not in a `const fn`),
-but require a rust version greater than or equal to 1.33.
-These versions will compile fine with rustc versions greater or equal to 1.19, but will
-lack support for constant expression.
-
-If you wish to use an older rustc version, lock your dependency to "0.2"
+These versions will compile fine with rustc versions greater or equal to 1.19.
 
 Add the following lines at the top of your `main.rs` or `lib.rs` files.
 
-```rust
+```rust,ignore
 #[macro_use]
 extern crate memoffset;
 ```
 
 ## Examples ##
 ```rust
+#[macro_use]
+extern crate memoffset;
+
 #[repr(C, packed)]
 struct Foo {
-	a: u32,
-	b: u32,
-	c: [u8; 5],
-	d: u32,
+    a: u32,
+    b: u32,
+    c: [u8; 5],
+    d: u32,
 }
 
-assert_eq!(offset_of!(Foo, b), 4);
-assert_eq!(offset_of!(Foo, c[3]), 11);
+fn main() {
+    assert_eq!(offset_of!(Foo, b), 4);
+    assert_eq!(offset_of!(Foo, d), 4+4+5);
 
-assert_eq!(span_of!(Foo, a),          0..4);
-assert_eq!(span_of!(Foo, a ..  c),    0..8);
-assert_eq!(span_of!(Foo, a ..  c[1]), 0..9);
-assert_eq!(span_of!(Foo, a ..= c[1]), 0..10);
-assert_eq!(span_of!(Foo, ..= d),      0..14);
-assert_eq!(span_of!(Foo, b ..),       4..17);
+    assert_eq!(span_of!(Foo, a),        0..4);
+    assert_eq!(span_of!(Foo, a ..  c),  0..8);
+    assert_eq!(span_of!(Foo, a ..= c),  0..13);
+    assert_eq!(span_of!(Foo, ..= d),    0..17);
+    assert_eq!(span_of!(Foo, b ..),     4..17);
+}
 ```
+
+## Feature flags ##
+
+### Usage in constants ###
+`memoffset` has **experimental** support for compile-time `offset_of!` on a nightly compiler.
+
+In order to use it, you must enable the `unstable_const` crate feature and several compiler features.
+
+Cargo.toml:
+```toml
+[dependencies.memoffset]
+version = "0.6"
+features = ["unstable_const"]
+```
+
+Your crate root: (`lib.rs`/`main.rs`)
+```rust,ignore
+#![feature(ptr_offset_from, const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
+```
+
+If you intend to use `offset_of!` inside a `const fn`, also add the `const_fn` compiler feature.
+
+### Raw references ###
+Recent nightlies support [a way to create raw pointers](https://github.com/rust-lang/rust/issues/73394) that avoids creating intermediate safe references.
+`memoffset` can make use of that feature to avoid what is technically Undefined Behavior.
+Use the `unstable_raw` feature to enable this.

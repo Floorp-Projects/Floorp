@@ -1,8 +1,8 @@
 use std::fmt;
 use std::marker::PhantomData;
-use std::sync::{Arc, Condvar, Mutex};
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
+use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
 /// A thread parking primitive.
@@ -30,7 +30,7 @@ use std::time::Duration;
 /// use std::time::Duration;
 /// use crossbeam_utils::sync::Parker;
 ///
-/// let mut p = Parker::new();
+/// let p = Parker::new();
 /// let u = p.unparker().clone();
 ///
 /// // Make the token available.
@@ -48,15 +48,30 @@ use std::time::Duration;
 /// p.park();
 /// ```
 ///
-/// [`park`]: struct.Parker.html#method.park
-/// [`park_timeout`]: struct.Parker.html#method.park_timeout
-/// [`unpark`]: struct.Unparker.html#method.unpark
+/// [`park`]: Parker::park
+/// [`park_timeout`]: Parker::park_timeout
+/// [`unpark`]: Unparker::unpark
 pub struct Parker {
     unparker: Unparker,
     _marker: PhantomData<*const ()>,
 }
 
 unsafe impl Send for Parker {}
+
+impl Default for Parker {
+    fn default() -> Self {
+        Self {
+            unparker: Unparker {
+                inner: Arc::new(Inner {
+                    state: AtomicUsize::new(EMPTY),
+                    lock: Mutex::new(()),
+                    cvar: Condvar::new(),
+                }),
+            },
+            _marker: PhantomData,
+        }
+    }
+}
 
 impl Parker {
     /// Creates a new `Parker`.
@@ -70,16 +85,7 @@ impl Parker {
     /// ```
     ///
     pub fn new() -> Parker {
-        Parker {
-            unparker: Unparker {
-                inner: Arc::new(Inner {
-                    state: AtomicUsize::new(EMPTY),
-                    lock: Mutex::new(()),
-                    cvar: Condvar::new(),
-                }),
-            },
-            _marker: PhantomData,
-        }
+        Self::default()
     }
 
     /// Blocks the current thread until the token is made available.
@@ -92,7 +98,7 @@ impl Parker {
     /// ```
     /// use crossbeam_utils::sync::Parker;
     ///
-    /// let mut p = Parker::new();
+    /// let p = Parker::new();
     /// let u = p.unparker().clone();
     ///
     /// // Make the token available.
@@ -116,7 +122,7 @@ impl Parker {
     /// use std::time::Duration;
     /// use crossbeam_utils::sync::Parker;
     ///
-    /// let mut p = Parker::new();
+    /// let p = Parker::new();
     ///
     /// // Waits for the token to become available, but will not wait longer than 500 ms.
     /// p.park_timeout(Duration::from_millis(500));
@@ -134,7 +140,7 @@ impl Parker {
     /// ```
     /// use crossbeam_utils::sync::Parker;
     ///
-    /// let mut p = Parker::new();
+    /// let p = Parker::new();
     /// let u = p.unparker().clone();
     ///
     /// // Make the token available.
@@ -143,24 +149,56 @@ impl Parker {
     /// p.park();
     /// ```
     ///
-    /// [`park`]: struct.Parker.html#method.park
-    /// [`park_timeout`]: struct.Parker.html#method.park_timeout
-    ///
-    /// [`Unparker`]: struct.Unparker.html
+    /// [`park`]: Parker::park
+    /// [`park_timeout`]: Parker::park_timeout
     pub fn unparker(&self) -> &Unparker {
         &self.unparker
+    }
+
+    /// Converts a `Parker` into a raw pointer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_utils::sync::Parker;
+    ///
+    /// let p = Parker::new();
+    /// let raw = Parker::into_raw(p);
+    /// ```
+    pub fn into_raw(this: Parker) -> *const () {
+        Unparker::into_raw(this.unparker)
+    }
+
+    /// Converts a raw pointer into a `Parker`.
+    ///
+    /// # Safety
+    ///
+    /// This method is safe to use only with pointers returned by [`Parker::into_raw`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_utils::sync::Parker;
+    ///
+    /// let p = Parker::new();
+    /// let raw = Parker::into_raw(p);
+    /// let p = unsafe { Parker::from_raw(raw) };
+    /// ```
+    pub unsafe fn from_raw(ptr: *const ()) -> Parker {
+        Parker {
+            unparker: Unparker::from_raw(ptr),
+            _marker: PhantomData,
+        }
     }
 }
 
 impl fmt::Debug for Parker {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad("Parker { .. }")
     }
 }
 
 /// Unparks a thread parked by the associated [`Parker`].
-///
-/// [`Parker`]: struct.Parker.html
 pub struct Unparker {
     inner: Arc<Inner>,
 }
@@ -181,7 +219,7 @@ impl Unparker {
     /// use std::time::Duration;
     /// use crossbeam_utils::sync::Parker;
     ///
-    /// let mut p = Parker::new();
+    /// let p = Parker::new();
     /// let u = p.unparker().clone();
     ///
     /// thread::spawn(move || {
@@ -194,15 +232,53 @@ impl Unparker {
     /// p.park();
     /// ```
     ///
-    /// [`park`]: struct.Parker.html#method.park
-    /// [`park_timeout`]: struct.Parker.html#method.park_timeout
+    /// [`park`]: Parker::park
+    /// [`park_timeout`]: Parker::park_timeout
     pub fn unpark(&self) {
         self.inner.unpark()
+    }
+
+    /// Converts an `Unparker` into a raw pointer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_utils::sync::{Parker, Unparker};
+    ///
+    /// let p = Parker::new();
+    /// let u = p.unparker().clone();
+    /// let raw = Unparker::into_raw(u);
+    /// ```
+    pub fn into_raw(this: Unparker) -> *const () {
+        Arc::into_raw(this.inner) as *const ()
+    }
+
+    /// Converts a raw pointer into an `Unparker`.
+    ///
+    /// # Safety
+    ///
+    /// This method is safe to use only with pointers returned by [`Unparker::into_raw`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_utils::sync::{Parker, Unparker};
+    ///
+    /// let p = Parker::new();
+    /// let u = p.unparker().clone();
+    ///
+    /// let raw = Unparker::into_raw(u);
+    /// let u = unsafe { Unparker::from_raw(raw) };
+    /// ```
+    pub unsafe fn from_raw(ptr: *const ()) -> Unparker {
+        Unparker {
+            inner: Arc::from_raw(ptr as *const Inner),
+        }
     }
 }
 
 impl fmt::Debug for Unparker {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad("Unparker { .. }")
     }
 }
@@ -228,7 +304,11 @@ struct Inner {
 impl Inner {
     fn park(&self, timeout: Option<Duration>) {
         // If we were previously notified then we consume this notification and return quickly.
-        if self.state.compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst).is_ok() {
+        if self
+            .state
+            .compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst)
+            .is_ok()
+        {
             return;
         }
 
@@ -264,10 +344,16 @@ impl Inner {
                     // Block the current thread on the conditional variable.
                     m = self.cvar.wait(m).unwrap();
 
-                    match self.state.compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst) {
-                        Ok(_) => return, // got a notification
-                        Err(_) => {} // spurious wakeup, go back to sleep
+                    if self
+                        .state
+                        .compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst)
+                        .is_ok()
+                    {
+                        // got a notification
+                        return;
                     }
+
+                    // spurious wakeup, go back to sleep
                 }
             }
             Some(timeout) => {
@@ -278,7 +364,7 @@ impl Inner {
 
                 match self.state.swap(EMPTY, SeqCst) {
                     NOTIFIED => {} // got a notification
-                    PARKED => {} // no notification
+                    PARKED => {}   // no notification
                     n => panic!("inconsistent park_timeout state: {}", n),
                 }
             }
@@ -291,9 +377,9 @@ impl Inner {
         // `NOTIFIED` even if `state` is already `NOTIFIED`. That is why this must be a swap rather
         // than a compare-and-swap that returns if it reads `NOTIFIED` on failure.
         match self.state.swap(NOTIFIED, SeqCst) {
-            EMPTY => return, // no one was waiting
+            EMPTY => return,    // no one was waiting
             NOTIFIED => return, // already unparked
-            PARKED => {} // gotta go wake someone up
+            PARKED => {}        // gotta go wake someone up
             _ => panic!("inconsistent state in unpark"),
         }
 

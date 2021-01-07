@@ -19,10 +19,11 @@
 //! conflicting requirements will need to be resolved before the build will
 //! succeed.
 
-#![doc(html_root_url = "https://docs.rs/rayon-core/1.6")]
+#![doc(html_root_url = "https://docs.rs/rayon-core/1.9")]
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(unreachable_pub)]
+#![warn(rust_2018_idioms)]
 
 use std::any::Any;
 use std::env;
@@ -31,19 +32,6 @@ use std::fmt;
 use std::io;
 use std::marker::PhantomData;
 use std::str::FromStr;
-
-extern crate crossbeam_deque;
-extern crate crossbeam_queue;
-extern crate crossbeam_utils;
-#[cfg(any(debug_assertions, rayon_unstable))]
-#[macro_use]
-extern crate lazy_static;
-extern crate num_cpus;
-
-#[cfg(test)]
-extern crate rand;
-#[cfg(test)]
-extern crate rand_xorshift;
 
 #[macro_use]
 mod log;
@@ -64,18 +52,16 @@ mod util;
 mod compile_fail;
 mod test;
 
-#[cfg(rayon_unstable)]
-pub mod internal;
-pub use join::{join, join_context};
-pub use registry::ThreadBuilder;
-pub use scope::{scope, Scope};
-pub use scope::{scope_fifo, ScopeFifo};
-pub use spawn::{spawn, spawn_fifo};
-pub use thread_pool::current_thread_has_pending_tasks;
-pub use thread_pool::current_thread_index;
-pub use thread_pool::ThreadPool;
+pub use self::join::{join, join_context};
+pub use self::registry::ThreadBuilder;
+pub use self::scope::{scope, Scope};
+pub use self::scope::{scope_fifo, ScopeFifo};
+pub use self::spawn::{spawn, spawn_fifo};
+pub use self::thread_pool::current_thread_has_pending_tasks;
+pub use self::thread_pool::current_thread_index;
+pub use self::thread_pool::ThreadPool;
 
-use registry::{CustomSpawn, DefaultSpawn, ThreadSpawn};
+use self::registry::{CustomSpawn, DefaultSpawn, ThreadSpawn};
 
 /// Returns the number of threads in the current registry. If this
 /// code is executing within a Rayon thread-pool, then this will be
@@ -96,7 +82,7 @@ use registry::{CustomSpawn, DefaultSpawn, ThreadSpawn};
 ///
 /// [snt]: struct.ThreadPoolBuilder.html#method.num_threads
 pub fn current_num_threads() -> usize {
-    ::registry::Registry::current_num_threads()
+    crate::registry::Registry::current_num_threads()
 }
 
 /// Error when initializing a thread pool.
@@ -211,7 +197,7 @@ impl<S> ThreadPoolBuilder<S>
 where
     S: ThreadSpawn,
 {
-    /// Create a new `ThreadPool` initialized using this configuration.
+    /// Creates a new `ThreadPool` initialized using this configuration.
     pub fn build(self) -> Result<ThreadPool, ThreadPoolBuildError> {
         ThreadPool::build(self)
     }
@@ -241,7 +227,7 @@ where
 }
 
 impl ThreadPoolBuilder {
-    /// Create a scoped `ThreadPool` initialized using this configuration.
+    /// Creates a scoped `ThreadPool` initialized using this configuration.
     ///
     /// This is a convenience function for building a pool using [`crossbeam::scope`]
     /// to spawn threads in a [`spawn_handler`](#method.spawn_handler).
@@ -255,11 +241,9 @@ impl ThreadPoolBuilder {
     /// A scoped pool may be useful in combination with scoped thread-local variables.
     ///
     /// ```
-    /// #[macro_use]
-    /// extern crate scoped_tls;
     /// # use rayon_core as rayon;
     ///
-    /// scoped_thread_local!(static POOL_DATA: Vec<i32>);
+    /// scoped_tls::scoped_thread_local!(static POOL_DATA: Vec<i32>);
     ///
     /// fn main() -> Result<(), rayon::ThreadPoolBuildError> {
     ///     let pool_data = vec![1, 2, 3];
@@ -311,7 +295,7 @@ impl ThreadPoolBuilder {
 }
 
 impl<S> ThreadPoolBuilder<S> {
-    /// Set a custom function for spawning threads.
+    /// Sets a custom function for spawning threads.
     ///
     /// Note that the threads will not exit until after the pool is dropped. It
     /// is up to the caller to wait for thread termination if that is important
@@ -419,7 +403,7 @@ impl<S> ThreadPoolBuilder<S> {
         Some(f(index))
     }
 
-    /// Set a closure which takes a thread index and returns
+    /// Sets a closure which takes a thread index and returns
     /// the thread's name.
     pub fn thread_name<F>(mut self, closure: F) -> Self
     where
@@ -429,7 +413,7 @@ impl<S> ThreadPoolBuilder<S> {
         self
     }
 
-    /// Set the number of threads to be used in the rayon threadpool.
+    /// Sets the number of threads to be used in the rayon threadpool.
     ///
     /// If you specify a non-zero number of threads using this
     /// function, then the resulting thread-pools are guaranteed to
@@ -492,7 +476,7 @@ impl<S> ThreadPoolBuilder<S> {
         self.stack_size
     }
 
-    /// Set the stack size of the worker threads
+    /// Sets the stack size of the worker threads
     pub fn stack_size(mut self, stack_size: usize) -> Self {
         self.stack_size = Some(stack_size);
         self
@@ -541,7 +525,7 @@ impl<S> ThreadPoolBuilder<S> {
         self.start_handler.take()
     }
 
-    /// Set a callback to be invoked on thread start.
+    /// Sets a callback to be invoked on thread start.
     ///
     /// The closure is passed the index of the thread on which it is invoked.
     /// Note that this same closure may be invoked multiple times in parallel.
@@ -560,7 +544,7 @@ impl<S> ThreadPoolBuilder<S> {
         self.exit_handler.take()
     }
 
-    /// Set a callback to be invoked on thread exit.
+    /// Sets a callback to be invoked on thread exit.
     ///
     /// The closure is passed the index of the thread on which it is invoked.
     /// Note that this same closure may be invoked multiple times in parallel.
@@ -655,22 +639,31 @@ impl ThreadPoolBuildError {
     }
 }
 
+const GLOBAL_POOL_ALREADY_INITIALIZED: &str =
+    "The global thread pool has already been initialized.";
+
 impl Error for ThreadPoolBuildError {
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         match self.kind {
-            ErrorKind::GlobalPoolAlreadyInitialized => {
-                "The global thread pool has already been initialized."
-            }
+            ErrorKind::GlobalPoolAlreadyInitialized => GLOBAL_POOL_ALREADY_INITIALIZED,
             ErrorKind::IOError(ref e) => e.description(),
+        }
+    }
+
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match &self.kind {
+            ErrorKind::GlobalPoolAlreadyInitialized => None,
+            ErrorKind::IOError(e) => Some(e),
         }
     }
 }
 
 impl fmt::Display for ThreadPoolBuildError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.kind {
-            ErrorKind::IOError(ref e) => e.fmt(f),
-            _ => self.description().fmt(f),
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.kind {
+            ErrorKind::GlobalPoolAlreadyInitialized => GLOBAL_POOL_ALREADY_INITIALIZED.fmt(f),
+            ErrorKind::IOError(e) => e.fmt(f),
         }
     }
 }
@@ -683,7 +676,7 @@ pub fn initialize(config: Configuration) -> Result<(), Box<dyn Error>> {
 }
 
 impl<S> fmt::Debug for ThreadPoolBuilder<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let ThreadPoolBuilder {
             ref num_threads,
             ref get_thread_name,
@@ -699,7 +692,7 @@ impl<S> fmt::Debug for ThreadPoolBuilder<S> {
         // output.
         struct ClosurePlaceholder;
         impl fmt::Debug for ClosurePlaceholder {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 f.write_str("<closure>")
             }
         }
@@ -731,7 +724,7 @@ impl Default for Configuration {
 
 #[allow(deprecated)]
 impl fmt::Debug for Configuration {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.builder.fmt(f)
     }
 }

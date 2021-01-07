@@ -4,10 +4,10 @@
 //! [`scope()`]: fn.scope.html
 //! [`join()`]: ../join/join.fn.html
 
-use job::{HeapJob, JobFifo};
-use latch::{CountLatch, Latch};
-use log::Event::*;
-use registry::{in_worker, Registry, WorkerThread};
+use crate::job::{HeapJob, JobFifo};
+use crate::latch::CountLatch;
+use crate::registry::{in_worker, Registry, WorkerThread};
+use crate::unwind;
 use std::any::Any;
 use std::fmt;
 use std::marker::PhantomData;
@@ -15,9 +15,7 @@ use std::mem;
 use std::ptr;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
-use unwind;
 
-mod internal;
 #[cfg(test)]
 mod test;
 
@@ -62,7 +60,7 @@ struct ScopeBase<'scope> {
     marker: PhantomData<Box<dyn FnOnce(&Scope<'scope>) + Send + Sync + 'scope>>,
 }
 
-/// Create a "fork-join" scope `s` and invokes the closure with a
+/// Creates a "fork-join" scope `s` and invokes the closure with a
 /// reference to `s`. This closure can then spawn asynchronous tasks
 /// into `s`. Those tasks may run asynchronously with respect to the
 /// closure; they may themselves spawn additional tasks into `s`. When
@@ -287,7 +285,7 @@ struct ScopeBase<'scope> {
 /// propagated at that point.
 pub fn scope<'scope, OP, R>(op: OP) -> R
 where
-    OP: for<'s> FnOnce(&'s Scope<'scope>) -> R + 'scope + Send,
+    OP: FnOnce(&Scope<'scope>) -> R + Send,
     R: Send,
 {
     in_worker(|owner_thread, _| {
@@ -296,7 +294,7 @@ where
     })
 }
 
-/// Create a "fork-join" scope `s` with FIFO order, and invokes the
+/// Creates a "fork-join" scope `s` with FIFO order, and invokes the
 /// closure with a reference to `s`. This closure can then spawn
 /// asynchronous tasks into `s`. Those tasks may run asynchronously with
 /// respect to the closure; they may themselves spawn additional tasks
@@ -378,7 +376,7 @@ where
 /// panics are propagated at that point.
 pub fn scope_fifo<'scope, OP, R>(op: OP) -> R
 where
-    OP: for<'s> FnOnce(&'s ScopeFifo<'scope>) -> R + 'scope + Send,
+    OP: FnOnce(&ScopeFifo<'scope>) -> R + Send,
     R: Send,
 {
     in_worker(|owner_thread, _| {
@@ -486,7 +484,7 @@ impl<'scope> ScopeFifo<'scope> {
     /// this distinction.
     ///
     /// [`Scope::spawn()`]: struct.Scope.html#method.spawn
-    /// [`scope_fifo` function]: fn.scope.html
+    /// [`scope_fifo` function]: fn.scope_fifo.html
     pub fn spawn_fifo<BODY>(&self, body: BODY)
     where
         BODY: FnOnce(&ScopeFifo<'scope>) + Send + 'scope,
@@ -512,7 +510,7 @@ impl<'scope> ScopeFifo<'scope> {
 }
 
 impl<'scope> ScopeBase<'scope> {
-    /// Create the base of a new scope for the given worker thread
+    /// Creates the base of a new scope for the given worker thread
     fn new(owner_thread: &WorkerThread) -> Self {
         ScopeBase {
             owner_thread_index: owner_thread.index(),
@@ -581,24 +579,16 @@ impl<'scope> ScopeBase<'scope> {
             .compare_exchange(nil, &mut *err, Ordering::Release, Ordering::Relaxed)
             .is_ok()
         {
-            log!(JobPanickedErrorStored {
-                owner_thread: self.owner_thread_index
-            });
             mem::forget(err); // ownership now transferred into self.panic
-        } else {
-            log!(JobPanickedErrorNotStored {
-                owner_thread: self.owner_thread_index
-            });
         }
 
-        self.job_completed_latch.set();
+        self.job_completed_latch
+            .set_and_tickle_one(&self.registry, self.owner_thread_index);
     }
 
     unsafe fn job_completed_ok(&self) {
-        log!(JobCompletedOk {
-            owner_thread: self.owner_thread_index
-        });
-        self.job_completed_latch.set();
+        self.job_completed_latch
+            .set_and_tickle_one(&self.registry, self.owner_thread_index);
     }
 
     unsafe fn steal_till_jobs_complete(&self, owner_thread: &WorkerThread) {
@@ -610,15 +600,8 @@ impl<'scope> ScopeBase<'scope> {
         // ordering:
         let panic = self.panic.swap(ptr::null_mut(), Ordering::Relaxed);
         if !panic.is_null() {
-            log!(ScopeCompletePanicked {
-                owner_thread: owner_thread.index()
-            });
             let value: Box<Box<dyn Any + Send + 'static>> = mem::transmute(panic);
             unwind::resume_unwinding(*value);
-        } else {
-            log!(ScopeCompleteNoPanic {
-                owner_thread: owner_thread.index()
-            });
         }
     }
 }
@@ -635,7 +618,7 @@ impl<'scope> fmt::Debug for Scope<'scope> {
 }
 
 impl<'scope> fmt::Debug for ScopeFifo<'scope> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_struct("ScopeFifo")
             .field("num_fifos", &self.fifos.len())
             .field("pool_id", &self.base.registry.id())

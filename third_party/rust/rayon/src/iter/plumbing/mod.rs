@@ -1,10 +1,10 @@
 //! Traits and functions used to implement parallel iteration.  These are
 //! low-level details -- users of parallel iterators should not need to
-//! interact with them directly.  See [the `plumbing` README][r] for a high-level overview.
+//! interact with them directly.  See [the `plumbing` README][r] for a general overview.
 //!
 //! [r]: https://github.com/rayon-rs/rayon/blob/master/src/iter/plumbing/README.md
 
-use join_context;
+use crate::join_context;
 
 use super::IndexedParallelIterator;
 
@@ -264,7 +264,7 @@ impl Splitter {
     #[inline]
     fn new() -> Splitter {
         Splitter {
-            splits: ::current_num_threads(),
+            splits: crate::current_num_threads(),
         }
     }
 
@@ -275,7 +275,7 @@ impl Splitter {
         if stolen {
             // This job was stolen!  Reset the number of desired splits to the
             // thread count, if that's more than we had remaining anyway.
-            self.splits = cmp::max(::current_num_threads(), self.splits / 2);
+            self.splits = cmp::max(crate::current_num_threads(), self.splits / 2);
             true
         } else if splits > 0 {
             // We have splits remaining, make it so.
@@ -300,7 +300,7 @@ struct LengthSplitter {
 }
 
 impl LengthSplitter {
-    /// Create a new splitter based on lengths.
+    /// Creates a new splitter based on lengths.
     ///
     /// The `min` is a hard lower bound.  We'll never split below that, but
     /// of course an iterator might start out smaller already.

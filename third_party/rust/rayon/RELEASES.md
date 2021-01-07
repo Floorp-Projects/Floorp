@@ -1,3 +1,138 @@
+# Release rayon 1.5.0 / rayon-core 1.9.0 (2020-10-21)
+
+- Update crossbeam dependencies.
+- The minimum supported `rustc` is now 1.36.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @cuviper
+- @mbrubeck
+- @mrksu
+
+# Release rayon 1.4.1 (2020-09-29)
+
+- The new `flat_map_iter` and `flatten_iter` methods can be used to flatten
+  sequential iterators, which may perform better in cases that don't need the
+  nested parallelism of `flat_map` and `flatten`.
+- The new `par_drain` method is a parallel version of the standard `drain` for
+  collections, removing items while keeping the original capacity. Collections
+  that implement this through `ParallelDrainRange` support draining items from
+  arbitrary index ranges, while `ParallelDrainFull` always drains everything.
+- The new `positions` method finds all items that match the given predicate and
+  returns their indices in a new iterator.
+
+# Release rayon-core 1.8.1 (2020-09-17)
+
+- Fixed an overflow panic on high-contention workloads, for a counter that was
+  meant to simply wrap. This panic only occurred with debug assertions enabled,
+  and was much more likely on 32-bit targets.
+
+# Release rayon 1.4.0 / rayon-core 1.8.0 (2020-08-24)
+
+- Implemented a new thread scheduler, [RFC 5], which uses targeted wakeups for
+  new work and for notifications of completed stolen work, reducing wasteful
+  CPU usage in idle threads.
+- Implemented `IntoParallelIterator for Range<char>` and `RangeInclusive<char>`
+  with the same iteration semantics as Rust 1.45.
+- Relaxed the lifetime requirements of the initial `scope` closure.
+
+[RFC 5]: https://github.com/rayon-rs/rfcs/pull/5
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @CAD97
+- @cuviper
+- @kmaork
+- @nikomatsakis
+- @SuperFluffy
+
+
+# Release rayon 1.3.1 / rayon-core 1.7.1 (2020-06-15)
+
+- Fixed a use-after-free race in calls blocked between two rayon thread pools.
+- Collecting to an indexed `Vec` now drops any partial writes while unwinding,
+  rather than just leaking them. If dropping also panics, Rust will abort.
+  - Note: the old leaking behavior is considered _safe_, just not ideal.
+- The new `IndexedParallelIterator::step_by()` adapts an iterator to step
+  through items by the given count, like `Iterator::step_by()`.
+- The new `ParallelSlice::par_chunks_exact()` and mutable equivalent
+  `ParallelSliceMut::par_chunks_exact_mut()` ensure that the chunks always have
+  the exact length requested, leaving any remainder separate, like the slice
+  methods `chunks_exact()` and `chunks_exact_mut()`.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @adrian5
+- @bluss
+- @cuviper
+- @FlyingCanoe
+- @GuillaumeGomez
+- @matthiasbeyer
+- @picoHz
+- @zesterer
+
+
+# Release rayon 1.3.0 / rayon-core 1.7.0 (2019-12-21)
+
+- Tuples up to length 12 now implement `IntoParallelIterator`, creating a
+  `MultiZip` iterator that produces items as similarly-shaped tuples.
+- The `--cfg=rayon_unstable` supporting code for `rayon-futures` is removed.
+- The minimum supported `rustc` is now 1.31.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @cuviper
+- @c410-f3r
+- @silwol
+
+
+# Release rayon-futures 0.1.1 (2019-12-21)
+
+- `Send` bounds have been added for the `Item` and `Error` associated types on
+  all generic `F: Future` interfaces. While technically a breaking change, this
+  is a soundness fix, so we are not increasing the semantic version for this.
+- This crate is now deprecated, and the `--cfg=rayon_unstable` supporting code
+  will be removed in `rayon-core 1.7.0`. This only supported the now-obsolete
+  `Future` from `futures 0.1`, while support for `std::future::Future` is
+  expected to come directly in `rayon-core` -- although that is not ready yet.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @cuviper
+- @kornelski
+- @jClaireCodesStuff
+- @jwass
+- @seanchen1991
+
+
+# Release rayon 1.2.1 / rayon-core 1.6.1 (2019-11-20)
+
+- Update crossbeam dependencies.
+- Add top-level doc links for the iterator traits.
+- Document that the iterator traits are not object safe.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @cuviper
+- @dnaka91
+- @matklad
+- @nikomatsakis
+- @Qqwy
+- @vorner
+
+
 # Release rayon 1.2.0 / rayon-core 1.6.0 (2019-08-30)
 
 - The new `ParallelIterator::copied()` converts an iterator of references into

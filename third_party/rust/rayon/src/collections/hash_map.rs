@@ -4,11 +4,12 @@
 
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
+use std::marker::PhantomData;
 
-use iter::plumbing::*;
-use iter::*;
+use crate::iter::plumbing::*;
+use crate::iter::*;
 
-use vec;
+use crate::vec;
 
 /// Parallel iterator over a hash map
 #[derive(Debug)] // std doesn't Clone
@@ -28,7 +29,7 @@ delegate_iterator! {
 
 /// Parallel iterator over an immutable reference to a hash map
 #[derive(Debug)]
-pub struct Iter<'a, K: Hash + Eq + Sync + 'a, V: Sync + 'a> {
+pub struct Iter<'a, K: Hash + Eq + Sync, V: Sync> {
     inner: vec::IntoIter<(&'a K, &'a V)>,
 }
 
@@ -52,7 +53,7 @@ delegate_iterator! {
 
 /// Parallel iterator over a mutable reference to a hash map
 #[derive(Debug)]
-pub struct IterMut<'a, K: Hash + Eq + Sync + 'a, V: Send + 'a> {
+pub struct IterMut<'a, K: Hash + Eq + Sync, V: Send> {
     inner: vec::IntoIter<(&'a K, &'a mut V)>,
 }
 
@@ -64,4 +65,32 @@ into_par_vec! {
 delegate_iterator! {
     IterMut<'a, K, V> => (&'a K, &'a mut V),
     impl<'a, K: Hash + Eq + Sync + 'a, V: Send + 'a>
+}
+
+/// Draining parallel iterator that moves out of a hash map,
+/// but keeps the total capacity.
+#[derive(Debug)]
+pub struct Drain<'a, K: Hash + Eq + Send, V: Send> {
+    inner: vec::IntoIter<(K, V)>,
+    marker: PhantomData<&'a mut HashMap<K, V>>,
+}
+
+impl<'a, K: Hash + Eq + Send, V: Send, S: BuildHasher> ParallelDrainFull
+    for &'a mut HashMap<K, V, S>
+{
+    type Iter = Drain<'a, K, V>;
+    type Item = (K, V);
+
+    fn par_drain(self) -> Self::Iter {
+        let vec: Vec<_> = self.drain().collect();
+        Drain {
+            inner: vec.into_par_iter(),
+            marker: PhantomData,
+        }
+    }
+}
+
+delegate_iterator! {
+    Drain<'_, K, V> => (K, V),
+    impl<K: Hash + Eq + Send, V: Send>
 }

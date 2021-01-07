@@ -1,5 +1,3 @@
-extern crate rayon;
-
 use rayon::prelude::*;
 use std::fmt::Debug;
 
@@ -13,8 +11,9 @@ where
 #[test]
 fn debug_binary_heap() {
     use std::collections::BinaryHeap;
-    let heap: BinaryHeap<_> = (0..10).collect();
+    let mut heap: BinaryHeap<_> = (0..10).collect();
     check(heap.par_iter());
+    check(heap.par_drain());
     check(heap.into_par_iter());
 }
 
@@ -41,14 +40,16 @@ fn debug_hash_map() {
     let mut map: HashMap<_, _> = (0..10).enumerate().collect();
     check(map.par_iter());
     check(map.par_iter_mut());
+    check(map.par_drain());
     check(map.into_par_iter());
 }
 
 #[test]
 fn debug_hash_set() {
     use std::collections::HashSet;
-    let set: HashSet<_> = (0..10).collect();
+    let mut set: HashSet<_> = (0..10).collect();
     check(set.par_iter());
+    check(set.par_drain());
     check(set.into_par_iter());
 }
 
@@ -67,6 +68,7 @@ fn debug_vec_deque() {
     let mut deque: VecDeque<_> = (0..10).collect();
     check(deque.par_iter());
     check(deque.par_iter_mut());
+    check(deque.par_drain(..));
     check(deque.into_par_iter());
 }
 
@@ -107,15 +109,24 @@ fn debug_str() {
 }
 
 #[test]
+fn debug_string() {
+    let mut s = "a b c d\ne f g".to_string();
+    s.par_drain(..);
+}
+
+#[test]
 fn debug_vec() {
     let mut v: Vec<_> = (0..10).collect();
     check(v.par_iter());
     check(v.par_iter_mut());
     check(v.par_chunks(42));
+    check(v.par_chunks_exact(42));
     check(v.par_chunks_mut(42));
+    check(v.par_chunks_exact_mut(42));
     check(v.par_windows(42));
     check(v.par_split(|x| x % 3 == 0));
     check(v.par_split_mut(|x| x % 3 == 0));
+    check(v.par_drain(..));
     check(v.into_par_iter());
 }
 
@@ -129,7 +140,9 @@ fn debug_adaptors() {
     check(v.par_iter().filter(|_| true));
     check(v.par_iter().filter_map(Some));
     check(v.par_iter().flat_map(Some));
+    check(v.par_iter().flat_map_iter(Some));
     check(v.par_iter().map(Some).flatten());
+    check(v.par_iter().map(Some).flatten_iter());
     check(v.par_iter().fold(|| 0, |x, _| x));
     check(v.par_iter().fold_with(0, |x, _| x));
     check(v.par_iter().try_fold(|| 0, |x, _| Some(x)));
@@ -144,6 +157,7 @@ fn debug_adaptors() {
     check(v.par_iter().map_with(0, |_, x| x));
     check(v.par_iter().map_init(|| 0, |_, x| x));
     check(v.par_iter().panic_fuse());
+    check(v.par_iter().positions(|_| true));
     check(v.par_iter().rev());
     check(v.par_iter().skip(1));
     check(v.par_iter().take(1));
@@ -152,6 +166,7 @@ fn debug_adaptors() {
     check(v.par_iter().with_min_len(1));
     check(v.par_iter().zip(&v));
     check(v.par_iter().zip_eq(&v));
+    check(v.par_iter().step_by(2));
 }
 
 #[test]
@@ -174,4 +189,21 @@ fn debug_repeat() {
 #[test]
 fn debug_splitter() {
     check(rayon::iter::split(0..10, |x| (x, None)));
+}
+
+#[test]
+fn debug_multizip() {
+    let v: &Vec<_> = &(0..10).collect();
+    check((v,).into_par_iter());
+    check((v, v).into_par_iter());
+    check((v, v, v).into_par_iter());
+    check((v, v, v, v).into_par_iter());
+    check((v, v, v, v, v).into_par_iter());
+    check((v, v, v, v, v, v).into_par_iter());
+    check((v, v, v, v, v, v, v).into_par_iter());
+    check((v, v, v, v, v, v, v, v).into_par_iter());
+    check((v, v, v, v, v, v, v, v, v).into_par_iter());
+    check((v, v, v, v, v, v, v, v, v, v).into_par_iter());
+    check((v, v, v, v, v, v, v, v, v, v, v).into_par_iter());
+    check((v, v, v, v, v, v, v, v, v, v, v, v).into_par_iter());
 }

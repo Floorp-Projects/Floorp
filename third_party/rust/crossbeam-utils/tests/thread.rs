@@ -1,5 +1,3 @@
-extern crate crossbeam_utils;
-
 use std::any::Any;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread::sleep;
@@ -176,6 +174,42 @@ fn join_nested() {
         });
 
         sleep(Duration::from_millis(100));
+    })
+    .unwrap();
+}
+
+#[test]
+fn scope_returns_ok() {
+    let result = thread::scope(|scope| scope.spawn(|_| 1234).join().unwrap()).unwrap();
+    assert_eq!(result, 1234);
+}
+
+#[cfg(unix)]
+#[test]
+fn as_pthread_t() {
+    use std::os::unix::thread::JoinHandleExt;
+    thread::scope(|scope| {
+        let handle = scope.spawn(|_scope| {
+            sleep(Duration::from_millis(100));
+            42
+        });
+        let _pthread_t = handle.as_pthread_t();
+        handle.join().unwrap();
+    })
+    .unwrap();
+}
+
+#[cfg(windows)]
+#[test]
+fn as_raw_handle() {
+    use std::os::windows::io::AsRawHandle;
+    thread::scope(|scope| {
+        let handle = scope.spawn(|_scope| {
+            sleep(Duration::from_millis(100));
+            42
+        });
+        let _raw_handle = handle.as_raw_handle();
+        handle.join().unwrap();
     })
     .unwrap();
 }

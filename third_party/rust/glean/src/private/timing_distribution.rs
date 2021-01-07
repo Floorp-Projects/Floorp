@@ -36,12 +36,12 @@ impl TimingDistributionMetric {
 
 #[inherent(pub)]
 impl glean_core::traits::TimingDistribution for TimingDistributionMetric {
-    fn start(&mut self) -> TimerId {
+    fn start(&self) -> TimerId {
         let start_time = time::precise_time_ns();
         self.0.write().unwrap().set_start(start_time)
     }
 
-    fn stop_and_accumulate(&mut self, id: TimerId) {
+    fn stop_and_accumulate(&self, id: TimerId) {
         let stop_time = time::precise_time_ns();
         let metric = Arc::clone(&self.0);
         dispatcher::launch(move || {
@@ -54,7 +54,7 @@ impl glean_core::traits::TimingDistribution for TimingDistributionMetric {
         });
     }
 
-    fn cancel(&mut self, id: TimerId) {
+    fn cancel(&self, id: TimerId) {
         let metric = Arc::clone(&self.0);
         dispatcher::launch(move || metric.write().unwrap().cancel(id));
     }

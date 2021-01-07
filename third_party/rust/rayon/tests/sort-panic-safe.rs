@@ -1,8 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-extern crate rand;
-extern crate rayon;
-
 use rand::distributions::Uniform;
 use rand::{thread_rng, Rng};
 use rayon::prelude::*;
@@ -15,7 +10,7 @@ use std::thread;
 
 static VERSIONS: AtomicUsize = AtomicUsize::new(0);
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref DROP_COUNTS: Vec<AtomicUsize> = (0..20_000).map(|_| AtomicUsize::new(0)).collect();
 }
 

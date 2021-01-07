@@ -59,7 +59,7 @@ fn validate_against_schema() {
     #[derive(Debug)]
     pub struct ValidatingUploader {
         sender: crossbeam_channel::Sender<Vec<u8>>,
-    };
+    }
     impl glean::net::PingUploader for ValidatingUploader {
         fn upload(
             &self,
@@ -115,7 +115,7 @@ fn validate_against_schema() {
         Ok(()) => {}
         Err(e) => {
             let errors = e.map(|e| format!("{}", e)).collect::<Vec<_>>();
-            assert!(false, "Data: {:#?}\nErrors: {:#?}", data, errors);
+            panic!("Data: {:#?}\nErrors: {:#?}", data, errors);
         }
     }
 }

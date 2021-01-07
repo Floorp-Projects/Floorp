@@ -20,7 +20,7 @@ fn send_a_ping() {
     #[derive(Debug)]
     pub struct FakeUploader {
         sender: crossbeam_channel::Sender<String>,
-    };
+    }
     impl net::PingUploader for FakeUploader {
         fn upload(
             &self,
@@ -369,7 +369,7 @@ fn setting_debug_view_tag_before_initialization_should_not_crash() {
     #[derive(Debug)]
     pub struct FakeUploader {
         sender: crossbeam_channel::Sender<Vec<(String, String)>>,
-    };
+    }
     impl net::PingUploader for FakeUploader {
         fn upload(
             &self,
@@ -428,7 +428,7 @@ fn setting_source_tags_before_initialization_should_not_crash() {
     #[derive(Debug)]
     pub struct FakeUploader {
         sender: crossbeam_channel::Sender<Vec<(String, String)>>,
-    };
+    }
     impl net::PingUploader for FakeUploader {
         fn upload(
             &self,
@@ -497,7 +497,7 @@ fn registering_pings_before_init_must_work() {
     #[derive(Debug)]
     pub struct FakeUploader {
         sender: crossbeam_channel::Sender<String>,
-    };
+    }
     impl net::PingUploader for FakeUploader {
         fn upload(
             &self,

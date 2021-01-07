@@ -21,7 +21,7 @@ no_static_freetype = []
 leak_checks = []
 
 [build-dependencies]
-build-parallel = "0.1.1"
+build-parallel = "0.1.2"
 glslopt = "0.1.7"
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
 
@@ -42,7 +42,7 @@ malloc_size_of_derive = "0.1"
 num-traits = "0.2"
 plane-split = "0.17"
 png = { optional = true, version = "0.16" }
-rayon = "1"
+rayon = "1.5"
 ron = { optional = true, version = "0.6.2" }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }
 serde_json = { optional = true, version = "1.0" }

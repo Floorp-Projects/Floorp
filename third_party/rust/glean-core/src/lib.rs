@@ -333,6 +333,7 @@ impl Glean {
             .is_none()
         {
             self.core_metrics.first_run_date.set(self, None);
+            self.core_metrics.first_run_hour.set(self, None);
             // The `first_run_date` field is generated on the very first run
             // and persisted across upload toggling. We can assume that, the only
             // time it is set, that's indeed our "first run".
@@ -445,13 +446,15 @@ impl Glean {
         // so that it can't be accessed until this function is done.
         let _lock = self.upload_manager.clear_ping_queue();
 
-        // There is only one metric that we want to survive after clearing all
-        // metrics: first_run_date. Here, we store its value so we can restore
-        // it after clearing the metrics.
+        // There are only two metrics that we want to survive after clearing all
+        // metrics: first_run_date and first_run_hour. Here, we store their values
+        // so we can restore them after clearing the metrics.
         let existing_first_run_date = self
             .core_metrics
             .first_run_date
             .get_value(self, "glean_client_info");
+
+        let existing_first_run_hour = self.core_metrics.first_run_hour.get_value(self, "metrics");
 
         // Clear any pending pings.
         let ping_maker = PingMaker::new();
@@ -493,6 +496,13 @@ impl Glean {
                 self.core_metrics
                     .first_run_date
                     .set(self, Some(existing_first_run_date));
+            }
+
+            // Restore the first_run_hour.
+            if let Some(existing_first_run_hour) = existing_first_run_hour {
+                self.core_metrics
+                    .first_run_hour
+                    .set(self, Some(existing_first_run_hour));
             }
 
             self.upload_enabled = false;
