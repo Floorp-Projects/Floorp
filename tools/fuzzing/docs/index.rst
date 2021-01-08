@@ -399,7 +399,7 @@ on fuzzing and hence prevent finding other critical issues.
 
 Issues in Bugzilla are marked as fuzz blockers by adding “[fuzzblocker]”
 to the “Whiteboard” field. A list of open issues marked as fuzz blockers
-can be found on `Bugzilla <https://bugzilla.mozilla.org/buglist.cgi?cmdtype=runnamed&namedcmd=fuzzblockers&list_id=15127589>`__.
+can be found on `Bugzilla <https://bugzilla.mozilla.org/buglist.cgi?cmdtype=dorem&remaction=run&namedcmd=fuzzblockers&sharer_id=486634>`__.
 
 
 Documentation
