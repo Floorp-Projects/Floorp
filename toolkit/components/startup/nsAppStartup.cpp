@@ -887,8 +887,16 @@ static nsresult RemoveIncompleteStartupFile() {
   MOZ_TRY(NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
                                  getter_AddRefs(file)));
 
-  MOZ_TRY_VAR(file, mozilla::startup::GetIncompleteStartupFile(file));
-  return file->Remove(false);
+  return NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+      "RemoveIncompleteStartupFile", [file = std::move(file)] {
+        auto incompleteStartup =
+            mozilla::startup::GetIncompleteStartupFile(file);
+        if (NS_WARN_IF(incompleteStartup.isErr())) {
+          return;
+        }
+        Unused << NS_WARN_IF(
+            NS_FAILED(incompleteStartup.unwrap()->Remove(false)));
+      }));
 }
 
 NS_IMETHODIMP
