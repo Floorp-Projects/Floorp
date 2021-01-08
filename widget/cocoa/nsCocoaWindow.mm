@@ -2511,6 +2511,25 @@ NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPo
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseScrollEvent(
+    LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage, double aDeltaX, double aDeltaY,
+    double aDeltaZ, uint32_t aModifierFlags, uint32_t aAdditionalFlags, nsIObserver* aObserver) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+  if (mPopupContentView) {
+    // Pass nullptr as the observer so that the AutoObserverNotification in
+    // nsChildView::SynthesizeNativeMouseScrollEvent will be ignored.
+    return mPopupContentView->SynthesizeNativeMouseScrollEvent(aPoint, aNativeMessage, aDeltaX,
+                                                               aDeltaY, aDeltaZ, aModifierFlags,
+                                                               aAdditionalFlags, nullptr);
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 void nsCocoaWindow::LockAspectRatio(bool aShouldLock) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
