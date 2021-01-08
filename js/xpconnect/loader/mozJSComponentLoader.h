@@ -13,7 +13,6 @@
 #include "mozilla/Module.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "nsIMemoryReporter.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
 #include "nsClassHashtable.h"
@@ -34,10 +33,9 @@ class ScriptPreloader;
 #  define STARTUP_RECORDER_ENABLED
 #endif
 
-class mozJSComponentLoader final : public nsIMemoryReporter {
+class mozJSComponentLoader final {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMEMORYREPORTER
+  NS_INLINE_DECL_REFCOUNTING(mozJSComponentLoader);
 
   void GetLoadedModules(nsTArray<nsCString>& aLoadedModules);
   void GetLoadedComponents(nsTArray<nsCString>& aLoadedComponents);
