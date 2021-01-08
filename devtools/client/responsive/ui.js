@@ -49,7 +49,7 @@ loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 loader.lazyRequireGetter(
   this,
   "saveScreenshot",
-  "devtools/shared/screenshot/save"
+  "devtools/client/shared/save-screenshot"
 );
 
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";

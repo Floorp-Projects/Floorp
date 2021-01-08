@@ -26,7 +26,7 @@ loader.lazyServiceGetter(
 loader.lazyRequireGetter(
   this,
   "saveScreenshot",
-  "devtools/shared/screenshot/save"
+  "devtools/client/shared/save-screenshot"
 );
 loader.lazyRequireGetter(
   this,

@@ -74,7 +74,7 @@ function createScreenshotDataURL(document, args) {
     height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
     filename = filename.replace(".png", "-fullpage.png");
   } else if (args.rawNode) {
-    window = args.rawNode.ownerDocument.defaultView;
+    window = args.rawNode.ownerGlobal;
     ({ top, left, width, height } = getRect(window, args.rawNode, window));
   } else if (args.selector) {
     const node = window.document.querySelector(args.selector);

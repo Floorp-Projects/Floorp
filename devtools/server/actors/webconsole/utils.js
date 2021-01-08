@@ -11,7 +11,7 @@ if (!isWorker) {
   loader.lazyRequireGetter(
     this,
     "captureScreenshot",
-    "devtools/shared/screenshot/capture",
+    "devtools/server/actors/utils/capture-screenshot",
     true
   );
 }
