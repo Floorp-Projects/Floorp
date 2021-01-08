@@ -659,6 +659,7 @@ pref("gfx.webrender.debug.echo-driver-messages", false);
 pref("gfx.webrender.debug.show-overdraw", false);
 pref("gfx.webrender.debug.slow-frame-indicator", false);
 pref("gfx.webrender.debug.picture-caching", false);
+pref("gfx.webrender.debug.force-picture-invalidation", false);
 pref("gfx.webrender.debug.tile-cache-logging", false);
 pref("gfx.webrender.debug.primitives", false);
 pref("gfx.webrender.debug.small-screen", false);

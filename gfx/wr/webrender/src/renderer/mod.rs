@@ -1110,6 +1110,7 @@ impl Renderer {
             tile_size_override: None,
             max_depth_ids: device.max_depth_ids(),
             max_target_size: max_texture_size,
+            force_invalidation: false,
         };
         info!("WR {:?}", config);
 

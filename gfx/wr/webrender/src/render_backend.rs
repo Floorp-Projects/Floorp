@@ -1191,6 +1191,12 @@ impl RenderBackend {
                         self.resource_cache.set_debug_flags(flags);
                         self.gpu_cache.set_debug_flags(flags);
 
+                        let force_invalidation = flags.contains(DebugFlags::FORCE_PICTURE_INVALIDATION);
+                        if self.frame_config.force_invalidation != force_invalidation {
+                            self.frame_config.force_invalidation = force_invalidation;
+                            self.update_frame_builder_config();
+                        }
+
                         // If we're toggling on the GPU cache debug display, we
                         // need to blow away the cache. This is because we only
                         // send allocation/free notifications to the renderer
