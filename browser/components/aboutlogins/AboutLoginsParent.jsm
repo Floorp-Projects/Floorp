@@ -390,23 +390,10 @@ class AboutLoginsParent extends JSWindowActorParent {
         break;
       }
       case "AboutLogins:ImportPasswords": {
-        let fp = Cc["@mozilla.org/filepicker;1"].createInstance(
-          Ci.nsIFilePicker
-        );
-        async function fpCallback(aResult) {
-          if (aResult != Ci.nsIFilePicker.returnCancel) {
-            await LoginCSVImport.importFromCSV(fp.file.path);
-            Services.telemetry.recordEvent(
-              "pwmgr",
-              "mgmt_menu_item_used",
-              "import_csv_complete"
-            );
-          }
-        }
         let [
           title,
           okButtonLabel,
-          csvFilterTitle,
+          filterTitle,
         ] = await AboutLoginsL10n.formatValues([
           {
             id: "about-logins-import-file-picker-title",
@@ -418,12 +405,23 @@ class AboutLoginsParent extends JSWindowActorParent {
             id: "about-logins-import-file-picker-csv-filter-title",
           },
         ]);
+        let { result, path } = await this.openFilePickerDialog(
+          title,
+          okButtonLabel,
+          filterTitle,
+          "*.csv",
+          ownerGlobal
+        );
 
-        fp.init(ownerGlobal, title, Ci.nsIFilePicker.modeOpen);
-        fp.appendFilter(csvFilterTitle, "*.csv");
-        fp.appendFilters(Ci.nsIFilePicker.filterAll);
-        fp.okButtonLabel = okButtonLabel;
-        fp.open(fpCallback);
+        if (result != Ci.nsIFilePicker.returnCancel) {
+          let summary = await LoginCSVImport.importFromCSV(path);
+          this.sendAsyncMessage("AboutLogins:ImportPasswordsDialog", summary);
+          Services.telemetry.recordEvent(
+            "pwmgr",
+            "mgmt_menu_item_used",
+            "import_csv_complete"
+          );
+        }
         break;
       }
       case "AboutLogins:RemoveAllLogins": {
@@ -446,6 +444,25 @@ class AboutLoginsParent extends JSWindowActorParent {
     }
 
     this.sendAsyncMessage("AboutLogins:ShowLoginItemError", messageObject);
+  }
+
+  async openFilePickerDialog(
+    title,
+    okButtonLabel,
+    filterTitle,
+    filterExtension,
+    ownerGlobal
+  ) {
+    return new Promise(resolve => {
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      fp.init(ownerGlobal, title, Ci.nsIFilePicker.modeOpen);
+      fp.appendFilter(filterTitle, filterExtension);
+      fp.appendFilters(Ci.nsIFilePicker.filterAll);
+      fp.okButtonLabel = okButtonLabel;
+      fp.open(async result => {
+        resolve({ result, path: fp.file.path });
+      });
+    });
   }
 }
 
