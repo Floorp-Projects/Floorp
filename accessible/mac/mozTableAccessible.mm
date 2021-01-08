@@ -481,21 +481,11 @@ using namespace mozilla::a11y;
   // all rows are direct children of the outline; they use
   // relations to expose their heirarchy structure.
 
-  mozAccessible* disclosingRow = nil;
   // first we check the relations to see if we're in a xul tree
   // with weird row semantics
-  if (mGeckoAccessible.IsAccessible()) {
-    Relation rel = mGeckoAccessible.AsAccessible()->RelationByType(
-        RelationType::NODE_CHILD_OF);
-    Accessible* maybeParent = rel.Next();
-    disclosingRow =
-        maybeParent ? GetNativeFromGeckoAccessible(maybeParent) : nil;
-  } else {
-    nsTArray<ProxyAccessible*> accs =
-        mGeckoAccessible.AsProxy()->RelationByType(RelationType::NODE_CHILD_OF);
-    disclosingRow =
-        accs.Length() > 0 ? GetNativeFromGeckoAccessible(accs[0]) : nil;
-  }
+  NSArray<mozAccessible*>* disclosingRows =
+      [self getRelationsByType:RelationType::NODE_CHILD_OF];
+  mozAccessible* disclosingRow = [disclosingRows firstObject];
 
   if (disclosingRow) {
     // if we find a row from our relation check,
@@ -507,6 +497,7 @@ using namespace mozilla::a11y;
 
     return disclosingRow;
   }
+
   mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
   // otherwise, its likely we're in an aria tree, so we can use
   // these role and subrole checks
@@ -539,24 +530,10 @@ using namespace mozilla::a11y;
   // xul trees so we have to use relations first and then fall-back
   // to the children filter for non-xul outlines.
 
-  NSMutableArray* disclosedRows = [[NSMutableArray alloc] init];
   // first we check the relations to see if we're in a xul tree
   // with weird row semantics
-  if (mGeckoAccessible.IsAccessible()) {
-    Relation rel = mGeckoAccessible.AsAccessible()->RelationByType(
-        RelationType::NODE_PARENT_OF);
-    Accessible* acc = nullptr;
-    while ((acc = rel.Next())) {
-      [disclosedRows addObject:GetNativeFromGeckoAccessible(acc)];
-    }
-  } else {
-    nsTArray<ProxyAccessible*> accs =
-        mGeckoAccessible.AsProxy()->RelationByType(
-            RelationType::NODE_PARENT_OF);
-    disclosedRows = utils::ConvertToNSArray(accs);
-  }
-
-  if (disclosedRows) {
+  if (NSArray* disclosedRows =
+          [self getRelationsByType:RelationType::NODE_PARENT_OF]) {
     // if we find rows from our relation check, return them here
     return disclosedRows;
   }

@@ -598,25 +598,17 @@ struct RoleDescrComparator {
     if (flag == eNameFromSubtree) {
       return nil;
     }
-
-    if (![self providesLabelNotTitle]) {
-      Relation rel = acc->RelationByType(RelationType::LABELLED_BY);
-      if (rel.Next() && !rel.Next()) {
-        return nil;
-      }
-    }
   } else if (proxy) {
     uint32_t flag = proxy->Name(name);
     if (flag == eNameFromSubtree) {
       return nil;
     }
+  }
 
-    if (![self providesLabelNotTitle]) {
-      nsTArray<ProxyAccessible*> rels =
-          proxy->RelationByType(RelationType::LABELLED_BY);
-      if (rels.Length() == 1) {
-        return nil;
-      }
+  if (![self providesLabelNotTitle]) {
+    NSArray* relations = [self getRelationsByType:RelationType::LABELLED_BY];
+    if ([relations count] == 1) {
+      return nil;
     }
   }
 
@@ -748,24 +740,9 @@ struct RoleDescrComparator {
 - (id)moxTitleUIElement {
   MOZ_ASSERT(!mGeckoAccessible.IsNull());
 
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
-    Relation rel = acc->RelationByType(RelationType::LABELLED_BY);
-    Accessible* tempAcc = rel.Next();
-    if (tempAcc && !rel.Next()) {
-      mozAccessible* label = GetNativeFromGeckoAccessible(tempAcc);
-      return [label isAccessibilityElement] ? label : nil;
-    }
-
-    return nil;
-  }
-
-  ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
-  nsTArray<ProxyAccessible*> rel =
-      proxy->RelationByType(RelationType::LABELLED_BY);
-  ProxyAccessible* tempProxy = rel.SafeElementAt(0);
-  if (tempProxy && rel.Length() <= 1) {
-    mozAccessible* label = GetNativeFromGeckoAccessible(tempProxy);
-    return [label isAccessibilityElement] ? label : nil;
+  NSArray* relations = [self getRelationsByType:RelationType::LABELLED_BY];
+  if ([relations count] == 1) {
+    return [relations firstObject];
   }
 
   return nil;
@@ -984,6 +961,24 @@ struct RoleDescrComparator {
       return;
     }
   }
+}
+
+- (NSArray<mozAccessible*>*)getRelationsByType:(RelationType)relationType {
+  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+    NSMutableArray<mozAccessible*>* relations = [[NSMutableArray alloc] init];
+    Relation rel = acc->RelationByType(relationType);
+    while (Accessible* relAcc = rel.Next()) {
+      if (mozAccessible* relNative = GetNativeFromGeckoAccessible(relAcc)) {
+        [relations addObject:relNative];
+      }
+    }
+
+    return relations;
+  }
+
+  ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+  nsTArray<ProxyAccessible*> rel = proxy->RelationByType(relationType);
+  return utils::ConvertToNSArray(rel);
 }
 
 - (void)handleAccessibleTextChangeEvent:(NSString*)change
