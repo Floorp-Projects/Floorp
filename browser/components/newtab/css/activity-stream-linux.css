@@ -1617,15 +1617,23 @@ main {
   padding: 16px;
   transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96);
   overflow: auto;
-  transform: translateX(435px); }
+  transform: translateX(435px);
+  visibility: hidden; }
   .customize-menu:dir(rtl) {
     transform: translateX(-435px); }
   .customize-menu.customize-animate-enter-done {
     transform: translateX(0); }
-  .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-enter-active, .customize-menu.customize-animate-exit-active {
-    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow); }
+  .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-enter-active, .customize-menu.customize-animate-enter {
+    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
+    transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 1ms;
+    visibility: visible; }
+  .customize-menu.customize-animate-exit-active, .customize-menu.customize-animate-exit {
+    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
+    transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 1ms 250ms;
+    visibility: visible; }
   .customize-menu.customize-animate-exit-done {
-    transform: translateX(435px); }
+    transform: translateX(435px);
+    transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 1ms 250ms; }
     .customize-menu.customize-animate-exit-done:dir(rtl) {
       transform: translateX(-435px); }
   .customize-menu .close-button {
@@ -1713,7 +1721,8 @@ main {
       position: relative;
       display: inline-block;
       width: 26px;
-      height: 16px; }
+      height: 16px;
+      grid-column: 2; }
     .home-section .section .switch input {
       opacity: 0;
       width: 0;
@@ -1721,7 +1730,7 @@ main {
     .home-section .section .slider {
       position: absolute;
       inset: 0;
-      transition: 250ms;
+      transition: transform 250ms;
       border-radius: 13px;
       border: 1px solid rgba(0, 0, 0, 0.15);
       background-color: var(--newtab-primary-action-background-off); }
@@ -1733,7 +1742,7 @@ main {
         inset-inline-start: 3px;
         bottom: 3px;
         background-color: var(--customize-menu-primary-action-text);
-        transition: 250ms;
+        transition: transform 250ms;
         border-radius: 50%;
         outline: 1px solid rgba(0, 0, 0, 0.15);
         -moz-outline-radius: 11px; }
