@@ -751,9 +751,21 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
       mayHaveSponsoredTopSites
     } = prefs;
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", showLogo && "visible-logo", newNewtabExperienceEnabled && "newtab-experience"].filter(v => v).join(" ");
-    return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", null, canShowCustomizationMenu ? react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PersonalizeButton, {
+    return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", null, canShowCustomizationMenu ? react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("span", null, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PersonalizeButton, {
       onClick: this.openCustomizationMenu
-    }) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
+    }), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_11__["CSSTransition"], {
+      timeout: 0,
+      classNames: "customize-animate",
+      in: showCustomizationMenu,
+      appear: true
+    }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__["CustomizeMenu"], {
+      onClose: this.closeCustomizationMenu,
+      openPreferences: this.openPreferences,
+      setPref: this.setPref,
+      enabledSections: enabledSections,
+      pocketRegion: pocketRegion,
+      mayHaveSponsoredTopSites: mayHaveSponsoredTopSites
+    }))) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
       onClick: this.openPreferences,
       icon: prefsButtonIcon
     }), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
@@ -774,20 +786,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
       className: "borderless-error"
     }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_DiscoveryStreamBase_DiscoveryStreamBase__WEBPACK_IMPORTED_MODULE_5__["DiscoveryStreamBase"], {
       locale: props.App.locale
-    })) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__["Sections"], null)), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__["ConfirmDialog"], null))), canShowCustomizationMenu && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_11__["CSSTransition"], {
-      timeout: 0,
-      classNames: "customize-animate",
-      in: showCustomizationMenu,
-      appear: true
-    }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__["CustomizeMenu"], {
-      onClose: this.closeCustomizationMenu,
-      openPreferences: this.openPreferences,
-      setPref: this.setPref,
-      enabledSections: enabledSections,
-      pocketRegion: pocketRegion,
-      mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
-      dispatch: this.props.dispatch
-    })));
+    })) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__["Sections"], null)), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__["ConfirmDialog"], null))));
   }
 
 }
@@ -14323,10 +14322,24 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("div", {
       id: "shortcuts-section",
       className: "section"
-    }, external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
+    }, external_React_default.a.createElement("label", {
+      className: "switch"
+    }, external_React_default.a.createElement("input", {
+      checked: topSitesEnabled,
+      type: "checkbox",
+      onChange: this.onPreferenceSelect,
+      preference: "feeds.topsites",
+      "aria-labelledby": "custom-shortcuts-title",
+      "aria-describedby": "custom-shortcuts-subtitle"
+    }), external_React_default.a.createElement("span", {
+      className: "slider",
+      role: "presentation"
+    })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
+      id: "custom-shortcuts-title",
       className: "title",
       "data-l10n-id": "newtab-custom-shortcuts-title"
     }), external_React_default.a.createElement("p", {
+      id: "custom-shortcuts-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-shortcuts-subtitle"
     }), external_React_default.a.createElement("div", {
@@ -14340,7 +14353,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       preference: "topSitesRows",
       value: topSitesRowsCount,
       onChange: this.onPreferenceSelect,
-      disabled: !topSitesEnabled
+      disabled: !topSitesEnabled,
+      "aria-labelledby": "custom-shortcuts-title"
     }, external_React_default.a.createElement("option", {
       value: "1",
       "data-l10n-id": "newtab-custom-row-selector",
@@ -14358,7 +14372,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       "data-l10n-id": "newtab-custom-row-selector",
       "data-l10n-args": "{\"num\": 4}"
     })), this.props.mayHaveSponsoredTopSites && external_React_default.a.createElement("div", {
-      className: "check-wrapper"
+      className: "check-wrapper",
+      role: "presentation"
     }, external_React_default.a.createElement("input", {
       id: "sponsored-shortcuts",
       className: "sponsored-checkbox",
@@ -14371,22 +14386,27 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       className: "sponsored",
       htmlFor: "sponsored-shortcuts",
       "data-l10n-id": "newtab-custom-sponsored-sites"
-    }))))), external_React_default.a.createElement("label", {
-      className: "switch"
-    }, external_React_default.a.createElement("input", {
-      checked: topSitesEnabled,
-      type: "checkbox",
-      onChange: this.onPreferenceSelect,
-      preference: "feeds.topsites"
-    }), external_React_default.a.createElement("span", {
-      className: "slider"
-    }))), this.props.pocketRegion && external_React_default.a.createElement("div", {
+    })))))), this.props.pocketRegion && external_React_default.a.createElement("div", {
       id: "pocket-section",
       className: "section"
-    }, external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
+    }, external_React_default.a.createElement("label", {
+      className: "switch"
+    }, external_React_default.a.createElement("input", {
+      checked: pocketEnabled,
+      type: "checkbox",
+      onChange: this.onPreferenceSelect,
+      preference: "feeds.section.topstories",
+      "aria-labelledby": "custom-pocket-title",
+      "aria-describedby": "custom-pocket-subtitle"
+    }), external_React_default.a.createElement("span", {
+      className: "slider",
+      role: "presentation"
+    })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
+      id: "custom-pocket-title",
       className: "title",
       "data-l10n-id": "newtab-custom-pocket-title"
     }), external_React_default.a.createElement("p", {
+      id: "custom-pocket-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-pocket-subtitle"
     }), external_React_default.a.createElement("div", {
@@ -14394,7 +14414,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("div", {
       className: `more-information ${pocketEnabled ? "expand" : "shrink"}`
     }, external_React_default.a.createElement("div", {
-      className: "check-wrapper"
+      className: "check-wrapper",
+      role: "presentation"
     }, external_React_default.a.createElement("input", {
       id: "sponsored-pocket",
       className: "sponsored-checkbox",
@@ -14408,55 +14429,56 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       className: "sponsored",
       htmlFor: "sponsored-pocket",
       "data-l10n-id": "newtab-custom-pocket-sponsored"
-    }))))), external_React_default.a.createElement("label", {
-      className: "switch"
-    }, external_React_default.a.createElement("input", {
-      checked: pocketEnabled,
-      type: "checkbox",
-      onChange: this.onPreferenceSelect,
-      preference: "feeds.section.topstories",
-      eventSource: "TOP_STORIES"
-    }), external_React_default.a.createElement("span", {
-      className: "slider"
-    }))), external_React_default.a.createElement("div", {
+    })))))), external_React_default.a.createElement("div", {
       id: "recent-section",
       className: "section"
-    }, external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
-      className: "title",
-      "data-l10n-id": "newtab-custom-recent-title"
-    }), external_React_default.a.createElement("p", {
-      className: "subtitle",
-      "data-l10n-id": "newtab-custom-recent-subtitle"
-    })), external_React_default.a.createElement("label", {
+    }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
       checked: highlightsEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
       preference: "feeds.section.highlights",
-      eventSource: "HIGHLIGHTS"
+      eventSource: "HIGHLIGHTS",
+      "aria-labelledby": "custom-recent-title",
+      "aria-describedby": "custom-recent-subtitle"
     }), external_React_default.a.createElement("span", {
-      className: "slider"
+      className: "slider",
+      role: "presentation"
+    })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
+      id: "custom-recent-title",
+      className: "title",
+      "data-l10n-id": "newtab-custom-recent-title"
+    }), external_React_default.a.createElement("p", {
+      id: "custom-recent-subtitle",
+      className: "subtitle",
+      "data-l10n-id": "newtab-custom-recent-subtitle"
     }))), external_React_default.a.createElement("div", {
       id: "snippets-section",
       className: "section"
-    }, external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
-      className: "title",
-      "data-l10n-id": "newtab-custom-snippets-title"
-    }), external_React_default.a.createElement("p", {
-      className: "subtitle",
-      "data-l10n-id": "newtab-custom-snippets-subtitle"
-    })), external_React_default.a.createElement("label", {
+    }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
       checked: snippetsEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
-      preference: "feeds.snippets"
+      preference: "feeds.snippets",
+      "aria-labelledby": "custom-snippets-title",
+      "aria-describedby": "custom-snippets-subtitle"
     }), external_React_default.a.createElement("span", {
-      className: "slider"
+      className: "slider",
+      role: "presentation"
+    })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
+      id: "custom-snippets-title",
+      className: "title",
+      "data-l10n-id": "newtab-custom-snippets-title"
+    }), external_React_default.a.createElement("p", {
+      id: "custom-snippets-subtitle",
+      className: "subtitle",
+      "data-l10n-id": "newtab-custom-snippets-subtitle"
     }))), external_React_default.a.createElement("span", {
-      className: "divider"
+      className: "divider",
+      role: "separator"
     }), external_React_default.a.createElement("div", null, external_React_default.a.createElement("button", {
       id: "settings-link",
       className: "external-link",
