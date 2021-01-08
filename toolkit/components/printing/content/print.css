@@ -235,11 +235,17 @@ input[type="text"] {
 }
 
 #print-progress {
-  background-image: url("chrome://browser/skin/tabbrowser/pendingpaint.png");
+  background-image: url("chrome://global/skin/icons/loading.png");
   background-repeat: no-repeat;
   background-size: 16px;
   background-position: left center;
   padding-inline-start: 20px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #print-progress {
+    background-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
 }
 
 #print-progress:dir(rtl) {
