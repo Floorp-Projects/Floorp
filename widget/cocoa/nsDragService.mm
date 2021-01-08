@@ -410,7 +410,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       if (!clipboardDataPtr) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      [pasteboardData getBytes:clipboardDataPtr];
+      [pasteboardData getBytes:clipboardDataPtr length:dataLength];
 
       nsCOMPtr<nsISupports> genericDataWrapper;
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,
@@ -452,7 +452,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       unsigned int dataLength = [stringData length];
       void* clipboardDataPtr = malloc(dataLength);
       if (!clipboardDataPtr) return NS_ERROR_OUT_OF_MEMORY;
-      [stringData getBytes:clipboardDataPtr];
+      [stringData getBytes:clipboardDataPtr length:dataLength];
 
       // The DOM only wants LF, so convert from MacOS line endings to DOM line endings.
       int32_t signedDataLength = dataLength;

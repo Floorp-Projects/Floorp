@@ -188,7 +188,7 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
         [pboardType release];
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      [stringData getBytes:clipboardDataPtr];
+      [stringData getBytes:clipboardDataPtr length:dataLength];
 
       // The DOM only wants LF, so convert from MacOS line endings to DOM line endings.
       int32_t signedDataLength = dataLength;
@@ -229,7 +229,7 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
         [pboardType release];
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      [pasteboardData getBytes:clipboardDataPtr];
+      [pasteboardData getBytes:clipboardDataPtr length:dataLength];
 
       nsCOMPtr<nsISupports> genericDataWrapper;
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,

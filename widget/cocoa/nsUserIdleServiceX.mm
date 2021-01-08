@@ -39,7 +39,7 @@ bool nsUserIdleServiceX::PollIdleTime(uint32_t* aIdleTime) {
 
   uint64_t time;
   if ([idleObj isKindOfClass:[NSData class]])
-    [idleObj getBytes:&time];
+    [idleObj getBytes:&time length:sizeof(time)];
   else
     time = [idleObj unsignedLongLongValue];
 
