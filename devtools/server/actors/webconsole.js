@@ -144,6 +144,11 @@ if (isWorker) {
     true
   );
 }
+loader.lazyRequireGetter(
+  this,
+  "ObjectUtils",
+  "devtools/server/actors/object/utils"
+);
 
 function isObject(value) {
   return Object(value) === value;
@@ -1004,7 +1009,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     DevToolsUtils.executeSoon(async () => {
       try {
         // Execute the script that may pause.
-        let response = this.evaluateJS(request);
+        let response = await this.evaluateJS(request);
         // Wait for any potential returned Promise.
         response = await this._maybeWaitForResponseResult(response);
         // Set the timestamp only now, so any messages logged in the expression will come
@@ -1092,7 +1097,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         The evaluation response packet.
    */
-  // eslint-disable-next-line complexity
   evaluateJS: function(request) {
     const input = request.text;
 
@@ -1117,6 +1121,33 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
     this.parentActor.threadActor.insideClientEvaluation = null;
 
+    return new Promise((resolve, reject) => {
+      // Queue up a task to run in the next tick so any microtask created by the evaluated
+      // expression has the time to be run.
+      // e.g. in :
+      // ```
+      // const promiseThenCb = result => "result: " + result;
+      // new Promise(res => res("hello")).then(promiseThenCb)
+      // ```
+      // we want`promiseThenCb` to have run before handling the result.
+      DevToolsUtils.executeSoon(() => {
+        try {
+          const result = this.prepareEvaluationResult(
+            evalInfo,
+            input,
+            request.eager,
+            mapped
+          );
+          resolve(result);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+  },
+
+  // eslint-disable-next-line complexity
+  prepareEvaluationResult: function(evalInfo, input, eager, mapped) {
     const evalResult = evalInfo.result;
     const helperResult = evalInfo.helperResult;
 
@@ -1258,7 +1289,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
     // Don't update _lastConsoleInputEvaluation in eager evaluation, as it would interfere
     // with the $_ command.
-    if (!request.eager) {
+    if (!eager) {
       if (!awaitResult) {
         this._lastConsoleInputEvaluation = result;
       } else {
@@ -1266,9 +1297,22 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         // _lastConsoleInputEvaluation only when the promise resolves, and only if it
         // resolves. If the promise rejects, we don't re-assign _lastConsoleInputEvaluation,
         // it will keep its previous value.
-        awaitResult.then(res => {
+
+        const p = awaitResult.then(res => {
           this._lastConsoleInputEvaluation = this.makeDebuggeeValue(res);
         });
+
+        // If the top level await was already rejected (e.g. `await Promise.reject("bleh")`),
+        // catch the resulting promise of awaitResult.then.
+        // If we don't do that, the new Promise will also be rejected, and since it's
+        // unhandled, it will generate an error.
+        // We don't want to do that for pending promise (e.g. `await new Promise((res, rej) => setTimeout(rej,250))`),
+        // as the the Promise rejection will be considered as handled, and the "Uncaught (in promise)"
+        // message wouldn't be emitted.
+        const { state } = ObjectUtils.getPromiseState(evalResult.return);
+        if (state === "rejected") {
+          p.catch(() => {});
+        }
       }
     }
 

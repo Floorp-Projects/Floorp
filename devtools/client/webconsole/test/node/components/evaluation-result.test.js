@@ -157,6 +157,80 @@ describe("EvaluationResult component:", () => {
     expect(wrapper.hasClass("error")).toBe(true);
   });
 
+  it("render pending Promise", () => {
+    const message = stubPreparedMessages.get(`eval pending promise`);
+    // We need to wrap the EvaluationResult in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(
+      Provider(
+        { store: setupStore() },
+        EvaluationResult({ message, serviceContainer })
+      )
+    );
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(`Promise { <state>: "pending" }`);
+  });
+
+  it("render Promise.resolve result", () => {
+    const message = stubPreparedMessages.get(`eval Promise.resolve`);
+    // We need to wrap the EvaluationResult in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(
+      Provider(
+        { store: setupStore() },
+        EvaluationResult({ message, serviceContainer })
+      )
+    );
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(`Promise { <state>: "fulfilled", <value>: 123 }`);
+  });
+
+  it("render Promise.reject result", () => {
+    const message = stubPreparedMessages.get(`eval Promise.reject`);
+    // We need to wrap the EvaluationResult in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(
+      Provider(
+        { store: setupStore() },
+        EvaluationResult({ message, serviceContainer })
+      )
+    );
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(`Promise { <state>: "rejected", <reason>: "ouch" }`);
+  });
+
+  it("render promise fulfilled in microtask", () => {
+    // See Bug 1439963
+    const message = stubPreparedMessages.get(`eval resolved promise`);
+    // We need to wrap the EvaluationResult in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(
+      Provider(
+        { store: setupStore() },
+        EvaluationResult({ message, serviceContainer })
+      )
+    );
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(`Promise { <state>: "fulfilled", <value>: 246 }`);
+  });
+
+  it("render promise rejected in microtask", () => {
+    // See Bug 1439963
+    const message = stubPreparedMessages.get(`eval rejected promise`);
+    // We need to wrap the EvaluationResult in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(
+      Provider(
+        { store: setupStore() },
+        EvaluationResult({ message, serviceContainer })
+      )
+    );
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(
+      `Promise { <state>: "rejected", <reason>: ReferenceError }`
+    );
+  });
+
   it("renders an inspect command result", () => {
     const message = stubPreparedMessages.get("inspect({a: 1})");
     // We need to wrap the ConsoleApiElement in a Provider in order for the
