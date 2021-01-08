@@ -346,7 +346,22 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     @CommandArgument(
         "--work-dir", default=None, help="Directory for output and working files."
     )
-    def analyze(self, application, shell_objdir, work_dir):
+    @CommandArgument(
+        "--jobs", "-j", default=None, type=int, help="Number of parallel analyzers."
+    )
+    @CommandArgument(
+        "--verbose",
+        "-v",
+        default=False,
+        action="store_true",
+        help="Display executed commands.",
+    )
+    @CommandArgument(
+        "--from-stage",
+        default="gcTypes",
+        help="Stage to begin running at ('list' to see all).",
+    )
+    def analyze(self, application, shell_objdir, work_dir, jobs, verbose, from_stage):
         """Analyzed gathered data for rooting hazards"""
 
         shell = self.ensure_shell(shell_objdir)
@@ -354,9 +369,17 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
             os.path.join(self.script_dir, "analyze.py"),
             "--js",
             shell,
-            "gcTypes",
-            "-v",
         ]
+
+        if from_stage == "list":
+            from_stage = "--list"
+        args.append(from_stage)
+
+        if jobs is not None:
+            args.extend(["-j", jobs])
+
+        if verbose:
+            args.append("-v")
 
         self.setup_env_for_tools(os.environ)
         os.environ["LD_LIBRARY_PATH"] += ":" + os.path.dirname(shell)
