@@ -976,6 +976,21 @@ uint32_t nsDisplayListBuilder::GetBackgroundPaintFlags() {
   return flags;
 }
 
+// TODO(emilio): Maybe unify BackgroundPaintFlags and IamgeRendererFlags.
+uint32_t nsDisplayListBuilder::GetImageRendererFlags() const {
+  uint32_t flags = 0;
+  if (mSyncDecodeImages) {
+    flags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
+  }
+  if (mIsPaintingToWindow) {
+    flags |= nsImageRenderer::FLAG_PAINTING_TO_WINDOW;
+  }
+  if (mUseHighQualityScaling) {
+    flags |= nsImageRenderer::FLAG_HIGH_QUALITY_SCALING;
+  }
+  return flags;
+}
+
 uint32_t nsDisplayListBuilder::GetImageDecodeFlags() const {
   uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
   if (mSyncDecodeImages) {
