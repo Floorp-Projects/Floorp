@@ -33,7 +33,9 @@ newtab-search-box-input =
 
 newtab-topsites-add-search-engine-header = Add Search Engine
 newtab-topsites-add-topsites-header = New Top Site
+newtab-topsites-add-shortcut-header = New Shortcut
 newtab-topsites-edit-topsites-header = Edit Top Site
+newtab-topsites-edit-shortcut-header = Edit Shortcut
 newtab-topsites-title-label = Title
 newtab-topsites-title-input =
     .placeholder = Enter a title
