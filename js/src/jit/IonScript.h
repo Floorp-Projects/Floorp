@@ -96,10 +96,12 @@ class alignas(8) IonScript final : public TrailingArray {
   // Number of times this script bailed out without invalidation.
   uint32_t numBailouts_ = 0;
 
-  // Flag set if we have bailed out from an instruction hoisted by
-  // LICM.  If this happens twice without triggering a CacheIR
-  // invalidation, we will disable LICM.
-  bool hadLICMBailout_ = false;
+ public:
+  enum class LICMState : uint8_t { NeverBailed, Bailed, BailedAndHitFallback };
+
+ private:
+  // Tracks the state of LICM bailouts.
+  LICMState licmState_ = LICMState::NeverBailed;
 
   // Flag set if IonScript was compiled with profiling enabled.
   bool hasProfilingInstrumentation_ = false;
@@ -343,8 +345,17 @@ class alignas(8) IonScript final : public TrailingArray {
     return numBailouts_ >= JitOptions.frequentBailoutThreshold;
   }
 
-  void setHadLICMBailout() { hadLICMBailout_ = true; }
-  bool hadLICMBailout() const { return hadLICMBailout_; }
+  LICMState licmState() const { return licmState_; }
+  void setHadLICMBailout() {
+    if (licmState_ == LICMState::NeverBailed) {
+      licmState_ = LICMState::Bailed;
+    }
+  }
+  void noteBaselineFallback() {
+    if (licmState_ == LICMState::Bailed) {
+      licmState_ = LICMState::BailedAndHitFallback;
+    }
+  }
 
   void setHasProfilingInstrumentation() { hasProfilingInstrumentation_ = true; }
   void clearHasProfilingInstrumentation() {
