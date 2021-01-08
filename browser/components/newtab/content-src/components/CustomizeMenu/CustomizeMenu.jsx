@@ -25,6 +25,7 @@ export class _CustomizeMenu extends React.PureComponent {
           enabledSections={this.props.enabledSections}
           pocketRegion={this.props.pocketRegion}
           mayHaveSponsoredTopSites={this.props.mayHaveSponsoredTopSites}
+          mayHaveSponsoredStories={this.props.DiscoveryStream.config.show_spocs}
           dispatch={this.props.dispatch}
         />
       </div>
@@ -32,6 +33,6 @@ export class _CustomizeMenu extends React.PureComponent {
   }
 }
 
-export const CustomizeMenu = connect(state => state.CustomizeMenu)(
-  _CustomizeMenu
-);
+export const CustomizeMenu = connect(state => ({
+  DiscoveryStream: state.DiscoveryStream,
+}))(_CustomizeMenu);
