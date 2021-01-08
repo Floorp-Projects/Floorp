@@ -46,17 +46,14 @@
            oncommand="goDoCommand('downloadsCmd_alwaysOpenInSystemViewer')"/>
 </commandset>
 
-<!-- The panel has level="top" to ensure that it is never hidden by the
-     taskbar on Windows.  See bug 672365.  For accessibility to screen
-     readers, we use a label on the panel instead of the anchor because the
-     panel can also be displayed without an anchor. -->
+<!-- For accessibility to screen readers, we use a label on the panel instead
+  of the anchor because the panel can also be displayed without an anchor. -->
 <panel id="downloadsPanel"
        data-l10n-id="downloads-panel"
        class="panel-no-padding"
        role="group"
        type="arrow"
        orient="vertical"
-       level="top"
        onpopupshown="DownloadsPanel.onPopupShown(event);"
        onpopuphidden="DownloadsPanel.onPopupHidden(event);"
        hidden="true">
