@@ -983,9 +983,11 @@ void nsCocoaWindow::Show(bool bState) {
 // the assigned space even when opened from another display. Apply the
 // workaround whenever more than one display is enabled.
 bool nsCocoaWindow::NeedsRecreateToReshow() {
-  // Limit the workaround to popup windows because only they need to override
-  // the "Assign To" setting. i.e., to display where the parent window is.
-  return (mWindowType == eWindowType_popup) && mWasShown && ([[NSScreen screens] count] > 1);
+  // Limit the workaround to non-tooltip popup windows because only they need to
+  // override the "Assign To" setting. i.e., to display where the parent window
+  // is.
+  return (mWindowType == eWindowType_popup) && (mPopupType != ePopupTypeTooltip) && mWasShown &&
+         ([[NSScreen screens] count] > 1);
 }
 
 struct ShadowParams {
