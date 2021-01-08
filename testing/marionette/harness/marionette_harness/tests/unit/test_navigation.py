@@ -6,8 +6,6 @@ from __future__ import absolute_import, print_function
 
 import contextlib
 import os
-import sys
-from unittest import skipIf
 
 from six.moves.urllib.parse import quote
 
@@ -621,10 +619,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         "Bug 1656208 - Always turn on session history in the parent for fission",
         "fission.autostart",
         lambda value: value is False,
-    )
-    @skipIf(
-        sys.platform.startswith("linux"),
-        "Bug 1683216: TypeError: can't access property 'document', container.frame is null",
     )
     def test_timeout_error(self):
         urls = [
