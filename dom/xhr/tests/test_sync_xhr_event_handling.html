@@ -27,7 +27,10 @@
     }, 0);
   }
 
-  function runTest() {
+  async function runTest() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.input_events.canSuspendInBCG.enabled", true]]
+    });
     subTab = window.open("file_sync_xhr_event_handling_helper.html");
   }
   runTest();
