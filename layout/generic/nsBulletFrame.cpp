@@ -152,11 +152,11 @@ class nsDisplayBulletGeometry
 class BulletRenderer final {
  public:
   BulletRenderer(nsIFrame* aFrame, const StyleImage& aImage,
-                 const nsRect& aDest)
+                 const nsRect& aDest, uint32_t aFlags)
       : mDest(aDest),
         mColor(NS_RGBA(0, 0, 0, 0)),
         mListStyleType(NS_STYLE_LIST_STYLE_NONE) {
-    mImageRenderer.emplace(aFrame, &aImage, 0);
+    mImageRenderer.emplace(aFrame, &aImage, aFlags);
     mImageRenderer->SetPreferredSize({}, aDest.Size());
     MOZ_ASSERT(IsImageType());
   }
@@ -190,8 +190,8 @@ class BulletRenderer final {
       nsDisplayListBuilder* aDisplayListBuilder);
 
   ImgDrawResult Paint(gfxContext& aRenderingContext, nsPoint aPt,
-                      const nsRect& aDirtyRect, uint32_t aFlags,
-                      bool aDisableSubpixelAA, nsIFrame* aFrame);
+                      const nsRect& aDirtyRect, bool aDisableSubpixelAA,
+                      nsIFrame* aFrame);
 
   bool IsImageType() const { return !!mImageRenderer; }
 
@@ -307,7 +307,7 @@ ImgDrawResult BulletRenderer::CreateWebRenderCommands(
 }
 
 ImgDrawResult BulletRenderer::Paint(gfxContext& aRenderingContext, nsPoint aPt,
-                                    const nsRect& aDirtyRect, uint32_t aFlags,
+                                    const nsRect& aDirtyRect,
                                     bool aDisableSubpixelAA, nsIFrame* aFrame) {
   if (IsImageType()) {
     return mImageRenderer->DrawLayer(aFrame->PresContext(), aRenderingContext,
@@ -534,7 +534,7 @@ bool nsDisplayBullet::CreateWebRenderCommands(
   ImgDrawResult drawResult;
   Maybe<BulletRenderer> br =
       static_cast<nsBulletFrame*>(mFrame)->CreateBulletRenderer(
-          *screenRefCtx, ToReferenceFrame(), &drawResult);
+          *screenRefCtx, aDisplayListBuilder, ToReferenceFrame(), &drawResult);
 
   if (br) {
     ImgDrawResult commandBuilderResult = br->CreateWebRenderCommands(
@@ -551,14 +551,9 @@ bool nsDisplayBullet::CreateWebRenderCommands(
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
-  uint32_t flags = imgIContainer::FLAG_NONE;
-  if (aBuilder->ShouldSyncDecodeImages()) {
-    flags |= imgIContainer::FLAG_SYNC_DECODE;
-  }
-
   ImgDrawResult result = static_cast<nsBulletFrame*>(mFrame)->PaintBullet(
-      *aCtx, ToReferenceFrame(), GetPaintRect(), flags, IsSubpixelAADisabled());
-
+      *aCtx, aBuilder, ToReferenceFrame(), GetPaintRect(),
+      IsSubpixelAADisabled());
   nsDisplayBulletGeometry::UpdateDrawResult(this, result);
 }
 
@@ -572,21 +567,24 @@ void nsBulletFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
-    gfxContext& aRenderingContext, nsPoint aPt, ImgDrawResult* aDrawResult) {
+    gfxContext& aRenderingContext, nsDisplayListBuilder* aBuilder, nsPoint aPt,
+    ImgDrawResult* aDrawResult) {
   *aDrawResult = ImgDrawResult::SUCCESS;
 
   CounterStyle* listStyleType = ResolveCounterStyle();
   nsMargin padding = mPadding.GetPhysicalMargin(GetWritingMode());
-  if (!StyleList()->mListStyleImage.IsNone()) {
+  const auto& image = StyleList()->mListStyleImage;
+  if (!image.IsNone()) {
     nsRect dest(padding.left, padding.top,
                 mRect.width - (padding.left + padding.right),
                 mRect.height - (padding.top + padding.bottom));
-    BulletRenderer br(this, StyleList()->mListStyleImage, dest + aPt);
+    BulletRenderer br(this, image, dest + aPt,
+                      aBuilder->GetImageRendererFlags());
     if (br.PrepareImage()) {
       return Some(br);
     }
     *aDrawResult = br.PrepareResult();
-    if (auto* request = StyleList()->mListStyleImage.GetImageRequest()) {
+    if (auto* request = image.GetImageRequest()) {
       uint32_t status = imgIRequest::STATUS_ERROR;
       request->GetImageStatus(&status);
       if (status & imgIRequest::STATUS_ERROR) {
@@ -718,18 +716,18 @@ Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
 }
 
 ImgDrawResult nsBulletFrame::PaintBullet(gfxContext& aRenderingContext,
+                                         nsDisplayListBuilder* aBuilder,
                                          nsPoint aPt, const nsRect& aDirtyRect,
-                                         uint32_t aFlags,
                                          bool aDisableSubpixelAA) {
   ImgDrawResult drawResult;
   Maybe<BulletRenderer> br =
-      CreateBulletRenderer(aRenderingContext, aPt, &drawResult);
+      CreateBulletRenderer(aRenderingContext, aBuilder, aPt, &drawResult);
 
   if (!br) {
     return drawResult;
   }
 
-  return drawResult & br->Paint(aRenderingContext, aPt, aDirtyRect, aFlags,
+  return drawResult & br->Paint(aRenderingContext, aPt, aDirtyRect,
                                 aDisableSubpixelAA, this);
 }
 
