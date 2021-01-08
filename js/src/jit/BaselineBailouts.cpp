@@ -37,6 +37,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 
 // BaselineStackBuilder may reallocate its buffer if the current one is too
@@ -1982,11 +1983,13 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
           innerScript->getWarmUpCount(), (unsigned)bailoutKind);
 
   BailoutAction action = BailoutAction::InvalidateImmediately;
+  DebugOnly<bool> saveFailedICHash = false;
   switch (bailoutKind) {
     case BailoutKind::TranspiledCacheIR:
       // A transpiled guard failed. If this happens often enough, we will
       // invalidate and recompile.
       action = BailoutAction::InvalidateIfFrequent;
+      saveFailedICHash = true;
       break;
 
     case BailoutKind::SpeculativePhi:
@@ -2072,6 +2075,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       // the time we compiled. If this happens often enough, we will
       // invalidate and recompile.
       action = BailoutAction::InvalidateIfFrequent;
+      saveFailedICHash = true;
       break;
 
     case BailoutKind::NotOptimizedArgumentsGuard:
@@ -2113,6 +2117,11 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       case BailoutAction::InvalidateIfFrequent:
         ionScript->incNumFixableBailouts();
         if (ionScript->shouldInvalidate()) {
+#ifdef DEBUG
+          if (saveFailedICHash) {
+            outerScript->jitScript()->setFailedICHash(ionScript->icHash());
+          }
+#endif
           InvalidateAfterBailout(cx, outerScript, "fixable bailouts");
         }
         break;

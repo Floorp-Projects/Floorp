@@ -172,6 +172,25 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   }
 #endif
 
+#ifdef DEBUG
+  // When transpiled CacheIR bails out, we do not want to recompile
+  // with the exact same data and get caught in an invalidation loop.
+  //
+  // To avoid this, we store a hash of the stub pointers and entry
+  // counts in this snapshot, save that hash in the JitScript if we
+  // have a TranspiledCacheIR bailout, and assert that the hash has
+  // changed when we recompile.
+  //
+  // Note: this assertion catches potential performance issues.
+  // Failing this assertion is not a correctness/security problem.
+  HashNumber hash = icScript->hash();
+  if (outerScript_->jitScript()->hasFailedICHash()) {
+    HashNumber oldHash = outerScript_->jitScript()->getFailedICHash();
+    MOZ_ASSERT(hash != oldHash);
+  }
+  snapshot->setICHash(hash);
+#endif
+
   return snapshot;
 }
 
