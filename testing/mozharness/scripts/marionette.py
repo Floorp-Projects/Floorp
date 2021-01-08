@@ -269,7 +269,10 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
                 "Could not find marionette requirements file: {}".format(requirements)
             )
 
-        self.register_virtualenv_module(requirements=[requirements], two_pass=True)
+        # marionette_requirements.txt must use the legacy resolver until bug 1684969 is resolved.
+        self.register_virtualenv_module(
+            requirements=[requirements], two_pass=True, legacy_resolver=True
+        )
 
     def _get_test_suite(self, is_emulator):
         """
