@@ -262,6 +262,8 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1623541
          "race:VRShMem::PullSystemState\n"
          "race:VRShMem::PushSystemState\n"
+         "race:VRShMem::PullBrowserState\n"
+         "race:VRShMem::PushBrowserState\n"
 
          // Bug 1674776
          "race:DocumentTimeline::GetCurrentTimeAsDuration\n"
