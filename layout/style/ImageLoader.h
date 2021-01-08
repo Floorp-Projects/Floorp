@@ -135,11 +135,9 @@ class ImageLoader final {
 
   nsPresContext* GetPresContext();
 
-  void RequestPaintIfNeeded(FrameSet* aFrameSet, imgIRequest* aRequest,
-                            bool aForcePaint);
-  void UnblockOnloadIfNeeded(nsIFrame* aFrame, imgIRequest* aRequest);
-  void RequestReflowIfNeeded(FrameSet* aFrameSet, imgIRequest* aRequest);
-  void RequestReflowOnFrame(FrameWithFlags* aFwf, imgIRequest* aRequest);
+  void ImageFrameChanged(imgIRequest*, bool aFirstFrame);
+  void UnblockOnloadIfNeeded(nsIFrame*, imgIRequest*);
+  void UnblockOnloadIfNeeded(FrameWithFlags&);
 
   void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   void OnFrameComplete(imgIRequest* aRequest);
