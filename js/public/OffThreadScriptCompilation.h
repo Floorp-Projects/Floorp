@@ -122,12 +122,15 @@ extern JS_PUBLIC_API bool CanDecodeOffThread(
 //
 // If options.useOffThreadParseGlobal is false,
 // decode stencil from the buffer and instantiate JSScript from it.
+//
+// `buffer` should be alive until the end of `FinishOffThreadScriptDecoder`.
 extern JS_PUBLIC_API bool DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
     OffThreadCompileCallback callback, void* callbackData,
     OffThreadToken** tokenOut = nullptr);
 
+// `range` should be alive until the end of `FinishOffThreadScriptDecoder`.
 extern JS_PUBLIC_API bool DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
