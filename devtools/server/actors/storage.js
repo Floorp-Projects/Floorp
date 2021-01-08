@@ -635,12 +635,9 @@ StorageActors.createActor(
 
     populateStoresForHost(host) {
       this.hostVsStores.set(host, new Map());
-      const doc = this.storageActor.document;
 
-      const cookies = this.getCookiesFromHost(
-        host,
-        doc.effectiveStoragePrincipal.originAttributes
-      );
+      const originAttributes = this.getOriginAttributesFromHost(host);
+      const cookies = this.getCookiesFromHost(host, originAttributes);
 
       for (const cookie of cookies) {
         if (this.isCookieAtHost(cookie, host)) {
@@ -651,6 +648,22 @@ StorageActors.createActor(
           this.hostVsStores.get(host).set(uniqueKey, cookie);
         }
       }
+    },
+
+    getOriginAttributesFromHost(host) {
+      const win = this.storageActor.getWindowFromHost(host);
+      let originAttributes;
+      if (win) {
+        originAttributes =
+          win.document.effectiveStoragePrincipal.originAttributes;
+      } else {
+        // If we can't find the window by host, fallback to the top window
+        // origin attributes.
+        originAttributes = this.storageActor.document.effectiveStoragePrincipal
+          .originAttributes;
+      }
+
+      return originAttributes;
     },
 
     /**
@@ -763,8 +776,7 @@ StorageActors.createActor(
      *        See editCookie() for format details.
      */
     async editItem(data) {
-      const doc = this.storageActor.document;
-      data.originAttributes = doc.effectiveStoragePrincipal.originAttributes;
+      data.originAttributes = this.getOriginAttributesFromHost(data.host);
       this.editCookie(data);
     },
 
@@ -777,30 +789,18 @@ StorageActors.createActor(
     },
 
     async removeItem(host, name) {
-      const doc = this.storageActor.document;
-      this.removeCookie(
-        host,
-        name,
-        doc.effectiveStoragePrincipal.originAttributes
-      );
+      const originAttributes = this.getOriginAttributesFromHost(host);
+      this.removeCookie(host, name, originAttributes);
     },
 
     async removeAll(host, domain) {
-      const doc = this.storageActor.document;
-      this.removeAllCookies(
-        host,
-        domain,
-        doc.effectiveStoragePrincipal.originAttributes
-      );
+      const originAttributes = this.getOriginAttributesFromHost(host);
+      this.removeAllCookies(host, domain, originAttributes);
     },
 
     async removeAllSessionCookies(host, domain) {
-      const doc = this.storageActor.document;
-      this.removeAllSessionCookies(
-        host,
-        domain,
-        doc.effectiveStoragePrincipal.originAttributes
-      );
+      const originAttributes = this.getOriginAttributesFromHost(host);
+      this.removeAllSessionCookies(host, domain, originAttributes);
     },
 
     maybeSetupChildProcess() {
