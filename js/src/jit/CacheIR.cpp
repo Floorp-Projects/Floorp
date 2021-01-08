@@ -6345,8 +6345,11 @@ AttachDecision CallIRGenerator::tryAttachMathFloor(HandleFunction callee) {
   if (args_[0].isInt32()) {
     MOZ_ASSERT(resultIsInt32);
 
+    // Use an indirect truncation to inform the optimizer it needs to preserve
+    // a bailout when the input can't be represented as an int32, even if the
+    // final result is fully truncated.
     Int32OperandId intId = writer.guardToInt32(argumentId);
-    writer.loadInt32Result(intId);
+    writer.indirectTruncateInt32Result(intId);
   } else {
     NumberOperandId numberId = writer.guardIsNumber(argumentId);
 
@@ -6386,8 +6389,11 @@ AttachDecision CallIRGenerator::tryAttachMathCeil(HandleFunction callee) {
   if (args_[0].isInt32()) {
     MOZ_ASSERT(resultIsInt32);
 
+    // Use an indirect truncation to inform the optimizer it needs to preserve
+    // a bailout when the input can't be represented as an int32, even if the
+    // final result is fully truncated.
     Int32OperandId intId = writer.guardToInt32(argumentId);
-    writer.loadInt32Result(intId);
+    writer.indirectTruncateInt32Result(intId);
   } else {
     NumberOperandId numberId = writer.guardIsNumber(argumentId);
 
@@ -6427,8 +6433,11 @@ AttachDecision CallIRGenerator::tryAttachMathTrunc(HandleFunction callee) {
   if (args_[0].isInt32()) {
     MOZ_ASSERT(resultIsInt32);
 
+    // Use an indirect truncation to inform the optimizer it needs to preserve
+    // a bailout when the input can't be represented as an int32, even if the
+    // final result is fully truncated.
     Int32OperandId intId = writer.guardToInt32(argumentId);
-    writer.loadInt32Result(intId);
+    writer.indirectTruncateInt32Result(intId);
   } else {
     NumberOperandId numberId = writer.guardIsNumber(argumentId);
 
@@ -6468,6 +6477,8 @@ AttachDecision CallIRGenerator::tryAttachMathRound(HandleFunction callee) {
   if (args_[0].isInt32()) {
     MOZ_ASSERT(resultIsInt32);
 
+    // We don't need an indirect truncation barrier here, because Math.trunc
+    // always truncates, but never rounds its input away from zero.
     Int32OperandId intId = writer.guardToInt32(argumentId);
     writer.loadInt32Result(intId);
   } else {
