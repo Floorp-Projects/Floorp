@@ -101,12 +101,9 @@ void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
       loader->DisassociateRequestFromFrame(oldListImage, this);
     }
     if (newListImage) {
-      // TODO: Use something that doesn't block the load event to preserve
-      // behavior.
       loader->AssociateRequestToFrame(
           newListImage, this,
-          css::ImageLoader::Flags::
-              RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking);
+          css::ImageLoader::Flags::RequiresReflowOnSizeAvailable);
     }
   }
 
