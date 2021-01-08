@@ -290,6 +290,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsTimerImpl::Shutdown\n"
          "race:nsTimerImpl::CancelImpl\n"
 
+         // Bug 1645696
+         "race:nsHttpHandler::PrefsChanged\n"
+         "race:nsHttpConnection::Activate\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
