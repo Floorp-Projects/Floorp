@@ -34,7 +34,6 @@ jobs-from:
     - geckodriver.yml
     - gn.yml
     - grcov.yml
-    - llvm-symbolizer.yml
     - mingw.yml
     - minidump_stackwalk.yml
     - misc.yml
