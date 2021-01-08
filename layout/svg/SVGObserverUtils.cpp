@@ -27,6 +27,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsIReflowCallback.h"
 #include "nsISupportsImpl.h"
+#include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
@@ -923,7 +924,7 @@ void SVGMaskObserverList::ResolveImage(uint32_t aIndex) {
   image.ResolveImage(*doc, nullptr);
   if (imgRequestProxy* req = image.GetImageRequest()) {
     // FIXME(emilio): What disassociates this request?
-    doc->StyleImageLoader()->AssociateRequestToFrame(req, mFrame, 0);
+    doc->StyleImageLoader()->AssociateRequestToFrame(req, mFrame);
   }
 }
 
