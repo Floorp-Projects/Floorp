@@ -105,6 +105,17 @@ function getCommands() {
     throw err;
   `
   );
+  evaluationResult.set(`eval pending promise`, `new Promise(() => {})`);
+  evaluationResult.set(`eval Promise.resolve`, `Promise.resolve(123)`);
+  evaluationResult.set(`eval Promise.reject`, `Promise.reject("ouch")`);
+  evaluationResult.set(
+    `eval resolved promise`,
+    `Promise.resolve().then(() => 246)`
+  );
+  evaluationResult.set(
+    `eval rejected promise`,
+    `Promise.resolve().then(() => a.b.c)`
+  );
 
   return evaluationResult;
 }
