@@ -128,10 +128,10 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(ion, true);
 
   // Warp compile Async functions
-  SET_DEFAULT(warpAsync, false);
+  SET_DEFAULT(warpAsync, true);
 
   // Warp compile Generator functions
-  SET_DEFAULT(warpGenerator, false);
+  SET_DEFAULT(warpGenerator, true);
 
   // Whether the IonMonkey and Baseline JITs are enabled for Trusted Principals.
   // (Ignored if ion or baselineJit is set to true.)
