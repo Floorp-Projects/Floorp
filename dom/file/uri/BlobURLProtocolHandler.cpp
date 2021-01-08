@@ -762,22 +762,22 @@ bool BlobURLProtocolHandler::GetDataEntry(
   // principal and which is never mutated to have a non-zero
   // mPrivateBrowsingId or container.
 
-  if (NS_WARN_IF(!aLoadingPrincipal ||
-                 !aLoadingPrincipal->IsSystemPrincipal()) &&
+  if ((NS_WARN_IF(!aLoadingPrincipal) ||
+       !aLoadingPrincipal->IsSystemPrincipal()) &&
       NS_WARN_IF(!ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
           aOriginAttributes,
           BasePrincipal::Cast(info->mPrincipal)->OriginAttributesRef()))) {
     return false;
   }
 
-  if (!aTriggeringPrincipal->Subsumes(info->mPrincipal)) {
+  if (NS_WARN_IF(!aTriggeringPrincipal->Subsumes(info->mPrincipal))) {
     return false;
   }
 
   // BlobURLs are openable on the same agent-cluster-id only.
   if (StaticPrefs::privacy_partition_bloburl_per_agent_cluster() &&
       aAgentClusterId.isSome() && info->mAgentClusterId.isSome() &&
-      !aAgentClusterId.value().Equals(info->mAgentClusterId.value())) {
+      NS_WARN_IF(!aAgentClusterId->Equals(info->mAgentClusterId.value()))) {
     return false;
   }
 
