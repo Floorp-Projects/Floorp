@@ -6413,8 +6413,11 @@ var gCSSProperties = {
       "url('data:text/plain,\\\"')",
       'url("data:text/plain,\\\'")',
       "url(data:text/plain,\\\\)",
-    ],
-    invalid_values: [],
+    ].concat(validNonUrlImageValues),
+    invalid_values: ["url('border.png') url('border.png')"].concat(
+      invalidNonUrlImageValues
+    ),
+    unbalanced_values: [].concat(unbalancedGradientAndElementValues),
   },
   "list-style-position": {
     domProp: "listStylePosition",
