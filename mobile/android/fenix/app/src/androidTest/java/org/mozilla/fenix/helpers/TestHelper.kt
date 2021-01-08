@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import androidx.preference.PreferenceManager
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewAction
@@ -25,11 +26,13 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.mDevice
+import java.io.File
 
 object TestHelper {
     fun scrollToElementByText(text: String): UiScrollable {
@@ -116,5 +119,20 @@ object TestHelper {
             0,
             0
         )
+    }
+
+    //Remove test file from the device Downloads folder
+    @Suppress("Deprecation")
+    fun deleteDownloadFromStorage(fileName: String){
+        runBlocking {
+            val downloadedFile = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                fileName
+            )
+
+            if (downloadedFile.exists()) {
+                downloadedFile.delete()
+            }
+        }
     }
 }

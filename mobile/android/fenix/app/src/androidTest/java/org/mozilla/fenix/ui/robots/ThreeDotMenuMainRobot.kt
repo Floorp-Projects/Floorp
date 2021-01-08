@@ -151,6 +151,14 @@ class ThreeDotMenuMainRobot {
             return SettingsRobot.Transition()
         }
 
+        fun openDownloadsManager(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
+            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(swipeDown())
+            downloadsButton().click()
+
+            DownloadRobot().interact()
+            return DownloadRobot.Transition()
+        }
+
         fun openSyncedTabs(interact: SyncedTabsRobot.() -> Unit): SyncedTabsRobot.Transition {
             onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(ViewActions.swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("Synced tabs")), waitingTime)

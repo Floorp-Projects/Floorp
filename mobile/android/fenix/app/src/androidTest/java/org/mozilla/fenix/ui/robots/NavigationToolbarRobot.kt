@@ -21,6 +21,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -99,8 +100,9 @@ class NavigationToolbarRobot {
             runWithIdleRes(sessionLoadedIdlingResource) {
                 onView(
                     anyOf(
-                        ViewMatchers.withResourceName("browserLayout"),
-                        ViewMatchers.withResourceName("onboarding_message") // Req ETP dialog
+                        withResourceName("browserLayout"),
+                        withResourceName("onboarding_message"), // Req ETP dialog
+                        withResourceName("download_button")
                     )
                 )
                     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))

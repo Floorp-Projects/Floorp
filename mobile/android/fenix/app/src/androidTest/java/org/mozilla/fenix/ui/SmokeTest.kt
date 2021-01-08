@@ -8,6 +8,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -21,12 +22,15 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickUrlbar
+import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import java.io.File
 
 /**
  * Test Suite that contains tests defined as part of the Smoke and Sanity check defined in Test rail.
@@ -39,6 +43,7 @@ class SmokeTest {
     private var awesomeBar: ViewVisibilityIdlingResource? = null
     private var searchSuggestionsIdlingResource: RecyclerViewIdlingResource? = null
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
+    private val downloadFileName = "Globe.svg"
 
     // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
     private fun getAwesomebarView(): View? {
@@ -51,6 +56,11 @@ class SmokeTest {
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+    @get:Rule
+    var mGrantPermissions = GrantPermissionRule.grant(
+        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        android.Manifest.permission.READ_EXTERNAL_STORAGE
+    )
 
     @Before
     fun setUp() {
@@ -75,6 +85,8 @@ class SmokeTest {
         if (addonsListIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
         }
+
+        deleteDownloadFromStorage(downloadFileName)
     }
 
     // copied over from HomeScreenTest
@@ -566,6 +578,40 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.openReportSiteIssue {
             verifyUrl("webcompat.com/issues/new")
+        }
+    }
+
+    @Test
+    /* Verifies downloads in the Downloads Menu:
+      - downloads appear in the list
+      - deleting a download from device storage, removes it from the Downloads Menu too
+    */
+    fun manageDownloadsInDownloadsMenuTest() {
+        val downloadWebPage = TestAssetHelper.getDownloadAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadWebPage.url) {
+            mDevice.waitForIdle()
+        }
+
+        downloadRobot {
+            verifyDownloadPrompt()
+        }.clickDownload {
+            mDevice.waitForIdle()
+            verifyDownloadNotificationPopup()
+        }
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openDownloadsManager {
+            waitForDownloadsListToExist()
+            verifyDownloadedFileName(downloadFileName)
+            verifyDownloadedFileIcon()
+            deleteDownloadFromStorage(downloadFileName)
+        }.exitDownloadsManagerToBrowser {
+        }.openThreeDotMenu {
+        }.openDownloadsManager {
+            verifyEmptyDownloadsList()
         }
     }
 }
