@@ -86,11 +86,14 @@ class ProfileBufferChunkManagerSingle final : public ProfileBufferChunkManager {
     // Nothing to do here.
   }
 
-  void ReleaseChunks(UniquePtr<ProfileBufferChunk> aChunks) final {
+  void ReleaseChunk(UniquePtr<ProfileBufferChunk> aChunk) final {
     MOZ_ASSERT(mUser, "Not registered yet");
+    if (!aChunk) {
+      return;
+    }
     MOZ_ASSERT(!mReleasedChunk, "Unexpected 2nd released chunk");
-    MOZ_ASSERT(!aChunks->GetNext(), "Only expected one released chunk");
-    mReleasedChunk = std::move(aChunks);
+    MOZ_ASSERT(!aChunk->GetNext(), "Only expected one released chunk");
+    mReleasedChunk = std::move(aChunk);
   }
 
   void SetChunkDestroyedCallback(

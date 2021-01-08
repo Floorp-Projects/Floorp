@@ -574,7 +574,7 @@ static void TestChunkManagerSingle() {
 
   // Release the first chunk.
   chunk->MarkDone();
-  cm.ReleaseChunks(std::move(chunk));
+  cm.ReleaseChunk(std::move(chunk));
   MOZ_RELEASE_ASSERT(!chunk, "chunk UniquePtr should have been moved-from");
 
   // Request after release.
@@ -733,6 +733,10 @@ static void TestChunkManagerWithLocalLimit() {
   extantReleasedChunks = cm.GetExtantReleasedChunks();
   MOZ_RELEASE_ASSERT(!extantReleasedChunks, "Unexpected released chunk(s)");
 
+  // Verify that ReleaseChunk accepts zero chunks.
+  cm.ReleaseChunk(nullptr);
+  MOZ_RELEASE_ASSERT(!extantReleasedChunks, "Unexpected released chunk(s)");
+
   // For this test, we need to be able to get at least 2 chunks without hitting
   // the limit. (If this failed, it wouldn't necessary be a problem with
   // ProfileBufferChunkManagerWithLocalLimit, fiddle with constants at the top
@@ -776,7 +780,7 @@ static void TestChunkManagerWithLocalLimit() {
     // Mark previous chunk done and release it.
     WaitUntilTimeStampChanges();  // Force "done" timestamp to change.
     chunk->MarkDone();
-    cm.ReleaseChunks(std::move(chunk));
+    cm.ReleaseChunk(std::move(chunk));
 
     // And cycle to the new chunk.
     chunk = std::move(newChunk);
@@ -1253,10 +1257,10 @@ static void TestControlledChunkManagerWithLocalLimit() {
     chunk->MarkDone();
     const auto doneTimeStamp = chunk->ChunkHeader().mDoneTimeStamp;
     const auto bufferBytes = chunk->BufferBytes();
-    cm.ReleaseChunks(std::move(chunk));
+    cm.ReleaseChunk(std::move(chunk));
 
     MOZ_RELEASE_ASSERT(updateCount == 1,
-                       "ReleaseChunks() should have triggered an update");
+                       "ReleaseChunk() should have triggered an update");
     MOZ_RELEASE_ASSERT(!update.IsFinal());
     MOZ_RELEASE_ASSERT(!update.IsNotUpdate());
     MOZ_RELEASE_ASSERT(update.UnreleasedBytes() ==
