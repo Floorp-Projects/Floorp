@@ -674,10 +674,6 @@ windowsZones:table(nofallback){
         }
         "US Mountain Standard Time"{
             001{"America/Phoenix"}
-            CA{
-                "America/Whitehorse America/Creston America/Dawson America/Dawson_Cre"
-                "ek America/Fort_Nelson"
-            }
             MX{"America/Hermosillo"}
             US{"America/Phoenix"}
             ZZ{"Etc/GMT+7"}
@@ -813,6 +809,13 @@ windowsZones:table(nofallback){
         "Yakutsk Standard Time"{
             001{"Asia/Yakutsk"}
             RU{"Asia/Yakutsk Asia/Khandyga"}
+        }
+        "Yukon Standard Time"{
+            001{"America/Whitehorse"}
+            CA{
+                "America/Whitehorse America/Creston America/Dawson America/Dawson_Cre"
+                "ek America/Fort_Nelson"
+            }
         }
     }
 }
