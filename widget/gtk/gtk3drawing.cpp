@@ -3048,27 +3048,23 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
       }
       return moz_gtk_button_paint(cr, rect, state, (GtkReliefStyle)flags,
                                   GetWidget(MOZ_GTK_BUTTON), direction);
-      break;
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE:
       return moz_gtk_header_bar_button_paint(
           cr, rect, state, (GtkReliefStyle)flags, widget, direction);
-      break;
     case MOZ_GTK_CHECKBUTTON:
     case MOZ_GTK_RADIOBUTTON:
       return moz_gtk_toggle_paint(cr, rect, state,
                                   !!(flags & MOZ_GTK_WIDGET_CHECKED),
                                   !!(flags & MOZ_GTK_WIDGET_INCONSISTENT),
                                   (widget == MOZ_GTK_RADIOBUTTON), direction);
-      break;
     case MOZ_GTK_SCROLLBAR_BUTTON:
       return moz_gtk_scrollbar_button_paint(
           cr, rect, state, (GtkScrollbarButtonFlags)flags, direction);
-      break;
     case MOZ_GTK_SCROLLBAR_HORIZONTAL:
-    case MOZ_GTK_SCROLLBAR_VERTICAL:
+    case MOZ_GTK_SCROLLBAR_VERTICAL: {
       if (flags & MOZ_GTK_TRACK_OPAQUE) {
         GtkStyleContext* style = GetStyleContext(MOZ_GTK_WINDOW, direction);
         gtk_render_background(style, cr, rect->x, rect->y, rect->width,
@@ -3077,14 +3073,12 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
       if (gtk_check_version(3, 20, 0) == nullptr) {
         return moz_gtk_scrollbar_paint(widget, cr, rect, state, direction);
       }
-      {
-        WidgetNodeType trough_widget = (widget == MOZ_GTK_SCROLLBAR_HORIZONTAL)
-                                           ? MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL
-                                           : MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL;
-        return moz_gtk_scrollbar_trough_paint(trough_widget, cr, rect, state,
-                                              direction);
-        break;
-      }
+      WidgetNodeType trough_widget = (widget == MOZ_GTK_SCROLLBAR_HORIZONTAL)
+                                         ? MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL
+                                         : MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL;
+      return moz_gtk_scrollbar_trough_paint(trough_widget, cr, rect, state,
+                                            direction);
+    }
     case MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL:
     case MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL:
       if (gtk_check_version(3, 20, 0) == nullptr) {
@@ -3095,52 +3089,40 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
     case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
     case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
       return moz_gtk_scrollbar_thumb_paint(widget, cr, rect, state, direction);
-      break;
     case MOZ_GTK_SCALE_HORIZONTAL:
     case MOZ_GTK_SCALE_VERTICAL:
       return moz_gtk_scale_paint(cr, rect, state, (GtkOrientation)flags,
                                  direction);
-      break;
     case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
     case MOZ_GTK_SCALE_THUMB_VERTICAL:
       return moz_gtk_scale_thumb_paint(cr, rect, state, (GtkOrientation)flags,
                                        direction);
-      break;
     case MOZ_GTK_INNER_SPIN_BUTTON:
       return moz_gtk_inner_spin_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_SPINBUTTON:
       return moz_gtk_spin_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_SPINBUTTON_UP:
     case MOZ_GTK_SPINBUTTON_DOWN:
       return moz_gtk_spin_updown_paint(
           cr, rect, (widget == MOZ_GTK_SPINBUTTON_DOWN), state, direction);
-      break;
     case MOZ_GTK_SPINBUTTON_ENTRY: {
       GtkStyleContext* style =
           GetStyleContext(MOZ_GTK_SPINBUTTON_ENTRY, state->scale, direction,
                           GetStateFlagsFromGtkWidgetState(state));
-      gint ret = moz_gtk_entry_paint(cr, rect, state, style, widget);
-      return ret;
-    } break;
+      return moz_gtk_entry_paint(cr, rect, state, style, widget);
+    }
     case MOZ_GTK_GRIPPER:
       return moz_gtk_gripper_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_TREEVIEW:
       return moz_gtk_treeview_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_TREE_HEADER_CELL:
       return moz_gtk_tree_header_cell_paint(cr, rect, state, flags, direction);
-      break;
     case MOZ_GTK_TREE_HEADER_SORTARROW:
       return moz_gtk_tree_header_sort_arrow_paint(
           cr, rect, state, (GtkArrowType)flags, direction);
-      break;
     case MOZ_GTK_TREEVIEW_EXPANDER:
       return moz_gtk_treeview_expander_paint(
           cr, rect, state, (GtkExpanderStyle)flags, direction);
-      break;
     case MOZ_GTK_ENTRY:
     case MOZ_GTK_DROPDOWN_ENTRY: {
       GtkStyleContext* style =
@@ -3151,99 +3133,72 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
     }
     case MOZ_GTK_TEXT_VIEW:
       return moz_gtk_text_view_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_DROPDOWN:
       return moz_gtk_combo_box_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_DROPDOWN_ARROW:
       return moz_gtk_combo_box_entry_button_paint(cr, rect, state, flags,
                                                   direction);
-      break;
     case MOZ_GTK_CHECKBUTTON_CONTAINER:
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
       return moz_gtk_container_paint(cr, rect, state, widget, direction);
-      break;
     case MOZ_GTK_CHECKBUTTON_LABEL:
     case MOZ_GTK_RADIOBUTTON_LABEL:
       return moz_gtk_toggle_label_paint(
           cr, rect, state, (widget == MOZ_GTK_RADIOBUTTON_LABEL), direction);
-      break;
     case MOZ_GTK_TOOLBAR:
       return moz_gtk_toolbar_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_TOOLBAR_SEPARATOR:
       return moz_gtk_toolbar_separator_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_TOOLTIP:
       return moz_gtk_tooltip_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_FRAME:
       return moz_gtk_frame_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_RESIZER:
       return moz_gtk_resizer_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_PROGRESSBAR:
       return moz_gtk_progressbar_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE:
     case MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE:
       return moz_gtk_progress_chunk_paint(cr, rect, state, direction, widget);
-      break;
     case MOZ_GTK_TAB_TOP:
     case MOZ_GTK_TAB_BOTTOM:
       return moz_gtk_tab_paint(cr, rect, state, (GtkTabFlags)flags, direction,
                                widget);
-      break;
     case MOZ_GTK_TABPANELS:
       return moz_gtk_tabpanels_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_TAB_SCROLLARROW:
       return moz_gtk_tab_scroll_arrow_paint(cr, rect, state,
                                             (GtkArrowType)flags, direction);
-      break;
     case MOZ_GTK_MENUBAR:
       return moz_gtk_menu_bar_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_MENUPOPUP:
       return moz_gtk_menu_popup_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_MENUSEPARATOR:
       return moz_gtk_menu_separator_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_MENUBARITEM:
     case MOZ_GTK_MENUITEM:
       return moz_gtk_menu_item_paint(widget, cr, rect, state, direction);
-      break;
     case MOZ_GTK_MENUARROW:
       return moz_gtk_menu_arrow_paint(cr, rect, state, direction);
-      break;
     case MOZ_GTK_TOOLBARBUTTON_ARROW:
       return moz_gtk_arrow_paint(cr, rect, state, (GtkArrowType)flags,
                                  direction);
-      break;
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
       return moz_gtk_check_menu_item_paint(widget, cr, rect, state,
                                            (gboolean)flags, direction);
-      break;
     case MOZ_GTK_SPLITTER_HORIZONTAL:
       return moz_gtk_vpaned_paint(cr, rect, state);
-      break;
     case MOZ_GTK_SPLITTER_VERTICAL:
       return moz_gtk_hpaned_paint(cr, rect, state);
-      break;
     case MOZ_GTK_WINDOW:
       return moz_gtk_window_paint(cr, rect, direction);
-      break;
     case MOZ_GTK_INFO_BAR:
       return moz_gtk_info_bar_paint(cr, rect, state);
-      break;
     case MOZ_GTK_HEADER_BAR:
     case MOZ_GTK_HEADER_BAR_MAXIMIZED:
       return moz_gtk_header_bar_paint(widget, cr, rect, state);
-      break;
     default:
       g_warning("Unknown widget type: %d", widget);
   }
