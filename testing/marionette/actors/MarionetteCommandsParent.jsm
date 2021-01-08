@@ -335,8 +335,9 @@ function getMarionetteCommandsActorProxy(browsingContextFn) {
               const result = await actor[methodName](...args);
               return result;
             } catch (e) {
-              if (e.name !== "AbortError") {
-                // Only AbortError(s) are retried, let any other error through.
+              if (!["AbortError", "InactiveActor"].includes(e.name)) {
+                // Only retry when the JSWindowActor pair gets destroyed, or
+                // gets inactive eg. when the page is moved into bfcache.
                 throw e;
               }
 
@@ -347,10 +348,13 @@ function getMarionetteCommandsActorProxy(browsingContextFn) {
               if (++attempts > MAX_ATTEMPTS) {
                 const browsingContextId = browsingContextFn()?.id;
                 logger.trace(
-                  `[${browsingContextId}] Query "${methodName}" reached the limit of retry attempts (${MAX_ATTEMPTS})`
+                  `[${browsingContextId}] Querying "${methodName} "` +
+                    `reached the limit of retry attempts (${MAX_ATTEMPTS})`
                 );
                 throw e;
               }
+
+              logger.trace(`Retrying "${methodName}", attempt: ${attempts}`);
             }
           }
         };
