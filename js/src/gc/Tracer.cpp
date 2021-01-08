@@ -11,6 +11,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/GCInternals.h"
+#include "gc/Marking.h"
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
 #include "util/Memory.h"
@@ -29,54 +30,7 @@ using namespace js;
 using namespace js::gc;
 using mozilla::DebugOnly;
 
-namespace js {
-template <typename T>
-void CheckTracedThing(JSTracer* trc, T thing);
-}  // namespace js
-
 /*** Callback Tracer Dispatch ***********************************************/
-
-static inline JSObject* DispatchToOnEdge(GenericTracer* trc, JSObject* obj) {
-  return trc->onObjectEdge(obj);
-}
-static inline JSString* DispatchToOnEdge(GenericTracer* trc, JSString* str) {
-  return trc->onStringEdge(str);
-}
-static inline JS::Symbol* DispatchToOnEdge(GenericTracer* trc,
-                                           JS::Symbol* sym) {
-  return trc->onSymbolEdge(sym);
-}
-static inline JS::BigInt* DispatchToOnEdge(GenericTracer* trc, JS::BigInt* bi) {
-  return trc->onBigIntEdge(bi);
-}
-static inline js::BaseScript* DispatchToOnEdge(GenericTracer* trc,
-                                               js::BaseScript* script) {
-  return trc->onScriptEdge(script);
-}
-static inline js::Shape* DispatchToOnEdge(GenericTracer* trc,
-                                          js::Shape* shape) {
-  return trc->onShapeEdge(shape);
-}
-static inline js::ObjectGroup* DispatchToOnEdge(GenericTracer* trc,
-                                                js::ObjectGroup* group) {
-  return trc->onObjectGroupEdge(group);
-}
-static inline js::BaseShape* DispatchToOnEdge(GenericTracer* trc,
-                                              js::BaseShape* base) {
-  return trc->onBaseShapeEdge(base);
-}
-static inline js::jit::JitCode* DispatchToOnEdge(GenericTracer* trc,
-                                                 js::jit::JitCode* code) {
-  return trc->onJitCodeEdge(code);
-}
-static inline js::Scope* DispatchToOnEdge(GenericTracer* trc,
-                                          js::Scope* scope) {
-  return trc->onScopeEdge(scope);
-}
-static inline js::RegExpShared* DispatchToOnEdge(GenericTracer* trc,
-                                                 js::RegExpShared* shared) {
-  return trc->onRegExpSharedEdge(shared);
-}
 
 template <typename T>
 bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {

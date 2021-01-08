@@ -9,6 +9,7 @@
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
+#include "js/TracingAPI.h"
 
 namespace JS {
 using CompartmentSet =
@@ -298,6 +299,47 @@ void TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments);
 /* Get information about a GC thing. Used when dumping the heap. */
 void GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
                        JS::TraceKind kind, bool includeDetails);
+
+// Overloaded function to call the correct GenericTracer method based on the
+// argument type.
+inline JSObject* DispatchToOnEdge(GenericTracer* trc, JSObject* obj) {
+  return trc->onObjectEdge(obj);
+}
+inline JSString* DispatchToOnEdge(GenericTracer* trc, JSString* str) {
+  return trc->onStringEdge(str);
+}
+inline JS::Symbol* DispatchToOnEdge(GenericTracer* trc, JS::Symbol* sym) {
+  return trc->onSymbolEdge(sym);
+}
+inline JS::BigInt* DispatchToOnEdge(GenericTracer* trc, JS::BigInt* bi) {
+  return trc->onBigIntEdge(bi);
+}
+inline js::BaseScript* DispatchToOnEdge(GenericTracer* trc,
+                                        js::BaseScript* script) {
+  return trc->onScriptEdge(script);
+}
+inline js::Shape* DispatchToOnEdge(GenericTracer* trc, js::Shape* shape) {
+  return trc->onShapeEdge(shape);
+}
+inline js::ObjectGroup* DispatchToOnEdge(GenericTracer* trc,
+                                         js::ObjectGroup* group) {
+  return trc->onObjectGroupEdge(group);
+}
+inline js::BaseShape* DispatchToOnEdge(GenericTracer* trc,
+                                       js::BaseShape* base) {
+  return trc->onBaseShapeEdge(base);
+}
+inline js::jit::JitCode* DispatchToOnEdge(GenericTracer* trc,
+                                          js::jit::JitCode* code) {
+  return trc->onJitCodeEdge(code);
+}
+inline js::Scope* DispatchToOnEdge(GenericTracer* trc, js::Scope* scope) {
+  return trc->onScopeEdge(scope);
+}
+inline js::RegExpShared* DispatchToOnEdge(GenericTracer* trc,
+                                          js::RegExpShared* shared) {
+  return trc->onRegExpSharedEdge(shared);
+}
 
 }  // namespace gc
 }  // namespace js

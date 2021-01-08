@@ -102,12 +102,6 @@ bool UnmarkGrayGCThingUnchecked(JSRuntime* rt, JS::GCCellPtr thing);
 // The return value indicates if anything was unmarked.
 bool UnmarkGrayShapeRecursively(Shape* shape);
 
-template <typename T>
-void CheckTracedThing(JSTracer* trc, T* thing);
-
-template <typename T>
-void CheckTracedThing(JSTracer* trc, T thing);
-
 namespace gc {
 
 // Functions for checking and updating GC thing pointers that might have been
@@ -165,6 +159,20 @@ inline void CheckGCThingAfterMovingGC(const WeakHeapPtr<T*>& t);
 #endif  // JSGC_HASH_TABLE_CHECKS
 
 } /* namespace gc */
+
+// Debugging functions to check tracing invariants.
+#ifdef DEBUG
+template <typename T>
+void CheckTracedThing(JSTracer* trc, T* thing);
+template <typename T>
+void CheckTracedThing(JSTracer* trc, const T& thing);
+#else
+template <typename T>
+inline void CheckTracedThing(JSTracer* trc, T* thing) {}
+template <typename T>
+inline void CheckTracedThing(JSTracer* trc, const T& thing) {}
+#endif
+
 } /* namespace js */
 
 #endif /* gc_Marking_h */
