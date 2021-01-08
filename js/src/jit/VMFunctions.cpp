@@ -1078,6 +1078,8 @@ bool CreateThisFromIC(JSContext* cx, HandleObject callee,
   HandleFunction fun = callee.as<JSFunction>();
   MOZ_ASSERT(fun->isInterpreted());
   MOZ_ASSERT(fun->isConstructor());
+  MOZ_ASSERT(cx->realm() == fun->realm(),
+             "Realm switching happens before creating this");
 
   // CreateThis expects rval to be this magic value.
   rval.set(MagicValue(JS_IS_CONSTRUCTING));
@@ -1122,6 +1124,7 @@ bool CreateThisFromIon(JSContext* cx, HandleObject callee,
     }
   }
 
+  AutoRealm ar(cx, fun);
   if (!js::CreateThis(cx, fun, newTarget, GenericObject, rval)) {
     return false;
   }
