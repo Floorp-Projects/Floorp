@@ -10,6 +10,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=666446
   <script type="application/javascript" src="imgutils.js"></script>
   <script type="application/javascript" src="animationPolling.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    li { color: transparent }
+  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=666446">
@@ -20,17 +23,17 @@ Mozilla Bug 666446: lots of animated gifs swamp us with paint events
 <div id="content">
   <div id="cleanDiv" style="display: none;">
     <ul>
-      <li>Test 1</li>
+      <li></li>
     </ul>
   </div>
   <div id="referenceDiv" style="display: none;">
     <ul>
-      <li style="list-style-image: url(animated-gif-finalframe.gif);">Test 1</li>
+      <li style="list-style-image: url(animated-gif-finalframe.gif);"></li>
     </ul>
   </div>
   <div id="animatedImage" style="display: none;">
       <ul>
-        <li style="list-style-image: url(animated-gif.gif);">Test 1</li>
+        <li style="list-style-image: url(animated-gif.gif);"></li>
       </ul>
   </div>
   <div id="text-descr"></div>
