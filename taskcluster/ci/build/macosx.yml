@@ -213,7 +213,7 @@ macosx64-aarch64-devedition/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-aarch64-cross
+            - linux64-clang-macosx-cross
             - macosx64-sdk-11.0
 
 macosx64-devedition/opt:
@@ -469,7 +469,7 @@ macosx64-aarch64-shippable/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-aarch64-cross
+            - linux64-clang-macosx-cross
             - macosx64-sdk-11.0
 
 macosx64-shippable/opt:
