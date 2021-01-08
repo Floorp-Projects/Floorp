@@ -303,9 +303,6 @@ void js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber) {
     } else {
       maybecx->addPendingOverRecursed();
     }
-#ifdef DEBUG
-    maybecx->hadOverRecursed_ = true;
-#endif
   }
 }
 
@@ -925,9 +922,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       unwrappedException_(this),
       unwrappedExceptionStack_(this),
       overRecursed_(this, false),
-#ifdef DEBUG
-      hadOverRecursed_(this, false),
-#endif
       propagatingForcedReturn_(this, false),
       reportGranularity(this, JS_DEFAULT_JITREPORT_GRANULARITY),
       resolvingList(this, nullptr),
