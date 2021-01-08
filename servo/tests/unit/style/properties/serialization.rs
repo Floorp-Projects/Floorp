@@ -459,34 +459,6 @@ mod shorthand_serialization {
         }
     }
 
-    mod list_style {
-        use style::properties::longhands::list_style_position::SpecifiedValue as ListStylePosition;
-        use style::properties::longhands::list_style_type::SpecifiedValue as ListStyleType;
-        use style::values::generics::url::UrlOrNone as ImageUrlOrNone;
-        use super::*;
-
-        #[test]
-        fn list_style_should_show_all_properties_when_values_are_set() {
-            let mut properties = Vec::new();
-
-            let position = ListStylePosition::Inside;
-            let image = ImageUrlOrNone::Url(SpecifiedUrl::new_for_testing("http://servo/test.png"));
-            let style_type = ListStyleType::Disc;
-
-            properties.push(PropertyDeclaration::ListStylePosition(position));
-
-            #[cfg(feature = "gecko")]
-            properties.push(PropertyDeclaration::ListStyleImage(Box::new(image)));
-            #[cfg(not(feature = "gecko"))]
-            properties.push(PropertyDeclaration::ListStyleImage(image));
-
-            properties.push(PropertyDeclaration::ListStyleType(style_type));
-
-            let serialization = shorthand_properties_to_string(properties);
-            assert_eq!(serialization, "list-style: inside url(\"http://servo/test.png\") disc;");
-        }
-    }
-
     mod background {
         use super::*;
 
