@@ -8689,6 +8689,7 @@ ScriptedThisResult CallIRGenerator::getThisForScripted(
     return ScriptedThisResult::NoAction;
   }
 
+  AutoRealm ar(cx_, calleeFunc);
   PlainObject* thisObject =
       CreateThisForFunction(cx_, calleeFunc, newTarget, TenuredObject);
   if (!thisObject) {

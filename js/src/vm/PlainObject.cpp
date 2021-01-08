@@ -44,20 +44,19 @@ static PlainObject* CreateThisForFunctionWithGroup(JSContext* cx,
   return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
 }
 
-PlainObject* js::CreateThisForFunctionWithProto(
-    JSContext* cx, Handle<JSFunction*> callee, Handle<JSObject*> newTarget,
-    Handle<JSObject*> proto, NewObjectKind newKind /* = GenericObject */) {
+PlainObject* js::CreateThisForFunction(JSContext* cx,
+                                       Handle<JSFunction*> callee,
+                                       Handle<JSObject*> newTarget,
+                                       NewObjectKind newKind) {
+  MOZ_ASSERT(cx->realm() == callee->realm());
   MOZ_ASSERT(!callee->constructorNeedsUninitializedThis());
 
-  Rooted<PlainObject*> res(cx);
-
-  // Ion may call this with a cross-realm callee.
-  mozilla::Maybe<AutoRealm> ar;
-  if (cx->realm() != callee->realm()) {
-    MOZ_ASSERT(cx->compartment() == callee->compartment());
-    ar.emplace(cx, callee);
+  Rooted<JSObject*> proto(cx);
+  if (!GetPrototypeFromConstructor(cx, newTarget, JSProto_Object, &proto)) {
+    return nullptr;
   }
 
+  Rooted<PlainObject*> res(cx);
   if (proto) {
     Rooted<ObjectGroup*> group(
         cx, ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
@@ -73,18 +72,4 @@ PlainObject* js::CreateThisForFunctionWithProto(
   MOZ_ASSERT_IF(res, res->nonCCWRealm() == callee->realm());
 
   return res;
-}
-
-PlainObject* js::CreateThisForFunction(JSContext* cx,
-                                       Handle<JSFunction*> callee,
-                                       Handle<JSObject*> newTarget,
-                                       NewObjectKind newKind) {
-  MOZ_ASSERT(!callee->constructorNeedsUninitializedThis());
-
-  Rooted<JSObject*> proto(cx);
-  if (!GetPrototypeFromConstructor(cx, newTarget, JSProto_Object, &proto)) {
-    return nullptr;
-  }
-
-  return CreateThisForFunctionWithProto(cx, callee, newTarget, proto, newKind);
 }
