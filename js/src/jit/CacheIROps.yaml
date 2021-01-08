@@ -2505,6 +2505,13 @@
     lhs: NumberId
     rhs: NumberId
 
+- name: IndirectTruncateInt32Result
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    val: Int32Id
+
 - name: CallPrintString
   shared: true
   transpile: false
