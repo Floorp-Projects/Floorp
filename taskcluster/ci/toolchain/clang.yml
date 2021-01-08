@@ -48,29 +48,6 @@ linux64-clang-7:
             - linux64-binutils
             - linux64-gcc-7
 
-linux64-clang-9:
-    description: "Clang 9 toolchain build"
-    attributes:
-        local-toolchain: true
-    treeherder:
-        symbol: TL(clang9)
-    run-on-projects: [trunk]
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-linux64.json'
-        resources:
-            - 'build/build-clang/clang-linux64.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-9
-        toolchain:
-            - linux64-binutils
-            - linux64-gcc-7
-            - wasi-sysroot-9
-
 linux64-clang-11-mingw-x86:
     description: "MinGW-Clang 11 x86 toolchain build"
     treeherder:
