@@ -23,7 +23,6 @@ DIRS += [
     "protocol",
     "qrcode",
     "resources",
-    "screenshot",
     "security",
     "sprintfjs",
     "specs",

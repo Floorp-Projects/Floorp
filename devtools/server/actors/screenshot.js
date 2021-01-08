@@ -5,7 +5,9 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const { captureScreenshot } = require("devtools/shared/screenshot/capture");
+const {
+  captureScreenshot,
+} = require("devtools/server/actors/utils/capture-screenshot");
 const { screenshotSpec } = require("devtools/shared/specs/screenshot");
 
 exports.ScreenshotActor = protocol.ActorClassWithSpec(screenshotSpec, {

@@ -5,7 +5,7 @@
 "use strict";
 
 const { screenshotSpec } = require("devtools/shared/specs/screenshot");
-const saveScreenshot = require("devtools/shared/screenshot/save");
+const saveScreenshot = require("devtools/client/shared/save-screenshot");
 const {
   FrontClassWithSpec,
   registerFront,
