@@ -587,7 +587,13 @@ Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
     }
     *aDrawResult = br.PrepareResult();
     if (auto* request = StyleList()->mListStyleImage.GetImageRequest()) {
-      request->BoostPriority(imgIRequest::CATEGORY_DISPLAY);
+      uint32_t status = imgIRequest::STATUS_ERROR;
+      request->GetImageStatus(&status);
+      if (status & imgIRequest::STATUS_ERROR) {
+        // Don't report errored images as not-yet-ready, just fall back to
+        // drawing the regular bullet.
+        *aDrawResult = ImgDrawResult::SUCCESS;
+      }
     }
   }
 
