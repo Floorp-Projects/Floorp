@@ -1022,7 +1022,7 @@ void CodeGenerator::visitValueToInt32(LValueToInt32* lir) {
     masm.bind(ool->rejoin());
   } else {
     masm.convertValueToInt32(operand, input, temp, output, &fails,
-                             lir->mirNormal()->canBeNegativeZero(),
+                             lir->mirNormal()->needsNegativeZeroCheck(),
                              lir->mirNormal()->conversion());
   }
 
@@ -1239,7 +1239,7 @@ void CodeGenerator::visitDoubleToInt32(LDoubleToInt32* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());
   masm.convertDoubleToInt32(input, output, &fail,
-                            lir->mir()->canBeNegativeZero());
+                            lir->mir()->needsNegativeZeroCheck());
   bailoutFrom(&fail, lir->snapshot());
 }
 
@@ -1248,7 +1248,7 @@ void CodeGenerator::visitFloat32ToInt32(LFloat32ToInt32* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());
   masm.convertFloat32ToInt32(input, output, &fail,
-                             lir->mir()->canBeNegativeZero());
+                             lir->mir()->needsNegativeZeroCheck());
   bailoutFrom(&fail, lir->snapshot());
 }
 
