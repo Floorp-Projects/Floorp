@@ -6,7 +6,7 @@
  */
 
 add_task(async function setup() {
-  useHttpServer();
+  useHttpServer("opensearch");
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
 
@@ -31,17 +31,13 @@ add_task(async function test_invalid_path_fails() {
 
 add_task(async function test_install_duplicate_fails() {
   let engine = await Services.search.addOpenSearchEngine(
-    gDataUrl + "engine.xml",
+    gDataUrl + "simple.xml",
     null
   );
-  Assert.equal(
-    engine.name,
-    "Test search engine",
-    "Should have installed the engine."
-  );
+  Assert.equal(engine.name, "simple", "Should have installed the engine.");
 
   await Assert.rejects(
-    Services.search.addOpenSearchEngine(gDataUrl + "engine.xml", null),
+    Services.search.addOpenSearchEngine(gDataUrl + "simple.xml", null),
     error => {
       Assert.equal(
         error.result,
@@ -56,7 +52,7 @@ add_task(async function test_install_duplicate_fails() {
 
 add_task(async function test_invalid_engine_from_dir() {
   await Assert.rejects(
-    Services.search.addOpenSearchEngine(gDataUrl + "invalid-engine.xml", null),
+    Services.search.addOpenSearchEngine(gDataUrl + "invalid.xml", null),
     error => {
       Assert.equal(
         error.result,
