@@ -28,7 +28,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
-    implementation project(":browser-session")
+    implementation project(":browser-state")
     implementation project(':concept-engine')
     implementation project(':feature-tabs')
     implementation project(':feature-app-links')
@@ -46,6 +46,7 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
 
+    testImplementation project(':browser-session')
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
 }

@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
@@ -30,9 +29,9 @@ internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
 /**
  * Feature for displaying a context menu after long-pressing web content.
  *
- * This feature will subscribe to the currently selected [Session] and display the context menu based on
- * [Session.Observer.onLongPress] events. Once the context menu is closed or the user selects an item from the context
- * menu the related [HitResult] will be consumed.
+ * This feature will subscribe to the currently selected tab and display a context menu based on
+ * the [HitResult] in its `ContentState`. Once the context menu is closed or the user selects an
+ * item from the context menu the related [HitResult] will be consumed.
  *
  * @property fragmentManager The [FragmentManager] to be used when displaying a context menu (fragment).
  * @property store The [BrowserStore] this feature should subscribe to.
