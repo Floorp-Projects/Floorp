@@ -2245,7 +2245,7 @@ var gProtectionsHandler = {
 
     let date = await TrackingDBService.getEarliestRecordedDate();
     let dateLocaleStr = new Date(date).toLocaleDateString("default", {
-      month: "short",
+      month: "long",
       year: "numeric",
     });
 
