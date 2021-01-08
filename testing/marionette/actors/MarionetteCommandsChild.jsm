@@ -78,6 +78,10 @@ class MarionetteCommandsChild extends JSWindowActorChild {
   }
 
   async receiveMessage(msg) {
+    if (!this.contentWindow) {
+      throw new DOMException("Actor is no longer active", "InactiveActor");
+    }
+
     try {
       let result;
 
