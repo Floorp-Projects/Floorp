@@ -277,10 +277,13 @@ def lto(
             # instruction sets.
         else:
             num_cores = multiprocessing.cpu_count()
-            if len(value) and value[0].lower() == "full":
-                cflags.append("-flto")
+            if len(value) and value[0].lower() == "thin":
+                die(
+                    "gcc does not support thin LTO. Use `--enable-lto` "
+                    "to enable full LTO for gcc."
+                )
             else:
-                cflags.append("-flto=thin")
+                cflags.append("-flto")
             cflags.append("-flifetime-dse=1")
 
             ldflags.append("-flto=%s" % num_cores)
