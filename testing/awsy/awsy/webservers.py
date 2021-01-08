@@ -32,6 +32,7 @@ class WebServers(object):
         self.stop()
         self.servers = []
         port = self.port
+        num_errors = 0
         while len(self.servers) < self.count:
             self.servers.append(
                 mozhttpd.MozHttpd(host=self.host, port=port, docroot=self.docroot)
@@ -47,10 +48,14 @@ class WebServers(object):
                 elif isinstance(error, str):
                     print("port {} error {}".format(port, error))
                 self.servers.pop()
+                num_errors += 1
             except Exception as error:
                 print("port {} error {}".format(port, error))
                 self.servers.pop()
+                num_errors += 1
 
+            if num_errors > 15:
+                raise Exception("Too many errors in webservers.py")
             port += 1
 
     def stop(self):
