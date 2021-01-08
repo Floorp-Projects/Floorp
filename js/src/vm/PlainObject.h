@@ -40,13 +40,6 @@ extern bool CopyDataPropertiesNative(JSContext* cx,
                                      JS::Handle<PlainObject*> excludedItems,
                                      bool* optimized);
 
-// Specialized call for constructing |this| with a known function callee,
-// and a known prototype.
-extern PlainObject* CreateThisForFunctionWithProto(
-    JSContext* cx, JS::Handle<JSFunction*> callee,
-    JS::Handle<JSObject*> newTarget, JS::Handle<JSObject*> proto,
-    NewObjectKind newKind = GenericObject);
-
 // Specialized call for constructing |this| with a known function callee.
 extern PlainObject* CreateThisForFunction(JSContext* cx,
                                           JS::Handle<JSFunction*> callee,
