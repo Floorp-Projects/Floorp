@@ -241,16 +241,10 @@ extern "C" const char* __tsan_default_suppressions() {
          // No Bug - Logging bug in Mochitests
          "race:mochitest/ssltunnel/ssltunnel.cpp\n"
 
-         // No Bug - Suppress thread leaks for now
-         "thread:NS_NewNamedThread\n"
-         "thread:nsThread::Init\n"
-         "thread:libglib-2\n"
-
          // This thread does not seem to be stopped/joined.
          // ImageBridgeChild should be turned back into a background
          // task queue in bug 1647628, in which case these suppressions
          // can be removed.
-         "thread:mozilla::layers::ImageBridgeChild\n"
          "race:mozilla::layers::ImageBridgeChild::ShutDown\n"
 
          // Bug 1652530
@@ -260,9 +254,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:IdentifyTextureHost\n"
          "race:GetCompositorBackendType\n"
          "race:SupportsTextureDirectMapping\n"
-
-         // Bug 1671574
-         "thread:StartupCache\n"
 
          // Bug 1671601
          "race:CamerasParent::ActorDestroy\n"
