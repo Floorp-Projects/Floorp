@@ -238,25 +238,15 @@ export class TopSiteForm extends React.PureComponent {
     const onSubmit = previewMode
       ? this.onPreviewButtonClick
       : this.onDoneButtonClick;
-
-    // When the newNewtabExperience is enabled by default, use only shortcut ids.
-    const addTopsitesHeaderL10nId =
-      this.props.newNewtabExperienceEnabled ||
-      this.props.customizationMenuEnabled
-        ? "newtab-topsites-add-shortcut-header"
-        : "newtab-topsites-add-topsites-header";
-    const editTopsitesHeaderL10nId =
-      this.props.newNewtabExperienceEnabled ||
-      this.props.customizationMenuEnabled
-        ? "newtab-topsites-edit-shortcut-header"
-        : "newtab-topsites-edit-topsites-header";
     return (
       <form className="topsite-form" onSubmit={onSubmit}>
         <div className="form-input-container">
           <h3
             className="section-title grey-title"
             data-l10n-id={
-              showAsAdd ? addTopsitesHeaderL10nId : editTopsitesHeaderL10nId
+              showAsAdd
+                ? "newtab-topsites-add-topsites-header"
+                : "newtab-topsites-edit-topsites-header"
             }
           />
           <div className="fields-and-preview">
