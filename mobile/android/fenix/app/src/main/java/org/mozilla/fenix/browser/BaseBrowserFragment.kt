@@ -516,7 +516,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
             appLinksFeature.set(
                 feature = AppLinksFeature(
                     context,
-                    sessionManager = sessionManager,
+                    store = store,
                     sessionId = customTabSessionId,
                     fragmentManager = parentFragmentManager,
                     launchInApp = { context.settings().openLinksInExternalApp },
