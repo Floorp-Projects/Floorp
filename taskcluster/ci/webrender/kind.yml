@@ -108,6 +108,8 @@ jobs:
                 - type: file
                   name: public/build/wrench-macos-headless.tar.bz2
                   path: /builds/worker/artifacts/wrench-macos-headless.tar.bz2
+        dependencies:
+            macosx64-clang-11: toolchain-macosx64-clang-11
         fetches:
             toolchain:
                 - linux64-rust-macos
@@ -115,6 +117,9 @@ jobs:
                 - linux64-clang-11-macosx-cross
                 - linux64-llvm-dsymutil
                 - wrench-deps
+            macosx64-clang-11:
+                - artifact: clang.tar.zst
+                  dest: clang-mac
         run:
             using: run-task
             tooltool-downloads: internal

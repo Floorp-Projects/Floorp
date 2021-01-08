@@ -41,8 +41,8 @@ cargo build --release -vv --frozen --target=${TARGET_TRIPLE} --features headless
 # Package up the wrench binary and some libraries that we will need
 cd "../target/${TARGET_TRIPLE}"
 
-# Copy the cross-compiled LLVM as dynamic dependency
-cp "${MOZ_FETCHES_DIR}/clang/lib/libLLVM.dylib" release/build/osmesa-src*/out/mesa/src/gallium/targets/osmesa/
+# Copy the native macOS libLLVM as dynamic dependency
+cp "${MOZ_FETCHES_DIR}/clang-mac/clang/lib/libLLVM.dylib" release/build/osmesa-src*/out/mesa/src/gallium/targets/osmesa/
 
 mkdir wrench-macos-headless
 mv release wrench-macos-headless/
