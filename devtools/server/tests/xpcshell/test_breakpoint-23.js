@@ -18,12 +18,13 @@ add_task(
     info("Create a new script with the displayUrl code.js");
     const consoleFront = await targetFront.getFront("console");
     let onEvaluationResult = consoleFront.once("evaluationResult");
+    const onNewSource = waitForEvent(threadFront, "newSource");
     consoleFront.evaluateJSAsync(
       "function f() {\n return 5; \n}\n//# sourceURL=http://example.com/code.js"
     );
     await onEvaluationResult;
+    const sourcePacket = await onNewSource;
 
-    const sourcePacket = await waitForEvent(threadFront, "newSource");
     equal(sourcePacket.source.url, "http://example.com/code.js");
 
     info("Evaluate f() and pause at line 2");

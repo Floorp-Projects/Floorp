@@ -148,22 +148,25 @@ function getCleanedPacket(key, packet) {
   }
 
   if (
-    res?.result?._grip?.promiseState?.reason &&
-    existingPacket?.result?._grip?.promiseState?.reason
+    res?.result?._grip?.preview?.ownProperties?.["<value>"]?.value &&
+    existingPacket?.result?._grip?.preview?.ownProperties?.["<value>"]?.value
   ) {
     // Clean actor ids on evaluation promise result messages.
     copyExistingActor(
-      res.result._grip.promiseState.reason,
-      existingPacket.result._grip.promiseState.reason
+      res.result._grip.preview.ownProperties["<value>"].value,
+      existingPacket.result._grip.preview.ownProperties["<value>"].value
     );
   }
 
   if (
-    res?.result?._grip?.promiseState?.timeToSettle &&
-    existingPacket?.result?._grip?.promiseState?.timeToSettle
+    res?.result?._grip?.preview?.ownProperties?.["<reason>"]?.value &&
+    existingPacket?.result?._grip?.preview?.ownProperties?.["<reason>"]?.value
   ) {
-    res.result._grip.promiseState.timeToSettle =
-      existingPacket.result._grip.promiseState.timeToSettle;
+    // Clean actor ids on evaluation promise result messages.
+    copyExistingActor(
+      res.result._grip.preview.ownProperties["<reason>"].value,
+      existingPacket.result._grip.preview.ownProperties["<reason>"].value
+    );
   }
 
   if (res.exception && existingPacket.exception) {

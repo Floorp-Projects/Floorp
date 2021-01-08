@@ -625,6 +625,186 @@ rawPackets.set(`eval throw Error Object with custom name`, {
   "timestamp": 1572867483805
 });
 
+rawPackets.set(`eval pending promise`, {
+  "resultID": "1609858965386-17",
+  "hasException": false,
+  "input": "new Promise(() => {})",
+  "result": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child3/obj53",
+      "class": "Promise",
+      "ownPropertyLength": 0,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": false,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "<state>": {
+            "value": "pending"
+          }
+        },
+        "ownPropertiesLength": 1
+      }
+    },
+    "actorID": "server0.conn0.child3/obj53"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval Promise.resolve`, {
+  "resultID": "1609858965388-18",
+  "hasException": false,
+  "input": "Promise.resolve(123)",
+  "result": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child3/obj55",
+      "class": "Promise",
+      "ownPropertyLength": 0,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": false,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "<state>": {
+            "value": "fulfilled"
+          },
+          "<value>": {
+            "value": 123
+          }
+        },
+        "ownPropertiesLength": 2
+      }
+    },
+    "actorID": "server0.conn0.child3/obj55"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval Promise.reject`, {
+  "resultID": "1609858965389-19",
+  "hasException": false,
+  "input": "Promise.reject(\"ouch\")",
+  "result": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child3/obj57",
+      "class": "Promise",
+      "ownPropertyLength": 0,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": false,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "<state>": {
+            "value": "rejected"
+          },
+          "<reason>": {
+            "value": "ouch"
+          }
+        },
+        "ownPropertiesLength": 2
+      }
+    },
+    "actorID": "server0.conn0.child3/obj57"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval resolved promise`, {
+  "resultID": "1609858965393-20",
+  "hasException": false,
+  "input": "Promise.resolve().then(() => 246)",
+  "result": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child3/obj59",
+      "class": "Promise",
+      "ownPropertyLength": 0,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": false,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "<state>": {
+            "value": "fulfilled"
+          },
+          "<value>": {
+            "value": 246
+          }
+        },
+        "ownPropertiesLength": 2
+      }
+    },
+    "actorID": "server0.conn0.child3/obj59"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval rejected promise`, {
+  "resultID": "1609858965397-21",
+  "hasException": false,
+  "input": "Promise.resolve().then(() => a.b.c)",
+  "result": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child3/obj61",
+      "class": "Promise",
+      "ownPropertyLength": 0,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": false,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "<state>": {
+            "value": "rejected"
+          },
+          "<reason>": {
+            "value": {
+              "type": "object",
+              "actor": "server0.conn0.child3/obj62",
+              "class": "ReferenceError",
+              "ownPropertyLength": 4,
+              "extensible": true,
+              "frozen": false,
+              "sealed": false,
+              "isError": true,
+              "preview": {
+                "kind": "Error",
+                "name": "ReferenceError",
+                "message": "a is not defined",
+                "stack": "@debugger eval code:1:30\npromise callback*@debugger eval code:1:19\n",
+                "fileName": "debugger eval code",
+                "lineNumber": 1,
+                "columnNumber": 30
+              }
+            }
+          }
+        },
+        "ownPropertiesLength": 2
+      }
+    },
+    "actorID": "server0.conn0.child3/obj61"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
 
 const stubPackets = parsePacketsWithFronts(rawPackets);
 
