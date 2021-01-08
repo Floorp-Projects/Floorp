@@ -17,6 +17,10 @@ const EXT_PROTOCOL_ENABLED = Services.prefs.getBoolPref(
   "security.external_protocol_requires_permission"
 );
 
+const STATE_PARTITIONING_ENABLED = Services.prefs.getBoolPref(
+  "browser.contentblocking.state-partitioning.mvp.ui.enabled"
+);
+
 add_task(async function testPermissionsListing() {
   let expectedPermissions = [
     "autoplay-media",
@@ -46,6 +50,9 @@ add_task(async function testPermissionsListing() {
   }
   if (EXT_PROTOCOL_ENABLED) {
     expectedPermissions.push("open-protocol-handler");
+  }
+  if (STATE_PARTITIONING_ENABLED) {
+    expectedPermissions.push("3rdPartyStorage");
   }
   Assert.deepEqual(
     SitePermissions.listPermissions().sort(),
@@ -216,6 +223,9 @@ add_task(async function testExactHostMatch() {
     "shortcuts",
     "storage-access",
   ];
+  if (STATE_PARTITIONING_ENABLED) {
+    nonExactHostMatched.push("3rdPartyStorage");
+  }
 
   let permissions = SitePermissions.listPermissions();
   for (let permission of permissions) {
