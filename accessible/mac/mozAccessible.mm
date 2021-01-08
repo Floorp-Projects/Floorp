@@ -771,6 +771,14 @@ struct RoleDescrComparator {
   return @([self stateWithMask:states::BUSY] != 0);
 }
 
+- (NSArray*)moxLinkedUIElements {
+  return [self getRelationsByType:RelationType::FLOWS_TO];
+}
+
+- (NSArray*)moxARIAControls {
+  return [self getRelationsByType:RelationType::CONTROLLER_FOR];
+}
+
 - (mozAccessible*)topWebArea {
   AccessibleOrProxy doc = [self geckoDocument];
   while (!doc.IsNull()) {
