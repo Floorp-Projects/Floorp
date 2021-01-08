@@ -26,7 +26,7 @@ linux64-fix-stacks:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-9
+            - linux64-clang-11
             - linux64-rust-1.47
 
 macosx64-fix-stacks:
@@ -43,8 +43,8 @@ macosx64-fix-stacks:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-9
-            - linux64-clang-9
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11
             - linux64-rust-macos-1.47
 
 win32-fix-stacks:
@@ -61,6 +61,6 @@ win32-fix-stacks:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-clang-9
+            - linux64-clang-11
             - linux64-liblowercase
             - linux64-rust-windows-1.47
