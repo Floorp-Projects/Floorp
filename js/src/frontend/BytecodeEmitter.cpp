@@ -7521,42 +7521,14 @@ bool BytecodeEmitter::checkSelfHostedUnsafeSetReservedSlot(
 }
 #endif
 
-bool BytecodeEmitter::isRestParameter(ParseNode* expr) {
-  if (!sc->isFunctionBox()) {
-    return false;
+bool BytecodeEmitter::isOptimizableSpreadArgument(ParseNode* expr) {
+  if (expr->isKind(ParseNodeKind::Name)) {
+    return true;
   }
 
-  FunctionBox* funbox = sc->asFunctionBox();
-  if (!funbox->hasRest()) {
-    return false;
-  }
-
-  if (!expr->isKind(ParseNodeKind::Name)) {
-    return allowSelfHostedIter(expr) &&
-           isRestParameter(
-               expr->as<BinaryNode>().right()->as<ListNode>().head());
-  }
-
-  const ParserAtom* name = expr->as<NameNode>().name();
-  Maybe<NameLocation> paramLoc = locationOfNameBoundInFunctionScope(name);
-  if (paramLoc && lookupName(name) == *paramLoc) {
-    FunctionScope::ParserData* bindings = funbox->functionScopeBindings();
-    if (bindings->slotInfo.nonPositionalFormalStart > 0) {
-      auto index =
-          bindings
-              ->trailingNames[bindings->slotInfo.nonPositionalFormalStart - 1]
-              .name();
-      if (index.isNull()) {
-        // Rest parameter name can be null when the rest destructuring syntax is
-        // used: `function f(...[]) {}`.
-        return false;
-      }
-      const ParserAtom* paramName = compilationState.getParserAtomAt(cx, index);
-      return name == paramName;
-    }
-  }
-
-  return false;
+  return allowSelfHostedIter(expr) &&
+         isOptimizableSpreadArgument(
+             expr->as<BinaryNode>().right()->as<ListNode>().head());
 }
 
 /* A version of emitCalleeAndThis for the optional cases:
@@ -7904,14 +7876,15 @@ bool BytecodeEmitter::emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
   bool isSpread = JOF_OPTYPE(callNode->callOp()) == JOF_BYTE;
   JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
+  bool isOptimizableSpread =
+      isSpread && argc == 1 &&
+      isOptimizableSpreadArgument(argsList->head()->as<UnaryNode>().kid());
 
-  CallOrNewEmitter cone(
-      this, op,
-      isSpread && (argc == 1) &&
-              isRestParameter(argsList->head()->as<UnaryNode>().kid())
-          ? CallOrNewEmitter::ArgumentsKind::SingleSpreadRest
-          : CallOrNewEmitter::ArgumentsKind::Other,
-      valueUsage);
+  CallOrNewEmitter cone(this, op,
+                        isOptimizableSpread
+                            ? CallOrNewEmitter::ArgumentsKind::SingleSpread
+                            : CallOrNewEmitter::ArgumentsKind::Other,
+                        valueUsage);
 
   ParseNode* coordNode = getCoordNode(callNode, calleeNode, op, argsList);
 
@@ -8023,13 +7996,14 @@ bool BytecodeEmitter::emitCallOrNew(
 
   JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
-  CallOrNewEmitter cone(
-      this, op,
-      isSpread && (argc == 1) &&
-              isRestParameter(argsList->head()->as<UnaryNode>().kid())
-          ? CallOrNewEmitter::ArgumentsKind::SingleSpreadRest
-          : CallOrNewEmitter::ArgumentsKind::Other,
-      valueUsage);
+  bool isOptimizableSpread =
+      isSpread && argc == 1 &&
+      isOptimizableSpreadArgument(argsList->head()->as<UnaryNode>().kid());
+  CallOrNewEmitter cone(this, op,
+                        isOptimizableSpread
+                            ? CallOrNewEmitter::ArgumentsKind::SingleSpread
+                            : CallOrNewEmitter::ArgumentsKind::Other,
+                        valueUsage);
 
   if (!emitCalleeAndThis(calleeNode, callNode, cone)) {
     //              [stack] CALLEE THIS
