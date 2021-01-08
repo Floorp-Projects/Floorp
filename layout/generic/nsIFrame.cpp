@@ -977,7 +977,7 @@ static void AddAndRemoveImageAssociations(
   }
 
   CompareLayers(aNewLayers, aOldLayers, [&](imgRequestProxy* aReq) {
-    aImageLoader.AssociateRequestToFrame(aReq, aFrame, 0);
+    aImageLoader.AssociateRequestToFrame(aReq, aFrame);
   });
 }
 
@@ -1343,7 +1343,7 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       loader->DisassociateRequestFromFrame(oldBorderImage, this);
     }
     if (newBorderImage) {
-      loader->AssociateRequestToFrame(newBorderImage, this, 0);
+      loader->AssociateRequestToFrame(newBorderImage, this);
     }
   }
 
@@ -1365,8 +1365,10 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       loader->DisassociateRequestFromFrame(oldShapeImage, this);
     }
     if (newShapeImage) {
-      loader->AssociateRequestToFrame(newShapeImage, this,
-                                      ImageLoader::REQUEST_REQUIRES_REFLOW);
+      loader->AssociateRequestToFrame(
+          newShapeImage, this,
+          ImageLoader::Flags::
+              RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking);
     }
   }
 
@@ -5636,7 +5638,7 @@ bool nsIFrame::AssociateImage(const StyleImage& aImage) {
   mozilla::css::ImageLoader* loader =
       PresContext()->Document()->StyleImageLoader();
 
-  loader->AssociateRequestToFrame(req, this, 0);
+  loader->AssociateRequestToFrame(req, this);
   return true;
 }
 
