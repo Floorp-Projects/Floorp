@@ -81,19 +81,9 @@ enum CheckboxValue {
 
 @implementation mozRadioButtonAccessible
 
-- (id)accessibilityAttributeValue:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-  if ([self isExpired]) {
-    return nil;
-  }
-
-  if ([attribute isEqualToString:NSAccessibilityLinkedUIElementsAttribute]) {
-    return [self getRelationsByType:RelationType::MEMBER_OF];
-  }
-
-  return [super accessibilityAttributeValue:attribute];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+- (NSArray*)moxLinkedUIElements {
+  return [[self getRelationsByType:RelationType::MEMBER_OF]
+      arrayByAddingObjectsFromArray:[super moxLinkedUIElements]];
 }
 
 @end
