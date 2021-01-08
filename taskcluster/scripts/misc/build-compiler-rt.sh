@@ -2,16 +2,36 @@
 
 set -e
 
-[ "$1" != "aarch64-apple-darwin" ] && echo $1 is not supported yet && exit 1
+target=$1
+
+case "$target" in
+aarch64-apple-darwin)
+  arch=arm64
+  sdk=11.0
+  extra_flags="-mcpu=apple-a12"
+  ;;
+x86_64-apple-darwin)
+  arch=x86_64
+  sdk=10.12
+  ;;
+*)
+  echo $target is not supported yet
+  exit 1
+  ;;
+esac
 
 export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
+
+if [ -n "$TOOLTOOL_MANIFEST" ]; then
+  . $GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh
+fi
 
 mkdir compiler-rt
 cd compiler-rt
 
 compiler_wrapper() {
 cat > $1 <<EOF
-exec \$MOZ_FETCHES_DIR/clang/bin/$1 -target aarch64-apple-darwin -mcpu=apple-a12 -isysroot \$MOZ_FETCHES_DIR/MacOSX11.0.sdk "\$@"
+exec \$MOZ_FETCHES_DIR/clang/bin/$1 -target $target $extra_flags -isysroot \$MOZ_FETCHES_DIR/MacOSX$sdk.sdk "\$@"
 EOF
 chmod +x $1
 }
@@ -23,20 +43,20 @@ cmake \
   -GNinja \
   -DCMAKE_C_COMPILER=$PWD/clang \
   -DCMAKE_CXX_COMPILER=$PWD/clang++ \
-  -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/aarch64-apple-darwin-ld \
+  -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/$target-ld \
   -DCMAKE_LIPO=$MOZ_FETCHES_DIR/cctools/bin/lipo \
-  -DCMAKE_AR=$MOZ_FETCHES_DIR/cctools/bin/aarch64-apple-darwin-ar \
-  -DCMAKE_RANLIB=$MOZ_FETCHES_DIR/cctools/bin/aarch64-apple-darwin-ranlib \
+  -DCMAKE_AR=$MOZ_FETCHES_DIR/cctools/bin/$target-ar \
+  -DCMAKE_RANLIB=$MOZ_FETCHES_DIR/cctools/bin/$target-ranlib \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_CONFIG_PATH=$MOZ_FETCHES_DIR/clang/bin/llvm-config \
   -DCMAKE_SYSTEM_NAME=Darwin \
-  -DCMAKE_SYSTEM_VERSION=11.0 \
-  -DDARWIN_osx_ARCHS=arm64 \
-  -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk \
-  -DLLVM_DEFAULT_TARGET_TRIPLE=aarch64-apple-darwin \
-  -DDARWIN_macosx_OVERRIDE_SDK_VERSION=11.0 \
-  -DDARWIN_osx_BUILTIN_ARCHS=arm64
+  -DCMAKE_SYSTEM_VERSION=$sdk \
+  -DDARWIN_osx_ARCHS=$arch \
+  -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX$sdk.sdk \
+  -DLLVM_DEFAULT_TARGET_TRIPLE=$target \
+  -DDARWIN_macosx_OVERRIDE_SDK_VERSION=$sdk \
+  -DDARWIN_osx_BUILTIN_ARCHS=$arch
 
 # compiler-rt build script expects to find `codesign` in $PATH.
 # Give it a fake one.
