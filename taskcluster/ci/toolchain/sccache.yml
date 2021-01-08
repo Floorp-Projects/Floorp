@@ -46,8 +46,8 @@ macosx64-sccache:
     fetches:
         toolchain:
             - linux64-rust-macos-1.47
-            - linux64-clang-9
-            - linux64-cctools-port-clang-9
+            - linux64-clang-11
+            - linux64-cctools-port-clang-11
             - linux64-llvm-dsymutil
             - linux64-binutils
 
