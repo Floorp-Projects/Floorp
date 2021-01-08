@@ -104,9 +104,10 @@ non-unified:
     description: Run syntax test for non-unified build on C/C++ files.
     treeherder:
         symbol: cpp(non-unified)
+        tier: 1
     attributes:
         code-review: false
-    run-on-projects: [mozilla-central]
+    run-on-projects: ['integration']
     run:
         cwd: '{checkout}'
         command: >-
