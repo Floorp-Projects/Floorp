@@ -430,12 +430,17 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
         self.register_virtualenv_module(name="mock")
         self.register_virtualenv_module(name="simplejson")
 
-        requirements_files = [
-            os.path.join(
-                dirs["abs_test_install_dir"], "config", "marionette_requirements.txt"
-            )
-        ]
+        marionette_requirements_file = os.path.join(
+            dirs["abs_test_install_dir"], "config", "marionette_requirements.txt"
+        )
+        # marionette_requirements.txt must use the legacy resolver until bug 1684969 is resolved.
+        self.register_virtualenv_module(
+            requirements=[marionette_requirements_file],
+            two_pass=True,
+            legacy_resolver=True,
+        )
 
+        requirements_files = []
         if self._query_specified_suites("mochitest") is not None:
             # mochitest is the only thing that needs this
             if PY2:

@@ -163,14 +163,14 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
 
     @PreScriptAction("create-virtualenv")
     def _pre_create_virtualenv(self, action):
-        requirements_files = [
-            os.path.join(self.testdir, "config", "marionette_requirements.txt")
-        ]
+        requirements_file = os.path.join(
+            self.testdir, "config", "marionette_requirements.txt"
+        )
 
-        for requirements_file in requirements_files:
-            self.register_virtualenv_module(
-                requirements=[requirements_file], two_pass=True
-            )
+        # marionette_requirements.txt must use the legacy resolver until bug 1684969 is resolved.
+        self.register_virtualenv_module(
+            requirements=[requirements_file], two_pass=True, legacy_resolver=True
+        )
 
         self.register_virtualenv_module("awsy", self.awsy_path)
 
