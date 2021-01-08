@@ -976,6 +976,8 @@ pub struct Capabilities {
     pub supports_texture_usage: bool,
     /// Whether offscreen render targets can be partially updated.
     pub supports_render_target_partial_update: bool,
+    /// Whether we can use SSBOs.
+    pub supports_shader_storage_object: bool,
     /// Whether the driver prefers fewer and larger texture uploads
     /// over many smaller updates.
     pub prefers_batched_texture_uploads: bool,
@@ -1354,6 +1356,8 @@ impl Device {
         let max_texture_size = max_texture_size[0];
         let max_texture_layers = max_texture_layers[0] as u32;
         let renderer_name = gl.get_string(gl::RENDERER);
+        info!("Renderer: {}", renderer_name);
+        info!("Max texture size: {}", max_texture_size);
 
         let mut extension_count = [0];
         unsafe {
@@ -1433,7 +1437,12 @@ impl Device {
         // So we must use glTexStorage instead. See bug 1591436.
         let is_emulator = renderer_name.starts_with("Android Emulator");
         let avoid_tex_image = is_emulator;
-        let gl_version = gl.get_string(gl::VERSION);
+        let mut gl_version = [0; 2];
+        unsafe {
+            gl.get_integer_v(gl::MAJOR_VERSION, &mut gl_version[0..1]);
+            gl.get_integer_v(gl::MINOR_VERSION, &mut gl_version[1..2]);
+        }
+        info!("GL context {:?} {}.{}", gl.get_type(), gl_version[0], gl_version[1]);
 
         // We block texture storage on mac because it doesn't support BGRA
         let supports_texture_storage = allow_texture_storage_support && !cfg!(target_os = "macos") &&
@@ -1446,7 +1455,7 @@ impl Device {
         let supports_texture_swizzle = allow_texture_swizzling &&
             match gl.get_type() {
                 // see https://www.g-truc.net/post-0734.html
-                gl::GlType::Gl => gl_version.as_str() >= "3.3" ||
+                gl::GlType::Gl => gl_version >= [3, 3] ||
                     supports_extension(&extensions, "GL_ARB_texture_swizzle"),
                 gl::GlType::Gles => true,
             };
@@ -1606,6 +1615,12 @@ impl Device {
         // See bug 1663355.
         let supports_render_target_partial_update = !is_mali_g;
 
+        let supports_shader_storage_object = match gl.get_type() {
+            // see https://www.g-truc.net/post-0734.html
+            gl::GlType::Gl => supports_extension(&extensions, "GL_ARB_shader_storage_buffer_object"),
+            gl::GlType::Gles => gl_version >= [3, 1],
+        };
+
         // On Mali-Gxx the driver really struggles with many small texture uploads,
         // and handles fewer, larger uploads better.
         let prefers_batched_texture_uploads = is_mali_g;
@@ -1631,6 +1646,7 @@ impl Device {
                 supports_nonzero_pbo_offsets,
                 supports_texture_usage,
                 supports_render_target_partial_update,
+                supports_shader_storage_object,
                 prefers_batched_texture_uploads,
                 renderer_name,
             },
