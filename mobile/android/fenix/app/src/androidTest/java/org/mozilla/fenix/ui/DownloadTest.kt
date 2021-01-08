@@ -4,25 +4,21 @@
 
 package org.mozilla.fenix.ui
 
-import android.os.Environment
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.UiDevice
-import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.downloadRobot
-import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
-import java.io.File
 
 /**
  *  Tests for verifying basic functionality of download prompt UI
@@ -56,35 +52,20 @@ class DownloadTest {
         }
     }
 
-    @Suppress("Deprecation")
     @After
     fun tearDown() {
         mockWebServer.shutdown()
 
-        // Clear Download
-        runBlocking {
-            val downloadedFile = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "Globe.svg.html"
-            )
-
-            if (downloadedFile.exists()) {
-                downloadedFile.delete()
-            }
-        }
+        TestHelper.deleteDownloadFromStorage("Globe.svg")
     }
 
     @Test
-    @Ignore("Temp disable flaky test - see: https://github.com/mozilla-mobile/fenix/issues/10798")
     fun testDownloadPrompt() {
-        homeScreen { }.dismissOnboarding()
-
         val defaultWebPage = TestAssetHelper.getDownloadAsset(mockWebServer)
 
         navigationToolbar {
-        }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             mDevice.waitForIdle()
-            clickLinkMatchingText(defaultWebPage.content)
         }
 
         downloadRobot {
@@ -97,9 +78,8 @@ class DownloadTest {
         val defaultWebPage = TestAssetHelper.getDownloadAsset(mockWebServer)
 
         navigationToolbar {
-        }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             mDevice.waitForIdle()
-            clickLinkMatchingText(defaultWebPage.content)
         }
 
         downloadRobot {

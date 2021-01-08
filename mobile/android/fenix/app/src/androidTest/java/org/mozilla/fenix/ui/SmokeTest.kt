@@ -30,7 +30,6 @@ import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import java.io.File
 
 /**
  * Test Suite that contains tests defined as part of the Smoke and Sanity check defined in Test rail.

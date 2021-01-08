@@ -121,9 +121,9 @@ object TestHelper {
         )
     }
 
-    //Remove test file from the device Downloads folder
+    // Remove test file from the device Downloads folder
     @Suppress("Deprecation")
-    fun deleteDownloadFromStorage(fileName: String){
+    fun deleteDownloadFromStorage(fileName: String) {
         runBlocking {
             val downloadedFile = File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
