@@ -2660,19 +2660,6 @@ bool WarpCacheIRTranspiler::emitCompareDoubleSameValueResult(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitIndirectTruncateInt32Result(
-    Int32OperandId valId) {
-  MDefinition* val = getOperand(valId);
-  MOZ_ASSERT(val->type() == MIRType::Int32);
-
-  auto* truncate =
-      MLimitedTruncate::New(alloc(), val, TruncateKind::IndirectTruncate);
-  add(truncate);
-
-  pushResult(truncate);
-  return true;
-}
-
 bool WarpCacheIRTranspiler::emitMathHypot2NumberResult(
     NumberOperandId firstId, NumberOperandId secondId) {
   MDefinitionVector vector(alloc());
