@@ -274,6 +274,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:style::traversal::note_children\n"
          "race:style::matching::MatchMethods::apply_selector_flags\n"
 
+         // Bug 1607588
+         "race:nssToken_Destroy\n"
+         "race:nssSlot_GetToken\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
