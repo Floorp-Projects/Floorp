@@ -13,20 +13,22 @@
 #include "mozilla/CORSMode.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
-#include "nsIFrame.h"
-#include "nsIReflowCallback.h"
+#include "nsRect.h"
 #include "nsTArray.h"
-#include "imgIRequest.h"
-#include "imgINotificationObserver.h"
 #include "mozilla/Attributes.h"
 
+class nsIFrame;
 class imgIContainer;
+class imgIRequest;
+class imgRequestProxy;
 class nsPresContext;
 class nsIURI;
 class nsIPrincipal;
+class nsIRequest;
 
 namespace mozilla {
 struct MediaFeatureChange;
+struct StyleComputedUrl;
 namespace dom {
 class Document;
 }
@@ -73,8 +75,8 @@ class ImageLoader final {
   void ClearFrames(nsPresContext* aPresContext);
 
   // Triggers an image load.
-  static already_AddRefed<imgRequestProxy> LoadImage(
-      const StyleComputedImageUrl&, dom::Document&);
+  static already_AddRefed<imgRequestProxy> LoadImage(const StyleComputedUrl&,
+                                                     dom::Document&);
 
   // Usually, only one style value owns a given proxy. However, we have a hack
   // to share image proxies in chrome documents under some circumstances. We
@@ -94,21 +96,7 @@ class ImageLoader final {
  private:
   // Called when we stop caring about a given request.
   void DeregisterImageRequest(imgIRequest*, nsPresContext*);
-
-  // This callback is used to unblock document onload after a reflow
-  // triggered from an image load.
-  struct ImageReflowCallback final : public nsIReflowCallback {
-    RefPtr<ImageLoader> mLoader;
-    WeakFrame mFrame;
-    nsCOMPtr<imgIRequest> const mRequest;
-
-    ImageReflowCallback(ImageLoader* aLoader, nsIFrame* aFrame,
-                        imgIRequest* aRequest)
-        : mLoader(aLoader), mFrame(aFrame), mRequest(aRequest) {}
-
-    bool ReflowFinished() override;
-    void ReflowCallbackCanceled() override;
-  };
+  struct ImageReflowCallback;
 
   ~ImageLoader() = default;
 
