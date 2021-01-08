@@ -235,7 +235,7 @@ element.Store = class {
       delete this.els[webEl.uuid];
     }
 
-    if (el === null || element.isStale(el, win)) {
+    if (element.isStale(el, win)) {
       throw new error.StaleElementReferenceError(
         pprint`The element reference of ${el || webEl.uuid} is stale; ` +
           "either the element is no longer attached to the DOM, " +
@@ -800,27 +800,31 @@ element.getElementId = function(el) {
  * @param {ElementIdentifier} id
  *     The identifier generated via ContentDOMReference.get for a DOM element.
  *
- * @param {WindowProxy=} win
- *     Current window global, which may differ from the associated
- *     window global of <var>el</var>.  When retrieving XUL
- *     elements, this is optional.
+ * @param {WindowProxy} win
+ *     Current window, which may differ from the associated
+ *     window of <var>el</var>.
  *
  * @return {Element} The DOM element that the identifier was generated for, or
  *     null if the element does not still exist.
  *
+ * @throws {NoSuchElementError}
+ *     If element represented by reference <var>id</var> doesn't exist
+ *     in the current browsing context.
  * @throws {StaleElementReferenceError}
  *     If the element has gone stale, indicating it is no longer
  *     attached to the DOM, or its node document is no longer the
  *     active document.
  */
-element.resolveElement = function(id, win = undefined) {
-  const el = ContentDOMReference.resolve(id);
-  if (el === null) {
-    // the element is unknown in the current browsing context
+element.resolveElement = function(id, win) {
+  // Don't allow elements whose browsing context differs from the current one.
+  if (id.browsingContextId != win?.browsingContext.id) {
     throw new error.NoSuchElementError(
       `Web element reference not seen before: ${JSON.stringify(id.webElRef)}`
     );
   }
+
+  const el = ContentDOMReference.resolve(id);
+
   if (element.isStale(el, win)) {
     throw new error.StaleElementReferenceError(
       pprint`The element reference of ${el || JSON.stringify(id.webElRef)} ` +
@@ -873,7 +877,9 @@ element.isCollection = function(seq) {
  * browsing context such as an <tt>&lt;iframe&gt;</tt>.
  *
  * @param {Element=} el
- *     DOM element to check for staleness.
+ *     DOM element to check for staleness.  If null, which may be
+ *     the case if the element has been unwrapped from a weak
+ *     reference, it is always considered stale.
  * @param {WindowProxy=} win
  *     Current window global, which may differ from the associated
  *     window global of <var>el</var>.  When retrieving XUL
@@ -883,13 +889,10 @@ element.isCollection = function(seq) {
  *     True if <var>el</var> is stale, false otherwise.
  */
 element.isStale = function(el, win = undefined) {
-  if (!el) {
-    throw new TypeError(`Expected Element got ${el}`);
-  }
   if (typeof win == "undefined") {
     win = el.ownerGlobal;
   }
-  if (!el.ownerGlobal || el.ownerDocument !== win.document) {
+  if (el === null || !el.ownerGlobal || el.ownerDocument !== win.document) {
     return true;
   }
 
