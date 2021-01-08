@@ -374,5 +374,5 @@ macosx64-aarch64-compiler-rt-11:
             - clang-11
         toolchain:
             - linux64-cctools-port-clang-11
-            - linux64-clang-11-macosx-cross
+            - linux64-clang-11
             - macosx64-sdk-11.0
