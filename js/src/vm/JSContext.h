@@ -684,6 +684,17 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // ReportOverRecursed. See Debugger::slowPathOnExceptionUnwind.
   js::ContextData<bool> overRecursed_;
 
+#ifdef DEBUG
+  // True if this context has ever called ReportOverRecursed.
+  js::ContextData<bool> hadOverRecursed_;
+
+ public:
+  bool hadNondeterministicException() const {
+    return hadOverRecursed_ || runtime()->hadOutOfMemory;
+  }
+#endif
+
+ private:
   // True if propagating a forced return from an interrupt handler during
   // debug mode.
   js::ContextData<bool> propagatingForcedReturn_;
