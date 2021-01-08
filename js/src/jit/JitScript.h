@@ -141,6 +141,10 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 
   void trace(JSTracer* trc);
 
+#ifdef DEBUG
+  mozilla::HashNumber hash();
+#endif
+
  private:
   class CallSite {
    public:
@@ -280,6 +284,13 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   Flags flags_ = {};  // Zero-initialize flags.
 
   js::UniquePtr<InliningRoot> inliningRoot_;
+
+#ifdef DEBUG
+  // If the last warp compilation invalidated because of TranspiledCacheIR
+  // bailouts, this is a hash of the ICScripts used in that compilation.
+  // When recompiling, we assert that the hash has changed.
+  mozilla::Maybe<mozilla::HashNumber> failedICHash_;
+#endif
 
   ICScript icScript_;
   // End of fields.
@@ -492,6 +503,15 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   InliningRoot* inliningRoot() const { return inliningRoot_.get(); }
   InliningRoot* getOrCreateInliningRoot(JSContext* cx, JSScript* script);
   void clearInliningRoot() { inliningRoot_.reset(); }
+
+#ifdef DEBUG
+  bool hasFailedICHash() const { return failedICHash_.isSome(); }
+  mozilla::HashNumber getFailedICHash() { return failedICHash_.extract(); }
+  void setFailedICHash(mozilla::HashNumber hash) {
+    MOZ_ASSERT(failedICHash_.isNothing());
+    failedICHash_.emplace(hash);
+  }
+#endif
 };
 
 // Ensures no JitScripts are purged in the current zone.
