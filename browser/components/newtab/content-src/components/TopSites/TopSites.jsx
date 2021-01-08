@@ -141,6 +141,8 @@ export class _TopSites extends React.PureComponent {
     const extraMenuOptions = ["AddTopSite"];
     const newNewtabExperienceEnabled =
       props.Prefs.values["newNewtabExperience.enabled"];
+    const customizationMenuEnabled =
+      props.Prefs.values["customizationMenu.enabled"];
     const colors = props.Prefs.values["newNewtabExperience.colors"];
 
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
@@ -148,8 +150,7 @@ export class _TopSites extends React.PureComponent {
     }
 
     const canShowCustomizationMenu =
-      props.Prefs.values["newNewtabExperience.enabled"] ||
-      props.Prefs.values["customizationMenu.enabled"];
+      newNewtabExperienceEnabled || customizationMenuEnabled;
     const hideTitle =
       props.Prefs.values.hideTopSitesTitle || canShowCustomizationMenu;
 
@@ -205,6 +206,7 @@ export class _TopSites extends React.PureComponent {
                     dispatch={this.props.dispatch}
                     {...editForm}
                     newNewtabExperienceEnabled={newNewtabExperienceEnabled}
+                    customizationMenuEnabled={customizationMenuEnabled}
                   />
                 </ModalOverlayWrapper>
               </div>

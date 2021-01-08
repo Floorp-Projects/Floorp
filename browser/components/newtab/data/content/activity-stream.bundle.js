@@ -8618,13 +8618,14 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
     } = props.TopSites;
     const extraMenuOptions = ["AddTopSite"];
     const newNewtabExperienceEnabled = props.Prefs.values["newNewtabExperience.enabled"];
+    const customizationMenuEnabled = props.Prefs.values["customizationMenu.enabled"];
     const colors = props.Prefs.values["newNewtabExperience.colors"];
 
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
       extraMenuOptions.push("AddSearchShortcut");
     }
 
-    const canShowCustomizationMenu = props.Prefs.values["newNewtabExperience.enabled"] || props.Prefs.values["customizationMenu.enabled"];
+    const canShowCustomizationMenu = newNewtabExperienceEnabled || customizationMenuEnabled;
     const hideTitle = props.Prefs.values.hideTopSitesTitle || canShowCustomizationMenu; // `collapsed` should be sent to CollapsibleSection as undefined if
     // `props.TopSites.pref` is not set to true.
 
@@ -8674,7 +8675,8 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
       onClose: this.onEditFormClose,
       dispatch: this.props.dispatch
     }, editForm, {
-      newNewtabExperienceEnabled: newNewtabExperienceEnabled
+      newNewtabExperienceEnabled: newNewtabExperienceEnabled,
+      customizationMenuEnabled: customizationMenuEnabled
     })))), showSearchShortcutsForm && react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("div", {
       className: "edit-search-shortcuts"
     }, react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_asrouter_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_5__["ModalOverlayWrapper"], {
@@ -15842,7 +15844,10 @@ class TopSiteForm_TopSiteForm extends external_React_default.a.PureComponent {
     } // Handles the form submit so an enter press performs the correct action
 
 
-    const onSubmit = previewMode ? this.onPreviewButtonClick : this.onDoneButtonClick;
+    const onSubmit = previewMode ? this.onPreviewButtonClick : this.onDoneButtonClick; // When the newNewtabExperience is enabled by default, use only "newtab-topsites-add-shortcut-header".
+
+    const addTopsitesHeaderL10nId = this.props.newNewtabExperienceEnabled || this.props.customizationMenuEnabled ? "newtab-topsites-add-shortcut-header" : "newtab-topsites-add-topsites-header";
+    const editTopsitesHeaderL10nId = this.props.newNewtabExperienceEnabled || this.props.customizationMenuEnabled ? "newtab-topsites-edit-shortcut-header" : "newtab-topsites-edit-topsites-header";
     return external_React_default.a.createElement("form", {
       className: "topsite-form",
       onSubmit: onSubmit
@@ -15850,7 +15855,7 @@ class TopSiteForm_TopSiteForm extends external_React_default.a.PureComponent {
       className: "form-input-container"
     }, external_React_default.a.createElement("h3", {
       className: "section-title grey-title",
-      "data-l10n-id": showAsAdd ? "newtab-topsites-add-topsites-header" : "newtab-topsites-edit-topsites-header"
+      "data-l10n-id": showAsAdd ? addTopsitesHeaderL10nId : editTopsitesHeaderL10nId
     }), external_React_default.a.createElement("div", {
       className: "fields-and-preview"
     }, external_React_default.a.createElement("div", {
