@@ -47,11 +47,14 @@ class ImageLoader final {
   // We also associate flags alongside frames in the request-to-frames hashmap.
   // These are used for special handling of events for requests.
   enum class Flags : uint32_t {
+    // Used for bullets.
+    RequiresReflowOnSizeAvailable = 1u << 0,
+
     // Used for shapes.
-    RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking = 1u << 0,
+    RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking = 1u << 1,
 
     // Internal flag, shouldn't be used by callers.
-    IsBlockingLoadEvent = 1u << 1,
+    IsBlockingLoadEvent = 1u << 2,
   };
 
   explicit ImageLoader(dom::Document* aDocument) : mDocument(aDocument) {

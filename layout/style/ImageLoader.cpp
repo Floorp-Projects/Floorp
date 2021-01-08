@@ -211,6 +211,13 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
   }
 
   // Check if the frame requires special processing.
+  if (aFlags & Flags::RequiresReflowOnSizeAvailable) {
+    MOZ_ASSERT(!(aFlags &
+                 Flags::RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking),
+               "These two are exclusive");
+    fwfToModify->mFlags |= Flags::RequiresReflowOnSizeAvailable;
+  }
+
   if (aFlags & Flags::RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking) {
     fwfToModify->mFlags |=
         Flags::RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking;
@@ -698,6 +705,10 @@ void ImageLoader::OnSizeAvailable(imgIRequest* aRequest,
   }
 
   for (const FrameWithFlags& fwf : *frameSet) {
+    if (fwf.mFlags & Flags::RequiresReflowOnSizeAvailable) {
+      fwf.mFrame->PresShell()->FrameNeedsReflow(
+          fwf.mFrame, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
+    }
     if (fwf.mFrame->StyleVisibility()->IsVisible()) {
       fwf.mFrame->SchedulePaint();
     }
