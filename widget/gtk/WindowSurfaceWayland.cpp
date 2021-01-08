@@ -675,6 +675,10 @@ static bool IsPopupFullScreenUpdate(
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     const LayoutDeviceIntRegion& aRegion) {
+  if (mWindow->WindowType() == eWindowType_invisible) {
+    return nullptr;
+  }
+
   // Wait until all pending events are processed. There may be queued
   // wl_buffer release event which releases our wl_buffer for further rendering.
   mWaylandDisplay->WaitForSyncEnd();
