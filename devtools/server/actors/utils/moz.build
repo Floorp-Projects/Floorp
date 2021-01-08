@@ -8,6 +8,7 @@ DevToolsModules(
     "accessibility.js",
     "actor-registry.js",
     "breakpoint-actor-map.js",
+    "capture-screenshot.js",
     "css-grid-utils.js",
     "dbg-source.js",
     "event-breakpoints.js",

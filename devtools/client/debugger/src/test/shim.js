@@ -32,7 +32,7 @@ global.loader = {
       "devtools/client/shared/keycodes",
       "devtools/client/shared/sourceeditor/editor",
       "devtools/client/shared/telemetry",
-      "devtools/shared/screenshot/save",
+      "devtools/client/shared/save-screenshot",
       "devtools/client/shared/focus",
     ];
     if (!excluded.includes(_path)) {
