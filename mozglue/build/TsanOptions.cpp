@@ -282,6 +282,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:AudioCallbackDriver::MixerCallback\n"
          "race:AudioCallbackDriver::Init\n"
 
+         // Bug 1683417
+         "race:DataChannelConnection::SetSignals\n"
+         "race:DataChannelConnection::SetReady\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
