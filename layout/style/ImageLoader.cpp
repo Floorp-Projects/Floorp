@@ -14,6 +14,7 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "nsContentUtils.h"
+#include "nsIReflowCallback.h"
 #include "nsLayoutUtils.h"
 #include "nsError.h"
 #include "nsCanvasFrame.h"
@@ -21,6 +22,7 @@
 #include "nsIFrameInlines.h"
 #include "FrameLayerBuilder.h"
 #include "imgIContainer.h"
+#include "imgINotificationObserver.h"
 #include "Image.h"
 #include "GeckoProfiler.h"
 #include "mozilla/PresShell.h"
@@ -590,6 +592,48 @@ void ImageLoader::RequestReflowIfNeeded(FrameSet* aFrameSet,
   }
 }
 
+// This callback is used to unblock document onload after a reflow
+// triggered from an image load.
+struct ImageLoader::ImageReflowCallback final : public nsIReflowCallback {
+  RefPtr<ImageLoader> mLoader;
+  WeakFrame mFrame;
+  nsCOMPtr<imgIRequest> const mRequest;
+
+  ImageReflowCallback(ImageLoader* aLoader, nsIFrame* aFrame,
+                      imgIRequest* aRequest)
+      : mLoader(aLoader), mFrame(aFrame), mRequest(aRequest) {}
+
+  bool ReflowFinished() override;
+  void ReflowCallbackCanceled() override;
+};
+
+bool ImageLoader::ImageReflowCallback::ReflowFinished() {
+  // Check that the frame is still valid. If it isn't, then onload was
+  // unblocked when the frame was removed from the FrameSet in
+  // RemoveRequestToFrameMapping.
+  if (mFrame.IsAlive()) {
+    mLoader->UnblockOnloadIfNeeded(mFrame, mRequest);
+  }
+
+  // Get rid of this callback object.
+  delete this;
+
+  // We don't need to trigger layout.
+  return false;
+}
+
+void ImageLoader::ImageReflowCallback::ReflowCallbackCanceled() {
+  // Check that the frame is still valid. If it isn't, then onload was
+  // unblocked when the frame was removed from the FrameSet in
+  // RemoveRequestToFrameMapping.
+  if (mFrame.IsAlive()) {
+    mLoader->UnblockOnloadIfNeeded(mFrame, mRequest);
+  }
+
+  // Get rid of this callback object.
+  delete this;
+}
+
 void ImageLoader::RequestReflowOnFrame(FrameWithFlags* aFwf,
                                        imgIRequest* aRequest) {
   nsIFrame* frame = aFwf->mFrame;
@@ -769,33 +813,6 @@ void ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
       }
     }
   }
-}
-
-bool ImageLoader::ImageReflowCallback::ReflowFinished() {
-  // Check that the frame is still valid. If it isn't, then onload was
-  // unblocked when the frame was removed from the FrameSet in
-  // RemoveRequestToFrameMapping.
-  if (mFrame.IsAlive()) {
-    mLoader->UnblockOnloadIfNeeded(mFrame, mRequest);
-  }
-
-  // Get rid of this callback object.
-  delete this;
-
-  // We don't need to trigger layout.
-  return false;
-}
-
-void ImageLoader::ImageReflowCallback::ReflowCallbackCanceled() {
-  // Check that the frame is still valid. If it isn't, then onload was
-  // unblocked when the frame was removed from the FrameSet in
-  // RemoveRequestToFrameMapping.
-  if (mFrame.IsAlive()) {
-    mLoader->UnblockOnloadIfNeeded(mFrame, mRequest);
-  }
-
-  // Get rid of this callback object.
-  delete this;
 }
 
 }  // namespace css
