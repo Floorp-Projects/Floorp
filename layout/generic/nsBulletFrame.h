@@ -68,11 +68,12 @@ class nsBulletFrame final : public nsIFrame {
 #endif
 
   Maybe<BulletRenderer> CreateBulletRenderer(gfxContext& aRenderingContext,
+                                             nsDisplayListBuilder* aBuilder,
                                              nsPoint aPt,
                                              ImgDrawResult* aOutDrawResult);
-  ImgDrawResult PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
-                            const nsRect& aDirtyRect, uint32_t aFlags,
-                            bool aDisableSubpixelAA);
+  ImgDrawResult PaintBullet(gfxContext& aRenderingContext,
+                            nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            const nsRect& aDirtyRect, bool aDisableSubpixelAA);
 
   bool IsEmpty() override;
   bool IsSelfEmpty() override;
