@@ -569,6 +569,25 @@ const PanelUI = {
       );
     }
 
+    // When these prefs are made the default, add this data-l10n-id directly to browser.xhtml.
+    if (
+      Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.customizationMenu.enabled"
+      ) ||
+      Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+      )
+    ) {
+      this.libraryRecentHighlights.previousElementSibling.setAttribute(
+        "data-l10n-id",
+        "library-recent-activity-label"
+      );
+    } else {
+      this.libraryRecentHighlights.previousElementSibling.removeAttribute(
+        "data-l10n-id"
+      );
+    }
+
     // Make the elements invisible synchronously, before the view is shown.
     this.makeLibraryRecentHighlightsInvisible();
 
