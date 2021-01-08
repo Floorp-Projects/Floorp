@@ -100,7 +100,7 @@ body {
   --newtab-snippets-hairline-color: transparent;
 
   // New New Tab
-  --newtab-focus-outline: #{$newtab-focus-outline};
+  --newtab-focus-outline: #{$newtab-focus-outline-color};
   --newtab-focus-border: #{$blue-60};
   --newtab-focus-border-selected: #{$newtab-card-tint};
   --newtab-primary-action-background: #{$blue-60};
@@ -197,7 +197,7 @@ body {
     --newtab-snippets-hairline-color: #{$white-10};
 
     // New New Tab
-    --newtab-focus-outline: #{$newtab-darktheme-focus-outline};
+    --newtab-focus-outline: #{$newtab-darktheme-focus-outline-color};
     --newtab-focus-border: #{$newtab-darktheme-focus-border};
     --newtab-focus-border-selected: #{$newtab-darktheme-focus-border-selected};
     --newtab-primary-action-background: #{$newtab-darktheme-primary-action-background};

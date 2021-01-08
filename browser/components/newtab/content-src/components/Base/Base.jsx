@@ -221,7 +221,24 @@ export class BaseContent extends React.PureComponent {
     return (
       <div>
         {canShowCustomizationMenu ? (
-          <PersonalizeButton onClick={this.openCustomizationMenu} />
+          <span>
+            <PersonalizeButton onClick={this.openCustomizationMenu} />
+            <CSSTransition
+              timeout={0}
+              classNames="customize-animate"
+              in={showCustomizationMenu}
+              appear={true}
+            >
+              <CustomizeMenu
+                onClose={this.closeCustomizationMenu}
+                openPreferences={this.openPreferences}
+                setPref={this.setPref}
+                enabledSections={enabledSections}
+                pocketRegion={pocketRegion}
+                mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
+              />
+            </CSSTransition>
+          </span>
         ) : (
           <PrefsButton onClick={this.openPreferences} icon={prefsButtonIcon} />
         )}
@@ -256,24 +273,6 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
-        {canShowCustomizationMenu && (
-          <CSSTransition
-            timeout={0}
-            classNames="customize-animate"
-            in={showCustomizationMenu}
-            appear={true}
-          >
-            <CustomizeMenu
-              onClose={this.closeCustomizationMenu}
-              openPreferences={this.openPreferences}
-              setPref={this.setPref}
-              enabledSections={enabledSections}
-              pocketRegion={pocketRegion}
-              mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
-              dispatch={this.props.dispatch}
-            />
-          </CSSTransition>
-        )}
       </div>
     );
   }

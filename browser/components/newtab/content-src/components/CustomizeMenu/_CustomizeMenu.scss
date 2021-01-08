@@ -12,6 +12,7 @@
   transition: transform 250ms $customize-menu-slide-bezier;
   overflow: auto;
   transform: translateX(435px);
+  visibility: hidden;
 
   &:dir(rtl) {
     transform: translateX(-435px);
@@ -23,12 +24,22 @@
 
   &.customize-animate-enter-done,
   &.customize-animate-enter-active,
-  &.customize-animate-exit-active {
+  &.customize-animate-enter {
     box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
+    transition: transform 250ms $customize-menu-slide-bezier, visibility 1ms;
+    visibility: visible;
+  }
+
+  &.customize-animate-exit-active,
+  &.customize-animate-exit {
+    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
+    transition: transform 250ms $customize-menu-slide-bezier, visibility 1ms 250ms;
+    visibility: visible;
   }
 
   &.customize-animate-exit-done {
     transform: translateX(435px);
+    transition: transform 250ms $customize-menu-slide-bezier, visibility 1ms 250ms;
 
     &:dir(rtl) {
       transform: translateX(-435px);
@@ -148,6 +159,7 @@
       display: inline-block;
       width: 26px;
       height: 16px;
+      grid-column: 2;
     }
 
     .switch input {
@@ -159,7 +171,7 @@
     .slider {
       position: absolute;
       inset: 0;
-      transition: 250ms;
+      transition: transform 250ms;
       border-radius: 13px;
       border: $customize-menu-border-tint;
       background-color: var(--newtab-primary-action-background-off);
@@ -172,7 +184,7 @@
         inset-inline-start: 3px;
         bottom: 3px;
         background-color: var(--customize-menu-primary-action-text);
-        transition: 250ms;
+        transition: transform 250ms;
         border-radius: 50%;
         outline: $customize-menu-border-tint;
         -moz-outline-radius: 11px;
