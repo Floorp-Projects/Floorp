@@ -330,7 +330,7 @@ bool BrowsingContextGroup::HasActiveBC() {
 }
 
 void BrowsingContextGroup::IncInputEventSuspensionLevel() {
-  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled());
   if (!mHasIncreasedInputTaskManagerSuspensionLevel && HasActiveBC()) {
     IncInputTaskManagerSuspensionLevel();
   }
@@ -338,7 +338,7 @@ void BrowsingContextGroup::IncInputEventSuspensionLevel() {
 }
 
 void BrowsingContextGroup::DecInputEventSuspensionLevel() {
-  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled());
   --mInputEventSuspensionLevel;
   if (!mInputEventSuspensionLevel &&
       mHasIncreasedInputTaskManagerSuspensionLevel) {
@@ -347,7 +347,7 @@ void BrowsingContextGroup::DecInputEventSuspensionLevel() {
 }
 
 void BrowsingContextGroup::DecInputTaskManagerSuspensionLevel() {
-  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled());
   MOZ_ASSERT(mHasIncreasedInputTaskManagerSuspensionLevel);
 
   InputTaskManager::Get()->DecSuspensionLevel();
@@ -355,7 +355,7 @@ void BrowsingContextGroup::DecInputTaskManagerSuspensionLevel() {
 }
 
 void BrowsingContextGroup::IncInputTaskManagerSuspensionLevel() {
-  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled());
   MOZ_ASSERT(!mHasIncreasedInputTaskManagerSuspensionLevel);
   MOZ_ASSERT(HasActiveBC());
 
@@ -364,7 +364,7 @@ void BrowsingContextGroup::IncInputTaskManagerSuspensionLevel() {
 }
 
 void BrowsingContextGroup::UpdateInputTaskManagerIfNeeded(bool aIsActive) {
-  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled());
   if (!aIsActive) {
     if (mHasIncreasedInputTaskManagerSuspensionLevel) {
       MOZ_ASSERT(mInputEventSuspensionLevel > 0);

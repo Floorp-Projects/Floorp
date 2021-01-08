@@ -74,7 +74,7 @@ class InputTaskManager : public TaskManager {
     // event queue state is STATE_DISABLED, so we can't suspend
     // input events.
     return XRE_IsContentProcess() &&
-           StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup() &&
+           StaticPrefs::dom_input_events_canSuspendInBCG_enabled() &&
            InputTaskManager::Get()->State() !=
                InputEventQueueState::STATE_DISABLED;
   }
