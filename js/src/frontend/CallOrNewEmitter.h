@@ -96,21 +96,7 @@ struct BytecodeEmitter;
 //
 //   `print(...arg);`
 //     CallOrNewEmitter cone(this, JSOp::SpreadCall,
-//                           CallOrNewEmitter::ArgumentsKind::Other,
-//                           ValueUsage::WantValue);
-//     cone.emitNameCallee(print);
-//     cone.emitThis();
-//     if (cone.wantSpreadOperand()) {
-//       emit(arg)
-//     }
-//     cone.emitSpreadArgumentsTest();
-//     emit([...arg]);
-//     cone.emitEnd(1, Some(offset_of_callee));
-//
-//   `print(...rest);`
-//   where `rest` is rest parameter
-//     CallOrNewEmitter cone(this, JSOp::SpreadCall,
-//                           CallOrNewEmitter::ArgumentsKind::SingleSpreadRest,
+//                           CallOrNewEmitter::ArgumentsKind::SingleSpread,
 //                           ValueUsage::WantValue);
 //     cone.emitNameCallee(print);
 //     cone.emitThis();
@@ -138,15 +124,13 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
 
     // Specify this for the following case:
     //
-    //   function f(...rest) {
-    //     g(...rest);
-    //   }
+    //   g(...input);
     //
     // This enables optimization to avoid allocating an intermediate array
     // for spread operation.
     //
     // wantSpreadOperand() returns true when this is specified.
-    SingleSpreadRest
+    SingleSpread
   };
 
  private:
@@ -155,7 +139,7 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   // The opcode for the call or new.
   JSOp op_;
 
-  // Whether the call is a spread call with single rest parameter or not.
+  // Whether the call is a spread call with single parameter or not.
   // See the comment in emitSpreadArgumentsTest for more details.
   ArgumentsKind argumentsKind_;
 
@@ -275,8 +259,8 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
 
   MOZ_MUST_USE bool isSpread() const { return JOF_OPTYPE(op_) == JOF_BYTE; }
 
-  MOZ_MUST_USE bool isSingleSpreadRest() const {
-    return argumentsKind_ == ArgumentsKind::SingleSpreadRest;
+  MOZ_MUST_USE bool isSingleSpread() const {
+    return argumentsKind_ == ArgumentsKind::SingleSpread;
   }
 
  public:

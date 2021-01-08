@@ -757,7 +757,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       ConditionalExpression& conditional,
       ValueUsage valueUsage = ValueUsage::WantValue);
 
-  bool isRestParameter(ParseNode* expr);
+  bool isOptimizableSpreadArgument(ParseNode* expr);
 
   MOZ_MUST_USE ParseNode* getCoordNode(ParseNode* callNode,
                                        ParseNode* calleeNode, JSOp op,

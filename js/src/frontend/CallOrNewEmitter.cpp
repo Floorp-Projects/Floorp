@@ -177,7 +177,7 @@ bool CallOrNewEmitter::wantSpreadOperand() {
   MOZ_ASSERT(isSpread());
 
   state_ = State::WantSpreadOperand;
-  return isSingleSpreadRest();
+  return isSingleSpread();
 }
 
 bool CallOrNewEmitter::emitSpreadArgumentsTest() {
@@ -185,19 +185,15 @@ bool CallOrNewEmitter::emitSpreadArgumentsTest() {
   MOZ_ASSERT(state_ == State::WantSpreadOperand);
   MOZ_ASSERT(isSpread());
 
-  if (isSingleSpreadRest()) {
-    // Emit a preparation code to optimize the spread call with a rest
-    // parameter:
+  if (isSingleSpread()) {
+    // Emit a preparation code to optimize the spread call:
     //
-    //   function f(...args) {
-    //     g(...args);
-    //   }
+    //   g(...args);
     //
-    // If the spread operand is a rest parameter and it's optimizable
-    // array, skip spread operation and pass it directly to spread call
-    // operation.  See the comment in OptimizeSpreadCall in
-    // Interpreter.cpp for the optimizable conditons.
-
+    // If the spread operand is a packed array, skip the spread
+    // operation and pass it directly to spread call operation.
+    // See the comment in OptimizeSpreadCall in Interpreter.cpp
+    // for the optimizable conditions.
     //              [stack] CALLEE THIS ARG0
 
     ifNotOptimizable_.emplace(bce_);
@@ -222,7 +218,7 @@ bool CallOrNewEmitter::emitSpreadArgumentsTest() {
 bool CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos) {
   MOZ_ASSERT(state_ == State::Arguments);
 
-  if (isSingleSpreadRest()) {
+  if (isSingleSpread()) {
     if (!ifNotOptimizable_->emitEnd()) {
       //            [stack] CALLEE THIS ARR
       return false;
