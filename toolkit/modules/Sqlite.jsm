@@ -19,7 +19,6 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Log: "resource://gre/modules/Log.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
@@ -1034,7 +1033,23 @@ function openConnection(options) {
   }
 
   // Retains absolute paths and normalizes relative as relative to profile.
-  let path = OS.Path.join(OS.Constants.Path.profileDir, options.path);
+  let path = options.path;
+  let file;
+  try {
+    file = FileUtils.File(path);
+  } catch (ex) {
+    // For relative paths, we will get an exception from trying to initialize
+    // the file. We must then join this path to the profile directory.
+    if (ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH) {
+      path = PathUtils.joinRelative(
+        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+        options.path
+      );
+      file = FileUtils.File(path);
+    } else {
+      throw ex;
+    }
+  }
 
   let sharedMemoryCache =
     "sharedMemoryCache" in options ? options.sharedMemoryCache : true;
@@ -1065,8 +1080,7 @@ function openConnection(options) {
     openedOptions.defaultTransactionType = defaultTransactionType;
   }
 
-  let file = FileUtils.File(path);
-  let identifier = getIdentifierByFileName(OS.Path.basename(path));
+  let identifier = getIdentifierByFileName(PathUtils.filename(path));
 
   log.info("Opening database: " + path + " (" + identifier + ")");
 
@@ -1181,7 +1195,7 @@ function cloneStorageConnection(options) {
   }
 
   let path = source.databaseFile.path;
-  let identifier = getIdentifierByFileName(OS.Path.basename(path));
+  let identifier = getIdentifierByFileName(PathUtils.filename(path));
 
   log.info("Cloning database: " + path + " (" + identifier + ")");
 
