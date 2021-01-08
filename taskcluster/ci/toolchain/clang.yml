@@ -120,6 +120,26 @@ linux64-clang-11-mingw-x64:
             - linux64-gcc-7
             - linux64-binutils
 
+linux64-clang-9-macosx-cross:
+    description: "Clang 9 toolchain repack with MacOS Compiler RT libs"
+    treeherder:
+        symbol: TL(clang9-macosx-cross)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run:
+        script: repack-clang-linux-macosx-cross.sh
+        toolchain-artifact: public/build/clang.tar.zst
+    dependencies:
+        macosx64-clang-9: toolchain-macosx64-clang-9
+    fetches:
+        toolchain:
+            - linux64-clang-9
+        macosx64-clang-9:
+            # Put this into a new directory so it doesn't conflict with the linux toolchain
+            - artifact: clang.tar.zst
+              dest: clang-mac
+
 linux64-clang-10:
     description: "Clang 10 toolchain build"
     treeherder:
@@ -139,6 +159,38 @@ linux64-clang-10:
             - linux64-binutils
             - linux64-gcc-7
             - wasi-sysroot
+
+macosx64-clang-9:
+    description: "Clang 9 toolchain build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TM(clang-9)
+    worker-type: b-linux-large
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+    run-on-projects:
+        - trunk
+    run:
+        script: build-clang.sh
+        tooltool-downloads: internal
+        arguments:
+            - 'build/build-clang/clang-macosx64.json'
+        resources:
+            - 'build/build-clang/clang-macosx64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-9
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port-clang-9
+            - linux64-clang-9
+            - linux64-gcc-7
+            - linux64-node
 
 linux64-clang-11:
     description: "Clang 11 toolchain build"
@@ -221,18 +273,30 @@ linux64-clang-11-macosx-cross:
         toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
-        macosx64-aarch64-compiler-rt-11: toolchain-macosx64-aarch64-compiler-rt-11
-        macosx64-x64-compiler-rt-11: toolchain-macosx64-x64-compiler-rt-11
+        macosx64-clang-11: toolchain-macosx64-clang-11
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-11
             - linux64-clang-11
-        macosx64-aarch64-compiler-rt-11:
-            - artifact: compiler-rt.tar.zst
-              dest: aarch64
-        macosx64-x64-compiler-rt-11:
-            - artifact: compiler-rt.tar.zst
-              dest: x86_64
+        macosx64-clang-11:
+            # Put this into a new directory so it doesn't conflict with the linux toolchain
+            - artifact: clang.tar.zst
+              dest: clang-mac
+
+linux64-clang-11-macosx-aarch64-cross:
+    description: "Clang 11 toolchain repack with MacOS aarch64 Compiler RT libs"
+    treeherder:
+        symbol: TL(clang11-macosx-aarch64)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run:
+        script: repack-clang-linux-macosx-aarch64-cross.sh
+        toolchain-alias: linux64-clang-macosx-aarch64-cross
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        toolchain:
+            - linux64-clang-11
+            - macosx64-aarch64-compiler-rt-11
 
 linux64-clang-11-win-cross:
     description: "Clang 11 toolchain repack with Windows Compiler RT libs"
@@ -283,9 +347,14 @@ macosx64-clang-11:
         fetch:
             - clang-11
         toolchain:
+            # Note: clang-9 below is not a typo. Indirectly due to SDK changes,
+            # we need to build with a linux64-...-macosx-cross toolchain rather
+            # than a simple linux64-clang. linux64-clang-11-macosx-cross is
+            # not an option because it would create a circular dependency on
+            # this toolchain. So we have to start from something older.
             - linux64-binutils
-            - linux64-cctools-port-clang-11
-            - linux64-clang-11-macosx-cross
+            - linux64-cctools-port-clang-9
+            - linux64-clang-9-macosx-cross
             - linux64-gcc-7
             - linux64-node
 

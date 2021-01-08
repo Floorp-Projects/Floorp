@@ -120,7 +120,6 @@ linux64-fuzzing/debug:
             - linux64-clang
             - linux64-cbindgen
             - linux64-dump-syms
-            - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-rust
             - linux64-rust-size
@@ -683,7 +682,6 @@ linux64-asan/opt:
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
-            - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -725,7 +723,6 @@ linux64-tsan/opt:
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
-            - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -770,7 +767,6 @@ linux64-tsan-fuzzing/opt:
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
-            - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -818,7 +814,6 @@ linux64-asan-fuzzing/opt:
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
-            - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -866,7 +861,6 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
-            - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -968,7 +962,6 @@ linux64-asan-reporter-shippable/opt:
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
-            - linux64-llvm-symbolizer
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
@@ -1009,7 +1002,6 @@ linux64-asan/debug:
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
-            - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
             - linux64-node

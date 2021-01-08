@@ -109,7 +109,6 @@ macosx64-asan-fuzzing/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-llvm-symbolizer
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -213,7 +212,7 @@ macosx64-aarch64-devedition/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang-macosx-aarch64-cross
             - macosx64-sdk-11.0
 
 macosx64-devedition/opt:
@@ -469,7 +468,7 @@ macosx64-aarch64-shippable/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang-macosx-aarch64-cross
             - macosx64-sdk-11.0
 
 macosx64-shippable/opt:
