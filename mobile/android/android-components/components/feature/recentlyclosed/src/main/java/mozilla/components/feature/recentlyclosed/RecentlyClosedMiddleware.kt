@@ -17,13 +17,13 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.ClosedTab
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.toRecoverableTabs
 import mozilla.components.concept.engine.Engine
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
-import java.util.UUID
 
 /**
  * [Middleware] implementation for handling [RecentlyClosedAction]s and syncing the closed tabs in
@@ -47,14 +47,14 @@ class RecentlyClosedMiddleware(
             is TabListAction.RemoveAllNormalTabsAction -> {
                 context.store.dispatch(
                     RecentlyClosedAction.AddClosedTabsAction(
-                        context.state.normalTabs.toClosedTab()
+                        context.state.normalTabs.toRecoverableTabs()
                     )
                 )
             }
             is TabListAction.RemoveAllTabsAction -> {
                 context.store.dispatch(
                     RecentlyClosedAction.AddClosedTabsAction(
-                        context.state.normalTabs.toClosedTab()
+                        context.state.normalTabs.toRecoverableTabs()
                     )
                 )
             }
@@ -63,7 +63,7 @@ class RecentlyClosedMiddleware(
                 if (!tab.content.private) {
                     context.store.dispatch(
                         RecentlyClosedAction.AddClosedTabsAction(
-                            listOf(tab).toClosedTab()
+                            listOf(tab).toRecoverableTabs()
                         )
                     )
                 }
@@ -73,7 +73,7 @@ class RecentlyClosedMiddleware(
                     .filterNot { it.content.private }
                 context.store.dispatch(
                     RecentlyClosedAction.AddClosedTabsAction(
-                        tabs.toClosedTab()
+                        tabs.toRecoverableTabs()
                     )
                 )
             }
@@ -104,18 +104,6 @@ class RecentlyClosedMiddleware(
         }
     }
 
-    private fun List<TabSessionState>.toClosedTab(): List<ClosedTab> {
-        return this.map {
-            ClosedTab(
-                id = UUID.randomUUID().toString(),
-                title = it.content.title,
-                url = it.content.url,
-                createdAt = System.currentTimeMillis(),
-                engineSessionState = it.engineState.engineSessionState
-            )
-        }
-    }
-
     private fun initializeRecentlyClosed(
         store: Store<BrowserState, BrowserAction>
     ) = scope.launch {
@@ -125,7 +113,7 @@ class RecentlyClosedMiddleware(
     }
 
     private fun addTabsToStorage(
-        tabList: List<ClosedTab>
+        tabList: List<RecoverableTab>
     ) = scope.launch {
         storage.value.addTabsToCollectionWithMax(
             tabList, maxSavedTabs
@@ -147,17 +135,17 @@ class RecentlyClosedMiddleware(
      */
     interface Storage {
         /**
-         * Returns an observable list of [ClosedTab]s.
+         * Returns an observable list of recently closed tabs as List of [RecoverableTab]s.
          */
-        fun getTabs(): Flow<List<ClosedTab>>
+        fun getTabs(): Flow<List<RecoverableTab>>
 
         /**
-         * Removes the given [ClosedTab].
+         * Removes the given saved [RecoverableTab].
          */
-        fun removeTab(recentlyClosedTab: ClosedTab)
+        fun removeTab(recentlyClosedTab: RecoverableTab)
 
         /**
-         * Removes all [ClosedTab]s.
+         * Removes all saved [RecoverableTab]s.
          */
         fun removeAllTabs()
 
@@ -165,6 +153,6 @@ class RecentlyClosedMiddleware(
          * Adds up to [maxTabs] [TabSessionState]s to storage, and then prunes storage to keep only
          * the newest [maxTabs].
          */
-        fun addTabsToCollectionWithMax(tab: List<ClosedTab>, maxTabs: Int)
+        fun addTabsToCollectionWithMax(tab: List<RecoverableTab>, maxTabs: Int)
     }
 }

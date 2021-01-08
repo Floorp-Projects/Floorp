@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.state
 
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.lib.state.State
 
 /**
@@ -28,7 +29,7 @@ import mozilla.components.lib.state.State
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
-    val closedTabs: List<ClosedTabSessionState> = emptyList(),
+    val closedTabs: List<RecoverableTab> = emptyList(),
     val selectedTabId: String? = null,
     val customTabs: List<CustomTabSessionState> = emptyList(),
     val containers: Map<String, ContainerState> = emptyMap(),

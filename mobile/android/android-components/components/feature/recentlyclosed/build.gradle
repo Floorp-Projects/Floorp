@@ -46,7 +46,7 @@ android {
 dependencies {
     implementation project(':concept-engine')
 
-    implementation project(':browser-session')
+    implementation project(':browser-state')
 
     implementation project(':support-ktx')
     implementation project(':support-base')

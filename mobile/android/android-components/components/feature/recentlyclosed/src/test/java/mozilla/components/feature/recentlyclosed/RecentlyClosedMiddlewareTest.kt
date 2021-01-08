@@ -13,9 +13,8 @@ import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.ClosedTab
-import mozilla.components.browser.state.state.ClosedTabSessionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.test.argumentCaptor
@@ -55,11 +54,11 @@ class RecentlyClosedMiddlewareTest {
     }
 
     // Test tab
-    private val closedTab = ClosedTabSessionState(
+    private val closedTab = RecoverableTab(
         id = "tab-id",
         title = "Mozilla",
         url = "https://mozilla.org",
-        createdAt = 1234
+        lastAccess = 1234
     )
 
     @Test
@@ -104,7 +103,7 @@ class RecentlyClosedMiddlewareTest {
             dispatcher.advanceUntilIdle()
             store.waitUntilIdle()
 
-            val closedTabCaptor = argumentCaptor<List<ClosedTab>>()
+            val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
             verify(storage).addTabsToCollectionWithMax(
                 closedTabCaptor.capture(),
                 eq(5)
@@ -116,11 +115,11 @@ class RecentlyClosedMiddlewareTest {
             assertEquals(tab2.content.url, closedTabCaptor.value[1].url)
             assertEquals(
                 tab.engineState.engineSessionState,
-                closedTabCaptor.value[0].engineSessionState
+                closedTabCaptor.value[0].state
             )
             assertEquals(
                 tab2.engineState.engineSessionState,
-                closedTabCaptor.value[1].engineSessionState
+                closedTabCaptor.value[1].state
             )
         }
 
@@ -145,7 +144,7 @@ class RecentlyClosedMiddlewareTest {
             dispatcher.advanceUntilIdle()
             store.waitUntilIdle()
 
-            val closedTabCaptor = argumentCaptor<List<ClosedTab>>()
+            val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
             verify(storage).addTabsToCollectionWithMax(
                 closedTabCaptor.capture(),
                 eq(5)
@@ -155,7 +154,7 @@ class RecentlyClosedMiddlewareTest {
             assertEquals(tab.content.url, closedTabCaptor.value[0].url)
             assertEquals(
                 tab.engineState.engineSessionState,
-                closedTabCaptor.value[0].engineSessionState
+                closedTabCaptor.value[0].state
             )
         }
 
@@ -206,7 +205,7 @@ class RecentlyClosedMiddlewareTest {
             dispatcher.advanceUntilIdle()
             store.waitUntilIdle()
 
-            val closedTabCaptor = argumentCaptor<List<ClosedTab>>()
+            val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
             verify(storage).addTabsToCollectionWithMax(
                 closedTabCaptor.capture(),
                 eq(5)
@@ -216,7 +215,7 @@ class RecentlyClosedMiddlewareTest {
             assertEquals(tab.content.url, closedTabCaptor.value[0].url)
             assertEquals(
                 tab.engineState.engineSessionState,
-                closedTabCaptor.value[0].engineSessionState
+                closedTabCaptor.value[0].state
             )
         }
 
@@ -242,7 +241,7 @@ class RecentlyClosedMiddlewareTest {
             dispatcher.advanceUntilIdle()
             store.waitUntilIdle()
 
-            val closedTabCaptor = argumentCaptor<List<ClosedTab>>()
+            val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
             verify(storage).addTabsToCollectionWithMax(
                 closedTabCaptor.capture(),
                 eq(5)
@@ -252,7 +251,7 @@ class RecentlyClosedMiddlewareTest {
             assertEquals(tab.content.url, closedTabCaptor.value[0].url)
             assertEquals(
                 tab.engineState.engineSessionState,
-                closedTabCaptor.value[0].engineSessionState
+                closedTabCaptor.value[0].state
             )
         }
 
@@ -324,7 +323,7 @@ class RecentlyClosedMiddlewareTest {
 }
 
 private fun mockStorage(
-    tabs: List<ClosedTab> = emptyList()
+    tabs: List<RecoverableTab> = emptyList()
 ): RecentlyClosedMiddleware.Storage {
     val storage: RecentlyClosedMiddleware.Storage = mock()
 

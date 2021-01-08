@@ -305,7 +305,8 @@ class TabsUseCases(
      */
     class RestoreUseCase(
         private val store: BrowserStore,
-        private val sessionManager: SessionManager
+        private val sessionManager: SessionManager,
+        private val selectTab: TabsUseCases.SelectTabUseCase
     ) {
         /**
          * Restores the given list of [RecoverableTab]s.
@@ -345,6 +346,18 @@ class TabsUseCases(
             }
             store.dispatch(RestoreCompleteAction)
         }
+
+        /**
+         * Restores the given [RecoverableTab] and updates the selected tab if [updateSelection] is
+         * `true`.
+         */
+        operator fun invoke(tab: RecoverableTab, updateSelection: Boolean = true) {
+            invoke(listOf(tab))
+
+            if (updateSelection) {
+                selectTab(tab.id)
+            }
+        }
     }
 
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(sessionManager) }
@@ -356,5 +369,5 @@ class TabsUseCases(
     val removeNormalTabs: RemoveNormalTabsUseCase by lazy { RemoveNormalTabsUseCase(sessionManager) }
     val removePrivateTabs: RemovePrivateTabsUseCase by lazy { RemovePrivateTabsUseCase(sessionManager) }
     val undo by lazy { UndoTabRemovalUseCase(store) }
-    val restore: RestoreUseCase by lazy { RestoreUseCase(store, sessionManager) }
+    val restore: RestoreUseCase by lazy { RestoreUseCase(store, sessionManager, selectTab) }
 }

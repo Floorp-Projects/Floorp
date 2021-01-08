@@ -8,7 +8,7 @@ import android.util.AtomicFile
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.ktx.util.readAndDeserialize
@@ -38,13 +38,13 @@ internal data class RecentlyClosedTabEntity(
     @ColumnInfo(name = "created_at")
     var createdAt: Long
 ) {
-    internal fun toClosedTab(filesDir: File, engine: Engine): ClosedTab {
-        return ClosedTab(
-            uuid,
-            title,
-            url,
-            createdAt,
-            getEngineSessionState(engine, filesDir)
+    internal fun toRecoverableTab(filesDir: File, engine: Engine): RecoverableTab {
+        return RecoverableTab(
+            id = uuid,
+            title = title,
+            url = url,
+            state = getEngineSessionState(engine, filesDir),
+            lastAccess = createdAt
         )
     }
 
@@ -68,11 +68,11 @@ internal data class RecentlyClosedTabEntity(
     }
 }
 
-internal fun ClosedTab.toRecentlyClosedTabEntity(): RecentlyClosedTabEntity {
+internal fun RecoverableTab.toRecentlyClosedTabEntity(): RecentlyClosedTabEntity {
     return RecentlyClosedTabEntity(
         uuid = id,
         title = title,
         url = url,
-        createdAt = createdAt
+        createdAt = lastAccess
     )
 }

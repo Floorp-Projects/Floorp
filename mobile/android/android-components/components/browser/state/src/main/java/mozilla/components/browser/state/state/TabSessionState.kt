@@ -6,6 +6,7 @@ package mozilla.components.browser.state.state
 
 import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import java.util.UUID
 
 /**
@@ -74,6 +75,7 @@ fun createTab(
     lastAccess: Long = 0L,
     source: SessionState.Source = SessionState.Source.NONE,
     engineSession: EngineSession? = null,
+    engineSessionState: EngineSessionState? = null,
     crashed: Boolean = false,
     mediaSessionState: MediaSessionState? = null
 ): TabSessionState {
@@ -93,6 +95,7 @@ fun createTab(
         source = source,
         engineState = EngineState(
             engineSession = engineSession,
+            engineSessionState = engineSessionState,
             crashed = crashed
         ),
         mediaSessionState = mediaSessionState

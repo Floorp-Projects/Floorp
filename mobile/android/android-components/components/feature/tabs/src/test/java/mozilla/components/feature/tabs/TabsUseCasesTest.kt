@@ -311,4 +311,30 @@ class TabsUseCasesTest {
         assertEquals(1, restoredTabs.size)
         assertEquals(tabs.first(), restoredTabs.first())
     }
+
+    @Test
+    fun `Restore single tab, update selection - SessionManager and BrowserStore are in sync`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(store = store, engine = mock())
+
+        sessionManager.add(Session("https://www.mozilla.org", id = "mozilla"))
+
+        assertEquals(1, sessionManager.sessions.size)
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("mozilla", sessionManager.selectedSessionOrThrow.id)
+        assertEquals("mozilla", store.state.selectedTabId)
+
+        val closedTab = RecoverableTab(
+            id = "wikipedia",
+            url = "https://www.wikipedia.org"
+        )
+
+        val useCases = TabsUseCases(store, sessionManager)
+        useCases.restore(closedTab)
+
+        assertEquals(2, sessionManager.sessions.size)
+        assertEquals(2, store.state.tabs.size)
+        assertEquals("wikipedia", sessionManager.selectedSessionOrThrow.id)
+        assertEquals("wikipedia", store.state.selectedTabId)
+    }
 }
