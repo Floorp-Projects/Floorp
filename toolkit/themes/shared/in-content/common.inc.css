@@ -571,17 +571,6 @@ html|input[type="checkbox"]:not(:disabled):checked:hover {
   background-color: var(--blue-70);
 }
 
-xul|checkbox[disabled="true"],
-xul|label[disabled="true"] {
-  color: inherit;
-}
-
-xul|checkbox[disabled="true"],
-html|input[type="checkbox"]:disabled,
-xul|label[disabled="true"] {
-  opacity: 0.5;
-}
-
 xul|richlistitem > xul|*.checkbox-check {
   margin: 3px 6px;
 }
@@ -607,7 +596,7 @@ xul|*.radio-check {
   background-color: var(--grey-90-a10);
 }
 
-xul|radio:not([disabled="true"], [selected="true"]):hover > xul|*.radio-check {
+xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
   background-color: var(--grey-90-a20);
 }
 
@@ -619,18 +608,28 @@ xul|*.radio-check[selected] {
   background-color: var(--blue-60);
 }
 
-xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
+xul|radio:not([disabled="true"])[selected]:hover > xul|*.radio-check {
   background-color: var(--blue-70);
-}
-
-xul|radio[disabled="true"] {
-  color: inherit;
-  opacity: 0.5;
 }
 
 xul|*.radio-label-box {
   margin-inline: -1px 8px; /* the negative margin-inline-start for the transparent border */
   padding-inline-start: 0;
+}
+
+/* Disabled checkboxes, radios and labels */
+
+xul|checkbox[disabled="true"],
+xul|radio[disabled="true"],
+xul|label[disabled="true"] {
+  color: inherit;
+}
+
+xul|checkbox[disabled="true"],
+html|input[type="checkbox"]:disabled,
+xul|radio[disabled="true"],
+xul|label[disabled="true"] {
+  opacity: 0.5;
 }
 
 /* Category List */
