@@ -348,7 +348,8 @@ void SVGAnimatedOrient::SetBaseType(SVGEnumValue aValue,
   if (mBaseType == aValue) {
     return;
   }
-  if (aValue == SVG_MARKER_ORIENT_AUTO || aValue == SVG_MARKER_ORIENT_ANGLE) {
+  if (aValue >= SVG_MARKER_ORIENT_AUTO &&
+      aValue <= SVG_MARKER_ORIENT_AUTO_START_REVERSE) {
     AutoChangeOrientNotifier notifier(this, aSVGElement);
 
     mBaseVal = .0f;
@@ -420,14 +421,6 @@ DOMSVGAnimatedAngle::~DOMSVGAnimatedAngle() {
 
 SVGAnimatedOrient::DOMAnimatedEnum::~DOMAnimatedEnum() {
   sSVGAnimatedEnumTearoffTable.RemoveTearoff(mVal);
-}
-
-// we want to avoid exposing SVG_MARKER_ORIENT_AUTO_START_REVERSE to
-// Web content
-uint16_t SVGAnimatedOrient::DOMAnimatedEnum::Sanitize(uint16_t aValue) {
-  return aValue == dom::SVG_MARKER_ORIENT_AUTO_START_REVERSE
-             ? dom::SVGMarkerElement_Binding::SVG_MARKER_ORIENT_UNKNOWN
-             : aValue;
 }
 
 UniquePtr<SMILAttr> SVGAnimatedOrient::ToSMILAttr(SVGElement* aSVGElement) {

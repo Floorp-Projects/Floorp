@@ -22,12 +22,6 @@
  * If 'orientType.animVal' is SVG_MARKER_ORIENT_ANGLE, then
  * 'orientAngle.animVal' contains the angle that is being used. The lacuna
  * value is 0.
- *
- * The SVG 2 specification does not define a
- * SVG_MARKER_ORIENT_AUTO_START_REVERSE constant value for orientType to use;
- * instead, if the attribute is set to "auto-start-reverse",
- * SVG_MARKER_ORIENT_UNKNOWN is used.  Internally, however, we do use a
- * constant with this name.
  */
 
 namespace mozilla {

@@ -194,8 +194,8 @@ function runTests() {
 
   marker.setAttribute("orient", "auto-start-reverse");
   is(marker.getAttribute("orient"), "auto-start-reverse", "checking 'auto-start-reverse' string preserved");
-  is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_UNKNOWN, "type baseVal");
-  is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_UNKNOWN, "type animVal");
+  is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO_START_REVERSE, "type baseVal");
+  is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO_START_REVERSE, "type animVal");
 
   marker.setAttribute("orient", "");
   ok(marker.getAttribute("orient") === "", "empty angle attribute");

@@ -30,9 +30,6 @@ namespace dom {
 class DOMSVGAnimatedAngle;
 class DOMSVGAnimatedEnumeration;
 
-// Non-Exposed Marker Orientation Types
-static const uint16_t SVG_MARKER_ORIENT_AUTO_START_REVERSE = 3;
-
 using SVGMarkerElementBase = SVGElement;
 
 class SVGMarkerElement : public SVGMarkerElementBase {

@@ -111,7 +111,7 @@ class SVGAnimatedOrient {
     SVGAnimatedOrient* mVal;  // kept alive because it belongs to content
 
     using dom::DOMSVGAnimatedEnumeration::SetBaseVal;
-    uint16_t BaseVal() override { return Sanitize(mVal->mBaseType); }
+    uint16_t BaseVal() override { return mVal->mBaseType; }
     void SetBaseVal(uint16_t aBaseVal, ErrorResult& aRv) override {
       mVal->SetBaseType(aBaseVal, mSVGElement, aRv);
     }
@@ -120,11 +120,8 @@ class SVGAnimatedOrient {
       // getters need to flush any resample requests to reflect these
       // modifications.
       mSVGElement->FlushAnimations();
-      return Sanitize(mVal->mAnimType);
+      return mVal->mAnimType;
     }
-
-   private:
-    uint16_t Sanitize(uint16_t aValue);
   };
 
   struct SMILOrient final : public SMILAttr {
