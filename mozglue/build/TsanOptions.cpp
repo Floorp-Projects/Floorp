@@ -294,6 +294,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsHttpHandler::PrefsChanged\n"
          "race:nsHttpConnection::Activate\n"
 
+         // Bug 1682951
+         "race:storage::Connection::Release\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
