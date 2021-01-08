@@ -47,8 +47,8 @@ macosx64-minidump-stackwalk:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-9
-            - linux64-clang-9
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11
             - linux64-rust-macos-1.47
 
 win32-minidump-stackwalk:

@@ -39,8 +39,8 @@ macosx64-gn:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-9
-            - linux64-clang-9
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11
 
 win32-gn:
     treeherder:
