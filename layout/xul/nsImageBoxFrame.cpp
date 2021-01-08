@@ -612,8 +612,7 @@ imgRequestProxy* nsImageBoxFrame::GetRequestFromStyle() {
       return nullptr;
     }
   }
-
-  return StyleList()->GetListStyleImage();
+  return StyleList()->mListStyleImage.GetImageRequest();
 }
 
 /* virtual */
