@@ -31,6 +31,9 @@
   }
 
   async function runTest() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.input_events.canSuspendInBCG.enabled", true]]
+    });
     subTab = window.open("file_sync_xhr_nested_helper.html");
     await new Promise((r) => {
       subTab.addEventListener("load", r);

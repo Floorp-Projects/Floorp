@@ -36,7 +36,7 @@ add_task(async function testAlertForceClosed() {
 
   is(
     isSuspendedAfterAlert,
-    true,
+    Services.prefs.getBoolPref("dom.input_events.canSuspendInBCG.enabled"),
     "InputTaskManager should be suspended because alert is opened"
   );
 
