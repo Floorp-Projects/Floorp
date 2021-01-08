@@ -84,6 +84,8 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">సూచించిన ప్రవేశాలు</string>
 
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">ఈ సైటుకి డేటాని మళ్ళీ పంపాలా?</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">డేటాను మళ్ళీ పంపించు</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
