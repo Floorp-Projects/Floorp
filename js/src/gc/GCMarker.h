@@ -257,7 +257,7 @@ enum MarkingState : uint8_t {
   IterativeMarking
 };
 
-class GCMarker : public JSTracer {
+class GCMarker final : public JSTracer {
  public:
   explicit GCMarker(JSRuntime* rt);
   MOZ_MUST_USE bool init(JSGCMode gcMode);

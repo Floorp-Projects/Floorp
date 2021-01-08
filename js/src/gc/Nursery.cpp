@@ -751,8 +751,8 @@ void js::Nursery::forwardBufferPointer(uintptr_t* pSlotsElems) {
 }
 
 js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
-    : JSTracer(rt, JS::TracerKind::Tenuring,
-               JS::WeakMapTraceAction::TraceKeysAndValues),
+    : GenericTracer(rt, JS::TracerKind::Tenuring,
+                    JS::WeakMapTraceAction::TraceKeysAndValues),
       nursery_(*nursery),
       tenuredSize(0),
       tenuredCells(0),

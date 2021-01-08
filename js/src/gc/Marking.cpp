@@ -104,16 +104,16 @@ using mozilla::PodCopy;
 //  |              TraceEdgeInternal                     |             |       |
 //  |                      |                             |             +---+---+
 //  |                      |                             |                 ^
-//  |       +--------------+---------------+             +<----------+     :
-//  |       |              |               |             |           |     :
-//  |       v              v               v             v           |     :
-//  |  DoCallback   TenuringTracer::   DoMarking    traverseEdge     |     :
-//  |       |          traverse            |             |           |     :
-//  |       |                              +------+------+           |     :
-//  |       |                                     |                  |     :
-//  |       v                                     v                  |     :
+//  |         +------------+---------------+             +<----------+     :
+//  |         |                            |             |           |     :
+//  |         v                            v             v           |     :
+//  |    DoCallback                    DoMarking    traverseEdge     |     :
+//  |         |                            |             |           |     :
+//  |         |                            +------+------+           |     :
+//  |         |                                   |                  |     :
+//  |         v                                   v                  |     :
 //  |  CallbackTracer::                   GCMarker::traverse         |     :
-//  |  dispatchToOnEdge                           |                  |     :
+//  |    onSomeEdge                               |                  |     :
 //  |                                             |                  |     :
 //  |             +-------------------+-----------+------+           |     :
 //  |             |                   |                  |           |     :
@@ -174,9 +174,10 @@ static inline bool IsOwnedByOtherRuntime(JSRuntime* rt, T thing) {
   return other;
 }
 
+#ifdef DEBUG
+
 template <typename T>
 void js::CheckTracedThing(JSTracer* trc, T* thing) {
-#ifdef DEBUG
   MOZ_ASSERT(trc);
   MOZ_ASSERT(thing);
 
@@ -262,12 +263,11 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
                     !zone->isGCFinished() && !zone->isGCCompacting(),
                 !IsThingPoisoned(thing) ||
                     !InFreeList(thing->asTenured().arena(), thing));
-#endif
 }
 
 template <typename T>
-void js::CheckTracedThing(JSTracer* trc, T thing) {
-  ApplyGCThingTyped(thing, [](auto t) { CheckTracedThing(t); });
+void js::CheckTracedThing(JSTracer* trc, const T& thing) {
+  ApplyGCThingTyped(thing, [trc](auto t) { CheckTracedThing(trc, t); });
 }
 
 namespace js {
@@ -276,6 +276,8 @@ namespace js {
 JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
 #undef IMPL_CHECK_TRACED_THING
 }  // namespace js
+
+#endif
 
 static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
                                               Cell* dstCell) {
@@ -674,11 +676,6 @@ bool js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
 
   if (trc->isMarkingTracer()) {
     DoMarking(GCMarker::fromTracer(trc), *thingp);
-    return true;
-  }
-
-  if (trc->isTenuringTracer()) {
-    static_cast<TenuringTracer*>(trc)->traverse(thingp);
     return true;
   }
 
@@ -2792,65 +2789,103 @@ size_t GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
 
 /*** Tenuring Tracer ********************************************************/
 
-namespace js {
-template <typename T>
-void TenuringTracer::traverse(T** tp) {}
+JSObject* TenuringTracer::onObjectEdge(JSObject* obj) {
+  if (!IsInsideNursery(obj)) {
+    return obj;
+  }
 
-template <>
-void TenuringTracer::traverse(JSObject** objp) {
-  // We only ever visit the internals of objects after moving them to tenured.
-  MOZ_ASSERT(!nursery().isInside(objp));
-
-  auto** cellp = reinterpret_cast<Cell**>(objp);
-  if (!IsInsideNursery(*cellp) || nursery().getForwardedPointer(cellp)) {
-    return;
+  if (obj->isForwarded()) {
+    const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(obj);
+    return static_cast<JSObject*>(overlay->forwardingAddress());
   }
 
   // Take a fast path for tenuring a plain object which is by far the most
   // common case.
-  JSObject* obj = *objp;
   if (obj->is<PlainObject>()) {
-    *objp = movePlainObjectToTenured(&obj->as<PlainObject>());
+    return movePlainObjectToTenured(&obj->as<PlainObject>());
+  }
+
+  return moveToTenuredSlow(obj);
+}
+
+JSString* TenuringTracer::onStringEdge(JSString* str) {
+  if (!IsInsideNursery(str)) {
+    return str;
+  }
+
+  if (str->isForwarded()) {
+    const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(str);
+    return static_cast<JSString*>(overlay->forwardingAddress());
+  }
+
+  return moveToTenured(str);
+}
+
+JS::BigInt* TenuringTracer::onBigIntEdge(JS::BigInt* bi) {
+  if (!IsInsideNursery(bi)) {
+    return bi;
+  }
+
+  if (bi->isForwarded()) {
+    const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(bi);
+    return static_cast<JS::BigInt*>(overlay->forwardingAddress());
+  }
+
+  return moveToTenured(bi);
+}
+
+JS::Symbol* TenuringTracer::onSymbolEdge(JS::Symbol* sym) { return sym; }
+js::BaseScript* TenuringTracer::onScriptEdge(BaseScript* script) {
+  return script;
+}
+js::Shape* TenuringTracer::onShapeEdge(Shape* shape) { return shape; }
+js::RegExpShared* TenuringTracer::onRegExpSharedEdge(RegExpShared* shared) {
+  return shared;
+}
+js::ObjectGroup* TenuringTracer::onObjectGroupEdge(ObjectGroup* group) {
+  return group;
+}
+js::BaseShape* TenuringTracer::onBaseShapeEdge(BaseShape* base) { return base; }
+js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code) {
+  return code;
+}
+js::Scope* TenuringTracer::onScopeEdge(Scope* scope) { return scope; }
+
+template <typename T>
+inline void TenuringTracer::traverse(T** thingp) {
+  // This is only used by VisitTraceList.
+  MOZ_ASSERT(!nursery().isInside(thingp));
+  CheckTracedThing(this, *thingp);
+  T* thing = *thingp;
+  T* post = DispatchToOnEdge(this, thing);
+  if (post != thing) {
+    *thingp = post;
+  }
+}
+
+void TenuringTracer::traverse(JS::Value* thingp) {
+  MOZ_ASSERT(!nursery().isInside(thingp));
+
+  Value value = *thingp;
+  CheckTracedThing(this, value);
+
+  // We only care about a few kinds of GC thing here and this generates much
+  // tighter code than using MapGCThingTyped.
+  Value post;
+  if (value.isObject()) {
+    post = JS::ObjectValue(*onObjectEdge(&value.toObject()));
+  } else if (value.isString()) {
+    post = JS::StringValue(onStringEdge(value.toString()));
+  } else if (value.isBigInt()) {
+    post = JS::BigIntValue(onBigIntEdge(value.toBigInt()));
+  } else {
     return;
   }
 
-  *objp = moveToTenuredSlow(obj);
-}
-
-template <>
-void TenuringTracer::traverse(JSString** strp) {
-  // We only ever visit the internals of strings after moving them to tenured.
-  MOZ_ASSERT(!nursery().isInside(strp));
-
-  auto** cellp = reinterpret_cast<Cell**>(strp);
-  if (IsInsideNursery(*cellp) && !nursery().getForwardedPointer(cellp)) {
-    *strp = moveToTenured(*strp);
+  if (post != value) {
+    *thingp = post;
   }
 }
-
-template <>
-void TenuringTracer::traverse(JS::BigInt** bip) {
-  // We only ever visit the internals of BigInts after moving them to tenured.
-  MOZ_ASSERT(!nursery().isInside(bip));
-
-  auto** cellp = reinterpret_cast<Cell**>(bip);
-  if (IsInsideNursery(*cellp) && !nursery().getForwardedPointer(cellp)) {
-    *bip = moveToTenured(*bip);
-  }
-}
-
-template <typename T>
-void TenuringTracer::traverse(T* thingp) {
-  auto tenured = MapGCThingTyped(*thingp, [this](auto t) {
-    this->traverse(&t);
-    return TaggedPtr<T>::wrap(t);
-  });
-  if (tenured.isSome() && tenured.value() != *thingp) {
-    *thingp = tenured.value();
-  }
-}
-
-}  // namespace js
 
 template <typename T>
 void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(TenuringTracer& mover) {
@@ -3073,12 +3108,13 @@ void js::gc::StoreBuffer::CellPtrEdge<T>::trace(TenuringTracer& mover) const {
   static_assert(!std::is_base_of_v<TenuredCell, T>,
                 "T must not be a tenured Cell type");
 
-  if (!*edge) {
+  T* thing = *edge;
+  if (!thing) {
     return;
   }
 
-  MOZ_ASSERT(IsCellPointerValid(*edge));
-  MOZ_ASSERT((*edge)->getTraceKind() == JS::MapTypeToTraceKind<T>::kind);
+  MOZ_ASSERT(IsCellPointerValid(thing));
+  MOZ_ASSERT(thing->getTraceKind() == JS::MapTypeToTraceKind<T>::kind);
 
   if (std::is_same_v<JSString, T>) {
     // Nursery string deduplication requires all tenured string -> nursery
@@ -3088,7 +3124,7 @@ void js::gc::StoreBuffer::CellPtrEdge<T>::trace(TenuringTracer& mover) const {
         edge, JS::TraceKind::String));
   }
 
-  mover.traverse(edge);
+  *edge = DispatchToOnEdge(&mover, thing);
 }
 
 void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {
