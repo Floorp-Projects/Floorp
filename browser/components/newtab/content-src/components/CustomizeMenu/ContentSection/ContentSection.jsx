@@ -139,35 +139,37 @@ export class ContentSection extends React.PureComponent {
                 className="subtitle"
                 data-l10n-id="newtab-custom-pocket-subtitle"
               />
-              <div
-                className={`more-info-pocket-wrapper ${
-                  pocketEnabled ? "" : "shrink"
-                }`}
-              >
+              {this.props.mayHaveSponsoredStories && (
                 <div
-                  className={`more-information ${
-                    pocketEnabled ? "expand" : "shrink"
+                  className={`more-info-pocket-wrapper ${
+                    pocketEnabled ? "" : "shrink"
                   }`}
                 >
-                  <div className="check-wrapper">
-                    <input
-                      id="sponsored-pocket"
-                      className="sponsored-checkbox"
-                      disabled={!pocketEnabled}
-                      checked={showSponsoredPocketEnabled}
-                      type="checkbox"
-                      onChange={this.onPreferenceSelect}
-                      preference="showSponsored"
-                      eventSource="POCKET_SPOCS"
-                    />
-                    <label
-                      className="sponsored"
-                      htmlFor="sponsored-pocket"
-                      data-l10n-id="newtab-custom-pocket-sponsored"
-                    />
+                  <div
+                    className={`more-information ${
+                      pocketEnabled ? "expand" : "shrink"
+                    }`}
+                  >
+                    <div className="check-wrapper">
+                      <input
+                        id="sponsored-pocket"
+                        className="sponsored-checkbox"
+                        disabled={!pocketEnabled}
+                        checked={showSponsoredPocketEnabled}
+                        type="checkbox"
+                        onChange={this.onPreferenceSelect}
+                        preference="showSponsored"
+                        eventSource="POCKET_SPOCS"
+                      />
+                      <label
+                        className="sponsored"
+                        htmlFor="sponsored-pocket"
+                        data-l10n-id="newtab-custom-pocket-sponsored"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
             <label className="switch">
               <input

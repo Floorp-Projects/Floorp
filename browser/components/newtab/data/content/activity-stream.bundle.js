@@ -14315,7 +14315,7 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }), external_React_default.a.createElement("p", {
       className: "subtitle",
       "data-l10n-id": "newtab-custom-pocket-subtitle"
-    }), external_React_default.a.createElement("div", {
+    }), this.props.mayHaveSponsoredStories && external_React_default.a.createElement("div", {
       className: `more-info-pocket-wrapper ${pocketEnabled ? "" : "shrink"}`
     }, external_React_default.a.createElement("div", {
       className: `more-information ${pocketEnabled ? "expand" : "shrink"}`
@@ -14420,12 +14420,15 @@ class CustomizeMenu_CustomizeMenu extends external_React_default.a.PureComponent
       enabledSections: this.props.enabledSections,
       pocketRegion: this.props.pocketRegion,
       mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
+      mayHaveSponsoredStories: this.props.DiscoveryStream.config.show_spocs,
       dispatch: this.props.dispatch
     }));
   }
 
 }
-const CustomizeMenu = Object(external_ReactRedux_["connect"])(state => state.CustomizeMenu)(CustomizeMenu_CustomizeMenu);
+const CustomizeMenu = Object(external_ReactRedux_["connect"])(state => ({
+  DiscoveryStream: state.DiscoveryStream
+}))(CustomizeMenu_CustomizeMenu);
 
 /***/ }),
 /* 72 */
