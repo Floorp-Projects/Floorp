@@ -1518,7 +1518,7 @@ class ProfileChunkedBuffer {
 
         // And finally mark filled chunk done and release it.
         filled->MarkDone();
-        mChunkManager->ReleaseChunks(std::move(filled));
+        mChunkManager->ReleaseChunk(std::move(filled));
 
         // Request another chunk if needed.
         // In most cases, here we should have one current chunk and no next

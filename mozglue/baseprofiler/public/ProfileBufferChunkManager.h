@@ -66,11 +66,11 @@ class ProfileBufferChunkManager {
   // allocations during these calls.
   virtual void FulfillChunkRequests() = 0;
 
-  // Chunks are released by the user, the ProfileBufferChunkManager should keep
-  // it as long as possible (depending on local or global memory/time limits).
-  // Note that the chunk-destroyed callback may be invoked during this call;
-  // user should be careful with reentrancy issues.
-  virtual void ReleaseChunks(UniquePtr<ProfileBufferChunk> aChunks) = 0;
+  // One chunk is released by the user, the ProfileBufferChunkManager should
+  // keep it as long as possible (depending on local or global memory/time
+  // limits). Note that the chunk-destroyed callback may be invoked during this
+  // call; user should be careful with reentrancy issues.
+  virtual void ReleaseChunk(UniquePtr<ProfileBufferChunk> aChunk) = 0;
 
   // `aChunkDestroyedCallback` will be called whenever the contents of a
   // previously-released chunk is about to be destroyed or recycled.
