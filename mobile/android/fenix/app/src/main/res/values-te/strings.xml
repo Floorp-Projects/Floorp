@@ -697,6 +697,8 @@
     <string name="download_delete_all_dialog">నిజంగానే మీ దింపుకోళ్ళను తుడిచేయాలనుకుంటున్నారా?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">దింపుకోళ్ళు తొలగించబడ్డాయి</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s తొలగించబడింది</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message_1">దించుకున్న ఫైళ్ళేమీ లేవు</string>
     <!-- History multi select title in app bar

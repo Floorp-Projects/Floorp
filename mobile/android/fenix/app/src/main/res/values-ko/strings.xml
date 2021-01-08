@@ -80,7 +80,7 @@
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">바로가기 추가</string>
     <!-- Text for the negative button -->
-    <string name="cfr_neg_button_text">아니오</string>
+    <string name="cfr_neg_button_text">아니요</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->

@@ -721,18 +721,22 @@
     <string name="download_delete_all">Ջնջել ներբեռնումները</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Համոզվա՞ծ եք, որ ցանկանում եք մաքրել ներբեռնումերը:</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Ներբեռնումները ջնջվեցին</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Ներբեռնումները հեռացված են</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s-ը հեռացված է</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Չկան նեևբեռնումներ</string>
+    <string name="download_empty_message_1">Չկան ներբեռնված ֆայլեր</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Ընտրված է %1$d-ը</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Բացել</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Ջնջել</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Հեռացնել</string>
 
 
     <!-- Crashes -->
@@ -858,6 +862,8 @@
     <string name="preference_phone_feature_notification">Ծանուցում</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Մշտական պահեստ</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM կառավարվող բովանդակություն</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Խնդրել թույլտվություն</string>
     <!-- Label that indicates that a permission must be blocked -->

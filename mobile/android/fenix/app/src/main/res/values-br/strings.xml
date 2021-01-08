@@ -149,8 +149,6 @@
     <string name="browser_menu_find_in_page">Kavout er bajennad</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Roadennoù prevez</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Ivinell nevez</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Enrollañ en dastumad</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -355,6 +353,10 @@
     <string name="customize_addon_collection_user_hint">Perc’henn an dastumad (Naoudi an arveriad)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Kemmet eo bet an dastumad askouezhioù. Kuitae vo an arload evit arloañ ar c’hemmoù...</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Ne vez skoret an enlugellad-mañ</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -709,10 +711,6 @@
     <string name="download_delete_all">Goullonderiñ roll ar pellgargadurioù</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Sur oc’h e fell deoc’h skarzhañ ho pellgargadennoù?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Pellgargadurioù dilammet</string>
-    <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Pellgargadur ebet amañ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d diuzet</string>
@@ -720,8 +718,6 @@
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Digeriñ</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Dilemel</string>
 
 
     <!-- Crashes -->
