@@ -546,7 +546,7 @@ struct TilePostUpdateContext<'a> {
 
     /// If true, the scale factor of the root transform for this picture
     /// cache changed, so we need to invalidate the tile and re-render.
-    root_scale_changed: bool,
+    invalidate_all: bool,
 }
 
 // Mutable state passed to picture cache tiles during post_update
@@ -1019,7 +1019,7 @@ impl Tile {
                 invalidation_reason.expect("bug: no invalidation_reason"),
             );
         }
-        if ctx.root_scale_changed {
+        if ctx.invalidate_all {
             self.invalidate(None, InvalidationReason::ScaleChanged);
         }
         // TODO(gw): We can avoid invalidating the whole tile in some cases here,
@@ -3812,7 +3812,7 @@ impl TileCacheInstance {
             !root_transform.scale.x.approx_eq_eps(&self.root_transform.scale.x, &EPSILON) ||
             !root_transform.scale.y.approx_eq_eps(&self.root_transform.scale.y, &EPSILON);
 
-        if root_translation_changed || root_scale_changed {
+        if root_translation_changed || root_scale_changed || frame_context.config.force_invalidation {
             self.root_transform = root_transform;
             frame_state.composite_state.dirty_rects_are_valid = false;
         }
@@ -3839,7 +3839,7 @@ impl TileCacheInstance {
             external_surfaces: &self.external_surfaces,
             z_id_opaque: self.z_id_opaque,
             z_id_alpha,
-            root_scale_changed,
+            invalidate_all: root_scale_changed || frame_context.config.force_invalidation,
         };
 
         let mut state = TilePostUpdateState {

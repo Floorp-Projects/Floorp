@@ -599,6 +599,8 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted",
                       wr::DebugFlags::TEXTURE_CACHE_DBG_CLEAR_EVICTED)
   GFX_WEBRENDER_DEBUG(".picture-caching", wr::DebugFlags::PICTURE_CACHING_DBG)
+  GFX_WEBRENDER_DEBUG(".force-picture-invalidation",
+                      wr::DebugFlags::FORCE_PICTURE_INVALIDATION)
   GFX_WEBRENDER_DEBUG(".tile-cache-logging",
                       wr::DebugFlags::TILE_CACHE_LOGGING_DBG)
   GFX_WEBRENDER_DEBUG(".primitives", wr::DebugFlags::PRIMITIVE_DBG)
