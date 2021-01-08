@@ -60,23 +60,10 @@ function awaitFileSave(name, ext) {
   });
 }
 
-function getFileContents(file) {
-  return new Promise((resolve, reject) => {
-    const channel = NetUtil.newChannel({
-      uri: NetUtil.newURI(file),
-      loadUsingSystemPrincipal: true,
-    });
-    NetUtil.asyncFetch(channel, function(inputStream, status) {
-      if (Components.isSuccessCode(status)) {
-        info("Fetched downloaded contents.");
-        resolve(
-          NetUtil.readInputStreamToString(inputStream, inputStream.available())
-        );
-      } else {
-        reject();
-      }
-    });
-  });
+async function getFileContents(file) {
+  await BrowserTestUtils.waitForCondition(() => OS.File.exists(file.path));
+  const buffer = await OS.File.read(file.path);
+  return new TextDecoder().decode(buffer);
 }
 
 function createTemporarySaveDirectory() {
@@ -107,17 +94,14 @@ add_task(async function() {
   const TEST_JSON_URL = URL_ROOT + JSON_FILE;
   await addJsonViewTab(TEST_JSON_URL);
 
-  let promise, rawJSON, prettyJSON;
-  await fetch(new Request(TEST_JSON_URL))
-    .then(response => response.text())
-    .then(function(data) {
-      info("Fetched JSON contents.");
-      rawJSON = data;
-      prettyJSON = JSON.stringify(JSON.parse(data), null, "  ");
-    });
+  const response = await fetch(new Request(TEST_JSON_URL));
+
+  info("Fetched JSON contents.");
+  const rawJSON = await response.text();
+  const prettyJSON = JSON.stringify(JSON.parse(rawJSON), null, "  ");
 
   // Attempt to save original JSON via "Save As" command
-  promise = awaitFileSave(JSON_FILE, "json");
+  let onFileSaved = awaitFileSave(JSON_FILE, "json");
   await new Promise(resolve => {
     info("Register to handle popupshown.");
     document.addEventListener(
@@ -136,29 +120,26 @@ add_task(async function() {
     rightClick("body");
     info("Right clicked.");
   });
-  await promise.then(getFileContents).then(function(data) {
-    is(data, rawJSON, "Original JSON contents should have been saved.");
-  });
+  let data = await onFileSaved.then(getFileContents);
+  is(data, rawJSON, "Original JSON contents should have been saved.");
 
   // Attempt to save original JSON via "Save" button
-  promise = awaitFileSave(JSON_FILE, "json");
+  onFileSaved = awaitFileSave(JSON_FILE, "json");
   await click(saveButton);
   info("Clicked Save button.");
-  await promise.then(getFileContents).then(function(data) {
-    is(data, rawJSON, "Original JSON contents should have been saved.");
-  });
+  data = await onFileSaved.then(getFileContents);
+  is(data, rawJSON, "Original JSON contents should have been saved.");
 
   // Attempt to save prettified JSON via "Save" button
   await selectJsonViewContentTab("rawdata");
   info("Switched to Raw Data tab.");
   await click(prettifyButton);
   info("Clicked Pretty Print button.");
-  promise = awaitFileSave(JSON_FILE, "json");
+  onFileSaved = awaitFileSave(JSON_FILE, "json");
   await click(saveButton);
   info("Clicked Save button.");
-  await promise.then(getFileContents).then(function(data) {
-    is(data, prettyJSON, "Prettified JSON contents should have been saved.");
-  });
+  data = await onFileSaved.then(getFileContents);
+  is(data, prettyJSON, "Prettified JSON contents should have been saved.");
 });
 
 add_task(async function() {
@@ -168,10 +149,10 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/json adds .json extension by default.");
-  const promise = awaitFileSave("index.json", "json");
+  const onFileSaved = awaitFileSave("index.json", "json");
   await click(saveButton);
   info("Clicked Save button.");
-  await promise.then(getFileContents);
+  await onFileSaved.then(getFileContents);
 });
 
 add_task(async function() {
@@ -181,8 +162,8 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/manifest+json does not add .json extension.");
-  const promise = awaitFileSave("index", null);
+  const onFileSaved = awaitFileSave("index", null);
   await click(saveButton);
   info("Clicked Save button.");
-  await promise.then(getFileContents);
+  await onFileSaved.then(getFileContents);
 });
