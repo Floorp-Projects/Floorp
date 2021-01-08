@@ -574,7 +574,21 @@ Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
   CounterStyle* listStyleType = ResolveCounterStyle();
   nsMargin padding = mPadding.GetPhysicalMargin(GetWritingMode());
   const auto& image = StyleList()->mListStyleImage;
-  if (!image.IsNone()) {
+  const bool isValidImage = [&] {
+    if (image.IsNone()) {
+      return false;
+    }
+    if (auto* request = image.GetImageRequest()) {
+      uint32_t status = imgIRequest::STATUS_ERROR;
+      request->GetImageStatus(&status);
+      if (status & imgIRequest::STATUS_ERROR) {
+        return false;
+      }
+    }
+    return true;
+  }();
+
+  if (isValidImage) {
     nsRect dest(padding.left, padding.top,
                 mRect.width - (padding.left + padding.right),
                 mRect.height - (padding.top + padding.bottom));
@@ -584,15 +598,6 @@ Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
       return Some(br);
     }
     *aDrawResult = br.PrepareResult();
-    if (auto* request = image.GetImageRequest()) {
-      uint32_t status = imgIRequest::STATUS_ERROR;
-      request->GetImageStatus(&status);
-      if (status & imgIRequest::STATUS_ERROR) {
-        // Don't report errored images as not-yet-ready, just fall back to
-        // drawing the regular bullet.
-        *aDrawResult = ImgDrawResult::SUCCESS;
-      }
-    }
   }
 
   nscolor color = nsLayoutUtils::GetColor(this, &nsStyleText::mColor);
