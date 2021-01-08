@@ -2879,14 +2879,6 @@ void BrowserChild::MakeHidden() {
     }
   }
 
-  // FIXME(emilio): The lack of parallelism between this and MakeVisible is a
-  // bit suspect, but I guess we don't always want the front-end to manage the
-  // tab visibility.
-  if (mIsTopLevel && mBrowsingContext && mBrowsingContext->IsActive()) {
-    Unused << mBrowsingContext->SetExplicitActive(
-        dom::ExplicitActiveStatus::None);
-  }
-
   if (mPuppetWidget) {
     mPuppetWidget->Show(false);
   }
