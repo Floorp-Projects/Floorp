@@ -4351,11 +4351,6 @@ pref("media.default_volume", "1.0");
 // return the maximum number of cores that navigator.hardwareCurrency returns
 pref("dom.maxHardwareConcurrency", 16);
 
-// Shutdown the osfile worker if its no longer needed.
-#if !defined(RELEASE_OR_BETA)
-  pref("osfile.reset_worker_delay", 30000);
-#endif
-
 pref("dom.storageManager.prompt.testing", false);
 pref("dom.storageManager.prompt.testing.allow", false);
 
