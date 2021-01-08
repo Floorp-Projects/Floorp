@@ -12,12 +12,11 @@ import android.content.Intent.ACTION_SEARCH
 import android.content.Intent.ACTION_WEB_SEARCH
 import android.content.Intent.EXTRA_TEXT
 import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState.Source
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.WebURLFinder
@@ -25,19 +24,16 @@ import mozilla.components.support.utils.WebURLFinder
 /**
  * Processor for intents which should trigger session-related actions.
  *
- * @property sessionManager The application's [SessionManager].
+ * @property tabsUseCases An instance of [TabsUseCases] used to open new tabs.
  * @property loadUrlUseCase A reference to [SessionUseCases.DefaultLoadUrlUseCase] used to load URLs.
  * @property newTabSearchUseCase A reference to [SearchUseCases.NewTabSearchUseCase] to be used for
  * ACTION_SEND intents if the provided text is not a URL.
- * @property openNewTab Whether a processed intent should open a new tab or
- * open URLs in the currently selected tab.
  * @property isPrivate Whether a processed intent should open a new tab as private
  */
 class TabIntentProcessor(
-    private val sessionManager: SessionManager,
+    private val tabsUseCases: TabsUseCases,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     private val newTabSearchUseCase: SearchUseCases.NewTabSearchUseCase,
-    private val openNewTab: Boolean = true,
     private val isPrivate: Boolean = false
 ) : IntentProcessor {
 
@@ -50,17 +46,12 @@ class TabIntentProcessor(
         return if (url.isNullOrEmpty()) {
             false
         } else {
-            val existingSession = sessionManager.sessions.find { it.url == url }
-            if (existingSession != null) {
-                sessionManager.select(existingSession)
-            } else {
-                val session = createSession(url, private = isPrivate, source = Source.ACTION_VIEW)
-                loadUrlUseCase(
-                    url,
-                    session.id,
-                    LoadUrlFlags.external()
-                )
-            }
+            tabsUseCases.selectOrAddTab(
+                url,
+                private = isPrivate,
+                source = Source.ACTION_VIEW,
+                flags = LoadUrlFlags.external()
+            )
             true
         }
     }
@@ -77,10 +68,9 @@ class TabIntentProcessor(
         } else {
             val url = WebURLFinder(extraText).bestWebURL()
             if (url != null) {
-                val session = createSession(url, private = isPrivate, source = Source.ACTION_SEND)
-                loadUrlUseCase(url, session.id, LoadUrlFlags.external())
+                addNewTab(url, Source.ACTION_SEND)
             } else {
-                newTabSearchUseCase(extraText, Source.ACTION_SEND, openNewTab)
+                newTabSearchUseCase(extraText, Source.ACTION_SEND)
             }
             true
         }
@@ -93,20 +83,19 @@ class TabIntentProcessor(
             false
         } else {
             if (searchQuery.isUrl()) {
-                val session = createSession(searchQuery, private = isPrivate, source = Source.ACTION_SEARCH)
-                loadUrlUseCase(searchQuery, session.id, LoadUrlFlags.external())
+                addNewTab(searchQuery, Source.ACTION_SEARCH)
             } else {
-                newTabSearchUseCase(searchQuery, Source.ACTION_SEARCH, openNewTab)
+                newTabSearchUseCase(searchQuery, Source.ACTION_SEARCH)
             }
             true
         }
     }
 
-    private fun createSession(url: String, private: Boolean = false, source: Source): Session {
-        return if (openNewTab) {
-            Session(url, private, source).also { sessionManager.add(it, selected = true) }
+    private fun addNewTab(url: String, source: Source) {
+        if (isPrivate) {
+            tabsUseCases.addPrivateTab(url, source = source, flags = LoadUrlFlags.external())
         } else {
-            sessionManager.selectedSession ?: Session(url, private, source)
+            tabsUseCases.addTab(url, source = source, flags = LoadUrlFlags.external())
         }
     }
 

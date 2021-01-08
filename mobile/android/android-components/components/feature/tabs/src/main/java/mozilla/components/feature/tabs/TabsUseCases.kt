@@ -360,6 +360,37 @@ class TabsUseCases(
         }
     }
 
+    /**
+     * Use case for selecting an existing tab or creating a new tab with a specific URL.
+     */
+    class SelectOrAddUseCase(
+        private val store: BrowserStore,
+        private val sessionManager: SessionManager
+    ) {
+        /**
+         * Selects an already existing tab displaying [url] or otherwise creates a new tab.
+         */
+        operator fun invoke(
+            url: String,
+            private: Boolean = false,
+            source: Source = Source.NEW_TAB,
+            flags: LoadUrlFlags = LoadUrlFlags.none()
+        ) {
+            val existingSession = sessionManager.sessions.find { it.url == url }
+            if (existingSession != null) {
+                sessionManager.select(existingSession)
+            } else {
+                val session = Session(url, private, source)
+                sessionManager.add(session, selected = true)
+                store.dispatch(EngineAction.LoadUrlAction(
+                    session.id,
+                    url,
+                    flags
+                ))
+            }
+        }
+    }
+
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(sessionManager) }
     val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(sessionManager) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(store, sessionManager) }
@@ -370,4 +401,5 @@ class TabsUseCases(
     val removePrivateTabs: RemovePrivateTabsUseCase by lazy { RemovePrivateTabsUseCase(sessionManager) }
     val undo by lazy { UndoTabRemovalUseCase(store) }
     val restore: RestoreUseCase by lazy { RestoreUseCase(store, sessionManager, selectTab) }
+    val selectOrAddTab: SelectOrAddUseCase by lazy { SelectOrAddUseCase(store, sessionManager) }
 }

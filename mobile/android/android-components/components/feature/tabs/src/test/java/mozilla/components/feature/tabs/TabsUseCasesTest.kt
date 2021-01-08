@@ -10,6 +10,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
@@ -22,6 +23,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -336,5 +338,45 @@ class TabsUseCasesTest {
         assertEquals(2, store.state.tabs.size)
         assertEquals("wikipedia", sessionManager.selectedSessionOrThrow.id)
         assertEquals("wikipedia", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `selectOrAddTab selects already existing tab`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val useCases = TabsUseCases(store, sessionManager)
+
+        sessionManager.add(Session("https://www.mozilla.org", id = "mozilla"))
+        sessionManager.add(Session("https://firefox.com", id = "firefox"))
+        sessionManager.add(Session("https://getpocket.com", id = "pocket"))
+
+        assertEquals("mozilla", store.state.selectedTabId)
+        assertEquals(3, store.state.tabs.size)
+
+        useCases.selectOrAddTab("https://getpocket.com")
+
+        assertEquals("pocket", store.state.selectedTabId)
+        assertEquals(3, store.state.tabs.size)
+    }
+
+    @Test
+    fun `selectOrAddTab adds new tab if no matching existing tab could be found`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val useCases = TabsUseCases(store, sessionManager)
+
+        sessionManager.add(Session("https://www.mozilla.org", id = "mozilla"))
+        sessionManager.add(Session("https://firefox.com", id = "firefox"))
+        sessionManager.add(Session("https://getpocket.com", id = "pocket"))
+
+        assertEquals("mozilla", store.state.selectedTabId)
+        assertEquals(3, store.state.tabs.size)
+
+        useCases.selectOrAddTab("https://youtube.com")
+
+        assertNotEquals("mozilla", store.state.selectedTabId)
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("https://youtube.com", store.state.tabs.last().content.url)
+        assertEquals("https://youtube.com", store.state.selectedTab!!.content.url)
     }
 }

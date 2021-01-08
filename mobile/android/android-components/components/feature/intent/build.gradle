@@ -25,14 +25,15 @@ android {
 
 dependencies {
     implementation project(':concept-engine')
-    implementation project(':browser-session')
+    implementation project(':browser-state')
     implementation project(':feature-search')
     implementation project(':feature-session')
+    implementation project(':feature-tabs')
     implementation project(':support-utils')
     implementation project(':support-ktx')
     implementation Dependencies.kotlin_stdlib
 
-    testImplementation project(':feature-tabs')
+    testImplementation project(":browser-session")
     testImplementation project(':browser-search')
     testImplementation project(':support-test')
     testImplementation Dependencies.androidx_browser
