@@ -4734,6 +4734,8 @@ EventListenerManager* nsContentUtils::GetExistingListenerManagerForNode(
 void nsContentUtils::AddEntryToDOMArenaTable(nsINode* aNode,
                                              DOMArena* aDOMArena) {
   MOZ_ASSERT(StaticPrefs::dom_arena_allocator_enabled_AtStartup());
+  MOZ_ASSERT_IF(sDOMArenaHashtable, !sDOMArenaHashtable->Contains(aNode));
+  MOZ_ASSERT(!aNode->HasFlag(NODE_KEEPS_DOMARENA));
   if (!sDOMArenaHashtable) {
     sDOMArenaHashtable =
         new nsRefPtrHashtable<nsPtrHashKey<const nsINode>, dom::DOMArena>();

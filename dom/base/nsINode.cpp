@@ -3142,6 +3142,11 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
   } else if (nodeInfoManager) {
     Document* oldDoc = aNode->OwnerDoc();
 
+    DOMArena* domArenaToStore =
+        !aNode->HasFlag(NODE_KEEPS_DOMARENA)
+            ? aNode->NodeInfo()->NodeInfoManager()->GetArenaAllocator()
+            : nullptr;
+
     Document* newDoc = nodeInfoManager->GetDocument();
     MOZ_ASSERT(newDoc);
 
@@ -3277,6 +3282,10 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
               docGroup->ArenaAllocator());
         }
       }
+
+      if (domArenaToStore && newDoc->GetDocGroup() != oldDoc->GetDocGroup()) {
+        nsContentUtils::AddEntryToDOMArenaTable(aNode, domArenaToStore);
+      }
     }
   }
 
@@ -3382,13 +3391,6 @@ void nsINode::Adopt(nsNodeInfoManager* aNewNodeInfoManager,
         return aError.ThrowSecurityError(
             "Adopting nodes across docgroups in chrome documents "
             "is unsupported");
-      } else {
-        if (StaticPrefs::dom_arena_allocator_enabled_AtStartup()) {
-          if (DOMArena* arena =
-                  NodeInfo()->NodeInfoManager()->GetArenaAllocator()) {
-            nsContentUtils::AddEntryToDOMArenaTable(this, arena);
-          }
-        }
       }
     }
   }
