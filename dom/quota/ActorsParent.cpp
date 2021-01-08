@@ -2874,7 +2874,7 @@ DirectoryLockImpl::DirectoryLockImpl(
 DirectoryLockImpl::~DirectoryLockImpl() {
   AssertIsOnOwningThread();
 
-  for (DirectoryLockImpl* blockingLock : mBlocking) {
+  for (NotNull<RefPtr<DirectoryLockImpl>> blockingLock : mBlocking) {
     blockingLock->MaybeUnblock(*this);
   }
 
