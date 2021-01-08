@@ -22,9 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=892372
   }
 
   function testAutoStartReverseIsSet(marker) {
-    is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_UNKNOWN,
+    is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO_START_REVERSE,
        "orientType baseVal for auto-start-reverse");
-    is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_UNKNOWN,
+    is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO_START_REVERSE,
        "orientType animVal for auto-start-reverse");
     is(marker.orientAngle.baseVal.value, 0,
        "orientAngle baseVal for auto-start-reverse");
