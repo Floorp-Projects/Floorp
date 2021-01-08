@@ -7,6 +7,8 @@ browser.jar:
   content/browser/aboutlogins/components/confirmation-dialog.js       (content/components/confirmation-dialog.js)
   content/browser/aboutlogins/components/remove-logins-dialog.css     (content/components/remove-logins-dialog.css)
   content/browser/aboutlogins/components/remove-logins-dialog.js      (content/components/remove-logins-dialog.js)
+  content/browser/aboutlogins/components/import-summary-dialog.css      (content/components/import-summary-dialog.css)
+  content/browser/aboutlogins/components/import-summary-dialog.js       (content/components/import-summary-dialog.js)
   content/browser/aboutlogins/components/fxaccounts-button.css (content/components/fxaccounts-button.css)
   content/browser/aboutlogins/components/fxaccounts-button.js  (content/components/fxaccounts-button.js)
   content/browser/aboutlogins/components/login-filter.css      (content/components/login-filter.css)
