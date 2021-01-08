@@ -46,10 +46,12 @@ class ImageLoader final {
 
   // We also associate flags alongside frames in the request-to-frames hashmap.
   // These are used for special handling of events for requests.
-  typedef uint32_t FrameFlags;
-  enum {
-    REQUEST_REQUIRES_REFLOW = 1u << 0,
-    REQUEST_HAS_BLOCKED_ONLOAD = 1u << 1,
+  enum class Flags : uint32_t {
+    // Used for shapes.
+    RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking = 1u << 0,
+
+    // Internal flag, shouldn't be used by callers.
+    IsBlockingLoadEvent = 1u << 1,
   };
 
   explicit ImageLoader(dom::Document* aDocument) : mDocument(aDocument) {
@@ -60,12 +62,9 @@ class ImageLoader final {
 
   void DropDocumentReference();
 
-  void AssociateRequestToFrame(imgIRequest* aRequest, nsIFrame* aFrame,
-                               FrameFlags aFlags);
-
-  void DisassociateRequestFromFrame(imgIRequest* aRequest, nsIFrame* aFrame);
-
-  void DropRequestsForFrame(nsIFrame* aFrame);
+  void AssociateRequestToFrame(imgIRequest*, nsIFrame*, Flags = Flags(0));
+  void DisassociateRequestFromFrame(imgIRequest*, nsIFrame*);
+  void DropRequestsForFrame(nsIFrame*);
 
   void SetAnimationMode(uint16_t aMode);
 
@@ -106,11 +105,11 @@ class ImageLoader final {
   // should always be in sync.
 
   struct FrameWithFlags {
-    explicit FrameWithFlags(nsIFrame* aFrame) : mFrame(aFrame), mFlags(0) {
+    explicit FrameWithFlags(nsIFrame* aFrame) : mFrame(aFrame) {
       MOZ_ASSERT(mFrame);
     }
     nsIFrame* const mFrame;
-    FrameFlags mFlags;
+    Flags mFlags{0};
   };
 
   // A helper class to compare FrameWithFlags by comparing mFrame and
@@ -161,6 +160,8 @@ class ImageLoader final {
   // A weak pointer to our document. Nulled out by DropDocumentReference.
   dom::Document* mDocument;
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ImageLoader::Flags)
 
 }  // namespace css
 }  // namespace mozilla
