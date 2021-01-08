@@ -42,6 +42,7 @@ class SmokeTest {
     private var awesomeBar: ViewVisibilityIdlingResource? = null
     private var searchSuggestionsIdlingResource: RecyclerViewIdlingResource? = null
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
+    private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
     private val downloadFileName = "Globe.svg"
 
     // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
@@ -83,6 +84,10 @@ class SmokeTest {
 
         if (addonsListIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
+        }
+
+        if (recentlyClosedTabsListIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
         }
 
         deleteDownloadFromStorage(downloadFileName)
@@ -577,6 +582,195 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.openReportSiteIssue {
             verifyUrl("webcompat.com/issues/new")
+        }
+    }
+
+    @Test
+    // This test verifies the Recently Closed Tabs List and items
+    fun verifyRecentlyClosedTabsListTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            closeTab()
+        }.openTabDrawer {
+        }.openRecentlyClosedTabs {
+            waitForListToExist()
+            recentlyClosedTabsListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
+            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsMenuView()
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsPageTitle("Test_Page_1")
+            verifyRecentlyClosedTabsUrl(website.url)
+        }
+    }
+
+    @Test
+    // Verifies the items from the overflow menu of Recently Closed Tabs
+    fun recentlyClosedTabsMenuItemsTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            closeTab()
+        }.openTabDrawer {
+        }.openRecentlyClosedTabs {
+            waitForListToExist()
+            recentlyClosedTabsListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
+            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsMenuView()
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            openRecentlyClosedTabsThreeDotMenu()
+            verifyRecentlyClosedTabsMenuCopy()
+            verifyRecentlyClosedTabsMenuShare()
+            verifyRecentlyClosedTabsMenuNewTab()
+            verifyRecentlyClosedTabsMenuPrivateTab()
+            verifyRecentlyClosedTabsMenuDelete()
+        }
+    }
+
+    @Test
+    // Verifies the Copy option from the Recently Closed Tabs overflow menu
+    fun copyRecentlyClosedTabsItemTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            closeTab()
+        }.openTabDrawer {
+        }.openRecentlyClosedTabs {
+            waitForListToExist()
+            recentlyClosedTabsListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
+            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsMenuView()
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            openRecentlyClosedTabsThreeDotMenu()
+            verifyRecentlyClosedTabsMenuCopy()
+            clickCopyRecentlyClosedTabs()
+            verifyCopyRecentlyClosedTabsSnackBarText()
+        }
+    }
+
+    @Test
+    // Verifies the Share option from the Recently Closed Tabs overflow menu
+    fun shareRecentlyClosedTabsItemTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            closeTab()
+        }.openTabDrawer {
+        }.openRecentlyClosedTabs {
+            waitForListToExist()
+            recentlyClosedTabsListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
+            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsMenuView()
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            openRecentlyClosedTabsThreeDotMenu()
+            verifyRecentlyClosedTabsMenuShare()
+            clickShareRecentlyClosedTabs()
+            verifyShareOverlay()
+            verifyShareTabTitle("Test_Page_1")
+            verifyShareTabUrl(website.url)
+            verifyShareTabFavicon()
+        }
+    }
+
+    @Test
+    // Verifies the Open in a new tab option from the Recently Closed Tabs overflow menu
+    fun openRecentlyClosedTabsInNewTabTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            closeTab()
+        }.openTabDrawer {
+        }.openRecentlyClosedTabs {
+            waitForListToExist()
+            recentlyClosedTabsListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
+            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsMenuView()
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            openRecentlyClosedTabsThreeDotMenu()
+            verifyRecentlyClosedTabsMenuNewTab()
+        }.clickOpenInNewTab {
+            verifyUrl(website.url.toString())
+        }.openTabDrawer {
+            verifyNormalModeSelected()
+        }
+    }
+
+    @Test
+    // Verifies the Open in a private tab option from the Recently Closed Tabs overflow menu
+    fun openRecentlyClosedTabsInNewPrivateTabTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            closeTab()
+        }.openTabDrawer {
+        }.openRecentlyClosedTabs {
+            waitForListToExist()
+            recentlyClosedTabsListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
+            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsMenuView()
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            openRecentlyClosedTabsThreeDotMenu()
+            verifyRecentlyClosedTabsMenuPrivateTab()
+        }.clickOpenInPrivateTab {
+            verifyUrl(website.url.toString())
+        }.openTabDrawer {
+            verifyPrivateModeSelected()
+        }
+    }
+
+    @Test
+    // Verifies the delete option from the Recently Closed Tabs overflow menu
+    fun deleteRecentlyClosedTabsItemTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            closeTab()
+        }.openTabDrawer {
+        }.openRecentlyClosedTabs {
+            waitForListToExist()
+            recentlyClosedTabsListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
+            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsMenuView()
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            openRecentlyClosedTabsThreeDotMenu()
+            verifyRecentlyClosedTabsMenuDelete()
+            clickDeleteCopyRecentlyClosedTabs()
+            verifyEmptyRecentlyClosedTabsList()
         }
     }
 

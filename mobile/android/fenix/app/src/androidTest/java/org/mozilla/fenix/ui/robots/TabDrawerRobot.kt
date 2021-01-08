@@ -30,6 +30,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -123,7 +124,8 @@ class TabDrawerRobot {
         }
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            org.mozilla.fenix.ui.robots.mDevice.waitForIdle()
+            mDevice.findObject(UiSelector().resourceId("org.mozilla.fenix.debug:id/tab_button"))
+                .waitForExists(waitingTime)
 
             tabsCounter().click()
 
@@ -225,6 +227,24 @@ class TabDrawerRobot {
                 TabDrawerRobot().interact()
             }
             return Transition()
+        }
+
+        fun openRecentlyClosedTabs(interact: RecentlyClosedTabsRobot.() -> Unit):
+                RecentlyClosedTabsRobot.Transition {
+
+            threeDotMenu().click()
+
+            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            mDevice.waitNotNull(
+                    Until.findObject(text("Recently closed tabs")),
+                    waitingTime
+            )
+
+            val menuRecentlyClosedTabs = mDevice.findObject(text("Recently closed tabs"))
+            menuRecentlyClosedTabs.click()
+
+            RecentlyClosedTabsRobot().interact()
+            return RecentlyClosedTabsRobot.Transition()
         }
     }
 }
