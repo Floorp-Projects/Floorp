@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "frontend/IfEmitter.h"  // IfEmitter, InternalIfEmitter, CondEmitter
+#include "frontend/TDZCheckCache.h"
 
 namespace js {
 namespace frontend {
@@ -145,6 +146,8 @@ class MOZ_RAII OptionalEmitter {
 
  private:
   BytecodeEmitter* bce_;
+
+  TDZCheckCache tdzCache_;
 
   // jumptarget for ShortCircuiting code, which has null or undefined values
   JumpList jumpShortCircuit_;
