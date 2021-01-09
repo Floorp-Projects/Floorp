@@ -11291,7 +11291,6 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
   }
 
   ScriptStencil& script = compilationState.scriptData[scriptIndex];
-  SourceExtent& extent = compilationState.scriptExtent[scriptIndex];
   script.setHasSharedData();
 
   // Update flags specific to functions.
@@ -11299,14 +11298,9 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
     FunctionBox* funbox = sc->asFunctionBox();
     MOZ_ASSERT(&script == &funbox->functionStencil());
     funbox->copyUpdatedImmutableFlags();
-    MOZ_ASSERT(funbox->extent().sourceStart == extent.sourceStart);
-    MOZ_ASSERT(funbox->extent().sourceEnd == extent.sourceEnd);
-    MOZ_ASSERT(funbox->extent().toStringStart == extent.toStringStart);
-    MOZ_ASSERT(funbox->extent().toStringEnd == extent.toStringEnd);
-    MOZ_ASSERT(funbox->extent().lineno == extent.lineno);
-    MOZ_ASSERT(funbox->extent().column == extent.column);
     MOZ_ASSERT(script.isFunction());
   } else {
+    SourceExtent& extent = compilationState.scriptExtent[scriptIndex];
     sc->copyScriptFields(script);
     sc->copyScriptExtent(extent);
   }

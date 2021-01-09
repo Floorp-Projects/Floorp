@@ -363,7 +363,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
     } else {
       MOZ_ASSERT(fun->isIncomplete());
       if (!CreateLazyScript(cx, input, stencil, gcOutput, scriptStencil,
-                            item.extent, index, fun)) {
+                            *item.extent, index, fun)) {
         return false;
       }
     }
@@ -525,19 +525,14 @@ static void AssertDelazificationFieldsMatch(CompilationStencil& stencil,
                                             CompilationGCOutput& gcOutput) {
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
-    auto& scriptExtent = item.extent;
+    auto* scriptExtent = item.extent;
     auto& fun = item.function;
 
     BaseScript* script = fun->baseScript();
 
     MOZ_ASSERT(script->immutableFlags() == scriptStencil.immutableFlags);
 
-    MOZ_ASSERT(script->extent().sourceStart == scriptExtent.sourceStart);
-    MOZ_ASSERT(script->extent().sourceEnd == scriptExtent.sourceEnd);
-    MOZ_ASSERT(script->extent().toStringStart == scriptExtent.toStringStart);
-    MOZ_ASSERT(script->extent().toStringEnd == scriptExtent.toStringEnd);
-    MOZ_ASSERT(script->extent().lineno == scriptExtent.lineno);
-    MOZ_ASSERT(script->extent().column == scriptExtent.column);
+    MOZ_ASSERT(scriptExtent == nullptr);
 
     // Names are updated by UpdateInnerFunctions.
     constexpr uint16_t HAS_INFERRED_NAME =
