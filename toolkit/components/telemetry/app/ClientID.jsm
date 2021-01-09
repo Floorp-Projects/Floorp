@@ -28,7 +28,6 @@ ChromeUtils.defineModuleGetter(
   "CommonUtils",
   "resource://services-common/utils.js"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
   return Components.Constructor(
@@ -39,11 +38,14 @@ XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "gDatareportingPath", () => {
-  return OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
+  return PathUtils.join(
+    Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+    "datareporting"
+  );
 });
 
 XPCOMUtils.defineLazyGetter(this, "gStateFilePath", () => {
-  return OS.Path.join(gDatareportingPath, "state.json");
+  return PathUtils.join(gDatareportingPath, "state.json");
 });
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
@@ -267,7 +269,13 @@ var ClientIDImpl = {
     if (AppConstants.platform == "android" && this._wasCanary) {
       obj.wasCanary = true;
     }
-    await OS.File.makeDir(gDatareportingPath);
+    try {
+      await IOUtils.makeDirectory(gDatareportingPath);
+    } catch (ex) {
+      if (ex.name != "NotAllowedError") {
+        throw ex;
+      }
+    }
     await CommonUtils.writeJSON(obj, gStateFilePath);
     this._saveClientIdsTask = null;
   },
@@ -412,7 +420,7 @@ var ClientIDImpl = {
     await this._saveClientIdsTask;
 
     // Remove the client id from disk
-    await OS.File.remove(gStateFilePath, { ignoreAbsent: true });
+    await IOUtils.remove(gStateFilePath);
   },
 
   async removeClientIDs() {
