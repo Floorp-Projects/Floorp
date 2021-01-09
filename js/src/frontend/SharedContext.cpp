@@ -387,14 +387,19 @@ ScriptStencil& FunctionBox::functionStencil() const {
   return compilationState_.scriptData[funcDataIndex_];
 }
 
+SourceExtent& FunctionBox::functionStencilExtent() const {
+  return compilationState_.scriptExtent[funcDataIndex_];
+}
+
 void SharedContext::copyScriptFields(ScriptStencil& script) {
   MOZ_ASSERT(!isScriptFieldCopiedToStencil);
 
   script.immutableFlags = immutableFlags_;
-  script.extent = extent_;
 
   isScriptFieldCopiedToStencil = true;
 }
+
+void SharedContext::copyScriptExtent(SourceExtent& extent) { extent = extent_; }
 
 void FunctionBox::finishScriptFlags() {
   MOZ_ASSERT(!isScriptFieldCopiedToStencil);
@@ -440,10 +445,7 @@ void FunctionBox::copyUpdatedImmutableFlags() {
   script.immutableFlags = immutableFlags_;
 }
 
-void FunctionBox::copyUpdatedExtent() {
-  ScriptStencil& script = functionStencil();
-  script.extent = extent_;
-}
+void FunctionBox::copyUpdatedExtent() { functionStencilExtent() = extent_; }
 
 void FunctionBox::copyUpdatedMemberInitializers() {
   ScriptStencil& script = functionStencil();

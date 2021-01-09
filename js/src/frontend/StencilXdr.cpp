@@ -554,6 +554,7 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   // Now serialize the vector of ScriptStencils.
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptData));
+  MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtent));
 
   if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
     if (mode == XDR_DECODE) {

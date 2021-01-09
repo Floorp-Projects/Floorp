@@ -273,6 +273,7 @@ class SharedContext {
                                         const ParserAtom* atomId);
 
   void copyScriptFields(ScriptStencil& script);
+  void copyScriptExtent(SourceExtent& extent);
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
@@ -419,6 +420,7 @@ class FunctionBox : public SuspendableContext {
               const ParserAtom* atom, FunctionFlags flags, ScriptIndex index);
 
   ScriptStencil& functionStencil() const;
+  SourceExtent& functionStencilExtent() const;
 
   LexicalScope::ParserData* namedLambdaBindings() {
     return namedLambdaBindings_;
