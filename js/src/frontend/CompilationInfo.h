@@ -238,6 +238,7 @@ struct MOZ_RAII CompilationState {
   // See corresponding CompilationStencil fields for desription.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
+  Vector<SourceExtent, 0, js::SystemAllocPolicy> scriptExtent;
   Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
   Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
   Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
@@ -317,6 +318,7 @@ struct CompilationStencil {
   // reserved for the top-level script. This top-level may or may not be a
   // function.
   mozilla::Span<ScriptStencil> scriptData;
+  mozilla::Span<SourceExtent> scriptExtent;
   SharedDataContainer sharedData;
   mozilla::Span<TaggedScriptThingIndex> gcThingData;
 
@@ -397,13 +399,14 @@ class ScriptStencilIterable {
   class ScriptAndFunction {
    public:
     const ScriptStencil& script;
+    const SourceExtent& extent;
     JSFunction* function;
     ScriptIndex index;
 
     ScriptAndFunction() = delete;
-    ScriptAndFunction(const ScriptStencil& script, JSFunction* function,
-                      ScriptIndex index)
-        : script(script), function(function), index(index) {}
+    ScriptAndFunction(const ScriptStencil& script, const SourceExtent& extent,
+                      JSFunction* function, ScriptIndex index)
+        : script(script), extent(extent), function(function), index(index) {}
   };
 
   class Iterator {
@@ -457,9 +460,11 @@ class ScriptStencilIterable {
 
     ScriptAndFunction operator*() {
       const ScriptStencil& script = stencil_.scriptData[index_];
+      const SourceExtent& extent = stencil_.scriptExtent[index_];
 
       ScriptIndex index = ScriptIndex(index_);
-      return ScriptAndFunction(script, gcOutput_.functions[index], index);
+      return ScriptAndFunction(script, extent, gcOutput_.functions[index],
+                               index);
     }
 
     static Iterator end(const CompilationStencil& stencil,

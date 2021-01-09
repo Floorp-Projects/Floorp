@@ -5316,6 +5316,10 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     ReportOutOfMemory(cx);
     return false;
   }
+  if (!compilationState.scriptExtent.emplaceBack()) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
 
   js::frontend::ParseNode* pn;
   if (goal == frontend::ParseGoal::Script) {

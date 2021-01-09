@@ -708,6 +708,10 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
     ReportOutOfMemory(cx);
     return false;
   }
+  if (!compilationState_.scriptExtent.emplaceBack()) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
 
   ParseNode* pn;
   {
@@ -764,6 +768,10 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationInfo::TopLevelIndex);
   if (!compilationState_.scriptData.emplaceBack()) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  if (!compilationState_.scriptExtent.emplaceBack()) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -864,7 +872,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     // we want the SourceExtent used in the final standalone script to
     // start from the beginning of the buffer, and use the provided
     // line and column.
-    compilationState_.scriptData[CompilationInfo::TopLevelIndex].extent =
+    compilationState_.scriptExtent[CompilationInfo::TopLevelIndex] =
         SourceExtent{/* sourceStart = */ 0,
                      sourceBuffer_.length(),
                      funbox->extent().toStringStart,

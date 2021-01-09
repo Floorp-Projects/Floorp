@@ -134,6 +134,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
                              CompilationStencil& stencil,
                              CompilationGCOutput& gcOutput,
                              const ScriptStencil& script,
+                             const SourceExtent& extent,
                              ScriptIndex scriptIndex, HandleFunction function) {
   Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
 
@@ -141,7 +142,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
 
   Rooted<BaseScript*> lazy(
       cx, BaseScript::CreateRawLazy(cx, ngcthings, function, sourceObject,
-                                    script.extent, script.immutableFlags));
+                                    extent, script.immutableFlags));
   if (!lazy) {
     return false;
   }
@@ -361,8 +362,8 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
       MOZ_ASSERT(fun->isAsmJSNative());
     } else {
       MOZ_ASSERT(fun->isIncomplete());
-      if (!CreateLazyScript(cx, input, stencil, gcOutput, scriptStencil, index,
-                            fun)) {
+      if (!CreateLazyScript(cx, input, stencil, gcOutput, scriptStencil,
+                            item.extent, index, fun)) {
         return false;
       }
     }
@@ -524,21 +525,19 @@ static void AssertDelazificationFieldsMatch(CompilationStencil& stencil,
                                             CompilationGCOutput& gcOutput) {
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
+    auto& scriptExtent = item.extent;
     auto& fun = item.function;
 
     BaseScript* script = fun->baseScript();
 
     MOZ_ASSERT(script->immutableFlags() == scriptStencil.immutableFlags);
 
-    MOZ_ASSERT(script->extent().sourceStart ==
-               scriptStencil.extent.sourceStart);
-    MOZ_ASSERT(script->extent().sourceEnd == scriptStencil.extent.sourceEnd);
-    MOZ_ASSERT(script->extent().toStringStart ==
-               scriptStencil.extent.toStringStart);
-    MOZ_ASSERT(script->extent().toStringEnd ==
-               scriptStencil.extent.toStringEnd);
-    MOZ_ASSERT(script->extent().lineno == scriptStencil.extent.lineno);
-    MOZ_ASSERT(script->extent().column == scriptStencil.extent.column);
+    MOZ_ASSERT(script->extent().sourceStart == scriptExtent.sourceStart);
+    MOZ_ASSERT(script->extent().sourceEnd == scriptExtent.sourceEnd);
+    MOZ_ASSERT(script->extent().toStringStart == scriptExtent.toStringStart);
+    MOZ_ASSERT(script->extent().toStringEnd == scriptExtent.toStringEnd);
+    MOZ_ASSERT(script->extent().lineno == scriptExtent.lineno);
+    MOZ_ASSERT(script->extent().column == scriptExtent.column);
 
     // Names are updated by UpdateInnerFunctions.
     constexpr uint16_t HAS_INFERRED_NAME =
@@ -690,14 +689,14 @@ bool CompilationInfoVector::buildDelazificationIndices(JSContext* cx) {
 
   for (size_t i = 0; i < delazifications.length(); i++) {
     const auto& delazification = delazifications[i];
-    auto key = toFunctionKey(delazification.scriptData[0].extent);
+    auto key = toFunctionKey(delazification.scriptExtent[0]);
     keyToIndex.putNewInfallible(key, i);
   }
 
   MOZ_ASSERT(keyToIndex.count() == delazifications.length());
 
   for (size_t i = 1; i < initial.stencil.scriptData.size(); i++) {
-    auto key = toFunctionKey(initial.stencil.scriptData[i].extent);
+    auto key = toFunctionKey(initial.stencil.scriptExtent[i]);
     auto ptr = keyToIndex.lookup(key);
     if (!ptr) {
       continue;
@@ -1038,6 +1037,11 @@ bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
 
   if (!CopyVectorToSpan(cx, compilationInfo.alloc,
                         compilationInfo.stencil.scriptData, scriptData)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
+                        compilationInfo.stencil.scriptExtent, scriptExtent)) {
     return false;
   }
 
@@ -1705,15 +1709,6 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
     json.endList();
   }
 
-  json.beginObjectProperty("extent");
-  json.property("sourceStart", extent.sourceStart);
-  json.property("sourceEnd", extent.sourceEnd);
-  json.property("toStringStart", extent.toStringStart);
-  json.property("toStringEnd", extent.toStringEnd);
-  json.property("lineno", extent.lineno);
-  json.property("column", extent.column);
-  json.endObject();
-
   json.beginListProperty("flags_");
   if (flags_ & WasFunctionEmittedFlag) {
     json.value("WasFunctionEmittedFlag");
@@ -1803,6 +1798,18 @@ void CompilationStencil::dump() {
   out.put("\n");
 }
 
+static void DumpSourceExtent(js::JSONPrinter& json,
+                             const SourceExtent& extent) {
+  json.beginObject();
+  json.property("sourceStart", extent.sourceStart);
+  json.property("sourceEnd", extent.sourceEnd);
+  json.property("toStringStart", extent.toStringStart);
+  json.property("toStringEnd", extent.toStringEnd);
+  json.property("lineno", extent.lineno);
+  json.property("column", extent.column);
+  json.endObject();
+}
+
 void CompilationStencil::dump(js::JSONPrinter& json) {
   json.beginObject();
 
@@ -1811,6 +1818,12 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
   json.beginListProperty("scriptData");
   for (auto& data : scriptData) {
     data.dump(json, this);
+  }
+  json.endList();
+
+  json.beginListProperty("scriptExtent");
+  for (auto& data : scriptExtent) {
+    DumpSourceExtent(json, data);
   }
   json.endList();
 

@@ -441,6 +441,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
 
   ScriptStencil& script = compilationInfo.stencil.scriptData[scriptIndex];
+  SourceExtent& extent = compilationInfo.stencil.scriptExtent[scriptIndex];
 
   script.immutableFlags = smooshScript.immutable_flags;
 
@@ -483,12 +484,12 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     script.setHasSharedData();
   }
 
-  script.extent.sourceStart = smooshScript.extent.source_start;
-  script.extent.sourceEnd = smooshScript.extent.source_end;
-  script.extent.toStringStart = smooshScript.extent.to_string_start;
-  script.extent.toStringEnd = smooshScript.extent.to_string_end;
-  script.extent.lineno = smooshScript.extent.lineno;
-  script.extent.column = smooshScript.extent.column;
+  extent.sourceStart = smooshScript.extent.source_start;
+  extent.sourceEnd = smooshScript.extent.source_end;
+  extent.toStringStart = smooshScript.extent.to_string_start;
+  extent.toStringEnd = smooshScript.extent.to_string_end;
+  extent.lineno = smooshScript.extent.lineno;
+  extent.column = smooshScript.extent.column;
 
   if (isFunction) {
     if (smooshScript.fun_name.IsSome()) {
@@ -621,12 +622,21 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     return false;
   }
 
-  auto* p = compilationInfo.alloc.newArrayUninitialized<ScriptStencil>(len);
-  if (!p) {
+  auto* pscript =
+      compilationInfo.alloc.newArrayUninitialized<ScriptStencil>(len);
+  if (!pscript) {
     js::ReportOutOfMemory(cx);
     return false;
   }
-  compilationInfo.stencil.scriptData = mozilla::Span(p, len);
+  compilationInfo.stencil.scriptData = mozilla::Span(pscript, len);
+
+  auto* pextent =
+      compilationInfo.alloc.newArrayUninitialized<SourceExtent>(len);
+  if (!pextent) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  compilationInfo.stencil.scriptExtent = mozilla::Span(pextent, len);
 
   // NOTE: Currently we don't support delazification or standalone function.
   //       Once we support, fix the following loop to include 0-th item
