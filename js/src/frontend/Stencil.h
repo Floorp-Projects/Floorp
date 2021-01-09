@@ -648,9 +648,6 @@ class ScriptStencil {
   CompilationGCThingIndex gcThingsOffset;
   uint32_t gcThingsLength = 0;
 
-  // The location of this script in the source.
-  SourceExtent extent = {};
-
   // Fields for JSFunction.
   // Used by:
   //   * non-lazy Function

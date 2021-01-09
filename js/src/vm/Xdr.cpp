@@ -791,7 +791,7 @@ XDRIncrementalStencilEncoder::toFunctionKey(const SourceExtent& extent) {
 XDRResultT<bool> XDRIncrementalStencilEncoder::checkAlreadyCoded(
     const frontend::CompilationStencil& stencil) {
   auto key = toFunctionKey(
-      stencil.scriptData[frontend::CompilationInfo::TopLevelIndex].extent);
+      stencil.scriptExtent[frontend::CompilationInfo::TopLevelIndex]);
 
   auto p = encodedFunctions_.lookupForAdd(key);
   if (p) {
