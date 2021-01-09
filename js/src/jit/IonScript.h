@@ -140,6 +140,11 @@ class alignas(8) IonScript final : public TrailingArray {
   // TraceLogger events that are baked into the IonScript.
   TraceLoggerEventVector traceLoggerEvents_;
 
+#ifdef DEBUG
+  // A hash of the ICScripts used in this compilation.
+  mozilla::HashNumber icHash_ = 0;
+#endif
+
   // End of fields.
 
  private:
@@ -450,6 +455,11 @@ class alignas(8) IonScript final : public TrailingArray {
   size_t allocBytes() const { return allocBytes_; }
 
   static void preWriteBarrier(Zone* zone, IonScript* ionScript);
+
+#ifdef DEBUG
+  mozilla::HashNumber icHash() const { return icHash_; }
+  void setICHash(mozilla::HashNumber hash) { icHash_ = hash; }
+#endif
 };
 
 // Execution information for a basic block which may persist after the
