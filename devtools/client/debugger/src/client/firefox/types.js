@@ -208,7 +208,7 @@ export type Target = {
   chrome: boolean,
   url: URL,
   isParentProcess: boolean,
-  isWorkerTarget: boolean,
+  isServiceWorker: boolean,
   targetForm: Object,
   reconfigure: Object,
 

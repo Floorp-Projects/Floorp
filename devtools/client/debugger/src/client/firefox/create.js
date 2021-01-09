@@ -20,7 +20,7 @@ export function prepareSourcePayload(
   threadFront: ThreadFront,
   source: SourcePayload
 ): GeneratedSourceData {
-  const { isWorkerTarget } = threadFront.parentFront;
+  const { isServiceWorker } = threadFront.parentFront;
 
   // We populate the set of sources as soon as we hear about them. Note that
   // this means that we have seen an actor, but it might still be in the
@@ -28,7 +28,7 @@ export function prepareSourcePayload(
   // a source actor with this ID yet.
   clientCommands.registerSourceActor(
     source.actor,
-    makeSourceId(source, isWorkerTarget)
+    makeSourceId(source, isServiceWorker)
   );
 
   source = { ...source };
@@ -44,11 +44,7 @@ export function prepareSourcePayload(
     delete (source: any).introductionUrl;
   }
 
-  return {
-    thread: threadFront.actor,
-    isWorkerTarget,
-    source,
-  };
+  return { thread: threadFront.actor, isServiceWorker, source };
 }
 
 export function createFrame(
@@ -81,12 +77,13 @@ export function createFrame(
   };
 }
 
-export function makeSourceId(source: SourcePayload, isWorkerTarget: boolean) {
+export function makeSourceId(source: SourcePayload, isServiceWorker: boolean) {
   // Source actors with the same URL will be given the same source ID and
   // grouped together under the same source in the client. There is an exception
-  // for sources from workers, where there may be multiple worker threads running
-  // at the same time which use different versions of the same URL.
-  return source.url && !isWorkerTarget
+  // for sources from service workers, where there may be multiple service
+  // worker threads running at the same time which use different versions of the
+  // same URL.
+  return source.url && !isServiceWorker
     ? `sourceURL-${source.url}`
     : `source-${source.actor}`;
 }

@@ -306,8 +306,8 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
     const newSourcesObj = {};
     const newSourceActors: Array<SourceActor> = [];
 
-    for (const { thread, isWorkerTarget, source, id } of sourceInfo) {
-      const newId = id || makeSourceId(source, isWorkerTarget);
+    for (const { thread, isServiceWorker, source, id } of sourceInfo) {
+      const newId = id || makeSourceId(source, isServiceWorker);
 
       if (!getSource(getState(), newId) && !newSourcesObj[newId]) {
         newSourcesObj[newId] = {
