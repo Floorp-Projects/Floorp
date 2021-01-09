@@ -411,12 +411,12 @@ class ScriptStencilIterable {
   class ScriptAndFunction {
    public:
     const ScriptStencil& script;
-    const SourceExtent& extent;
+    const SourceExtent* extent;
     JSFunction* function;
     ScriptIndex index;
 
     ScriptAndFunction() = delete;
-    ScriptAndFunction(const ScriptStencil& script, const SourceExtent& extent,
+    ScriptAndFunction(const ScriptStencil& script, const SourceExtent* extent,
                       JSFunction* function, ScriptIndex index)
         : script(script), extent(extent), function(function), index(index) {}
   };
@@ -471,10 +471,12 @@ class ScriptStencilIterable {
     }
 
     ScriptAndFunction operator*() {
-      const ScriptStencil& script = stencil_.scriptData[index_];
-      const SourceExtent& extent = stencil_.scriptExtent[index_];
-
       ScriptIndex index = ScriptIndex(index_);
+      const ScriptStencil& script = stencil_.scriptData[index];
+      const SourceExtent* extent = nullptr;
+      if (index < stencil_.scriptExtent.size()) {
+        extent = &stencil_.scriptExtent[index];
+      }
       return ScriptAndFunction(script, extent, gcOutput_.functions[index],
                                index);
     }
