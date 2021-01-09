@@ -16,7 +16,7 @@ using namespace js;
 using namespace js::frontend;
 
 OptionalEmitter::OptionalEmitter(BytecodeEmitter* bce, int32_t initialDepth)
-    : bce_(bce), initialDepth_(initialDepth) {}
+    : bce_(bce), tdzCache_(bce), initialDepth_(initialDepth) {}
 
 bool OptionalEmitter::emitJumpShortCircuit() {
   MOZ_ASSERT(state_ == State::Start || state_ == State::ShortCircuit ||
