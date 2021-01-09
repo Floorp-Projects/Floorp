@@ -99,7 +99,7 @@ bool TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
   ICFallbackStub* fallback = entry.fallbackStub();
   MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Candidate);
 
-  fallback->discardStubs(cx(), root_->owningScript());
+  fallback->discardStubs(cx());
 
   // Note: AttachBaselineCacheIRStub never throws an exception.
   bool attached = false;

@@ -419,11 +419,8 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
 
     while (stub != lastStub) {
       if (!stub->toCacheIRStub()->allocatedInFallbackSpace()) {
-        // Note: this is called when discarding JIT code, after invalidating
-        // all Warp code, so we don't need to check for that here.
-        lastStub->toFallbackStub()->clearUsedByTranspiler();
-        lastStub->toFallbackStub()->unlinkStubDontInvalidateWarp(
-            zone, prev, stub->toCacheIRStub());
+        lastStub->toFallbackStub()->unlinkStub(zone, prev,
+                                               stub->toCacheIRStub());
         stub = stub->toCacheIRStub()->next();
         continue;
       }

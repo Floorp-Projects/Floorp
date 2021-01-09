@@ -1998,18 +1998,26 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::LICM:
       // LICM may cause spurious bailouts by hoisting unreachable
       // guards past branches.  To prevent bailout loops, when an
-      // instruction hoisted by LICM bails out, we set a flag on the
+      // instruction hoisted by LICM bails out, we update the
       // IonScript and resume in baseline. If the guard would have
-      // been executed anyway, then the baseline fallback code will
-      // invalidate the script. Otherwise, the next time we reach this
-      // point, we will invalidate the script and disable LICM.
+      // been executed anyway, then we will hit the baseline fallback,
+      // and call noteBaselineFallback. If that does not happen,
+      // then the next time we reach this point, we will disable LICM
+      // for this script.
       MOZ_ASSERT(!outerScript->hadLICMInvalidation());
       if (outerScript->hasIonScript()) {
-        if (outerScript->ionScript()->hadLICMBailout()) {
-          outerScript->setHadLICMInvalidation();
-          InvalidateAfterBailout(cx, outerScript, "LICM failure");
-        } else {
-          outerScript->ionScript()->setHadLICMBailout();
+        switch (outerScript->ionScript()->licmState()) {
+          case IonScript::LICMState::NeverBailed:
+            outerScript->ionScript()->setHadLICMBailout();
+            break;
+          case IonScript::LICMState::Bailed:
+            outerScript->setHadLICMInvalidation();
+            InvalidateAfterBailout(cx, outerScript, "LICM failure");
+            break;
+          case IonScript::LICMState::BailedAndHitFallback:
+            // This bailout is not due to LICM. Treat it like a
+            // regular TranspiledCacheIR bailout.
+            break;
         }
       }
       break;

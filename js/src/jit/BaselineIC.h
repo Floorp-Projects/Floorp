@@ -269,7 +269,7 @@ class ICStubIterator {
 
   bool atEnd() const { return currentStub_ == (ICStub*)fallbackStub_; }
 
-  void unlink(JSContext* cx, JSScript* script);
+  void unlink(JSContext* cx);
 };
 
 //
@@ -449,7 +449,7 @@ class ICFallbackStub : public ICStub {
 
   ICStubIterator beginChain() { return ICStubIterator(this); }
 
-  void discardStubs(JSContext* cx, JSScript* script);
+  void discardStubs(JSContext* cx);
 
   void clearUsedByTranspiler() { state_.clearUsedByTranspiler(); }
   void setUsedByTranspiler() { state_.setUsedByTranspiler(); }
@@ -461,14 +461,9 @@ class ICFallbackStub : public ICStub {
     state_.setTrialInliningState(state);
   }
 
-  void trackNotAttached(JSContext* cx, JSScript* script);
+  void trackNotAttached();
 
-  // If the transpiler optimized based on this IC, invalidate the script's Warp
-  // code.
-  void maybeInvalidateWarp(JSContext* cx, JSScript* script);
-
-  void unlinkStubDontInvalidateWarp(Zone* zone, ICCacheIRStub* prev,
-                                    ICCacheIRStub* stub);
+  void unlinkStub(Zone* zone, ICCacheIRStub* prev, ICCacheIRStub* stub);
 };
 
 class ICCacheIRStub : public ICStub {
