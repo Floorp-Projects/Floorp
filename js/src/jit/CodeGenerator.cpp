@@ -12087,6 +12087,10 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   if (!ionScript) {
     return false;
   }
+#ifdef DEBUG
+  ionScript->setICHash(snapshot->icHash());
+#endif
+
   auto freeIonScript = mozilla::MakeScopeExit([&ionScript] {
     // Use js_free instead of IonScript::Destroy: the cache list is still
     // uninitialized.
