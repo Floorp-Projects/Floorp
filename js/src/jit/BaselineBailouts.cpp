@@ -1624,9 +1624,6 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
           "  Reading from snapshot offset %u size %zu", iter.snapshotOffset(),
           iter.ionScript()->snapshotsListSize());
 
-  if (!excInfo) {
-    iter.ionScript()->incNumBailouts();
-  }
   iter.script()->updateJitCodeRaw(cx->runtime());
 
   // Under a bailout, there is no need to invalidate the frame after
@@ -2078,6 +2075,5 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       MOZ_CRASH("Unknown bailout kind!");
   }
 
-  CheckFrequentBailouts(cx, outerScript, bailoutKind);
   return true;
 }

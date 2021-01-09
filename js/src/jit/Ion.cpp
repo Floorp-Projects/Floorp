@@ -2010,11 +2010,6 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
     return Method_Skipped;
   }
 
-  // Skip if the code is expected to result in a bailout.
-  if (script->hasIonScript() && script->ionScript()->bailoutExpected()) {
-    return Method_Skipped;
-  }
-
   if (state.isInvoke()) {
     InvokeState& invoke = *state.asInvoke();
 
@@ -2113,11 +2108,6 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
 
   // Skip if the script is being compiled off thread.
   if (script->isIonCompilingOffThread()) {
-    return Method_Skipped;
-  }
-
-  // Skip if the code is expected to result in a bailout.
-  if (script->hasIonScript() && script->ionScript()->bailoutExpected()) {
     return Method_Skipped;
   }
 
@@ -2224,6 +2214,7 @@ static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
   }
 
   if (stat == Method_CantCompile) {
+    MOZ_ASSERT(!script->canIonCompile());
     JitSpew(JitSpew_BaselineOSR, "  Can't compile with Ion!");
   } else if (stat == Method_Skipped) {
     JitSpew(JitSpew_BaselineOSR, "  Skipped compile with Ion!");
@@ -2231,22 +2222,6 @@ static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
     JitSpew(JitSpew_BaselineOSR, "  Compiled with Ion!");
   } else {
     MOZ_CRASH("Invalid MethodStatus!");
-  }
-
-  // Failed to compile.  Reset warm-up counter and return.
-  if (stat != Method_Compiled) {
-    // TODO: If stat == Method_CantCompile, insert stub that just skips the
-    // warm-up counter entirely, instead of resetting it.
-    bool bailoutExpected =
-        script->hasIonScript() && script->ionScript()->bailoutExpected();
-    if (stat == Method_CantCompile || bailoutExpected) {
-      JitSpew(JitSpew_BaselineOSR,
-              "  Reset WarmUpCounter cantCompile=%s bailoutExpected=%s!",
-              stat == Method_CantCompile ? "yes" : "no",
-              bailoutExpected ? "yes" : "no");
-      script->resetWarmUpCounterToDelayIonCompilation();
-    }
-    return true;
   }
 
   return true;
@@ -2344,7 +2319,7 @@ bool jit::IonCompileScriptForBaselineOSR(JSContext* cx, BaselineFrame* frame,
 
   RootedScript script(cx, frame->script());
   if (!script->hasIonScript() || script->ionScript()->osrPc() != pc ||
-      script->ionScript()->bailoutExpected() || frame->isDebuggee()) {
+      frame->isDebuggee()) {
     return true;
   }
 
