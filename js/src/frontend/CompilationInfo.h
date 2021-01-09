@@ -340,6 +340,13 @@ struct CompilationStencil {
   // was generated in original parse but not used by stencil.
   ParserAtomSpan parserAtomData;
 
+  // FunctionKey is an identifier that identifies a function within the source
+  // next in a reproducible way. It allows us to match delazification data with
+  // initial parse data, even across different runs. This is only used for
+  // delazification stencils.
+  using FunctionKey = uint64_t;
+  FunctionKey functionKey = {};
+
   CompilationStencil() = default;
 
   // We need a move-constructor to work with Rooted.
@@ -359,6 +366,11 @@ struct CompilationStencil {
       nonLazyScriptCount++;
     }
     return sharedData.prepareStorageFor(cx, nonLazyScriptCount, allScriptCount);
+  }
+
+  static FunctionKey toFunctionKey(const SourceExtent& extent) {
+    return static_cast<FunctionKey>(extent.sourceStart) << 32 |
+           static_cast<FunctionKey>(extent.sourceEnd);
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -566,12 +578,7 @@ struct CompilationInfo {
 // This contains the initial compilation, and a vector of delazification.
 struct CompilationInfoVector {
  private:
-  using FunctionKey = uint64_t;
   using ScriptIndexVector = Vector<ScriptIndex, 0, js::SystemAllocPolicy>;
-
-  static FunctionKey toFunctionKey(const SourceExtent& extent) {
-    return (FunctionKey)extent.sourceStart << 32 | extent.sourceEnd;
-  }
 
   MOZ_MUST_USE bool buildDelazificationIndices(JSContext* cx);
 

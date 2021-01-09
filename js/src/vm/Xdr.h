@@ -753,12 +753,10 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   //   b. atoms
   //   c. CompilationStencil
 
-  using FunctionKey = uint64_t;
-  static FunctionKey toFunctionKey(const SourceExtent& extent);
-
   // A set of functions that is passed to codeFunctionStencil.
   // Used to avoid encoding delazification for same function twice.
   // NOTE: This is not a set of all encoded functions.
+  using FunctionKey = uint64_t;
   HashSet<FunctionKey> encodedFunctions_;
 
  public:

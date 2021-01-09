@@ -782,17 +782,12 @@ XDRResult XDRIncrementalStencilEncoder::codeStencils(
   return Ok();
 }
 
-/* static */
-XDRIncrementalStencilEncoder::FunctionKey
-XDRIncrementalStencilEncoder::toFunctionKey(const SourceExtent& extent) {
-  return (FunctionKey)extent.sourceStart << 32 | extent.sourceEnd;
-}
-
 XDRResultT<bool> XDRIncrementalStencilEncoder::checkAlreadyCoded(
     const frontend::CompilationStencil& stencil) {
-  auto key = toFunctionKey(
-      stencil.scriptExtent[frontend::CompilationInfo::TopLevelIndex]);
+  static_assert(std::is_same_v<frontend::CompilationStencil::FunctionKey,
+                               XDRIncrementalStencilEncoder::FunctionKey>);
 
+  auto key = stencil.functionKey;
   auto p = encodedFunctions_.lookupForAdd(key);
   if (p) {
     return true;
