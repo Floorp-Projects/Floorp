@@ -615,7 +615,13 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
   }
 
   if (input.lazy) {
-    MOZ_ASSERT(!stencil.scriptData[CompilationInfo::TopLevelIndex].isModule());
+    MOZ_ASSERT(stencil.scriptData[CompilationInfo::TopLevelIndex].isFunction());
+
+    // FunctionKey is used when caching to map a delazification stencil to a
+    // specific lazy script. It is not used by instantiation, but we should
+    // ensure it is correctly defined.
+    MOZ_ASSERT(stencil.functionKey ==
+               CompilationStencil::toFunctionKey(input.lazy->extent()));
 
     FunctionsFromExistingLazy(input, gcOutput);
 
@@ -682,21 +688,22 @@ bool CompilationInfoVector::buildDelazificationIndices(JSContext* cx) {
     return false;
   }
 
-  HashMap<FunctionKey, size_t> keyToIndex(cx);
+  HashMap<CompilationStencil::FunctionKey, size_t> keyToIndex(cx);
   if (!keyToIndex.reserve(delazifications.length())) {
     return false;
   }
 
   for (size_t i = 0; i < delazifications.length(); i++) {
     const auto& delazification = delazifications[i];
-    auto key = toFunctionKey(delazification.scriptExtent[0]);
+    auto key = delazification.functionKey;
     keyToIndex.putNewInfallible(key, i);
   }
 
   MOZ_ASSERT(keyToIndex.count() == delazifications.length());
 
   for (size_t i = 1; i < initial.stencil.scriptData.size(); i++) {
-    auto key = toFunctionKey(initial.stencil.scriptExtent[i]);
+    auto key =
+        CompilationStencil::toFunctionKey(initial.stencil.scriptExtent[i]);
     auto ptr = keyToIndex.lookup(key);
     if (!ptr) {
       continue;

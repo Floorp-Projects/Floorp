@@ -523,6 +523,8 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
     return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
   }
 
+  MOZ_TRY(xdr->codeUint64(&stencil.functionKey));
+
   // All of the vector-indexed data elements referenced by the
   // main script tree must be materialized first.
 
