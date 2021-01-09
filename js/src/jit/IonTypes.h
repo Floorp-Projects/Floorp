@@ -56,7 +56,48 @@ static const uint32_t SNAPSHOT_MAX_NARGS = 127;
 static const SnapshotOffset INVALID_RECOVER_OFFSET = uint32_t(-1);
 static const SnapshotOffset INVALID_SNAPSHOT_OFFSET = uint32_t(-1);
 
-// Different kinds of bailouts.
+/*
+ * [SMDOC] Avoiding repeated bailouts / invalidations
+ *
+ * To avoid getting trapped in a "compilation -> bailout -> invalidation ->
+ * recompilation -> bailout -> invalidation -> ..." loop, every snapshot in
+ * Warp code is assigned a BailoutKind. If we bail out at that snapshot,
+ * FinishBailoutToBaseline will examine the BailoutKind and take appropriate
+ * action. In general:
+ *
+ * 1. If the bailing instruction comes from transpiled CacheIR, then when we
+ *    bail out and continue execution in the baseline interpreter, the
+ *    corresponding stub should fail a guard. As a result, we will either
+ *    increment the enteredCount for a subsequent stub or attach a new stub,
+ *    either of which will prevent WarpOracle from transpiling the failing stub
+ *    when we recompile.
+ *
+ *    Note: this means that every CacheIR op that can bail out in Warp must
+ *    have an equivalent guard in the baseline CacheIR implementation.
+ *
+ *    FirstExecution works according to the same principles: we have never hit
+ *    this IC before, but after we bail to baseline we will attach a stub and
+ *    recompile with better CacheIR information.
+ *
+ * 2. If the bailout occurs because an assumption we made in WarpBuilder was
+ *    invalidated, then FinishBailoutToBaseline will set a flag on the script
+ *    to avoid that assumption in the future. Examples include
+ *    NotOptimizedArgumentsGuard and UninitializedLexical.
+ *
+ * 3. Similarly, if the bailing instruction is generated or modified by a MIR
+ *    optimization, then FinishBailoutToBaseline will set a flag on the script
+ *    to make that optimization more conservative in the future.  Examples
+ *    include LICM, EagerTruncation, and HoistBoundsCheck.
+ *
+ * 4. Some bailouts can't be handled in Warp, even after a recompile. For
+ *    example, Warp does not support catching exceptions. If this happens
+ *    too often, then the cost of bailing out repeatedly outweighs the
+ *    benefit of Warp compilation, so we invalidate the script and disable
+ *    Warp compilation.
+ *
+ * 5. Some bailouts don't happen in performance-sensitive code: for example,
+ *    the |debugger| statement. We just ignore those.
+ */
 enum class BailoutKind : uint8_t {
   Unknown,
 
