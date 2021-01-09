@@ -100,7 +100,7 @@ inline CallObject& BaselineFrame::callObj() const {
   return obj->as<CallObject>();
 }
 
-inline JSScript* BaselineFrame::outerScript() const {
+inline JSScript* BaselineFrame::invalidationScript() const {
   if (!icScript()->isInlined()) {
     return script();
   }
