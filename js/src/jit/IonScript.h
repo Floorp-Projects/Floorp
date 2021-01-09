@@ -93,9 +93,6 @@ class alignas(8) IonScript final : public TrailingArray {
   // per-platform if we want.
   uint32_t invalidateEpilogueDataOffset_ = 0;
 
-  // Number of times this script bailed out without invalidation.
-  uint32_t numBailouts_ = 0;
-
  public:
   enum class LICMState : uint8_t { NeverBailed, Bailed, BailedAndHitFallback };
 
@@ -339,10 +336,6 @@ class alignas(8) IonScript final : public TrailingArray {
   uint32_t invalidateEpilogueDataOffset() const {
     MOZ_ASSERT(invalidateEpilogueDataOffset_);
     return invalidateEpilogueDataOffset_;
-  }
-  void incNumBailouts() { numBailouts_++; }
-  bool bailoutExpected() const {
-    return numBailouts_ >= JitOptions.frequentBailoutThreshold;
   }
 
   LICMState licmState() const { return licmState_; }

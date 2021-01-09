@@ -225,9 +225,6 @@ class ExceptionBailoutInfo {
 
 [[nodiscard]] bool FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg);
 
-void CheckFrequentBailouts(JSContext* cx, JSScript* script,
-                           BailoutKind bailoutKind);
-
 }  // namespace jit
 }  // namespace js
 
