@@ -752,6 +752,12 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
   if (!docSel->IsCollapsed()) {
     docSel->RemoveAllRanges(IgnoreErrors());
   }
+
+  // If the focus moved to a text control during text selection by pointer
+  // device, stop extending the selection.
+  if (RefPtr<nsFrameSelection> frameSelection = presShell->FrameSelection()) {
+    frameSelection->SetDragState(false);
+  }
 }
 
 nsresult nsTextControlFrame::SetFormProperty(nsAtom* aName,
