@@ -302,8 +302,7 @@ class BaselineFrame {
   ICScript* icScript() const { return icScript_; }
   void setICScript(ICScript* icScript) { icScript_ = icScript; }
 
-  // The script that owns the current ICScript.
-  JSScript* outerScript() const;
+  JSScript* invalidationScript() const;
 
   bool hasReturnValue() const { return flags_ & HAS_RVAL; }
   MutableHandleValue returnValue() {

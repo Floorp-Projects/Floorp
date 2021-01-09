@@ -1207,9 +1207,6 @@ bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
   MDefinition* input = getOperand(inputId);
   auto* ins =
       MToNumberInt32::New(alloc(), input, IntConversionInputKind::NumbersOnly);
-
-  // ToPropertyKey(-0) is "0", so we can silently convert -0 to 0 here.
-  ins->setNeedsNegativeZeroCheck(false);
   add(ins);
 
   return defineOperand(resultId, ins);
