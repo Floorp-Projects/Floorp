@@ -1164,9 +1164,12 @@ void DisplayListBuilder::PushRoundedRect(const wr::LayoutRect& aBounds,
   // - clips are not cached; borders are
   // - a simple border like this will be drawn as an image
   // - Processing lots of clips is not WebRender's strong point.
+  //
+  // Made the borders thicker than one half the width/height, to avoid
+  // little white dots at the center at some magnifications.
   wr::BorderSide side = {aColor, wr::BorderStyle::Solid};
-  float h = aBounds.size.width / 2;
-  float v = aBounds.size.height / 2;
+  float h = aBounds.size.width * 0.6f;
+  float v = aBounds.size.height * 0.6f;
   wr::LayoutSideOffsets widths = {v, h, v, h};
   wr::BorderRadius radii = {{h, v}, {h, v}, {h, v}, {h, v}};
 
