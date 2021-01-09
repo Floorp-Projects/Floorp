@@ -69,7 +69,7 @@ export type OriginalSourceData = {|
 export type GeneratedSourceData = {
   thread: ThreadId,
   source: SourcePayload,
-  isWorkerTarget: boolean,
+  isServiceWorker: boolean,
 
   // Many of our tests rely on being able to set a specific ID for the Source
   // object. We may want to consider avoiding that eventually.
