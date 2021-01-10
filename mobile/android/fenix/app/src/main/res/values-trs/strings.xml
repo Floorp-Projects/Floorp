@@ -21,10 +21,23 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Hiūj nan nāruguì\’ nej rakïj ñanj huì nīkājt.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 nā\'nïn rakïj ñanj. Gūru\'man ra\'a da\' nādūnāt rakïj ñanj.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s nā\'nïn nej rakïj ñanj. Gūru\'man ra\'a da\' nādūnāt nej rakïj ñanj.</string>
+
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d sa naguij</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Nūtà\' \'ngō yi\'nïn\' nākàa</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Si yugui</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Nāguī sa màn yì\'nïn\'ïn</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s huin \’ngō sa giri Mozilla.</string>
@@ -47,14 +60,6 @@
     <string name="cfr_pos_button_text">Nūtà\' \'ngō aksêso dirêckto</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Guruhuât nānj ân</string>
-
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Gūchì\' hìo doj riña Firefox. Nūtà\' \'ngō widget riña pantayâ ayi\'ìt.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Nūtà\' widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Sī ga\'ue akuan\' nïn</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -107,8 +112,6 @@
     <string name="browser_menu_find_in_page">Nānà\'uì\' riña ñanj</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Rakïj ñanj huìi</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Rakïj ñanj nakàa</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Na\'nïnj sà\' riña màn si yi\'nïnj</string>
 
@@ -167,7 +170,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Gāhuin chrūn doj</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Nānà\'uì\'</string>
     <!-- Text preview for larger sized widgets -->
@@ -516,7 +518,7 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
     <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Nādure\'</string>
+	<string name="remove_top_site">Nādure\'</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Riña Huìi)</string>
 
@@ -559,6 +561,7 @@
     <string name="history_older">Sa nâ doj</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nitāj à\'ngō sa gini\'iājt</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -715,10 +718,6 @@
     <string name="collections_header">Koleksiôn</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Si menû koleksiûn</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Nāran\' daran\' sa ni\'ñānj ruhuât</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Nāgi\'iaj chrē\' sa nana\'uî\'t, sitio nī nej rakïj ñanj guñā hua da\' ga\'ue gātū hìot ne\' rūkù.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Nāguī nej rakïj ñanj</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -973,13 +972,6 @@
     <string name="onboarding_whats_new_description">Huā sa gāchìnj na\'ānjt rayi\'î nùhuin saj nadunâ hua %s aj. Gīni\'înt sa nadunâ ruhuâ raj.</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Hiūj nan \'na\' nuguan\' ruhuât gīni\'înt</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Nārì\' daran\' sa nīkāj %s.</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Ngà gayì\'ìt sēsiûn ngà %s riña a\'ngô sa nana\'ui\' Firefox riña aga\' nab. Ruhuât gāyi\'ìt sēsiûn ngà kuendâ nan anj.</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Gā\'ue, gāyì\'ìj sēsiûn</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1232,9 +1224,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Si yūgui aksêso dīrêkto</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Gā\'ue nāchrūnt sitiô nan riña pajinâ ayi\'ìt riña aga\' a\'min nīkājt da\' ga\'ue hìo gātūt riñanj dàj rû\' \'iaj \'ngō aplikāsiûn</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Nej riña gayi\'ìt sēsiûn nī nej da\'nga\' huìi</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1468,8 +1457,6 @@
     <string name="saved_login_duplicate">Ngà huā \'ngō riña gayì\'ìt sēsiûn gù\'nàj dàdanj</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Gātū ngà a\'ngô kuendâ Firefox</string>
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Gātū ngà a\'ngô aga\'a.</string>
     <!-- Text displayed asking user to re-authenticate -->
@@ -1486,20 +1473,20 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Ngà guchî\'t riña da\'uît gūchì\'t guendâ nej sitiô ña’ān doj</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Guendâ gānatà\' \'ngō sitiô arâj sun nīchrà\'t doj, nādure\' \'ngòj. Gūru\'man ra\'a riña sitio nī gūru\'man ra\'a nādurê\'.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ga\'ue, ngà garâj da\'nga\' ruhuâj</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Nānà\'uì\' a\'ngô hiūj u</string>
+    <!-- Deprecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Nārì\' daran\' sa nīkāj %s.</string>
 
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Nānà\'uì\' ngà</string>
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Nāran\' daran\' sa ni\'ñānj ruhuât</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Nāgi\'iaj chrē\' sa nana\'uî\'t, sitio nī nej rakïj ñanj guñā hua da\' ga\'ue gātū hìot ne\' rūkù.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Ngà gayì\'ìt sēsiûn ngà %s riña a\'ngô sa nana\'ui\' Firefox riña aga\' nab. Ruhuât gāyi\'ìt sēsiûn ngà kuendâ nan anj.</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Gā\'ue nāchrūnt sitiô nan riña pajinâ ayi\'ìt riña aga\' a\'min nīkājt da\' ga\'ue hìo gātūt riñanj dàj rû\' \'iaj \'ngō aplikāsiûn</string>
 
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Hìaj nī, nānà\'uì\' ngà:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Dīgân riña a\'ngô hiūj ga\'ue nānà\'uì\'</string>
     </resources>
