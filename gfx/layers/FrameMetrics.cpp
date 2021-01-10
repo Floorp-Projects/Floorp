@@ -152,6 +152,24 @@ CSSPoint FrameMetrics::ApplyPureRelativeScrollUpdateFrom(
   return GetVisualScrollOffset() - origin;
 }
 
+void FrameMetrics::UpdatePendingScrollInfo(const ScrollPositionUpdate& aInfo) {
+  // We only get this "pending scroll info" for paint-skip transactions,
+  // but PureRelative position updates always trigger a full paint, so
+  // we should never enter this code with a PureRelative update type. For
+  // the other types, the destination field on the ScrollPositionUpdate will
+  // tell us the final layout scroll position on the main thread.
+  MOZ_ASSERT(aInfo.GetType() != ScrollUpdateType::PureRelative);
+
+  // In applying a main-thread scroll update, try to preserve the relative
+  // offset between the visual and layout viewports.
+  CSSPoint relativeOffset = GetVisualScrollOffset() - GetLayoutScrollOffset();
+  MOZ_ASSERT(IsRootContent() || relativeOffset == CSSPoint());
+
+  SetLayoutScrollOffset(aInfo.GetDestination());
+  ClampAndSetVisualScrollOffset(aInfo.GetDestination() + relativeOffset);
+  mScrollGeneration = aInfo.GetGeneration();
+}
+
 ScrollSnapInfo::ScrollSnapInfo()
     : mScrollSnapStrictnessX(StyleScrollSnapStrictness::None),
       mScrollSnapStrictnessY(StyleScrollSnapStrictness::None) {}
