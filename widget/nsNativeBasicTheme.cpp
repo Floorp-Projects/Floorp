@@ -1291,8 +1291,11 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       PaintRoundedFocusRect(dt, devPxRect, dpiRatio, 0.0f, 0.0f);
       break;
     default:
-      MOZ_ASSERT_UNREACHABLE(
-          "Should not get here with a widget type we don't support.");
+      // Various appearance values are used for XUL elements.  Normally these
+      // will not be available in content documents (and thus in the content
+      // processes where the native basic theme can be used), but tests are run
+      // with the remote XUL pref enabled and so we can get in here.  So we
+      // just return an error rather than assert.
       return NS_ERROR_NOT_IMPLEMENTED;
   }
 
