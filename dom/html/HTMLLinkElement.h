@@ -188,6 +188,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
 
   static bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
                                 const nsAString& aMedia, Document* aDocument);
+  static void WarnIgnoredPreload(const Document&, nsIURI&);
 
  protected:
   virtual ~HTMLLinkElement();

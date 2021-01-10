@@ -746,29 +746,27 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
                                 const nsAString& aSrcset,
                                 const nsAString& aSizes, const nsAString& aCORS,
                                 const nsAString& aReferrerPolicy) {
-  nsAttrValue asAttr;
-  HTMLLinkElement::ParseAsValue(aAs, asAttr);
-  auto policyType = HTMLLinkElement::AsValueToContentPolicy(asAttr);
-
-  if (policyType == nsIContentPolicy::TYPE_INVALID) {
-    // Ignore preload with a wrong or empty as attribute.
+  auto encoding = mDocument->GetDocumentCharacterSet();
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), aHref, encoding, mDocument->GetDocBaseURI());
+  if (!uri) {
+    // URL parsing failed.
     return;
   }
+
+  nsAttrValue asAttr;
+  HTMLLinkElement::ParseAsValue(aAs, asAttr);
 
   nsAutoString mimeType;
   nsAutoString notUsed;
   nsContentUtils::SplitMimeType(aType, mimeType, notUsed);
-  if (!HTMLLinkElement::CheckPreloadAttrs(asAttr, mimeType, aMedia,
+
+  auto policyType = HTMLLinkElement::AsValueToContentPolicy(asAttr);
+  if (policyType == nsIContentPolicy::TYPE_INVALID ||
+      !HTMLLinkElement::CheckPreloadAttrs(asAttr, mimeType, aMedia,
                                           mDocument)) {
-    policyType = nsIContentPolicy::TYPE_INVALID;
-  }
-
-  auto encoding = mDocument->GetDocumentCharacterSet();
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), aHref, encoding, mDocument->GetDocBaseURI());
-
-  if (!uri) {
-    // URL parsing failed.
+    // Ignore preload wrong or empty attributes.
+    HTMLLinkElement::WarnIgnoredPreload(*mDocument, *uri);
     return;
   }
 
