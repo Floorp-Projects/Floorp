@@ -40,16 +40,25 @@ add_task(async function basic_install_test() {
   await Services.search.init();
   await promiseAfterSettings();
 
-  // On first boot, we get the list.json defaults
+  // On first boot, we get the configuration defaults
   Assert.deepEqual(await getEngineNames(), ["Plain", "Special"]);
 
   // User installs a new search engine
-  let extension = await SearchTestUtils.installSearchExtension();
+  let extension = await SearchTestUtils.installSearchExtension({
+    encoding: "windows-1252",
+  });
   Assert.deepEqual((await getEngineNames()).sort(), [
     "Example",
     "Plain",
     "Special",
   ]);
+
+  let engine = await Services.search.getEngineByName("Example");
+  Assert.equal(
+    engine.wrappedJSObject.queryCharset,
+    "windows-1252",
+    "Should have the correct charset"
+  );
 
   // User uninstalls their engine
   await extension.awaitStartup();

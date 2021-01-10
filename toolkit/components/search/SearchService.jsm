@@ -1501,7 +1501,7 @@ SearchService.prototype = {
       chrome_settings_overrides: {
         search_provider: {
           name,
-          encoding: `windows-1252`,
+          encoding: details.encoding || SearchUtils.DEFAULT_QUERY_CHARSET,
           search_url: encodeURI(details.template),
           keyword: details.alias,
           search_url_get_params: details.searchGetParams,

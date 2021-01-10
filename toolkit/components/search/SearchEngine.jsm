@@ -371,6 +371,7 @@ class EngineURL {
 
     this.type = type;
     this.method = method;
+    this._queryCharset = SearchUtils.DEFAULT_QUERY_CHARSET;
 
     var templateURI = SearchUtils.makeURI(template);
     if (!templateURI) {
@@ -1037,7 +1038,9 @@ class SearchEngine {
       this._urls.push(url);
     }
 
-    this._queryCharset = searchProvider.encoding || "UTF-8";
+    if (searchProvider.encoding) {
+      this._queryCharset = searchProvider.encoding;
+    }
     this.__searchForm = searchProvider.search_form;
   }
 
@@ -1400,10 +1403,7 @@ class SearchEngine {
   }
 
   get queryCharset() {
-    if (this._queryCharset) {
-      return this._queryCharset;
-    }
-    return (this._queryCharset = "windows-1252"); // the default
+    return this._queryCharset || SearchUtils.DEFAULT_QUERY_CHARSET;
   }
 
   get _defaultMobileResponseType() {

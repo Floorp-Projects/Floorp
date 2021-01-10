@@ -25,6 +25,7 @@ add_task(async function test_parseSubmissionURL() {
       name: "bacon_addParam",
       details: {
         alias: "bacon_addParam",
+        encoding: "windows-1252",
         description: "Search Bacon",
         method: "GET",
         template: "http://www.bacon.test/find",
@@ -81,8 +82,7 @@ add_task(async function test_parseSubmissionURL() {
   Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
   Assert.equal(result.termsLength, "caff%C3%A8".length);
 
-  // We support parsing URLs from a dynamically added engine.  Those engines use
-  // windows-1252 encoding by default.
+  // We support parsing URLs from a dynamically added engine.
   url = "http://www.bacon.test/find?q=caff%E8";
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine, engine3);

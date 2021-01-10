@@ -34,6 +34,7 @@ const tests = [
     file: "suggestion.xml",
     name: "suggestion",
     description: "A small engine with suggestions",
+    queryCharset: "windows-1252",
     searchForm: "http://engine-rel-searchform.xml/?search",
     searchUrl: "https://example.com/search?q=foo",
     suggestUrl: "https://example.com/suggest?suggestion=foo",
@@ -88,6 +89,12 @@ for (const test of tests) {
     Assert.equal(
       engine.wrappedJSObject._loadPath,
       `[http]localhost/${test.file}`
+    );
+
+    Assert.equal(
+      engine.queryCharset,
+      test.queryCharset ?? SearchUtils.DEFAULT_QUERY_CHARSET,
+      "Should have the expected query charset"
     );
 
     let submission = engine.getSubmission("foo");

@@ -155,10 +155,7 @@ var SearchUtils = {
   // cause big delays when loading them at startup.
   MAX_ICON_SIZE: 20000,
 
-  // Default charset to use for sending search parameters. ISO-8859-1 is used to
-  // match previous nsInternetSearchService behavior as a URL parameter. Label
-  // resolution causes windows-1252 to be actually used.
-  DEFAULT_QUERY_CHARSET: "ISO-8859-1",
+  DEFAULT_QUERY_CHARSET: "UTF-8",
 
   // A tag to denote when we are using the "default_locale" of an engine.
   DEFAULT_TAG: "default",
