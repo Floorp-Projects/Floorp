@@ -31,6 +31,9 @@ class RenderCompositorSWGL : public RenderCompositor {
   void CancelFrame() override;
   RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
 
+  void StartCompositing(const wr::DeviceIntRect* aDirtyRects,
+                        size_t aNumDirtyRects) override;
+
   bool UsePartialPresent() override { return true; }
 
   void Pause() override;
@@ -62,7 +65,9 @@ class RenderCompositorSWGL : public RenderCompositor {
 
   void ClearMappedBuffer();
 
-  void CommitMappedBuffer();
+  bool AllocateMappedBuffer();
+
+  void CommitMappedBuffer(bool aDirty = true);
 };
 
 }  // namespace wr

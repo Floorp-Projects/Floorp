@@ -747,6 +747,8 @@ struct ivec2_scalar {
     return ivec2_scalar{select(c1), select(c2)};
   }
 
+  ivec2_scalar operator-() const { return ivec2_scalar{-x, -y}; }
+
   ivec2_scalar& operator+=(ivec2_scalar a) {
     x += a.x;
     y += a.y;
@@ -770,6 +772,14 @@ struct ivec2_scalar {
 
   friend ivec2_scalar operator+(ivec2_scalar a, ivec2_scalar b) {
     return ivec2_scalar{a.x + b.x, a.y + b.y};
+  }
+
+  friend ivec2_scalar operator-(ivec2_scalar a, ivec2_scalar b) {
+    return ivec2_scalar{a.x - b.x, a.y - b.y};
+  }
+
+  friend bool operator==(const ivec2_scalar& l, const ivec2_scalar& r) {
+    return l.x == r.x && l.y == r.y;
   }
 };
 

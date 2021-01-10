@@ -80,6 +80,8 @@
 
 using namespace glsl;
 
+typedef ivec2_scalar IntPoint;
+
 struct IntRect {
   int x0;
   int y0;
@@ -89,6 +91,8 @@ struct IntRect {
   int width() const { return x1 - x0; }
   int height() const { return y1 - y0; }
   bool is_empty() const { return width() <= 0 || height() <= 0; }
+
+  IntPoint origin() const { return IntPoint(x0, y0); }
 
   bool same_size(const IntRect& o) const {
     return width() == o.width() && height() == o.height();
@@ -129,12 +133,19 @@ struct IntRect {
     swap(y0, y1);
   }
 
-  IntRect& offset(int dx, int dy) {
-    x0 += dx;
-    y0 += dy;
-    x1 += dx;
-    y1 += dy;
+  IntRect& offset(const IntPoint& o) {
+    x0 += o.x;
+    y0 += o.y;
+    x1 += o.x;
+    y1 += o.y;
     return *this;
+  }
+
+  IntRect operator+(const IntPoint& o) const {
+    return IntRect(*this).offset(o);
+  }
+  IntRect operator-(const IntPoint& o) const {
+    return IntRect(*this).offset(-o);
   }
 };
 
@@ -535,6 +546,10 @@ struct Texture {
   // locks, we need to disallow modifying or destroying the texture as it may
   // be accessed by other threads where modifications could lead to races.
   int32_t locked = 0;
+  // When used as an attachment of a framebuffer, rendering to the texture
+  // behaves as if it is located at the given offset such that the offset is
+  // subtracted from all transformed vertexes after the viewport is applied.
+  IntPoint offset;
 
   enum FLAGS {
     // If the buffer is internally-allocated by SWGL
@@ -684,10 +699,11 @@ struct Texture {
   ~Texture() { cleanup(); }
 
   IntRect bounds() const { return IntRect{0, 0, width, height}; }
+  IntRect offset_bounds() const { return bounds() + offset; }
 
   // Find the valid sampling bounds relative to the requested region
   IntRect sample_bounds(const IntRect& req, bool invertY = false) const {
-    IntRect bb = bounds().intersect(req).offset(-req.x0, -req.y0);
+    IntRect bb = bounds().intersect(req) - req.origin();
     if (invertY) bb.invert_y(req.height());
     return bb;
   }
@@ -965,8 +981,13 @@ struct Context {
     return textures[texture_units[unit].texture_rectangle_binding];
   }
 
-  IntRect apply_scissor(IntRect bb) const {
-    return scissortest ? bb.intersect(scissor) : bb;
+  IntRect apply_scissor(IntRect bb,
+                        const IntPoint& origin = IntPoint(0, 0)) const {
+    return scissortest ? bb.intersect(scissor - origin) : bb;
+  }
+
+  IntRect apply_scissor(const Texture& t) const {
+    return apply_scissor(t.bounds(), t.offset);
   }
 };
 static Context* ctx = nullptr;
@@ -2345,7 +2366,7 @@ static void clear_buffer(Texture& t, T value, int layer, IntRect bb,
 
 template <typename T>
 static inline void clear_buffer(Texture& t, T value, int layer = 0) {
-  IntRect bb = ctx->apply_scissor(t.bounds());
+  IntRect bb = ctx->apply_scissor(t);
   if (bb.width() > 0) {
     clear_buffer<T>(t, value, layer, bb);
   }
@@ -2439,7 +2460,7 @@ static void prepare_texture(Texture& t, const IntRect* skip) {
 }
 
 static inline bool clear_requires_scissor(Texture& t) {
-  return ctx->scissortest && !ctx->scissor.contains(t.bounds());
+  return ctx->scissortest && !ctx->scissor.contains(t.offset_bounds());
 }
 
 // Setup a clear on a texture. This may either force an immediate clear or
@@ -2449,7 +2470,8 @@ static void request_clear(Texture& t, int layer, T value) {
   // If the clear would require a scissor, force clear anything outside
   // the scissor, and then immediately clear anything inside the scissor.
   if (clear_requires_scissor(t)) {
-    force_clear<T>(t, &ctx->scissor);
+    IntRect skip = ctx->scissor - t.offset;
+    force_clear<T>(t, &skip);
     clear_buffer<T>(t, value, layer);
   } else if (t.depth > 1) {
     // Delayed clear is not supported on texture arrays.
@@ -2483,7 +2505,7 @@ static ALWAYS_INLINE void fill_depth_run(DepthRun* dst, size_t n,
 void Texture::fill_depth_runs(uint16_t depth) {
   if (!buf) return;
   assert(cleared());
-  IntRect bb = ctx->apply_scissor(bounds());
+  IntRect bb = ctx->apply_scissor(*this);
   DepthRun* runs = (DepthRun*)sample_ptr(0, bb.y0);
   for (int rows = bb.height(); rows > 0; rows--) {
     if (bb.width() >= width) {
@@ -2504,7 +2526,8 @@ void Texture::fill_depth_runs(uint16_t depth) {
 
 extern "C" {
 
-void InitDefaultFramebuffer(int width, int height, int stride, void* buf) {
+void InitDefaultFramebuffer(int x, int y, int width, int height, int stride,
+                            void* buf) {
   Framebuffer& fb = ctx->framebuffers[0];
   if (!fb.color_attachment) {
     GenTextures(1, &fb.color_attachment);
@@ -2514,12 +2537,14 @@ void InitDefaultFramebuffer(int width, int height, int stride, void* buf) {
   // the underlying storage for the color buffer texture.
   Texture& colortex = ctx->textures[fb.color_attachment];
   set_tex_storage(colortex, GL_RGBA8, width, height, buf, stride);
+  colortex.offset = IntPoint(x, y);
   if (!fb.depth_attachment) {
     GenTextures(1, &fb.depth_attachment);
   }
   // Ensure dimensions of the depth buffer match the color buffer.
   Texture& depthtex = ctx->textures[fb.depth_attachment];
   set_tex_storage(depthtex, GL_DEPTH_COMPONENT16, width, height);
+  depthtex.offset = IntPoint(x, y);
 }
 
 void* GetColorBuffer(GLuint fbo, GLboolean flush, int32_t* width,
@@ -2532,6 +2557,7 @@ void* GetColorBuffer(GLuint fbo, GLboolean flush, int32_t* width,
   if (flush) {
     prepare_texture(colortex);
   }
+  assert(colortex.offset == IntPoint(0, 0));
   *width = colortex.width;
   *height = colortex.height;
   *stride = colortex.stride();
@@ -2625,6 +2651,9 @@ void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
   prepare_texture(t);
   // debugf("read pixels %d, %d, %d, %d from fb %d with format %x\n", x, y,
   // width, height, ctx->read_framebuffer_binding, t.internal_format);
+  x -= t.offset.x;
+  y -= t.offset.y;
+  assert(x >= 0 && y >= 0);
   assert(x + width <= t.width);
   assert(y + height <= t.height);
   if (internal_format_for_data(format, type) != t.internal_format) {
@@ -3109,7 +3138,7 @@ struct ClipRect {
   float y1;
 
   ClipRect(const IntRect& i) : x0(i.x0), y0(i.y0), x1(i.x1), y1(i.y1) {}
-  ClipRect(Texture& t) : ClipRect(ctx->apply_scissor(t.bounds())) {}
+  ClipRect(const Texture& t) : ClipRect(ctx->apply_scissor(t)) {}
 
   template <typename P>
   bool overlaps(int nump, const P* p) const {
@@ -3920,7 +3949,8 @@ static void draw_perspective(int nump, Interpolants interp_outs[4],
   vec3_scalar scale =
       vec3_scalar(ctx->viewport.width(), ctx->viewport.height(), 1) * 0.5f;
   vec3_scalar offset =
-      vec3_scalar(ctx->viewport.x0, ctx->viewport.y0, 0.0f) + scale;
+      make_vec3(make_vec2(ctx->viewport.origin() - colortex.offset), 0.0f) +
+      scale;
   if (test_none(pos.z <= -pos.w || pos.z >= pos.w)) {
     // No points cross the near or far planes, so no clipping required.
     // Just divide coords by W and convert to viewport. We assume the W
@@ -4017,7 +4047,7 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   if(!isfinite(w)) w = 0.0f;
   vec2 screen = (pos.sel(X, Y) * w + 1) * 0.5f *
                     vec2_scalar(ctx->viewport.width(), ctx->viewport.height()) +
-                vec2_scalar(ctx->viewport.x0, ctx->viewport.y0);
+                make_vec2(ctx->viewport.origin() - colortex.offset);
   Point2D p[4] = {{screen.x.x, screen.y.x},
                   {screen.x.y, screen.y.y},
                   {screen.x.z, screen.y.z},
@@ -4166,6 +4196,7 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     assert(depthtex.internal_format == GL_DEPTH_COMPONENT16);
     assert(colortex.width == depthtex.width &&
            colortex.height == depthtex.height);
+    assert(colortex.offset == depthtex.offset);
   }
 
   // debugf("current_vertex_array %d\n", ctx->current_vertex_array);

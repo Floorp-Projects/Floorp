@@ -42,12 +42,14 @@ pub extern "C" fn wr_swgl_make_current(ctx: *mut c_void) {
 #[no_mangle]
 pub extern "C" fn wr_swgl_init_default_framebuffer(
     ctx: *mut c_void,
+    x: i32,
+    y: i32,
     width: i32,
     height: i32,
     stride: i32,
     buf: *mut c_void,
 ) {
-    swgl::Context::from(ctx).init_default_framebuffer(width, height, stride, buf);
+    swgl::Context::from(ctx).init_default_framebuffer(x, y, width, height, stride, buf);
 }
 
 #[no_mangle]
@@ -1583,9 +1585,6 @@ impl Compositor for SwCompositor {
         self.late_surfaces.clear();
 
         self.reset_overlaps();
-        if self.composite_thread.is_some() {
-            self.locked_framebuffer = self.gl.lock_framebuffer(0);
-        }
     }
 
     fn add_surface(
@@ -1643,6 +1642,8 @@ impl Compositor for SwCompositor {
                     }
                 }
             }
+
+            self.locked_framebuffer = self.gl.lock_framebuffer(0);
 
             composite_thread.start_compositing();
             // Issue any initial composite jobs for the SwComposite thread.

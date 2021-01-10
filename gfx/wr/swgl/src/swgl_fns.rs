@@ -254,7 +254,14 @@ extern "C" {
     fn GetString(name: GLenum) -> *const c_char;
     fn GetStringi(name: GLenum, index: GLuint) -> *const c_char;
     fn GetError() -> GLenum;
-    fn InitDefaultFramebuffer(width: i32, height: i32, stride: i32, buf: *mut c_void);
+    fn InitDefaultFramebuffer(
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+        stride: i32,
+        buf: *mut c_void,
+    );
     fn GetColorBuffer(
         fbo: GLuint,
         flush: GLboolean,
@@ -363,9 +370,17 @@ impl Context {
         }
     }
 
-    pub fn init_default_framebuffer(&self, width: i32, height: i32, stride: i32, buf: *mut c_void) {
+    pub fn init_default_framebuffer(
+        &self,
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+        stride: i32,
+        buf: *mut c_void,
+    ) {
         unsafe {
-            InitDefaultFramebuffer(width, height, stride, buf);
+            InitDefaultFramebuffer(x, y, width, height, stride, buf);
         }
     }
 
