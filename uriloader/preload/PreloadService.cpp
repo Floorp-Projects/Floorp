@@ -63,15 +63,12 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   // Even if the pref is disabled, we still want to collect telemetry about
   // attempted preloads.
   const bool preloadEnabled = StaticPrefs::network_preload();
-
   if (!CheckReferrerURIScheme(aReferrerInfo)) {
     return nullptr;
   }
 
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
-    if (preloadEnabled) {
-      NotifyNodeEvent(aLinkElement, false);
-    }
+    MOZ_ASSERT_UNREACHABLE("Caller should check");
     return nullptr;
   }
 
@@ -124,6 +121,7 @@ void PreloadService::PreloadLinkHeader(
   }
 
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
+    MOZ_ASSERT_UNREACHABLE("Caller should check");
     return;
   }
 
@@ -286,6 +284,8 @@ dom::ReferrerPolicy PreloadService::PreloadReferrerPolicy(
   return referrerPolicy;
 }
 
+// FIXME(emilio): Other browsers don't seem to have this check (preload loads
+// just fine from a file:// URI). Why is this?
 bool PreloadService::CheckReferrerURIScheme(nsIReferrerInfo* aReferrerInfo) {
   if (!aReferrerInfo) {
     return false;
