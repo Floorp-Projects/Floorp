@@ -1439,6 +1439,11 @@ impl TextureCache {
     pub fn default_picture_tile_size(&self) -> DeviceIntSize {
         self.picture_textures.default_tile_size
     }
+
+    #[cfg(test)]
+    pub fn total_allocated_bytes_for_testing(&self) -> usize {
+        self.standalone_bytes_allocated + self.shared_bytes_allocated
+    }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -1520,5 +1525,77 @@ impl TextureCacheUpdate {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test_texture_cache {
+    #[test]
+    fn check_allocation_size_balance() {
+        // Allocate some glyphs, observe the total allocation size, and free
+        // the glyphs again. Check that the total allocation size is back at the
+        // original value.
+
+        use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
+        use crate::gpu_cache::GpuCache;
+        use crate::device::TextureFilter;
+        use crate::gpu_types::UvRectKind;
+        use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};
+        use api::units::*;
+        use euclid::size2;
+        let mut gpu_cache = GpuCache::new_for_testing();
+        let mut texture_cache = TextureCache::new_for_testing(2048, ImageFormat::BGRA8);
+
+        let sizes: &[DeviceIntSize] = &[
+            size2(23, 27),
+            size2(15, 22),
+            size2(11, 5),
+            size2(20, 25),
+            size2(38, 41),
+            size2(11, 19),
+            size2(13, 21),
+            size2(37, 40),
+            size2(13, 15),
+            size2(14, 16),
+            size2(10, 9),
+            size2(25, 28),
+        ];
+
+        let bytes_at_start = texture_cache.total_allocated_bytes_for_testing();
+
+        let handles: Vec<TextureCacheHandle> = sizes.iter().map(|size| {
+            let mut texture_cache_handle = TextureCacheHandle::invalid();
+            texture_cache.request(&texture_cache_handle, &mut gpu_cache);
+            texture_cache.update(
+                &mut texture_cache_handle,
+                ImageDescriptor {
+                    size: *size,
+                    stride: None,
+                    format: ImageFormat::BGRA8,
+                    flags: ImageDescriptorFlags::empty(),
+                    offset: 0,
+                },
+                TextureFilter::Linear,
+                None,
+                [0.0; 3],
+                DirtyRect::All,
+                &mut gpu_cache,
+                None,
+                UvRectKind::Rect,
+                Eviction::Manual,
+                TargetShader::Text,
+            );
+            texture_cache_handle
+        }).collect();
+
+        let bytes_after_allocating = texture_cache.total_allocated_bytes_for_testing();
+        assert!(bytes_after_allocating > bytes_at_start);
+
+        for handle in handles {
+            texture_cache.evict_manual_handle(&handle);
+        }
+
+        let bytes_at_end = texture_cache.total_allocated_bytes_for_testing();
+        assert_eq!(bytes_at_end, bytes_at_start);
     }
 }
