@@ -1255,6 +1255,11 @@ extern "C" {
         clip_rect: DeviceIntRect,
         image_rendering: ImageRendering,
     );
+    fn wr_compositor_start_compositing(
+        compositor: *mut c_void,
+        dirty_rects: *const DeviceIntRect,
+        num_dirty_rects: usize,
+    );
     fn wr_compositor_end_frame(compositor: *mut c_void);
     fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
     fn wr_compositor_deinit(compositor: *mut c_void);
@@ -1362,6 +1367,12 @@ impl Compositor for WrCompositor {
     ) {
         unsafe {
             wr_compositor_add_surface(self.0, id, &transform, clip_rect, image_rendering);
+        }
+    }
+
+    fn start_compositing(&mut self, dirty_rects: &[DeviceIntRect]) {
+        unsafe {
+            wr_compositor_start_compositing(self.0, dirty_rects.as_ptr(), dirty_rects.len());
         }
     }
 
@@ -1476,8 +1487,9 @@ pub extern "C" fn wr_window_new(
     enclosing_size_of_op: VoidPtrToSizeFn,
     document_id: u32,
     compositor: *mut c_void,
+    use_native_compositor: bool,
     max_update_rects: usize,
-    partial_present_compositor: *mut c_void,
+    use_partial_present: bool,
     max_partial_present_rects: usize,
     draw_previous_partial_present_regions: bool,
     out_handle: &mut *mut DocumentHandle,
@@ -1552,16 +1564,16 @@ pub extern "C" fn wr_window_new(
     };
 
     let compositor_config = if software {
-        let wr_compositor = if compositor != ptr::null_mut() {
-            Some(WrCompositor(compositor))
-        } else {
-            None
-        };
         CompositorConfig::Native {
             max_update_rects: 1,
-            compositor: Box::new(SwCompositor::new(sw_gl.unwrap(), native_gl, wr_compositor)),
+            compositor: Box::new(SwCompositor::new(
+                sw_gl.unwrap(),
+                native_gl,
+                WrCompositor(compositor),
+                use_native_compositor,
+            )),
         }
-    } else if compositor != ptr::null_mut() {
+    } else if use_native_compositor {
         CompositorConfig::Native {
             max_update_rects,
             compositor: Box::new(WrCompositor(compositor)),
@@ -1570,8 +1582,8 @@ pub extern "C" fn wr_window_new(
         CompositorConfig::Draw {
             max_partial_present_rects,
             draw_previous_partial_present_regions,
-            partial_present: if partial_present_compositor != ptr::null_mut() {
-                Some(Box::new(WrPartialPresentCompositor(partial_present_compositor)))
+            partial_present: if use_partial_present {
+                Some(Box::new(WrPartialPresentCompositor(compositor)))
             } else {
                 None
             },
