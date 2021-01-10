@@ -11,6 +11,7 @@ use crate::device::TextureFilter;
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::GpuCache;
 use crate::internal_types::FastHashMap;
+use crate::picture::{SurfaceIndex, SurfaceInfo};
 use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::GradientCacheKey;
 use crate::prim_store::line_dec::LineDecorationCacheKey;
@@ -20,9 +21,21 @@ use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetSha
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{RenderTask, StaticRenderTaskSurface, RenderTaskLocation};
 use crate::render_task_graph::{RenderTaskGraphBuilder, RenderTaskId};
+use crate::frame_builder::add_child_render_task;
 use euclid::Scale;
 
 const MAX_CACHE_TASK_SIZE: f32 = 4096.0;
+
+/// Describes a parent dependency for a render task. Render tasks
+/// may depend on a surface (e.g. when a surface uses a cached border)
+/// or an arbitrary render task (e.g. when a clip mask uses a blurred
+/// box-shadow input).
+pub enum RenderTaskParent {
+    /// Parent is a surface
+    Surface(SurfaceIndex),
+    /// Parent is a render task
+    RenderTask(RenderTaskId),
+}
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -198,7 +211,8 @@ impl RenderTaskCache {
         rg_builder: &mut RenderTaskGraphBuilder,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
-        parent_render_task_id: RenderTaskId,
+        parent: RenderTaskParent,
+        surfaces: &[SurfaceInfo],
         f: F,
     ) -> Result<RenderTaskCacheEntryHandle, ()>
     where
@@ -242,10 +256,27 @@ impl RenderTaskCache {
         // render task for it as a dependency of any render task that uses this as
         // an input source.
         if let Some(render_task_id) = cache_entry.render_task_id {
-            rg_builder.add_dependency(
-                parent_render_task_id,
-                render_task_id,
-            );
+            match parent {
+                RenderTaskParent::Surface(surface_index) => {
+                    // If parent is a surface, use helper fn to add this dependency,
+                    // which correctly takes account of the render task configuration
+                    // of the surface.
+                    add_child_render_task(
+                        surface_index,
+                        render_task_id,
+                        surfaces,
+                        rg_builder
+                    );
+                }
+                RenderTaskParent::RenderTask(parent_render_task_id) => {
+                    // For render tasks, just add it as a direct dependency on the
+                    // task graph builder.
+                    rg_builder.add_dependency(
+                        parent_render_task_id,
+                        render_task_id,
+                    );
+                }
+            }
         }
 
         Ok(entry_handle.weak())

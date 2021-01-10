@@ -4023,15 +4023,19 @@ pub struct SurfaceIndex(pub usize);
 
 pub const ROOT_SURFACE_INDEX: SurfaceIndex = SurfaceIndex(0);
 
-#[derive(Debug, Copy, Clone)]
-pub struct SurfaceRenderTasks {
-    /// The root of the render task chain for this surface. This
-    /// is attached to parent tasks, and also the surface that
-    /// gets added during batching.
-    pub root: RenderTaskId,
-    /// The port of the render task change for this surface. This
-    /// is where child tasks for this surface get attached to.
-    pub port: RenderTaskId,
+/// Describes the render task configuration for a picture surface.
+#[derive(Debug)]
+pub enum SurfaceRenderTasks {
+    /// The common type of surface is a single render task
+    Simple(RenderTaskId),
+    /// Some surfaces draw their content, and then have further tasks applied
+    /// to that input (such as blur passes for shadows). These tasks have a root
+    /// (the output of the surface), and a port (for attaching child task dependencies
+    /// to the content).
+    Chained { root_task_id: RenderTaskId, port_task_id: RenderTaskId },
+    /// Picture caches are a single surface consisting of multiple render
+    /// tasks, one per tile with dirty content.
+    Tiled(Vec<RenderTaskId>),
 }
 
 /// Information about an offscreen surface. For now,
@@ -4874,7 +4878,7 @@ impl PicturePrimitive {
                     }
                 }
 
-                let dep_info = match raster_config.composite_mode {
+                match raster_config.composite_mode {
                     PictureCompositeMode::Filter(Filter::Blur(width, height)) => {
                         let width_std_deviation = clamp_blur_radius(width, scale_factors) * device_pixel_scale.0;
                         let height_std_deviation = clamp_blur_radius(height, scale_factors) * device_pixel_scale.0;
@@ -4959,7 +4963,12 @@ impl PicturePrimitive {
                             original_size.to_i32(),
                         );
 
-                        Some((blur_render_task_id, picture_task_id))
+                        frame_state.init_surface_chain(
+                            raster_config.surface_index,
+                            blur_render_task_id,
+                            picture_task_id,
+                            parent_surface_index,
+                        );
                     }
                     PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
                         let mut max_std_deviation = 0.0;
@@ -5023,8 +5032,8 @@ impl PicturePrimitive {
 
                         // Add this content picture as a dependency of the parent surface, to
                         // ensure it isn't free'd after the shadow uses it as an input.
-                        frame_state.rg_builder.add_dependency(
-                            frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port,
+                        frame_state.add_child_render_task(
+                            parent_surface_index,
                             picture_task_id,
                         );
 
@@ -5051,7 +5060,12 @@ impl PicturePrimitive {
                         }
 
                         // TODO(nical) the second one should to be the blur's task id but we have several blurs now
-                        Some((blur_render_task_id, picture_task_id))
+                        frame_state.init_surface_chain(
+                            raster_config.surface_index,
+                            blur_render_task_id,
+                            picture_task_id,
+                            parent_surface_index,
+                        );
                     }
                     PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {
                         if let Some(scale) = adjust_scale_for_max_surface_size(
@@ -5077,8 +5091,8 @@ impl PicturePrimitive {
                             )
                         );
 
-                        frame_state.rg_builder.add_dependency(
-                            frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port,
+                        frame_state.add_child_render_task(
+                            parent_surface_index,
                             readback_task_id,
                         );
 
@@ -5104,7 +5118,11 @@ impl PicturePrimitive {
                             )
                         );
 
-                        Some((render_task_id, render_task_id))
+                        frame_state.init_surface(
+                            raster_config.surface_index,
+                            render_task_id,
+                            parent_surface_index,
+                        );
                     }
                     PictureCompositeMode::Filter(..) => {
 
@@ -5144,7 +5162,11 @@ impl PicturePrimitive {
                             )
                         );
 
-                        Some((render_task_id, render_task_id))
+                        frame_state.init_surface(
+                            raster_config.surface_index,
+                            render_task_id,
+                            parent_surface_index,
+                        );
                     }
                     PictureCompositeMode::ComponentTransferFilter(..) => {
                         if let Some(scale) = adjust_scale_for_max_surface_size(
@@ -5183,12 +5205,16 @@ impl PicturePrimitive {
                             )
                         );
 
-                        Some((render_task_id, render_task_id))
+                        frame_state.init_surface(
+                            raster_config.surface_index,
+                            render_task_id,
+                            parent_surface_index,
+                        );
                     }
                     PictureCompositeMode::TileCache { slice_id } => {
                         let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
-                        let mut first = true;
                         let mut debug_info = SliceDebugInfo::new();
+                        let mut surface_tasks = Vec::with_capacity(tile_cache.tiles.len());
 
                         // Get the overall world space rect of the picture cache. Used to clip
                         // the tile rects below for occlusion testing to the relevant area.
@@ -5463,17 +5489,7 @@ impl PicturePrimitive {
                                     ),
                                 );
 
-                                if first {
-                                    // TODO(gw): Maybe we can restructure this code to avoid the
-                                    //           first hack here. Or at least explain it with a follow up
-                                    //           bug.
-                                    frame_state.surfaces[raster_config.surface_index.0].render_tasks = Some(SurfaceRenderTasks {
-                                        root: render_task_id,
-                                        port: render_task_id,
-                                    });
-
-                                    first = false;
-                                }
+                                surface_tasks.push(render_task_id);
                             }
 
                             if frame_context.fb_config.testing {
@@ -5514,7 +5530,10 @@ impl PicturePrimitive {
                                 );
                         }
 
-                        None
+                        frame_state.init_surface_tiled(
+                            raster_config.surface_index,
+                            surface_tasks,
+                        );
                     }
                     PictureCompositeMode::MixBlend(..) |
                     PictureCompositeMode::Blit(_) => {
@@ -5554,7 +5573,11 @@ impl PicturePrimitive {
                             )
                         );
 
-                        Some((render_task_id, render_task_id))
+                        frame_state.init_surface(
+                            raster_config.surface_index,
+                            render_task_id,
+                            parent_surface_index,
+                        );
                     }
                     PictureCompositeMode::SvgFilter(ref primitives, ref filter_datas) => {
 
@@ -5604,20 +5627,13 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
-                        Some((filter_task_id, picture_task_id))
+                        frame_state.init_surface_chain(
+                            raster_config.surface_index,
+                            filter_task_id,
+                            picture_task_id,
+                            parent_surface_index,
+                        );
                     }
-                };
-
-                if let Some((root, port)) = dep_info {
-                    frame_state.surfaces[raster_config.surface_index.0].render_tasks = Some(SurfaceRenderTasks {
-                        root,
-                        port,
-                    });
-
-                    frame_state.rg_builder.add_dependency(
-                        frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port,
-                        root,
-                    );
                 }
             }
             None => {}

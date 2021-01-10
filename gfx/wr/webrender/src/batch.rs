@@ -17,7 +17,8 @@ use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
 use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter, DeferredResolveIndex};
-use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, ClusterFlags};
+use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
+use crate::picture::{ClusterFlags, SurfaceIndex, SurfaceRenderTasks};
 use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind, ClipData};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
@@ -1513,10 +1514,7 @@ impl BatchBuilder {
                                 .as_ref()
                                 .expect("BUG: 3d primitive was not assigned a surface");
                             let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                ctx.surfaces[raster_config.surface_index.0]
-                                    .render_tasks
-                                    .expect("BUG: no surface")
-                                    .root,
+                                ctx.resolve_surface(raster_config.surface_index),
                                 clip_mask_texture_id,
                                 gpu_cache,
                             );
@@ -1566,7 +1564,6 @@ impl BatchBuilder {
                         };
 
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
-                        let surface_task = surface.render_tasks.map(|s| s.root);
 
                         let mut is_opaque = prim_info.clip_task_index == ClipTaskIndex::INVALID
                             && surface.opaque_rect.contains_rect(&surface.rect);
@@ -1614,7 +1611,7 @@ impl BatchBuilder {
                                             BrushBatchKind::Image(ImageBufferKind::Texture2D)
                                         );
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                            surface_task.expect("bug: surface must be allocated by now"),
+                                            ctx.resolve_surface(raster_config.surface_index),
                                             clip_mask_texture_id,
                                             gpu_cache,
                                         );
@@ -1674,8 +1671,7 @@ impl BatchBuilder {
                                         };
 
                                         // Retrieve the UV rect addresses for shadow/content.
-                                        let cache_task_id = surface_task
-                                            .expect("bug: surface must be allocated by now");
+                                        let cache_task_id = ctx.resolve_surface(raster_config.surface_index);
                                         let (shadow_uv_rect_address, shadow_textures) = render_tasks.resolve_surface(
                                             cache_task_id,
                                             clip_mask_texture_id,
@@ -1768,7 +1764,7 @@ impl BatchBuilder {
                                         let amount = (amount * 65536.0) as i32;
 
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                            surface_task.expect("bug: surface must be allocated by now"),
+                                            ctx.resolve_surface(raster_config.surface_index),
                                             clip_mask_texture_id,
                                             gpu_cache,
                                         );
@@ -1844,7 +1840,7 @@ impl BatchBuilder {
                                         }
 
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                            surface_task.expect("bug: surface must be allocated by now"),
+                                            ctx.resolve_surface(raster_config.surface_index),
                                             clip_mask_texture_id,
                                             gpu_cache,
                                         );
@@ -1903,7 +1899,7 @@ impl BatchBuilder {
                                 ).unwrap();
 
                                 let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                    surface_task.expect("bug: surface must be allocated by now"),
+                                    ctx.resolve_surface(raster_config.surface_index),
                                     clip_mask_texture_id,
                                     gpu_cache,
                                 );
@@ -1941,7 +1937,7 @@ impl BatchBuilder {
                                     render_tasks,
                                 ).unwrap();
                                 let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                    surface_task.expect("bug: surface must be allocated by now"),
+                                    ctx.resolve_surface(raster_config.surface_index),
                                     clip_mask_texture_id,
                                     gpu_cache,
                                 );
@@ -1982,7 +1978,7 @@ impl BatchBuilder {
                                     prim_info.clip_task_index,
                                     render_tasks,
                                 ).unwrap();
-                                let cache_task_id = surface_task.expect("bug: surface must be allocated by now");
+                                let cache_task_id = ctx.resolve_surface(raster_config.surface_index);
                                 let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
                                 // TODO(gw): For now, mix-blend is not supported as a picture
@@ -2043,7 +2039,7 @@ impl BatchBuilder {
                                 );
                             }
                             PictureCompositeMode::Blit(_) => {
-                                let cache_task_id = surface_task.expect("bug: surface must be allocated by now");
+                                let cache_task_id = ctx.resolve_surface(raster_config.surface_index);
                                 let uv_rect_address = render_tasks[cache_task_id]
                                     .get_texture_address(gpu_cache)
                                     .as_int();
@@ -2129,7 +2125,7 @@ impl BatchBuilder {
                                     BrushBatchKind::Image(ImageBufferKind::Texture2D)
                                 );
                                 let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                    surface_task.expect("bug: surface must be allocated by now"),
+                                    ctx.resolve_surface(raster_config.surface_index),
                                     clip_mask_texture_id,
                                     gpu_cache,
                                 );
@@ -2969,12 +2965,7 @@ impl BatchBuilder {
                     .as_ref()
                     .expect("backdrop surface should be alloc by now")
                     .surface_index;
-
-                let backdrop_task_id = ctx.surfaces[backdrop_surface_index.0]
-                    .render_tasks
-                    .as_ref()
-                    .expect("backdrop task not available")
-                    .root;
+                let backdrop_task_id = ctx.resolve_surface(backdrop_surface_index);
 
                 let (backdrop_uv_rect_address, textures) = render_tasks.resolve_surface(
                     backdrop_task_id,
@@ -3852,5 +3843,31 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
             0,
             render_tasks,
         )
+    }
+
+    /// Given a surface index, return the render task id for the output render
+    /// task of this surface.
+    fn resolve_surface(
+        &self,
+        surface_index: SurfaceIndex,
+    ) -> RenderTaskId {
+        let surface = self.surfaces[surface_index.0]
+            .render_tasks
+            .as_ref()
+            .expect("bug: no surface");
+        match surface {
+            SurfaceRenderTasks::Simple(task_id) => {
+                *task_id
+            }
+            SurfaceRenderTasks::Tiled(..) => {
+                // For now, the tiled picture cache surfaces are never used as a readback
+                // source. Soon, that will change when they are available as inputs to
+                // elements such as mix-blend and backdrop-filter.
+                unreachable!();
+            }
+            SurfaceRenderTasks::Chained { root_task_id, .. } => {
+                *root_task_id
+            }
+        }
     }
 }
