@@ -45,10 +45,17 @@ bool RenderCompositorSWGL::MakeCurrent() {
 }
 
 bool RenderCompositorSWGL::BeginFrame() {
-  // Request a new draw target to use from the widget...
+  // Set up a temporary region representing the entire window surface in case a
+  // dirty region is not supplied.
   ClearMappedBuffer();
-  LayoutDeviceIntRect bounds(LayoutDeviceIntPoint(), GetBufferSize());
-  mRegion = LayoutDeviceIntRegion(bounds);
+  mRegion = LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetBufferSize());
+  wr_swgl_make_current(mContext);
+  return true;
+}
+
+bool RenderCompositorSWGL::AllocateMappedBuffer() {
+  // Request a new draw target to use from the widget...
+  MOZ_ASSERT(!mDT);
   layers::BufferMode bufferMode = layers::BufferMode::BUFFERED;
   mDT = mWidget->StartRemoteDrawingInRegion(mRegion, &bufferMode);
   if (!mDT) {
@@ -62,18 +69,24 @@ bool RenderCompositorSWGL::BeginFrame() {
   int32_t stride = 0;
   gfx::SurfaceFormat format = gfx::SurfaceFormat::UNKNOWN;
   if (!mSurface && mDT->LockBits(&data, &size, &stride, &format) &&
-      (size != bounds.Size().ToUnknownSize() ||
-       (format != gfx::SurfaceFormat::B8G8R8A8 &&
-        format != gfx::SurfaceFormat::B8G8R8X8))) {
+      (format != gfx::SurfaceFormat::B8G8R8A8 &&
+       format != gfx::SurfaceFormat::B8G8R8X8)) {
     // We tried to lock the DT and it succeeded, but the size or format
     // of the data is not compatible, so just release it and fall back below...
     mDT->ReleaseBits(data);
     data = nullptr;
   }
+  LayoutDeviceIntRect bounds = mRegion.GetBounds();
   // If locking succeeded above, just use that.
   if (data) {
     mMappedData = data;
     mMappedStride = stride;
+    // Disambiguate whether the widget's draw target has its origin at zero or
+    // if it is offset to the dirty region origin.
+    if (size == gfx::IntSize(bounds.XMost(), bounds.YMost())) {
+      // Update the bounds to include zero if the origin is at zero.
+      bounds.ExpandToEnclose(LayoutDeviceIntPoint(0, 0));
+    }
   } else {
     // If we couldn't lock the DT above, then allocate a data surface and map
     // that for usage with SWGL.
@@ -93,13 +106,44 @@ bool RenderCompositorSWGL::BeginFrame() {
     mMappedStride = map.mStride;
   }
   MOZ_ASSERT(mMappedData != nullptr && mMappedStride > 0);
-  wr_swgl_make_current(mContext);
-  wr_swgl_init_default_framebuffer(mContext, bounds.width, bounds.height,
-                                   mMappedStride, mMappedData);
+  wr_swgl_init_default_framebuffer(mContext, bounds.x, bounds.y, bounds.width,
+                                   bounds.height, mMappedStride, mMappedData);
   return true;
 }
 
-void RenderCompositorSWGL::CommitMappedBuffer() {
+void RenderCompositorSWGL::StartCompositing(
+    const wr::DeviceIntRect* aDirtyRects, size_t aNumDirtyRects) {
+  if (mDT) {
+    // Cancel any existing buffers that might accidentally be left from updates
+    CommitMappedBuffer(false);
+    // Reset the region to the widget bounds
+    mRegion = LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetBufferSize());
+  }
+  if (aNumDirtyRects) {
+    // Install the dirty rects into the bounds of the existing region
+    auto bounds = mRegion.GetBounds();
+    mRegion.SetEmpty();
+    for (size_t i = 0; i < aNumDirtyRects; i++) {
+      const auto& rect = aDirtyRects[i];
+      mRegion.OrWith(LayoutDeviceIntRect(rect.origin.x, rect.origin.y,
+                                         rect.size.width, rect.size.height));
+    }
+    // Ensure the region lies within the widget bounds
+    mRegion.AndWith(bounds);
+  }
+  // Now that the dirty rects have been supplied and the composition region
+  // is known, allocate and install a framebuffer encompassing the composition
+  // region.
+  if (!AllocateMappedBuffer()) {
+    gfxCriticalNote
+        << "RenderCompositorSWGL failed mapping default framebuffer";
+    // If allocation of the mapped default framebuffer failed, then just install
+    // a small temporary framebuffer so compositing can still proceed.
+    wr_swgl_init_default_framebuffer(mContext, 0, 0, 2, 2, 0, nullptr);
+  }
+}
+
+void RenderCompositorSWGL::CommitMappedBuffer(bool aDirty) {
   if (!mDT) {
     return;
   }
@@ -109,13 +153,15 @@ void RenderCompositorSWGL::CommitMappedBuffer() {
     // If we're using a data surface, unmap it and draw it to the DT if there
     // are any supplied dirty rects.
     mSurface->Unmap();
-    for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const LayoutDeviceIntRect& dirtyRect = iter.Get();
-      gfx::Rect bounds(dirtyRect.x, dirtyRect.y, dirtyRect.width,
-                       dirtyRect.height);
-      mDT->DrawSurface(mSurface, bounds, bounds,
-                       gfx::DrawSurfaceOptions(gfx::SamplingFilter::POINT),
-                       gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
+    if (aDirty) {
+      for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
+        const LayoutDeviceIntRect& dirtyRect = iter.Get();
+        gfx::Rect bounds(dirtyRect.x, dirtyRect.y, dirtyRect.width,
+                         dirtyRect.height);
+        mDT->DrawSurface(mSurface, bounds, bounds,
+                         gfx::DrawSurfaceOptions(gfx::SamplingFilter::POINT),
+                         gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
+      }
     }
   } else {
     // Otherwise, we had locked the DT directly. Just release the data.
@@ -126,18 +172,13 @@ void RenderCompositorSWGL::CommitMappedBuffer() {
   ClearMappedBuffer();
 }
 
-void RenderCompositorSWGL::CancelFrame() { CommitMappedBuffer(); }
+void RenderCompositorSWGL::CancelFrame() { CommitMappedBuffer(false); }
 
 RenderedFrameId RenderCompositorSWGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
-  if (!aDirtyRects.IsEmpty()) {
-    mRegion.SetEmpty();
-    for (auto& rect : aDirtyRects) {
-      mRegion.OrWith(LayoutDeviceIntRect(rect.origin.x, rect.origin.y,
-                                         rect.size.width, rect.size.height));
-    }
-  }
-
+  // Dirty rects have already been set inside StartCompositing. We need to keep
+  // those dirty rects exactly the same here so we supply the same exact region
+  // to EndRemoteDrawingInRegion as for StartRemoteDrawingInRegion.
   RenderedFrameId frameId = GetNextRenderFrameId();
   CommitMappedBuffer();
   return frameId;
