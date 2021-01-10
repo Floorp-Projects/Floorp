@@ -183,6 +183,11 @@ add_task(async function test_settings_write() {
         }
       }
     }
+    // Remove queryCharset, if it is the same as the default, as we don't save
+    // it in that case.
+    if (engine?.queryCharset == SearchUtils.DEFAULT_QUERY_CHARSET) {
+      delete engine.queryCharset;
+    }
   }
 
   // Note: the file is copied with an old version number, which should have

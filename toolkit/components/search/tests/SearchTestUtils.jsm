@@ -232,6 +232,8 @@ var SearchTestUtils = Object.freeze({
    *   The version to use for the WebExtension.
    * @param {string} [options.keyword]
    *   The keyword to use for the WebExtension.
+   * @param {string} [options.encoding]
+   *   The encoding to use for the WebExtension.
    * @param {string} [options.search_url]
    *   The search URL to use for the WebExtension.
    * @param {string} [options.search_url_get_params]
@@ -263,6 +265,10 @@ var SearchTestUtils = Object.freeze({
         },
       },
     };
+    if (options.encoding) {
+      manifest.chrome_settings_overrides.search_provider.encoding =
+        options.encoding;
+    }
     if (options.keyword) {
       manifest.chrome_settings_overrides.search_provider.keyword =
         options.keyword;
