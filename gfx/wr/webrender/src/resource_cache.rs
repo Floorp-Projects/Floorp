@@ -26,10 +26,11 @@ use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKe
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, TextureSource, ResourceUpdateList};
+use crate::picture::SurfaceInfo;
 use crate::profiler::{self, TransactionProfile, bytes_to_mb};
 use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
-use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey};
+use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey, RenderTaskParent};
 use crate::render_task_cache::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
 use euclid::point2;
 use smallvec::SmallVec;
@@ -581,7 +582,8 @@ impl ResourceCache {
         rg_builder: &mut RenderTaskGraphBuilder,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
-        parent_render_task_id: RenderTaskId,
+        parent: RenderTaskParent,
+        surfaces: &[SurfaceInfo],
         f: F,
     ) -> RenderTaskCacheEntryHandle
     where
@@ -594,7 +596,8 @@ impl ResourceCache {
             rg_builder,
             user_data,
             is_opaque,
-            parent_render_task_id,
+            parent,
+            surfaces,
             |render_graph| Ok(f(render_graph))
         ).expect("Failed to request a render task from the resource cache!")
     }
