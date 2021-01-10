@@ -98,7 +98,8 @@ add_task(async function test_initialization_with_region() {
   await initPromise;
 
   let otherPromises = [
-    promiseAfterSettings(),
+    // This test expects settings to be saved twice.
+    promiseAfterSettings().then(promiseAfterSettings),
     SearchTestUtils.promiseSearchNotification(
       "engine-default",
       SEARCH_ENGINE_TOPIC
