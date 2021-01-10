@@ -571,7 +571,8 @@ bool RenderCompositorNativeSWGL::InitDefaultFramebuffer(
     if (!MapNativeLayer(mNativeLayerForEntireWindow, aBounds, aBounds)) {
       return false;
     }
-    wr_swgl_init_default_framebuffer(mContext, aBounds.width, aBounds.height,
+    wr_swgl_init_default_framebuffer(mContext, aBounds.x, aBounds.y,
+                                     aBounds.width, aBounds.height,
                                      mLayerStride, mLayerValidRectData);
   }
   return true;

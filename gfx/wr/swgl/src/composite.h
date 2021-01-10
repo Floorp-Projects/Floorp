@@ -32,8 +32,7 @@ static NO_INLINE void scale_blit(Texture& srctex, const IntRect& srcReq,
   // Limit dest sampling bounds to overlap source bounds
   dstBounds.intersect(srcBounds);
   // Compute the clipped bounds, relative to dstBounds.
-  IntRect clippedDest = dstBounds.intersection(clipRect);
-  clippedDest.offset(-dstBounds.x0, -dstBounds.y0);
+  IntRect clippedDest = dstBounds.intersection(clipRect) - dstBounds.origin();
   // Check if clipped sampling bounds are empty
   if (clippedDest.is_empty()) {
     return;
@@ -289,12 +288,12 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   if (invertY) {
     swap(dstY0, dstY1);
   }
-  IntRect srcReq = {srcX0, srcY0, srcX1, srcY1};
-  IntRect dstReq = {dstX0, dstY0, dstX1, dstY1};
-  IntRect clipRect = {0, 0, dstReq.width(), dstReq.height()};
+  IntRect srcReq = IntRect{srcX0, srcY0, srcX1, srcY1} - srctex.offset;
+  IntRect dstReq = IntRect{dstX0, dstY0, dstX1, dstY1} - dsttex.offset;
   if (srcReq.is_empty() || dstReq.is_empty()) {
     return;
   }
+  IntRect clipRect = {0, 0, dstReq.width(), dstReq.height()};
   prepare_texture(srctex);
   prepare_texture(dsttex, &dstReq);
   if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR &&
@@ -424,8 +423,10 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
   assert(srctex.bpp() == 4);
   assert(dsttex.bpp() == 4);
 
-  IntRect srcReq = {srcX, srcY, srcX + srcWidth, srcY + srcHeight};
-  IntRect dstReq = {dstX, dstY, dstX + dstWidth, dstY + dstHeight};
+  IntRect srcReq =
+      IntRect{srcX, srcY, srcX + srcWidth, srcY + srcHeight} - srctex.offset;
+  IntRect dstReq =
+      IntRect{dstX, dstY, dstX + dstWidth, dstY + dstHeight} - dsttex.offset;
   // Compute clip rect as relative to the dstReq, as that's the same coords
   // as used for the sampling bounds.
   IntRect clipRect = {clipX - dstX,
@@ -899,10 +900,13 @@ void CompositeYUV(LockedTexture* lockedDst, LockedTexture* lockedY,
          (ytex.bpp() == 2 && colorDepth > 8));
   // assert(ytex.width == utex.width && ytex.height == utex.height);
   assert(utex.width == vtex.width && utex.height == vtex.height);
+  assert(ytex.offset == utex.offset && ytex.offset == vtex.offset);
   assert(dsttex.bpp() == 4);
 
-  IntRect srcReq = {srcX, srcY, srcX + srcWidth, srcY + srcHeight};
-  IntRect dstReq = {dstX, dstY, dstX + dstWidth, dstY + dstHeight};
+  IntRect srcReq =
+      IntRect{srcX, srcY, srcX + srcWidth, srcY + srcHeight} - ytex.offset;
+  IntRect dstReq =
+      IntRect{dstX, dstY, dstX + dstWidth, dstY + dstHeight} - dsttex.offset;
   // Compute clip rect as relative to the dstReq, as that's the same coords
   // as used for the sampling bounds.
   IntRect clipRect = {clipX - dstX,
