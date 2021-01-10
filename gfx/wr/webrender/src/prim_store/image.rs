@@ -13,6 +13,7 @@ use crate::frame_builder::FrameBuildingState;
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::{LayoutPrimitiveInfo};
+use crate::picture::SurfaceIndex;
 use crate::prim_store::{
     EdgeAaSegmentMask, PrimitiveInstanceKind,
     PrimitiveOpacity, PrimKey,
@@ -22,9 +23,8 @@ use crate::prim_store::{
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{BlitSource, RenderTask};
 use crate::render_task_cache::{
-    RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind
+    RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent
 };
-use crate::render_task_graph::RenderTaskId;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::pack_as_float;
 
@@ -146,7 +146,7 @@ impl ImageData {
     pub fn update(
         &mut self,
         common: &mut PrimTemplateCommonData,
-        parent_render_task_id: RenderTaskId,
+        parent_surface: SurfaceIndex,
         frame_state: &mut FrameBuildingState,
     ) {
         if let Some(mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {
@@ -215,7 +215,8 @@ impl ImageData {
                                 frame_state.rg_builder,
                                 None,
                                 image_properties.descriptor.is_opaque(),
-                                parent_render_task_id,
+                                RenderTaskParent::Surface(parent_surface),
+                                frame_state.surfaces,
                                 |rg_builder| {
                                     // Create a task to blit from the texture cache to
                                     // a normal transient render task surface. This will

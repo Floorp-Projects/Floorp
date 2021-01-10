@@ -15,7 +15,7 @@ use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter};
 use crate::picture::{DirtyRegion, PictureUpdateState, SliceId, TileCacheInstance};
-use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX};
+use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceRenderTasks};
 use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{PictureIndex, PrimitiveDebugId};
@@ -203,6 +203,70 @@ impl<'a> FrameBuildingState<'a> {
     /// Pop the top dirty region from the stack.
     pub fn pop_dirty_region(&mut self) {
         self.dirty_region_stack.pop().unwrap();
+    }
+
+    /// Initialize render tasks for a surface that is tiled (currently applies
+    /// only to picture cache surfaces).
+    pub fn init_surface_tiled(
+        &mut self,
+        surface_index: SurfaceIndex,
+        tasks: Vec<RenderTaskId>,
+    ) {
+        let surface = &mut self.surfaces[surface_index.0];
+        assert!(surface.render_tasks.is_none());
+        surface.render_tasks = Some(SurfaceRenderTasks::Tiled(tasks));
+    }
+
+    /// Initialize render tasks for a simple surface, that contains only a
+    /// single render task.
+    pub fn init_surface(
+        &mut self,
+        surface_index: SurfaceIndex,
+        task_id: RenderTaskId,
+        parent_surface_index: SurfaceIndex,
+    ) {
+        let surface = &mut self.surfaces[surface_index.0];
+        assert!(surface.render_tasks.is_none());
+        surface.render_tasks = Some(SurfaceRenderTasks::Simple(task_id));
+
+        self.add_child_render_task(
+            parent_surface_index,
+            task_id,
+        );
+    }
+
+    /// Initialize render tasks for a surface that is made up of a chain of
+    /// render tasks, where the final output render task is different than the
+    /// input render task (for example, a blur pass on a picture).
+    pub fn init_surface_chain(
+        &mut self,
+        surface_index: SurfaceIndex,
+        root_task_id: RenderTaskId,
+        port_task_id: RenderTaskId,
+        parent_surface_index: SurfaceIndex,
+    ) {
+        let surface = &mut self.surfaces[surface_index.0];
+        assert!(surface.render_tasks.is_none());
+        surface.render_tasks = Some(SurfaceRenderTasks::Chained { root_task_id, port_task_id });
+
+        self.add_child_render_task(
+            parent_surface_index,
+            root_task_id,
+        );
+    }
+
+    /// Add a render task as a dependency of a given surface.
+    pub fn add_child_render_task(
+        &mut self,
+        surface_index: SurfaceIndex,
+        child_task_id: RenderTaskId,
+    ) {
+        add_child_render_task(
+            surface_index,
+            child_task_id,
+            self.surfaces,
+            self.rg_builder,
+        );
     }
 }
 
@@ -1028,5 +1092,38 @@ impl Frame {
         // test if a composite is needed due to picture cache surfaces moving
         // or external surfaces being updated).
         self.passes.is_empty()
+    }
+}
+
+/// Add a child render task as a dependency to a surface. This is a free
+/// function for now as it's also used by the render task cache.
+// TODO(gw): Find a more appropriate place for this to live - probably clearer
+//           once SurfaceInfo gets refactored.
+pub fn add_child_render_task(
+    surface_index: SurfaceIndex,
+    child_task_id: RenderTaskId,
+    surfaces: &[SurfaceInfo],
+    rg_builder: &mut RenderTaskGraphBuilder,
+) {
+    let surface_tasks = surfaces[surface_index.0]
+        .render_tasks
+        .as_ref()
+        .expect("bug: no task for surface");
+
+    match surface_tasks {
+        SurfaceRenderTasks::Tiled(ref tasks) => {
+            // For a tiled render task, add as a dependency to every tile.
+            for parent_id in tasks {
+                rg_builder.add_dependency(*parent_id, child_task_id);
+            }
+        }
+        SurfaceRenderTasks::Simple(parent_id) => {
+            rg_builder.add_dependency(*parent_id, child_task_id);
+        }
+        SurfaceRenderTasks::Chained { port_task_id, .. } => {
+            // For chained render tasks, add as a dependency of the lowest part of
+            // the chain (the picture content)
+            rg_builder.add_dependency(*port_task_id, child_task_id);
+        }
     }
 }

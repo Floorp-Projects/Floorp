@@ -13,7 +13,7 @@ use crate::frame_graph::PassId;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex};
-use crate::picture::ResolvedSurfaceTexture;
+use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo};
 use crate::prim_store::{ClipData, PictureIndex};
 use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
@@ -25,7 +25,7 @@ use crate::render_target::{RenderTargetIndex, RenderTargetKind};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 #[cfg(feature = "debugger")]
 use crate::render_task_graph::RenderTaskGraph;
-use crate::render_task_cache::{RenderTaskCacheKey, RenderTaskCacheKeyKind};
+use crate::render_task_cache::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
 use crate::visibility::PrimitiveVisibilityMask;
 use smallvec::SmallVec;
 
@@ -470,6 +470,7 @@ impl RenderTaskKind {
         clip_data_store: &mut ClipDataStore,
         device_pixel_scale: DevicePixelScale,
         fb_config: &FrameBuilderConfig,
+        surfaces: &[SurfaceInfo],
     ) -> RenderTaskId {
         // Step through the clip sources that make up this mask. If we find
         // any box-shadow clip sources, request that image from the render
@@ -522,7 +523,8 @@ impl RenderTaskKind {
                         rg_builder,
                         None,
                         false,
-                        clip_task_id,
+                        RenderTaskParent::RenderTask(clip_task_id),
+                        surfaces,
                         |rg_builder| {
                             let clip_data = ClipData::rounded_rect(
                                 source.minimal_shadow_rect.size,
