@@ -72,10 +72,10 @@ input[type="url"]:read-only {
   all: unset;
   font-size: 1.1em;
   display: inline-block;
-  width: -moz-available;
   background-color: transparent !important; /* override common.inc.css */
   text-overflow: ellipsis;
   overflow: hidden;
+  width: 100%;
 }
 
 /* We can't use `margin-inline-start` here because we force
@@ -154,17 +154,39 @@ input[type="url"]:read-only:hover:active {
   align-items: center;
 }
 
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, max-content) auto;
+  grid-template-rows: auto;
+  column-gap: 20px;
+  row-gap: 40px;
+  justify-content: start;
+}
+
+:host([data-editing]) .detail-grid {
+  grid-template-columns: auto;
+}
+
+.detail-grid > .detail-row:not([hidden]) {
+  display: contents;
+}
+
+.detail-grid > .detail-row > .detail-cell {
+  grid-column: 1;
+}
+
+.detail-grid > .detail-row > .copy-button {
+  grid-column: 2;
+  margin-inline-start: 0; /* Reset button's margin so it doesn't affect the overall grid's width */
+  justify-self: start;
+  align-self: end;
+}
+
 .detail-row {
   display: flex;
 }
 
-.detail-row-contents {
-  display: flex;
-  align-items: end;
-  flex-basis: 340px; /* Allows for 360px of flex on the end (700px (the default 100% width) - 340px) */
-  max-width: 100%;
-}
-
+.detail-grid,
 .detail-row,
 .form-actions-row {
   margin-bottom: 40px;
@@ -188,7 +210,6 @@ input[type="url"]:read-only:hover:active {
 
 .copy-button {
   margin-bottom: 0; /* Align button at the bottom of the row */
-  margin-inline-start: 20px;
 }
 
 .copy-button:not([data-copied]) .copied-button-text,
