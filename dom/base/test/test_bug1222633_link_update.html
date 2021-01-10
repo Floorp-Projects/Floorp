@@ -39,7 +39,7 @@ function testPreloadEventAsAttributeChange(url) {
   });
 }
 
-function testPreloadEventAttributeChange(url, attr, value1, value2, expectLoad1, expectLoad2) {
+function testPreloadEventAttributeChange(url, attr, invalidValue, validValue) {
   return new Promise((resolve) => {
     var count = 0;
     var link = document.createElement("LINK");
@@ -47,36 +47,23 @@ function testPreloadEventAttributeChange(url, attr, value1, value2, expectLoad1,
     link.setAttribute("href", url);
     link.setAttribute("as", "image");
 
-    link.setAttribute(attr, value1);
+    link.setAttribute(attr, invalidValue);
 
+    let firedLoad = false;
     link.addEventListener("load", () => {
-      count++;
-      if (count == 1) {
-        ok(expectLoad1, "expecting first load event for " + url);
-        link.setAttribute(attr, value2);
-      } else {
-        ok(expectLoad2, "expecting second load event for " + url);
-      }
-
-      if (count == 2) {
-        link.remove();
-        resolve();
-      }
+      ok(!firedLoad, "expecting first load event for " + url);
+      firedLoad = true;
+      link.remove();
+      resolve();
     });
     link.addEventListener("error", () => {
-      count++;
-      if (count == 1) {
-        ok(!expectLoad1, "expecting first error event for " + url);
-        link.setAttribute(attr, value2);
-      } else {
-        ok(!expectLoad2, "expecting second error event for " + url);
-      }
-      if (count == 2) {
-        link.remove();
-        resolve();
-      }
+      ok(false, "shouldn't fire error events");
     });
     document.head.appendChild(link);
+    SimpleTest.executeSoon(function() {
+      ok(!firedLoad, "Invalid value shouldn't fire load event");
+      link.setAttribute(attr, validValue);
+    })
   });
 }
 
@@ -128,9 +115,9 @@ SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
 // Test changing as parameter from a wrong to a correct one.
 .then(() => testPreloadEventAsAttributeChange(SAME_ORIGIN + IMAGE_PATH))
 // Test changing type parameter from a wrong to a correct one for given as parameter.
-.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "type", "text/vtt", "image/png", false, true))
+.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "type", "text/vtt", "image/png"))
 // Test changing media parameter from a wrong to a correct one.
-.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "media", "foo", "all", false, true))
+.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "media", "foo", "all"))
 // Test changing crossorigin parameter.
 .then(() => testPreloadEventSetCrossOrigin(CROSS_ORIGIN + SJS_PATH + "?statusCode=404&cacheControl=max-age%3D120&allowOrigin=*"))
 
