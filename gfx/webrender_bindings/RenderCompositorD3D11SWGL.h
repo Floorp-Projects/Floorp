@@ -107,6 +107,11 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
   ID3D11Device* GetDevice() { return mCompositor->GetDevice(); }
 
  private:
+  already_AddRefed<ID3D11Texture2D> CreateStagingTexture(
+      const gfx::IntSize aSize);
+  already_AddRefed<DataSourceSurface> CreateStagingSurface(
+      const gfx::IntSize aSize);
+
   RefPtr<layers::CompositorD3D11> mCompositor;
   void* mContext = nullptr;
 
@@ -116,7 +121,9 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
     // changed area into the texture.
     RefPtr<layers::DataTextureSourceD3D11> mTexture;
     RefPtr<ID3D11Texture2D> mStagingTexture;
+    RefPtr<DataSourceSurface> mSurface;
     gfx::Rect mValidRect;
+    bool mIsTemp = false;
 
     struct KeyHashFn {
       std::size_t operator()(const TileKey& aId) const {
@@ -141,6 +148,8 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
     std::unordered_map<TileKey, Tile, Tile::KeyHashFn> mTiles;
     RefPtr<RenderTextureHost> mExternalImage;
 
+    nsTArray<RefPtr<ID3D11Texture2D>> mStagingPool;
+
     struct IdHashFn {
       std::size_t operator()(const wr::NativeSurfaceId& aId) const {
         return HashGeneric(wr::AsUint64(aId));
@@ -149,9 +158,19 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
   };
   std::unordered_map<wr::NativeSurfaceId, Surface, Surface::IdHashFn> mSurfaces;
 
+  enum UploadMode {
+    Upload_Immediate,
+    Upload_Staging,
+    Upload_StagingNoBlock,
+    Upload_StagingPooled
+  };
+  UploadMode GetUploadMode();
+  UploadMode mUploadMode = Upload_Staging;
+
   // Temporary state held between MapTile and UnmapTile
   Tile mCurrentTile;
   gfx::IntRect mCurrentTileDirty;
+  wr::NativeTileId mCurrentTileId;
 
   // The set of surfaces added to be composited for the current frame
   struct FrameSurface {
