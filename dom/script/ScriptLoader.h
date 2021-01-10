@@ -534,7 +534,8 @@ class ScriptLoader final : public nsISupports {
    *   * the about: page is not linkable from content
    *     (e.g. the function will return false for about:blank or about:srcdoc)
    */
-  static bool IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest);
+  static bool IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest,
+                                          Document* aDocument);
 
   /**
    * Start a load for aRequest's URI.
