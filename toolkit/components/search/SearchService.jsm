@@ -651,11 +651,16 @@ SearchService.prototype = {
       return;
     }
 
+    // Before entering `_reloadingEngines` get the settings which we'll need.
+    // This also ensures that any pending settings have finished being written,
+    // which could otherwise cause data loss.
+    let settings = await this._settings.get();
+
     logConsole.debug("Running maybeReloadEngines");
     this._reloadingEngines = true;
 
     try {
-      await this._reloadEngines();
+      await this._reloadEngines(settings);
     } catch (ex) {
       logConsole.error("maybeReloadEngines failed", ex);
     }
@@ -663,7 +668,7 @@ SearchService.prototype = {
     logConsole.debug("maybeReloadEngines complete");
   },
 
-  async _reloadEngines() {
+  async _reloadEngines(settings) {
     // Capture the current engine state, in case we need to notify below.
     const prevCurrentEngine = this._currentEngine;
     const prevPrivateEngine = this._currentPrivateEngine;
@@ -774,7 +779,6 @@ SearchService.prototype = {
         );
       }
     }
-    let settings = await this._settings.get();
     this._loadEnginesMetadataFromSettings(settings.engines);
 
     // Now set the sort out the default engines and notify as appropriate.
