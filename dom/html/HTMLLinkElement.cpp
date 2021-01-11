@@ -736,10 +736,8 @@ void HTMLLinkElement::CancelPrefetchOrPreload() {
 
 void HTMLLinkElement::StartPreload(nsContentPolicyType aPolicyType) {
   MOZ_ASSERT(!mPreload, "Forgot to cancel the running preload");
-
-  auto referrerInfo = MakeRefPtr<ReferrerInfo>(*this);
-  RefPtr<PreloaderBase> preload = OwnerDoc()->Preloads().PreloadLinkElement(
-      this, aPolicyType, referrerInfo);
+  RefPtr<PreloaderBase> preload =
+      OwnerDoc()->Preloads().PreloadLinkElement(this, aPolicyType);
   mPreload = preload.get();
 }
 
