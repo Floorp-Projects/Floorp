@@ -118,7 +118,7 @@ var PrintUtils = {
 
   getPreviewBrowser(sourceBrowser) {
     let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
-    for (let dialog of dialogBox._dialogManager._dialogs) {
+    for (let dialog of dialogBox.getTabDialogManager()._dialogs) {
       let browser = dialog._box.querySelector(".printPreviewBrowser");
       if (browser) {
         return browser;

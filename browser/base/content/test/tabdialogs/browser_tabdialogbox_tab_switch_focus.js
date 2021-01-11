@@ -30,7 +30,7 @@ add_task(async function test_tabdialogbox_tab_switch_focus() {
   for (let i = 0; i < 2; i += 1) {
     let dialogBox = gBrowser.getTabDialogBox(tabs[i].linkedBrowser);
     dialogBox.open(TEST_DIALOG_PATH);
-    dialogs.push(dialogBox._dialogManager._topDialog);
+    dialogs.push(dialogBox.getTabDialogManager()._topDialog);
   }
 
   // Wait for dialogs to be ready
@@ -100,7 +100,7 @@ add_task(async function test_tabdialogbox_tab_switch_hidden() {
     dialogBox = gBrowser.getTabDialogBox(tabs[i].linkedBrowser);
     browser = tabs[i].linkedBrowser;
     dialogBox.open(TEST_DIALOG_PATH);
-    dialogBoxManager = dialogBox.getManager();
+    dialogBoxManager = dialogBox.getTabDialogManager();
     dialogs.push(dialogBoxManager._topDialog);
   }
 
@@ -121,7 +121,7 @@ add_task(async function test_tabdialogbox_tab_switch_hidden() {
   // Check the dialog stack is showing in first tab
   dialogBoxManager = gBrowser
     .getTabDialogBox(tabs[0].linkedBrowser)
-    .getManager();
+    .getTabDialogManager();
   is(dialogBoxManager._dialogStack.hidden, false, "Dialog stack is showing");
 
   // Cleanup
