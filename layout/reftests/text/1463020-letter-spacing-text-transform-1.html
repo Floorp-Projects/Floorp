@@ -3,6 +3,10 @@
 <meta charset=utf-8>
 <style>
 span {
+  /* On Windows, we need to use the TwEmoji Mozilla font in preference to
+     Segoe UI Emoji, as the latter doesn't support the Regional-Indicator
+     flag ligatures. */
+  font-family: TwEmoji Mozilla, sans-serif;
   font-size: 36px;
   font-kerning: none;
 }
