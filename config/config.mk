@@ -309,7 +309,13 @@ else
 # reasonable styling applied to DOM trees whose depth is near what
 # Blink's HTML parser can output, esp.
 # layout/base/crashtests/507119.html (Bug 256180)
+ifndef MOZ_DEBUG
 WIN32_EXE_LDFLAGS      += -STACK:1572864
+else
+# In debug builds, layout code has extra logging helpers on the stack,
+# which can go over the 1.5MB limit on some deeply-nested crashtests.
+WIN32_EXE_LDFLAGS      += -STACK:2097152
+endif
 endif
 else
 ifneq ($(CPU_ARCH),x86)
