@@ -1305,18 +1305,18 @@ using MutableHandleValVector = MutableHandle<ValVector>;
 //
 // This can return false if the type check fails, or if a boxing into AnyRef
 // throws an OOM.
-extern MOZ_MUST_USE bool CheckRefType(JSContext* cx, RefType targetType,
-                                      HandleValue v,
-                                      MutableHandleFunction fnval,
-                                      MutableHandleAnyRef refval);
+[[nodiscard]] extern bool CheckRefType(JSContext* cx, RefType targetType,
+                                       HandleValue v,
+                                       MutableHandleFunction fnval,
+                                       MutableHandleAnyRef refval);
 
 // The same as above for when the target type is 'funcref'.
-extern MOZ_MUST_USE bool CheckFuncRefValue(JSContext* cx, HandleValue v,
-                                           MutableHandleFunction fun);
+[[nodiscard]] extern bool CheckFuncRefValue(JSContext* cx, HandleValue v,
+                                            MutableHandleFunction fun);
 
 // The same as above for when the target type is 'eqref'.
-extern MOZ_MUST_USE bool CheckEqRefValue(JSContext* cx, HandleValue v,
-                                         MutableHandleAnyRef vp);
+[[nodiscard]] extern bool CheckEqRefValue(JSContext* cx, HandleValue v,
+                                          MutableHandleAnyRef vp);
 class NoDebug;
 class DebugCodegenVal;
 
