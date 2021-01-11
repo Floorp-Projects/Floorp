@@ -454,6 +454,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   }
 
   bool shouldMarkInZone() const {
+    // We only need to check needsIncrementalBarrier() for the pre-barrier
+    // verifier. During marking isGCMarking() will always be true.
     return needsIncrementalBarrier() || isGCMarking();
   }
 
