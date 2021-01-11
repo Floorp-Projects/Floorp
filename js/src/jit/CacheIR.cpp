@@ -224,11 +224,8 @@ IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, HandleScript script,
                                        jsbytecode* pc, ICState::Mode mode,
                                        CacheKind cacheKind, HandleValue val,
-                                       HandleValue idVal, HandleValue receiver)
-    : IRGenerator(cx, script, pc, cacheKind, mode),
-      val_(val),
-      idVal_(idVal),
-      receiver_(receiver) {}
+                                       HandleValue idVal)
+    : IRGenerator(cx, script, pc, cacheKind, mode), val_(val), idVal_(idVal) {}
 
 static void EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderId,
                                NativeObject* holder, Shape* shape) {

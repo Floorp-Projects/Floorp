@@ -885,7 +885,7 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
   }
 
   TryAttachStub<GetPropIRGenerator>("GetElem", cx, frame, stub,
-                                    CacheKind::GetElem, lhs, rhs, lhs);
+                                    CacheKind::GetElem, lhs, rhs);
 
   if (!isOptimizedArgs) {
     if (!GetElementOperation(cx, lhsCopy, rhs, res)) {
@@ -911,8 +911,7 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
   MOZ_ASSERT(op == JSOp::GetElemSuper);
 
   TryAttachStub<GetPropIRGenerator>("GetElemSuper", cx, frame, stub,
-                                    CacheKind::GetElemSuper, lhs, rhs,
-                                    receiver);
+                                    CacheKind::GetElemSuper, lhs, rhs);
 
   // |lhs| is [[HomeObject]].[[Prototype]] which must be Object
   RootedObject lhsObj(cx, &lhs.toObject());
@@ -1473,7 +1472,7 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedValue idVal(cx, StringValue(name));
 
   TryAttachStub<GetPropIRGenerator>("GetProp", cx, frame, stub,
-                                    CacheKind::GetProp, val, idVal, val);
+                                    CacheKind::GetProp, val, idVal);
 
   return ComputeGetPropResult(cx, frame, op, name, val, res);
 }
@@ -1493,8 +1492,7 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
   RootedValue idVal(cx, StringValue(name));
 
   TryAttachStub<GetPropIRGenerator>("GetPropSuper", cx, frame, stub,
-                                    CacheKind::GetPropSuper, val, idVal,
-                                    receiver);
+                                    CacheKind::GetPropSuper, val, idVal);
 
   // |val| is [[HomeObject]].[[Prototype]] which must be Object
   RootedObject valObj(cx, &val.toObject());
