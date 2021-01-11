@@ -65,6 +65,10 @@ function do_test() {
       "border-box", "padding-box", "content-box", "text", "contain",
       "cover", "none", "-moz-element", "-moz-image-rect", "url", ...allGradients ];
 
+  if(SpecialPowers.getBoolPref("layout.css.image-set.enabled")) {
+    expected.push("image-set");
+  }
+
   if(SpecialPowers.getBoolPref("layout.css.cross-fade.enabled")) {
     expected.push("cross-fade");
   }
@@ -145,6 +149,10 @@ function do_test() {
   var expected = [ "auto", "inherit", "revert", "initial", "unset", "repeat", "stretch",
                    "-moz-element", "-moz-image-rect", "url", ...allGradients,
                    "fill", "none", "round", "space" ];
+
+  if(SpecialPowers.getBoolPref("layout.css.image-set.enabled")) {
+    expected.push("image-set");
+  }
 
   if(SpecialPowers.getBoolPref("layout.css.cross-fade.enabled")) {
     expected.push("cross-fade");
