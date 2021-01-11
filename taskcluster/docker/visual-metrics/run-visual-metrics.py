@@ -73,6 +73,15 @@ BROWSERTIME_SCHEMA = Schema(
     [{Required("files"): {Required("video"): [str]}}], extra=ALLOW_EXTRA
 )
 
+SHOULD_ALERT = {
+    "ContentfulSpeedIndex": True,
+    "FirstVisualChange": True,
+    "LastVisualChange": True,
+    "PerceptualSpeedIndex": True,
+    "SpeedIndex": True,
+    "videoRecordingStart": False,
+}
+
 with Path("/", "builds", "worker", "performance-artifact-schema.json").open() as f:
     PERFHERDER_SCHEMA = json.loads(f.read())
 
@@ -171,6 +180,7 @@ def append_result(log, suites, test_name, name, result, extra_options):
             "replicates": [result],
             "lowerIsBetter": True,
             "unit": "ms",
+            "shouldAlert": SHOULD_ALERT[name],
         }
     else:
         subtests[name]["replicates"].append(result)
