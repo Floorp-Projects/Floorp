@@ -9,6 +9,9 @@ pub extern crate chrono;
 pub extern crate once_cell;
 pub extern crate uuid;
 
+// Re-exporting for use in user tests.
+pub use private::{DistributionData, ErrorType, RecordedEvent};
+
 pub mod metrics;
 pub mod pings;
 pub mod private;
