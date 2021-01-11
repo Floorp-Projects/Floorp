@@ -63,6 +63,11 @@ add_task(async function test_main() {
       {
         file: "helper_fission_animation_styling_in_transformed_oopif.html",
       },
+      // Bug 1682200: This test fails on WebRender.
+      {
+        file: "helper_fission_tap_on_zoomed.html",
+        prefs: [["apz.max_tap_time", 10000]],
+      },
     ]);
   }
 

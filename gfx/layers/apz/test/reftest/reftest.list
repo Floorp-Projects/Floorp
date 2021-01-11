@@ -35,4 +35,7 @@ skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruc
 pref(apz.allow_zooming,true) == pinch-zoom-position-fixed.html pinch-zoom-position-fixed-ref.html
 pref(apz.allow_zooming,true) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html
 
+pref(apz.allow_zooming,true) == iframe-zoomed.html iframe-zoomed-ref.html
+pref(apz.allow_zooming,true) == scaled-iframe-zoomed.html scaled-iframe-zoomed-ref.html
+
 == root-scrollbars-1.html root-scrollbars-1-ref.html
