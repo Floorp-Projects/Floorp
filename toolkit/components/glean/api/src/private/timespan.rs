@@ -130,11 +130,5 @@ mod test {
 
         // (They also shouldn't do anything,
         // but that's not something we can inspect in this test)
-
-        // Need to catch the panic so that our RAIIs drop nicely.
-        let result = std::panic::catch_unwind(move || {
-            child_metric.test_get_value("store1");
-        });
-        assert!(result.is_err());
     }
 }
