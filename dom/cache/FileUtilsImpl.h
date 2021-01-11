@@ -19,18 +19,19 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
                            const bool aCanRemoveFiles, const bool aTrackQuota) {
   MOZ_DIAGNOSTIC_ASSERT(aBodyDir);
 
-  nsresult rv;
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  nsCOMPtr<nsIFile> parentFile;
-  rv = aBodyDir->GetParent(getter_AddRefs(parentFile));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_DIAGNOSTIC_ASSERT(parentFile);
+  {
+    nsCOMPtr<nsIFile> parentFile;
+    nsresult rv = aBodyDir->GetParent(getter_AddRefs(parentFile));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    MOZ_DIAGNOSTIC_ASSERT(parentFile);
 
-  nsAutoCString nativeLeafName;
-  rv = parentFile->GetNativeLeafName(nativeLeafName);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    nsAutoCString nativeLeafName;
+    rv = parentFile->GetNativeLeafName(nativeLeafName);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
-  MOZ_DIAGNOSTIC_ASSERT(StringEndsWith(nativeLeafName, "morgue"_ns));
+    MOZ_DIAGNOSTIC_ASSERT(StringEndsWith(nativeLeafName, "morgue"_ns));
+  }
 #endif
 
   bool isEmpty = true;
@@ -87,7 +88,7 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
     MOZ_ASSERT(NS_SUCCEEDED(result));
   }
 
-  return rv;
+  return NS_OK;
 }
 
 }  // namespace cache
