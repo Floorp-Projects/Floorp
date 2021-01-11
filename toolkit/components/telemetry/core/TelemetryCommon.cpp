@@ -17,7 +17,6 @@
 #include "nsVersionComparator.h"
 #include "TelemetryProcessData.h"
 #include "Telemetry.h"
-#include "mozilla/Uptime.h"
 
 namespace mozilla::Telemetry::Common {
 
@@ -85,27 +84,17 @@ bool CanRecordProduct(SupportedProduct aProducts) {
 }
 
 nsresult MsSinceProcessStart(double* aResult) {
+  bool isInconsistent = false;
   *aResult =
-      (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation()).ToMilliseconds();
+      (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation(&isInconsistent))
+          .ToMilliseconds();
+
+  if (isInconsistent) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::TELEMETRY_PROCESS_CREATION_TIMESTAMP_INCONSISTENT,
+        1);
+  }
   return NS_OK;
-}
-
-nsresult MsSinceProcessStartIncludingSuspend(double* aResult) {
-  auto rv = mozilla::ProcessUptimeMs();
-  if (rv) {
-    *aResult = rv.value();
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-nsresult MsSinceProcessStartExcludingSuspend(double* aResult) {
-  auto rv = mozilla::ProcessUptimeExcludingSuspendMs();
-  if (rv) {
-    *aResult = rv.value();
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_AVAILABLE;
 }
 
 void LogToBrowserConsole(uint32_t aLogLevel, const nsAString& aMsg) {
