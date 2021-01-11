@@ -1255,25 +1255,25 @@ main {
     align-items: center;
     display: flex;
     justify-content: center;
-    margin-bottom: 49px; }
+    margin-bottom: 48px; }
     .search-wrapper .logo-and-wordmark .logo {
       background: url("chrome://branding/content/about-logo.png") no-repeat center;
-      background-size: 96px;
+      background-size: 82px;
       display: inline-block;
-      height: 96px;
-      width: 96px; }
+      height: 82px;
+      width: 82px; }
       @media (min-resolution: 2x) {
         .search-wrapper .logo-and-wordmark .logo {
           background-image: url("chrome://branding/content/about-logo@2x.png"); } }
     .search-wrapper .logo-and-wordmark .wordmark {
       background: url("chrome://branding/content/firefox-wordmark.svg") no-repeat center center;
-      background-size: 172px;
+      background-size: 134px;
       -moz-context-properties: fill;
       display: inline-block;
       fill: var(--newtab-search-wordmark-color);
-      height: 96px;
-      margin-inline-start: 15px;
-      width: 172px; }
+      height: 82px;
+      margin-inline-start: 16px;
+      width: 134px; }
     @media (max-width: 609px) {
       .search-wrapper .logo-and-wordmark .logo {
         background-size: 64px;
@@ -1282,7 +1282,8 @@ main {
       .search-wrapper .logo-and-wordmark .wordmark {
         background-size: 100px;
         height: 64px;
-        width: 100px; } }
+        width: 100px;
+        margin-inline-start: 12px; } }
   .search-wrapper .search-inner-wrapper {
     cursor: default;
     display: flex;
