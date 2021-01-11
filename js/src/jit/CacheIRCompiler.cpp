@@ -3672,12 +3672,6 @@ bool CacheIRCompiler::emitLoadDenseElementHoleResult(ObjOperandId objId,
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
 
-  if (!output.hasValue()) {
-    masm.assumeUnreachable(
-        "Should have monitored undefined value after attaching stub");
-    return true;
-  }
-
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
@@ -5079,26 +5073,6 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
 #endif
 
-  // BigInt values are always boxed.
-  MOZ_ASSERT_IF(Scalar::isBigIntType(elementType), output.hasValue());
-
-  if (!output.hasValue()) {
-    if (elementType == Scalar::Float32 || elementType == Scalar::Float64) {
-      if (output.type() != JSVAL_TYPE_DOUBLE) {
-        masm.assumeUnreachable(
-            "Should have monitored double after attaching stub");
-        return true;
-      }
-    } else {
-      if (output.type() != JSVAL_TYPE_INT32 &&
-          output.type() != JSVAL_TYPE_DOUBLE) {
-        masm.assumeUnreachable(
-            "Should have monitored int32 after attaching stub");
-        return true;
-      }
-    }
-  }
-
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
@@ -5133,43 +5107,27 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
   BaseIndex source(scratch1, index,
                    ScaleFromElemWidth(Scalar::byteSize(elementType)));
 
-  if (output.hasValue()) {
-    if (Scalar::isBigIntType(elementType)) {
+  if (Scalar::isBigIntType(elementType)) {
 #ifdef JS_PUNBOX64
-      Register64 temp(scratch2);
+    Register64 temp(scratch2);
 #else
-      // We don't have more registers available on x86, so spill |obj| and
-      // additionally use the output's type register.
-      MOZ_ASSERT(output.valueReg().scratchReg() != output.valueReg().typeReg());
-      masm.push(obj);
-      Register64 temp(output.valueReg().typeReg(), obj);
+    // We don't have more registers available on x86, so spill |obj| and
+    // additionally use the output's type register.
+    MOZ_ASSERT(output.valueReg().scratchReg() != output.valueReg().typeReg());
+    masm.push(obj);
+    Register64 temp(output.valueReg().typeReg(), obj);
 #endif
 
-      masm.loadFromTypedBigIntArray(elementType, source, *bigInt, temp);
+    masm.loadFromTypedBigIntArray(elementType, source, *bigInt, temp);
 
 #ifndef JS_PUNBOX64
-      masm.pop(obj);
+    masm.pop(obj);
 #endif
 
-      masm.tagValue(JSVAL_TYPE_BIGINT, *bigInt, output.valueReg());
-    } else {
-      masm.loadFromTypedArray(elementType, source, output.valueReg(),
-                              allowDoubleForUint32, scratch1, failure->label());
-    }
+    masm.tagValue(JSVAL_TYPE_BIGINT, *bigInt, output.valueReg());
   } else {
-    bool needGpr =
-        (elementType == Scalar::Int8 || elementType == Scalar::Uint8 ||
-         elementType == Scalar::Int16 || elementType == Scalar::Uint16 ||
-         elementType == Scalar::Uint8Clamped || elementType == Scalar::Int32);
-    if (needGpr && output.type() == JSVAL_TYPE_DOUBLE) {
-      // Load the element as integer, then convert it to double.
-      masm.loadFromTypedArray(elementType, source, AnyRegister(scratch1),
-                              scratch1, failure->label());
-      masm.convertInt32ToDouble(source, output.typedReg().fpu());
-    } else {
-      masm.loadFromTypedArray(elementType, source, output.typedReg(), scratch1,
-                              failure->label());
-    }
+    masm.loadFromTypedArray(elementType, source, output.valueReg(),
+                            allowDoubleForUint32, scratch1, failure->label());
   }
 
   if (handleOOB) {
@@ -5177,11 +5135,7 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
     masm.jump(&done);
 
     masm.bind(&outOfBounds);
-    if (output.hasValue()) {
-      masm.moveValue(UndefinedValue(), output.valueReg());
-    } else {
-      masm.assumeUnreachable("Should have monitored undefined result");
-    }
+    masm.moveValue(UndefinedValue(), output.valueReg());
 
     masm.bind(&done);
   }
