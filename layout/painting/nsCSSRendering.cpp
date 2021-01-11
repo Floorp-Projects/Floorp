@@ -1879,7 +1879,8 @@ bool nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(
 
   // We only support painting gradients and image for a single style image
   // layer, and we don't support crop-rects.
-  const auto& styleImage = aBackgroundStyle->mImage.mLayers[aLayer].mImage;
+  const auto& styleImage =
+      aBackgroundStyle->mImage.mLayers[aLayer].mImage.FinalImage();
   if (styleImage.IsImageRequestType()) {
     if (styleImage.IsRect()) {
       return false;

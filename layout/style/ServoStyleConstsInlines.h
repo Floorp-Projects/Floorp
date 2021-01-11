@@ -933,18 +933,29 @@ inline bool RestyleHint::DefinitelyRecascadesAllSubtree() const {
 }
 
 template <>
+inline const StyleImage& StyleImage::FinalImage() const {
+  if (!IsImageSet()) {
+    return *this;
+  }
+  auto& set = AsImageSet();
+  return set->items.AsSpan()[set->selected_index].image.FinalImage();
+}
+
+template <>
 inline bool StyleImage::IsImageRequestType() const {
-  return IsUrl() || IsRect();
+  auto& finalImage = FinalImage();
+  return finalImage.IsUrl() || finalImage.IsRect();
 }
 
 template <>
 inline const StyleComputedImageUrl* StyleImage::GetImageRequestURLValue()
     const {
-  if (IsUrl()) {
-    return &AsUrl();
+  auto& finalImage = FinalImage();
+  if (finalImage.IsUrl()) {
+    return &finalImage.AsUrl();
   }
-  if (IsRect()) {
-    return &AsRect()->url;
+  if (finalImage.IsRect()) {
+    return &finalImage.AsRect()->url;
   }
   return nullptr;
 }
