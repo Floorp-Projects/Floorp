@@ -5,7 +5,7 @@
 <resources>
 
     <declare-styleable name="TabCounter">
-        <attr name="drawableColor" format="color" />
+        <attr name="tabCounterTintColor" format="reference|color" />
     </declare-styleable>
 
 </resources>

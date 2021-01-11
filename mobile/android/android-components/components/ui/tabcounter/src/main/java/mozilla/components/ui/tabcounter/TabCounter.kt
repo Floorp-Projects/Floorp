@@ -12,6 +12,7 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.RelativeLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
 import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
 import mozilla.components.support.utils.DrawableUtils
@@ -31,13 +32,23 @@ open class TabCounter @JvmOverloads constructor(
 
         setCount(INTERNAL_COUNT)
 
+        context.obtainStyledAttributes(attrs, R.styleable.TabCounter, defStyle, 0).apply {
+            val counterColor = getColor(
+                R.styleable.TabCounter_tabCounterTintColor,
+                ContextCompat.getColor(context, R.color.mozac_ui_tabcounter_default_tint)
+            )
+            setColor(counterColor)
+
+            recycle()
+        }
+
         animationSet = createAnimatorSet()
     }
 
     /**
      * Sets the colors of the tab counter box and text.
      */
-    fun setColor(color: Int) {
+    private fun setColor(color: Int) {
         val tabCounterBox =
             DrawableUtils.loadAndTintDrawable(context, R.drawable.mozac_ui_tabcounter_box, color)
         counter_box.setImageDrawable(tabCounterBox)

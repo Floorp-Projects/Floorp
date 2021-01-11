@@ -4,6 +4,8 @@ A component that connects a trabs tray implementation with the session and toolb
 
 ## Usage
 
+See the [`ui/tabcounter` component](../../ui/tabcounter/README.md) instructions on how to style the counter.
+
 ### Setting up the dependency
 
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):

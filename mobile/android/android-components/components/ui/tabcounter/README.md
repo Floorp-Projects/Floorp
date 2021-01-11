@@ -4,6 +4,24 @@ A button that shows the current tab count and can animate state changes.
 
 ## Usage
 
+Create a tab counter in XML:
+
+```xml
+<mozilla.components.ui.tabcounter.TabCounter
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  mozac:tabCounterTintColor="@color/primary" />
+```
+
+Styleable attributes can be set on your theme as well:
+
+```xml
+<style name="AppTheme">
+    ...
+    <item name="tabCounterTintColor">#FFFFFF</item>
+</style>
+```
+
 ### Setting up the dependency
 
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):

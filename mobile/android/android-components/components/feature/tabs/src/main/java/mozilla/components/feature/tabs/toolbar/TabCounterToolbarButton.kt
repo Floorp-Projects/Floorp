@@ -34,8 +34,7 @@ open class TabCounterToolbarButton(
     private val countBasedOnSelectedTabType: Boolean = true,
     private val showTabs: () -> Unit,
     private val store: BrowserStore,
-    private val menu: TabCounterMenu? = null,
-    private val privateColor: Int? = null
+    private val menu: TabCounterMenu? = null
 ) : Toolbar.Action {
 
     private var reference = WeakReference<TabCounter>(null)
@@ -59,12 +58,6 @@ open class TabCounterToolbarButton(
                 setOnLongClickListener {
                     menu.menuController.show(anchor = it)
                     true
-                }
-            }
-
-            privateColor?.let {
-                if (isPrivate(store)) {
-                    setColor(it)
                 }
             }
 
