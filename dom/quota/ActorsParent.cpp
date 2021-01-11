@@ -4560,23 +4560,20 @@ nsresult QuotaManager::LoadQuota() {
             // in the metadata file, but only as a side-effect. The actual place
             // we ensure consistency is in EnsureTemporaryOriginIsInitialized.
 
-            int64_t metadataLastAccessTime;
-            bool metadataPersisted;
-            QuotaInfo metadataQuotaInfo;
-            QM_TRY(GetDirectoryMetadata2WithRestore(
-                directory, /* aPersistent */ false, &metadataLastAccessTime,
-                &metadataPersisted, metadataQuotaInfo,
-                /* aTelemetry */ false));
+            QM_TRY_INSPECT(const auto& metadata,
+                           GetDirectoryMetadataWithQuotaInfo2WithRestore(
+                               directory, /* aPersistent */ false));
 
-            QM_TRY(OkIf(lastAccessTime == metadataLastAccessTime),
+            QM_TRY(OkIf(lastAccessTime == metadata.mTimestamp),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(persisted == metadataPersisted), Err(NS_ERROR_FAILURE));
-
-            QM_TRY(OkIf(groupAndOrigin.mGroup == metadataQuotaInfo.mGroup),
+            QM_TRY(OkIf(persisted == metadata.mPersisted),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(groupAndOrigin.mOrigin == metadataQuotaInfo.mOrigin),
+            QM_TRY(OkIf(groupAndOrigin.mGroup == metadata.mQuotaInfo.mGroup),
+                   Err(NS_ERROR_FAILURE));
+
+            QM_TRY(OkIf(groupAndOrigin.mOrigin == metadata.mQuotaInfo.mOrigin),
                    Err(NS_ERROR_FAILURE));
 
             QM_TRY(InitializeOrigin(persistenceType, groupAndOrigin,
@@ -5001,14 +4998,10 @@ nsresult QuotaManager::RestoreDirectoryMetadata2(nsIFile* aDirectory,
   return NS_OK;
 }
 
-nsresult QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory,
-                                             int64_t* aTimestamp,
-                                             bool* aPersisted,
-                                             QuotaInfo& aOutQuotaInfo) {
+Result<QuotaManager::GetDirectoryResultWithQuotaInfo, nsresult>
+QuotaManager::GetDirectoryMetadataWithQuotaInfo2(nsIFile* aDirectory) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aTimestamp);
-  MOZ_ASSERT(aPersisted);
   MOZ_ASSERT(mStorageConnection);
 
   QM_TRY_UNWRAP(auto binaryStream,
@@ -5056,92 +5049,68 @@ nsresult QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory,
         CreateDirectoryMetadata2(*aDirectory, timestamp, persisted, quotaInfo));
   }
 
-  *aTimestamp = timestamp;
-  *aPersisted = persisted;
-  aOutQuotaInfo = std::move(quotaInfo);
-  return NS_OK;
+  return GetDirectoryResultWithQuotaInfo{
+      {static_cast<int64_t>(timestamp), persisted}, std::move(quotaInfo)};
 }
 
-nsresult QuotaManager::GetDirectoryMetadata2WithRestore(
-    nsIFile* aDirectory, bool aPersistent, int64_t* aTimestamp,
-    bool* aPersisted, QuotaInfo& aOutQuotaInfo, const bool aTelemetry) {
-  nsresult rv =
-      GetDirectoryMetadata2(aDirectory, aTimestamp, aPersisted, aOutQuotaInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    rv = RestoreDirectoryMetadata2(aDirectory, aPersistent);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      if (aTelemetry) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Rep_RestoreDirMeta);
-      }
-      return rv;
-    }
+Result<QuotaManager::GetDirectoryResultWithQuotaInfo, nsresult>
+QuotaManager::GetDirectoryMetadataWithQuotaInfo2WithRestore(nsIFile* aDirectory,
+                                                            bool aPersistent) {
+  QM_TRY_UNWRAP(
+      auto maybeFirstAttemptResult,
+      ([&]() -> Result<Maybe<GetDirectoryResultWithQuotaInfo>, nsresult> {
+        QM_TRY_RETURN(GetDirectoryMetadataWithQuotaInfo2(aDirectory)
+                          .map(Some<GetDirectoryResultWithQuotaInfo,
+                                    GetDirectoryResultWithQuotaInfo>),
+                      Maybe<GetDirectoryResultWithQuotaInfo>{});
+      }()));
 
-    rv = GetDirectoryMetadata2(aDirectory, aTimestamp, aPersisted,
-                               aOutQuotaInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      if (aTelemetry) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_GetDirMeta);
-      }
-      return rv;
-    }
+  if (!maybeFirstAttemptResult) {
+    QM_TRY(RestoreDirectoryMetadata2(aDirectory, aPersistent));
+
+    QM_TRY_RETURN(GetDirectoryMetadataWithQuotaInfo2(aDirectory));
   }
 
-  return NS_OK;
+  return maybeFirstAttemptResult.extract();
 }
 
-nsresult QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory,
-                                             int64_t* aTimestamp,
-                                             bool* aPersisted) {
+Result<QuotaManager::GetDirectoryResult, nsresult>
+QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aTimestamp != nullptr || aPersisted != nullptr);
   MOZ_ASSERT(mStorageConnection);
 
-  QM_TRY_UNWRAP(auto binaryStream,
-                GetBinaryInputStream(*aDirectory,
-                                     nsLiteralString(METADATA_V2_FILE_NAME)));
+  QM_TRY_INSPECT(const auto& binaryStream,
+                 GetBinaryInputStream(*aDirectory,
+                                      nsLiteralString(METADATA_V2_FILE_NAME)));
 
-  uint64_t timestamp;
-  nsresult rv = binaryStream->Read64(&timestamp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_INSPECT(const uint64_t& timestamp,
+                 MOZ_TO_RESULT_INVOKE(binaryStream, Read64));
 
-  bool persisted;
-  if (aPersisted != nullptr) {
-    rv = binaryStream->ReadBoolean(&persisted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
+  QM_TRY_INSPECT(const bool& persisted,
+                 MOZ_TO_RESULT_INVOKE(binaryStream, ReadBoolean));
 
-  if (aTimestamp != nullptr) {
-    *aTimestamp = timestamp;
-  }
-  if (aPersisted != nullptr) {
-    *aPersisted = persisted;
-  }
-  return NS_OK;
+  return GetDirectoryResult{static_cast<int64_t>(timestamp), persisted};
 }
 
-nsresult QuotaManager::GetDirectoryMetadata2WithRestore(nsIFile* aDirectory,
-                                                        bool aPersistent,
-                                                        int64_t* aTimestamp,
-                                                        bool* aPersisted) {
-  nsresult rv = GetDirectoryMetadata2(aDirectory, aTimestamp, aPersisted);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    rv = RestoreDirectoryMetadata2(aDirectory, aPersistent);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+Result<QuotaManager::GetDirectoryResult, nsresult>
+QuotaManager::GetDirectoryMetadata2WithRestore(nsIFile* aDirectory,
+                                               bool aPersistent) {
+  QM_TRY_UNWRAP(
+      auto maybeFirstAttemptResult,
+      ([this, &aDirectory]() -> Result<Maybe<GetDirectoryResult>, nsresult> {
+        QM_TRY_RETURN(GetDirectoryMetadata2(aDirectory)
+                          .map(Some<GetDirectoryResult, GetDirectoryResult>),
+                      Maybe<GetDirectoryResult>{});
+      }()));
 
-    rv = GetDirectoryMetadata2(aDirectory, aTimestamp, aPersisted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (!maybeFirstAttemptResult) {
+    QM_TRY(RestoreDirectoryMetadata2(aDirectory, aPersistent));
+
+    QM_TRY_RETURN(GetDirectoryMetadata2(aDirectory));
   }
 
-  return NS_OK;
+  return maybeFirstAttemptResult.extract();
 }
 
 nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
@@ -5179,84 +5148,83 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
   nsTArray<RenameAndInitInfo> renameAndInitInfos;
 
   QM_TRY(([&]() -> Result<Ok, nsresult> {
-    QM_TRY(CollectEachFile(
-               *directory,
-               [&](nsCOMPtr<nsIFile>&& childDirectory) -> Result<Ok, nsresult> {
-                 if (NS_WARN_IF(IsShuttingDown())) {
-                   RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_ABORT);
-                 }
+    QM_TRY(
+        CollectEachFile(
+            *directory,
+            [&](nsCOMPtr<nsIFile>&& childDirectory) -> Result<Ok, nsresult> {
+              if (NS_WARN_IF(IsShuttingDown())) {
+                RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_ABORT);
+              }
 
-                 QM_TRY(
-                     ([this, &childDirectory, &renameAndInitInfos,
-                       aPersistenceType]() -> Result<Ok, nsresult> {
-                       QM_TRY_INSPECT(
-                           const bool& isDirectory,
-                           MOZ_TO_RESULT_INVOKE(childDirectory, IsDirectory));
+              QM_TRY(
+                  ([this, &childDirectory, &renameAndInitInfos,
+                    aPersistenceType]() -> Result<Ok, nsresult> {
+                    QM_TRY_INSPECT(
+                        const bool& isDirectory,
+                        MOZ_TO_RESULT_INVOKE(childDirectory, IsDirectory));
 
-                       nsAutoString leafName;
-                       QM_TRY(childDirectory->GetLeafName(leafName));
+                    nsAutoString leafName;
+                    QM_TRY(childDirectory->GetLeafName(leafName));
 
-                       if (!isDirectory) {
-                         if (IsOSMetadata(leafName) || IsDotFile(leafName)) {
-                           return Ok{};
-                         }
+                    if (!isDirectory) {
+                      if (IsOSMetadata(leafName) || IsDotFile(leafName)) {
+                        return Ok{};
+                      }
 
-                         // Unknown files during initialization are now allowed.
-                         // Just warn if we find them.
-                         UNKNOWN_FILE_WARNING(leafName);
-                         return Ok{};
-                       }
+                      // Unknown files during initialization are now allowed.
+                      // Just warn if we find them.
+                      UNKNOWN_FILE_WARNING(leafName);
+                      return Ok{};
+                    }
 
-                       int64_t timestamp;
-                       bool persisted;
-                       QuotaInfo quotaInfo;
-                       QM_TRY(GetDirectoryMetadata2WithRestore(
-                           childDirectory,
-                           /* aPersistent */ false, &timestamp, &persisted,
-                           quotaInfo,
-                           /* aTelemetry */ true));
+                    QM_TRY_UNWRAP(auto metadata,
+                                  GetDirectoryMetadataWithQuotaInfo2WithRestore(
+                                      childDirectory,
+                                      /* aPersistent */ false));
 
-                       // FIXME(tt): The check for origin name consistency can
-                       // be removed once we have an upgrade to traverse origin
-                       // directories and check through the directory metadata
-                       // files.
-                       nsAutoCString originSanitized(quotaInfo.mOrigin);
-                       SanitizeOriginString(originSanitized);
+                    // FIXME(tt): The check for origin name consistency can
+                    // be removed once we have an upgrade to traverse origin
+                    // directories and check through the directory metadata
+                    // files.
+                    nsAutoCString originSanitized(metadata.mQuotaInfo.mOrigin);
+                    SanitizeOriginString(originSanitized);
 
-                       NS_ConvertUTF16toUTF8 utf8LeafName(leafName);
-                       if (!originSanitized.Equals(utf8LeafName)) {
-                         QM_WARNING(
-                             "The name of the origin directory (%s) doesn't "
-                             "match the sanitized origin string (%s) in the "
-                             "metadata file!",
-                             utf8LeafName.get(), originSanitized.get());
+                    NS_ConvertUTF16toUTF8 utf8LeafName(leafName);
+                    if (!originSanitized.Equals(utf8LeafName)) {
+                      QM_WARNING(
+                          "The name of the origin directory (%s) doesn't "
+                          "match the sanitized origin string (%s) in the "
+                          "metadata file!",
+                          utf8LeafName.get(), originSanitized.get());
 
-                         // If it's the known case, we try to restore the origin
-                         // directory name if it's possible.
-                         if (originSanitized.Equals(utf8LeafName + "."_ns)) {
-                           renameAndInitInfos.AppendElement(RenameAndInitInfo{
-                               std::move(childDirectory), std::move(quotaInfo),
-                               timestamp, persisted});
-                           return Ok{};
-                         }
+                      // If it's the known case, we try to restore the origin
+                      // directory name if it's possible.
+                      if (originSanitized.Equals(utf8LeafName + "."_ns)) {
+                        renameAndInitInfos.AppendElement(RenameAndInitInfo{
+                            std::move(childDirectory),
+                            std::move(metadata.mQuotaInfo), metadata.mTimestamp,
+                            metadata.mPersisted});
+                        return Ok{};
+                      }
 
-                         // XXXtt: Try to restore the unknown cases base on the
-                         // content for their metadata files. Note that if the
-                         // restore fails, QM should maintain a list and ensure
-                         // they won't be accessed after initialization.
-                       }
+                      // XXXtt: Try to restore the unknown cases base on the
+                      // content for their metadata files. Note that if the
+                      // restore fails, QM should maintain a list and ensure
+                      // they won't be accessed after initialization.
+                    }
 
-                       QM_TRY(InitializeOrigin(aPersistenceType, quotaInfo,
-                                               timestamp, persisted,
-                                               childDirectory));
+                    QM_TRY(
+                        InitializeOrigin(aPersistenceType, metadata.mQuotaInfo,
+                                         metadata.mTimestamp,
+                                         metadata.mPersisted, childDirectory));
 
-                       return Ok{};
-                     }()),
-                     OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS, statusKeeperFunc);
+                    return Ok{};
+                  }()),
+                  OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS, statusKeeperFunc);
 
-                 return Ok{};
-               }),
-           OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS, statusKeeperFunc);
+              return Ok{};
+            }),
+        OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS, statusKeeperFunc);
 
     return Ok{};
   }()));
@@ -6760,21 +6728,29 @@ QuotaManager::EnsurePersistentOriginIsInitialized(const QuotaInfo& aQuotaInfo) {
 
     QM_TRY_INSPECT(const bool& created, EnsureOriginDirectory(*directory));
 
-    int64_t timestamp;
-    if (created) {
-      timestamp = PR_Now();
+    QM_TRY_INSPECT(
+        const int64_t& timestamp,
+        ([this, created, &directory,
+          &aQuotaInfo]() -> Result<int64_t, nsresult> {
+          if (created) {
+            const int64_t timestamp = PR_Now();
 
-      // Only creating .metadata-v2 to reduce IO.
-      QM_TRY(CreateDirectoryMetadata2(*directory, timestamp,
-                                      /* aPersisted */ true, aQuotaInfo));
-    } else {
-      QM_TRY(GetDirectoryMetadata2WithRestore(directory,
-                                              /* aPersistent */ true,
-                                              &timestamp,
-                                              /* aPersisted */ nullptr));
+            // Only creating .metadata-v2 to reduce IO.
+            QM_TRY(CreateDirectoryMetadata2(*directory, timestamp,
+                                            /* aPersisted */ true, aQuotaInfo));
 
-      MOZ_ASSERT(timestamp <= PR_Now());
-    }
+            return timestamp;
+          }
+
+          // Get the metadata. We only use the timestamp.
+          QM_TRY_INSPECT(const auto& metadata, GetDirectoryMetadata2WithRestore(
+                                                   directory,
+                                                   /* aPersistent */ true));
+
+          MOZ_ASSERT(metadata.mTimestamp <= PR_Now());
+
+          return metadata.mTimestamp;
+        }()));
 
     QM_TRY(InitializeOrigin(PERSISTENCE_TYPE_PERSISTENT, aQuotaInfo, timestamp,
                             /* aPersisted */ true, directory));
@@ -9139,24 +9115,17 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager& aQuotaManager,
                                    const PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  int64_t timestamp;
-  bool persisted;
-  QuotaInfo quotaInfo;
-  nsresult rv = aQuotaManager.GetDirectoryMetadata2WithRestore(
-      &aOriginDir, aPersistent, &timestamp, &persisted, quotaInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_INSPECT(const auto& metadata,
+                 aQuotaManager.GetDirectoryMetadataWithQuotaInfo2WithRestore(
+                     &aOriginDir, aPersistent));
 
-  auto usageInfoOrErr =
-      GetUsageForOrigin(aQuotaManager, aPersistenceType, quotaInfo);
-  if (NS_WARN_IF(usageInfoOrErr.isErr())) {
-    return usageInfoOrErr.unwrapErr();
-  }
+  QM_TRY_INSPECT(
+      const auto& usageInfo,
+      GetUsageForOrigin(aQuotaManager, aPersistenceType, metadata.mQuotaInfo));
 
-  ProcessOriginInternal(&aQuotaManager, aPersistenceType, quotaInfo.mOrigin,
-                        timestamp, persisted,
-                        usageInfoOrErr.unwrap().TotalUsage().valueOr(0));
+  ProcessOriginInternal(&aQuotaManager, aPersistenceType,
+                        metadata.mQuotaInfo.mOrigin, metadata.mTimestamp,
+                        metadata.mPersisted, usageInfo.TotalUsage().valueOr(0));
 
   return NS_OK;
 }
@@ -9715,11 +9684,10 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
             const bool persistent =
                 aPersistenceType == PERSISTENCE_TYPE_PERSISTENT;
 
-            int64_t timestamp;
-            QuotaInfo quotaInfo;
-            bool persisted;
-            QM_TRY(aQuotaManager.GetDirectoryMetadata2WithRestore(
-                file, persistent, &timestamp, &persisted, quotaInfo));
+            QM_TRY_INSPECT(
+                const auto& metadata,
+                aQuotaManager.GetDirectoryMetadataWithQuotaInfo2WithRestore(
+                    file, persistent));
 
             if (!mClientType.IsNull()) {
               nsAutoString clientDirectoryName;
@@ -9747,7 +9715,8 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
 
             const bool initialized =
                 aPersistenceType == PERSISTENCE_TYPE_PERSISTENT
-                    ? aQuotaManager.IsOriginInitialized(quotaInfo.mOrigin)
+                    ? aQuotaManager.IsOriginInitialized(
+                          metadata.mQuotaInfo.mOrigin)
                     : aQuotaManager.IsTemporaryStorageInitialized();
 
             // If it hasn't been initialized, we don't need to update the quota
@@ -9758,15 +9727,16 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
 
             if (aPersistenceType != PERSISTENCE_TYPE_PERSISTENT) {
               if (mClientType.IsNull()) {
-                aQuotaManager.RemoveQuotaForOrigin(aPersistenceType, quotaInfo);
+                aQuotaManager.RemoveQuotaForOrigin(aPersistenceType,
+                                                   metadata.mQuotaInfo);
               } else {
-                aQuotaManager.ResetUsageForClient(aPersistenceType, quotaInfo,
-                                                  mClientType.Value());
+                aQuotaManager.ResetUsageForClient(
+                    aPersistenceType, metadata.mQuotaInfo, mClientType.Value());
               }
             }
 
-            aQuotaManager.OriginClearCompleted(aPersistenceType,
-                                               quotaInfo.mOrigin, mClientType);
+            aQuotaManager.OriginClearCompleted(
+                aPersistenceType, metadata.mQuotaInfo.mOrigin, mClientType);
 
             return Ok{};
           }),
@@ -9982,17 +9952,13 @@ nsresult PersistedOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   }
 
   if (exists) {
-    // Get the persisted flag.
-    bool persisted;
-    rv = aQuotaManager.GetDirectoryMetadata2WithRestore(
-        directory,
-        /* aPersistent */ false,
-        /* aTimestamp */ nullptr, &persisted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    // Get the metadata. We only use the persisted flag.
+    QM_TRY_INSPECT(const auto& metadata,
+                   aQuotaManager.GetDirectoryMetadata2WithRestore(
+                       directory,
+                       /* aPersistent */ false));
 
-    mPersisted = persisted;
+    mPersisted = metadata.mPersisted;
   } else {
     // The directory has not been created yet.
     mPersisted = false;
@@ -10057,17 +10023,14 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
       return rv;
     }
   } else {
-    // Get the persisted flag (restore the metadata file if necessary).
-    bool persisted;
-    rv = aQuotaManager.GetDirectoryMetadata2WithRestore(
-        directory,
-        /* aPersistent */ false,
-        /* aTimestamp */ nullptr, &persisted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    // Get the metadata (restore the metadata file if necessary). We only use
+    // the persisted flag.
+    QM_TRY_INSPECT(const auto& metadata,
+                   aQuotaManager.GetDirectoryMetadata2WithRestore(
+                       directory,
+                       /* aPersistent */ false));
 
-    if (!persisted) {
+    if (!metadata.mPersisted) {
       nsCOMPtr<nsIFile> file;
       nsresult rv = directory->Clone(getter_AddRefs(file));
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -10214,21 +10177,16 @@ nsresult ListOriginsOp::ProcessOrigin(QuotaManager& aQuotaManager,
                                       const PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  int64_t timestamp;
-  bool persisted;
-  // XXX We only use quotaInfo.mOrigin
-  QuotaInfo quotaInfo;
-  nsresult rv = aQuotaManager.GetDirectoryMetadata2WithRestore(
-      &aOriginDir, aPersistent, &timestamp, &persisted, quotaInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  // XXX We only use metadata.mQuotaInfo.mOrigin...
+  QM_TRY_UNWRAP(auto metadata,
+                aQuotaManager.GetDirectoryMetadataWithQuotaInfo2WithRestore(
+                    &aOriginDir, aPersistent));
 
-  if (aQuotaManager.IsOriginInternal(quotaInfo.mOrigin)) {
+  if (aQuotaManager.IsOriginInternal(metadata.mQuotaInfo.mOrigin)) {
     return NS_OK;
   }
 
-  mOrigins.AppendElement(std::move(quotaInfo.mOrigin));
+  mOrigins.AppendElement(std::move(metadata.mQuotaInfo.mOrigin));
 
   return NS_OK;
 }
