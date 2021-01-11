@@ -1364,7 +1364,7 @@ class FuncType {
   FuncType(ValTypeVector&& args, ValTypeVector&& results)
       : args_(std::move(args)), results_(std::move(results)) {}
 
-  MOZ_MUST_USE bool clone(const FuncType& src) {
+  [[nodiscard]] bool clone(const FuncType& src) {
     MOZ_ASSERT(args_.empty());
     MOZ_ASSERT(results_.empty());
     return args_.appendAll(src.args_) && results_.appendAll(src.results_);
@@ -1909,7 +1909,7 @@ class StructType {
   StructType(StructType&&) = default;
   StructType& operator=(StructType&&) = default;
 
-  MOZ_MUST_USE bool clone(const StructType& src) {
+  [[nodiscard]] bool clone(const StructType& src) {
     if (!fields_.appendAll(src.fields_)) {
       return false;
     }
@@ -1929,7 +1929,7 @@ class StructType {
     }
   }
 
-  MOZ_MUST_USE bool computeLayout();
+  [[nodiscard]] bool computeLayout();
 
   // Get the offset to a field from the base of the struct object. This
   // is just the field offset for outline typed objects, but includes
@@ -2428,7 +2428,7 @@ class TypeDef {
     return *this;
   }
 
-  MOZ_MUST_USE bool clone(const TypeDef& src) {
+  [[nodiscard]] bool clone(const TypeDef& src) {
     MOZ_ASSERT(isNone());
     tag_ = src.tag_;
     switch (src.tag_) {
@@ -2595,13 +2595,13 @@ class TypeContext {
   uint32_t length() const { return types_.length(); }
 
   template <typename U>
-  MOZ_MUST_USE bool append(U&& typeDef) {
+  [[nodiscard]] bool append(U&& typeDef) {
     return types_.append(std::move(typeDef));
   }
-  MOZ_MUST_USE bool resize(uint32_t length) { return types_.resize(length); }
+  [[nodiscard]] bool resize(uint32_t length) { return types_.resize(length); }
 
-  MOZ_MUST_USE bool transferTypes(const TypeDefWithIdVector& types,
-                                  uint32_t* baseIndex) {
+  [[nodiscard]] bool transferTypes(const TypeDefWithIdVector& types,
+                                   uint32_t* baseIndex) {
     *baseIndex = length();
     if (!resize(*baseIndex + types.length())) {
       return false;
@@ -3860,7 +3860,7 @@ class DebugFrame {
   // returnValue() can return a Handle to it.
 
   bool hasCachedReturnJSValue() const { return flags_.hasCachedReturnJSValue; }
-  MOZ_MUST_USE bool updateReturnJSValue(JSContext* cx);
+  [[nodiscard]] bool updateReturnJSValue(JSContext* cx);
   HandleValue returnValue() const;
   void clearReturnJSValue();
 

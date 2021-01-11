@@ -1705,7 +1705,7 @@ class FunctionCompiler {
   }
 
  public:
-  MOZ_MUST_USE bool pushDefs(const DefVector& defs) {
+  [[nodiscard]] bool pushDefs(const DefVector& defs) {
     if (inDeadCode()) {
       return true;
     }

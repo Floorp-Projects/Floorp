@@ -1368,7 +1368,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   }
 
  protected:
-  MOZ_MUST_USE bool addStandardLibraryMathInfo() {
+  [[nodiscard]] bool addStandardLibraryMathInfo() {
     static constexpr struct {
       const char* name;
       AsmJSMathBuiltinFunction func;
@@ -1449,7 +1449,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     MOZ_ASSERT(!moduleFunctionName_);
     moduleFunctionName_ = name;
   }
-  MOZ_MUST_USE bool initGlobalArgumentName(const ParserName* n) {
+  [[nodiscard]] bool initGlobalArgumentName(const ParserName* n) {
     globalArgumentName_ = n;
     if (n) {
       asmJSMetadata_->globalArgumentName = ParserAtomToNewUTF8CharsZ(cx_, n);
@@ -1459,7 +1459,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     }
     return true;
   }
-  MOZ_MUST_USE bool initImportArgumentName(const ParserName* n) {
+  [[nodiscard]] bool initImportArgumentName(const ParserName* n) {
     importArgumentName_ = n;
     if (n) {
       asmJSMetadata_->importArgumentName = ParserAtomToNewUTF8CharsZ(cx_, n);
@@ -1469,7 +1469,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     }
     return true;
   }
-  MOZ_MUST_USE bool initBufferArgumentName(const ParserName* n) {
+  [[nodiscard]] bool initBufferArgumentName(const ParserName* n) {
     bufferArgumentName_ = n;
     if (n) {
       asmJSMetadata_->bufferArgumentName = ParserAtomToNewUTF8CharsZ(cx_, n);
@@ -2566,10 +2566,10 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
 
   Encoder& encoder() { return encoder_; }
 
-  MOZ_MUST_USE bool writeInt32Lit(int32_t i32) {
+  [[nodiscard]] bool writeInt32Lit(int32_t i32) {
     return encoder().writeOp(Op::I32Const) && encoder().writeVarS32(i32);
   }
-  MOZ_MUST_USE bool writeConstExpr(const NumLit& lit) {
+  [[nodiscard]] bool writeConstExpr(const NumLit& lit) {
     switch (lit.which()) {
       case NumLit::Fixnum:
       case NumLit::NegativeInt:
@@ -2602,26 +2602,26 @@ class MOZ_STACK_CLASS FunctionValidator : public FunctionValidatorShared {
     return static_cast<ModuleValidator<Unit>&>(FunctionValidatorShared::m());
   }
 
-  MOZ_MUST_USE bool writeCall(ParseNode* pn, Op op) {
+  [[nodiscard]] bool writeCall(ParseNode* pn, Op op) {
     if (!encoder().writeOp(op)) {
       return false;
     }
 
     return appendCallSiteLineNumber(pn);
   }
-  MOZ_MUST_USE bool writeCall(ParseNode* pn, MozOp op) {
+  [[nodiscard]] bool writeCall(ParseNode* pn, MozOp op) {
     if (!encoder().writeOp(op)) {
       return false;
     }
 
     return appendCallSiteLineNumber(pn);
   }
-  MOZ_MUST_USE bool prepareCall(ParseNode* pn) {
+  [[nodiscard]] bool prepareCall(ParseNode* pn) {
     return appendCallSiteLineNumber(pn);
   }
 
  private:
-  MOZ_MUST_USE bool appendCallSiteLineNumber(ParseNode* node) {
+  [[nodiscard]] bool appendCallSiteLineNumber(ParseNode* node) {
     const TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
     auto lineToken = anyChars.lineToken(node->pn_pos.begin);
     uint32_t lineNumber = anyChars.lineNumber(lineToken);

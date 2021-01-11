@@ -46,7 +46,7 @@ class Context {
   bool triedToInstallSignalHandlers;
   bool haveSignalHandlers;
 
-  MOZ_MUST_USE bool ensureTypeContext(JSContext* cx);
+  [[nodiscard]] bool ensureTypeContext(JSContext* cx);
 
   // The global type context.
   UniquePtr<TypeContext> typeContext;
