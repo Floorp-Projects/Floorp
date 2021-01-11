@@ -784,6 +784,10 @@ renaming_overrides_prefixing = true
 
 "GenericImage" = """
  public:
+  // If this is an image-set(), the final image we've selected, otherwise it
+  // returns *this.
+  const StyleGenericImage& FinalImage() const;
+
   // Whether this image may have an image request associated with it.
   bool IsImageRequestType() const;
 
