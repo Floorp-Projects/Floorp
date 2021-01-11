@@ -44,7 +44,7 @@ interface NimbusApi : Observable<NimbusApi.Observer> {
      *
      * @return A list of [EnrolledExperiment]s
      */
-    fun getActiveExperiments(): List<EnrolledExperiment>
+    fun getActiveExperiments(): List<EnrolledExperiment> = listOf()
 
     /**
      * Get the currently enrolled branch for the given experiment
@@ -53,25 +53,27 @@ interface NimbusApi : Observable<NimbusApi.Observer> {
      *
      * @return A String representing the branch-id or "slug"
      */
-    fun getExperimentBranch(experimentId: String): String?
+    fun getExperimentBranch(experimentId: String): String? = null
 
     /**
      * Refreshes the experiments from the endpoint. Should be called at least once after
      * initialization
      */
-    fun updateExperiments()
+    fun updateExperiments() = Unit
 
     /**
      * Opt out of a specific experiment
      *
      * @param experimentId The string experiment-id or "slug" for which to opt out of
      */
-    fun optOut(experimentId: String)
+    fun optOut(experimentId: String) = Unit
 
     /**
      * Control the opt out for all experiments at once. This is likely a user action.
      */
     var globalUserParticipation: Boolean
+        get() = false
+        set(_) = Unit
 
     /**
      * Interface to be implemented by classes that want to observe experiment updates
@@ -239,3 +241,16 @@ class Nimbus(
             osVersion = Build.VERSION.RELEASE)
     }
 }
+
+/**
+ * An empty implementation of the `NimbusApi` to allow clients who have not enabled Nimbus (either
+ * by feature flags, or by not using a server endpoint.
+ *
+ * Any implementations using this class will report that the user has not been enrolled into any
+ * experiments, and will not report anything to Glean. Importantly, any calls to
+ * `getExperimentBranch(slug)` will return `null`, i.e. as if the user is not enrolled into the
+ * experiment.
+ */
+class NimbusDisabled(
+    private val delegate: Observable<NimbusApi.Observer> = ObserverRegistry()
+) : NimbusApi, Observable<NimbusApi.Observer> by delegate
