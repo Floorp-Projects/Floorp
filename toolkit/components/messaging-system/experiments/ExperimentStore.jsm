@@ -44,21 +44,7 @@ const DEFAULT_STORE_ID = "ExperimentStoreData";
 const SYNC_ACCESS_FEATURES = ["newtab", "aboutwelcome"];
 
 class ExperimentStore extends SharedDataMap {
-  constructor(sharedDataKey, options = {}) {
-    if (!options.path) {
-      // Adding path to options as a lazy loaded property
-      // to give the profile a chance to load first.
-      Object.defineProperty(options, "path", {
-        get: () => {
-          try {
-            const profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-            return PathUtils.join(profileDir, `${sharedDataKey}.json`);
-          } catch (e) {
-            return null;
-          }
-        },
-      });
-    }
+  constructor(sharedDataKey, options) {
     super(sharedDataKey || DEFAULT_STORE_ID, options);
   }
 
