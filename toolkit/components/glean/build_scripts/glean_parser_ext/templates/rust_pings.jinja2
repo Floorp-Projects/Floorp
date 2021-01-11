@@ -25,6 +25,14 @@ pub static {{ obj.name|snake_case }}: Lazy<Ping> = Lazy::new(|| {
 
 {% endfor %}
 
+/// Instantiate each custom ping once to trigger registration.
+#[doc(hidden)]
+pub fn register_pings() {
+    {% for obj in all_objs['pings'].values() %}
+    let _ = &*{{obj.name|snake_case }};
+    {% endfor %}
+}
+
 #[cfg(feature = "with_gecko")]
 pub(crate) fn submit_ping_by_id(id: u32, reason: Option<&str>) {
     match id {

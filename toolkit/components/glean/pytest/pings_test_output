@@ -69,6 +69,15 @@ pub static not_deletion_request: Lazy<Ping> = Lazy::new(|| {
 });
 
 
+/// Instantiate each custom ping once to trigger registration.
+#[doc(hidden)]
+pub fn register_pings() {
+    let _ = &*not_baseline;
+    let _ = &*not_metrics;
+    let _ = &*not_events;
+    let _ = &*not_deletion_request;
+}
+
 #[cfg(feature = "with_gecko")]
 pub(crate) fn submit_ping_by_id(id: u32, reason: Option<&str>) {
     match id {

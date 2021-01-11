@@ -122,6 +122,10 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
 
     if configuration.data_path.len() > 0 {
         glean::initialize(configuration, client_info);
+
+        // Register all custom pings before we initialize.
+        fog::pings::register_pings();
+
         fog::metrics::fog::initialization.stop();
         schedule_fog_validation_ping();
     }
