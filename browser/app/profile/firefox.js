@@ -1353,14 +1353,6 @@ pref("browser.partnerlink.campaign.topsites", "amzn_2020_a1");
 // TabModalPromptBox (false).
 pref("prompts.tabChromePromptSubDialog", true);
 
-// Whether to show the dialogs opened at the content level, such as
-// alert() or prompt(), using a SubDialogManager in the TabDialogBox.
-#ifdef EARLY_BETA_OR_EARLIER
-  pref("prompts.contentPromptSubDialog", true);
-#else
-  pref("prompts.contentPromptSubDialog", false);
-#endif
-
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
