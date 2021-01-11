@@ -75,11 +75,15 @@ class nsWaylandDisplay {
       zwp_primary_selection_device_manager_v1* aPrimarySelectionDeviceManager);
   void SetIdleInhibitManager(zwp_idle_inhibit_manager_v1* aIdleInhibitManager);
 
+  MessageLoop* GetThreadLoop() { return mThreadLoop; }
+  void ShutdownThreadLoop();
+
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
 
  private:
   ~nsWaylandDisplay();
 
+  MessageLoop* mThreadLoop;
   PRThread* mThreadId;
   wl_display* mDisplay;
   wl_event_queue* mEventQueue;
@@ -97,6 +101,7 @@ class nsWaylandDisplay {
 };
 
 void WaylandDispatchDisplays();
+void WaylandDisplayShutdown();
 void WaylandDisplayRelease();
 
 RefPtr<nsWaylandDisplay> WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
