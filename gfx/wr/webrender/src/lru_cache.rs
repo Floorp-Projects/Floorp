@@ -31,6 +31,7 @@ use std::{mem, num};
 /// into the LRU tracking freelist for this element.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 struct LRUCacheEntry<T> {
     /// The location of the LRU tracking element for this cache entry.
     /// This is None if the entry has manual eviction policy enabled.
@@ -42,6 +43,7 @@ struct LRUCacheEntry<T> {
 /// The main public interface to the LRU cache
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct LRUCache<T, M> {
     /// A free list of cache entries, and indices into the LRU tracking list
     entries: FreeList<LRUCacheEntry<T>, M>,
@@ -237,7 +239,7 @@ impl<T, M> LRUCache<T, M> {
 /// Index of an LRU tracking element
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, MallocSizeOf)]
 struct ItemIndex(num::NonZeroU32);
 
 impl ItemIndex {
@@ -252,7 +254,7 @@ impl ItemIndex {
 /// to minimize heap allocations and improve cache access patterns.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug)]
+#[derive(Debug, MallocSizeOf)]
 struct Item<H> {
     prev: Option<ItemIndex>,
     next: Option<ItemIndex>,
@@ -262,6 +264,7 @@ struct Item<H> {
 /// Internal implementation of the LRU tracking list
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 struct LRUTracker<H> {
     /// Current head of the list - this is the oldest item that will be evicted next.
     head: Option<ItemIndex>,
