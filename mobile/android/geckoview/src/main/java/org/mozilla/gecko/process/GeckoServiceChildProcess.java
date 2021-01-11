@@ -29,7 +29,7 @@ public class GeckoServiceChildProcess extends Service {
 
     private static IProcessManager sProcessManager;
 
-    private long lastLowMemoryNotificationTime = 0;
+    private long mLastLowMemoryNotificationTime = 0;
 
     @WrapForJNI(calledFrom = "gecko")
     private static void getEditableParent(final IGeckoEditableChild child,
@@ -156,15 +156,15 @@ public class GeckoServiceChildProcess extends Service {
             return;
         }
 
-        // See nsMemory.idl for descriptions of the various arguments to the "memory-pressure" observer.
+        // See nsIMemory.idl for descriptions of the various arguments to the "memory-pressure" observer.
         String observerArg = null;
 
         final long currentNotificationTime = System.currentTimeMillis();
         if (level >= ComponentCallbacks2.TRIM_MEMORY_COMPLETE ||
-            (currentNotificationTime - lastLowMemoryNotificationTime) >= LOW_MEMORY_ONGOING_RESET_TIME_MS) {
+            (currentNotificationTime - mLastLowMemoryNotificationTime) >= LOW_MEMORY_ONGOING_RESET_TIME_MS) {
             // We do a full "low-memory" notification for both new and last-ditch onTrimMemory requests.
             observerArg = "low-memory";
-            lastLowMemoryNotificationTime = currentNotificationTime;
+            mLastLowMemoryNotificationTime = currentNotificationTime;
         } else {
             // If it has been less than ten seconds since the last time we sent a "low-memory"
             // notification, we send a "low-memory-ongoing" notification instead.
