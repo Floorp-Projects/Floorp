@@ -12,6 +12,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 
 /**
  * Processes incoming intents and sends them to the corresponding activity.
@@ -27,7 +28,13 @@ class AuthIntentReceiverActivity : Activity() {
             // assumes it is not. If it's null, then we make a new one and open
             // the HomeActivity.
             val intent = intent?.let { Intent(intent) } ?: Intent()
-            components.intentProcessors.customTabIntentProcessor.process(intent)
+
+            if (settings().lastKnownMode.isPrivate) {
+                components.intentProcessors.privateCustomTabIntentProcessor.process(intent)
+            } else {
+                components.intentProcessors.customTabIntentProcessor.process(intent)
+            }
+
             intent.setClassName(applicationContext, AuthCustomTabActivity::class.java.name)
             intent.putExtra(HomeActivity.OPEN_TO_BROWSER, true)
 
