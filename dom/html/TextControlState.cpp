@@ -2096,7 +2096,9 @@ void TextControlState::SetSelectionRange(
         handlingSetSelectionRange.IsTextControlStateDestroyed()) {
       return;
     }
-    if (aScroll == ScrollAfterSelection::Yes) {
+    if (aScroll == ScrollAfterSelection::Yes && mBoundFrame) {
+      // mBoundFrame could be gone if selection listeners flushed layout for
+      // example.
       mBoundFrame->ScrollSelectionIntoViewAsync();
     }
     // Press on to firing the event even if that failed, like our old code did.
