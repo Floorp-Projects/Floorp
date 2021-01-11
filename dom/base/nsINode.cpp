@@ -2523,7 +2523,7 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     fragChildren->SetCapacity(count);
     for (nsIContent* child = newContent->GetFirstChild(); child;
          child = child->GetNextSibling()) {
-      NS_ASSERTION(child->GetComposedDoc() == nullptr,
+      NS_ASSERTION(child->GetUncomposedDoc() == nullptr,
                    "How did we get a child with a current doc?");
       fragChildren->AppendElement(child);
     }
