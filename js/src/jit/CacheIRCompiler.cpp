@@ -2356,11 +2356,7 @@ bool CacheIRCompiler::emitLoadDOMExpandoValueIgnoreGeneration(
 bool CacheIRCompiler::emitLoadUndefinedResult() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  if (output.hasValue()) {
-    masm.moveValue(UndefinedValue(), output.valueReg());
-  } else {
-    masm.assumeUnreachable("Should have monitored undefined result");
-  }
+  masm.moveValue(UndefinedValue(), output.valueReg());
   return true;
 }
 
@@ -5559,11 +5555,7 @@ bool CacheIRCompiler::emitLoadObjectResult(ObjOperandId objId) {
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
 
-  if (output.hasValue()) {
-    masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
-  } else {
-    masm.mov(obj, output.typedReg().gpr());
-  }
+  EmitStoreResult(masm, obj, JSVAL_TYPE_OBJECT, output);
 
   return true;
 }
@@ -5573,11 +5565,7 @@ bool CacheIRCompiler::emitLoadStringResult(StringOperandId strId) {
   AutoOutputRegister output(*this);
   Register str = allocator.useRegister(masm, strId);
 
-  if (output.hasValue()) {
-    masm.tagValue(JSVAL_TYPE_STRING, str, output.valueReg());
-  } else {
-    masm.mov(str, output.typedReg().gpr());
-  }
+  masm.tagValue(JSVAL_TYPE_STRING, str, output.valueReg());
 
   return true;
 }
@@ -5587,11 +5575,7 @@ bool CacheIRCompiler::emitLoadSymbolResult(SymbolOperandId symId) {
   AutoOutputRegister output(*this);
   Register sym = allocator.useRegister(masm, symId);
 
-  if (output.hasValue()) {
-    masm.tagValue(JSVAL_TYPE_SYMBOL, sym, output.valueReg());
-  } else {
-    masm.mov(sym, output.typedReg().gpr());
-  }
+  masm.tagValue(JSVAL_TYPE_SYMBOL, sym, output.valueReg());
 
   return true;
 }
@@ -5601,11 +5585,7 @@ bool CacheIRCompiler::emitLoadInt32Result(Int32OperandId valId) {
   AutoOutputRegister output(*this);
   Register val = allocator.useRegister(masm, valId);
 
-  if (output.hasValue()) {
-    masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
-  } else {
-    masm.mov(val, output.typedReg().gpr());
-  }
+  masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
 
   return true;
 }
@@ -5615,11 +5595,7 @@ bool CacheIRCompiler::emitLoadBigIntResult(BigIntOperandId valId) {
   AutoOutputRegister output(*this);
   Register val = allocator.useRegister(masm, valId);
 
-  if (output.hasValue()) {
-    masm.tagValue(JSVAL_TYPE_BIGINT, val, output.valueReg());
-  } else {
-    masm.mov(val, output.typedReg().gpr());
-  }
+  masm.tagValue(JSVAL_TYPE_BIGINT, val, output.valueReg());
 
   return true;
 }
