@@ -892,6 +892,8 @@ void AccessibleCaretManager::ChangeFocusToOrClearOldFocus(
 
 nsresult AccessibleCaretManager::SelectWord(nsIFrame* aFrame,
                                             const nsPoint& aPoint) const {
+  AC_LOGV("%s", __FUNCTION__);
+
   SetSelectionDragState(true);
   nsresult rs = aFrame->SelectByTypeAtPoint(
       mPresShell->GetPresContext(), aPoint, eSelectWord, eSelectWord, 0);
