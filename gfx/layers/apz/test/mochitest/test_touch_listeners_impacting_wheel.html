@@ -63,11 +63,11 @@ function takeSnapshots(e) {
   SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 }
 
-function* test(testDriver) {
+async function test() {
   var box = document.getElementById("box");
 
   // Ensure the div is layerized by scrolling it
-  yield moveMouseAndScrollWheelOver(box, 10, 10, testDriver);
+  await promiseMoveMouseAndScrollWheelOver(box, 10, 10);
 
   box.addEventListener("touchstart", function(e) {
     ok(false, "This should never be run");
@@ -75,11 +75,10 @@ function* test(testDriver) {
   box.addEventListener("wheel", takeSnapshots, { capture: false, passive: true });
 
   // Let the event regions and layerization propagate to the APZ
-  yield waitForAllPaints(function() {
-    flushApzRepaints(testDriver);
-  });
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
 
-  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(box, 10, 10, testDriver);
+  await promiseNativeMouseMoveAndWaitForMoveEvent(box, 10, 10);
 
   // Take over control of the refresh driver and compositor
   var utils = SpecialPowers.DOMWindowUtils;
@@ -88,7 +87,7 @@ function* test(testDriver) {
   // Trigger an APZ scroll using a wheel event. If APZ is waiting for a
   // content response, it will wait for takeSnapshots to finish running before
   // it starts scrolling, which will cause the checks in takeSnapshots to fail.
-  yield synthesizeNativeWheelAndWaitForScrollEvent(box, 10, 10, 0, -50, testDriver);
+  await promiseNativeWheelAndWaitForScrollEvent(box, 10, 10, 0, -50);
 }
 
 if (isApzEnabled()) {
@@ -104,7 +103,7 @@ if (isApzEnabled()) {
              ["apz.content_response_timeout", kResponseTimeoutMs],
              ["general.smoothscroll", true]])
   .then(waitUntilApzStable)
-  .then(runContinuation(test))
+  .then(test)
   .then(SimpleTest.finish, SimpleTest.finishWithFailure);
 }
 
