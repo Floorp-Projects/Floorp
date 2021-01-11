@@ -101,13 +101,16 @@ class nsNodeInfoManager final {
   /**
    * Returns true if SVG nodes in this document have real SVG semantics.
    */
-  bool SVGEnabled() { return mSVGEnabled.valueOr(InternalSVGEnabled()); }
+  bool SVGEnabled() {
+    return mSVGEnabled.valueOrFrom([this] { return InternalSVGEnabled(); });
+  }
 
   /**
    * Returns true if MathML nodes in this document have real MathML semantics.
    */
   bool MathMLEnabled() {
-    return mMathMLEnabled.valueOr(InternalMathMLEnabled());
+    return mMathMLEnabled.valueOrFrom(
+        [this] { return InternalMathMLEnabled(); });
   }
 
   mozilla::dom::DOMArena* GetArenaAllocator() { return mArena; }
