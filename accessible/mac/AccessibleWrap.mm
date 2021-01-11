@@ -326,6 +326,7 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::ENTRY:
     case roles::CAPTION:
     case roles::ACCEL_LABEL:
+    case roles::EDITCOMBOBOX:
     case roles::PASSWORD_TEXT:
       // normal textfield (static or editable)
       return [mozTextAccessible class];
