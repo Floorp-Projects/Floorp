@@ -33,6 +33,7 @@ use std::cell::Cell;
 use std::{cmp, mem};
 use std::rc::Rc;
 use euclid::size2;
+use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 
 /// Information about which shader will use the entry.
 ///
@@ -124,6 +125,8 @@ struct CacheEntry {
 
     shader: TargetShader,
 }
+
+malloc_size_of::malloc_size_of_is_0!(CacheEntry, CacheEntryMarker);
 
 impl CacheEntry {
     // Create a new entry for a standalone texture.
@@ -1443,6 +1446,10 @@ impl TextureCache {
     #[cfg(test)]
     pub fn total_allocated_bytes_for_testing(&self) -> usize {
         self.standalone_bytes_allocated + self.shared_bytes_allocated
+    }
+
+    pub fn report_memory(&self, ops: &mut MallocSizeOfOps) -> usize {
+        self.lru_cache.size_of(ops)
     }
 }
 
