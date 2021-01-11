@@ -1701,8 +1701,12 @@ nsresult nsHttpChannel::CallOnStartRequest() {
         request.mPromise->Resolve(std::move(child), __func__);
       }
     } else {
-      docListener->AttachStreamFilter(request.mChildProcessId)
-          ->ChainTo(request.mPromise.forget(), __func__);
+      if (docListener) {
+        docListener->AttachStreamFilter(request.mChildProcessId)
+            ->ChainTo(request.mPromise.forget(), __func__);
+      } else {
+        request.mPromise->Reject(false, __func__);
+      }
     }
     request.mPromise = nullptr;
   }
