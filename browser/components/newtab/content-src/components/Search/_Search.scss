@@ -13,13 +13,13 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   }
 
   .logo-and-wordmark {
-    $logo-size: 96px;
-    $wordmark-size: 172px;
+    $logo-size: 82px;
+    $wordmark-size: 134px;
 
     align-items: center;
     display: flex;
     justify-content: center;
-    margin-bottom: 49px;
+    margin-bottom: 48px;
 
     .logo {
       background: url('chrome://branding/content/about-logo.png') no-repeat center;
@@ -39,7 +39,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       display: inline-block;
       fill: var(--newtab-search-wordmark-color);
       height: $logo-size;
-      margin-inline-start: 15px;
+      margin-inline-start: 16px;
       width: $wordmark-size;
     }
 
@@ -57,6 +57,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
         background-size: $wordmark-small-size;
         height: $logo-size-small;
         width: $wordmark-small-size;
+        margin-inline-start: 12px;
       }
     }
   }
