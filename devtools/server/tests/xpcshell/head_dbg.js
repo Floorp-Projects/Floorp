@@ -23,7 +23,7 @@ const { require, loader } = ChromeUtils.import(
 const { worker } = ChromeUtils.import(
   "resource://devtools/shared/worker/loader.js"
 );
-const defer = require("devtools/shared/defer");
+
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 
 const Services = require("Services");
