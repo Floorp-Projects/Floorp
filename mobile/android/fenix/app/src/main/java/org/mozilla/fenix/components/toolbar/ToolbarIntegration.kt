@@ -171,8 +171,7 @@ class DefaultToolbarIntegration(
                 interactor.onTabCounterClicked()
             },
             store = store,
-            menu = tabCounterMenu,
-            privateColor = ContextCompat.getColor(context, R.color.primary_text_private_theme)
+            menu = tabCounterMenu
         )
 
         val tabCount = if (isPrivate) {

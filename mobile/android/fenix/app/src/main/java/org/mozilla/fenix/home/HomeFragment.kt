@@ -1010,7 +1010,6 @@ class HomeFragment : Fragment() {
     // https://github.com/mozilla-mobile/fenix/issues/16792
     private fun updateTabCounter(browserState: BrowserState) {
         val tabCount = if (browsingModeManager.mode.isPrivate) {
-            view?.tab_button?.setColor(ContextCompat.getColor(requireContext(), R.color.primary_text_private_theme))
             browserState.privateTabs.size
         } else {
             browserState.normalTabs.size

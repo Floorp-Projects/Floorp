@@ -107,6 +107,8 @@
         <item name="bottomBarBackgroundTop">@drawable/home_bottom_bar_background_top</item>
         <item name="privateBrowsingButtonBackground">@android:color/transparent</item>
         <item name="privateBrowsingButtonAccent">@color/primary_text_normal_theme</item>
+
+        <item name="tabCounterTintColor">?primaryText</item>
     </style>
 
     <style name="NormalTheme" parent="NormalThemeBase" />
