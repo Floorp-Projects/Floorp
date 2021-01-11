@@ -167,17 +167,17 @@ bool ExceptionsAvailable(JSContext* cx);
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 
-MOZ_MUST_USE bool Eval(JSContext* cx, Handle<TypedArrayObject*> code,
-                       HandleObject importObj,
-                       MutableHandleWasmInstanceObject instanceObj);
+[[nodiscard]] bool Eval(JSContext* cx, Handle<TypedArrayObject*> code,
+                        HandleObject importObj,
+                        MutableHandleWasmInstanceObject instanceObj);
 
 // Extracts the various imports from the given import object into the given
 // ImportValues structure while checking the imports against the given module.
 // The resulting structure can be passed to WasmModule::instantiate.
 
 struct ImportValues;
-MOZ_MUST_USE bool GetImports(JSContext* cx, const Module& module,
-                             HandleObject importObj, ImportValues* imports);
+[[nodiscard]] bool GetImports(JSContext* cx, const Module& module,
+                              HandleObject importObj, ImportValues* imports);
 
 // For testing cross-process (de)serialization, this pair of functions are
 // responsible for, in the child process, compiling the given wasm bytecode
@@ -185,11 +185,11 @@ MOZ_MUST_USE bool GetImports(JSContext* cx, const Module& module,
 // the parent process, deserializing the given byte array into a
 // WebAssembly.Module object.
 
-MOZ_MUST_USE bool CompileAndSerialize(const ShareableBytes& bytecode,
-                                      Bytes* serialized);
+[[nodiscard]] bool CompileAndSerialize(const ShareableBytes& bytecode,
+                                       Bytes* serialized);
 
-MOZ_MUST_USE bool DeserializeModule(JSContext* cx, const Bytes& serialized,
-                                    MutableHandleObject module);
+[[nodiscard]] bool DeserializeModule(JSContext* cx, const Bytes& serialized,
+                                     MutableHandleObject module);
 
 // A WebAssembly "Exported Function" is the spec name for the JS function
 // objects created to wrap wasm functions. This predicate returns false

@@ -305,50 +305,52 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 #endif
   size_t offsetOfLastReadOp_;
 
-  MOZ_MUST_USE bool readFixedU8(uint8_t* out) { return d_.readFixedU8(out); }
-  MOZ_MUST_USE bool readFixedU32(uint32_t* out) { return d_.readFixedU32(out); }
-  MOZ_MUST_USE bool readVarS32(int32_t* out) { return d_.readVarS32(out); }
-  MOZ_MUST_USE bool readVarU32(uint32_t* out) { return d_.readVarU32(out); }
-  MOZ_MUST_USE bool readVarS64(int64_t* out) { return d_.readVarS64(out); }
-  MOZ_MUST_USE bool readVarU64(uint64_t* out) { return d_.readVarU64(out); }
-  MOZ_MUST_USE bool readFixedF32(float* out) { return d_.readFixedF32(out); }
-  MOZ_MUST_USE bool readFixedF64(double* out) { return d_.readFixedF64(out); }
+  [[nodiscard]] bool readFixedU8(uint8_t* out) { return d_.readFixedU8(out); }
+  [[nodiscard]] bool readFixedU32(uint32_t* out) {
+    return d_.readFixedU32(out);
+  }
+  [[nodiscard]] bool readVarS32(int32_t* out) { return d_.readVarS32(out); }
+  [[nodiscard]] bool readVarU32(uint32_t* out) { return d_.readVarU32(out); }
+  [[nodiscard]] bool readVarS64(int64_t* out) { return d_.readVarS64(out); }
+  [[nodiscard]] bool readVarU64(uint64_t* out) { return d_.readVarU64(out); }
+  [[nodiscard]] bool readFixedF32(float* out) { return d_.readFixedF32(out); }
+  [[nodiscard]] bool readFixedF64(double* out) { return d_.readFixedF64(out); }
 
-  MOZ_MUST_USE bool readMemOrTableIndex(bool isMem, uint32_t* index);
-  MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize,
-                                            LinearMemoryAddress<Value>* addr);
-  MOZ_MUST_USE bool readLinearMemoryAddressAligned(
+  [[nodiscard]] bool readMemOrTableIndex(bool isMem, uint32_t* index);
+  [[nodiscard]] bool readLinearMemoryAddress(uint32_t byteSize,
+                                             LinearMemoryAddress<Value>* addr);
+  [[nodiscard]] bool readLinearMemoryAddressAligned(
       uint32_t byteSize, LinearMemoryAddress<Value>* addr);
-  MOZ_MUST_USE bool readBlockType(BlockType* type);
-  MOZ_MUST_USE bool readStructTypeIndex(uint32_t* typeIndex);
-  MOZ_MUST_USE bool readFieldIndex(uint32_t* fieldIndex,
-                                   const StructType& structType);
+  [[nodiscard]] bool readBlockType(BlockType* type);
+  [[nodiscard]] bool readStructTypeIndex(uint32_t* typeIndex);
+  [[nodiscard]] bool readFieldIndex(uint32_t* fieldIndex,
+                                    const StructType& structType);
 
-  MOZ_MUST_USE bool popCallArgs(const ValTypeVector& expectedTypes,
-                                ValueVector* values);
+  [[nodiscard]] bool popCallArgs(const ValTypeVector& expectedTypes,
+                                 ValueVector* values);
 
-  MOZ_MUST_USE bool failEmptyStack();
-  MOZ_MUST_USE bool popStackType(StackType* type, Value* value);
-  MOZ_MUST_USE bool popWithType(ValType expected, Value* value);
-  MOZ_MUST_USE bool popWithType(ResultType expected, ValueVector* values);
-  MOZ_MUST_USE bool popWithRefType(Value* value, StackType* type);
-  MOZ_MUST_USE bool popThenPushType(ResultType expected, ValueVector* values);
-  MOZ_MUST_USE bool topWithType(ResultType expected, ValueVector* values);
+  [[nodiscard]] bool failEmptyStack();
+  [[nodiscard]] bool popStackType(StackType* type, Value* value);
+  [[nodiscard]] bool popWithType(ValType expected, Value* value);
+  [[nodiscard]] bool popWithType(ResultType expected, ValueVector* values);
+  [[nodiscard]] bool popWithRefType(Value* value, StackType* type);
+  [[nodiscard]] bool popThenPushType(ResultType expected, ValueVector* values);
+  [[nodiscard]] bool topWithType(ResultType expected, ValueVector* values);
 
-  MOZ_MUST_USE bool pushControl(LabelKind kind, BlockType type);
-  MOZ_MUST_USE bool checkStackAtEndOfBlock(ResultType* type,
-                                           ValueVector* values);
-  MOZ_MUST_USE bool getControl(uint32_t relativeDepth, Control** controlEntry);
-  MOZ_MUST_USE bool checkBranchValue(uint32_t relativeDepth, ResultType* type,
-                                     ValueVector* values);
-  MOZ_MUST_USE bool checkBrTableEntry(uint32_t* relativeDepth,
-                                      ResultType prevBranchType,
-                                      ResultType* branchType,
-                                      ValueVector* branchValues);
+  [[nodiscard]] bool pushControl(LabelKind kind, BlockType type);
+  [[nodiscard]] bool checkStackAtEndOfBlock(ResultType* type,
+                                            ValueVector* values);
+  [[nodiscard]] bool getControl(uint32_t relativeDepth, Control** controlEntry);
+  [[nodiscard]] bool checkBranchValue(uint32_t relativeDepth, ResultType* type,
+                                      ValueVector* values);
+  [[nodiscard]] bool checkBrTableEntry(uint32_t* relativeDepth,
+                                       ResultType prevBranchType,
+                                       ResultType* branchType,
+                                       ValueVector* branchValues);
 
-  MOZ_MUST_USE bool push(ValType t) { return valueStack_.emplaceBack(t); }
-  MOZ_MUST_USE bool push(TypeAndValue tv) { return valueStack_.append(tv); }
-  MOZ_MUST_USE bool push(ResultType t) {
+  [[nodiscard]] bool push(ValType t) { return valueStack_.emplaceBack(t); }
+  [[nodiscard]] bool push(TypeAndValue tv) { return valueStack_.append(tv); }
+  [[nodiscard]] bool push(ResultType t) {
     for (size_t i = 0; i < t.length(); i++) {
       if (!push(t[i])) {
         return false;
@@ -402,13 +404,13 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   const uint8_t* end() const { return d_.end(); }
 
   // Report a general failure.
-  MOZ_MUST_USE bool fail(const char* msg) MOZ_COLD;
+  [[nodiscard]] bool fail(const char* msg) MOZ_COLD;
 
   // Report a general failure with a context
-  MOZ_MUST_USE bool fail_ctx(const char* fmt, const char* context) MOZ_COLD;
+  [[nodiscard]] bool fail_ctx(const char* fmt, const char* context) MOZ_COLD;
 
   // Report an unrecognized opcode.
-  MOZ_MUST_USE bool unrecognizedOpcode(const OpBytes* expr) MOZ_COLD;
+  [[nodiscard]] bool unrecognizedOpcode(const OpBytes* expr) MOZ_COLD;
 
   // Return whether the innermost block has a polymorphic base of its stack.
   // Ideally this accessor would be removed; consider using something else.
@@ -419,136 +421,140 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // ------------------------------------------------------------------------
   // Decoding and validation interface.
 
-  MOZ_MUST_USE bool readOp(OpBytes* op);
-  MOZ_MUST_USE bool readFunctionStart(uint32_t funcIndex);
-  MOZ_MUST_USE bool readFunctionEnd(const uint8_t* bodyEnd);
-  MOZ_MUST_USE bool readReturn(ValueVector* values);
-  MOZ_MUST_USE bool readBlock(ResultType* paramType);
-  MOZ_MUST_USE bool readLoop(ResultType* paramType);
-  MOZ_MUST_USE bool readIf(ResultType* paramType, Value* condition);
-  MOZ_MUST_USE bool readElse(ResultType* paramType, ResultType* resultType,
-                             ValueVector* thenResults);
-  MOZ_MUST_USE bool readEnd(LabelKind* kind, ResultType* type,
-                            ValueVector* results,
-                            ValueVector* resultsForEmptyElse);
+  [[nodiscard]] bool readOp(OpBytes* op);
+  [[nodiscard]] bool readFunctionStart(uint32_t funcIndex);
+  [[nodiscard]] bool readFunctionEnd(const uint8_t* bodyEnd);
+  [[nodiscard]] bool readReturn(ValueVector* values);
+  [[nodiscard]] bool readBlock(ResultType* paramType);
+  [[nodiscard]] bool readLoop(ResultType* paramType);
+  [[nodiscard]] bool readIf(ResultType* paramType, Value* condition);
+  [[nodiscard]] bool readElse(ResultType* paramType, ResultType* resultType,
+                              ValueVector* thenResults);
+  [[nodiscard]] bool readEnd(LabelKind* kind, ResultType* type,
+                             ValueVector* results,
+                             ValueVector* resultsForEmptyElse);
   void popEnd();
-  MOZ_MUST_USE bool readBr(uint32_t* relativeDepth, ResultType* type,
-                           ValueVector* values);
-  MOZ_MUST_USE bool readBrIf(uint32_t* relativeDepth, ResultType* type,
-                             ValueVector* values, Value* condition);
-  MOZ_MUST_USE bool readBrTable(Uint32Vector* depths, uint32_t* defaultDepth,
-                                ResultType* defaultBranchValueType,
-                                ValueVector* branchValues, Value* index);
+  [[nodiscard]] bool readBr(uint32_t* relativeDepth, ResultType* type,
+                            ValueVector* values);
+  [[nodiscard]] bool readBrIf(uint32_t* relativeDepth, ResultType* type,
+                              ValueVector* values, Value* condition);
+  [[nodiscard]] bool readBrTable(Uint32Vector* depths, uint32_t* defaultDepth,
+                                 ResultType* defaultBranchValueType,
+                                 ValueVector* branchValues, Value* index);
 #ifdef ENABLE_WASM_EXCEPTIONS
-  MOZ_MUST_USE bool readTry(ResultType* type);
-  MOZ_MUST_USE bool readCatch(LabelKind* kind, uint32_t* eventIndex,
-                              ResultType* paramType, ResultType* resultType,
-                              ValueVector* tryResults);
-  MOZ_MUST_USE bool readThrow(uint32_t* eventIndex, ValueVector* argValues);
+  [[nodiscard]] bool readTry(ResultType* type);
+  [[nodiscard]] bool readCatch(LabelKind* kind, uint32_t* eventIndex,
+                               ResultType* paramType, ResultType* resultType,
+                               ValueVector* tryResults);
+  [[nodiscard]] bool readThrow(uint32_t* eventIndex, ValueVector* argValues);
 #endif
-  MOZ_MUST_USE bool readUnreachable();
-  MOZ_MUST_USE bool readDrop();
-  MOZ_MUST_USE bool readUnary(ValType operandType, Value* input);
-  MOZ_MUST_USE bool readConversion(ValType operandType, ValType resultType,
-                                   Value* input);
-  MOZ_MUST_USE bool readBinary(ValType operandType, Value* lhs, Value* rhs);
-  MOZ_MUST_USE bool readComparison(ValType operandType, Value* lhs, Value* rhs);
-  MOZ_MUST_USE bool readLoad(ValType resultType, uint32_t byteSize,
-                             LinearMemoryAddress<Value>* addr);
-  MOZ_MUST_USE bool readStore(ValType resultType, uint32_t byteSize,
-                              LinearMemoryAddress<Value>* addr, Value* value);
-  MOZ_MUST_USE bool readTeeStore(ValType resultType, uint32_t byteSize,
-                                 LinearMemoryAddress<Value>* addr,
-                                 Value* value);
-  MOZ_MUST_USE bool readNop();
-  MOZ_MUST_USE bool readMemorySize();
-  MOZ_MUST_USE bool readMemoryGrow(Value* input);
-  MOZ_MUST_USE bool readSelect(bool typed, StackType* type, Value* trueValue,
-                               Value* falseValue, Value* condition);
-  MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
-  MOZ_MUST_USE bool readSetLocal(const ValTypeVector& locals, uint32_t* id,
-                                 Value* value);
-  MOZ_MUST_USE bool readTeeLocal(const ValTypeVector& locals, uint32_t* id,
-                                 Value* value);
-  MOZ_MUST_USE bool readGetGlobal(uint32_t* id);
-  MOZ_MUST_USE bool readSetGlobal(uint32_t* id, Value* value);
-  MOZ_MUST_USE bool readTeeGlobal(uint32_t* id, Value* value);
-  MOZ_MUST_USE bool readI32Const(int32_t* i32);
-  MOZ_MUST_USE bool readI64Const(int64_t* i64);
-  MOZ_MUST_USE bool readF32Const(float* f32);
-  MOZ_MUST_USE bool readF64Const(double* f64);
-  MOZ_MUST_USE bool readRefFunc(uint32_t* funcTypeIndex);
-  MOZ_MUST_USE bool readRefNull();
-  MOZ_MUST_USE bool readRefIsNull(Value* input);
-  MOZ_MUST_USE bool readRefAsNonNull(Value* input);
-  MOZ_MUST_USE bool readBrOnNull(uint32_t* relativeDepth, ResultType* type,
-                                 ValueVector* values, Value* condition);
-  MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
-  MOZ_MUST_USE bool readCallIndirect(uint32_t* funcTypeIndex,
-                                     uint32_t* tableIndex, Value* callee,
-                                     ValueVector* argValues);
-  MOZ_MUST_USE bool readOldCallDirect(uint32_t numFuncImports,
-                                      uint32_t* funcIndex,
-                                      ValueVector* argValues);
-  MOZ_MUST_USE bool readOldCallIndirect(uint32_t* funcTypeIndex, Value* callee,
-                                        ValueVector* argValues);
-  MOZ_MUST_USE bool readWake(LinearMemoryAddress<Value>* addr, Value* count);
-  MOZ_MUST_USE bool readWait(LinearMemoryAddress<Value>* addr,
-                             ValType resultType, uint32_t byteSize,
-                             Value* value, Value* timeout);
-  MOZ_MUST_USE bool readFence();
-  MOZ_MUST_USE bool readAtomicLoad(LinearMemoryAddress<Value>* addr,
-                                   ValType resultType, uint32_t byteSize);
-  MOZ_MUST_USE bool readAtomicStore(LinearMemoryAddress<Value>* addr,
-                                    ValType resultType, uint32_t byteSize,
-                                    Value* value);
-  MOZ_MUST_USE bool readAtomicRMW(LinearMemoryAddress<Value>* addr,
-                                  ValType resultType, uint32_t byteSize,
+  [[nodiscard]] bool readUnreachable();
+  [[nodiscard]] bool readDrop();
+  [[nodiscard]] bool readUnary(ValType operandType, Value* input);
+  [[nodiscard]] bool readConversion(ValType operandType, ValType resultType,
+                                    Value* input);
+  [[nodiscard]] bool readBinary(ValType operandType, Value* lhs, Value* rhs);
+  [[nodiscard]] bool readComparison(ValType operandType, Value* lhs,
+                                    Value* rhs);
+  [[nodiscard]] bool readLoad(ValType resultType, uint32_t byteSize,
+                              LinearMemoryAddress<Value>* addr);
+  [[nodiscard]] bool readStore(ValType resultType, uint32_t byteSize,
+                               LinearMemoryAddress<Value>* addr, Value* value);
+  [[nodiscard]] bool readTeeStore(ValType resultType, uint32_t byteSize,
+                                  LinearMemoryAddress<Value>* addr,
                                   Value* value);
-  MOZ_MUST_USE bool readAtomicCmpXchg(LinearMemoryAddress<Value>* addr,
-                                      ValType resultType, uint32_t byteSize,
-                                      Value* oldValue, Value* newValue);
-  MOZ_MUST_USE bool readMemOrTableCopy(bool isMem, uint32_t* dstMemOrTableIndex,
-                                       Value* dst, uint32_t* srcMemOrTableIndex,
-                                       Value* src, Value* len);
-  MOZ_MUST_USE bool readDataOrElemDrop(bool isData, uint32_t* segIndex);
-  MOZ_MUST_USE bool readMemFill(Value* start, Value* val, Value* len);
-  MOZ_MUST_USE bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
-                                       uint32_t* dstTableIndex, Value* dst,
-                                       Value* src, Value* len);
-  MOZ_MUST_USE bool readTableFill(uint32_t* tableIndex, Value* start,
-                                  Value* val, Value* len);
-  MOZ_MUST_USE bool readTableGet(uint32_t* tableIndex, Value* index);
-  MOZ_MUST_USE bool readTableGrow(uint32_t* tableIndex, Value* initValue,
-                                  Value* delta);
-  MOZ_MUST_USE bool readTableSet(uint32_t* tableIndex, Value* index,
-                                 Value* value);
-  MOZ_MUST_USE bool readTableSize(uint32_t* tableIndex);
-  MOZ_MUST_USE bool readStructNew(uint32_t* typeIndex, ValueVector* argValues);
-  MOZ_MUST_USE bool readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex,
-                                  Value* ptr);
-  MOZ_MUST_USE bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex,
-                                  Value* ptr, Value* val);
-  MOZ_MUST_USE bool readStructNarrow(ValType* inputType, ValType* outputType,
-                                     Value* ptr);
-  MOZ_MUST_USE bool readValType(ValType* type);
-  MOZ_MUST_USE bool readHeapType(bool nullable, RefType* type);
-  MOZ_MUST_USE bool readReferenceType(ValType* type, const char* const context);
+  [[nodiscard]] bool readNop();
+  [[nodiscard]] bool readMemorySize();
+  [[nodiscard]] bool readMemoryGrow(Value* input);
+  [[nodiscard]] bool readSelect(bool typed, StackType* type, Value* trueValue,
+                                Value* falseValue, Value* condition);
+  [[nodiscard]] bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
+  [[nodiscard]] bool readSetLocal(const ValTypeVector& locals, uint32_t* id,
+                                  Value* value);
+  [[nodiscard]] bool readTeeLocal(const ValTypeVector& locals, uint32_t* id,
+                                  Value* value);
+  [[nodiscard]] bool readGetGlobal(uint32_t* id);
+  [[nodiscard]] bool readSetGlobal(uint32_t* id, Value* value);
+  [[nodiscard]] bool readTeeGlobal(uint32_t* id, Value* value);
+  [[nodiscard]] bool readI32Const(int32_t* i32);
+  [[nodiscard]] bool readI64Const(int64_t* i64);
+  [[nodiscard]] bool readF32Const(float* f32);
+  [[nodiscard]] bool readF64Const(double* f64);
+  [[nodiscard]] bool readRefFunc(uint32_t* funcTypeIndex);
+  [[nodiscard]] bool readRefNull();
+  [[nodiscard]] bool readRefIsNull(Value* input);
+  [[nodiscard]] bool readRefAsNonNull(Value* input);
+  [[nodiscard]] bool readBrOnNull(uint32_t* relativeDepth, ResultType* type,
+                                  ValueVector* values, Value* condition);
+  [[nodiscard]] bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
+  [[nodiscard]] bool readCallIndirect(uint32_t* funcTypeIndex,
+                                      uint32_t* tableIndex, Value* callee,
+                                      ValueVector* argValues);
+  [[nodiscard]] bool readOldCallDirect(uint32_t numFuncImports,
+                                       uint32_t* funcIndex,
+                                       ValueVector* argValues);
+  [[nodiscard]] bool readOldCallIndirect(uint32_t* funcTypeIndex, Value* callee,
+                                         ValueVector* argValues);
+  [[nodiscard]] bool readWake(LinearMemoryAddress<Value>* addr, Value* count);
+  [[nodiscard]] bool readWait(LinearMemoryAddress<Value>* addr,
+                              ValType resultType, uint32_t byteSize,
+                              Value* value, Value* timeout);
+  [[nodiscard]] bool readFence();
+  [[nodiscard]] bool readAtomicLoad(LinearMemoryAddress<Value>* addr,
+                                    ValType resultType, uint32_t byteSize);
+  [[nodiscard]] bool readAtomicStore(LinearMemoryAddress<Value>* addr,
+                                     ValType resultType, uint32_t byteSize,
+                                     Value* value);
+  [[nodiscard]] bool readAtomicRMW(LinearMemoryAddress<Value>* addr,
+                                   ValType resultType, uint32_t byteSize,
+                                   Value* value);
+  [[nodiscard]] bool readAtomicCmpXchg(LinearMemoryAddress<Value>* addr,
+                                       ValType resultType, uint32_t byteSize,
+                                       Value* oldValue, Value* newValue);
+  [[nodiscard]] bool readMemOrTableCopy(bool isMem,
+                                        uint32_t* dstMemOrTableIndex,
+                                        Value* dst,
+                                        uint32_t* srcMemOrTableIndex,
+                                        Value* src, Value* len);
+  [[nodiscard]] bool readDataOrElemDrop(bool isData, uint32_t* segIndex);
+  [[nodiscard]] bool readMemFill(Value* start, Value* val, Value* len);
+  [[nodiscard]] bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
+                                        uint32_t* dstTableIndex, Value* dst,
+                                        Value* src, Value* len);
+  [[nodiscard]] bool readTableFill(uint32_t* tableIndex, Value* start,
+                                   Value* val, Value* len);
+  [[nodiscard]] bool readTableGet(uint32_t* tableIndex, Value* index);
+  [[nodiscard]] bool readTableGrow(uint32_t* tableIndex, Value* initValue,
+                                   Value* delta);
+  [[nodiscard]] bool readTableSet(uint32_t* tableIndex, Value* index,
+                                  Value* value);
+  [[nodiscard]] bool readTableSize(uint32_t* tableIndex);
+  [[nodiscard]] bool readStructNew(uint32_t* typeIndex, ValueVector* argValues);
+  [[nodiscard]] bool readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex,
+                                   Value* ptr);
+  [[nodiscard]] bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex,
+                                   Value* ptr, Value* val);
+  [[nodiscard]] bool readStructNarrow(ValType* inputType, ValType* outputType,
+                                      Value* ptr);
+  [[nodiscard]] bool readValType(ValType* type);
+  [[nodiscard]] bool readHeapType(bool nullable, RefType* type);
+  [[nodiscard]] bool readReferenceType(ValType* type,
+                                       const char* const context);
 
 #ifdef ENABLE_WASM_SIMD
-  MOZ_MUST_USE bool readLaneIndex(uint32_t inputLanes, uint32_t* laneIndex);
-  MOZ_MUST_USE bool readExtractLane(ValType resultType, uint32_t inputLanes,
-                                    uint32_t* laneIndex, Value* input);
-  MOZ_MUST_USE bool readReplaceLane(ValType operandType, uint32_t inputLanes,
-                                    uint32_t* laneIndex, Value* baseValue,
-                                    Value* operand);
-  MOZ_MUST_USE bool readVectorShift(Value* baseValue, Value* shift);
-  MOZ_MUST_USE bool readVectorSelect(Value* v1, Value* v2, Value* controlMask);
-  MOZ_MUST_USE bool readVectorShuffle(Value* v1, Value* v2, V128* selectMask);
-  MOZ_MUST_USE bool readV128Const(V128* f64);
-  MOZ_MUST_USE bool readLoadSplat(uint32_t byteSize,
-                                  LinearMemoryAddress<Value>* addr);
-  MOZ_MUST_USE bool readLoadExtend(LinearMemoryAddress<Value>* addr);
+  [[nodiscard]] bool readLaneIndex(uint32_t inputLanes, uint32_t* laneIndex);
+  [[nodiscard]] bool readExtractLane(ValType resultType, uint32_t inputLanes,
+                                     uint32_t* laneIndex, Value* input);
+  [[nodiscard]] bool readReplaceLane(ValType operandType, uint32_t inputLanes,
+                                     uint32_t* laneIndex, Value* baseValue,
+                                     Value* operand);
+  [[nodiscard]] bool readVectorShift(Value* baseValue, Value* shift);
+  [[nodiscard]] bool readVectorSelect(Value* v1, Value* v2, Value* controlMask);
+  [[nodiscard]] bool readVectorShuffle(Value* v1, Value* v2, V128* selectMask);
+  [[nodiscard]] bool readV128Const(V128* f64);
+  [[nodiscard]] bool readLoadSplat(uint32_t byteSize,
+                                   LinearMemoryAddress<Value>* addr);
+  [[nodiscard]] bool readLoadExtend(LinearMemoryAddress<Value>* addr);
 #endif
 
   // At a location where readOp is allowed, peek at the next opcode
