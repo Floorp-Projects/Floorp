@@ -77,10 +77,10 @@ document.getElementById("scrollbox").addEventListener("wheel", function(e) {
   e.preventDefault();
 });
 
-function* test(testDriver) {
+async function test() {
   var content = document.getElementById("content");
   for (let i = 0; i < 300; i++) { // enough iterations that we would scroll to the bottom of 'content'
-    yield synthesizeNativeWheelAndWaitForWheelEvent(content, 100, 150, 0, -5, testDriver);
+    await promiseNativeWheelAndWaitForWheelEvent(content, 100, 150, 0, -5);
   }
   is(content.scrollTop > 0, true, "We should have scrolled down somewhat");
   is(content.scrollTop < content.scrollTopMax, true, "We should not have scrolled to the bottom of the scrollframe");
@@ -94,7 +94,7 @@ SimpleTest.waitForExplicitFinish();
 // we might end up at the bottom of the page.
 pushPrefs([["general.smoothScroll", false]])
 .then(waitUntilApzStable)
-.then(runContinuation(test))
+.then(test)
 .then(SimpleTest.finish, SimpleTest.finishWithFailure);
 
 </script>
