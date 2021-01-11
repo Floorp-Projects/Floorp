@@ -278,7 +278,7 @@ var PrintEventHandler = {
       let sourceBrowser = this.getSourceBrowsingContext().top.embedderElement;
       let dialogBoxManager = gBrowser
         .getTabDialogBox(sourceBrowser)
-        .getManager();
+        .getTabDialogManager();
       dialogBoxManager.hideDialog(sourceBrowser);
 
       // Use our settings to prepopulate the system dialog.
