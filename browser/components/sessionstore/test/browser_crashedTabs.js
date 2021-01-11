@@ -146,7 +146,7 @@ add_task(async function test_revived_history_from_remote() {
   // Browse to a new site that will cause the browser to
   // become remote again.
   BrowserTestUtils.loadURI(browser, PAGE_2);
-  await promiseTabRestored(newTab);
+  await promiseBrowserLoaded(browser);
   ok(
     !newTab.hasAttribute("crashed"),
     "Tab shouldn't be marked as crashed anymore."
