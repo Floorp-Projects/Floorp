@@ -1427,8 +1427,21 @@ bool nsDisplayRemote::UpdateScrollData(
 
   if (aLayerData) {
     aLayerData->SetReferentId(mLayersId);
-    aLayerData->SetTransform(
-        mozilla::gfx::Matrix4x4::Translation(mOffset.x, mOffset.y, 0.0));
+    Matrix4x4 m = Matrix4x4::Translation(mOffset.x, mOffset.y, 0.0);
+
+    // Apply the top level resolution if we are in the same process of the top
+    // level document. We don't need to apply it in cases where we are in OOP
+    // iframes since it will be applied later in
+    // HitTestingTreeNode::GetTransformToGecko by walking up the tree node.
+    nsPresContext* inProcessRootContext =
+        mFrame->PresContext()->GetInProcessRootContentDocumentPresContext();
+    if (inProcessRootContext &&
+        inProcessRootContext->IsRootContentDocumentCrossProcess()) {
+      float resolution = inProcessRootContext->PresShell()->GetResolution();
+      m.PostScale(resolution, resolution, 1.0);
+    }
+
+    aLayerData->SetTransform(m);
     aLayerData->SetEventRegionsOverride(mEventRegionsOverride);
     aLayerData->SetRemoteDocumentSize(GetFrameSize(mFrame));
   }
