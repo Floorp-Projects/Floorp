@@ -7,7 +7,7 @@ package org.mozilla.fenix.library.recentlyclosed
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.history_list_item.view.*
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.history.HistoryItemMenu
 import org.mozilla.fenix.utils.Do
@@ -17,14 +17,14 @@ class RecentlyClosedItemViewHolder(
     private val recentlyClosedFragmentInteractor: RecentlyClosedFragmentInteractor
 ) : RecyclerView.ViewHolder(view) {
 
-    private var item: ClosedTab? = null
+    private var item: RecoverableTab? = null
 
     init {
         setupMenu()
     }
 
     fun bind(
-        item: ClosedTab
+        item: RecoverableTab
     ) {
         itemView.history_layout.titleView.text =
             if (item.title.isNotEmpty()) item.title else item.url

@@ -12,7 +12,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_recently_closed.*
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import org.mozilla.fenix.R
 
 interface RecentlyClosedInteractor {
@@ -21,7 +21,7 @@ interface RecentlyClosedInteractor {
      *
      * @param item the tapped item to restore.
      */
-    fun restore(item: ClosedTab)
+    fun restore(item: RecoverableTab)
 
     /**
      * Called when the view more history option is tapped.
@@ -33,35 +33,35 @@ interface RecentlyClosedInteractor {
      *
      * @param item the recently closed tab item to copy the URL from
      */
-    fun onCopyPressed(item: ClosedTab)
+    fun onCopyPressed(item: RecoverableTab)
 
     /**
      * Opens the share sheet for a recently closed tab item.
      *
      * @param item the recently closed tab item to share
      */
-    fun onSharePressed(item: ClosedTab)
+    fun onSharePressed(item: RecoverableTab)
 
     /**
      * Opens a recently closed tab item in a new tab.
      *
      * @param item the recently closed tab item to open in a new tab
      */
-    fun onOpenInNormalTab(item: ClosedTab)
+    fun onOpenInNormalTab(item: RecoverableTab)
 
     /**
      * Opens a recently closed tab item in a private tab.
      *
      * @param item the recently closed tab item to open in a private tab
      */
-    fun onOpenInPrivateTab(item: ClosedTab)
+    fun onOpenInPrivateTab(item: RecoverableTab)
 
     /**
      * Deletes one recently closed tab item.
      *
-     * @param item the recently closed tab item to delete.
+     * @param tab the recently closed tab item to delete.
      */
-    fun onDeleteOne(tab: ClosedTab)
+    fun onDeleteOne(tab: RecoverableTab)
 }
 
 /**
@@ -102,7 +102,7 @@ class RecentlyClosedFragmentView(
         }
     }
 
-    fun update(items: List<ClosedTab>) {
+    fun update(items: List<RecoverableTab>) {
         recently_closed_empty_view.isVisible = items.isEmpty()
         recently_closed_list.isVisible = items.isNotEmpty()
         recentlyClosedAdapter.submitList(items)

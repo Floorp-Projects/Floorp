@@ -13,18 +13,16 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.slot
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.RecentlyClosedAction
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
-import mozilla.components.feature.recentlyclosed.ext.restoreTab
+import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -47,16 +45,18 @@ class DefaultRecentlyClosedControllerTest {
     private val resources: Resources = mockk(relaxed = true)
     private val snackbar: FenixSnackbar = mockk(relaxed = true)
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
-    private val openToBrowser: (ClosedTab, BrowsingMode?) -> Unit = mockk(relaxed = true)
+    private val openToBrowser: (RecoverableTab, BrowsingMode?) -> Unit = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
     private val activity: HomeActivity = mockk(relaxed = true)
     private val store: BrowserStore = mockk(relaxed = true)
-    val mockedTab: ClosedTab = mockk(relaxed = true)
+    private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
+    val mockedTab: RecoverableTab = mockk(relaxed = true)
 
     private val controller = DefaultRecentlyClosedController(
         navController,
         store,
         sessionManager,
+        tabsUseCases,
         resources,
         snackbar,
         clipboardManager,
@@ -66,19 +66,17 @@ class DefaultRecentlyClosedControllerTest {
 
     @Before
     fun setUp() {
-        mockkStatic("mozilla.components.feature.recentlyclosed.ext.ClosedTabKt")
-        every { mockedTab.restoreTab(any(), any(), any()) } just Runs
+        every { tabsUseCases.restore.invoke(any(), true) } just Runs
     }
 
     @After
     fun tearDown() {
         dispatcher.cleanupTestCoroutines()
-        unmockkStatic("mozilla.components.feature.recentlyclosed.ext.ClosedTabKt")
     }
 
     @Test
     fun handleOpen() {
-        val item: ClosedTab = mockk(relaxed = true)
+        val item: RecoverableTab = mockk(relaxed = true)
 
         controller.handleOpen(item, BrowsingMode.Private)
 
@@ -95,7 +93,7 @@ class DefaultRecentlyClosedControllerTest {
 
     @Test
     fun handleDeleteOne() {
-        val item: ClosedTab = mockk(relaxed = true)
+        val item: RecoverableTab = mockk(relaxed = true)
 
         controller.handleDeleteOne(item)
 
@@ -120,7 +118,7 @@ class DefaultRecentlyClosedControllerTest {
 
     @Test
     fun handleCopyUrl() {
-        val item = ClosedTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", createdAt = 1L)
+        val item = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
 
         val clipdata = slot<ClipData>()
 
@@ -139,7 +137,7 @@ class DefaultRecentlyClosedControllerTest {
     @Test
     @Suppress("UNCHECKED_CAST")
     fun handleShare() {
-        val item = ClosedTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", createdAt = 1L)
+        val item = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
 
         controller.handleShare(item)
 
@@ -160,12 +158,6 @@ class DefaultRecentlyClosedControllerTest {
 
         dispatcher.advanceUntilIdle()
 
-        verify {
-            mockedTab.restoreTab(
-                store,
-                sessionManager,
-                onTabRestored = any()
-            )
-        }
+        verify { tabsUseCases.restore.invoke(mockedTab, true) }
     }
 }

@@ -11,10 +11,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.RecentlyClosedAction
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
-import mozilla.components.feature.recentlyclosed.ext.restoreTab
+import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -22,29 +22,30 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 
 interface RecentlyClosedController {
-    fun handleOpen(item: ClosedTab, mode: BrowsingMode? = null)
-    fun handleDeleteOne(tab: ClosedTab)
-    fun handleCopyUrl(item: ClosedTab)
-    fun handleShare(item: ClosedTab)
+    fun handleOpen(item: RecoverableTab, mode: BrowsingMode? = null)
+    fun handleDeleteOne(tab: RecoverableTab)
+    fun handleCopyUrl(item: RecoverableTab)
+    fun handleShare(item: RecoverableTab)
     fun handleNavigateToHistory()
-    fun handleRestore(item: ClosedTab)
+    fun handleRestore(item: RecoverableTab)
 }
 
 class DefaultRecentlyClosedController(
     private val navController: NavController,
     private val store: BrowserStore,
     private val sessionManager: SessionManager,
+    private val tabsUseCases: TabsUseCases,
     private val resources: Resources,
     private val snackbar: FenixSnackbar,
     private val clipboardManager: ClipboardManager,
     private val activity: HomeActivity,
-    private val openToBrowser: (item: ClosedTab, mode: BrowsingMode?) -> Unit
+    private val openToBrowser: (item: RecoverableTab, mode: BrowsingMode?) -> Unit
 ) : RecentlyClosedController {
-    override fun handleOpen(item: ClosedTab, mode: BrowsingMode?) {
+    override fun handleOpen(item: RecoverableTab, mode: BrowsingMode?) {
         openToBrowser(item, mode)
     }
 
-    override fun handleDeleteOne(tab: ClosedTab) {
+    override fun handleDeleteOne(tab: RecoverableTab) {
         store.dispatch(RecentlyClosedAction.RemoveClosedTabAction(tab))
     }
 
@@ -55,7 +56,7 @@ class DefaultRecentlyClosedController(
         )
     }
 
-    override fun handleCopyUrl(item: ClosedTab) {
+    override fun handleCopyUrl(item: RecoverableTab) {
         val urlClipData = ClipData.newPlainText(item.url, item.url)
         clipboardManager.setPrimaryClip(urlClipData)
         with(snackbar) {
@@ -64,7 +65,7 @@ class DefaultRecentlyClosedController(
         }
     }
 
-    override fun handleShare(item: ClosedTab) {
+    override fun handleShare(item: RecoverableTab) {
         navController.navigate(
             RecentlyClosedFragmentDirections.actionGlobalShareFragment(
                 data = arrayOf(ShareData(url = item.url, title = item.title))
@@ -72,15 +73,15 @@ class DefaultRecentlyClosedController(
         )
     }
 
-    override fun handleRestore(item: ClosedTab) {
-        item.restoreTab(
-            store,
-            sessionManager,
-            onTabRestored = {
-                activity.openToBrowser(
-                    from = BrowserDirection.FromRecentlyClosed
-                )
-            }
+    override fun handleRestore(item: RecoverableTab) {
+        tabsUseCases.restore(item)
+
+        store.dispatch(
+            RecentlyClosedAction.RemoveClosedTabAction(item)
+        )
+
+        activity.openToBrowser(
+            from = BrowserDirection.FromRecentlyClosed
         )
     }
 }

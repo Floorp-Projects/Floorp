@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.recentlyclosed
 
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 
 /**
@@ -14,27 +14,27 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 class RecentlyClosedFragmentInteractor(
     private val recentlyClosedController: RecentlyClosedController
 ) : RecentlyClosedInteractor {
-    override fun restore(item: ClosedTab) {
+    override fun restore(item: RecoverableTab) {
         recentlyClosedController.handleRestore(item)
     }
 
-    override fun onCopyPressed(item: ClosedTab) {
+    override fun onCopyPressed(item: RecoverableTab) {
         recentlyClosedController.handleCopyUrl(item)
     }
 
-    override fun onSharePressed(item: ClosedTab) {
+    override fun onSharePressed(item: RecoverableTab) {
         recentlyClosedController.handleShare(item)
     }
 
-    override fun onOpenInNormalTab(item: ClosedTab) {
+    override fun onOpenInNormalTab(item: RecoverableTab) {
         recentlyClosedController.handleOpen(item, BrowsingMode.Normal)
     }
 
-    override fun onOpenInPrivateTab(item: ClosedTab) {
+    override fun onOpenInPrivateTab(item: RecoverableTab) {
         recentlyClosedController.handleOpen(item, BrowsingMode.Private)
     }
 
-    override fun onDeleteOne(tab: ClosedTab) {
+    override fun onDeleteOne(tab: RecoverableTab) {
         recentlyClosedController.handleDeleteOne(tab)
     }
 

@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.fragment_recently_closed_tabs.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -34,7 +34,7 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.LibraryPageFragment
 
 @Suppress("TooManyFunctions")
-class RecentlyClosedFragment : LibraryPageFragment<ClosedTab>() {
+class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>() {
     private lateinit var recentlyClosedFragmentStore: RecentlyClosedFragmentStore
     private var _recentlyClosedFragmentView: RecentlyClosedFragmentView? = null
     protected val recentlyClosedFragmentView: RecentlyClosedFragmentView
@@ -82,6 +82,7 @@ class RecentlyClosedFragment : LibraryPageFragment<ClosedTab>() {
                 navController = findNavController(),
                 store = requireComponents.core.store,
                 activity = activity as HomeActivity,
+                tabsUseCases = requireComponents.useCases.tabsUseCases,
                 sessionManager = requireComponents.core.sessionManager,
                 resources = requireContext().resources,
                 snackbar = FenixSnackbar.make(
@@ -104,7 +105,7 @@ class RecentlyClosedFragment : LibraryPageFragment<ClosedTab>() {
         _recentlyClosedFragmentView = null
     }
 
-    private fun openItem(tab: ClosedTab, mode: BrowsingMode? = null) {
+    private fun openItem(tab: RecoverableTab, mode: BrowsingMode? = null) {
         mode?.let { (activity as HomeActivity).browsingModeManager.mode = it }
 
         (activity as HomeActivity).openToBrowserAndLoad(
@@ -131,5 +132,5 @@ class RecentlyClosedFragment : LibraryPageFragment<ClosedTab>() {
         }
     }
 
-    override val selectedItems: Set<ClosedTab> = setOf()
+    override val selectedItems: Set<RecoverableTab> = setOf()
 }

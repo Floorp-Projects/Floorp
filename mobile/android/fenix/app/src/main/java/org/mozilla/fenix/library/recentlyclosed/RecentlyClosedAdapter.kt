@@ -8,11 +8,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 
 class RecentlyClosedAdapter(
     private val interactor: RecentlyClosedFragmentInteractor
-) : ListAdapter<ClosedTab, RecentlyClosedItemViewHolder>(DiffCallback) {
+) : ListAdapter<RecoverableTab, RecentlyClosedItemViewHolder>(DiffCallback) {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -26,11 +26,11 @@ class RecentlyClosedAdapter(
         holder.bind(getItem(position))
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<ClosedTab>() {
-        override fun areItemsTheSame(oldItem: ClosedTab, newItem: ClosedTab) =
+    private object DiffCallback : DiffUtil.ItemCallback<RecoverableTab>() {
+        override fun areItemsTheSame(oldItem: RecoverableTab, newItem: RecoverableTab) =
             oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: ClosedTab, newItem: ClosedTab) =
+        override fun areContentsTheSame(oldItem: RecoverableTab, newItem: RecoverableTab) =
             oldItem.id == newItem.id
     }
 }

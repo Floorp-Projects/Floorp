@@ -6,7 +6,7 @@ package org.mozilla.fenix.library.recentlyclosed
 
 import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -27,7 +27,7 @@ class RecentlyClosedFragmentInteractorTest {
 
     @Test
     fun open() {
-        val tab = ClosedTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", createdAt = 1L)
+        val tab = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
         interactor.restore(tab)
 
         verify {
@@ -37,7 +37,7 @@ class RecentlyClosedFragmentInteractorTest {
 
     @Test
     fun onCopyPressed() {
-        val tab = ClosedTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", createdAt = 1L)
+        val tab = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
         interactor.onCopyPressed(tab)
 
         verify {
@@ -47,7 +47,7 @@ class RecentlyClosedFragmentInteractorTest {
 
     @Test
     fun onSharePressed() {
-        val tab = ClosedTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", createdAt = 1L)
+        val tab = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
         interactor.onSharePressed(tab)
 
         verify {
@@ -57,7 +57,7 @@ class RecentlyClosedFragmentInteractorTest {
 
     @Test
     fun onOpenInNormalTab() {
-        val tab = ClosedTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", createdAt = 1L)
+        val tab = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
         interactor.onOpenInNormalTab(tab)
 
         verify {
@@ -67,7 +67,7 @@ class RecentlyClosedFragmentInteractorTest {
 
     @Test
     fun onOpenInPrivateTab() {
-        val tab = ClosedTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", createdAt = 1L)
+        val tab = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
         interactor.onOpenInPrivateTab(tab)
 
         verify {
@@ -77,7 +77,7 @@ class RecentlyClosedFragmentInteractorTest {
 
     @Test
     fun onDeleteOne() {
-        val tab = ClosedTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", createdAt = 1L)
+        val tab = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
         interactor.onDeleteOne(tab)
 
         verify {
