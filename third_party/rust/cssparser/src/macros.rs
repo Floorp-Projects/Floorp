@@ -144,37 +144,44 @@ macro_rules! _cssparser_internal_to_lowercase {
 /// Otherwise, return `input` ASCII-lowercased, using `buffer` as temporary space if necessary.
 #[doc(hidden)]
 #[allow(non_snake_case)]
+#[inline]
 pub fn _cssparser_internal_to_lowercase<'a>(
     buffer: &'a mut [MaybeUninit<u8>],
     input: &'a str,
 ) -> Option<&'a str> {
-    if let Some(buffer) = buffer.get_mut(..input.len()) {
-        if let Some(first_uppercase) = input.bytes().position(|byte| matches!(byte, b'A'..=b'Z')) {
-            unsafe {
-                // This cast doesn’t change the pointer’s validity
-                // since `u8` has the same layout as `MaybeUninit<u8>`:
-                let input_bytes = &*(input.as_bytes() as *const [u8] as *const [MaybeUninit<u8>]);
+    let buffer = buffer.get_mut(..input.len())?;
 
-                buffer.copy_from_slice(&*input_bytes);
+    #[cold]
+    fn make_ascii_lowercase<'a>(
+        buffer: &'a mut [MaybeUninit<u8>],
+        input: &'a str,
+        first_uppercase: usize,
+    ) -> &'a str {
+        unsafe {
+            // This cast doesn't change the pointer's validity
+            // since `u8` has the same layout as `MaybeUninit<u8>`:
+            let input_bytes = &*(input.as_bytes() as *const [u8] as *const [MaybeUninit<u8>]);
 
-                // Same as above re layout, plus these bytes have been initialized:
-                let buffer = &mut *(buffer as *mut [MaybeUninit<u8>] as *mut [u8]);
+            buffer.copy_from_slice(&*input_bytes);
 
-                buffer[first_uppercase..].make_ascii_lowercase();
-                // `buffer` was initialized to a copy of `input`
-                // (which is `&str` so well-formed UTF-8)
-                // then ASCII-lowercased (which preserves UTF-8 well-formedness):
-                Some(::std::str::from_utf8_unchecked(buffer))
-            }
-        } else {
-            // Input is already lower-case
-            Some(input)
+            // Same as above re layout, plus these bytes have been initialized:
+            let buffer = &mut *(buffer as *mut [MaybeUninit<u8>] as *mut [u8]);
+
+            buffer[first_uppercase..].make_ascii_lowercase();
+            // `buffer` was initialized to a copy of `input`
+            // (which is `&str` so well-formed UTF-8)
+            // then ASCII-lowercased (which preserves UTF-8 well-formedness):
+            ::std::str::from_utf8_unchecked(buffer)
         }
-    } else {
-        // Input is longer than buffer, which has the length of the longest expected string:
-        // none of the expected strings would match.
-        None
     }
+
+    Some(
+        match input.bytes().position(|byte| matches!(byte, b'A'..=b'Z')) {
+            Some(first_uppercase) => make_ascii_lowercase(buffer, input, first_uppercase),
+            // common case: input is already lower-case
+            None => input,
+        },
+    )
 }
 
 #[cfg(feature = "dummy_match_byte")]
