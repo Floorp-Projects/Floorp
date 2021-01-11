@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-    function* test(testDriver) {
+    async function test() {
       // Trigger the buggy scenario
       var subframe = document.getElementById("bug1277814-div");
       subframe.classList.add("a");
@@ -26,16 +26,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
 
       // Wait for the layer tree with any updated dispatch-to-content region to
       // get pushed over to the APZ
-      yield waitForAllPaints(function() {
-        flushApzRepaints(testDriver);
-      });
+      await promiseAllPaintsDone();
+      await promiseApzRepaintsFlushed();
 
       // Trigger layerization of the subframe by scrolling the wheel over it
-      yield moveMouseAndScrollWheelOver(subframe, 10, 10, testDriver);
+      await promiseMoveMouseAndScrollWheelOver(subframe, 10, 10);
 
       // Give APZ the chance to compute a displayport, and content
       // to render based on it.
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
       // Examine the content-side APZ test data
       var contentTestData = utils.getContentAPZTestData();
@@ -64,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
 
       pushPrefs([["apz.test.logging_enabled", true]])
         .then(waitUntilApzStable)
-        .then(runContinuation(test))
+        .then(test)
         .then(SimpleTest.finish, SimpleTest.finishWithFailure);
     }
   </script>
