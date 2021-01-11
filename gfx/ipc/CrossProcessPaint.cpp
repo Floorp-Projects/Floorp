@@ -102,12 +102,6 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
     return PaintFragment{};
   }
 
-  Maybe<dom::ExplicitActiveStatus> oldExplicitStatus;
-  if (!aBc->IsActive()) {
-    oldExplicitStatus.emplace(aBc->GetExplicitActive());
-    Unused << aBc->SetExplicitActive(dom::ExplicitActiveStatus::Active);
-  }
-
   // Flush any pending notifications
   nsContentUtils::FlushLayoutForTree(ds->GetWindow());
 
@@ -140,10 +134,6 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
     RefPtr<PresShell> presShell = presContext->PresShell();
     Unused << presShell->RenderDocument(r, renderDocFlags, aBackgroundColor,
                                         thebes);
-  }
-
-  if (oldExplicitStatus) {
-    Unused << aBc->SetExplicitActive(*oldExplicitStatus);
   }
 
   if (!recorder->mOutputStream.mValid) {
