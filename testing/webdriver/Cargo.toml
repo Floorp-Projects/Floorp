@@ -10,6 +10,10 @@ readme = "README.md"
 license = "MPL-2.0"
 edition = "2018"
 
+[features]
+default = ["server"]
+server = ["tokio", "warp"]
+
 [dependencies]
 base64 = "0.12"
 bytes = "0.5"
@@ -20,7 +24,7 @@ serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
 time = "0.1"
-tokio = { version = "0.2", features = ["rt-core"] }
+tokio = { version = "0.2", features = ["rt-core"], optional = true}
 unicode-segmentation = "1.2"
 url = "2.0"
-warp = { version = "0.2", default-features = false }
+warp = { version = "0.2", default-features = false, optional = true }
