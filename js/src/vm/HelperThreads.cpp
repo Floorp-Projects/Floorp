@@ -884,24 +884,24 @@ static void WaitForOffThreadParses(JSRuntime* rt,
     return;
   }
 
+  GlobalHelperThreadState::ParseTaskVector& worklist =
+      HelperThreadState().parseWorklist(lock);
+
   while (true) {
     bool pending = false;
-    GlobalHelperThreadState::ParseTaskVector& worklist =
-        HelperThreadState().parseWorklist(lock);
     for (const auto& task : worklist) {
       if (task->runtimeMatches(rt)) {
         pending = true;
+        break;
       }
     }
     if (!pending) {
       bool inProgress = false;
       for (auto* helper : HelperThreadState().helperTasks(lock)) {
-        if (!helper->is<ParseTask>()) {
-          continue;
-        }
-
-        if (helper->as<ParseTask>()->runtimeMatches(rt)) {
+        if (helper->is<ParseTask>() &&
+            helper->as<ParseTask>()->runtimeMatches(rt)) {
           inProgress = true;
+          break;
         }
       }
       if (!inProgress) {
@@ -910,6 +910,16 @@ static void WaitForOffThreadParses(JSRuntime* rt,
     }
     HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
   }
+
+#ifdef DEBUG
+  for (const auto& task : worklist) {
+    MOZ_ASSERT(!task->runtimeMatches(rt));
+  }
+  for (auto* helper : HelperThreadState().helperTasks(lock)) {
+    MOZ_ASSERT_IF(helper->is<ParseTask>(),
+                  !helper->as<ParseTask>()->runtimeMatches(rt));
+  }
+#endif
 }
 
 void js::WaitForOffThreadParses(JSRuntime* rt) {
@@ -952,7 +962,7 @@ void js::CancelOffThreadParses(JSRuntime* rt) {
   }
 
 #ifdef DEBUG
-  for (const auto& task : HelperThreadState().parseWorklist(lock)) {
+  for (ParseTask* task : finished) {
     MOZ_ASSERT(!task->runtimeMatches(rt));
   }
 #endif
@@ -1456,9 +1466,12 @@ void GlobalHelperThreadState::waitForAllThreadsLocked(
     AutoLockHelperThreadState& lock) {
   CancelOffThreadWasmTier2GeneratorLocked(lock);
 
-  while (hasActiveThreads(lock)) {
+  while (hasActiveThreads(lock) || hasQueuedTasks(lock)) {
     wait(lock, CONSUMER);
   }
+
+  MOZ_ASSERT(!hasActiveThreads(lock));
+  MOZ_ASSERT(!hasQueuedTasks(lock));
 }
 
 // A task can be a "master" task, ie, it will block waiting for other worker
@@ -2613,6 +2626,16 @@ const HelperThread::Selector HelperThread::selectors[] = {
     &GlobalHelperThreadState::maybeGetIonFreeTask,
     &GlobalHelperThreadState::maybeGetWasmTier2CompileTask,
     &GlobalHelperThreadState::maybeGetWasmTier2GeneratorTask};
+
+bool GlobalHelperThreadState::hasQueuedTasks(
+    const AutoLockHelperThreadState& lock) {
+  return !gcParallelWorklist(lock).isEmpty() || !ionWorklist(lock).empty() ||
+         !wasmWorklist(lock, wasm::CompileMode::Tier1).empty() ||
+         !promiseHelperTasks(lock).empty() || !parseWorklist(lock).empty() ||
+         !compressionWorklist(lock).empty() || !ionFreeList(lock).empty() ||
+         !wasmWorklist(lock, wasm::CompileMode::Tier2).empty() ||
+         !wasmTier2GeneratorWorklist(lock).empty();
+}
 
 HelperThread::AutoProfilerLabel::AutoProfilerLabel(
     HelperThread* helperThread, const char* label,
