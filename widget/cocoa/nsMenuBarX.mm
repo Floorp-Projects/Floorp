@@ -44,6 +44,7 @@ extern BOOL sTouchBarIsInitialized;
 // window does not have a quit or pref item. We don't need strong refs here because
 // these items are always strong ref'd by their owning menu bar (instance variable).
 static nsIContent* sAboutItemContent = nullptr;
+static nsIContent* sUpdateItemContent = nullptr;
 static nsIContent* sPrefItemContent = nullptr;
 static nsIContent* sQuitItemContent = nullptr;
 
@@ -105,6 +106,7 @@ nsMenuBarX::~nsMenuBarX() {
   // the quit/pref items of a random window might have been used if there was no
   // hidden window, thus we need to invalidate the weak references.
   if (sAboutItemContent == mAboutItemContent) sAboutItemContent = nullptr;
+  if (sUpdateItemContent == mUpdateItemContent) sUpdateItemContent = nullptr;
   if (sQuitItemContent == mQuitItemContent) sQuitItemContent = nullptr;
   if (sPrefItemContent == mPrefItemContent) sPrefItemContent = nullptr;
 
@@ -503,6 +505,10 @@ void nsMenuBarX::HideItem(mozilla::dom::Document* inDoc, const nsAString& inID,
 void nsMenuBarX::AquifyMenuBar() {
   RefPtr<mozilla::dom::Document> domDoc = mContent->GetComposedDoc();
   if (domDoc) {
+    // remove the update item
+    HideItem(domDoc, u"checkForUpdates"_ns, getter_AddRefs(mUpdateItemContent));
+    if (!sUpdateItemContent) sUpdateItemContent = mUpdateItemContent;
+
     // remove the "About..." item and its separator
     HideItem(domDoc, u"aboutSeparator"_ns, nullptr);
     HideItem(domDoc, u"aboutName"_ns, getter_AddRefs(mAboutItemContent));
@@ -621,6 +627,7 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
 
     ========================
     = About This App       = <- aboutName
+    = Check for Updates    = <- checkForUpdates
     ========================
     = Preferences...       = <- menu_preferences
     ========================
@@ -663,6 +670,17 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     // Add the About menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, u"aboutName"_ns, @selector(menuItemHit:),
                                              eCommand_ID_About, nsMenuBarX::sNativeEventTarget);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+      itemBeingAdded = nil;
+
+      addAboutSeparator = TRUE;
+    }
+
+    // Add the Check For Updates menu item
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, u"checkForUpdates"_ns, @selector(menuItemHit:),
+                                             eCommand_ID_Update, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -886,6 +904,11 @@ static BOOL gMenuItemsExecuteCommands = YES;
   if (tag == eCommand_ID_About) {
     nsIContent* mostSpecificContent = sAboutItemContent;
     if (menuBar && menuBar->mAboutItemContent) mostSpecificContent = menuBar->mAboutItemContent;
+    nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
+    return;
+  } else if (tag == eCommand_ID_Update) {
+    nsIContent* mostSpecificContent = sUpdateItemContent;
+    if (menuBar && menuBar->mUpdateItemContent) mostSpecificContent = menuBar->mUpdateItemContent;
     nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
     return;
   } else if (tag == eCommand_ID_Prefs) {
