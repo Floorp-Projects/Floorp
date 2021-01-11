@@ -155,7 +155,14 @@ async function initBrowserToolboxTask({
   }
 
   async function importScript(script) {
-    await consoleFront.evaluateJSAsync(script);
+    const response = await consoleFront.evaluateJSAsync(script);
+    if (response.hasException) {
+      ok(
+        false,
+        "ToolboxTask.spawn exception while importing script: " +
+          response.exceptionMessage
+      );
+    }
   }
 
   async function destroy() {
