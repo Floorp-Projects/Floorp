@@ -770,12 +770,9 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
     return;
   }
 
-  auto referrerInfo = MakeRefPtr<ReferrerInfo>(*mDocument);
-  referrerInfo = referrerInfo->CloneWithNewOriginalReferrer(mDocumentURI);
-
   mDocument->Preloads().PreloadLinkHeader(uri, aHref, policyType, aAs, aType,
                                           aIntegrity, aSrcset, aSizes, aCORS,
-                                          aReferrerPolicy, referrerInfo);
+                                          aReferrerPolicy);
 }
 
 void nsContentSink::PrefetchDNS(const nsAString& aHref) {
