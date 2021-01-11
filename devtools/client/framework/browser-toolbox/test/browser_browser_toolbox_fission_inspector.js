@@ -71,8 +71,29 @@ add_task(async function() {
 
   await ToolboxTask.spawn(null, async () => {
     const onPickerStarted = gToolbox.nodePicker.once("picker-started");
+
+    // Wait until the inspector front was initialized in the target that
+    // contains the element we want to pick (#second-div).
+    // Otherwise, even if the picker is "started", the corresponding WalkerActor
+    // might not be listening to the correct pick events (WalkerActor::pick)
+    const onPickerReady = new Promise(resolve => {
+      gToolbox.nodePicker.on(
+        "inspector-front-ready-for-picker",
+        async function onFrontReady(walker) {
+          if (await walker.querySelector(walker.rootNode, "#second-div")) {
+            gToolbox.nodePicker.off(
+              "inspector-front-ready-for-picker",
+              onFrontReady
+            );
+            resolve();
+          }
+        }
+      );
+    });
+
     gToolbox.nodePicker.start();
     await onPickerStarted;
+    await onPickerReady;
 
     const inspector = gToolbox.getPanel("inspector");
 

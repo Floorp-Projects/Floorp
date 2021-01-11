@@ -88,6 +88,8 @@ class NodePicker extends EventEmitter {
     walker.on("picker-node-previewed", this._onPreviewed);
     walker.on("picker-node-canceled", this._onCanceled);
     await walker.pick(this.doFocus);
+
+    this.emitForTests("inspector-front-ready-for-picker", walker);
   }
 
   /**
