@@ -5,10 +5,11 @@
  * detect newly occurring issues in shipping files. It is a list of objects
  * specifying conditions under which an error should be ignored.
  *
- * As each issue is found in the whitelist, it is removed from the list. At
- * the end of the test, there is an assertion that all items have been
- * removed from the whitelist, thus ensuring there are no stale entries. */
-let gWhitelist = [
+ * As each issue is found in the exceptions list, it is removed from the list.
+ * At the end of the test, there is an assertion that all items have been
+ * removed from the exceptions list, thus ensuring there are no stale
+ * entries. */
+let gExceptionsList = [
   {
     file: "netError.dtd",
     key: "certerror.introPara2",
@@ -125,8 +126,8 @@ let gWhitelist = [
 ];
 
 /**
- * Check if an error should be ignored due to matching one of the whitelist
- * objects defined in gWhitelist.
+ * Check if an error should be ignored due to matching one of the exceptions
+ * defined in gExceptionsList.
  *
  * @param filepath The URI spec of the locale file
  * @param key The key of the entity that is being checked
@@ -134,14 +135,14 @@ let gWhitelist = [
  * @return true if the error should be ignored, false otherwise.
  */
 function ignoredError(filepath, key, type) {
-  for (let index in gWhitelist) {
-    let whitelistItem = gWhitelist[index];
+  for (let index in gExceptionsList) {
+    let exceptionItem = gExceptionsList[index];
     if (
-      filepath.endsWith(whitelistItem.file) &&
-      key == whitelistItem.key &&
-      type == whitelistItem.type
+      filepath.endsWith(exceptionItem.file) &&
+      key == exceptionItem.key &&
+      type == exceptionItem.type
     ) {
-      gWhitelist.splice(index, 1);
+      gExceptionsList.splice(index, 1);
       return true;
     }
   }
@@ -159,7 +160,7 @@ function testForErrors(filepath, key, str) {
     filepath,
     key,
     str,
-    /\w'\w/,
+    /(\w|^)'\w/,
     "apostrophe",
     "Strings with apostrophes should use foo\u2019s instead of foo's."
   );
@@ -335,6 +336,6 @@ add_task(async function checkAllTheFluents() {
   }
 });
 
-add_task(async function ensureWhiteListIsEmpty() {
-  is(gWhitelist.length, 0, "No remaining whitelist entries exist");
+add_task(async function ensureExceptionsListIsEmpty() {
+  is(gExceptionsList.length, 0, "No remaining exceptions exist");
 });
