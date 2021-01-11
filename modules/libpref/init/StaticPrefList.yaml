@@ -6293,13 +6293,6 @@
   mirror: always
   rust: true
 
-# Whether the ::-moz-focus-outer pseudo-class is parsed.
-- name: layout.css.moz-focus-outer.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Is -moz-osx-font-smoothing enabled? (Only supported in OSX builds)
 - name: layout.css.osx-font-smoothing.enabled
   type: bool

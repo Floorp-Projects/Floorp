@@ -120,8 +120,6 @@ class nsCSSPseudoElements {
 
   static bool EnabledInContent(Type aType) {
     switch (aType) {
-      case Type::mozFocusOuter:
-        return mozilla::StaticPrefs::layout_css_moz_focus_outer_enabled();
       case Type::fileSelectorButton:
         return mozilla::StaticPrefs::layout_css_file_selector_button_enabled();
       default:

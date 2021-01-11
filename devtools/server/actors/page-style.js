@@ -754,7 +754,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       case ":-moz-range-progress":
       case ":-moz-range-thumb":
       case ":-moz-range-track":
-      case ":-moz-focus-outer":
         return node.nodeName == "INPUT" && node.type == "range";
       default:
         throw Error("Unhandled pseudo-element " + pseudo);
