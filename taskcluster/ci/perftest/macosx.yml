@@ -196,6 +196,8 @@ controlled:
     description: Controlled performance testing
     treeherder:
         symbol: perftest(controlled)
+    worker:
+        max-run-time: 14400
     attributes:
         batch: false
         cron: true
