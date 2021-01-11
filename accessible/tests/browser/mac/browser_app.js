@@ -191,6 +191,12 @@ add_task(async () => {
         'data:text/html,<a id="exampleLink" href="https://example.com">link</a>',
     },
     async browser => {
+      if (!Services.search.isInitialized) {
+        let aStatus = await Services.search.init();
+        Assert.ok(Components.isSuccessCode(aStatus));
+        Assert.ok(Services.search.isInitialized);
+      }
+
       // synthesize a right click on the link to open the link context menu
       let menu = document.getElementById("contentAreaContextMenu");
       await BrowserTestUtils.synthesizeMouse(
@@ -203,16 +209,16 @@ add_task(async () => {
       await BrowserTestUtils.waitForPopupEvent(menu, "shown");
       menu = await getMacAccessible(menu);
       const menuChildren = menu.getAttributeValue("AXChildren");
-      // menu contains 11 items and 3 splitters for 14 items total
+      // menu contains 12 items and 3 splitters for 15 items total
       is(
         menuChildren.length,
-        14,
-        "Context menu on link contains fourteen items"
+        15,
+        "Context menu on link contains fifteen items"
       );
 
       for (let i = 0; i < menuChildren.length; i++) {
-        // items at indicies 4, 9, and 11 are the splitters, everything else should be a menu item
-        if (i == 4 || i == 9 || i == 11) {
+        // items at indicies 4, 10, and 12 are the splitters, everything else should be a menu item
+        if (i == 4 || i == 10 || i == 12) {
           is(
             menuChildren[i].getAttributeValue("AXRole"),
             "AXSplitter",
@@ -235,7 +241,7 @@ add_task(async () => {
         "Submenu 1 has no chldren when hidden"
       );
       is(
-        menuChildren[10].getAttributeValue("AXChildren").length,
+        menuChildren[11].getAttributeValue("AXChildren").length,
         0,
         "Submenu 2 has no chldren when hidden"
       );
