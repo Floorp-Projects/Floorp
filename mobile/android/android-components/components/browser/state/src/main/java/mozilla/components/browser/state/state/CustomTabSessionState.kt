@@ -58,6 +58,7 @@ fun createCustomTab(
     url: String,
     id: String = UUID.randomUUID().toString(),
     config: CustomTabConfig = CustomTabConfig(),
+    title: String = "",
     contextId: String? = null,
     engineSession: EngineSession? = null,
     mediaSessionState: MediaSessionState? = null,
@@ -65,7 +66,10 @@ fun createCustomTab(
 ): CustomTabSessionState {
     return CustomTabSessionState(
         id = id,
-        content = ContentState(url),
+        content = ContentState(
+            url = url,
+            title = title
+        ),
         config = config,
         mediaSessionState = mediaSessionState,
         contextId = contextId,

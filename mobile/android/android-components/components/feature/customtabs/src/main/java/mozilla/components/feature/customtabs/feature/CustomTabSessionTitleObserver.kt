@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.customtabs.feature
 
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.concept.toolbar.Toolbar
 
 /**
@@ -12,25 +12,39 @@ import mozilla.components.concept.toolbar.Toolbar
  */
 class CustomTabSessionTitleObserver(
     private val toolbar: Toolbar
-) : Session.Observer {
-    private var receivedTitle = false
+) {
+    private var url: String? = null
+    private var title: String? = null
+    private var showedTitle = false
 
-    override fun onUrlChanged(session: Session, url: String) {
-        // If we showed a title once in a custom tab then we are going to continue displaying
-        // a title (to avoid the layout bouncing around). However if no title is available then
-        // we just use the URL.
-        if (receivedTitle && session.title.isEmpty()) {
-            toolbar.title = url
+    internal fun onTab(tab: CustomTabSessionState) {
+        if (tab.content.title != title) {
+            onTitleChanged(tab)
+            title = tab.content.title
+        }
+
+        if (tab.content.url != url) {
+            onUrlChanged(tab)
+            url = tab.content.url
         }
     }
 
-    override fun onTitleChanged(session: Session, title: String) {
-        if (title.isNotEmpty()) {
-            toolbar.title = title
-            receivedTitle = true
-        } else if (receivedTitle) {
+    private fun onUrlChanged(tab: CustomTabSessionState) {
+        // If we showed a title once in a custom tab then we are going to continue displaying
+        // a title (to avoid the layout bouncing around). However if no title is available then
+        // we just use the URL.
+        if (showedTitle && tab.content.title.isEmpty()) {
+            toolbar.title = tab.content.url
+        }
+    }
+
+    private fun onTitleChanged(tab: CustomTabSessionState) {
+        if (tab.content.title.isNotEmpty()) {
+            toolbar.title = tab.content.title
+            showedTitle = true
+        } else if (showedTitle) {
             // See comment in OnUrlChanged().
-            toolbar.title = session.url
+            toolbar.title = tab.content.url
         }
     }
 }

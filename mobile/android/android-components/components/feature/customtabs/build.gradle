@@ -29,13 +29,14 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 dependencies {
     implementation project(':browser-menu')
-    implementation project(':browser-session')
+    implementation project(':browser-state')
     implementation project(':browser-toolbar')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
     implementation project(':concept-menu')
     implementation project(':feature-session')
     implementation project(':feature-intent')
+    implementation project(':feature-tabs')
     implementation project(':service-digitalassetlinks')
     implementation project(':support-base')
     implementation project(':support-ktx')
@@ -49,7 +50,8 @@ dependencies {
     api Dependencies.androidx_browser
 
     testImplementation project(':support-test')
-
+    testImplementation project(':support-test-libstate')
+    testImplementation project(':browser-session')
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_coroutines

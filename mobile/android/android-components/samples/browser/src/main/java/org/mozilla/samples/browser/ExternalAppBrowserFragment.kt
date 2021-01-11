@@ -41,9 +41,10 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
 
         customTabsToolbarFeature.set(
             feature = CustomTabsToolbarFeature(
-                components.sessionManager,
+                components.store,
                 layout.toolbar,
                 sessionId,
+                components.customTabsUseCases,
                 components.menuBuilder,
                 window = activity?.window,
                 closeListener = { activity?.finish() }),

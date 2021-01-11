@@ -67,6 +67,7 @@ import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
+import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.crash.Crash
@@ -169,6 +170,8 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val sessionUseCases by lazy { SessionUseCases(store, sessionManager) }
 
+    val customTabsUseCases by lazy { CustomTabsUseCases(sessionManager, sessionUseCases.loadUrl) }
+
     // Addons
     val addonManager by lazy {
         AddonManager(store, engine, addonCollectionProvider, addonUpdater)
@@ -246,7 +249,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 relationChecker,
                 customTabsStore
             ),
-            CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources)
+            CustomTabIntentProcessor(customTabsUseCases.add, applicationContext.resources)
         )
     }
 
