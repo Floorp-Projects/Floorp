@@ -3442,10 +3442,11 @@ gfx.canvas.remote:
   activated:
     bug_numbers:
       - 1641722
+      - 1672582
     description: >
       Number of times remote canvas 2D has been activated.
     kind: uint
-    expires: "85"
+    expires: "91"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
@@ -3458,10 +3459,11 @@ gfx.canvas.remote:
   deactivated_no_device:
     bug_numbers:
       - 1641722
+      - 1672582
     description: >
       Number of times remote canvas 2D has been deactivated due to device creation failure.
     kind: uint
-    expires: "85"
+    expires: "91"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
@@ -3474,10 +3476,11 @@ gfx.canvas.remote:
   deactivated_bad_stream:
     bug_numbers:
       - 1641722
+      - 1672582
     description: >
       Number of times remote canvas 2D has been deactivated due to a stream read failure.
     kind: uint
-    expires: "85"
+    expires: "91"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
