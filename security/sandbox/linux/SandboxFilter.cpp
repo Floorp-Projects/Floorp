@@ -654,6 +654,9 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
             // 4 -> CPUCLOCK_PERTHREAD_MASK. 2 -> CPUCLOCK_SCHED.
             .ElseIf((clk_id & 7u) == (4u | 2u), Allow())
 #endif
+#ifdef CLOCK_BOOTTIME
+            .ElseIf(clk_id == CLOCK_BOOTTIME, Allow())
+#endif
             .Else(InvalidSyscall());
       }
 
