@@ -31,7 +31,7 @@ linux64-geckodriver:
     description: "Geckodriver toolchain"
     run:
         index-search:
-            - gecko.cache.level-3.toolchains.v3.linux64-geckodriver.latest
+            - gecko.v2.mozilla-central.latest.geckodriver.linux64
 
 linux64-minidump-stackwalk:
     attributes:
