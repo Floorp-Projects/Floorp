@@ -83,6 +83,10 @@
 #  include "mozilla/WindowsVersion.h"
 #endif
 
+#ifdef MOZ_WAYLAND
+#  include "mozilla/widget/nsWaylandDisplay.h"
+#endif
+
 #include "nsGkAtoms.h"
 #include "gfxPlatformFontList.h"
 #include "gfxContext.h"
@@ -1348,6 +1352,10 @@ void gfxPlatform::ShutdownLayersIPC() {
     return;
   }
   sLayersIPCIsUp = false;
+
+#ifdef MOZ_WAYLAND
+  widget::WaylandDisplayShutdown();
+#endif
 
   if (XRE_IsContentProcess()) {
     gfx::VRManagerChild::ShutDown();
