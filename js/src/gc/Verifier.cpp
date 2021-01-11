@@ -353,6 +353,7 @@ void gc::GCRuntime::endVerifyPreBarriers() {
     if (!zone->needsIncrementalBarrier()) {
       compartmentCreated = true;
     }
+
     zone->setNeedsIncrementalBarrier(false);
   }
 
