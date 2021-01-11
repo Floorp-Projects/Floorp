@@ -70,8 +70,9 @@ modal.findModalDialogs = function(context) {
   // This is for prompts that are shown in SubDialogs in the browser chrome.
   if (context.tab && context.tabBrowser.getTabDialogBox) {
     let contentBrowser = context.contentBrowser;
-    let dialogManager = context.tabBrowser.getTabDialogBox(contentBrowser)
-      ._dialogManager;
+    let dialogManager = context.tabBrowser
+      .getTabDialogBox(contentBrowser)
+      .getTabDialogManager();
     let dialogs = dialogManager._dialogs.filter(
       dialog => dialog._openedURL === COMMON_DIALOG
     );

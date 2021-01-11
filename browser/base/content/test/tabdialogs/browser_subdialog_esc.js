@@ -30,7 +30,7 @@ add_task(async function test_subdialog_esc_does_not_cancel_load() {
       keepOpenSameOriginNav: true,
     });
 
-    let dialogs = dialogBox._dialogManager._dialogs;
+    let dialogs = dialogBox.getTabDialogManager()._dialogs;
 
     is(dialogs.length, 1, "Dialog manager has a dialog.");
 
@@ -68,7 +68,7 @@ add_task(async function test_subdialog_esc_on_dropdown_does_not_close_dialog() {
       keepOpenSameOriginNav: true,
     });
 
-    let dialogs = dialogBox._dialogManager._dialogs;
+    let dialogs = dialogBox.getTabDialogManager()._dialogs;
 
     is(dialogs.length, 1, "Dialog manager has a dialog.");
 
