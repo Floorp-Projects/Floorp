@@ -10,7 +10,6 @@
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Uptime.h"
 
 #include <stdio.h>
 #include <stdlib.h>

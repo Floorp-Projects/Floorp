@@ -16,7 +16,6 @@ EXPORTS.mozilla += [
     "Printf.h",
     "StackWalk.h",
     "TimeStamp.h",
-    "Uptime.h",
 ]
 
 EXPORTS.mozilla.glue += [
@@ -38,7 +37,6 @@ SOURCES += [
     "Printf.cpp",
     "StackWalk.cpp",
     "TimeStamp.cpp",
-    "Uptime.cpp",
 ]
 
 OS_LIBS += CONFIG["REALTIME_LIBS"]
