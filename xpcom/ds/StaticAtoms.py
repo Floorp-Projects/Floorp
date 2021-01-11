@@ -2457,7 +2457,6 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_firstLine", ":first-line"),
     PseudoElementAtom("PseudoElement_selection", ":selection"),
     PseudoElementAtom("PseudoElement_mozFocusInner", ":-moz-focus-inner"),
-    PseudoElementAtom("PseudoElement_mozFocusOuter", ":-moz-focus-outer"),
     PseudoElementAtom(
         "PseudoElement_mozComplexControlWrapper", ":-moz-complex-control-wrapper"
     ),

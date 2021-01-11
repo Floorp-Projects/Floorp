@@ -53,7 +53,6 @@ CSS_PSEUDO_ELEMENT(selection, ":selection",
 // XXXbz should we really allow random content to style these?  Maybe
 // use our flags to prevent that?
 CSS_PSEUDO_ELEMENT(mozFocusInner, ":-moz-focus-inner", 0)
-CSS_PSEUDO_ELEMENT(mozFocusOuter, ":-moz-focus-outer", 0)
 
 // HTML5 Forms pseudo elements
 CSS_PSEUDO_ELEMENT(mozComplexControlWrapper, ":-moz-complex-control-wrapper",
