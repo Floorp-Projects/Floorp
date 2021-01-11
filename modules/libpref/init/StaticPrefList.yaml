@@ -6462,13 +6462,6 @@
   value: true
   mirror: always
 
-# Does arbitrary ::-webkit-* pseudo-element parsed?
-- name: layout.css.unknown-webkit-pseudo-element
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Are counters for implemented CSS properties enabled?
 - name: layout.css.use-counters.enabled
   type: bool
