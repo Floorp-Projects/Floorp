@@ -12,7 +12,6 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/FontPreloader.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "nsIReferrerInfo.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -58,15 +57,10 @@ already_AddRefed<nsIURI> PreloadService::GetPreloadURI(const nsAString& aURL) {
 }
 
 already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
-    dom::HTMLLinkElement* aLinkElement, nsContentPolicyType aPolicyType,
-    nsIReferrerInfo* aReferrerInfo) {
+    dom::HTMLLinkElement* aLinkElement, nsContentPolicyType aPolicyType) {
   // Even if the pref is disabled, we still want to collect telemetry about
   // attempted preloads.
   const bool preloadEnabled = StaticPrefs::network_preload();
-  if (!CheckReferrerURIScheme(aReferrerInfo)) {
-    return nullptr;
-  }
-
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
     MOZ_ASSERT_UNREACHABLE("Caller should check");
     return nullptr;
@@ -111,14 +105,10 @@ void PreloadService::PreloadLinkHeader(
     nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
     const nsAString& aAs, const nsAString& aType, const nsAString& aIntegrity,
     const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aCORS,
-    const nsAString& aReferrerPolicy, nsIReferrerInfo* aReferrerInfo) {
+    const nsAString& aReferrerPolicy) {
   // Even if the pref is disabled, we still want to collect telemetry about
   // attempted preloads.
   const bool preloadEnabled = StaticPrefs::network_preload();
-
-  if (!CheckReferrerURIScheme(aReferrerInfo)) {
-    return;
-  }
 
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
     MOZ_ASSERT_UNREACHABLE("Caller should check");
@@ -282,24 +272,6 @@ dom::ReferrerPolicy PreloadService::PreloadReferrerPolicy(
   }
 
   return referrerPolicy;
-}
-
-// FIXME(emilio): Other browsers don't seem to have this check (preload loads
-// just fine from a file:// URI). Why is this?
-bool PreloadService::CheckReferrerURIScheme(nsIReferrerInfo* aReferrerInfo) {
-  if (!aReferrerInfo) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> referrer = aReferrerInfo->GetOriginalReferrer();
-  if (!referrer) {
-    return false;
-  }
-  if (!referrer->SchemeIs("http") && !referrer->SchemeIs("https")) {
-    return false;
-  }
-
-  return true;
 }
 
 nsIURI* PreloadService::BaseURIForPreload() {

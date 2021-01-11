@@ -7,7 +7,6 @@
 #define PreloadService_h__
 
 #include "nsIContentPolicy.h"
-#include "nsIReferrerInfo.h"
 #include "nsIURI.h"
 #include "nsRefPtrHashtable.h"
 #include "PreloaderBase.h"
@@ -61,16 +60,14 @@ class PreloadService {
   already_AddRefed<nsIURI> GetPreloadURI(const nsAString& aURL);
 
   already_AddRefed<PreloaderBase> PreloadLinkElement(
-      dom::HTMLLinkElement* aLink, nsContentPolicyType aPolicyType,
-      nsIReferrerInfo* aReferrerInfo);
+      dom::HTMLLinkElement* aLink, nsContentPolicyType aPolicyType);
 
   void PreloadLinkHeader(nsIURI* aURI, const nsAString& aURL,
                          nsContentPolicyType aPolicyType, const nsAString& aAs,
                          const nsAString& aType, const nsAString& aIntegrity,
                          const nsAString& aSrcset, const nsAString& aSizes,
                          const nsAString& aCORS,
-                         const nsAString& aReferrerPolicy,
-                         nsIReferrerInfo* aReferrerInfo);
+                         const nsAString& aReferrerPolicy);
 
   void PreloadScript(nsIURI* aURI, const nsAString& aType,
                      const nsAString& aCharset, const nsAString& aCrossOrigin,
@@ -95,7 +92,6 @@ class PreloadService {
 
  private:
   dom::ReferrerPolicy PreloadReferrerPolicy(const nsAString& aReferrerPolicy);
-  bool CheckReferrerURIScheme(nsIReferrerInfo* aReferrerInfo);
   nsIURI* BaseURIForPreload();
 
   struct PreloadOrCoalesceResult {
