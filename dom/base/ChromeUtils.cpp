@@ -244,7 +244,7 @@ void ChromeUtils::AddProfilerMarker(
   }
 
   {
-    AUTO_PROFILER_STATS(ChromeUtils::AddProfilerMarker);
+    AUTO_PROFILER_STATS(ChromeUtils_AddProfilerMarker);
     if (aText.WasPassed()) {
       profiler_add_marker(aName, category, std::move(options),
                           ::geckoprofiler::markers::TextMarker{},
