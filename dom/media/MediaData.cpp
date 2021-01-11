@@ -53,10 +53,14 @@ Span<AudioDataValue> AudioData::Data() const {
 
 bool AudioData::AdjustForStartTime(const media::TimeUnit& aStartTime) {
   mOriginalTime -= aStartTime;
+  mTime -= aStartTime;
   if (mTrimWindow) {
     *mTrimWindow -= aStartTime;
   }
-  return MediaData::AdjustForStartTime(aStartTime) && mOriginalTime.IsValid();
+  if (mTime.IsNegative()) {
+    NS_WARNING("Negative audio start time after time-adjustment!");
+  }
+  return mTime.IsValid() && mOriginalTime.IsValid();
 }
 
 bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
@@ -231,6 +235,14 @@ void VideoData::UpdateTimestamp(const TimeUnit& aTimestamp) {
 
   mTime = aTimestamp;
   mDuration = updatedDuration;
+}
+
+bool VideoData::AdjustForStartTime(const media::TimeUnit& aStartTime) {
+  mTime -= aStartTime;
+  if (mTime.IsNegative()) {
+    NS_WARNING("Negative video start time after time-adjustment!");
+  }
+  return mTime.IsValid();
 }
 
 PlanarYCbCrData ConstructPlanarYCbCrData(const VideoInfo& aInfo,
