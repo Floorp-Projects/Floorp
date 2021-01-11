@@ -2535,6 +2535,7 @@ impl TileCacheInstance {
             frame_state.clip_store.set_active_clips(
                 LayoutRect::max_rect(),
                 self.spatial_node_index,
+                self.map_local_to_surface.ref_spatial_node_index,
                 &shared_clips,
                 frame_context.spatial_tree,
                 &mut frame_state.data_stores.clip,
