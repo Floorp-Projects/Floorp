@@ -2416,7 +2416,7 @@ bool CacheIRCompiler::emitLoadInt32ArrayLengthResult(ObjOperandId objId) {
 
   // Guard length fits in an int32.
   masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -3155,7 +3155,7 @@ bool CacheIRCompiler::emitLoadArgumentsObjectLengthResult(ObjOperandId objId) {
 
   masm.loadArgumentsObjectLength(obj, scratch, failure->label());
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -3168,7 +3168,7 @@ bool CacheIRCompiler::emitLoadArrayBufferByteLengthInt32Result(
 
   masm.loadArrayBufferByteLengthInt32(obj, scratch);
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -3179,7 +3179,7 @@ bool CacheIRCompiler::emitLoadTypedArrayLengthResult(ObjOperandId objId) {
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   masm.loadArrayBufferViewLengthInt32(obj, scratch);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -3206,7 +3206,7 @@ bool CacheIRCompiler::emitLoadFunctionLengthResult(ObjOperandId objId) {
       failure->label());
 
   masm.loadFunctionLength(obj, scratch, scratch, failure->label());
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -3224,7 +3224,7 @@ bool CacheIRCompiler::emitLoadFunctionNameResult(ObjOperandId objId) {
   masm.loadFunctionName(obj, scratch, ImmGCPtr(cx_->names().empty),
                         failure->label());
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_STRING, output);
+  masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
   return true;
 }
 
@@ -3235,7 +3235,7 @@ bool CacheIRCompiler::emitLoadStringLengthResult(StringOperandId strId) {
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   masm.loadStringLength(str, scratch);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -3258,7 +3258,7 @@ bool CacheIRCompiler::emitLoadStringCharCodeResult(StringOperandId strId,
                             scratch1, failure->label());
   masm.loadStringChar(str, index, scratch1, scratch2, failure->label());
 
-  EmitStoreResult(masm, scratch1, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
   return true;
 }
 
@@ -3839,7 +3839,7 @@ bool CacheIRCompiler::emitIsObjectResult(ValOperandId inputId) {
 
   masm.testObjectSet(Assembler::Equal, val, scratch);
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
   return true;
 }
 
@@ -3896,7 +3896,7 @@ bool CacheIRCompiler::emitIsCallableResult(ValOperandId inputId) {
   }
 
   masm.bind(&done);
-  EmitStoreResult(masm, scratch2, JSVAL_TYPE_BOOLEAN, output);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
   return true;
 }
 
@@ -3930,7 +3930,7 @@ bool CacheIRCompiler::emitIsConstructorResult(ObjOperandId objId) {
   }
 
   masm.bind(&done);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
   return true;
 }
 
@@ -4206,7 +4206,7 @@ bool CacheIRCompiler::emitMathAbsInt32Result(Int32OperandId inputId) {
   masm.branchNeg32(Assembler::Overflow, scratch, failure->label());
   masm.bind(&positive);
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -4231,7 +4231,7 @@ bool CacheIRCompiler::emitMathClz32Result(Int32OperandId inputId) {
   Register input = allocator.useRegister(masm, inputId);
 
   masm.clz32(input, scratch, /* knownNotZero = */ false);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -4533,7 +4533,7 @@ bool CacheIRCompiler::emitMathFloorToInt32Result(NumberOperandId inputId) {
 
   masm.floorDoubleToInt32(scratchFloat, scratch, failure->label());
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -4554,7 +4554,7 @@ bool CacheIRCompiler::emitMathCeilToInt32Result(NumberOperandId inputId) {
 
   masm.ceilDoubleToInt32(scratchFloat, scratch, failure->label());
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -4575,7 +4575,7 @@ bool CacheIRCompiler::emitMathTruncToInt32Result(NumberOperandId inputId) {
 
   masm.truncDoubleToInt32(scratchFloat, scratch, failure->label());
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -4598,7 +4598,7 @@ bool CacheIRCompiler::emitMathRoundToInt32Result(NumberOperandId inputId) {
   masm.roundDoubleToInt32(scratchFloat0, scratch, scratchFloat1,
                           failure->label());
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
