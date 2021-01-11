@@ -1140,11 +1140,9 @@ Result<EntryIds, nsresult> QueryCache(mozIStorageConnection& aConn,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aMaxResults > 0);
 
-  EntryIds entryIdList;
-
   if (!aParams.ignoreMethod() &&
       !aRequest.method().LowerCaseEqualsLiteral("get")) {
-    return std::move(entryIdList);
+    return Result<EntryIds, nsresult>{std::in_place};
   }
 
   nsAutoCString query(
@@ -1168,87 +1166,69 @@ Result<EntryIds, nsresult> QueryCache(mozIStorageConnection& aConn,
 
   query.AppendLiteral("GROUP BY entries.id ORDER BY entries.id;");
 
-  nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv = aConn.CreateStatement(query, getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY_INSPECT(const auto& state,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                               aConn, CreateStatement, query));
 
-  rv = state->BindInt64ByName("cache_id"_ns, aCacheId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
 
-  nsCOMPtr<nsICryptoHash> crypto =
-      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY_INSPECT(
+      const auto& crypto,
+      ToResultGet<nsCOMPtr<nsICryptoHash>>(
+          MOZ_SELECT_OVERLOAD(do_CreateInstance), NS_CRYPTO_HASH_CONTRACTID));
 
   CACHE_TRY_INSPECT(const auto& urlWithoutQueryHash,
                     HashCString(*crypto, aRequest.urlWithoutQuery()));
 
-  rv = state->BindUTF8StringAsBlobByName("url_no_query_hash"_ns,
-                                         urlWithoutQueryHash);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY(state->BindUTF8StringAsBlobByName("url_no_query_hash"_ns,
+                                              urlWithoutQueryHash));
 
   if (!aParams.ignoreSearch()) {
     CACHE_TRY_INSPECT(const auto& urlQueryHash,
                       HashCString(*crypto, aRequest.urlQuery()));
 
-    rv = state->BindUTF8StringAsBlobByName("url_query_hash"_ns, urlQueryHash);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+    CACHE_TRY(
+        state->BindUTF8StringAsBlobByName("url_query_hash"_ns, urlQueryHash));
   }
 
-  rv = state->BindUTF8StringByName("url_no_query"_ns,
-                                   aRequest.urlWithoutQuery());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY(state->BindUTF8StringByName("url_no_query"_ns,
+                                        aRequest.urlWithoutQuery()));
 
   if (!aParams.ignoreSearch()) {
-    rv = state->BindUTF8StringByName("url_query"_ns, aRequest.urlQuery());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+    CACHE_TRY(state->BindUTF8StringByName("url_query"_ns, aRequest.urlQuery()));
   }
 
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    // no invalid EntryId, init to least likely real value
-    EntryId entryId = INT32_MAX;
-    rv = state->GetInt32(0, &entryId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+  EntryIds entryIdList;
 
-    int32_t varyCount;
-    rv = state->GetInt32(1, &varyCount);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+  CACHE_TRY(CollectWhile(
+      [&state, &entryIdList, aMaxResults]() -> Result<bool, nsresult> {
+        if (entryIdList.Length() == aMaxResults) {
+          return false;
+        }
+        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(state, ExecuteStep));
+      },
+      [&state, &entryIdList, ignoreVary = aParams.ignoreVary(), &aConn,
+       &aRequest]() -> Result<Ok, nsresult> {
+        CACHE_TRY_INSPECT(const EntryId& entryId,
+                          MOZ_TO_RESULT_INVOKE(state, GetInt32, 0));
 
-    if (!aParams.ignoreVary() && varyCount > 0) {
-      bool matchedByVary = false;
-      CACHE_TRY_UNWRAP(matchedByVary,
-                       MatchByVaryHeader(aConn, aRequest, entryId));
-      if (!matchedByVary) {
-        continue;
-      }
-    }
+        CACHE_TRY_INSPECT(const int32_t& varyCount,
+                          MOZ_TO_RESULT_INVOKE(state, GetInt32, 1));
 
-    entryIdList.AppendElement(entryId);
+        if (!ignoreVary && varyCount > 0) {
+          CACHE_TRY_INSPECT(const bool& matchedByVary,
+                            MatchByVaryHeader(aConn, aRequest, entryId));
+          if (!matchedByVary) {
+            return Ok{};
+          }
+        }
 
-    if (entryIdList.Length() == aMaxResults) {
-      return std::move(entryIdList);
-    }
-  }
+        entryIdList.AppendElement(entryId);
 
-  return std::move(entryIdList);
+        return Ok{};
+      }));
+
+  return entryIdList;
 }
 
 Result<bool, nsresult> MatchByVaryHeader(mozIStorageConnection& aConn,
