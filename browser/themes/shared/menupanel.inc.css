@@ -13,7 +13,7 @@
 }
 
 #appMenu-print-button {
-  list-style-image: url(chrome://browser/skin/print.svg);
+  list-style-image: url(chrome://global/skin/icons/print.svg);
 }
 
 #appMenu-library-button {
