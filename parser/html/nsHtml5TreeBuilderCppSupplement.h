@@ -147,13 +147,13 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
     opCreateHTMLElement opeation(
         content, aName, aAttributes, aCreator.html, aIntendedParent,
         (!!mSpeculativeLoadStage) ? mozilla::dom::FROM_PARSER_NETWORK
-                                  : dom::FROM_PARSER_DOCUMENT_WRITE);
+                                  : mozilla::dom::FROM_PARSER_DOCUMENT_WRITE);
     treeOp->Init(mozilla::AsVariant(opeation));
   } else if (aNamespace == kNameSpaceID_SVG) {
     opCreateSVGElement operation(
         content, aName, aAttributes, aCreator.svg, aIntendedParent,
         (!!mSpeculativeLoadStage) ? mozilla::dom::FROM_PARSER_NETWORK
-                                  : dom::FROM_PARSER_DOCUMENT_WRITE);
+                                  : mozilla::dom::FROM_PARSER_DOCUMENT_WRITE);
     treeOp->Init(mozilla::AsVariant(operation));
   } else {
     // kNameSpaceID_MathML
