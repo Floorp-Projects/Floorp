@@ -1507,6 +1507,16 @@ TelemetryImpl::MsSinceProcessStart(double* aResult) {
 }
 
 NS_IMETHODIMP
+TelemetryImpl::MsSinceProcessStartIncludingSuspend(double* aResult) {
+  return Telemetry::Common::MsSinceProcessStartIncludingSuspend(aResult);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::MsSinceProcessStartExcludingSuspend(double* aResult) {
+  return Telemetry::Common::MsSinceProcessStartExcludingSuspend(aResult);
+}
+
+NS_IMETHODIMP
 TelemetryImpl::MsSystemNow(double* aResult) {
 #if defined(XP_UNIX) && !defined(XP_DARWIN)
   timespec ts;
