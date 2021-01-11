@@ -9,9 +9,13 @@
 #include "nsIContentPolicy.h"
 #include "nsIURI.h"
 #include "nsRefPtrHashtable.h"
-#include "PreloaderBase.h"
+#include "mozilla/PreloadHashKey.h"
+
+class nsINode;
 
 namespace mozilla {
+
+class PreloaderBase;
 
 namespace dom {
 
@@ -31,7 +35,8 @@ enum class SheetPreloadStatus : uint8_t;
  */
 class PreloadService {
  public:
-  explicit PreloadService(dom::Document* aDocument) : mDocument(aDocument) {}
+  explicit PreloadService(dom::Document*);
+  ~PreloadService();
 
   // Called by resource loaders to register a running resource load.  This is
   // called for a speculative load when it's started the first time, being it

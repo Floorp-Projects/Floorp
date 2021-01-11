@@ -6,15 +6,20 @@
 #include "PreloadService.h"
 
 #include "FetchPreloader.h"
+#include "PreloaderBase.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/FontPreloader.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
+
+PreloadService::PreloadService(dom::Document* aDoc) : mDocument(aDoc) {}
+PreloadService::~PreloadService() = default;
 
 bool PreloadService::RegisterPreload(const PreloadHashKey& aKey,
                                      PreloaderBase* aPreload) {
