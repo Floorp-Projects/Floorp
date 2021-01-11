@@ -932,6 +932,12 @@ nsresult Selection::AddRangesForSelectableNodes(
 
   NS_ASSERTION(aOutIndex, "aOutIndex can't be null");
 
+  MOZ_LOG(
+      sSelectionLog, LogLevel::Debug,
+      ("%s: selection=%p, type=%i, range=(%p, StartOffset=%u, EndOffset=%u)",
+       __FUNCTION__, this, static_cast<int>(GetType()), aRange,
+       aRange->StartOffset(), aRange->EndOffset()));
+
   if (mUserInitiated) {
     return AddRangesForUserSelectableNodes(aRange, aOutIndex,
                                            aDispatchSelectstartEvent);
