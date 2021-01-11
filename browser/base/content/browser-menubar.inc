@@ -465,6 +465,12 @@
 #endif
                    data-l10n-id="menu-help">
               <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
+#ifdef MOZ_UPDATER
+                <menuitem id="checkForUpdates"
+                          data-l10n-id="menu-help-check-for-update"
+                          class="menuitem-iconic"
+                          oncommand="openAboutDialog();"/>
+#endif
                 <menuitem id="menu_openHelp"
                           oncommand="openHelpLink('firefox-help')"
                           onclick="checkForMiddleClick(this, event);"
