@@ -1673,6 +1673,7 @@ class AsyncPanZoomController {
   LayersId GetLayersId() const { return mLayersId; }
 
   bool IsAsyncZooming() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mState == PINCHING || mState == ANIMATING_ZOOM;
   }
 
