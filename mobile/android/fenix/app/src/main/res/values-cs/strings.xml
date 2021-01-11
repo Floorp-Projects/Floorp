@@ -740,6 +740,8 @@
     <string name="download_delete_all">Smazat stažené soubory</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Opravdu chcete smazat všechny stažené soubory?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Stažené soubory smazány</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
     <string name="download_delete_single_item_snackbar">Soubor %1$s odebrán</string>
     <!-- Text shown when no download exists -->
@@ -878,6 +880,8 @@
     <string name="preference_phone_feature_location">Poloha</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Oznámení</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Trvalé úložiště</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Obsah chráněný pomocí DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1053,6 +1057,8 @@
     <string name="qr_scanner_dialog_negative">ZAKÁZAT</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Opravdu chcete odstranit sbírku „%1$s“?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Odstraněním tohoto panelu smažete celou sbírku. Novou sbírku si můžete kdykoliv znovu vytvořit.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">Smazat %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
