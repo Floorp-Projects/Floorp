@@ -9,7 +9,7 @@ use crate::command::{VoidWebDriverExtensionCommand, WebDriverCommand, WebDriverE
 use crate::error::WebDriverResult;
 use crate::Parameters;
 
-pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Route<U>)>
+pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Route<U>)>
 {
     return vec![
         (Method::POST, "/session", Route::NewSession),
