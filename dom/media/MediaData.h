@@ -308,16 +308,6 @@ class MediaData {
            GetEndTime().IsValid() && GetEndTimecode().IsValid();
   }
 
-  // Return true if the adjusted time is valid. Caller should handle error when
-  // the result is invalid.
-  virtual bool AdjustForStartTime(const media::TimeUnit& aStartTime) {
-    mTime -= aStartTime;
-    if (mTime.IsNegative()) {
-      NS_WARNING("Negative start time after time-adjustment!");
-    }
-    return mTime.IsValid();
-  }
-
   template <typename ReturnType>
   const ReturnType* As() const {
     MOZ_ASSERT(this->mType == ReturnType::sType);
@@ -382,7 +372,7 @@ class AudioData : public MediaData {
 
   // Return true if the adjusted time is valid. Caller should handle error when
   // the result is invalid.
-  bool AdjustForStartTime(const media::TimeUnit& aStartTime) override;
+  bool AdjustForStartTime(const media::TimeUnit& aStartTime);
 
   const uint32_t mChannels;
   // The AudioConfig::ChannelLayout map. Channels are ordered as per SMPTE
@@ -511,6 +501,10 @@ class VideoData : public MediaData {
 
   void UpdateDuration(const media::TimeUnit& aDuration);
   void UpdateTimestamp(const media::TimeUnit& aTimestamp);
+
+  // Return true if the adjusted time is valid. Caller should handle error when
+  // the result is invalid.
+  bool AdjustForStartTime(const media::TimeUnit& aStartTime);
 
   void SetNextKeyFrameTime(const media::TimeUnit& aTime) {
     mNextKeyFrameTime = aTime;
