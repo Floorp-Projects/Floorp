@@ -17,6 +17,8 @@ include svg-filter-chains/reftest.list
 == dynamic-filtered-foreignObject-01.svg pass.svg
 == dynamic-filter-invalidation-01.svg pass.svg
 == dynamic-filter-invalidation-02.svg pass.svg
+== dynamic-filter-invalidation-03.svg pass.svg
+== dynamic-filter-invalidation-04.svg pass.svg
 
 fuzzy(0-1,0-42500) == feBlend-1.svg feBlend-1-ref.svg
 == feBlend-2.svg feBlend-2-ref.svg
