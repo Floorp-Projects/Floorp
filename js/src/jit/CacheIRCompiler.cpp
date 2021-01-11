@@ -2583,7 +2583,7 @@ bool CacheIRCompiler::emitInt32AddResult(Int32OperandId lhsId,
 
   masm.mov(rhs, scratch);
   masm.branchAdd32(Assembler::Overflow, lhs, scratch, failure->label());
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2602,7 +2602,7 @@ bool CacheIRCompiler::emitInt32SubResult(Int32OperandId lhsId,
 
   masm.mov(lhs, scratch);
   masm.branchSub32(Assembler::Overflow, rhs, scratch, failure->label());
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2634,7 +2634,7 @@ bool CacheIRCompiler::emitInt32MulResult(Int32OperandId lhsId,
   masm.branchTest32(Assembler::Signed, scratch2, scratch2, failure->label());
 
   masm.bind(&done);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -2674,7 +2674,7 @@ bool CacheIRCompiler::emitInt32DivResult(Int32OperandId lhsId,
 
   // A remainder implies a double result.
   masm.branchTest32(Assembler::NonZero, rem, rem, failure->label());
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -2714,7 +2714,7 @@ bool CacheIRCompiler::emitInt32ModResult(Int32OperandId lhsId,
   masm.branchTest32(Assembler::Signed, lhs, lhs, failure->label());
   masm.bind(&notZero);
 
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2736,7 +2736,7 @@ bool CacheIRCompiler::emitInt32PowResult(Int32OperandId lhsId,
 
   masm.pow32(base, power, scratch1, scratch2, scratch3, failure->label());
 
-  EmitStoreResult(masm, scratch1, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
   return true;
 }
 
@@ -2751,7 +2751,7 @@ bool CacheIRCompiler::emitInt32BitOrResult(Int32OperandId lhsId,
 
   masm.mov(rhs, scratch);
   masm.or32(lhs, scratch);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2766,7 +2766,7 @@ bool CacheIRCompiler::emitInt32BitXorResult(Int32OperandId lhsId,
 
   masm.mov(rhs, scratch);
   masm.xor32(lhs, scratch);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2781,7 +2781,7 @@ bool CacheIRCompiler::emitInt32BitAndResult(Int32OperandId lhsId,
 
   masm.mov(rhs, scratch);
   masm.and32(lhs, scratch);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2795,7 +2795,7 @@ bool CacheIRCompiler::emitInt32LeftShiftResult(Int32OperandId lhsId,
 
   masm.mov(lhs, scratch);
   masm.flexibleLshift32(rhs, scratch);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2810,7 +2810,7 @@ bool CacheIRCompiler::emitInt32RightShiftResult(Int32OperandId lhsId,
 
   masm.mov(lhs, scratch);
   masm.flexibleRshift32Arithmetic(rhs, scratch);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2847,7 +2847,7 @@ bool CacheIRCompiler::emitInt32URightShiftResult(Int32OperandId lhsId,
     masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
   }
   masm.bind(&intDone);
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   masm.bind(&floatDone);
   return true;
 }
@@ -2885,7 +2885,7 @@ bool CacheIRCompiler::emitInt32IncResult(Int32OperandId inputId) {
 
   masm.mov(input, scratch);
   masm.branchAdd32(Assembler::Overflow, Imm32(1), scratch, failure->label());
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
@@ -2903,7 +2903,7 @@ bool CacheIRCompiler::emitInt32DecResult(Int32OperandId inputId) {
 
   masm.mov(input, scratch);
   masm.branchSub32(Assembler::Overflow, Imm32(1), scratch, failure->label());
-  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
 
   return true;
 }
