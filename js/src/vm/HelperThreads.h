@@ -234,6 +234,11 @@ bool StartOffThreadDecodeMultiScripts(JSContext* cx,
  */
 void EnqueuePendingParseTasksAfterGC(JSRuntime* rt);
 
+// Drain the task queues and wait for all helper threads to finish running.
+//
+// Note that helper threads are shared between runtimes and it's possible that
+// another runtime could saturate the helper thread system and cause this to
+// never return.
 void WaitForAllHelperThreads();
 void WaitForAllHelperThreads(AutoLockHelperThreadState& lock);
 
