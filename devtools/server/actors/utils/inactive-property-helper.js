@@ -313,6 +313,50 @@ class InactivePropertyHelper {
         msgId: "inactive-outline-radius-when-outline-style-auto-or-none",
         numFixProps: 1,
       },
+      // margin properties used on table internal elements.
+      {
+        invalidProperties: [
+          "margin",
+          "margin-block",
+          "margin-block-end",
+          "margin-block-start",
+          "margin-bottom",
+          "margin-inline",
+          "margin-inline-end",
+          "margin-inline-start",
+          "margin-left",
+          "margin-right",
+          "margin-top",
+        ],
+        when: () => this.internalTableElement,
+        fixId: "inactive-css-not-for-internal-table-elements-fix",
+        msgId: "inactive-css-not-for-internal-table-elements",
+        numFixProps: 1,
+      },
+      // padding properties used on table internal elements except table cells.
+      {
+        invalidProperties: [
+          "padding",
+          "padding-block",
+          "padding-block-end",
+          "padding-block-start",
+          "padding-bottom",
+          "padding-inline",
+          "padding-inline-end",
+          "padding-inline-start",
+          "padding-left",
+          "padding-right",
+          "padding-top",
+        ],
+        when: () =>
+          this.internalTableElement &&
+          !this.checkComputedStyle("display", ["table-cell"]),
+        fixId:
+          "inactive-css-not-for-internal-table-elements-except-table-cells-fix",
+        msgId:
+          "inactive-css-not-for-internal-table-elements-except-table-cells",
+        numFixProps: 1,
+      },
     ];
   }
 
@@ -578,7 +622,22 @@ class InactivePropertyHelper {
   }
 
   /**
-   * Check if the curent node is a horizontal table track. That is: either a table row
+   * Check if the current node is an internal table element.
+   */
+  get internalTableElement() {
+    return this.checkComputedStyle("display", [
+      "table-cell",
+      "table-row",
+      "table-row-group",
+      "table-header-group",
+      "table-footer-group",
+      "table-column",
+      "table-column-group",
+    ]);
+  }
+
+  /**
+   * Check if the current node is a horizontal table track. That is: either a table row
    * displayed in horizontal writing mode, or a table column displayed in vertical writing
    * mode.
    */
@@ -594,7 +653,7 @@ class InactivePropertyHelper {
   }
 
   /**
-   * Check if the curent node is a vertical table track. That is: either a table row
+   * Check if the current node is a vertical table track. That is: either a table row
    * displayed in vertical writing mode, or a table column displayed in horizontal writing
    * mode.
    */
@@ -624,7 +683,7 @@ class InactivePropertyHelper {
   }
 
   /**
-   * Check if the curent node is a horizontal table track group. That is: either a table
+   * Check if the current node is a horizontal table track group. That is: either a table
    * row group displayed in horizontal writing mode, or a table column group displayed in
    * vertical writing mode.
    */
@@ -643,7 +702,7 @@ class InactivePropertyHelper {
   }
 
   /**
-   * Check if the curent node is a vertical table track group. That is: either a table row
+   * Check if the current node is a vertical table track group. That is: either a table row
    * group displayed in vertical writing mode, or a table column group displayed in
    * horizontal writing mode.
    */
