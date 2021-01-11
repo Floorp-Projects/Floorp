@@ -58,7 +58,7 @@ void UnregisterCodeSegment(const CodeSegment* cs);
 
 bool IsHugeMemoryEnabled();
 
-MOZ_MUST_USE bool DisableHugeMemory();
+[[nodiscard]] bool DisableHugeMemory();
 
 // Called once before/after the last VM execution which could execute or compile
 // wasm.

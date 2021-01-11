@@ -46,9 +46,9 @@ class TypeDescr : public NativeObject {
 
   const wasm::TypeDef& getType(JSContext* cx) const;
 
-  MOZ_MUST_USE bool lookupProperty(JSContext* cx, jsid id, uint32_t* offset,
-                                   wasm::ValType* type);
-  MOZ_MUST_USE bool hasProperty(JSContext* cx, jsid id) {
+  [[nodiscard]] bool lookupProperty(JSContext* cx, jsid id, uint32_t* offset,
+                                    wasm::ValType* type);
+  [[nodiscard]] bool hasProperty(JSContext* cx, jsid id) {
     uint32_t offset;
     wasm::ValType type;
     return lookupProperty(cx, id, &offset, &type);
@@ -68,7 +68,7 @@ class TypeDescr : public NativeObject {
   // order.
   // TODO/AnyRef-boxing: once anyref has a more complicated structure, we must
   // revisit this.
-  MOZ_MUST_USE bool hasTraceList() const {
+  [[nodiscard]] bool hasTraceList() const {
     return !getFixedSlot(Slot::TraceList).isUndefined();
   }
   const uint32_t* traceList() const {

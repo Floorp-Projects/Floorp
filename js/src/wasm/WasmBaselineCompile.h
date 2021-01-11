@@ -27,10 +27,10 @@ namespace wasm {
 // Return whether BaselineCompileFunction can generate code on the current
 // device.  Usually you do *not* want to call this, you want
 // BaselineAvailable().
-MOZ_MUST_USE bool BaselinePlatformSupport();
+[[nodiscard]] bool BaselinePlatformSupport();
 
 // Generate adequate code quickly.
-MOZ_MUST_USE bool BaselineCompileFunctions(
+[[nodiscard]] bool BaselineCompileFunctions(
     const ModuleEnvironment& moduleEnv, const CompilerEnvironment& compilerEnv,
     LifoAlloc& lifo, const FuncCompileInputVector& inputs, CompiledCode* code,
     UniqueChars* error);

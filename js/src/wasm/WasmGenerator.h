@@ -78,9 +78,9 @@ struct CompiledCode {
   StackMaps stackMaps;
   CraneliftReusableData craneliftReusableData;
 
-  MOZ_MUST_USE bool swap(jit::MacroAssembler& masm);
-  MOZ_MUST_USE bool swapCranelift(jit::MacroAssembler& masm,
-                                  CraneliftReusableData& craneliftData);
+  [[nodiscard]] bool swap(jit::MacroAssembler& masm);
+  [[nodiscard]] bool swapCranelift(jit::MacroAssembler& masm,
+                                   CraneliftReusableData& craneliftData);
 
   void clear() {
     bytes.clear();
@@ -238,21 +238,21 @@ class MOZ_STACK_CLASS ModuleGenerator {
                   CompilerEnvironment* compilerEnv,
                   const Atomic<bool>* cancelled, UniqueChars* error);
   ~ModuleGenerator();
-  MOZ_MUST_USE bool init(
+  [[nodiscard]] bool init(
       Metadata* maybeAsmJSMetadata = nullptr,
       JSTelemetrySender telemetrySender = JSTelemetrySender());
 
   // Before finishFuncDefs() is called, compileFuncDef() must be called once
   // for each funcIndex in the range [0, env->numFuncDefs()).
 
-  MOZ_MUST_USE bool compileFuncDef(
+  [[nodiscard]] bool compileFuncDef(
       uint32_t funcIndex, uint32_t lineOrBytecode, const uint8_t* begin,
       const uint8_t* end, Uint32Vector&& callSiteLineNums = Uint32Vector());
 
   // Must be called after the last compileFuncDef() and before finishModule()
   // or finishTier2().
 
-  MOZ_MUST_USE bool finishFuncDefs();
+  [[nodiscard]] bool finishFuncDefs();
 
   // If env->mode is Once or Tier1, finishModule() must be called to generate
   // a new Module. Otherwise, if env->mode is Tier2, finishTier2() must be
@@ -261,7 +261,7 @@ class MOZ_STACK_CLASS ModuleGenerator {
   SharedModule finishModule(
       const ShareableBytes& bytecode,
       JS::OptimizedEncodingListener* maybeTier2Listener = nullptr);
-  MOZ_MUST_USE bool finishTier2(const Module& module);
+  [[nodiscard]] bool finishTier2(const Module& module);
 };
 
 }  // namespace wasm

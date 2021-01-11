@@ -189,11 +189,11 @@ class StackMaps {
       mapping_[i].map = nullptr;
     }
   }
-  MOZ_MUST_USE bool add(uint8_t* nextInsnAddr, StackMap* map) {
+  [[nodiscard]] bool add(uint8_t* nextInsnAddr, StackMap* map) {
     MOZ_ASSERT(!sorted_);
     return mapping_.append(Maplet(nextInsnAddr, map));
   }
-  MOZ_MUST_USE bool add(const Maplet& maplet) {
+  [[nodiscard]] bool add(const Maplet& maplet) {
     return add(maplet.nextInsnAddr, maplet.map);
   }
   void clear() {
@@ -331,7 +331,7 @@ wasm::StackMap* ConvertStackMapBoolVectorToStackMap(
 // The "space reserved before trap" is the space reserved by
 // MacroAssembler::wasmReserveStackChecked, in the case where the frame is
 // "small", as determined by that function.
-MOZ_MUST_USE bool CreateStackMapForFunctionEntryTrap(
+[[nodiscard]] bool CreateStackMapForFunctionEntryTrap(
     const ArgTypeVector& argTypes, const MachineState& trapExitLayout,
     size_t trapExitLayoutWords, size_t nBytesReservedBeforeTrap,
     size_t nInboundStackArgBytes, wasm::StackMap** result);
@@ -341,7 +341,7 @@ MOZ_MUST_USE bool CreateStackMapForFunctionEntryTrap(
 // vector of booleans describing the ref-ness of the saved integer registers.
 // |args[0]| corresponds to the low addressed end of the described section of
 // the save area.
-MOZ_MUST_USE bool GenerateStackmapEntriesForTrapExit(
+[[nodiscard]] bool GenerateStackmapEntriesForTrapExit(
     const ArgTypeVector& args, const MachineState& trapExitLayout,
     const size_t trapExitLayoutNumWords, ExitStubMapVector* extras);
 

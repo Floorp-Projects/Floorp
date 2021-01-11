@@ -249,7 +249,7 @@ using SharedModule = RefPtr<const Module>;
 
 // JS API implementations:
 
-MOZ_MUST_USE bool GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId);
+[[nodiscard]] bool GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId);
 
 }  // namespace wasm
 }  // namespace js
