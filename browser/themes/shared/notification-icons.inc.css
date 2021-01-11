@@ -74,7 +74,7 @@
 }
 
 .open-protocol-handler-icon {
-  list-style-image: url(chrome://browser/skin/open-in-new.svg);
+  list-style-image: url(chrome://global/skin/icons/open-in-new.svg);
 }
 
 .open-protocol-handler-icon:-moz-locale-dir(rtl) {
