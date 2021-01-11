@@ -370,6 +370,7 @@ class GlobalHelperThreadState {
   JSObject* finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token);
 
   bool hasActiveThreads(const AutoLockHelperThreadState&);
+  bool hasQueuedTasks(const AutoLockHelperThreadState& locked);
   void waitForAllThreads();
   void waitForAllThreadsLocked(AutoLockHelperThreadState&);
 
