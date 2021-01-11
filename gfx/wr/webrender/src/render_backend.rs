@@ -1659,6 +1659,9 @@ impl RenderBackend {
         }
 
         (*report) += self.resource_cache.report_memory(op);
+        report.texture_cache_structures = self.resource_cache
+            .texture_cache
+            .report_memory(ops);
 
         // Send a message to report memory on the scene-builder thread, which
         // will add its report to this one and send the result back to the original
