@@ -7429,8 +7429,12 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       }
 
       TokenPos propNamePos(propNameOffset, pos().end);
-      initializerIfPrivate = Some(
-          privateMethodInitializer(propNamePos, propAtom, storedMethodAtom));
+      auto initializerNode =
+          privateMethodInitializer(propNamePos, propAtom, storedMethodAtom);
+      if (!initializerNode) {
+        return false;
+      }
+      initializerIfPrivate = Some(initializerNode);
     }
   }
 
