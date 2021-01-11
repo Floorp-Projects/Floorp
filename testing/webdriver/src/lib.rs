@@ -14,9 +14,11 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate time;
+#[cfg(feature = "server")]
 extern crate tokio;
 extern crate unicode_segmentation;
 extern crate url;
+#[cfg(feature = "server")]
 extern crate warp;
 
 #[macro_use]
@@ -28,6 +30,7 @@ pub mod common;
 pub mod error;
 pub mod httpapi;
 pub mod response;
+#[cfg(feature = "server")]
 pub mod server;
 
 #[cfg(test)]
