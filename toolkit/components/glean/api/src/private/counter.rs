@@ -166,12 +166,6 @@ mod test {
 
             child_metric.add(42);
 
-            // Need to catch the panic so that our RAIIs drop nicely.
-            let result = std::panic::catch_unwind(move || {
-                child_metric.test_get_value("store1");
-            });
-            assert!(result.is_err());
-
             ipc::with_ipc_payload(move |payload| {
                 assert!(
                     42 == *payload.counters.get(&metric_id).unwrap(),
