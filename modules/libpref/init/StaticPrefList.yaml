@@ -6740,13 +6740,6 @@
   value: true
   mirror: always
 
-# Is support for the ::file-selector-button pseudo-element enabled?
-- name: layout.css.file-selector-button.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether the computed value of line-height: normal returns the `normal`
 # keyword rather than a pixel value based on the first available font.
 #
