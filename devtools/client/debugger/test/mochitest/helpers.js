@@ -2009,17 +2009,25 @@ async function toggleDebbuggerSettingsMenuItem(dbg, { className, isChecked }) {
   await waitFor(() => menuButton.getAttribute("aria-expanded") === "false");
 }
 
+// This module is also loaded for Browser Toolbox tests, within the browser toolbox process
+// which doesn't contain mochitests resource://testing-common URL.
+// This isn't important to allow rejections in the context of the browser toolbox tests.
+const protocolHandler = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
+if (protocolHandler.hasSubstitution("testing-common")) {
+  const { PromiseTestUtils } = ChromeUtils.import(
+    "resource://testing-common/PromiseTestUtils.jsm"
+  );
 
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
-
-// Debugger operations that are canceled because they were rendered obsolete by
-// a navigation or pause/resume end up as uncaught rejections. These never
-// indicate errors and are allowed in all debugger tests.
-PromiseTestUtils.allowMatchingRejectionsGlobally(/Page has navigated/);
-PromiseTestUtils.allowMatchingRejectionsGlobally(/Current thread has changed/);
-PromiseTestUtils.allowMatchingRejectionsGlobally(
-  /Current thread has paused or resumed/
-);
-PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
+  // Debugger operations that are canceled because they were rendered obsolete by
+  // a navigation or pause/resume end up as uncaught rejections. These never
+  // indicate errors and are allowed in all debugger tests.
+  PromiseTestUtils.allowMatchingRejectionsGlobally(/Page has navigated/);
+  PromiseTestUtils.allowMatchingRejectionsGlobally(/Current thread has changed/);
+  PromiseTestUtils.allowMatchingRejectionsGlobally(
+    /Current thread has paused or resumed/
+  );
+  PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
+  this.PromiseTestUtils = PromiseTestUtils;
+}
