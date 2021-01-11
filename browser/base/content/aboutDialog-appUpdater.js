@@ -7,6 +7,7 @@
 
 /* import-globals-from aboutDialog.js */
 
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -16,11 +17,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 
+var UPDATING_MIN_DISPLAY_TIME_MS = 1500;
+
 var gAppUpdater;
 
 function onUnload(aEvent) {
   if (gAppUpdater) {
-    gAppUpdater.stopCurrentCheck();
+    gAppUpdater.destroy();
     gAppUpdater = null;
   }
 }
@@ -34,6 +37,7 @@ function appUpdater(options = {}) {
   this._appUpdater.addListener(this._appUpdateListener);
 
   this.options = options;
+  this.updatingMinDisplayTimerId = null;
   this.updateDeck = document.getElementById("updateDeck");
 
   this.bundle = Services.strings.createBundle(
@@ -50,6 +54,13 @@ function appUpdater(options = {}) {
 }
 
 appUpdater.prototype = {
+  destroy() {
+    this.stopCurrentCheck();
+    if (this.updatingMinDisplayTimerId) {
+      clearTimeout(this.updatingMinDisplayTimerId);
+    }
+  },
+
   stopCurrentCheck() {
     this._appUpdater.removeListener(this._appUpdateListener);
     this._appUpdater.stop();
@@ -71,8 +82,8 @@ appUpdater.prototype = {
         this.selectPanel("otherInstanceHandlingUpdates");
         break;
       case AppUpdater.STATUS.DOWNLOADING:
+        this.downloadStatus = document.getElementById("downloadStatus");
         if (!args.length) {
-          this.downloadStatus = document.getElementById("downloadStatus");
           this.downloadStatus.textContent = DownloadUtils.getTransferTotal(
             0,
             this.update.selectedPatch.size
@@ -89,11 +100,28 @@ appUpdater.prototype = {
       case AppUpdater.STATUS.STAGING:
         this.selectPanel("applying");
         break;
-      case AppUpdater.STATUS.CHECKING:
-        this.selectPanel("checkingForUpdates");
+      case AppUpdater.STATUS.CHECKING: {
+        this.checkingForUpdatesDelayPromise = new Promise(resolve => {
+          this.updatingMinDisplayTimerId = setTimeout(
+            resolve,
+            UPDATING_MIN_DISPLAY_TIME_MS
+          );
+        });
+        if (Services.policies.isAllowed("appUpdate")) {
+          this.selectPanel("checkingForUpdates");
+        } else {
+          this.selectPanel("policyDisabled");
+        }
         break;
+      }
       case AppUpdater.STATUS.NO_UPDATES_FOUND:
-        this.selectPanel("noUpdatesFound");
+        this.checkingForUpdatesDelayPromise.then(() => {
+          if (Services.policies.isAllowed("appUpdate")) {
+            this.selectPanel("noUpdatesFound");
+          } else {
+            this.selectPanel("policyDisabled");
+          }
+        });
         break;
       case AppUpdater.STATUS.UNSUPPORTED_SYSTEM:
         if (this.update.detailsURL) {
@@ -115,13 +143,18 @@ appUpdater.prototype = {
   },
 
   /**
-   * Sets the panel of the updateDeck.
+   * Sets the panel of the updateDeck and the visibility of icons
+   * in the #icons element.
    *
    * @param  aChildID
    *         The id of the deck's child to select, e.g. "apply".
    */
   selectPanel(aChildID) {
     let panel = document.getElementById(aChildID);
+    let icons = document.getElementById("icons");
+    if (icons) {
+      icons.className = aChildID;
+    }
 
     let button = panel.querySelector("button");
     if (button) {

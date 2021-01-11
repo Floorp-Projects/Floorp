@@ -17,12 +17,11 @@ browser.jar:
    content/browser/fxr/prefs.html               (content/prefs.html)
    content/browser/fxr/prefs.css                (content/prefs.css)
    content/browser/fxr/prefs.js                 (content/prefs.js)
-   
+
    content/browser/fxr/assets/icon-backward.svg         (content/assets/icon-backward.svg)
    content/browser/fxr/assets/icon-forward.svg          (content/assets/icon-forward.svg)
    content/browser/fxr/assets/icon-home.svg             (content/assets/icon-home.svg)
    content/browser/fxr/assets/icon-logo-settings-preview.png  (content/assets/icon-logo-settings-preview.png)
-   content/browser/fxr/assets/icon-refresh.svg          (content/assets/icon-refresh.svg)
    content/browser/fxr/assets/icon-reportissue.svg      (content/assets/icon-reportissue.svg)
    content/browser/fxr/assets/icon-secure.svg           (content/assets/icon-secure.svg)
    content/browser/fxr/assets/icon-settings.svg         (content/assets/icon-settings.svg)
