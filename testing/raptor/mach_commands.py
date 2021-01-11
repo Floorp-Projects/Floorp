@@ -193,14 +193,51 @@ class RaptorRunner(MozbuildObject):
                 }
             )
 
-            def _browsertime_exists():
-                return os.path.exists(
+            def _should_install():
+                # If browsertime doesn't exist, install it
+                if not os.path.exists(
                     self.config["browsertime_browsertimejs"]
-                ) and os.path.exists(self.config["browsertime_vismet_script"])
+                ) or not os.path.exists(self.config["browsertime_vismet_script"]):
+                    return True
+
+                # Browsertime exists, check if it's outdated
+                with open(
+                    os.path.join(self.topsrcdir, "tools", "browsertime", "package.json")
+                ) as new, open(
+                    os.path.join(
+                        self.topsrcdir,
+                        "tools",
+                        "browsertime",
+                        "node_modules",
+                        "browsertime",
+                        "package.json",
+                    )
+                ) as old:
+                    old_pkg = json.load(old)
+                    new_pkg = json.load(new)
+
+                return not old_pkg["_from"].endswith(
+                    new_pkg["devDependencies"]["browsertime"]
+                )
+
+            def _get_browsertime_version():
+                # Returns the (current commit, version number) used
+                with open(
+                    os.path.join(
+                        self.topsrcdir,
+                        "tools",
+                        "browsertime",
+                        "node_modules",
+                        "browsertime",
+                        "package.json",
+                    )
+                ) as existing:
+                    package = json.load(existing)
+                return package["version"], package["_from"]
 
             # Check if browsertime scripts exist and try to install them if
             # they aren't
-            if not _browsertime_exists():
+            if _should_install():
                 # TODO: Make this "integration" nicer in the near future
                 print("Missing browsertime files...attempting to install")
                 subprocess.check_call(
@@ -211,11 +248,14 @@ class RaptorRunner(MozbuildObject):
                         "--clobber",
                     ]
                 )
-                if not _browsertime_exists():
+                if _should_install():
                     raise Exception(
                         "Failed installation attempt. Cannot find browsertime scripts. "
                         "Run `./mach browsertime --setup --clobber` to set it up."
                     )
+
+            print("Using browsertime version %s from %s" % _get_browsertime_version())
+
         finally:
             sys.path = sys.path[1:]
 
