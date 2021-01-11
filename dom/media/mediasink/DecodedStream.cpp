@@ -608,6 +608,11 @@ static void SendStreamAudio(DecodedStreamData* aStream,
 
   MOZ_ASSERT(aData);
   AudioData* audio = aData;
+
+  if (!audio->Frames()) {
+    // Ignore elements with 0 frames.
+    return;
+  }
   // This logic has to mimic AudioSink closely to make sure we write
   // the exact same silences
   CheckedInt64 audioWrittenOffset =
@@ -621,8 +626,9 @@ static void SendStreamAudio(DecodedStreamData* aStream,
   }
 
   if (audioWrittenOffset.value() + AUDIO_FUZZ_FRAMES < frameOffset.value()) {
+    // We've written less audio than our frame offset, write silence so we have
+    // enough audio to be at the correct offset for our current frames.
     int64_t silentFrames = frameOffset.value() - audioWrittenOffset.value();
-    // Write silence to catch up
     AudioSegment silence;
     silence.InsertNullDataAtStart(silentFrames);
     aStream->mAudioFramesWritten += silentFrames;
