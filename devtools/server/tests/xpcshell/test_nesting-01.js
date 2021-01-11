@@ -19,16 +19,15 @@ add_task(
 );
 
 function test_nesting(thread) {
-  const { resolve, promise: p } = defer();
-
   let currentStep = 0;
-
-  executeSoon(function() {
-    // Should be on the first step
-    Assert.equal(++currentStep, 1);
-    // We should have one nested event loop from unsfeSynchronize
-    Assert.equal(thread._nestedEventLoops.size, 1);
-    resolve(true);
+  const p = new Promise(resolve => {
+    executeSoon(function() {
+      // Should be on the first step
+      Assert.equal(++currentStep, 1);
+      // We should have one nested event loop from unsfeSynchronize
+      Assert.equal(thread._nestedEventLoops.size, 1);
+      resolve(true);
+    });
   });
 
   Assert.equal(thread.unsafeSynchronize(p), true);
