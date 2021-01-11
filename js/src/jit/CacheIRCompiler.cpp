@@ -6117,6 +6117,19 @@ bool CacheIRCompiler::emitCompareDoubleSameValueResult(NumberOperandId lhsId,
   return true;
 }
 
+bool CacheIRCompiler::emitIndirectTruncateInt32Result(Int32OperandId valId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register val = allocator.useRegister(masm, valId);
+
+  if (output.hasValue()) {
+    masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
+  } else {
+    masm.mov(val, output.typedReg().gpr());
+  }
+  return true;
+}
+
 bool CacheIRCompiler::emitCallPrintString(const char* str) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   masm.printf(str);
