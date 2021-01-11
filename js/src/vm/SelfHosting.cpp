@@ -2880,12 +2880,6 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
     return true;
   }
 
-  /*
-   * Self hosted state can be accessed from threads for other runtimes
-   * parented to this one, so cannot include state in the nursery.
-   */
-  JS::AutoDisableGenerationalGC disable(cx);
-
   Rooted<GlobalObject*> shg(cx, JSRuntime::createSelfHostingGlobal(cx));
   if (!shg) {
     return false;
