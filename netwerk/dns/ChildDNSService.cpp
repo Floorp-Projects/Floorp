@@ -18,6 +18,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/DNSListenerProxy.h"
 #include "mozilla/net/TRRServiceParent.h"
+#include "nsHostResolver.h"
 #include "nsServiceManagerUtils.h"
 #include "prsystem.h"
 #include "DNSResolverInfo.h"
@@ -94,6 +95,11 @@ nsresult ChildDNSService::AsyncResolveInternal(
   bool resolveDNSInSocketProcess = false;
   if (XRE_IsParentProcess() && nsIOService::UseSocketProcess()) {
     resolveDNSInSocketProcess = true;
+    if (type != nsIDNSService::RESOLVE_TYPE_DEFAULT &&
+        (mTRRServiceParent->Mode() != MODE_TRRFIRST &&
+         mTRRServiceParent->Mode() != MODE_TRRONLY)) {
+      return NS_ERROR_UNKNOWN_HOST;
+    }
   }
 
   if (mDisablePrefetch && (flags & RESOLVE_SPECULATE)) {
