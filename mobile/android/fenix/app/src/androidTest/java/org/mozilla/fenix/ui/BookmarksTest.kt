@@ -395,7 +395,7 @@ class BookmarksTest {
         }
 
         bookmarksMenu {
-            verifyEmptyBookmarksList()
+            verifyDeleteMultipleBookmarksSnackBar()
         }
     }
 

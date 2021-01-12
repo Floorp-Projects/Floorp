@@ -50,6 +50,7 @@ class SmokeTest {
         var url = "https://www.ecosia.org/search?q=%s"
     }
     val collectionName = "First Collection"
+    private var bookmarksListIdlingResource: RecyclerViewIdlingResource? = null
 
     // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
     private fun getAwesomebarView(): View? {
@@ -97,6 +98,10 @@ class SmokeTest {
         }
 
         deleteDownloadFromStorage(downloadFileName)
+
+        if (bookmarksListIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }
     }
 
     // copied over from HomeScreenTest
@@ -949,6 +954,45 @@ class SmokeTest {
             selectDeleteCollection()
             confirmDeleteCollection()
             verifyNoCollectionsText()
+        }
+    }
+
+    @Test
+    // Verifies that deleting a Bookmarks folder also removes the item from inside it.
+    fun deleteNonEmptyBookmarkFolderTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        browserScreen {
+            createBookmark(website.url)
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 1)
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+            verifyBookmarkTitle("Test_Page_1")
+            createFolder("My Folder")
+            verifyFolderTitle("My Folder")
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }.openThreeDotMenu("Test_Page_1") {
+        }.clickEdit {
+            clickParentFolderSelector()
+            selectFolder("My Folder")
+            navigateUp()
+            saveEditBookmark()
+        }.openThreeDotMenu("My Folder") {
+        }.clickDelete {
+            cancelFolderDeletion()
+            verifyFolderTitle("My Folder")
+        }.openThreeDotMenu("My Folder") {
+        }.clickDelete {
+            confirmFolderDeletion()
+            verifyDeleteSnackBarText()
+            navigateUp()
+        }
+
+        browserScreen {
+        }.openThreeDotMenu {
+            verifyBookmarksButton()
         }
     }
 }
