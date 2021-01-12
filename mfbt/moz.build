@@ -186,6 +186,8 @@ SOURCES += [
     "lz4/xxhash.c",
 ]
 
+SOURCES["lz4/xxhash.c"].flags += ["-Wno-unused-function"]
+
 DisableStlWrapping()
 
 if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
