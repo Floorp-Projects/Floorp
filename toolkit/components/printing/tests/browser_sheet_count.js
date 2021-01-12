@@ -157,7 +157,7 @@ add_task(async function testPagesPerSheetCount() {
     ok(BrowserTestUtils.is_visible(pagesPerSheet), "Pages per sheet is shown");
     pagesPerSheet.focus();
     EventUtils.sendKey("space", helper.win);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       EventUtils.sendKey("down", helper.win);
       if (pagesPerSheet.value == 16) {
         break;

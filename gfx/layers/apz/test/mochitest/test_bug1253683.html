@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1253683
 <pre id="test">
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var container = document.getElementById("container");
   var no_layer = document.getElementById("no_layer");
 
@@ -30,10 +30,9 @@ function* test(testDriver) {
   ok(!isLayerized("no_layer"), "initially 'no_layer' should not be layerized");
 
   // Scrolling over outer1 should layerize outer1, but not inner1.
-  yield moveMouseAndScrollWheelOver(no_layer, 10, 10, testDriver, true);
-  yield waitForAllPaints(function() {
-    flushApzRepaints(testDriver);
-  });
+  await promiseMoveMouseAndScrollWheelOver(no_layer, 10, 10, true);
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
 
   ok(container.scrollTop > 0, "We should have scrolled the body");
   ok(!isLayerized("no_layer"), "no_layer should still not be layerized");
@@ -50,7 +49,7 @@ if (isApzEnabled()) {
              ["apz.test.logging_enabled", true]])
   .then(waitUntilApzStable)
   .then(forceLayerTreeToCompositor)
-  .then(runContinuation(test))
+  .then(test)
   .then(SimpleTest.finish, SimpleTest.finishWithFailure);
 }
 
