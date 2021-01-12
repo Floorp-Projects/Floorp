@@ -65,7 +65,7 @@ body {
   background-image: url("assets/icon-forward.svg");
 }
 .icon_refresh {
-  background-image: url("chrome://global/skin/icons/icon-refresh.svg");
+  background-image: url("assets/icon-refresh.svg");
 }
 .icon_stop {
   background-image: url("assets/icon-stop-reload.svg");

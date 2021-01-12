@@ -11,12 +11,6 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-if (AppConstants.MOZ_UPDATER) {
-  Services.scriptloader.loadSubScript(
-    "chrome://browser/content/aboutDialog-appUpdater.js",
-    this
-  );
-}
 
 async function init(aEvent) {
   if (aEvent.target != document) {
