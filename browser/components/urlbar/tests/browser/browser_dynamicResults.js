@@ -493,6 +493,103 @@ add_task(async function shouldNavigate() {
   }, new TestShouldNavigateProvider());
 });
 
+// Tests applying highlighting to a dynamic result.
+add_task(async function highlighting() {
+  /**
+   * Provides a dynamic result with highlighted text.
+   */
+  class TestHighlightProvider extends TestProvider {
+    startQuery(context, addCallback) {
+      let result = Object.assign(
+        new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.DYNAMIC,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
+            dynamicType: DYNAMIC_TYPE_NAME,
+            text: ["Test title", UrlbarUtils.HIGHLIGHT.SUGGESTED],
+          })
+        ),
+        { suggestedIndex: 1 }
+      );
+      addCallback(this, result);
+    }
+
+    getViewUpdate(result, idsByName) {
+      return {};
+    }
+  }
+
+  // Test that highlighting is applied.
+  await withDynamicTypeProvider(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+      waitForFocus: SimpleTest.waitForFocus,
+    });
+
+    let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+    Assert.equal(
+      row.result.type,
+      UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      "row.result.type"
+    );
+    let parentTextNode = row.querySelector(
+      `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-text`
+    );
+    let highlightedTextNode = row.querySelector(
+      `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-text > strong`
+    );
+    Assert.equal(parentTextNode.firstChild.textContent, "Test");
+    Assert.equal(
+      highlightedTextNode.textContent,
+      " title",
+      "The highlighting was applied successfully."
+    );
+  }, new TestHighlightProvider());
+
+  /**
+   * Provides a dynamic result with highlighted text that is then overridden.
+   */
+  class TestHighlightProviderOveridden extends TestHighlightProvider {
+    getViewUpdate(result, idsByName) {
+      return {
+        text: {
+          textContent: "Test title",
+        },
+      };
+    }
+  }
+
+  // Test that highlighting is not applied when overridden from getViewUpdate.
+  await withDynamicTypeProvider(async () => {
+    // Do a search.
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+      waitForFocus: SimpleTest.waitForFocus,
+    });
+
+    let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+    Assert.equal(
+      row.result.type,
+      UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      "row.result.type"
+    );
+    let parentTextNode = row.querySelector(
+      `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-text`
+    );
+    let highlightedTextNode = row.querySelector(
+      `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-text > strong`
+    );
+    Assert.equal(
+      parentTextNode.firstChild.textContent,
+      "Test title",
+      "No highlighting was applied"
+    );
+    Assert.ok(!highlightedTextNode, "The <strong> child node was deleted.");
+  }, new TestHighlightProviderOveridden());
+});
+
 /**
  * Provides a dynamic result.
  */
