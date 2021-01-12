@@ -423,6 +423,17 @@
       );
     }
   });
+
+  add_task(async function test_createUniquePath() {
+    let path = PathUtils.join(await PathUtils.getProfileDir(), ".test");
+
+    let firstPath = PathUtils.createUniquePath(path);
+    let secondPath = PathUtils.createUniquePath(path);
+
+    isnot(firstPath, secondPath, "Create unique paths returns different paths");
+    is(PathUtils.filename(firstPath), ".test", "PathUtils.createUniquePath() matches filename for first path");
+    is(PathUtils.filename(secondPath), "-1.test", "PathUtils.createUniquePath() has unique filename for second path");
+  });
 </script>
 
 <body>
