@@ -57,10 +57,11 @@ XPCTraceableVariant::~XPCTraceableVariant() {
   Value val = GetJSValPreserveColor();
 
   MOZ_ASSERT(val.isGCThing() || val.isNull(), "Must be traceable or unlinked");
+  bool unroot = val.isGCThing();
 
   mData.Cleanup();
 
-  if (!val.isNull()) {
+  if (unroot) {
     RemoveFromRootSet();
   }
 }
@@ -84,10 +85,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
   JS::Value val = tmp->GetJSValPreserveColor();
+  bool unroot = val.isGCThing();
 
   tmp->mData.Cleanup();
 
-  if (val.isGCThing()) {
+  if (unroot) {
     XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(tmp);
     v->RemoveFromRootSet();
   }
