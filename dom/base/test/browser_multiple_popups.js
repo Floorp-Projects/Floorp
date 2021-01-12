@@ -532,3 +532,44 @@ add_task(async _ => {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_bug_1685056() {
+  info(
+    "window.open() from a blank iframe window during an event dispatched at the parent page: window should be allowed"
+  );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.block_multiple_popups", true],
+      ["dom.disable_open_during_load", true],
+    ],
+  });
+
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
+  );
+  gBrowser.selectedTab = tab;
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  let obs = new WindowObserver(1);
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#openPopupInFrame",
+    {},
+    tab.linkedBrowser
+  );
+
+  await obs;
+  ok(true, "We had 1 popup.");
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#closeAllWindows",
+    {},
+    tab.linkedBrowser
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
