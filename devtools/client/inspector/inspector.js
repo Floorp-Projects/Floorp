@@ -1646,9 +1646,6 @@ Inspector.prototype = {
     }
     this._destroyed = true;
 
-    this.currentTarget.threadFront.off("paused", this.handleThreadPaused);
-    this.currentTarget.threadFront.off("resumed", this.handleThreadResumed);
-
     this.cancelUpdate();
 
     this.sidebar.destroy();
