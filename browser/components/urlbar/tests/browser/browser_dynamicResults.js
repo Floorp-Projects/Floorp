@@ -46,6 +46,9 @@ const DYNAMIC_TYPE_VIEW_TEMPLATE = {
   ],
 };
 
+const DUMMY_PAGE =
+  "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
+
 // Tests the dynamic type registration functions and stylesheet loading.
 add_task(async function registration() {
   // Get our test stylesheet URIs.
@@ -400,6 +403,96 @@ add_task(async function pick() {
   });
 });
 
+// Tests picking elements in a dynamic result.
+add_task(async function shouldNavigate() {
+  /**
+   * A dummy provider that providers results with a `shouldNavigate` property.
+   */
+  class TestShouldNavigateProvider extends TestProvider {
+    /**
+     * @param {object} context - Data regarding the context of the query.
+     * @param {function} addCallback - Function to add a result to the query.
+     */
+    async startQuery(context, addCallback) {
+      for (let result of this._results) {
+        result.payload.searchString = context.searchString;
+        result.payload.shouldNavigate = true;
+        result.payload.url = DUMMY_PAGE;
+        addCallback(this, result);
+      }
+    }
+  }
+
+  await withDynamicTypeProvider(async provider => {
+    // Do a search.
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+      waitForFocus: SimpleTest.waitForFocus,
+    });
+
+    // Sanity check that the dynamic result is at index 1.
+    let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+    Assert.equal(
+      row.result.type,
+      UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      "row.result.type"
+    );
+
+    // The heuristic result will be selected.  Arrow down from the heuristic
+    // to the selectable element.
+    let element = row.querySelector(
+      `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-selectable`
+    );
+    Assert.ok(element, "Sanity check element");
+    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 1 });
+    Assert.equal(
+      UrlbarTestUtils.getSelectedElement(window),
+      element,
+      `Selected element: ${name}`
+    );
+
+    // Pick the element.
+    await UrlbarTestUtils.promisePopupClose(window, () =>
+      EventUtils.synthesizeKey("KEY_Enter")
+    );
+
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    is(
+      gBrowser.currentURI.spec,
+      DUMMY_PAGE,
+      "We navigated to payload.url when result selected"
+    );
+
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:home");
+    await BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      "about:home"
+    );
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+      waitForFocus: SimpleTest.waitForFocus,
+    });
+
+    row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+    element = row.querySelector(
+      `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-selectable`
+    );
+
+    EventUtils.synthesizeMouseAtCenter(element, {});
+
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    is(
+      gBrowser.currentURI.spec,
+      DUMMY_PAGE,
+      "We navigated to payload.url when result is clicked"
+    );
+  }, new TestShouldNavigateProvider());
+});
+
 /**
  * Provides a dynamic result.
  */
@@ -473,7 +566,15 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
   }
 }
 
-async function withDynamicTypeProvider(callback) {
+/**
+ * Provides a dynamic result.
+ * @param {object} callback - Function that runs the body of the test.
+ * @param {object} provider - The dummy provider to use.
+ */
+async function withDynamicTypeProvider(
+  callback,
+  provider = new TestProvider()
+) {
   // Add a dynamic result type.
   UrlbarResult.addDynamicResultType(DYNAMIC_TYPE_NAME);
   UrlbarView.addDynamicViewTemplate(
@@ -482,7 +583,6 @@ async function withDynamicTypeProvider(callback) {
   );
 
   // Add a provider of the dynamic type.
-  let provider = new TestProvider();
   UrlbarProvidersManager.registerProvider(provider);
 
   await callback(provider);
