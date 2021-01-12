@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="run()">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function getToFileName() {
+  try {
+    const PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+      Ci.nsIPrintSettingsService
+    );
+
+    const printSettings = PSSVC.newPrintSettings;
+    PSSVC.initPrintSettingsFromPrefs(
+      printSettings,
+      true,
+      printSettings.kInitSaveAll
+    );
+
+    return printSettings.toFileName;
+  } catch (e) {
+    Cu.reportError(e);
+  }
+
+  return "";
+}
+
+function run() {
+  const globalToFileNamePref = "print.print_to_filename";
+  const directory = document.location.pathname.replace(/[^\/]*$/, '');
+  const globalTestFileName = directory + "test-file-name.pdf";
+
+  SpecialPowers.pushPrefEnv(
+    { set: [[globalToFileNamePref, globalTestFileName]] },
+    function() {
+      const toFileName = getToFileName();
+      info("Global toFileName: " + toFileName);
+      is(toFileName, globalTestFileName, "setting global pref is reflected in print settings.");
+      SimpleTest.finish();
+    }
+  );
+}
+
+</script>
+</body>
+</html>
+
