@@ -53,24 +53,3 @@ add_task(async function testTXTResolve() {
     .getRecordsAsOneString();
   Assert.equal(answer, test_answer, "got correct answer");
 });
-
-add_task(async function testHTTPSSVCResolve() {
-  // use the h2 server as DOH provider
-  let listenerEsni = new DNSListener();
-  let request = dns.asyncResolve(
-    "httpssvc_esni.example.com",
-    dns.RESOLVE_TYPE_HTTPSSVC,
-    0,
-    null, // resolverInfo
-    listenerEsni,
-    mainThread,
-    defaultOriginAttributes
-  );
-
-  let [inRequest, inRecord, inStatus] = await listenerEsni;
-  Assert.equal(inRequest, request, "correct request was used");
-  Assert.equal(inStatus, Cr.NS_OK, "status OK");
-  let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
-  let esni = answer[0].values[0].QueryInterface(Ci.nsISVCParamEchConfig);
-  Assert.equal(esni.echconfig, "testytestystringstring", "got correct answer");
-});
