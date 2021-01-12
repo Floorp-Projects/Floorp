@@ -33,7 +33,7 @@ function runSandboxTest(testFunc, argString) {
   return testPromise;
 }
 
-var origin = 'https://example.com';
+var origin = document.location.origin;
 var properties = ['fetch', 'Blob', 'URL'];
 var sb = new SpecialPowers.Cu.Sandbox(origin,
                                       { wantGlobalProperties: properties });
