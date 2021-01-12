@@ -51,6 +51,14 @@ namespace PathUtils {
   DOMString joinRelative(DOMString base, DOMString relativePath);
 
   /**
+   * Creates a unique path from the provided path.
+   *
+   * @param path An absolute path.
+   */
+  [Throws]
+  DOMString createUniquePath(DOMString path);
+
+  /**
    * Normalize a path by removing multiple separators and `..` and `.`
    * directories.
    *
