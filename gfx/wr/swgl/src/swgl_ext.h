@@ -408,7 +408,7 @@ static void blendTextureNearestRGBA8(S sampler, const ivec2_scalar& i, int span,
   }
   // Here we only deal with valid samples within the sample bounds. No clamping
   // should occur here within these inner loops.
-  int n = min(maxX + 1 - curX, span);
+  int n = clamp(maxX + 1 - curX, 0, span);
   span -= n;
   // Try to process as many chunks as possible with full loads and stores.
   if (blend_key) {
