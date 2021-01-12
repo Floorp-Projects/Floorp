@@ -30,7 +30,6 @@ if platform.architecture()[0] == "64bit":
     VALGRIND_SUPP_ARCH = os.path.join(VALGRIND_SUPP_DIR, "x86_64-pc-linux-gnu.sup")
 else:
     VALGRIND_SUPP_ARCH = os.path.join(VALGRIND_SUPP_DIR, "i386-pc-linux-gnu.sup")
-    NODEJS_TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux32/nodejs.manifest"
 
 #####
 config = {
