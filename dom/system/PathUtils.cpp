@@ -330,10 +330,19 @@ PathUtils::DirectoryCache& PathUtils::DirectoryCache::Ensure(
   if (aCache.isNothing()) {
     aCache.emplace();
 
-    RunOnShutdown([]() {
-      auto cache = PathUtils::sDirCache.Lock();
-      cache->reset();
-    });
+    auto clearAtShutdown = []() {
+      RunOnShutdown([]() {
+        auto cache = PathUtils::sDirCache.Lock();
+        cache->reset();
+      });
+    };
+
+    if (NS_IsMainThread()) {
+      clearAtShutdown();
+    } else {
+      NS_DispatchToMainThread(
+          NS_NewRunnableFunction(__func__, std::move(clearAtShutdown)));
+    }
   }
 
   return aCache.ref();
