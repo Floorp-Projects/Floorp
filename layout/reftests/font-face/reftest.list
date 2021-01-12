@@ -119,9 +119,9 @@ load 486974-1.html
 # try damaged fonts that should still load (bad checksums)
 == 507960-1-bad-checksums-ttf.html 507960-1-ref.html
 == 507960-1-bad-checksums-woff.html 507960-1-ref.html
-== 507960-1-bad-sfnt-version-woff.html 507960-1-ref.html
 # try versions that should NOT load (bad offsets, signatures, hint)
 != 507960-1-bad-sfnt-version-ttf.html 507960-1-ref.html
+!= 507960-1-bad-sfnt-version-woff.html 507960-1-ref.html
 != 507960-1-bad-woff-sig.html 507960-1-ref.html
 != 507960-1-bad-offset-woff.html 507960-1-ref.html
 != 507960-1-woff-bad-hint.html 507960-1-ref.html
