@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* globals localStorage, window, document, NodeFilter */
+/* globals localStorage, window */
 
 // XXX: This file is a copy of the Services shim from devtools-services.
 // See https://github.com/firefox-devtools/devtools-core/blob/a9263b4c3f88ea42879a36cdc3ca8217b4a528ea/packages/devtools-services/index.js
@@ -66,7 +66,7 @@ PrefBranch.prototype = {
   /** @see nsIPrefBranch.getBoolPref.  */
   getBoolPref: function(prefName, defaultValue) {
     try {
-      let thePref = this._findPref(prefName);
+      const thePref = this._findPref(prefName);
       if (thePref._type !== PREF_BOOL) {
         throw new Error(`${prefName} does not have bool type`);
       }
@@ -84,7 +84,7 @@ PrefBranch.prototype = {
     if (typeof value !== "boolean") {
       throw new Error("non-bool passed to setBoolPref");
     }
-    let thePref = this._findOrCreatePref(prefName, value, true, value);
+    const thePref = this._findOrCreatePref(prefName, value, true, value);
     if (thePref._type !== PREF_BOOL) {
       throw new Error(`${prefName} does not have bool type`);
     }
@@ -94,7 +94,7 @@ PrefBranch.prototype = {
   /** @see nsIPrefBranch.getCharPref.  */
   getCharPref: function(prefName, defaultValue) {
     try {
-      let thePref = this._findPref(prefName);
+      const thePref = this._findPref(prefName);
       if (thePref._type !== PREF_STRING) {
         throw new Error(`${prefName} does not have string type`);
       }
@@ -117,7 +117,7 @@ PrefBranch.prototype = {
     if (typeof value !== "string") {
       throw new Error("non-string passed to setCharPref");
     }
-    let thePref = this._findOrCreatePref(prefName, value, true, value);
+    const thePref = this._findOrCreatePref(prefName, value, true, value);
     if (thePref._type !== PREF_STRING) {
       throw new Error(`${prefName} does not have string type`);
     }
@@ -132,7 +132,7 @@ PrefBranch.prototype = {
   /** @see nsIPrefBranch.getIntPref.  */
   getIntPref: function(prefName, defaultValue) {
     try {
-      let thePref = this._findPref(prefName);
+      const thePref = this._findPref(prefName);
       if (thePref._type !== PREF_INT) {
         throw new Error(`${prefName} does not have int type`);
       }
@@ -150,7 +150,7 @@ PrefBranch.prototype = {
     if (typeof value !== "number") {
       throw new Error("non-number passed to setIntPref");
     }
-    let thePref = this._findOrCreatePref(prefName, value, true, value);
+    const thePref = this._findOrCreatePref(prefName, value, true, value);
     if (thePref._type !== PREF_INT) {
       throw new Error(`${prefName} does not have int type`);
     }
@@ -159,13 +159,13 @@ PrefBranch.prototype = {
 
   /** @see nsIPrefBranch.clearUserPref */
   clearUserPref: function(prefName) {
-    let thePref = this._findPref(prefName);
+    const thePref = this._findPref(prefName);
     thePref._clearUserValue();
   },
 
   /** @see nsIPrefBranch.prefHasUserValue */
   prefHasUserValue: function(prefName) {
-    let thePref = this._findPref(prefName);
+    const thePref = this._findPref(prefName);
     return thePref._hasUserValue;
   },
 
@@ -186,7 +186,7 @@ PrefBranch.prototype = {
     if (!(domain in this._observers)) {
       return;
     }
-    let index = this._observers[domain].indexOf(observer);
+    const index = this._observers[domain].indexOf(observer);
     if (index >= 0) {
       this._observers[domain].splice(index, 1);
     }
@@ -274,7 +274,7 @@ PrefBranch.prototype = {
    * and then emit a change notification.
    */
   _saveAndNotify: function() {
-    let store = {
+    const store = {
       type: this._type,
       defaultValue: this._defaultValue,
       hasUserValue: this._hasUserValue,
@@ -321,15 +321,14 @@ PrefBranch.prototype = {
    * @return {Object} Either a Preference or PrefBranch object
    */
   _findPref: function(prefName) {
-    let branchNames = prefName.split(".");
+    const branchNames = prefName.split(".");
     let branch = this;
 
-    for (let branchName of branchNames) {
+    for (const branchName of branchNames) {
       branch = branch._children[branchName];
       if (!branch) {
         // throw new Error(`could not find pref branch ${ prefName}`);
         return false;
-
       }
     }
 
@@ -345,16 +344,22 @@ PrefBranch.prototype = {
    *        relative to this branch
    */
   _notify: function(relativeName) {
-    for (let domain in this._observers) {
-      if (relativeName === domain || domain === "" ||
-          (domain.endsWith(".") && relativeName.startsWith(domain))) {
+    for (const domain in this._observers) {
+      if (
+        relativeName === domain ||
+        domain === "" ||
+        (domain.endsWith(".") && relativeName.startsWith(domain))
+      ) {
         // Allow mutation while walking.
-        let localList = this._observers[domain].slice();
-        for (let observer of localList) {
+        const localList = this._observers[domain].slice();
+        for (const observer of localList) {
           try {
             if ("observe" in observer) {
-              observer.observe(this, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
-                               relativeName);
+              observer.observe(
+                this,
+                NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
+                relativeName
+              );
             } else {
               // Function-style observer -- these aren't mentioned in
               // the IDL, but they're accepted and devtools uses them.
@@ -368,7 +373,7 @@ PrefBranch.prototype = {
     }
 
     if (this._parent) {
-      this._parent._notify(`${this._name }.${ relativeName}`);
+      this._parent._notify(`${this._name}.${relativeName}`);
     }
   },
 
@@ -382,10 +387,10 @@ PrefBranch.prototype = {
    */
   _createBranch: function(branchList) {
     let parent = this;
-    for (let branch of branchList) {
+    for (const branch of branchList) {
       if (!parent._children[branch]) {
-        let isParentRoot = !parent._parent;
-        let branchName = (isParentRoot ? "" : `${parent.root }.`) + branch;
+        const isParentRoot = !parent._parent;
+        const branchName = (isParentRoot ? "" : `${parent.root}.`) + branch;
         parent._children[branch] = new PrefBranch(parent, branch, branchName);
       }
       parent = parent._children[branch];
@@ -407,16 +412,21 @@ PrefBranch.prototype = {
    * @param {Boolean} init if true, then this call is initialization
    *        from local storage and should override the default prefs
    */
-  _findOrCreatePref: function(keyName, userValue, hasUserValue, defaultValue,
-                               init = false) {
-    let branch = this._createBranch(keyName.split("."));
+  _findOrCreatePref: function(
+    keyName,
+    userValue,
+    hasUserValue,
+    defaultValue,
+    init = false
+  ) {
+    const branch = this._createBranch(keyName.split("."));
 
-    if (hasUserValue && typeof (userValue) !== typeof (defaultValue)) {
-      throw new Error(`inconsistent values when creating ${ keyName}`);
+    if (hasUserValue && typeof userValue !== typeof defaultValue) {
+      throw new Error(`inconsistent values when creating ${keyName}`);
     }
 
     let type;
-    switch (typeof (defaultValue)) {
+    switch (typeof defaultValue) {
       case "boolean":
         type = PREF_BOOL;
         break;
@@ -427,13 +437,13 @@ PrefBranch.prototype = {
         type = PREF_STRING;
         break;
       default:
-        throw new Error(`unhandled argument type: ${ typeof (defaultValue)}`);
+        throw new Error(`unhandled argument type: ${typeof defaultValue}`);
     }
 
     if (init || branch._type === PREF_INVALID) {
       branch._storageUpdated(type, userValue, hasUserValue, defaultValue);
     } else if (branch._type !== type) {
-      throw new Error(`attempt to change type of pref ${ keyName}`);
+      throw new Error(`attempt to change type of pref ${keyName}`);
     }
 
     return branch;
@@ -466,12 +476,13 @@ PrefBranch.prototype = {
       return;
     }
 
-    let { type, userValue, hasUserValue, defaultValue } =
-        JSON.parse(event.newValue);
+    const { type, userValue, hasUserValue, defaultValue } = JSON.parse(
+      event.newValue
+    );
     if (event.oldValue === null) {
       this._findOrCreatePref(key, userValue, hasUserValue, defaultValue);
     } else {
-      let thePref = this._findPref(key);
+      const thePref = this._findPref(key);
       thePref._storageUpdated(type, userValue, hasUserValue, defaultValue);
     }
   },
@@ -492,12 +503,18 @@ PrefBranch.prototype = {
     // Read the prefs from local storage and create the local
     // representations.
     for (let i = 0; i < localStorage.length; ++i) {
-      let keyName = localStorage.key(i);
+      const keyName = localStorage.key(i);
       if (keyName.startsWith(PREFIX)) {
-        let { userValue, hasUserValue, defaultValue } =
-            JSON.parse(localStorage.getItem(keyName));
-        this._findOrCreatePref(keyName.slice(PREFIX.length), userValue,
-                               hasUserValue, defaultValue, true);
+        const { userValue, hasUserValue, defaultValue } = JSON.parse(
+          localStorage.getItem(keyName)
+        );
+        this._findOrCreatePref(
+          keyName.slice(PREFIX.length),
+          userValue,
+          hasUserValue,
+          defaultValue,
+          true
+        );
       }
     }
 
@@ -505,7 +522,6 @@ PrefBranch.prototype = {
     window.addEventListener("storage", this._onStorageChange);
   },
 };
-
 
 const Services = {
   _prefs: null,
@@ -521,11 +537,11 @@ const Services = {
   },
 
   appinfo: "",
-  obs: { addObserver: () => {} }
+  obs: { addObserver: () => {} },
 };
 
 function pref(name, value) {
-  let thePref = Services.prefs._findOrCreatePref(name, value, true, value);
+  const thePref = Services.prefs._findOrCreatePref(name, value, true, value);
   thePref._setDefault(value);
 }
 
