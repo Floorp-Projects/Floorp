@@ -4,46 +4,12 @@
 
 "use strict";
 
-/* global global */
-
 // Configure enzyme with React 16 adapter.
 const Enzyme = require("enzyme");
 const Adapter = require("enzyme-adapter-react-16");
 Enzyme.configure({ adapter: new Adapter() });
 
-global.loader = {
-  lazyGetter: (context, name, fn) => {
-    const module = fn();
-    global[name] = module;
-  },
-  lazyRequireGetter: (obj, properties, module, destructure) => {
-    if (!Array.isArray(properties)) {
-      properties = [properties];
-    }
-
-    for (const property of properties) {
-      Object.defineProperty(obj, property, {
-        get: () => {
-          // Redefine this accessor property as a data property.
-          // Delete it first, to rule out "too much recursion" in case obj is
-          // a proxy whose defineProperty handler might unwittingly trigger this
-          // getter again.
-          delete obj[property];
-          const value = destructure
-            ? require(module)[property]
-            : require(module || property);
-          Object.defineProperty(obj, property, {
-            value,
-            writable: true,
-            configurable: true,
-            enumerable: true,
-          });
-          return value;
-        },
-        configurable: true,
-        enumerable: true,
-      });
-    }
-  },
-  lazyImporter: () => {},
-};
+const {
+  setMocksInGlobal,
+} = require("devtools/client/shared/test-helpers/shared-node-helpers");
+setMocksInGlobal();
