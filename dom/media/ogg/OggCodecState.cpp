@@ -1771,14 +1771,15 @@ bool SkeletonState::DecodeHeader(OggPacketPtr aPacket) {
 
     // Initialize the serialno-to-index map.
     return true;
-  } else if (IsSkeletonIndex(aPacket.get()) &&
-             mVersion >= SKELETON_VERSION(4, 0)) {
+  }
+  if (IsSkeletonIndex(aPacket.get()) && mVersion >= SKELETON_VERSION(4, 0)) {
     return DecodeIndex(aPacket.get());
-  } else if (IsSkeletonFisbone(aPacket.get())) {
+  }
+  if (IsSkeletonFisbone(aPacket.get())) {
     return DecodeFisbone(aPacket.get());
-  } else if (aPacket->e_o_s) {
+  }
+  if (aPacket->e_o_s) {
     mDoneReadingHeaders = true;
-    return true;
   }
   return true;
 }
