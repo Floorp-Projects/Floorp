@@ -19,9 +19,8 @@
 #ifndef wasm_js_h
 #define wasm_js_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-#include "mozilla/HashTable.h"   // DefaultHasher
-#include "mozilla/Maybe.h"       // mozilla::Maybe
+#include "mozilla/HashTable.h"  // DefaultHasher
+#include "mozilla/Maybe.h"      // mozilla::Maybe
 
 #include <stdint.h>  // int32_t, int64_t, uint32_t
 
