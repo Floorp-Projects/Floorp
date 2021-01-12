@@ -383,13 +383,14 @@ class CrashInfo(object):
             if not self.stackwalk_binary:
                 errors.append(
                     "MINIDUMP_STACKWALK not set, can't process dump. Either set "
-                    "MINIDUMP_STACKWALK or use mach bootstrap --no-system "
+                    "MINIDUMP_STACKWALK or use mach bootstrap --no-system-changes "
                     "to install minidump_stackwalk."
                 )
             elif self.stackwalk_binary and not os.path.exists(self.stackwalk_binary):
                 errors.append(
                     "MINIDUMP_STACKWALK binary not found: %s. Use mach bootstrap "
-                    "--no-system to install minidump_stackwalk." % self.stackwalk_binary
+                    "--no-system-changes to install minidump_stackwalk."
+                    % self.stackwalk_binary
                 )
             elif not os.access(self.stackwalk_binary, os.X_OK):
                 errors.append("This user cannot execute the MINIDUMP_STACKWALK binary.")
