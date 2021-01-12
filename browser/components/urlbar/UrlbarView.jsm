@@ -1464,6 +1464,25 @@ class UrlbarView {
       idsByName.set(name, node.id);
     }
 
+    // First, apply highlighting. We do this before updating via getViewUpdate
+    // so the dynamic provider can override the highlighting by setting the
+    // textContent of the highlighted node, if it wishes.
+    for (let [payloadName, highlights] of Object.entries(
+      result.payloadHighlights
+    )) {
+      if (!highlights.length) {
+        continue;
+      }
+      // Highlighting only works if the dynamic element name is the same as the
+      // highlighted payload property name.
+      let nodeToHighlight = item.querySelector(`#${item.id}-${payloadName}`);
+      this._addTextContentWithHighlights(
+        nodeToHighlight,
+        result.payload[payloadName],
+        highlights
+      );
+    }
+
     // Get the view update from the result's provider.
     let provider = UrlbarProvidersManager.getProvider(result.providerName);
     let viewUpdate = await provider.getViewUpdate(result, idsByName);
