@@ -77,13 +77,13 @@ static JSLinearString* GetNameIfLatin1(jsid id) {
   return nullptr;
 }
 
-static JSObject* GetService(JSContext* cx, const xpcom::JSServiceEntry& service,
-                            ErrorResult& aRv) {
+static bool GetServiceImpl(JSContext* cx, const xpcom::JSServiceEntry& service,
+                           JS::MutableHandleObject aObj, ErrorResult& aRv) {
   nsresult rv;
   nsCOMPtr<nsISupports> inst = service.Module().GetService(&rv);
   if (!inst) {
     aRv.Throw(rv);
-    return nullptr;
+    return false;
   }
 
   auto ifaces = service.Interfaces();
@@ -94,7 +94,8 @@ static JSObject* GetService(JSContext* cx, const xpcom::JSServiceEntry& service,
     // its own wrapping, and there's nothing to do. In the latter case, we want
     // to unwrap the underlying JS object.
     if (nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(inst)) {
-      return wrappedJS->GetJSObject();
+      aObj.set(wrappedJS->GetJSObject());
+      return !!aObj;
     }
   }
 
@@ -106,7 +107,7 @@ static JSObject* GetService(JSContext* cx, const xpcom::JSServiceEntry& service,
                                             /* allowNativeWrapper */ true,
                                             &rv)) {
     aRv.Throw(rv);
-    return nullptr;
+    return false;
   }
 
   if (ifaces.Length() > 1) {
@@ -119,7 +120,17 @@ static JSObject* GetService(JSContext* cx, const xpcom::JSServiceEntry& service,
     }
   }
 
-  return &val.toObject();
+  aObj.set(&val.toObject());
+  return true;
+}
+
+static JSObject* GetService(JSContext* cx, const xpcom::JSServiceEntry& service,
+                            ErrorResult& aRv) {
+  JS::RootedObject obj(cx);
+  if (!GetServiceImpl(cx, service, &obj, aRv)) {
+    return nullptr;
+  }
+  return obj;
 }
 
 static bool Services_Resolve(JSContext* cx, HandleObject obj, HandleId id,
