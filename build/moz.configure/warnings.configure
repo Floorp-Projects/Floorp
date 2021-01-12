@@ -60,8 +60,14 @@ add_gcc_warning("-Wempty-body")
 # catches return types with qualifiers like const
 add_gcc_warning("-Wignored-qualifiers")
 
-# function declaration hides virtual function from base class
-add_gcc_warning("-Woverloaded-virtual", cxx_compiler)
+# function declaration hides virtual function from base class.
+# Don't enable for GCC, since it's more strict than clang,
+# and the additional cases it covers are not valuable.
+add_gcc_warning(
+    "-Woverloaded-virtual",
+    cxx_compiler,
+    when=depends(cxx_compiler)(lambda c: c.type != "gcc"),
+)
 
 # catches pointer arithmetic using NULL or sizeof(void)
 add_gcc_warning("-Wpointer-arith")
