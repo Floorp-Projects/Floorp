@@ -24,6 +24,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         # and include the npm package.
         self.packages = [
             "nodejs",
+            "python-devel",
             "which",
         ]
 

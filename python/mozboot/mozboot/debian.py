@@ -32,6 +32,8 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     # Ubuntu).
     COMMON_PACKAGES = [
         "build-essential",
+        "libpython2-dev",
+        "libpython3-dev",
         "nodejs",
         "unzip",
         "uuid",
