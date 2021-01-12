@@ -85,10 +85,6 @@
     grid-template-rows: auto;
     grid-template-columns: auto 26px;
 
-    & > div {
-      grid-area: 1;
-    }
-
     .title {
       grid-column: 1 / -1;
       margin: 0;
@@ -144,6 +140,7 @@
       appearance: none;
       padding-block: 7px;
       padding-inline: 10px 13px;
+      margin-bottom: 10px;
       margin-inline-start: 2px;
       -moz-context-properties: fill;
       fill: var(--customize-menu-primary-text-color);
@@ -242,10 +239,6 @@
 
       .more-information {
         top: -77px;
-      }
-
-      .check-wrapper {
-        margin-top: 10px;
       }
     }
 

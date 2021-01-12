@@ -14325,7 +14325,6 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
-      id: "shortcuts-toggle",
       checked: topSitesEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
@@ -14337,11 +14336,9 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       role: "presentation"
     })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
       id: "custom-shortcuts-title",
-      className: "title"
-    }, external_React_default.a.createElement("label", {
-      for: "shortcuts-toggle",
+      className: "title",
       "data-l10n-id": "newtab-custom-shortcuts-title"
-    })), external_React_default.a.createElement("p", {
+    }), external_React_default.a.createElement("p", {
       id: "custom-shortcuts-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-shortcuts-subtitle"
@@ -14395,7 +14392,6 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
-      id: "pocket-toggle",
       checked: pocketEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
@@ -14407,11 +14403,9 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       role: "presentation"
     })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
       id: "custom-pocket-title",
-      className: "title"
-    }, external_React_default.a.createElement("label", {
-      for: "pocket-toggle",
+      className: "title",
       "data-l10n-id": "newtab-custom-pocket-title"
-    })), external_React_default.a.createElement("p", {
+    }), external_React_default.a.createElement("p", {
       id: "custom-pocket-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-pocket-subtitle"
@@ -14441,7 +14435,6 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
-      id: "highlights-toggle",
       checked: highlightsEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
@@ -14454,11 +14447,9 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       role: "presentation"
     })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
       id: "custom-recent-title",
-      className: "title"
-    }, external_React_default.a.createElement("label", {
-      for: "highlights-toggle",
+      className: "title",
       "data-l10n-id": "newtab-custom-recent-title"
-    })), external_React_default.a.createElement("p", {
+    }), external_React_default.a.createElement("p", {
       id: "custom-recent-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-recent-subtitle"
@@ -14468,7 +14459,6 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
-      id: "snippets-toggle",
       checked: snippetsEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
@@ -14480,11 +14470,9 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       role: "presentation"
     })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
       id: "custom-snippets-title",
-      className: "title"
-    }, external_React_default.a.createElement("label", {
-      for: "snippets-toggle",
+      className: "title",
       "data-l10n-id": "newtab-custom-snippets-title"
-    })), external_React_default.a.createElement("p", {
+    }), external_React_default.a.createElement("p", {
       id: "custom-snippets-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-snippets-subtitle"
