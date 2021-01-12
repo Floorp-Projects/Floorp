@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test to ensure events get delivered properly for a nested OOP iframe</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+// Copied from helper_fission_tap_on_zoomed.html.  In this test
+// SpecialPowers.spawn is used instead of FissionTestHelper.sendToOopif to
+// handle scripts in a nested OOP iframe.
+
+fission_subtest_init();
+
+SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+function failsafe() {
+  // Catch and fail faster on the case where the click ends up not going to
+  // the iframe like it should. Otherwise the test hangs until timeout which
+  // is more painful.
+  document.addEventListener("click", function(e) {
+    dump(`${location.href} got click at ${e.clientX},${e.clientY}\n`);
+    ok(false, "The OOPIF hosting page should not have gotten the click");
+    setTimeout(FissionTestHelper.subtestDone, 0);
+  }, {once: true});
+}
+
+async function test() {
+  let iframeElement = document.getElementById("testframe");
+
+  // Load another OOP document in the parent OOP iframe.
+  await SpecialPowers.spawn(iframeElement, [], async () => {
+    const iframe = content.document.createElement("iframe");
+    iframe.src =
+        "https://example.org/browser/gfx/layers/apz/test/mochitest/helper_fission_empty.html";
+    iframe.style.width = "400px";
+    iframe.style.height = "300px";
+    iframe.style.border = "none";
+    content.document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.addEventListener("load", resolve, {once: true});
+    });
+    await SpecialPowers.spawn(iframe, [], async () => {
+      await content.wrappedJSObject.promiseApzFlushedRepaints(content.window);
+    });
+  });
+
+  // Set a click event listener in the nested OOP document.
+  const iframePromise = SpecialPowers.spawn(iframeElement, [], async () => {
+    const iframe = content.document.querySelector("iframe");
+    const result = await SpecialPowers.spawn(iframe, [], async () => {
+      return new Promise(resolve => {
+        content.document.addEventListener("click", e =>  {
+          dump(`OOPIF got click at ${e.clientX},${e.clientY}\n`);
+          resolve({ x: e.clientX, y: e.clientY });
+        }, {once: true});
+      });
+    });
+    return result;
+  });
+
+  synthesizeNativeTap(document.documentElement, 200, 200, function() {
+    dump("Finished synthesizing click, waiting for OOPIF message...\n");
+  });
+  let iframeResponse = await iframePromise;
+  dump("OOPIF response: " + JSON.stringify(iframeResponse) + "\n");
+
+  let expected_coord = 100; // because the parent iframe is offseted by (100, 100).
+  ok(Math.abs(iframeResponse.x - expected_coord) < 3,
+     `x-coord ${iframeResponse.x} landed near expected value ${expected_coord}`);
+  ok(Math.abs(iframeResponse.y - expected_coord) < 3,
+     `y-coord ${iframeResponse.y} landed near expected value ${expected_coord}`);
+}
+
+  </script>
+  <style>
+    body, html {
+        margin: 0;
+    }
+    div {
+        margin-left: 100px;
+        margin-top: 100px;
+        width: 500px;
+    }
+    iframe {
+        width: 400px;
+        height: 300px;
+        border: solid 1px black;
+    }
+  </style>
+</head>
+<body onload="failsafe()">
+<div><iframe id="testframe"></iframe></div>
+</body>
+</html>

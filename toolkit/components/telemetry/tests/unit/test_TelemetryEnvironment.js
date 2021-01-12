@@ -2566,6 +2566,36 @@ add_task(
   }
 );
 
+add_task(async function test_normandyTestPrefsGoneAfter91() {
+  const testPrefBool = "app.normandy.test-prefs.bool";
+  const testPrefInteger = "app.normandy.test-prefs.integer";
+  const testPrefString = "app.normandy.test-prefs.string";
+
+  Services.prefs.setBoolPref(testPrefBool, true);
+  Services.prefs.setIntPref(testPrefInteger, 10);
+  Services.prefs.setCharPref(testPrefString, "test-string");
+
+  const data = TelemetryEnvironment.currentEnvironment;
+
+  if (Services.vc.compare(data.build.version, "91") > 0) {
+    Assert.equal(
+      data.settings.userPrefs["app.normandy.test-prefs.bool"],
+      null,
+      "This probe should expire in FX91. bug 1686105 "
+    );
+    Assert.equal(
+      data.settings.userPrefs["app.normandy.test-prefs.integer"],
+      null,
+      "This probe should expire in FX91. bug 1686105 "
+    );
+    Assert.equal(
+      data.settings.userPrefs["app.normandy.test-prefs.string"],
+      null,
+      "This probe should expire in FX91. bug 1686105 "
+    );
+  }
+});
+
 add_task(async function test_environmentShutdown() {
   // Define and reset the test preference.
   const PREF_TEST = "toolkit.telemetry.test.pref1";
