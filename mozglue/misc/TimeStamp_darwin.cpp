@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Uptime.h"
 
 // Estimate of the smallest duration of time we can measure.
 static uint64_t sResolution;
