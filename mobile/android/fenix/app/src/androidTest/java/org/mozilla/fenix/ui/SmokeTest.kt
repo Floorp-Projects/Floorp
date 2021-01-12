@@ -44,6 +44,10 @@ class SmokeTest {
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
     private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
     private val downloadFileName = "Globe.svg"
+    private val searchEngine = object {
+        var title = "Ecosia"
+        var url = "https://www.ecosia.org/search?q=%s"
+    }
 
     // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
     private fun getAwesomebarView(): View? {
@@ -463,6 +467,31 @@ class SmokeTest {
             IdlingRegistry.getInstance().register(searchSuggestionsIdlingResource!!)
             verifySearchSuggestionsAreEqualTo(0)
             IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
+        }
+    }
+
+    @Test
+    // Verifies setting as default a customized search engine name and URL
+    fun editCustomSearchEngineTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            openAddSearchEngineMenu()
+            selectAddCustomSearchEngine()
+            typeCustomEngineDetails(searchEngine.title, searchEngine.url)
+            saveNewSearchEngine()
+            openEngineOverflowMenu("Ecosia")
+            clickEdit()
+            typeCustomEngineDetails("Test", searchEngine.url)
+            saveEditSearchEngine()
+            changeDefaultSearchEngine("Test")
+        }.goBack {
+        }.goBack {
+        }.openSearch {
+            verifyDefaultSearchEngine("Test")
+            clickSearchEngineShortcutButton()
+            verifyEnginesListShortcutContains("Test")
         }
     }
 
