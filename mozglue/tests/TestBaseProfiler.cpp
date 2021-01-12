@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <atomic>
 #include <iostream>
+#include <random>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -843,6 +844,69 @@ static void TestChunkManagerWithLocalLimit() {
   WaitUntilTimeStampChanges();  // Force "done" timestamp to change.
   chunk->MarkDone();
   cm.ForgetUnreleasedChunks();
+
+  // Special testing of the release algorithm, to make sure released chunks get
+  // sorted.
+  constexpr unsigned RandomReleaseChunkLoop = 100;
+  // Build a vector of chunks, and mark them "done", ready to be released.
+  Vector<UniquePtr<ProfileBufferChunk>> chunksToRelease;
+  MOZ_RELEASE_ASSERT(chunksToRelease.reserve(RandomReleaseChunkLoop));
+  Vector<TimeStamp> chunksTimeStamps;
+  MOZ_RELEASE_ASSERT(chunksTimeStamps.reserve(RandomReleaseChunkLoop));
+  for (unsigned i = 0; i < RandomReleaseChunkLoop; ++i) {
+    UniquePtr<ProfileBufferChunk> chunk = cm.GetChunk();
+    MOZ_RELEASE_ASSERT(chunk);
+    Unused << chunk->ReserveInitialBlockAsTail(0);
+    chunk->MarkDone();
+    MOZ_RELEASE_ASSERT(!chunk->ChunkHeader().mDoneTimeStamp.IsNull());
+    chunksTimeStamps.infallibleEmplaceBack(chunk->ChunkHeader().mDoneTimeStamp);
+    chunksToRelease.infallibleEmplaceBack(std::move(chunk));
+    if (i % 10 == 0) {
+      // "Done" timestamps should *usually* increase, let's make extra sure some
+      // timestamps are actually different.
+      WaitUntilTimeStampChanges();
+    }
+  }
+  // Shuffle the list.
+  std::random_device randomDevice;
+  std::mt19937 generator(randomDevice());
+  std::shuffle(chunksToRelease.begin(), chunksToRelease.end(), generator);
+  // And release chunks one by one, checking that the list of released chunks
+  // is always sorted.
+  printf("TestChunkManagerWithLocalLimit - Shuffle test timestamps:");
+  for (unsigned i = 0; i < RandomReleaseChunkLoop; ++i) {
+    printf(" %f", (chunksToRelease[i]->ChunkHeader().mDoneTimeStamp -
+                   TimeStamp::ProcessCreation())
+                      .ToMicroseconds());
+    cm.ReleaseChunk(std::move(chunksToRelease[i]));
+    cm.PeekExtantReleasedChunks([i](const ProfileBufferChunk* releasedChunks) {
+      MOZ_RELEASE_ASSERT(releasedChunks);
+      unsigned releasedChunkCount = 1;
+      for (;;) {
+        const ProfileBufferChunk* nextChunk = releasedChunks->GetNext();
+        if (!nextChunk) {
+          break;
+        }
+        ++releasedChunkCount;
+        MOZ_RELEASE_ASSERT(releasedChunks->ChunkHeader().mDoneTimeStamp <=
+                           nextChunk->ChunkHeader().mDoneTimeStamp);
+        releasedChunks = nextChunk;
+      }
+      MOZ_RELEASE_ASSERT(releasedChunkCount == i + 1);
+    });
+  }
+  printf("\n");
+  // Finally, the whole list of released chunks should have the exact same
+  // timestamps as the initial list of "done" chunks.
+  extantReleasedChunks = cm.GetExtantReleasedChunks();
+  for (unsigned i = 0; i < RandomReleaseChunkLoop; ++i) {
+    MOZ_RELEASE_ASSERT(extantReleasedChunks, "Not enough released chunks");
+    MOZ_RELEASE_ASSERT(extantReleasedChunks->ChunkHeader().mDoneTimeStamp ==
+                       chunksTimeStamps[i]);
+    Unused << std::exchange(extantReleasedChunks,
+                            extantReleasedChunks->ReleaseNext());
+  }
+  MOZ_RELEASE_ASSERT(!extantReleasedChunks, "Too many released chunks");
 
 #  ifdef DEBUG
   cm.DeregisteredFrom(chunkManagerRegisterer);
