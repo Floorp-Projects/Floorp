@@ -55,8 +55,8 @@ def dependentlibs_readelf(lib):
         # or with BSD readelf:
         #  tag TYPE            value
         # Looking for NEEDED type entries
-        tmp = line.split(" ", 3)
-        if len(tmp) > 3 and "NEEDED" in tmp[2]:
+        tmp = line.strip().split(" ", 3)
+        if len(tmp) > 3 and "NEEDED" in tmp[1]:
             # NEEDED lines look like:
             # 0x00000001 (NEEDED)             Shared library: [libname]
             # or with BSD readelf:
