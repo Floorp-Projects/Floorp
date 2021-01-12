@@ -2015,15 +2015,34 @@ class L10NCommands(MachCommandBase):
                 cwd=mozpath.join(self.topsrcdir),
             )
 
+        if self.substs["MOZ_BUILD_APP"] == "browser":
+            self.log(
+                logging.INFO,
+                "package-multi-locale",
+                {},
+                "Repackaging browser",
+            )
+            self._run_make(
+                directory=mozpath.join(self.topobjdir, "browser", "app"),
+                target=["tools"],
+                append_env=append_env,
+                pass_thru=True,
+                ensure_exit_code=True,
+            )
+
         self.log(
             logging.INFO,
             "package-multi-locale",
             {},
             "Invoking multi-locale `mach package`",
         )
+        target = ["package"]
+        if self.substs["MOZ_BUILD_APP"] == "mobile/android":
+            target.append("AB_CD=multi")
+
         self._run_make(
             directory=self.topobjdir,
-            target=["package", "AB_CD=multi"],
+            target=target,
             append_env=append_env,
             pass_thru=True,
             ensure_exit_code=True,
