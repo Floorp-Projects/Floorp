@@ -19,8 +19,7 @@
 #ifndef wasm_AsmJS_h
 #define wasm_AsmJS_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include <stdint.h>  // uint32_t
 
