@@ -358,7 +358,7 @@
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">ஒத்திசைவு தோல்வி. கடைசியாக ஒத்திசைக்கப்பட்டது: இல்லை</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">கடைசி ஒத்திசைவு: %@</string>
+    <string name="sync_last_synced_summary">கடைசி ஒத்திசைவு: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">கடைசி ஒத்திசைவு: இல்லை</string>
 
