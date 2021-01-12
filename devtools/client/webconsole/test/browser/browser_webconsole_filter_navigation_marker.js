@@ -54,4 +54,24 @@ add_task(async function() {
     findMessage(hud, "Navigated to"),
     "The navigation marker is still visible"
   );
+
+  info("Navigate to a different origin");
+  let newUrl = `http://example.net/document-builder.sjs?html=HelloNet`;
+  await navigateTo(newUrl);
+  // Wait for the navigation message to be displayed.
+  await waitFor(
+    () => findMessage(hud, "Navigated to " + newUrl),
+    "Wait for example.net navigation message to be rendered"
+  );
+  ok(true, "Navigation message for example.net was displayed as expected");
+
+  info("Navigate to another different origin");
+  newUrl = `http://example.com/document-builder.sjs?html=HelloCom`;
+  await navigateTo(newUrl);
+  // Wait for the navigation message to be displayed.
+  await waitFor(
+    () => findMessage(hud, "Navigated to " + newUrl),
+    "Wait for example.com navigation message to be rendered"
+  );
+  ok(true, "Navigation message for example.com was displayed as expected");
 });
