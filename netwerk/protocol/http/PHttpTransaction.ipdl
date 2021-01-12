@@ -30,6 +30,7 @@ struct NetworkAddressArg {
   NetAddr selfAddr;
   NetAddr peerAddr;
   bool resolvedByTRR;
+  bool echConfigUsed;
 };
 
 refcounted protocol PHttpTransaction
@@ -47,7 +48,7 @@ parent:
                        nsCString?                 altSvcUsed,
                        bool                       dataToChildProcess,
                        bool                       restarted,
-                       uint32_t?                  HTTPSSVCReceivedStage,
+                       uint32_t                   HTTPSSVCReceivedStage,
                        bool                       supportsHttp3);
   async OnTransportStatus(nsresult status,
                           int64_t progress,

@@ -483,15 +483,13 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
   int32_t proxyConnectResponseCode =
       mTransaction->GetProxyConnectResponseCode();
 
-  Maybe<uint32_t> stage = mTransaction->HTTPSSVCReceivedStage();
-
-  Unused << SendOnStartRequest(status, optionalHead, serializedSecurityInfoOut,
-                               mTransaction->ProxyConnectFailed(),
-                               ToTimingStructArgs(mTransaction->Timings()),
-                               proxyConnectResponseCode, dataForSniffer,
-                               optionalAltSvcUsed, !!mDataBridgeParent,
-                               mTransaction->TakeRestartedState(), stage,
-                               mTransaction->GetSupportsHTTP3());
+  Unused << SendOnStartRequest(
+      status, optionalHead, serializedSecurityInfoOut,
+      mTransaction->ProxyConnectFailed(),
+      ToTimingStructArgs(mTransaction->Timings()), proxyConnectResponseCode,
+      dataForSniffer, optionalAltSvcUsed, !!mDataBridgeParent,
+      mTransaction->TakeRestartedState(), mTransaction->HTTPSSVCReceivedStage(),
+      mTransaction->GetSupportsHTTP3());
   return NS_OK;
 }
 
@@ -597,8 +595,10 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
     NetAddr selfAddr;
     NetAddr peerAddr;
     bool isTrr = false;
+    bool echConfigUsed = false;
     if (mTransaction) {
-      mTransaction->GetNetworkAddresses(selfAddr, peerAddr, isTrr);
+      mTransaction->GetNetworkAddresses(selfAddr, peerAddr, isTrr,
+                                        echConfigUsed);
     } else {
       nsCOMPtr<nsISocketTransport> socketTransport =
           do_QueryInterface(aTransport);
@@ -606,9 +606,10 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
         socketTransport->GetSelfAddr(&selfAddr);
         socketTransport->GetPeerAddr(&peerAddr);
         socketTransport->ResolvedByTRR(&isTrr);
+        socketTransport->GetEchConfigUsed(&echConfigUsed);
       }
     }
-    arg.emplace(selfAddr, peerAddr, isTrr);
+    arg.emplace(selfAddr, peerAddr, isTrr, echConfigUsed);
   }
 
   Unused << SendOnTransportStatus(aStatus, aProgress, aProgressMax, arg);
