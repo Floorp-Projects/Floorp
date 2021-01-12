@@ -597,6 +597,65 @@ add_task(async function test_expiredHistogram() {
   );
 });
 
+add_task(async function sessionTimeExcludingAndIncludingSuspend() {
+  if (gIsAndroid) {
+    // We don't support this new probe on android at the moment.
+    return;
+  }
+  Preferences.set("toolkit.telemetry.testing.overrideProductsCheck", true);
+  await TelemetryController.testReset();
+  let subsession = TelemetrySession.getPayload("environment-change", true);
+  let parentScalars = subsession.processes.parent.scalars;
+
+  let withSuspend =
+    parentScalars["browser.engagement.session_time_including_suspend"];
+  let withoutSuspend =
+    parentScalars["browser.engagement.session_time_excluding_suspend"];
+
+  Assert.ok(
+    withSuspend > 0,
+    "The session time including suspend should be positive"
+  );
+
+  Assert.ok(
+    withoutSuspend > 0,
+    "The session time excluding suspend should be positive"
+  );
+
+  // Two things about the next assertion:
+  // 1. The two calls to get the two different uptime values are made
+  //    separately, so we can't guarantee equality, even if we know the machine
+  //    has not been suspended (for example because it's running in infra and
+  //    was just booted). In this case the value should be close to each other.
+  // 2. This test will fail if the device running this has been suspended in
+  //    between booting the Firefox process running this test, and doing the
+  //    following assertion test, but that's unlikely in practice.
+  const max_delta_ms = 100;
+
+  Assert.ok(
+    withSuspend - withoutSuspend <= max_delta_ms,
+    "In test condition, the two uptimes should be close to each other"
+  );
+
+  // This however should always hold, except on Windows < 10, where the two
+  // clocks are from different system calls, and it can fail in test condition
+  // because the machine has not been suspended.
+  if (
+    !(
+      AppConstants.platform == "windows" &&
+      !AppConstants.isPlatformAndVersionAtLeast("win", "10")
+    )
+  ) {
+    Assert.ok(
+      withSuspend >= withoutSuspend,
+      `The uptime with suspend must always been greater or equal to the uptime
+       without suspend`
+    );
+  }
+
+  Preferences.set("toolkit.telemetry.testing.overrideProductsCheck", false);
+});
+
 // Sends a ping to a non existing server. If we remove this test, we won't get
 // all the histograms we need in the main ping.
 add_task(async function test_noServerPing() {
