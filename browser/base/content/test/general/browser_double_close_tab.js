@@ -45,6 +45,10 @@ add_task(async function() {
     set: [["dom.require_user_interaction_for_beforeunload", false]],
   });
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.contentPromptSubDialog", false]],
+  });
+
   testTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
   // XXXgijs the reason this has nesting and callbacks rather than promises is
   // that DOM promises resolve on the next tick. So they're scheduled

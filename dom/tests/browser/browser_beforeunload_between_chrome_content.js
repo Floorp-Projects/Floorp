@@ -47,6 +47,10 @@ SpecialPowers.pushPrefEnv({
   set: [["dom.require_user_interaction_for_beforeunload", false]],
 });
 
+SpecialPowers.pushPrefEnv({
+  set: [["prompts.contentPromptSubDialog", false]],
+});
+
 /**
  * Test navigation from a content page to a chrome page. Also check that only
  * one beforeunload event is fired.
