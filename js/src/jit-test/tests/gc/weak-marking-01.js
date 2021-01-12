@@ -21,6 +21,8 @@ function syncIncrementalGC() {
 
 // All reachable keys should be found, and the rest should be swept.
 function basicSweeping() {
+  gc();
+
   var wm1 = new WeakMap();
   wm1.set({'name': 'obj1'}, {'name': 'val1'});
   var hold = {'name': 'obj2'};
@@ -37,6 +39,8 @@ basicSweeping();
 
 // Keep values alive even when they are only referenced by (live) WeakMap values.
 function weakGraph() {
+  gc();
+
   var wm1 = new WeakMap();
   var obj1 = {'name': 'obj1'};
   var obj2 = {'name': 'obj2'};
@@ -62,6 +66,8 @@ weakGraph();
 
 // ...but the weakmap itself has to stay alive, too.
 function deadWeakMap() {
+  gc();
+
   var wm1 = new WeakMap();
   var obj1 = makeFinalizeObserver();
   var obj2 = {'name': 'obj2'};
@@ -91,6 +97,8 @@ deadWeakMap();
 // the key to the value. So if the key is live, the value is live too, but the
 // edge itself has no references to anything.)
 function deadKeys() {
+  gc();
+
   var wm1 = new WeakMap();
   var obj1 = makeFinalizeObserver();
   var obj2 = {'name': 'obj2'};
@@ -118,6 +126,8 @@ deadKeys();
 // into the weakKeys table. This chains through multiple weakmap layers to
 // ensure that the objects can't get marked before the weakmaps.
 function weakKeysRealloc() {
+  gc();
+
   var wm1 = new WeakMap;
   var wm2 = new WeakMap;
   var wm3 = new WeakMap;
@@ -129,8 +139,6 @@ function weakKeysRealloc() {
     wm3.set(Object.create(null), wm2);
   }
   wm3.set(Object.create(null), makeFinalizeObserver());
-
-  finishgc();  // In case we triggerd one creating all those WeakMaps.
 
   wm2 = undefined;
   wm3 = undefined;
@@ -148,6 +156,8 @@ weakKeysRealloc();
 // Otherwise, it will hold its value live if it gets marked, and our table
 // traversals will include non-keys, etc.
 function deletedKeys() {
+  gc();
+
   var wm = new WeakMap;
   var g = newGlobal();
 
@@ -168,6 +178,8 @@ deletedKeys();
 
 // Test adding keys during incremental GC.
 function incrementalAdds() {
+  gc();
+
   var initialCount = finalizeCount();
 
   var wm1 = new WeakMap;
