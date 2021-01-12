@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,11 +12,12 @@
 
 [package]
 name = "linked-hash-map"
-version = "0.5.1"
+version = "0.5.4"
 authors = ["Stepan Koltsov <stepan.koltsov@gmail.com>", "Andrew Paseltiner <apaseltiner@gmail.com>"]
+exclude = ["/.travis.yml", "/deploy-docs.sh"]
 description = "A HashMap wrapper that holds key-value pairs in insertion order"
 homepage = "https://github.com/contain-rs/linked-hash-map"
-documentation = "https://contain-rs.github.io/linked-hash-map/linked_hash_map"
+documentation = "https://docs.rs/linked-hash-map"
 readme = "README.md"
 keywords = ["data-structures"]
 license = "MIT/Apache-2.0"
