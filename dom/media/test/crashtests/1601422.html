@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<head>
+<script>
+(async _ => {
+  try {
+    const video = document.createElement('video')
+    video.preload = 'metadata'
+    video.src = 'sound.ogg'
+    await new Promise(r => video.onloadedmetadata = r)
+    const stream_1 = video.mozCaptureStreamUntilEnded()
+    video.src = ''
+    const stream_2 = video.mozCaptureStreamUntilEnded()
+  } finally {
+    document.documentElement.removeAttribute("class")
+  }
+})()
+</script>
+</head>
+</html>
+
