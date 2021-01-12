@@ -104,7 +104,7 @@ function updateObject(obj, property, watchpoint) {
 }
 
 function getObjectInspectorState(state) {
-  return state.objectInspector;
+  return state.objectInspector || state;
 }
 
 function getExpandedPaths(state) {

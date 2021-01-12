@@ -9,10 +9,23 @@ const {
   createFactory,
   createElement,
 } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const actions = require("devtools/client/shared/components/object-inspector/actions");
+const {
+  connect,
+  Provider,
+} = require("devtools/client/shared/vendor/react-redux");
+loader.lazyRequireGetter(
+  this,
+  "createStore",
+  "devtools/client/shared/redux/create-store"
+);
 
-const selectors = require("devtools/client/shared/components/object-inspector/reducer");
+const actions = require("devtools/client/shared/components/object-inspector/actions");
+const {
+  getExpandedPaths,
+  getLoadedProperties,
+  getEvaluations,
+  default: reducer,
+} = require("devtools/client/shared/components/object-inspector/reducer");
 
 const Tree = createFactory(require("devtools/client/shared/components/Tree"));
 
@@ -318,16 +331,16 @@ class ObjectInspector extends Component {
 
 function mapStateToProps(state, props) {
   return {
-    expandedPaths: selectors.getExpandedPaths(state),
-    loadedProperties: selectors.getLoadedProperties(state),
-    evaluations: selectors.getEvaluations(state),
+    expandedPaths: getExpandedPaths(state),
+    loadedProperties: getLoadedProperties(state),
+    evaluations: getEvaluations(state),
   };
 }
 
 const OI = connect(mapStateToProps, actions)(ObjectInspector);
 
 module.exports = props => {
-  const { roots } = props;
+  const { roots, standalone = false } = props;
 
   if (roots.length == 0) {
     return null;
@@ -337,5 +350,12 @@ module.exports = props => {
     return renderRep(roots[0], props);
   }
 
-  return createElement(OI, props);
+  const oiElement = createElement(OI, props);
+
+  if (!standalone) {
+    return oiElement;
+  }
+
+  const store = createStore(reducer);
+  return createElement(Provider, { store }, oiElement);
 };
