@@ -767,6 +767,10 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
                                          apzc->IsAsyncZooming());
     }
 
+    layerTranslation =
+        apzc->GetOverscrollTransform(AsyncPanZoomController::eForCompositing)
+            .TransformPoint(layerTranslation);
+
     // If layerTranslation includes only the layout component of the async
     // transform then it has not been scaled by the async zoom, so we want to
     // divide it by the resolution. If layerTranslation includes the visual
