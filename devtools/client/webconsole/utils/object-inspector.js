@@ -83,6 +83,7 @@ function getObjectInspector(
   const objectInspectorProps = {
     autoExpandDepth: 0,
     mode: MODE.LONG,
+    standalone: true,
     roots,
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
