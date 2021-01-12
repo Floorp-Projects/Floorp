@@ -3420,7 +3420,7 @@ MDefinition* MToIntegerInt32::foldsTo(TempAllocator& alloc) {
 
 void MToNumberInt32::analyzeEdgeCasesBackward() {
   if (!NeedNegativeZeroCheck(this)) {
-    setCanBeNegativeZero(false);
+    setNeedsNegativeZeroCheck(false);
   }
 }
 

@@ -27,8 +27,6 @@ class nsPrintSettingsX : public nsPrintSettings {
   explicit nsPrintSettingsX(const PrintSettingsInitializer& aSettings);
 
   nsresult Init() { return NS_OK; }
-  nsresult ReadPageFormatFromPrefs();
-  nsresult WritePageFormatToPrefs();
 
   void SetDestination(uint16_t aDestination) { mDestination = aDestination; }
   void GetDestination(uint16_t* aDestination) { *aDestination = mDestination; }
@@ -69,11 +67,6 @@ class nsPrintSettingsX : public nsPrintSettings {
 
   nsresult _Clone(nsIPrintSettings** _retval) override;
   nsresult _Assign(nsIPrintSettings* aPS) override;
-
-  void SetPMPageFormat(PMPageFormat aPageFormat);
-
-  // Set the paper size and margins from the given NSPrintInfo.
-  void SetPageFormatFromPrintInfo(const NSPrintInfo* aPrintInfo);
 
   int GetCocoaUnit(int16_t aGeckoUnit);
 

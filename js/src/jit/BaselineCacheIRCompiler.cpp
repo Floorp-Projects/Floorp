@@ -2003,11 +2003,6 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
 
   JitZone* jitZone = cx->zone()->jitZone();
 
-  // The script to invalidate if we are modifying a transpiled IC.
-  JSScript* invalidationScript = icScript->isInlined()
-                                     ? icScript->inliningRoot()->owningScript()
-                                     : outerScript;
-
   // Check if we already have JitCode for this stub.
   CacheIRStubInfo* stubInfo;
   CacheIRStubKey::Lookup lookup(kind, ICStubEngine::Baseline,
@@ -2085,8 +2080,6 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
   // Resetting the entered counts on the IC chain makes subsequent reasoning
   // about the chain much easier.
   ResetEnteredCounts(stub);
-
-  stub->maybeInvalidateWarp(cx, invalidationScript);
 
   switch (stub->trialInliningState()) {
     case TrialInliningState::Initial:

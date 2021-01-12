@@ -1243,7 +1243,15 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
                                        CaretAssociateHint aHint) {
   if (!aNewFocus) return NS_ERROR_INVALID_ARG;
 
-  MOZ_LOG(sFrameSelectionLog, LogLevel::Debug, ("%s", __FUNCTION__));
+  if (MOZ_LOG_TEST(sFrameSelectionLog, LogLevel::Debug)) {
+    const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    MOZ_LOG(sFrameSelectionLog, LogLevel::Debug,
+            ("%s: selection=%p, new focus=%p, offsets=(%u,%u), focus mode=%i",
+             __FUNCTION__,
+             mDomSelections[index] ? mDomSelections[index].get() : nullptr,
+             aNewFocus, aContentOffset, aContentEndOffset,
+             static_cast<int>(aFocusMode)));
+  }
 
   mDesiredCaretPos.Invalidate();
 

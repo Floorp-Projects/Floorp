@@ -240,3 +240,13 @@ cfr-whatsnew-media-keys-button = Learn how
 
 cfr-whatsnew-search-shortcuts-header = Search shortcuts in the address bar
 cfr-whatsnew-search-shortcuts-body = Now, when you type a search engine or specific site into the address bar, a blue shortcut will appear in the search suggestions beneath. Select that shortcut to complete your search directly from the address bar.
+
+## What's new: Cookies protection
+
+cfr-whatsnew-supercookies-header = Protection from malicious supercookies
+cfr-whatsnew-supercookies-body = Websites can secretly attach a “supercookie” to your browser that can follow you around the web, even after you clear your cookies. { -brand-short-name } now provides strong protection against supercookies so they can’t be used to track your online activities from one site to the next.
+
+## What's new: Better bookmarking
+
+cfr-whatsnew-bookmarking-header = Better bookmarking
+cfr-whatsnew-bookmarking-body = It’s easier to keep track of your favorite sites. { -brand-short-name } now remembers your preferred location for saved bookmarks, shows the bookmarks toolbar by default on new tabs, and gives you easy access to the rest of your bookmarks via a toolbar folder.

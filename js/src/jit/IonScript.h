@@ -93,13 +93,20 @@ class alignas(8) IonScript final : public TrailingArray {
   // per-platform if we want.
   uint32_t invalidateEpilogueDataOffset_ = 0;
 
-  // Number of times this script bailed out without invalidation.
-  uint32_t numBailouts_ = 0;
+  // Number of bailouts that have occurred for reasons that could be
+  // fixed if we invalidated and recompiled.
+  uint16_t numFixableBailouts_ = 0;
 
-  // Flag set if we have bailed out from an instruction hoisted by
-  // LICM.  If this happens twice without triggering a CacheIR
-  // invalidation, we will disable LICM.
-  bool hadLICMBailout_ = false;
+  // Number of bailouts that have occurred for reasons that can't be
+  // fixed by recompiling: for example, bailing out to catch an exception.
+  uint16_t numUnfixableBailouts_ = 0;
+
+ public:
+  enum class LICMState : uint8_t { NeverBailed, Bailed, BailedAndHitFallback };
+
+ private:
+  // Tracks the state of LICM bailouts.
+  LICMState licmState_ = LICMState::NeverBailed;
 
   // Flag set if IonScript was compiled with profiling enabled.
   bool hasProfilingInstrumentation_ = false;
@@ -132,6 +139,11 @@ class alignas(8) IonScript final : public TrailingArray {
 
   // TraceLogger events that are baked into the IonScript.
   TraceLoggerEventVector traceLoggerEvents_;
+
+#ifdef DEBUG
+  // A hash of the ICScripts used in this compilation.
+  mozilla::HashNumber icHash_ = 0;
+#endif
 
   // End of fields.
 
@@ -338,13 +350,28 @@ class alignas(8) IonScript final : public TrailingArray {
     MOZ_ASSERT(invalidateEpilogueDataOffset_);
     return invalidateEpilogueDataOffset_;
   }
-  void incNumBailouts() { numBailouts_++; }
-  bool bailoutExpected() const {
-    return numBailouts_ >= JitOptions.frequentBailoutThreshold;
+
+  void incNumFixableBailouts() { numFixableBailouts_++; }
+  void incNumUnfixableBailouts() { numUnfixableBailouts_++; }
+
+  bool shouldInvalidate() const {
+    return numFixableBailouts_ >= JitOptions.frequentBailoutThreshold;
+  }
+  bool shouldInvalidateAndDisable() const {
+    return numUnfixableBailouts_ >= JitOptions.frequentBailoutThreshold * 5;
   }
 
-  void setHadLICMBailout() { hadLICMBailout_ = true; }
-  bool hadLICMBailout() const { return hadLICMBailout_; }
+  LICMState licmState() const { return licmState_; }
+  void setHadLICMBailout() {
+    if (licmState_ == LICMState::NeverBailed) {
+      licmState_ = LICMState::Bailed;
+    }
+  }
+  void noteBaselineFallback() {
+    if (licmState_ == LICMState::Bailed) {
+      licmState_ = LICMState::BailedAndHitFallback;
+    }
+  }
 
   void setHasProfilingInstrumentation() { hasProfilingInstrumentation_ = true; }
   void clearHasProfilingInstrumentation() {
@@ -428,6 +455,11 @@ class alignas(8) IonScript final : public TrailingArray {
   size_t allocBytes() const { return allocBytes_; }
 
   static void preWriteBarrier(Zone* zone, IonScript* ionScript);
+
+#ifdef DEBUG
+  mozilla::HashNumber icHash() const { return icHash_; }
+  void setICHash(mozilla::HashNumber hash) { icHash_ = hash; }
+#endif
 };
 
 // Execution information for a basic block which may persist after the

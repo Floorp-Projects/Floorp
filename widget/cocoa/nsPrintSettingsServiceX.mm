@@ -5,8 +5,6 @@
 
 #include "nsPrintSettingsServiceX.h"
 
-#include "mozilla/Debug.h"
-#include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "nsPrintSettingsX.h"
@@ -51,23 +49,6 @@ nsPrintSettingsServiceX::DeserializeToPrintSettings(const PrintData& data,
   return NS_OK;
 }
 
-nsresult nsPrintSettingsServiceX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
-                                            uint32_t aFlags) {
-  mozilla::DebugOnly<nsresult> rv = nsPrintSettingsService::ReadPrefs(aPS, aPrinterName, aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::ReadPrefs() failed");
-
-  RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
-  if (!printSettingsX) {
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  // ReadPageFormatFromPrefs may fail (e.g. prefs are missing/broken) but we can
-  // safely ignore that and just leave existing/default values in the settings.
-  mozilla::Unused << printSettingsX->ReadPageFormatFromPrefs();
-
-  return NS_OK;
-}
-
 nsresult nsPrintSettingsServiceX::_CreatePrintSettings(nsIPrintSettings** _retval) {
   nsresult rv;
   *_retval = nullptr;
@@ -94,21 +75,4 @@ nsresult nsPrintSettingsServiceX::_CreatePrintSettings(nsIPrintSettings** _retva
   // global defaults that we want, doesn't it?
   InitPrintSettingsFromPrefs(*_retval, false, globalPrintSettings);
   return rv;
-}
-
-nsresult nsPrintSettingsServiceX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
-                                             uint32_t aFlags) {
-  nsresult rv;
-
-  rv = nsPrintSettingsService::WritePrefs(aPS, aPrinterName, aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::WritePrefs() failed");
-
-  RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
-  if (!printSettingsX) {
-    return NS_ERROR_NO_INTERFACE;
-  }
-  rv = printSettingsX->WritePageFormatToPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsX::WritePageFormatToPrefs() failed");
-
-  return NS_OK;
 }

@@ -13887,17 +13887,17 @@ nsresult Maintenance::DirectoryWork() {
           // (GetDirectoryMetadata2WithRestore also checks if it's a valid
           // origin).
 
-          int64_t timestamp;
-          bool persisted;
-          QuotaInfo quotaInfo;
-          IDB_TRY(quotaManager->GetDirectoryMetadata2WithRestore(
-                      originDir, persistent, &timestamp, &persisted, quotaInfo),
-                  // Not much we can do here...
-                  Ok{});
+          IDB_TRY_INSPECT(
+              const auto& metadata,
+              quotaManager->GetDirectoryMetadataWithQuotaInfo2WithRestore(
+                  originDir, persistent),
+              // Not much we can do here...
+              Ok{});
 
           // Don't do any maintenance for private browsing databases, which are
           // only temporary.
-          if (OriginAttributes::IsPrivateBrowsing(quotaInfo.mOrigin)) {
+          if (OriginAttributes::IsPrivateBrowsing(
+                  metadata.mQuotaInfo.mOrigin)) {
             return Ok{};
           }
 
@@ -13910,7 +13910,8 @@ nsresult Maintenance::DirectoryWork() {
 
             IDB_TRY_UNWRAP(
                 const DebugOnly<bool> created,
-                quotaManager->EnsurePersistentOriginIsInitialized(quotaInfo)
+                quotaManager
+                    ->EnsurePersistentOriginIsInitialized(metadata.mQuotaInfo)
                     .map([](const auto& res) { return res.second; }),
                 // Not much we can do here...
                 Ok{});
@@ -13979,7 +13980,7 @@ nsresult Maintenance::DirectoryWork() {
               }));
 
           if (!databasePaths.IsEmpty()) {
-            mDirectoryInfos.EmplaceBack(persistenceType, quotaInfo,
+            mDirectoryInfos.EmplaceBack(persistenceType, metadata.mQuotaInfo,
                                         std::move(databasePaths));
           }
 

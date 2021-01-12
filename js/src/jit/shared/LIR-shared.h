@@ -3627,7 +3627,9 @@ class LNaNToZero : public LInstructionHelper<1, 1, 1> {
   const LDefinition* tempDouble() { return getTemp(0); }
 };
 
-// Passed the BaselineFrame address in the OsrFrameReg by SideCannon().
+// Passed the BaselineFrame address in the OsrFrameReg via the IonOsrTempData
+// populated by PrepareOsrTempData.
+//
 // Forwards this object to the LOsrValues for Value materialization.
 class LOsrEntry : public LInstructionHelper<1, 0, 1> {
  protected:

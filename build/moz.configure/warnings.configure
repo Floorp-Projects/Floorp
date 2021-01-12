@@ -97,6 +97,9 @@ check_and_add_gcc_warning("-Wfloat-zero-conversion")
 
 # catches issues around loops
 check_and_add_gcc_warning("-Wloop-analysis")
+# But, disable range-loop-analysis because it can raise unhelpful false
+# positives.
+check_and_add_gcc_warning("-Wno-range-loop-analysis")
 
 # catches C++ version forward-compat issues
 check_and_add_gcc_warning("-Wc++2a-compat", cxx_compiler)

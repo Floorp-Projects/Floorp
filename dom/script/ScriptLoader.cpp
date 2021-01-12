@@ -3037,7 +3037,13 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       JS::Rooted<JS::Value> rval(cx);
 
       rv = nsJSUtils::ModuleEvaluate(cx, module, &rval);
-      MOZ_ASSERT(NS_FAILED(rv) == aes.HasException());
+
+      if (NS_SUCCEEDED(rv)) {
+        // If we have an infinite loop in a module, which is stopped by the
+        // user, the module evaluation will fail, but we will not have an
+        // AutoEntryScript exception.
+        MOZ_ASSERT(!aes.HasException());
+      }
 
       if (NS_FAILED(rv)) {
         LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
@@ -3052,14 +3058,22 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
         }
       } else {
         // Path for when Top Level Await is enabled
-        JS::Rooted<JSObject*> aEvaluationPromise(cx, &rval.toObject());
+        JS::Rooted<JSObject*> aEvaluationPromise(cx);
+        if (NS_SUCCEEDED(rv)) {
+          // If the user cancels the evaluation on an infinite loop, we need
+          // to skip this step. In that case, ModuleEvaluate will not return a
+          // promise, rval will be undefined. We should treat it as a failed
+          // evaluation, and reject appropriately.
+          aEvaluationPromise.set(&rval.toObject());
+        }
         if (request->IsDynamicImport()) {
           FinishDynamicImport(cx, request, rv, aEvaluationPromise);
         } else {
           // If this is not a dynamic import, and if the promise is rejected,
           // the value is unwrapped from the promise value.
           if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
-            LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
+            LOG(("ScriptLoadRequest (%p):   evaluation failed on throw",
+                 aRequest));
             // For a dynamic import, the promise is rejected.  Otherwise an
             // error is either reported by AutoEntryScript.
             rv = NS_OK;
