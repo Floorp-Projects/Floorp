@@ -88,6 +88,7 @@ HttpTransactionParent::HttpTransactionParent(bool aIsDocumentLoad)
       mOnStartRequestCalled(false),
       mOnStopRequestCalled(false),
       mResolvedByTRR(false),
+      mEchConfigUsed(false),
       mProxyConnectResponseCode(0),
       mChannelId(0),
       mDataSentToChildProcess(false),
@@ -304,12 +305,12 @@ void HttpTransactionParent::SetDNSWasRefreshed() {
 }
 
 void HttpTransactionParent::GetNetworkAddresses(NetAddr& self, NetAddr& peer,
-                                                bool& aResolvedByTRR) {
+                                                bool& aResolvedByTRR,
+                                                bool& aEchConfigUsed) {
   self = mSelfAddr;
   peer = mPeerAddr;
-
-  // TODO: will be implemented later in bug 1600254.
-  aResolvedByTRR = false;
+  aResolvedByTRR = mResolvedByTRR;
+  aEchConfigUsed = mEchConfigUsed;
 }
 
 bool HttpTransactionParent::HasStickyConnection() const {
@@ -378,7 +379,7 @@ bool HttpTransactionParent::TakeRestartedState() {
   return result;
 }
 
-Maybe<uint32_t> HttpTransactionParent::HTTPSSVCReceivedStage() {
+uint32_t HttpTransactionParent::HTTPSSVCReceivedStage() {
   return mHTTPSSVCReceivedStage;
 }
 
@@ -447,20 +448,19 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
     const bool& aDataToChildProcess, const bool& aRestarted,
-    Maybe<uint32_t>&& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
+    const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
              aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
              aTimings, aProxyConnectResponseCode,
              aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
              aAltSvcUsed, aDataToChildProcess, aRestarted,
-             aHTTPSSVCReceivedStage{std::move(aHTTPSSVCReceivedStage)},
-             aSupportsHttp3]() mutable {
+             aHTTPSSVCReceivedStage, aSupportsHttp3]() mutable {
         self->DoOnStartRequest(
             aStatus, aResponseHead, aSecurityInfoSerialization,
             aProxyConnectFailed, aTimings, aProxyConnectResponseCode,
             std::move(aDataForSniffer), aAltSvcUsed, aDataToChildProcess,
-            aRestarted, std::move(aHTTPSSVCReceivedStage), aSupportsHttp3);
+            aRestarted, aHTTPSSVCReceivedStage, aSupportsHttp3);
       }));
   return IPC_OK();
 }
@@ -490,7 +490,7 @@ void HttpTransactionParent::DoOnStartRequest(
     const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
     const bool& aDataToChildProcess, const bool& aRestarted,
-    Maybe<uint32_t>&& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
+    const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
   LOG(("HttpTransactionParent::DoOnStartRequest [this=%p aStatus=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -503,7 +503,7 @@ void HttpTransactionParent::DoOnStartRequest(
 
   mStatus = aStatus;
   mDataSentToChildProcess = aDataToChildProcess;
-  mHTTPSSVCReceivedStage = std::move(aHTTPSSVCReceivedStage);
+  mHTTPSSVCReceivedStage = aHTTPSSVCReceivedStage;
   mSupportsHTTP3 = aSupportsHttp3;
 
   if (!aSecurityInfoSerialization.IsEmpty()) {
@@ -547,6 +547,7 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnTransportStatus(
     mSelfAddr = aNetworkAddressArg->selfAddr();
     mPeerAddr = aNetworkAddressArg->peerAddr();
     mResolvedByTRR = aNetworkAddressArg->resolvedByTRR();
+    mEchConfigUsed = aNetworkAddressArg->echConfigUsed();
   }
   mEventsink->OnTransportStatus(nullptr, aStatus, aProgress, aProgressMax);
   return IPC_OK();

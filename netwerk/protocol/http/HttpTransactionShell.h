@@ -108,7 +108,8 @@ class HttpTransactionShell : public nsISupports {
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) = 0;
 
   virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer,
-                                   bool& aResolvedByTRR) = 0;
+                                   bool& aResolvedByTRR,
+                                   bool& aEchConfigUsed) = 0;
 
   // Functions for Timing interface
   virtual mozilla::TimeStamp GetDomainLookupStart() = 0;
@@ -152,7 +153,7 @@ class HttpTransactionShell : public nsISupports {
   virtual HttpTransactionParent* AsHttpTransactionParent() = 0;
 
   virtual bool TakeRestartedState() = 0;
-  virtual Maybe<uint32_t> HTTPSSVCReceivedStage() = 0;
+  virtual uint32_t HTTPSSVCReceivedStage() = 0;
 
   virtual bool Http2Disabled() const = 0;
   virtual bool Http3Disabled() const = 0;
@@ -185,7 +186,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)         \
       override;                                                                \
   virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer,               \
-                                   bool& aResolvedByTRR) override;             \
+                                   bool& aResolvedByTRR, bool& aEchConfigUsed) \
+      override;                                                                \
   virtual mozilla::TimeStamp GetDomainLookupStart() override;                  \
   virtual mozilla::TimeStamp GetDomainLookupEnd() override;                    \
   virtual mozilla::TimeStamp GetConnectStart() override;                       \
@@ -214,7 +216,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual nsHttpTransaction* AsHttpTransaction() override;                     \
   virtual HttpTransactionParent* AsHttpTransactionParent() override;           \
   virtual bool TakeRestartedState() override;                                  \
-  virtual Maybe<uint32_t> HTTPSSVCReceivedStage() override;                    \
+  virtual uint32_t HTTPSSVCReceivedStage() override;                           \
   virtual bool Http2Disabled() const override;                                 \
   virtual bool Http3Disabled() const override;                                 \
   virtual already_AddRefed<nsHttpConnectionInfo> GetConnInfo() const override; \

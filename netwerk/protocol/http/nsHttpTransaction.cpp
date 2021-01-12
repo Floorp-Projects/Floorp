@@ -136,12 +136,14 @@ nsHttpTransaction::nsHttpTransaction()
       mSynchronousRatePaceRequest(false),
       mClassOfService(0),
       mResolvedByTRR(false),
+      mEchConfigUsed(false),
       m0RTTInProgress(false),
       mDoNotTryEarlyData(false),
       mEarlyDataDisposition(EARLY_NONE),
       mFastOpenStatus(TFO_NOT_TRIED),
       mTrafficCategory(HttpTrafficCategory::eInvalid),
       mProxyConnectResponseCode(0),
+      mHTTPSSVCReceivedStage(HTTPSSVC_NOT_USED),
       m421Received(false),
       mDontRetryWithDirectRoute(false),
       mFastFallbackTriggered(false),
@@ -442,7 +444,7 @@ nsresult nsHttpTransaction::Init(
   }
 
   if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled()) {
-    mHTTPSSVCReceivedStage.emplace(HTTPSSVC_NOT_PRESENT);
+    mHTTPSSVCReceivedStage = HTTPSSVC_NOT_PRESENT;
 
     nsCOMPtr<nsIEventTarget> target;
     Unused << gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
@@ -650,6 +652,7 @@ void nsHttpTransaction::OnTransportStatus(nsITransport* transport,
       socketTransport->GetSelfAddr(&mSelfAddr);
       socketTransport->GetPeerAddr(&mPeerAddr);
       socketTransport->ResolvedByTRR(&mResolvedByTRR);
+      socketTransport->GetEchConfigUsed(&mEchConfigUsed);
     }
   }
 
@@ -2850,11 +2853,13 @@ nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream* out) {
 }
 
 void nsHttpTransaction::GetNetworkAddresses(NetAddr& self, NetAddr& peer,
-                                            bool& aResolvedByTRR) {
+                                            bool& aResolvedByTRR,
+                                            bool& aEchConfigUsed) {
   MutexAutoLock lock(mLock);
   self = mSelfAddr;
   peer = mPeerAddr;
   aResolvedByTRR = mResolvedByTRR;
+  aEchConfigUsed = mEchConfigUsed;
 }
 
 bool nsHttpTransaction::CanDo0RTT() {
@@ -3112,6 +3117,12 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
     mDNSRequest = nullptr;
   }
 
+  uint32_t receivedStage = HTTPSSVC_NO_USABLE_RECORD;
+  // Make sure we set the correct value to |mHTTPSSVCReceivedStage|, since we
+  // also use this value to indicate whether HTTPS RR is used or not.
+  auto updateHTTPSSVCReceivedStage =
+      MakeScopeExit([&] { mHTTPSSVCReceivedStage = receivedStage; });
+
   MakeDontWaitHTTPSSVC();
 
   nsCOMPtr<nsIDNSHTTPSSVCRecord> record = aHTTPSSVCRecord;
@@ -3123,15 +3134,13 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
   Unused << record->GetHasIPAddresses(&hasIPAddress);
 
   if (mActivated) {
-    mHTTPSSVCReceivedStage =
-        Some(hasIPAddress ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_2
-                          : HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_2);
+    receivedStage = hasIPAddress ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_2
+                                 : HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_2;
     return NS_OK;
   }
 
-  mHTTPSSVCReceivedStage =
-      Some(hasIPAddress ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_1
-                        : HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_1);
+  receivedStage = hasIPAddress ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_1
+                               : HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_1;
 
   nsCOMPtr<nsISVCBRecord> svcbRecord = aHighestPriorityRecord;
   if (!svcbRecord) {
@@ -3198,7 +3207,7 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
   return NS_OK;
 }
 
-Maybe<uint32_t> nsHttpTransaction::HTTPSSVCReceivedStage() {
+uint32_t nsHttpTransaction::HTTPSSVCReceivedStage() {
   return mHTTPSSVCReceivedStage;
 }
 

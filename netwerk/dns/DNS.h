@@ -61,7 +61,12 @@ enum HTTPSSVC_RECEIVED_STAGE : uint32_t {
   HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_1 = 4,
   HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_2 = 5,
   HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_2 = 6,
+  HTTPSSVC_NOT_USED = 7,
+  HTTPSSVC_NO_USABLE_RECORD = 8,
 };
+
+#define HTTPS_RR_IS_USED(s) \
+  (s > HTTPSSVC_NOT_PRESENT && s < HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_2)
 
 // Required buffer size for text form of an IP address.
 // Includes space for null termination. We make our own contants

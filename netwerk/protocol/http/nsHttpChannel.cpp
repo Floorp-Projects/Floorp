@@ -7421,12 +7421,19 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
       mSecurityInfo = mTransaction->SecurityInfo();
     }
 
+    uint32_t stage = mTransaction->HTTPSSVCReceivedStage();
     if (!LoadHTTPSSVCTelemetryReported()) {
-      Maybe<uint32_t> stage = mTransaction->HTTPSSVCReceivedStage();
-      if (stage) {
+      if (stage != HTTPSSVC_NOT_USED) {
         Telemetry::Accumulate(Telemetry::DNS_HTTPSSVC_RECORD_RECEIVING_STAGE,
-                              *stage);
+                              stage);
       }
+    }
+
+    if (HTTPS_RR_IS_USED(stage)) {
+      Telemetry::Accumulate(
+          Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_HTTPS_RR,
+          LoadEchConfigUsed() ? "echConfig-used"_ns : "echConfig-not-used"_ns,
+          NS_SUCCEEDED(mStatus));
     }
   }
 
@@ -8338,17 +8345,21 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
   if (status == NS_NET_STATUS_CONNECTED_TO ||
       status == NS_NET_STATUS_WAITING_FOR) {
     bool isTrr = false;
+    bool echConfigUsed = false;
     if (mTransaction) {
-      mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr, isTrr);
+      mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr, isTrr,
+                                        echConfigUsed);
     } else {
       nsCOMPtr<nsISocketTransport> socketTransport = do_QueryInterface(trans);
       if (socketTransport) {
         socketTransport->GetSelfAddr(&mSelfAddr);
         socketTransport->GetPeerAddr(&mPeerAddr);
         socketTransport->ResolvedByTRR(&isTrr);
+        socketTransport->GetEchConfigUsed(&echConfigUsed);
       }
     }
     StoreResolvedByTRR(isTrr);
+    StoreEchConfigUsed(echConfigUsed);
   }
 
   // block socket status event after Cancel or OnStopRequest has been called.
