@@ -527,7 +527,6 @@ void RenderCompositorNativeOGL::Bind(wr::NativeTileId aId,
 
   Maybe<GLuint> fbo = mCurrentlyBoundNativeLayer->NextSurfaceAsFramebuffer(
       validRect, dirtyRect, true);
-  MOZ_RELEASE_ASSERT(fbo);  // TODO: make fallible
 
   *aFboId = *fbo;
   *aOffset = wr::DeviceIntPoint{0, 0};

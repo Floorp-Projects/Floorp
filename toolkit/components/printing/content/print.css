@@ -105,7 +105,7 @@ select:not([size], [multiple])[iconic] {
 
 #printer-picker {
   background-size: auto 12px, 16px;
-  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://browser/skin/print.svg");
+  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://global/skin/icons/print.svg");
   background-position: right 3px center, left 8px center;
   width: 100%;
 }
@@ -218,7 +218,7 @@ input[type="text"] {
 
 #open-dialog-link::after {
   display: block;
-  content: url(chrome://browser/skin/open-in-new.svg);
+  content: url(chrome://global/skin/icons/open-in-new.svg);
   -moz-context-properties: fill;
   fill: currentColor;
   width: 12px;

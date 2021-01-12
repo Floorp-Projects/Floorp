@@ -403,6 +403,9 @@ void JitScript::purgeOptimizedStubs(JSScript* script) {
   if (hasInliningRoot()) {
     inliningRoot()->purgeOptimizedStubs(zone);
   }
+#ifdef DEBUG
+  failedICHash_.reset();
+#endif
 }
 
 void ICScript::purgeOptimizedStubs(Zone* zone) {
@@ -419,11 +422,8 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
 
     while (stub != lastStub) {
       if (!stub->toCacheIRStub()->allocatedInFallbackSpace()) {
-        // Note: this is called when discarding JIT code, after invalidating
-        // all Warp code, so we don't need to check for that here.
-        lastStub->toFallbackStub()->clearUsedByTranspiler();
-        lastStub->toFallbackStub()->unlinkStubDontInvalidateWarp(
-            zone, prev, stub->toCacheIRStub());
+        lastStub->toFallbackStub()->unlinkStub(zone, prev,
+                                               stub->toCacheIRStub());
         stub = stub->toCacheIRStub()->next();
         continue;
       }
@@ -666,3 +666,49 @@ JitScript* ICScript::outerJitScript() {
   uint8_t* ptr = reinterpret_cast<uint8_t*>(this);
   return reinterpret_cast<JitScript*>(ptr - JitScript::offsetOfICScript());
 }
+
+#ifdef DEBUG
+// This hash is used to verify that we do not recompile after a
+// TranspiledCacheIR invalidation with the exact same ICs.
+//
+// It should change iff an ICEntry in this ICScript (or an ICScript
+// inlined into this ICScript) is modified such that we will make a
+// different decision in WarpScriptOracle::maybeInlineIC. This means:
+//
+// 1. The hash will change if we attach a new stub.
+// 2. The hash will change if we increment the entered count of any
+//    CacheIR stub other than the first.
+// 3. The hash will change if we increment the entered count of the
+//    fallback stub.
+//
+HashNumber ICScript::hash() {
+  HashNumber h = 0;
+  for (size_t i = 0; i < numICEntries(); i++) {
+    ICStub* stub = icEntry(i).firstStub();
+
+    // Hash the address of the first stub.
+    h = mozilla::AddToHash(h, stub);
+
+    // Hash the entered count of each subsequent CacheIRStub.
+    if (!stub->isFallback()) {
+      stub = stub->toCacheIRStub()->next();
+      while (!stub->isFallback()) {
+        h = mozilla::AddToHash(h, stub->enteredCount());
+        stub = stub->toCacheIRStub()->next();
+      }
+    }
+
+    // Hash the enteredCount of the fallback stub.
+    MOZ_ASSERT(stub->isFallback());
+    h = mozilla::AddToHash(h, stub->enteredCount());
+  }
+
+  if (inlinedChildren_) {
+    for (auto& callsite : *inlinedChildren_) {
+      h = mozilla::AddToHash(h, callsite.callee_->hash());
+    }
+  }
+  return h;
+}
+
+#endif

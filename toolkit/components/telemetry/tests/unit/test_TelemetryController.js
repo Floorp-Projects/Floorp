@@ -53,8 +53,9 @@ const APP_NAME = "XPCShell";
 
 var gClientID = null;
 
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
+XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", async function() {
+  let profileDir = await PathUtils.getProfileDir();
+  return PathUtils.join(profileDir, "datareporting");
 });
 
 function sendPing(aSendClientId, aSendEnvironment) {
@@ -667,25 +668,32 @@ add_task(async function test_telemetryCleanFHRDatabase() {
   const DEFAULT_DB_NAME = "healthreport.sqlite";
 
   // Check that we're able to remove a FHR DB with a custom name.
+  const profileDir = await PathUtils.getProfileDir();
   const CUSTOM_DB_PATHS = [
-    OS.Path.join(OS.Constants.Path.profileDir, CUSTOM_DB_NAME),
-    OS.Path.join(OS.Constants.Path.profileDir, CUSTOM_DB_NAME + "-wal"),
-    OS.Path.join(OS.Constants.Path.profileDir, CUSTOM_DB_NAME + "-shm"),
+    PathUtils.join(profileDir, CUSTOM_DB_NAME),
+    PathUtils.join(profileDir, CUSTOM_DB_NAME + "-wal"),
+    PathUtils.join(profileDir, CUSTOM_DB_NAME + "-shm"),
   ];
   Preferences.set(FHR_DBNAME_PREF, CUSTOM_DB_NAME);
 
   // Write fake DB files to the profile directory.
   for (let dbFilePath of CUSTOM_DB_PATHS) {
-    await OS.File.writeAtomic(dbFilePath, "some data");
+    await IOUtils.writeUTF8(dbFilePath, "some data");
   }
 
   // Trigger the cleanup and check that the files were removed.
   await TelemetryStorage.removeFHRDatabase();
   for (let dbFilePath of CUSTOM_DB_PATHS) {
-    Assert.ok(
-      !(await OS.File.exists(dbFilePath)),
-      "The DB must not be on the disk anymore: " + dbFilePath
-    );
+    try {
+      await IOUtils.read(dbFilePath);
+    } catch (e) {
+      Assert.ok(e instanceof DOMException);
+      Assert.equal(
+        e.name,
+        "NotFoundError",
+        "The DB must not be on the disk anymore: " + dbFilePath
+      );
+    }
   }
 
   // We should not break anything if there's no DB file.
@@ -695,23 +703,29 @@ add_task(async function test_telemetryCleanFHRDatabase() {
   Preferences.reset(FHR_DBNAME_PREF);
 
   const DEFAULT_DB_PATHS = [
-    OS.Path.join(OS.Constants.Path.profileDir, DEFAULT_DB_NAME),
-    OS.Path.join(OS.Constants.Path.profileDir, DEFAULT_DB_NAME + "-wal"),
-    OS.Path.join(OS.Constants.Path.profileDir, DEFAULT_DB_NAME + "-shm"),
+    PathUtils.join(profileDir, DEFAULT_DB_NAME),
+    PathUtils.join(profileDir, DEFAULT_DB_NAME + "-wal"),
+    PathUtils.join(profileDir, DEFAULT_DB_NAME + "-shm"),
   ];
 
   // Write fake DB files to the profile directory.
   for (let dbFilePath of DEFAULT_DB_PATHS) {
-    await OS.File.writeAtomic(dbFilePath, "some data");
+    await IOUtils.writeUTF8(dbFilePath, "some data");
   }
 
   // Trigger the cleanup and check that the files were removed.
   await TelemetryStorage.removeFHRDatabase();
   for (let dbFilePath of DEFAULT_DB_PATHS) {
-    Assert.ok(
-      !(await OS.File.exists(dbFilePath)),
-      "The DB must not be on the disk anymore: " + dbFilePath
-    );
+    try {
+      await IOUtils.read(dbFilePath);
+    } catch (e) {
+      Assert.ok(e instanceof DOMException);
+      Assert.equal(
+        e.name,
+        "NotFoundError",
+        "The DB must not be on the disk anymore: " + dbFilePath
+      );
+    }
   }
 });
 
@@ -741,8 +755,11 @@ add_task(async function test_sendNewProfile() {
   await resetTest();
 
   // Make sure to reset all the new-profile ping prefs.
-  const stateFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
-  await OS.File.remove(stateFilePath, { ignoreAbsent: true });
+  const stateFilePath = PathUtils.join(
+    await DATAREPORTING_PATH,
+    "session-state.json"
+  );
+  await IOUtils.remove(stateFilePath);
   Preferences.set(PREF_NEWPROFILE_DELAY, 1);
   Preferences.set(PREF_NEWPROFILE_ENABLED, true);
 
@@ -771,7 +788,7 @@ add_task(async function test_sendNewProfile() {
 
   // Make sure that the new-profile ping is sent at shutdown if it wasn't sent before.
   await resetTest();
-  await OS.File.remove(stateFilePath, { ignoreAbsent: true });
+  await IOUtils.remove(stateFilePath);
   Preferences.reset(PREF_NEWPROFILE_DELAY);
 
   nextReq = PingServer.promiseNextRequest();
@@ -814,7 +831,7 @@ add_task(async function test_sendNewProfile() {
   // Check that we don't send the new-profile ping if the profile already contains
   // a state file (but no "newProfilePingSent" property).
   await resetTest();
-  await OS.File.remove(stateFilePath, { ignoreAbsent: true });
+  await IOUtils.remove(stateFilePath);
   const sessionState = {
     sessionId: null,
     subsessionId: null,

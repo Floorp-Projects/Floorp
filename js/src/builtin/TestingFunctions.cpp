@@ -3351,7 +3351,9 @@ static bool testingFunc_invalidate(JSContext* cx, unsigned argc, Value* vp) {
     while (!iter.isPhysicalJitFrame()) {
       ++iter;
     }
-    js::jit::Invalidate(cx, iter.script());
+    if (iter.script()->hasIonScript()) {
+      js::jit::Invalidate(cx, iter.script());
+    }
   }
 
   args.rval().setUndefined();

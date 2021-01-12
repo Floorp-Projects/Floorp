@@ -4496,6 +4496,8 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
 }
 
 bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
+  TDZCheckCache tdzCache(this);
+
   JSOp op;
   switch (node->getKind()) {
     case ParseNodeKind::CoalesceAssignExpr:
