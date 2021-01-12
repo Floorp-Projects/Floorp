@@ -68,14 +68,12 @@ static bool ContainsLiveAudioTracks(
 
 class DOMMediaStream::PlaybackTrackListener : public MediaStreamTrackConsumer {
  public:
-  explicit PlaybackTrackListener(DOMMediaStream* aStream) : mStream(aStream) {}
+  NS_INLINE_DECL_REFCOUNTING(PlaybackTrackListener)
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PlaybackTrackListener)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PlaybackTrackListener)
+  explicit PlaybackTrackListener(DOMMediaStream* aStream) : mStream(aStream) {}
 
   void NotifyEnded(MediaStreamTrack* aTrack) override {
     if (!mStream) {
-      MOZ_ASSERT(false);
       return;
     }
 
@@ -91,14 +89,8 @@ class DOMMediaStream::PlaybackTrackListener : public MediaStreamTrackConsumer {
  protected:
   virtual ~PlaybackTrackListener() = default;
 
-  RefPtr<DOMMediaStream> mStream;
+  WeakPtr<DOMMediaStream> mStream;
 };
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMediaStream::PlaybackTrackListener,
-                                     AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMediaStream::PlaybackTrackListener,
-                                       Release)
-NS_IMPL_CYCLE_COLLECTION(DOMMediaStream::PlaybackTrackListener, mStream)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMMediaStream)
 
@@ -108,7 +100,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMMediaStream,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumersToKeepAlive)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaybackTrackListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -117,7 +108,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMMediaStream,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTracks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsumersToKeepAlive)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlaybackTrackListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(DOMMediaStream, DOMEventTargetHelper)
