@@ -8,3 +8,8 @@
 const Enzyme = require("enzyme");
 const Adapter = require("enzyme-adapter-react-16");
 Enzyme.configure({ adapter: new Adapter() });
+
+const {
+  setMocksInGlobal,
+} = require("devtools/client/shared/test-helpers/shared-node-helpers");
+setMocksInGlobal();
