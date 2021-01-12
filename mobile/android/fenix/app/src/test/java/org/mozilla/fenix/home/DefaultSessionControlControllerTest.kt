@@ -205,7 +205,7 @@ class DefaultSessionControlControllerTest {
         verify { metrics.track(Event.CollectionTabRestored) }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
         verify { selectTabUseCase.selectTab.invoke(session) }
-        verify { reloadUrlUseCase.reload }
+        verify { reloadUrlUseCase.reload.invoke(session) }
     }
 
     @Test
