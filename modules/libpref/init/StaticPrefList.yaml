@@ -6078,7 +6078,7 @@
 # Whether the `:autofill` pseudo-class is exposed to content.
 - name: layout.css.autofill.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
