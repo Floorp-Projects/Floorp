@@ -20,17 +20,22 @@ function colorAt(image, x, y) {
   return { r, g, b };
 }
 
+let allDownloads = [];
 async function waitUntilScreenshot() {
   const { Downloads } = require("resource://gre/modules/Downloads.jsm");
   const list = await Downloads.getList(Downloads.ALL);
 
   return new Promise(function(resolve) {
     const view = {
-      onDownloadAdded: download => {
-        download.whenSucceeded().then(() => {
-          resolve(download.target.path);
-          list.removeView(view);
-        });
+      onDownloadAdded: async download => {
+        await download.whenSucceeded();
+        if (allDownloads.includes(download)) {
+          return;
+        }
+
+        allDownloads.push(download);
+        resolve(download.target.path);
+        list.removeView(view);
       },
     };
 
@@ -47,6 +52,7 @@ async function resetDownloads() {
     publicList.remove(download);
     await download.finalize(true);
   }
+  allDownloads = [];
 }
 
 async function takeNodeScreenshot(inspector) {
@@ -92,8 +98,23 @@ async function assertSingleColorScreenshotImage(
   height,
   { r, g, b }
 ) {
-  is(image.width, width, "node screenshot has the expected width");
-  is(image.height, height, "node screenshot has the expected height");
+  info(`Assert ${image.src} content`);
+  const ratio = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.wrappedJSObject.devicePixelRatio
+  );
+
+  is(
+    image.width,
+    ratio * width,
+    `node screenshot has the expected width (dpr = ${ratio})`
+  );
+  is(
+    image.height,
+    height * ratio,
+    `node screenshot has the expected height (dpr = ${ratio})`
+  );
 
   const color = colorAt(image, 0, 0);
   is(color.r, r, "node screenshot has the expected red component");
