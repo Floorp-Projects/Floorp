@@ -307,17 +307,10 @@ PathUtils::DirectoryCache& PathUtils::DirectoryCache::Ensure(
   if (aCache.isNothing()) {
     aCache.emplace();
 
-    auto clear = []() {
+    RunOnShutdown([]() {
       auto cache = PathUtils::sDirCache.Lock();
       cache->reset();
-    };
-
-    if (NS_IsMainThread()) {
-      clear();
-    } else {
-      NS_DispatchToMainThread(
-          NS_NewRunnableFunction(__func__, std::move(clear)));
-    }
+    });
   }
 
   return aCache.ref();
