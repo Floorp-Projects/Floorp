@@ -219,7 +219,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDrain() {
       MOZ_ASSERT(mLastTime,
                  "We must have attempted to decode at least one frame to get "
                  "one decoded output");
-      results.LastElement()->mTime = *mLastTime;
+      results.LastElement()->As<AudioData>()->SetOriginalStartTime(*mLastTime);
     }
     return DecodePromise::CreateAndResolve(std::move(results), __func__);
   }

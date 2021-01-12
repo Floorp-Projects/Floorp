@@ -51,6 +51,13 @@ Span<AudioDataValue> AudioData::Data() const {
   return Span{GetAdjustedData(), mFrames * mChannels};
 }
 
+void AudioData::SetOriginalStartTime(const media::TimeUnit& aStartTime) {
+  MOZ_ASSERT(mTime == mOriginalTime,
+             "Do not call this if data has been trimmed!");
+  mTime = aStartTime;
+  mOriginalTime = aStartTime;
+}
+
 bool AudioData::AdjustForStartTime(const media::TimeUnit& aStartTime) {
   mOriginalTime -= aStartTime;
   mTime -= aStartTime;
