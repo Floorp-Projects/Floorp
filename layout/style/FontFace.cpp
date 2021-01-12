@@ -765,11 +765,16 @@ gfxCharacterMap* FontFace::GetUnicodeRangeAsCharacterMap() {
 
   Span<const StyleUnicodeRange> ranges(rangesPtr, len);
   if (!ranges.IsEmpty()) {
-    mUnicodeRange = new gfxCharacterMap();
+    RefPtr<gfxCharacterMap> charMap = new gfxCharacterMap();
     for (auto& range : ranges) {
-      mUnicodeRange->SetRange(range.start, range.end);
+      charMap->SetRange(range.start, range.end);
     }
-    mUnicodeRange->Compact();
+    charMap->Compact();
+    // As it's common for multiple font resources to have the same
+    // unicode-range list, look for an existing copy of this map to share,
+    // or add this one to the sharing cache if not already present.
+    mUnicodeRange =
+        gfxPlatformFontList::PlatformFontList()->FindCharMap(charMap);
   } else {
     mUnicodeRange = nullptr;
   }
