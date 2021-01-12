@@ -87,12 +87,33 @@ bool CanRecordProduct(SupportedProduct aProducts);
 
 /**
  * Return the number of milliseconds since process start using monotonic
- * timestamps (unaffected by system clock changes).
+ * timestamps (unaffected by system clock changes). Depending on the platform,
+ * this can include the time the device was suspended (Windows) or not (Linux,
+ * macOS).
  *
- * @return NS_OK on success, NS_ERROR_NOT_AVAILABLE if TimeStamp doesn't have
- *               the data.
+ * @return NS_OK on success.
  */
 nsresult MsSinceProcessStart(double* aResult);
+
+/**
+ * Return the number of milliseconds since process start using monotonic
+ * timestamps (unaffected by system clock changes), including the time the
+ * system was suspended.
+ *
+ * @return NS_OK on success, NS_ERROR_NOT_AVAILABLE if the data is unavailable
+ * (this can happen on old operating systems).
+ */
+nsresult MsSinceProcessStartIncludingSuspend(double* aResult);
+
+/**
+ * Return the number of milliseconds since process start using monotonic
+ * timestamps (unaffected by system clock changes), excluding the time the
+ * system was suspended.
+ *
+ * @return NS_OK on success, NS_ERROR_NOT_AVAILABLE if the data is unavailable
+ * (this can happen on old operating systems).
+ */
+nsresult MsSinceProcessStartExcludingSuspend(double* aResult);
 
 /**
  * Dumps a log message to the Browser Console using the provided level.

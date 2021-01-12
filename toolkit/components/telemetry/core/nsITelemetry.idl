@@ -409,10 +409,27 @@ interface nsITelemetry : nsISupports
 
   /**
    * Return the number of milliseconds since process start using monotonic
-   * timestamps (unaffected by system clock changes).
-   * @throws NS_ERROR_NOT_AVAILABLE if TimeStamp doesn't have the data.
+   * timestamps (unaffected by system clock changes). On Windows, this includes
+   * the period of time the device was suspended. On Linux and macOS, this does
+   * not include the period of time the device was suspneded.
    */
   double msSinceProcessStart();
+
+  /**
+   * Return the number of milliseconds since process start using monotonic
+   * timestamps (unaffected by system clock changes), including the periods of
+   * time the device was suspended.
+   * @throws NS_ERROR_NOT_AVAILABLE if unavailable.
+   */
+  double msSinceProcessStartIncludingSuspend();
+
+  /**
+   * Return the number of milliseconds since process start using monotonic
+   * timestamps (unaffected by system clock changes), excluding the periods of
+   * time the device was suspended.
+   * @throws NS_ERROR_NOT_AVAILABLE if unavailable.
+   */
+  double msSinceProcessStartExcludingSuspend();
 
   /**
    * Time since the system wide epoch. This is not a monotonic timer but
