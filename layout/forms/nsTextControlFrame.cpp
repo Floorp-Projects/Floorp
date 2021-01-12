@@ -820,8 +820,10 @@ nsresult nsTextControlFrame::SetSelectionInternal(
 
   ErrorResult error;
   selection->SetStartAndEndInLimiter(*aStartNode, aStartOffset, *aEndNode,
-                                     aEndOffset, direction, error);
+                                     aEndOffset, error);
   MOZ_TRY(error.StealNSResult());
+
+  selection->SetDirection(direction);
   return NS_OK;
 }
 

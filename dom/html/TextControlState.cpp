@@ -2101,6 +2101,15 @@ void TextControlState::SetSelectionRange(
       // example.
       mBoundFrame->ScrollSelectionIntoViewAsync();
     }
+    // Press on to firing the event even if that failed, like our old code did.
+    // But is that really what we want?  Firing the event _and_ throwing from
+    // here is weird.  Maybe we should just ignore ScrollSelectionIntoView
+    // failures?
+
+    // XXXbz This is preserving our current behavior of firing a "select" event
+    // on all mutations when we have an editor, but we should really consider
+    // fixing that...
+    changed = true;
   }
 
   if (changed) {

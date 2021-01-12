@@ -59,12 +59,10 @@ const actions = [
   }
 ];
 
-async function initialize(el) {
+function initialize(el) {
   el.value = "foobar";
   el.setSelectionRange(0, 0);
-  // Double timers to make sure to flush async dispatches queued later than a frame paint
-  await new Promise(requestAnimationFrame);
-  await new Promise(requestAnimationFrame);
+  return new Promise(requestAnimationFrame);
 }
 
 els.forEach((el) => {
