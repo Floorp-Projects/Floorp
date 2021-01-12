@@ -51,7 +51,7 @@ class AppLinksUseCasesTest {
     private val dataUrl = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="
     private val aboutUrl = "about:config"
     private val javascriptUrl = "javascript:'hello, world'"
-    private val blobUrl = "blob://example.com"
+    private val jarUrl = "jar:file://some/path/test.html"
     private val fileType = "audio/mpeg"
     private val layerUrl = "https://exmaple.com"
     private val layerPackage = "com.example.app"
@@ -209,11 +209,11 @@ class AppLinksUseCasesTest {
     }
 
     @Test
-    fun `A blob url is not an app link`() {
-        val context = createContext(Triple(blobUrl, appPackage, ""))
+    fun `A jar url is not an app link`() {
+        val context = createContext(Triple(jarUrl, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
-        val redirect = subject.interceptedAppLinkRedirect(aboutUrl)
+        val redirect = subject.interceptedAppLinkRedirect(jarUrl)
         assertFalse(redirect.isRedirect())
     }
 
@@ -370,16 +370,12 @@ class AppLinksUseCasesTest {
         val subject = AppLinksUseCases(context, { true })
 
         var failedToLaunch = false
-        var loadUrl = false
         val failedAction = { failedToLaunch = true }
-        val loadUrlAction = { loadUrl = true }
         `when`(context.startActivity(any())).thenThrow(ActivityNotFoundException("failed"))
-        subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction,
-            loadUrlAction = loadUrlAction)
+        subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
 
         verify(context).startActivity(any())
         assert(failedToLaunch)
-        assert(loadUrl)
     }
 
     @Test
@@ -482,6 +478,19 @@ class AppLinksUseCasesTest {
     fun `OpenAppLinkRedirect should not try to open about URIs`() {
         val context = spy(createContext())
         val uri = Uri.parse(aboutUrl)
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(uri, fileType)
+        val subject = AppLinksUseCases(context, { true })
+
+        subject.openAppLink(intent)
+
+        verify(context, never()).startActivity(any())
+    }
+
+    @Test
+    fun `OpenAppLinkRedirect should not try to open jar URIs`() {
+        val context = spy(createContext())
+        val uri = Uri.parse(jarUrl)
         val intent = Intent(Intent.ACTION_VIEW)
         intent.setDataAndType(uri, fileType)
         val subject = AppLinksUseCases(context, { true })

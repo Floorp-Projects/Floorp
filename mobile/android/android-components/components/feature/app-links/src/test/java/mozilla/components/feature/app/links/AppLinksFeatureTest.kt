@@ -143,7 +143,7 @@ class AppLinksFeatureTest {
         feature.handleAppIntent(tab, intentUrl, mock())
 
         verifyNoMoreInteractions(mockDialog)
-        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any(), any())
+        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any())
     }
 
     @Test
@@ -152,7 +152,7 @@ class AppLinksFeatureTest {
         feature.handleAppIntent(tab, intentUrl, mock())
 
         verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
-        verify(mockOpenRedirect, never()).invoke(any(), anyBoolean(), any(), any())
+        verify(mockOpenRedirect, never()).invoke(any(), anyBoolean(), any())
     }
 
     @Test

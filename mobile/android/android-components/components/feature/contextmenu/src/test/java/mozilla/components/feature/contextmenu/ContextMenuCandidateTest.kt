@@ -903,7 +903,7 @@ class ContextMenuCandidateTest {
             mock(),
             HitResult.UNKNOWN("https://www.otherexample.com"))
 
-        verify(openAppLinkRedirectMock, times(2)).invoke(any(), anyBoolean(), any(), any())
+        verify(openAppLinkRedirectMock, times(2)).invoke(any(), anyBoolean(), any())
     }
 
     @Test

@@ -188,11 +188,18 @@ class AppLinksUseCases(
     inner class OpenAppLinkRedirect internal constructor(
         private val context: Context
     ) {
+        /**
+         * Tries to open an external app for the provided [appIntent]. Invokes [failedToLaunchAction]
+         * in case an exception is thrown opening the app.
+         *
+         * @param appIntent the [Intent] to open the external app for.
+         * @param launchInNewTask whether or not the app should be launched in a new task.
+         * @param failedToLaunchAction callback invoked in case opening the external app fails.
+         */
         operator fun invoke(
             appIntent: Intent?,
             launchInNewTask: Boolean = true,
-            failedToLaunchAction: () -> Unit = {},
-            loadUrlAction: () -> Unit = {}
+            failedToLaunchAction: () -> Unit = {}
         ) {
             appIntent?.let {
                 try {
@@ -208,7 +215,6 @@ class AppLinksUseCases(
                 } catch (e: Exception) {
                     when (e) {
                         is ActivityNotFoundException, is SecurityException, is NullPointerException -> {
-                            loadUrlAction()
                             failedToLaunchAction()
                             Logger.error("failed to start third party app activity", e)
                         }
@@ -263,6 +269,6 @@ class AppLinksUseCases(
         internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf("about", "data", "file", "ftp", "http",
             "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss", "blob")
 
-        internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("file", "javascript", "data", "about")
+        internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("jar", "file", "javascript", "data", "about")
     }
 }

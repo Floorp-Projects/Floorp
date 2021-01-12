@@ -93,15 +93,10 @@ class AppLinksFeature(
             loadUrlUseCase?.invoke(url, tab.id, EngineSession.LoadUrlFlags.none())
         }
 
-        val loadUrlAction = {
-            loadUrlUseCase?.invoke(url, tab.id, EngineSession.LoadUrlFlags.none())
-        }
-
         val doOpenApp = {
             useCases.openAppLink(
                 appIntent,
-                failedToLaunchAction = failedToLaunchAction,
-                loadUrlAction = loadUrlAction
+                failedToLaunchAction = failedToLaunchAction
             )
         }
 
