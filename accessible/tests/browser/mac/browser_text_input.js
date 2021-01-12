@@ -302,3 +302,15 @@ addAccessibleTask(
   },
   { iframe: true }
 );
+
+// Test input that gets role::EDITCOMBOBOX
+addAccessibleTask(`<input type="text" id="box">`, async (browser, accDoc) => {
+  const box = getNativeInterface(accDoc, "box");
+  const editableAncestor = box.getAttributeValue("AXEditableAncestor");
+  is(
+    editableAncestor.getAttributeValue("AXDOMIdentifier"),
+    "box",
+    "Editable ancestor is box itself"
+  );
+  await focusIntoInputAndType(accDoc, "box");
+});

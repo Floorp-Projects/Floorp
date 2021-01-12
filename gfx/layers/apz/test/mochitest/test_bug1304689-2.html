@@ -30,15 +30,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1304689
   </style>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var utils = SpecialPowers.DOMWindowUtils;
   var elm = document.getElementById("outer");
 
   // Set margins on the element, to ensure it is layerized
   utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, /* priority*/ 1);
-  yield waitForAllPaints(function() {
-    flushApzRepaints(testDriver);
-  });
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
 
   // Take control of the refresh driver
   utils.advanceTimeAndRefresh(0);
@@ -63,7 +62,7 @@ function* test(testDriver) {
   }
   utils.restoreNormalRefresh();
 
-  yield flushApzRepaints(testDriver);
+  await promiseApzRepaintsFlushed();
   is(elm.scrollTop, 100, "The scrollTop now should be y=100");
 }
 
@@ -71,7 +70,7 @@ if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
   pushPrefs([["apz.displayport_expiry_ms", 0]])
   .then(waitUntilApzStable)
-  .then(runContinuation(test))
+  .then(test)
   .then(SimpleTest.finish, SimpleTest.finishWithFailure);
 }
 

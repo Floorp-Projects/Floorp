@@ -51,6 +51,14 @@ add_task(async function test_main() {
       prefs: [["apz.max_tap_time", 10000]],
     },
     { file: "helper_fission_inactivescroller_under_oopif.html" },
+    {
+      file: "helper_fission_tap_on_zoomed.html",
+      prefs: [["apz.max_tap_time", 10000]],
+    },
+    {
+      file: "helper_fission_tap_in_nested_iframe_on_zoomed.html",
+      prefs: [["apz.max_tap_time", 10000]],
+    },
     // add additional tests here
   ];
   if (isWebRender) {

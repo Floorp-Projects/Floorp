@@ -400,6 +400,12 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``toolkit.telemetry.pioneerId``: The state of the Pioneer ID. If set, then user is enrolled in Pioneer. Note that this does *not* collect the value.
 
+- ``app.normandy.test-prefs.bool``: Test pref that will help troubleshoot uneven unenrollment in experiments. Defaults to false.
+
+- ``app.normandy.test-prefs.integer``: Test pref that will help troubleshoot uneven unenrollment in experiments. Defaults to 0.
+
+- ``app.normandy.test-prefs.string``: Test pref that will help troubleshoot uneven unenrollment in experiments. Defaults to "".
+
 attribution
 ~~~~~~~~~~~
 

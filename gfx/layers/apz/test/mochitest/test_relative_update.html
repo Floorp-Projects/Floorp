@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1453425
         <div id="second"></div>
     </div>
 <script type="application/javascript">
-function* test(testDriver) {
+async function test() {
   var utils = SpecialPowers.DOMWindowUtils;
 
   var elm = document.querySelector("#frame");
@@ -47,7 +47,7 @@ function* test(testDriver) {
   // Take over control of the refresh driver and don't allow a layer
   // transaction until the main thread and APZ have processed two different
   // scrolls.
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
   utils.advanceTimeAndRefresh(0);
 
   // Scroll instantly on the main thread by (0, 100).
@@ -58,7 +58,7 @@ function* test(testDriver) {
 
   // Dispatch a wheel event to have APZ scroll by (0, 8). Wait for the wheel
   // event to ensure that the APZ has processed the scroll.
-  yield synthesizeNativeWheelAndWaitForWheelEvent(elm, 40, 40, 0, -8, testDriver);
+  await promiseNativeWheelAndWaitForWheelEvent(elm, 40, 40, 0, -8);
 
   // APZ should be handling the wheel scroll
   is(elm.scrollTop, 100, "the wheel scroll should be handled by APZ");
@@ -69,7 +69,7 @@ function* test(testDriver) {
 
   // Wait for all paints to finish and for the main thread to receive pending
   // repaint requests with the scroll offset from the wheel event.
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   // The main thread scroll should not have overidden the APZ scroll, and we
   // should see the effects of both scrolls.
@@ -83,7 +83,7 @@ if (isApzEnabled()) {
   // by disabling smooth scrolling.
   pushPrefs([["general.smoothScroll", false]])
   .then(waitUntilApzStable)
-  .then(runContinuation(test))
+  .then(test)
   .then(SimpleTest.finish, SimpleTest.finishWithFailure);
 }
 

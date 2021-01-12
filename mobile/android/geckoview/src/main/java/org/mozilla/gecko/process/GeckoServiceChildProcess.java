@@ -12,6 +12,7 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Service;
+import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
@@ -23,7 +24,12 @@ import android.util.Log;
 
 public class GeckoServiceChildProcess extends Service {
     private static final String LOGTAG = "ServiceChildProcess";
+    // Allowed elapsed time between full GCs while under constant memory pressure
+    private static final long LOW_MEMORY_ONGOING_RESET_TIME_MS = 10000;
+
     private static IProcessManager sProcessManager;
+
+    private long mLastLowMemoryNotificationTime = 0;
 
     @WrapForJNI(calledFrom = "gecko")
     private static void getEditableParent(final IGeckoEditableChild child,
@@ -136,5 +142,37 @@ public class GeckoServiceChildProcess extends Service {
         stopSelf();
         Process.killProcess(Process.myPid());
         return false;
+    }
+
+    @Override
+    public void onTrimMemory(final int level) {
+        Log.i(LOGTAG, "onTrimMemory(" + level + ")");
+
+        // This is currently a no-op in Service, but let's future-proof.
+        super.onTrimMemory(level);
+
+        if (level < ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
+            // We're not currently interested in trim events for non-backgrounded processes.
+            return;
+        }
+
+        // See nsIMemory.idl for descriptions of the various arguments to the "memory-pressure" observer.
+        String observerArg = null;
+
+        final long currentNotificationTime = System.currentTimeMillis();
+        if (level >= ComponentCallbacks2.TRIM_MEMORY_COMPLETE ||
+            (currentNotificationTime - mLastLowMemoryNotificationTime) >= LOW_MEMORY_ONGOING_RESET_TIME_MS) {
+            // We do a full "low-memory" notification for both new and last-ditch onTrimMemory requests.
+            observerArg = "low-memory";
+            mLastLowMemoryNotificationTime = currentNotificationTime;
+        } else {
+            // If it has been less than ten seconds since the last time we sent a "low-memory"
+            // notification, we send a "low-memory-ongoing" notification instead.
+            // This prevents Gecko from re-doing full GC's repeatedly over and over in succession,
+            // as they are expensive and quickly result in diminishing returns.
+            observerArg = "low-memory-ongoing";
+        }
+
+        GeckoAppShell.notifyObservers("memory-pressure", observerArg);
     }
 }
