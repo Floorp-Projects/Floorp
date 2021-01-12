@@ -512,6 +512,7 @@ main {
 
 .personalize-button {
   font-size: 12px;
+  font-weight: 600;
   border: 1px solid transparent;
   border-radius: 4px;
   background-color: var(--newtab-background-button-color);
@@ -1667,6 +1668,8 @@ main {
     display: grid;
     grid-template-rows: auto;
     grid-template-columns: auto 26px; }
+    .home-section .section > div {
+      grid-area: 1; }
     .home-section .section .title {
       grid-column: 1 / -1;
       margin: 0;
@@ -1708,7 +1711,6 @@ main {
       appearance: none;
       padding-block: 7px;
       padding-inline: 10px 13px;
-      margin-bottom: 10px;
       margin-inline-start: 2px;
       -moz-context-properties: fill;
       fill: var(--customize-menu-primary-text-color);
@@ -1779,6 +1781,8 @@ main {
       max-height: 78px; }
       .home-section .section .more-info-top-wrapper .more-information {
         top: -77px; }
+      .home-section .section .more-info-top-wrapper .check-wrapper {
+        margin-top: 10px; }
     .home-section .section .more-info-pocket-wrapper {
       max-height: 35px; }
       .home-section .section .more-info-pocket-wrapper .more-information {
