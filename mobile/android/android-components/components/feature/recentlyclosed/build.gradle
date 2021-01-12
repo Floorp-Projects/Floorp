@@ -58,6 +58,7 @@ dependencies {
     implementation Dependencies.androidx_lifecycle_livedata
     kapt Dependencies.androidx_room_compiler
 
+    testImplementation project(':browser-session')
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
 
@@ -69,7 +70,6 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.kotlin_coroutines
     testImplementation Dependencies.testing_coroutines
-    testImplementation project(':support-test')
 
     androidTestImplementation project(':support-android-test')
     androidTestImplementation Dependencies.androidx_room_testing

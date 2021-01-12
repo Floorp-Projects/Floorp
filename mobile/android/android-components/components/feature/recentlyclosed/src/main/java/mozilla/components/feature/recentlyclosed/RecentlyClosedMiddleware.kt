@@ -13,13 +13,10 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
-import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
-import mozilla.components.browser.state.state.recover.toRecoverableTabs
 import mozilla.components.concept.engine.Engine
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
@@ -44,43 +41,19 @@ class RecentlyClosedMiddleware(
         action: BrowserAction
     ) {
         when (action) {
-            is TabListAction.RemoveAllNormalTabsAction -> {
-                context.store.dispatch(
-                    RecentlyClosedAction.AddClosedTabsAction(
-                        context.state.normalTabs.toRecoverableTabs()
-                    )
-                )
-            }
-            is TabListAction.RemoveAllTabsAction -> {
-                context.store.dispatch(
-                    RecentlyClosedAction.AddClosedTabsAction(
-                        context.state.normalTabs.toRecoverableTabs()
-                    )
-                )
-            }
-            is TabListAction.RemoveTabAction -> {
-                val tab = context.state.findTab(action.tabId) ?: return
-                if (!tab.content.private) {
+            is UndoAction.ClearRecoverableTabs -> {
+                if (action.tag == context.state.undoHistory.tag) {
+                    // If the user has removed tabs and not invoked "undo" then let's save all non
+                    // private tabs.
                     context.store.dispatch(
                         RecentlyClosedAction.AddClosedTabsAction(
-                            listOf(tab).toRecoverableTabs()
+                            context.state.undoHistory.tabs.filter { tab -> !tab.private }
                         )
                     )
                 }
             }
-            is TabListAction.RemoveTabsAction -> {
-                val tabs = action.tabIds.mapNotNull { context.state.findTab(it) }
-                    .filterNot { it.content.private }
-                context.store.dispatch(
-                    RecentlyClosedAction.AddClosedTabsAction(
-                        tabs.toRecoverableTabs()
-                    )
-                )
-            }
             is RecentlyClosedAction.AddClosedTabsAction -> {
-                addTabsToStorage(
-                    action.tabs
-                )
+                addTabsToStorage(action.tabs)
             }
             is RecentlyClosedAction.RemoveAllClosedTabAction -> {
                 removeAllTabs()
