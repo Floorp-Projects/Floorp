@@ -26,7 +26,9 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.fxa.sync.SyncReason
@@ -94,7 +96,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             ::deleteHistoryItems,
             ::syncHistory,
             requireComponents.analytics.metrics
-            )
+        )
         historyInteractor = HistoryInteractor(
             historyController
         )
@@ -271,6 +273,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                         requireComponents.analytics.metrics.track(Event.HistoryAllItemsRemoved)
                         requireComponents.core.store.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
                         requireComponents.core.historyStorage.deleteEverything()
+                        deleteOpenTabsEngineHistory(requireComponents.core.store)
                         launch(Main) {
                             viewModel.invalidate()
                             historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
@@ -286,6 +289,10 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 create()
             }.show()
         }
+    }
+
+    private suspend fun deleteOpenTabsEngineHistory(store: BrowserStore) {
+        store.dispatch(EngineAction.PurgeHistoryAction).join()
     }
 
     private fun share(data: List<ShareData>) {

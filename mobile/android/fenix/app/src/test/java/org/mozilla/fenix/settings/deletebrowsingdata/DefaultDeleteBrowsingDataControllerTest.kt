@@ -13,6 +13,7 @@ import kotlinx.coroutines.GlobalScope.coroutineContext
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -77,6 +78,7 @@ class DefaultDeleteBrowsingDataControllerTest {
         coVerify {
             engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
             historyStorage.deleteEverything()
+            store.dispatch(EngineAction.PurgeHistoryAction)
             store.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
             iconsStorage.clear()
         }
