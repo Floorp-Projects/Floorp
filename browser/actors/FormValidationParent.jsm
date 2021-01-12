@@ -96,7 +96,9 @@ class FormValidationParent extends JSWindowActorParent {
    *
    * @aPanelData - Object that contains popup information
    *  aPanelData stucture detail:
-   *   screenRect - the screen rect of the target element.
+   *   contentRect - the bounding client rect of the target element. If
+   *    content is remote, this is relative to the browser, otherwise its
+   *    relative to the window.
    *   position - popup positional string constants.
    *   message - the form element validation message text.
    */
@@ -110,6 +112,10 @@ class FormValidationParent extends JSWindowActorParent {
 
     let tabBrowser = window.gBrowser;
     this._anchor = tabBrowser.selectedBrowser.popupAnchor;
+    this._anchor.style.left = aPanelData.contentRect.left + "px";
+    this._anchor.style.top = aPanelData.contentRect.top + "px";
+    this._anchor.style.width = aPanelData.contentRect.width + "px";
+    this._anchor.style.height = aPanelData.contentRect.height + "px";
     this._anchor.hidden = false;
 
     // Display the panel if it isn't already visible.
@@ -123,16 +129,7 @@ class FormValidationParent extends JSWindowActorParent {
       tabBrowser.selectedBrowser.addEventListener("TextZoomChange", this);
 
       // Open the popup
-      let rect = aPanelData.screenRect;
-      this._panel.openPopupAtScreenRect(
-        aPanelData.position,
-        rect.left,
-        rect.top,
-        rect.width,
-        rect.height,
-        false,
-        false
-      );
+      this._panel.openPopup(this._anchor, aPanelData.position, 0, 0, false);
     }
   }
 
