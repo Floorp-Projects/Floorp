@@ -51,7 +51,7 @@ function run_test() {
 
 function handler(metadata, response) {
   try {
-    var IMS = metadata.getHeader("If-Modified-Since");
+    metadata.getHeader("If-Modified-Since");
     response.setStatusLine(metadata.httpVersion, 500, "Failed");
     var msg = "Client should not set If-Modified-Since header";
     response.bodyOutputStream.write(msg, msg.length);

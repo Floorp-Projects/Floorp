@@ -48,7 +48,7 @@ function contentHandler(metadata, response) {
 
   Assert.throws(
     () => {
-      var etag = metadata.getHeader("If-None-Match");
+      metadata.getHeader("If-None-Match");
     },
     /NS_ERROR_NOT_AVAILABLE/,
     "conditional request not expected"

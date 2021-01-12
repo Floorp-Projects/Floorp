@@ -102,7 +102,7 @@ function run_test() {
     observe() {
       dump("got offline-cache-update-completed\n");
       // offline cache update completed.
-      var _x = randomURI; // doing this so the lazy value gets computed
+      randomURI; // doing this so the lazy value gets computed
       httpServer.stop(function() {
         // Now shut the server down to have an error in onstartrequest
         var chan = make_channel(randomURI);

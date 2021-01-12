@@ -199,7 +199,7 @@ add_task(async function testConnectWithECH() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -272,7 +272,7 @@ add_task(async function testEchRetry() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 

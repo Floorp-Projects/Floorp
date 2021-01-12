@@ -50,7 +50,7 @@ function get_expiry_delay() {
 
 function* do_run_test() {
   // Set up a profile.
-  let profile = do_get_profile();
+  do_get_profile();
 
   // twiddle prefs to convenient values for this test
   Services.prefs.setIntPref("network.cookie.purgeAge", gPurgeAge);

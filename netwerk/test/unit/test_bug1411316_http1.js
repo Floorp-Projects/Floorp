@@ -91,7 +91,6 @@ function setup_http_server() {
     "network.http.max-persistent-connections-per-server"
   );
 
-  var allDummyHttpRequestReceived = false;
   // Start server; will be stopped at test cleanup time.
   server.registerPathHandler("/", function(metadata, response) {
     var id = metadata.getHeader("X-ID");

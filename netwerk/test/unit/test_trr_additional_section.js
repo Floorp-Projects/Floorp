@@ -40,7 +40,7 @@ add_task(async function setup_server() {
   await trrServer.start();
   dump(`port = ${trrServer.port}\n`);
   let chan = makeChan(`https://localhost:${trrServer.port}/test?bla=some`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [, resp] = await channelOpenPromise(chan);
   equal(resp, "<h1> 404 Path not found: /test?bla=some</h1>");
 });
 
@@ -249,10 +249,9 @@ add_task(async function test_parse_additional_section() {
     ]
   );
 
-  let [inRequest, inRecord, inStatus] = await new TRRDNSListener(
-    "multiple.foo",
-    { expectedAnswer: "9.9.9.9" }
-  );
+  let [, inRecord] = await new TRRDNSListener("multiple.foo", {
+    expectedAnswer: "9.9.9.9",
+  });
   let IPs = [];
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   inRecord.rewind();
@@ -262,7 +261,7 @@ add_task(async function test_parse_additional_section() {
   equal(IPs.length, 1);
   equal(IPs[0], "9.9.9.9");
   IPs = [];
-  [inRequest, inRecord, inStatus] = await new TRRDNSListener("yuiop.foo", {
+  [, inRecord] = await new TRRDNSListener("yuiop.foo", {
     expectedSuccess: false,
   });
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);

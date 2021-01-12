@@ -25,7 +25,7 @@ function run_test() {
     exception_threw = false;
     newURI = ios.newURI("http://foo.com");
     try {
-      newURI = newURI
+      newURI
         .mutate()
         .setSpec("http://foo.com" + port)
         .finalize();

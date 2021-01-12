@@ -78,7 +78,6 @@ function run_test() {
     do_test_finished();
   }
 
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   for (var i = 0; i < urls.length; ++i) {
     dump("*** opening channel " + i + "\n");
     do_test_pending();

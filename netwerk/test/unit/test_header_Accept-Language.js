@@ -51,11 +51,11 @@ function test_accepted_languages() {
   let acceptedLanguagesLength = acceptedLanguages.length;
 
   for (let i = 0; i < acceptedLanguagesLength; i++) {
-    let acceptedLanguage, qualityValue, unused;
+    let qualityValue;
 
     try {
       // The q-value must conform to the definition in HTTP/1.1 Section 3.9.
-      [unused, acceptedLanguage, qualityValue] = acceptedLanguages[i]
+      [, , qualityValue] = acceptedLanguages[i]
         .trim()
         .match(/^([a-z0-9_-]*?)(?:;q=(1(?:\.0{0,3})?|0(?:\.[0-9]{0,3})))?$/i);
     } catch (e) {

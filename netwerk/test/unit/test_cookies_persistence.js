@@ -9,7 +9,7 @@
 
 add_task(async () => {
   // Set up a profile.
-  let profile = do_get_profile();
+  do_get_profile();
 
   CookieXPCShellUtils.createServer({
     hosts: ["foo.com", "bar.com", "third.com"],

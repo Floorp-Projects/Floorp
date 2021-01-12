@@ -176,7 +176,7 @@ function run_filter_test() {
   // Verify initial state
   var cb = new resolveCallback();
   cb.nextFunction = filter_test0_1;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 var filter01;
@@ -198,7 +198,7 @@ function filter_test0_1(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test0_2(pi) {
@@ -213,7 +213,7 @@ function filter_test0_2(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test0_3(pi) {
@@ -230,7 +230,7 @@ function filter_test0_3(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 var filter03;
@@ -245,7 +245,7 @@ function filter_test0_4(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test0_5(pi) {
@@ -326,7 +326,7 @@ function run_filter_test2() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test1_1(pi) {
@@ -341,7 +341,7 @@ function filter_test1_1(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test1_2(pi) {
@@ -357,7 +357,7 @@ function filter_test1_2(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test1_3(pi) {
@@ -379,7 +379,7 @@ function run_filter_test3() {
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test3_1;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test3_1(pi) {
@@ -399,7 +399,7 @@ function run_pref_test() {
 
   var cb = new resolveCallback();
   cb.nextFunction = pref_test1_1;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function pref_test1_1(pi) {
@@ -414,7 +414,7 @@ function pref_test1_1(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function pref_test1_2(pi) {
@@ -431,7 +431,7 @@ function pref_test1_2(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function pref_test1_3(pi) {
@@ -450,7 +450,7 @@ function pref_test1_3(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function pref_test1_4(pi) {
@@ -512,11 +512,7 @@ function run_pac_test() {
 
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
-  var req = pps.asyncResolve(
-    channel,
-    0,
-    new TestResolveCallback("http", run_pac2_test)
-  );
+  pps.asyncResolve(channel, 0, new TestResolveCallback("http", run_pac2_test));
 }
 
 function run_pac2_test() {
@@ -535,11 +531,7 @@ function run_pac2_test() {
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
   prefs.setBoolPref("network.proxy.proxy_over_tls", true);
 
-  var req = pps.asyncResolve(
-    channel,
-    0,
-    new TestResolveCallback("https", run_pac3_test)
-  );
+  pps.asyncResolve(channel, 0, new TestResolveCallback("https", run_pac3_test));
 }
 
 function run_pac3_test() {
@@ -556,11 +548,7 @@ function run_pac3_test() {
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
   prefs.setBoolPref("network.proxy.proxy_over_tls", false);
 
-  var req = pps.asyncResolve(
-    channel,
-    0,
-    new TestResolveCallback(null, run_pac4_test)
-  );
+  pps.asyncResolve(channel, 0, new TestResolveCallback(null, run_pac4_test));
 }
 
 function run_pac4_test() {
@@ -599,7 +587,7 @@ function run_pac4_test() {
 
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
-  var req = pps.asyncResolve(
+  pps.asyncResolve(
     channel,
     0,
     new TestResolveCallback("http", run_utf8_pac_test)
@@ -631,7 +619,7 @@ function run_utf8_pac_test() {
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
-  var req = pps.asyncResolve(
+  pps.asyncResolve(
     channel,
     0,
     new TestResolveCallback("http", run_latin1_pac_test)
@@ -659,7 +647,7 @@ function run_latin1_pac_test() {
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
-  var req = pps.asyncResolve(
+  pps.asyncResolve(
     channel,
     0,
     new TestResolveCallback("http", finish_pac_test)
@@ -739,7 +727,6 @@ function check_host_filters_cb() {
 }
 
 function check_host_filter(i) {
-  var uri;
   dump(
     "*** uri=" + hostList[i] + " bShouldBeFiltered=" + bShouldBeFiltered + "\n"
   );
@@ -749,7 +736,7 @@ function check_host_filter(i) {
   });
   var cb = new resolveCallback();
   cb.nextFunction = host_filter_cb;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function host_filter_cb(proxy) {
@@ -790,7 +777,6 @@ function run_proxy_host_filters_test() {
     hostFilterList
   );
 
-  var rv;
   // Check the hosts that should be filtered out
   uriStrFilterList = [
     "http://www.mozilla.org/",
@@ -866,7 +852,7 @@ function run_myipaddress_test() {
 
   var cb = new resolveCallback();
   cb.nextFunction = myipaddress_callback;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function myipaddress_callback(pi) {
@@ -903,7 +889,7 @@ function run_myipaddress_test_2() {
 
   var cb = new resolveCallback();
   cb.nextFunction = myipaddress2_callback;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function myipaddress2_callback(pi) {
@@ -933,7 +919,7 @@ function run_failed_script_test() {
 
   var cb = new resolveCallback();
   cb.nextFunction = failed_script_callback;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 var directFilter;
@@ -1012,7 +998,7 @@ function run_isresolvable_test() {
 
   var cb = new resolveCallback();
   cb.nextFunction = isresolvable_callback;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function isresolvable_callback(pi) {
@@ -1044,7 +1030,7 @@ function run_localhost_pac() {
 
   var cb = new resolveCallback();
   cb.nextFunction = localhost_callback;
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function localhost_callback(pi) {

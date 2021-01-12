@@ -243,8 +243,6 @@ function check_evict_cache(appcache) {
     Ci.nsICacheStorage.OPEN_READONLY,
     null,
     function(status, entry, appcache) {
-      var hold_entry_foo3 = entry;
-
       // evict all documents.
       let storage = get_cache_service().appCacheStorage(
         Services.loadContextInfo.default,

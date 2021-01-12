@@ -162,7 +162,7 @@ add_task(async function test_signature() {
   let completionPromise = promiseSaverComplete(saver);
 
   try {
-    let signatureInfo = saver.signatureInfo;
+    saver.signatureInfo;
     do_throw("Can't get signature before saver is complete.");
   } catch (ex) {
     if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {

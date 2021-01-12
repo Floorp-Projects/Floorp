@@ -33,7 +33,7 @@ class Listener {
   }
 
   async addresses() {
-    let [inRequest, inRecord, inStatus] = await this.promise;
+    let [, inRecord] = await this.promise;
     let addresses = [];
     if (!inRecord) {
       return addresses; // returns []
@@ -262,7 +262,7 @@ add_task(async function test_cname_flag() {
     mainThread,
     defaultOriginAttributes
   );
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [, inRecord] = await listener;
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   Assert.throws(
     () => inRecord.canonicalName,
@@ -281,7 +281,7 @@ add_task(async function test_cname_flag() {
     mainThread,
     defaultOriginAttributes
   );
-  [inRequest, inRecord, inStatus] = await listener;
+  [, inRecord] = await listener;
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   Assert.equal(inRecord.canonicalName, DOMAIN, "No canonical name specified");
   Assert.equal(inRecord.getNextAddrAsString(), "2.2.2.2");
@@ -301,7 +301,7 @@ add_task(async function test_cname_flag() {
     mainThread,
     defaultOriginAttributes
   );
-  [inRequest, inRecord, inStatus] = await listener;
+  [, inRecord] = await listener;
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   Assert.equal(inRecord.canonicalName, OTHER, "Must have correct CNAME");
   Assert.equal(inRecord.getNextAddrAsString(), "2.2.2.2");

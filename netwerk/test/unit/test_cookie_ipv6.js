@@ -44,7 +44,7 @@ add_task(async function test_cookie_ipv6() {
     uri: URL,
     loadUsingSystemPrincipal: true,
   });
-  let req = await new Promise(resolve => {
+  await new Promise(resolve => {
     chan.asyncOpen(new ChannelListener(resolve));
   });
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
