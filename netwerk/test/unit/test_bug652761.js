@@ -6,7 +6,7 @@ function run_test() {
   // Bug 1301621 makes invalid ports throw
   Assert.throws(
     () => {
-      var chan = NetUtil.newChannel({
+      NetUtil.newChannel({
         uri: "http://localhost:80000/",
         loadUsingSystemPrincipal: true,
       });

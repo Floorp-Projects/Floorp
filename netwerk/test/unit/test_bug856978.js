@@ -61,7 +61,7 @@ RequestObserver.prototype = {
         do_throw(notification + " observed a non-HTTP channel.");
       }
       try {
-        let authHeader = subject.getRequestHeader("Authorization");
+        subject.getRequestHeader("Authorization");
       } catch (e) {
         // Throw if there is no header to delete. We should get one iff caching
         // the auth credentials is working and the header gets added _before_

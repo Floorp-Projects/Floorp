@@ -266,14 +266,14 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  var [hasUploadStream, postData] = await loadTestTab(NORMAL_FORM_URI);
+  var [hasUploadStream] = await loadTestTab(NORMAL_FORM_URI);
   is(hasUploadStream, "no", "normal action should not have uploadStream");
 
   gBrowser.removeCurrentTab();
 });
 
 add_task(async function() {
-  var [hasUploadStream, postData] = await loadTestTab(UPLOAD_FORM_URI);
+  var [hasUploadStream] = await loadTestTab(UPLOAD_FORM_URI);
   is(hasUploadStream, "no", "upload action should not have uploadStream");
 
   gBrowser.removeCurrentTab();

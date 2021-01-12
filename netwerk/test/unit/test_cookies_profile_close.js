@@ -7,7 +7,7 @@
 
 add_task(async () => {
   // Set up a profile.
-  let profile = do_get_profile();
+  do_get_profile();
 
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
@@ -29,10 +29,7 @@ add_task(async () => {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
 
-  let principal = Services.scriptSecurityManager.createContentPrincipal(
-    uri,
-    {}
-  );
+  Services.scriptSecurityManager.createContentPrincipal(uri, {});
 
   await CookieXPCShellUtils.setCookieToDocument(
     uri.spec,

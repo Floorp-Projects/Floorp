@@ -1165,7 +1165,7 @@ add_test(
   function test_bug1517025() {
     Assert.throws(
       () => {
-        let other = stringToURL("https://b%9a/");
+        stringToURL("https://b%9a/");
       },
       /NS_ERROR_UNEXPECTED/,
       "bad URI"
@@ -1173,7 +1173,7 @@ add_test(
 
     Assert.throws(
       () => {
-        let other = stringToURL("https://b%9ª/");
+        stringToURL("https://b%9ª/");
       },
       /NS_ERROR_MALFORMED_URI/,
       "bad URI"
@@ -1184,7 +1184,7 @@ add_test(
     );
     Assert.throws(
       () => {
-        let uri = Services.io.newURI("/\\b%9ª", "windows-1252", base);
+        Services.io.newURI("/\\b%9ª", "windows-1252", base);
       },
       /NS_ERROR_MALFORMED_URI/,
       "bad URI"

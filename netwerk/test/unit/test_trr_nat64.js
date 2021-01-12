@@ -64,7 +64,7 @@ add_task(async function test_add_nat64_prefix_to_trr() {
   await trrServer.start();
   dump(`port = ${trrServer.port}\n`);
   let chan = makeChan(`https://localhost:${trrServer.port}/test?bla=some`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [, resp] = await channelOpenPromise(chan);
   equal(resp, "<h1> 404 Path not found: /test?bla=some</h1>");
   dns.clearCache(true);
   override.addIPOverride("ipv4only.arpa", "fe80::9b2b:c000:00aa");

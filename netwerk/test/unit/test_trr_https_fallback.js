@@ -229,12 +229,12 @@ add_task(async function testFallbackToTheLastRecord() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
   let chan = makeChan(`https://test.fallback.com:${h2Port}/server-timing`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   // Test if this request is done by h2.
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
@@ -319,12 +319,12 @@ add_task(async function testFallbackToTheOrigin() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
   let chan = makeChan(`https://test.foo.com:${h2Port}/server-timing`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   // Test if this request is done by h2.
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
@@ -400,7 +400,7 @@ add_task(async function testAllRecordsFailed() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -459,7 +459,7 @@ add_task(async function testFallbackToTheOrigin2() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -559,7 +559,7 @@ add_task(async function testFallbackToTheOrigin3() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -626,7 +626,7 @@ add_task(async function testResetExclusionList() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -713,12 +713,12 @@ add_task(async function testH3Connection() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
   let chan = makeChan(`https://test.h3.com`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   Assert.equal(req.protocolVersion, "h3");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
@@ -796,12 +796,12 @@ add_task(async function testFastfallbackToH2() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
   let chan = makeChan(`https://test.fastfallback.com/server-timing`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   Assert.equal(req.protocolVersion, "h2");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h2Port);
@@ -813,7 +813,7 @@ add_task(async function testFastfallbackToH2() {
   );
 
   chan = makeChan(`https://test.fastfallback.com/server-timing`);
-  [req, resp] = await channelOpenPromise(chan);
+  [req] = await channelOpenPromise(chan);
   Assert.equal(req.protocolVersion, "h2");
   internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h2Port);
@@ -867,7 +867,7 @@ add_task(async function testFailedH3Connection() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -948,12 +948,12 @@ add_task(async function testHttp3ExcludedList() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
   chan = makeChan(`https://test.h3_excluded.org`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   Assert.equal(req.protocolVersion, "h3");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
@@ -996,7 +996,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
     `https://www.h3_all_excluded.org:${h2Port}/server-timing`
   );
 
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
 
   // Test if this request is done by h2.
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
@@ -1059,7 +1059,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -1081,7 +1081,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
   // The the case that when all records are in http3 excluded list, we still
   // give the first record one more shot.
   chan = makeChan(`https://www.h3_all_excluded.org`);
-  [req, resp] = await channelOpenPromise(chan);
+  [req] = await channelOpenPromise(chan);
   Assert.equal(req.protocolVersion, "h3");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);

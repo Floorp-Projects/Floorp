@@ -24,7 +24,7 @@ class Listener {
   }
 
   async addresses() {
-    let [inRequest, inRecord, inStatus] = await this.promise;
+    let [, inRecord] = await this.promise;
     let addresses = [];
     if (!inRecord) {
       return addresses; // returns []

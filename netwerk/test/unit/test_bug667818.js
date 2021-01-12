@@ -21,10 +21,7 @@ add_task(async () => {
     loadUsingSystemPrincipal: true,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
-  const principal = Services.scriptSecurityManager.createContentPrincipal(
-    uri,
-    {}
-  );
+  Services.scriptSecurityManager.createContentPrincipal(uri, {});
 
   CookieXPCShellUtils.createServer({ hosts: ["example.com"] });
 

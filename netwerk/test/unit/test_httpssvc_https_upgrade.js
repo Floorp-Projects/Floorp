@@ -168,7 +168,7 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await dnsListener;
+  let [inRequest, , inStatus] = await dnsListener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -178,7 +178,7 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
   let listener = new EventSinkListener();
   chan.notificationCallbacks = listener;
 
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
 
   req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
@@ -187,7 +187,7 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
   listener = new EventSinkListener();
   chan.notificationCallbacks = listener;
 
-  [req, resp] = await channelOpenPromise(chan);
+  [req] = await channelOpenPromise(chan);
 
   req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
@@ -209,12 +209,12 @@ add_task(async function testInvalidDNSResult() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await dnsListener;
+  let [inRequest, , inStatus] = await dnsListener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST, "status error");
 
   let chan = makeChan(`http://foo.notexisted.com:8888/server-timing`);
-  let [req, resp] = await channelOpenPromise(
+  let [req] = await channelOpenPromise(
     chan,
     CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL
   );
@@ -223,7 +223,7 @@ add_task(async function testInvalidDNSResult() {
 
 add_task(async function testLiteralIP() {
   let chan = makeChan(`http://127.0.0.1:8888/server-timing`);
-  let [req, resp] = await channelOpenPromise(
+  let [req] = await channelOpenPromise(
     chan,
     CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL
   );

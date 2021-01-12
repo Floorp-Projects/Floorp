@@ -249,9 +249,6 @@ OpenCallback.prototype = {
         this.goon(entry, true);
       }
 
-      var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
-        Ci.nsIScriptableInputStream
-      );
       var self = this;
       pumpReadStream(entry.openInputStream(0), function(data) {
         Assert.equal(data, self.workingData);

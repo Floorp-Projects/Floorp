@@ -30,8 +30,6 @@ var uri = NetUtil.newURI("http://www.example.com");
 var principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
 
 function get_channel(spec) {
-  var channelURI = NetUtil.newURI(spec);
-
   var channel = NetUtil.newChannel({
     uri: NetUtil.newURI(spec),
     loadingPrincipal: principal,

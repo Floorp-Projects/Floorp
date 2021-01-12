@@ -156,7 +156,7 @@ function run_filter_test1() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test1_1(pi) {
@@ -171,7 +171,7 @@ function filter_test1_1(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test1_2(pi) {
@@ -185,7 +185,7 @@ function filter_test1_2(pi) {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test1_3(pi) {
@@ -205,7 +205,7 @@ function run_filter2_sync_async() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test2_1(pi) {
@@ -230,7 +230,7 @@ function run_filter3_async_sync() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test3_1(pi) {
@@ -257,7 +257,7 @@ function run_filter4_throwing_sync_sync() {
     uri: "http://www.mozilla2.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test4_1(pi) {
@@ -285,7 +285,7 @@ function run_filter5_sync_sync_throwing() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test5_1(pi) {
@@ -313,7 +313,7 @@ function run_filter5_2_throwing_async_async() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test5_2(pi) {
@@ -341,7 +341,7 @@ function run_filter6_async_async_throwing() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test6_1(pi) {
@@ -369,7 +369,7 @@ function run_filter7_async_throwing_async() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test7_1(pi) {
@@ -397,7 +397,7 @@ function run_filter8_sync_throwing_sync() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test8_1(pi) {
@@ -421,7 +421,7 @@ function run_filter9_throwing() {
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true,
   });
-  var req = pps.asyncResolve(channel, 0, cb);
+  pps.asyncResolve(channel, 0, cb);
 }
 
 function filter_test9_1(pi) {
