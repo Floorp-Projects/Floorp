@@ -485,6 +485,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
   bool mResolvedByTRR;
+  bool mEchConfigUsed = false;
 
   bool m0RTTInProgress;
   bool mDoNotTryEarlyData;
@@ -509,7 +510,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
       mIDToStreamMap;
 
   nsCOMPtr<nsICancelable> mDNSRequest;
-  Maybe<uint32_t> mHTTPSSVCReceivedStage;
+  Atomic<uint32_t, Relaxed> mHTTPSSVCReceivedStage;
   bool m421Received = false;
   nsCOMPtr<nsIDNSHTTPSSVCRecord> mHTTPSSVCRecord;
   nsTArray<RefPtr<nsISVCBRecord>> mRecordsForRetry;

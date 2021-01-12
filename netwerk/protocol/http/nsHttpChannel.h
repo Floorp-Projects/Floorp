@@ -744,7 +744,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields6, 32, (
     // Only set to true when we receive an HTTPSSVC record before the
     // transaction is created.
-    (uint32_t, HTTPSSVCTelemetryReported, 1)
+    (uint32_t, HTTPSSVCTelemetryReported, 1),
+    (uint32_t, EchConfigUsed, 1)
   ))
   // clang-format on
 

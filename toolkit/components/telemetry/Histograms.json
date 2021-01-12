@@ -3123,6 +3123,16 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
+  "HTTP_CHANNEL_ONSTART_SUCCESS_HTTPS_RR" : {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "Successfully started HTTP channels when HTTPS RR is used; Keyed by echConfig is used or not",
+    "bug_numbers": [1682552],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
+  },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
