@@ -61,77 +61,63 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame, const StyleImage* aImage,
       mExtendMode(ExtendMode::CLAMP),
       mMaskOp(StyleMaskMode::MatchSource) {}
 
-static bool ShouldTreatAsCompleteDueToSyncDecode(const StyleImage* aImage,
-                                                 uint32_t aFlags) {
-  if (!(aFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES)) {
-    return false;
-  }
-
-  imgRequestProxy* req = aImage->GetImageRequest();
-  if (!req) {
-    return false;
-  }
-
-  uint32_t status = 0;
-  if (NS_FAILED(req->GetImageStatus(&status))) {
-    return false;
-  }
-
-  if (status & imgIRequest::STATUS_ERROR) {
-    // The image is "complete" since it's a corrupt image. If we created an
-    // imgIContainer at all, return true.
-    nsCOMPtr<imgIContainer> image;
-    req->GetImage(getter_AddRefs(image));
-    return bool(image);
-  }
-
-  if (!(status & imgIRequest::STATUS_LOAD_COMPLETE)) {
-    // We must have loaded all of the image's data and the size must be
-    // available, or else sync decoding won't be able to decode the image.
-    return false;
-  }
-
-  return true;
-}
-
 bool nsImageRenderer::PrepareImage() {
-  if (mImage->IsNone() ||
-      (mImage->IsImageRequestType() && !mImage->GetImageRequest())) {
-    // mImage->GetImageRequest() could be null here if the StyleImage refused
-    // to load a same-document URL, or the url was invalid, for example.
+  if (mImage->IsNone()) {
     mPrepareResult = ImgDrawResult::BAD_IMAGE;
     return false;
   }
 
-  if (!mImage->IsComplete()) {
-    // Make sure the image is actually decoding.
-    bool frameComplete = mImage->StartDecoding();
-
-    // Boost the loading priority since we know we want to draw the image.
-    if ((mFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) &&
-        mImage->IsImageRequestType()) {
-      MOZ_ASSERT(mImage->GetImageRequest(),
-                 "must have image data, since we checked above");
-      mImage->GetImageRequest()->BoostPriority(imgIRequest::CATEGORY_DISPLAY);
-    }
-
-    // Check again to see if we finished.
-    // We cannot prepare the image for rendering if it is not fully loaded.
-    // Special case: If we requested a sync decode and the image has loaded,
-    // push on through because the Draw() will do a sync decode then.
-    if (!(frameComplete || mImage->IsComplete()) &&
-        !ShouldTreatAsCompleteDueToSyncDecode(mImage, mFlags)) {
-      mPrepareResult = ImgDrawResult::NOT_READY;
+  const bool isImageRequest = mImage->IsImageRequestType();
+  MOZ_ASSERT_IF(!isImageRequest, !mImage->GetImageRequest());
+  imgRequestProxy* request = nullptr;
+  if (isImageRequest) {
+    request = mImage->GetImageRequest();
+    if (!request) {
+      // request could be null here if the StyleImage refused
+      // to load a same-document URL, or the url was invalid, for example.
+      mPrepareResult = ImgDrawResult::BAD_IMAGE;
       return false;
     }
   }
 
-  if (mImage->IsImageRequestType()) {
-    MOZ_ASSERT(mImage->GetImageRequest(),
-               "must have image data, since we checked above");
+  if (!mImage->IsComplete()) {
+    MOZ_DIAGNOSTIC_ASSERT(isImageRequest);
+
+    // Make sure the image is actually decoding.
+    bool frameComplete =
+        request->StartDecodingWithResult(imgIContainer::FLAG_ASYNC_NOTIFY);
+
+    // Boost the loading priority since we know we want to draw the image.
+    if (mFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) {
+      request->BoostPriority(imgIRequest::CATEGORY_DISPLAY);
+    }
+
+    // Check again to see if we finished.
+    // We cannot prepare the image for rendering if it is not fully loaded.
+    if (!frameComplete && !mImage->IsComplete()) {
+      uint32_t imageStatus = 0;
+      request->GetImageStatus(&imageStatus);
+      if (imageStatus & imgIRequest::STATUS_ERROR) {
+        mPrepareResult = ImgDrawResult::BAD_IMAGE;
+        return false;
+      }
+
+      // Special case: If not errored, and we requested a sync decode, and the
+      // image has loaded, push on through because the Draw() will do a sync
+      // decode then.
+      const bool syncDecodeWillComplete =
+          (mFlags & FLAG_SYNC_DECODE_IMAGES) &&
+          (imageStatus & imgIRequest::STATUS_LOAD_COMPLETE);
+      if (!syncDecodeWillComplete) {
+        mPrepareResult = ImgDrawResult::NOT_READY;
+        return false;
+      }
+    }
+  }
+
+  if (isImageRequest) {
     nsCOMPtr<imgIContainer> srcImage;
-    DebugOnly<nsresult> rv =
-        mImage->GetImageRequest()->GetImage(getter_AddRefs(srcImage));
+    DebugOnly<nsresult> rv = request->GetImage(getter_AddRefs(srcImage));
     MOZ_ASSERT(NS_SUCCEEDED(rv) && srcImage,
                "If GetImage() is failing, mImage->IsComplete() "
                "should have returned false");
