@@ -686,6 +686,10 @@
       "type": ["JSON", "array"]
     },
 
+    "ManualAppUpdateOnly": {
+        "type": "boolean"
+    },
+
     "NetworkPrediction": {
       "type": "boolean"
     },
