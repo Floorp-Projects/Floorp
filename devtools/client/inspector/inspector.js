@@ -1907,7 +1907,9 @@ Inspector.prototype = {
       nodeActorID: this.selection.nodeFront.actorID,
       clipboard: clipboardEnabled,
     };
-    const screenshotFront = await this.currentTarget.getFront("screenshot");
+    const screenshotFront = await this.selection.nodeFront.targetFront.getFront(
+      "screenshot"
+    );
     const screenshot = await screenshotFront.capture(args);
     await saveScreenshot(this.panelWin, args, screenshot);
   },
