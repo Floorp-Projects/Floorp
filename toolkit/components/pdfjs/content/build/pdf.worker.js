@@ -50,8 +50,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.7.345';
-const pdfjsBuild = 'b194c820b';
+const pdfjsVersion = '2.7.510';
+const pdfjsBuild = '631bada0d';
 
 /***/ }),
 /* 1 */
@@ -62,7 +62,7 @@ const pdfjsBuild = 'b194c820b';
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.WorkerMessageHandler = exports.WorkerTask = void 0;
+exports.WorkerTask = exports.WorkerMessageHandler = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -145,7 +145,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.7.345';
+    const workerVersion = '2.7.510';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -430,6 +430,16 @@ class WorkerMessageHandler {
     handler.on("GetJavaScript", function wphSetupGetJavaScript(data) {
       return pdfManager.ensureCatalog("javaScript");
     });
+    handler.on("GetDocJSActions", function wphSetupGetDocJSActions(data) {
+      return pdfManager.ensureCatalog("jsActions");
+    });
+    handler.on("GetPageJSActions", function ({
+      pageIndex
+    }) {
+      return pdfManager.getPage(pageIndex).then(function (page) {
+        return page.jsActions;
+      });
+    });
     handler.on("GetOutline", function wphSetupGetOutline(data) {
       return pdfManager.ensureCatalog("documentOutline");
     });
@@ -691,31 +701,33 @@ exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
-exports.escapeString = escapeString;
+exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
 exports.encodeToXmlString = encodeToXmlString;
+exports.escapeString = escapeString;
 exports.getModificationDate = getModificationDate;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
 exports.isArrayEqual = isArrayEqual;
+exports.isAscii = isAscii;
 exports.isBool = isBool;
 exports.isNum = isNum;
-exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
-exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
-exports.objectSize = objectSize;
+exports.isString = isString;
 exports.objectFromEntries = objectFromEntries;
+exports.objectSize = objectSize;
 exports.removeNullCharacters = removeNullCharacters;
 exports.setVerbosityLevel = setVerbosityLevel;
 exports.shadow = shadow;
 exports.string32 = string32;
 exports.stringToBytes = stringToBytes;
 exports.stringToPDFString = stringToPDFString;
+exports.stringToUTF16BEString = stringToUTF16BEString;
 exports.stringToUTF8String = stringToUTF8String;
+exports.unreachable = unreachable;
 exports.utf8StringToString = utf8StringToString;
 exports.warn = warn;
-exports.unreachable = unreachable;
-exports.IsEvalSupportedCached = exports.IsLittleEndianCached = exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = exports.BaseException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UNSUPPORTED_FEATURES = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.IsLittleEndianCached = exports.IsEvalSupportedCached = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.createObjectURL = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 
 __w_pdfjs_require__(3);
 
@@ -862,14 +874,22 @@ const AnnotationActionEventType = {
   K: "Keystroke",
   F: "Format",
   V: "Validate",
-  C: "Calculate",
+  C: "Calculate"
+};
+exports.AnnotationActionEventType = AnnotationActionEventType;
+const DocumentActionEventType = {
   WC: "WillClose",
   WS: "WillSave",
   DS: "DidSave",
   WP: "WillPrint",
   DP: "DidPrint"
 };
-exports.AnnotationActionEventType = AnnotationActionEventType;
+exports.DocumentActionEventType = DocumentActionEventType;
+const PageActionEventType = {
+  O: "PageOpen",
+  C: "PageClose"
+};
+exports.PageActionEventType = PageActionEventType;
 const StreamType = {
   UNKNOWN: "UNKNOWN",
   FLATE: "FLATE",
@@ -1454,6 +1474,22 @@ function escapeString(str) {
   });
 }
 
+function isAscii(str) {
+  return /^[\x00-\x7F]*$/.test(str);
+}
+
+function stringToUTF16BEString(str) {
+  const buf = ["\xFE\xFF"];
+
+  for (let i = 0, ii = str.length; i < ii; i++) {
+    const char = str.charCodeAt(i);
+    buf.push(String.fromCharCode(char >> 8 & 0xff));
+    buf.push(String.fromCharCode(char & 0xff));
+  }
+
+  return buf.join("");
+}
+
 function stringToUTF8String(str) {
   return decodeURIComponent(escape(str));
 }
@@ -1629,14 +1665,14 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.clearPrimitiveCaches = clearPrimitiveCaches;
-exports.isEOF = isEOF;
 exports.isCmd = isCmd;
 exports.isDict = isDict;
+exports.isEOF = isEOF;
 exports.isName = isName;
 exports.isRef = isRef;
 exports.isRefsEqual = isRefsEqual;
 exports.isStream = isStream;
-exports.RefSetCache = exports.RefSet = exports.Ref = exports.Name = exports.Dict = exports.Cmd = exports.EOF = void 0;
+exports.RefSetCache = exports.RefSet = exports.Ref = exports.Name = exports.EOF = exports.Dict = exports.Cmd = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -2855,20 +2891,23 @@ exports.ChunkedStreamManager = ChunkedStreamManager;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.collectActions = collectActions;
 exports.escapePDFName = escapePDFName;
-exports.getLookupTableFactory = getLookupTableFactory;
 exports.getArrayLookupTableFactory = getArrayLookupTableFactory;
 exports.getInheritableProperty = getInheritableProperty;
-exports.toRomanNumerals = toRomanNumerals;
+exports.getLookupTableFactory = getLookupTableFactory;
+exports.isWhiteSpace = isWhiteSpace;
 exports.log2 = log2;
 exports.parseXFAPath = parseXFAPath;
 exports.readInt8 = readInt8;
 exports.readUint16 = readUint16;
 exports.readUint32 = readUint32;
-exports.isWhiteSpace = isWhiteSpace;
+exports.toRomanNumerals = toRomanNumerals;
 exports.XRefParseException = exports.XRefEntryException = exports.MissingDataException = void 0;
 
 var _util = __w_pdfjs_require__(2);
+
+var _primitives = __w_pdfjs_require__(5);
 
 function getLookupTableFactory(initializer) {
   let lookup;
@@ -3049,6 +3088,93 @@ function escapePDFName(str) {
   }
 
   return buffer.join("");
+}
+
+function _collectJS(entry, xref, list, parents) {
+  if (!entry) {
+    return;
+  }
+
+  let parent = null;
+
+  if ((0, _primitives.isRef)(entry)) {
+    if (parents.has(entry)) {
+      return;
+    }
+
+    parent = entry;
+    parents.put(parent);
+    entry = xref.fetch(entry);
+  }
+
+  if (Array.isArray(entry)) {
+    for (const element of entry) {
+      _collectJS(element, xref, list, parents);
+    }
+  } else if (entry instanceof _primitives.Dict) {
+    if ((0, _primitives.isName)(entry.get("S"), "JavaScript") && entry.has("JS")) {
+      const js = entry.get("JS");
+      let code;
+
+      if ((0, _primitives.isStream)(js)) {
+        code = (0, _util.bytesToString)(js.getBytes());
+      } else {
+        code = js;
+      }
+
+      code = (0, _util.stringToPDFString)(code);
+
+      if (code) {
+        list.push(code);
+      }
+    }
+
+    _collectJS(entry.getRaw("Next"), xref, list, parents);
+  }
+
+  if (parent) {
+    parents.remove(parent);
+  }
+}
+
+function collectActions(xref, dict, eventType) {
+  const actions = Object.create(null);
+
+  if (dict.has("AA")) {
+    const additionalActions = dict.get("AA");
+
+    for (const key of additionalActions.getKeys()) {
+      const action = eventType[key];
+
+      if (!action) {
+        continue;
+      }
+
+      const actionDict = additionalActions.getRaw(key);
+      const parents = new _primitives.RefSet();
+      const list = [];
+
+      _collectJS(actionDict, xref, list, parents);
+
+      if (list.length > 0) {
+        actions[action] = list;
+      }
+    }
+  }
+
+  if (dict.has("A")) {
+    const actionDict = dict.get("A");
+    const parents = new _primitives.RefSet();
+    const list = [];
+
+    _collectJS(actionDict, xref, list, parents);
+
+    if (list.length > 0) {
+      actions.Action = list;
+    }
+  }
+
+  return (0, _util.objectSize)(actions) > 0 ? actions : null;
 }
 
 /***/ }),
@@ -3403,7 +3529,9 @@ class Page {
   }
 
   get annotations() {
-    return (0, _util.shadow)(this, "annotations", this._getInheritableProperty("Annots") || []);
+    const annots = this._getInheritableProperty("Annots");
+
+    return (0, _util.shadow)(this, "annotations", Array.isArray(annots) ? annots : []);
   }
 
   get _parsedAnnotations() {
@@ -3422,6 +3550,11 @@ class Page {
       });
     });
     return (0, _util.shadow)(this, "_parsedAnnotations", parsedAnnotations);
+  }
+
+  get jsActions() {
+    const actions = (0, _core_utils.collectActions)(this.xref, this.pageDict, _util.PageActionEventType);
+    return (0, _util.shadow)(this, "jsActions", actions);
   }
 
 }
@@ -3874,7 +4007,7 @@ class PDFDocument {
       }
     }
 
-    if (!(name in promises)) {
+    if (!promises.has(name)) {
       promises.set(name, []);
     }
 
@@ -3921,7 +4054,7 @@ class PDFDocument {
 
   get hasJSActions() {
     return (0, _util.shadow)(this, "hasJSActions", this.fieldObjects.then(fieldObjects => {
-      return fieldObjects !== null && Object.values(fieldObjects).some(fieldObject => fieldObject.some(object => object.actions !== null));
+      return fieldObjects !== null && Object.values(fieldObjects).some(fieldObject => fieldObject.some(object => object.actions !== null)) || !!this.catalog.jsActions;
     }));
   }
 
@@ -3939,6 +4072,11 @@ class PDFDocument {
     }
 
     const ids = calculationOrder.filter(_primitives.isRef).map(ref => ref.toString());
+
+    if (ids.length === 0) {
+      return (0, _util.shadow)(this, "calculationOrderIds", null);
+    }
+
     return (0, _util.shadow)(this, "calculationOrderIds", ids);
   }
 
@@ -3955,15 +4093,15 @@ exports.PDFDocument = PDFDocument;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.FileSpec = exports.XRef = exports.ObjectLoader = exports.Catalog = void 0;
+exports.XRef = exports.ObjectLoader = exports.FileSpec = exports.Catalog = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _parser = __w_pdfjs_require__(11);
-
 var _core_utils = __w_pdfjs_require__(8);
+
+var _parser = __w_pdfjs_require__(11);
 
 var _crypto = __w_pdfjs_require__(22);
 
@@ -4871,12 +5009,12 @@ class Catalog {
     return (0, _util.shadow)(this, "attachments", attachments);
   }
 
-  get javaScript() {
+  _collectJavaScript() {
     const obj = this._catDict.get("Names");
 
     let javaScript = null;
 
-    function appendIfJavaScriptDict(jsDict) {
+    function appendIfJavaScriptDict(name, jsDict) {
       const type = jsDict.get("S");
 
       if (!(0, _primitives.isName)(type, "JavaScript")) {
@@ -4891,11 +5029,11 @@ class Catalog {
         return;
       }
 
-      if (!javaScript) {
-        javaScript = [];
+      if (javaScript === null) {
+        javaScript = Object.create(null);
       }
 
-      javaScript.push((0, _util.stringToPDFString)(js));
+      javaScript[name] = (0, _util.stringToPDFString)(js);
     }
 
     if (obj && obj.has("JavaScript")) {
@@ -4906,7 +5044,7 @@ class Catalog {
         const jsDict = names[name];
 
         if ((0, _primitives.isDict)(jsDict)) {
-          appendIfJavaScriptDict(jsDict);
+          appendIfJavaScriptDict(name, jsDict);
         }
       }
     }
@@ -4914,10 +5052,38 @@ class Catalog {
     const openAction = this._catDict.get("OpenAction");
 
     if ((0, _primitives.isDict)(openAction) && (0, _primitives.isName)(openAction.get("S"), "JavaScript")) {
-      appendIfJavaScriptDict(openAction);
+      appendIfJavaScriptDict("OpenAction", openAction);
     }
 
-    return (0, _util.shadow)(this, "javaScript", javaScript);
+    return javaScript;
+  }
+
+  get javaScript() {
+    const javaScript = this._collectJavaScript();
+
+    return (0, _util.shadow)(this, "javaScript", javaScript ? Object.values(javaScript) : null);
+  }
+
+  get jsActions() {
+    const js = this._collectJavaScript();
+
+    let actions = (0, _core_utils.collectActions)(this.xref, this._catDict, _util.DocumentActionEventType);
+
+    if (!actions && js) {
+      actions = Object.create(null);
+    }
+
+    if (actions && js) {
+      for (const [key, val] of Object.entries(js)) {
+        if (key in actions) {
+          actions[key].push(val);
+        } else {
+          actions[key] = [val];
+        }
+      }
+    }
+
+    return (0, _util.shadow)(this, "jsActions", actions);
   }
 
   fontFallback(id, handler) {
@@ -7832,7 +7998,7 @@ exports.Linearization = Linearization;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.LZWStream = exports.StringStream = exports.StreamsSequenceStream = exports.Stream = exports.RunLengthStream = exports.PredictorStream = exports.NullStream = exports.FlateStream = exports.DecodeStream = exports.DecryptStream = exports.AsciiHexStream = exports.Ascii85Stream = void 0;
+exports.StringStream = exports.StreamsSequenceStream = exports.Stream = exports.RunLengthStream = exports.PredictorStream = exports.NullStream = exports.LZWStream = exports.FlateStream = exports.DecryptStream = exports.DecodeStream = exports.AsciiHexStream = exports.Ascii85Stream = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -13661,7 +13827,7 @@ var JpegImage = function JpegImageClosure() {
               break;
             }
 
-            if (offset >= data.length - 1) {
+            if (!nextFileMarker || offset >= data.length - 1) {
               (0, _util.warn)("JpegImage.parse - reached the end of the image data " + "without finding an EOI marker (0xFFD9).");
               break markerLoop;
             }
@@ -14376,7 +14542,7 @@ var JpxImage = function JpxImageClosure() {
 
               if (unsupported.length > 0) {
                 doNotRecover = true;
-                throw new Error("Unsupported COD options (" + unsupported.join(", ") + ")");
+                (0, _util.warn)(`JPX: Unsupported COD options (${unsupported.join(", ")}).`);
               }
 
               if (context.mainHeader) {
@@ -14420,15 +14586,15 @@ var JpxImage = function JpxImageClosure() {
               parseTilePackets(context, data, position, length);
               break;
 
+            case 0xff53:
+              (0, _util.warn)("JPX: Codestream code 0xFF53 (COC) is not implemented.");
+
             case 0xff55:
             case 0xff57:
             case 0xff58:
             case 0xff64:
               length = (0, _core_utils.readUint16)(data, position);
               break;
-
-            case 0xff53:
-              throw new Error("Codestream code 0xFF53 (COC) is not implemented");
 
             default:
               throw new Error("Unknown codestream code: " + code.toString(16));
@@ -14440,7 +14606,7 @@ var JpxImage = function JpxImageClosure() {
         if (doNotRecover || this.failOnCorruptedImage) {
           throw new JpxError(e.message);
         } else {
-          (0, _util.warn)("JPX: Trying to recover from: " + e.message);
+          (0, _util.warn)(`JPX: Trying to recover from: "${e.message}".`);
         }
       }
 
@@ -16322,7 +16488,7 @@ exports.JpxImage = JpxImage;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.calculateSHA512 = exports.calculateSHA384 = exports.calculateSHA256 = exports.calculateMD5 = exports.PDF20 = exports.PDF17 = exports.CipherTransformFactory = exports.ARCFourCipher = exports.AES256Cipher = exports.AES128Cipher = void 0;
+exports.PDF20 = exports.PDF17 = exports.CipherTransformFactory = exports.calculateSHA512 = exports.calculateSHA384 = exports.calculateSHA256 = exports.calculateMD5 = exports.ARCFourCipher = exports.AES256Cipher = exports.AES128Cipher = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -19015,7 +19181,7 @@ const LabCS = function LabCSClosure() {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.GlobalImageCache = exports.LocalTilingPatternCache = exports.LocalGStateCache = exports.LocalFunctionCache = exports.LocalColorSpaceCache = exports.LocalImageCache = void 0;
+exports.LocalTilingPatternCache = exports.LocalImageCache = exports.LocalGStateCache = exports.LocalFunctionCache = exports.LocalColorSpaceCache = exports.GlobalImageCache = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -19306,11 +19472,11 @@ var _util = __w_pdfjs_require__(2);
 
 var _obj = __w_pdfjs_require__(10);
 
+var _core_utils = __w_pdfjs_require__(8);
+
 var _primitives = __w_pdfjs_require__(5);
 
 var _colorspace = __w_pdfjs_require__(23);
-
-var _core_utils = __w_pdfjs_require__(8);
 
 var _operator_list = __w_pdfjs_require__(26);
 
@@ -19985,7 +20151,7 @@ class WidgetAnnotation extends Annotation {
     this.ref = params.ref;
     data.annotationType = _util.AnnotationType.WIDGET;
     data.fieldName = this._constructFieldName(dict);
-    data.actions = this._collectActions(params.xref, dict);
+    data.actions = (0, _core_utils.collectActions)(params.xref, dict, _util.AnnotationActionEventType);
     const fieldValue = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "V",
@@ -19999,10 +20165,11 @@ class WidgetAnnotation extends Annotation {
     });
     data.defaultFieldValue = this._decodeFormValue(defaultFieldValue);
     data.alternativeText = (0, _util.stringToPDFString)(dict.get("TU") || "");
-    data.defaultAppearance = (0, _core_utils.getInheritableProperty)({
+    const defaultAppearance = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "DA"
     }) || params.acroForm.get("DA") || "";
+    data.defaultAppearance = (0, _util.isString)(defaultAppearance) ? defaultAppearance : "";
     const fieldType = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "FT"
@@ -20013,12 +20180,14 @@ class WidgetAnnotation extends Annotation {
       key: "DR"
     });
     const acroFormResources = params.acroForm.get("DR");
+    const appearanceResources = this.appearance && this.appearance.dict.get("Resources");
     this._fieldResources = {
       localResources,
       acroFormResources,
+      appearanceResources,
       mergedResources: _primitives.Dict.merge({
         xref: params.xref,
-        dictArray: [localResources, acroFormResources],
+        dictArray: [localResources, appearanceResources, acroFormResources],
         mergeSubDicts: true
       })
     };
@@ -20167,7 +20336,7 @@ class WidgetAnnotation extends Annotation {
       appearance = newTransform.encryptString(appearance);
     }
 
-    dict.set("V", value);
+    dict.set("V", (0, _util.isAscii)(value) ? value : (0, _util.stringToUTF16BEString)(value));
     dict.set("AP", AP);
     dict.set("M", `D:${(0, _util.getModificationDate)()}`);
     const appearanceDict = new _primitives.Dict(xref);
@@ -20216,6 +20385,11 @@ class WidgetAnnotation extends Annotation {
     const hPadding = defaultPadding;
     const totalHeight = this.data.rect[3] - this.data.rect[1];
     const totalWidth = this.data.rect[2] - this.data.rect[0];
+
+    if (!this.data.defaultAppearance) {
+      this.data.defaultAppearance = "/Helvetica 0 Tf 0 g";
+    }
+
     const fontInfo = await this._getFontData(evaluator, task);
     const [font, fontName] = fontInfo;
 
@@ -20232,19 +20406,21 @@ class WidgetAnnotation extends Annotation {
     const defaultAppearance = this.data.defaultAppearance;
     const alignment = this.data.textAlignment;
 
-    if (this.data.comb) {
-      return this._getCombAppearance(defaultAppearance, value, totalWidth, hPadding, vPadding);
-    }
-
     if (this.data.multiLine) {
       return this._getMultilineAppearance(defaultAppearance, value, font, fontSize, totalWidth, totalHeight, alignment, hPadding, vPadding);
     }
 
-    if (alignment === 0 || alignment > 2) {
-      return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm (${(0, _util.escapeString)(value)}) Tj` + " ET Q EMC";
+    const encodedString = font.encodeString(value).join("");
+
+    if (this.data.comb) {
+      return this._getCombAppearance(defaultAppearance, font, encodedString, totalWidth, hPadding, vPadding);
     }
 
-    const renderedText = this._renderText(value, font, fontSize, totalWidth, alignment, hPadding, vPadding);
+    if (alignment === 0 || alignment > 2) {
+      return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm (${(0, _util.escapeString)(encodedString)}) Tj` + " ET Q EMC";
+    }
+
+    const renderedText = this._renderText(encodedString, font, fontSize, totalWidth, alignment, hPadding, vPadding);
 
     return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 0 0 Tm ${renderedText}` + " ET Q EMC";
   }
@@ -20273,8 +20449,21 @@ class WidgetAnnotation extends Annotation {
 
   _computeFontSize(font, fontName, fontSize, height) {
     if (fontSize === null || fontSize === 0) {
-      const em = font.charsToGlyphs("M")[0].width / 1000;
-      const capHeight = 0.7 * em;
+      let capHeight;
+
+      if (font.capHeight) {
+        capHeight = font.capHeight;
+      } else {
+        const glyphs = font.charsToGlyphs(font.encodeString("M").join(""));
+
+        if (glyphs.length === 1 && glyphs[0].width) {
+          const em = glyphs[0].width / 1000;
+          capHeight = 0.7 * em;
+        } else {
+          capHeight = 0.7;
+        }
+      }
+
       fontSize = Math.max(1, Math.floor(height / (1.5 * capHeight)));
       let fontRegex = new RegExp(`/${fontName}\\s+[0-9.]+\\s+Tf`);
 
@@ -20315,18 +20504,21 @@ class WidgetAnnotation extends Annotation {
   _getSaveFieldResources(xref) {
     const {
       localResources,
-      acroFormResources
+      acroFormResources,
+      appearanceResources
     } = this._fieldResources;
 
     if (!this._fontName) {
       return localResources || _primitives.Dict.empty;
     }
 
-    if (localResources instanceof _primitives.Dict) {
-      const localFont = localResources.get("Font");
+    for (const resources of [localResources, appearanceResources]) {
+      if (resources instanceof _primitives.Dict) {
+        const localFont = resources.get("Font");
 
-      if (localFont instanceof _primitives.Dict && localFont.has(this._fontName)) {
-        return localResources;
+        if (localFont instanceof _primitives.Dict && localFont.has(this._fontName)) {
+          return resources;
+        }
       }
     }
 
@@ -20347,93 +20539,6 @@ class WidgetAnnotation extends Annotation {
     }
 
     return localResources || _primitives.Dict.empty;
-  }
-
-  _collectJS(entry, xref, list, parents) {
-    if (!entry) {
-      return;
-    }
-
-    let parent = null;
-
-    if ((0, _primitives.isRef)(entry)) {
-      if (parents.has(entry)) {
-        return;
-      }
-
-      parent = entry;
-      parents.put(parent);
-      entry = xref.fetch(entry);
-    }
-
-    if (Array.isArray(entry)) {
-      for (const element of entry) {
-        this._collectJS(element, xref, list, parents);
-      }
-    } else if (entry instanceof _primitives.Dict) {
-      if ((0, _primitives.isName)(entry.get("S"), "JavaScript") && entry.has("JS")) {
-        const js = entry.get("JS");
-        let code;
-
-        if ((0, _primitives.isStream)(js)) {
-          code = (0, _util.bytesToString)(js.getBytes());
-        } else {
-          code = js;
-        }
-
-        code = (0, _util.stringToPDFString)(code);
-
-        if (code) {
-          list.push(code);
-        }
-      }
-
-      this._collectJS(entry.getRaw("Next"), xref, list, parents);
-    }
-
-    if (parent) {
-      parents.remove(parent);
-    }
-  }
-
-  _collectActions(xref, dict) {
-    const actions = Object.create(null);
-
-    if (dict.has("AA")) {
-      const additionalActions = dict.get("AA");
-
-      for (const key of additionalActions.getKeys()) {
-        const action = _util.AnnotationActionEventType[key];
-
-        if (!action) {
-          continue;
-        }
-
-        const actionDict = additionalActions.getRaw(key);
-        const parents = new _primitives.RefSet();
-        const list = [];
-
-        this._collectJS(actionDict, xref, list, parents);
-
-        if (list.length > 0) {
-          actions[action] = list;
-        }
-      }
-    }
-
-    if (dict.has("A")) {
-      const actionDict = dict.get("A");
-      const parents = new _primitives.RefSet();
-      const list = [];
-
-      this._collectJS(actionDict, xref, list, parents);
-
-      if (list.length > 0) {
-        actions.Action = list;
-      }
-    }
-
-    return (0, _util.objectSize)(actions) > 0 ? actions : null;
   }
 
   getFieldObject() {
@@ -20484,12 +20589,13 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     this.data.comb = this.hasFieldFlag(_util.AnnotationFieldFlag.COMB) && !this.hasFieldFlag(_util.AnnotationFieldFlag.MULTILINE) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD) && !this.hasFieldFlag(_util.AnnotationFieldFlag.FILESELECT) && this.data.maxLen !== null;
   }
 
-  _getCombAppearance(defaultAppearance, text, width, hPadding, vPadding) {
+  _getCombAppearance(defaultAppearance, font, text, width, hPadding, vPadding) {
     const combWidth = (width / this.data.maxLen).toFixed(2);
     const buf = [];
+    const positions = font.getCharPositions(text);
 
-    for (const character of text) {
-      buf.push(`(${(0, _util.escapeString)(character)}) Tj`);
+    for (const [start, end] of positions) {
+      buf.push(`(${(0, _util.escapeString)(text.substring(start, end))}) Tj`);
     }
 
     const renderedComb = buf.join(` ${combWidth} 0 Td `);
@@ -20515,46 +20621,55 @@ class TextWidgetAnnotation extends WidgetAnnotation {
   }
 
   _splitLine(line, font, fontSize, width) {
-    if (line.length <= 1) {
+    line = font.encodeString(line).join("");
+    const glyphs = font.charsToGlyphs(line);
+
+    if (glyphs.length <= 1) {
       return [line];
     }
 
+    const positions = font.getCharPositions(line);
     const scale = fontSize / 1000;
-    const whitespace = font.charsToGlyphs(" ")[0].width * scale;
     const chunks = [];
-    let lastSpacePos = -1,
+    let lastSpacePosInStringStart = -1,
+        lastSpacePosInStringEnd = -1,
+        lastSpacePos = -1,
         startChunk = 0,
         currentWidth = 0;
 
-    for (let i = 0, ii = line.length; i < ii; i++) {
-      const character = line.charAt(i);
+    for (let i = 0, ii = glyphs.length; i < ii; i++) {
+      const [start, end] = positions[i];
+      const glyph = glyphs[i];
+      const glyphWidth = glyph.width * scale;
 
-      if (character === " ") {
-        if (currentWidth + whitespace > width) {
-          chunks.push(line.substring(startChunk, i));
-          startChunk = i;
-          currentWidth = whitespace;
+      if (glyph.unicode === " ") {
+        if (currentWidth + glyphWidth > width) {
+          chunks.push(line.substring(startChunk, start));
+          startChunk = start;
+          currentWidth = glyphWidth;
+          lastSpacePosInStringStart = -1;
           lastSpacePos = -1;
         } else {
-          currentWidth += whitespace;
+          currentWidth += glyphWidth;
+          lastSpacePosInStringStart = start;
+          lastSpacePosInStringEnd = end;
           lastSpacePos = i;
         }
       } else {
-        const charWidth = font.charsToGlyphs(character)[0].width * scale;
-
-        if (currentWidth + charWidth > width) {
-          if (lastSpacePos !== -1) {
-            chunks.push(line.substring(startChunk, lastSpacePos + 1));
-            startChunk = i = lastSpacePos + 1;
-            lastSpacePos = -1;
+        if (currentWidth + glyphWidth > width) {
+          if (lastSpacePosInStringStart !== -1) {
+            chunks.push(line.substring(startChunk, lastSpacePosInStringEnd));
+            startChunk = lastSpacePosInStringEnd;
+            i = lastSpacePos + 1;
+            lastSpacePosInStringStart = -1;
             currentWidth = 0;
           } else {
-            chunks.push(line.substring(startChunk, i));
-            startChunk = i;
-            currentWidth = charWidth;
+            chunks.push(line.substring(startChunk, start));
+            startChunk = start;
+            currentWidth = glyphWidth;
           }
         } else {
-          currentWidth += charWidth;
+          currentWidth += glyphWidth;
         }
       }
     }
@@ -20871,20 +20986,21 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
   getFieldObject() {
     let type = "button";
-    let value = null;
+    let exportValues;
 
     if (this.data.checkBox) {
       type = "checkbox";
-      value = this.data.fieldValue && this.data.fieldValue !== "Off";
+      exportValues = this.data.exportValue;
     } else if (this.data.radioButton) {
       type = "radiobutton";
-      value = this.data.fieldValue === this.data.buttonValue;
+      exportValues = this.data.buttonValue;
     }
 
     return {
       id: this.data.id,
-      value,
+      value: this.data.fieldValue || null,
       defaultValue: this.data.defaultFieldValue,
+      exportValues,
       editable: !this.data.readOnly,
       name: this.data.fieldName,
       rect: this.data.rect,
@@ -20948,6 +21064,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       editable: !this.data.readOnly,
       name: this.data.fieldName,
       rect: this.data.rect,
+      numItems: this.data.fieldValue.length,
       multipleSelection: this.data.multiSelect,
       hidden: this.data.hidden,
       actions: this.data.actions,
@@ -21975,8 +22092,8 @@ exports.OperatorList = OperatorList;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.writeDict = writeDict;
 exports.incrementalUpdate = incrementalUpdate;
+exports.writeDict = writeDict;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -23749,7 +23866,15 @@ class PartialEvaluator {
     }
 
     var fontCapability = (0, _util.createPromiseCapability)();
-    var preEvaluatedFont = this.preEvaluateFont(font);
+    let preEvaluatedFont;
+
+    try {
+      preEvaluatedFont = this.preEvaluateFont(font);
+    } catch (reason) {
+      (0, _util.warn)(`loadFont - ignoring preEvaluateFont errors: "${reason}".`);
+      return errorFont();
+    }
+
     const {
       descriptor,
       hash
@@ -25685,6 +25810,11 @@ class PartialEvaluator {
       }
 
       dict = Array.isArray(df) ? this.xref.fetchIfRef(df[0]) : df;
+
+      if (!(dict instanceof _primitives.Dict)) {
+        throw new _util.FormatError("Descendant font is not a dictionary.");
+      }
+
       type = dict.get("Subtype");
 
       if (!(0, _primitives.isName)(type)) {
@@ -26001,7 +26131,7 @@ class TranslatedFont {
     var charProcOperatorList = Object.create(null);
 
     for (const key of charProcs.getKeys()) {
-      loadCharProcsPromise = loadCharProcsPromise.then(function () {
+      loadCharProcsPromise = loadCharProcsPromise.then(() => {
         var glyphStream = charProcs.get(key);
         var operatorList = new _operator_list.OperatorList();
         return type3Evaluator.getOperatorList({
@@ -26009,7 +26139,11 @@ class TranslatedFont {
           task,
           resources: fontResources,
           operatorList
-        }).then(function () {
+        }).then(() => {
+          if (operatorList.fnArray[0] === _util.OPS.setCharWidthAndBounds) {
+            this._removeType3ColorOperators(operatorList);
+          }
+
           charProcOperatorList[key] = operatorList.getIR();
 
           for (const dependency of operatorList.dependencies) {
@@ -26027,6 +26161,62 @@ class TranslatedFont {
       translatedFont.charProcOperatorList = charProcOperatorList;
     });
     return this.type3Loaded;
+  }
+
+  _removeType3ColorOperators(operatorList) {
+    let i = 1,
+        ii = operatorList.length;
+
+    while (i < ii) {
+      switch (operatorList.fnArray[i]) {
+        case _util.OPS.setStrokeColorSpace:
+        case _util.OPS.setFillColorSpace:
+        case _util.OPS.setStrokeColor:
+        case _util.OPS.setStrokeColorN:
+        case _util.OPS.setFillColor:
+        case _util.OPS.setFillColorN:
+        case _util.OPS.setStrokeGray:
+        case _util.OPS.setFillGray:
+        case _util.OPS.setStrokeRGBColor:
+        case _util.OPS.setFillRGBColor:
+        case _util.OPS.setStrokeCMYKColor:
+        case _util.OPS.setFillCMYKColor:
+        case _util.OPS.shadingFill:
+        case _util.OPS.setRenderingIntent:
+          operatorList.fnArray.splice(i, 1);
+          operatorList.argsArray.splice(i, 1);
+          ii--;
+          continue;
+
+        case _util.OPS.setGState:
+          const gStateObj = operatorList.argsArray[i];
+          let j = 0,
+              jj = gStateObj.length;
+
+          while (j < jj) {
+            const [gStateKey] = gStateObj[j];
+
+            switch (gStateKey) {
+              case "TR":
+              case "TR2":
+              case "HT":
+              case "BG":
+              case "BG2":
+              case "UCR":
+              case "UCR2":
+                gStateObj.splice(j, 1);
+                jj--;
+                continue;
+            }
+
+            j++;
+          }
+
+          break;
+      }
+
+      i++;
+    }
   }
 
 }
@@ -26687,7 +26877,7 @@ class EvaluatorPreprocessor {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.CMapFactory = exports.IdentityCMap = exports.CMap = void 0;
+exports.IdentityCMap = exports.CMapFactory = exports.CMap = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -26826,6 +27016,25 @@ class CMap {
 
     out.charcode = 0;
     out.length = 1;
+  }
+
+  getCharCodeLength(charCode) {
+    const codespaceRanges = this.codespaceRanges;
+
+    for (let n = 0, nn = codespaceRanges.length; n < nn; n++) {
+      const codespaceRange = codespaceRanges[n];
+
+      for (let k = 0, kk = codespaceRange.length; k < kk;) {
+        const low = codespaceRange[k++];
+        const high = codespaceRange[k++];
+
+        if (charCode >= low && charCode <= high) {
+          return n + 1;
+        }
+      }
+    }
+
+    return 1;
   }
 
   get length() {
@@ -27597,7 +27806,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.getFontType = getFontType;
-exports.IdentityToUnicodeMap = exports.ToUnicodeMap = exports.FontFlags = exports.Font = exports.ErrorFont = exports.SEAC_ANALYSIS_ENABLED = void 0;
+exports.ToUnicodeMap = exports.SEAC_ANALYSIS_ENABLED = exports.IdentityToUnicodeMap = exports.FontFlags = exports.Font = exports.ErrorFont = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -28007,6 +28216,7 @@ var Font = function FontClosure() {
     this.defaultWidth = properties.defaultWidth;
     this.composite = properties.composite;
     this.cMap = properties.cMap;
+    this.capHeight = properties.capHeight / PDF_GLYPH_SPACE_UNITS;
     this.ascent = properties.ascent / PDF_GLYPH_SPACE_UNITS;
     this.descent = properties.descent / PDF_GLYPH_SPACE_UNITS;
     this.fontMatrix = properties.fontMatrix;
@@ -28600,14 +28810,15 @@ var Font = function FontClosure() {
       let fontName = name.replace(/[,_]/g, "-").replace(/\s/g, "");
       var stdFontMap = (0, _standard_fonts.getStdFontMap)(),
           nonStdFontMap = (0, _standard_fonts.getNonStdFontMap)();
-      var isStandardFont = !!stdFontMap[fontName] || !!(nonStdFontMap[fontName] && stdFontMap[nonStdFontMap[fontName]]);
+      const isStandardFont = !!stdFontMap[fontName];
+      const isMappedToStandardFont = !!(nonStdFontMap[fontName] && stdFontMap[nonStdFontMap[fontName]]);
       fontName = stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
       this.bold = fontName.search(/bold/gi) !== -1;
       this.italic = fontName.search(/oblique/gi) !== -1 || fontName.search(/italic/gi) !== -1;
       this.black = name.search(/Black/g) !== -1;
-      this.remeasure = Object.keys(this.widths).length > 0;
+      this.remeasure = !isStandardFont && Object.keys(this.widths).length > 0;
 
-      if (isStandardFont && type === "CIDFontType2" && this.cidEncoding.startsWith("Identity-")) {
+      if ((isStandardFont || isMappedToStandardFont) && type === "CIDFontType2" && this.cidEncoding.startsWith("Identity-")) {
         const GlyphMapForStandardFonts = (0, _standard_fonts.getGlyphMapForStandardFonts)(),
               cidToGidMap = properties.cidToGidMap;
         const map = [];
@@ -30335,8 +30546,75 @@ var Font = function FontClosure() {
       return charsCache[charsCacheKey] = glyphs;
     },
 
+    getCharPositions(chars) {
+      const positions = [];
+
+      if (this.cMap) {
+        const c = Object.create(null);
+        let i = 0;
+
+        while (i < chars.length) {
+          this.cMap.readCharCode(chars, i, c);
+          const length = c.length;
+          positions.push([i, i + length]);
+          i += length;
+        }
+      } else {
+        for (let i = 0, ii = chars.length; i < ii; ++i) {
+          positions.push([i, i + 1]);
+        }
+      }
+
+      return positions;
+    },
+
     get glyphCacheValues() {
       return Object.values(this.glyphCache);
+    },
+
+    encodeString(str) {
+      const buffers = [];
+      const currentBuf = [];
+
+      const hasCurrentBufErrors = () => buffers.length % 2 === 1;
+
+      for (let i = 0, ii = str.length; i < ii; i++) {
+        const unicode = str.codePointAt(i);
+
+        if (unicode > 0xd7ff && (unicode < 0xe000 || unicode > 0xfffd)) {
+          i++;
+        }
+
+        if (this.toUnicode) {
+          const char = String.fromCodePoint(unicode);
+          const charCode = this.toUnicode.charCodeOf(char);
+
+          if (charCode !== -1) {
+            if (hasCurrentBufErrors()) {
+              buffers.push(currentBuf.join(""));
+              currentBuf.length = 0;
+            }
+
+            const charCodeLength = this.cMap ? this.cMap.getCharCodeLength(charCode) : 1;
+
+            for (let j = charCodeLength - 1; j >= 0; j--) {
+              currentBuf.push(String.fromCharCode(charCode >> 8 * j & 0xff));
+            }
+
+            continue;
+          }
+        }
+
+        if (!hasCurrentBufErrors()) {
+          buffers.push(currentBuf.join(""));
+          currentBuf.length = 0;
+        }
+
+        currentBuf.push(String.fromCodePoint(unicode));
+      }
+
+      buffers.push(currentBuf.join(""));
+      return buffers;
     }
 
   };
@@ -30355,6 +30633,9 @@ var ErrorFont = function ErrorFontClosure() {
   ErrorFont.prototype = {
     charsToGlyphs: function ErrorFont_charsToGlyphs() {
       return [];
+    },
+    encodeString: function ErrorFont_encodeString(chars) {
+      return [chars];
     },
 
     exportData(extraProperties = false) {
@@ -30849,7 +31130,7 @@ var CFFFont = function CFFFontClosure() {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.CFFFDSelect = exports.CFFCompiler = exports.CFFPrivateDict = exports.CFFTopDict = exports.CFFCharset = exports.CFFIndex = exports.CFFStrings = exports.CFFHeader = exports.CFF = exports.CFFParser = exports.CFFStandardStrings = void 0;
+exports.CFFTopDict = exports.CFFStrings = exports.CFFStandardStrings = exports.CFFPrivateDict = exports.CFFParser = exports.CFFIndex = exports.CFFHeader = exports.CFFFDSelect = exports.CFFCompiler = exports.CFFCharset = exports.CFF = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -32685,7 +32966,7 @@ exports.CFFCompiler = CFFCompiler;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.ExpertSubsetCharset = exports.ExpertCharset = exports.ISOAdobeCharset = void 0;
+exports.ISOAdobeCharset = exports.ExpertSubsetCharset = exports.ExpertCharset = void 0;
 const ISOAdobeCharset = [".notdef", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand", "quoteright", "parenleft", "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum", "underscore", "quoteleft", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "exclamdown", "cent", "sterling", "fraction", "yen", "florin", "section", "currency", "quotesingle", "quotedblleft", "guillemotleft", "guilsinglleft", "guilsinglright", "fi", "fl", "endash", "dagger", "daggerdbl", "periodcentered", "paragraph", "bullet", "quotesinglbase", "quotedblbase", "quotedblright", "guillemotright", "ellipsis", "perthousand", "questiondown", "grave", "acute", "circumflex", "tilde", "macron", "breve", "dotaccent", "dieresis", "ring", "cedilla", "hungarumlaut", "ogonek", "caron", "emdash", "AE", "ordfeminine", "Lslash", "Oslash", "OE", "ordmasculine", "ae", "dotlessi", "lslash", "oslash", "oe", "germandbls", "onesuperior", "logicalnot", "mu", "trademark", "Eth", "onehalf", "plusminus", "Thorn", "onequarter", "divide", "brokenbar", "degree", "thorn", "threequarters", "twosuperior", "registered", "minus", "eth", "multiply", "threesuperior", "copyright", "Aacute", "Acircumflex", "Adieresis", "Agrave", "Aring", "Atilde", "Ccedilla", "Eacute", "Ecircumflex", "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis", "Igrave", "Ntilde", "Oacute", "Ocircumflex", "Odieresis", "Ograve", "Otilde", "Scaron", "Uacute", "Ucircumflex", "Udieresis", "Ugrave", "Yacute", "Ydieresis", "Zcaron", "aacute", "acircumflex", "adieresis", "agrave", "aring", "atilde", "ccedilla", "eacute", "ecircumflex", "edieresis", "egrave", "iacute", "icircumflex", "idieresis", "igrave", "ntilde", "oacute", "ocircumflex", "odieresis", "ograve", "otilde", "scaron", "uacute", "ucircumflex", "udieresis", "ugrave", "yacute", "ydieresis", "zcaron"];
 exports.ISOAdobeCharset = ISOAdobeCharset;
 const ExpertCharset = [".notdef", "space", "exclamsmall", "Hungarumlautsmall", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "comma", "hyphen", "period", "fraction", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon", "semicolon", "commasuperior", "threequartersemdash", "periodsuperior", "questionsmall", "asuperior", "bsuperior", "centsuperior", "dsuperior", "esuperior", "isuperior", "lsuperior", "msuperior", "nsuperior", "osuperior", "rsuperior", "ssuperior", "tsuperior", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior", "parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "exclamdownsmall", "centoldstyle", "Lslashsmall", "Scaronsmall", "Zcaronsmall", "Dieresissmall", "Brevesmall", "Caronsmall", "Dotaccentsmall", "Macronsmall", "figuredash", "hypheninferior", "Ogoneksmall", "Ringsmall", "Cedillasmall", "onequarter", "onehalf", "threequarters", "questiondownsmall", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "zerosuperior", "onesuperior", "twosuperior", "threesuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "eightsuperior", "ninesuperior", "zeroinferior", "oneinferior", "twoinferior", "threeinferior", "fourinferior", "fiveinferior", "sixinferior", "seveninferior", "eightinferior", "nineinferior", "centinferior", "dollarinferior", "periodinferior", "commainferior", "Agravesmall", "Aacutesmall", "Acircumflexsmall", "Atildesmall", "Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall", "Egravesmall", "Eacutesmall", "Ecircumflexsmall", "Edieresissmall", "Igravesmall", "Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall", "Ntildesmall", "Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall", "Odieresissmall", "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall", "Ucircumflexsmall", "Udieresissmall", "Yacutesmall", "Thornsmall", "Ydieresissmall"];
@@ -32703,7 +32984,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.getEncoding = getEncoding;
-exports.ExpertEncoding = exports.ZapfDingbatsEncoding = exports.SymbolSetEncoding = exports.MacRomanEncoding = exports.StandardEncoding = exports.WinAnsiEncoding = void 0;
+exports.ZapfDingbatsEncoding = exports.WinAnsiEncoding = exports.SymbolSetEncoding = exports.StandardEncoding = exports.MacRomanEncoding = exports.ExpertEncoding = void 0;
 const ExpertEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclamsmall", "Hungarumlautsmall", "", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "comma", "hyphen", "period", "fraction", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon", "semicolon", "commasuperior", "threequartersemdash", "periodsuperior", "questionsmall", "", "asuperior", "bsuperior", "centsuperior", "dsuperior", "esuperior", "", "", "", "isuperior", "", "", "lsuperior", "msuperior", "nsuperior", "osuperior", "", "", "rsuperior", "ssuperior", "tsuperior", "", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior", "", "parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "exclamdownsmall", "centoldstyle", "Lslashsmall", "", "", "Scaronsmall", "Zcaronsmall", "Dieresissmall", "Brevesmall", "Caronsmall", "", "Dotaccentsmall", "", "", "Macronsmall", "", "", "figuredash", "hypheninferior", "", "", "Ogoneksmall", "Ringsmall", "Cedillasmall", "", "", "", "onequarter", "onehalf", "threequarters", "questiondownsmall", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "", "", "zerosuperior", "onesuperior", "twosuperior", "threesuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "eightsuperior", "ninesuperior", "zeroinferior", "oneinferior", "twoinferior", "threeinferior", "fourinferior", "fiveinferior", "sixinferior", "seveninferior", "eightinferior", "nineinferior", "centinferior", "dollarinferior", "periodinferior", "commainferior", "Agravesmall", "Aacutesmall", "Acircumflexsmall", "Atildesmall", "Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall", "Egravesmall", "Eacutesmall", "Ecircumflexsmall", "Edieresissmall", "Igravesmall", "Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall", "Ntildesmall", "Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall", "Odieresissmall", "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall", "Ucircumflexsmall", "Udieresissmall", "Yacutesmall", "Thornsmall", "Ydieresissmall"];
 exports.ExpertEncoding = ExpertEncoding;
 const MacExpertEncoding = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space", "exclamsmall", "Hungarumlautsmall", "centoldstyle", "dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall", "parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader", "comma", "hyphen", "period", "fraction", "zerooldstyle", "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon", "semicolon", "", "threequartersemdash", "", "questionsmall", "", "", "", "", "Ethsmall", "", "", "onequarter", "onehalf", "threequarters", "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds", "", "", "", "", "", "", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior", "", "parenrightinferior", "Circumflexsmall", "hypheninferior", "Gravesmall", "Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall", "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall", "", "", "asuperior", "centsuperior", "", "", "", "", "Aacutesmall", "Agravesmall", "Acircumflexsmall", "Adieresissmall", "Atildesmall", "Aringsmall", "Ccedillasmall", "Eacutesmall", "Egravesmall", "Ecircumflexsmall", "Edieresissmall", "Iacutesmall", "Igravesmall", "Icircumflexsmall", "Idieresissmall", "Ntildesmall", "Oacutesmall", "Ogravesmall", "Ocircumflexsmall", "Odieresissmall", "Otildesmall", "Uacutesmall", "Ugravesmall", "Ucircumflexsmall", "Udieresissmall", "", "eightsuperior", "fourinferior", "threeinferior", "sixinferior", "eightinferior", "seveninferior", "Scaronsmall", "", "centinferior", "twoinferior", "", "Dieresissmall", "", "Caronsmall", "osuperior", "fiveinferior", "", "commainferior", "periodinferior", "Yacutesmall", "", "dollarinferior", "", "", "Thornsmall", "", "nineinferior", "zeroinferior", "Zcaronsmall", "AEsmall", "Oslashsmall", "questiondownsmall", "oneinferior", "Lslashsmall", "", "", "", "", "", "", "Cedillasmall", "", "", "", "", "", "OEsmall", "figuredash", "hyphensuperior", "", "", "", "", "exclamdownsmall", "", "Ydieresissmall", "", "onesuperior", "twosuperior", "threesuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior", "ninesuperior", "zerosuperior", "", "esuperior", "rsuperior", "tsuperior", "", "", "isuperior", "ssuperior", "dsuperior", "", "", "", "", "", "lsuperior", "Ogoneksmall", "Brevesmall", "Macronsmall", "bsuperior", "nsuperior", "msuperior", "commasuperior", "periodsuperior", "Dotaccentsmall", "Ringsmall", "", "", "", ""];
@@ -32755,7 +33036,7 @@ function getEncoding(encodingName) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.getDingbatsGlyphsUnicode = exports.getGlyphsUnicode = void 0;
+exports.getGlyphsUnicode = exports.getDingbatsGlyphsUnicode = void 0;
 
 var _core_utils = __w_pdfjs_require__(8);
 
@@ -32777,7 +33058,7 @@ exports.getDingbatsGlyphsUnicode = getDingbatsGlyphsUnicode;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.getSupplementalGlyphMapForCalibri = exports.getSupplementalGlyphMapForArialBlack = exports.getGlyphMapForStandardFonts = exports.getSymbolsFonts = exports.getSerifFonts = exports.getNonStdFontMap = exports.getStdFontMap = void 0;
+exports.getSymbolsFonts = exports.getSupplementalGlyphMapForCalibri = exports.getSupplementalGlyphMapForArialBlack = exports.getStdFontMap = exports.getSerifFonts = exports.getNonStdFontMap = exports.getGlyphMapForStandardFonts = void 0;
 
 var _core_utils = __w_pdfjs_require__(8);
 
@@ -33520,10 +33801,10 @@ exports.getSupplementalGlyphMapForCalibri = getSupplementalGlyphMapForCalibri;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.getUnicodeForGlyph = getUnicodeForGlyph;
+exports.getUnicodeRangeFor = getUnicodeRangeFor;
 exports.mapSpecialUnicodeValues = mapSpecialUnicodeValues;
 exports.reverseIfRtl = reverseIfRtl;
-exports.getUnicodeRangeFor = getUnicodeRangeFor;
-exports.getUnicodeForGlyph = getUnicodeForGlyph;
 exports.getNormalizedUnicodes = void 0;
 
 var _core_utils = __w_pdfjs_require__(8);
@@ -36660,7 +36941,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.isPDFFunction = isPDFFunction;
-exports.PostScriptCompiler = exports.PostScriptEvaluator = exports.PDFFunctionFactory = void 0;
+exports.PostScriptEvaluator = exports.PostScriptCompiler = exports.PDFFunctionFactory = void 0;
 
 var _primitives = __w_pdfjs_require__(5);
 

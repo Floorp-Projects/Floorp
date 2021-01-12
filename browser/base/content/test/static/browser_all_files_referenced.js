@@ -33,7 +33,7 @@ var gExceptionPaths = [
   // These resources are referenced by messages delivered through Remote Settings
   "chrome://activity-stream/content/data/content/assets/remote/",
 
-  // browser/extensions/pdfjs/content/build/pdf.js#1999
+  // toolkit/components/pdfjs/content/build/pdf.js
   "resource://pdf.js/web/images/",
 
   // Exclude all the metadata paths under the country metadata folder because these
@@ -62,7 +62,7 @@ var whitelist = [
   // pocket/content/panels/tmpl/loggedoutvariants/variant_a.handlebars
   { file: "chrome://pocket/content/panels/img/glyph.svg" },
 
-  // toolkt/components/pdfjs/content/PdfStreamConverter.jsm
+  // toolkit/components/pdfjs/content/PdfStreamConverter.jsm
   { file: "chrome://pdf.js/locale/chrome.properties" },
   { file: "chrome://pdf.js/locale/viewer.properties" },
 
@@ -149,7 +149,9 @@ var whitelist = [
     platforms: ["linux", "macosx"],
   },
 
-  // toolkt/components/pdfjs/content/web/viewer.js#7450
+  // Files from upstream library
+  { file: "resource://pdf.js/build/pdf.sandbox.external.js" },
+  { file: "resource://pdf.js/build/pdf.scripting.js" },
   { file: "resource://pdf.js/web/debugger.js" },
 
   // resource://app/modules/translation/TranslationContentHandler.jsm
