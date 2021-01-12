@@ -12,6 +12,10 @@ SpecialPowers.pushPrefEnv({
   set: [["dom.require_user_interaction_for_beforeunload", false]],
 });
 
+SpecialPowers.pushPrefEnv({
+  set: [["prompts.contentPromptSubDialog", false]],
+});
+
 var signalAllEventsReceived;
 var onAllEventsReceived = new Promise(resolve => {
   signalAllEventsReceived = resolve;

@@ -20,6 +20,9 @@
           src="../browser.js"></script>
 
   <script type="application/javascript">
+    SpecialPowers.pushPrefEnv({
+      set: [["prompts.contentPromptSubDialog", false]],
+    });
     function showAlert() {
       this.eventSeq = [
         {

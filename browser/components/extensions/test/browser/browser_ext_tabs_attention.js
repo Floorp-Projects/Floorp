@@ -3,6 +3,10 @@
 "use strict";
 
 add_task(async function tabsAttention() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.contentPromptSubDialog", false]],
+  });
+
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://example.com/?2",

@@ -3,6 +3,10 @@
 
 "use strict";
 
+SpecialPowers.pushPrefEnv({
+  set: [["prompts.contentPromptSubDialog", false]],
+});
+
 function whenBrowserLoaded(browser, callback) {
   return BrowserTestUtils.browserLoaded(browser).then(callback);
 }
