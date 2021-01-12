@@ -271,8 +271,8 @@ subprojects {
 
                     sourceDirectories.setFrom(files([mainSrc]))
                     classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
-                    executionData.setFrom(fileTree(dir: project.buildDir, includes: [
-                            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
+                    getExecutionData().setFrom(fileTree(project.buildDir).include([
+                            'jacoco/testReleaseUnitTest.exec'
                     ]))
                 }
 
