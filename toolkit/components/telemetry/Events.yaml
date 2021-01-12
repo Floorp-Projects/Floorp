@@ -302,34 +302,6 @@ addonsManager:
     bug_numbers: [1544927, 1580561, 1590736, 1630596, 1672570]
     release_channel_collection: opt-out
 
-exp_import:
-  event:
-    objects: ["click", "info", "enter", "delete"]
-    bug_numbers: [1628849]
-    description: >
-      Experimental import logins interface user interactions. Value is the browser suggested.
-    expiry_version: "87"
-    extra_keys:
-      profilesCount: Count of profiles found for the selected browser
-    notification_emails: ["edilee@mozilla.com"]
-    products: ["firefox"]
-    record_in_processes: ["main", "content"]
-    release_channel_collection: opt-out
-  impression:
-    objects: ["formfill", "popup"]
-    bug_numbers: [1628849]
-    description: >
-      Experimental import logins potential impressions. Value is number of importable browsers.
-    expiry_version: "87"
-    extra_keys:
-      autofillResult: Value from PWMGR_FORM_AUTOFILL_RESULT
-      loginsCount: Count of logins found
-      searchLength: Length of searched login query
-    notification_emails: ["edilee@mozilla.com"]
-    products: ["firefox"]
-    record_in_processes: ["content"]
-    release_channel_collection: opt-out
-
 downloads:
   added:
     description: >
