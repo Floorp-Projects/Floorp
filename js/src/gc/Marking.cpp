@@ -878,59 +878,20 @@ template void GCMarker::markImplicitEdges(BaseScript*);
 }  // namespace js
 
 template <typename T>
-static inline bool ShouldMark(GCMarker* gcmarker, T thing) {
+static inline bool ShouldMark(GCMarker* gcmarker, T* thing) {
   // Don't trace things that are owned by another runtime.
   if (IsOwnedByOtherRuntime(gcmarker->runtime(), thing)) {
     return false;
   }
 
+  // We may encounter nursery things during normal marking since we don't
+  // collect the nursery at the start of every GC slice.
+  if (!thing->isTenured()) {
+    return false;
+  }
+
   // Don't mark things outside a zone if we are in a per-zone GC.
-  return thing->zone()->shouldMarkInZone();
-}
-
-template <>
-bool ShouldMark<JSObject*>(GCMarker* gcmarker, JSObject* obj) {
-  // Don't trace things that are owned by another runtime.
-  if (IsOwnedByOtherRuntime(gcmarker->runtime(), obj)) {
-    return false;
-  }
-
-  // We may mark a Nursery thing outside the context of the
-  // MinorCollectionTracer because of a pre-barrier. The pre-barrier is not
-  // needed in this case because we perform a minor collection before each
-  // incremental slice.
-  if (IsInsideNursery(obj)) {
-    return false;
-  }
-
-  // Don't mark things outside a zone if we are in a per-zone GC. It is
-  // faster to check our own arena, which we can do since we know that
-  // the object is tenured.
-  return obj->asTenured().zone()->shouldMarkInZone();
-}
-
-// JSStrings can also be in the nursery. See ShouldMark<JSObject*> for comments.
-template <>
-bool ShouldMark<JSString*>(GCMarker* gcmarker, JSString* str) {
-  if (IsOwnedByOtherRuntime(gcmarker->runtime(), str)) {
-    return false;
-  }
-  if (IsInsideNursery(str)) {
-    return false;
-  }
-  return str->asTenured().zone()->shouldMarkInZone();
-}
-
-// BigInts can also be in the nursery. See ShouldMark<JSObject*> for comments.
-template <>
-bool ShouldMark<JS::BigInt*>(GCMarker* gcmarker, JS::BigInt* bi) {
-  if (IsOwnedByOtherRuntime(gcmarker->runtime(), bi)) {
-    return false;
-  }
-  if (IsInsideNursery(bi)) {
-    return false;
-  }
-  return bi->asTenured().zone()->shouldMarkInZone();
+  return thing->asTenured().zone()->shouldMarkInZone();
 }
 
 template <typename T>
@@ -3773,22 +3734,16 @@ static inline bool ShouldCheckMarkState(JSRuntime* rt, T** thingp) {
 }
 
 template <typename T>
-struct MightBeNurseryAllocated {
-  static const bool value = std::is_base_of_v<JSObject, T> ||
-                            std::is_base_of_v<JSString, T> ||
-                            std::is_base_of_v<JS::BigInt, T>;
-};
-
-template <typename T>
 bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
   // Don't depend on the mark state of other cells during finalization.
   MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
 
-  if (IsOwnedByOtherRuntime(rt, *thingp)) {
+  T* thing = *thingp;
+  if (IsOwnedByOtherRuntime(rt, thing)) {
     return true;
   }
 
-  if (MightBeNurseryAllocated<T>::value && IsInsideNursery(*thingp)) {
+  if (!thing->isTenured()) {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
     auto** cellp = reinterpret_cast<Cell**>(thingp);
     return Nursery::getForwardedPointer(cellp);
@@ -3816,7 +3771,7 @@ bool js::gc::IsAboutToBeFinalizedInternal(T** thingp) {
     return false;
   }
 
-  if (IsInsideNursery(thing)) {
+  if (!thing->isTenured()) {
     return JS::RuntimeHeapIsMinorCollecting() &&
            !Nursery::getForwardedPointer(reinterpret_cast<Cell**>(thingp));
   }
