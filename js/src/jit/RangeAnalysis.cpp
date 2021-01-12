@@ -3370,7 +3370,7 @@ void MMod::collectRangeInfoPreTrunc() {
 void MToNumberInt32::collectRangeInfoPreTrunc() {
   Range inputRange(input());
   if (!inputRange.canBeNegativeZero()) {
-    canBeNegativeZero_ = false;
+    needsNegativeZeroCheck_ = false;
   }
 }
 

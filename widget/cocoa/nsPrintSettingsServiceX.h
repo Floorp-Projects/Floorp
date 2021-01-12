@@ -27,12 +27,6 @@ class nsPrintSettingsServiceX final : public nsPrintSettingsService {
       nsIPrintSettings* settings) override;
 
  protected:
-  nsresult ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
-                     uint32_t aFlags) override;
-
-  nsresult WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
-                      uint32_t aFlags) override;
-
   nsresult _CreatePrintSettings(nsIPrintSettings** _retval) override;
 };
 
