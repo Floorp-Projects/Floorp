@@ -12,7 +12,6 @@ const {
 const { ContentPrefStore } = ChromeUtils.import(
   "resource://gre/modules/ContentPrefStore.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "Sqlite",
@@ -1165,8 +1164,8 @@ ContentPrefService2.prototype = {
   },
 
   async _getConnection(aAttemptNum = 0) {
-    let path = OS.Path.join(
-      OS.Constants.Path.profileDir,
+    let path = PathUtils.join(
+      await PathUtils.getProfileDir(),
       "content-prefs.sqlite"
     );
     let conn;
@@ -1227,12 +1226,9 @@ ContentPrefService2.prototype = {
       await aConn.close();
     }
     let backupFile = aPath + ".corrupt";
-    let { file, path: uniquePath } = await OS.File.openUnique(backupFile, {
-      humanReadable: true,
-    });
-    await file.close();
-    await OS.File.copy(aPath, uniquePath);
-    await OS.File.remove(aPath);
+    let uniquePath = PathUtils.createUniquePath(backupFile);
+    await IOUtils.copy(aPath, uniquePath);
+    await IOUtils.remove(aPath);
     this.log("Completed DB cleanup.");
   },
 
