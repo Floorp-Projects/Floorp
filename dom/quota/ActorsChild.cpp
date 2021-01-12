@@ -302,10 +302,9 @@ void QuotaRequestChild::HandleResponse(const nsTArray<nsCString>& aResponse) {
     variant->SetAsEmptyArray();
   } else {
     nsTArray<const char*> stringPointers(aResponse.Length());
-
-    for (const auto& string : aResponse) {
-      stringPointers.AppendElement(string.get());
-    }
+    std::transform(aResponse.cbegin(), aResponse.cend(),
+                   MakeBackInserter(stringPointers),
+                   std::mem_fn(&nsCString::get));
 
     variant->SetAsArray(nsIDataType::VTYPE_CHAR_STR, nullptr,
                         stringPointers.Length(), stringPointers.Elements());

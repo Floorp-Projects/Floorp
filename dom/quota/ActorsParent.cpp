@@ -1088,6 +1088,8 @@ class GroupInfo final {
 
   void LockedAddOriginInfo(OriginInfo* aOriginInfo);
 
+  void LockedAdjustUsageForRemovedOriginInfo(const OriginInfo& aOriginInfo);
+
   void LockedRemoveOriginInfo(const nsACString& aOrigin);
 
   void LockedRemoveOriginInfos();
@@ -3723,8 +3725,9 @@ auto QuotaManager::CreateDirectoryLock(
 
   // See if this lock needs to wait.
   bool blocked = false;
-  for (uint32_t index = mDirectoryLocks.Length(); index > 0; index--) {
-    DirectoryLockImpl* existingLock = mDirectoryLocks[index - 1];
+
+  // XXX It is probably unnecessary to iterate this in reverse order.
+  for (DirectoryLockImpl* const existingLock : Reversed(mDirectoryLocks)) {
     if (lock->MustWaitFor(*existingLock)) {
       existingLock->AddBlockingLock(*lock);
       lock->AddBlockedOnLock(*existingLock);
@@ -3759,8 +3762,7 @@ auto QuotaManager::CreateDirectoryLockForEviction(
       ShouldUpdateLockIdTableFlag::No, nullptr);
 
 #ifdef DEBUG
-  for (uint32_t index = mDirectoryLocks.Length(); index > 0; index--) {
-    DirectoryLockImpl* existingLock = mDirectoryLocks[index - 1];
+  for (const DirectoryLockImpl* const existingLock : mDirectoryLocks) {
     MOZ_ASSERT(!lock->MustWaitFor(*existingLock));
   }
 #endif
@@ -3859,16 +3861,13 @@ uint64_t QuotaManager::CollectOriginsForEviction(
           continue;
         }
 
-        OriginScope originScope = OriginScope::FromOrigin(originInfo->mOrigin);
+        const auto originScope = OriginScope::FromOrigin(originInfo->mOrigin);
 
-        bool match = false;
-        for (uint32_t j = aLocks.Length(); j > 0; j--) {
-          DirectoryLockImpl* lock = aLocks[j - 1];
-          if (originScope.Matches(lock->GetOriginScope())) {
-            match = true;
-            break;
-          }
-        }
+        const bool match =
+            std::any_of(aLocks.begin(), aLocks.end(),
+                        [&originScope](const DirectoryLockImpl* const lock) {
+                          return originScope.Matches(lock->GetOriginScope());
+                        });
 
         if (!match) {
           MOZ_ASSERT(!originInfo->mQuotaObjects.Count(),
@@ -3908,10 +3907,10 @@ uint64_t QuotaManager::CollectOriginsForEviction(
   // mutex.
   MutexAutoLock lock(mQuotaMutex);
 
-  for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
-    GroupInfoPair* pair = iter.UserData();
+  for (const auto& entry : mGroupInfoPairs) {
+    const auto& pair = entry.GetData();
 
-    MOZ_ASSERT(!iter.Key().IsEmpty());
+    MOZ_ASSERT(!entry.GetKey().IsEmpty());
     MOZ_ASSERT(pair);
 
     RefPtr<GroupInfo> groupInfo =
@@ -3930,10 +3929,12 @@ uint64_t QuotaManager::CollectOriginsForEviction(
 
 #ifdef DEBUG
   // Make sure the array is sorted correctly.
-  for (uint32_t index = inactiveOrigins.Length(); index > 1; index--) {
-    MOZ_ASSERT(inactiveOrigins[index - 1]->mAccessTime >=
-               inactiveOrigins[index - 2]->mAccessTime);
-  }
+  const bool inactiveOriginsSorted =
+      std::is_sorted(inactiveOrigins.cbegin(), inactiveOrigins.cend(),
+                     [](const auto& lhs, const auto& rhs) {
+                       return lhs->mAccessTime <= rhs->mAccessTime;
+                     });
+  MOZ_ASSERT(inactiveOriginsSorted);
 #endif
 
   // Create a list of inactive and the least recently used origins
@@ -3970,10 +3971,10 @@ template <typename P>
 void QuotaManager::CollectPendingOriginsForListing(P aPredicate) {
   MutexAutoLock lock(mQuotaMutex);
 
-  for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
-    GroupInfoPair* pair = iter.UserData();
+  for (const auto& entry : mGroupInfoPairs) {
+    const auto& pair = entry.GetData();
 
-    MOZ_ASSERT(!iter.Key().IsEmpty());
+    MOZ_ASSERT(!entry.GetKey().IsEmpty());
     MOZ_ASSERT(pair);
 
     RefPtr<GroupInfo> groupInfo =
@@ -4445,11 +4446,11 @@ void QuotaManager::RemoveQuota() {
 
   MutexAutoLock lock(mQuotaMutex);
 
-  for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
-    auto pair = iter.UserData();
+  for (const auto& entry : mGroupInfoPairs) {
+    const auto& pair = entry.GetData();
 
-    MOZ_ASSERT(!iter.Key().IsEmpty(), "Empty key!");
-    MOZ_ASSERT(pair, "Null pointer!");
+    MOZ_ASSERT(!entry.GetKey().IsEmpty());
+    MOZ_ASSERT(pair);
 
     RefPtr<GroupInfo> groupInfo =
         pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
@@ -4461,11 +4462,11 @@ void QuotaManager::RemoveQuota() {
     if (groupInfo) {
       groupInfo->LockedRemoveOriginInfos();
     }
-
-    iter.Remove();
   }
 
-  NS_ASSERTION(mTemporaryStorageUsage == 0, "Should be zero!");
+  mGroupInfoPairs.Clear();
+
+  MOZ_ASSERT(mTemporaryStorageUsage == 0, "Should be zero!");
 }
 
 nsresult QuotaManager::LoadQuota() {
@@ -7444,11 +7445,11 @@ void QuotaManager::CheckTemporaryStorageLimits() {
   {
     MutexAutoLock lock(mQuotaMutex);
 
-    for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
-      GroupInfoPair* pair = iter.UserData();
+    for (const auto& entry : mGroupInfoPairs) {
+      const auto& pair = entry.GetData();
 
-      MOZ_ASSERT(!iter.Key().IsEmpty(), "Empty key!");
-      MOZ_ASSERT(pair, "Null pointer!");
+      MOZ_ASSERT(!entry.GetKey().IsEmpty());
+      MOZ_ASSERT(pair);
 
       uint64_t groupUsage = 0;
 
@@ -7495,19 +7496,20 @@ void QuotaManager::CheckTemporaryStorageLimits() {
       }
     }
 
-    uint64_t usage = 0;
-    for (uint32_t index = 0; index < doomedOriginInfos.Length(); index++) {
-      usage += doomedOriginInfos[index]->LockedUsage();
-    }
+    uint64_t usage = std::accumulate(
+        doomedOriginInfos.cbegin(), doomedOriginInfos.cend(), uint64_t(0),
+        [](uint64_t oldValue, const auto& originInfo) {
+          return oldValue + originInfo->LockedUsage();
+        });
 
     if (mTemporaryStorageUsage - usage > mTemporaryStorageLimit) {
       nsTArray<OriginInfo*> originInfos;
 
-      for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
-        GroupInfoPair* pair = iter.UserData();
+      for (const auto& entry : mGroupInfoPairs) {
+        const auto& pair = entry.GetData();
 
-        MOZ_ASSERT(!iter.Key().IsEmpty(), "Empty key!");
-        MOZ_ASSERT(pair, "Null pointer!");
+        MOZ_ASSERT(!entry.GetKey().IsEmpty());
+        MOZ_ASSERT(pair);
 
         RefPtr<GroupInfo> groupInfo =
             pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
@@ -7542,9 +7544,7 @@ void QuotaManager::CheckTemporaryStorageLimits() {
     }
   }
 
-  for (uint32_t index = 0; index < doomedOriginInfos.Length(); index++) {
-    OriginInfo* doomedOriginInfo = doomedOriginInfos[index];
-
+  for (const OriginInfo* const doomedOriginInfo : doomedOriginInfos) {
 #ifdef DEBUG
     {
       MutexAutoLock lock(mQuotaMutex);
@@ -7560,20 +7560,14 @@ void QuotaManager::CheckTemporaryStorageLimits() {
   {
     MutexAutoLock lock(mQuotaMutex);
 
-    for (uint32_t index = 0; index < doomedOriginInfos.Length(); index++) {
-      OriginInfo* doomedOriginInfo = doomedOriginInfos[index];
-
+    for (const OriginInfo* const doomedOriginInfo : doomedOriginInfos) {
       PersistenceType persistenceType =
           doomedOriginInfo->mGroupInfo->mPersistenceType;
       const GroupAndOrigin groupAndOrigin = {
           doomedOriginInfo->mGroupInfo->mGroup, doomedOriginInfo->mOrigin};
       LockedRemoveQuotaForOrigin(persistenceType, groupAndOrigin);
 
-#ifdef DEBUG
-      doomedOriginInfos[index] = nullptr;
-#endif
-
-      doomedOrigins.AppendElement(
+      doomedOrigins.EmplaceBack(
           OriginParams(persistenceType, groupAndOrigin.mOrigin));
     }
   }
@@ -7913,51 +7907,43 @@ void GroupInfo::LockedAddOriginInfo(OriginInfo* aOriginInfo) {
   quotaManager->mTemporaryStorageUsage += usage;
 }
 
+void GroupInfo::LockedAdjustUsageForRemovedOriginInfo(
+    const OriginInfo& aOriginInfo) {
+  const uint64_t usage = aOriginInfo.LockedUsage();
+
+  if (!aOriginInfo.LockedPersisted()) {
+    AssertNoUnderflow(mUsage, usage);
+    mUsage -= usage;
+  }
+
+  QuotaManager* const quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, usage);
+  quotaManager->mTemporaryStorageUsage -= usage;
+}
+
 void GroupInfo::LockedRemoveOriginInfo(const nsACString& aOrigin) {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  for (uint32_t index = 0; index < mOriginInfos.Length(); index++) {
-    if (mOriginInfos[index]->mOrigin == aOrigin) {
-      uint64_t usage = mOriginInfos[index]->LockedUsage();
+  const auto foundIt = std::find_if(mOriginInfos.cbegin(), mOriginInfos.cend(),
+                                    [&aOrigin](const auto& originInfo) {
+                                      return originInfo->mOrigin == aOrigin;
+                                    });
 
-      if (!mOriginInfos[index]->LockedPersisted()) {
-        AssertNoUnderflow(mUsage, usage);
-        mUsage -= usage;
-      }
+  // XXX Or can we MOZ_ASSERT(foundIt != mOriginInfos.cend()) ?
+  if (foundIt != mOriginInfos.cend()) {
+    LockedAdjustUsageForRemovedOriginInfo(**foundIt);
 
-      QuotaManager* quotaManager = QuotaManager::Get();
-      MOZ_ASSERT(quotaManager);
-
-      AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, usage);
-      quotaManager->mTemporaryStorageUsage -= usage;
-
-      mOriginInfos.RemoveElementAt(index);
-
-      return;
-    }
+    mOriginInfos.RemoveElementAt(foundIt);
   }
 }
 
 void GroupInfo::LockedRemoveOriginInfos() {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  for (uint32_t index = mOriginInfos.Length(); index > 0; index--) {
-    OriginInfo* originInfo = mOriginInfos[index - 1];
-
-    uint64_t usage = originInfo->LockedUsage();
-
-    if (!originInfo->LockedPersisted()) {
-      AssertNoUnderflow(mUsage, usage);
-      mUsage -= usage;
-    }
-
-    AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, usage);
-    quotaManager->mTemporaryStorageUsage -= usage;
-
-    mOriginInfos.RemoveElementAt(index - 1);
+  for (const OriginInfo* const originInfo : std::exchange(mOriginInfos, {})) {
+    LockedAdjustUsageForRemovedOriginInfo(*originInfo);
   }
 }
 
