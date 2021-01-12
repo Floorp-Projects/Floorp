@@ -45,18 +45,6 @@ add_task(async function test_remove_single() {
       observer = {
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},
-        onFrecencyChanged(aURI) {
-          try {
-            Assert.ok(!shouldRemove, "Observing onFrecencyChanged");
-            Assert.equal(
-              aURI.spec,
-              uri.spec,
-              "Observing effect on the right uri"
-            );
-          } finally {
-            resolve();
-          }
-        },
         onManyFrecenciesChanged() {
           try {
             Assert.ok(!shouldRemove, "Observing onManyFrecenciesChanged");
