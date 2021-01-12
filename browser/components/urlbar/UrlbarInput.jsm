@@ -882,20 +882,26 @@ class UrlbarInput {
         break;
       }
       case UrlbarUtils.RESULT_TYPE.DYNAMIC: {
-        this.handleRevert();
-        this.controller.engagementEvent.record(event, {
-          selIndex,
-          searchString: this._lastSearchString,
-          selType: this.controller.engagementEvent.typeFromElement(element),
-          provider: result.providerName,
-        });
-        let provider = UrlbarProvidersManager.getProvider(result.providerName);
-        if (!provider) {
-          Cu.reportError(`Provider not found: ${result.providerName}`);
+        url = result.payload.url;
+        if (!url || !result.payload.shouldNavigate) {
+          this.handleRevert();
+          this.controller.engagementEvent.record(event, {
+            selIndex,
+            searchString: this._lastSearchString,
+            selType: this.controller.engagementEvent.typeFromElement(element),
+            provider: result.providerName,
+          });
+          let provider = UrlbarProvidersManager.getProvider(
+            result.providerName
+          );
+          if (!provider) {
+            Cu.reportError(`Provider not found: ${result.providerName}`);
+            return;
+          }
+          provider.tryMethod("pickResult", result, element);
           return;
         }
-        provider.tryMethod("pickResult", result, element);
-        return;
+        break;
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
         this.controller.engagementEvent.record(event, {

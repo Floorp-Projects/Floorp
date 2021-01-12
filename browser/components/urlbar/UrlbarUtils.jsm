@@ -1284,6 +1284,12 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       dynamicType: {
         type: "string",
       },
+      // If `shouldNavigate` is `true` and the payload contains a `url` property, when
+      // the result is selected the browser will navigate to the `url` and `pickResult`
+      // will not be called.
+      shouldNavigate: {
+        type: "boolean",
+      },
     },
   },
 };
