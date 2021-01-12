@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="@style/Body14TextStyle"
             android:layout_marginTop="14dp"
-            tools:text="@string/onboarding_privacy_notice_description"
+            tools:text="@string/onboarding_privacy_notice_description2"
             app:layout_constraintTop_toBottomOf="@id/header_text"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />

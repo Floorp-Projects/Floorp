@@ -1188,9 +1188,7 @@
     <string name="onboarding_privacy_notice_header">Your privacy</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">We’ve designed %s to give you control over what you share
-        online and what you share with us.
-    </string>
+    <string name="onboarding_privacy_notice_description2">We’ve designed %s to give you control over what you share online and what you share with us.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Read our privacy notice</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->

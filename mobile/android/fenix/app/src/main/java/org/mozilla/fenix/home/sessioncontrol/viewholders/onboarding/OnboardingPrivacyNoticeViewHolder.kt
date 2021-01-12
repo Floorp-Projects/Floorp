@@ -21,7 +21,7 @@ class OnboardingPrivacyNoticeViewHolder(
         view.header_text.setOnboardingIcon(R.drawable.ic_onboarding_privacy_notice)
 
         val appName = view.context.getString(R.string.app_name)
-        view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description, appName)
+        view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description2, appName)
 
         view.read_button.setOnClickListener {
             it.context.components.analytics.metrics.track(Event.OnboardingPrivacyNotice)
