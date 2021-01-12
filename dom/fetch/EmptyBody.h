@@ -38,6 +38,8 @@ class EmptyBody final : public FetchBody<EmptyBody> {
     return mPrincipalInfo;
   }
 
+  void GetMimeType(nsACString& aMimeType) { aMimeType = mMimeType; }
+
   void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr);
 
   using FetchBody::BodyBlobURISpec;
@@ -51,13 +53,14 @@ class EmptyBody final : public FetchBody<EmptyBody> {
  private:
   EmptyBody(nsIGlobalObject* aGlobal,
             mozilla::ipc::PrincipalInfo* aPrincipalInfo,
-            AbortSignalImpl* aAbortSignalImpl,
+            AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
             already_AddRefed<nsIInputStream> mBodyStream);
 
   ~EmptyBody();
 
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
   RefPtr<AbortSignalImpl> mAbortSignalImpl;
+  nsCString mMimeType;
   nsCOMPtr<nsIInputStream> mBodyStream;
 };
 

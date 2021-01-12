@@ -156,6 +156,8 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   void GetBody(JSContext* aCx, JS::MutableHandle<JSObject*> aBodyOut,
                ErrorResult& aRv);
 
+  void GetMimeType(nsACString& aMimeType);
+
   const nsACString& BodyBlobURISpec() const;
 
   const nsAString& BodyLocalPath() const;
@@ -191,8 +193,6 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   // Exceptions generated when reading from the ReadableStream are directly sent
   // to the Console.
   void SetBodyUsed(JSContext* aCx, ErrorResult& aRv);
-
-  const nsCString& MimeType() const { return mMimeType; }
 
   // BodyStreamHolder
   void NullifyStream() override {
@@ -236,10 +236,6 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   virtual ~FetchBody();
 
-  void SetMimeType();
-
-  void OverrideMimeType(const nsACString& aMimeType);
-
   void SetReadableStreamBody(JSContext* aCx, JSObject* aBody);
 
  private:
@@ -255,7 +251,6 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   // Only ever set once, always on target thread.
   bool mBodyUsed;
-  nsCString mMimeType;
 
   // The main-thread event target for runnable dispatching.
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
