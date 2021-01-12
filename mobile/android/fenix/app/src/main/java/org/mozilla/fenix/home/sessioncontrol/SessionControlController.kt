@@ -179,6 +179,7 @@ class DefaultSessionControlController(
     private val addTabUseCase: TabsUseCases.AddNewTabUseCase,
     private val restoreUseCase: TabsUseCases.RestoreUseCase,
     private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
+    private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
     private val fragmentStore: HomeFragmentStore,
     private val navController: NavController,
     private val viewLifecycleScope: CoroutineScope,
@@ -216,6 +217,7 @@ class DefaultSessionControlController(
             tab,
             onTabRestored = {
                 activity.openToBrowser(BrowserDirection.FromHome)
+                sessionManager.selectedSession?.let { selectTabUseCase.invoke(it) }
                 reloadUrlUseCase.invoke(sessionManager.selectedSession)
             },
             onFailure = {
