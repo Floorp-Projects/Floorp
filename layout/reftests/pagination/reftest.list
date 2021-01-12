@@ -5,7 +5,7 @@
 asserts(3-7) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml # Bug 1655630, Bug 1392106
 asserts(3-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-002.xhtml abspos-breaking-000.ref.xhtml # Bug 1655630, Bug 1392106
 asserts(2-3) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-003.html abspos-breaking-003-ref.html # Bug 1655630, Bug 1392106
-asserts(4) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-004.html abspos-breaking-004-ref.html # Bug 1655630, Bug 1392106
+asserts(4-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-004.html abspos-breaking-004-ref.html # Bug 1655630, Bug 1392106
 asserts(4-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-005.html abspos-breaking-005-ref.html # Bug 1655630, Bug 1392106
 asserts(4) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-006.html abspos-breaking-006-ref.html # Bug 1655630, Bug 1392106
 asserts(2) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-007.html abspos-breaking-007-ref.html # Bug 1655630, Bug 1392106
