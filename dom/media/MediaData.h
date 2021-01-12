@@ -374,6 +374,11 @@ class AudioData : public MediaData {
   // the result is invalid.
   bool AdjustForStartTime(const media::TimeUnit& aStartTime);
 
+  // This method is used to adjust the original start time, which would change
+  //  `mTime` and `mOriginalTime` together, and should only be used for data
+  // which hasn't been trimmed before.
+  void SetOriginalStartTime(const media::TimeUnit& aStartTime);
+
   const uint32_t mChannels;
   // The AudioConfig::ChannelLayout map. Channels are ordered as per SMPTE
   // definition. A value of UNKNOWN_MAP indicates unknown layout.
