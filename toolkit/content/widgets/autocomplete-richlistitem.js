@@ -606,12 +606,6 @@
         LoginHelper.openPasswordManager(this.ownerGlobal, {
           entryPoint: "autocomplete",
         });
-        Services.telemetry.recordEvent(
-          "exp_import",
-          "event",
-          "click",
-          "loginsFooter"
-        );
       }
 
       this.addEventListener("click", handleEvent);
@@ -793,7 +787,6 @@
             name: "PasswordManager:HandleImportable",
             data: {
               browserId: this.getAttribute("ac-value"),
-              type: "click",
             },
           });
       });
