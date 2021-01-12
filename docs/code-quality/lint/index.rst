@@ -21,6 +21,13 @@ different kinds of linters in all of these different places could quickly balloo
 ``Mozlint`` isn't designed to be used directly by end users. Instead, it can be consumed by things
 like mach, phabricator and taskcluster.
 
+Getting Help
+------------
+
+If you need help or have questions, please don’t hesitate to contact us via Matrix
+in the "Lint and Formatting" room
+(`#lint:mozilla.org <https://chat.mozilla.org/#/room/#lint:mozilla.org>`_).
+
 .. toctree::
   :caption: Linting User Guide
   :maxdepth: 1
