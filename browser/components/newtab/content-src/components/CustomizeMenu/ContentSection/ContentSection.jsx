@@ -52,6 +52,7 @@ export class ContentSection extends React.PureComponent {
         <div id="shortcuts-section" className="section">
           <label className="switch">
             <input
+              id="shortcuts-toggle"
               checked={topSitesEnabled}
               type="checkbox"
               onChange={this.onPreferenceSelect}
@@ -62,11 +63,12 @@ export class ContentSection extends React.PureComponent {
             <span className="slider" role="presentation"></span>
           </label>
           <div>
-            <h2
-              id="custom-shortcuts-title"
-              className="title"
-              data-l10n-id="newtab-custom-shortcuts-title"
-            />
+            <h2 id="custom-shortcuts-title" className="title">
+              <label
+                htmlFor="shortcuts-toggle"
+                data-l10n-id="newtab-custom-shortcuts-title"
+              ></label>
+            </h2>
             <p
               id="custom-shortcuts-subtitle"
               className="subtitle"
@@ -140,6 +142,7 @@ export class ContentSection extends React.PureComponent {
           <div id="pocket-section" className="section">
             <label className="switch">
               <input
+                id="pocket-toggle"
                 checked={pocketEnabled}
                 type="checkbox"
                 onChange={this.onPreferenceSelect}
@@ -150,11 +153,12 @@ export class ContentSection extends React.PureComponent {
               <span className="slider" role="presentation"></span>
             </label>
             <div>
-              <h2
-                id="custom-pocket-title"
-                className="title"
-                data-l10n-id="newtab-custom-pocket-title"
-              />
+              <h2 id="custom-pocket-title" className="title">
+                <label
+                  htmlFor="pocket-toggle"
+                  data-l10n-id="newtab-custom-pocket-title"
+                ></label>
+              </h2>
               <p
                 id="custom-pocket-subtitle"
                 className="subtitle"
@@ -198,6 +202,7 @@ export class ContentSection extends React.PureComponent {
         <div id="recent-section" className="section">
           <label className="switch">
             <input
+              id="highlights-toggle"
               checked={highlightsEnabled}
               type="checkbox"
               onChange={this.onPreferenceSelect}
@@ -209,11 +214,13 @@ export class ContentSection extends React.PureComponent {
             <span className="slider" role="presentation"></span>
           </label>
           <div>
-            <h2
-              id="custom-recent-title"
-              className="title"
-              data-l10n-id="newtab-custom-recent-title"
-            />
+            <h2 id="custom-recent-title" className="title">
+              <label
+                htmlFor="highlights-toggle"
+                data-l10n-id="newtab-custom-recent-title"
+              ></label>
+            </h2>
+
             <p
               id="custom-recent-subtitle"
               className="subtitle"
@@ -225,6 +232,7 @@ export class ContentSection extends React.PureComponent {
         <div id="snippets-section" className="section">
           <label className="switch">
             <input
+              id="snippets-toggle"
               checked={snippetsEnabled}
               type="checkbox"
               onChange={this.onPreferenceSelect}
@@ -235,11 +243,12 @@ export class ContentSection extends React.PureComponent {
             <span className="slider" role="presentation"></span>
           </label>
           <div>
-            <h2
-              id="custom-snippets-title"
-              className="title"
-              data-l10n-id="newtab-custom-snippets-title"
-            />
+            <h2 id="custom-snippets-title" className="title">
+              <label
+                htmlFor="snippets-toggle"
+                data-l10n-id="newtab-custom-snippets-title"
+              ></label>
+            </h2>
             <p
               id="custom-snippets-subtitle"
               className="subtitle"
