@@ -96,7 +96,7 @@ _observer.prototype = {
 // once the close is complete.
 function do_close_profile(generator) {
   // Register an observer for db close.
-  let obs = new _observer(generator, "cookie-db-closed");
+  new _observer(generator, "cookie-db-closed");
 
   // Close the db.
   let service = Services.cookies.QueryInterface(Ci.nsIObserver);
@@ -152,7 +152,7 @@ function promise_load_profile() {
 // once the load is complete.
 function do_load_profile(generator) {
   // Register an observer for read completion.
-  let obs = new _observer(generator, "cookie-db-read");
+  new _observer(generator, "cookie-db-read");
 
   // Load the profile.
   let service = Services.cookies.QueryInterface(Ci.nsIObserver);

@@ -52,7 +52,7 @@ function write_data() {
 
 function open_big_altdata_output(entry) {
   try {
-    var os = entry.openAlternativeOutputStream("text/binary", altData.length);
+    entry.openAlternativeOutputStream("text/binary", altData.length);
   } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_FILE_TOO_BIG);
   }

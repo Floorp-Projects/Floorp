@@ -42,7 +42,7 @@ add_task(async function() {
 
     // Do something that will cause the cookie service access and upgrade the
     // database.
-    let cookies = Services.cookies.cookies;
+    Services.cookies.cookies;
 
     // Pretend that we're about to shut down, to tell the cookie manager
     // to clean up its connection with its database.

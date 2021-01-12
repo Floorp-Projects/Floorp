@@ -96,10 +96,6 @@ function run_test() {
 async function run_test_continued() {
   var chan = makeChan();
 
-  var cookServ = Cc["@mozilla.org/cookieService;1"].getService(
-    Ci.nsICookieService
-  );
-
   var cookie2 = "C2=V2";
 
   await CookieXPCShellUtils.setCookieToDocument(chan.URI.spec, cookie2);

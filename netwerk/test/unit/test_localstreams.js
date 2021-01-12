@@ -56,7 +56,7 @@ function test_stream(stream) {
     dump("Trying to read " + avail + " bytes\n");
     // Note: Verification that this does return as much bytes as we asked for is
     // done in the binarystream implementation
-    var data = binstream.readByteArray(avail);
+    binstream.readByteArray(avail);
 
     numread += avail;
   }

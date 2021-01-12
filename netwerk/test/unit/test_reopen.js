@@ -97,7 +97,7 @@ function after_channel_closed() {
 function test_channel(createChanClosure) {
   // First, synchronous reopening test
   chan = createChanClosure();
-  var inputStream = chan.open();
+  chan.open();
   check_open_throws(NS_ERROR_IN_PROGRESS);
   check_async_open_throws([NS_ERROR_IN_PROGRESS, NS_ERROR_ALREADY_OPENED]);
 

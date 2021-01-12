@@ -272,7 +272,7 @@ add_task(async function testConnectionWithIPHint() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(
     inStatus,
@@ -286,7 +286,7 @@ add_task(async function testConnectionWithIPHint() {
 
   // The connection should be succeeded since the IP hint is 127.0.0.1.
   let chan = makeChan(`https://test.iphint.com:8080/`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(

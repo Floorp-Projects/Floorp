@@ -4,7 +4,6 @@
 "use strict";
 
 add_task(async () => {
-  var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
 
@@ -146,10 +145,7 @@ add_task(async () => {
   });
 
   var uri = NetUtil.newURI("http://baz.com/");
-  const principal = Services.scriptSecurityManager.createContentPrincipal(
-    uri,
-    {}
-  );
+  Services.scriptSecurityManager.createContentPrincipal(uri, {});
 
   Assert.equal(uri.asciiHost, "baz.com");
 
@@ -245,16 +241,11 @@ add_task(async () => {
 });
 
 function getCookieCount() {
-  var count = 0;
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
-  for (let cookie of cm.cookies) {
-    ++count;
-  }
-  return count;
+  return cm.cookies.length;
 }
 
 async function testDomainCookie(uriString, domain) {
-  var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
   cm.removeAll();
@@ -281,7 +272,6 @@ async function testDomainCookie(uriString, domain) {
 }
 
 async function testTrailingDotCookie(uriString, domain) {
-  var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
   cm.removeAll();

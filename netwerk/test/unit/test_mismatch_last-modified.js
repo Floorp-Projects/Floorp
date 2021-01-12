@@ -67,7 +67,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
     },
 
     onStopRequest: function test_onStopR(request, status) {
-      var channel = request.QueryInterface(Ci.nsIHttpChannel);
+      request.QueryInterface(Ci.nsIHttpChannel);
       var chan = NetUtil.newChannel({
         uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
         loadUsingSystemPrincipal: true,
@@ -95,7 +95,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
     },
 
     onStopRequest: function test_onStopR(request, status) {
-      var channel = request.QueryInterface(Ci.nsIHttpChannel);
+      request.QueryInterface(Ci.nsIHttpChannel);
       var chan = NetUtil.newChannel({
         uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
         loadUsingSystemPrincipal: true,

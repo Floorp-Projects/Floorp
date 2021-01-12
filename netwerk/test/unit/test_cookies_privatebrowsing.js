@@ -20,7 +20,7 @@ function getCookieStringFromPrivateDocument(uriSpec) {
 
 add_task(async () => {
   // Set up a profile.
-  let profile = do_get_profile();
+  do_get_profile();
 
   // We don't want to have CookieJarSettings blocking this test.
   Services.prefs.setBoolPref(

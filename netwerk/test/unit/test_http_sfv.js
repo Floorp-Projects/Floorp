@@ -236,7 +236,7 @@ add_task(async function test_sfv_list() {
   );
 
   // check inner list member's params
-  let inner_list_parameters = list_members[1]
+  list_members[1]
     .QueryInterface(Ci.nsISFVInnerList)
     .params.QueryInterface(Ci.nsISFVParams);
 
@@ -300,7 +300,7 @@ add_task(async function test_sfv_dictionary() {
     "must throw exception as key does not exist in dictionary"
   );
 
-  let dict_member1 = dict.get("key_1").QueryInterface(Ci.nsISFVItem);
+  // let dict_member1 = dict.get("key_1").QueryInterface(Ci.nsISFVItem);
   let dict_member2 = dict.get("key_2").QueryInterface(Ci.nsISFVInnerList);
   let dict_member3 = dict.get("key_3").QueryInterface(Ci.nsISFVItem);
 

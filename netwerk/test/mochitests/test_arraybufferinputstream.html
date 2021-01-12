@@ -21,7 +21,7 @@ function test()
   ta[0] = 'a'.charCodeAt(0);
   ta[1] = 'b'.charCodeAt(0);
 
-  const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci, Cr = SpecialPowers.Cr;
+  const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci;
   var abis = Cc["@mozilla.org/io/arraybuffer-input-stream;1"]
                .createInstance(Ci.nsIArrayBufferInputStream);
 

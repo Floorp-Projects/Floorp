@@ -172,7 +172,6 @@ module.exports = {
         "no-redeclare": "off",
         "no-shadow": "off",
         "no-throw-literal": "off",
-        "no-unused-vars": "off",
       },
     },
     {

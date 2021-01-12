@@ -27,7 +27,7 @@ add_task(async function test() {
   );
 
   let chan = NetUtil.newChannel({ uri: URL, loadUsingSystemPrincipal: true });
-  let [req, buff] = await new Promise(resolve => {
+  let [, buff] = await new Promise(resolve => {
     chan.asyncOpen(
       new ChannelListener(
         (req, buff) => {

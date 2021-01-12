@@ -297,7 +297,7 @@ Http2PushApiListener.prototype = {
     offset,
     cnt
   ) {
-    var data = read_stream(stream, cnt);
+    read_stream(stream, cnt);
   },
 
   onStopRequest: function test_onStopR(request, status) {

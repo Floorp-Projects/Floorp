@@ -53,8 +53,6 @@ add_task(async function() {
   const PORT = httpserver.identity.primaryPort;
   const URI = `http://localhost:${PORT}/testdir`;
 
-  let response;
-
   await get_response(make_channel(URI, "GET"), false);
   await get_response(make_channel(URI, "GET"), true);
 

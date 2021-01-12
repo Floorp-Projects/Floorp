@@ -1,7 +1,7 @@
 "use strict";
 
 function run_test() {
-  var storage = getCacheStorage("disk");
+  getCacheStorage("disk");
   var lcis = [
     Services.loadContextInfo.default,
     Services.loadContextInfo.custom(false, { userContextId: 1 }),

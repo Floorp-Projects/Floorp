@@ -91,7 +91,7 @@ function run_test() {
   for (let i = 0; i < badURIs.length; ++i) {
     Assert.throws(
       () => {
-        let result = stringToURL("http://" + badURIs[i][0]).host;
+        stringToURL("http://" + badURIs[i][0]).host;
       },
       /NS_ERROR_MALFORMED_URI/,
       "bad escaped character"

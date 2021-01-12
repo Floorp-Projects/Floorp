@@ -22,7 +22,7 @@ function run_test() {
 
   success = false;
   try {
-    newURI = newURI
+    newURI
       .mutate()
       .setHost(" foo.com")
       .finalize();

@@ -333,7 +333,6 @@ function handleAuth(metadata, response) {
   // btoa("guest:guest"), but that function is not available here
   var expectedHeader = "Basic Z3Vlc3Q6Z3Vlc3Q=";
 
-  var body;
   if (
     metadata.hasHeader("Authorization") &&
     metadata.getHeader("Authorization") == expectedHeader

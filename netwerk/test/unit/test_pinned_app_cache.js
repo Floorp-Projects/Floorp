@@ -236,7 +236,6 @@ function start_cache_nonpinned_app() {
  * file)
  */
 function start_cache_nonpinned_app2_for_partial() {
-  let error_count = [0];
   info("Start non-pinned App2 for partial\n");
   start_and_watch_app_cache(
     kHttpLocation_ip + "app2.appcache",

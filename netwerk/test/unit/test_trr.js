@@ -1420,7 +1420,7 @@ add_task(async function test_async_resolve_with_trr_server_5() {
 
   // When dns is resolved in socket process, we can't set |expectEarlyFail| to true.
   let inSocketProcess = mozinfo.socketprocess_networking;
-  let [_] = await new DNSListener(
+  await new DNSListener(
     "bar_with_trr3.example.com",
     undefined,
     false,
@@ -1696,7 +1696,7 @@ add_task(async function test_resolve_not_confirmed() {
       // because of the increased delay between the emulator and host.
       await new Promise(resolve => do_timeout(100 * (100 / count), resolve));
     }
-    let [inRequest, inRecord, inStatus] = await new DNSListener(
+    let [, inRecord] = await new DNSListener(
       `ip${count}.example.org`,
       undefined,
       false
@@ -2080,7 +2080,6 @@ add_task(async function test_no_retry_without_doh() {
     // Requests to 0.0.0.0 are usually directed to localhost, so let's use a port
     // we know isn't being used - 666 (Doom)
     let chan = makeChan(url, Ci.nsIRequest.TRR_DEFAULT_MODE);
-    let resolutions = 0;
     let statusCounter = {
       statusCount: {},
       QueryInterface: ChromeUtils.generateQI([
@@ -2096,7 +2095,7 @@ add_task(async function test_no_retry_without_doh() {
       },
     };
     chan.notificationCallbacks = statusCounter;
-    let req = await new Promise(resolve =>
+    await new Promise(resolve =>
       chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE))
     );
     equal(

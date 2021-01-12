@@ -5,7 +5,7 @@ function test_not_too_long() {
 
   var spec = "jar:http://example.com/bar.jar!/";
   try {
-    var newURI = ios.newURI(spec);
+    ios.newURI(spec);
   } catch (e) {
     do_throw("newURI threw even though it wasn't passed a large nested URI?");
   }
@@ -30,7 +30,7 @@ function test_too_long() {
     // unchecked would lead to a stack overflow. If we
     // do not crash here and thus an exception is caught
     // we have passed the test.
-    var newURI = ios.newURI(spec);
+    ios.newURI(spec);
   } catch (e) {}
 }
 

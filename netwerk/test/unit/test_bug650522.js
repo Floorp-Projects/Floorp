@@ -6,7 +6,6 @@
 add_task(async () => {
   Services.prefs.setBoolPref("network.cookie.sameSite.schemeful", false);
 
-  var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
 

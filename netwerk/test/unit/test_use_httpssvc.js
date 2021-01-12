@@ -138,7 +138,7 @@ add_task(async function testUseHTTPSSVCForHttpsUpgrade() {
   );
 
   let chan = makeChan(`https://test.httpssvc.com:8080/`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
@@ -184,7 +184,7 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
   let listener = new EventSinkListener();
   chan.notificationCallbacks = listener;
 
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
 
   req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
@@ -195,7 +195,7 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
   listener = new EventSinkListener();
   chan.notificationCallbacks = listener;
 
-  [req, resp] = await channelOpenPromise(chan);
+  [req] = await channelOpenPromise(chan);
 
   req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
@@ -228,7 +228,7 @@ add_task(async function testUseHTTPSSVC() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listener;
+  let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
@@ -239,7 +239,7 @@ add_task(async function testUseHTTPSSVC() {
   );
 
   let chan = makeChan(`https://test.httpssvc.com:8888`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   // Test if this request is done by h2.
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
@@ -315,7 +315,7 @@ add_task(async function testFallback() {
   // When the connection with port 8888 failed, the correct h2Port will be used
   // to connect again.
   let chan = makeChan(`https://test.fallback.com:${h2Port}`);
-  let [req, resp] = await channelOpenPromise(chan);
+  let [req] = await channelOpenPromise(chan);
   // Test if this request is done by h2.
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
