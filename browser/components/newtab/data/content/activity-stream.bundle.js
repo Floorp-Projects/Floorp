@@ -5691,14 +5691,19 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
   }
 
   componentDidMount() {
-    this.contextMenuButtonRef.addEventListener("mouseenter", this.onMenuButtonMouseEnter);
-    this.contextMenuButtonRef.addEventListener("mouseleave", this.onMenuButtonMouseLeave);
+    if (!this.props.Prefs.values["newNewtabExperience.enabled"]) {
+      this.contextMenuButtonRef.addEventListener("mouseenter", this.onMenuButtonMouseEnter);
+      this.contextMenuButtonRef.addEventListener("mouseleave", this.onMenuButtonMouseLeave);
+    }
   }
 
   componentWillUnmount() {
     this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
-    this.contextMenuButtonRef.removeEventListener("mouseenter", this.onMenuButtonMouseEnter);
-    this.contextMenuButtonRef.removeEventListener("mouseleave", this.onMenuButtonMouseLeave);
+
+    if (!this.props.Prefs.values["newNewtabExperience.enabled"]) {
+      this.contextMenuButtonRef.removeEventListener("mouseenter", this.onMenuButtonMouseEnter);
+      this.contextMenuButtonRef.removeEventListener("mouseleave", this.onMenuButtonMouseLeave);
+    }
   }
 
   enableOrDisableAnimation() {
@@ -5906,7 +5911,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
       message: learnMore.link.message
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
       href: learnMore.link.href
-    })))))), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_7__["ContextMenuButton"], {
+    })))))), !isNewNewtabExperienceEnabled && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_7__["ContextMenuButton"], {
       tooltip: "newtab-menu-section-tooltip",
       onUpdate: this.onMenuUpdate,
       refFunction: this.setContextMenuButtonRef
