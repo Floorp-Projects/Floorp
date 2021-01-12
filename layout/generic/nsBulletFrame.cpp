@@ -574,21 +574,7 @@ Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
   CounterStyle* listStyleType = ResolveCounterStyle();
   nsMargin padding = mPadding.GetPhysicalMargin(GetWritingMode());
   const auto& image = StyleList()->mListStyleImage;
-  const bool isValidImage = [&] {
-    if (image.IsNone()) {
-      return false;
-    }
-    if (auto* request = image.GetImageRequest()) {
-      uint32_t status = imgIRequest::STATUS_ERROR;
-      request->GetImageStatus(&status);
-      if (status & imgIRequest::STATUS_ERROR) {
-        return false;
-      }
-    }
-    return true;
-  }();
-
-  if (isValidImage) {
+  if (!image.IsNone()) {
     nsRect dest(padding.left, padding.top,
                 mRect.width - (padding.left + padding.right),
                 mRect.height - (padding.top + padding.bottom));

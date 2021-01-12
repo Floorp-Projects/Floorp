@@ -979,8 +979,6 @@ bool StyleImage::IsSizeAvailable() const;
 template <>
 bool StyleImage::IsComplete() const;
 template <>
-bool StyleImage::StartDecoding() const;
-template <>
 Maybe<StyleImage::ActualCropRect> StyleImage::ComputeActualCropRect() const;
 template <>
 void StyleImage::ResolveImage(dom::Document&, const StyleImage*);

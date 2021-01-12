@@ -1518,17 +1518,6 @@ Maybe<StyleImage::ActualCropRect> StyleImage::ComputeActualCropRect() const {
 }
 
 template <>
-bool StyleImage::StartDecoding() const {
-  if (IsImageRequestType()) {
-    imgRequestProxy* req = GetImageRequest();
-    return req &&
-           req->StartDecodingWithResult(imgIContainer::FLAG_ASYNC_NOTIFY);
-  }
-  // None always returns false from IsComplete, so we do the same here.
-  return !IsNone();
-}
-
-template <>
 bool StyleImage::IsOpaque() const {
   if (IsImageSet()) {
     return FinalImage().IsOpaque();
