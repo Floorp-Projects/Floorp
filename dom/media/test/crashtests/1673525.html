@@ -1,0 +1,15 @@
+<html>
+<head>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const audio = document.getElementById("audio");
+      audio.autoplay = true;
+      audio.mozCaptureStream();
+    })
+  </script>
+</head>
+<body>
+  <!-- The data URL is crafted from a fuzzed mp3 so the base64 can be decoded back to an mp3 as needed -->
+  <audio id="audio" src="data:audio/mpeg;base64,//tQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAALAAAJygAXFxcXFxcXFxcuLi4uLi4uLi5FRUVFRUVFRUVdXV1dXV1dXV10dHR0dHR0dHSLi4uLi4uLi4uioqKioqKioqK6urq6urq6urrR0dHR0dHR0dHo6Ojo6Ojo6Oj///////////8AAAA5TEFNRTMuOThyAaUAAAAALh0AABRAJARJQgAAQAAACcrhiNjEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7UMQAAAZkI1x0kQAB+iHwdzlSAwAAy5ZoyMVisVk8iAAYJhsnRo0aMeH/E4Pg+DgIHPwcBA5/lAQ/qsB//vE58u///yjuCGA4HA4HA4HA4HAoEAAACigVBXP55z99GuTtM8mMzDTJMypT72thl4DCAW8A0BAGA0DVxi09hCIBIaBZ0DQ2+AQDw/cExWBiQVicP/AFFoDAUICBIOCpgChj/8ERtHLAiFg2kMXBYWL7//FmDFKRCJF4b50Xn//5JrLizx+Tr0qABSsaySJtugz/+1LEBIALgQmLvLUAMXkorjzSjuWd/+FbPOduga79Dhef0OFYNhp+FEPDPRyRvOEERl/Uwbv9F/UuQN5yt9WPM5xwqlB4+hzmfmoYmcceWPD8s3WA8FhYEPkhR0SgMHw="></audio>
+</body>
+</html>
