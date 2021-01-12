@@ -479,7 +479,10 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
       break;
   }
 
-  if (strcmp(requiredMimeType, response->MimeType().Data())) {
+  nsAutoCString mimeType;
+  response->GetMimeType(mimeType);
+
+  if (!mimeType.EqualsASCII(requiredMimeType)) {
     return ThrowException(aCx, JSMSG_BAD_RESPONSE_MIME_TYPE);
   }
 
