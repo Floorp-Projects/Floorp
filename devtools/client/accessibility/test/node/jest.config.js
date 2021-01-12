@@ -5,20 +5,14 @@
 "use strict";
 
 /* global __dirname */
+const sharedJestConfig = require(`${__dirname}/../../../shared/test-helpers/shared-jest.config`);
 
 module.exports = {
-  verbose: true,
+  ...sharedJestConfig,
   moduleNameMapper: {
-    // Custom name mappers for modules that require m-c specific API.
-    "^devtools/client/shared/link": `${__dirname}/fixtures/stub`,
-    "^devtools/shared/flags": `${__dirname}/fixtures/stub`,
+    // This needs to be set before the other rules
     "^devtools/shared/event-emitter": `${__dirname}/node_modules/devtools-modules/src/utils/event-emitter`,
-    "^devtools/shared/layout/utils": `${__dirname}/fixtures/stub`,
-    "^devtools/shared/DevToolsUtils": `${__dirname}/fixtures/devtools-utils`,
-    "^devtools/client/shared/components/tree/TreeView": `${__dirname}/fixtures/stub`,
-    "^Services": `${__dirname}/fixtures/Services`,
-    // Map all require("devtools/...") to the real devtools root.
-    "^devtools\\/(.*)": `${__dirname}/../../../../$1`,
+    ...sharedJestConfig.moduleNameMapper,
   },
   setupFiles: ["<rootDir>setup.js"],
   snapshotSerializers: ["enzyme-to-json/serializer"],

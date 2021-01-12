@@ -4,11 +4,8 @@
 
 "use strict";
 
-module.exports = {
-  appinfo: "",
-  prefs: {
-    getBoolPref(name, defaultVal) {
-      return defaultVal;
-    },
-  },
-};
+function generateUUID() {
+  return `${Date.now()}-${Math.round(Math.random() * 100)}`;
+}
+
+module.exports = { generateUUID };
