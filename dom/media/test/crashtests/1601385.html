@@ -1,0 +1,12 @@
+<html>
+<head>
+<script>
+const video = document.createElement("video");
+video.srcObject = new MediaStream();
+video.mozCaptureStreamUntilEnded();
+video.src = "sound.ogg";
+video.srcObject = undefined;
+</script>
+</head>
+</html>
+
