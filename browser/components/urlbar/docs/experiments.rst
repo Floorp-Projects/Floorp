@@ -41,35 +41,91 @@ address bar extensions.
 Developing Address Bar Extensions
 ---------------------------------
 
-Address bar extensions use the ``browser.urlbar`` WebExtensions API.  You won't
-find ``browser.urlbar`` documented on MDN, and that's because it's a
-**privileged** API. It can be used only by Mozilla extensions, at least for now.
+Overview
+~~~~~~~~
 
-You can read what's possible with ``browser.urlbar`` in its `schema, urlbar.json
-<urlbar.json_>`__. Find more information on schemas in the `Developing Address
-Bar Extension APIs`_ section.
+The address bar WebExtensions API currently lives in two API namespaces,
+``browser.urlbar`` and ``browser.experiments.urlbar``. The reason for this is
+historical and is discussed in the `Developing Address Bar Extension APIs`_
+section. As a consumer of the API, there are only two important things you need
+to know:
 
-Here's an `example extension`_ that uses ``browser.urlbar``.
+* There's no meaningful difference between the APIs of the two namespaces.
+  Their kinds of functions, events, and properties are similar.  You should
+  think of the address bar API as one single API that happens to be split into
+  two namespaces.
 
-Your extension will need to request permission to use ``browser.urlbar``. Add
-``"urlbar"`` to the ``"permissions"`` entry in its manifest.json, as illustrated
-here__.
+* However, there is a big difference between the two when it comes to setting up
+  your extension to use them. This is discussed next.
+
+The ``browser.urlbar`` API namespace is built into Firefox. It's a
+**privileged API**, which means that only Mozilla-signed and temporarily
+installed extensions can use it. The only thing your Mozilla extension needs to
+do in order to use it is to request the ``urlbar`` permission in its
+manifest.json, as illustrated `here <urlbarPermissionExample_>`__.
+
+In contrast, the ``browser.experiments.urlbar`` API namespace is bundled inside
+your extension. APIs that are bundled inside extensions are called
+**experimental APIs**, and the extensions in which they're bundled are called
+**WebExtension experiments**. As with privileged APIs, experimental APIs are
+available only to Mozilla-signed and temporarily installed extensions.
+("WebExtension experiments" is a term of art and shouldn't be confused with the
+general notion of experiments that happen to use extensions.) For more on
+experimental APIs and WebExtension experiments, see the `WebExtensions API
+implementation documentation <webextAPIImplBasicsDoc_>`__.
+
+Since ``browser.experiments.urlbar`` is bundled inside your extension, you'll
+need to include it in your extension's repo by doing the following:
+
+1. The implementation consists of two files, api.js_ and schema.json_. In your
+   extension repo, create a *experiments/urlbar* subdirectory and copy the
+   files there. See `this repo`__ for an example.
+
+2. Add the following ``experiment_apis`` key to your manifest.json (see here__
+   for an example in context)::
+
+     "experiment_apis": {
+       "experiments_urlbar": {
+         "schema": "experiments/urlbar/schema.json",
+         "parent": {
+           "scopes": ["addon_parent"],
+           "paths": [["experiments", "urlbar"]],
+           "script": "experiments/urlbar/api.js"
+         }
+       }
+     }
+
+As mentioned, only Mozilla-signed and temporarily installed extensions can use
+these two API namespaces. For information on running the extensions you develop
+that use these namespaces, see `Running Address Bar Extensions`_.
+
+.. _urlbarPermissionExample: https://github.com/0c0w3/urlbar-top-sites-experiment/blob/ac1517118bb7ee165fb9989834514b1082575c10/src/manifest.json#L24
+.. _webextAPIImplBasicsDoc: https://firefox-source-docs.mozilla.org/toolkit/components/extensions/webextensions/basics.html
+.. _api.js: https://searchfox.org/mozilla-central/source/browser/components/urlbar/tests/ext/api.js
+.. _schema.json: https://searchfox.org/mozilla-central/source/browser/components/urlbar/tests/ext/schema.json
+__ https://github.com/0c0w3/dynamic-result-type-extension/tree/master/src/experiments/urlbar
+__ https://github.com/0c0w3/dynamic-result-type-extension/blob/0987da4b259b9fcb139b31d771883a2f822712b5/src/manifest.json#L28
+
+browser.urlbar
+~~~~~~~~~~~~~~
+
+Currently the only documentation for ``browser.urlbar`` is its `schema
+<urlbar.json_>`__. Fortunately WebExtension schemas are JSON and aren't too hard
+to read. If you need help understanding it, see the `WebExtensions API
+implementation documentation <webextAPIImplDoc_>`__.
+
+For examples on using the API, see the Cookbook_ section.
 
 .. _urlbar.json: https://searchfox.org/mozilla-central/source/browser/components/extensions/schemas/urlbar.json
-.. _example extension: https://github.com/0c0w3/urlbar-top-sites-experiment
-__ https://github.com/0c0w3/urlbar-top-sites-experiment/blob/ac1517118bb7ee165fb9989834514b1082575c10/src/manifest.json#L24
 
-API
-~~~
+browser.experiments.urlbar
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``browser.urlbar`` currently is not documented anywhere except for in the schema
-itself. Until someone makes a tool for converting schema to HTML, you can read
-the documentation in urlbar.json_.
+As with ``browser.urlbar``, currently the only documentation for
+``browser.experiments.urlbar`` is its schema__. For examples on using the API,
+see the Cookbook_ section.
 
-For help on understanding the schema, see :ref:`API Schemas <API Schemas>` in the WebExtensions
-API Developers Guide.
-
-For examples on using the API, see the `browser.urlbar Cookbook`_ section below.
+__ https://searchfox.org/mozilla-central/source/browser/components/urlbar/tests/ext/schema.json
 
 Workflow
 ~~~~~~~~
@@ -123,18 +179,23 @@ Automated Tests
 ~~~~~~~~~~~~~~~
 
 It's possible to write `browser chrome mochitests`_ for your extension the same
-way we write tests for Firefox. The example extension linked above includes a
-test_, for instance.
+way we write tests for Firefox. One of the example extensions linked throughout
+this document includes a test_, for instance.
 
 See the readme in the example-addon-experiment_ repo for a workflow.
 
 .. _browser chrome mochitests: https://developer.mozilla.org/en-US/docs/Mozilla/Browser_chrome_tests
 .. _test: https://github.com/0c0w3/urlbar-top-sites-experiment/blob/master/tests/tests/browser/browser_urlbarTopSitesExtension.js
 
-browser.urlbar Cookbook
-~~~~~~~~~~~~~~~~~~~~~~~
+Cookbook
+~~~~~~~~
 
-*To be written*
+*To be written.* For now, you can find example uses of ``browser.experiments.urlbar`` and ``browser.urlbar`` in the following repos:
+
+* https://github.com/mozilla-extensions/firefox-quick-suggest-weather
+* https://github.com/0c0w3/urlbar-tips-experiment
+* https://github.com/0c0w3/urlbar-top-sites-experiment
+* https://github.com/0c0w3/urlbar-search-interventions-experiment
 
 Further Reading
 ~~~~~~~~~~~~~~~
@@ -151,35 +212,65 @@ Further Reading
 Developing Address Bar Extension APIs
 -------------------------------------
 
-Hopefully, ``browser.urlbar`` already provides all the address bar APIs you need
-to write your extension. If it doesn't, then good news: You have an opportunity
-to shape some new APIs for extension authors. Actually, you might have a lot
-more work to do.
+Built-In APIs vs. Experimental APIs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As of August 2019, there's no formal process for proposing new,
-Mozilla-privileged WebExtensions APIs. To introduce new APIs, you and your team
-should think about what new APIs your project will need during the planning
-process. Discuss among yourselves what the APIs should look like. If the APIs
-are substantial, consider putting together an informal proposal document. Have
-your team review the document, and then the WebExtensions team. Then, file bugs
-in Address Bar for the various parts of those APIs and start work. You'll need
-to have your patches reviewed by someone from the WebExtensions team. Shane
-(mixedpuppy) is a good contact. It's better to get him involved sooner rather
-than later — around the time everyone is reviewing the informal proposal doc (if
-there is one) or when the bugs are filed — because he needs to approve not only
-your API implementation but also the API itself.
+Originally we developed the address bar extension API in the ``browser.urlbar``
+namespace, which is built into Firefox as discussed above. By "built into
+Firefox," we mean that the API is developed in `mozilla-central
+<urlbar.json_>`__ and shipped inside Firefox just like any other Firefox
+feature. At the time, that seemed like the right thing to do because we wanted
+to build an API that ultimately could be used by all extension authors, not only
+Mozilla.
 
-Like all WebExtensions APIs, the ``browser.urlbar`` implementation lives in
-mozilla-central. Any new APIs you create will have to land in mozilla-central,
-too, and that means you'll be bound by the usual six-week development
-cycle. This is important to keep in mind as you're planning and scoping your
-project.
+However, there were a number of disadvantages to this development model. The
+biggest was that it tightly coupled our experiments to specific versions of
+Firefox. For example, if we were working on an experiment that targeted Firefox
+72, then any APIs used by that experiment needed to land and ship in 72. If we
+weren't able to finish an API by the time 72 shipped, then the experiment would
+have to be postponed until 73. Our experiment development timeframes were always
+very short because we always wanted to ship our experiments ASAP. Often we
+targeted the Firefox version that was then in Nightly; sometimes we even
+targeted the version in Beta. Either way, it meant that we were always uplifting
+patch after patch to Beta. This tight coupling between Firefox versions and
+experiments erased what should have been a big advantage of implementing
+experiments as extensions in the first place: the ability to ship experiments
+outside the usual cyclical release process.
 
-Although ``browser.urlbar`` currently is a privileged API available only to
-Mozilla extensions, we'd eventually like to make it available to all extensions,
-ideally anyway. Please design your new APIs with that goal in mind. Try to
-create APIs that could be useful for extensions in general instead of being
-narrowly tailored to the task at hand.
+Another notable disadvantage of this model was just the cognitive weight of the
+idea that we were developing APIs not only for ourselves and our experiments but
+potentially for all extensions. This meant that not only did we have to design
+APIs to meet our immediate needs, we also had to imagine use cases that could
+potentially arise and then design for them as well.
+
+For these reasons, we stopped developing ``browser.urlbar`` and created the
+``browser.experiments.urlbar`` experimental API. As discussed earlier,
+experimental APIs are APIs that are bundled inside extensions. Experimental APIs
+can do anything that built-in APIs can do with the added flexibility of not
+being tied to specific versions of Firefox.
+
+Adding New APIs
+~~~~~~~~~~~~~~~
+
+All new address bar APIs should be added to ``browser.experiments.urlbar``.
+Although this API does not ship in Firefox, it's currently developed in
+mozilla-central, in `browser/components/urlbar/tests/ext/ <extDirectory_>`__ --
+note the "tests" subdirectory. Developing it in mozilla-central lets us take
+advantage of our usual build and testing infrastructure. This way we have API
+tests running against each mozilla-central checkin, against all versions of
+Firefox that are tested on Mozilla's infrastructure, and we're alerted to any
+breaking changes we accidentally make. When we start a new extension repo, we
+copy schema.json and api.js to it as described earlier (or clone an example repo
+with up-to-date copies of these files).
+
+Generally changes to the API should be reviewed by someone on the address bar
+team and someone on the WebExtensions team. Shane (mixedpuppy) is a good
+contact.
+
+.. _extDirectory: https://searchfox.org/mozilla-central/source/browser/components/urlbar/tests/ext/
+
+Anatomy of an API
+~~~~~~~~~~~~~~~~~
 
 Roughly speaking, a WebExtensions API implementation comprises three different
 pieces:
@@ -188,19 +279,19 @@ Schema
   The schema declares the functions, properties, events, and types that the API
   makes available to extensions. Schemas are written in JSON.
 
-  The ``browser.urlbar`` schema is urlbar.json_.
+  The ``browser.experiments.urlbar`` schema is schema.json_, and the
+  ``browser.urlbar`` schema is urlbar.json_.
 
-  For reference, the schemas of other APIs are in
+  For reference, the schemas of built-in APIs are in
   `browser/components/extensions/schemas`_ and
   `toolkit/components/extensions/schemas`_.
 
-  .. _urlbar.json: https://searchfox.org/mozilla-central/source/browser/components/extensions/schemas/urlbar.json
   .. _browser/components/extensions/schemas: https://searchfox.org/mozilla-central/source/browser/components/extensions/schemas/
   .. _toolkit/components/extensions/schemas: https://searchfox.org/mozilla-central/source/toolkit/components/extensions/schemas/
 
 Internals
-  Every API hooks into some internal part of Firefox. For ``browser.urlbar``,
-  that's the quantumbar implementation in `browser/components/urlbar`_.
+  Every API hooks into some internal part of Firefox. For the address bar API,
+  that's the Urlbar implementation in `browser/components/urlbar`_.
 
   .. _browser/components/urlbar: https://searchfox.org/mozilla-central/source/browser/components/urlbar/
 
@@ -211,12 +302,15 @@ Glue
   registrations made by extensions using the public-facing API into terms that
   the Firefox internals understand, and vice versa.
 
-  For ``browser.urlbar``, this is ext-urlbar.js_.
+  For ``browser.experiments.urlbar``, this is api.js_, and for
+  ``browser.urlbar``, it's ext-urlbar.js_.
 
-  For reference, the implementations of other APIs are in
+  For reference, the implementations of built-in APIs are in
   `browser/components/extensions`_ and `toolkit/components/extensions`_, in the
   *parent* and *child* subdirecties.  As you might guess, code in *parent* runs
   in the main process, and code in *child* runs in the extensions process.
+  Address bar APIs deal with browser chrome and their implementations therefore
+  run in the parent process.
 
   .. _ext-urlbar.js: https://searchfox.org/mozilla-central/source/browser/components/extensions/parent/ext-urlbar.js
   .. _browser/components/extensions: https://searchfox.org/mozilla-central/source/browser/components/extensions/
@@ -229,20 +323,22 @@ example.
 Further Reading
 ~~~~~~~~~~~~~~~
 
-:ref:`WebExtensions API Developers Guide <WebExtensions API Development>`
+`WebExtensions API implementation documentation <webextAPIImplDoc_>`__
   Detailed info on implementing a WebExtensions API.
+
+.. _webextAPIImplDoc: https://firefox-source-docs.mozilla.org/toolkit/components/extensions/webextensions/
 
 Running Address Bar Extensions
 ------------------------------
 
-``browser.urlbar`` is a privileged API. There are two different points to
-consider when it comes to running an extension that uses privileged APIs:
-loading the extension in the first place, and granting it access to privileged
-APIs. There's a certain bar for loading any extension regardless of its API
-usage that depends on its signed state and the Firefox build you want to run it
-in. There's yet a higher bar for granting it access to privileged APIs. This
-section discusses how to load extensions so that they can access privileged
-APIs.
+As discussed above, ``browser.experiments.urlbar`` and ``browser.urlbar`` are
+privileged APIs. There are two different points to consider when it comes to
+running an extension that uses privileged APIs: loading the extension in the
+first place, and granting it access to privileged APIs. There's a certain bar
+for loading any extension regardless of its API usage that depends on its signed
+state and the Firefox build you want to run it in. There's yet a higher bar for
+granting it access to privileged APIs. This section discusses how to load
+extensions so that they can access privileged APIs.
 
 Since we're interested in extensions primarily for running experiments, there
 are three particular signed states relevant to us:
@@ -251,11 +347,14 @@ Unsigned
   There are two ways to run unsigned extensions that use privileged APIs.
 
   They can be loaded temporarily using a Firefox Nightly build or
-  Developer Edition but not Beta or Release [source__]. You can load extensions
-  temporarily by visiting about:debugging#/runtime/this-firefox and clicking
-  "Load Temporary Add-on." `web-ext <Workflow_>`__ also loads extensions temporarily.
+  Developer Edition but not Beta or Release [source__], and the
+  ``extensions.experiments.enabled`` preference must be set to true [source__].
+  You can load extensions temporarily by visiting
+  about:debugging#/runtime/this-firefox and clicking "Load Temporary Add-on."
+  `web-ext <Workflow_>`__ also loads extensions temporarily.
 
   __ https://searchfox.org/mozilla-central/rev/053826b10f838f77c27507e5efecc96e34718541/toolkit/components/extensions/Extension.jsm#1884
+  __ https://searchfox.org/mozilla-central/rev/014fe72eaba26dcf6082fb9bbaf208f97a38594e/toolkit/mozapps/extensions/internal/AddonSettings.jsm#93
 
   They can be also be loaded normally (not temporarily) in a custom build where
   the build-time setting ``AppConstants.MOZ_REQUIRE_SIGNING`` [source__, source__]
@@ -305,18 +404,18 @@ Signed for release
 Experiments
 -----------
 
-**Experiments** let us try out ideas in Firefox outside the usual six-week
-release cycle and on particular populations of users.
+**Experiments** let us try out ideas in Firefox outside the usual release cycle
+and on particular populations of users.
 
 For example, say we have a hunch that the top sites shown on the new-tab page
 aren't very discoverable, so we want to make them more visible. We have one idea
 that might work — show them every time the user begins an interaction with the
 address bar — but we aren't sure how good an idea it is. So we test it. We write
-an extension that does just that (using our ``browser.urlbar`` API), make sure
-it collects telemetry that will help us answer our question, ship it outside the
-usual release cycle to a small percentage of Beta users, collect and analyze the
-telemetry, and determine whether the experiment was successful. If it was, then
-we might want to ship the feature to all Firefox users.
+an extension that does just that, make sure it collects telemetry that will help
+us answer our question, ship it outside the usual release cycle to a small
+percentage of Beta users, collect and analyze the telemetry, and determine
+whether the experiment was successful. If it was, then we might want to ship the
+feature to all Firefox users.
 
 Experiments sometimes are also called **studies** (not to be confused with *user
 studies*, which are face-to-face interviews with users conducted by user
@@ -346,9 +445,9 @@ Add-on experiments
   implements the experimental feature we want to test. To reiterate, the
   extension is a WebExtension and uses WebExtensions APIs. If the current
   WebExtensions APIs do not meet the needs of your experiment, then you must
-  land new APIs in mozilla-central so that your extension can use them. If
-  necessary, you can make them privileged so that they are available only to
-  Mozilla extensions.
+  create either experimental or built-in APIs so that your extension can use
+  them. If necessary, you can make any new built-in APIs privileged so that they
+  are available only to Mozilla extensions.
 
   An add-on experiment can collect additional telemetry that's not collected in
   the product by using the privileged ``browser.telemetry`` WebExtensions API,
@@ -379,11 +478,8 @@ Experiments are tracked by Mozilla project management using a system called
 Experimenter_.
 
 Finally, there was an older version of the experiments program called
-**Shield**. Experiments under this system were called **Shield studies**. Shield
-studies could be shipped as extensions too, and one interesting difference is
-that new WebExtensions APIs could be implemented inside those same extensions
-themselves. It wasn't necessary to land new APIs in Firefox. APIs implemented in
-this way were called **WebExtension experiments**.
+**Shield**. Experiments under this system were called **Shield studies** and
+could be be shipped as extensions too.
 
 .. _Experimenter: https://experimenter.services.mozilla.com/
 
@@ -448,14 +544,7 @@ This section describes an experiment's life cycle.
    process.
 
 8. Engineering implements the extension and any new WebExtensions APIs it
-   requires. As discussed in `Developing Address Bar Extension APIs`_, APIs land
-   in mozilla-central, not the extension, so if your experiment requires new
-   APIs, to some extent it will be bound to the usual six-week release cycle
-   even though the extension itself isn't. This is important to keep in mind as
-   you're planning and scoping your work. Experiments usually target a certain
-   version of Firefox, not necessarily for any reason other than project
-   management. You may end up uplifting lots of bugs towards the end of the
-   release cycle.
+   requires.
 
 9. When the extension is done, engineering or management clicks the "Ready for
    Sign-Off" button on the Experimenter page. That changes the page's status
@@ -494,14 +583,13 @@ familiar with the concepts discussed in the `Developing Address Bar Extensions`_
 and `Running Address Bar Extensions`_ sections before reading this one.
 
 The most salient thing about add-on experiments is that they're implemented
-simply as privileged extensions. Other than being privileged, they're really not
-special, and they don't contain any files that non-experiment extensions don't
-contain. So there's actually not much to discuss in this section that hasn't
-already been discussed elsewhere in this doc.
+simply as privileged extensions. Other than being privileged and possibly
+containing bundled experimental APIs, they're similar to all other extensions.
 
-By way of example, here's the `top-sites experiment extension <example
-extension_>`__. (It's the same extension linked to in the `Developing Address
-Bar Extensions`_ secton.)
+The `top-sites experiment extension <topSites_>`__ is an example of a real,
+shipped experiment.
+
+.. _topSites: https://github.com/0c0w3/urlbar-top-sites-experiment
 
 Setup
 ~~~~~
