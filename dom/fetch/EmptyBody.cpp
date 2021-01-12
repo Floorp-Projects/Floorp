@@ -40,9 +40,11 @@ NS_INTERFACE_MAP_END_INHERITING(FetchBody<EmptyBody>)
 EmptyBody::EmptyBody(nsIGlobalObject* aGlobal,
                      mozilla::ipc::PrincipalInfo* aPrincipalInfo,
                      AbortSignalImpl* aAbortSignalImpl,
+                     const nsACString& aMimeType,
                      already_AddRefed<nsIInputStream> aBodyStream)
     : FetchBody<EmptyBody>(aGlobal),
       mAbortSignalImpl(aAbortSignalImpl),
+      mMimeType(aMimeType),
       mBodyStream(std::move(aBodyStream)) {
   if (aPrincipalInfo) {
     mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(*aPrincipalInfo);
@@ -62,9 +64,9 @@ already_AddRefed<EmptyBody> EmptyBody::Create(
     return nullptr;
   }
 
-  RefPtr<EmptyBody> emptyBody = new EmptyBody(
-      aGlobal, aPrincipalInfo, aAbortSignalImpl, bodyStream.forget());
-  emptyBody->OverrideMimeType(aMimeType);
+  RefPtr<EmptyBody> emptyBody =
+      new EmptyBody(aGlobal, aPrincipalInfo, aAbortSignalImpl, aMimeType,
+                    bodyStream.forget());
   return emptyBody.forget();
 }
 

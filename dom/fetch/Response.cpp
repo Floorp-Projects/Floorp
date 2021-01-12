@@ -75,7 +75,6 @@ Response::Response(nsIGlobalObject* aGlobal,
   MOZ_ASSERT(
       aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Immutable ||
       aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Response);
-  SetMimeType();
 
   mozilla::HoldJSObjects(this);
 }
@@ -370,7 +369,6 @@ already_AddRefed<Response> Response::Constructor(
     }
   }
 
-  r->SetMimeType();
   return r.forget();
 }
 
