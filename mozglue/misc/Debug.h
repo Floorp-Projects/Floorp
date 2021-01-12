@@ -45,7 +45,9 @@ inline void printf_stderr(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2) {
   }
 #endif  // defined(XP_WIN)
 
-  FILE* fp = _fdopen(_dup(2), "a");
+  // stderr is unbuffered by default so we open a new FILE (which is buffered)
+  // so that calls to printf_stderr are not as likely to get mixed together.
+  FILE* fp = _fdopen(_dup(_fileno(stderr)), "a");
   if (!fp) return;
 
   va_list args;
