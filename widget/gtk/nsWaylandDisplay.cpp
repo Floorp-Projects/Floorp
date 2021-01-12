@@ -25,14 +25,6 @@ namespace widget {
 static RefPtr<nsWaylandDisplay> gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
 static StaticMutex gWaylandDisplayArrayWriteMutex;
 
-void WaylandDisplayShutdown() {
-  for (auto& display : gWaylandDisplays) {
-    if (display) {
-      display->ShutdownThreadLoop();
-    }
-  }
-}
-
 // Dispatch events to Compositor/Render queues
 void WaylandDispatchDisplays() {
   MOZ_ASSERT(NS_IsMainThread(),
@@ -238,22 +230,11 @@ void nsWaylandDisplay::SyncBegin() {
   wl_display_flush(mDisplay);
 }
 
-static void WaylandDisplayQueueSyncBegin(RefPtr<nsWaylandDisplay> aDisplay) {
-  for (auto& display : gWaylandDisplays) {
-    if (display == aDisplay) {
-      display->SyncBegin();
-      return;
-    }
-  }
-  NS_WARNING("DispatchDisplay was called for released display!");
-}
-
 void nsWaylandDisplay::QueueSyncBegin() {
-  MessageLoop* loop = GetThreadLoop();
-  if (loop) {
-    loop->PostTask(NewRunnableFunction("WaylandSyncBegin",
-                                       &WaylandDisplayQueueSyncBegin, this));
-  }
+  RefPtr<nsWaylandDisplay> self(this);
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("nsWaylandDisplay::QueueSyncBegin",
+                             [self]() -> void { self->SyncBegin(); }));
 }
 
 void nsWaylandDisplay::WaitForSyncEnd() {
@@ -263,6 +244,8 @@ void nsWaylandDisplay::WaitForSyncEnd() {
   }
 
   while (mSyncCallback != nullptr) {
+    // TODO: wl_display_dispatch_queue() should not be called while
+    // glib main loop is iterated at nsAppShell::ProcessNextNativeEvent().
     if (wl_display_dispatch_queue(mDisplay, mEventQueue) == -1) {
       NS_WARNING("wl_display_dispatch_queue failed!");
       SyncEnd();
@@ -275,23 +258,8 @@ bool nsWaylandDisplay::Matches(wl_display* aDisplay) {
   return mThreadId == PR_GetCurrentThread() && aDisplay == mDisplay;
 }
 
-class nsWaylandDisplayLoopObserver : public MessageLoop::DestructionObserver {
- public:
-  explicit nsWaylandDisplayLoopObserver(nsWaylandDisplay* aWaylandDisplay)
-      : mDisplay(aWaylandDisplay){};
-  virtual void WillDestroyCurrentMessageLoop() override {
-    mDisplay->ShutdownThreadLoop();
-    mDisplay = nullptr;
-    delete this;
-  }
-
- private:
-  nsWaylandDisplay* mDisplay;
-};
-
 nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
-    : mThreadLoop(nullptr),
-      mThreadId(PR_GetCurrentThread()),
+    : mThreadId(PR_GetCurrentThread()),
       mDisplay(aDisplay),
       mEventQueue(nullptr),
       mDataDeviceManager(nullptr),
@@ -311,11 +279,6 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
   }
 
   if (!NS_IsMainThread()) {
-    mThreadLoop = MessageLoop::current();
-    if (mThreadLoop) {
-      auto observer = new nsWaylandDisplayLoopObserver(this);
-      mThreadLoop->AddDestructionObserver(observer);
-    }
     mEventQueue = wl_display_create_queue(mDisplay);
     wl_proxy_set_queue((struct wl_proxy*)mRegistry, mEventQueue);
   }
@@ -330,8 +293,6 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
     }
   }
 }
-
-void nsWaylandDisplay::ShutdownThreadLoop() { mThreadLoop = nullptr; }
 
 nsWaylandDisplay::~nsWaylandDisplay() {
   wl_registry_destroy(mRegistry);
