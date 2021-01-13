@@ -2052,7 +2052,6 @@ dependencies = [
  "rlbox_lucet_sandbox",
  "rsdparsa_capi",
  "rusqlite",
- "rust_minidump_writer_linux",
  "rustc_version",
  "shift_or_euc_c",
  "static_prefs",
@@ -3123,20 +3122,6 @@ checksum = "2684d4c2e97d99848d30b324b00c8fcc7e5c897b7cbb5819b09e7c90e8baf212"
 dependencies = [
  "mime",
  "unicase",
-]
-
-[[package]]
-name = "minidump_writer_linux"
-version = "0.1.0"
-source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=b014a1a66041776cbd44ee97b09835fc5f428f9f#b014a1a66041776cbd44ee97b09835fc5f428f9f"
-dependencies = [
- "byteorder",
- "goblin",
- "libc",
- "memmap",
- "memoffset 0.5.1",
- "nix",
- "tempfile",
 ]
 
 [[package]]
@@ -4463,14 +4448,6 @@ checksum = "95ba36e8c41bf675947e200af432325f332f60a0aea0ef2dc456636c2f6037d7"
 dependencies = [
  "num-traits",
  "serde",
-]
-
-[[package]]
-name = "rust_minidump_writer_linux"
-version = "0.1.0"
-dependencies = [
- "libc",
- "minidump_writer_linux",
 ]
 
 [[package]]
