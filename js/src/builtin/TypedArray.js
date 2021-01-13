@@ -577,10 +577,11 @@ function TypedArrayForEach(callbackfn/*, thisArg*/) {
     return undefined;
 }
 
-// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.14 %TypedArray%.prototype.indexOf ( searchElement [ , fromIndex ] )
 function TypedArrayIndexOf(searchElement, fromIndex = 0) {
-    // This function is not generic.
+    // Step 2.
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement, fromIndex,
                             "TypedArrayIndexOf");
@@ -591,42 +592,56 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     // Step 1.
     var O = this;
 
-    // Step 2.
+    // Step 3.
     var len = TypedArrayLength(O);
 
-    // Step 3.
+    // Step 4.
     if (len === 0)
         return -1;
 
-    // Steps 4-5.
+    // Step 5.
     var n = ToInteger(fromIndex);
 
     // Step 6.
+    assert(fromIndex !== undefined || n === 0, "ToInteger(undefined) is zero");
+
+    // Reload O.[[ArrayLength]] in case ToInteger() detached the ArrayBuffer.
+    // This let's us avoid executing the HasProperty operation in step 11.a.
+    len = TypedArrayLength(O);
+
+    assert(len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+           "TypedArrays with detached buffers have a length of zero");
+
+    // Step 7.
     if (n >= len)
         return -1;
 
-    // Steps 7-8.
+    // Steps 7-10.
+    // Steps 7-8 are handled implicitly.
     var k;
     if (n >= 0) {
-        // Step 7.a.
+        // Step 9.a.
         k = n;
     } else {
-        // Step 8.a.
+        // Step 10.a.
         k = len + n;
 
-        // Step 8.b.
+        // Step 10.b.
         if (k < 0)
             k = 0;
     }
 
-    // Step 9.
-    // Omit steps 9.a-b, since there are no holes in typed arrays.
+    // Step 11.
     for (; k < len; k++) {
+        // Step 11.a (not necessary in our implementation).
+        assert(k in O, "unexpected missing element");
+
+        // Steps 11.b.i-iii.
         if (O[k] === searchElement)
             return k;
     }
 
-    // Step 10.
+    // Step 12.
     return -1;
 }
 
