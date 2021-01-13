@@ -2608,7 +2608,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
       do_QueryInterface(aRequest->GetScriptElement());
 
   nsCOMPtr<Document> doc;
-  if (!aRequest->mIsInline) {
+  if (!aRequest->mIsInline || aRequest->IsModuleRequest()) {
     doc = scriptElem->OwnerDoc();
   }
 
