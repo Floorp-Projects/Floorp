@@ -60,8 +60,6 @@ class WebConsoleUI {
     this.hud = hud;
     this.hudId = this.hud.hudId;
     this.isBrowserConsole = this.hud.isBrowserConsole;
-    // Map of all stacktrace resources keyed by network event's channelId
-    this.netEventStackTraces = new Map();
 
     this.isBrowserToolboxConsole =
       this.hud.currentTarget &&
@@ -386,37 +384,13 @@ class WebConsoleUI {
       }
 
       if (resource.resourceType === TYPES.NETWORK_EVENT_STACKTRACE) {
-        this.netEventStackTraces.set(resource.resourceId, resource);
+        this.wrapper.networkDataProvider?.onStackTraceAvailable(resource);
         continue;
       }
 
       if (resource.resourceType === TYPES.NETWORK_EVENT) {
-        // Add the stacktrace
-        if (this.netEventStackTraces.has(resource.resourceId)) {
-          const {
-            stacktraceAvailable,
-            lastFrame,
-            targetFront,
-          } = this.netEventStackTraces.get(resource.resourceId);
-
-          resource.cause.stacktraceAvailable = stacktraceAvailable;
-          resource.cause.lastFrame = lastFrame;
-          this.netEventStackTraces.delete(resource.resourceId);
-
-          if (
-            this.wrapper?.networkDataProvider?.stackTraceRequestInfoByActorID
-          ) {
-            this.wrapper.networkDataProvider.stackTraceRequestInfoByActorID.set(
-              resource.actor,
-              {
-                targetFront,
-                resourceId: resource.resourceId,
-              }
-            );
-          }
-        }
+        this.wrapper.networkDataProvider?.onNetworkResourceAvailable(resource);
       }
-
       messages.push(resource);
     }
     this.wrapper.dispatchMessagesAdd(messages);
@@ -428,7 +402,10 @@ class WebConsoleUI {
         ({ resource }) =>
           resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT
       )
-      .map(({ resource }) => resource);
+      .map(({ resource }) => {
+        this.wrapper.networkDataProvider?.onNetworkResourceUpdated(resource);
+        return resource;
+      });
     this.wrapper.dispatchMessagesUpdate(messageUpdates);
   }
 

@@ -28,6 +28,7 @@ rawPackets.set(`GET request`, {
   "isXHR": false,
   "cause": {
     "type": "img",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
     "stacktraceAvailable": true,
     "lastFrame": {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
@@ -66,6 +67,7 @@ rawPackets.set(`GET request update`, {
   "isXHR": false,
   "cause": {
     "type": "img",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
     "stacktraceAvailable": true,
     "lastFrame": {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
@@ -104,6 +106,7 @@ rawPackets.set(`XHR GET request`, {
   "isXHR": true,
   "cause": {
     "type": "xhr",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
     "stacktraceAvailable": true,
     "lastFrame": {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
@@ -141,6 +144,7 @@ rawPackets.set(`XHR GET request update`, {
   "isXHR": true,
   "cause": {
     "type": "xhr",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
     "stacktraceAvailable": true,
     "lastFrame": {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
@@ -179,6 +183,7 @@ rawPackets.set(`XHR POST request`, {
   "isXHR": true,
   "cause": {
     "type": "xhr",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
     "stacktraceAvailable": true,
     "lastFrame": {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
@@ -216,6 +221,7 @@ rawPackets.set(`XHR POST request update`, {
   "isXHR": true,
   "cause": {
     "type": "xhr",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
     "stacktraceAvailable": true,
     "lastFrame": {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",

@@ -53,7 +53,10 @@ module.exports = async function({
         url: actor.url,
         method: actor.method,
         isXHR: actor.isXHR,
-        cause: { type: actor.cause.type },
+        cause: {
+          type: actor.cause.type,
+          loadingDocumentUri: actor.cause.loadingDocumentUri,
+        },
         timings: {},
         private: actor.private,
         fromCache: actor.fromCache,

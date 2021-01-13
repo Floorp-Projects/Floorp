@@ -33,7 +33,6 @@ const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 const enableBatching = require("devtools/client/webconsole/enhancers/batching");
 const enableActorReleaser = require("devtools/client/webconsole/enhancers/actor-releaser");
 const ensureCSSErrorReportingEnabled = require("devtools/client/webconsole/enhancers/css-error-reporting");
-const enableNetProvider = require("devtools/client/webconsole/enhancers/net-provider");
 const enableMessagesCacheClearing = require("devtools/client/webconsole/enhancers/message-cache-clearing");
 
 /**
@@ -110,7 +109,6 @@ function configureStore(webConsoleUI, options = {}) {
       middleware,
       enableActorReleaser(webConsoleUI),
       enableBatching(),
-      enableNetProvider(webConsoleUI),
       enableMessagesCacheClearing(webConsoleUI),
       ensureCSSErrorReportingEnabled(webConsoleUI)
     )
