@@ -18,27 +18,35 @@
 // worker loader. To make sure the worker loader can access it, it needs to be
 // defined before loading the worker loader script below.
 let nextId = 0;
-const rpcDeferreds = {};
 this.rpc = function(method, ...params) {
-  const id = nextId++;
+  return new Promise((resolve, reject) => {
+    const id = nextId++;
+    this.addEventListener("message", function onMessageForRpc(event) {
+      const packet = JSON.parse(event.data);
+      if (packet.type !== "rpc" || packet.id !== id) {
+        return;
+      }
+      if (packet.error) {
+        reject(packet.error);
+      } else {
+        resolve(packet.result);
+      }
+      this.removeEventListener("message", onMessageForRpc);
+    });
 
-  postMessage(
-    JSON.stringify({
-      type: "rpc",
-      method,
-      params,
-      id,
-    })
-  );
-
-  const deferred = defer();
-  rpcDeferreds[id] = deferred;
-  return deferred.promise;
+    postMessage(
+      JSON.stringify({
+        type: "rpc",
+        method,
+        params,
+        id,
+      })
+    );
+  });
 };
 
 loadSubScript("resource://devtools/shared/worker/loader.js");
 
-const defer = worker.require("devtools/shared/defer");
 const { WorkerTargetActor } = worker.require(
   "devtools/server/actors/targets/worker"
 );
@@ -133,15 +141,6 @@ this.addEventListener("message", async function(event) {
         connections.get(packet.forwardingPrefix).connection.close();
         connections.delete(packet.forwardingPrefix);
       }
-      break;
-
-    case "rpc":
-      const deferred = rpcDeferreds[packet.id];
-      delete rpcDeferreds[packet.id];
-      if (packet.error) {
-        deferred.reject(packet.error);
-      }
-      deferred.resolve(packet.result);
       break;
   }
 });
