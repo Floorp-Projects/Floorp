@@ -226,6 +226,10 @@ struct ParamTraits<mozilla::webgl::OpaqueFramebufferOptions> final
 
 // -
 
+template <typename T>
+struct ParamTraits<mozilla::webgl::EnumMask<T>> final
+    : public PlainOldDataSerializer<mozilla::webgl::EnumMask<T>> {};
+
 template <>
 struct ParamTraits<mozilla::webgl::InitContextResult> final {
   using T = mozilla::webgl::InitContextResult;
@@ -234,13 +238,15 @@ struct ParamTraits<mozilla::webgl::InitContextResult> final {
     WriteParam(msg, in.error);
     WriteParam(msg, in.options);
     WriteParam(msg, in.limits);
+    WriteParam(msg, in.uploadableSdTypes);
   }
 
   static bool Read(const Message* const msg, PickleIterator* const itr,
                    T* const out) {
     return ReadParam(msg, itr, &out->error) &&
            ReadParam(msg, itr, &out->options) &&
-           ReadParam(msg, itr, &out->limits);
+           ReadParam(msg, itr, &out->limits) &&
+           ReadParam(msg, itr, &out->uploadableSdTypes);
   }
 };
 

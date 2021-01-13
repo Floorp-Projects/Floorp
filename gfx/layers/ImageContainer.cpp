@@ -225,6 +225,24 @@ ImageContainer::~ImageContainer() {
   }
 }
 
+Maybe<SurfaceDescriptor> Image::GetDesc() { return {}; }
+
+Maybe<SurfaceDescriptor> Image::GetDescFromTexClient(
+    TextureClient* const forTc) {
+  RefPtr<TextureClient> tc = forTc;
+  if (!forTc) {
+    tc = GetTextureClient(nullptr);
+  }
+
+  const auto& tcd = tc->GetInternalData();
+
+  SurfaceDescriptor ret;
+  if (!tcd->Serialize(ret)) {
+    return {};
+  }
+  return Some(ret);
+}
+
 RefPtr<PlanarYCbCrImage> ImageContainer::CreatePlanarYCbCrImage() {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   EnsureImageClient();
