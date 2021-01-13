@@ -160,7 +160,7 @@ void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
 
 bool BytecodeEmitter::init() {
   if (!parent) {
-    if (!compilationInfo.stencil.prepareStorageFor(cx, compilationState)) {
+    if (!compilationInfo.prepareStorageFor(cx, compilationState)) {
       return false;
     }
   }
@@ -1672,13 +1672,13 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
   }
   memcpy(code, writer.getCode().data(), len);
 
-  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
   if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;
   }
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack(code, len,
-                                                          writer.getFlags())) {
+  if (!compilationInfo.objLiteralData.emplaceBack(code, len,
+                                                  writer.getFlags())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -11285,8 +11285,7 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
   }
 
   // De-duplicate the bytecode within the runtime.
-  if (!compilationInfo.stencil.sharedData.addAndShare(cx, scriptIndex,
-                                                      sharedData)) {
+  if (!compilationInfo.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
     return false;
   }
 

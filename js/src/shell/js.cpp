@@ -5373,7 +5373,7 @@ static bool DumpStencil(JSContext* cx,
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  compilationInfo->stencil.dump();
+  compilationInfo->dump();
 #endif
 
   return true;
@@ -5550,7 +5550,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
 #  ifdef DEBUG
-          compilationInfo->stencil.dump();
+          compilationInfo->dump();
 #  endif
         } else {
           JS_ReportErrorASCII(cx,
