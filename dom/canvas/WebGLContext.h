@@ -1237,7 +1237,35 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   template <typename... Args>
   void GeneratePerfWarning(const char* const fmt, const Args&... args) const {
-    GenerateError(webgl::kErrorPerfWarning, fmt, args...);
+    if (!ShouldGeneratePerfWarnings()) return;
+
+    const auto funcName = FuncName();
+    nsCString msg;
+    msg.AppendPrintf("WebGL perf warning: %s: ", funcName);
+
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wformat-security"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wformat-security"
+#endif
+    msg.AppendPrintf(fmt, args...);
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif
+
+    GenerateErrorImpl(0, msg);
+
+    mNumPerfWarnings++;
+    if (!ShouldGeneratePerfWarnings()) {
+      GenerateWarning(
+          "After reporting %u, no further WebGL perf warnings will"
+          " be reported for this WebGL context.",
+          uint32_t(mNumPerfWarnings));
+    }
   }
 
  public:
