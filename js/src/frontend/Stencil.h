@@ -48,7 +48,7 @@ namespace frontend {
 
 struct CompilationInfo;
 struct CompilationAtomCache;
-struct CompilationStencil;
+struct BaseCompilationStencil;
 struct CompilationGCOutput;
 class RegExpStencil;
 class BigIntStencil;
@@ -82,7 +82,7 @@ using RegExpIndex = TypedIndex<RegExpStencil>;
 using BigIntIndex = TypedIndex<BigIntStencil>;
 using ObjLiteralIndex = TypedIndex<ObjLiteralStencil>;
 
-// Index into {CompilationState,CompilationStencil}.gcThingData.
+// Index into {CompilationState,BaseCompilationStencil}.gcThingData.
 class CompilationGCThingType {};
 using CompilationGCThingIndex = TypedIndex<CompilationGCThingType>;
 
@@ -112,15 +112,16 @@ class RegExpStencil {
                              CompilationAtomCache& atomCache) const;
 
   // This is used by `Reflect.parse` when we need the RegExpObject but are not
-  // doing a complete instantiation of the CompilationStencil.
-  RegExpObject* createRegExpAndEnsureAtom(JSContext* cx,
-                                          CompilationAtomCache& atomCache,
-                                          CompilationStencil& stencil) const;
+  // doing a complete instantiation of the BaseCompilationStencil.
+  RegExpObject* createRegExpAndEnsureAtom(
+      JSContext* cx, CompilationAtomCache& atomCache,
+      BaseCompilationStencil& stencil) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, BaseCompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json,
+                  BaseCompilationStencil* compilationStencil);
 #endif
 };
 
@@ -323,9 +324,9 @@ class ScopeStencil {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
   void dump(JSONPrinter& json, BaseParserScopeData* baseScopeData,
-            CompilationStencil* compilationStencil);
+            BaseCompilationStencil* compilationStencil);
   void dumpFields(JSONPrinter& json, BaseParserScopeData* baseScopeData,
-                  CompilationStencil* compilationStencil);
+                  BaseCompilationStencil* compilationStencil);
 #endif
 
  private:
@@ -492,8 +493,9 @@ class StencilModuleMetadata {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, BaseCompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json,
+                  BaseCompilationStencil* compilationStencil);
 #endif
 };
 
@@ -640,8 +642,9 @@ class ScriptStencil {
 
   uint32_t memberInitializers_ = 0;
 
-  // GCThings are stored into {CompilationState,CompilationStencil}.gcThingData,
-  // in [gcThingsOffset, gcThingsOffset + gcThingsLength) range.
+  // GCThings are stored into
+  // {CompilationState,BaseCompilationStencil}.gcThingData, in [gcThingsOffset,
+  // gcThingsOffset + gcThingsLength) range.
   CompilationGCThingIndex gcThingsOffset;
   uint32_t gcThingsLength = 0;
 
@@ -678,7 +681,7 @@ class ScriptStencil {
   static constexpr uint16_t AllowRelazifyFlag = 1 << 1;
 
   // Set if this is non-lazy script and shared data is created.
-  // The shared data is stored into CompilationStencil.sharedData.
+  // The shared data is stored into BaseCompilationStencil.sharedData.
   static constexpr uint16_t HasSharedDataFlag = 1 << 2;
 
   // Set if this script has member initializer.
@@ -705,7 +708,7 @@ class ScriptStencil {
   bool hasGCThings() const { return gcThingsLength; }
 
   mozilla::Span<TaggedScriptThingIndex> gcthings(
-      CompilationStencil& stencil) const;
+      BaseCompilationStencil& stencil) const;
 
   bool wasFunctionEmitted() const { return flags_ & WasFunctionEmittedFlag; }
 
@@ -759,8 +762,9 @@ class ScriptStencil {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, BaseCompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json,
+                  BaseCompilationStencil* compilationStencil);
 #endif
 };
 
@@ -795,7 +799,7 @@ class ScriptStencilExtra {
 #if defined(DEBUG) || defined(JS_JITSPEW)
 void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
                                TaggedParserAtomIndex taggedIndex,
-                               CompilationStencil* compilationStencil);
+                               BaseCompilationStencil* compilationStencil);
 #endif
 
 } /* namespace frontend */

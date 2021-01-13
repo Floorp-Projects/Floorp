@@ -178,7 +178,8 @@ class FullParseHandler {
     return new_<NumericLiteral>(value, decimalPoint, pos);
   }
 
-  BigIntLiteralType newBigInt(BigIntIndex index, CompilationStencil& stencil,
+  BigIntLiteralType newBigInt(BigIntIndex index,
+                              BaseCompilationStencil& stencil,
                               const TokenPos& pos) {
     return new_<BigIntLiteral>(index, stencil, pos);
   }

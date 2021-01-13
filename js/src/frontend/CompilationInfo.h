@@ -105,7 +105,7 @@ struct CompilationAtomCache {
   using AtomCacheVector = JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy>;
 
  private:
-  // Atoms lowered into or converted from CompilationStencil.parserAtomData.
+  // Atoms lowered into or converted from BaseCompilationStencil.parserAtomData.
   //
   // This field is here instead of in CompilationGCOutput because atoms lowered
   // from JSAtom is part of input (enclosing scope bindings, lazy function name,
@@ -144,7 +144,7 @@ struct CompilationInput {
   //    (See EmitterScope::checkEnvironmentChainLength)
   //  * If we're compiling self-hosted JS, an empty global scope.
   //    This scope is also used for EmptyGlobalScopeType in
-  //    CompilationStencil.gcThings.
+  //    BaseCompilationStencil.gcThings.
   //    See the comment in initForSelfHostingGlobal.
   //  * Null otherwise
   Scope* enclosingScope = nullptr;
@@ -164,7 +164,7 @@ struct CompilationInput {
     }
 
     // This enclosing scope is also recorded as EmptyGlobalScopeType in
-    // CompilationStencil.gcThings even though corresponding ScopeStencil
+    // BaseCompilationStencil.gcThings even though corresponding ScopeStencil
     // isn't generated.
     //
     // Store the enclosing scope here in order to access it from
@@ -233,9 +233,9 @@ struct MOZ_RAII CompilationState {
   CompilationInput& input;
 
   // Temporary space to accumulate stencil data.
-  // Copied to CompilationStencil by `finish` method.
+  // Copied to BaseCompilationStencil by `finish` method.
   //
-  // See corresponding CompilationStencil fields for desription.
+  // See corresponding BaseCompilationStencil fields for desription.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
   Vector<ScriptStencilExtra, 0, js::SystemAllocPolicy> scriptExtra;
@@ -250,7 +250,7 @@ struct MOZ_RAII CompilationState {
   // This doesn't count top-level non-function script.
   //
   // This should be counted while parsing, and should be passed to
-  // CompilationStencil.prepareStorageFor *before* start emitting bytecode.
+  // BaseCompilationStencil.prepareStorageFor *before* start emitting bytecode.
   size_t nonLazyFunctionCount = 0;
 
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
@@ -307,7 +307,7 @@ struct SharedDataContainer {
 };
 
 // The top level struct of stencil.
-struct CompilationStencil {
+struct BaseCompilationStencil {
   // Hold onto the RegExpStencil, BigIntStencil, and ObjLiteralStencil that are
   // allocated during parse to ensure correct destruction.
   mozilla::Span<RegExpStencil> regExpData;
@@ -347,17 +347,17 @@ struct CompilationStencil {
   using FunctionKey = uint64_t;
   FunctionKey functionKey = {};
 
-  CompilationStencil() = default;
+  BaseCompilationStencil() = default;
 
   // We need a move-constructor to work with Rooted.
-  CompilationStencil(CompilationStencil&& other) = default;
+  BaseCompilationStencil(BaseCompilationStencil&& other) = default;
 
   const ParserAtom* getParserAtomAt(JSContext* cx,
                                     TaggedParserAtomIndex taggedIndex) const;
 
   bool prepareStorageFor(JSContext* cx, CompilationState& compilationState) {
     // NOTE: At this point CompilationState shouldn't be finished, and
-    // CompilationStencil.scriptData field should be empty.
+    // BaseCompilationStencil.scriptData field should be empty.
     // Use CompilationState.scriptData as data source.
     MOZ_ASSERT(scriptData.empty());
     size_t allScriptCount = compilationState.scriptData.length();
@@ -429,17 +429,17 @@ class ScriptStencilIterable {
 
   class Iterator {
     size_t index_ = 0;
-    const CompilationStencil& stencil_;
+    const BaseCompilationStencil& stencil_;
     CompilationGCOutput& gcOutput_;
 
-    Iterator(const CompilationStencil& stencil, CompilationGCOutput& gcOutput,
-             size_t index)
+    Iterator(const BaseCompilationStencil& stencil,
+             CompilationGCOutput& gcOutput, size_t index)
         : index_(index), stencil_(stencil), gcOutput_(gcOutput) {
       MOZ_ASSERT(index == stencil.scriptData.size());
     }
 
    public:
-    explicit Iterator(const CompilationStencil& stencil,
+    explicit Iterator(const BaseCompilationStencil& stencil,
                       CompilationGCOutput& gcOutput)
         : stencil_(stencil), gcOutput_(gcOutput) {
       skipTopLevelNonFunction();
@@ -487,16 +487,16 @@ class ScriptStencilIterable {
                                index);
     }
 
-    static Iterator end(const CompilationStencil& stencil,
+    static Iterator end(const BaseCompilationStencil& stencil,
                         CompilationGCOutput& gcOutput) {
       return Iterator(stencil, gcOutput, stencil.scriptData.size());
     }
   };
 
-  const CompilationStencil& stencil_;
+  const BaseCompilationStencil& stencil_;
   CompilationGCOutput& gcOutput_;
 
-  explicit ScriptStencilIterable(const CompilationStencil& stencil,
+  explicit ScriptStencilIterable(const BaseCompilationStencil& stencil,
                                  CompilationGCOutput& gcOutput)
       : stencil_(stencil), gcOutput_(gcOutput) {}
 
@@ -517,7 +517,7 @@ struct CompilationInfo {
   static constexpr size_t LifoAllocChunkSize = 512;
 
   CompilationInput input;
-  CompilationStencil stencil;
+  BaseCompilationStencil stencil;
 
   // Set to true once prepareForInstantiate is called.
   // NOTE: This field isn't XDR-encoded.
@@ -541,9 +541,9 @@ struct CompilationInfo {
       : alloc(LifoAllocChunkSize), input(options) {}
 
   static MOZ_MUST_USE bool prepareInputAndStencilForInstantiate(
-      JSContext* cx, CompilationInput& input, CompilationStencil& stencil);
+      JSContext* cx, CompilationInput& input, BaseCompilationStencil& stencil);
   static MOZ_MUST_USE bool prepareGCOutputForInstantiate(
-      JSContext* cx, CompilationStencil& stencil,
+      JSContext* cx, BaseCompilationStencil& stencil,
       CompilationGCOutput& gcOutput);
 
   static MOZ_MUST_USE bool prepareForInstantiate(
@@ -553,7 +553,7 @@ struct CompilationInfo {
                                                CompilationInfo& compilationInfo,
                                                CompilationGCOutput& gcOutput);
   static MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
-      JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+      JSContext* cx, CompilationInput& input, BaseCompilationStencil& stencil,
       CompilationGCOutput& gcOutput);
 
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
@@ -575,7 +575,7 @@ struct CompilationInfo {
   CompilationInfo& operator=(CompilationInfo&&) = delete;
 
   static ScriptStencilIterable functionScriptStencils(
-      CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
+      BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput) {
     return ScriptStencilIterable(stencil, gcOutput);
   }
 
@@ -596,7 +596,7 @@ struct CompilationInfoVector {
  public:
   CompilationInfo initial;
   LifoAlloc allocForDelazifications;
-  Vector<CompilationStencil, 0, js::SystemAllocPolicy> delazifications;
+  Vector<BaseCompilationStencil, 0, js::SystemAllocPolicy> delazifications;
   ScriptIndexVector delazificationIndices;
   CompilationAtomCache::AtomCacheVector delazificationAtomCache;
 
