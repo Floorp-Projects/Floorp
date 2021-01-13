@@ -81,6 +81,19 @@ class XDRBuffer<XDR_ENCODE> : public XDRBufferBase {
     return ptr;
   }
 
+  bool align32() {
+    size_t extra = cursor_ % 4;
+    if (extra) {
+      size_t padding = 4 - extra;
+      if (!buffer_.appendN(0, padding)) {
+        ReportOutOfMemory(cx());
+        return false;
+      }
+      cursor_ += padding;
+    }
+    return true;
+  }
+
   const uint8_t* read(size_t n) {
     MOZ_CRASH("Should never read in encode mode");
     return nullptr;
@@ -103,6 +116,20 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
 
   XDRBuffer(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
       : XDRBufferBase(cx, cursor), buffer_(buffer.begin(), buffer.length()) {}
+
+  bool align32() {
+    size_t extra = cursor_ % 4;
+    if (extra) {
+      size_t padding = 4 - extra;
+      cursor_ += padding;
+
+      // Don't let buggy code read past our buffer
+      if (cursor_ > buffer_.length()) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   const uint8_t* read(size_t n) {
     MOZ_ASSERT(cursor_ < buffer_.length());
@@ -299,6 +326,13 @@ class XDRState : public XDRCoderBase {
     setResultCode(code);
 #endif
     return mozilla::Err(code);
+  }
+
+  XDRResult align32() {
+    if (!buf->align32()) {
+      return fail(JS::TranscodeResult_Throw);
+    }
+    return Ok();
   }
 
   XDRResult readData(const uint8_t** pptr, size_t length) {
