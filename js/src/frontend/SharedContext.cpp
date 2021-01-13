@@ -388,7 +388,7 @@ ScriptStencil& FunctionBox::functionStencil() const {
 }
 
 SourceExtent& FunctionBox::functionStencilExtent() const {
-  return compilationState_.scriptExtent[funcDataIndex_];
+  return compilationState_.scriptExtra[funcDataIndex_].extent;
 }
 
 void SharedContext::copyScriptFields(ScriptStencil& script) {

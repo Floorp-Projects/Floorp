@@ -268,7 +268,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   }
 
   if (!handler_.canSkipLazyInnerFunctions()) {
-    if (!compilationState_.scriptExtent.emplaceBack()) {
+    if (!compilationState_.scriptExtra.emplaceBack()) {
       js::ReportOutOfMemory(cx_);
       return nullptr;
     }

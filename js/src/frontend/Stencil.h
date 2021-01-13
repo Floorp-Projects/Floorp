@@ -776,6 +776,21 @@ class ScriptStencil {
 #endif
 };
 
+// In addition to ScriptStencil, data generated only while initial-parsing.
+class ScriptStencilExtra {
+ public:
+  // The location of this script in the source.
+  SourceExtent extent;
+
+  ScriptStencilExtra() = default;
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump();
+  void dump(JSONPrinter& json);
+  void dumpFields(JSONPrinter& json);
+#endif
+};
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
 void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
                                TaggedParserAtomIndex taggedIndex,

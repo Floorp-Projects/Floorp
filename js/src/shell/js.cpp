@@ -5317,7 +5317,7 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     ReportOutOfMemory(cx);
     return false;
   }
-  if (!compilationState.scriptExtent.emplaceBack()) {
+  if (!compilationState.scriptExtra.emplaceBack()) {
     ReportOutOfMemory(cx);
     return false;
   }
