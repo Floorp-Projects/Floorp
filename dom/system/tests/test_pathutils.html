@@ -429,6 +429,10 @@
 
     let firstPath = PathUtils.createUniquePath(path);
     let secondPath = PathUtils.createUniquePath(path);
+    SimpleTest.registerCleanupFunction(async () => {
+      await IOUtils.remove(firstPath);
+      await IOUtils.remove(secondPath);
+    });
 
     isnot(firstPath, secondPath, "Create unique paths returns different paths");
     is(PathUtils.filename(firstPath), ".test", "PathUtils.createUniquePath() matches filename for first path");
