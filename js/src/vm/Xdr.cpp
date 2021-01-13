@@ -459,7 +459,7 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
   MOZ_TRY(ParserAtomTable(this, stencil));
 
   MOZ_ASSERT(isMainBuf());
-  MOZ_TRY(XDRBaseCompilationStencil(this, stencil));
+  MOZ_TRY(XDRCompilationStencil(this, stencil));
 
   return Ok();
 }
