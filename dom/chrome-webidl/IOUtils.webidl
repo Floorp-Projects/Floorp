@@ -41,7 +41,7 @@ namespace IOUtils {
    * @return Resolves with the file contents encoded as a string, otherwise
    *         rejects with a DOMException.
    */
-  Promise<DOMString> readUTF8(DOMString path, optional ReadUTF8Options opts = {});
+  Promise<UTF8String> readUTF8(DOMString path, optional ReadUTF8Options opts = {});
   /**
    * Attempts to safely write |data| to a file at |path|.
    *
