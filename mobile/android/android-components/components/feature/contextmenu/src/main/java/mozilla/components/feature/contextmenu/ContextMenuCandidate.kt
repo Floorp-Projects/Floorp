@@ -313,7 +313,7 @@ data class ContextMenuCandidate(
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.share_link",
             label = context.getString(R.string.mozac_feature_contextmenu_share_link),
-            showFor = { _, hitResult -> hitResult.isUri() },
+            showFor = { _, hitResult -> hitResult.isUri() || hitResult.isImage() || hitResult.isVideoAudio() },
             action = { _, hitResult ->
                 val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
@@ -353,7 +353,7 @@ data class ContextMenuCandidate(
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.copy_link",
             label = context.getString(R.string.mozac_feature_contextmenu_copy_link),
-            showFor = { _, hitResult -> hitResult.isUri() },
+            showFor = { _, hitResult -> hitResult.isUri() || hitResult.isImage() || hitResult.isVideoAudio() },
             action = { _, hitResult ->
                 clipPlaintText(context, hitResult.getLink(), hitResult.getLink(),
                     R.string.mozac_feature_contextmenu_snackbar_link_copied, snackBarParentView,
