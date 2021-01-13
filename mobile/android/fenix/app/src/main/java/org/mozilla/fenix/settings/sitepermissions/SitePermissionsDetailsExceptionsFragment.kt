@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.settings.sitepermissions
 
+import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
@@ -19,6 +21,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
@@ -27,10 +30,15 @@ import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
 import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
 import org.mozilla.fenix.settings.PhoneFeature.PERSISTENT_STORAGE
 import org.mozilla.fenix.settings.PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS
+import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY
+import org.mozilla.fenix.settings.quicksettings.AutoplayValue
 import org.mozilla.fenix.settings.requirePreference
+import org.mozilla.fenix.utils.Settings
 
+@SuppressWarnings("TooManyFunctions")
 class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
-    private lateinit var sitePermissions: SitePermissions
+    @VisibleForTesting
+    internal lateinit var sitePermissions: SitePermissions
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,19 +62,22 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun bindCategoryPhoneFeatures() {
+    @VisibleForTesting
+    internal fun bindCategoryPhoneFeatures() {
         initPhoneFeature(CAMERA)
         initPhoneFeature(LOCATION)
         initPhoneFeature(MICROPHONE)
         initPhoneFeature(NOTIFICATION)
         initPhoneFeature(PERSISTENT_STORAGE)
         initPhoneFeature(MEDIA_KEY_SYSTEM_ACCESS)
+        initAutoplayFeature()
         bindClearPermissionsButton()
     }
 
-    private fun initPhoneFeature(phoneFeature: PhoneFeature) {
-        val summary = phoneFeature.getActionLabel(requireContext(), sitePermissions)
-        val cameraPhoneFeatures = requirePreference<Preference>(phoneFeature.getPreferenceId())
+    @VisibleForTesting
+    internal fun initPhoneFeature(phoneFeature: PhoneFeature) {
+        val summary = phoneFeature.getActionLabel(provideContext(), sitePermissions)
+        val cameraPhoneFeatures = getPreference(phoneFeature)
         cameraPhoneFeatures.summary = summary
 
         cameraPhoneFeatures.onPreferenceClickListener = Preference.OnPreferenceClickListener {
@@ -75,7 +86,44 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun bindClearPermissionsButton() {
+    @VisibleForTesting
+    internal fun getPreference(phoneFeature: PhoneFeature): Preference =
+        requirePreference(phoneFeature.getPreferenceId())
+
+    @VisibleForTesting
+    internal fun provideContext(): Context = requireContext()
+
+    @VisibleForTesting
+    internal fun provideSettings(): Settings = provideContext().settings()
+
+    @VisibleForTesting
+    internal fun initAutoplayFeature() {
+        val phoneFeature = getPreference(AUTOPLAY)
+        phoneFeature.summary = getAutoplayLabel()
+
+        phoneFeature.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            navigateToPhoneFeature(AUTOPLAY)
+            true
+        }
+    }
+
+    @VisibleForTesting
+    internal fun getAutoplayLabel(): String {
+        val context = provideContext()
+        val settings = provideSettings()
+        val autoplayValues = AutoplayValue.values(context, settings, sitePermissions)
+        val selected =
+            autoplayValues.firstOrNull { it.isSelected() } ?: AutoplayValue.getFallbackValue(
+                context,
+                settings,
+                sitePermissions
+            )
+
+        return selected.label
+    }
+
+    @VisibleForTesting
+    internal fun bindClearPermissionsButton() {
         val button: Preference = requirePreference(R.string.pref_key_exceptions_clear_site_permissions)
 
         button.onPreferenceClickListener = Preference.OnPreferenceClickListener {
@@ -106,7 +154,8 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun navigateToPhoneFeature(phoneFeature: PhoneFeature) {
+    @VisibleForTesting
+    internal fun navigateToPhoneFeature(phoneFeature: PhoneFeature) {
         val directions =
             SitePermissionsDetailsExceptionsFragmentDirections.actionSitePermissionsToExceptionsToManagePhoneFeature(
                 phoneFeature = phoneFeature,

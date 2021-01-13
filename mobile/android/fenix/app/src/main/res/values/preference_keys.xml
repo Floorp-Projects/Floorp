@@ -108,6 +108,7 @@
     <string name="pref_key_show_site_exceptions" translatable="false">pref_key_show_site_exceptions</string>
     <string name="pref_key_recommended_settings" translatable="false">pref_key_recommended_settings</string>
     <string name="pref_key_custom_settings" translatable="false">pref_key_custom_settings</string>
+    <string name="pref_key_browser_feature_autoplay" translatable="false">pref_key_browser_feature_autoplay</string>
     <string name="pref_key_browser_feature_autoplay_audible" translatable="false">pref_key_browser_feature_autoplay</string>
     <string name="pref_key_browser_feature_autoplay_inaudible" translatable="false">pref_key_browser_feature_autoplay_inaudible</string>
     <string name="pref_key_browser_feature_persistent_storage" translatable="false">pref_key_browser_feature_persistent_storage</string>
