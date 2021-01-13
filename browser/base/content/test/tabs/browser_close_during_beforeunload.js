@@ -11,10 +11,6 @@ add_task(async function() {
     set: [["dom.require_user_interaction_for_beforeunload", false]],
   });
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
-
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   let browser = win.gBrowser.selectedBrowser;
