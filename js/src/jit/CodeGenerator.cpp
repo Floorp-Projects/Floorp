@@ -15605,6 +15605,159 @@ void CodeGenerator::visitCallObjectHasSparseElement(
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitBigIntAsIntN(LBigIntAsIntN* ins) {
+  Register bits = ToRegister(ins->bits());
+  Register input = ToRegister(ins->input());
+
+  pushArg(bits);
+  pushArg(input);
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, int32_t);
+  callVM<Fn, jit::BigIntAsIntN>(ins);
+}
+
+void CodeGenerator::visitBigIntAsIntN64(LBigIntAsIntN64* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp = ToRegister(ins->temp());
+  Register64 temp64 = ToRegister64(ins->temp64());
+  Register output = ToRegister(ins->output());
+
+  Label done, create;
+
+  masm.movePtr(input, output);
+
+  // Load the BigInt value as an int64.
+  masm.loadBigInt64(input, temp64);
+
+  // Create a new BigInt when the input exceeds the int64 range.
+  masm.branch32(Assembler::Above, Address(input, BigInt::offsetOfLength()),
+                Imm32(64 / BigInt::DigitBits), &create);
+
+  // And create a new BigInt when the value and the BigInt have different signs.
+  Label nonNegative;
+  masm.branchIfBigIntIsNonNegative(input, &nonNegative);
+  masm.branchTest64(Assembler::NotSigned, temp64, temp64, temp, &create);
+  masm.jump(&done);
+
+  masm.bind(&nonNegative);
+  masm.branchTest64(Assembler::NotSigned, temp64, temp64, temp, &done);
+
+  masm.bind(&create);
+  emitCreateBigInt(ins, Scalar::BigInt64, temp64, output, temp);
+
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitBigIntAsIntN32(LBigIntAsIntN32* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp = ToRegister(ins->temp());
+  Register64 temp64 = ToRegister64(ins->temp64());
+  Register output = ToRegister(ins->output());
+
+  Label done, create;
+
+  masm.movePtr(input, output);
+
+  // Load the absolute value of the first digit.
+  masm.loadFirstBigIntDigitOrZero(input, temp);
+
+  // If the absolute value exceeds the int32 range, create a new BigInt.
+  masm.branchPtr(Assembler::Above, temp, Imm32(INT32_MAX), &create);
+
+  // Also create a new BigInt if we have more than one digit.
+  masm.branch32(Assembler::BelowOrEqual,
+                Address(input, BigInt::offsetOfLength()), Imm32(1), &done);
+
+  masm.bind(&create);
+
+  // |temp| stores the absolute value, negate it when the sign flag is set.
+  Label nonNegative;
+  masm.branchIfBigIntIsNonNegative(input, &nonNegative);
+  masm.negPtr(temp);
+  masm.bind(&nonNegative);
+
+  masm.move32To64SignExtend(temp, temp64);
+  emitCreateBigInt(ins, Scalar::BigInt64, temp64, output, temp);
+
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitBigIntAsUintN(LBigIntAsUintN* ins) {
+  Register bits = ToRegister(ins->bits());
+  Register input = ToRegister(ins->input());
+
+  pushArg(bits);
+  pushArg(input);
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, int32_t);
+  callVM<Fn, jit::BigIntAsUintN>(ins);
+}
+
+void CodeGenerator::visitBigIntAsUintN64(LBigIntAsUintN64* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp = ToRegister(ins->temp());
+  Register64 temp64 = ToRegister64(ins->temp64());
+  Register output = ToRegister(ins->output());
+
+  Label done, create;
+
+  masm.movePtr(input, output);
+
+  // Load the BigInt value as an uint64.
+  masm.loadBigInt64(input, temp64);
+
+  // Create a new BigInt when the input exceeds the uint64 range.
+  masm.branch32(Assembler::Above, Address(input, BigInt::offsetOfLength()),
+                Imm32(64 / BigInt::DigitBits), &create);
+
+  // And create a new BigInt when the input has the sign flag set.
+  masm.branchIfBigIntIsNonNegative(input, &done);
+
+  masm.bind(&create);
+  emitCreateBigInt(ins, Scalar::BigUint64, temp64, output, temp);
+
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitBigIntAsUintN32(LBigIntAsUintN32* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp = ToRegister(ins->temp());
+  Register64 temp64 = ToRegister64(ins->temp64());
+  Register output = ToRegister(ins->output());
+
+  Label done, create;
+
+  masm.movePtr(input, output);
+
+  // Load the absolute value of the first digit.
+  masm.loadFirstBigIntDigitOrZero(input, temp);
+
+  // If the absolute value exceeds the uint32 range, create a new BigInt.
+#if JS_PUNBOX64
+  masm.branchPtr(Assembler::Above, temp, ImmWord(UINT32_MAX), &create);
+#endif
+
+  // Also create a new BigInt if we have more than one digit.
+  masm.branch32(Assembler::Above, Address(input, BigInt::offsetOfLength()),
+                Imm32(1), &create);
+
+  // And create a new BigInt when the input has the sign flag set.
+  masm.branchIfBigIntIsNonNegative(input, &done);
+
+  masm.bind(&create);
+
+  // |temp| stores the absolute value, negate it when the sign flag is set.
+  Label nonNegative;
+  masm.branchIfBigIntIsNonNegative(input, &nonNegative);
+  masm.negPtr(temp);
+  masm.bind(&nonNegative);
+
+  masm.move32To64ZeroExtend(temp, temp64);
+  emitCreateBigInt(ins, Scalar::BigUint64, temp64, output, temp);
+
+  masm.bind(&done);
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;
