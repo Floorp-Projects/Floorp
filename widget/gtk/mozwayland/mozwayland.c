@@ -32,6 +32,7 @@ const struct wl_interface wl_surface_interface;
 const struct wl_interface wl_subsurface_interface;
 const struct wl_interface wl_compositor_interface;
 const struct wl_interface wl_subcompositor_interface;
+const struct wl_interface wl_output_interface;
 #pragma GCC visibility pop
 
 MOZ_EXPORT void wl_event_queue_destroy(struct wl_event_queue* queue) {}
@@ -185,3 +186,16 @@ MOZ_EXPORT void wl_egl_window_destroy(struct wl_egl_window* egl_window) {}
 
 MOZ_EXPORT void wl_egl_window_resize(struct wl_egl_window* egl_window,
                                      int width, int height, int dx, int dy) {}
+
+MOZ_EXPORT void wl_list_init(struct wl_list* list) {}
+
+MOZ_EXPORT void wl_list_insert(struct wl_list* list, struct wl_list* elm) {}
+
+MOZ_EXPORT void wl_list_remove(struct wl_list* elm) {}
+
+MOZ_EXPORT int wl_list_length(const struct wl_list* list) { return -1; }
+
+MOZ_EXPORT int wl_list_empty(const struct wl_list* list) { return -1; }
+
+MOZ_EXPORT void wl_list_insert_list(struct wl_list* list,
+                                    struct wl_list* other) {}
