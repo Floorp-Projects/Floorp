@@ -451,6 +451,7 @@ XDRResult XDRState<mode>::codeStencil(
   // XDRIncrementalStencilEncoder::linearize, after the header.
   if (mode == XDR_DECODE) {
     MOZ_TRY(XDRChunkCount(this, &nchunks()));
+    MOZ_TRY(align32());
   }
 
   if (mode == XDR_ENCODE) {
@@ -720,6 +721,7 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer) {
 
   uint32_t nchunks = encodedFunctions_.count() + 1;
   MOZ_TRY(XDRChunkCount(this, &nchunks));
+  MOZ_TRY(align32());
 
   switchToMainBuf();
 
