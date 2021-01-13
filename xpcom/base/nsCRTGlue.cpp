@@ -253,9 +253,7 @@ void vprintf_stderr(const char* aFmt, va_list aArgs) {
     }
   }
 
-  // stderr is unbuffered by default so we open a new FILE (which is buffered)
-  // so that calls to printf_stderr are not as likely to get mixed together.
-  FILE* fp = _fdopen(_dup(_fileno(stderr)), "a");
+  FILE* fp = _fdopen(_dup(2), "a");
   if (!fp) {
     return;
   }
