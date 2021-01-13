@@ -631,17 +631,17 @@ class nsFrameSelection final {
    * by the selection during MouseDown processing. It can be nullptr
    * if the data is no longer valid.
    */
-  bool HasDelayedCaretData() { return mDelayedMouseEvent.mIsValid; }
-  bool IsShiftDownInDelayedCaretData() {
+  bool HasDelayedCaretData() const { return mDelayedMouseEvent.mIsValid; }
+  bool IsShiftDownInDelayedCaretData() const {
     NS_ASSERTION(mDelayedMouseEvent.mIsValid, "No valid delayed caret data");
     return mDelayedMouseEvent.mIsShift;
   }
-  uint32_t GetClickCountInDelayedCaretData() {
+  uint32_t GetClickCountInDelayedCaretData() const {
     NS_ASSERTION(mDelayedMouseEvent.mIsValid, "No valid delayed caret data");
     return mDelayedMouseEvent.mClickCount;
   }
 
-  bool MouseDownRecorded() {
+  bool MouseDownRecorded() const {
     return !GetDragState() && HasDelayedCaretData() &&
            GetClickCountInDelayedCaretData() < 2;
   }
