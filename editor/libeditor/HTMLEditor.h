@@ -310,28 +310,36 @@ class HTMLEditor final : public TextEditor,
       nsIPrincipal* aPrincipal = nullptr);
 
   /**
-   * event callback when a mouse button is pressed
-   * @param aX      [IN] horizontal position of the pointer
-   * @param aY      [IN] vertical position of the pointer
-   * @param aTarget [IN] the element triggering the event
-   * @param aMouseEvent [IN] the event
+   * If aTargetElement is a resizer, start to drag the resizer.  Otherwise, if
+   * aTargetElement is the grabber, start to handle drag gester on it.
+   *
+   * @param aMouseDownEvent     A `mousedown` event fired on aTargetElement.
+   * @param aEventTargetElement The target element being pressed.  This must
+   *                            be same as explicit original event target of
+   *                            aMouseDownEvent.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult OnMouseDown(int32_t aX, int32_t aY,
-                                          Element* aTarget,
-                                          dom::Event* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult StartToDragResizerOrHandleDragGestureOnGrabber(
+      dom::MouseEvent& aMouseDownEvent, Element& aEventTargetElement);
 
   /**
-   * event callback when a mouse button is released
-   * @param aX      [IN] horizontal position of the pointer
-   * @param aY      [IN] vertical position of the pointer
+   * If the editor is handling dragging a resizer, handling drag gesture on
+   * the grabber or dragging the grabber, this finalize it.  Otherwise,
+   * does nothing.
+   *
+   * @param aClientPoint    The final point of the drag.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult OnMouseUp(int32_t aX, int32_t aY);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  StopDraggingResizerOrGrabberAt(const CSSIntPoint& aClientPoint);
 
   /**
-   * event callback when the mouse pointer is moved
-   * @param aMouseEvent [IN] the event
+   * If the editor is handling dragging a resizer, handling drag gesture to
+   * start dragging the grabber or dragging the grabber, this method updates
+   * it's position.
+   *
+   * @param aClientPoint    The new point of the drag.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult OnMouseMove(dom::MouseEvent* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  UpdateResizerOrGrabberPositionTo(const CSSIntPoint& aClientPoint);
 
   /**
    * IsCSSEnabled() returns true if this editor treats styles with style
