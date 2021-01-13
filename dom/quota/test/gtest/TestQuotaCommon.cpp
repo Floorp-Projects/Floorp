@@ -814,6 +814,20 @@ TEST(QuotaCommon_TryReturn, Success)
   EXPECT_EQ(res.unwrap(), 42);
 }
 
+TEST(QuotaCommon_TryReturn, Success_nsresult)
+{
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&tryReturnDidNotReturn] {
+    QM_TRY_RETURN(NS_OK);
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isOk());
+}
+
 #ifdef DEBUG
 TEST(QuotaCommon_TryReturn, Success_CustomErr_AssertUnreachable)
 {
@@ -857,6 +871,21 @@ TEST(QuotaCommon_TryReturn, Failure_PropagateErr)
 
   auto res = [&tryReturnDidNotReturn] {
     QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_TryReturn, Failure_PropagateErr_nsresult)
+{
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&tryReturnDidNotReturn] {
+    QM_TRY_RETURN(NS_ERROR_FAILURE);
 
     tryReturnDidNotReturn = true;
   }();
