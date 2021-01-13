@@ -8602,11 +8602,11 @@ class LGuardIsExtensible : public LInstructionHelper<0, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
-class LGuardInt32IsNonNegative : public LInstructionHelper<0, 1, 0> {
+class LGuardIndexIsNonNegative : public LInstructionHelper<0, 1, 0> {
  public:
-  LIR_HEADER(GuardInt32IsNonNegative)
+  LIR_HEADER(GuardIndexIsNonNegative)
 
-  explicit LGuardInt32IsNonNegative(const LAllocation& index)
+  explicit LGuardIndexIsNonNegative(const LAllocation& index)
       : LInstructionHelper(classOpcode) {
     setOperand(0, index);
   }
@@ -8728,102 +8728,6 @@ class LCallObjectHasSparseElement : public LCallInstructionHelper<1, 2, 2> {
   const LAllocation* index() { return getOperand(1); }
   const LDefinition* temp1() { return getTemp(0); }
   const LDefinition* temp2() { return getTemp(1); }
-};
-
-class LBigIntAsIntN : public LCallInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(BigIntAsIntN)
-
-  LBigIntAsIntN(const LAllocation& bits, const LAllocation& input)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, bits);
-    setOperand(1, input);
-  }
-
-  const LAllocation* bits() { return getOperand(0); }
-  const LAllocation* input() { return getOperand(1); }
-};
-
-class LBigIntAsIntN64 : public LInstructionHelper<1, 1, 1 + INT64_PIECES> {
- public:
-  LIR_HEADER(BigIntAsIntN64)
-
-  LBigIntAsIntN64(const LAllocation& input, const LDefinition& temp,
-                  const LInt64Definition& temp64)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-    setTemp(0, temp);
-    setInt64Temp(1, temp64);
-  }
-
-  const LAllocation* input() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
-  LInt64Definition temp64() { return getInt64Temp(1); }
-};
-
-class LBigIntAsIntN32 : public LInstructionHelper<1, 1, 1 + INT64_PIECES> {
- public:
-  LIR_HEADER(BigIntAsIntN32)
-
-  LBigIntAsIntN32(const LAllocation& input, const LDefinition& temp,
-                  const LInt64Definition& temp64)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-    setTemp(0, temp);
-    setInt64Temp(1, temp64);
-  }
-
-  const LAllocation* input() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
-  LInt64Definition temp64() { return getInt64Temp(1); }
-};
-
-class LBigIntAsUintN : public LCallInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(BigIntAsUintN)
-
-  LBigIntAsUintN(const LAllocation& bits, const LAllocation& input)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, bits);
-    setOperand(1, input);
-  }
-
-  const LAllocation* bits() { return getOperand(0); }
-  const LAllocation* input() { return getOperand(1); }
-};
-
-class LBigIntAsUintN64 : public LInstructionHelper<1, 1, 1 + INT64_PIECES> {
- public:
-  LIR_HEADER(BigIntAsUintN64)
-
-  LBigIntAsUintN64(const LAllocation& input, const LDefinition& temp,
-                   const LInt64Definition& temp64)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-    setTemp(0, temp);
-    setInt64Temp(1, temp64);
-  }
-
-  const LAllocation* input() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
-  LInt64Definition temp64() { return getInt64Temp(1); }
-};
-
-class LBigIntAsUintN32 : public LInstructionHelper<1, 1, 1 + INT64_PIECES> {
- public:
-  LIR_HEADER(BigIntAsUintN32)
-
-  LBigIntAsUintN32(const LAllocation& input, const LDefinition& temp,
-                   const LInt64Definition& temp64)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-    setTemp(0, temp);
-    setInt64Temp(1, temp64);
-  }
-
-  const LAllocation* input() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
-  LInt64Definition temp64() { return getInt64Temp(1); }
 };
 
 template <size_t NumDefs>

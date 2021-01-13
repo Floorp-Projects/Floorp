@@ -1577,15 +1577,13 @@ void MacroAssembler::branchTestPtr(Condition cond, const Address& lhs,
 template <class L>
 void MacroAssembler::branchTest64(Condition cond, Register64 lhs,
                                   Register64 rhs, Register temp, L label) {
-  if (cond == Assembler::Zero || cond == Assembler::NonZero) {
-    ScratchRegisterScope scratch(*this);
+  ScratchRegisterScope scratch(*this);
 
+  if (cond == Assembler::Zero || cond == Assembler::NonZero) {
     MOZ_ASSERT(lhs.low == rhs.low);
     MOZ_ASSERT(lhs.high == rhs.high);
     ma_orr(lhs.low, lhs.high, scratch);
     branchTestPtr(cond, scratch, scratch, label);
-  } else if (cond == Assembler::Signed || cond == Assembler::NotSigned) {
-    branchTest32(cond, lhs.high, rhs.high, label);
   } else {
     MOZ_CRASH("Unsupported condition");
   }
