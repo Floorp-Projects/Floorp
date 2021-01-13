@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
+#ifdef MOZ_WASM_SANDBOXING_HUNSPELL
+#  include "mozilla/ipc/LibrarySandboxPreload.h"
+#endif
 #include "RLBoxHunspell.h"
 #include "mozHunspellRLBoxGlue.h"
 #include "mozHunspellRLBoxHost.h"
@@ -34,7 +37,19 @@ static tainted_hunspell<char*> allocStrInSandbox(
 RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
                              const nsAutoCString& dpath)
     : mHandle(nullptr) {
+#ifdef MOZ_WASM_SANDBOXING_HUNSPELL
+  // Firefox preloads the library externally to ensure we won't be stopped by
+  // the content sandbox
+  const bool external_loads_exist = true;
+  // See Bug 1606981: In some environments allowing stdio in the wasm sandbox
+  // fails as the I/O redirection involves querying meta-data of file
+  // descriptors. This querying fails in some environments.
+  const bool allow_stdio = false;
+  mSandbox.create_sandbox(mozilla::ipc::GetSandboxedHunspellPath().get(),
+                          external_loads_exist, allow_stdio);
+#else
   mSandbox.create_sandbox();
+#endif
 
   // Add the aff and dict files to allow list
   mozHunspellCallbacks::AllowFile(affpath);
