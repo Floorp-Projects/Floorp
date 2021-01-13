@@ -90,8 +90,8 @@ class BigIntArithPolicy final : public TypePolicy {
  public:
   constexpr BigIntArithPolicy() = default;
   EMPTY_DATA_;
-  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
-                                 MInstruction* def) const override;
+  [[nodiscard]] bool adjustInputs(TempAllocator& alloc,
+                                  MInstruction* def) const override;
 };
 
 class AllDoublePolicy final : public TypePolicy {
@@ -202,6 +202,20 @@ template <unsigned Op>
 class ConvertToStringPolicy final : public TypePolicy {
  public:
   constexpr ConvertToStringPolicy() = default;
+  EMPTY_DATA_;
+  [[nodiscard]] static bool staticAdjustInputs(TempAllocator& alloc,
+                                               MInstruction* def);
+  [[nodiscard]] bool adjustInputs(TempAllocator& alloc,
+                                  MInstruction* def) const override {
+    return staticAdjustInputs(alloc, def);
+  }
+};
+
+// Expect a BigInt for operand Op. If the input is a Value, it is unboxed.
+template <unsigned Op>
+class BigIntPolicy final : public TypePolicy {
+ public:
+  constexpr BigIntPolicy() = default;
   EMPTY_DATA_;
   [[nodiscard]] static bool staticAdjustInputs(TempAllocator& alloc,
                                                MInstruction* def);

@@ -523,6 +523,24 @@ template bool ConvertToStringPolicy<2>::staticAdjustInputs(TempAllocator& alloc,
                                                            MInstruction* ins);
 
 template <unsigned Op>
+bool BigIntPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
+                                          MInstruction* ins) {
+  MDefinition* in = ins->getOperand(Op);
+  if (in->type() == MIRType::BigInt) {
+    return true;
+  }
+
+  MUnbox* replace = MUnbox::New(alloc, in, MIRType::BigInt, MUnbox::Fallible);
+  ins->block()->insertBefore(ins, replace);
+  ins->replaceOperand(Op, replace);
+
+  return replace->typePolicy()->adjustInputs(alloc, replace);
+}
+
+template bool BigIntPolicy<1>::staticAdjustInputs(TempAllocator& alloc,
+                                                  MInstruction* ins);
+
+template <unsigned Op>
 bool UnboxedInt32Policy<Op>::staticAdjustInputs(TempAllocator& alloc,
                                                 MInstruction* def) {
   MDefinition* in = def->getOperand(Op);
@@ -1204,6 +1222,7 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(MixPolicy<BoxPolicy<0>, BoxPolicy<1>>)                                    \
   _(MixPolicy<ObjectPolicy<0>, BoxPolicy<2>, ObjectPolicy<3>>)                \
   _(MixPolicy<BoxExceptPolicy<0, MIRType::Object>, ObjectPolicy<1>>)          \
+  _(MixPolicy<UnboxedInt32Policy<0>, BigIntPolicy<1>>)                        \
   _(NoFloatPolicy<0>)                                                         \
   _(NoFloatPolicy<1>)                                                         \
   _(NoFloatPolicy<2>)                                                         \
