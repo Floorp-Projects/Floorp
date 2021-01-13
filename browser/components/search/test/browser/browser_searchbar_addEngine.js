@@ -15,6 +15,10 @@ const searchPopup = document.getElementById("PopupSearchAutoComplete");
 let searchbar;
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.contentPromptSubDialog", false]],
+  });
+
   searchbar = await gCUITestUtils.addSearchBar();
 
   registerCleanupFunction(async function() {
