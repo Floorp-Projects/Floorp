@@ -54,7 +54,7 @@ key3 = Value { $count }
         ok(false, "Missing argument didn't cause an exception.");
       } catch (e) {
         is(e,
-          "[fluent][resolver] errors in en-US/key3: ReferenceError: Unknown variable: $count.",
+          "[fluent][resolver] errors in en-US/key3: Resolver error: Unknown variable: $count.",
           "Missing key causes an exception.");
       }
     }

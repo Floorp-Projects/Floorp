@@ -126,7 +126,7 @@ pub struct FluentNumber {
 }
 
 impl FluentNumber {
-    pub fn new(value: f64, options: FluentNumberOptions) -> Self {
+    pub const fn new(value: f64, options: FluentNumberOptions) -> Self {
         Self { value, options }
     }
 
