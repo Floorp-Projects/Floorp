@@ -730,8 +730,10 @@ class ReactEventCollector extends MainEventCollector {
       handlerDO = handlerDO.boundTargetFunction;
     }
 
-    const introScript = handlerDO.script.source.introductionScript;
     const script = handlerDO.script;
+    // Script might be undefined (eg for methods bound several times, see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1589658)
+    const introScript = script?.source.introductionScript;
 
     // If this is a Babel transpiled function we have no access to the
     // source location so we need to hide the filename and debugger
