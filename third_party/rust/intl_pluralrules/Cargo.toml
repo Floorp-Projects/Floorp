@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "intl_pluralrules"
-version = "7.0.0"
+version = "7.0.1"
 authors = ["Kekoa Riggin <kekoariggin@gmail.com>", "Zibi Braniecki <zbraniecki@mozilla.com>"]
 include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md"]
 description = "Unicode Plural Rules categorizer for numeric input."

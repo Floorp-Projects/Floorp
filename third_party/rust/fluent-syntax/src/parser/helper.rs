@@ -61,10 +61,7 @@ where
     }
 
     pub(super) fn is_identifier_start(&self) -> bool {
-        match self.source.as_ref().as_bytes().get(self.ptr) {
-            Some(b) if b.is_ascii_alphabetic() => true,
-            _ => false,
-        }
+        matches!(self.source.as_ref().as_bytes().get(self.ptr), Some(b) if b.is_ascii_alphabetic())
     }
 
     pub(super) fn take_byte_if(&mut self, b: u8) -> bool {
@@ -93,8 +90,7 @@ where
     pub(super) fn skip_blank(&mut self) {
         loop {
             match self.source.as_ref().as_bytes().get(self.ptr) {
-                Some(b' ') => self.ptr += 1,
-                Some(b'\n') => self.ptr += 1,
+                Some(b' ') | Some(b'\n') => self.ptr += 1,
                 Some(b'\r')
                     if self.source.as_ref().as_bytes().get(self.ptr + 1) == Some(&b'\n') =>
                 {
@@ -117,6 +113,11 @@ where
         ![b'}', b'.', b'[', b'*'].contains(&b)
     }
 
+    pub(super) fn is_callee(name: &[u8]) -> bool {
+        name.iter()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || *c == b'_' || *c == b'-')
+    }
+
     pub(super) fn expect_byte(&mut self, b: u8) -> Result<()> {
         if !self.is_current_byte(b) {
             return error!(ErrorKind::ExpectedToken(b as char), self.ptr);
@@ -126,10 +127,7 @@ where
     }
 
     pub(super) fn is_number_start(&self) -> bool {
-        match self.source.as_ref().as_bytes().get(self.ptr) {
-            Some(b) if (b == &b'-') || b.is_ascii_digit() => true,
-            _ => false,
-        }
+        matches!(self.source.as_ref().as_bytes().get(self.ptr), Some(b) if (b == &b'-') || b.is_ascii_digit())
     }
 
     pub(super) fn is_eol(&self) -> bool {
