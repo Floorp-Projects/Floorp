@@ -1710,12 +1710,7 @@ pref("browser.contentblocking.state-partitioning.mvp.ui.enabled", true);
 //     "cookieBehavior4": cookie behaviour BEHAVIOR_REJECT_TRACKER
 //     "cookieBehavior5": cookie behaviour BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
 // One value from each section must be included in the browser.contentblocking.features.strict pref.
-#ifdef NIGHTLY_BUILD
-// Enable Dynamic First-Party Isolation in Nightly.
 pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior5,cm,fp,stp,lvl2");
-#else
-pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior4,cm,fp,stp,lvl2");
-#endif
 
 // Hide the "Change Block List" link for trackers/tracking content in the custom
 // Content Blocking/ETP panel. By default, it will not be visible. There is also
