@@ -43,6 +43,11 @@ inline SVGDocument* Document::AsSVGDocument() {
   return static_cast<SVGDocument*>(this);
 }
 
+inline const SVGDocument* Document::AsSVGDocument() const {
+  MOZ_ASSERT(IsSVGDocument());
+  return static_cast<const SVGDocument*>(this);
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
