@@ -19,7 +19,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
-#include "frontend/CompilationInfo.h"  // frontend::CompilationStencil, frontend::CompilationInfo, frontend::CompilationInfoVector
+#include "frontend/CompilationInfo.h"  // frontend::BaseCompilationStencil, frontend::CompilationInfo, frontend::CompilationInfoVector
 #include "frontend/ParserAtom.h"       // frontend::ParserAtomEntry
 #include "js/BuildId.h"                // JS::BuildIdCharVector
 #include "vm/JSContext.h"
@@ -299,7 +299,7 @@ static XDRResult AtomTable(XDRState<mode>* xdr) {
 
 template <XDRMode mode>
 static XDRResult ParserAtomTable(XDRState<mode>* xdr,
-                                 frontend::CompilationStencil& stencil) {
+                                 frontend::BaseCompilationStencil& stencil) {
   if (mode == XDR_ENCODE) {
     uint32_t atomVectorLength = stencil.parserAtomData.size();
     MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
@@ -460,14 +460,14 @@ XDRResult XDRState<mode>::codeStencil(
   MOZ_TRY(ParserAtomTable(this, compilationInfo.stencil));
 
   MOZ_ASSERT(isMainBuf());
-  MOZ_TRY(XDRCompilationStencil(this, compilationInfo.stencil));
+  MOZ_TRY(XDRBaseCompilationStencil(this, compilationInfo.stencil));
 
   return Ok();
 }
 
 template <XDRMode mode>
 XDRResult XDRState<mode>::codeFunctionStencil(
-    frontend::CompilationStencil& stencil) {
+    frontend::BaseCompilationStencil& stencil) {
 #ifdef DEBUG
   auto sanityCheck = mozilla::MakeScopeExit(
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
@@ -480,7 +480,7 @@ XDRResult XDRState<mode>::codeFunctionStencil(
 
   MOZ_TRY(ParserAtomTable(this, stencil));
 
-  MOZ_TRY(XDRCompilationStencil(this, stencil));
+  MOZ_TRY(XDRBaseCompilationStencil(this, stencil));
 
   return Ok();
 }
@@ -790,8 +790,8 @@ XDRResult XDRIncrementalStencilEncoder::codeStencils(
 }
 
 XDRResultT<bool> XDRIncrementalStencilEncoder::checkAlreadyCoded(
-    const frontend::CompilationStencil& stencil) {
-  static_assert(std::is_same_v<frontend::CompilationStencil::FunctionKey,
+    const frontend::BaseCompilationStencil& stencil) {
+  static_assert(std::is_same_v<frontend::BaseCompilationStencil::FunctionKey,
                                XDRIncrementalStencilEncoder::FunctionKey>);
 
   auto key = stencil.functionKey;

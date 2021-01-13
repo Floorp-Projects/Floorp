@@ -53,7 +53,7 @@ mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
 }
 
 bool js::frontend::EmitScriptThingsVector(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    JSContext* cx, CompilationInput& input, BaseCompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     mozilla::Span<const TaggedScriptThingIndex> things,
     mozilla::Span<JS::GCCellPtr> output) {
