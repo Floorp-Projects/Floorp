@@ -638,9 +638,6 @@ class ScriptStencil {
   //   * non-lazy Function (except asm.js module)
   //   * lazy Function (cannot be asm.js module)
 
-  // See `BaseScript::immutableFlags_`.
-  ImmutableScriptFlags immutableFlags;
-
   uint32_t memberInitializers_ = 0;
 
   // GCThings are stored into {CompilationState,CompilationStencil}.gcThingData,
@@ -702,12 +699,6 @@ class ScriptStencil {
     bool result = functionFlags.toRaw() != 0x0000;
     MOZ_ASSERT_IF(
         result, functionFlags.isAsmJSNative() || functionFlags.hasBaseScript());
-    return result;
-  }
-
-  bool isModule() const {
-    bool result = immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsModule);
-    MOZ_ASSERT_IF(result, !isFunction());
     return result;
   }
 
@@ -776,6 +767,9 @@ class ScriptStencil {
 // In addition to ScriptStencil, data generated only while initial-parsing.
 class ScriptStencilExtra {
  public:
+  // See `BaseScript::immutableFlags_`.
+  ImmutableScriptFlags immutableFlags;
+
   // The location of this script in the source.
   SourceExtent extent;
 
@@ -786,6 +780,10 @@ class ScriptStencilExtra {
   uint16_t padding_ = 0;
 
   ScriptStencilExtra() = default;
+
+  bool isModule() const {
+    return immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsModule);
+  }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
