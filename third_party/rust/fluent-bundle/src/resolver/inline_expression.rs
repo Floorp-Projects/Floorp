@@ -24,34 +24,23 @@ impl<'p> WriteValue for ast::InlineExpression<&'p str> {
     {
         match self {
             Self::StringLiteral { value } => unescape_unicode(w, value),
-            Self::MessageReference { id, attribute } => {
-                if let Some(msg) = scope.bundle.get_entry_message(id.name) {
+            Self::MessageReference { id, attribute } => scope
+                .bundle
+                .get_entry_message(id.name)
+                .and_then(|msg| {
                     if let Some(attr) = attribute {
-                        msg.attributes
-                            .iter()
-                            .find_map(|a| {
-                                if a.id.name == attr.name {
-                                    Some(scope.track(w, &a.value, self))
-                                } else {
-                                    None
-                                }
-                            })
-                            .unwrap_or_else(|| scope.write_ref_error(w, self))
+                        msg.attributes.iter().find_map(|a| {
+                            if a.id.name == attr.name {
+                                Some(scope.track(w, &a.value, self))
+                            } else {
+                                None
+                            }
+                        })
                     } else {
-                        msg.value
-                            .as_ref()
-                            .map(|value| scope.track(w, value, self))
-                            .unwrap_or_else(|| {
-                                scope.add_error(ResolverError::NoValue(id.name.to_string()));
-                                w.write_char('{')?;
-                                self.write_error(w)?;
-                                w.write_char('}')
-                            })
+                        msg.value.as_ref().map(|value| scope.track(w, value, self))
                     }
-                } else {
-                    scope.write_ref_error(w, self)
-                }
-            }
+                })
+                .unwrap_or_else(|| scope.write_ref_error(w, self)),
             Self::NumberLiteral { value } => FluentValue::try_number(*value).write(w, scope),
             Self::TermReference {
                 id,
@@ -105,7 +94,7 @@ impl<'p> WriteValue for ast::InlineExpression<&'p str> {
                     arg.write(w, scope)
                 } else {
                     if scope.local_args.is_none() {
-                        scope.add_error(self.into());
+                        scope.add_error(ResolverError::Reference(self.resolve_error()));
                     }
                     w.write_char('{')?;
                     self.write_error(w)?;
@@ -164,7 +153,7 @@ impl<'p> ResolveValue for ast::InlineExpression<&'p str> {
                     arg.clone()
                 } else {
                     if scope.local_args.is_none() {
-                        scope.add_error(self.into());
+                        scope.add_error(ResolverError::Reference(self.resolve_error()));
                     }
                     FluentValue::Error
                 }
@@ -174,6 +163,52 @@ impl<'p> ResolveValue for ast::InlineExpression<&'p str> {
                 self.write(&mut result, scope).expect("Failed to write");
                 result.into()
             }
+        }
+    }
+
+    fn resolve_error(&self) -> String {
+        match self {
+            Self::MessageReference {
+                attribute: None, ..
+            } => {
+                let mut error = String::from("Unknown message: ");
+                self.write_error(&mut error)
+                    .expect("Failed to write to String.");
+                error
+            }
+            Self::MessageReference { .. } => {
+                let mut error = String::from("Unknown attribute: ");
+                self.write_error(&mut error)
+                    .expect("Failed to write to String.");
+                error
+            }
+            Self::VariableReference { .. } => {
+                let mut error = String::from("Unknown variable: ");
+                self.write_error(&mut error)
+                    .expect("Failed to write to String.");
+                error
+            }
+            Self::TermReference {
+                attribute: None, ..
+            } => {
+                let mut error = String::from("Unknown term: ");
+                self.write_error(&mut error)
+                    .expect("Failed to write to String.");
+                error
+            }
+            Self::TermReference { .. } => {
+                let mut error = String::from("Unknown attribute: ");
+                self.write_error(&mut error)
+                    .expect("Failed to write to String.");
+                error
+            }
+            Self::FunctionReference { .. } => {
+                let mut error = String::from("Unknown function: ");
+                self.write_error(&mut error)
+                    .expect("Failed to write to String.");
+                error
+            }
+            _ => unreachable!(),
         }
     }
 }
