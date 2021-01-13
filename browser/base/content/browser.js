@@ -8894,10 +8894,9 @@ const SafeBrowsingNotificationBox = {
 };
 
 /**
- * The TabDialogBox supports opening window dialogs as SubDialogs on the tab and content
- * level. Both tab and content dialogs have their own separate managers.
+ * The TabDialogBox supports opening window dialogs as SubDialogs on tab level.
  * Dialogs will be queued FIFO and cover the web content.
- * Dialogs are closed when the user reloads or leaves the page.
+ * Tab dialogs are closed when the user reloads or leaves the page.
  * While a dialog is open PopupNotifications, such as permission prompts, are
  * suppressed.
  */
@@ -8905,11 +8904,9 @@ class TabDialogBox {
   constructor(browser) {
     this._weakBrowserRef = Cu.getWeakReference(browser);
 
-    // Create parent element for tab dialogs
+    // Create parent element for dialogs
     let template = document.getElementById("dialogStackTemplate");
     let dialogStack = template.content.cloneNode(true).firstElementChild;
-    dialogStack.classList.add("tab-prompt-dialog");
-
     this.browser.parentNode.insertBefore(
       dialogStack,
       this.browser.nextElementSibling
@@ -8918,8 +8915,7 @@ class TabDialogBox {
     // Initially the stack only contains the template
     let dialogTemplate = dialogStack.firstElementChild;
 
-    // Create dialog manager for prompts at the tab level.
-    this._tabDialogManager = new SubDialogManager({
+    this._dialogManager = new SubDialogManager({
       dialogStack,
       dialogTemplate,
       orderType: SubDialogManager.ORDER_QUEUE,
@@ -8931,7 +8927,7 @@ class TabDialogBox {
   }
 
   /**
-   * Open a dialog on tab or content level.
+   * Open a dialog on tab level.
    * @param {String} aURL - URL of the dialog to load in the tab box.
    * @param {Object} [aOptions]
    * @param {String} [aOptions.features] - Comma separated list of window
@@ -8944,8 +8940,6 @@ class TabDialogBox {
    * @param {Boolean} [aOptions.keepOpenSameOriginNav] - By default dialogs are
    * aborted on any navigation.
    * Set to true to keep the dialog open for same origin navigation.
-   * @param {Number} [aOptions.modalType] - The modal type to create the dialog for.
-   * By default, we show the dialog for tab prompts.
    * @returns {Promise} - Resolves once the dialog has been closed.
    */
   open(
@@ -8955,32 +8949,22 @@ class TabDialogBox {
       allowDuplicateDialogs = true,
       sizeTo,
       keepOpenSameOriginNav,
-      modalType = null,
     } = {},
     ...aParams
   ) {
     return new Promise(resolve => {
-      // Get the dialog manager to open the prompt with.
-      let dialogManager =
-        modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT
-          ? this.getContentDialogManager()
-          : this._tabDialogManager;
-      let hasDialogs =
-        this._tabDialogManager.hasDialogs ||
-        this._contentDialogManager?.hasDialogs;
-
-      if (!hasDialogs) {
+      if (!this._dialogManager.hasDialogs) {
         this._onFirstDialogOpen();
       }
 
       let closingCallback = () => {
-        if (!hasDialogs) {
+        if (!this._dialogManager.hasDialogs) {
           this._onLastDialogClose();
         }
       };
 
       // Open dialog and resolve once it has been closed
-      let dialog = dialogManager.open(
+      let dialog = this._dialogManager.open(
         aURL,
         {
           features,
@@ -9025,29 +9009,6 @@ class TabDialogBox {
     this.tab?.removeEventListener("TabClose", this);
   }
 
-  _buildContentPromptDialog() {
-    let template = document.getElementById("dialogStackTemplate");
-    let contentDialogStack = template.content.cloneNode(true).firstElementChild;
-    contentDialogStack.classList.add("content-prompt-dialog");
-
-    // Create a dialog manager for content prompts.
-    let tabPromptDialog = this.browser.parentNode.querySelector(
-      ".tab-prompt-dialog"
-    );
-    this.browser.parentNode.insertBefore(contentDialogStack, tabPromptDialog);
-
-    let contentDialogTemplate = contentDialogStack.firstElementChild;
-    this._contentDialogManager = new SubDialogManager({
-      dialogStack: contentDialogStack,
-      dialogTemplate: contentDialogTemplate,
-      orderType: SubDialogManager.ORDER_QUEUE,
-      allowDuplicateDialogs: true,
-      dialogOptions: {
-        consumeOutsideClicks: false,
-      },
-    });
-  }
-
   handleEvent(event) {
     if (event.type !== "TabClose") {
       return;
@@ -9056,17 +9017,11 @@ class TabDialogBox {
   }
 
   abortAllDialogs() {
-    this._tabDialogManager.abortDialogs();
-    this._contentDialogManager?.abortDialogs();
+    this._dialogManager.abortDialogs();
   }
 
   focus() {
-    // Prioritize focusing the dialog manager for tab prompts
-    if (this._tabDialogManager._dialogs.length) {
-      this._tabDialogManager.focusTopDialog();
-      return;
-    }
-    this._contentDialogManager?.focusTopDialog();
+    this._dialogManager.focusTopDialog();
   }
 
   /**
@@ -9096,8 +9051,7 @@ class TabDialogBox {
 
     this._lastPrincipal = this.browser.contentPrincipal;
 
-    this._tabDialogManager.abortDialogs(filterFn);
-    this._contentDialogManager?.abortDialogs(filterFn);
+    this._dialogManager.abortDialogs(filterFn);
   }
 
   get tab() {
@@ -9112,15 +9066,8 @@ class TabDialogBox {
     return browser;
   }
 
-  getTabDialogManager() {
-    return this._tabDialogManager;
-  }
-
-  getContentDialogManager() {
-    if (!this._contentDialogManager) {
-      this._buildContentPromptDialog();
-    }
-    return this._contentDialogManager;
+  getManager() {
+    return this._dialogManager;
   }
 }
 
