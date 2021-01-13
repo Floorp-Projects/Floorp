@@ -817,48 +817,47 @@ function TypedArrayMap(callbackfn/*, thisArg*/) {
     return A;
 }
 
-// ES6 draft rev30 (2014/12/24) 22.2.3.19 %TypedArray%.prototype.reduce(callbackfn[, initialValue]).
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
+// 22.2.3.20 %TypedArray%.prototype.reduce ( callbackfn [ , initialValue ] )
 function TypedArrayReduce(callbackfn/*, initialValue*/) {
-    // Steps 1-2.
+    // Step 1.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
+    // Step 2.
     var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
 
     // If we got here, `this` is either a typed array or a wrapper for one.
 
-    // Steps 3-5.
+    // Step 3.
     var len;
     if (isTypedArray)
         len = TypedArrayLength(O);
     else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
 
-    // Step 6.
+    // Step 4.
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.reduce");
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    // Step 7.
+    // Step 5.
     if (len === 0 && arguments.length === 1)
         ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
 
-    // Step 8.
+    // Step 6.
     var k = 0;
 
-    // Steps 9-10.
-    // Omit some steps, since 'accumulator' should always be O[0] in step 10 for typed arrays.
+    // Steps 7-9.
     var accumulator = arguments.length > 1 ? arguments[1] : O[k++];
 
-    // Step 11.
-    // Omit steps 11.b-11.c and the 'if' clause in step 11.d, since there are no holes in typed arrays.
+    // Step 10.
     for (; k < len; k++) {
         accumulator = callContentFunction(callbackfn, undefined, accumulator, O[k], k, O);
     }
 
-    // Step 12.
+    // Step 11.
     return accumulator;
 }
 
