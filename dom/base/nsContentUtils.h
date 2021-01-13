@@ -71,6 +71,7 @@ class nsAttrValue;
 class nsAutoScriptBlockerSuppressNodeRemoved;
 class nsContentList;
 class nsCycleCollectionTraversalCallback;
+class nsDocShell;
 class nsGlobalWindowInner;
 class nsHtml5StringParser;
 class nsIArray;
@@ -2706,6 +2707,7 @@ class nsContentUtils {
    * is not in designMode, this returns nullptr.
    */
   static mozilla::HTMLEditor* GetHTMLEditor(nsPresContext* aPresContext);
+  static mozilla::HTMLEditor* GetHTMLEditor(nsDocShell* aDocShell);
 
   /**
    * Returns pointer to a text editor if <input> or <textarea> element is
@@ -2716,6 +2718,7 @@ class nsContentUtils {
    * Note that this does not return editor in descendant documents.
    */
   static mozilla::TextEditor* GetActiveEditor(nsPresContext* aPresContext);
+  static mozilla::TextEditor* GetActiveEditor(nsPIDOMWindowOuter* aWindow);
 
   /**
    * Returns `TextEditor` which manages `aAnonymousContent` if there is.
