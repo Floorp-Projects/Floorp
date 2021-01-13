@@ -645,7 +645,7 @@ class UrlbarView {
           setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
         });
       } else if (
-        firstResult.payload.providesSearchMode &&
+        firstResult.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW &&
         queryContext.trimmedSearchString != "@"
       ) {
         // Filtered keyword offer results can be in the first position but not
@@ -1174,7 +1174,7 @@ class UrlbarView {
 
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-      !result.payload.providesSearchMode &&
+      !result.payload.keywordOffer &&
       !result.payload.inPrivateWindow
     ) {
       item.setAttribute("type", "search");
@@ -1291,7 +1291,7 @@ class UrlbarView {
               { engine: result.payload.engine }
             );
           };
-        } else if (!result.payload.providesSearchMode) {
+        } else if (!result.payload.keywordOffer) {
           actionSetter = () => {
             this.document.l10n.setAttributes(
               action,
@@ -1796,7 +1796,7 @@ class UrlbarView {
    *   The DOM node for the result's tile.
    */
   _setResultTitle(result, titleNode) {
-    if (result.payload.providesSearchMode) {
+    if (result.payload.keywordOffer) {
       // Keyword offers are the only result that require a localized title.
       // We localize the title instead of using the action text as a title
       // because some keyword offer results use both a title and action text

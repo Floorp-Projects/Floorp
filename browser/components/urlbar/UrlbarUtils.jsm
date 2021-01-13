@@ -162,6 +162,18 @@ var UrlbarUtils = {
     SUGGESTED: 2,
   },
 
+  // "Keyword offers" are search results with keywords that enter search mode
+  // when the user picks them.  Depending on the use case, a keyword offer can
+  // visually show or hide the keyword itself in its result.  For example,
+  // typing "@" by itself will show keyword offers for all engines with @
+  // aliases, and those results will preview their search modes. When a keyword
+  // offer is a heuristic -- like an autofilled @  alias -- usually it hides
+  // its keyword since the user is already typing it.
+  KEYWORD_OFFER: {
+    SHOW: 1,
+    HIDE: 2,
+  },
+
   // UnifiedComplete's autocomplete results store their titles and tags together
   // in their comments.  This separator is used to separate them.  When we
   // rewrite UnifiedComplete for quantumbar, we should stop using this old hack
@@ -1064,11 +1076,11 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       keyword: {
         type: "string",
       },
+      keywordOffer: {
+        type: "number", // UrlbarUtils.KEYWORD_OFFER
+      },
       lowerCaseSuggestion: {
         type: "string",
-      },
-      providesSearchMode: {
-        type: "boolean",
       },
       query: {
         type: "string",

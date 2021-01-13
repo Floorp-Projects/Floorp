@@ -213,7 +213,7 @@ add_task(async function test_suggestions() {
       {
         engine: "mozSearch",
         query: "moz",
-        providesSearchMode: true,
+        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
         keyword: "@moz",
       }
     ),
