@@ -506,7 +506,7 @@ class ScriptStencilIterable {
 };
 
 // Input and output of compilation to stencil.
-struct CompilationInfo {
+struct CompilationInfo : public BaseCompilationStencil {
   static constexpr ScriptIndex TopLevelIndex = ScriptIndex(0);
 
   // This holds allocations that do not require destructors to be run but are
@@ -517,7 +517,6 @@ struct CompilationInfo {
   static constexpr size_t LifoAllocChunkSize = 512;
 
   CompilationInput input;
-  BaseCompilationStencil stencil;
 
   // Set to true once prepareForInstantiate is called.
   // NOTE: This field isn't XDR-encoded.
@@ -562,9 +561,9 @@ struct CompilationInfo {
   // Move constructor is necessary to use Rooted, but must be explicit in
   // order to steal the LifoAlloc data
   CompilationInfo(CompilationInfo&& other) noexcept
-      : alloc(LifoAllocChunkSize),
-        input(std::move(other.input)),
-        stencil(std::move(other.stencil)) {
+      : BaseCompilationStencil(std::move(other)),
+        alloc(LifoAllocChunkSize),
+        input(std::move(other.input)) {
     // Steal the data from the LifoAlloc.
     alloc.steal(&other.alloc);
   }

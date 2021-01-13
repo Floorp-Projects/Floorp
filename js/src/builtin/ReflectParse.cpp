@@ -3289,7 +3289,7 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
     case ParseNodeKind::RegExpExpr: {
       RegExpObject* re = pn->as<RegExpLiteral>().create(
           cx, parser->getCompilationInfo().input.atomCache,
-          parser->getCompilationInfo().stencil);
+          parser->getCompilationInfo());
       if (!re) {
         return false;
       }

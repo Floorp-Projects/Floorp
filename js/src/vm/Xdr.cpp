@@ -457,10 +457,10 @@ XDRResult XDRState<mode>::codeStencil(
   if (mode == XDR_ENCODE) {
     switchToMainBuf();
   }
-  MOZ_TRY(ParserAtomTable(this, compilationInfo.stencil));
+  MOZ_TRY(ParserAtomTable(this, compilationInfo));
 
   MOZ_ASSERT(isMainBuf());
-  MOZ_TRY(XDRBaseCompilationStencil(this, compilationInfo.stencil));
+  MOZ_TRY(XDRBaseCompilationStencil(this, compilationInfo));
 
   return Ok();
 }
@@ -746,7 +746,7 @@ XDRResult XDRStencilDecoder::codeStencils(
   MOZ_ASSERT(stencilSet.delazifications.length() == 0);
 
   frontend::ParserAtomSpanBuilder parserAtomBuilder(
-      cx()->runtime(), stencilSet.initial.stencil.parserAtomData);
+      cx()->runtime(), stencilSet.initial.parserAtomData);
   parserAtomBuilder_ = &parserAtomBuilder;
   stencilAlloc_ = &stencilSet.initial.alloc;
 

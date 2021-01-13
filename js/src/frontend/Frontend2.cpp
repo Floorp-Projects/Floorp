@@ -280,7 +280,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
     js::ReportOutOfMemory(cx);
     return false;
   }
-  compilationInfo.stencil.regExpData = mozilla::Span(p, len);
+  compilationInfo.regExpData = mozilla::Span(p, len);
 
   for (size_t i = 0; i < len; i++) {
     SmooshRegExpItem& item = result.regexps.data[i];
@@ -338,7 +338,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
     }
     atom->markUsedByStencil();
 
-    new (mozilla::KnownNotNull, &compilationInfo.stencil.regExpData[i])
+    new (mozilla::KnownNotNull, &compilationInfo.regExpData[i])
         RegExpStencil(atom->toIndex(), JS::RegExpFlags(flags));
   }
 
@@ -440,9 +440,8 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
 
   const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
 
-  ScriptStencil& script = compilationInfo.stencil.scriptData[scriptIndex];
-  ScriptStencilExtra& scriptExtra =
-      compilationInfo.stencil.scriptExtra[scriptIndex];
+  ScriptStencil& script = compilationInfo.scriptData[scriptIndex];
+  ScriptStencilExtra& scriptExtra = compilationInfo.scriptExtra[scriptIndex];
 
   scriptExtra.immutableFlags = smooshScript.immutable_flags;
 
@@ -478,8 +477,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
       return false;
     }
 
-    if (!compilationInfo.stencil.sharedData.addAndShare(cx, scriptIndex,
-                                                        sharedData)) {
+    if (!compilationInfo.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
       return false;
     }
 
@@ -630,7 +628,7 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     js::ReportOutOfMemory(cx);
     return false;
   }
-  compilationInfo.stencil.scriptData = mozilla::Span(pscript, len);
+  compilationInfo.scriptData = mozilla::Span(pscript, len);
 
   auto* pextra =
       compilationInfo.alloc.newArrayUninitialized<ScriptStencilExtra>(len);
@@ -638,7 +636,7 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     js::ReportOutOfMemory(cx);
     return false;
   }
-  compilationInfo.stencil.scriptExtra = mozilla::Span(pextra, len);
+  compilationInfo.scriptExtra = mozilla::Span(pextra, len);
 
   // NOTE: Currently we don't support delazification or standalone function.
   //       Once we support, fix the following loop to include 0-th item
@@ -651,10 +649,10 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     }
   }
 
-  compilationInfo.stencil.prepareStorageFor(cx, compilationState);
+  compilationInfo.prepareStorageFor(cx, compilationState);
 
   for (size_t i = 0; i < len; i++) {
-    new (mozilla::KnownNotNull, &compilationInfo.stencil.scriptData[i])
+    new (mozilla::KnownNotNull, &compilationInfo.scriptData[i])
         BaseCompilationStencil();
 
     if (!ConvertScriptStencil(cx, result, result.scripts.data[i], allAtoms,
