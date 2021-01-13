@@ -851,7 +851,6 @@ nsPrintSettingsService::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
   auto globalPrintSettings = aFlags;
 #ifndef MOZ_WIDGET_ANDROID
   globalPrintSettings &= nsIPrintSettings::kInitSaveShrinkToFit |
-                         nsIPrintSettings::kInitSaveToFileName |
                          nsIPrintSettings::kInitSaveHeaderLeft |
                          nsIPrintSettings::kInitSaveHeaderCenter |
                          nsIPrintSettings::kInitSaveHeaderRight |
