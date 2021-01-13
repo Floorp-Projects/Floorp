@@ -4,7 +4,9 @@
 
 package mozilla.components.browser.engine.gecko.mediasession
 
+import android.graphics.Bitmap
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.mediasession.MediaSession
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.MediaSession as GeckoViewMediaSession
@@ -30,9 +32,13 @@ internal class GeckoMediaSessionDelegate(
         mediaSession: GeckoViewMediaSession,
         metaData: GeckoViewMediaSession.Metadata
     ) {
+        val getArtwork: (suspend (Int) -> Bitmap?)? = metaData.artwork?.let {
+            { size -> it.getBitmap(size).await() }
+        }
+
         engineSession.notifyObservers {
             onMediaMetadataChanged(
-                MediaSession.Metadata(metaData.title, metaData.artist, metaData.album)
+                MediaSession.Metadata(metaData.title, metaData.artist, metaData.album, getArtwork)
             )
         }
     }

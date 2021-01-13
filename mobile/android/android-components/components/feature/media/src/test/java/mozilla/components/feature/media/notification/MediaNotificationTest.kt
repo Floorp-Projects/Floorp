@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.MediaState
@@ -203,8 +204,9 @@ class MediaNotificationTest {
                 ))
         )
 
-        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
-            .create(state.tabs[0], mock())
+        val notification = runBlocking {
+            MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
+        }
 
         assertEquals("https://www.mozilla.org", notification.text)
         assertEquals("Mozilla", notification.title)
@@ -220,8 +222,9 @@ class MediaNotificationTest {
                 ))
         )
 
-        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
-            .create(state.tabs[0], mock())
+        val notification = runBlocking {
+            MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
+        }
 
         assertEquals("https://www.mozilla.org", notification.text)
         assertEquals("Mozilla", notification.title)
@@ -237,8 +240,9 @@ class MediaNotificationTest {
                 ))
         )
 
-        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
-            .create(state.tabs[0], mock())
+        val notification = runBlocking {
+            MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
+        }
 
         assertEquals("", notification.text)
         assertEquals("", notification.title)
@@ -253,8 +257,9 @@ class MediaNotificationTest {
                 ))
         )
 
-        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
-            .create(state.tabs[0], mock())
+        val notification = runBlocking {
+            MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
+        }
 
         assertEquals("", notification.text)
         assertEquals("A site is playing media", notification.title)
@@ -270,8 +275,9 @@ class MediaNotificationTest {
                 ))
         )
 
-        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
-            .create(state.tabs[0], mock())
+        val notification = runBlocking {
+            MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
+        }
 
         assertEquals("", notification.text)
         assertEquals("A site is playing media", notification.title)

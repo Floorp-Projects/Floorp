@@ -4,7 +4,7 @@
 
 package mozilla.components.concept.engine.mediasession
 
-import android.media.Image
+import android.graphics.Bitmap
 
 /**
  * Value type that represents a media session that is present on the currently displayed page in a session.
@@ -39,13 +39,13 @@ class MediaSession {
      * @property title The media title string.
      * @property artist The media artist string.
      * @property album The media album string.
-     * @property artwork The media artwork {@link Image}.
+     * @property getArtwork Get the media artwork.
      */
     data class Metadata(
         val title: String? = null,
         val artist: String? = null,
         val album: String? = null,
-        val artwork: Image? = null
+        val getArtwork: (suspend (Int) -> Bitmap?)?
     )
 
     /**

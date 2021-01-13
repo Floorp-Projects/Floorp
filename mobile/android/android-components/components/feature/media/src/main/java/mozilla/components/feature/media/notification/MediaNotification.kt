@@ -13,6 +13,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.media.app.NotificationCompat.MediaStyle
+import kotlinx.coroutines.withTimeoutOrNull
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.MediaState
@@ -20,6 +21,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.feature.media.R
 import mozilla.components.feature.media.ext.getActiveMediaTab
+import mozilla.components.feature.media.ext.getNonPrivateIcon
 import mozilla.components.feature.media.ext.getTitleOrUrl
 import mozilla.components.feature.media.ext.isMediaStateForCustomTab
 import mozilla.components.feature.media.ext.nonPrivateIcon
@@ -28,6 +30,9 @@ import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import mozilla.components.support.base.ids.SharedIdsHelper
 import java.util.Locale
+
+private const val ARTWORK_RETRIEVE_TIMEOUT = 1000L
+private const val ARTWORK_IMAGE_SIZE = 48
 
 /**
  * Helper to display a notification for web content playing media.
@@ -49,7 +54,7 @@ internal class MediaNotification(
     /**
      * Creates a new [Notification] for the given [sessionState].
      */
-    fun create(sessionState: SessionState?, mediaSessionCompat: MediaSessionCompat): Notification {
+    suspend fun create(sessionState: SessionState?, mediaSessionCompat: MediaSessionCompat): Notification {
         val data = sessionState?.toNotificationData(context, cls) ?: NotificationData()
 
         return buildNotification(data, mediaSessionCompat, sessionState !is CustomTabSessionState)
@@ -155,20 +160,23 @@ private fun BrowserState.toNotificationData(
     }
 }
 
-private fun SessionState.toNotificationData(
+private suspend fun SessionState.toNotificationData(
     context: Context,
     cls: Class<*>
 ): NotificationData {
     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.also {
         it.action = AbstractMediaSessionService.ACTION_SWITCH_TAB
     }
+    val artwork = withTimeoutOrNull(ARTWORK_RETRIEVE_TIMEOUT) {
+        mediaSessionState?.metadata?.getArtwork?.invoke(ARTWORK_IMAGE_SIZE)
+    }
 
     return when (mediaSessionState?.playbackState) {
         MediaSession.PlaybackState.PLAYING -> NotificationData(
-            title = getTitleOrUrl(context),
+            title = getTitleOrUrl(context, mediaSessionState?.metadata?.title),
             description = nonPrivateUrl,
             icon = R.drawable.mozac_feature_media_playing,
-            largeIcon = nonPrivateIcon,
+            largeIcon = getNonPrivateIcon(artwork),
             action = NotificationCompat.Action.Builder(
                 R.drawable.mozac_feature_media_action_pause,
                 context.getString(R.string.mozac_feature_media_notification_action_pause),
@@ -186,10 +194,10 @@ private fun SessionState.toNotificationData(
             )
         )
         MediaSession.PlaybackState.PAUSED -> NotificationData(
-            title = getTitleOrUrl(context),
+            title = getTitleOrUrl(context, mediaSessionState?.metadata?.title),
             description = nonPrivateUrl,
             icon = R.drawable.mozac_feature_media_paused,
-            largeIcon = nonPrivateIcon,
+            largeIcon = getNonPrivateIcon(artwork),
             action = NotificationCompat.Action.Builder(
                 R.drawable.mozac_feature_media_action_play,
                 context.getString(R.string.mozac_feature_media_notification_action_play),
