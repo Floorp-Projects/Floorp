@@ -632,10 +632,7 @@ if __name__ == "__main__":
         help="Skip tar packaging stage",
     )
     parser.add_argument(
-        "--skip-checkout",
-        required=False,
-        action="store_true",
-        help="Do not checkout/revert source",
+        "--skip-patch", required=False, action="store_true", help="Do not patch source",
     )
 
     args = parser.parse_args()
@@ -782,8 +779,9 @@ if __name__ == "__main__":
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
 
-    for p in config.get("patches", []):
-        patch(os.path.join(config_dir, p), source_dir)
+    if not args.skip_patch:
+        for p in config.get("patches", []):
+            patch(os.path.join(config_dir, p), source_dir)
 
     compiler_rt_source_link = llvm_source_dir + "/projects/compiler-rt"
 
@@ -806,7 +804,10 @@ if __name__ == "__main__":
     package_name = "clang"
     if build_clang_tidy:
         package_name = "clang-tidy"
-        import_clang_tidy(source_dir, build_clang_tidy_alpha, build_clang_tidy_external)
+        if not args.skip_patch:
+            import_clang_tidy(
+                source_dir, build_clang_tidy_alpha, build_clang_tidy_external
+            )
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
