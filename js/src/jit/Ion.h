@@ -63,8 +63,6 @@ struct IonOsrTempData {
 
 MethodStatus CanEnterIon(JSContext* cx, RunState& state);
 
-MethodStatus Recompile(JSContext* cx, HandleScript script, bool force);
-
 class MIRGenerator;
 class LIRGraph;
 class CodeGenerator;
