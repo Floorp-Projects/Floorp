@@ -689,13 +689,11 @@ void JitCode::finalize(JSFreeOp* fop) {
 }
 
 IonScript::IonScript(IonCompilationId compilationId, uint32_t frameSlots,
-                     uint32_t argumentSlots, uint32_t frameSize,
-                     OptimizationLevel optimizationLevel)
+                     uint32_t argumentSlots, uint32_t frameSize)
     : frameSlots_(frameSlots),
       argumentSlots_(argumentSlots),
       frameSize_(frameSize),
-      compilationId_(compilationId),
-      optimizationLevel_(optimizationLevel) {}
+      compilationId_(compilationId) {}
 
 IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
                           uint32_t frameSlots, uint32_t argumentSlots,
@@ -704,8 +702,7 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
                           size_t bailoutEntries, size_t constants,
                           size_t nurseryObjects, size_t safepointIndices,
                           size_t osiIndices, size_t icEntries,
-                          size_t runtimeSize, size_t safepointsSize,
-                          OptimizationLevel optimizationLevel) {
+                          size_t runtimeSize, size_t safepointsSize) {
   if (snapshotsListSize >= MAX_BUFFER_SIZE ||
       (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t))) {
     ReportOutOfMemory(cx);
@@ -743,8 +740,8 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   if (!raw) {
     return nullptr;
   }
-  IonScript* script = new (raw) IonScript(
-      compilationId, frameSlots, argumentSlots, frameSize, optimizationLevel);
+  IonScript* script =
+      new (raw) IonScript(compilationId, frameSlots, argumentSlots, frameSize);
 
   Offset offsetCursor = sizeof(IonScript);
 
@@ -1627,10 +1624,7 @@ static AbortReasonOr<WarpSnapshot*> CreateWarpSnapshot(JSContext* cx,
 }
 
 static AbortReason IonCompile(JSContext* cx, HandleScript script,
-                              BaselineFrame* baselineFrame,
-                              uint32_t baselineFrameSize, jsbytecode* osrPc,
-                              bool recompile,
-                              OptimizationLevel optimizationLevel) {
+                              jsbytecode* osrPc) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
   AutoTraceLog logScript(logger, event);
@@ -1678,7 +1672,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   }
 
   const OptimizationInfo* optimizationInfo =
-      IonOptimizations.get(optimizationLevel);
+      IonOptimizations.get(OptimizationLevel::Normal);
   const JitCompileOptions options(cx);
 
   MIRGenerator* mirGen =
@@ -1688,14 +1682,9 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     return AbortReason::Alloc;
   }
 
-  const bool scriptHasIonScript = script->hasIonScript();
-
-  MOZ_ASSERT(recompile == script->hasIonScript());
+  MOZ_ASSERT(!script->baselineScript()->hasPendingIonCompileTask());
+  MOZ_ASSERT(!script->hasIonScript());
   MOZ_ASSERT(script->canIonCompile());
-
-  if (recompile) {
-    script->ionScript()->setRecompiling();
-  }
 
   if (osrPc) {
     script->jitScript()->setHadIonOSR();
@@ -1714,8 +1703,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
             ". (Compiled on background thread.)",
             script->filename(), script->lineno(), script->column());
 
-    IonCompileTask* task =
-        alloc->new_<IonCompileTask>(*mirGen, scriptHasIonScript, snapshot);
+    IonCompileTask* task = alloc->new_<IonCompileTask>(*mirGen, snapshot);
     if (!task) {
       return AbortReason::Alloc;
     }
@@ -1727,9 +1715,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
       return AbortReason::Alloc;
     }
 
-    if (!recompile) {
-      script->jitScript()->setIsIonCompilingOffThread(script);
-    }
+    script->jitScript()->setIsIonCompilingOffThread(script);
 
     // The allocator and associated data will be destroyed after being
     // processed in the finishedOffThreadCompilations list.
@@ -1888,24 +1874,18 @@ bool CanIonInlineScript(JSScript* script) {
   return true;
 }
 
-static OptimizationLevel GetOptimizationLevel(HandleScript script,
-                                              jsbytecode* pc) {
-  return IonOptimizations.levelForScript(script, pc);
-}
-
 static MethodStatus Compile(JSContext* cx, HandleScript script,
-                            BaselineFrame* osrFrame, uint32_t osrFrameSize,
-                            jsbytecode* osrPc, bool forceRecompile = false) {
+                            BaselineFrame* osrFrame, jsbytecode* osrPc) {
   MOZ_ASSERT(jit::IsIonEnabled(cx));
   MOZ_ASSERT(jit::IsBaselineJitEnabled(cx));
+
+  MOZ_ASSERT(script->hasBaselineScript());
+  MOZ_ASSERT(!script->baselineScript()->hasPendingIonCompileTask());
+  MOZ_ASSERT(!script->hasIonScript());
 
   AutoGeckoProfilerEntry pseudoFrame(
       cx, "Ion script compilation",
       JS::ProfilingCategoryPair::JS_IonCompilation);
-
-  if (!script->hasBaselineScript()) {
-    return Method_Skipped;
-  }
 
   if (script->isDebuggee() || (osrFrame && osrFrame->isDebuggee())) {
     TrackAndSpewIonAbort(cx, script, "debugging");
@@ -1918,48 +1898,22 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
     return Method_CantCompile;
   }
 
-  bool recompile = false;
-  OptimizationLevel optimizationLevel = GetOptimizationLevel(script, osrPc);
+  OptimizationLevel optimizationLevel =
+      IonOptimizations.levelForScript(script, osrPc);
   if (optimizationLevel == OptimizationLevel::DontCompile) {
     return Method_Skipped;
   }
+
+  MOZ_ASSERT(optimizationLevel == OptimizationLevel::Normal);
 
   if (!CanLikelyAllocateMoreExecutableMemory()) {
     script->resetWarmUpCounterToDelayIonCompilation();
     return Method_Skipped;
   }
 
-  if (script->baselineScript()->hasPendingIonCompileTask()) {
-    LinkIonScript(cx, script);
-  }
+  MOZ_ASSERT(!script->hasIonScript());
 
-  if (script->hasIonScript()) {
-    IonScript* scriptIon = script->ionScript();
-    if (!scriptIon->method()) {
-      return Method_CantCompile;
-    }
-
-    // Don't recompile/overwrite higher optimized code,
-    // with a lower optimization level.
-    if (optimizationLevel <= scriptIon->optimizationLevel() &&
-        !forceRecompile) {
-      return Method_Compiled;
-    }
-
-    // Don't start compiling if already compiling
-    if (scriptIon->isRecompiling()) {
-      return Method_Compiled;
-    }
-
-    if (osrPc) {
-      scriptIon->resetOsrPcMismatchCounter();
-    }
-
-    recompile = true;
-  }
-
-  AbortReason reason = IonCompile(cx, script, osrFrame, osrFrameSize, osrPc,
-                                  recompile, optimizationLevel);
+  AbortReason reason = IonCompile(cx, script, osrPc);
   if (reason == AbortReason::Error) {
     MOZ_ASSERT(cx->isExceptionPending());
     return Method_Error;
@@ -1999,6 +1953,7 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
   MOZ_ASSERT(jit::IsIonEnabled(cx));
 
   HandleScript script = state.script();
+  MOZ_ASSERT(!script->hasIonScript());
 
   // Skip if the script has been disabled.
   if (!script->canIonCompile()) {
@@ -2041,13 +1996,16 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
     }
   }
 
+  if (!script->hasBaselineScript()) {
+    return Method_Skipped;
+  }
+
   MOZ_ASSERT(!script->isIonCompilingOffThread());
   MOZ_ASSERT(script->canIonCompile());
 
   // Attempt compilation. Returns Method_Compiled if already compiled.
-  MethodStatus status =
-      Compile(cx, script, /* osrFrame = */ nullptr, /* osrFrameSize = */ 0,
-              /* osrPc = */ nullptr);
+  MethodStatus status = Compile(cx, script, /* osrFrame = */ nullptr,
+                                /* osrPc = */ nullptr);
   if (status != Method_Compiled) {
     if (status == Method_CantCompile) {
       ForbidCompilation(cx, script);
@@ -2066,8 +2024,7 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
 }
 
 static MethodStatus BaselineCanEnterAtEntry(JSContext* cx, HandleScript script,
-                                            BaselineFrame* frame,
-                                            uint32_t frameSize) {
+                                            BaselineFrame* frame) {
   MOZ_ASSERT(jit::IsIonEnabled(cx));
   MOZ_ASSERT(script->canIonCompile());
   MOZ_ASSERT(!script->isIonCompilingOffThread());
@@ -2080,8 +2037,15 @@ static MethodStatus BaselineCanEnterAtEntry(JSContext* cx, HandleScript script,
     return Method_CantCompile;
   }
 
+  if (script->baselineScript()->hasPendingIonCompileTask()) {
+    LinkIonScript(cx, script);
+    if (script->hasIonScript()) {
+      return Method_Compiled;
+    }
+  }
+
   // Attempt compilation. Returns Method_Compiled if already compiled.
-  MethodStatus status = Compile(cx, script, frame, frameSize, nullptr);
+  MethodStatus status = Compile(cx, script, frame, nullptr);
   if (status != Method_Compiled) {
     if (status == Method_CantCompile) {
       ForbidCompilation(cx, script);
@@ -2096,7 +2060,6 @@ static MethodStatus BaselineCanEnterAtEntry(JSContext* cx, HandleScript script,
 // May compile or recompile the target JSScript.
 static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
                                              BaselineFrame* osrFrame,
-                                             uint32_t osrFrameSize,
                                              jsbytecode* pc) {
   MOZ_ASSERT(jit::IsIonEnabled(cx));
   MOZ_ASSERT((JSOp)*pc == JSOp::LoopHead);
@@ -2130,15 +2093,19 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
 
   // By default a recompilation doesn't happen on osr mismatch.
   // Decide if we want to force a recompilation if this happens too much.
-  bool force = false;
-  if (script->hasIonScript() && pc != script->ionScript()->osrPc()) {
+  if (script->hasIonScript()) {
+    if (pc == script->ionScript()->osrPc()) {
+      return Method_Compiled;
+    }
+
     uint32_t count = script->ionScript()->incrOsrPcMismatchCounter();
     if (count <= JitOptions.osrPcMismatchesBeforeRecompile &&
         !JitOptions.eagerIonCompilation()) {
       return Method_Skipped;
     }
+
     JitSpew(JitSpew_IonScripts, "Forcing OSR Mismatch Compilation");
-    force = true;
+    Invalidate(cx, script);
   }
 
   // Attempt compilation.
@@ -2147,7 +2114,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
   // - Returns Method_Skipped if pc doesn't match
   //   (This means a background thread compilation with that pc could have
   //   started or not.)
-  MethodStatus status = Compile(cx, script, osrFrame, osrFrameSize, pc, force);
+  MethodStatus status = Compile(cx, script, osrFrame, pc);
   if (status != Method_Compiled) {
     if (status == Method_CantCompile) {
       ForbidCompilation(cx, script);
@@ -2167,9 +2134,8 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
 }
 
 static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
-                                        uint32_t frameSize, jsbytecode* pc) {
+                                        jsbytecode* pc) {
   MOZ_ASSERT(IsIonEnabled(cx));
-  MOZ_ASSERT(frame->debugFrameSize() == frameSize);
 
   RootedScript script(cx, frame->script());
   bool isLoopHead = JSOp(*pc) == JSOp::LoopHead;
@@ -2199,11 +2165,11 @@ static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
   MethodStatus stat;
   if (isLoopHead) {
     JitSpew(JitSpew_BaselineOSR, "  Compile at loop head!");
-    stat = BaselineCanEnterAtBranch(cx, script, frame, frameSize, pc);
+    stat = BaselineCanEnterAtBranch(cx, script, frame, pc);
   } else if (frame->isFunctionFrame()) {
     JitSpew(JitSpew_BaselineOSR,
             "  Compile function from top for later entry!");
-    stat = BaselineCanEnterAtEntry(cx, script, frame, frameSize);
+    stat = BaselineCanEnterAtEntry(cx, script, frame);
   } else {
     return true;
   }
@@ -2230,9 +2196,7 @@ static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
 bool jit::IonCompileScriptForBaselineAtEntry(JSContext* cx,
                                              BaselineFrame* frame) {
   JSScript* script = frame->script();
-  uint32_t frameSize =
-      BaselineFrame::frameSizeForNumValueSlots(script->nfixed());
-  return IonCompileScriptForBaseline(cx, frame, frameSize, script->code());
+  return IonCompileScriptForBaseline(cx, frame, script->code());
 }
 
 /* clang-format off */
@@ -2313,7 +2277,7 @@ bool jit::IonCompileScriptForBaselineOSR(JSContext* cx, BaselineFrame* frame,
   MOZ_ASSERT(frame->debugFrameSize() == frameSize);
   MOZ_ASSERT(JSOp(*pc) == JSOp::LoopHead);
 
-  if (!IonCompileScriptForBaseline(cx, frame, frameSize, pc)) {
+  if (!IonCompileScriptForBaseline(cx, frame, pc)) {
     return false;
   }
 
@@ -2328,6 +2292,8 @@ bool jit::IonCompileScriptForBaselineOSR(JSContext* cx, BaselineFrame* frame,
              ion->hasProfilingInstrumentation());
   MOZ_ASSERT(ion->osrPc() == pc);
 
+  ion->resetOsrPcMismatchCounter();
+
   JitSpew(JitSpew_BaselineOSR, "  OSR possible!");
   void* jitcode = ion->method()->raw() + ion->osrEntryOffset();
 
@@ -2341,27 +2307,6 @@ bool jit::IonCompileScriptForBaselineOSR(JSContext* cx, BaselineFrame* frame,
 
   *infoPtr = info;
   return true;
-}
-
-MethodStatus jit::Recompile(JSContext* cx, HandleScript script, bool force) {
-  MOZ_ASSERT(script->hasIonScript());
-  if (script->ionScript()->isRecompiling()) {
-    return Method_Compiled;
-  }
-
-  MOZ_ASSERT(!script->baselineScript()->hasPendingIonCompileTask());
-
-  MethodStatus status = Compile(cx, script, /* osrFrame = */ nullptr,
-                                /* osrFrameSize = */ 0,
-                                /* osrPc = */ nullptr, force);
-  if (status != Method_Compiled) {
-    if (status == Method_CantCompile) {
-      ForbidCompilation(cx, script);
-    }
-    return status;
-  }
-
-  return Method_Compiled;
 }
 
 static void InvalidateActivation(JSFreeOp* fop,

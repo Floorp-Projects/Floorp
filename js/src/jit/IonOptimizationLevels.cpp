@@ -36,28 +36,6 @@ void OptimizationInfo::initNormalOptimizationInfo() {
   sink_ = true;
 
   registerAllocator_ = RegisterAllocator_Backtracking;
-
-  inlineMaxBytecodePerCallSiteMainThread_ = 200;
-  inlineMaxBytecodePerCallSiteHelperThread_ = 400;
-  inlineMaxCalleeInlinedBytecodeLength_ = 3550;
-  inlineMaxTotalBytecodeLength_ = 85000;
-  inliningMaxCallerBytecodeLength_ = 1600;
-  maxInlineDepth_ = 0;
-  smallFunctionMaxInlineDepth_ = 1;
-  inliningWarmUpThresholdFactor_ = 0.5;
-  inliningRecompileThresholdFactor_ = 4;
-}
-
-void OptimizationInfo::initFullOptimizationInfo() {
-  initNormalOptimizationInfo();
-
-  level_ = OptimizationLevel::Full;
-
-  inlineMaxBytecodePerCallSiteMainThread_ = 550;
-  inlineMaxBytecodePerCallSiteHelperThread_ = 1100;
-  maxInlineDepth_ = 3;
-  smallFunctionMaxInlineDepth_ = 10;
-  inliningWarmUpThresholdFactor_ = 0.125;
 }
 
 void OptimizationInfo::initWasmOptimizationInfo() {
@@ -142,58 +120,17 @@ uint32_t OptimizationInfo::recompileWarmUpThreshold(JSScript* script,
 
 OptimizationLevelInfo::OptimizationLevelInfo() {
   infos_[OptimizationLevel::Normal].initNormalOptimizationInfo();
-  infos_[OptimizationLevel::Full].initFullOptimizationInfo();
   infos_[OptimizationLevel::Wasm].initWasmOptimizationInfo();
-
-#ifdef DEBUG
-  OptimizationLevel level = firstLevel();
-  while (!isLastLevel(level)) {
-    OptimizationLevel next = nextLevel(level);
-    MOZ_ASSERT_IF(level != OptimizationLevel::DontCompile, level < next);
-    level = next;
-  }
-#endif
-}
-
-OptimizationLevel OptimizationLevelInfo::nextLevel(
-    OptimizationLevel level) const {
-  MOZ_ASSERT(!isLastLevel(level));
-  switch (level) {
-    case OptimizationLevel::DontCompile:
-      return OptimizationLevel::Normal;
-    case OptimizationLevel::Normal:
-      return OptimizationLevel::Full;
-    case OptimizationLevel::Full:
-    case OptimizationLevel::Wasm:
-    case OptimizationLevel::Count:
-      break;
-  }
-  MOZ_CRASH("Unknown optimization level.");
-}
-
-OptimizationLevel OptimizationLevelInfo::firstLevel() const {
-  return nextLevel(OptimizationLevel::DontCompile);
-}
-
-bool OptimizationLevelInfo::isLastLevel(OptimizationLevel level) const {
-  return level == OptimizationLevel::Full;
 }
 
 OptimizationLevel OptimizationLevelInfo::levelForScript(JSScript* script,
                                                         jsbytecode* pc) const {
-  OptimizationLevel prev = OptimizationLevel::DontCompile;
-
-  while (!isLastLevel(prev)) {
-    OptimizationLevel level = nextLevel(prev);
-    const OptimizationInfo* info = get(level);
-    if (script->getWarmUpCount() < info->compilerWarmUpThreshold(script, pc)) {
-      return prev;
-    }
-
-    prev = level;
+  const OptimizationInfo* info = get(OptimizationLevel::Normal);
+  if (script->getWarmUpCount() < info->compilerWarmUpThreshold(script, pc)) {
+    return OptimizationLevel::DontCompile;
   }
 
-  return prev;
+  return OptimizationLevel::Normal;
 }
 
 }  // namespace jit

@@ -14,6 +14,7 @@
 #include "jit/CalleeToken.h"
 #include "jit/FixedList.h"
 #include "jit/IonAnalysis.h"
+#include "jit/IonOptimizationLevels.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
@@ -1316,7 +1317,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   Label done;
 
   const OptimizationInfo* info =
-      IonOptimizations.get(IonOptimizations.firstLevel());
+      IonOptimizations.get(OptimizationLevel::Normal);
   uint32_t warmUpThreshold = info->compilerWarmUpThreshold(script, pc);
   masm.branch32(Assembler::LessThan, countReg, Imm32(warmUpThreshold), &done);
 

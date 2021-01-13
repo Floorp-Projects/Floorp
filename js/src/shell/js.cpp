@@ -10643,16 +10643,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-  if (const char* str = op.getStringOption("ion-optimization-levels")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableOptimizationLevels = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableOptimizationLevels = true;
-    } else {
-      return OptionFailure("ion-optimization-levels", str);
-    }
-  }
-
   if (const char* str = op.getStringOption("ion-instruction-reordering")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disableInstructionReordering = false;
@@ -10704,11 +10694,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   int32_t warmUpThreshold = op.getIntOption("ion-warmup-threshold");
   if (warmUpThreshold >= 0) {
     jit::JitOptions.setNormalIonWarmUpThreshold(warmUpThreshold);
-  }
-
-  warmUpThreshold = op.getIntOption("ion-full-warmup-threshold");
-  if (warmUpThreshold >= 0) {
-    jit::JitOptions.setFullIonWarmUpThreshold(warmUpThreshold);
   }
 
   warmUpThreshold = op.getIntOption("baseline-warmup-threshold");
@@ -11528,8 +11513,7 @@ int main(int argc, char** argv, char** envp) {
       !op.addStringOption('\0', "ion-sink", "on/off",
                           "Sink code motion (default: off, on to enable)") ||
       !op.addStringOption('\0', "ion-optimization-levels", "on/off",
-                          "Use multiple Ion optimization levels (default: on, "
-                          "off to disable)") ||
+                          "No-op for fuzzing") ||
       !op.addStringOption('\0', "ion-loop-unrolling", "on/off",
                           "(NOP for fuzzers)") ||
       !op.addStringOption(
@@ -11553,9 +11537,7 @@ int main(int argc, char** argv, char** envp) {
                        "at the normal optimization level (default: 1000)",
                        -1) ||
       !op.addIntOption('\0', "ion-full-warmup-threshold", "COUNT",
-                       "Wait for COUNT calls or iterations before compiling "
-                       "at the 'full' optimization level (default: 100,000)",
-                       -1) ||
+                       "No-op for fuzzing", -1) ||
       !op.addStringOption(
           '\0', "ion-regalloc", "[mode]",
           "Specify Ion register allocation:\n"

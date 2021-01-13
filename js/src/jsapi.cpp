@@ -5217,13 +5217,6 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       }
       jit::JitOptions.setNormalIonWarmUpThreshold(value);
       break;
-    case JSJITCOMPILER_ION_FULL_WARMUP_TRIGGER:
-      if (value == uint32_t(-1)) {
-        jit::JitOptions.resetFullIonWarmUpThreshold();
-        break;
-      }
-      jit::JitOptions.setFullIonWarmUpThreshold(value);
-      break;
     case JSJITCOMPILER_ION_GVN_ENABLE:
       if (value == 0) {
         jit::JitOptions.enableGvn(false);
@@ -5381,9 +5374,6 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER:
       *valueOut = jit::JitOptions.normalIonWarmUpThreshold;
-      break;
-    case JSJITCOMPILER_ION_FULL_WARMUP_TRIGGER:
-      *valueOut = jit::JitOptions.fullIonWarmUpThreshold;
       break;
     case JSJITCOMPILER_ION_FORCE_IC:
       *valueOut = jit::JitOptions.forceInlineCaches;

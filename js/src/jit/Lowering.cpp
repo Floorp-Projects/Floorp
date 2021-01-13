@@ -5288,12 +5288,6 @@ void LIRGenerator::visitIncrementWarmUpCounter(MIncrementWarmUpCounter* ins) {
   add(lir, ins);
 }
 
-void LIRGenerator::visitRecompileCheck(MRecompileCheck* ins) {
-  LRecompileCheck* lir = new (alloc()) LRecompileCheck(temp());
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitLexicalCheck(MLexicalCheck* ins) {
   MDefinition* input = ins->input();
   MOZ_ASSERT(input->type() == MIRType::Value);

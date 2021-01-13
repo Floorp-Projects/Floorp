@@ -2,7 +2,6 @@
 
 setJitCompilerOption("baseline.warmup.trigger", 9);
 setJitCompilerOption("ion.warmup.trigger", 20);
-setJitCompilerOption("ion.full.warmup.trigger", 20);
 
 // Prevent the GC from cancelling Ion compilations, when we expect them to succeed
 gczeal(0);
