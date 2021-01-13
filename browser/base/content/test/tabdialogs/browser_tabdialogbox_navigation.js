@@ -20,7 +20,7 @@ add_task(async function test_tabdialogbox_multiple_close_on_nav() {
       dialogBox.open(TEST_DIALOG_PATH),
     ];
 
-    let dialogs = dialogBox._dialogManager._dialogs;
+    let dialogs = dialogBox.getTabDialogManager()._dialogs;
 
     is(dialogs.length, 2, "Dialog manager has two dialogs.");
 
@@ -48,10 +48,10 @@ add_task(async function test_tabdialogbox_close_on_content_nav() {
     let dialogBox = gBrowser.getTabDialogBox(browser);
     let closedPromise = dialogBox.open(TEST_DIALOG_PATH);
 
-    let dialog = dialogBox._dialogManager._topDialog;
+    let dialog = dialogBox.getTabDialogManager()._topDialog;
 
     is(
-      dialogBox._dialogManager._dialogs.length,
+      dialogBox.getTabDialogManager()._dialogs.length,
       1,
       "Dialog manager has one dialog."
     );
@@ -116,16 +116,16 @@ add_task(async function test_tabdialogbox_hide() {
   ) {
     // Open a dialog and wait for it to be ready
     let dialogBox = gBrowser.getTabDialogBox(browser);
-    let dialogBoxManager = dialogBox.getManager();
+    let dialogBoxManager = dialogBox.getTabDialogManager();
     let closedPromises = [
       dialogBox.open(TEST_DIALOG_PATH),
       dialogBox.open(TEST_DIALOG_PATH),
     ];
 
-    let dialogs = dialogBox._dialogManager._dialogs;
+    let dialogs = dialogBox.getTabDialogManager()._dialogs;
 
     is(
-      dialogBox._dialogManager._dialogs.length,
+      dialogBox.getTabDialogManager()._dialogs.length,
       2,
       "Dialog manager has two dialogs."
     );
