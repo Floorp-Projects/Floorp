@@ -130,7 +130,7 @@ class DefaultToolbarIntegration(
             }
 
         if (FeatureFlags.permissionIndicatorsToolbar) {
-            toolbar.display.indicators += DisplayToolbar.Indicators.PERMISSION_HIGHLIGHTS
+            toolbar.display.indicators += DisplayToolbar.Indicators.HIGHLIGHT
         }
 
         toolbar.display.displayIndicatorSeparator =

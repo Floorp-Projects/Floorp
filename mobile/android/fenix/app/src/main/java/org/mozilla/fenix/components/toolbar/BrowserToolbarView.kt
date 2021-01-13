@@ -152,7 +152,10 @@ class BrowserToolbarView(
                     hint = secondaryTextColor,
                     separator = separatorColor,
                     trackingProtection = primaryTextColor,
-                    permissionHighlights = primaryTextColor
+                    highlight = ContextCompat.getColor(
+                        context,
+                        R.color.whats_new_notification_color
+                    )
                 )
 
                 display.hint = context.getString(R.string.search_hint)

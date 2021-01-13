@@ -368,10 +368,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                 showQuickSettingsDialog()
             }
 
-            browserToolbarView.view.display.setOnPermissionIndicatorClickedListener {
-                showQuickSettingsDialog()
-            }
-
             browserToolbarView.view.display.setOnTrackingProtectionClickedListener {
                 context.metrics.track(Event.TrackingProtectionIconPressed)
                 showTrackingProtectionPanel()
