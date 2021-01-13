@@ -1568,6 +1568,11 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   width: 66ch;
 }
 
+.content-prompt-dialog > .dialogOverlay {
+  display: grid;
+  place-content: center;
+}
+
 /**
  * End Tab Dialogs
  */
