@@ -17,11 +17,6 @@ git = "https://github.com/shravanrn/nix/"
 replace-with = "vendored-sources"
 rev = "4af6c367603869a30fddb5ffb0aba2b9477ba92e"
 
-[source."https://github.com/msirringhaus/minidump_writer_linux.git"]
-git = "https://github.com/msirringhaus/minidump_writer_linux.git"
-replace-with = "vendored-sources"
-rev = "b014a1a66041776cbd44ee97b09835fc5f428f9f"
-
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
