@@ -155,9 +155,9 @@ class EitherParser : public BCEParserHandle {
     return base.liftParserAtomToJSAtom(parserAtom);
   }
 
-  CompilationInfo& getCompilationInfo() {
+  CompilationStencil& getCompilationStencil() {
     ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
-    return base.getCompilationInfo();
+    return base.getCompilationStencil();
   }
 };
 

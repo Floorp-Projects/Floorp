@@ -17,7 +17,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
-#include "frontend/CompilationInfo.h"  // for frontened::CompilationInfo, frontened::CompilationGCOutput
+#include "frontend/CompilationInfo.h"  // for frontened::CompilationStencil, frontened::CompilationGCOutput
 #include "frontend/FullParseHandler.h"  // frontend::FullParseHandler
 #include "frontend/ParseContext.h"      // frontend::UsedNameTracker
 #include "frontend/Parser.h"            // frontend::Parser, frontend::ParseGoal
@@ -91,19 +91,18 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, frontend::CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
+  Rooted<frontend::CompilationStencil> stencil(
+      cx, frontend::CompilationStencil(cx, options));
+  if (!stencil.get().input.initForGlobal(cx)) {
     return nullptr;
   }
-  if (!frontend::CompileGlobalScriptToStencil(cx, compilationInfo.get(), srcBuf,
+  if (!frontend::CompileGlobalScriptToStencil(cx, stencil.get(), srcBuf,
                                               scopeKind)) {
     return nullptr;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, compilationInfo.get(),
-                                     gcOutput.get())) {
+  if (!frontend::InstantiateStencils(cx, stencil.get(), gcOutput.get())) {
     return nullptr;
   }
 
@@ -115,8 +114,8 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
   if (options.useStencilXDR) {
     UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
 
-    if (!compilationInfo.get().input.source()->xdrEncodeInitialStencil(
-            cx, compilationInfo.get(), xdrEncoder)) {
+    if (!stencil.get().input.source()->xdrEncodeInitialStencil(
+            cx, stencil.get(), xdrEncoder)) {
       return nullptr;
     }
 
@@ -199,21 +198,21 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   using frontend::Parser;
 
   CompileOptions options(cx);
-  Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, frontend::CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
+  Rooted<frontend::CompilationStencil> stencil(
+      cx, frontend::CompilationStencil(cx, options));
+  if (!stencil.get().input.initForGlobal(cx)) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options,
-                                              compilationInfo.get());
+                                              stencil.get());
 
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   Parser<FullParseHandler, char16_t> parser(cx, options, chars.get(), length,
                                             /* foldConstants = */ true,
-                                            compilationInfo.get(),
-                                            compilationState, nullptr, nullptr);
+                                            stencil.get(), compilationState,
+                                            nullptr, nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of source, we
     // return false so our caller knows to try to collect more buffered

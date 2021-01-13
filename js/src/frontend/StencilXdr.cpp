@@ -14,9 +14,10 @@
 #include <type_traits>  // std::has_unique_object_representations
 #include <utility>      // std::forward
 
-#include "frontend/ScriptIndex.h"  // ScriptIndex
-#include "vm/JSScript.h"           // js::CheckCompileOptionsMatch
-#include "vm/StencilEnums.h"       // js::ImmutableScriptFlagsEnum
+#include "frontend/CompilationInfo.h"  // BaseCompilationStencil
+#include "frontend/ScriptIndex.h"      // ScriptIndex
+#include "vm/JSScript.h"               // js::CheckCompileOptionsMatch
+#include "vm/StencilEnums.h"           // js::ImmutableScriptFlagsEnum
 
 using namespace js;
 using namespace js::frontend;
@@ -556,7 +557,7 @@ XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtra));
 
   if (stencil.isInitialStencil() &&
-      stencil.scriptExtra[CompilationInfo::TopLevelIndex].isModule()) {
+      stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
     if (mode == XDR_DECODE) {
       stencil.moduleMetadata.emplace();
     }

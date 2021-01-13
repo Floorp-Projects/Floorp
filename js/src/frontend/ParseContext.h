@@ -348,7 +348,7 @@ class ParseContext : public Nestable<ParseContext> {
  public:
   // All inner functions in this context. Only used when syntax parsing.
   // The Functions (or FunctionCreateionDatas) are traced as part of the
-  // CompilationInfo function vector.
+  // CompilationStencil function vector.
   Vector<ScriptIndex, 4> innerFunctionIndexesForLazy;
 
   // In a function context, points to a Directive struct that can be updated

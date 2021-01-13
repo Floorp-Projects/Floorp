@@ -145,7 +145,7 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
 }
 
 static void DumpObjLiteral(js::JSONPrinter& json,
-                           frontend::BaseCompilationStencil* compilationStencil,
+                           frontend::BaseCompilationStencil* stencil,
                            mozilla::Span<const uint8_t> code,
                            const ObjLiteralFlags& flags) {
   json.beginListProperty("flags");
@@ -163,7 +163,7 @@ static void DumpObjLiteral(js::JSONPrinter& json,
     } else if (insn.getKey().isAtomIndex()) {
       frontend::TaggedParserAtomIndex index = insn.getKey().getAtomIndex();
       json.beginObjectProperty("key");
-      DumpTaggedParserAtomIndex(json, index, compilationStencil);
+      DumpTaggedParserAtomIndex(json, index, stencil);
       json.endObject();
     } else if (insn.getKey().isArrayIndex()) {
       uint32_t index = insn.getKey().getArrayIndex();
@@ -179,7 +179,7 @@ static void DumpObjLiteral(js::JSONPrinter& json,
       case ObjLiteralOpcode::ConstAtom: {
         frontend::TaggedParserAtomIndex index = insn.getAtomIndex();
         json.beginObjectProperty("op");
-        DumpTaggedParserAtomIndex(json, index, compilationStencil);
+        DumpTaggedParserAtomIndex(json, index, stencil);
         json.endObject();
         break;
       }
@@ -211,18 +211,16 @@ void ObjLiteralWriter::dump() {
   dump(json, nullptr);
 }
 
-void ObjLiteralWriter::dump(
-    js::JSONPrinter& json,
-    frontend::BaseCompilationStencil* compilationStencil) {
+void ObjLiteralWriter::dump(js::JSONPrinter& json,
+                            frontend::BaseCompilationStencil* stencil) {
   json.beginObject();
-  dumpFields(json, compilationStencil);
+  dumpFields(json, stencil);
   json.endObject();
 }
 
-void ObjLiteralWriter::dumpFields(
-    js::JSONPrinter& json,
-    frontend::BaseCompilationStencil* compilationStencil) {
-  DumpObjLiteral(json, compilationStencil, getCode(), flags_);
+void ObjLiteralWriter::dumpFields(js::JSONPrinter& json,
+                                  frontend::BaseCompilationStencil* stencil) {
+  DumpObjLiteral(json, stencil, getCode(), flags_);
 }
 
 void ObjLiteralStencil::dump() {
@@ -231,18 +229,16 @@ void ObjLiteralStencil::dump() {
   dump(json, nullptr);
 }
 
-void ObjLiteralStencil::dump(
-    js::JSONPrinter& json,
-    frontend::BaseCompilationStencil* compilationStencil) {
+void ObjLiteralStencil::dump(js::JSONPrinter& json,
+                             frontend::BaseCompilationStencil* stencil) {
   json.beginObject();
-  dumpFields(json, compilationStencil);
+  dumpFields(json, stencil);
   json.endObject();
 }
 
-void ObjLiteralStencil::dumpFields(
-    js::JSONPrinter& json,
-    frontend::BaseCompilationStencil* compilationStencil) {
-  DumpObjLiteral(json, compilationStencil, code_, flags_);
+void ObjLiteralStencil::dumpFields(js::JSONPrinter& json,
+                                   frontend::BaseCompilationStencil* stencil) {
+  DumpObjLiteral(json, stencil, code_, flags_);
 }
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
