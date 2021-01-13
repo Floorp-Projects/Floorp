@@ -3690,6 +3690,30 @@ bool WarpCacheIRTranspiler::emitAtomicsIsLockFreeResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitBigIntAsIntNResult(Int32OperandId bitsId,
+                                                   BigIntOperandId bigIntId) {
+  MDefinition* bits = getOperand(bitsId);
+  MDefinition* bigInt = getOperand(bigIntId);
+
+  auto* ins = MBigIntAsIntN::New(alloc(), bits, bigInt);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitBigIntAsUintNResult(Int32OperandId bitsId,
+                                                    BigIntOperandId bigIntId) {
+  MDefinition* bits = getOperand(bitsId);
+  MDefinition* bigInt = getOperand(bigIntId);
+
+  auto* ins = MBigIntAsUintN::New(alloc(), bits, bigInt);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadValueTruthyResult(ValOperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
