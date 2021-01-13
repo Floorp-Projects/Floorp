@@ -175,12 +175,19 @@ describe("ToolbarPanelHub", () => {
   it("should create an instance", () => {
     assert.ok(instance);
   });
-  it("should enableAppmenuButton() on init()", async () => {
+  it("should enableAppmenuButton() on init() just once", async () => {
     instance.enableAppmenuButton = sandbox.stub();
 
     await instance.init(waitForInitializedStub, { getMessages: () => {} });
+    await instance.init(waitForInitializedStub, { getMessages: () => {} });
 
     assert.calledOnce(instance.enableAppmenuButton);
+
+    instance.uninit();
+
+    await instance.init(waitForInitializedStub, { getMessages: () => {} });
+
+    assert.calledTwice(instance.enableAppmenuButton);
   });
   it("should unregisterCallback on uninit()", () => {
     instance.uninit();

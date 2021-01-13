@@ -57,9 +57,15 @@ class _ToolbarPanelHub {
     );
 
     this.state = {};
+    this._initialized = false;
   }
 
   async init(waitForInitialized, { getMessages, sendTelemetry }) {
+    if (this._initialized) {
+      return;
+    }
+
+    this._initialized = true;
     this._getMessages = getMessages;
     this._sendTelemetry = sendTelemetry;
     // Wait for ASRouter messages to become available in order to know
@@ -78,6 +84,7 @@ class _ToolbarPanelHub {
   }
 
   uninit() {
+    this._initialized = false;
     EveryWindow.unregisterCallback(TOOLBAR_BUTTON_ID);
     EveryWindow.unregisterCallback(APPMENU_BUTTON_ID);
   }
