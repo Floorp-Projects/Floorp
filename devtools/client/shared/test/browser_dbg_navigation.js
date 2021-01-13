@@ -21,29 +21,29 @@ add_task(async () => {
 });
 
 function testNavigate(target) {
-  const outstanding = [promise.defer(), promise.defer()];
+  return new Promise(resolve => {
+    let gotStartPacket = false;
+    target.on("tabNavigated", function onTabNavigated(packet) {
+      is(
+        packet.url.split("/").pop(),
+        TAB2_FILE,
+        "Got a tab navigation notification."
+      );
 
-  target.on("tabNavigated", function onTabNavigated(packet) {
-    is(
-      packet.url.split("/").pop(),
-      TAB2_FILE,
-      "Got a tab navigation notification."
-    );
+      info(JSON.stringify(packet));
 
-    info(JSON.stringify(packet));
+      if (packet.state == "start") {
+        ok(true, "Tab started to navigate.");
+        gotStartPacket = true;
+      } else if (gotStartPacket) {
+        ok(true, "Tab finished navigating.");
+        target.off("tabNavigated", onTabNavigated);
+        resolve();
+      }
+    });
 
-    if (packet.state == "start") {
-      ok(true, "Tab started to navigate.");
-      outstanding[0].resolve();
-    } else {
-      ok(true, "Tab finished navigating.");
-      target.off("tabNavigated", onTabNavigated);
-      outstanding[1].resolve();
-    }
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TAB2_URL);
   });
-
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TAB2_URL);
-  return promise.all(outstanding.map(e => e.promise));
 }
 
 async function testDetach(target) {
