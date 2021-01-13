@@ -88,3 +88,22 @@ fog_validation:
     expires: "89"
     send_in_pings:
       - fog-validation
+
+  profile_disk_is_ssd:
+    type: boolean
+    description:
+      True iff the type of the disk the current Firefox profile is stored on
+      is an SSD. (Windows only).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675877
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675877#c7
+    data_sensitivity:
+      - technical
+    lifetime: application
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: "89"
+    send_in_pings:
+      - fog-validation
