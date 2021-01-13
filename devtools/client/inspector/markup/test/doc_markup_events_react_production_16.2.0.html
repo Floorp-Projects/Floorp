@@ -58,6 +58,14 @@
                 onClickCapture: externalCapturingFunction
               },
               "Click for externalCapturingFunction"
+            ),
+            React.createElement(
+              "h3",
+              {
+                id: "doublebind",
+                onClick: this.inlineFunction.bind(this).bind(this)
+              },
+              "Click for inlineFunction bound twice"
             )
           );
         }
