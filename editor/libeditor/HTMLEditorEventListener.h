@@ -84,9 +84,6 @@ class HTMLEditorEventListener final : public EditorEventListener {
   nsresult ListenToMouseMoveEventForResizersOrGrabber(bool aListen,
                                                       bool aForGrabber);
 
-  MOZ_CAN_RUN_SCRIPT void MaybeDisplayResizers(HTMLEditor& aHTMLEditor,
-                                               dom::Element& aElement,
-                                               dom::MouseEvent& aMouseEvent);
   MOZ_CAN_RUN_SCRIPT nsresult HandlePrimaryMouseButtonDown(
       HTMLEditor& aHTMLEditor, dom::MouseEvent& aMouseEvent);
   MOZ_CAN_RUN_SCRIPT nsresult HandleSecondaryMouseButtonDown(
