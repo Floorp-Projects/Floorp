@@ -1604,6 +1604,7 @@ pub extern "C" fn wr_window_new(
             color8_nearest_texture_size: 512,
             color8_glyph_texture_size: 512,
             alpha8_texture_size: 512,
+            alpha8_glyph_texture_size: 512,
             alpha16_texture_size: 512,
         }
     };
