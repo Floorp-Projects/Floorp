@@ -158,8 +158,6 @@ android {
                     srcDir "${topsrcdir}/third_party/libwebrtc/webrtc/sdk/android"
                     srcDir "${topsrcdir}/third_party/libwebrtc/webrtc/rtc_base/java"
                 }
-
-                srcDir "${topobjdir}/mobile/android/geckoview/src/main/java"
             }
 
             resources {
@@ -171,14 +169,6 @@ android {
             }
 
             assets {
-            }
-
-            debug {
-                manifest.srcFile "${topobjdir}/mobile/android/geckoview/src/main/AndroidManifest_overlay.xml"
-            }
-
-            release {
-                manifest.srcFile "${topobjdir}/mobile/android/geckoview/src/main/AndroidManifest_overlay.xml"
             }
         }
     }
