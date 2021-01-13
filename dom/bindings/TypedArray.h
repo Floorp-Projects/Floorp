@@ -45,10 +45,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
         mLength(aOther.mLength),
         mShared(aOther.mShared),
         mComputed(aOther.mComputed) {
-    aOther.mData = nullptr;
-    aOther.mLength = 0;
-    aOther.mShared = false;
-    aOther.mComputed = false;
+    aOther.Reset();
   }
 
  private:
@@ -137,6 +134,16 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
     MOZ_ASSERT(!mComputed);
     GetLengthAndDataAndSharedness(mImplObj, &mLength, &mShared, &mData);
     mComputed = true;
+  }
+
+  inline void Reset() {
+    // This method mostly exists to inform the GC rooting hazard analysis that
+    // the variable can be considered dead, at least until you do anything else
+    // with it.
+    mData = nullptr;
+    mLength = 0;
+    mShared = false;
+    mComputed = false;
   }
 
  private:

@@ -31,6 +31,7 @@ var resetterMethods = {
     'mozilla::UniquePtr': new Set(["reset"]),
     'js::UniquePtr': new Set(["reset"]),
     'mozilla::dom::Nullable': new Set(["SetNull"]),
+    'mozilla::dom::TypedArray_base': new Set(["Reset"]),
 };
 
 function indirectCallCannotGC(fullCaller, fullVariable)

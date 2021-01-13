@@ -182,11 +182,15 @@ function edgeUsesVariable(edge, variable, body)
     switch (edge.Kind) {
 
     case "Assign": {
+        // Detect `Return := nullptr`.
         if (isReturningImmobileValue(edge, variable))
             return 0;
         const [lhs, rhs] = edge.Exp;
+        // Detect `lhs := ...variable...`
         if (expressionUsesVariable(rhs, variable))
             return src;
+        // Detect `...variable... := rhs` but not `variable := rhs`. The latter
+        // overwrites the previous value of `variable` without using it.
         if (expressionUsesVariable(lhs, variable) && !expressionIsVariable(lhs, variable))
             return src;
         return 0;
@@ -273,6 +277,16 @@ function edgeTakesVariableAddress(edge, variable, body)
 
 function expressionIsVariable(exp, variable)
 {
+    return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
+}
+
+function expressionIsMethodOnVariable(exp, variable)
+{
+    // This might be calling a method on a base class, in which case exp will
+    // be an unnamed field of the variable instead of the variable itself.
+    while (exp.Kind == "Fld" && exp.Field.Name[0].startsWith("field:"))
+        exp = exp.Exp[0];
+
     return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
 }
 
@@ -453,33 +467,32 @@ function edgeInvalidatesVariable(edge, variable, body)
     if (edge.Type.Kind == 'Function' &&
         edge.Type.TypeFunctionCSU &&
         edge.PEdgeCallInstance &&
-        edge.PEdgeCallInstance.Exp.Kind == 'Var' &&
-        expressionIsVariable(edge.PEdgeCallInstance.Exp, variable))
-    do {
+        expressionIsMethodOnVariable(edge.PEdgeCallInstance.Exp, variable))
+    {
         const typeName = edge.Type.TypeFunctionCSU.Type.Name;
         const m = typeName.match(/^(((\w|::)+?)(\w+))</);
-        if (!m)
-            break;
-        const [, type, namespace,, classname] = m;
+        if (m) {
+            const [, type, namespace,, classname] = m;
 
-        // special-case: the initial constructor that doesn't provide a value.
-        // Useful for things like Maybe<T>.
-        if (callee.Kind == 'Var' &&
-            typesWithSafeConstructors.has(type) &&
-            callee.Variable.Name[0].includes(`${namespace}${classname}<T>::${classname}()`))
-        {
-            return true;
+            // special-case: the initial constructor that doesn't provide a value.
+            // Useful for things like Maybe<T>.
+            const ctorName = `${namespace}${classname}<T>::${classname}()`;
+            if (callee.Kind == 'Var' &&
+                typesWithSafeConstructors.has(type) &&
+                callee.Variable.Name[0].includes(ctorName))
+            {
+                return true;
+            }
+
+            // special-case: UniquePtr::reset() and similar.
+            if (callee.Kind == 'Var' &&
+                type in resetterMethods &&
+                resetterMethods[type].has(callee.Variable.Name[1]))
+            {
+                return true;
+            }
         }
-
-        // special-case: UniquePtr::reset() and similar.
-        if (callee.Kind == 'Var' &&
-            type in resetterMethods &&
-            resetterMethods[type].has(callee.Variable.Name[1]))
-        {
-            return true;
-        }
-
-    } while(0);
+    }
 
     // special-case: passing UniquePtr<T> by value.
     if (edge.Type.Kind == 'Function' &&
