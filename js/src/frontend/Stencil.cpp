@@ -134,7 +134,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
                              CompilationStencil& stencil,
                              CompilationGCOutput& gcOutput,
                              const ScriptStencil& script,
-                             const SourceExtent& extent,
+                             const ScriptStencilExtra& scriptExtra,
                              ScriptIndex scriptIndex, HandleFunction function) {
   Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
 
@@ -142,7 +142,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
 
   Rooted<BaseScript*> lazy(
       cx, BaseScript::CreateRawLazy(cx, ngcthings, function, sourceObject,
-                                    extent, script.immutableFlags));
+                                    scriptExtra.extent, script.immutableFlags));
   if (!lazy) {
     return false;
   }
@@ -334,6 +334,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
   Rooted<JSFunction*> fun(cx);
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
+    auto* scriptExtra = item.scriptExtra;
     fun = item.function;
     auto index = item.index;
     if (scriptStencil.hasSharedData()) {
@@ -363,7 +364,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
     } else {
       MOZ_ASSERT(fun->isIncomplete());
       if (!CreateLazyScript(cx, input, stencil, gcOutput, scriptStencil,
-                            *item.extent, index, fun)) {
+                            *scriptExtra, index, fun)) {
         return false;
       }
     }
@@ -525,14 +526,14 @@ static void AssertDelazificationFieldsMatch(CompilationStencil& stencil,
                                             CompilationGCOutput& gcOutput) {
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
-    auto* scriptExtent = item.extent;
+    auto* scriptExtra = item.scriptExtra;
     auto& fun = item.function;
 
     BaseScript* script = fun->baseScript();
 
     MOZ_ASSERT(script->immutableFlags() == scriptStencil.immutableFlags);
 
-    MOZ_ASSERT(scriptExtent == nullptr);
+    MOZ_ASSERT(scriptExtra == nullptr);
 
     // Names are updated by UpdateInnerFunctions.
     constexpr uint16_t HAS_INFERRED_NAME =
@@ -697,8 +698,8 @@ bool CompilationInfoVector::buildDelazificationIndices(JSContext* cx) {
   MOZ_ASSERT(keyToIndex.count() == delazifications.length());
 
   for (size_t i = 1; i < initial.stencil.scriptData.size(); i++) {
-    auto key =
-        CompilationStencil::toFunctionKey(initial.stencil.scriptExtent[i]);
+    auto key = CompilationStencil::toFunctionKey(
+        initial.stencil.scriptExtra[i].extent);
     auto ptr = keyToIndex.lookup(key);
     if (!ptr) {
       continue;
@@ -1043,7 +1044,7 @@ bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
   }
 
   if (!CopyVectorToSpan(cx, compilationInfo.alloc,
-                        compilationInfo.stencil.scriptExtent, scriptExtent)) {
+                        compilationInfo.stencil.scriptExtra, scriptExtra)) {
     return false;
   }
 
@@ -1747,6 +1748,29 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   }
 }
 
+void ScriptStencilExtra::dump() {
+  js::Fprinter out(stderr);
+  js::JSONPrinter json(out);
+  dump(json);
+}
+
+void ScriptStencilExtra::dump(js::JSONPrinter& json) {
+  json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
+
+void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) {
+  json.beginObjectProperty("extent");
+  json.property("sourceStart", extent.sourceStart);
+  json.property("sourceEnd", extent.sourceEnd);
+  json.property("toStringStart", extent.toStringStart);
+  json.property("toStringEnd", extent.toStringEnd);
+  json.property("lineno", extent.lineno);
+  json.property("column", extent.column);
+  json.endObject();
+}
+
 void SharedDataContainer::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
@@ -1800,18 +1824,6 @@ void CompilationStencil::dump() {
   out.put("\n");
 }
 
-static void DumpSourceExtent(js::JSONPrinter& json,
-                             const SourceExtent& extent) {
-  json.beginObject();
-  json.property("sourceStart", extent.sourceStart);
-  json.property("sourceEnd", extent.sourceEnd);
-  json.property("toStringStart", extent.toStringStart);
-  json.property("toStringEnd", extent.toStringEnd);
-  json.property("lineno", extent.lineno);
-  json.property("column", extent.column);
-  json.endObject();
-}
-
 void CompilationStencil::dump(js::JSONPrinter& json) {
   json.beginObject();
 
@@ -1823,9 +1835,9 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
   }
   json.endList();
 
-  json.beginListProperty("scriptExtent");
-  for (auto& data : scriptExtent) {
-    DumpSourceExtent(json, data);
+  json.beginListProperty("scriptExtra");
+  for (auto& data : scriptExtra) {
+    data.dump(json);
   }
   json.endList();
 

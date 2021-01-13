@@ -441,7 +441,8 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
 
   ScriptStencil& script = compilationInfo.stencil.scriptData[scriptIndex];
-  SourceExtent& extent = compilationInfo.stencil.scriptExtent[scriptIndex];
+  SourceExtent& extent =
+      compilationInfo.stencil.scriptExtra[scriptIndex].extent;
 
   script.immutableFlags = smooshScript.immutable_flags;
 
@@ -630,13 +631,13 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
   }
   compilationInfo.stencil.scriptData = mozilla::Span(pscript, len);
 
-  auto* pextent =
-      compilationInfo.alloc.newArrayUninitialized<SourceExtent>(len);
-  if (!pextent) {
+  auto* pextra =
+      compilationInfo.alloc.newArrayUninitialized<ScriptStencilExtra>(len);
+  if (!pextra) {
     js::ReportOutOfMemory(cx);
     return false;
   }
-  compilationInfo.stencil.scriptExtent = mozilla::Span(pextent, len);
+  compilationInfo.stencil.scriptExtra = mozilla::Span(pextra, len);
 
   // NOTE: Currently we don't support delazification or standalone function.
   //       Once we support, fix the following loop to include 0-th item
