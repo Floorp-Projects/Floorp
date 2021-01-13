@@ -159,6 +159,10 @@ handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 #define BUFFER_BPP 4
 gfx::SurfaceFormat WindowBackBuffer::mFormat = gfx::SurfaceFormat::B8G8R8A8;
 
+int WindowBackBuffer::mDumpSerial =
+    PR_GetEnv("MOZ_WAYLAND_DUMP_WL_BUFFERS") ? 1 : 0;
+char* WindowBackBuffer::mDumpDir = PR_GetEnv("MOZ_WAYLAND_DUMP_DIR");
+
 RefPtr<nsWaylandDisplay> WindowBackBuffer::GetWaylandDisplay() {
   return mWindowSurfaceWayland->GetWaylandDisplay();
 }
@@ -418,6 +422,35 @@ already_AddRefed<gfx::DrawTarget> WindowBackBuffer::Lock() {
       static_cast<unsigned char*>(mShmPool.GetImageData()), lockSize,
       BUFFER_BPP * mWidth, GetSurfaceFormat());
 }
+
+#ifdef MOZ_LOGGING
+void WindowBackBuffer::DumpToFile(const char* aHint) {
+  if (!mDumpSerial) {
+    return;
+  }
+
+  cairo_surface_t* surface = nullptr;
+  auto unmap = MakeScopeExit([&] {
+    if (surface) {
+      cairo_surface_destroy(surface);
+    }
+  });
+  surface = cairo_image_surface_create_for_data(
+      (unsigned char*)mShmPool.GetImageData(), CAIRO_FORMAT_ARGB32, mWidth,
+      mHeight, BUFFER_BPP * mWidth);
+  if (cairo_surface_status(surface) == CAIRO_STATUS_SUCCESS) {
+    nsCString filename;
+    if (mDumpDir) {
+      filename.Append(mDumpDir);
+      filename.Append('/');
+    }
+    filename.Append(
+        nsPrintfCString("firefox-wl-buffer-%.5d-%s.png", mDumpSerial++, aHint));
+    cairo_surface_write_to_png(surface, filename.get());
+    LOGWAYLAND(("Dumped wl_buffer to %s\n", filename.get()));
+  }
+}
+#endif
 
 static void frame_callback_handler(void* data, struct wl_callback* callback,
                                    uint32_t time) {
@@ -785,8 +818,14 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     LOGWAYLAND(("   Direct drawing\n"));
     RefPtr<gfx::DrawTarget> dt = LockWaylandBuffer();
     if (dt) {
+#if MOZ_LOGGING
+      mWaylandBuffer->DumpToFile("Lock");
+#endif
       if (!windowRedraw) {
         DrawDelayedImageCommits(dt, mWaylandBufferDamage);
+#if MOZ_LOGGING
+        mWaylandBuffer->DumpToFile("Lock-after-commit");
+#endif
       }
       mBufferPendingCommit = true;
       return dt.forget();
@@ -1009,6 +1048,10 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
       wl_surface_damage_buffer(waylandSurface, r.x, r.y, r.width, r.height);
     }
   }
+
+#if MOZ_LOGGING
+  mWaylandBuffer->DumpToFile("Commit");
+#endif
 
   // Clear all back buffer damage as we're committing
   // all requested regions.
