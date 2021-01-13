@@ -779,10 +779,9 @@ void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
       // lists
       //      see bug 154892; need to revisit later
       if (mFrame->GetPrevInFlow()) frameType = NS_CSS_FRAME_TYPE_BLOCK;
-    } else if (disp->IsFloating(mFrame)) {
-      frameType = NS_CSS_FRAME_TYPE_FLOATING;
     } else {
-      NS_ASSERTION(disp->mDisplay == StyleDisplay::MozPopup,
+      NS_ASSERTION(disp->IsFloating(mFrame) ||
+                   disp->mDisplay == StyleDisplay::MozPopup,
                    "unknown out of flow frame type");
       frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
     }
