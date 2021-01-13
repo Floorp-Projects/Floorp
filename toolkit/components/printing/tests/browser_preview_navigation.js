@@ -379,3 +379,51 @@ add_task(async function testPreviewNavigationSelection() {
     await helper.closeDialog();
   }, "longerArticle.html");
 });
+
+add_task(async function testPaginatorAfterSettingsUpdate() {
+  const mockPrinterName = "Fake Printer";
+  await PrintHelper.withTestPage(async helper => {
+    helper.addMockPrinter(mockPrinterName);
+    await helper.startPrint();
+
+    let paginationElem = document.querySelector(".printPreviewNavigation");
+    let paginationSheetIndicator = paginationElem.shadowRoot.querySelector(
+      "#sheetIndicator"
+    );
+    // Wait for the first _updatePrintPreview before interacting with the preview
+    await waitForPageStatusUpdate(
+      paginationSheetIndicator,
+      { sheetNum: 1, sheetCount: 3 },
+      "Paginator indicates the correct number of sheets"
+    );
+
+    // click the navigation buttons
+    // and verify the indicator is updated correctly
+    EventUtils.synthesizeMouseAtCenter(
+      paginationElem.shadowRoot.querySelector("#navigateNext"),
+      {}
+    );
+    await waitForPageStatusUpdate(
+      paginationSheetIndicator,
+      { sheetNum: 2, sheetCount: 3 },
+      "Indicator updates on navigation"
+    );
+
+    // Select a new printer
+    await helper.dispatchSettingsChange({ printerName: mockPrinterName });
+    await waitForPageStatusUpdate(
+      paginationSheetIndicator,
+      { sheetNum: 1, sheetCount: 3 },
+      "Indicator updates on navigation"
+    );
+    ok(
+      compare10nArgs(paginationSheetIndicator, { sheetNum: 1, sheetCount: 3 }),
+      "Sheet indicator has correct value"
+    );
+
+    // move focus before closing the dialog
+    helper.get("cancel-button").focus();
+    await helper.awaitAnimationFrame();
+    await helper.closeDialog();
+  }, "longerArticle.html");
+});
