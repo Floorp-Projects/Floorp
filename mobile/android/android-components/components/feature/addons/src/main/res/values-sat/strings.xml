@@ -59,7 +59,7 @@
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">ᱵᱨᱟᱩᱡᱟᱹᱨ ᱯᱨᱚᱠᱥᱤ ᱥᱟᱡᱟᱣ ᱠᱚ ᱥᱟᱢᱲᱟᱣ ᱢᱮ</string>
     <!-- Description for sessions permission. -->
-    <string name="mozac_feature_addons_permissions_sessions_description">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵ ᱠᱚ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
+    <string name="mozac_feature_addons_permissions_sessions_description">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵ ᱠᱚ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">ᱵᱨᱟᱩᱡᱚᱨ ᱴᱮᱵ ᱠᱚ ᱩᱠᱩ ᱟᱨ ᱩᱫᱩᱜ ᱢᱮ</string>
     <!-- Description for top_sites permission. -->
