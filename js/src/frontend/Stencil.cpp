@@ -204,7 +204,7 @@ static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
 
   if (isAsmJS) {
     RefPtr<const JS::WasmModule> asmJS =
-        stencil.asmJS.lookup(functionIndex)->value();
+        stencil.asCompilationStencil().asmJS.lookup(functionIndex)->value();
 
     JSObject* moduleObj = asmJS->createObjectForAsmJS(cx);
     if (!moduleObj) {
@@ -1825,9 +1825,11 @@ void BaseCompilationStencil::dump() {
 
 void BaseCompilationStencil::dump(js::JSONPrinter& json) {
   json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
 
-  // FIXME: dump asmJS
-
+void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   json.beginListProperty("scriptData");
   for (auto& data : scriptData) {
     data.dump(json, this);
@@ -1874,7 +1876,30 @@ void BaseCompilationStencil::dump(js::JSONPrinter& json) {
   json.beginObjectProperty("sharedData");
   sharedData.dumpFields(json);
   json.endObject();
+}
 
+void CompilationStencil::dump() {
+  js::Fprinter out(stderr);
+  js::JSONPrinter json(out);
+  dump(json);
+  out.put("\n");
+}
+
+void CompilationStencil::dump(js::JSONPrinter& json) {
+  json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
+
+void CompilationStencil::dumpFields(js::JSONPrinter& json) {
+  BaseCompilationStencil::dumpFields(json);
+
+  json.beginObjectProperty("asmJS");
+  char index[16];
+  for (auto iter = asmJS.iter(); !iter.done(); iter.next()) {
+    SprintfLiteral(index, "%u", iter.get().key().index);
+    json.formatProperty(index, "asm.js");
+  }
   json.endObject();
 }
 

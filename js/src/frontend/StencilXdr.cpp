@@ -517,10 +517,6 @@ template XDRResult XDRSharedDataContainer(XDRState<XDR_DECODE>* xdr,
 template <XDRMode mode>
 XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
                                     BaseCompilationStencil& stencil) {
-  if (!stencil.asmJS.empty()) {
-    return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
-  }
-
   MOZ_TRY(xdr->codeUint64(&stencil.functionKey));
 
   // All of the vector-indexed data elements referenced by the
@@ -567,10 +563,29 @@ XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
 
   return Ok();
 }
+
 template XDRResult XDRBaseCompilationStencil(XDRState<XDR_ENCODE>* xdr,
                                              BaseCompilationStencil& stencil);
 
 template XDRResult XDRBaseCompilationStencil(XDRState<XDR_DECODE>* xdr,
                                              BaseCompilationStencil& stencil);
+
+template <XDRMode mode>
+XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
+                                CompilationStencil& stencil) {
+  if (!stencil.asmJS.empty()) {
+    return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
+  }
+
+  MOZ_TRY(XDRBaseCompilationStencil(xdr, stencil));
+
+  return Ok();
+}
+
+template XDRResult XDRCompilationStencil(XDRState<XDR_ENCODE>* xdr,
+                                         CompilationStencil& stencil);
+
+template XDRResult XDRCompilationStencil(XDRState<XDR_DECODE>* xdr,
+                                         CompilationStencil& stencil);
 
 }  // namespace js
