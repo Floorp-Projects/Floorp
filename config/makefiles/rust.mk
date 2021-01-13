@@ -146,6 +146,14 @@ rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 export CC_$(rust_cc_env_name)=$(filter-out $(CC_BASE_FLAGS),$(CC))
 export CXX_$(rust_cc_env_name)=$(filter-out $(CXX_BASE_FLAGS),$(CXX))
 export AR_$(rust_cc_env_name)=$(AR)
+
+ifeq (WINNT,$(HOST_OS_ARCH))
+HOST_CC_BASE_FLAGS += -DUNICODE
+HOST_CXX_BASE_FLAGS += -DUNICODE
+CC_BASE_FLAGS += -DUNICODE
+CXX_BASE_FLAGS += -DUNICODE
+endif
+
 ifeq (,$(NATIVE_SANITIZERS)$(MOZ_CODE_COVERAGE))
 # -DMOZILLA_CONFIG_H is added to prevent mozilla-config.h from injecting anything
 # in C/C++ compiles from rust. That's not needed in the other branch because the
