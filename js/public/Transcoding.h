@@ -54,17 +54,57 @@ enum TranscodeResult : uint8_t {
   TranscodeResult_Throw = 0x20
 };
 
+static constexpr size_t BytecodeOffsetAlignment = 4;
+static_assert(BytecodeOffsetAlignment <= alignof(std::max_align_t),
+              "Alignment condition requires a custom allocator.");
+
+// Align the bytecode offset for transcoding for the requirement.
+inline size_t AlignTranscodingBytecodeOffset(size_t offset) {
+  size_t extra = offset % BytecodeOffsetAlignment;
+  if (extra == 0) {
+    return offset;
+  }
+  size_t padding = BytecodeOffsetAlignment - extra;
+  return offset + padding;
+}
+
+inline bool IsTranscodingBytecodeOffsetAligned(size_t offset) {
+  return offset % BytecodeOffsetAlignment == 0;
+}
+
+inline bool IsTranscodingBytecodeAligned(void* offset) {
+  return IsTranscodingBytecodeOffsetAligned(size_t(offset));
+}
+
 // Encode JSScript into the buffer.
+//
+// If the `buffer` isn't empty, the start of the `buffer` should meet
+// IsTranscodingBytecodeAligned, and the length should meet
+// IsTranscodingBytecodeOffsetAligned.
+//
+// NOTE: As long as IsTranscodingBytecodeOffsetAligned is met, that means
+//       there's JS::BytecodeOffsetAlignment+extra bytes in the buffer,
+//       IsTranscodingBytecodeAligned should be guaranteed to meet by
+//       malloc, used by MallocAllocPolicy in mozilla::Vector.
 extern JS_PUBLIC_API TranscodeResult EncodeScript(JSContext* cx,
                                                   TranscodeBuffer& buffer,
                                                   Handle<JSScript*> script);
 
 // Decode JSScript from the buffer.
+//
+// The start of `buffer` and `cursorIndex` should meet
+// IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
+// (This should be handled while encoding).
 extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
              TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
              size_t cursorIndex = 0);
 
+// Decode JSScript from the range.
+//
+// The start of `range` should meet IsTranscodingBytecodeAligned and
+// IsTranscodingBytecodeOffsetAligned.
+// (This should be handled while encoding).
 extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
              const TranscodeRange& range, MutableHandle<JSScript*> scriptp);
@@ -75,6 +115,10 @@ DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
 // buffer and instantiate JSScript from it.
 //
 // options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
+//
+// The start of `buffer` and `cursorIndex` should meet
+// IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
+// (This should be handled while encoding).
 extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
@@ -92,6 +136,10 @@ extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
 // See also JS::FinishIncrementalEncoding.
 //
 // options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
+//
+// The start of `buffer` and `cursorIndex` should meet
+// IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
+// (This should be handled while encoding).
 extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
@@ -113,6 +161,15 @@ extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
 //
 // If js::UseOffThreadParseGlobal is false, |buffer| contains encoded
 // CompilationStencil.
+//
+// If the `buffer` isn't empty, the start of the `buffer` should meet
+// IsTranscodingBytecodeAligned, and the length should meet
+// IsTranscodingBytecodeOffsetAligned.
+//
+// NOTE: As long as IsTranscodingBytecodeOffsetAligned is met, that means
+//       there's JS::BytecodeOffsetAlignment+extra bytes in the buffer,
+//       IsTranscodingBytecodeAligned should be guaranteed to meet by
+//       malloc, used by MallocAllocPolicy in mozilla::Vector.
 extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
                                                     Handle<JSScript*> script,
                                                     TranscodeBuffer& buffer);
