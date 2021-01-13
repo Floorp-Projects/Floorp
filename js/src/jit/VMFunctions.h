@@ -636,6 +636,9 @@ template <ComparisonKind Kind>
 bool StringBigIntCompare(JSContext* cx, HandleString x, HandleBigInt y,
                          bool* res);
 
+BigInt* BigIntAsIntN(JSContext* cx, HandleBigInt x, int32_t bits);
+BigInt* BigIntAsUintN(JSContext* cx, HandleBigInt x, int32_t bits);
+
 using AtomicsCompareExchangeFn = int32_t (*)(TypedArrayObject*, int32_t,
                                              int32_t, int32_t);
 

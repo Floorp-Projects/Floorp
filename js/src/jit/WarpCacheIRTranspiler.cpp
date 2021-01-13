@@ -1147,11 +1147,11 @@ bool WarpCacheIRTranspiler::emitGuardIsExtensible(ObjOperandId objId) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardIndexIsNonNegative(
+bool WarpCacheIRTranspiler::emitGuardInt32IsNonNegative(
     Int32OperandId indexId) {
   MDefinition* index = getOperand(indexId);
 
-  auto* ins = MGuardIndexIsNonNegative::New(alloc(), index);
+  auto* ins = MGuardInt32IsNonNegative::New(alloc(), index);
   add(ins);
   setOperand(indexId, ins);
   return true;
