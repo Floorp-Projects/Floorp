@@ -351,30 +351,29 @@ bool frontend::InstantiateStencils(JSContext* cx,
 }
 
 bool frontend::InstantiateStencils(
-    JSContext* cx, CompilationInfoVector& compilationInfos,
+    JSContext* cx, CompilationStencilSet& stencilSet,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput& gcOutputForDelazification_) {
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!compilationInfos.instantiateStencils(cx, gcOutput,
-                                              gcOutputForDelazification_)) {
+    if (!stencilSet.instantiateStencils(cx, gcOutput,
+                                        gcOutputForDelazification_)) {
       return false;
     }
   }
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!cx->isHelperThreadContext()) {
-    if (!compilationInfos.initial.input.source()->tryCompressOffThread(cx)) {
+    if (!stencilSet.initial.input.source()->tryCompressOffThread(cx)) {
       return false;
     }
   }
 
   Rooted<JSScript*> script(cx, gcOutput.script);
   tellDebuggerAboutCompiledScript(
-      cx, compilationInfos.initial.input.options.hideScriptFromDebugger,
-      script);
+      cx, stencilSet.initial.input.options.hideScriptFromDebugger, script);
 
   return true;
 }
@@ -389,14 +388,14 @@ bool frontend::PrepareForInstantiate(JSContext* cx,
 }
 
 bool frontend::PrepareForInstantiate(
-    JSContext* cx, CompilationInfoVector& compilationInfos,
+    JSContext* cx, CompilationStencilSet& stencilSet,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput& gcOutputForDelazification_) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return compilationInfos.prepareForInstantiate(cx, gcOutput,
-                                                gcOutputForDelazification_);
+  return stencilSet.prepareForInstantiate(cx, gcOutput,
+                                          gcOutputForDelazification_);
 }
 
 template <typename Unit>
@@ -1260,7 +1259,7 @@ void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
 void CompilationInfo::trace(JSTracer* trc) { input.trace(trc); }
 
-void CompilationInfoVector::trace(JSTracer* trc) {
+void CompilationStencilSet::trace(JSTracer* trc) {
   initial.trace(trc);
   delazificationAtomCache.trace(trc);
 }

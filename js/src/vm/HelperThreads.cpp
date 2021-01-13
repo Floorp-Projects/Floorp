@@ -584,8 +584,8 @@ void ParseTask::trace(JSTracer* trc) {
   if (compilationInfo_) {
     compilationInfo_->trace(trc);
   }
-  if (compilationInfos_) {
-    compilationInfos_->trace(trc);
+  if (stencilSet_) {
+    stencilSet_->trace(trc);
   }
   gcOutput_.trace(trc);
   gcOutputForDelazification_.trace(trc);
@@ -694,7 +694,7 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
 }
 
 bool ParseTask::instantiateStencils(JSContext* cx) {
-  if (!compilationInfo_ && !compilationInfos_) {
+  if (!compilationInfo_ && !stencilSet_) {
     return false;
   }
 
@@ -702,7 +702,7 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
   if (compilationInfo_) {
     result = frontend::InstantiateStencils(cx, *compilationInfo_, gcOutput_);
   } else {
-    result = frontend::InstantiateStencils(cx, *compilationInfos_, gcOutput_,
+    result = frontend::InstantiateStencils(cx, *stencilSet_, gcOutput_,
                                            gcOutputForDelazification_);
   }
 
@@ -777,30 +777,30 @@ void ScriptDecodeTask::parse(JSContext* cx) {
 
   if (options.useStencilXDR) {
     // The buffer contains stencil.
-    Rooted<UniquePtr<frontend::CompilationInfoVector>> compilationInfos(
-        cx, js_new<frontend::CompilationInfoVector>(cx, options));
-    if (!compilationInfos) {
+    Rooted<UniquePtr<frontend::CompilationStencilSet>> stencilSet(
+        cx, js_new<frontend::CompilationStencilSet>(cx, options));
+    if (!stencilSet) {
       ReportOutOfMemory(cx);
       return;
     }
 
-    XDRStencilDecoder decoder(
-        cx, &compilationInfos.get()->initial.input.options, range);
-    if (!compilationInfos.get()->initial.input.initForGlobal(cx)) {
+    XDRStencilDecoder decoder(cx, &stencilSet.get()->initial.input.options,
+                              range);
+    if (!stencilSet.get()->initial.input.initForGlobal(cx)) {
       return;
     }
 
-    XDRResult res = decoder.codeStencils(*compilationInfos);
+    XDRResult res = decoder.codeStencils(*stencilSet);
     if (!res.isOk()) {
       return;
     }
 
-    compilationInfos_ = std::move(compilationInfos.get());
+    stencilSet_ = std::move(stencilSet.get());
 
-    if (compilationInfos_) {
-      if (!frontend::PrepareForInstantiate(cx, *compilationInfos_, gcOutput_,
+    if (stencilSet_) {
+      if (!frontend::PrepareForInstantiate(cx, *stencilSet_, gcOutput_,
                                            gcOutputForDelazification_)) {
-        compilationInfos_ = nullptr;
+        stencilSet_ = nullptr;
       }
     }
 
@@ -2095,7 +2095,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
     }
   } else {
     MOZ_ASSERT(parseTask->compilationInfo_.get() ||
-               parseTask->compilationInfos_.get());
+               parseTask->stencilSet_.get());
 
     if (!parseTask->instantiateStencils(cx)) {
       return nullptr;
@@ -2117,9 +2117,9 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
           return nullptr;
         }
       } else {
-        auto compilationInfos = parseTask->compilationInfos_.get();
-        if (!compilationInfos->initial.input.source()->xdrEncodeStencils(
-                cx, *compilationInfos, xdrEncoder)) {
+        auto stencilSet = parseTask->stencilSet_.get();
+        if (!stencilSet->initial.input.source()->xdrEncodeStencils(
+                cx, *stencilSet, xdrEncoder)) {
           return nullptr;
         }
       }

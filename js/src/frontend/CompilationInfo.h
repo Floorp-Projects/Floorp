@@ -584,7 +584,7 @@ struct CompilationInfo {
 
 // A set of CompilationInfo, for XDR purpose.
 // This contains the initial compilation, and a vector of delazification.
-struct CompilationInfoVector {
+struct CompilationStencilSet {
  private:
   using ScriptIndexVector = Vector<ScriptIndex, 0, js::SystemAllocPolicy>;
 
@@ -600,12 +600,12 @@ struct CompilationInfoVector {
   ScriptIndexVector delazificationIndices;
   CompilationAtomCache::AtomCacheVector delazificationAtomCache;
 
-  CompilationInfoVector(JSContext* cx,
+  CompilationStencilSet(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options)
       : initial(cx, options), allocForDelazifications(LifoAllocChunkSize) {}
 
   // Move constructor is necessary to use Rooted.
-  CompilationInfoVector(CompilationInfoVector&& other) noexcept
+  CompilationStencilSet(CompilationStencilSet&& other) noexcept
       : initial(std::move(other.initial)),
         allocForDelazifications(LifoAllocChunkSize),
         delazifications(std::move(other.delazifications)),
@@ -615,9 +615,9 @@ struct CompilationInfoVector {
   }
 
   // To avoid any misuses, make sure this is neither copyable or assignable.
-  CompilationInfoVector(const CompilationInfoVector&) = delete;
-  CompilationInfoVector& operator=(const CompilationInfoVector&) = delete;
-  CompilationInfoVector& operator=(CompilationInfoVector&&) = delete;
+  CompilationStencilSet(const CompilationStencilSet&) = delete;
+  CompilationStencilSet& operator=(const CompilationStencilSet&) = delete;
+  CompilationStencilSet& operator=(CompilationStencilSet&&) = delete;
 
   MOZ_MUST_USE bool prepareForInstantiate(
       JSContext* cx, CompilationGCOutput& gcOutput,

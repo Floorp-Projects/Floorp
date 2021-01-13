@@ -644,7 +644,7 @@ struct JSRuntime {
 
   // Used internally to initialize the self-hosted global using XDR content.
   bool initSelfHostingFromXDR(JSContext* cx, const JS::CompileOptions& options,
-                              js::frontend::CompilationInfoVector& ciVec,
+                              js::frontend::CompilationStencilSet& stencilSet,
                               js::MutableHandle<JSScript*> scriptOut);
 
  public:
