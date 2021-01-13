@@ -847,6 +847,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void move32To64ZeroExtend(Register src, Register64 dest) PER_ARCH;
 
+  // On x86, `dest` must be edx:eax for the sign extend operations.
   inline void move8To64SignExtend(Register src, Register64 dest) PER_ARCH;
   inline void move16To64SignExtend(Register src, Register64 dest) PER_ARCH;
   inline void move32To64SignExtend(Register src, Register64 dest) PER_ARCH;

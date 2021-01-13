@@ -2588,11 +2588,7 @@ BigInt* BigInt::asUintN(JSContext* cx, HandleBigInt x, uint64_t bits) {
   if (bits <= 64) {
     uint64_t u64 = toUint64(x);
     uint64_t mask = uint64_t(-1) >> (64 - bits);
-    uint64_t n = u64 & mask;
-    if (u64 == n && x->absFitsInUint64()) {
-      return x;
-    }
-    return createFromUint64(cx, n);
+    return createFromUint64(cx, u64 & mask);
   }
 
   if (bits >= MaxBitLength) {
@@ -2649,11 +2645,7 @@ BigInt* BigInt::asIntN(JSContext* cx, HandleBigInt x, uint64_t bits) {
   }
 
   if (bits == 64) {
-    int64_t n = toInt64(x);
-    if (((n < 0) == x->isNegative()) && x->absFitsInUint64()) {
-      return x;
-    }
-    return createFromInt64(cx, n);
+    return createFromInt64(cx, toInt64(x));
   }
 
   if (bits > MaxBitLength) {

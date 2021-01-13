@@ -5639,7 +5639,7 @@ MDefinition* MCheckObjCoercible::foldsTo(TempAllocator& alloc) {
   return input;
 }
 
-MDefinition* MGuardInt32IsNonNegative::foldsTo(TempAllocator& alloc) {
+MDefinition* MGuardIndexIsNonNegative::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(index()->type() == MIRType::Int32);
 
   MDefinition* input = index();

@@ -31,9 +31,6 @@
   _(AtomicsXor)                                    \
   _(AtomicsIsLockFree)                             \
                                                    \
-  _(BigIntAsIntN)                                  \
-  _(BigIntAsUintN)                                 \
-                                                   \
   _(Boolean)                                       \
                                                    \
   _(DataViewGetInt8)                               \
