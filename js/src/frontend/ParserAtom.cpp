@@ -819,6 +819,8 @@ XDRResult XDRParserAtomEntry(XDRState<mode>* xdr, ParserAtomEntry** entryp) {
     return HeaderSize + (CharSize * length);
   };
 
+  MOZ_TRY(xdr->align32());
+
   if (mode == XDR_ENCODE) {
     size_t totalLength =
         ComputeTotalLength((*entryp)->hasLatin1Chars(), (*entryp)->length());

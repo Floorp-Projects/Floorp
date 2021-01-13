@@ -52,6 +52,8 @@ template <XDRMode mode, typename ScopeT>
            sizeof(AbstractBindingName<TaggedParserAtomIndex>) * length;
   };
 
+  MOZ_TRY(xdr->align32());
+
   if (mode == XDR_ENCODE) {
     ScopeDataT* scopeData = static_cast<ScopeDataT*>(baseScopeData);
     const SlotInfo* slotInfo = &scopeData->slotInfo;
@@ -181,6 +183,8 @@ template <XDRMode mode, typename T>
 static XDRResult XDRSpanContent(XDRState<mode>* xdr, mozilla::Span<T>& span) {
   static_assert(CanCopyDataToDisk<T>::value,
                 "Span cannot be bulk-copied to disk.");
+
+  MOZ_TRY(xdr->align32());
 
   uint32_t size;
   MOZ_TRY(XDRSpanUninitialized(xdr, span, size));
