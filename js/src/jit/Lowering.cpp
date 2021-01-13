@@ -5585,11 +5585,11 @@ void LIRGenerator::visitGuardIsExtensible(MGuardIsExtensible* ins) {
   redefine(ins, object);
 }
 
-void LIRGenerator::visitGuardIndexIsNonNegative(MGuardIndexIsNonNegative* ins) {
+void LIRGenerator::visitGuardInt32IsNonNegative(MGuardInt32IsNonNegative* ins) {
   MDefinition* index = ins->index();
   MOZ_ASSERT(index->type() == MIRType::Int32);
 
-  auto* guard = new (alloc()) LGuardIndexIsNonNegative(useRegister(index));
+  auto* guard = new (alloc()) LGuardInt32IsNonNegative(useRegister(index));
   assignSnapshot(guard, ins->bailoutKind());
   add(guard, ins);
   redefine(ins, index);
