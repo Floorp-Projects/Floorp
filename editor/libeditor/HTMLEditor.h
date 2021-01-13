@@ -165,6 +165,14 @@ class HTMLEditor final : public TextEditor,
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() override;
 
+  /**
+   * PreHandleMouseDown() and PreHandleMouseUp() are called before
+   * HTMLEditorEventListener handles them.  The coming event may be
+   * non-acceptable event.
+   */
+  void PreHandleMouseDown(const dom::MouseEvent& aMouseDownEvent);
+  void PreHandleMouseUp(const dom::MouseEvent& aMouseUpEvent);
+
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
   virtual nsIContent* GetFocusedContent() const override;

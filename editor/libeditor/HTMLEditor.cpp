@@ -700,6 +700,24 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
   return rv;
 }
 
+void HTMLEditor::PreHandleMouseDown(const MouseEvent& aMouseDownEvent) {
+  if (mTypeInState) {
+    // mTypeInState will be notified of selection change even if aMouseDownEvent
+    // is not an acceptable event for this editor.  Therefore, we need to notify
+    // it of this event too.
+    mTypeInState->PreHandleMouseEvent(aMouseDownEvent);
+  }
+}
+
+void HTMLEditor::PreHandleMouseUp(const MouseEvent& aMouseUpEvent) {
+  if (mTypeInState) {
+    // mTypeInState will be notified of selection change even if aMouseUpEvent
+    // is not an acceptable event for this editor.  Therefore, we need to notify
+    // it of this event too.
+    mTypeInState->PreHandleMouseEvent(aMouseUpEvent);
+  }
+}
+
 nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   // NOTE: When you change this method, you should also change:
   //   * editor/libeditor/tests/test_htmleditor_keyevent_handling.html
