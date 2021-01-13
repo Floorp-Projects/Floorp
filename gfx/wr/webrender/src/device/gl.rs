@@ -1588,19 +1588,25 @@ impl Device {
              //  && renderer_name.starts_with("AMD");
              //  (XXX: we apply this restriction to all GPUs to handle switching)
 
+        let is_angle = renderer_name.starts_with("ANGLE");
+
         // On certain GPUs PBO texture upload is only performed asynchronously
         // if the stride of the data is a multiple of a certain value.
-        // On Adreno it must be a multiple of 64 pixels, meaning value in bytes
-        // varies with the texture format.
-        // On AMD Mac, it must always be a multiple of 256 bytes.
-        // Other platforms may have similar requirements and should be added
-        // here.
-        // The default value should be 4 bytes.
         let optimal_pbo_stride = if is_adreno {
+            // On Adreno it must be a multiple of 64 pixels, meaning value in bytes
+            // varies with the texture format.
             StrideAlignment::Pixels(NonZeroUsize::new(64).unwrap())
         } else if is_macos {
+            // On AMD Mac, it must always be a multiple of 256 bytes.
+            // We apply this restriction to all GPUs to handle switching
             StrideAlignment::Bytes(NonZeroUsize::new(256).unwrap())
+        } else if is_angle {
+            // On ANGLE, PBO texture uploads get incorrectly truncated if
+            // the stride is greater than the width * bpp.
+            StrideAlignment::Bytes(NonZeroUsize::new(1).unwrap())
         } else {
+            // Other platforms may have similar requirements and should be added
+            // here. The default value should be 4 bytes.
             StrideAlignment::Bytes(NonZeroUsize::new(4).unwrap())
         };
 
