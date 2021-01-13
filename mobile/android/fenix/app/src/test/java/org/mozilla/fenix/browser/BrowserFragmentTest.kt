@@ -25,9 +25,11 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,11 +38,13 @@ import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
+import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.onboarding.FenixOnboarding
+import java.lang.Exception
 
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
@@ -299,6 +303,47 @@ class BrowserFragmentTest {
         every { context.settings().isPullToRefreshEnabledInBrowser } returns true
         assert(browserFragment.shouldPullToRefreshBeEnabled(false))
         assert(!browserFragment.shouldPullToRefreshBeEnabled(true))
+    }
+
+    @Test
+    fun `WHEN fragment is not attached THEN toolbar invalidation does nothing`() {
+        val browserToolbarView: BrowserToolbarView = mockk(relaxed = true)
+        val browserToolbar: BrowserToolbar = mockk(relaxed = true)
+        val toolbarIntegration: ToolbarIntegration = mockk(relaxed = true)
+        every { browserToolbarView.view } returns browserToolbar
+        every { browserToolbarView.toolbarIntegration } returns toolbarIntegration
+        every { browserFragment.context } returns null
+        browserFragment._browserToolbarView = browserToolbarView
+        browserFragment.safeInvalidateBrowserToolbarView()
+
+        verify(exactly = 0) { browserToolbar.invalidateActions() }
+        verify(exactly = 0) { toolbarIntegration.invalidateMenu() }
+    }
+
+    @Test
+    @Suppress("TooGenericExceptionCaught")
+    fun `WHEN fragment is attached and toolbar view is null THEN toolbar invalidation is safe`() {
+        every { browserFragment.context } returns mockk(relaxed = true)
+        try {
+            browserFragment.safeInvalidateBrowserToolbarView()
+        } catch (e: Exception) {
+            fail("Exception thrown when invalidating toolbar")
+        }
+    }
+
+    @Test
+    fun `WHEN fragment and view are attached THEN toolbar invalidation is triggered`() {
+        val browserToolbarView: BrowserToolbarView = mockk(relaxed = true)
+        val browserToolbar: BrowserToolbar = mockk(relaxed = true)
+        val toolbarIntegration: ToolbarIntegration = mockk(relaxed = true)
+        every { browserToolbarView.view } returns browserToolbar
+        every { browserToolbarView.toolbarIntegration } returns toolbarIntegration
+        every { browserFragment.context } returns mockk(relaxed = true)
+        browserFragment._browserToolbarView = browserToolbarView
+        browserFragment.safeInvalidateBrowserToolbarView()
+
+        verify(exactly = 1) { browserToolbar.invalidateActions() }
+        verify(exactly = 1) { toolbarIntegration.invalidateMenu() }
     }
 
     private fun addAndSelectTab(tab: TabSessionState) {

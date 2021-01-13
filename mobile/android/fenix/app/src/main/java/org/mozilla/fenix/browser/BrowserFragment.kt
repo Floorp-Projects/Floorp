@@ -40,7 +40,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 
@@ -125,11 +124,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
                         readerModeAvailable = available
                         readerModeAction.setSelected(active)
-
-                        runIfFragmentIsAttached {
-                            browserToolbarView.view.invalidateActions()
-                            browserToolbarView.toolbarIntegration.invalidateMenu()
-                        }
+                        safeInvalidateBrowserToolbarView()
                     }
                 },
                 owner = this,
