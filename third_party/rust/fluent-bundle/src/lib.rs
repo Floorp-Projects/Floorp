@@ -30,7 +30,7 @@
 //!     .expect("Failed to parse an FTL string.");
 //!
 //! let langid_en = langid!("en-US");
-//! let mut bundle = FluentBundle::new(&[langid_en]);
+//! let mut bundle = FluentBundle::new(vec![langid_en]);
 //!
 //! bundle
 //!     .add_resource(res)
@@ -79,9 +79,6 @@
 //! [`FluentValue`]: ./types/enum.FluentValue.html
 //! [`FluentArgs`]: ./struct.FluentArgs.html
 
-#[macro_use]
-extern crate rental;
-
 use intl_memoizer::{IntlLangMemoizer, Memoizable};
 use unic_langid::LanguageIdentifier;
 
@@ -116,7 +113,7 @@ pub use types::FluentValue;
 ///     .expect("Could not parse an FTL string.");
 ///
 /// let langid_en = langid!("en-US");
-/// let mut bundle = FluentBundle::new(&[langid_en]);
+/// let mut bundle = FluentBundle::new(vec![langid_en]);
 ///
 /// bundle.add_resource(&resource)
 ///     .expect("Failed to add FTL resources to the bundle.");
