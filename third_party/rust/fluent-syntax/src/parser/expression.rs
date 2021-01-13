@@ -71,7 +71,9 @@ where
                 while let Some(b) = self.source.as_ref().as_bytes().get(self.ptr) {
                     match b {
                         b'\\' => match self.source.as_ref().as_bytes().get(self.ptr + 1) {
-                            Some(b'\\') | Some(b'{') | Some(b'"') => self.ptr += 2,
+                            Some(b'\\') => self.ptr += 2,
+                            Some(b'{') => self.ptr += 2,
+                            Some(b'"') => self.ptr += 2,
                             Some(b'u') => {
                                 self.ptr += 2;
                                 self.skip_unicode_escape_sequence(4)?;
@@ -126,7 +128,9 @@ where
                 let id = self.get_identifier()?;
                 let arguments = self.get_call_arguments()?;
                 if arguments.is_some() {
-                    if !Self::is_callee(id.name.as_ref().as_bytes()) {
+                    if !id.name.as_ref().bytes().all(|c| {
+                        c.is_ascii_uppercase() || c.is_ascii_digit() || c == b'_' || c == b'-'
+                    }) {
                         return error!(ErrorKind::ForbiddenCallee, self.ptr);
                     }
 
