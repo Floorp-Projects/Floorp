@@ -291,6 +291,16 @@ void TypeInState::OnSelectionChange(Selection& aSelection, int16_t aReason) {
     // we'll check the point later.
     AutoEditorDOMPointChildInvalidator saveOnlyOffset(mLastSelectionPoint);
   } else {
+    if (aSelection.RangeCount()) {
+      // If selection starts from a link, we shouldn't preserve the link style
+      // unless the range is entirely in the link.
+      EditorRawDOMRange firstRange(*aSelection.GetRangeAt(0));
+      if (firstRange.StartRef().IsInContentNode() &&
+          HTMLEditUtils::IsContentInclusiveDescendantOfLink(
+              *firstRange.StartRef().ContainerAsContent())) {
+        unlink = !HTMLEditUtils::IsRangeEntirelyInLink(firstRange);
+      }
+    }
     mLastSelectionPoint.Clear();
   }
 
