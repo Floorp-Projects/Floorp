@@ -163,6 +163,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
 static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
                                   CompilationStencil& stencil,
                                   const ScriptStencil& script,
+                                  const ScriptStencilExtra& scriptExtra,
                                   ScriptIndex functionIndex) {
   GeneratorKind generatorKind =
       script.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
@@ -193,7 +194,7 @@ static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
     MOZ_ASSERT(displayAtom);
   }
   RootedFunction fun(
-      cx, NewFunctionWithProto(cx, maybeNative, script.nargs,
+      cx, NewFunctionWithProto(cx, maybeNative, scriptExtra.nargs,
                                script.functionFlags, nullptr, displayAtom,
                                proto, allocKind, TenuredObject));
   if (!fun) {
@@ -275,11 +276,13 @@ static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
                                  CompilationGCOutput& gcOutput) {
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
+    const auto* scriptExtra = item.scriptExtra;
     auto index = item.index;
 
     MOZ_ASSERT(!item.function);
 
-    JSFunction* fun = CreateFunction(cx, input, stencil, scriptStencil, index);
+    JSFunction* fun =
+        CreateFunction(cx, input, stencil, scriptStencil, *scriptExtra, index);
     if (!fun) {
       return false;
     }
@@ -554,11 +557,6 @@ static void AssertDelazificationFieldsMatch(CompilationStencil& stencil,
                   scriptStencil.hasSharedData());
     MOZ_ASSERT_IF(item.index > CompilationInfo::TopLevelIndex,
                   !scriptStencil.hasSharedData());
-
-    // FIXME: If this function is lazily parsed again, nargs isn't set to
-    //        correct value (bug 1666978).
-    MOZ_ASSERT_IF(scriptStencil.hasSharedData(),
-                  fun->nargs() == scriptStencil.nargs);
   }
 }
 #endif  // DEBUG
@@ -1739,8 +1737,6 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
     DumpFunctionFlagsItems(json, functionFlags);
     json.endList();
 
-    json.property("nargs", nargs);
-
     if (hasLazyFunctionEnclosingScopeIndex()) {
       json.formatProperty("lazyFunctionEnclosingScopeIndex", "ScopeIndex(%zu)",
                           size_t(lazyFunctionEnclosingScopeIndex_));
@@ -1769,6 +1765,8 @@ void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) {
   json.property("lineno", extent.lineno);
   json.property("column", extent.column);
   json.endObject();
+
+  json.property("nargs", nargs);
 }
 
 void SharedDataContainer::dump() {
