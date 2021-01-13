@@ -132,10 +132,11 @@ where
                     }
                     PatternElementPlaceholders::TextElement(start, end, indent, role) => {
                         let start = if role == TextElementPosition::LineStart {
-                            common_indent.map_or_else(
-                                || start + indent,
-                                |common_indent| start + std::cmp::min(indent, common_indent),
-                            )
+                            if let Some(common_indent) = common_indent {
+                                start + std::cmp::min(indent, common_indent)
+                            } else {
+                                start + indent
+                            }
                         } else {
                             start
                         };
