@@ -54,17 +54,24 @@ def parse(args):
     return all_objs.value, options
 
 
-def main(output_fd, _metrics_index, *args):
+# Must be kept in sync with the length of `deps` in moz.build.
+DEPS_LEN = 13
+
+
+def main(output_fd, *args):
+    args = args[DEPS_LEN:]
     all_objs, options = parse(args)
     rust.output_rust(all_objs, output_fd, options)
 
 
-def cpp_metrics(output_fd, _metrics_index, *args):
+def cpp_metrics(output_fd, *args):
+    args = args[DEPS_LEN:]
     all_objs, options = parse(args)
     cpp.output_cpp(all_objs, output_fd, options)
 
 
-def js_metrics(output_fd, _metrics_index, *args):
+def js_metrics(output_fd, *args):
+    args = args[DEPS_LEN:]
     all_objs, options = parse(args)
     js.output_js(all_objs, output_fd, options)
 
