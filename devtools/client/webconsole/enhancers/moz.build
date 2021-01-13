@@ -8,5 +8,4 @@ DevToolsModules(
     "batching.js",
     "css-error-reporting.js",
     "message-cache-clearing.js",
-    "net-provider.js",
 )

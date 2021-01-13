@@ -80,7 +80,6 @@ exports.NetworkEventMessage = function(props) {
       totalTime: null,
       indent: 0,
       updates: null,
-      openedOnce: false,
       securityState: null,
       securityInfo: null,
       requestHeadersFromUploadStream: null,
