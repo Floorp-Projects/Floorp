@@ -1015,48 +1015,47 @@ function TypedArraySlice(start, end) {
     return A;
 }
 
-// ES6 draft rev30 (2014/12/24) 22.2.3.25 %TypedArray%.prototype.some(callbackfn[, thisArg]).
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
+// 22.2.3.25 %TypedArray%.prototype.some ( callbackfn [ , thisArg ] )
 function TypedArraySome(callbackfn/*, thisArg*/) {
-    // Steps 1-2.
+    // Step 1.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
+    // Step 2.
     var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
 
     // If we got here, `this` is either a typed array or a wrapper for one.
 
-    // Steps 3-5.
+    // Step 3.
     var len;
     if (isTypedArray)
         len = TypedArrayLength(O);
     else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
 
-    // Step 6.
+    // Step 4.
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.some");
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    // Step 7.
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
 
-    // Steps 8-9.
-    // Omit steps 9.a-9.c and the 'if' clause in step 9.d, since there are no holes in typed arrays.
+    // Steps 5-6.
     for (var k = 0; k < len; k++) {
-        // Steps 9.d.i-9.d.ii.
+        // Steps 6.a-b.
         var kValue = O[k];
 
-        // Steps 9.d.iii-9.d.iv.
-        var testResult = callContentFunction(callbackfn, T, kValue, k, O);
+        // Step 6.c.
+        var testResult = callContentFunction(callbackfn, thisArg, kValue, k, O);
 
-        // Step 9.d.v.
+        // Step 6.d.
         if (testResult)
             return true;
     }
 
-    // Step 10.
+    // Step 7.
     return false;
 }
 
