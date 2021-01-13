@@ -45,27 +45,31 @@ class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
 };
 
 // This class manages a section which is created in the launcher process and
-// mapped in the browser process and the sandboxed processes.  The section's
-// layout is represented as SharedSection::Layout.
+// mapped in the browser process and the sandboxed processes as a copy-on-write
+// region.  The section's layout is represented as SharedSection::Layout.
 //
 // (1) Kernel32's functions required for MMPolicyInProcessEarlyStage
 //     Formatted as Kernel32ExportsSolver.
 //
 // (2) Array of NT paths of the executable's dependent modules
-//     Formatted as a null-delimited wide-character string set ending with
-//     an empty string.
+//     Array item is an offset to a string buffer of a module's
+//     NT path, relative to the beginning of the array.
+//     Array is case-insensitive sorted.
 //
 // +--------------------------------------------------------------+
 // | (1) | FlushInstructionCache                                  |
-// |     | GetModuleHandleW                                       |
 // |     | GetSystemInfo                                          |
 // |     | VirtualProtect                                         |
 // |     | State [Uninitialized|Initialized|Resolved]             |
 // +--------------------------------------------------------------+
-// | (2) | L"NT path 1"                                           |
-// |     | L"NT path 2"                                           |
+// | (2) | The length of the offset array                         |
+// |     | Offset1 to String1                                     |
+// |     |   * Offset is relative to the beginning of the array   |
+// |     |   * String is an NT path in wchar_t                    |
+// |     | Offset2 to String2                                     |
 // |     | ...                                                    |
-// |     | L""                                                    |
+// |     | OffsetN to StringN                                     |
+// |     | String1, 2, ..., N (null delimited strings)            |
 // +--------------------------------------------------------------+
 class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
   // As we define a global variable of this class and use it in our blocklist
@@ -77,35 +81,21 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
   static HANDLE sSectionHandle;
   static void* sWriteCopyView;
 
-  static constexpr size_t kSharedViewSize = 0x1000;
-
  public:
   struct Layout final {
     Kernel32ExportsSolver mK32Exports;
-    wchar_t mModulePathArray[1];
+    uint32_t mModulePathArrayLength;
+    uint32_t mModulePathArray[1];
 
     Layout() = delete;  // disallow instantiation
   };
 
-  // Replace |sSectionHandle| with a given handle.
-  static void Reset(HANDLE aNewSecionObject = sSectionHandle);
-
-  // Replace |sSectionHandle| with a new readonly handle.
-  static void ConvertToReadOnly();
-
-  // Create a new writable section and initialize the Kernel32ExportsSolver
-  // part.
+  static void Reset(HANDLE aNewSecionObject);
   static LauncherVoidResult Init(const nt::PEHeaders& aPEHeaders);
 
-  // Append a new string to the |sSectionHandle|
-  static LauncherVoidResult AddDepenentModule(PCUNICODE_STRING aNtPath);
-
-  // Map |sSectionHandle| to a copy-on-write page and return its address.
   static LauncherResult<Layout*> GetView();
-
-  // Transfer |sSectionHandle| to a process associated with |aTransferMgr|.
   static LauncherVoidResult TransferHandle(
-      nt::CrossExecTransferManager& aTransferMgr, DWORD aDesiredAccess,
+      nt::CrossExecTransferManager& aTransferMgr,
       HANDLE* aDestinationAddress = &sSectionHandle);
 };
 
