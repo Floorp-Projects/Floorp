@@ -83,11 +83,28 @@ if CONFIG["MOZ_GLEAN"]:
     # The yamls arrays are relative to topsrcdir, so we need to transform:
     metrics_yamls = ["../../../" + x for x in metrics_yamls]
     pings_yamls = ["../../../" + x for x in pings_yamls]
+    # If you change the length of this deps list, update DEPS_LEN in run_glean_parser.py
+    deps = [
+        "metrics_index.py",
+        "build_scripts/glean_parser_ext/cpp.py",
+        "build_scripts/glean_parser_ext/js.py",
+        "build_scripts/glean_parser_ext/run_glean_parser.py",
+        "build_scripts/glean_parser_ext/rust.py",
+        "build_scripts/glean_parser_ext/string_table.py",
+        "build_scripts/glean_parser_ext/util.py",
+        "build_scripts/glean_parser_ext/templates/cpp.jinja2",
+        "build_scripts/glean_parser_ext/templates/cpp_pings.jinja2",
+        "build_scripts/glean_parser_ext/templates/js.jinja2",
+        "build_scripts/glean_parser_ext/templates/js_pings.jinja2",
+        "build_scripts/glean_parser_ext/templates/rust.jinja2",
+        "build_scripts/glean_parser_ext/templates/rust_pings.jinja2",
+    ]
+
     GeneratedFile(
         "api/src/metrics.rs",
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=["metrics_index.py"] + metrics_yamls,
+        inputs=deps + metrics_yamls,
     )
 
     GeneratedFile(
@@ -95,7 +112,7 @@ if CONFIG["MOZ_GLEAN"]:
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
         entry_point="cpp_metrics",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=["metrics_index.py"] + metrics_yamls,
+        inputs=deps + metrics_yamls,
     )
 
     GeneratedFile(
@@ -103,14 +120,14 @@ if CONFIG["MOZ_GLEAN"]:
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
         entry_point="js_metrics",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=["metrics_index.py"] + metrics_yamls,
+        inputs=deps + metrics_yamls,
     )
 
     GeneratedFile(
         "api/src/pings.rs",
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=["metrics_index.py"] + pings_yamls,
+        inputs=deps + pings_yamls,
     )
 
     GeneratedFile(
@@ -118,7 +135,7 @@ if CONFIG["MOZ_GLEAN"]:
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
         entry_point="cpp_metrics",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=["metrics_index.py"] + pings_yamls,
+        inputs=deps + pings_yamls,
     )
 
     GeneratedFile(
@@ -126,7 +143,7 @@ if CONFIG["MOZ_GLEAN"]:
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
         entry_point="js_metrics",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=["metrics_index.py"] + pings_yamls,
+        inputs=deps + pings_yamls,
     )
 
     DIRS += [
