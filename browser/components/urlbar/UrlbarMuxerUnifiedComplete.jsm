@@ -532,7 +532,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     if (
       state.canShowPrivateSearch &&
       (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
-        result.payload.providesSearchMode ||
+        result.payload.keywordOffer ||
         (result.heuristic && result.payload.keyword))
     ) {
       state.canShowPrivateSearch = false;
