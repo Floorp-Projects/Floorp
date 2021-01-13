@@ -588,25 +588,8 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
     printf_stderr("--- WebGL context created: %p\n", webgl.get());
   }
 
-  // -
-
-  const auto UploadableSdTypes = [&]() {
-    webgl::EnumMask<layers::SurfaceDescriptor::Type> types;
-    if (webgl->gl->IsANGLE()) {
-      types[layers::SurfaceDescriptor::TSurfaceDescriptorD3D10] = true;
-      types[layers::SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr] = true;
-    }
-    if (kIsMacOS) {
-      types[layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface] = true;
-    }
-    return types;
-  };
-
-  // -
-
   out->options = webgl->mOptions;
   out->limits = *webgl->mLimits;
-  out->uploadableSdTypes = UploadableSdTypes();
 
   return webgl;
 }
@@ -1415,8 +1398,8 @@ const char* WebGLContext::FuncName() const {
   if (MOZ_LIKELY(mFuncScope)) {
     ret = mFuncScope->mFuncName;
   } else {
-    NS_WARNING("FuncScope not on stack!");
-    ret = "<unknown function>";
+    MOZ_ASSERT(false, "FuncScope not on stack!");
+    ret = "<funcName unknown>";
   }
   return ret;
 }
@@ -1521,20 +1504,12 @@ nsresult webgl::AvailabilityRunnable::Run() {
 
 // -
 
-void WebGLContext::GenerateErrorImpl(const GLenum errOrWarning,
+void WebGLContext::GenerateErrorImpl(const GLenum err,
                                      const std::string& text) const {
-  auto err = errOrWarning;
-  bool isPerfWarning = false;
-  if (err == webgl::kErrorPerfWarning) {
-    err = 0;
-    isPerfWarning = true;
-  }
-
-  if (err && mFuncScope && mFuncScope->mBindFailureGuard) {
+  if (mFuncScope && mFuncScope->mBindFailureGuard) {
     gfxCriticalError() << "mBindFailureGuard failure: Generating error "
                        << EnumString(err) << ": " << text;
   }
-
   /* ES2 section 2.5 "GL Errors" states that implementations can have
    * multiple 'flags', as errors might be caught in different parts of
    * a distributed implementation.
@@ -1545,39 +1520,18 @@ void WebGLContext::GenerateErrorImpl(const GLenum errOrWarning,
 
   if (!mHost) return;  // Impossible?
 
-  // -
+  if (!ShouldGenerateWarnings()) return;
 
-  const auto ShouldWarn = [&]() {
-    if (isPerfWarning) {
-      return ShouldGeneratePerfWarnings();
-    }
-    return ShouldGenerateWarnings();
-  };
-  if (!ShouldWarn()) return;
+  mHost->JsWarning(text);
+  mWarningCount += 1;
 
-  // -
-
-  auto* pNumWarnings = &mWarningCount;
-  const char* warningsType = "warnings";
-  if (isPerfWarning) {
-    pNumWarnings = &mNumPerfWarnings;
-    warningsType = "perf warnings";
-  }
-
-  if (isPerfWarning) {
-    const auto perfText = std::string("WebGL perf warning: ") + text;
-    mHost->JsWarning(perfText);
-  } else {
-    mHost->JsWarning(text);
-  }
-  *pNumWarnings += 1;
-
-  if (!ShouldWarn()) {
-    const auto& msg = nsPrintfCString(
-        "After reporting %i, no further %s will be reported for this WebGL "
-        "context.",
-        int(*pNumWarnings), warningsType);
-    mHost->JsWarning(ToString(msg));
+  if (!ShouldGenerateWarnings()) {
+    auto info = std::string(
+        "WebGL: No further warnings will be reported for this WebGL "
+        "context. (already reported ");
+    info += std::to_string(mWarningCount);
+    info += " warnings)";
+    mHost->JsWarning(info);
   }
 }
 

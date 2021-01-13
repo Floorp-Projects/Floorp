@@ -39,7 +39,6 @@ class GPUVideoImage;
 class PlanarYCbCrImage;
 class SurfaceTextureImage;
 class MacIOSurfaceImage;
-class SurfaceDescriptor;
 class SurfaceDescriptorD3D10;
 class SurfaceDescriptorDXGIYCbCr;
 }  // namespace layers
@@ -195,8 +194,6 @@ class GLBlitHelper final {
   bool BlitImageToFramebuffer(layers::Image* srcImage,
                               const gfx::IntSize& destSize,
                               OriginPos destOrigin);
-  bool BlitSdToFramebuffer(const layers::SurfaceDescriptor&,
-                           const gfx::IntSize& destSize, OriginPos destOrigin);
 
  private:
   bool BlitImage(layers::GPUVideoImage* srcImage, const gfx::IntSize& destSize,

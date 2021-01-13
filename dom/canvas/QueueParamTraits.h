@@ -398,25 +398,24 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
 
   template <typename U>
   static QueueStatus Write(ProducerView<U>& view, const ParamType& in) {
-    MOZ_RELEASE_ASSERT(!in.image);
-    const bool isDataSurf = bool(in.dataSurf);
+    MOZ_ASSERT(!in.image);
+    const bool isSurf = bool(in.surf);
     if (!view.WriteParam(in.imageTarget) || !view.WriteParam(in.size) ||
         !view.WriteParam(in.srcAlphaType) || !view.WriteParam(in.unpacking) ||
         !view.WriteParam(in.cpuData) || !view.WriteParam(in.pboOffset) ||
-        !view.WriteParam(in.imageSize) || !view.WriteParam(in.sd) ||
-        !view.WriteParam(isDataSurf)) {
+        !view.WriteParam(isSurf)) {
       return view.GetStatus();
     }
-    if (isDataSurf) {
-      const auto& surf = in.dataSurf;
-      gfx::DataSourceSurface::ScopedMap map(surf, gfx::DataSourceSurface::READ);
+    if (isSurf) {
+      gfx::DataSourceSurface::ScopedMap map(in.surf,
+                                            gfx::DataSourceSurface::READ);
       if (!map.IsMapped()) {
         return QueueStatus::kOOMError;
       }
-      const auto& surfSize = surf->GetSize();
+      const auto& surfSize = in.surf->GetSize();
       const auto stride = *MaybeAs<size_t>(map.GetStride());
-      if (!view.WriteParam(surfSize) || !view.WriteParam(surf->GetFormat()) ||
-          !view.WriteParam(stride)) {
+      if (!view.WriteParam(surfSize) ||
+          !view.WriteParam(in.surf->GetFormat()) || !view.WriteParam(stride)) {
         return view.GetStatus();
       }
 
@@ -431,15 +430,14 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
 
   template <typename U>
   static QueueStatus Read(ConsumerView<U>& view, ParamType* const out) {
-    bool isDataSurf;
+    bool isSurf;
     if (!view.ReadParam(&out->imageTarget) || !view.ReadParam(&out->size) ||
         !view.ReadParam(&out->srcAlphaType) ||
         !view.ReadParam(&out->unpacking) || !view.ReadParam(&out->cpuData) ||
-        !view.ReadParam(&out->pboOffset) || !view.ReadParam(&out->imageSize) ||
-        !view.ReadParam(&out->sd) || !view.ReadParam(&isDataSurf)) {
+        !view.ReadParam(&out->pboOffset) || !view.ReadParam(&isSurf)) {
       return view.GetStatus();
     }
-    if (isDataSurf) {
+    if (isSurf) {
       gfx::IntSize surfSize;
       gfx::SurfaceFormat format;
       size_t stride;
@@ -447,14 +445,13 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
           !view.ReadParam(&stride)) {
         return view.GetStatus();
       }
-      auto& surf = out->dataSurf;
-      surf = gfx::Factory::CreateDataSourceSurfaceWithStride(surfSize, format,
-                                                             stride, true);
-      if (!surf) {
+      out->surf = gfx::Factory::CreateDataSourceSurfaceWithStride(
+          surfSize, format, stride, true);
+      if (!out->surf) {
         return QueueStatus::kOOMError;
       }
 
-      gfx::DataSourceSurface::ScopedMap map(surf,
+      gfx::DataSourceSurface::ScopedMap map(out->surf,
                                             gfx::DataSourceSurface::WRITE);
       if (!map.IsMapped()) {
         return QueueStatus::kOOMError;
