@@ -26,6 +26,7 @@ class nsAtom;
 class nsINode;
 
 namespace mozilla {
+class HTMLEditor;
 namespace dom {
 class MouseEvent;
 class Selection;
@@ -103,7 +104,7 @@ class TypeInState final {
   void PostHandleSelectionChangeCommand(const HTMLEditor& aHTMLEditor,
                                         Command aCommand);
 
-  void OnSelectionChange(dom::Selection& aSelection, int16_t aReason);
+  void OnSelectionChange(const HTMLEditor& aHTMLEditor, int16_t aReason);
 
   void SetProp(nsAtom* aProp, nsAtom* aAttr, const nsAString& aValue);
 

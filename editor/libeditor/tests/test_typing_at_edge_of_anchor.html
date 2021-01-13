@@ -96,22 +96,6 @@ function doTest(editor, selection, win) {
      `${kDescription}: Typing X and Y at start of the <a> element should insert to start of wrapper <b> when caret is moved from the previous paragraph`);
 
   editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
-  selection.collapse(editor.querySelector("a[href]").firstChild, 0);
-  synthesizeKey("KEY_Backspace");
-  synthesizeKey("X");
-  synthesizeKey("Y");
-  is(editor.innerHTML, "<p>abc<a href=\"about:blank\">XYdef</a></p>",
-     `${kDescription}: Typing X and Y at start of the <a> element after joining paragraphs with Backspace should insert to start of it`);
-
-  editor.innerHTML = "<p><b>abc</b></p><p><a href=\"about:blank\">def</a></p>";
-  selection.collapse(editor.querySelector("a[href]").firstChild, 0);
-  synthesizeKey("KEY_Backspace");
-  synthesizeKey("X");
-  synthesizeKey("Y");
-  is(editor.innerHTML, "<p><b>abc</b><a href=\"about:blank\">XYdef</a></p>",
-     `${kDescription}: Typing X and Y at start of the <a> element after joining paragraphs with Backspace should insert to start of it (following <b>)`);
-
-  editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
   selection.collapse(editor.querySelector("p").firstChild, 3);
   synthesizeKey("KEY_Delete");
   synthesizeKey("X");
