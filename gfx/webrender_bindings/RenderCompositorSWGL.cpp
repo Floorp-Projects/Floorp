@@ -82,8 +82,11 @@ bool RenderCompositorSWGL::AllocateMappedBuffer() {
     mMappedData = data;
     mMappedStride = stride;
     // Disambiguate whether the widget's draw target has its origin at zero or
-    // if it is offset to the dirty region origin.
-    if (size == gfx::IntSize(bounds.XMost(), bounds.YMost())) {
+    // if it is offset to the dirty region origin. The DT might either enclose
+    // only the region itself, the region including the origin, or the entire
+    // widget. Thus, if the DT doesn't only enclose the region, we assume it
+    // contains the origin.
+    if (size != bounds.Size().ToUnknownSize()) {
       // Update the bounds to include zero if the origin is at zero.
       bounds.ExpandToEnclose(LayoutDeviceIntPoint(0, 0));
     }
