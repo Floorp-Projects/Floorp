@@ -100,6 +100,8 @@ class TypeInState final {
   void PreHandleMouseEvent(const dom::MouseEvent& aMouseDownOrUpEvent);
 
   void PreHandleSelectionChangeCommand(Command aCommand);
+  void PostHandleSelectionChangeCommand(const HTMLEditor& aHTMLEditor,
+                                        Command aCommand);
 
   void OnSelectionChange(dom::Selection& aSelection, int16_t aReason);
 

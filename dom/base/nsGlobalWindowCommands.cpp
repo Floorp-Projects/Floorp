@@ -320,16 +320,22 @@ nsresult nsSelectMoveScrollCommand::DoCommand(const char* aCommandName,
     if (!forward && command != browseCommand.reverse) {
       continue;
     }
-    TextEditor* maybeHTMLEditor = nsContentUtils::GetActiveEditor(piWindow);
-    if (maybeHTMLEditor && maybeHTMLEditor->IsHTMLEditor()) {
-      maybeHTMLEditor->AsHTMLEditor()->PreHandleSelectionChangeCommand(command);
+    RefPtr<HTMLEditor> htmlEditor =
+        HTMLEditor::GetFrom(nsContentUtils::GetActiveEditor(piWindow));
+    if (htmlEditor) {
+      htmlEditor->PreHandleSelectionChangeCommand(command);
     }
+    nsresult rv = NS_OK;
     if (caretOn && browseCommand.move &&
         NS_SUCCEEDED((selCont->*(browseCommand.move))(forward, false))) {
       AdjustFocusAfterCaretMove(piWindow);
-      return NS_OK;
+    } else {
+      rv = (selCont->*(browseCommand.scroll))(forward);
     }
-    return (selCont->*(browseCommand.scroll))(forward);
+    if (htmlEditor) {
+      htmlEditor->PostHandleSelectionChangeCommand(command);
+    }
+    return rv;
   }
 
   MOZ_ASSERT(false, "Forgot to handle new command?");
@@ -383,20 +389,25 @@ nsresult nsPhysicalSelectMoveScrollCommand::DoCommand(
     if (command != browseCommand.command) {
       continue;
     }
-    TextEditor* maybeHTMLEditor = nsContentUtils::GetActiveEditor(piWindow);
-    if (maybeHTMLEditor && maybeHTMLEditor->IsHTMLEditor()) {
-      maybeHTMLEditor->AsHTMLEditor()->PreHandleSelectionChangeCommand(command);
+    RefPtr<HTMLEditor> htmlEditor =
+        HTMLEditor::GetFrom(nsContentUtils::GetActiveEditor(piWindow));
+    if (htmlEditor) {
+      htmlEditor->PreHandleSelectionChangeCommand(command);
     }
+    nsresult rv = NS_OK;
     if (caretOn && NS_SUCCEEDED(selCont->PhysicalMove(
                        browseCommand.direction, browseCommand.amount, false))) {
       AdjustFocusAfterCaretMove(piWindow);
-      return NS_OK;
+    } else {
+      const bool forward =
+          (browseCommand.direction == nsISelectionController::MOVE_RIGHT ||
+           browseCommand.direction == nsISelectionController::MOVE_DOWN);
+      rv = (selCont->*(browseCommand.scroll))(forward);
     }
-
-    const bool forward =
-        (browseCommand.direction == nsISelectionController::MOVE_RIGHT ||
-         browseCommand.direction == nsISelectionController::MOVE_DOWN);
-    return (selCont->*(browseCommand.scroll))(forward);
+    if (htmlEditor) {
+      htmlEditor->PostHandleSelectionChangeCommand(command);
+    }
+    return rv;
   }
 
   MOZ_ASSERT(false, "Forgot to handle new command?");
@@ -438,11 +449,16 @@ nsresult nsSelectCommand::DoCommand(const char* aCommandName,
     if (!forward && command != selectCommand.reverse) {
       continue;
     }
-    TextEditor* maybeHTMLEditor = nsContentUtils::GetActiveEditor(piWindow);
-    if (maybeHTMLEditor && maybeHTMLEditor->IsHTMLEditor()) {
-      maybeHTMLEditor->AsHTMLEditor()->PreHandleSelectionChangeCommand(command);
+    RefPtr<HTMLEditor> htmlEditor =
+        HTMLEditor::GetFrom(nsContentUtils::GetActiveEditor(piWindow));
+    if (htmlEditor) {
+      htmlEditor->PreHandleSelectionChangeCommand(command);
     }
-    return (selCont->*(selectCommand.select))(forward, true);
+    nsresult rv = (selCont->*(selectCommand.select))(forward, true);
+    if (htmlEditor) {
+      htmlEditor->PostHandleSelectionChangeCommand(command);
+    }
+    return rv;
   }
 
   MOZ_ASSERT(false, "Forgot to handle new command?");
@@ -478,12 +494,17 @@ nsresult nsPhysicalSelectCommand::DoCommand(const char* aCommandName,
     if (command != selectCommand.command) {
       continue;
     }
-    TextEditor* maybeHTMLEditor = nsContentUtils::GetActiveEditor(piWindow);
-    if (maybeHTMLEditor && maybeHTMLEditor->IsHTMLEditor()) {
-      maybeHTMLEditor->AsHTMLEditor()->PreHandleSelectionChangeCommand(command);
+    RefPtr<HTMLEditor> htmlEditor =
+        HTMLEditor::GetFrom(nsContentUtils::GetActiveEditor(piWindow));
+    if (htmlEditor) {
+      htmlEditor->PreHandleSelectionChangeCommand(command);
     }
-    return selCont->PhysicalMove(selectCommand.direction, selectCommand.amount,
-                                 true);
+    nsresult rv = selCont->PhysicalMove(selectCommand.direction,
+                                        selectCommand.amount, true);
+    if (htmlEditor) {
+      htmlEditor->PostHandleSelectionChangeCommand(command);
+    }
+    return rv;
   }
 
   MOZ_ASSERT(false, "Forgot to handle new command?");

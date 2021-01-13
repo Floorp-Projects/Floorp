@@ -23,6 +23,9 @@ const kCanTestHomeEndKeys =
 
 SimpleTest.waitForExplicitFinish();
 
+// When some tests newly fail by your change but the new result is expected by
+// testing/web-platform/tests/editing/other/typing-around-link-element-at-(non-)collapsed-selection.tentative.html,
+// it's okay to delete the test from here.
 function doTest(editor, selection, win) {
   const kDescription =
     editor.getAttribute("contenteditable") === null ? "designMode" : "contenteditable";
@@ -179,16 +182,16 @@ function doTest(editor, selection, win) {
   synthesizeKey("KEY_ArrowLeft");
   synthesizeKey("X");
   synthesizeKey("Y");
-  todo_is(editor.innerHTML, "<p>XY<a href=\"about:blank\">abc</a></p>",
-          `${kDescription}: Typing X and Y at start of the <a> element after \`ArrowLeft\` key press without selection change should insert it outside the link`);
+  is(editor.innerHTML, "<p>XY<a href=\"about:blank\">abc</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element after \`ArrowLeft\` key press without selection change should insert it outside the link`);
 
   editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p>";
   selection.collapse(editor.querySelector("a[href]").firstChild, 0);
   synthesizeKey("KEY_ArrowLeft");
   synthesizeKey("X");
   synthesizeKey("Y");
-  todo_is(editor.innerHTML, "<p><b>XY<a href=\"about:blank\">abc</a></b></p>",
-          `${kDescription}: Typing X and Y at start of the <a> element wrapped by <b> after \`ArrowLeft\` key press without selection change should insert it outside the link but in the <b>`);
+  is(editor.innerHTML, "<p><b>XY<a href=\"about:blank\">abc</a></b></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element wrapped by <b> after \`ArrowLeft\` key press without selection change should insert it outside the link but in the <b>`);
 
   for (const startPos of [2, 0]) {
     editor.innerHTML = '<p><a href="about:blank">abc</a></p>';

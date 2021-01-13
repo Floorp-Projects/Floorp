@@ -724,6 +724,18 @@ void HTMLEditor::PreHandleSelectionChangeCommand(Command aCommand) {
   }
 }
 
+void HTMLEditor::PostHandleSelectionChangeCommand(Command aCommand) {
+  if (!mTypeInState) {
+    return;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (!editActionData.CanHandle()) {
+    return;
+  }
+  mTypeInState->PostHandleSelectionChangeCommand(*this, aCommand);
+}
+
 nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   // NOTE: When you change this method, you should also change:
   //   * editor/libeditor/tests/test_htmleditor_keyevent_handling.html

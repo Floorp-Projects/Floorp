@@ -134,6 +134,10 @@ class HTMLEditor final : public TextEditor,
 
   HTMLEditor();
 
+  static HTMLEditor* GetFrom(EditorBase* aEditorBase) {
+    return aEditorBase ? aEditorBase->AsHTMLEditor() : nullptr;
+  }
+
   MOZ_CAN_RUN_SCRIPT virtual void PreDestroy(bool aDestroyingFrames) override;
 
   bool GetReturnInParagraphCreatesNewParagraph();
@@ -174,10 +178,12 @@ class HTMLEditor final : public TextEditor,
   void PreHandleMouseUp(const dom::MouseEvent& aMouseUpEvent);
 
   /**
-   * PreHandleSelectionChangeCommand() is called before handling a command
-   * which may change selection and/or scroll position.
+   * PreHandleSelectionChangeCommand() and PostHandleSelectionChangeCommand()
+   * are called before or after handling a command which may change selection
+   * and/or scroll position.
    */
   void PreHandleSelectionChangeCommand(Command aCommand);
+  void PostHandleSelectionChangeCommand(Command aCommand);
 
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
