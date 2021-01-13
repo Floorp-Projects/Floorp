@@ -670,7 +670,7 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
 
 bool CompilationStencilSet::buildDelazificationIndices(JSContext* cx) {
   // Standalone-functions are not supported by XDR.
-  MOZ_ASSERT(!initial.scriptData[0].isFunction());
+  MOZ_ASSERT(!scriptData[0].isFunction());
 
   // If no delazifications, we are done.
   if (delazifications.empty()) {
@@ -695,9 +695,8 @@ bool CompilationStencilSet::buildDelazificationIndices(JSContext* cx) {
 
   MOZ_ASSERT(keyToIndex.count() == delazifications.length());
 
-  for (size_t i = 1; i < initial.scriptData.size(); i++) {
-    auto key =
-        BaseCompilationStencil::toFunctionKey(initial.scriptExtra[i].extent);
+  for (size_t i = 1; i < scriptData.size(); i++) {
+    auto key = BaseCompilationStencil::toFunctionKey(scriptExtra[i].extent);
     auto ptr = keyToIndex.lookup(key);
     if (!ptr) {
       continue;
@@ -722,8 +721,8 @@ bool CompilationStencilSet::instantiateStencils(
 bool CompilationStencilSet::instantiateStencilsAfterPreparation(
     JSContext* cx, CompilationGCOutput& gcOutput,
     CompilationGCOutput& gcOutputForDelazification) {
-  if (!CompilationInfo::instantiateStencilsAfterPreparation(
-          cx, initial.input, initial, gcOutput)) {
+  if (!CompilationInfo::instantiateStencilsAfterPreparation(cx, input, *this,
+                                                            gcOutput)) {
     return false;
   }
 
@@ -737,17 +736,19 @@ bool CompilationStencilSet::instantiateStencilsAfterPreparation(
     BaseScript* lazy = fun->baseScript();
     MOZ_ASSERT(!lazy->hasBytecode());
 
-    Rooted<CompilationInput> input(cx, CompilationInput(initial.input.options));
-    input.get().initFromLazy(lazy);
+    Rooted<CompilationInput> delazificationInput(
+        cx, CompilationInput(input.options));
+    delazificationInput.get().initFromLazy(lazy);
 
-    input.get().atomCache.stealBuffer(delazificationAtomCache);
+    delazificationInput.get().atomCache.stealBuffer(delazificationAtomCache);
 
     if (!CompilationInfo::prepareGCOutputForInstantiate(
             cx, delazification, gcOutputForDelazification)) {
       return false;
     }
     if (!CompilationInfo::instantiateStencilsAfterPreparation(
-            cx, input.get(), delazification, gcOutputForDelazification)) {
+            cx, delazificationInput.get(), delazification,
+            gcOutputForDelazification)) {
       return false;
     }
 
@@ -755,7 +756,7 @@ bool CompilationStencilSet::instantiateStencilsAfterPreparation(
     gcOutputForDelazification.functions.clear();
     gcOutputForDelazification.scopes.clear();
 
-    input.get().atomCache.returnBuffer(delazificationAtomCache);
+    delazificationInput.get().atomCache.returnBuffer(delazificationAtomCache);
   }
 
   return true;
@@ -808,7 +809,7 @@ bool CompilationInfo::prepareForInstantiate(JSContext* cx,
 bool CompilationStencilSet::prepareForInstantiate(
     JSContext* cx, CompilationGCOutput& gcOutput,
     CompilationGCOutput& gcOutputForDelazification) {
-  if (!CompilationInfo::prepareForInstantiate(cx, initial, gcOutput)) {
+  if (!CompilationInfo::prepareForInstantiate(cx, *this, gcOutput)) {
     return false;
   }
 
@@ -885,8 +886,8 @@ bool CompilationStencilSet::deserializeStencils(JSContext* cx,
   if (succeededOut) {
     *succeededOut = false;
   }
-  MOZ_ASSERT(initial.parserAtomData.empty());
-  XDRStencilDecoder decoder(cx, &initial.input.options, range);
+  MOZ_ASSERT(parserAtomData.empty());
+  XDRStencilDecoder decoder(cx, &input.options, range);
 
   XDRResult res = decoder.codeStencils(*this);
   if (res.isErr()) {
