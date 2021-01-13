@@ -171,6 +171,11 @@ widget/android/export: mobile/android/base/export
 # android_apks is not built on artifact builds without this dependency.
 mobile/android/base/export: mobile/android/base/android_apks
 
+# This is required so that the pre-export tier sees the rules in mobile/android/base
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+recurse_pre-export:: mobile/android/base/pre-export
+endif
+
 # CSS2Properties.webidl needs ServoCSSPropList.py from layout/style
 dom/bindings/export: layout/style/ServoCSSPropList.py
 
