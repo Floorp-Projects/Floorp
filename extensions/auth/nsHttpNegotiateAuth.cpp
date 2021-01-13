@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsNetCID.h"
+#include "nsProxyRelease.h"
 #include "plbase64.h"
 #include "plstr.h"
 #include "mozilla/Base64.h"
@@ -334,12 +335,12 @@ class GetNextTokenRunnable final : public mozilla::Runnable {
   ~GetNextTokenRunnable() override = default;
 
  public:
-  GetNextTokenRunnable(nsIHttpAuthenticableChannel* authChannel,
-                       const char* challenge, bool isProxyAuth,
-                       const char16_t* domain, const char16_t* username,
-                       const char16_t* password, nsISupports* sessionState,
-                       nsISupports* continuationState,
-                       GetNextTokenCompleteEvent* aCompleteEvent)
+  GetNextTokenRunnable(
+      nsMainThreadPtrHandle<nsIHttpAuthenticableChannel>& authChannel,
+      const char* challenge, bool isProxyAuth, const char16_t* domain,
+      const char16_t* username, const char16_t* password,
+      nsISupports* sessionState, nsISupports* continuationState,
+      GetNextTokenCompleteEvent* aCompleteEvent)
       : mozilla::Runnable("GetNextTokenRunnable"),
         mAuthChannel(authChannel),
         mChallenge(challenge),
@@ -409,7 +410,7 @@ class GetNextTokenRunnable final : public mozilla::Runnable {
   }
 
  private:
-  nsCOMPtr<nsIHttpAuthenticableChannel> mAuthChannel;
+  nsMainThreadPtrHandle<nsIHttpAuthenticableChannel> mAuthChannel;
   nsCString mChallenge;
   bool mIsProxyAuth;
   nsString mDomain;
@@ -435,9 +436,12 @@ nsHttpNegotiateAuth::GenerateCredentialsAsync(
   RefPtr<GetNextTokenCompleteEvent> cancelEvent =
       new GetNextTokenCompleteEvent(aCallback);
 
+  nsMainThreadPtrHandle<nsIHttpAuthenticableChannel> handle(
+      new nsMainThreadPtrHolder<nsIHttpAuthenticableChannel>(
+          "nsIHttpAuthenticableChannel", authChannel, false));
   nsCOMPtr<nsIRunnable> getNextTokenRunnable = new GetNextTokenRunnable(
-      authChannel, challenge, isProxyAuth, domain, username, password,
-      sessionState, continuationState, cancelEvent);
+      handle, challenge, isProxyAuth, domain, username, password, sessionState,
+      continuationState, cancelEvent);
 
   nsresult rv = NS_DispatchBackgroundTask(
       getNextTokenRunnable, nsIEventTarget::DISPATCH_EVENT_MAY_BLOCK);
