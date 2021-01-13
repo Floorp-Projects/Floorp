@@ -488,7 +488,6 @@ function messages(
       if (currMessage.source == "network") {
         openState.messagesById = new Map(messagesById).set(action.id, {
           ...currMessage,
-          openedOnce: true,
         });
       }
       return openState;
