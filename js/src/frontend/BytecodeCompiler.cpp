@@ -801,8 +801,7 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
     return false;
   }
 
-  StencilModuleMetadata& moduleMetadata =
-      *compilationInfo.stencil.moduleMetadata;
+  StencilModuleMetadata& moduleMetadata = *compilationInfo.moduleMetadata;
 
   builder.finishFunctionDecls(moduleMetadata);
 
@@ -890,7 +889,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     // The asm.js module was created by parser. Instantiation below will
     // allocate the JSFunction that wraps it.
     MOZ_ASSERT(funbox->isAsmJSModule());
-    MOZ_ASSERT(compilationInfo.stencil.asmJS.has(funbox->index()));
+    MOZ_ASSERT(compilationInfo.asmJS.has(funbox->index()));
     MOZ_ASSERT(compilationState_.scriptData[CompilationInfo::TopLevelIndex]
                    .functionFlags.isAsmJSNative());
   }
@@ -1099,7 +1098,7 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
 
   // Record the FunctionKey in the BaseCompilationStencil since it does not
   // contain any of the SourceExtents itself.
-  compilationInfo.stencil.functionKey =
+  compilationInfo.functionKey =
       BaseCompilationStencil::toFunctionKey(lazy->extent());
 
   assertException.reset();

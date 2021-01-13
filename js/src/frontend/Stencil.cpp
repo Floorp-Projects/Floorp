@@ -592,7 +592,7 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
   }
 
   return instantiateStencilsAfterPreparation(cx, compilationInfo.input,
-                                             compilationInfo.stencil, gcOutput);
+                                             compilationInfo, gcOutput);
 }
 
 /* static */
@@ -670,7 +670,7 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
 
 bool CompilationStencilSet::buildDelazificationIndices(JSContext* cx) {
   // Standalone-functions are not supported by XDR.
-  MOZ_ASSERT(!initial.stencil.scriptData[0].isFunction());
+  MOZ_ASSERT(!initial.scriptData[0].isFunction());
 
   // If no delazifications, we are done.
   if (delazifications.empty()) {
@@ -695,9 +695,9 @@ bool CompilationStencilSet::buildDelazificationIndices(JSContext* cx) {
 
   MOZ_ASSERT(keyToIndex.count() == delazifications.length());
 
-  for (size_t i = 1; i < initial.stencil.scriptData.size(); i++) {
-    auto key = BaseCompilationStencil::toFunctionKey(
-        initial.stencil.scriptExtra[i].extent);
+  for (size_t i = 1; i < initial.scriptData.size(); i++) {
+    auto key =
+        BaseCompilationStencil::toFunctionKey(initial.scriptExtra[i].extent);
     auto ptr = keyToIndex.lookup(key);
     if (!ptr) {
       continue;
@@ -723,7 +723,7 @@ bool CompilationStencilSet::instantiateStencilsAfterPreparation(
     JSContext* cx, CompilationGCOutput& gcOutput,
     CompilationGCOutput& gcOutputForDelazification) {
   if (!CompilationInfo::instantiateStencilsAfterPreparation(
-          cx, initial.input, initial.stencil, gcOutput)) {
+          cx, initial.input, initial, gcOutput)) {
     return false;
   }
 
@@ -792,7 +792,7 @@ bool CompilationInfo::prepareForInstantiate(JSContext* cx,
                                             CompilationInfo& compilationInfo,
                                             CompilationGCOutput& gcOutput) {
   auto& input = compilationInfo.input;
-  auto& stencil = compilationInfo.stencil;
+  auto& stencil = compilationInfo;
 
   if (!prepareInputAndStencilForInstantiate(cx, input, stencil)) {
     return false;
@@ -885,7 +885,7 @@ bool CompilationStencilSet::deserializeStencils(JSContext* cx,
   if (succeededOut) {
     *succeededOut = false;
   }
-  MOZ_ASSERT(initial.stencil.parserAtomData.empty());
+  MOZ_ASSERT(initial.parserAtomData.empty());
   XDRStencilDecoder decoder(cx, &initial.input.options, range);
 
   XDRResult res = decoder.codeStencils(*this);
@@ -1032,39 +1032,39 @@ bool CopyVectorToSpan(JSContext* cx, LifoAlloc& alloc, mozilla::Span<T>& span,
 }
 
 bool CompilationState::finish(JSContext* cx, CompilationInfo& compilationInfo) {
-  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
-                        compilationInfo.stencil.regExpData, regExpData)) {
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc, compilationInfo.regExpData,
+                        regExpData)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc, compilationInfo.scriptData,
+                        scriptData)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc, compilationInfo.scriptExtra,
+                        scriptExtra)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc, compilationInfo.scopeData,
+                        scopeData)) {
+    return false;
+  }
+
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc, compilationInfo.scopeNames,
+                        scopeNames)) {
     return false;
   }
 
   if (!CopyVectorToSpan(cx, compilationInfo.alloc,
-                        compilationInfo.stencil.scriptData, scriptData)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
-                        compilationInfo.stencil.scriptExtra, scriptExtra)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
-                        compilationInfo.stencil.scopeData, scopeData)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
-                        compilationInfo.stencil.scopeNames, scopeNames)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
-                        compilationInfo.stencil.parserAtomData,
+                        compilationInfo.parserAtomData,
                         parserAtoms.entries())) {
     return false;
   }
 
-  if (!CopyVectorToSpan(cx, compilationInfo.alloc,
-                        compilationInfo.stencil.gcThingData, gcThingData)) {
+  if (!CopyVectorToSpan(cx, compilationInfo.alloc, compilationInfo.gcThingData,
+                        gcThingData)) {
     return false;
   }
 

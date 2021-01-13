@@ -1719,7 +1719,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  this->compilationInfo_.stencil.moduleMetadata.emplace();
+  this->compilationInfo_.moduleMetadata.emplace();
 
   SourceParseContext modulepc(this, modulesc, nullptr);
   if (!modulepc.init()) {
@@ -1768,18 +1768,17 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   // Set the module to async if an await keyword was found at the top level.
   if (pc_->isAsync()) {
     pc_->sc()->asModuleContext()->builder.noteAsync(
-        *this->compilationInfo_.stencil.moduleMetadata);
+        *this->compilationInfo_.moduleMetadata);
   }
 
   // Generate the Import/Export tables and store in CompilationInfo.
-  if (!modulesc->builder.buildTables(
-          *this->compilationInfo_.stencil.moduleMetadata)) {
+  if (!modulesc->builder.buildTables(*this->compilationInfo_.moduleMetadata)) {
     return null();
   }
 
   // Check exported local bindings exist and mark them as closed over.
   StencilModuleMetadata& moduleMetadata =
-      *this->compilationInfo_.stencil.moduleMetadata;
+      *this->compilationInfo_.moduleMetadata;
   for (auto entry : moduleMetadata.localExportEntries) {
     const ParserAtom* nameId =
         this->compilationState_.getParserAtomAt(cx_, entry.localName);
@@ -10426,24 +10425,23 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
 
-  BigIntIndex index(this->getCompilationInfo().stencil.bigIntData.length());
+  BigIntIndex index(this->getCompilationInfo().bigIntData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx_);
     return null();
   }
-  if (!this->getCompilationInfo().stencil.bigIntData.emplaceBack()) {
+  if (!this->getCompilationInfo().bigIntData.emplaceBack()) {
     js::ReportOutOfMemory(cx_);
     return null();
   }
 
-  if (!this->getCompilationInfo().stencil.bigIntData[index].init(this->cx_,
-                                                                 chars)) {
+  if (!this->getCompilationInfo().bigIntData[index].init(this->cx_, chars)) {
     return null();
   }
 
   // Should the operations below fail, the buffer held by data will
   // be cleaned up by the CompilationInfo destructor.
-  return handler_.newBigInt(index, this->getCompilationInfo().stencil, pos());
+  return handler_.newBigInt(index, this->getCompilationInfo(), pos());
 }
 
 template <typename Unit>
@@ -11599,16 +11597,16 @@ template class Parser<SyntaxParseHandler, char16_t>;
 
 CompilationInfo::RewindToken CompilationInfo::getRewindToken(
     CompilationState& state) {
-  return RewindToken{state.scriptData.length(), stencil.asmJS.count()};
+  return RewindToken{state.scriptData.length(), asmJS.count()};
 }
 
 void CompilationInfo::rewind(CompilationState& state,
                              const CompilationInfo::RewindToken& pos) {
-  if (stencil.asmJS.count() != pos.asmJSCount) {
+  if (asmJS.count() != pos.asmJSCount) {
     for (size_t i = pos.scriptDataLength; i < state.scriptData.length(); i++) {
-      stencil.asmJS.remove(ScriptIndex(i));
+      asmJS.remove(ScriptIndex(i));
     }
-    MOZ_ASSERT(stencil.asmJS.count() == pos.asmJSCount);
+    MOZ_ASSERT(asmJS.count() == pos.asmJSCount);
   }
   state.scriptData.shrinkTo(pos.scriptDataLength);
 }

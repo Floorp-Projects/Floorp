@@ -1594,7 +1594,7 @@ bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
       //       format to use for incremental encoding.
       bool useStencilXDR = !js::UseOffThreadParseGlobal();
       if (useStencilXDR) {
-        if (!ss->xdrEncodeFunctionStencil(cx, compilationInfo.get().stencil)) {
+        if (!ss->xdrEncodeFunctionStencil(cx, compilationInfo.get())) {
           return false;
         }
       } else {
