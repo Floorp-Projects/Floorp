@@ -397,6 +397,10 @@ DownloadsPlacesView.prototype = {
   },
   set searchTerm(aValue) {
     if (this._searchTerm != aValue) {
+      // Always clear selection on a new search, since the user is starting a
+      // different workflow. This also solves the fact we could end up
+      // retaining selection on hidden elements.
+      this._richlistbox.clearSelection();
       for (let element of this._richlistbox.childNodes) {
         element.hidden = !element._shell.matchesSearchTerm(aValue);
       }
@@ -678,7 +682,23 @@ DownloadsPlacesView.prototype = {
   },
 
   cmd_selectAll() {
-    this._richlistbox.selectAll();
+    if (!this.searchTerm) {
+      this._richlistbox.selectAll();
+      return;
+    }
+    // If there is a filtering search term, some rows are hidden and should not
+    // be selected.
+    let oldSuppressOnSelect = this._richlistbox.suppressOnSelect;
+    this._richlistbox.suppressOnSelect = true;
+    this._richlistbox.clearSelection();
+    var item = this._richlistbox.getItemAtIndex(0);
+    while (item) {
+      if (!item.hidden) {
+        this._richlistbox.addItemToSelection(item);
+      }
+      item = this._richlistbox.getNextItem(item, 1);
+    }
+    this._richlistbox.suppressOnSelect = oldSuppressOnSelect;
   },
 
   cmd_paste() {
