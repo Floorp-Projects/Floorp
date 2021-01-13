@@ -645,52 +645,63 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     return -1;
 }
 
-// ES6 draft rev30 (2014/12/24) 22.2.3.14 %TypedArray%.prototype.join(separator).
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
+// 22.2.3.15 %TypedArray%.prototype.join ( separator )
 function TypedArrayJoin(separator) {
-    // This function is not generic.
+    // Step 2.
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, separator, "TypedArrayJoin");
     }
 
     GetAttachedArrayBuffer(this);
 
-    // Steps 1-2.
+    // Step 1.
     var O = this;
 
-    // Steps 3-5.
+    // Step 3.
     var len = TypedArrayLength(O);
 
-    // Steps 6-7.
+    // Steps 4-5.
     var sep = separator === undefined ? "," : ToString(separator);
 
-    // Step 8.
+    // Steps 6 and 9.
     if (len === 0)
         return "";
 
-    // Step 9.
-    var element0 = O[0];
+    // ToString() might have detached the underlying ArrayBuffer. To avoid
+    // checking for this condition when looping in step 8.c, do it once here.
+    if (TypedArrayLength(O) === 0) {
+        assert(IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+               "TypedArrays with detached buffers have a length of zero");
 
-    // Steps 10-11.
-    // Omit the 'if' clause in step 10, since typed arrays can't have undefined or null elements.
-    var R = ToString(element0);
-
-    // Steps 12-13.
-    for (var k = 1; k < len; k++) {
-        // Step 13.a.
-        var S = R + sep;
-
-        // Step 13.b.
-        var element = O[k];
-
-        // Steps 13.c-13.d.
-        // Omit the 'if' clause in step 13.c, since typed arrays can't have undefined or null elements.
-        var next = ToString(element);
-
-        // Step 13.e.
-        R = S + next;
+        return callFunction(String_repeat, ",", len - 1);
     }
 
-    // Step 14.
+    assert(!IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+           "TypedArrays with detached buffers have a length of zero");
+
+    var element0 = O[0];
+
+    // Omit the 'if' clause in step 8.c, since typed arrays can't have undefined or null elements.
+    assert(element0 !== undefined, "unexpected undefined element");
+
+    // Step 6.
+    var R = ToString(element0);
+
+    // Steps 7-8.
+    for (var k = 1; k < len; k++) {
+        // Step 8.b.
+        var element = O[k];
+
+        // Omit the 'if' clause in step 8.c, since typed arrays can't have undefined or null elements.
+        assert(element !== undefined, "unexpected undefined element");
+
+        // Steps 8.a and 8.c-d.
+        R += sep + ToString(element);
+    }
+
+    // Step 9.
     return R;
 }
 
