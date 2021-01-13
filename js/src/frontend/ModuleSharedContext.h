@@ -22,14 +22,14 @@ class ModuleBuilder;
 
 namespace frontend {
 
-struct CompilationInfo;
+struct CompilationStencil;
 
 class MOZ_STACK_CLASS ModuleSharedContext : public SuspendableContext {
  public:
   ModuleScope::ParserData* bindings;
   ModuleBuilder& builder;
 
-  ModuleSharedContext(JSContext* cx, CompilationInfo& compilationInfo,
+  ModuleSharedContext(JSContext* cx, CompilationStencil& stencil,
                       ModuleBuilder& builder, SourceExtent extent);
 };
 

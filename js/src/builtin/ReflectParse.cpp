@@ -3288,8 +3288,8 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
 
     case ParseNodeKind::RegExpExpr: {
       RegExpObject* re = pn->as<RegExpLiteral>().create(
-          cx, parser->getCompilationInfo().input.atomCache,
-          parser->getCompilationInfo());
+          cx, parser->getCompilationStencil().input.atomCache,
+          parser->getCompilationStencil());
       if (!re) {
         return false;
       }
@@ -3772,30 +3772,30 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   options.allowHTMLComments = target == ParseGoal::Script;
   mozilla::Range<const char16_t> chars = linearChars.twoByteRange();
 
-  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
+  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
   if (target == ParseGoal::Script) {
-    if (!compilationInfo.get().input.initForGlobal(cx)) {
+    if (!stencil.get().input.initForGlobal(cx)) {
       return false;
     }
   } else {
-    if (!compilationInfo.get().input.initForModule(cx)) {
+    if (!stencil.get().input.initForModule(cx)) {
       return false;
     }
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options,
-                                              compilationInfo.get());
+                                              stencil.get());
 
   Parser<FullParseHandler, char16_t> parser(
       cx, options, chars.begin().get(), chars.length(),
-      /* foldConstants = */ false, compilationInfo.get(), compilationState,
-      nullptr, nullptr);
+      /* foldConstants = */ false, stencil.get(), compilationState, nullptr,
+      nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
 
-  if (!compilationState.finish(cx, compilationInfo.get())) {
+  if (!compilationState.finish(cx, stencil.get())) {
     return false;
   }
 
@@ -3817,7 +3817,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     uint32_t len = chars.length();
     SourceExtent extent =
         SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-    ModuleSharedContext modulesc(cx, compilationInfo.get(), builder, extent);
+    ModuleSharedContext modulesc(cx, stencil.get(), builder, extent);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {
       return false;
@@ -3826,7 +3826,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     pn = pn->as<ModuleNode>().body();
   }
 
-  if (!compilationState.finish(cx, compilationInfo.get())) {
+  if (!compilationState.finish(cx, stencil.get())) {
     return false;
   }
 

@@ -19,22 +19,22 @@
 
 #include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
 #include "frontend/BytecodeOffset.h"    // BytecodeOffset
-#include "frontend/CompilationInfo.h"   // CompilationInfo, CompilationGCOutput
-#include "frontend/JumpList.h"          // JumpTarget
-#include "frontend/NameCollections.h"   // AtomIndexMap, PooledMapPtr
-#include "frontend/ObjLiteral.h"        // ObjLiteralStencil
-#include "frontend/ParseNode.h"         // BigIntLiteral
-#include "frontend/SourceNotes.h"       // SrcNote
-#include "frontend/Stencil.h"           // Stencils
-#include "gc/Rooting.h"                 // JS::Rooted
-#include "js/GCVariant.h"               // GCPolicy<mozilla::Variant>
-#include "js/GCVector.h"                // GCVector
-#include "js/TypeDecls.h"               // jsbytecode, JSContext
-#include "js/Value.h"                   // JS::Vector
-#include "js/Vector.h"                  // Vector
-#include "vm/Opcodes.h"                 // JSOpLength_JumpTarget
-#include "vm/SharedStencil.h"           // TryNote, ScopeNote, GCThingIndex
-#include "vm/StencilEnums.h"            // TryNoteKind
+#include "frontend/CompilationInfo.h"  // CompilationStencil, CompilationGCOutput
+#include "frontend/JumpList.h"         // JumpTarget
+#include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
+#include "frontend/ObjLiteral.h"       // ObjLiteralStencil
+#include "frontend/ParseNode.h"        // BigIntLiteral
+#include "frontend/SourceNotes.h"      // SrcNote
+#include "frontend/Stencil.h"          // Stencils
+#include "gc/Rooting.h"                // JS::Rooted
+#include "js/GCVariant.h"              // GCPolicy<mozilla::Variant>
+#include "js/GCVector.h"               // GCVector
+#include "js/TypeDecls.h"              // jsbytecode, JSContext
+#include "js/Value.h"                  // JS::Vector
+#include "js/Vector.h"                 // Vector
+#include "vm/Opcodes.h"                // JSOpLength_JumpTarget
+#include "vm/SharedStencil.h"          // TryNote, ScopeNote, GCThingIndex
+#include "vm/StencilEnums.h"           // TryNoteKind
 
 namespace js {
 
@@ -49,18 +49,16 @@ struct MOZ_STACK_CLASS GCThingList {
   // reserve some stack slots to avoid allocating for most small scripts.
   using ScriptThingsStackVector = Vector<TaggedScriptThingIndex, 8>;
 
-  CompilationInfo& compilationInfo;
+  CompilationStencil& stencil;
   CompilationState& compilationState;
   ScriptThingsStackVector vector;
 
   // Index of the first scope in the vector.
   mozilla::Maybe<GCThingIndex> firstScopeIndex;
 
-  explicit GCThingList(JSContext* cx, CompilationInfo& compilationInfo,
+  explicit GCThingList(JSContext* cx, CompilationStencil& stencil,
                        CompilationState& compilationState)
-      : compilationInfo(compilationInfo),
-        compilationState(compilationState),
-        vector(cx) {}
+      : stencil(stencil), compilationState(compilationState), vector(cx) {}
 
   MOZ_MUST_USE bool append(const ParserAtom* atom, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
@@ -121,7 +119,7 @@ struct MOZ_STACK_CLASS GCThingList {
 
   AbstractScopePtr getScope(size_t index) const;
 
-  // Index of scope within CompilationInfo or Nothing is the scope is
+  // Index of scope within CompilationStencil or Nothing is the scope is
   // EmptyGlobalScopeType.
   mozilla::Maybe<ScopeIndex> getScopeIndex(size_t index) const;
 
@@ -395,8 +393,7 @@ class BytecodeSection {
 // bytecode, but referred from bytecode is stored in this class.
 class PerScriptData {
  public:
-  explicit PerScriptData(JSContext* cx,
-                         frontend::CompilationInfo& compilationInfo,
+  explicit PerScriptData(JSContext* cx, frontend::CompilationStencil& stencil,
                          frontend::CompilationState& compilationState);
 
   MOZ_MUST_USE bool init(JSContext* cx);

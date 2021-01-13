@@ -8,7 +8,7 @@
 
 #include "mozilla/Maybe.h"
 
-#include "frontend/CompilationInfo.h"
+#include "frontend/CompilationInfo.h"  // CompilationState
 #include "frontend/Stencil.h"
 #include "js/GCPolicyAPI.h"
 #include "js/GCVariant.h"

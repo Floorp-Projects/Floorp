@@ -6,7 +6,6 @@
 
 #include "vm/GeneratorObject.h"
 
-#include "frontend/CompilationInfo.h"
 #include "frontend/ParserAtom.h"
 #ifdef DEBUG
 #  include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue

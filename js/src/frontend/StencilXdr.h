@@ -7,11 +7,10 @@
 #ifndef frontend_StencilXdr_h
 #define frontend_StencilXdr_h
 
-#include "frontend/CompilationInfo.h"  // CompilationInfo
-#include "frontend/ObjLiteral.h"       // ObjLiteralStencil
-#include "frontend/Stencil.h"          // *Stencil
-#include "vm/Scope.h"                  // Scope, ScopeKindString
-#include "vm/Xdr.h"                    // XDRMode, XDRResult, XDREncoder
+#include "frontend/ObjLiteral.h"  // ObjLiteralStencil
+#include "frontend/Stencil.h"     // *Stencil
+#include "vm/Scope.h"             // Scope, ScopeKindString
+#include "vm/Xdr.h"               // XDRMode, XDRResult, XDREncoder
 
 namespace js {
 namespace frontend {

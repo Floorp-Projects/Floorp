@@ -118,36 +118,34 @@ static bool NeedsMethodInitializer(ParseNode* member, bool isStatic) {
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
-                                 CompilationInfo& compilationInfo,
+                                 CompilationStencil& stencil,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
       bytecodeSection_(cx, sc->extent().lineno, sc->extent().column),
-      perScriptData_(cx, compilationInfo, compilationState),
-      compilationInfo(compilationInfo),
+      perScriptData_(cx, stencil, compilationState),
+      stencil(stencil),
       compilationState(compilationState),
       emitterMode(emitterMode) {}
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  BCEParserHandle* handle, SharedContext* sc,
-                                 CompilationInfo& compilationInfo,
+                                 CompilationStencil& stencil,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, compilationInfo, compilationState,
-                      emitterMode) {
+    : BytecodeEmitter(parent, sc, stencil, compilationState, emitterMode) {
   parser = handle;
   instrumentationKinds = parser->options().instrumentationKinds;
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  const EitherParser& parser, SharedContext* sc,
-                                 CompilationInfo& compilationInfo,
+                                 CompilationStencil& stencil,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, compilationInfo, compilationState,
-                      emitterMode) {
+    : BytecodeEmitter(parent, sc, stencil, compilationState, emitterMode) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
   instrumentationKinds = this->parser->options().instrumentationKinds;
@@ -160,7 +158,7 @@ void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
 
 bool BytecodeEmitter::init() {
   if (!parent) {
-    if (!compilationInfo.prepareStorageFor(cx, compilationState)) {
+    if (!stencil.prepareStorageFor(cx, compilationState)) {
       return false;
     }
   }
@@ -1665,20 +1663,19 @@ void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
 bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
                                         GCThingIndex* outIndex) {
   size_t len = writer.getCode().size();
-  auto* code = compilationInfo.alloc.newArrayUninitialized<uint8_t>(len);
+  auto* code = stencil.alloc.newArrayUninitialized<uint8_t>(len);
   if (!code) {
     js::ReportOutOfMemory(cx);
     return false;
   }
   memcpy(code, writer.getCode().data(), len);
 
-  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
+  ObjLiteralIndex objIndex(stencil.objLiteralData.length());
   if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;
   }
-  if (!compilationInfo.objLiteralData.emplaceBack(code, len,
-                                                  writer.getFlags())) {
+  if (!stencil.objLiteralData.emplaceBack(code, len, writer.getFlags())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -2603,7 +2600,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   // Create a Stencil and convert it into a JSScript.
-  return intoScriptStencil(CompilationInfo::TopLevelIndex);
+  return intoScriptStencil(CompilationStencil::TopLevelIndex);
 }
 
 js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
@@ -2675,7 +2672,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
     return false;
   }
 
-  if (funbox->index() == CompilationInfo::TopLevelIndex) {
+  if (funbox->index() == CompilationStencil::TopLevelIndex) {
     if (!NameFunctions(cx, compilationState.parserAtoms, funNode)) {
       return false;
     }
@@ -5862,8 +5859,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       return false;
     }
 
-    BytecodeEmitter bce2(this, parser, funbox, compilationInfo,
-                         compilationState, emitterMode);
+    BytecodeEmitter bce2(this, parser, funbox, stencil, compilationState,
+                         emitterMode);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
@@ -8985,7 +8982,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
   }
 
   // JSOp::Object may only be used by (top-level) run-once scripts.
-  MOZ_ASSERT_IF(singleton, compilationInfo.input.options.isRunOnce);
+  MOZ_ASSERT_IF(singleton, stencil.input.options.isRunOnce);
 
   JSOp op = singleton ? JSOp::Object : JSOp::NewObject;
   if (!emitGCIndexOp(op, index)) {
@@ -9401,7 +9398,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializer(
     return false;
   }
 
-  BytecodeEmitter bce2(this, parser, funbox, compilationInfo, compilationState,
+  BytecodeEmitter bce2(this, parser, funbox, stencil, compilationState,
                        emitterMode);
   if (!bce2.init(funNode->pn_pos)) {
     return false;
@@ -11285,7 +11282,7 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
   }
 
   // De-duplicate the bytecode within the runtime.
-  if (!compilationInfo.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
+  if (!stencil.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
     return false;
   }
 

@@ -11,8 +11,7 @@
 
 #include "jstypes.h"               // JS_PUBLIC_API
 #include "builtin/ModuleObject.h"  // js::{{Im,Ex}portEntry,Requested{Module,}}Object
-#include "frontend/CompilationInfo.h"  // js::frontend::CompilationInfo
-#include "frontend/EitherParser.h"     // js::frontend::EitherParser
+#include "frontend/EitherParser.h"  // js::frontend::EitherParser
 #include "frontend/ParserAtom.h"  // js::frontend::{ParserAtom, TaggedParserAtomIndex}
 #include "frontend/Stencil.h"  // js::frontend::StencilModuleEntry
 #include "js/GCHashTable.h"    // JS::GCHash{Map,Set}
