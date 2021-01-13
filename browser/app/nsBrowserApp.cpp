@@ -25,7 +25,6 @@
 #include "nsCOMPtr.h"
 
 #ifdef XP_WIN
-#  include "freestanding/SharedSection.h"
 #  include "LauncherProcessWin.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 
@@ -321,11 +320,6 @@ int main(int argc, char* argv[], char* envp[]) {
 #endif
 
 #if defined(XP_WIN)
-  // Once the browser process hits the main function, we no longer need
-  // a writable section handle because all dependent modules have been
-  // loaded.
-  mozilla::freestanding::gSharedSection.ConvertToReadOnly();
-
   mozilla::CreateAndStorePreXULSkeletonUI(GetModuleHandle(nullptr), argc, argv);
 #endif
 
