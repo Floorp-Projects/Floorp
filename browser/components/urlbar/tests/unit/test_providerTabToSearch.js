@@ -54,7 +54,7 @@ add_task(async function basic() {
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           testEngine.getResultDomain()
         ),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
@@ -144,7 +144,7 @@ add_task(async function ignoreWww() {
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           testEngine.getResultDomain()
         ),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
@@ -175,7 +175,7 @@ add_task(async function ignoreWww() {
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           wwwTestEngine.getResultDomain()
         ),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
@@ -203,7 +203,7 @@ add_task(async function ignoreWww() {
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           wwwTestEngine.getResultDomain()
         ),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
@@ -253,7 +253,7 @@ add_task(async function conflictingEngines() {
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           fooTestEngine.getResultDomain()
         ),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
@@ -285,7 +285,7 @@ add_task(async function conflictingEngines() {
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           fooBarTestEngine.getResultDomain()
         ),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
@@ -323,7 +323,7 @@ add_task(async function multipleEnginesForHostname() {
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           testEngine.getResultDomain()
         ),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
@@ -354,7 +354,7 @@ add_task(async function test_casing() {
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           testEngine.getResultDomain()
         ),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
@@ -383,7 +383,7 @@ add_task(async function test_publicSuffix() {
         engineName: engine.name,
         engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
         uri: UrlbarUtils.stripPublicSuffixFromHost(engine.getResultDomain()),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
         satisfiesAutofillThreshold: true,
@@ -448,7 +448,7 @@ add_task(async function test_disabledEngine() {
         engineName: engine.name,
         engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
         uri: UrlbarUtils.stripPublicSuffixFromHost(engine.getResultDomain()),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        providesSearchMode: true,
         query: "",
         providerName: "TabToSearch",
       }),
