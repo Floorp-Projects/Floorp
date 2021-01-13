@@ -43,8 +43,6 @@
             android:required="true"/>
 
     <application>
-
-        <!-- New child services must also be added to the Fennec AndroidManifest.xml.in -->
         <service
                 android:name="org.mozilla.gecko.media.MediaManager"
                 android:enabled="true"
@@ -59,58 +57,6 @@
                 android:isolatedProcess="false"
                 android:process=":gmplugin">
         </service>
-
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab0" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab0"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab1" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab1"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab2" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab2"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab3" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab3"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab4" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab4"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab5" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab5"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab6" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab6"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab7" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab7"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab8" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab8"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab9" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab9"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab10" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab10"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab11" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab11"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab12" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab12"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab13" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab13"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab14" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab14"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab15" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab15"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab16" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab16"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab17" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab17"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab18" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab18"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab19" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab19"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab20" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab20"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab21" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab21"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab22" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab22"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab23" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab23"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab24" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab24"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab25" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab25"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab26" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab26"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab27" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab27"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab28" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab28"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab29" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab29"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab30" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab30"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab31" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab31"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab32" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab32"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab33" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab33"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab34" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab34"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab35" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab35"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab36" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab36"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab37" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab37"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab38" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab38"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab39" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab39"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab40" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab40"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab41" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab41"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab42" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab42"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab43" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab43"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab44" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab44"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab45" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab45"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab46" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab46"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab47" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab47"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab48" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab48"></service>
-        <service android:name="org.mozilla.gecko.process.GeckoChildProcessServices$tab49" android:enabled="true" android:exported="false" android:isolatedProcess="false" android:process=":tab49"></service>
-
         <service
                 android:name="org.mozilla.gecko.process.GeckoChildProcessServices$socket"
                 android:enabled="true"
