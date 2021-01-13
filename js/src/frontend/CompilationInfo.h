@@ -318,7 +318,6 @@ struct BaseCompilationStencil {
   // reserved for the top-level script. This top-level may or may not be a
   // function.
   mozilla::Span<ScriptStencil> scriptData;
-  mozilla::Span<ScriptStencilExtra> scriptExtra;
   SharedDataContainer sharedData;
   mozilla::Span<TaggedScriptThingIndex> gcThingData;
 
@@ -337,7 +336,10 @@ struct BaseCompilationStencil {
   // initial parse data, even across different runs. This is only used for
   // delazification stencils.
   using FunctionKey = uint64_t;
-  FunctionKey functionKey = {};
+
+  static constexpr FunctionKey NullFunctionKey = 0;
+
+  FunctionKey functionKey = NullFunctionKey;
 
   BaseCompilationStencil() = default;
 
@@ -361,14 +363,17 @@ struct BaseCompilationStencil {
   }
 
   static FunctionKey toFunctionKey(const SourceExtent& extent) {
-    return static_cast<FunctionKey>(extent.sourceStart) << 32 |
-           static_cast<FunctionKey>(extent.sourceEnd);
+    auto result = static_cast<FunctionKey>(extent.sourceStart) << 32 |
+                  static_cast<FunctionKey>(extent.sourceEnd);
+    MOZ_ASSERT(result != NullFunctionKey);
+    return result;
   }
 
-  bool isInitialStencil() const { return !scriptExtra.empty(); }
+  bool isInitialStencil() const { return functionKey == NullFunctionKey; }
 
   bool isCompilationStencil() const { return isInitialStencil(); }
   inline CompilationStencil& asCompilationStencil();
+  inline const CompilationStencil& asCompilationStencil() const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
@@ -472,16 +477,7 @@ class ScriptStencilIterable {
       return index_ != other.index_;
     }
 
-    ScriptAndFunction operator*() {
-      ScriptIndex index = ScriptIndex(index_);
-      const ScriptStencil& script = stencil_.scriptData[index];
-      const ScriptStencilExtra* scriptExtra = nullptr;
-      if (index < stencil_.scriptExtra.size()) {
-        scriptExtra = &stencil_.scriptExtra[index];
-      }
-      return ScriptAndFunction(script, scriptExtra, gcOutput_.functions[index],
-                               index);
-    }
+    inline ScriptAndFunction operator*();
 
     static Iterator end(const BaseCompilationStencil& stencil,
                         CompilationGCOutput& gcOutput) {
@@ -513,6 +509,9 @@ struct CompilationStencil : public BaseCompilationStencil {
   static constexpr size_t LifoAllocChunkSize = 512;
 
   CompilationInput input;
+
+  // Initial-compilation-specific data for each script.
+  mozilla::Span<ScriptStencilExtra> scriptExtra;
 
   // Module metadata if this is a module compile.
   mozilla::Maybe<StencilModuleMetadata> moduleMetadata;
@@ -594,6 +593,24 @@ struct CompilationStencil : public BaseCompilationStencil {
 inline CompilationStencil& BaseCompilationStencil::asCompilationStencil() {
   MOZ_ASSERT(isCompilationStencil());
   return *static_cast<CompilationStencil*>(this);
+}
+
+inline const CompilationStencil& BaseCompilationStencil::asCompilationStencil()
+    const {
+  MOZ_ASSERT(isCompilationStencil());
+  return *reinterpret_cast<const CompilationStencil*>(this);
+}
+
+inline ScriptStencilIterable::ScriptAndFunction
+ScriptStencilIterable::Iterator::operator*() {
+  ScriptIndex index = ScriptIndex(index_);
+  const ScriptStencil& script = stencil_.scriptData[index];
+  const ScriptStencilExtra* scriptExtra = nullptr;
+  if (stencil_.isInitialStencil()) {
+    scriptExtra = &stencil_.asCompilationStencil().scriptExtra[index];
+  }
+  return ScriptAndFunction(script, scriptExtra, gcOutput_.functions[index],
+                           index);
 }
 
 // A set of stencils, for XDR purpose.

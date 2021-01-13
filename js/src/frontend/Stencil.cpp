@@ -254,7 +254,7 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
 
 // Instantiate ModuleObject if this is a module compile.
 static bool MaybeInstantiateModule(JSContext* cx, CompilationInput& input,
-                                   BaseCompilationStencil& stencil,
+                                   CompilationStencil& stencil,
                                    CompilationGCOutput& gcOutput) {
   if (stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
     gcOutput.module = ModuleObject::create(cx);
@@ -333,7 +333,7 @@ static bool InstantiateScopes(JSContext* cx, CompilationInput& input,
 // compilation. Note that standalone functions and functions being delazified
 // are handled below with other top-levels.
 static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
-                                      BaseCompilationStencil& stencil,
+                                      CompilationStencil& stencil,
                                       CompilationGCOutput& gcOutput) {
   MOZ_ASSERT(input.lazy == nullptr);
 
@@ -413,8 +413,9 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return true;
   }
 
-  gcOutput.script = JSScript::fromStencil(cx, input, stencil, gcOutput,
-                                          CompilationStencil::TopLevelIndex);
+  gcOutput.script =
+      JSScript::fromStencil(cx, input, stencil.asCompilationStencil(), gcOutput,
+                            CompilationStencil::TopLevelIndex);
   if (!gcOutput.script) {
     return false;
   }
@@ -425,7 +426,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   }
 
   const ScriptStencilExtra& scriptExtra =
-      stencil.scriptExtra[CompilationStencil::TopLevelIndex];
+      stencil.asCompilationStencil()
+          .scriptExtra[CompilationStencil::TopLevelIndex];
 
   // Finish initializing the ModuleObject if needed.
   if (scriptExtra.isModule()) {
@@ -630,7 +632,9 @@ bool CompilationStencil::instantiateStencilsAfterPreparation(
     AssertDelazificationFieldsMatch(stencil, gcOutput);
 #endif
   } else {
-    if (stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
+    if (stencil.asCompilationStencil()
+            .scriptExtra[CompilationStencil::TopLevelIndex]
+            .isModule()) {
       MOZ_ASSERT(input.enclosingScope == nullptr);
       input.enclosingScope = &cx->global()->emptyGlobalScope();
       MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
@@ -641,7 +645,8 @@ bool CompilationStencil::instantiateStencilsAfterPreparation(
       return false;
     }
 
-    if (!MaybeInstantiateModule(cx, input, stencil, gcOutput)) {
+    if (!MaybeInstantiateModule(cx, input, stencil.asCompilationStencil(),
+                                gcOutput)) {
       return false;
     }
 
@@ -655,7 +660,8 @@ bool CompilationStencil::instantiateStencilsAfterPreparation(
   }
 
   if (!input.lazy) {
-    if (!InstantiateScriptStencils(cx, input, stencil, gcOutput)) {
+    if (!InstantiateScriptStencils(cx, input, stencil.asCompilationStencil(),
+                                   gcOutput)) {
       return false;
     }
   }
@@ -1837,12 +1843,6 @@ void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   }
   json.endList();
 
-  json.beginListProperty("scriptExtra");
-  for (auto& data : scriptExtra) {
-    data.dump(json);
-  }
-  json.endList();
-
   json.beginListProperty("regExpData");
   for (auto& data : regExpData) {
     data.dump(json, this);
@@ -1888,6 +1888,12 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
 void CompilationStencil::dumpFields(js::JSONPrinter& json) {
   BaseCompilationStencil::dumpFields(json);
+
+  json.beginListProperty("scriptExtra");
+  for (auto& data : scriptExtra) {
+    data.dump(json);
+  }
+  json.endList();
 
   if (scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
     json.beginObjectProperty("moduleMetadata");

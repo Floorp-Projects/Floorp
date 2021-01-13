@@ -815,7 +815,8 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   //   a. number of atoms
   //   b. atoms
   //   c. BaseCompilationStencil
-  //   d. moduleMetadata if exists
+  //   d. ScriptStencilExtra array
+  //   e. moduleMetadata if exists
   // 4. array of delazification chunks
   //   a. number of atoms
   //   b. atoms
