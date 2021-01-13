@@ -138,7 +138,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
             keyword: [tokenAliases[0], UrlbarUtils.HIGHLIGHT.TYPED],
             query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
             icon: engine.iconURI?.spec,
-            keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+            providesSearchMode: true,
           })
         );
         addCallback(this, result);
@@ -202,8 +202,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
               keyword: [aliasPreservingUserCase, UrlbarUtils.HIGHLIGHT.TYPED],
               query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
               icon: engine.iconURI?.spec,
-              // See bug 1665066 for work to turn this into a boolean property.
-              keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+              providesSearchMode: true,
             })
           );
 
