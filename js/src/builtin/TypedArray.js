@@ -1388,10 +1388,11 @@ function $TypedArrayValues() {
 }
 _SetCanonicalName($TypedArrayValues, "values");
 
-// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.13 %TypedArray%.prototype.includes ( searchElement [ , fromIndex ] )
 function TypedArrayIncludes(searchElement, fromIndex = 0) {
-    // This function is not generic.
+    // Step 2.
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement,
                             fromIndex, "TypedArrayIncludes");
@@ -1402,41 +1403,45 @@ function TypedArrayIncludes(searchElement, fromIndex = 0) {
     // Step 1.
     var O = this;
 
-    // Step 2.
+    // Step 3.
     var len = TypedArrayLength(O);
 
-    // Step 3.
+    // Step 4.
     if (len === 0)
         return false;
 
-    // Steps 4-5.
+    // Step 5.
     var n = ToInteger(fromIndex);
 
-    // Steps 6-7
+    // Step 6.
+    assert(fromIndex !== undefined || n === 0, "ToInteger(undefined) is zero");
+
+    // Steps 7-10.
+    // Steps 7-8 are handled implicitly.
     var k;
     if (n >= 0) {
-        // Step 6.a
+        // Step 9.a
         k = n;
     } else {
-        // Step 7.a.
+        // Step 10.a.
         k = len + n;
 
-        // Step 7.b.
+        // Step 10.b.
         if (k < 0)
             k = 0;
     }
 
-    // Step 8.
+    // Step 11.
     while (k < len) {
-        // Steps 8.a-c.
+        // Steps 11.a-b.
         if (SameValueZero(searchElement, O[k]))
             return true;
 
-        // Step 8.d.
+        // Step 11.c.
         k++;
     }
 
-    // Step 9.
+    // Step 12.
     return false;
 }
 
