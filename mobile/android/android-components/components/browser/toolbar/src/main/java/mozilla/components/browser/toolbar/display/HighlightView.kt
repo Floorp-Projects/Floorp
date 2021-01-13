@@ -12,14 +12,14 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.R
-import mozilla.components.concept.toolbar.Toolbar.PermissionHighlights
-import mozilla.components.concept.toolbar.Toolbar.PermissionHighlights.AUTOPLAY_BLOCKED
-import mozilla.components.concept.toolbar.Toolbar.PermissionHighlights.NONE
+import mozilla.components.concept.toolbar.Toolbar.Highlight
+import mozilla.components.concept.toolbar.Toolbar.Highlight.AUTOPLAY_BLOCKED
+import mozilla.components.concept.toolbar.Toolbar.Highlight.NONE
 
 /**
- * Internal widget to display the different icons of site permission.
+ * Internal widget to display a dot notification.
  */
-internal class PermissionHighlightsIconView @JvmOverloads constructor(
+internal class HighlightView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -29,7 +29,7 @@ internal class PermissionHighlightsIconView @JvmOverloads constructor(
         visibility = GONE
     }
 
-    var permissionHighlights: PermissionHighlights = NONE
+    var state: Highlight = NONE
         set(value) {
             if (value != field) {
                 field = value
@@ -38,18 +38,18 @@ internal class PermissionHighlightsIconView @JvmOverloads constructor(
         }
 
     @VisibleForTesting
-    internal var permissionTint: Int? = null
+    internal var highlightTint: Int? = null
 
-    private var iconAutoplayBlocked: Drawable =
-        requireNotNull(AppCompatResources.getDrawable(context, DEFAULT_ICON_AUTOPLAY_BLOCKED))
+    private var highlightIcon: Drawable =
+        requireNotNull(AppCompatResources.getDrawable(context, DEFAULT_ICON))
 
     fun setTint(tint: Int) {
-        permissionTint = tint
+        highlightTint = tint
         setColorFilter(tint)
     }
 
-    fun setIcons(icons: DisplayToolbar.Icons.PermissionHighlights) {
-        this.iconAutoplayBlocked = icons.autoPlayBlocked
+    fun setIcon(icons: Drawable) {
+        this.highlightIcon = icons
 
         updateIcon()
     }
@@ -57,7 +57,7 @@ internal class PermissionHighlightsIconView @JvmOverloads constructor(
     @Synchronized
     @VisibleForTesting
     internal fun updateIcon() {
-        val update = permissionHighlights.toUpdate()
+        val update = state.toUpdate()
 
         isVisible = update.visible
 
@@ -67,18 +67,17 @@ internal class PermissionHighlightsIconView @JvmOverloads constructor(
             null
         }
 
-        permissionTint?.let { setColorFilter(it) }
+        highlightTint?.let { setColorFilter(it) }
         setImageDrawable(update.drawable)
     }
 
     companion object {
-        val DEFAULT_ICON_AUTOPLAY_BLOCKED =
-            R.drawable.mozac_ic_autoplay_blocked
+        val DEFAULT_ICON = R.drawable.mozac_dot_notification
     }
 
-    private fun PermissionHighlights.toUpdate(): Update = when (this) {
+    private fun Highlight.toUpdate(): Update = when (this) {
         AUTOPLAY_BLOCKED -> Update(
-            iconAutoplayBlocked,
+            highlightIcon,
             R.string.mozac_browser_toolbar_content_description_autoplay_blocked,
             true)
 

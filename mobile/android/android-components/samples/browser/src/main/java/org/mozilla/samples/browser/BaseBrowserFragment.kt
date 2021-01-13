@@ -88,18 +88,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
             owner = this,
             view = layout)
 
-        layout.toolbar.display.setOnPermissionIndicatorClickedListener {
-            sitePermissionsFeature.withFeature { feature ->
-                feature.sitePermissionsRules = feature.sitePermissionsRules?.copy(
-                    autoplayAudible = AutoplayAction.ALLOWED,
-                    autoplayInaudible = AutoplayAction.ALLOWED
-                )
-                components.sessionUseCases.reload()
-            }
-        }
-
         layout.toolbar.display.indicators += listOf(
-            DisplayToolbar.Indicators.TRACKING_PROTECTION
+            DisplayToolbar.Indicators.TRACKING_PROTECTION, DisplayToolbar.Indicators.HIGHLIGHT
         )
 
         swipeRefreshFeature.set(

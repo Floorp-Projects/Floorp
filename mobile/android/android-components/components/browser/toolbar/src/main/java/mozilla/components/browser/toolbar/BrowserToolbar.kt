@@ -25,7 +25,7 @@ import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.concept.toolbar.Toolbar.PermissionHighlights
+import mozilla.components.concept.toolbar.Toolbar.Highlight
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.ui.autocomplete.AutocompleteView
@@ -112,10 +112,10 @@ class BrowserToolbar @JvmOverloads constructor(
         get() = display.siteSecurity
         set(value) { display.siteSecurity = value }
 
-    override var permissionHighlights: PermissionHighlights = PermissionHighlights.NONE
+    override var highlight: Highlight = Highlight.NONE
         set(value) {
             if (field != value) {
-                display.setPermissionIndicator(value)
+                display.setHighlight(value)
                 field = value
             }
         }

@@ -48,9 +48,9 @@ interface Toolbar {
     var siteSecure: SiteSecurity
 
     /**
-     * Sets/Gets the site site permission indicator to be displayed on the toolbar.
+     * Sets/Gets the highlight icon to be displayed on the toolbar.
      */
-    var permissionHighlights: PermissionHighlights
+    var highlight: Highlight
 
     /**
      * Sets/Gets the site tracking protection state to be displayed on the toolbar.
@@ -415,15 +415,15 @@ interface Toolbar {
     }
 
     /**
-     * Indicates which site permission indicator a site should show.
+     * Indicates the reason why a highlight icon is shown or hidden.
      */
-    enum class PermissionHighlights {
+    enum class Highlight {
         /**
          * The site has autoplay blocked.
          */
         AUTOPLAY_BLOCKED,
         /**
-         * The site does not have any permission indicator to show.
+         * The site does not show a dot indicator.
          */
         NONE
     }

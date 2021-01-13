@@ -14,7 +14,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.concept.toolbar.Toolbar.PermissionHighlights
+import mozilla.components.concept.toolbar.Toolbar.Highlight
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.lib.state.ext.flowScoped
@@ -81,16 +81,16 @@ class ToolbarPresenter(
                 else -> SiteTrackingProtection.OFF_GLOBALLY
             }
 
-            updatePermissionIndicator(tab)
+            updateHighlight(tab)
         } else {
             clear()
         }
     }
 
-    private fun updatePermissionIndicator(tab: SessionState) {
-        toolbar.permissionHighlights = when {
-            tab.content.permissionHighlights.isAutoPlayBlocking -> PermissionHighlights.AUTOPLAY_BLOCKED
-            else -> PermissionHighlights.NONE
+    private fun updateHighlight(tab: SessionState) {
+        toolbar.highlight = when {
+            tab.content.permissionHighlights.isAutoPlayBlocking -> Highlight.AUTOPLAY_BLOCKED
+            else -> Highlight.NONE
         }
     }
 
@@ -104,6 +104,6 @@ class ToolbarPresenter(
         toolbar.siteSecure = Toolbar.SiteSecurity.INSECURE
 
         toolbar.siteTrackingProtection = SiteTrackingProtection.OFF_GLOBALLY
-        toolbar.permissionHighlights = PermissionHighlights.NONE
+        toolbar.highlight = Highlight.NONE
     }
 }

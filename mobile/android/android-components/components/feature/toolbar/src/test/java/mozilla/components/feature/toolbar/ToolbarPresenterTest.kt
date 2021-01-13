@@ -164,7 +164,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(60)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.SECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
-        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
+        verify(toolbar).highlight = Toolbar.Highlight.NONE
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
 
@@ -279,7 +279,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(60)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.SECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
-        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
+        verify(toolbar).highlight = Toolbar.Highlight.NONE
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
     }
@@ -326,7 +326,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(60)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.SECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
-        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
+        verify(toolbar).highlight = Toolbar.Highlight.NONE
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
 
@@ -339,7 +339,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(90)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
-        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.AUTOPLAY_BLOCKED
+        verify(toolbar).highlight = Toolbar.Highlight.AUTOPLAY_BLOCKED
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
     }
@@ -394,7 +394,7 @@ class ToolbarPresenterTest {
     }
 
     @Test
-    fun `displaying different permissions highlights states`() {
+    fun `displaying different dot notification states`() {
         val toolbar: Toolbar = mock()
         val store = spy(BrowserStore(
             BrowserState(
@@ -418,19 +418,19 @@ class ToolbarPresenterTest {
 
         testDispatcher.advanceUntilIdle()
 
-        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
+        verify(toolbar).highlight = Toolbar.Highlight.NONE
 
         store.dispatch(UpdatePermissionHighlightsStateAction("tab", PermissionHighlightsState(true))).joinBlocking()
 
         testDispatcher.advanceUntilIdle()
 
-        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.AUTOPLAY_BLOCKED
+        verify(toolbar).highlight = Toolbar.Highlight.AUTOPLAY_BLOCKED
 
         store.dispatch(UpdatePermissionHighlightsStateAction("tab", PermissionHighlightsState())).joinBlocking()
 
         testDispatcher.advanceUntilIdle()
 
-        verify(toolbar, times(2)).permissionHighlights = Toolbar.PermissionHighlights.NONE
+        verify(toolbar, times(2)).highlight = Toolbar.Highlight.NONE
     }
 
     @Test
@@ -466,6 +466,6 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(0)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
-        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
+        verify(toolbar).highlight = Toolbar.Highlight.NONE
     }
 }

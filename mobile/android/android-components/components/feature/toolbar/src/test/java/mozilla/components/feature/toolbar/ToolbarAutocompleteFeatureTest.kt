@@ -35,7 +35,7 @@ import org.mockito.Mockito.verify
 class ToolbarAutocompleteFeatureTest {
 
     class TestToolbar : Toolbar {
-        override var permissionHighlights: Toolbar.PermissionHighlights = Toolbar.PermissionHighlights.NONE
+        override var highlight: Toolbar.Highlight = Toolbar.Highlight.NONE
         override var siteTrackingProtection: Toolbar.SiteTrackingProtection =
             Toolbar.SiteTrackingProtection.OFF_GLOBALLY
         override var title: String = ""

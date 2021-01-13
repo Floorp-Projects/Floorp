@@ -97,15 +97,15 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `permissionViewColor will change the color of the permissionIconView`() {
+    fun `highlightView will change the color of the dot`() {
         val (_, displayToolbar) = createDisplayToolbar()
 
-        assertNull(displayToolbar.views.permissionIndicator.colorFilter)
+        assertNull(displayToolbar.views.highlight.colorFilter)
 
-        displayToolbar.colors = displayToolbar.colors.copy(permissionHighlights = Color.BLUE)
+        displayToolbar.colors = displayToolbar.colors.copy(highlight = Color.BLUE)
 
-        assertNotNull(displayToolbar.views.permissionIndicator.colorFilter)
-        assertNotNull(displayToolbar.views.permissionIndicator.permissionTint)
+        assertNotNull(displayToolbar.views.highlight.colorFilter)
+        assertNotNull(displayToolbar.views.highlight.highlightTint)
     }
 
     @Test
@@ -182,29 +182,29 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `setPermissionIcons will forward to PermissionHighlightsIconView`() {
+    fun `setHighlight will forward to HighlightView`() {
         val (_, displayToolbar) = createDisplayToolbar()
 
-        val oldPermissionIcon = displayToolbar.views.permissionIndicator.drawable
+        val oldPermissionIcon = displayToolbar.views.highlight.drawable
         assertNotNull(oldPermissionIcon)
 
-        val drawable1 = testContext.getDrawable(PermissionHighlightsIconView.DEFAULT_ICON_AUTOPLAY_BLOCKED)!!
+        val drawable1 = testContext.getDrawable(HighlightView.DEFAULT_ICON)!!
 
-        displayToolbar.indicators = listOf(DisplayToolbar.Indicators.PERMISSION_HIGHLIGHTS)
+        displayToolbar.indicators = listOf(DisplayToolbar.Indicators.HIGHLIGHT)
         displayToolbar.icons = displayToolbar.icons.copy(
-            permissionHighlights = DisplayToolbar.Icons.PermissionHighlights(drawable1)
+            highlight = drawable1
         )
 
         assertNotEquals(
             oldPermissionIcon,
-            displayToolbar.views.permissionIndicator.drawable
+            displayToolbar.views.highlight.drawable
         )
 
-        displayToolbar.setPermissionIndicator(Toolbar.PermissionHighlights.AUTOPLAY_BLOCKED)
+        displayToolbar.setHighlight(Toolbar.Highlight.AUTOPLAY_BLOCKED)
 
         assertNotEquals(
             oldPermissionIcon,
-            displayToolbar.views.permissionIndicator.drawable
+            displayToolbar.views.highlight.drawable
         )
     }
 
@@ -702,39 +702,6 @@ class DisplayToolbarTest {
         displayToolbar.setOnSiteSecurityClickedListener(null)
 
         assertNull(displayToolbar.views.securityIndicator.background)
-    }
-
-    @Test
-    fun `clicking on permission indicator invokes listener`() {
-        var listenerInvoked = false
-
-        val (_, displayToolbar) = createDisplayToolbar()
-
-        assertNull(displayToolbar.views.permissionIndicator.background)
-
-        displayToolbar.setOnPermissionIndicatorClickedListener {
-            listenerInvoked = true
-        }
-
-        assertNotNull(displayToolbar.views.permissionIndicator.background)
-
-        displayToolbar.views.permissionIndicator.performClick()
-
-        assertTrue(listenerInvoked)
-
-        listenerInvoked = false
-
-        displayToolbar.setOnPermissionIndicatorClickedListener { }
-
-        assertNotNull(displayToolbar.views.permissionIndicator.background)
-
-        displayToolbar.views.permissionIndicator.performClick()
-
-        assertFalse(listenerInvoked)
-
-        displayToolbar.setOnPermissionIndicatorClickedListener(null)
-
-        assertNull(displayToolbar.views.permissionIndicator.background)
     }
 
     @Test

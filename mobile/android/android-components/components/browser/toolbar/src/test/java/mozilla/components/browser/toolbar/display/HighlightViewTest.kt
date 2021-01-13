@@ -7,8 +7,8 @@ package mozilla.components.browser.toolbar.display
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.toolbar.R
-import mozilla.components.concept.toolbar.Toolbar.PermissionHighlights.NONE
-import mozilla.components.concept.toolbar.Toolbar.PermissionHighlights.AUTOPLAY_BLOCKED
+import mozilla.components.concept.toolbar.Toolbar.Highlight.NONE
+import mozilla.components.concept.toolbar.Toolbar.Highlight.AUTOPLAY_BLOCKED
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -21,22 +21,22 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
-class PermissionHighlightsIconViewTest {
+class HighlightViewTest {
 
     @Test
     fun `after setting tint, can get trackingProtectionTint`() {
-        val view = PermissionHighlightsIconView(testContext)
+        val view = HighlightView(testContext)
         view.setTint(android.R.color.black)
-        assertEquals(android.R.color.black, view.permissionTint)
+        assertEquals(android.R.color.black, view.highlightTint)
     }
 
     @Test
-    fun `setting permissionHighlights status will trigger an icon updated`() {
-        val view = PermissionHighlightsIconView(testContext)
+    fun `setting status will trigger an icon updated`() {
+        val view = HighlightView(testContext)
 
-        view.permissionHighlights = AUTOPLAY_BLOCKED
+        view.state = AUTOPLAY_BLOCKED
 
-        assertEquals(AUTOPLAY_BLOCKED, view.permissionHighlights)
+        assertEquals(AUTOPLAY_BLOCKED, view.state)
         assertTrue(view.isVisible)
         assertNotNull(view.drawable)
         assertEquals(
@@ -44,9 +44,9 @@ class PermissionHighlightsIconViewTest {
             testContext.getString(R.string.mozac_browser_toolbar_content_description_autoplay_blocked)
         )
 
-        view.permissionHighlights = NONE
+        view.state = NONE
 
-        assertEquals(NONE, view.permissionHighlights)
+        assertEquals(NONE, view.state)
         assertNull(view.drawable)
         assertFalse(view.isVisible)
         assertNull(view.contentDescription)
@@ -54,12 +54,12 @@ class PermissionHighlightsIconViewTest {
 
     @Test
     fun `setIcons will trigger an icon updated`() {
-        val view = spy(PermissionHighlightsIconView(testContext))
+        val view = spy(HighlightView(testContext))
 
-        view.setIcons(DisplayToolbar.Icons.PermissionHighlights(
+        view.setIcon(
                 testContext.getDrawable(
                         TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
-                )!!))
+                )!!)
 
         verify(view).updateIcon()
     }

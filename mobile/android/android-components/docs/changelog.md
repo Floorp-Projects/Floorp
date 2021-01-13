@@ -43,15 +43,18 @@ permalink: /changelog/
 * **feature-app-links**
   * ⚠️ **This is a breaking change**: Migrated this component to use `browser-state` instead of `browser-session`. It is now required to pass a `BrowserStore` instance (instead of `SessionManager`) to `AppLinksFeature`.
 
+* **browser-toolbar**
+  * ⚠️ **This is a breaking change**: The API for showing the site permission indicators has been replaced to API to show an dot notification instead, for more information see [#9378](https://github.com/mozilla-mobile/android-components/issues/9378).
+
 * **service-nimbus**
   * Added a `NimbusDisabled` class to provide implementers who are not able to use Nimbus yet.
-  
+
 * **support-base**
   * 🌟 Add an `ActivityResultHandler` for features that want to consume the result.
-  
+
 * **concept-engine**
   * 🌟 Added a new `ActivityDelegate` for handling intent requests from the engine.
-  
+
 * **browser-engine-gecko(-nightly)**
   * Added `GeckoActivityDelegate` for the GeckoView `activityDelegate`.
 
