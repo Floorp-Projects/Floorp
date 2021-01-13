@@ -1,5 +1,11 @@
 [
   {
+    "title": "adidas",
+    "urls": ["https://www.adidas.co.uk/", "https://www.adidas.de/", "https://www.adidas.fr/"],
+    "image_url": "images/adidas@2x.jpg",
+    "favicon_url": "favicons/adidas.ico"
+  },
+  {
     "title": "aliexpress",
     "url": "https://www.aliexpress.com/",
     "image_url": "images/aliexpress-com@2x.png",
@@ -60,16 +66,34 @@
     "favicon_url": "favicons/ebay.ico"
   },
   {
+    "title": "etsy",
+    "url": "https://www.etsy.com/",
+    "image_url": "images/etsy@2x.jpg",
+    "favicon_url": "favicons/etsy.ico"
+  },
+  {
     "title": "facebook",
     "url": "https://www.facebook.com/",
     "image_url": "images/facebook-com@2x.png",
     "favicon_url": "favicons/facebook-com.ico"
   },
   {
+    "title": "geico",
+    "url": "https://www.geico.com/",
+    "image_url": "images/geico@2x.jpg",
+    "favicon_url": "favicons/geico.ico"
+  },
+  {
     "title": "google",
     "url": "https://www.google.com/",
     "image_url": "images/google-com@2x.png",
     "favicon_url": "favicons/google-com.ico"
+  },
+  {
+    "title": "hrblock",
+    "url": "https://www.hrblock.com/",
+    "image_url": "images/hrblock@2x.jpg",
+    "favicon_url": "favicons/hrblock.ico"
   },
   {
     "title": "ifeng",
@@ -90,6 +114,12 @@
     "favicon_url": "favicons/leboncoin-fr.png"
   },
   {
+    "title": "nike",
+    "url": "https://www.nike.com/",
+    "image_url": "images/nike@2x.jpg",
+    "favicon_url": "favicons/nike.ico"
+  },
+  {
     "title": "ok",
     "url": "https://www.ok.ru/",
     "image_url": "images/ok-ru@2x.png",
@@ -108,6 +138,18 @@
     "favicon_url": "favicons/reddit-com.png"
   },
   {
+    "title": "samsung",
+    "url": "https://samsung.com/",
+    "image_url": "images/samsung@2x.jpg",
+    "favicon_url": "favicons/samsung.ico"
+  },
+  {
+    "title": "turbotax",
+    "url": "https://turbotax.intuit.com/",
+    "image_url": "images/turbotax@2x.jpg",
+    "favicon_url": "favicons/turbotax.png"
+  },
+  {
     "title": "twitter",
     "url": "https://twitter.com/",
     "image_url": "images/twitter-com@2x.png",
@@ -120,6 +162,12 @@
     "favicon_url": "favicons/vk-com.ico"
   },
   {
+    "title": "vodafone",
+    "url": "https://www.vodafone.co.uk/",
+    "image_url": "images/vodafone@2x.jpg",
+    "favicon_url": "favicons/vodafone.png"
+  },
+  {
     "title": "weibo",
     "url": "https://weibo.com/",
     "image_url": "images/weibo-com@2x.png",
@@ -130,6 +178,12 @@
     "url": "https://www.wikipedia.org/",
     "image_url": "images/wikipedia-org@2x.png",
     "favicon_url": "favicons/wikipedia-org.ico"
+  },
+  {
+    "title": "wix",
+    "url": "https://www.wix.com/",
+    "image_url": "images/wix@2x.jpg",
+    "favicon_url": "favicons/wix.ico"
   },
   {
     "title": "wykop",
