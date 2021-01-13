@@ -934,6 +934,8 @@ void MacroAssembler::branchTest64(Condition cond, Register64 lhs,
     movl(lhs.low, temp);
     orl(lhs.high, temp);
     branchTestPtr(cond, temp, temp, label);
+  } else if (cond == Assembler::Signed || cond == Assembler::NotSigned) {
+    branchTest32(cond, lhs.high, rhs.high, label);
   } else {
     MOZ_CRASH("Unsupported condition");
   }
