@@ -570,8 +570,8 @@ function makePrioritySearchResult(
  *   A URI for the engine's icon.
  * @param {boolean} [options.heuristic]
  *   True if this is a heuristic result. Defaults to false.
- * @param {boolean} [options.providesSearchMode]
- *   Whether search mode is entered when this result is selected.
+ * @param {number} [options.keywordOffer]
+ *   A value from UrlbarUtils.KEYWORD_OFFER.
  * @param {string} [options.providerName]
  *   The name of the provider offering this result. The test suite will not
  *   check which provider offered a result unless this option is specified.
@@ -589,7 +589,7 @@ function makeSearchResult(
     uri,
     query,
     engineIconUri,
-    providesSearchMode,
+    keywordOffer,
     providerName,
     inPrivateWindow,
     isPrivateEngine,
@@ -617,7 +617,7 @@ function makeSearchResult(
     tailOffsetIndex,
     keyword: [
       alias,
-      providesSearchMode
+      keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW
         ? UrlbarUtils.HIGHLIGHT.TYPED
         : UrlbarUtils.HIGHLIGHT.NONE,
     ],
@@ -627,7 +627,7 @@ function makeSearchResult(
       UrlbarUtils.HIGHLIGHT.TYPED,
     ],
     icon: engineIconUri,
-    providesSearchMode,
+    keywordOffer,
     inPrivateWindow,
     isPrivateEngine,
   };
