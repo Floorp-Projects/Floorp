@@ -251,30 +251,34 @@ subprojects {
             }
 
             if (project.hasProperty("coverage") && project.name != "support-test") {
-                tasks.withType(Test).configureEach() {
-                    jacoco.includeNoLocationClasses = true
-                    jacoco.excludes = ['jdk.internal.*']
+                android.buildTypes.all { buildType ->
+                    tasks.withType(Test).configureEach() {
+                        jacoco {
+                            includeNoLocationClasses = true
+                            excludes = ['jdk.internal.*']
+                        }
 
-                    finalizedBy jacocoTestReport
-                }
-
-                tasks.register("jacocoTestReport", JacocoReport) {
-                    reports {
-                        xml.enabled = true
-                        html.enabled = true
+                        finalizedBy { "jacoco${buildType.name.capitalize()}TestReport" }
                     }
 
-                    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
-                                      '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
-                    def kotlinDebugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/debug", excludes: fileFilter)
-                    def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
-                    def mainSrc = "$project.projectDir/src/main/java"
+                    tasks.register("jacoco${buildType.name.capitalize()}TestReport", JacocoReport) {
+                        reports {
+                            xml.enabled = true
+                            html.enabled = true
+                        }
 
-                    sourceDirectories.setFrom(files([mainSrc]))
-                    classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
-                    getExecutionData().setFrom(fileTree(project.buildDir).include([
-                            'jacoco/testReleaseUnitTest.exec'
-                    ]))
+                        def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                                          '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
+                        def kotlinDebugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/${buildType.name}", excludes: fileFilter)
+                        def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/${buildType.name}", excludes: fileFilter)
+                        def mainSrc = "$project.projectDir/src/main/java"
+
+                        sourceDirectories.setFrom(files([mainSrc]))
+                        classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
+                        getExecutionData().setFrom(fileTree(project.buildDir).include([
+                                "jacoco/test${buildType.name.capitalize()}UnitTest.exec"
+                        ]))
+                    }
                 }
 
                 android {
