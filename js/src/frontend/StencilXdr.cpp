@@ -550,7 +550,6 @@ XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
   // Now serialize the vector of ScriptStencils.
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptData));
-  MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtra));
 
   return Ok();
 }
@@ -569,6 +568,8 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   }
 
   MOZ_TRY(XDRBaseCompilationStencil(xdr, stencil));
+
+  MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtra));
 
   // We don't support coding non-initial CompilationStencil.
   MOZ_ASSERT(stencil.isInitialStencil());
