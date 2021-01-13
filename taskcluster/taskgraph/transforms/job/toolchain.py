@@ -175,6 +175,7 @@ def generic_worker_toolchain(config, job, taskdesc):
     run = job["run"]
 
     worker = taskdesc["worker"] = job["worker"]
+    worker["chain-of-trust"] = True
 
     # Allow the job to specify where artifacts come from, but add
     # public/build if it's not there already.
@@ -183,9 +184,6 @@ def generic_worker_toolchain(config, job, taskdesc):
         generic_worker_add_artifacts(config, job, taskdesc)
 
     if job["worker"]["os"] == "windows":
-        # mac workers don't support chain-of-trust yet.
-        worker["chain-of-trust"] = True
-
         # There were no caches on generic-worker before bug 1519472, and they cause
         # all sorts of problems with Windows toolchain tasks, disable them until
         # tasks are ready.
