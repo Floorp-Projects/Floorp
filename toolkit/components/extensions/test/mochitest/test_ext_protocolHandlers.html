@@ -150,7 +150,7 @@ add_task(async function test_protocolHandler() {
     let window = await windowOpen;
     let gBrowser = window.gBrowser
     let tabDialogBox = gBrowser.getTabDialogBox(gBrowser.selectedBrowser);
-    let dialogStack = tabDialogBox._dialogManager._dialogStack;
+    let dialogStack = tabDialogBox.getTabDialogManager()._dialogStack;
 
     let checkFn = dialogEvent =>
       dialogEvent.detail.dialog?._openedURL == CONTENT_HANDLING_URL;
