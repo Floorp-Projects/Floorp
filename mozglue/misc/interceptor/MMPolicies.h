@@ -614,6 +614,7 @@ class MMPolicyInProcessEarlyStage : public MMPolicyInProcessPrimitive {
  public:
   struct Kernel32Exports {
     decltype(&::FlushInstructionCache) mFlushInstructionCache;
+    decltype(&::GetModuleHandleW) mGetModuleHandleW;
     decltype(&::GetSystemInfo) mGetSystemInfo;
     decltype(&::VirtualProtect) mVirtualProtect;
   };
