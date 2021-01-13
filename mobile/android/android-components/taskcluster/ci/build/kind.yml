@@ -44,6 +44,10 @@ job-defaults:
         type: file
         name: public/github/customCheckRunText.md
         path: '/builds/worker/github/customCheckRunText.md'
+    jacoco-coverage-template:
+        type: directory
+        name: public/reports/jacoco
+        path: '/builds/worker/checkouts/src/{component_path}/build/reports/jacoco'
     attributes:
         code-review:
             by-build-type:

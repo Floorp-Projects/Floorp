@@ -140,7 +140,7 @@ def add_artifacts(config, tasks):
         component = task["attributes"]["component"]
         build_artifact_definitions = task.setdefault("worker", {}).setdefault("artifacts", [])
 
-        for key in ["tests-artifact-template", "lint-artifact-template", "text-artifact-template"]:
+        for key in ["tests-artifact-template", "lint-artifact-template", "text-artifact-template", "jacoco-coverage-template"]:
             if key in task:
                 optional_artifact_template = task.pop(key, {})
                 build_artifact_definitions.append({
