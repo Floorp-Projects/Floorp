@@ -88,6 +88,9 @@ extern crate remote;
 
 extern crate gecko_logger;
 
+#[cfg(all(unix, not(target_os = "android")))]
+extern crate rust_minidump_writer_linux;
+
 extern crate log;
 use log::info;
 
