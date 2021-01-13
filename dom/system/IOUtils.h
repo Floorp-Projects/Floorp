@@ -221,22 +221,6 @@ class IOUtils final {
       const InternalWriteOpts& aOptions);
 
   /**
-   * Attempt to write the entirety of |aUTF8String| to the file at |aFile|.
-   * This may occur by writing to an intermediate destination and performing a
-   * move, depending on |aOptions|.
-   *
-   * @param aFile The location of the file.
-   * @param aByteArray The data to write to the file.
-   * @param aOptions Options to modify the way the write is completed.
-   *
-   * @return The number of bytes written to the file, or an error if the write
-   *         failed or was incomplete.
-   */
-  static Result<uint32_t, IOError> WriteUTF8Sync(
-      nsIFile* aFile, const nsCString& aString,
-      const InternalWriteOpts& aOptions);
-
-  /**
    * Attempts to move the file located at |aSourceFile| to |aDestFile|.
    *
    * @param aSourceFile  The location of the file to move.
