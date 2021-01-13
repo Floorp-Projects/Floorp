@@ -2828,23 +2828,14 @@ bool CacheIRCompiler::emitInt32URightShiftResult(Int32OperandId lhsId,
 
   masm.mov(lhs, scratch);
   masm.flexibleRshift32(rhs, scratch);
-  Label intDone, floatDone;
   if (allowDouble) {
-    Label toUint;
-    masm.branchTest32(Assembler::Signed, scratch, scratch, &toUint);
-    masm.jump(&intDone);
-
-    masm.bind(&toUint);
     ScratchDoubleScope fpscratch(masm);
     masm.convertUInt32ToDouble(scratch, fpscratch);
     masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
-    masm.jump(&floatDone);
   } else {
     masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   }
-  masm.bind(&intDone);
-  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
-  masm.bind(&floatDone);
   return true;
 }
 
