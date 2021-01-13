@@ -119,6 +119,13 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     @CallSuper
     open fun setupInMainProcessOnly() {
+        // See feature flags kdoc for details.
+        if (FeatureFlags.intentionalRegressionToValidatePerfTestAlerting) {
+            logger.info("Intentional thread sleep. See #17447")
+            @Suppress("MagicNumber") // it's fine for a quick patch.
+            Thread.sleep(100)
+        }
+
         run {
             // Attention: Do not invoke any code from a-s in this scope.
             val megazordSetup = setupMegazord()
