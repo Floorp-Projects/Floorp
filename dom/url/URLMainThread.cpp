@@ -9,7 +9,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Blob.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
-#include "mozilla/NullPrincipal.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
@@ -31,12 +30,6 @@ void URLMainThread::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
 
   nsCOMPtr<nsIPrincipal> principal =
       nsContentUtils::ObjectPrincipal(aGlobal.Get());
-  if (!principal->SchemeIs("http") && !principal->SchemeIs("https")) {
-    // In case the global is not the security context of http or https,
-    // then we want to use a NullPrincipal for generating the blob.
-    // This is the case e.g. for pdf.js
-    principal = NullPrincipal::CreateWithInheritedAttributes(principal);
-  }
 
   nsAutoCString url;
   aRv = BlobURLProtocolHandler::AddDataEntry(aBlob.Impl(), principal,
@@ -63,12 +56,6 @@ void URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
 
   nsCOMPtr<nsIPrincipal> principal =
       nsContentUtils::ObjectPrincipal(aGlobal.Get());
-  if (!principal->SchemeIs("http") && !principal->SchemeIs("https")) {
-    // In case the global is not the security context of http or https,
-    // then we want to use a NullPrincipal for generating the blob.
-    // This is the case e.g. for pdf.js
-    principal = NullPrincipal::CreateWithInheritedAttributes(principal);
-  }
 
   nsAutoCString url;
   aRv = BlobURLProtocolHandler::AddDataEntry(&aSource, principal,
