@@ -14,10 +14,6 @@ SpecialPowers.pushPrefEnv({
   set: [["dom.require_user_interaction_for_beforeunload", true]],
 });
 
-SpecialPowers.pushPrefEnv({
-  set: [["prompts.contentPromptSubDialog", false]],
-});
-
 const PAGE_URL =
   "data:text/html," +
   encodeURIComponent("<script>(" + pageScript.toSource() + ")();</script>");
