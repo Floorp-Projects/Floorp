@@ -387,19 +387,23 @@ ScriptStencil& FunctionBox::functionStencil() const {
   return compilationState_.scriptData[funcDataIndex_];
 }
 
-SourceExtent& FunctionBox::functionStencilExtent() const {
-  return compilationState_.scriptExtent[funcDataIndex_];
+ScriptStencilExtra& FunctionBox::functionExtraStencil() const {
+  return compilationState_.scriptExtra[funcDataIndex_];
+}
+
+bool FunctionBox::hasFunctionExtraStencil() const {
+  return funcDataIndex_ < compilationState_.scriptExtra.length();
 }
 
 void SharedContext::copyScriptFields(ScriptStencil& script) {
   MOZ_ASSERT(!isScriptFieldCopiedToStencil);
-
-  script.immutableFlags = immutableFlags_;
-
   isScriptFieldCopiedToStencil = true;
 }
 
-void SharedContext::copyScriptExtent(SourceExtent& extent) { extent = extent_; }
+void SharedContext::copyScriptExtraFields(ScriptStencilExtra& scriptExtra) {
+  scriptExtra.immutableFlags = immutableFlags_;
+  scriptExtra.extent = extent_;
+}
 
 void FunctionBox::finishScriptFlags() {
   MOZ_ASSERT(!isScriptFieldCopiedToStencil);
@@ -429,7 +433,6 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
     script.functionAtom = atom_->toIndex();
   }
   script.functionFlags = flags_;
-  script.nargs = nargs_;
   if (enclosingScopeIndex_) {
     script.setLazyFunctionEnclosingScopeIndex(*enclosingScopeIndex_);
   }
@@ -440,12 +443,21 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
   isFunctionFieldCopiedToStencil = true;
 }
 
-void FunctionBox::copyUpdatedImmutableFlags() {
-  ScriptStencil& script = functionStencil();
-  script.immutableFlags = immutableFlags_;
+void FunctionBox::copyFunctionExtraFields(ScriptStencilExtra& scriptExtra) {
+  scriptExtra.nargs = nargs_;
 }
 
-void FunctionBox::copyUpdatedExtent() { functionStencilExtent() = extent_; }
+void FunctionBox::copyUpdatedImmutableFlags() {
+  if (hasFunctionExtraStencil()) {
+    ScriptStencilExtra& scriptExtra = functionExtraStencil();
+    scriptExtra.immutableFlags = immutableFlags_;
+  }
+}
+
+void FunctionBox::copyUpdatedExtent() {
+  ScriptStencilExtra& scriptExtra = functionExtraStencil();
+  scriptExtra.extent = extent_;
+}
 
 void FunctionBox::copyUpdatedMemberInitializers() {
   ScriptStencil& script = functionStencil();

@@ -238,7 +238,7 @@ struct MOZ_RAII CompilationState {
   // See corresponding CompilationStencil fields for desription.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
-  Vector<SourceExtent, 0, js::SystemAllocPolicy> scriptExtent;
+  Vector<ScriptStencilExtra, 0, js::SystemAllocPolicy> scriptExtra;
   Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
   Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
   Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
@@ -318,7 +318,7 @@ struct CompilationStencil {
   // reserved for the top-level script. This top-level may or may not be a
   // function.
   mozilla::Span<ScriptStencil> scriptData;
-  mozilla::Span<SourceExtent> scriptExtent;
+  mozilla::Span<ScriptStencilExtra> scriptExtra;
   SharedDataContainer sharedData;
   mozilla::Span<TaggedScriptThingIndex> gcThingData;
 
@@ -373,6 +373,8 @@ struct CompilationStencil {
            static_cast<FunctionKey>(extent.sourceEnd);
   }
 
+  bool isInitialStencil() const { return !scriptExtra.empty(); }
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
   void dump(js::JSONPrinter& json);
@@ -411,14 +413,18 @@ class ScriptStencilIterable {
   class ScriptAndFunction {
    public:
     const ScriptStencil& script;
-    const SourceExtent* extent;
+    const ScriptStencilExtra* scriptExtra;
     JSFunction* function;
     ScriptIndex index;
 
     ScriptAndFunction() = delete;
-    ScriptAndFunction(const ScriptStencil& script, const SourceExtent* extent,
+    ScriptAndFunction(const ScriptStencil& script,
+                      const ScriptStencilExtra* scriptExtra,
                       JSFunction* function, ScriptIndex index)
-        : script(script), extent(extent), function(function), index(index) {}
+        : script(script),
+          scriptExtra(scriptExtra),
+          function(function),
+          index(index) {}
   };
 
   class Iterator {
@@ -473,11 +479,11 @@ class ScriptStencilIterable {
     ScriptAndFunction operator*() {
       ScriptIndex index = ScriptIndex(index_);
       const ScriptStencil& script = stencil_.scriptData[index];
-      const SourceExtent* extent = nullptr;
-      if (index < stencil_.scriptExtent.size()) {
-        extent = &stencil_.scriptExtent[index];
+      const ScriptStencilExtra* scriptExtra = nullptr;
+      if (index < stencil_.scriptExtra.size()) {
+        scriptExtra = &stencil_.scriptExtra[index];
       }
-      return ScriptAndFunction(script, extent, gcOutput_.functions[index],
+      return ScriptAndFunction(script, scriptExtra, gcOutput_.functions[index],
                                index);
     }
 

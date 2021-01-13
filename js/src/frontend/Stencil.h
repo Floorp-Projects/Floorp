@@ -638,9 +638,6 @@ class ScriptStencil {
   //   * non-lazy Function (except asm.js module)
   //   * lazy Function (cannot be asm.js module)
 
-  // See `BaseScript::immutableFlags_`.
-  ImmutableScriptFlags immutableFlags;
-
   uint32_t memberInitializers_ = 0;
 
   // GCThings are stored into {CompilationState,CompilationStencil}.gcThingData,
@@ -658,12 +655,6 @@ class ScriptStencil {
   // the kind of name.
   TaggedParserAtomIndex functionAtom;
 
-  // See: `FunctionFlags`.
-  FunctionFlags functionFlags = {};
-
-  // See `JSFunction::nargs_`.
-  uint16_t nargs = 0;
-
   // If this ScriptStencil refers to a lazy child of the function being
   // compiled, this field holds the child's immediately enclosing scope's index.
   // Once compilation succeeds, we will store the scope pointed by this in the
@@ -673,29 +664,32 @@ class ScriptStencil {
   // successfully.)
   ScopeIndex lazyFunctionEnclosingScopeIndex_;
 
+  // See: `FunctionFlags`.
+  FunctionFlags functionFlags = {};
+
   // This is set by the BytecodeEmitter of the enclosing script when a reference
   // to this function is generated.
-  static constexpr uint32_t WasFunctionEmittedFlag = 1 << 0;
+  static constexpr uint16_t WasFunctionEmittedFlag = 1 << 0;
 
   // If this is for the root of delazification, this represents
   // MutableScriptFlagsEnum::AllowRelazify value of the script *after*
   // delazification.
   // False otherwise.
-  static constexpr uint32_t AllowRelazifyFlag = 1 << 1;
+  static constexpr uint16_t AllowRelazifyFlag = 1 << 1;
 
   // Set if this is non-lazy script and shared data is created.
   // The shared data is stored into CompilationStencil.sharedData.
-  static constexpr uint32_t HasSharedDataFlag = 1 << 2;
+  static constexpr uint16_t HasSharedDataFlag = 1 << 2;
 
   // Set if this script has member initializer.
   // `memberInitializers_` is valid only if this flag is set.
-  static constexpr uint32_t HasMemberInitializersFlag = 1 << 3;
+  static constexpr uint16_t HasMemberInitializersFlag = 1 << 3;
 
   // True if this script is lazy function and has enclosing scope.
   // `lazyFunctionEnclosingScopeIndex_` is valid only if this flag is set.
-  static constexpr uint32_t HasLazyFunctionEnclosingScopeIndexFlag = 1 << 4;
+  static constexpr uint16_t HasLazyFunctionEnclosingScopeIndexFlag = 1 << 4;
 
-  uint32_t flags_ = 0;
+  uint16_t flags_ = 0;
 
   // End of fields.
 
@@ -705,12 +699,6 @@ class ScriptStencil {
     bool result = functionFlags.toRaw() != 0x0000;
     MOZ_ASSERT_IF(
         result, functionFlags.isAsmJSNative() || functionFlags.hasBaseScript());
-    return result;
-  }
-
-  bool isModule() const {
-    bool result = immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsModule);
-    MOZ_ASSERT_IF(result, !isFunction());
     return result;
   }
 
@@ -773,6 +761,34 @@ class ScriptStencil {
   void dump();
   void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
   void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
+#endif
+};
+
+// In addition to ScriptStencil, data generated only while initial-parsing.
+class ScriptStencilExtra {
+ public:
+  // See `BaseScript::immutableFlags_`.
+  ImmutableScriptFlags immutableFlags;
+
+  // The location of this script in the source.
+  SourceExtent extent;
+
+  // See `JSFunction::nargs_`.
+  uint16_t nargs = 0;
+
+  // To make this struct packed, add explicit field for padding.
+  uint16_t padding_ = 0;
+
+  ScriptStencilExtra() = default;
+
+  bool isModule() const {
+    return immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsModule);
+  }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump();
+  void dump(JSONPrinter& json);
+  void dumpFields(JSONPrinter& json);
 #endif
 };
 

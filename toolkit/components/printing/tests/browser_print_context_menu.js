@@ -5,7 +5,11 @@
 const frameSource = `<a href="about:mozilla">Inner frame</a>`;
 const source = `<html><h1>Top level text</h1><iframe srcdoc='${frameSource}' id="f"></iframe></html>`;
 
-add_task(async function() {
+add_task(async function testPrintFrame() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", true]],
+  });
+
   let url = `data:text/html,${source}`;
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
     let contentAreaContextMenuPopup = document.getElementById(

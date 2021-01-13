@@ -765,7 +765,9 @@ ScriptDecodeTask::ScriptDecodeTask(JSContext* cx,
                                    JS::OffThreadCompileCallback callback,
                                    void* callbackData)
     : ParseTask(ParseTaskKind::ScriptDecode, cx, callback, callbackData),
-      range(range) {}
+      range(range) {
+  MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
+}
 
 void ScriptDecodeTask::parse(JSContext* cx) {
   MOZ_ASSERT(cx->isHelperThreadContext());

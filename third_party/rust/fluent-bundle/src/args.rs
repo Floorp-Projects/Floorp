@@ -6,6 +6,7 @@ use crate::types::FluentValue;
 /// A map of arguments passed from the code to
 /// the localization to be used for message
 /// formatting.
+#[derive(Debug, Default)]
 pub struct FluentArgs<'args>(Vec<(Cow<'args, str>, FluentValue<'args>)>);
 
 impl<'args> FluentArgs<'args> {

@@ -3675,7 +3675,18 @@ nsresult ScriptLoader::OnStreamComplete(
     // hash in case we are going to save the bytecode of this script in the
     // cache.
     if (aRequest->IsSource()) {
-      rv = SaveSRIHash(aRequest, aSRIDataVerifier);
+      uint32_t sriLength = 0;
+      rv = SaveSRIHash(aRequest, aSRIDataVerifier, &sriLength);
+      MOZ_ASSERT_IF(NS_SUCCEEDED(rv),
+                    aRequest->mScriptBytecode.length() == sriLength);
+
+      aRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
+      if (aRequest->mBytecodeOffset != sriLength) {
+        // We need extra padding after SRI hash.
+        if (!aRequest->mScriptBytecode.resize(aRequest->mBytecodeOffset)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
     }
 
     if (NS_SUCCEEDED(rv)) {
@@ -3737,43 +3748,51 @@ nsresult ScriptLoader::VerifySRI(ScriptLoadRequest* aRequest,
   return rv;
 }
 
-nsresult ScriptLoader::SaveSRIHash(
-    ScriptLoadRequest* aRequest, SRICheckDataVerifier* aSRIDataVerifier) const {
+nsresult ScriptLoader::SaveSRIHash(ScriptLoadRequest* aRequest,
+                                   SRICheckDataVerifier* aSRIDataVerifier,
+                                   uint32_t* sriLength) const {
   MOZ_ASSERT(aRequest->IsSource());
   MOZ_ASSERT(aRequest->mScriptBytecode.empty());
+
+  uint32_t len;
 
   // If the integrity metadata does not correspond to a valid hash function,
   // IsComplete would be false.
   if (!aRequest->mIntegrity.IsEmpty() && aSRIDataVerifier->IsComplete()) {
+    MOZ_ASSERT(aRequest->mScriptBytecode.length() == 0);
+
     // Encode the SRI computed hash.
-    uint32_t len = aSRIDataVerifier->DataSummaryLength();
-    if (!aRequest->mScriptBytecode.growBy(len)) {
+    len = aSRIDataVerifier->DataSummaryLength();
+
+    if (!aRequest->mScriptBytecode.resize(len)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    aRequest->mBytecodeOffset = len;
 
     DebugOnly<nsresult> res = aSRIDataVerifier->ExportDataSummary(
-        aRequest->mScriptBytecode.length(), aRequest->mScriptBytecode.begin());
+        len, aRequest->mScriptBytecode.begin());
     MOZ_ASSERT(NS_SUCCEEDED(res));
   } else {
+    MOZ_ASSERT(aRequest->mScriptBytecode.length() == 0);
+
     // Encode a dummy SRI hash.
-    uint32_t len = SRICheckDataVerifier::EmptyDataSummaryLength();
-    if (!aRequest->mScriptBytecode.growBy(len)) {
+    len = SRICheckDataVerifier::EmptyDataSummaryLength();
+
+    if (!aRequest->mScriptBytecode.resize(len)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    aRequest->mBytecodeOffset = len;
 
     DebugOnly<nsresult> res = SRICheckDataVerifier::ExportEmptyDataSummary(
-        aRequest->mScriptBytecode.length(), aRequest->mScriptBytecode.begin());
+        len, aRequest->mScriptBytecode.begin());
     MOZ_ASSERT(NS_SUCCEEDED(res));
   }
 
   // Verify that the exported and predicted length correspond.
   mozilla::DebugOnly<uint32_t> srilen;
   MOZ_ASSERT(NS_SUCCEEDED(SRICheckDataVerifier::DataSummaryLength(
-      aRequest->mScriptBytecode.length(), aRequest->mScriptBytecode.begin(),
-      &srilen)));
-  MOZ_ASSERT(srilen == aRequest->mBytecodeOffset);
+      len, aRequest->mScriptBytecode.begin(), &srilen)));
+  MOZ_ASSERT(srilen == len);
+
+  *sriLength = len;
 
   return NS_OK;
 }

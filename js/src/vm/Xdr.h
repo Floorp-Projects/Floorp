@@ -48,16 +48,7 @@ using XDRAtomMap = JS::GCHashMap<PreBarriered<JSAtom*>, uint32_t>;
 class XDRBufferBase {
  public:
   explicit XDRBufferBase(JSContext* cx, size_t cursor = 0)
-      : context_(cx),
-        cursor_(cursor)
-#ifdef DEBUG
-        // Note, when decoding the buffer can be set to a range, which does not
-        // have any alignment requirement as opposed to allocations.
-        ,
-        aligned_(false)
-#endif
-  {
-  }
+      : context_(cx), cursor_(cursor) {}
 
   JSContext* cx() const { return context_; }
 
@@ -66,9 +57,6 @@ class XDRBufferBase {
  protected:
   JSContext* const context_;
   size_t cursor_;
-#ifdef DEBUG
-  bool aligned_;
-#endif
 
   friend class XDRIncrementalStencilEncoder;
 };
@@ -537,12 +525,15 @@ class XDRStencilDecoder : public XDRDecoderBase {
   XDRStencilDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
                     JS::TranscodeBuffer& buffer, size_t cursor)
       : XDRDecoderBase(cx, buffer, cursor), options_(options) {
+    MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(buffer.begin()));
+    MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(cursor));
     MOZ_ASSERT(options_);
   }
 
   XDRStencilDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
                     const JS::TranscodeRange& range)
       : XDRDecoderBase(cx, range), options_(options) {
+    MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
     MOZ_ASSERT(options_);
   }
 

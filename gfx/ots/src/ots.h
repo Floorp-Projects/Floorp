@@ -187,8 +187,6 @@ template<typename T> T Round2(T value) {
 // Check that a tag consists entirely of printable ASCII characters
 bool CheckTag(uint32_t tag_value);
 
-bool IsValidVersionTag(uint32_t tag);
-
 #define OTS_TAG_CFF  OTS_TAG('C','F','F',' ')
 #define OTS_TAG_CFF2 OTS_TAG('C','F','F','2')
 #define OTS_TAG_CMAP OTS_TAG('c','m','a','p')
