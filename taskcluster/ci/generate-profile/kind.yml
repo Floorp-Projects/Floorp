@@ -184,7 +184,7 @@ jobs:
             job-name: macosx64-profile
         treeherder:
             platform: macosx1014-64-shippable/opt
-        worker-type: t-osx-1014-pgo
+        worker-type: b-osx-1015
         worker:
             max-run-time: 7200
             env:
