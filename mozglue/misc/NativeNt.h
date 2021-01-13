@@ -97,7 +97,6 @@ VOID NTAPI RtlReleaseSRWLockShared(PSRWLOCK aLock);
 
 ULONG NTAPI RtlNtStatusToDosError(NTSTATUS aStatus);
 VOID NTAPI RtlSetLastWin32Error(DWORD aError);
-DWORD NTAPI RtlGetLastWin32Error();
 
 NTSTATUS NTAPI NtReadVirtualMemory(HANDLE aProcessHandle, PVOID aBaseAddress,
                                    PVOID aBuffer, SIZE_T aNumBytesToRead,
@@ -154,15 +153,6 @@ class AllocatedUnicodeString final {
       delete;
 #else
   explicit AllocatedUnicodeString(PCUNICODE_STRING aSrc) {
-    if (!aSrc) {
-      mUnicodeString = {};
-      return;
-    }
-
-    Duplicate(aSrc);
-  }
-
-  explicit AllocatedUnicodeString(const char* aSrc) {
     if (!aSrc) {
       mUnicodeString = {};
       return;
@@ -237,19 +227,6 @@ class AllocatedUnicodeString final {
     if (!NT_SUCCESS(ntStatus)) {
       // Make sure that mUnicodeString does not contain bogus data
       // (since not all callers zero it out before invoking)
-      mUnicodeString = {};
-    }
-  }
-
-  void Duplicate(const char* aSrc) {
-    MOZ_ASSERT(aSrc);
-
-    ANSI_STRING ansiStr;
-    RtlInitAnsiString(&ansiStr, aSrc);
-    NTSTATUS ntStatus =
-        ::RtlAnsiStringToUnicodeString(&mUnicodeString, &ansiStr, TRUE);
-    MOZ_ASSERT(NT_SUCCESS(ntStatus));
-    if (!NT_SUCCESS(ntStatus)) {
       mUnicodeString = {};
     }
   }
