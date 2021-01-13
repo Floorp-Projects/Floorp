@@ -74,6 +74,9 @@ qcms = { path = "../../../../gfx/qcms", features = ["c_bindings"] }
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
+[target.'cfg(all(unix, not(target_os = "android")))'.dependencies]
+rust_minidump_writer_linux = { path = "../../../../toolkit/crashreporter/rust_minidump_writer_linux" }
+
 [build-dependencies]
 rustc_version = "0.2"
 
