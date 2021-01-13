@@ -305,6 +305,10 @@ class GetNextTokenCompleteEvent final : public nsIRunnable,
     MOZ_ASSERT(NS_IsMainThread());
 
     mCancelled = true;
+    nsCOMPtr<nsIHttpAuthenticatorCallback> callback = std::move(mCallback);
+    if (callback) {
+      callback->OnCredsGenerated(mCreds, mFlags, aReason, nullptr, nullptr);
+    }
     return NS_OK;
   }
 
