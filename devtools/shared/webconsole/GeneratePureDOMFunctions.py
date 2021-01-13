@@ -8,15 +8,11 @@ Run this script via
 
 > ./mach python devtools/shared/webconsole/GeneratePureDOMFunctions.py
 
-with a mozconfig that references a built non-artifact build, and then run
-
-> ./mach eslint --fix devtools/server/actors/webconsole/webidl-pure-allowlist.js
-
-to format the file properly.
+with a mozconfig that references a built non-artifact build.
 """
 
-from __future__ import absolute_import, unicode_literals
-from os import path
+from __future__ import absolute_import, unicode_literals, print_function
+from os import path, remove, system
 import json
 import WebIDL
 import buildconfig
@@ -92,3 +88,10 @@ for result in results:
 
 with open(output_file, "w") as f:
     f.write(FILE_TEMPLATE % {"pure_data": json.dumps(output, indent=2, sort_keys=True)})
+
+print("Successfully generated", output_file, "\nFormatting file...")
+system("./mach eslint --fix " + output_file)
+
+# Parsing the idls generate a parser.out file that we don't have any use of.
+if path.exists("parser.out"):
+    remove("parser.out")
