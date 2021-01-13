@@ -444,24 +444,25 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   ScriptStencilExtra& scriptExtra =
       compilationInfo.stencil.scriptExtra[scriptIndex];
 
-  script.immutableFlags = smooshScript.immutable_flags;
+  scriptExtra.immutableFlags = smooshScript.immutable_flags;
 
   // FIXME: The following flags should be set in jsparagus.
-  script.immutableFlags.setFlag(ImmutableFlags::SelfHosted,
-                                options.selfHostingMode);
-  script.immutableFlags.setFlag(ImmutableFlags::ForceStrict,
-                                options.forceStrictMode());
-  script.immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
-                                options.nonSyntacticScope);
+  scriptExtra.immutableFlags.setFlag(ImmutableFlags::SelfHosted,
+                                     options.selfHostingMode);
+  scriptExtra.immutableFlags.setFlag(ImmutableFlags::ForceStrict,
+                                     options.forceStrictMode());
+  scriptExtra.immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
+                                     options.nonSyntacticScope);
 
   if (&smooshScript == &result.scripts.data[0]) {
-    script.immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
-                                  options.isRunOnce);
-    script.immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
-                                  options.noScriptRval);
+    scriptExtra.immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
+                                       options.isRunOnce);
+    scriptExtra.immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
+                                       options.noScriptRval);
   }
 
-  bool isFunction = script.immutableFlags.hasFlag(ImmutableFlags::IsFunction);
+  bool isFunction =
+      scriptExtra.immutableFlags.hasFlag(ImmutableFlags::IsFunction);
 
   if (smooshScript.immutable_script_data.IsSome()) {
     auto index = smooshScript.immutable_script_data.AsSome();
