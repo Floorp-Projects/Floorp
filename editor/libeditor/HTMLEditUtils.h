@@ -213,6 +213,62 @@ class HTMLEditUtils final {
   static bool IsSingleLineContainer(nsINode& aNode);
 
   /**
+   * IsPointAtEdgeOfLink() returns true if aPoint is at start or end of a
+   * link.
+   */
+  template <typename PT, typename CT>
+  static bool IsPointAtEdgeOfLink(const EditorDOMPointBase<PT, CT>& aPoint,
+                                  Element** aFoundLinkElement = nullptr) {
+    if (aFoundLinkElement) {
+      *aFoundLinkElement = nullptr;
+    }
+    if (!aPoint.IsInContentNode()) {
+      return false;
+    }
+    if (!aPoint.IsStartOfContainer() && !aPoint.IsEndOfContainer()) {
+      return false;
+    }
+    // XXX Assuming it's not in an empty text node because it's unrealistic edge
+    //     case.
+    bool maybeStartOfAnchor = aPoint.IsStartOfContainer();
+    for (EditorRawDOMPoint point(aPoint.GetContainer());
+         point.IsSet() && (maybeStartOfAnchor ? point.IsStartOfContainer()
+                                              : point.IsAtLastContent());
+         point.Set(point.GetContainer())) {
+      if (HTMLEditUtils::IsLink(point.GetContainer())) {
+        // Now, we're at start or end of <a href>.
+        if (aFoundLinkElement) {
+          *aFoundLinkElement = do_AddRef(point.ContainerAsElement()).take();
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * IsContentInclusiveDescendantOfLink() returns true if aContent is a
+   * descendant of a link element.
+   * Note that this returns true even if editing host of aContent is in a link
+   * element.
+   */
+  static bool IsContentInclusiveDescendantOfLink(
+      nsIContent& aContent, Element** aFoundLinkElement = nullptr) {
+    if (aFoundLinkElement) {
+      *aFoundLinkElement = nullptr;
+    }
+    for (Element* element : aContent.InclusiveAncestorsOfType<Element>()) {
+      if (HTMLEditUtils::IsLink(element)) {
+        if (aFoundLinkElement) {
+          *aFoundLinkElement = do_AddRef(element).take();
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * GetLastLeafChild() returns rightmost leaf content in aNode.  It depends on
    * aChildBlockBoundary whether this scans into a block child or treat
    * block as a leaf.

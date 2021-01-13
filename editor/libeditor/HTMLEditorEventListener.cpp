@@ -230,6 +230,9 @@ nsresult HTMLEditorEventListener::ListenToWindowResizeEvent(bool aListen) {
 }
 
 nsresult HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent) {
+  MOZ_ASSERT(aMouseEvent);
+  MOZ_ASSERT(aMouseEvent->IsTrusted());
+
   if (DetachedFromEditor()) {
     return NS_OK;
   }
@@ -238,6 +241,8 @@ nsresult HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent) {
   //      because HTML editor always needs to release grabbing resizer.
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
+
+  htmlEditor->PreHandleMouseUp(*aMouseEvent);
 
   if (NS_WARN_IF(!aMouseEvent->GetTarget())) {
     return NS_ERROR_FAILURE;
@@ -369,6 +374,9 @@ nsresult HTMLEditorEventListener::HandleSecondaryMouseButtonDown(
 }
 
 nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
+  MOZ_ASSERT(aMouseEvent);
+  MOZ_ASSERT(aMouseEvent->IsTrusted());
+
   if (NS_WARN_IF(!aMouseEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
@@ -383,6 +391,8 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
 
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
+
+  htmlEditor->PreHandleMouseDown(*aMouseEvent);
 
   if (!IsAcceptableMouseEvent(*htmlEditor, aMouseEvent)) {
     return EditorEventListener::MouseDown(aMouseEvent);
