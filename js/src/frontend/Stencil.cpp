@@ -263,7 +263,8 @@ static bool MaybeInstantiateModule(JSContext* cx, CompilationInput& input,
     }
 
     Rooted<ModuleObject*> module(cx, gcOutput.module);
-    if (!stencil.moduleMetadata->initModule(cx, input.atomCache, module)) {
+    if (!stencil.asCompilationStencil().moduleMetadata->initModule(
+            cx, input.atomCache, module)) {
       return false;
     }
   }
@@ -1867,12 +1868,6 @@ void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   }
   json.endList();
 
-  if (scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
-    json.beginObjectProperty("moduleMetadata");
-    moduleMetadata->dumpFields(json, this);
-    json.endObject();
-  }
-
   json.beginObjectProperty("sharedData");
   sharedData.dumpFields(json);
   json.endObject();
@@ -1893,6 +1888,12 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
 void CompilationStencil::dumpFields(js::JSONPrinter& json) {
   BaseCompilationStencil::dumpFields(json);
+
+  if (scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
+    json.beginObjectProperty("moduleMetadata");
+    moduleMetadata->dumpFields(json, this);
+    json.endObject();
+  }
 
   json.beginObjectProperty("asmJS");
   char index[16];

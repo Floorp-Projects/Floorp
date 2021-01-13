@@ -552,15 +552,6 @@ XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptData));
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtra));
 
-  if (stencil.isInitialStencil() &&
-      stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
-    if (mode == XDR_DECODE) {
-      stencil.moduleMetadata.emplace();
-    }
-
-    MOZ_TRY(XDRStencilModuleMetadata(xdr, *stencil.moduleMetadata));
-  }
-
   return Ok();
 }
 
@@ -578,6 +569,17 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   }
 
   MOZ_TRY(XDRBaseCompilationStencil(xdr, stencil));
+
+  // We don't support coding non-initial CompilationStencil.
+  MOZ_ASSERT(stencil.isInitialStencil());
+
+  if (stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
+    if (mode == XDR_DECODE) {
+      stencil.moduleMetadata.emplace();
+    }
+
+    MOZ_TRY(XDRStencilModuleMetadata(xdr, *stencil.moduleMetadata));
+  }
 
   return Ok();
 }
