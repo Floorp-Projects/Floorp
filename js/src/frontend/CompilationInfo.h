@@ -373,6 +373,8 @@ struct CompilationStencil {
            static_cast<FunctionKey>(extent.sourceEnd);
   }
 
+  bool isInitialStencil() const { return !scriptExtra.empty(); }
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
   void dump(js::JSONPrinter& json);

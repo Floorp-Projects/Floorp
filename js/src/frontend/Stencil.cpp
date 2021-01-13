@@ -142,7 +142,8 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
 
   Rooted<BaseScript*> lazy(
       cx, BaseScript::CreateRawLazy(cx, ngcthings, function, sourceObject,
-                                    scriptExtra.extent, script.immutableFlags));
+                                    scriptExtra.extent,
+                                    scriptExtra.immutableFlags));
   if (!lazy) {
     return false;
   }
@@ -166,11 +167,11 @@ static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
                                   const ScriptStencilExtra& scriptExtra,
                                   ScriptIndex functionIndex) {
   GeneratorKind generatorKind =
-      script.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
+      scriptExtra.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
           ? GeneratorKind::Generator
           : GeneratorKind::NotGenerator;
   FunctionAsyncKind asyncKind =
-      script.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsAsync)
+      scriptExtra.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsAsync)
           ? FunctionAsyncKind::AsyncFunction
           : FunctionAsyncKind::SyncFunction;
 
@@ -255,7 +256,7 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
 static bool MaybeInstantiateModule(JSContext* cx, CompilationInput& input,
                                    CompilationStencil& stencil,
                                    CompilationGCOutput& gcOutput) {
-  if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
+  if (stencil.scriptExtra[CompilationInfo::TopLevelIndex].isModule()) {
     gcOutput.module = ModuleObject::create(cx);
     if (!gcOutput.module) {
       return false;
@@ -420,8 +421,11 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     gcOutput.script->setAllowRelazify();
   }
 
+  const ScriptStencilExtra& scriptExtra =
+      stencil.scriptExtra[CompilationInfo::TopLevelIndex];
+
   // Finish initializing the ModuleObject if needed.
-  if (scriptStencil.isModule()) {
+  if (scriptExtra.isModule()) {
     Rooted<JSScript*> script(cx, gcOutput.script);
 
     gcOutput.module->initScriptSlots(script);
@@ -532,10 +536,6 @@ static void AssertDelazificationFieldsMatch(CompilationStencil& stencil,
     auto* scriptExtra = item.scriptExtra;
     auto& fun = item.function;
 
-    BaseScript* script = fun->baseScript();
-
-    MOZ_ASSERT(script->immutableFlags() == scriptStencil.immutableFlags);
-
     MOZ_ASSERT(scriptExtra == nullptr);
 
     // Names are updated by UpdateInnerFunctions.
@@ -623,7 +623,7 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
     AssertDelazificationFieldsMatch(stencil, gcOutput);
 #endif
   } else {
-    if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
+    if (stencil.scriptExtra[CompilationInfo::TopLevelIndex].isModule()) {
       MOZ_ASSERT(input.enclosingScope == nullptr);
       input.enclosingScope = &cx->global()->emptyGlobalScope();
       MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
@@ -1690,10 +1690,6 @@ void ScriptStencil::dump(js::JSONPrinter& json,
 
 void ScriptStencil::dumpFields(js::JSONPrinter& json,
                                CompilationStencil* compilationStencil) {
-  json.beginListProperty("immutableFlags");
-  DumpImmutableScriptFlags(json, immutableFlags);
-  json.endList();
-
   if (hasMemberInitializers()) {
     json.property("memberInitializers", memberInitializers_);
   }
@@ -1757,6 +1753,10 @@ void ScriptStencilExtra::dump(js::JSONPrinter& json) {
 }
 
 void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) {
+  json.beginListProperty("immutableFlags");
+  DumpImmutableScriptFlags(json, immutableFlags);
+  json.endList();
+
   json.beginObjectProperty("extent");
   json.property("sourceStart", extent.sourceStart);
   json.property("sourceEnd", extent.sourceEnd);
@@ -1864,7 +1864,7 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
   }
   json.endList();
 
-  if (scriptData[CompilationInfo::TopLevelIndex].isModule()) {
+  if (scriptExtra[CompilationInfo::TopLevelIndex].isModule()) {
     json.beginObjectProperty("moduleMetadata");
     moduleMetadata->dumpFields(json, this);
     json.endObject();

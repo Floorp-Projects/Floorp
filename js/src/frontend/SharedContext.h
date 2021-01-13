@@ -422,6 +422,8 @@ class FunctionBox : public SuspendableContext {
   ScriptStencil& functionStencil() const;
   ScriptStencilExtra& functionExtraStencil() const;
 
+  bool hasFunctionExtraStencil() const;
+
   LexicalScope::ParserData* namedLambdaBindings() {
     return namedLambdaBindings_;
   }
