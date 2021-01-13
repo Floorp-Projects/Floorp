@@ -6213,7 +6213,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
     timeout->mScriptHandler->GetDescription(handlerDescription);
     str.Append(handlerDescription);
   }
-  AUTO_PROFILER_MARKER_TEXT("setTimeout callback", JS,
+  AUTO_PROFILER_MARKER_TEXT("setTimeout callback", DOM,
                             MarkerOptions(MarkerStack::TakeBacktrace(
                                               timeout->TakeProfilerBacktrace()),
                                           MarkerInnerWindowId(mWindowID)),
