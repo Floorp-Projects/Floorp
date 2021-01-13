@@ -14,12 +14,10 @@ class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):
         super(BaseAlertTestCase, self).setUp()
         self.new_tab = self.open_tab()
         self.marionette.switch_to_window(self.new_tab)
-        self.marionette.set_pref("prompts.contentPromptSubDialog", False)
 
     def tearDown(self):
         self.close_all_tabs()
         super(BaseAlertTestCase, self).tearDown()
-        self.marionette.clear_pref("prompts.contentPromptSubDialog")
 
     @property
     def alert_present(self):

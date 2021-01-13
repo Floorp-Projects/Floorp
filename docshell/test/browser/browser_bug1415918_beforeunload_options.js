@@ -18,10 +18,6 @@ add_task(async function test() {
     set: [["dom.require_user_interaction_for_beforeunload", false]],
   });
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
-
   const permitUnloadTimeout = Services.prefs.getIntPref(
     "dom.beforeunload_timeout_ms"
   );
