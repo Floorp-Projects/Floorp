@@ -15,6 +15,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
+#include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLTags.h"
@@ -266,6 +267,29 @@ class HTMLEditUtils final {
       }
     }
     return false;
+  }
+
+  /**
+   * IsRangeEntirelyInLink() returns true if aRange is entirely in a link
+   * element.
+   * Note that this returns true even if editing host of the range is in a link
+   * element.
+   */
+  template <typename EditorDOMRangeType>
+  static bool IsRangeEntirelyInLink(const EditorDOMRangeType& aRange,
+                                    Element** aFoundLinkElement = nullptr) {
+    MOZ_ASSERT(aRange.IsPositionedAndValid());
+    if (aFoundLinkElement) {
+      *aFoundLinkElement = nullptr;
+    }
+    nsINode* commonAncestorNode =
+        nsContentUtils::GetClosestCommonInclusiveAncestor(
+            aRange.StartRef().GetContainer(), aRange.EndRef().GetContainer());
+    if (NS_WARN_IF(!commonAncestorNode) || !commonAncestorNode->IsContent()) {
+      return false;
+    }
+    return IsContentInclusiveDescendantOfLink(*commonAncestorNode->AsContent(),
+                                              aFoundLinkElement);
   }
 
   /**
