@@ -238,6 +238,8 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::AtomicsOr:
     case InlinableNative::AtomicsXor:
     case InlinableNative::AtomicsIsLockFree:
+    case InlinableNative::BigIntAsIntN:
+    case InlinableNative::BigIntAsUintN:
     case InlinableNative::DataViewGetInt8:
     case InlinableNative::DataViewGetUint8:
     case InlinableNative::DataViewGetInt16:

@@ -15477,8 +15477,8 @@ void CodeGenerator::visitGuardIsExtensible(LGuardIsExtensible* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
-void CodeGenerator::visitGuardIndexIsNonNegative(
-    LGuardIndexIsNonNegative* lir) {
+void CodeGenerator::visitGuardInt32IsNonNegative(
+    LGuardInt32IsNonNegative* lir) {
   Register index = ToRegister(lir->index());
 
   bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());

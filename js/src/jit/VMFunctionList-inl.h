@@ -47,6 +47,8 @@ namespace jit {
   _(BaselineDebugPrologue, js::jit::DebugPrologue)                             \
   _(BaselineGetFunctionThis, js::jit::BaselineGetFunctionThis)                 \
   _(BigIntAdd, JS::BigInt::add)                                                \
+  _(BigIntAsIntN, js::jit::BigIntAsIntN)                                       \
+  _(BigIntAsUintN, js::jit::BigIntAsUintN)                                     \
   _(BigIntBitAnd, JS::BigInt::bitAnd)                                          \
   _(BigIntBitNot, JS::BigInt::bitNot)                                          \
   _(BigIntBitOr, JS::BigInt::bitOr)                                            \
