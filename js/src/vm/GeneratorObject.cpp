@@ -205,6 +205,22 @@ void AbstractGeneratorObject::finalSuspend(HandleObject obj) {
   genObj->setClosed();
 }
 
+static AbstractGeneratorObject* GetGeneratorObjectForCall(JSContext* cx,
+                                                          CallObject& callObj) {
+  // The ".generator" binding is always present and always "aliased".
+  Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
+  if (shape == nullptr) {
+    return nullptr;
+  }
+  Value genValue = callObj.getSlot(shape->slot());
+
+  // If the `Generator; SetAliasedVar ".generator"; InitialYield` bytecode
+  // sequence has not run yet, genValue is undefined.
+  return genValue.isObject()
+             ? &genValue.toObject().as<AbstractGeneratorObject>()
+             : nullptr;
+}
+
 AbstractGeneratorObject* js::GetGeneratorObjectForFrame(
     JSContext* cx, AbstractFramePtr frame) {
   cx->check(frame);
@@ -223,16 +239,13 @@ AbstractGeneratorObject* js::GetGeneratorObjectForFrame(
     return nullptr;
   }
 
-  // The ".generator" binding is always present and always "aliased".
-  CallObject& callObj = frame.callObj();
-  Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
-  Value genValue = callObj.getSlot(shape->slot());
+  return GetGeneratorObjectForCall(cx, frame.callObj());
+}
 
-  // If the `Generator; SetAliasedVar ".generator"; InitialYield` bytecode
-  // sequence has not run yet, genValue is undefined.
-  return genValue.isObject()
-             ? &genValue.toObject().as<AbstractGeneratorObject>()
-             : nullptr;
+AbstractGeneratorObject* js::GetGeneratorObjectForEnvironment(
+    JSContext* cx, HandleObject env) {
+  auto* call = CallObject::find(env);
+  return call ? GetGeneratorObjectForCall(cx, *call) : nullptr;
 }
 
 bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
@@ -435,6 +448,21 @@ static const ClassSpec GeneratorFunctionClassSpec = {
 
 const JSClass js::GeneratorFunctionClass = {
     "GeneratorFunction", 0, JS_NULL_CLASS_OPS, &GeneratorFunctionClassSpec};
+
+const Value& AbstractGeneratorObject::getUnaliasedLocal(uint32_t slot) const {
+  MOZ_ASSERT(isSuspended());
+  MOZ_ASSERT(hasStackStorage());
+  MOZ_ASSERT(slot < callee().nonLazyScript()->nfixed());
+  return stackStorage().getDenseElement(slot);
+}
+
+void AbstractGeneratorObject::setUnaliasedLocal(uint32_t slot,
+                                                const Value& value) {
+  MOZ_ASSERT(isSuspended());
+  MOZ_ASSERT(hasStackStorage());
+  MOZ_ASSERT(slot < callee().nonLazyScript()->nfixed());
+  return stackStorage().setDenseElement(slot, value);
+}
 
 bool AbstractGeneratorObject::isAfterYield() {
   return isAfterYieldOrAwait(JSOp::Yield);

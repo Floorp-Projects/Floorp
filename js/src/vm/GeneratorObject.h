@@ -104,6 +104,12 @@ class AbstractGeneratorObject : public NativeObject {
     setFixedSlot(STACK_STORAGE_SLOT, ObjectValue(stackStorage));
   }
 
+  // Access stack storage. Requires `hasStackStorage() && isSuspended()`.
+  // `slot` is the index of the desired local in the stack frame when this
+  // generator is *not* suspended.
+  const Value& getUnaliasedLocal(uint32_t slot) const;
+  void setUnaliasedLocal(uint32_t slot, const Value& value);
+
   // The resumeIndex slot is abused for a few purposes.  It's undefined if
   // it hasn't been set yet (before the initial yield), and null if the
   // generator is closed. If the generator is running, the resumeIndex is
@@ -225,6 +231,16 @@ bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
  */
 AbstractGeneratorObject* GetGeneratorObjectForFrame(JSContext* cx,
                                                     AbstractFramePtr frame);
+
+/**
+ * If `env` or any enclosing environment is a `CallObject` associated with a
+ * generator object, return the generator.
+ *
+ * Otherwise `env` is not in a generator or async function, or the generator
+ * object hasn't been created yet; return nullptr with no pending exception.
+ */
+AbstractGeneratorObject* GetGeneratorObjectForEnvironment(JSContext* cx,
+                                                          HandleObject env);
 
 GeneratorResumeKind ParserAtomToResumeKind(JSContext* cx,
                                            const frontend::ParserAtom* atom);

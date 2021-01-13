@@ -65,11 +65,11 @@ dbg.onEnterFrame = f => {
     JSON.stringify(frame.environment.names()),
     JSON.stringify(["arguments", "promises", "value"])
   );
-  //FIXME assertEq(frame.environment.getVariable("value"), 42);
+  assertEq(frame.environment.getVariable("value"), 42);
 
   frame.environment.setVariable("value", 43);
 
-  //FIXME assertEq(frame.environment.getVariable("value"), 43);
+  assertEq(frame.environment.getVariable("value"), 43);
 
   await waitForOnPop(frame);
 
@@ -97,7 +97,7 @@ dbg.onEnterFrame = f => {
 
   const result = await promise;
 
-  //FIXME assertEq(result, 43);
+  assertEq(result, 43);
 
   assertThrowsInstanceOf(() => frame.environment, Error);
 

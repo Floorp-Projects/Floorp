@@ -15,6 +15,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
+#include "vm/GeneratorObject.h"  // js::GetGeneratorObjectForEnvironment
 #include "vm/GlobalObject.h"
 #include "vm/Iteration.h"
 #include "vm/JSObject.h"
@@ -214,6 +215,28 @@ CallObject* CallObject::create(JSContext* cx, AbstractFramePtr frame) {
   }
 
   return callobj;
+}
+
+CallObject* CallObject::find(JSObject* env) {
+  for (;;) {
+    if (env->is<CallObject>()) {
+      break;
+    } else if (env->is<EnvironmentObject>()) {
+      env = &env->as<EnvironmentObject>().enclosingEnvironment();
+    } else if (env->is<DebugEnvironmentProxy>()) {
+      EnvironmentObject& unwrapped =
+          env->as<DebugEnvironmentProxy>().environment();
+      if (unwrapped.is<CallObject>()) {
+        env = &unwrapped;
+        break;
+      }
+      env = &env->as<DebugEnvironmentProxy>().enclosingEnvironment();
+    } else {
+      MOZ_ASSERT(env->is<GlobalObject>());
+      return nullptr;
+    }
+  }
+  return &env->as<CallObject>();
 }
 
 CallObject* CallObject::createHollowForDebug(JSContext* cx,
@@ -1512,6 +1535,15 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
           } else {
             frame.unaliasedLocal(i) = vp;
           }
+        } else if (AbstractGeneratorObject* genObj =
+                       GetGeneratorObjectForEnvironment(cx, env);
+                   genObj && genObj->isSuspended() &&
+                   genObj->hasStackStorage()) {
+          if (action == GET) {
+            vp.set(genObj->getUnaliasedLocal(i));
+          } else {
+            genObj->setUnaliasedLocal(i, vp);
+          }
         } else if (NativeObject* snapshot = debugEnv->maybeSnapshot()) {
           if (action == GET) {
             vp.set(snapshot->getDenseElement(script->numArgs() + i));
@@ -1634,6 +1666,14 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
           vp.set(frame.unaliasedLocal(local));
         } else {
           frame.unaliasedLocal(local) = vp;
+        }
+      } else if (AbstractGeneratorObject* genObj =
+                     GetGeneratorObjectForEnvironment(cx, debugEnv);
+                 genObj && genObj->isSuspended() && genObj->hasStackStorage()) {
+        if (action == GET) {
+          vp.set(genObj->getUnaliasedLocal(loc.slot()));
+        } else {
+          genObj->setUnaliasedLocal(loc.slot(), vp);
         }
       } else if (NativeObject* snapshot = debugEnv->maybeSnapshot()) {
         // Indices in the frame snapshot are offset by the first frame
