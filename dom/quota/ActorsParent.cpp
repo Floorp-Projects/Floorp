@@ -3932,7 +3932,7 @@ uint64_t QuotaManager::CollectOriginsForEviction(
   const bool inactiveOriginsSorted =
       std::is_sorted(inactiveOrigins.cbegin(), inactiveOrigins.cend(),
                      [](const auto& lhs, const auto& rhs) {
-                       return lhs->mAccessTime <= rhs->mAccessTime;
+                       return lhs->mAccessTime < rhs->mAccessTime;
                      });
   MOZ_ASSERT(inactiveOriginsSorted);
 #endif
