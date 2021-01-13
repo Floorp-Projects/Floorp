@@ -37,6 +37,7 @@ class MOZ_RAII ModuleLoadFrame final {
    */
   static void NotifySectionMap(nt::AllocatedUnicodeString&& aSectionName,
                                const void* aMapBaseAddr, NTSTATUS aMapNtStatus);
+  static bool ExistsTopFrame();
 
   /**
    * Called by the LdrLoadDll hook to indicate the status of the load and for
