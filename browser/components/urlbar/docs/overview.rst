@@ -389,7 +389,7 @@ The following RESULT_TYPEs are supported:
     // Payload: { icon, url, userContextId }
     TAB_SWITCH: 1,
     // A search suggestion or engine.
-    // Payload: { icon, suggestion, keyword, query, keywordOffer, inPrivateWindow, isPrivateEngine }
+    // Payload: { icon, suggestion, keyword, query, providesSearchMode, inPrivateWindow, isPrivateEngine }
     SEARCH: 2,
     // A common url/title tuple, may be a bookmark with tags.
     // Payload: { icon, url, title, tags }
