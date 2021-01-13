@@ -118,19 +118,6 @@ function bigIntRshBail(i) {
   if (i >= 99) bailout();
 }
 
-function bigIntAsUintBail(i) {
-  var x = [0, maxBitLength + 1][0 + (i >= 99)];
-
-  var a = BigInt.asUintN(x, -1n);
-
-  // Add a function call to capture a resumepoint at the end of the call or
-  // inside the inlined block, such as the bailout does not rewind to the
-  // beginning of the function.
-  resumeHere();
-
-  if (i >= 99) bailout();
-}
-
 // Prevent compilation of the top-level
 eval(`(${resumeHere})`);
 
@@ -204,15 +191,6 @@ try {
 try {
   for (let i = 0; i < 100; i++) {
     bigIntRshBail(i);
-  }
-  throw new Error("missing exception");
-} catch (e) {
-  assertEq(e instanceof RangeError || e === "out of memory", true, String(e));
-}
-
-try {
-  for (let i = 0; i < 100; i++) {
-    bigIntAsUintBail(i);
   }
   throw new Error("missing exception");
 } catch (e) {

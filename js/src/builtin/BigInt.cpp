@@ -231,5 +231,4 @@ const JSFunctionSpec BigIntObject::methods[] = {
     JS_FS_END};
 
 const JSFunctionSpec BigIntObject::staticMethods[] = {
-    JS_INLINABLE_FN("asUintN", asUintN, 2, 0, BigIntAsUintN),
-    JS_INLINABLE_FN("asIntN", asIntN, 2, 0, BigIntAsIntN), JS_FS_END};
+    JS_FN("asUintN", asUintN, 2, 0), JS_FN("asIntN", asIntN, 2, 0), JS_FS_END};
