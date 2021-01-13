@@ -718,6 +718,12 @@ void HTMLEditor::PreHandleMouseUp(const MouseEvent& aMouseUpEvent) {
   }
 }
 
+void HTMLEditor::PreHandleSelectionChangeCommand(Command aCommand) {
+  if (mTypeInState) {
+    mTypeInState->PreHandleSelectionChangeCommand(aCommand);
+  }
+}
+
 nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   // NOTE: When you change this method, you should also change:
   //   * editor/libeditor/tests/test_htmleditor_keyevent_handling.html

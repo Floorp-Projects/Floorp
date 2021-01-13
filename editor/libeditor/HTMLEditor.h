@@ -173,6 +173,12 @@ class HTMLEditor final : public TextEditor,
   void PreHandleMouseDown(const dom::MouseEvent& aMouseDownEvent);
   void PreHandleMouseUp(const dom::MouseEvent& aMouseUpEvent);
 
+  /**
+   * PreHandleSelectionChangeCommand() is called before handling a command
+   * which may change selection and/or scroll position.
+   */
+  void PreHandleSelectionChangeCommand(Command aCommand);
+
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
   virtual nsIContent* GetFocusedContent() const override;
