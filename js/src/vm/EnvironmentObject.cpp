@@ -3427,13 +3427,24 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
                            res);
       }
 
-      if (loc.kind() == BindingLocation::Kind::Frame &&
-          ei.withinInitialFrame()) {
-        res.set(ei.initialFrame().unaliasedLocal(loc.slot()));
-      } else {
-        res.setMagic(JS_OPTIMIZED_OUT);
+      if (loc.kind() == BindingLocation::Kind::Frame) {
+        if (ei.withinInitialFrame()) {
+          res.set(ei.initialFrame().unaliasedLocal(loc.slot()));
+          return true;
+        }
+
+        if (ei.hasAnyEnvironmentObject()) {
+          RootedObject env(cx, &ei.environment());
+          AbstractGeneratorObject* genObj =
+              GetGeneratorObjectForEnvironment(cx, env);
+          if (genObj && genObj->isSuspended() && genObj->hasStackStorage()) {
+            res.set(genObj->getUnaliasedLocal(loc.slot()));
+            return true;
+          }
+        }
       }
 
+      res.setMagic(JS_OPTIMIZED_OUT);
       return true;
     }
 
