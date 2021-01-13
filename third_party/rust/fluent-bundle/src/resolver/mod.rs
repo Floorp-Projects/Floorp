@@ -30,6 +30,8 @@ pub(crate) trait ResolveValue {
     ) -> FluentValue<'source>
     where
         R: Borrow<FluentResource>;
+
+    fn resolve_error(&self) -> String;
 }
 
 pub(crate) trait WriteValue {
