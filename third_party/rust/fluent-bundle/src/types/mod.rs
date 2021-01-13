@@ -2,7 +2,7 @@ mod number;
 mod plural;
 
 pub use number::*;
-use plural::PluralRules;
+use plural::*;
 
 use std::any::Any;
 use std::borrow::{Borrow, Cow};
@@ -37,9 +37,11 @@ pub trait AnyEq: Any + 'static {
 
 impl<T: Any + PartialEq> AnyEq for T {
     fn equals(&self, other: &dyn Any) -> bool {
-        other
-            .downcast_ref::<Self>()
-            .map_or(false, |that| self == that)
+        if let Some(that) = other.downcast_ref::<Self>() {
+            self == that
+        } else {
+            false
+        }
     }
     fn as_any(&self) -> &dyn Any {
         self
