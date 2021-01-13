@@ -1776,20 +1776,6 @@ static bool IonCompileTaskHasHigherPriority(jit::IonCompileTask* first,
   // This method can return whatever it wants, though it really ought to be a
   // total order. The ordering is allowed to race (change on the fly), however.
 
-  // A lower optimization level indicates a higher priority.
-  jit::OptimizationLevel firstLevel =
-      first->mirGen().optimizationInfo().level();
-  jit::OptimizationLevel secondLevel =
-      second->mirGen().optimizationInfo().level();
-  if (firstLevel != secondLevel) {
-    return firstLevel < secondLevel;
-  }
-
-  // A script without an IonScript has precedence on one with.
-  if (first->scriptHasIonScript() != second->scriptHasIonScript()) {
-    return !first->scriptHasIonScript();
-  }
-
   // A higher warm-up counter indicates a higher priority.
   jit::JitScript* firstJitScript = first->script()->jitScript();
   jit::JitScript* secondJitScript = second->script()->jitScript();

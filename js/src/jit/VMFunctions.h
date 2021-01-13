@@ -509,10 +509,6 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                                            InterpreterFrame* interpFrame,
                                            uint32_t numStackValues);
 
-[[nodiscard]] bool IonRecompile(JSContext* cx);
-[[nodiscard]] bool IonForcedRecompile(JSContext* cx);
-[[nodiscard]] bool IonForcedInvalidation(JSContext* cx);
-
 JSString* StringReplace(JSContext* cx, HandleString string,
                         HandleString pattern, HandleString repl);
 

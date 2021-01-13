@@ -52,7 +52,6 @@ struct DefaultJitOptions {
   bool disableScalarReplacement;
   bool disableCacheIR;
   bool disableSink;
-  bool disableOptimizationLevels;
   bool baselineInterpreter;
   bool baselineJit;
   bool ion;
@@ -85,7 +84,6 @@ struct DefaultJitOptions {
   uint32_t trialInliningWarmUpThreshold;
   uint32_t trialInliningInitialWarmUpCount;
   uint32_t normalIonWarmUpThreshold;
-  uint32_t fullIonWarmUpThreshold;
   uint32_t regexpWarmUpThreshold;
   uint32_t exceptionBailoutThreshold;
   uint32_t frequentBailoutThreshold;
@@ -126,9 +124,7 @@ struct DefaultJitOptions {
   void setEagerBaselineCompilation();
   void setEagerIonCompilation();
   void setNormalIonWarmUpThreshold(uint32_t warmUpThreshold);
-  void setFullIonWarmUpThreshold(uint32_t warmUpThreshold);
   void resetNormalIonWarmUpThreshold();
-  void resetFullIonWarmUpThreshold();
   void enableGvn(bool val);
   void setFastWarmUp();
 

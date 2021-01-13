@@ -8092,19 +8092,6 @@ class LIncrementWarmUpCounter : public LInstructionHelper<0, 0, 1> {
   MIncrementWarmUpCounter* mir() { return mir_->toIncrementWarmUpCounter(); }
 };
 
-class LRecompileCheck : public LInstructionHelper<0, 0, 1> {
- public:
-  LIR_HEADER(RecompileCheck)
-
-  explicit LRecompileCheck(const LDefinition& scratch)
-      : LInstructionHelper(classOpcode) {
-    setTemp(0, scratch);
-  }
-
-  const LDefinition* scratch() { return getTemp(0); }
-  MRecompileCheck* mir() { return mir_->toRecompileCheck(); }
-};
-
 class LLexicalCheck : public LInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(LexicalCheck)

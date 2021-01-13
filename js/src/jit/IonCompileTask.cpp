@@ -64,11 +64,8 @@ void IonCompileTask::trace(JSTracer* trc) {
   snapshot_->trace(trc);
 }
 
-IonCompileTask::IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
-                               WarpSnapshot* snapshot)
-    : mirGen_(mirGen),
-      snapshot_(snapshot),
-      scriptHasIonScript_(scriptHasIonScript) {}
+IonCompileTask::IonCompileTask(MIRGenerator& mirGen, WarpSnapshot* snapshot)
+    : mirGen_(mirGen), snapshot_(snapshot) {}
 
 size_t IonCompileTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   // See js::jit::FreeIonCompileTask.
@@ -188,12 +185,6 @@ void jit::FinishOffThreadTask(JSRuntime* runtime, IonCompileTask* task,
   // If the task is still in one of the helper thread lists, then remove it.
   if (task->isInList()) {
     runtime->jitRuntime()->ionLazyLinkListRemove(runtime, task);
-  }
-
-  // Clear the recompiling flag of the old ionScript, since we continue to
-  // use the old ionScript if recompiling fails.
-  if (script->hasIonScript()) {
-    script->ionScript()->clearRecompiling();
   }
 
   // Clean up if compilation did not succeed.

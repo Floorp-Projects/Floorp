@@ -33,18 +33,12 @@ class IonCompileTask final : public HelperThreadTask,
 
   WarpSnapshot* snapshot_ = nullptr;
 
-  // script->hasIonScript() at the start of the compilation. Used to avoid
-  // calling hasIonScript() from background compilation threads.
-  bool scriptHasIonScript_;
-
  public:
-  explicit IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
-                          WarpSnapshot* snapshot);
+  explicit IonCompileTask(MIRGenerator& mirGen, WarpSnapshot* snapshot);
 
   JSScript* script() { return mirGen_.outerInfo().script(); }
   MIRGenerator& mirGen() { return mirGen_; }
   TempAllocator& alloc() { return mirGen_.alloc(); }
-  bool scriptHasIonScript() const { return scriptHasIonScript_; }
   WarpSnapshot* snapshot() { return snapshot_; }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);

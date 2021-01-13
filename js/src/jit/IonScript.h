@@ -14,13 +14,13 @@
 
 #include "jstypes.h"
 
-#include "gc/Barrier.h"  // HeapPtr{JitCode,Object}, PreBarrieredValue
-#include "jit/IonOptimizationLevels.h"  // OptimizationLevel
-#include "jit/IonTypes.h"               // IonCompilationId
-#include "jit/JitCode.h"                // JitCode
-#include "js/TypeDecls.h"               // jsbytecode
-#include "util/TrailingArray.h"         // TrailingArray
-#include "vm/TraceLogging.h"            // TraceLoggerEvent
+#include "gc/Barrier.h"          // HeapPtr{JitCode,Object}, PreBarrieredValue
+#include "jit/IonTypes.h"        // IonCompilationId
+#include "jit/JitCode.h"         // JitCode
+#include "jit/JitOptions.h"      // JitOptions
+#include "js/TypeDecls.h"        // jsbytecode
+#include "util/TrailingArray.h"  // TrailingArray
+#include "vm/TraceLogging.h"     // TraceLoggerEvent
 
 namespace js {
 namespace jit {
@@ -111,9 +111,6 @@ class alignas(8) IonScript final : public TrailingArray {
   // Flag set if IonScript was compiled with profiling enabled.
   bool hasProfilingInstrumentation_ = false;
 
-  // Flag for if this script is getting recompiled.
-  uint32_t recompiling_ = 0;
-
   // Number of bytes this function reserves on the stack.
   uint32_t frameSlots_ = 0;
 
@@ -129,9 +126,6 @@ class alignas(8) IonScript final : public TrailingArray {
 
   // Identifier of the compilation which produced this code.
   IonCompilationId compilationId_;
-
-  // The optimization level this script was compiled in.
-  OptimizationLevel optimizationLevel_;
 
   // Number of times we tried to enter this script via OSR but failed due to
   // a LOOPENTRY pc other than osrPc_.
@@ -286,8 +280,7 @@ class alignas(8) IonScript final : public TrailingArray {
 
  private:
   IonScript(IonCompilationId compilationId, uint32_t frameSlots,
-            uint32_t argumentSlots, uint32_t frameSize,
-            OptimizationLevel optimizationLevel);
+            uint32_t argumentSlots, uint32_t frameSize);
 
  public:
   static IonScript* New(JSContext* cx, IonCompilationId compilationId,
@@ -297,8 +290,7 @@ class alignas(8) IonScript final : public TrailingArray {
                         size_t bailoutEntries, size_t constants,
                         size_t nurseryObjects, size_t safepointIndices,
                         size_t osiIndices, size_t icEntries, size_t runtimeSize,
-                        size_t safepointsSize,
-                        OptimizationLevel optimizationLevel);
+                        size_t safepointsSize);
 
   static void Destroy(JSFreeOp* fop, IonScript* script);
 
@@ -306,9 +298,6 @@ class alignas(8) IonScript final : public TrailingArray {
 
   static inline size_t offsetOfInvalidationCount() {
     return offsetof(IonScript, invalidationCount_);
-  }
-  static inline size_t offsetOfRecompiling() {
-    return offsetof(IonScript, recompiling_);
   }
 
  public:
@@ -442,15 +431,8 @@ class alignas(8) IonScript final : public TrailingArray {
     }
   }
   IonCompilationId compilationId() const { return compilationId_; }
-  OptimizationLevel optimizationLevel() const { return optimizationLevel_; }
   uint32_t incrOsrPcMismatchCounter() { return ++osrPcMismatchCounter_; }
   void resetOsrPcMismatchCounter() { osrPcMismatchCounter_ = 0; }
-
-  void setRecompiling() { recompiling_ = true; }
-
-  bool isRecompiling() const { return recompiling_; }
-
-  void clearRecompiling() { recompiling_ = false; }
 
   size_t allocBytes() const { return allocBytes_; }
 
