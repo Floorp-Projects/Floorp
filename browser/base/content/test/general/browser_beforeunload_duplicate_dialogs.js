@@ -23,6 +23,10 @@ SpecialPowers.pushPrefEnv({
   set: [["dom.require_user_interaction_for_beforeunload", false]],
 });
 
+SpecialPowers.pushPrefEnv({
+  set: [["prompts.contentPromptSubDialog", false]],
+});
+
 // Listen for the dialog being created
 Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
 registerCleanupFunction(() => {

@@ -14,6 +14,10 @@ function awaitAndClosePrompt() {
 }
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.contentPromptSubDialog", false]],
+  });
+
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   let browser = tab.linkedBrowser;
 
