@@ -3350,7 +3350,7 @@ bool CacheIRCompiler::emitLoadDenseElementResult(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIndexIsNonNegative(Int32OperandId indexId) {
+bool CacheIRCompiler::emitGuardInt32IsNonNegative(Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register index = allocator.useRegister(masm, indexId);
 
@@ -7681,6 +7681,42 @@ bool CacheIRCompiler::emitAtomicsIsLockFreeResult(Int32OperandId valueId) {
   masm.atomicIsLockFreeJS(value, scratch);
   masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
 
+  return true;
+}
+
+bool CacheIRCompiler::emitBigIntAsIntNResult(Int32OperandId bitsId,
+                                             BigIntOperandId bigIntId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register bits = allocator.useRegister(masm, bitsId);
+  Register bigInt = allocator.useRegister(masm, bigIntId);
+
+  callvm.prepare();
+  masm.Push(bits);
+  masm.Push(bigInt);
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, int32_t);
+  callvm.call<Fn, jit::BigIntAsIntN>();
+  return true;
+}
+
+bool CacheIRCompiler::emitBigIntAsUintNResult(Int32OperandId bitsId,
+                                              BigIntOperandId bigIntId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register bits = allocator.useRegister(masm, bitsId);
+  Register bigInt = allocator.useRegister(masm, bigIntId);
+
+  callvm.prepare();
+  masm.Push(bits);
+  masm.Push(bigInt);
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, int32_t);
+  callvm.call<Fn, jit::BigIntAsUintN>();
   return true;
 }
 

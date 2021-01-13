@@ -12450,10 +12450,10 @@ class MGuardIsExtensible : public MUnaryInstruction,
   }
 };
 
-// Guard the input index is non-negative.
-class MGuardIndexIsNonNegative : public MUnaryInstruction,
+// Guard the input int32 is non-negative.
+class MGuardInt32IsNonNegative : public MUnaryInstruction,
                                  public UnboxedInt32Policy<0>::Data {
-  explicit MGuardIndexIsNonNegative(MDefinition* index)
+  explicit MGuardInt32IsNonNegative(MDefinition* index)
       : MUnaryInstruction(classOpcode, index) {
     setResultType(MIRType::Int32);
     setMovable();
@@ -12461,7 +12461,7 @@ class MGuardIndexIsNonNegative : public MUnaryInstruction,
   }
 
  public:
-  INSTRUCTION_HEADER(GuardIndexIsNonNegative)
+  INSTRUCTION_HEADER(GuardInt32IsNonNegative)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, index))
 
