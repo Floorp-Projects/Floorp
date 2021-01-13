@@ -854,6 +854,82 @@ function* dragVerticalScrollbar(
   };
 }
 
+// Same as the above dragVerticalScrollbar continuation, but in the form
+// of an async function. It returns another async function that can be
+// invoked to finish the drag. Returns null if there's no scrollbar to drag.
+async function promiseVerticalScrollbarDrag(
+  target,
+  distance = 20,
+  increment = 5,
+  scaleFactor = 1
+) {
+  var targetElement = elementForTarget(target);
+  var w = {},
+    h = {};
+  utilsForTarget(target).getScrollbarSizes(targetElement, w, h);
+  var verticalScrollbarWidth = w.value;
+  if (verticalScrollbarWidth == 0) {
+    return null;
+  }
+
+  var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
+  var mouseX = targetElement.clientWidth + verticalScrollbarWidth / 2;
+  var mouseY = upArrowHeight + 5; // start dragging somewhere in the thumb
+  mouseX *= scaleFactor;
+  mouseY *= scaleFactor;
+
+  dump(
+    "Starting drag at " +
+      mouseX +
+      ", " +
+      mouseY +
+      " from top-left of #" +
+      targetElement.id +
+      "\n"
+  );
+
+  // Move the mouse to the scrollbar thumb and drag it down
+  await promiseNativeMouseEvent(
+    target,
+    mouseX,
+    mouseY,
+    nativeMouseMoveEventMsg()
+  );
+  // mouse down
+  await promiseNativeMouseEvent(
+    target,
+    mouseX,
+    mouseY,
+    nativeMouseDownEventMsg()
+  );
+  // drag vertically by |increment| until we reach the specified distance
+  for (var y = increment; y < distance; y += increment) {
+    await promiseNativeMouseEvent(
+      target,
+      mouseX,
+      mouseY + y,
+      nativeMouseMoveEventMsg()
+    );
+  }
+  await promiseNativeMouseEvent(
+    target,
+    mouseX,
+    mouseY + distance,
+    nativeMouseMoveEventMsg()
+  );
+
+  // and return an async function to call afterwards to finish up the drag
+  return async function() {
+    dump("Finishing drag of #" + targetElement.id + "\n");
+    await promiseNativeMouseEvent(
+      target,
+      mouseX,
+      mouseY + distance,
+      nativeMouseUpEventMsg()
+    );
+  };
+}
+
 // Synthesizes a native mouse drag, starting at offset (mouseX, mouseY) from
 // the given target. The drag occurs in the given number of steps, to a final
 // destination of (mouseX + distanceX, mouseY + distanceY) from the target.
