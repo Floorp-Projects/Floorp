@@ -863,6 +863,10 @@ template <XDRMode mode>
 XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
                                     frontend::BaseCompilationStencil& stencil);
 
+template <XDRMode mode>
+XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
+                                frontend::CompilationStencil& stencil);
+
 } /* namespace js */
 
 #endif /* vm_Xdr_h */
