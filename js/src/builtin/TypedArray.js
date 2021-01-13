@@ -719,10 +719,11 @@ function TypedArrayKeys() {
     return CreateArrayIterator(O, ITEM_KIND_KEY);
 }
 
-// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.17 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] )
 function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
-    // This function is not generic.
+    // Step 2.
     if (!IsObject(this) || !IsTypedArray(this)) {
         if (arguments.length > 1) {
             return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement, arguments[1],
@@ -737,27 +738,37 @@ function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
     // Step 1.
     var O = this;
 
-    // Step 2.
+    // Step 3.
     var len = TypedArrayLength(O);
 
-    // Step 3.
+    // Step 4.
     if (len === 0)
         return -1;
 
-    // Steps 4.
+    // Step 5.
     var n = arguments.length > 1 ? ToInteger(arguments[1]) : len - 1;
 
-    // Steps 5-6.
+    // Reload O.[[ArrayLength]] in case ToInteger() detached the ArrayBuffer.
+    // This let's us avoid executing the HasProperty operation in step 9.a.
+    len = TypedArrayLength(O);
+
+    assert(len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+           "TypedArrays with detached buffers have a length of zero");
+
+    // Steps 6-8.
     var k = n >= 0 ? std_Math_min(n, len - 1) : len + n;
 
-    // Step 7.
-    // Omit steps 7.a-b, since there are no holes in typed arrays.
+    // Step 9.
     for (; k >= 0; k--) {
+        // Step 9.a (not necessary in our implementation).
+        assert(k in O, "unexpected missing element");
+
+        // Steps 9.b.i-iii.
         if (O[k] === searchElement)
             return k;
     }
 
-    // Step 8.
+    // Step 10.
     return -1;
 }
 
