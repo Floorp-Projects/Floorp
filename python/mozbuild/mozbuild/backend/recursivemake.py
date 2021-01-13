@@ -383,6 +383,7 @@ class RecursiveMakeBackend(MakeBackend):
         self._pre_compile = set()
 
         self._no_skip = {
+            "pre-export": set(),
             "export": set(),
             "libs": set(),
             "misc": set(),
@@ -550,7 +551,9 @@ class RecursiveMakeBackend(MakeBackend):
             self._process_defines(obj, backend_file)
 
         elif isinstance(obj, GeneratedFile):
-            if obj.required_before_compile:
+            if obj.required_before_export:
+                tier = "pre-export"
+            elif obj.required_before_compile:
                 tier = "export"
             elif obj.required_during_compile:
                 tier = "pre-compile"
