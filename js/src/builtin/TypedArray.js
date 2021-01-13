@@ -905,43 +905,43 @@ function TypedArrayReduceRight(callbackfn/*, initialValue*/) {
     return accumulator;
 }
 
-// ES6 draft rev29 (2014/12/06) 22.2.3.21 %TypedArray%.prototype.reverse().
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
+// 22.2.3.22 %TypedArray%.prototype.reverse ( )
 function TypedArrayReverse() {
-    // This function is not generic.
+    // Step 2.
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayReverse");
     }
 
     GetAttachedArrayBuffer(this);
 
-    // Steps 1-2.
+    // Step 1.
     var O = this;
 
-    // Steps 3-5.
+    // Step 3.
     var len = TypedArrayLength(O);
 
-    // Step 6.
+    // Step 4.
     var middle = std_Math_floor(len / 2);
 
-    // Steps 7-8.
-    // Omit some steps, since there are no holes in typed arrays.
-    // Especially all the HasProperty/*exists checks always succeed.
+    // Steps 5-6.
     for (var lower = 0; lower !== middle; lower++) {
-        // Step 8.a.
+        // Step 6.a.
         var upper = len - lower - 1;
 
-        // Step 8.f.i.
+        // Step 6.d.
         var lowerValue = O[lower];
 
-        // Step 8.i.i.
+        // Step 6.e.
         var upperValue = O[upper];
 
-        // We always end up in the step 8.j. case.
+        // Steps 6.f-g.
         O[lower] = upperValue;
         O[upper] = lowerValue;
     }
 
-    // Step 9.
+    // Step 7.
     return O;
 }
 
