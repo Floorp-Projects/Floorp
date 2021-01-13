@@ -244,7 +244,7 @@ class MOZ_STACK_CLASS ParserSharedBase {
  public:
   enum class Kind { Parser };
 
-  ParserSharedBase(JSContext* cx, CompilationInfo& compilationInfo,
+  ParserSharedBase(JSContext* cx, CompilationStencil& stencil,
                    CompilationState& compilationState, Kind kind);
   ~ParserSharedBase();
 
@@ -254,7 +254,7 @@ class MOZ_STACK_CLASS ParserSharedBase {
   LifoAlloc& alloc_;
 
   // Information for parsing with a lifetime longer than the parser itself.
-  CompilationInfo& compilationInfo_;
+  CompilationStencil& stencil_;
 
   CompilationState& compilationState_;
 
@@ -265,12 +265,12 @@ class MOZ_STACK_CLASS ParserSharedBase {
   UsedNameTracker& usedNames_;
 
  public:
-  CompilationInfo& getCompilationInfo() { return compilationInfo_; }
+  CompilationStencil& getCompilationStencil() { return stencil_; }
 
-  LifoAlloc& stencilAlloc() { return compilationInfo_.alloc; }
+  LifoAlloc& stencilAlloc() { return stencil_.alloc; }
 
   JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
-    return parserAtom->toJSAtom(cx_, compilationInfo_.input.atomCache);
+    return parserAtom->toJSAtom(cx_, stencil_.input.atomCache);
   }
 };
 
@@ -316,7 +316,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   friend class AutoInParametersOfAsyncFunction;
 
   ParserBase(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-             bool foldConstants, CompilationInfo& compilationInfo,
+             bool foldConstants, CompilationStencil& stencil,
              CompilationState& compilationState);
   ~ParserBase();
 
@@ -381,17 +381,17 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   class Mark {
     friend class ParserBase;
     LifoAlloc::Mark mark;
-    CompilationInfo::RewindToken token;
+    CompilationStencil::RewindToken token;
   };
   Mark mark() const {
     Mark m;
     m.mark = alloc_.mark();
-    m.token = compilationInfo_.getRewindToken(compilationState_);
+    m.token = stencil_.getRewindToken(compilationState_);
     return m;
   }
   void release(Mark m) {
     alloc_.release(m.mark);
-    compilationInfo_.rewind(compilationState_, m.token);
+    stencil_.rewind(compilationState_, m.token);
   }
 
  public:
@@ -470,20 +470,19 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                   bool foldConstants, CompilationInfo& compilationInfo,
+                   bool foldConstants, CompilationStencil& stencil,
                    CompilationState& compilationState,
                    BaseScript* lazyOuterFunction, void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                   bool foldConstants, CompilationInfo& compilationInfo,
+                   bool foldConstants, CompilationStencil& stencil,
                    CompilationState& compilationState,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser,
                    BaseScript* lazyOuterFunction)
-      : PerHandlerParser(cx, options, foldConstants, compilationInfo,
-                         compilationState, lazyOuterFunction,
-                         static_cast<void*>(syntaxParser)) {}
+      : PerHandlerParser(cx, options, foldConstants, stencil, compilationState,
+                         lazyOuterFunction, static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
 
@@ -913,9 +912,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
  public:
   GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                 const Unit* units, size_t length, bool foldConstants,
-                CompilationInfo& compilationInfo,
-                CompilationState& compilationState, SyntaxParser* syntaxParser,
-                BaseScript* lazyOuterFunction);
+                CompilationStencil& stencil, CompilationState& compilationState,
+                SyntaxParser* syntaxParser, BaseScript* lazyOuterFunction);
 
   inline void setAwaitHandling(AwaitHandling awaitHandling);
   inline void setInParametersOfAsyncFunction(bool inParameters);

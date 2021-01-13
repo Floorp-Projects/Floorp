@@ -12,8 +12,6 @@
 namespace js {
 namespace frontend {
 
-struct CompilationInfo;
-
 class FullParseHandler;
 template <class ParseHandler>
 class PerHandlerParser;

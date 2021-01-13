@@ -28,7 +28,7 @@ namespace js {
 struct SourceExtent;
 
 namespace frontend {
-struct CompilationInfo;
+struct CompilationStencil;
 struct CompilationStencilSet;
 struct CompilationInput;
 struct BaseCompilationStencil;
@@ -546,7 +546,7 @@ class XDRState : public XDRCoderBase {
   XDRResult codeFunction(JS::MutableHandleFunction objp,
                          HandleScriptSourceObject sourceObject = nullptr);
   XDRResult codeScript(MutableHandleScript scriptp);
-  XDRResult codeStencil(frontend::CompilationInfo& compilationInfo);
+  XDRResult codeStencil(frontend::CompilationStencil& stencil);
   XDRResult codeFunctionStencil(frontend::BaseCompilationStencil& stencil);
 };
 
@@ -588,7 +588,7 @@ class XDRDecoder : public XDRDecoderBase {
  * with a freshly initialized `parserAtoms` table.
  *
  * The decoded stencils are outputted to the default-initialized
- * `compilationInfo` parameter of `codeStencil` method, and decoded atoms are
+ * `stencil` parameter of `codeStencil` method, and decoded atoms are
  * interned into the `parserAtoms` parameter of the ctor.
  *
  * The decoded stencils borrow the input `buffer`/`range`, and the consumer

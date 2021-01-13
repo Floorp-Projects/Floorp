@@ -46,7 +46,7 @@ class RegExpObject;
 
 namespace frontend {
 
-struct CompilationInfo;
+struct CompilationStencil;
 struct CompilationAtomCache;
 struct BaseCompilationStencil;
 struct CompilationGCOutput;
@@ -119,9 +119,8 @@ class RegExpStencil {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json, BaseCompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json,
-                  BaseCompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, BaseCompilationStencil* stencil);
+  void dumpFields(JSONPrinter& json, BaseCompilationStencil* stencil);
 #endif
 };
 
@@ -236,47 +235,45 @@ class ScopeStencil {
 
  public:
   static bool createForFunctionScope(
-      JSContext* cx, CompilationInfo& compilationInfo,
+      JSContext* cx, CompilationStencil& stencil,
       CompilationState& compilationState, FunctionScope::ParserData* dataArg,
       bool hasParameterExprs, bool needsEnvironment, ScriptIndex functionIndex,
       bool isArrow, mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
-  static bool createForLexicalScope(
-      JSContext* cx, CompilationInfo& compilationInfo,
-      CompilationState& compilationState, ScopeKind kind,
-      LexicalScope::ParserData* dataArg, uint32_t firstFrameSlot,
-      mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+  static bool createForLexicalScope(JSContext* cx, CompilationStencil& stencil,
+                                    CompilationState& compilationState,
+                                    ScopeKind kind,
+                                    LexicalScope::ParserData* dataArg,
+                                    uint32_t firstFrameSlot,
+                                    mozilla::Maybe<ScopeIndex> enclosing,
+                                    ScopeIndex* index);
 
-  static bool createForVarScope(JSContext* cx, CompilationInfo& compilationInfo,
+  static bool createForVarScope(JSContext* cx, CompilationStencil& stencil,
                                 CompilationState& compilationState,
                                 ScopeKind kind, VarScope::ParserData* dataArg,
                                 uint32_t firstFrameSlot, bool needsEnvironment,
                                 mozilla::Maybe<ScopeIndex> enclosing,
                                 ScopeIndex* index);
 
-  static bool createForGlobalScope(JSContext* cx,
-                                   CompilationInfo& compilationInfo,
+  static bool createForGlobalScope(JSContext* cx, CompilationStencil& stencil,
                                    CompilationState& compilationState,
                                    ScopeKind kind,
                                    GlobalScope::ParserData* dataArg,
                                    ScopeIndex* index);
 
-  static bool createForEvalScope(JSContext* cx,
-                                 CompilationInfo& compilationInfo,
+  static bool createForEvalScope(JSContext* cx, CompilationStencil& stencil,
                                  CompilationState& compilationState,
                                  ScopeKind kind, EvalScope::ParserData* dataArg,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
-  static bool createForModuleScope(JSContext* cx,
-                                   CompilationInfo& compilationInfo,
+  static bool createForModuleScope(JSContext* cx, CompilationStencil& stencil,
                                    CompilationState& compilationState,
                                    ModuleScope::ParserData* dataArg,
                                    mozilla::Maybe<ScopeIndex> enclosing,
                                    ScopeIndex* index);
 
-  static bool createForWithScope(JSContext* cx,
-                                 CompilationInfo& compilationInfo,
+  static bool createForWithScope(JSContext* cx, CompilationStencil& stencil,
                                  CompilationState& compilationState,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
@@ -324,9 +321,9 @@ class ScopeStencil {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
   void dump(JSONPrinter& json, BaseParserScopeData* baseScopeData,
-            BaseCompilationStencil* compilationStencil);
+            BaseCompilationStencil* stencil);
   void dumpFields(JSONPrinter& json, BaseParserScopeData* baseScopeData,
-                  BaseCompilationStencil* compilationStencil);
+                  BaseCompilationStencil* stencil);
 #endif
 
  private:
@@ -493,9 +490,8 @@ class StencilModuleMetadata {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json, BaseCompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json,
-                  BaseCompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, BaseCompilationStencil* stencil);
+  void dumpFields(JSONPrinter& json, BaseCompilationStencil* stencil);
 #endif
 };
 
@@ -762,9 +758,8 @@ class ScriptStencil {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json, BaseCompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json,
-                  BaseCompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, BaseCompilationStencil* stencil);
+  void dumpFields(JSONPrinter& json, BaseCompilationStencil* stencil);
 #endif
 };
 
@@ -799,7 +794,7 @@ class ScriptStencilExtra {
 #if defined(DEBUG) || defined(JS_JITSPEW)
 void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
                                TaggedParserAtomIndex taggedIndex,
-                               BaseCompilationStencil* compilationStencil);
+                               BaseCompilationStencil* stencil);
 #endif
 
 } /* namespace frontend */

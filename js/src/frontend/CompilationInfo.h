@@ -218,7 +218,7 @@ struct CompilationInput {
   void trace(JSTracer* trc);
 } JS_HAZ_GC_POINTER;
 
-struct CompilationInfo;
+struct CompilationStencil;
 
 struct MOZ_RAII CompilationState {
   // Until we have dealt with Atoms in the front end, we need to hold
@@ -255,12 +255,12 @@ struct MOZ_RAII CompilationState {
 
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
                    const JS::ReadOnlyCompileOptions& options,
-                   CompilationInfo& compilationInfo,
+                   CompilationStencil& stencil,
                    InheritThis inheritThis = InheritThis::No,
                    Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr);
 
-  bool finish(JSContext* cx, CompilationInfo& compilationInfo);
+  bool finish(JSContext* cx, CompilationStencil& stencil);
 
   const ParserAtom* getParserAtomAt(JSContext* cx,
                                     TaggedParserAtomIndex taggedIndex) const;
@@ -384,7 +384,7 @@ struct BaseCompilationStencil {
 // The output of GC allocation from stencil.
 struct CompilationGCOutput {
   // The resulting outermost script for the compilation powered
-  // by this CompilationInfo.
+  // by this CompilationStencil.
   JSScript* script = nullptr;
 
   // The resulting module object if there is one.
@@ -397,7 +397,7 @@ struct CompilationGCOutput {
   JS::GCVector<JSFunction*, 0, js::SystemAllocPolicy> functions;
 
   // References to scopes are controlled via AbstractScopePtr, which holds onto
-  // an index (and CompilationInfo reference).
+  // an index (and CompilationStencil reference).
   JS::GCVector<js::Scope*, 0, js::SystemAllocPolicy> scopes;
 
   // The result ScriptSourceObject. This is unused in delazifying parses.
@@ -506,7 +506,7 @@ class ScriptStencilIterable {
 };
 
 // Input and output of compilation to stencil.
-struct CompilationInfo : public BaseCompilationStencil {
+struct CompilationStencil : public BaseCompilationStencil {
   static constexpr ScriptIndex TopLevelIndex = ScriptIndex(0);
 
   // This holds allocations that do not require destructors to be run but are
@@ -535,8 +535,8 @@ struct CompilationInfo : public BaseCompilationStencil {
   RewindToken getRewindToken(CompilationState& state);
   void rewind(CompilationState& state, const RewindToken& pos);
 
-  // Construct a CompilationInfo
-  CompilationInfo(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
+  // Construct a CompilationStencil
+  CompilationStencil(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
       : alloc(LifoAllocChunkSize), input(options) {}
 
   static MOZ_MUST_USE bool prepareInputAndStencilForInstantiate(
@@ -545,11 +545,11 @@ struct CompilationInfo : public BaseCompilationStencil {
       JSContext* cx, BaseCompilationStencil& stencil,
       CompilationGCOutput& gcOutput);
 
-  static MOZ_MUST_USE bool prepareForInstantiate(
-      JSContext* cx, CompilationInfo& compilationInfo,
-      CompilationGCOutput& gcOutput);
+  static MOZ_MUST_USE bool prepareForInstantiate(JSContext* cx,
+                                                 CompilationStencil& stencil,
+                                                 CompilationGCOutput& gcOutput);
   static MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
-                                               CompilationInfo& compilationInfo,
+                                               CompilationStencil& stencil,
                                                CompilationGCOutput& gcOutput);
   static MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
       JSContext* cx, CompilationInput& input, BaseCompilationStencil& stencil,
@@ -560,7 +560,7 @@ struct CompilationInfo : public BaseCompilationStencil {
 
   // Move constructor is necessary to use Rooted, but must be explicit in
   // order to steal the LifoAlloc data
-  CompilationInfo(CompilationInfo&& other) noexcept
+  CompilationStencil(CompilationStencil&& other) noexcept
       : BaseCompilationStencil(std::move(other)),
         alloc(LifoAllocChunkSize),
         input(std::move(other.input)) {
@@ -569,9 +569,9 @@ struct CompilationInfo : public BaseCompilationStencil {
   }
 
   // To avoid any misuses, make sure this is neither copyable or assignable.
-  CompilationInfo(const CompilationInfo&) = delete;
-  CompilationInfo& operator=(const CompilationInfo&) = delete;
-  CompilationInfo& operator=(CompilationInfo&&) = delete;
+  CompilationStencil(const CompilationStencil&) = delete;
+  CompilationStencil& operator=(const CompilationStencil&) = delete;
+  CompilationStencil& operator=(CompilationStencil&&) = delete;
 
   static ScriptStencilIterable functionScriptStencils(
       BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput) {
@@ -583,7 +583,7 @@ struct CompilationInfo : public BaseCompilationStencil {
 
 // A set of stencils, for XDR purpose.
 // This contains the initial compilation, and a vector of delazification.
-struct CompilationStencilSet : public CompilationInfo {
+struct CompilationStencilSet : public CompilationStencil {
  private:
   using ScriptIndexVector = Vector<ScriptIndex, 0, js::SystemAllocPolicy>;
 
@@ -600,12 +600,12 @@ struct CompilationStencilSet : public CompilationInfo {
 
   CompilationStencilSet(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options)
-      : CompilationInfo(cx, options),
+      : CompilationStencil(cx, options),
         allocForDelazifications(LifoAllocChunkSize) {}
 
   // Move constructor is necessary to use Rooted.
   CompilationStencilSet(CompilationStencilSet&& other) noexcept
-      : CompilationInfo(std::move(other)),
+      : CompilationStencil(std::move(other)),
         allocForDelazifications(LifoAllocChunkSize),
         delazifications(std::move(other.delazifications)),
         delazificationAtomCache(std::move(other.delazificationAtomCache)) {
@@ -637,4 +637,5 @@ struct CompilationStencilSet : public CompilationInfo {
 
 }  // namespace frontend
 }  // namespace js
-#endif
+
+#endif  // frontend_CompilationInfo_h

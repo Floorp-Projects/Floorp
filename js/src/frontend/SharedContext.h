@@ -28,7 +28,7 @@
 namespace js {
 namespace frontend {
 
-struct CompilationInfo;
+struct CompilationStencil;
 struct CompilationState;
 class ParseContext;
 class ScriptStencil;
@@ -140,7 +140,7 @@ class SharedContext {
   JSContext* const cx_;
 
  protected:
-  CompilationInfo& compilationInfo_;
+  CompilationStencil& stencil_;
 
   // See: BaseScript::immutableFlags_
   ImmutableScriptFlags immutableFlags_ = {};
@@ -195,7 +195,7 @@ class SharedContext {
   }
 
  public:
-  SharedContext(JSContext* cx, Kind kind, CompilationInfo& compilationInfo,
+  SharedContext(JSContext* cx, Kind kind, CompilationStencil& stencil,
                 Directives directives, SourceExtent extent);
 
   IMMUTABLE_FLAG_GETTER_SETTER(isForEval, IsForEval)
@@ -231,7 +231,7 @@ class SharedContext {
 
   bool isTopLevelContext() const { return !isFunction(); }
 
-  CompilationInfo& compilationInfo() const { return compilationInfo_; }
+  CompilationStencil& stencil() const { return stencil_; }
 
   ThisBinding thisBinding() const { return thisBinding_; }
   bool hasFunctionThisBinding() const {
@@ -283,7 +283,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
   GlobalScope::ParserData* bindings;
 
   GlobalSharedContext(JSContext* cx, ScopeKind scopeKind,
-                      CompilationInfo& compilationInfo, Directives directives,
+                      CompilationStencil& stencil, Directives directives,
                       SourceExtent extent);
 
   ScopeKind scopeKind() const { return scopeKind_; }
@@ -298,7 +298,7 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
  public:
   EvalScope::ParserData* bindings;
 
-  EvalSharedContext(JSContext* cx, CompilationInfo& compilationInfo,
+  EvalSharedContext(JSContext* cx, CompilationStencil& stencil,
                     CompilationState& compilationState, SourceExtent extent);
 };
 
@@ -311,7 +311,7 @@ enum class HasHeritage { No, Yes };
 
 class SuspendableContext : public SharedContext {
  public:
-  SuspendableContext(JSContext* cx, Kind kind, CompilationInfo& compilationInfo,
+  SuspendableContext(JSContext* cx, Kind kind, CompilationStencil& stencil,
                      Directives directives, SourceExtent extent,
                      bool isGenerator, bool isAsync);
 
@@ -413,8 +413,7 @@ class FunctionBox : public SuspendableContext {
 
   // End of fields.
 
-  FunctionBox(JSContext* cx, SourceExtent extent,
-              CompilationInfo& compilationInfo,
+  FunctionBox(JSContext* cx, SourceExtent extent, CompilationStencil& stencil,
               CompilationState& compilationState, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               const ParserAtom* atom, FunctionFlags flags, ScriptIndex index);

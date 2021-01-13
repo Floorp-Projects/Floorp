@@ -18,7 +18,7 @@ inline Directives::Directives(ParseContext* parent)
 
 inline JSAtom* SharedContext::liftParserAtomToJSAtom(JSContext* cx,
                                                      const ParserAtom* atomId) {
-  return atomId->toJSAtom(cx, compilationInfo_.input.atomCache);
+  return atomId->toJSAtom(cx, stencil_.input.atomCache);
 }
 
 }  // namespace frontend

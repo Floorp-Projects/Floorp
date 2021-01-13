@@ -43,7 +43,7 @@
 #include "builtin/String.h"
 #include "builtin/WeakMapObject.h"
 #include "frontend/BytecodeCompilation.h"  // CompileGlobalScriptToStencil
-#include "frontend/CompilationInfo.h"      // js::frontend::CompilationInfo
+#include "frontend/CompilationInfo.h"      // js::frontend::CompilationStencil
 #include "frontend/ParserAtom.h"           // js::frontend::ParserAtom
 #include "gc/Marking.h"
 #include "gc/Policy.h"
@@ -2863,8 +2863,8 @@ bool JSRuntime::initSelfHostingFromXDR(
 
   // Instantiate the stencil.
   Rooted<frontend::CompilationGCOutput> output(cx);
-  if (!frontend::CompilationInfo::instantiateStencils(cx, stencilSet,
-                                                      output.get())) {
+  if (!frontend::CompilationStencil::instantiateStencils(cx, stencilSet,
+                                                         output.get())) {
     return false;
   }
 
@@ -2920,9 +2920,9 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
   // If script wasn't generated, it means XDR was either not provided or that it
   // failed the decoding phase. Parse from text as before.
   if (!script) {
-    Rooted<frontend::CompilationInfo> compilationInfo(
-        cx, frontend::CompilationInfo(cx, options));
-    if (!compilationInfo.get().input.initForSelfHostingGlobal(cx)) {
+    Rooted<frontend::CompilationStencil> stencil(
+        cx, frontend::CompilationStencil(cx, options));
+    if (!stencil.get().input.initForSelfHostingGlobal(cx)) {
       return false;
     }
 
@@ -2944,15 +2944,15 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
       return false;
     }
 
-    if (!frontend::CompileGlobalScriptToStencil(cx, compilationInfo.get(),
-                                                srcBuf, ScopeKind::Global)) {
+    if (!frontend::CompileGlobalScriptToStencil(cx, stencil.get(), srcBuf,
+                                                ScopeKind::Global)) {
       return false;
     }
 
     // Serialize the stencil to XDR.
     if (selfHostedXDRWriter) {
       JS::TranscodeBuffer xdrBuffer;
-      if (!compilationInfo.get().serializeStencils(cx, xdrBuffer)) {
+      if (!stencil.get().serializeStencils(cx, xdrBuffer)) {
         return false;
       }
 
@@ -2963,8 +2963,8 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
 
     // Instantiate the stencil.
     Rooted<frontend::CompilationGCOutput> output(cx);
-    if (!frontend::CompilationInfo::instantiateStencils(
-            cx, compilationInfo.get(), output.get())) {
+    if (!frontend::CompilationStencil::instantiateStencils(cx, stencil.get(),
+                                                           output.get())) {
       return false;
     }
 

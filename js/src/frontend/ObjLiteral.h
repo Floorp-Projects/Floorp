@@ -338,10 +338,8 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json,
-            frontend::BaseCompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json,
-                  frontend::BaseCompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, frontend::BaseCompilationStencil* stencil);
+  void dumpFields(JSONPrinter& json, frontend::BaseCompilationStencil* stencil);
 #endif
 
  private:
@@ -554,10 +552,8 @@ class ObjLiteralStencil {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json,
-            frontend::BaseCompilationStencil* compilationStencil);
-  void dumpFields(JSONPrinter& json,
-                  frontend::BaseCompilationStencil* compilationStencil);
+  void dump(JSONPrinter& json, frontend::BaseCompilationStencil* stencil);
+  void dumpFields(JSONPrinter& json, frontend::BaseCompilationStencil* stencil);
 
 #endif
 };

@@ -80,7 +80,7 @@ class MOZ_RAII AutoAssertReportedException {
 #endif
 };
 
-static bool EmplaceEmitter(CompilationInfo& compilationInfo,
+static bool EmplaceEmitter(CompilationStencil& stencil,
                            CompilationState& compilationState,
                            Maybe<BytecodeEmitter>& emitter,
                            const EitherParser& parser, SharedContext* sc);
@@ -100,20 +100,20 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
  protected:
   explicit SourceAwareCompiler(JSContext* cx, LifoAllocScope& allocScope,
                                const JS::ReadOnlyCompileOptions& options,
-                               CompilationInfo& compilationInfo,
+                               CompilationStencil& stencil,
                                SourceText<Unit>& sourceBuffer,
                                InheritThis inheritThis = InheritThis::No,
                                js::Scope* enclosingScope = nullptr,
                                JSObject* enclosingEnv = nullptr)
       : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, allocScope, options, compilationInfo, inheritThis,
+        compilationState_(cx, allocScope, options, stencil, inheritThis,
                           enclosingScope, enclosingEnv) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
   // Call this before calling compile{Global,Eval}Script.
   MOZ_MUST_USE bool createSourceAndParser(JSContext* cx,
-                                          CompilationInfo& compilationInfo);
+                                          CompilationStencil& stencil);
 
   void assertSourceAndParserCreated(CompilationInput& compilationInput) const {
     MOZ_ASSERT(compilationInput.source() != nullptr);
@@ -124,19 +124,19 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
     assertSourceAndParserCreated(compilationInput);
   }
 
-  MOZ_MUST_USE bool emplaceEmitter(CompilationInfo& compilationInfo,
+  MOZ_MUST_USE bool emplaceEmitter(CompilationStencil& stencil,
                                    Maybe<BytecodeEmitter>& emitter,
                                    SharedContext* sharedContext) {
-    return EmplaceEmitter(compilationInfo, compilationState_, emitter,
+    return EmplaceEmitter(stencil, compilationState_, emitter,
                           EitherParser(parser.ptr()), sharedContext);
   }
 
   bool canHandleParseFailure(const Directives& newDirectives);
 
-  void handleParseFailure(CompilationInfo& compilationInfo,
+  void handleParseFailure(CompilationStencil& stencil,
                           const Directives& newDirectives,
                           TokenStreamPosition& startPosition,
-                          CompilationInfo::RewindToken& startObj);
+                          CompilationStencil::RewindToken& startObj);
 
  public:
   frontend::CompilationState& compilationState() { return compilationState_; };
@@ -162,17 +162,17 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
  public:
   explicit ScriptCompiler(JSContext* cx, LifoAllocScope& allocScope,
                           const JS::ReadOnlyCompileOptions& options,
-                          CompilationInfo& compilationInfo,
+                          CompilationStencil& stencil,
                           SourceText<Unit>& sourceBuffer,
                           InheritThis inheritThis = InheritThis::No,
                           js::Scope* enclosingScope = nullptr,
                           JSObject* enclosingEnv = nullptr)
-      : Base(cx, allocScope, options, compilationInfo, sourceBuffer,
-             inheritThis, enclosingScope, enclosingEnv) {}
+      : Base(cx, allocScope, options, stencil, sourceBuffer, inheritThis,
+             enclosingScope, enclosingEnv) {}
 
   using Base::createSourceAndParser;
 
-  bool compileScriptToStencil(JSContext* cx, CompilationInfo& compilationInfo,
+  bool compileScriptToStencil(JSContext* cx, CompilationStencil& stencil,
                               SharedContext* sc);
 };
 
@@ -194,7 +194,7 @@ static void tellDebuggerAboutCompiledScript(JSContext* cx, bool hideScript,
 }
 
 #ifdef JS_ENABLE_SMOOSH
-bool TrySmoosh(JSContext* cx, CompilationInfo& compilationInfo,
+bool TrySmoosh(JSContext* cx, CompilationStencil& stencil,
                JS::SourceText<Utf8Unit>& srcBuf, bool* fallback) {
   if (!cx->options().trySmoosh()) {
     *fallback = true;
@@ -203,12 +203,12 @@ bool TrySmoosh(JSContext* cx, CompilationInfo& compilationInfo,
 
   bool unimplemented = false;
   JSRuntime* rt = cx->runtime();
-  bool result = Smoosh::compileGlobalScriptToStencil(cx, compilationInfo,
-                                                     srcBuf, &unimplemented);
+  bool result =
+      Smoosh::compileGlobalScriptToStencil(cx, stencil, srcBuf, &unimplemented);
   if (!unimplemented) {
     *fallback = false;
 
-    if (!compilationInfo.input.assignSource(cx, srcBuf)) {
+    if (!stencil.input.assignSource(cx, srcBuf)) {
       return false;
     }
 
@@ -227,7 +227,7 @@ bool TrySmoosh(JSContext* cx, CompilationInfo& compilationInfo,
   return true;
 }
 
-bool TrySmoosh(JSContext* cx, CompilationInfo& compilationInfo,
+bool TrySmoosh(JSContext* cx, CompilationStencil& stencil,
                JS::SourceText<char16_t>& srcBuf, bool* fallback) {
   *fallback = true;
   return true;
@@ -236,12 +236,12 @@ bool TrySmoosh(JSContext* cx, CompilationInfo& compilationInfo,
 
 template <typename Unit>
 static bool CompileGlobalScriptToStencilImpl(JSContext* cx,
-                                             CompilationInfo& compilationInfo,
+                                             CompilationStencil& stencil,
                                              JS::SourceText<Unit>& srcBuf,
                                              ScopeKind scopeKind) {
 #ifdef JS_ENABLE_SMOOSH
   bool fallback = false;
-  if (!TrySmoosh(cx, compilationInfo, srcBuf, &fallback)) {
+  if (!TrySmoosh(cx, stencil, srcBuf, &fallback)) {
     return false;
   }
   if (!fallback) {
@@ -252,21 +252,20 @@ static bool CompileGlobalScriptToStencilImpl(JSContext* cx,
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::ScriptCompiler<Unit> compiler(
-      cx, allocScope, compilationInfo.input.options, compilationInfo, srcBuf);
+  frontend::ScriptCompiler<Unit> compiler(cx, allocScope, stencil.input.options,
+                                          stencil, srcBuf);
 
-  if (!compiler.createSourceAndParser(cx, compilationInfo)) {
+  if (!compiler.createSourceAndParser(cx, stencil)) {
     return false;
   }
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(
-      srcBuf.length(), compilationInfo.input.options.lineno,
-      compilationInfo.input.options.column);
-  frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                         compiler.compilationState().directives,
-                                         extent);
+      srcBuf.length(), stencil.input.options.lineno,
+      stencil.input.options.column);
+  frontend::GlobalSharedContext globalsc(
+      cx, scopeKind, stencil, compiler.compilationState().directives, extent);
 
-  if (!compiler.compileScriptToStencil(cx, compilationInfo, &globalsc)) {
+  if (!compiler.compileScriptToStencil(cx, stencil, &globalsc)) {
     return false;
   }
 
@@ -275,77 +274,74 @@ static bool CompileGlobalScriptToStencilImpl(JSContext* cx,
 }
 
 bool frontend::CompileGlobalScriptToStencil(JSContext* cx,
-                                            CompilationInfo& compilationInfo,
+                                            CompilationStencil& stencil,
                                             JS::SourceText<char16_t>& srcBuf,
                                             ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(cx, compilationInfo, srcBuf,
-                                          scopeKind);
+  return CompileGlobalScriptToStencilImpl(cx, stencil, srcBuf, scopeKind);
 }
 
 bool frontend::CompileGlobalScriptToStencil(JSContext* cx,
-                                            CompilationInfo& compilationInfo,
+                                            CompilationStencil& stencil,
                                             JS::SourceText<Utf8Unit>& srcBuf,
                                             ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(cx, compilationInfo, srcBuf,
-                                          scopeKind);
+  return CompileGlobalScriptToStencilImpl(cx, stencil, srcBuf, scopeKind);
 }
 
 template <typename Unit>
-static UniquePtr<CompilationInfo> CompileGlobalScriptToStencilImpl(
+static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
-  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
-      cx, js_new<frontend::CompilationInfo>(cx, options));
-  if (!compilationInfo) {
+  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
+      cx, js_new<frontend::CompilationStencil>(cx, options));
+  if (!stencil) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  if (!compilationInfo.get()->input.initForGlobal(cx)) {
+  if (!stencil.get()->input.initForGlobal(cx)) {
     return nullptr;
   }
 
-  if (!CompileGlobalScriptToStencil(cx, *compilationInfo, srcBuf, scopeKind)) {
+  if (!CompileGlobalScriptToStencil(cx, *stencil, srcBuf, scopeKind)) {
     return nullptr;
   }
 
-  return std::move(compilationInfo.get());
+  return std::move(stencil.get());
 }
 
-UniquePtr<CompilationInfo> frontend::CompileGlobalScriptToStencil(
+UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind) {
   return CompileGlobalScriptToStencilImpl(cx, options, srcBuf, scopeKind);
 }
 
-UniquePtr<CompilationInfo> frontend::CompileGlobalScriptToStencil(
+UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     JS::SourceText<Utf8Unit>& srcBuf, ScopeKind scopeKind) {
   return CompileGlobalScriptToStencilImpl(cx, options, srcBuf, scopeKind);
 }
 
-bool frontend::InstantiateStencils(JSContext* cx,
-                                   CompilationInfo& compilationInfo,
+bool frontend::InstantiateStencils(JSContext* cx, CompilationStencil& stencil,
                                    CompilationGCOutput& gcOutput) {
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!CompilationInfo::instantiateStencils(cx, compilationInfo, gcOutput)) {
+    if (!CompilationStencil::instantiateStencils(cx, stencil, gcOutput)) {
       return false;
     }
   }
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!cx->isHelperThreadContext()) {
-    if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
+    if (!stencil.input.source()->tryCompressOffThread(cx)) {
       return false;
     }
   }
 
   Rooted<JSScript*> script(cx, gcOutput.script);
   tellDebuggerAboutCompiledScript(
-      cx, compilationInfo.input.options.hideScriptFromDebugger, script);
+      cx, stencil.input.options.hideScriptFromDebugger, script);
 
   return true;
 }
@@ -378,13 +374,12 @@ bool frontend::InstantiateStencils(
   return true;
 }
 
-bool frontend::PrepareForInstantiate(JSContext* cx,
-                                     CompilationInfo& compilationInfo,
+bool frontend::PrepareForInstantiate(JSContext* cx, CompilationStencil& stencil,
                                      CompilationGCOutput& gcOutput) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return CompilationInfo::prepareForInstantiate(cx, compilationInfo, gcOutput);
+  return CompilationStencil::prepareForInstantiate(cx, stencil, gcOutput);
 }
 
 bool frontend::PrepareForInstantiate(
@@ -402,24 +397,23 @@ template <typename Unit>
 static JSScript* CompileGlobalScriptImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
-  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
+  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
   if (options.selfHostingMode) {
-    if (!compilationInfo.get().input.initForSelfHostingGlobal(cx)) {
+    if (!stencil.get().input.initForSelfHostingGlobal(cx)) {
       return nullptr;
     }
   } else {
-    if (!compilationInfo.get().input.initForGlobal(cx)) {
+    if (!stencil.get().input.initForGlobal(cx)) {
       return nullptr;
     }
   }
 
-  if (!CompileGlobalScriptToStencil(cx, compilationInfo.get(), srcBuf,
-                                    scopeKind)) {
+  if (!CompileGlobalScriptToStencil(cx, stencil.get(), srcBuf, scopeKind)) {
     return nullptr;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput.get())) {
+  if (!InstantiateStencils(cx, stencil.get(), gcOutput.get())) {
     return nullptr;
   }
 
@@ -445,33 +439,32 @@ static JSScript* CompileEvalScriptImpl(
     JS::Handle<JSObject*> enclosingEnv) {
   AutoAssertReportedException assertException(cx);
 
-  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForEval(cx, enclosingScope)) {
+  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
+  if (!stencil.get().input.initForEval(cx, enclosingScope)) {
     return nullptr;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
   frontend::ScriptCompiler<Unit> compiler(
-      cx, allocScope, compilationInfo.get().input.options,
-      compilationInfo.get(), srcBuf, InheritThis::Yes, enclosingScope,
-      enclosingEnv);
-  if (!compiler.createSourceAndParser(cx, compilationInfo.get())) {
+      cx, allocScope, stencil.get().input.options, stencil.get(), srcBuf,
+      InheritThis::Yes, enclosingScope, enclosingEnv);
+  if (!compiler.createSourceAndParser(cx, stencil.get())) {
     return nullptr;
   }
 
   uint32_t len = srcBuf.length();
-  SourceExtent extent = SourceExtent::makeGlobalExtent(
-      len, compilationInfo.get().input.options.lineno,
-      compilationInfo.get().input.options.column);
-  frontend::EvalSharedContext evalsc(cx, compilationInfo.get(),
+  SourceExtent extent =
+      SourceExtent::makeGlobalExtent(len, stencil.get().input.options.lineno,
+                                     stencil.get().input.options.column);
+  frontend::EvalSharedContext evalsc(cx, stencil.get(),
                                      compiler.compilationState(), extent);
-  if (!compiler.compileScriptToStencil(cx, compilationInfo.get(), &evalsc)) {
+  if (!compiler.compileScriptToStencil(cx, stencil.get(), &evalsc)) {
     return nullptr;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput.get())) {
+  if (!InstantiateStencils(cx, stencil.get(), gcOutput.get())) {
     return nullptr;
   }
 
@@ -502,14 +495,14 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
  public:
   explicit ModuleCompiler(JSContext* cx, LifoAllocScope& allocScope,
                           const JS::ReadOnlyCompileOptions& options,
-                          CompilationInfo& compilationInfo,
+                          CompilationStencil& stencil,
                           SourceText<Unit>& sourceBuffer,
                           js::Scope* enclosingScope = nullptr,
                           JSObject* enclosingEnv = nullptr)
-      : Base(cx, allocScope, options, compilationInfo, sourceBuffer,
-             InheritThis::No, enclosingScope, enclosingEnv) {}
+      : Base(cx, allocScope, options, stencil, sourceBuffer, InheritThis::No,
+             enclosingScope, enclosingEnv) {}
 
-  bool compile(JSContext* cx, CompilationInfo& compilationInfo);
+  bool compile(JSContext* cx, CompilationStencil& stencil);
 };
 
 template <typename Unit>
@@ -530,22 +523,22 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
  public:
   explicit StandaloneFunctionCompiler(JSContext* cx, LifoAllocScope& allocScope,
                                       const JS::ReadOnlyCompileOptions& options,
-                                      CompilationInfo& compilationInfo,
+                                      CompilationStencil& stencil,
                                       SourceText<Unit>& sourceBuffer,
                                       InheritThis inheritThis = InheritThis::No,
                                       js::Scope* enclosingScope = nullptr,
                                       JSObject* enclosingEnv = nullptr)
-      : Base(cx, allocScope, options, compilationInfo, sourceBuffer,
-             inheritThis, enclosingScope, enclosingEnv) {}
+      : Base(cx, allocScope, options, stencil, sourceBuffer, inheritThis,
+             enclosingScope, enclosingEnv) {}
 
   using Base::createSourceAndParser;
 
-  FunctionNode* parse(JSContext* cx, CompilationInfo& compilationInfo,
+  FunctionNode* parse(JSContext* cx, CompilationStencil& stencil,
                       FunctionSyntaxKind syntaxKind,
                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                       const Maybe<uint32_t>& parameterListEnd);
 
-  bool compile(JSContext* cx, CompilationInfo& compilationInfo,
+  bool compile(JSContext* cx, CompilationStencil& stencil,
                FunctionNode* parsedFunction, CompilationGCOutput& gcOutput);
 };
 
@@ -619,45 +612,45 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 }
 #endif
 
-static bool CanLazilyParse(const CompilationInfo& compilationInfo) {
-  return !compilationInfo.input.options.discardSource &&
-         !compilationInfo.input.options.sourceIsLazy &&
-         !compilationInfo.input.options.forceFullParse();
+static bool CanLazilyParse(const CompilationStencil& stencil) {
+  return !stencil.input.options.discardSource &&
+         !stencil.input.options.sourceIsLazy &&
+         !stencil.input.options.forceFullParse();
 }
 
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
-    JSContext* cx, CompilationInfo& compilationInfo) {
-  if (!compilationInfo.input.assignSource(cx, sourceBuffer_)) {
+    JSContext* cx, CompilationStencil& stencil) {
+  if (!stencil.input.assignSource(cx, sourceBuffer_)) {
     return false;
   }
 
-  if (CanLazilyParse(compilationInfo)) {
-    syntaxParser.emplace(cx, compilationInfo.input.options,
-                         sourceBuffer_.units(), sourceBuffer_.length(),
-                         /* foldConstants = */ false, compilationInfo,
+  if (CanLazilyParse(stencil)) {
+    syntaxParser.emplace(cx, stencil.input.options, sourceBuffer_.units(),
+                         sourceBuffer_.length(),
+                         /* foldConstants = */ false, stencil,
                          compilationState_, nullptr, nullptr);
     if (!syntaxParser->checkOptions()) {
       return false;
     }
   }
 
-  parser.emplace(cx, compilationInfo.input.options, sourceBuffer_.units(),
+  parser.emplace(cx, stencil.input.options, sourceBuffer_.units(),
                  sourceBuffer_.length(),
-                 /* foldConstants = */ true, compilationInfo, compilationState_,
+                 /* foldConstants = */ true, stencil, compilationState_,
                  syntaxParser.ptrOr(nullptr), nullptr);
-  parser->ss = compilationInfo.input.source();
+  parser->ss = stencil.input.source();
   return parser->checkOptions();
 }
 
-static bool EmplaceEmitter(CompilationInfo& compilationInfo,
+static bool EmplaceEmitter(CompilationStencil& stencil,
                            CompilationState& compilationState,
                            Maybe<BytecodeEmitter>& emitter,
                            const EitherParser& parser, SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
       sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
-  emitter.emplace(/* parent = */ nullptr, parser, sc, compilationInfo,
-                  compilationState, emitterMode);
+  emitter.emplace(/* parent = */ nullptr, parser, sc, stencil, compilationState,
+                  emitterMode);
   return emitter->init();
 }
 
@@ -678,14 +671,14 @@ bool frontend::SourceAwareCompiler<Unit>::canHandleParseFailure(
 
 template <typename Unit>
 void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
-    CompilationInfo& compilationInfo, const Directives& newDirectives,
+    CompilationStencil& stencil, const Directives& newDirectives,
     TokenStreamPosition& startPosition,
-    CompilationInfo::RewindToken& startObj) {
+    CompilationStencil::RewindToken& startObj) {
   MOZ_ASSERT(canHandleParseFailure(newDirectives));
 
   // Rewind to starting position to retry.
   parser->tokenStream.rewind(startPosition);
-  compilationInfo.rewind(compilationState_, startObj);
+  stencil.rewind(compilationState_, startObj);
 
   // Assignment must be monotonic to prevent reparsing iloops
   MOZ_ASSERT_IF(compilationState_.directives.strict(), newDirectives.strict());
@@ -695,14 +688,14 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 
 template <typename Unit>
 bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
-    JSContext* cx, CompilationInfo& compilationInfo, SharedContext* sc) {
-  assertSourceParserAndScriptCreated(compilationInfo.input);
+    JSContext* cx, CompilationStencil& stencil, SharedContext* sc) {
+  assertSourceParserAndScriptCreated(stencil.input);
 
   TokenStreamPosition startPosition(parser->tokenStream);
 
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
-             CompilationInfo::TopLevelIndex);
+             CompilationStencil::TopLevelIndex);
   if (!compilationState_.scriptData.emplaceBack()) {
     ReportOutOfMemory(cx);
     return false;
@@ -738,7 +731,7 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
     Maybe<BytecodeEmitter> emitter;
-    if (!emplaceEmitter(compilationInfo, emitter, sc)) {
+    if (!emplaceEmitter(stencil, emitter, sc)) {
       return false;
     }
 
@@ -746,7 +739,7 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
       return false;
     }
 
-    if (!compilationState_.finish(cx, compilationInfo)) {
+    if (!compilationState_.finish(cx, stencil)) {
       return false;
     }
   }
@@ -758,14 +751,14 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
 
 template <typename Unit>
 bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
-                                             CompilationInfo& compilationInfo) {
-  if (!createSourceAndParser(cx, compilationInfo)) {
+                                             CompilationStencil& stencil) {
+  if (!createSourceAndParser(cx, stencil)) {
     return false;
   }
 
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
-             CompilationInfo::TopLevelIndex);
+             CompilationStencil::TopLevelIndex);
   if (!compilationState_.scriptData.emplaceBack()) {
     ReportOutOfMemory(cx);
     return false;
@@ -778,10 +771,9 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
   ModuleBuilder builder(cx, parser.ptr());
 
   uint32_t len = this->sourceBuffer_.length();
-  SourceExtent extent =
-      SourceExtent::makeGlobalExtent(len, compilationInfo.input.options.lineno,
-                                     compilationInfo.input.options.column);
-  ModuleSharedContext modulesc(cx, compilationInfo, builder, extent);
+  SourceExtent extent = SourceExtent::makeGlobalExtent(
+      len, stencil.input.options.lineno, stencil.input.options.column);
+  ModuleSharedContext modulesc(cx, stencil, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
@@ -789,7 +781,7 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
   }
 
   Maybe<BytecodeEmitter> emitter;
-  if (!emplaceEmitter(compilationInfo, emitter, &modulesc)) {
+  if (!emplaceEmitter(stencil, emitter, &modulesc)) {
     return false;
   }
 
@@ -797,11 +789,11 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
     return false;
   }
 
-  if (!compilationState_.finish(cx, compilationInfo)) {
+  if (!compilationState_.finish(cx, stencil)) {
     return false;
   }
 
-  StencilModuleMetadata& moduleMetadata = *compilationInfo.moduleMetadata;
+  StencilModuleMetadata& moduleMetadata = *stencil.moduleMetadata;
 
   builder.finishFunctionDecls(moduleMetadata);
 
@@ -814,14 +806,14 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
 // constructor.
 template <typename Unit>
 FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
-    JSContext* cx, CompilationInfo& compilationInfo,
-    FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, const Maybe<uint32_t>& parameterListEnd) {
-  assertSourceAndParserCreated(compilationInfo.input);
+    JSContext* cx, CompilationStencil& stencil, FunctionSyntaxKind syntaxKind,
+    GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+    const Maybe<uint32_t>& parameterListEnd) {
+  assertSourceAndParserCreated(stencil.input);
 
   TokenStreamPosition startPosition(parser->tokenStream);
-  CompilationInfo::RewindToken startObj =
-      compilationInfo.getRewindToken(compilationState_);
+  CompilationStencil::RewindToken startObj =
+      stencil.getRewindToken(compilationState_);
 
   // Speculatively parse using the default directives implied by the context.
   // If a directive is encountered (e.g., "use strict") that changes how the
@@ -843,7 +835,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
       return nullptr;
     }
 
-    handleParseFailure(compilationInfo, newDirectives, startPosition, startObj);
+    handleParseFailure(stencil, newDirectives, startPosition, startObj);
   }
 
   return fn;
@@ -852,13 +844,13 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
 // Compile a standalone JS function.
 template <typename Unit>
 bool frontend::StandaloneFunctionCompiler<Unit>::compile(
-    JSContext* cx, CompilationInfo& compilationInfo,
-    FunctionNode* parsedFunction, CompilationGCOutput& gcOutput) {
+    JSContext* cx, CompilationStencil& stencil, FunctionNode* parsedFunction,
+    CompilationGCOutput& gcOutput) {
   FunctionBox* funbox = parsedFunction->funbox();
 
   if (funbox->isInterpreted()) {
     Maybe<BytecodeEmitter> emitter;
-    if (!emplaceEmitter(compilationInfo, emitter, funbox)) {
+    if (!emplaceEmitter(stencil, emitter, funbox)) {
       return false;
     }
 
@@ -870,42 +862,42 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     // we want the SourceExtent used in the final standalone script to
     // start from the beginning of the buffer, and use the provided
     // line and column.
-    compilationState_.scriptExtra[CompilationInfo::TopLevelIndex].extent =
+    compilationState_.scriptExtra[CompilationStencil::TopLevelIndex].extent =
         SourceExtent{/* sourceStart = */ 0,
                      sourceBuffer_.length(),
                      funbox->extent().toStringStart,
                      funbox->extent().toStringEnd,
-                     compilationInfo.input.options.lineno,
-                     compilationInfo.input.options.column};
+                     stencil.input.options.lineno,
+                     stencil.input.options.column};
 
-    if (!compilationState_.finish(cx, compilationInfo)) {
+    if (!compilationState_.finish(cx, stencil)) {
       return false;
     }
   } else {
-    if (!compilationState_.finish(cx, compilationInfo)) {
+    if (!compilationState_.finish(cx, stencil)) {
       return false;
     }
 
     // The asm.js module was created by parser. Instantiation below will
     // allocate the JSFunction that wraps it.
     MOZ_ASSERT(funbox->isAsmJSModule());
-    MOZ_ASSERT(compilationInfo.asmJS.has(funbox->index()));
-    MOZ_ASSERT(compilationState_.scriptData[CompilationInfo::TopLevelIndex]
+    MOZ_ASSERT(stencil.asmJS.has(funbox->index()));
+    MOZ_ASSERT(compilationState_.scriptData[CompilationStencil::TopLevelIndex]
                    .functionFlags.isAsmJSNative());
   }
 
-  if (!CompilationInfo::instantiateStencils(cx, compilationInfo, gcOutput)) {
+  if (!CompilationStencil::instantiateStencils(cx, stencil, gcOutput)) {
     return false;
   }
 
 #ifdef DEBUG
-  JSFunction* fun = gcOutput.functions[CompilationInfo::TopLevelIndex];
+  JSFunction* fun = gcOutput.functions[CompilationStencil::TopLevelIndex];
   MOZ_ASSERT(fun->hasBytecode() || IsAsmJSModule(fun));
 #endif
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!cx->isHelperThreadContext()) {
-    if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
+    if (!stencil.input.source()->tryCompressOffThread(cx)) {
       return false;
     }
   }
@@ -914,17 +906,16 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 }
 
 template <typename Unit>
-static bool ParseModuleToStencilImpl(JSContext* cx,
-                                     CompilationInfo& compilationInfo,
+static bool ParseModuleToStencilImpl(JSContext* cx, CompilationStencil& stencil,
                                      SourceText<Unit>& srcBuf) {
   MOZ_ASSERT(srcBuf.get());
 
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, allocScope, compilationInfo.input.options,
-                                compilationInfo, srcBuf);
-  if (!compiler.compile(cx, compilationInfo)) {
+  ModuleCompiler<Unit> compiler(cx, allocScope, stencil.input.options, stencil,
+                                srcBuf);
+  if (!compiler.compile(cx, stencil)) {
     return false;
   }
 
@@ -932,47 +923,45 @@ static bool ParseModuleToStencilImpl(JSContext* cx,
   return true;
 }
 
-bool frontend::ParseModuleToStencil(JSContext* cx,
-                                    CompilationInfo& compilationInfo,
+bool frontend::ParseModuleToStencil(JSContext* cx, CompilationStencil& stencil,
                                     SourceText<char16_t>& srcBuf) {
-  return ParseModuleToStencilImpl(cx, compilationInfo, srcBuf);
+  return ParseModuleToStencilImpl(cx, stencil, srcBuf);
 }
 
-bool frontend::ParseModuleToStencil(JSContext* cx,
-                                    CompilationInfo& compilationInfo,
+bool frontend::ParseModuleToStencil(JSContext* cx, CompilationStencil& stencil,
                                     SourceText<Utf8Unit>& srcBuf) {
-  return ParseModuleToStencilImpl(cx, compilationInfo, srcBuf);
+  return ParseModuleToStencilImpl(cx, stencil, srcBuf);
 }
 
 template <typename Unit>
-static UniquePtr<CompilationInfo> ParseModuleToStencilImpl(
+static UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<Unit>& srcBuf) {
-  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
-      cx, js_new<frontend::CompilationInfo>(cx, options));
-  if (!compilationInfo) {
+  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
+      cx, js_new<frontend::CompilationStencil>(cx, options));
+  if (!stencil) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  if (!compilationInfo.get()->input.initForModule(cx)) {
+  if (!stencil.get()->input.initForModule(cx)) {
     return nullptr;
   }
 
-  if (!ParseModuleToStencilImpl(cx, *compilationInfo, srcBuf)) {
+  if (!ParseModuleToStencilImpl(cx, *stencil, srcBuf)) {
     return nullptr;
   }
 
-  return std::move(compilationInfo.get());
+  return std::move(stencil.get());
 }
 
-UniquePtr<CompilationInfo> frontend::ParseModuleToStencil(
+UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf) {
   return ParseModuleToStencilImpl(cx, options, srcBuf);
 }
 
-UniquePtr<CompilationInfo> frontend::ParseModuleToStencil(
+UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<Utf8Unit>& srcBuf) {
   return ParseModuleToStencilImpl(cx, options, srcBuf);
@@ -991,17 +980,17 @@ static ModuleObject* CompileModuleImpl(
   CompileOptions options(cx, optionsInput);
   options.setModule();
 
-  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForModule(cx)) {
+  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
+  if (!stencil.get().input.initForModule(cx)) {
     return nullptr;
   }
 
-  if (!ParseModuleToStencil(cx, compilationInfo.get(), srcBuf)) {
+  if (!ParseModuleToStencil(cx, stencil.get(), srcBuf)) {
     return nullptr;
   }
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput.get())) {
+  if (!InstantiateStencils(cx, stencil.get(), gcOutput.get())) {
     return nullptr;
   }
 
@@ -1033,7 +1022,7 @@ void frontend::FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
 
 template <typename Unit>
 static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
-                                             CompilationInfo& compilationInfo,
+                                             CompilationStencil& stencil,
                                              Handle<BaseScript*> lazy,
                                              const Unit* units, size_t length) {
   MOZ_ASSERT(cx->compartment() == lazy->compartment());
@@ -1051,13 +1040,12 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(
-      cx, allocScope, compilationInfo.input.options, compilationInfo,
-      inheritThis, fun->enclosingScope());
+      cx, allocScope, stencil.input.options, stencil, inheritThis,
+      fun->enclosingScope());
 
   Parser<FullParseHandler, Unit> parser(
-      cx, compilationInfo.input.options, units, length,
-      /* foldConstants = */ true, compilationInfo, compilationState, nullptr,
-      lazy);
+      cx, stencil.input.options, units, length,
+      /* foldConstants = */ true, stencil, compilationState, nullptr, lazy);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -1072,9 +1060,8 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
     return false;
   }
 
-  BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(),
-                      compilationInfo, compilationState,
-                      BytecodeEmitter::LazyFunction);
+  BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), stencil,
+                      compilationState, BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
   }
@@ -1088,48 +1075,43 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   bool hadLazyScriptData = lazy->hasPrivateScriptData();
   bool isRelazifiableAfterDelazify = lazy->isRelazifiableAfterDelazify();
   if (isRelazifiableAfterDelazify && !hadLazyScriptData) {
-    compilationState.scriptData[CompilationInfo::TopLevelIndex]
+    compilationState.scriptData[CompilationStencil::TopLevelIndex]
         .setAllowRelazify();
   }
 
-  if (!compilationState.finish(cx, compilationInfo)) {
+  if (!compilationState.finish(cx, stencil)) {
     return false;
   }
 
   // Record the FunctionKey in the BaseCompilationStencil since it does not
   // contain any of the SourceExtents itself.
-  compilationInfo.functionKey =
-      BaseCompilationStencil::toFunctionKey(lazy->extent());
+  stencil.functionKey = BaseCompilationStencil::toFunctionKey(lazy->extent());
 
   assertException.reset();
   return true;
 }
 
 MOZ_MUST_USE bool frontend::CompileLazyFunctionToStencil(
-    JSContext* cx, CompilationInfo& compilationInfo,
-    JS::Handle<BaseScript*> lazy, const char16_t* units, size_t length) {
-  return CompileLazyFunctionToStencilImpl(cx, compilationInfo, lazy, units,
-                                          length);
+    JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
+    const char16_t* units, size_t length) {
+  return CompileLazyFunctionToStencilImpl(cx, stencil, lazy, units, length);
 }
 
 MOZ_MUST_USE bool frontend::CompileLazyFunctionToStencil(
-    JSContext* cx, CompilationInfo& compilationInfo,
-    JS::Handle<BaseScript*> lazy, const mozilla::Utf8Unit* units,
-    size_t length) {
-  return CompileLazyFunctionToStencilImpl(cx, compilationInfo, lazy, units,
-                                          length);
+    JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
+    const mozilla::Utf8Unit* units, size_t length) {
+  return CompileLazyFunctionToStencilImpl(cx, stencil, lazy, units, length);
 }
 
-bool frontend::InstantiateStencilsForDelazify(
-    JSContext* cx, CompilationInfo& compilationInfo) {
+bool frontend::InstantiateStencilsForDelazify(JSContext* cx,
+                                              CompilationStencil& stencil) {
   AutoAssertReportedException assertException(cx);
 
   mozilla::DebugOnly<uint32_t> lazyFlags =
-      static_cast<uint32_t>(compilationInfo.input.lazy->immutableFlags());
+      static_cast<uint32_t>(stencil.input.lazy->immutableFlags());
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!CompilationInfo::instantiateStencils(cx, compilationInfo,
-                                            gcOutput.get())) {
+  if (!CompilationStencil::instantiateStencils(cx, stencil, gcOutput.get())) {
     return false;
   }
 
@@ -1155,8 +1137,8 @@ static JSFunction* CompileStandaloneFunction(
     scope = &cx->global()->emptyGlobalScope();
   }
 
-  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForStandaloneFunction(cx, scope)) {
+  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
+  if (!stencil.get().input.initForStandaloneFunction(cx, scope)) {
     return nullptr;
   }
 
@@ -1165,22 +1147,21 @@ static JSFunction* CompileStandaloneFunction(
                                 ? InheritThis::Yes
                                 : InheritThis::No;
   StandaloneFunctionCompiler<char16_t> compiler(
-      cx, allocScope, compilationInfo.get().input.options,
-      compilationInfo.get(), srcBuf, inheritThis, enclosingScope);
-  if (!compiler.createSourceAndParser(cx, compilationInfo.get())) {
+      cx, allocScope, stencil.get().input.options, stencil.get(), srcBuf,
+      inheritThis, enclosingScope);
+  if (!compiler.createSourceAndParser(cx, stencil.get())) {
     return nullptr;
   }
 
   FunctionNode* parsedFunction =
-      compiler.parse(cx, compilationInfo.get(), syntaxKind, generatorKind,
-                     asyncKind, parameterListEnd);
+      compiler.parse(cx, stencil.get(), syntaxKind, generatorKind, asyncKind,
+                     parameterListEnd);
   if (!parsedFunction) {
     return nullptr;
   }
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!compiler.compile(cx, compilationInfo.get(), parsedFunction,
-                        gcOutput.get())) {
+  if (!compiler.compile(cx, stencil.get(), parsedFunction, gcOutput.get())) {
     return nullptr;
   }
 
@@ -1189,15 +1170,14 @@ static JSFunction* CompileStandaloneFunction(
   // interpreted script.
   if (gcOutput.get().script) {
     if (parameterListEnd) {
-      compilationInfo.get().input.source()->setParameterListEnd(
-          *parameterListEnd);
+      stencil.get().input.source()->setParameterListEnd(*parameterListEnd);
     }
     Rooted<JSScript*> script(cx, gcOutput.get().script);
     tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger, script);
   }
 
   assertException.reset();
-  return gcOutput.get().functions[CompilationInfo::TopLevelIndex];
+  return gcOutput.get().functions[CompilationStencil::TopLevelIndex];
 }
 
 JSFunction* frontend::CompileStandaloneFunction(
@@ -1256,10 +1236,10 @@ void CompilationInput::trace(JSTracer* trc) {
 
 void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
-void CompilationInfo::trace(JSTracer* trc) { input.trace(trc); }
+void CompilationStencil::trace(JSTracer* trc) { input.trace(trc); }
 
 void CompilationStencilSet::trace(JSTracer* trc) {
-  CompilationInfo::trace(trc);
+  CompilationStencil::trace(trc);
   delazificationAtomCache.trace(trc);
 }
 

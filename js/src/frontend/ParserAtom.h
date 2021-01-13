@@ -25,7 +25,7 @@ namespace js {
 namespace frontend {
 
 struct CompilationAtomCache;
-struct CompilationInfo;
+struct CompilationStencil;
 class ParserAtom;
 class ParserName;
 
@@ -715,8 +715,7 @@ class ParserAtomsTable {
   const ParserAtom* internChar16(JSContext* cx, const char16_t* char16Ptr,
                                  uint32_t length);
 
-  const ParserAtom* internJSAtom(JSContext* cx,
-                                 CompilationInfo& compilationInfo,
+  const ParserAtom* internJSAtom(JSContext* cx, CompilationStencil& stencil,
                                  JSAtom* atom);
 
   const ParserAtom* concatAtoms(JSContext* cx,

@@ -514,8 +514,9 @@ const ParserAtom* ParserAtomsTable::internChar16(JSContext* cx,
                                            length);
 }
 
-const ParserAtom* ParserAtomsTable::internJSAtom(
-    JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom) {
+const ParserAtom* ParserAtomsTable::internJSAtom(JSContext* cx,
+                                                 CompilationStencil& stencil,
+                                                 JSAtom* atom) {
   const ParserAtom* parserAtom;
   {
     JS::AutoCheckCannotGC nogc;
@@ -531,7 +532,7 @@ const ParserAtom* ParserAtomsTable::internJSAtom(
 
   if (parserAtom->isParserAtomIndex()) {
     ParserAtomIndex index = parserAtom->toParserAtomIndex();
-    auto& atomCache = compilationInfo.input.atomCache;
+    auto& atomCache = stencil.input.atomCache;
 
     if (!atomCache.hasAtomAt(index)) {
       if (!atomCache.setAtomAt(cx, index, atom)) {
@@ -541,7 +542,7 @@ const ParserAtom* ParserAtomsTable::internJSAtom(
   }
 
   // We should (infallibly) map back to the same JSAtom.
-  MOZ_ASSERT(parserAtom->toJSAtom(cx, compilationInfo.input.atomCache) == atom);
+  MOZ_ASSERT(parserAtom->toJSAtom(cx, stencil.input.atomCache) == atom);
 
   return parserAtom;
 }

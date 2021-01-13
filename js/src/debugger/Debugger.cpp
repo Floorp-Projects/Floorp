@@ -38,6 +38,7 @@
 #include "debugger/Object.h"             // for DebuggerObject
 #include "debugger/Script.h"             // for DebuggerScript
 #include "debugger/Source.h"             // for DebuggerSource
+#include "frontend/CompilationInfo.h"    // for CompilationStencil
 #include "frontend/NameAnalysisTypes.h"  // for ParseGoal, ParseGoal::Script
 #include "frontend/ParseContext.h"       // for UsedNameTracker
 #include "frontend/Parser.h"             // for Parser
@@ -6031,21 +6032,21 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
   bool result = true;
 
   CompileOptions options(cx);
-  Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, frontend::CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
+  Rooted<frontend::CompilationStencil> stencil(
+      cx, frontend::CompilationStencil(cx, options));
+  if (!stencil.get().input.initForGlobal(cx)) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options,
-                                              compilationInfo.get());
+                                              stencil.get());
 
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   frontend::Parser<frontend::FullParseHandler, char16_t> parser(
       cx, options, chars.twoByteChars(), length,
-      /* foldConstants = */ true, compilationInfo.get(), compilationState,
-      nullptr, nullptr);
+      /* foldConstants = */ true, stencil.get(), compilationState, nullptr,
+      nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of memory we report
     // it in the usual way.

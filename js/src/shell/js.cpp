@@ -5298,21 +5298,21 @@ enum class DumpType {
 template <typename Unit>
 static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                     const Unit* units, size_t length,
-                    js::frontend::CompilationInfo& compilationInfo,
+                    js::frontend::CompilationStencil& stencil,
                     js::frontend::CompilationState& compilationState,
                     js::frontend::ParseGoal goal) {
   using namespace js::frontend;
 
   Parser<FullParseHandler, Unit> parser(cx, options, units, length, false,
-                                        compilationInfo, compilationState,
-                                        nullptr, nullptr);
+                                        stencil, compilationState, nullptr,
+                                        nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
 
   // Emplace the top-level stencil.
   MOZ_ASSERT(compilationState.scriptData.length() ==
-             CompilationInfo::TopLevelIndex);
+             CompilationStencil::TopLevelIndex);
   if (!compilationState.scriptData.emplaceBack()) {
     ReportOutOfMemory(cx);
     return false;
@@ -5333,7 +5333,7 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     ModuleBuilder builder(cx, &parser);
 
     SourceExtent extent = SourceExtent::makeGlobalExtent(length);
-    ModuleSharedContext modulesc(cx, compilationInfo, builder, extent);
+    ModuleSharedContext modulesc(cx, stencil, builder, extent);
     pn = parser.moduleBody(&modulesc);
   }
 
@@ -5354,7 +5354,7 @@ static bool DumpStencil(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options,
                         const Unit* units, size_t length,
                         js::frontend::ParseGoal goal) {
-  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(cx);
+  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(cx);
 
   JS::SourceText<Unit> srcBuf;
   if (!srcBuf.init(cx, units, length, JS::SourceOwnership::Borrowed)) {
@@ -5362,18 +5362,18 @@ static bool DumpStencil(JSContext* cx,
   }
 
   if (goal == frontend::ParseGoal::Script) {
-    compilationInfo = frontend::CompileGlobalScriptToStencil(
-        cx, options, srcBuf, ScopeKind::Global);
+    stencil = frontend::CompileGlobalScriptToStencil(cx, options, srcBuf,
+                                                     ScopeKind::Global);
   } else {
-    compilationInfo = frontend::ParseModuleToStencil(cx, options, srcBuf);
+    stencil = frontend::ParseModuleToStencil(cx, options, srcBuf);
   }
 
-  if (!compilationInfo) {
+  if (!stencil) {
     return false;
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  compilationInfo->dump();
+  stencil->dump();
 #endif
 
   return true;
@@ -5542,15 +5542,15 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
           bool unimplemented;
-          Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
+          Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
               cx, Smoosh::compileGlobalScriptToStencil(cx, options, srcBuf,
                                                        &unimplemented));
-          if (!compilationInfo) {
+          if (!stencil) {
             return false;
           }
 
 #  ifdef DEBUG
-          compilationInfo->dump();
+          stencil->dump();
 #  endif
         } else {
           JS_ReportErrorASCII(cx,
@@ -5583,34 +5583,33 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     return true;
   }
 
-  js::Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, js::frontend::CompilationInfo(cx, options));
+  js::Rooted<frontend::CompilationStencil> stencil(
+      cx, js::frontend::CompilationStencil(cx, options));
   if (goal == frontend::ParseGoal::Script) {
-    if (!compilationInfo.get().input.initForGlobal(cx)) {
+    if (!stencil.get().input.initForGlobal(cx)) {
       return false;
     }
   } else {
-    if (!compilationInfo.get().input.initForModule(cx)) {
+    if (!stencil.get().input.initForModule(cx)) {
       return false;
     }
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options,
-                                              compilationInfo.get());
+                                              stencil.get());
 
   if (isAscii) {
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
     auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
-    if (!DumpAST<mozilla::Utf8Unit>(cx, options, utf8, length,
-                                    compilationInfo.get(), compilationState,
-                                    goal)) {
+    if (!DumpAST<mozilla::Utf8Unit>(cx, options, utf8, length, stencil.get(),
+                                    compilationState, goal)) {
       return false;
     }
   } else {
     MOZ_ASSERT(stableChars.isTwoByte());
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    if (!DumpAST<char16_t>(cx, options, chars, length, compilationInfo.get(),
+    if (!DumpAST<char16_t>(cx, options, chars, length, stencil.get(),
                            compilationState, goal)) {
       return false;
     }
@@ -5663,19 +5662,19 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   const char16_t* chars = stableChars.twoByteRange().begin().get();
   size_t length = scriptContents->length();
 
-  js::Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, js::frontend::CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
+  js::Rooted<frontend::CompilationStencil> stencil(
+      cx, js::frontend::CompilationStencil(cx, options));
+  if (!stencil.get().input.initForGlobal(cx)) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options,
-                                              compilationInfo.get());
+                                              stencil.get());
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
-      cx, options, chars, length, false, compilationInfo.get(),
-      compilationState, nullptr, nullptr);
+      cx, options, chars, length, false, stencil.get(), compilationState,
+      nullptr, nullptr);
   if (!parser.checkOptions()) {
     return false;
   }

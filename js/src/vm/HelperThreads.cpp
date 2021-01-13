@@ -15,7 +15,7 @@
 #include <algorithm>
 
 #include "frontend/BytecodeCompilation.h"
-#include "frontend/CompilationInfo.h"  // frontend::CompilationInfo, frontend::CompilationGCOutput
+#include "frontend/CompilationInfo.h"  // frontend::CompilationStencilSet, frontend::CompilationGCOutput
 #include "frontend/ParserAtom.h"  // frontend::ParserAtomsTable
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
@@ -581,8 +581,8 @@ void ParseTask::trace(JSTracer* trc) {
   scripts.trace(trc);
   sourceObjects.trace(trc);
 
-  if (compilationInfo_) {
-    compilationInfo_->trace(trc);
+  if (stencil_) {
+    stencil_->trace(trc);
   }
   if (stencilSet_) {
     stencilSet_->trace(trc);
@@ -679,12 +679,12 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
 
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
-  compilationInfo_ =
+  stencil_ =
       frontend::CompileGlobalScriptToStencil(cx, options, data, scopeKind);
 
-  if (compilationInfo_) {
-    if (!frontend::PrepareForInstantiate(cx, *compilationInfo_, gcOutput_)) {
-      compilationInfo_ = nullptr;
+  if (stencil_) {
+    if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_)) {
+      stencil_ = nullptr;
     }
   }
 
@@ -694,13 +694,13 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
 }
 
 bool ParseTask::instantiateStencils(JSContext* cx) {
-  if (!compilationInfo_ && !stencilSet_) {
+  if (!stencil_ && !stencilSet_) {
     return false;
   }
 
   bool result;
-  if (compilationInfo_) {
-    result = frontend::InstantiateStencils(cx, *compilationInfo_, gcOutput_);
+  if (stencil_) {
+    result = frontend::InstantiateStencils(cx, *stencil_, gcOutput_);
   } else {
     result = frontend::InstantiateStencils(cx, *stencilSet_, gcOutput_,
                                            gcOutputForDelazification_);
@@ -747,11 +747,11 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
 
   options.setModule();
 
-  compilationInfo_ = frontend::ParseModuleToStencil(cx, options, data);
+  stencil_ = frontend::ParseModuleToStencil(cx, options, data);
 
-  if (compilationInfo_) {
-    if (!frontend::PrepareForInstantiate(cx, *compilationInfo_, gcOutput_)) {
-      compilationInfo_ = nullptr;
+  if (stencil_) {
+    if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_)) {
+      stencil_ = nullptr;
     }
   }
 
@@ -2093,8 +2093,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
       DebugAPI::onNewScript(cx, script);
     }
   } else {
-    MOZ_ASSERT(parseTask->compilationInfo_.get() ||
-               parseTask->stencilSet_.get());
+    MOZ_ASSERT(parseTask->stencil_.get() || parseTask->stencilSet_.get());
 
     if (!parseTask->instantiateStencils(cx)) {
       return nullptr;
@@ -2109,14 +2108,14 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
     if (parseTask->options.useStencilXDR) {
       UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
 
-      if (parseTask->compilationInfo_.get()) {
-        auto compilationInfo = parseTask->compilationInfo_.get();
-        if (!compilationInfo->input.source()->xdrEncodeInitialStencil(
-                cx, *compilationInfo, xdrEncoder)) {
+      if (parseTask->stencil_.get()) {
+        auto* stencil = parseTask->stencil_.get();
+        if (!stencil->input.source()->xdrEncodeInitialStencil(cx, *stencil,
+                                                              xdrEncoder)) {
           return nullptr;
         }
       } else {
-        auto stencilSet = parseTask->stencilSet_.get();
+        auto* stencilSet = parseTask->stencilSet_.get();
         if (!stencilSet->input.source()->xdrEncodeStencils(cx, *stencilSet,
                                                            xdrEncoder)) {
           return nullptr;
