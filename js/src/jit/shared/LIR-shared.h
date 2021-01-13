@@ -8602,11 +8602,11 @@ class LGuardIsExtensible : public LInstructionHelper<0, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
-class LGuardIndexIsNonNegative : public LInstructionHelper<0, 1, 0> {
+class LGuardInt32IsNonNegative : public LInstructionHelper<0, 1, 0> {
  public:
-  LIR_HEADER(GuardIndexIsNonNegative)
+  LIR_HEADER(GuardInt32IsNonNegative)
 
-  explicit LGuardIndexIsNonNegative(const LAllocation& index)
+  explicit LGuardInt32IsNonNegative(const LAllocation& index)
       : LInstructionHelper(classOpcode) {
     setOperand(0, index);
   }
