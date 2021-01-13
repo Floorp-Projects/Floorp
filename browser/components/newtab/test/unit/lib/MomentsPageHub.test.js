@@ -62,6 +62,33 @@ describe("MomentsPageHub", () => {
     assert.equal(instance.state._intervalId, 42);
   });
 
+  it("should init only once", async () => {
+    assert.notCalled(handleMessageRequestStub);
+
+    await instance.init(Promise.resolve(), {
+      handleMessageRequest: handleMessageRequestStub,
+      addImpression: addImpressionStub,
+      blockMessageById: blockMessageByIdStub,
+    });
+    await instance.init(Promise.resolve(), {
+      handleMessageRequest: handleMessageRequestStub,
+      addImpression: addImpressionStub,
+      blockMessageById: blockMessageByIdStub,
+    });
+
+    assert.calledOnce(handleMessageRequestStub);
+
+    instance.uninit();
+
+    await instance.init(Promise.resolve(), {
+      handleMessageRequest: handleMessageRequestStub,
+      addImpression: addImpressionStub,
+      blockMessageById: blockMessageByIdStub,
+    });
+
+    assert.calledTwice(handleMessageRequestStub);
+  });
+
   it("should uninit the instance", () => {
     instance.uninit();
     assert.calledOnce(clearIntervalStub);
