@@ -33,7 +33,8 @@ import java.util.concurrent.TimeUnit
  * sent with the request, defaults to [CookiePolicy.INCLUDE]
  * @property useCaches Whether caches should be used or a network request
  * should be forced, defaults to true (use caches).
- *
+* @property private Whether the request should be performed in a private context, defaults to false.
+ * The feature is not support in all [Client]s, check support before using.
  * @see [Headers.Names]
  * @see [Headers.Values]
  */
@@ -46,7 +47,8 @@ data class Request(
     val body: Body? = null,
     val redirect: Redirect = Redirect.FOLLOW,
     val cookiePolicy: CookiePolicy = CookiePolicy.INCLUDE,
-    val useCaches: Boolean = true
+    val useCaches: Boolean = true,
+    val private: Boolean = false
 ) {
     /**
      * A [Body] to be send with the [Request].
