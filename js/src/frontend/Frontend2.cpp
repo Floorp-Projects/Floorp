@@ -441,8 +441,8 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
 
   ScriptStencil& script = compilationInfo.stencil.scriptData[scriptIndex];
-  SourceExtent& extent =
-      compilationInfo.stencil.scriptExtra[scriptIndex].extent;
+  ScriptStencilExtra& scriptExtra =
+      compilationInfo.stencil.scriptExtra[scriptIndex];
 
   script.immutableFlags = smooshScript.immutable_flags;
 
@@ -485,19 +485,19 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     script.setHasSharedData();
   }
 
-  extent.sourceStart = smooshScript.extent.source_start;
-  extent.sourceEnd = smooshScript.extent.source_end;
-  extent.toStringStart = smooshScript.extent.to_string_start;
-  extent.toStringEnd = smooshScript.extent.to_string_end;
-  extent.lineno = smooshScript.extent.lineno;
-  extent.column = smooshScript.extent.column;
+  scriptExtra.extent.sourceStart = smooshScript.extent.source_start;
+  scriptExtra.extent.sourceEnd = smooshScript.extent.source_end;
+  scriptExtra.extent.toStringStart = smooshScript.extent.to_string_start;
+  scriptExtra.extent.toStringEnd = smooshScript.extent.to_string_end;
+  scriptExtra.extent.lineno = smooshScript.extent.lineno;
+  scriptExtra.extent.column = smooshScript.extent.column;
 
   if (isFunction) {
     if (smooshScript.fun_name.IsSome()) {
       script.functionAtom = allAtoms[smooshScript.fun_name.AsSome()]->toIndex();
     }
     script.functionFlags = FunctionFlags(smooshScript.fun_flags);
-    script.nargs = smooshScript.fun_nargs;
+    scriptExtra.nargs = smooshScript.fun_nargs;
     if (smooshScript.lazy_function_enclosing_scope_index.IsSome()) {
       script.setLazyFunctionEnclosingScopeIndex(ScopeIndex(
           smooshScript.lazy_function_enclosing_scope_index.AsSome()));
