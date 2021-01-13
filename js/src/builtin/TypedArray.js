@@ -540,42 +540,40 @@ function TypedArrayFindIndex(predicate/*, thisArg*/) {
     return -1;
 }
 
-// ES6 draft rev31 (2015-01-15) 22.1.3.10 %TypedArray%.prototype.forEach(callbackfn[,thisArg])
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
+// 22.2.3.12 %TypedArray%.prototype.forEach ( callbackfn [ , thisArg ] )
 function TypedArrayForEach(callbackfn/*, thisArg*/) {
-    // Step 1-2.
+    // Step 1.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
+    // Step 2.
     var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
 
     // If we got here, `this` is either a typed array or a wrapper for one.
 
-    // Step 3-4.
+    // Step 3.
     var len;
     if (isTypedArray)
         len = TypedArrayLength(O);
     else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
 
-    // Step 5.
+    // Step 4.
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "TypedArray.prototype.forEach");
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    // Step 6.
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
 
-    // Step 7-8.
-    // Step 7, 8a (implicit) and 8e.
+    // Steps 5-6.
     for (var k = 0; k < len; k++) {
-        // Step 8b-8c are unnecessary since the condition always holds true for TypedArray.
-        // Step 8d.
-        callContentFunction(callbackfn, T, O[k], k, O);
+        // Steps 6.a-c.
+        callContentFunction(callbackfn, thisArg, O[k], k, O);
     }
 
-    // Step 9.
+    // Step 7.
     return undefined;
 }
 
