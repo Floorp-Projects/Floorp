@@ -253,6 +253,7 @@ subprojects {
             if (project.hasProperty("coverage") && project.name != "support-test") {
                 tasks.withType(Test).configureEach() {
                     jacoco.includeNoLocationClasses = true
+                    jacoco.excludes = ['jdk.internal.*']
 
                     finalizedBy jacocoTestReport
                 }
