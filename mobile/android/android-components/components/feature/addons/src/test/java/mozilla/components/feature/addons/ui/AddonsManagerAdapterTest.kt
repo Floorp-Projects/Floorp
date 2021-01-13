@@ -98,6 +98,23 @@ class AddonsManagerAdapterTest {
             R.string.mozac_feature_addons_unavailable_section,
             (itemsWithSections[6] as NotYetSupportedSection).title
         )
+
+        // Test if excluededAddonIDs are excluded from recommended section
+        val excludedAddonIDs = listOf(recommendedAddon.id)
+        val itemsWithSections2 = adapter.createListWithSections(addons, excludedAddonIDs)
+
+        // The only recommended addon should be excluded, so the recommended section should be null
+        // Section size should shrink from 7 to 6
+        assertEquals(6, itemsWithSections2.size)
+        // There should be no section between the titles of Recommended & NotYetSupported
+        assertEquals(
+            R.string.mozac_feature_addons_recommended_section,
+            (itemsWithSections2[4] as Section).title
+        )
+        assertEquals(
+            R.string.mozac_feature_addons_unavailable_section,
+            (itemsWithSections2[5] as NotYetSupportedSection).title
+        )
     }
 
     @Test
