@@ -493,11 +493,7 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", false);
   pref("media.peerconnection.mute_on_bye_or_timeout", false);
 
   // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
-#ifdef EARLY_BETA_OR_EARLIER
-  pref("media.peerconnection.dtls.version.min", 771);
-#else
-  pref("media.peerconnection.dtls.version.min", 770);
-#endif
+pref("media.peerconnection.dtls.version.min", 771);
 #ifdef NIGHTLY_BUILD
   pref("media.peerconnection.dtls.version.max", 772);
 #else
