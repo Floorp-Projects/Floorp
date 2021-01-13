@@ -63,12 +63,12 @@ let target = document.getElementById("target");
 
 add_task(function testMouseDownUpMove() {
   // Left button
-  sendMouseEvent(target, "mousedown", LEFT_BUTTON, "mousedown", checkBlockOpenPopup);
+  sendMouseEvent(target, "mousedown", LEFT_BUTTON, "mousedown", checkAllowOpenPopup);
   sendMouseEvent(target, "mousemove", LEFT_BUTTON, "mousemove", checkBlockOpenPopup);
   sendMouseEvent(target, "mouseup", LEFT_BUTTON, "mouseup", checkAllowOpenPopup);
 
   // Middle button
-  sendMouseEvent(target, "mousedown", MIDDLE_BUTTON, "mousedown", checkBlockOpenPopup);
+  sendMouseEvent(target, "mousedown", MIDDLE_BUTTON, "mousedown", checkAllowOpenPopup);
   sendMouseEvent(target, "mousemove", MIDDLE_BUTTON, "mousemove", checkBlockOpenPopup);
   sendMouseEvent(target, "mouseup", MIDDLE_BUTTON, "mouseup", checkAllowOpenPopup);
 

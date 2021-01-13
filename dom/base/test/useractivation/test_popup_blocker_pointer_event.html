@@ -67,14 +67,14 @@
     add_task(function testPointerEventDefault() {
       // By default, only allow opening popup in the pointerup listener.
       // Left button
-      sendMouseEvent(target, "mousedown", LEFT_BUTTON, "pointerdown", checkBlockOpenPopup);
+      sendMouseEvent(target, "mousedown", LEFT_BUTTON, "pointerdown", checkAllowOpenPopup);
       sendMouseEvent(target, "mousemove", LEFT_BUTTON, "pointermove", checkBlockOpenPopup);
       sendMouseEvent(target, "mouseup", LEFT_BUTTON, "pointerup", checkAllowOpenPopup);
 
       // Middle button
-      sendMouseEvent(target, "mousedown", MIDDLE_BUTTON, "pointerdown", checkBlockOpenPopup);
+      sendMouseEvent(target, "mousedown", MIDDLE_BUTTON, "pointerdown", checkAllowOpenPopup);
       sendMouseEvent(target, "mousemove", MIDDLE_BUTTON, "pointermove", checkBlockOpenPopup);
-      sendMouseEvent(target, "mouseup", MIDDLE_BUTTON, "pointerup", checkBlockOpenPopup);
+      sendMouseEvent(target, "mouseup", MIDDLE_BUTTON, "pointerup", checkAllowOpenPopup);
 
       // Right button
       sendMouseEvent(target, "mousedown", RIGHT_BUTTON, "pointerdown", checkBlockOpenPopup);
@@ -92,9 +92,9 @@
       sendMouseEvent(target, "mouseup", LEFT_BUTTON, "pointerup", checkAllowOpenPopup);
 
       // Middle button
-      sendMouseEvent(target, "mousedown", MIDDLE_BUTTON, "pointerdown", checkBlockOpenPopup);
+      sendMouseEvent(target, "mousedown", MIDDLE_BUTTON, "pointerdown", checkAllowOpenPopup);
       sendMouseEvent(target, "mousemove", MIDDLE_BUTTON, "pointermove", checkBlockOpenPopup);
-      sendMouseEvent(target, "mouseup", MIDDLE_BUTTON, "pointerup", checkBlockOpenPopup);
+      sendMouseEvent(target, "mouseup", MIDDLE_BUTTON, "pointerup", checkAllowOpenPopup);
 
       // Right button
       sendMouseEvent(target, "mousedown", RIGHT_BUTTON, "pointerdown", checkBlockOpenPopup);
@@ -112,9 +112,9 @@
       sendMouseEvent(target, "mouseup", LEFT_BUTTON, "pointerup", checkAllowOpenPopup);
 
       // Middle button
-      sendMouseEvent(target, "mousedown", MIDDLE_BUTTON, "pointerdown", checkBlockOpenPopup);
+      sendMouseEvent(target, "mousedown", MIDDLE_BUTTON, "pointerdown", checkAllowOpenPopup);
       sendMouseEvent(target, "mousemove", MIDDLE_BUTTON, "pointermove", checkBlockOpenPopup);
-      sendMouseEvent(target, "mouseup", MIDDLE_BUTTON, "pointerup", checkBlockOpenPopup);
+      sendMouseEvent(target, "mouseup", MIDDLE_BUTTON, "pointerup", checkAllowOpenPopup);
 
       // Right button
       sendMouseEvent(target, "mousedown", RIGHT_BUTTON, "pointerdown", checkBlockOpenPopup);
