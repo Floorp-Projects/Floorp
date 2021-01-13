@@ -161,9 +161,9 @@ add_task(async function test_multiple_dialogs() {
   // Check we only have one dialog
 
   let tabDialogBox = gBrowser.getTabDialogBox(tab.linkedBrowser);
-  let dialogs = tabDialogBox
-    .getTabDialogManager()
-    ._dialogs.filter(d => d._openedURL == CONTENT_HANDLING_URL);
+  let dialogs = tabDialogBox._dialogManager._dialogs.filter(
+    d => d._openedURL == CONTENT_HANDLING_URL
+  );
 
   is(dialogs.length, 1, "Should only have 1 dialog open");
 

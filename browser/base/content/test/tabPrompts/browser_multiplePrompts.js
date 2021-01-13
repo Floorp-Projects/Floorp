@@ -8,10 +8,6 @@
  * the oldest one.
  */
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
-
   const PROMPTCOUNT = 9;
 
   let contentScript = function(MAX_PROMPT) {

@@ -277,11 +277,11 @@ class PrintHelper {
   }
 
   get _tabDialogBoxManager() {
-    return this._tabDialogBox.getTabDialogManager();
+    return this._tabDialogBox.getManager();
   }
 
   get _dialogs() {
-    return this._tabDialogBox.getTabDialogManager()._dialogs;
+    return this._tabDialogBox._dialogManager._dialogs;
   }
 
   get dialog() {

@@ -1331,9 +1331,6 @@ async function runTests(util) {
 let promptArgs;
 
 add_task(async function runPromptTests() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
   await runPromptCombinations(window, runTests);
 });
 </script>

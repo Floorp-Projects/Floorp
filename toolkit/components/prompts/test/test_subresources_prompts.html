@@ -38,10 +38,6 @@ let authPromptModalType = SpecialPowers.Services.prefs.getIntPref(
   "prompts.modalType.httpAuth"
 );
 
-SpecialPowers.pushPrefEnv({
-  set: [["prompts.contentPromptSubDialog", false]],
-});
-
 add_task(async function runTest() {
   modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT;
 

@@ -25,10 +25,6 @@ inittest();
 var promptDone;
 
 function inittest() {
-  SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
-
   window.addEventListener("message", runtest);
   window.open("bug619644_inner.html", "619644");
 

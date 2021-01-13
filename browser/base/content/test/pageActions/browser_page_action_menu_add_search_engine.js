@@ -107,10 +107,6 @@ add_task(async function one() {
 
 // Checks the panel button with a page that offers an invalid engine.
 add_task(async function invalid() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
-
   let url =
     getRootDirectory(gTestPath) +
     "page_action_menu_add_search_engine_invalid.html";
