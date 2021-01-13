@@ -16,6 +16,7 @@ DevToolsModules(
     "eval-with-debugger.js",
     "message-manager-mock.js",
     "utils.js",
+    "webidl-deprecated-list.js",
     "webidl-pure-allowlist.js",
     "worker-listeners.js",
 )
