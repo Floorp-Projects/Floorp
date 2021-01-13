@@ -3880,9 +3880,10 @@ bool JSScript::fullyInitFromStencil(
 
   // Note: These flags should already be correct when the BaseScript was
   // allocated.
-  MOZ_ASSERT_IF(stencil.scriptExtra.size() > scriptIndex.index,
-                script->immutableFlags() ==
-                    stencil.scriptExtra[scriptIndex].immutableFlags);
+  MOZ_ASSERT_IF(stencil.isInitialStencil(),
+                script->immutableFlags() == stencil.asCompilationStencil()
+                                                .scriptExtra[scriptIndex]
+                                                .immutableFlags);
 
   // Derive initial mutable flags
   script->resetArgsUsageAnalysis();
@@ -3933,7 +3934,7 @@ bool JSScript::fullyInitFromStencil(
 
 JSScript* JSScript::fromStencil(JSContext* cx,
                                 js::frontend::CompilationInput& input,
-                                js::frontend::BaseCompilationStencil& stencil,
+                                js::frontend::CompilationStencil& stencil,
                                 frontend::CompilationGCOutput& gcOutput,
                                 const js::frontend::ScriptIndex scriptIndex) {
   js::frontend::ScriptStencil& scriptStencil = stencil.scriptData[scriptIndex];
