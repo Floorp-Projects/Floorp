@@ -51,6 +51,10 @@
 #include "common/linux/eintr_wrapper.h"
 #include "common/linux/safe_readlink.h"
 
+#if !defined(__ANDROID__)
+#include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
+#endif
+
 static const char kCommandQuit = 'x';
 
 namespace google_breakpad {
@@ -266,12 +270,20 @@ CrashGenerationServer::ClientEvent(short revents)
   if (!MakeMinidumpFilename(minidump_filename))
     return true;
 
+#if defined(__ANDROID__)
   if (!google_breakpad::WriteMinidump(minidump_filename.c_str(),
                                       crashing_pid, crash_context,
                                       kCrashContextSize)) {
     close(signal_fd);
     return true;
   }
+#else
+  if (!write_minidump_linux_with_context(minidump_filename.c_str(),
+                                      crashing_pid, crash_context)) {
+    close(signal_fd);
+    return true;
+  }
+#endif
 
   ClientInfo info(crashing_pid, this);
   if (dump_callback_) {
