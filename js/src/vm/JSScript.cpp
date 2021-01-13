@@ -2815,13 +2815,13 @@ bool ScriptSource::xdrEncodeInitialStencil(
 }
 
 bool ScriptSource::xdrEncodeStencils(
-    JSContext* cx, frontend::CompilationInfoVector& compilationInfos,
+    JSContext* cx, frontend::CompilationStencilSet& stencilSet,
     UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder) {
-  if (!xdrEncodeInitialStencil(cx, compilationInfos.initial, xdrEncoder)) {
+  if (!xdrEncodeInitialStencil(cx, stencilSet.initial, xdrEncoder)) {
     return false;
   }
 
-  for (auto& delazification : compilationInfos.delazifications) {
+  for (auto& delazification : stencilSet.delazifications) {
     if (!xdrEncodeFunctionStencilWith(cx, delazification, xdrEncoder)) {
       return false;
     }
