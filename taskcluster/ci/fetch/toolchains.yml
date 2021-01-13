@@ -351,8 +351,8 @@ sccache:
     fetch:
         type: git
         repo: https://github.com/mozilla/sccache
-        # 0.2.14 release
-        revision: 5f57603ff6338d7b07221bf1fddcaedc14dba9b8
+        # 0.2.15 release
+        revision: 6b6d2f7d2dceefeb4f583712aa4c221db62be0bd
 
 fxc2:
     description: fxc2 source code
