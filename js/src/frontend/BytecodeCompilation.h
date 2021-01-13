@@ -17,7 +17,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "frontend/CompilationInfo.h"  // CompilationInfo, CompilationInfoVector, CompilationGCOutput
+#include "frontend/CompilationInfo.h"  // CompilationInfo, CompilationStencilSet, CompilationGCOutput
 #include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
@@ -76,7 +76,7 @@ extern bool PrepareForInstantiate(JSContext* cx,
                                   CompilationInfo& compilationInfo,
                                   CompilationGCOutput& gcOutput);
 extern bool PrepareForInstantiate(
-    JSContext* cx, CompilationInfoVector& compilationInfos,
+    JSContext* cx, CompilationStencilSet& stencilSet,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput& gcOutputForDelazification);
 
@@ -84,7 +84,7 @@ extern bool InstantiateStencils(JSContext* cx, CompilationInfo& compilationInfo,
                                 CompilationGCOutput& gcOutput);
 
 extern bool InstantiateStencils(JSContext* cx,
-                                CompilationInfoVector& compilationInfos,
+                                CompilationStencilSet& stencilSet,
                                 CompilationGCOutput& gcOutput,
                                 CompilationGCOutput& gcOutputForDelazification);
 

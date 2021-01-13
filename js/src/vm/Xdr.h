@@ -29,7 +29,7 @@ struct SourceExtent;
 
 namespace frontend {
 struct CompilationInfo;
-struct CompilationInfoVector;
+struct CompilationStencilSet;
 struct CompilationInput;
 struct BaseCompilationStencil;
 }  // namespace frontend
@@ -322,7 +322,7 @@ class XDRState : public XDRCoderBase {
   }
 
   virtual XDRResult codeDelazificationStencils(
-      frontend::CompilationInfoVector& compilationInfos) {
+      frontend::CompilationStencilSet& stencilSet) {
     MOZ_CRASH("cannot code delazification stencils.");
   }
 
@@ -627,7 +627,7 @@ class XDRStencilDecoder : public XDRDecoderBase {
   bool hasOptions() const override { return true; }
   const JS::ReadOnlyCompileOptions& options() override { return *options_; }
 
-  XDRResult codeStencils(frontend::CompilationInfoVector& compilationInfos);
+  XDRResult codeStencils(frontend::CompilationStencilSet& stencilSet);
 
  private:
   const JS::ReadOnlyCompileOptions* options_;
@@ -839,7 +839,7 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
 
   XDRResult linearize(JS::TranscodeBuffer& buffer) override;
 
-  XDRResult codeStencils(frontend::CompilationInfoVector& compilationInfos);
+  XDRResult codeStencils(frontend::CompilationStencilSet& stencilSet);
 };
 
 template <XDRMode mode>
