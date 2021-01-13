@@ -11302,9 +11302,9 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
     funbox->copyUpdatedImmutableFlags();
     MOZ_ASSERT(script.isFunction());
   } else {
-    SourceExtent& extent = compilationState.scriptExtent[scriptIndex];
+    ScriptStencilExtra& scriptExtra = compilationState.scriptExtra[scriptIndex];
     sc->copyScriptFields(script);
-    sc->copyScriptExtent(extent);
+    sc->copyScriptExtraFields(scriptExtra);
   }
 
   return true;

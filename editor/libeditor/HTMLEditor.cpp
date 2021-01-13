@@ -372,7 +372,7 @@ NS_IMETHODIMP HTMLEditor::NotifySelectionChanged(Document* aDocument,
 
   if (mTypeInState) {
     RefPtr<TypeInState> typeInState = mTypeInState;
-    typeInState->OnSelectionChange(*aSelection, aReason);
+    typeInState->OnSelectionChange(*this, aReason);
 
     // We used a class which derived from nsISelectionListener to call
     // HTMLEditor::RefreshEditingUI().  The lifetime of the class was
@@ -698,6 +698,42 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionTo() failed");
   return rv;
+}
+
+void HTMLEditor::PreHandleMouseDown(const MouseEvent& aMouseDownEvent) {
+  if (mTypeInState) {
+    // mTypeInState will be notified of selection change even if aMouseDownEvent
+    // is not an acceptable event for this editor.  Therefore, we need to notify
+    // it of this event too.
+    mTypeInState->PreHandleMouseEvent(aMouseDownEvent);
+  }
+}
+
+void HTMLEditor::PreHandleMouseUp(const MouseEvent& aMouseUpEvent) {
+  if (mTypeInState) {
+    // mTypeInState will be notified of selection change even if aMouseUpEvent
+    // is not an acceptable event for this editor.  Therefore, we need to notify
+    // it of this event too.
+    mTypeInState->PreHandleMouseEvent(aMouseUpEvent);
+  }
+}
+
+void HTMLEditor::PreHandleSelectionChangeCommand(Command aCommand) {
+  if (mTypeInState) {
+    mTypeInState->PreHandleSelectionChangeCommand(aCommand);
+  }
+}
+
+void HTMLEditor::PostHandleSelectionChangeCommand(Command aCommand) {
+  if (!mTypeInState) {
+    return;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (!editActionData.CanHandle()) {
+    return;
+  }
+  mTypeInState->PostHandleSelectionChangeCommand(*this, aCommand);
 }
 
 nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {

@@ -57,7 +57,6 @@ add_task(async function() {
   });
   is(color, "rgb(255, 0, 102)", "div is red before saving file");
 
-  // let styleApplied = defer();
   const styleApplied = editor.once("style-applied");
 
   await pauseForTimeChange();

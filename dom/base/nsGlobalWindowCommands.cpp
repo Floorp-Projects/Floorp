@@ -31,6 +31,8 @@
 #include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/HTMLEditor.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Selection.h"
@@ -266,37 +268,41 @@ static bool IsCaretOnInWindow(nsPIDOMWindowOuter* aWindow,
 }
 
 static constexpr struct BrowseCommand {
-  const char *reverse, *forward;
+  Command reverse, forward;
   KeyboardScrollAction::KeyboardScrollActionType scrollAction;
   nsresult (NS_STDCALL nsISelectionController::*scroll)(bool);
   nsresult (NS_STDCALL nsISelectionController::*move)(bool, bool);
 } browseCommands[] = {
-    {sScrollTopString, sScrollBottomString,
+    {Command::ScrollTop, Command::ScrollBottom,
      KeyboardScrollAction::eScrollComplete,
      &nsISelectionController::CompleteScroll},
-    {sScrollPageUpString, sScrollPageDownString,
+    {Command::ScrollPageUp, Command::ScrollPageDown,
      KeyboardScrollAction::eScrollPage, &nsISelectionController::ScrollPage},
-    {sScrollLineUpString, sScrollLineDownString,
+    {Command::ScrollLineUp, Command::ScrollLineDown,
      KeyboardScrollAction::eScrollLine, &nsISelectionController::ScrollLine},
-    {sScrollLeftString, sScrollRightString,
+    {Command::ScrollLeft, Command::ScrollRight,
      KeyboardScrollAction::eScrollCharacter,
      &nsISelectionController::ScrollCharacter},
-    {sMoveTopString, sMoveBottomString, KeyboardScrollAction::eScrollComplete,
+    {Command::MoveTop, Command::MoveBottom,
+     KeyboardScrollAction::eScrollComplete,
      &nsISelectionController::CompleteScroll,
      &nsISelectionController::CompleteMove},
-    {sMovePageUpString, sMovePageDownString, KeyboardScrollAction::eScrollPage,
-     &nsISelectionController::ScrollPage, &nsISelectionController::PageMove},
-    {sLinePreviousString, sLineNextString, KeyboardScrollAction::eScrollLine,
-     &nsISelectionController::ScrollLine, &nsISelectionController::LineMove},
-    {sWordPreviousString, sWordNextString,
+    {Command::MovePageUp, Command::MovePageDown,
+     KeyboardScrollAction::eScrollPage, &nsISelectionController::ScrollPage,
+     &nsISelectionController::PageMove},
+    {Command::LinePrevious, Command::LineNext,
+     KeyboardScrollAction::eScrollLine, &nsISelectionController::ScrollLine,
+     &nsISelectionController::LineMove},
+    {Command::WordPrevious, Command::WordNext,
      KeyboardScrollAction::eScrollCharacter,
      &nsISelectionController::ScrollCharacter,
      &nsISelectionController::WordMove},
-    {sCharPreviousString, sCharNextString,
+    {Command::CharPrevious, Command::CharNext,
      KeyboardScrollAction::eScrollCharacter,
      &nsISelectionController::ScrollCharacter,
      &nsISelectionController::CharacterMove},
-    {sBeginLineString, sEndLineString, KeyboardScrollAction::eScrollComplete,
+    {Command::BeginLine, Command::EndLine,
+     KeyboardScrollAction::eScrollComplete,
      &nsISelectionController::CompleteScroll,
      &nsISelectionController::IntraLineMove}};
 
@@ -307,20 +313,32 @@ nsresult nsSelectMoveScrollCommand::DoCommand(const char* aCommandName,
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
   NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);
 
-  bool caretOn = IsCaretOnInWindow(piWindow, selCont);
-
-  for (size_t i = 0; i < ArrayLength(browseCommands); i++) {
-    bool forward = !strcmp(aCommandName, browseCommands[i].forward);
-    if (forward || !strcmp(aCommandName, browseCommands[i].reverse)) {
-      if (caretOn && browseCommands[i].move &&
-          NS_SUCCEEDED((selCont->*(browseCommands[i].move))(forward, false))) {
-        AdjustFocusAfterCaretMove(piWindow);
-        return NS_OK;
-      }
-      return (selCont->*(browseCommands[i].scroll))(forward);
+  const bool caretOn = IsCaretOnInWindow(piWindow, selCont);
+  const Command command = GetInternalCommand(aCommandName);
+  for (const BrowseCommand& browseCommand : browseCommands) {
+    const bool forward = command == browseCommand.forward;
+    if (!forward && command != browseCommand.reverse) {
+      continue;
     }
+    RefPtr<HTMLEditor> htmlEditor =
+        HTMLEditor::GetFrom(nsContentUtils::GetActiveEditor(piWindow));
+    if (htmlEditor) {
+      htmlEditor->PreHandleSelectionChangeCommand(command);
+    }
+    nsresult rv = NS_OK;
+    if (caretOn && browseCommand.move &&
+        NS_SUCCEEDED((selCont->*(browseCommand.move))(forward, false))) {
+      AdjustFocusAfterCaretMove(piWindow);
+    } else {
+      rv = (selCont->*(browseCommand.scroll))(forward);
+    }
+    if (htmlEditor) {
+      htmlEditor->PostHandleSelectionChangeCommand(command);
+    }
+    return rv;
   }
 
+  MOZ_ASSERT(false, "Forgot to handle new command?");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -329,31 +347,31 @@ nsresult nsSelectMoveScrollCommand::DoCommand(const char* aCommandName,
 // ScrollLine, etc., as if for horizontal-mode content, but this may need
 // to be reconsidered once we have more experience with vertical content.
 static const struct PhysicalBrowseCommand {
-  const char* command;
+  Command command;
   int16_t direction, amount;
   KeyboardScrollAction::KeyboardScrollActionType scrollAction;
   nsresult (NS_STDCALL nsISelectionController::*scroll)(bool);
 } physicalBrowseCommands[] = {
-    {sMoveLeftString, nsISelectionController::MOVE_LEFT, 0,
+    {Command::MoveLeft, nsISelectionController::MOVE_LEFT, 0,
      KeyboardScrollAction::eScrollCharacter,
      &nsISelectionController::ScrollCharacter},
-    {sMoveRightString, nsISelectionController::MOVE_RIGHT, 0,
+    {Command::MoveRight, nsISelectionController::MOVE_RIGHT, 0,
      KeyboardScrollAction::eScrollCharacter,
      &nsISelectionController::ScrollCharacter},
-    {sMoveUpString, nsISelectionController::MOVE_UP, 0,
+    {Command::MoveUp, nsISelectionController::MOVE_UP, 0,
      KeyboardScrollAction::eScrollLine, &nsISelectionController::ScrollLine},
-    {sMoveDownString, nsISelectionController::MOVE_DOWN, 0,
+    {Command::MoveDown, nsISelectionController::MOVE_DOWN, 0,
      KeyboardScrollAction::eScrollLine, &nsISelectionController::ScrollLine},
-    {sMoveLeft2String, nsISelectionController::MOVE_LEFT, 1,
+    {Command::MoveLeft2, nsISelectionController::MOVE_LEFT, 1,
      KeyboardScrollAction::eScrollCharacter,
      &nsISelectionController::ScrollCharacter},
-    {sMoveRight2String, nsISelectionController::MOVE_RIGHT, 1,
+    {Command::MoveRight2, nsISelectionController::MOVE_RIGHT, 1,
      KeyboardScrollAction::eScrollCharacter,
      &nsISelectionController::ScrollCharacter},
-    {sMoveUp2String, nsISelectionController::MOVE_UP, 1,
+    {Command::MoveUp2, nsISelectionController::MOVE_UP, 1,
      KeyboardScrollAction::eScrollComplete,
      &nsISelectionController::CompleteScroll},
-    {sMoveDown2String, nsISelectionController::MOVE_DOWN, 1,
+    {Command::MoveDown2, nsISelectionController::MOVE_DOWN, 1,
      KeyboardScrollAction::eScrollComplete,
      &nsISelectionController::CompleteScroll},
 };
@@ -365,24 +383,34 @@ nsresult nsPhysicalSelectMoveScrollCommand::DoCommand(
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
   NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);
 
-  bool caretOn = IsCaretOnInWindow(piWindow, selCont);
-
-  for (size_t i = 0; i < ArrayLength(physicalBrowseCommands); i++) {
-    const PhysicalBrowseCommand& cmd = physicalBrowseCommands[i];
-    if (!strcmp(aCommandName, cmd.command)) {
-      int16_t dir = cmd.direction;
-      if (caretOn &&
-          NS_SUCCEEDED(selCont->PhysicalMove(dir, cmd.amount, false))) {
-        AdjustFocusAfterCaretMove(piWindow);
-        return NS_OK;
-      }
-
-      bool forward = (dir == nsISelectionController::MOVE_RIGHT ||
-                      dir == nsISelectionController::MOVE_DOWN);
-      return (selCont->*(cmd.scroll))(forward);
+  const bool caretOn = IsCaretOnInWindow(piWindow, selCont);
+  Command command = GetInternalCommand(aCommandName);
+  for (const PhysicalBrowseCommand& browseCommand : physicalBrowseCommands) {
+    if (command != browseCommand.command) {
+      continue;
     }
+    RefPtr<HTMLEditor> htmlEditor =
+        HTMLEditor::GetFrom(nsContentUtils::GetActiveEditor(piWindow));
+    if (htmlEditor) {
+      htmlEditor->PreHandleSelectionChangeCommand(command);
+    }
+    nsresult rv = NS_OK;
+    if (caretOn && NS_SUCCEEDED(selCont->PhysicalMove(
+                       browseCommand.direction, browseCommand.amount, false))) {
+      AdjustFocusAfterCaretMove(piWindow);
+    } else {
+      const bool forward =
+          (browseCommand.direction == nsISelectionController::MOVE_RIGHT ||
+           browseCommand.direction == nsISelectionController::MOVE_DOWN);
+      rv = (selCont->*(browseCommand.scroll))(forward);
+    }
+    if (htmlEditor) {
+      htmlEditor->PostHandleSelectionChangeCommand(command);
+    }
+    return rv;
   }
 
+  MOZ_ASSERT(false, "Forgot to handle new command?");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -391,19 +419,19 @@ nsresult nsPhysicalSelectMoveScrollCommand::DoCommand(
 #endif
 
 static const struct SelectCommand {
-  const char *reverse, *forward;
+  Command reverse, forward;
   nsresult (NS_STDCALL nsISelectionController::*select)(bool, bool);
-} selectCommands[] = {{sSelectCharPreviousString, sSelectCharNextString,
+} selectCommands[] = {{Command::SelectCharPrevious, Command::SelectCharNext,
                        &nsISelectionController::CharacterMove},
-                      {sSelectWordPreviousString, sSelectWordNextString,
+                      {Command::SelectWordPrevious, Command::SelectWordNext,
                        &nsISelectionController::WordMove},
-                      {sSelectBeginLineString, sSelectEndLineString,
+                      {Command::SelectBeginLine, Command::SelectEndLine,
                        &nsISelectionController::IntraLineMove},
-                      {sSelectLinePreviousString, sSelectLineNextString,
+                      {Command::SelectLinePrevious, Command::SelectLineNext,
                        &nsISelectionController::LineMove},
-                      {sSelectPageUpString, sSelectPageDownString,
+                      {Command::SelectPageUp, Command::SelectPageDown,
                        &nsISelectionController::PageMove},
-                      {sSelectTopString, sSelectBottomString,
+                      {Command::SelectTop, Command::SelectBottom,
                        &nsISelectionController::CompleteMove}};
 
 nsresult nsSelectCommand::DoCommand(const char* aCommandName,
@@ -415,12 +443,25 @@ nsresult nsSelectCommand::DoCommand(const char* aCommandName,
 
   // These commands are so the browser can use caret navigation key bindings -
   // Helps with accessibility - aaronl@netscape.com
-  for (size_t i = 0; i < ArrayLength(selectCommands); i++) {
-    bool forward = !strcmp(aCommandName, selectCommands[i].forward);
-    if (forward || !strcmp(aCommandName, selectCommands[i].reverse)) {
-      return (selCont->*(selectCommands[i].select))(forward, true);
+  const Command command = GetInternalCommand(aCommandName);
+  for (const SelectCommand& selectCommand : selectCommands) {
+    const bool forward = command == selectCommand.forward;
+    if (!forward && command != selectCommand.reverse) {
+      continue;
     }
+    RefPtr<HTMLEditor> htmlEditor =
+        HTMLEditor::GetFrom(nsContentUtils::GetActiveEditor(piWindow));
+    if (htmlEditor) {
+      htmlEditor->PreHandleSelectionChangeCommand(command);
+    }
+    nsresult rv = (selCont->*(selectCommand.select))(forward, true);
+    if (htmlEditor) {
+      htmlEditor->PostHandleSelectionChangeCommand(command);
+    }
+    return rv;
   }
+
+  MOZ_ASSERT(false, "Forgot to handle new command?");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -429,17 +470,17 @@ nsresult nsSelectCommand::DoCommand(const char* aCommandName,
 #endif
 
 static const struct PhysicalSelectCommand {
-  const char* command;
+  Command command;
   int16_t direction, amount;
 } physicalSelectCommands[] = {
-    {sSelectLeftString, nsISelectionController::MOVE_LEFT, 0},
-    {sSelectRightString, nsISelectionController::MOVE_RIGHT, 0},
-    {sSelectUpString, nsISelectionController::MOVE_UP, 0},
-    {sSelectDownString, nsISelectionController::MOVE_DOWN, 0},
-    {sSelectLeft2String, nsISelectionController::MOVE_LEFT, 1},
-    {sSelectRight2String, nsISelectionController::MOVE_RIGHT, 1},
-    {sSelectUp2String, nsISelectionController::MOVE_UP, 1},
-    {sSelectDown2String, nsISelectionController::MOVE_DOWN, 1}};
+    {Command::SelectLeft, nsISelectionController::MOVE_LEFT, 0},
+    {Command::SelectRight, nsISelectionController::MOVE_RIGHT, 0},
+    {Command::SelectUp, nsISelectionController::MOVE_UP, 0},
+    {Command::SelectDown, nsISelectionController::MOVE_DOWN, 0},
+    {Command::SelectLeft2, nsISelectionController::MOVE_LEFT, 1},
+    {Command::SelectRight2, nsISelectionController::MOVE_RIGHT, 1},
+    {Command::SelectUp2, nsISelectionController::MOVE_UP, 1},
+    {Command::SelectDown2, nsISelectionController::MOVE_DOWN, 1}};
 
 nsresult nsPhysicalSelectCommand::DoCommand(const char* aCommandName,
                                             nsISupports* aCommandContext) {
@@ -448,13 +489,25 @@ nsresult nsPhysicalSelectCommand::DoCommand(const char* aCommandName,
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
   NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);
 
-  for (size_t i = 0; i < ArrayLength(physicalSelectCommands); i++) {
-    if (!strcmp(aCommandName, physicalSelectCommands[i].command)) {
-      return selCont->PhysicalMove(physicalSelectCommands[i].direction,
-                                   physicalSelectCommands[i].amount, true);
+  const Command command = GetInternalCommand(aCommandName);
+  for (const PhysicalSelectCommand& selectCommand : physicalSelectCommands) {
+    if (command != selectCommand.command) {
+      continue;
     }
+    RefPtr<HTMLEditor> htmlEditor =
+        HTMLEditor::GetFrom(nsContentUtils::GetActiveEditor(piWindow));
+    if (htmlEditor) {
+      htmlEditor->PreHandleSelectionChangeCommand(command);
+    }
+    nsresult rv = selCont->PhysicalMove(selectCommand.direction,
+                                        selectCommand.amount, true);
+    if (htmlEditor) {
+      htmlEditor->PostHandleSelectionChangeCommand(command);
+    }
+    return rv;
   }
 
+  MOZ_ASSERT(false, "Forgot to handle new command?");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1155,26 +1208,29 @@ bool nsGlobalWindowCommands::FindScrollCommand(
   // of them, so the order we examine browseCommands and physicalBrowseCommands
   // doesn't matter.
 
-  for (size_t i = 0; i < ArrayLength(browseCommands); i++) {
-    const BrowseCommand& cmd = browseCommands[i];
-    bool forward = !strcmp(aCommandName, cmd.forward);
-    bool reverse = !strcmp(aCommandName, cmd.reverse);
+  const Command command = GetInternalCommand(aCommandName);
+  if (command == Command::DoNothing) {
+    return false;
+  }
+  for (const BrowseCommand& browseCommand : browseCommands) {
+    const bool forward = command == browseCommand.forward;
+    const bool reverse = command == browseCommand.reverse;
     if (forward || reverse) {
-      *aOutAction = KeyboardScrollAction(cmd.scrollAction, forward);
+      *aOutAction = KeyboardScrollAction(browseCommand.scrollAction, forward);
       return true;
     }
   }
 
-  for (size_t i = 0; i < ArrayLength(physicalBrowseCommands); i++) {
-    const PhysicalBrowseCommand& cmd = physicalBrowseCommands[i];
-    if (!strcmp(aCommandName, cmd.command)) {
-      int16_t dir = cmd.direction;
-      bool forward = (dir == nsISelectionController::MOVE_RIGHT ||
-                      dir == nsISelectionController::MOVE_DOWN);
-
-      *aOutAction = KeyboardScrollAction(cmd.scrollAction, forward);
-      return true;
+  for (const PhysicalBrowseCommand& browseCommand : physicalBrowseCommands) {
+    if (command != browseCommand.command) {
+      continue;
     }
+    const bool forward =
+        (browseCommand.direction == nsISelectionController::MOVE_RIGHT ||
+         browseCommand.direction == nsISelectionController::MOVE_DOWN);
+
+    *aOutAction = KeyboardScrollAction(browseCommand.scrollAction, forward);
+    return true;
   }
 
   return false;

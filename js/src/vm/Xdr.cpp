@@ -711,6 +711,11 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
 }
 
 XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer) {
+  // NOTE: If buffer is empty, buffer.begin() doesn't point valid buffer.
+  MOZ_ASSERT_IF(!buffer.empty(),
+                JS::IsTranscodingBytecodeAligned(buffer.begin()));
+  MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(buffer.length()));
+
   switchToHeaderBuf();
 
   uint32_t nchunks = encodedFunctions_.count() + 1;

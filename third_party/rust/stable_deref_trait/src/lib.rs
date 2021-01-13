@@ -19,6 +19,9 @@ no_std support can be enabled by disabling default features (specifically "std")
 #[cfg(feature = "std")]
 extern crate core;
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 use core::ops::Deref;
 
 
@@ -129,36 +132,50 @@ pub unsafe trait CloneStableDeref: StableDeref + Clone {}
 // std types integration
 /////////////////////////////////////////////////////////////////////////////
 
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
+#[cfg(feature = "alloc")]
+use alloc::rc::Rc;
+#[cfg(feature = "alloc")]
+use alloc::sync::Arc;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+
 #[cfg(feature = "std")]
-use std::boxed::Box;
+use std::ffi::{CString, OsString};
 #[cfg(feature = "std")]
-use std::rc::Rc;
-#[cfg(feature = "std")]
-use std::sync::Arc;
+use std::path::PathBuf;
 #[cfg(feature = "std")]
 use std::sync::{MutexGuard, RwLockReadGuard, RwLockWriteGuard};
-#[cfg(feature = "std")]
-use std::cell::{Ref, RefMut};
 
-#[cfg(feature = "std")]
+use core::cell::{Ref, RefMut};
+
+
+#[cfg(feature = "alloc")]
 unsafe impl<T: ?Sized> StableDeref for Box<T> {}
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 unsafe impl<T> StableDeref for Vec<T> {}
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 unsafe impl StableDeref for String {}
+#[cfg(feature = "std")]
+unsafe impl StableDeref for CString {}
+#[cfg(feature = "std")]
+unsafe impl StableDeref for OsString {}
+#[cfg(feature = "std")]
+unsafe impl StableDeref for PathBuf {}
 
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 unsafe impl<T: ?Sized> StableDeref for Rc<T> {}
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 unsafe impl<T: ?Sized> CloneStableDeref for Rc<T> {}
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 unsafe impl<T: ?Sized> StableDeref for Arc<T> {}
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 unsafe impl<T: ?Sized> CloneStableDeref for Arc<T> {}
 
-#[cfg(feature = "std")]
 unsafe impl<'a, T: ?Sized> StableDeref for Ref<'a, T> {}
-#[cfg(feature = "std")]
 unsafe impl<'a, T: ?Sized> StableDeref for RefMut<'a, T> {}
 #[cfg(feature = "std")]
 unsafe impl<'a, T: ?Sized> StableDeref for MutexGuard<'a, T> {}

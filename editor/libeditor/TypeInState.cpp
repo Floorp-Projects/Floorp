@@ -8,9 +8,12 @@
 #include <stddef.h>
 
 #include "HTMLEditUtils.h"
+#include "mozilla/EditAction.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/dom/AncestorIterator.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsDebug.h"
@@ -50,7 +53,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TypeInState, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TypeInState, Release)
 
-TypeInState::TypeInState() : mRelativeFontSize(0) { Reset(); }
+TypeInState::TypeInState()
+    : mRelativeFontSize(0),
+      mLastSelectionCommand(Command::DoNothing),
+      mMouseDownFiredInLinkElement(false),
+      mMouseUpFiredInLinkElement(false) {
+  Reset();
+}
 
 TypeInState::~TypeInState() {
   // Call Reset() to release any data that may be in
@@ -78,7 +87,78 @@ nsresult TypeInState::UpdateSelState(Selection* aSelection) {
   return NS_OK;
 }
 
-void TypeInState::OnSelectionChange(Selection& aSelection, int16_t aReason) {
+void TypeInState::PreHandleMouseEvent(const MouseEvent& aMouseDownOrUpEvent) {
+  MOZ_ASSERT(aMouseDownOrUpEvent.WidgetEventPtr()->mMessage == eMouseDown ||
+             aMouseDownOrUpEvent.WidgetEventPtr()->mMessage == eMouseUp);
+  bool& eventFiredInLinkElement =
+      aMouseDownOrUpEvent.WidgetEventPtr()->mMessage == eMouseDown
+          ? mMouseDownFiredInLinkElement
+          : mMouseUpFiredInLinkElement;
+  eventFiredInLinkElement = false;
+  if (aMouseDownOrUpEvent.DefaultPrevented()) {
+    return;
+  }
+  // If mouse button is down or up in a link element, we shouldn't unlink
+  // it when we get a notification of selection change.
+  EventTarget* target = aMouseDownOrUpEvent.GetExplicitOriginalTarget();
+  if (NS_WARN_IF(!target)) {
+    return;
+  }
+  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+  if (NS_WARN_IF(!targetContent)) {
+    return;
+  }
+  eventFiredInLinkElement =
+      HTMLEditUtils::IsContentInclusiveDescendantOfLink(*targetContent);
+}
+
+void TypeInState::PreHandleSelectionChangeCommand(Command aCommand) {
+  mLastSelectionCommand = aCommand;
+}
+
+void TypeInState::PostHandleSelectionChangeCommand(
+    const HTMLEditor& aHTMLEditor, Command aCommand) {
+  if (mLastSelectionCommand != aCommand) {
+    return;
+  }
+
+  // If `OnSelectionChange()` hasn't been called for `mLastSelectionCommand`,
+  // it means that it didn't cause selection change.
+  if (!aHTMLEditor.SelectionRefPtr()->IsCollapsed() ||
+      !aHTMLEditor.SelectionRefPtr()->RangeCount()) {
+    return;
+  }
+
+  EditorRawDOMPoint caretPoint(
+      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
+  if (NS_WARN_IF(!caretPoint.IsSet())) {
+    return;
+  }
+
+  if (!HTMLEditUtils::IsPointAtEdgeOfLink(caretPoint)) {
+    return;
+  }
+
+  // If all styles are cleared or link style is explicitly set, we
+  // shouldn't reset them without caret move.
+  if (AreAllStylesCleared() || IsLinkStyleSet()) {
+    return;
+  }
+  // And if non-link styles are cleared or some styles are set, we
+  // shouldn't reset them too, but we may need to change the link
+  // style.
+  if (AreSomeStylesSet() ||
+      (AreSomeStylesCleared() && !IsOnlyLinkStyleCleared())) {
+    ClearProp(nsGkAtoms::a, nullptr);
+    return;
+  }
+
+  Reset();
+  ClearProp(nsGkAtoms::a, nullptr);
+}
+
+void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
+                                    int16_t aReason) {
   // XXX: Selection currently generates bogus selection changed notifications
   // XXX: (bug 140303). It can notify us when the selection hasn't actually
   // XXX: changed, and it notifies us more than once for the same change.
@@ -89,44 +169,141 @@ void TypeInState::OnSelectionChange(Selection& aSelection, int16_t aReason) {
   // XXX: This code temporarily fixes the problem where clicking the mouse in
   // XXX: the same location clears the type-in-state.
 
+  const bool causedByFrameSelectionMoveCaret =
+      (aReason & (nsISelectionListener::KEYPRESS_REASON |
+                  nsISelectionListener::COLLAPSETOSTART_REASON |
+                  nsISelectionListener::COLLAPSETOEND_REASON)) &&
+      !(aReason & nsISelectionListener::JS_REASON);
+
+  Command lastSelectionCommand = mLastSelectionCommand;
+  if (causedByFrameSelectionMoveCaret) {
+    mLastSelectionCommand = Command::DoNothing;
+  }
+
+  bool mouseEventFiredInLinkElement = false;
+  if (aReason & (nsISelectionListener::MOUSEDOWN_REASON |
+                 nsISelectionListener::MOUSEUP_REASON)) {
+    MOZ_ASSERT((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
+                           nsISelectionListener::MOUSEUP_REASON)) !=
+               (nsISelectionListener::MOUSEDOWN_REASON |
+                nsISelectionListener::MOUSEUP_REASON));
+    bool& eventFiredInLinkElement =
+        aReason & nsISelectionListener::MOUSEDOWN_REASON
+            ? mMouseDownFiredInLinkElement
+            : mMouseUpFiredInLinkElement;
+    mouseEventFiredInLinkElement = eventFiredInLinkElement;
+    eventFiredInLinkElement = false;
+  }
+
   bool unlink = false;
-  if (aSelection.IsCollapsed() && aSelection.RangeCount()) {
+  bool resetAllStyles = true;
+  if (aHTMLEditor.SelectionRefPtr()->IsCollapsed() &&
+      aHTMLEditor.SelectionRefPtr()->RangeCount()) {
     EditorRawDOMPoint selectionStartPoint(
-        EditorBase::GetStartPoint(aSelection));
+        EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
     if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
       return;
     }
 
     if (mLastSelectionPoint == selectionStartPoint) {
-      // We got a bogus selection changed notification!
-      return;
+      // If all styles are cleared or link style is explicitly set, we
+      // shouldn't reset them without caret move.
+      if (AreAllStylesCleared() || IsLinkStyleSet()) {
+        return;
+      }
+      // And if non-link styles are cleared or some styles are set, we
+      // shouldn't reset them too, but we may need to change the link
+      // style.
+      if (AreSomeStylesSet() ||
+          (AreSomeStylesCleared() && !IsOnlyLinkStyleCleared())) {
+        resetAllStyles = false;
+      }
     }
 
-    // If caret comes from outside of <a href> element, we should clear "link"
-    // style after reset.
-    if (aReason == nsISelectionListener::KEYPRESS_REASON &&
-        mLastSelectionPoint.IsSet() && selectionStartPoint.IsInTextNode() &&
-        (selectionStartPoint.IsStartOfContainer() ||
-         selectionStartPoint.IsEndOfContainer()) &&
-        // If we're moving in same text node, we can assume that we should
-        // stay in the <a href>.
-        mLastSelectionPoint.GetContainer() !=
-            selectionStartPoint.GetContainer()) {
-      // XXX Assuming it's not empty text node because it's unrealistic edge
-      //     case.
-      bool maybeStartOfAnchor = selectionStartPoint.IsStartOfContainer();
-      for (EditorRawDOMPoint point(selectionStartPoint.GetContainer());
-           point.IsSet() && (maybeStartOfAnchor ? point.IsStartOfContainer()
-                                                : point.IsAtLastContent());
-           point.Set(point.GetContainer())) {
-        // TODO: We should check editing host boundary here.
-        if (HTMLEditUtils::IsLink(point.GetContainer())) {
-          // Now, we're at start or end of <a href>.
-          unlink = !mLastSelectionPoint.GetContainer()->IsInclusiveDescendantOf(
-              point.GetContainer());
-          break;
+    RefPtr<Element> linkElement;
+    if (HTMLEditUtils::IsPointAtEdgeOfLink(selectionStartPoint,
+                                           getter_AddRefs(linkElement))) {
+      // If caret comes from outside of <a href> element, we should clear "link"
+      // style after reset.
+      if (causedByFrameSelectionMoveCaret) {
+        MOZ_ASSERT(!(aReason & (nsISelectionListener::MOUSEDOWN_REASON |
+                                nsISelectionListener::MOUSEUP_REASON)));
+        // If caret is moves in a link per character, we should keep inserting
+        // new text to the link because user may want to keep extending the link
+        // text.  Otherwise, e.g., using `End` or `Home` key. we should insert
+        // new text outside the link because it should be possible to user
+        // choose it, and this is similar to the other browsers.
+        switch (lastSelectionCommand) {
+          case Command::CharNext:
+          case Command::CharPrevious:
+          case Command::MoveLeft:
+          case Command::MoveLeft2:
+          case Command::MoveRight:
+          case Command::MoveRight2:
+            // If selection becomes collapsed, we should unlink new text.
+            if (!mLastSelectionPoint.IsSet()) {
+              unlink = true;
+              break;
+            }
+            // Special case, if selection isn't moved, it means that caret is
+            // positioned at start or end of an editing host.  In this case,
+            // we can unlink it even with arrow key press.
+            // TODO: This does not work as expected for `ArrowLeft` key press
+            //       at start of an editing host.
+            if (mLastSelectionPoint == selectionStartPoint) {
+              unlink = true;
+              break;
+            }
+            // Otherwise, if selection is moved in a link element, we should
+            // keep inserting new text into the link.  Note that this is our
+            // traditional behavior, but different from the other browsers.
+            // If this breaks some web apps, we should change our behavior,
+            // but let's wait a report because our traditional behavior allows
+            // user to type text into start/end of a link only when user
+            // moves caret inside the link with arrow keys.
+            unlink =
+                !mLastSelectionPoint.GetContainer()->IsInclusiveDescendantOf(
+                    linkElement);
+            break;
+          default:
+            // If selection is moved without arrow keys, e.g., `Home` and
+            // `End`, we should not insert new text into the link element.
+            // This is important for web-compat especially when the link is
+            // the last content in the block.
+            unlink = true;
+            break;
+        }
+      } else if (aReason & (nsISelectionListener::MOUSEDOWN_REASON |
+                            nsISelectionListener::MOUSEUP_REASON)) {
+        // If the corresponding mouse event is fired in a link element,
+        // we should keep treating inputting content as content in the link,
+        // but otherwise, i.e., clicked outside the link, we should stop
+        // treating inputting content as content in the link.
+        unlink = !mouseEventFiredInLinkElement;
+      } else if (aReason & nsISelectionListener::JS_REASON) {
+        // If this is caused by a call of Selection API or something similar
+        // API, we should not contain new inserting content to the link.
+        unlink = true;
+      } else {
+        switch (aHTMLEditor.GetEditAction()) {
+          case EditAction::eDeleteBackward:
+          case EditAction::eDeleteForward:
+          case EditAction::eDeleteSelection:
+          case EditAction::eDeleteToBeginningOfSoftLine:
+          case EditAction::eDeleteToEndOfSoftLine:
+          case EditAction::eDeleteWordBackward:
+          case EditAction::eDeleteWordForward:
+            // This selection change is caused by the editor and the edit
+            // action is deleting content at edge of a link, we shouldn't
+            // keep the link style for new inserted content.
+            unlink = true;
+            break;
+          default:
+            break;
         }
       }
+    } else if (mLastSelectionPoint == selectionStartPoint) {
+      return;
     }
 
     mLastSelectionPoint = selectionStartPoint;
@@ -134,13 +311,38 @@ void TypeInState::OnSelectionChange(Selection& aSelection, int16_t aReason) {
     // we'll check the point later.
     AutoEditorDOMPointChildInvalidator saveOnlyOffset(mLastSelectionPoint);
   } else {
+    if (aHTMLEditor.SelectionRefPtr()->RangeCount()) {
+      // If selection starts from a link, we shouldn't preserve the link style
+      // unless the range is entirely in the link.
+      EditorRawDOMRange firstRange(
+          *aHTMLEditor.SelectionRefPtr()->GetRangeAt(0));
+      if (firstRange.StartRef().IsInContentNode() &&
+          HTMLEditUtils::IsContentInclusiveDescendantOfLink(
+              *firstRange.StartRef().ContainerAsContent())) {
+        unlink = !HTMLEditUtils::IsRangeEntirelyInLink(firstRange);
+      }
+    }
     mLastSelectionPoint.Clear();
   }
 
-  Reset();
+  if (resetAllStyles) {
+    Reset();
+    if (unlink) {
+      ClearProp(nsGkAtoms::a, nullptr);
+    }
+    return;
+  }
 
+  if (unlink == IsExplicitlyLinkStyleCleared()) {
+    return;
+  }
+
+  // Even if we shouldn't touch existing style, we need to set/clear only link
+  // style in some cases.
   if (unlink) {
     ClearProp(nsGkAtoms::a, nullptr);
+  } else if (!unlink) {
+    RemovePropFromClearedList(nsGkAtoms::a, nullptr);
   }
 }
 
@@ -302,7 +504,7 @@ bool TypeInState::IsPropCleared(nsAtom* aProp, nsAtom* aAttr,
   if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, outIndex)) {
     return true;
   }
-  if (FindPropInList(nullptr, nullptr, nullptr, mClearedArray, outIndex)) {
+  if (AreAllStylesCleared()) {
     // special case for all props cleared
     outIndex = -1;
     return true;
@@ -312,7 +514,7 @@ bool TypeInState::IsPropCleared(nsAtom* aProp, nsAtom* aAttr,
 
 bool TypeInState::FindPropInList(nsAtom* aProp, nsAtom* aAttr,
                                  nsAString* outValue,
-                                 nsTArray<PropItem*>& aList,
+                                 const nsTArray<PropItem*>& aList,
                                  int32_t& outIndex) {
   if (aAttr == nsGkAtoms::_empty) {
     aAttr = nullptr;

@@ -113,7 +113,7 @@ async function test() {
   await scrollWheelOver(document.getElementById("outer1"), true);
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
-  await new Promise(resolve => setTimeout(resolve, DISPLAYPORT_EXPIRY));
+  await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
   await promiseAllPaintsDone();
   ok(!isLayerized("outer1"), "outer1 is no longer layerized after displayport expiry");
   ok(!isLayerized("inner1"), "inner1 is still not layerized after displayport expiry");
@@ -124,10 +124,10 @@ async function test() {
   await promiseApzRepaintsFlushed();
   // Once the expiry elapses, it will trigger expiry on outer2, so we check
   // both, one at a time.
-  await new Promise(resolve => setTimeout(resolve, DISPLAYPORT_EXPIRY));
+  await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
   await promiseAllPaintsDone();
   ok(!isLayerized("inner2"), "inner2 is no longer layerized after displayport expiry");
-  await new Promise(resolve => setTimeout(resolve, DISPLAYPORT_EXPIRY));
+  await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
   await promiseAllPaintsDone();
   ok(!isLayerized("outer2"), "outer2 got de-layerized with inner2");
 
@@ -163,7 +163,7 @@ async function test() {
 
   await promiseAllPaintsDone();
   ok(!isLayerized("inner3"), "inner3 becomes unlayerized after expiry");
-  await new Promise(resolve => setTimeout(resolve, DISPLAYPORT_EXPIRY));
+  await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
   await promiseAllPaintsDone();
   ok(!isLayerized("outer3"), "outer3 is no longer layerized after inner3 triggered expiry");
 
@@ -173,7 +173,7 @@ async function test() {
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
   // Wait for the expiry to elapse
-  await new Promise(resolve => setTimeout(resolve, DISPLAYPORT_EXPIRY));
+  await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
   await promiseAllPaintsDone();
   ok(isLayerized("inner4"), "inner4 is still layerized because it never expired");
   ok(isLayerized("outer4"), "outer4 is still layerized because inner4 is still layerized");

@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "fluent-syntax"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>", "Staś Małolepszy <stas@mozilla.com>"]
 include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md"]
 description = "Parser/Serializer tools for Fluent Syntax. \n"
