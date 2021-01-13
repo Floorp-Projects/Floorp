@@ -20,6 +20,9 @@ interface nsISelectionListener : nsISupports
   const short COLLAPSETOSTART_REASON=32;
   const short COLLAPSETOEND_REASON=64;
   const short IME_REASON=128;
+  // JS_REASON is set if the selection change is directly caused by a call
+  // of Selection API or Range API.
+  const short JS_REASON=256;
 
   [can_run_script]
   void notifySelectionChanged(in Document doc, in Selection sel,

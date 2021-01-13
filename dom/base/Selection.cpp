@@ -3151,6 +3151,9 @@ nsresult Selection::NotifySelectionListeners() {
       selectionListeners = mSelectionListeners;
 
   int16_t reason = frameSelection->PopChangeReasons();
+  if (calledByJSRestorer.SavedValue()) {
+    reason |= nsISelectionListener::JS_REASON;
+  }
 
   if (mNotifyAutoCopy) {
     AutoCopyListener::OnSelectionChange(doc, *this, reason);

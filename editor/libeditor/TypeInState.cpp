@@ -168,9 +168,10 @@ void TypeInState::OnSelectionChange(Selection& aSelection, int16_t aReason) {
   // XXX: the same location clears the type-in-state.
 
   const bool causedByFrameSelectionMoveCaret =
-      !!(aReason & (nsISelectionListener::KEYPRESS_REASON |
-                    nsISelectionListener::COLLAPSETOSTART_REASON |
-                    nsISelectionListener::COLLAPSETOEND_REASON));
+      (aReason & (nsISelectionListener::KEYPRESS_REASON |
+                  nsISelectionListener::COLLAPSETOSTART_REASON |
+                  nsISelectionListener::COLLAPSETOEND_REASON)) &&
+      !(aReason & nsISelectionListener::JS_REASON);
 
   Command lastSelectionCommand = mLastSelectionCommand;
   if (causedByFrameSelectionMoveCaret) {
@@ -276,6 +277,10 @@ void TypeInState::OnSelectionChange(Selection& aSelection, int16_t aReason) {
         // but otherwise, i.e., clicked outside the link, we should stop
         // treating inputting content as content in the link.
         unlink = !mouseEventFiredInLinkElement;
+      } else if (aReason & nsISelectionListener::JS_REASON) {
+        // If this is caused by a call of Selection API or something similar
+        // API, we should not contain new inserting content to the link.
+        unlink = true;
       }
     } else if (mLastSelectionPoint == selectionStartPoint) {
       return;
