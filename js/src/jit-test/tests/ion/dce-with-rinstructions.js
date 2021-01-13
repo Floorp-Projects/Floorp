@@ -1544,6 +1544,24 @@ function rbigintrsh(i) {
     return i;
 }
 
+let uceFault_bigintasint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bigintasint'));
+function rbigintasint(i) {
+    var x = BigInt.asIntN(6, i);
+    if (uceFault_bigintasint(i) || uceFault_bigintasint(i))
+        assertEq(x, -29n);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+let uceFault_bigintasuint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bigintasuint'));
+function rbigintasuint(i) {
+    var x = BigInt.asUintN(6, i);
+    if (uceFault_bigintasuint(i) || uceFault_bigintasuint(i))
+        assertEq(x, 35n);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1697,6 +1715,8 @@ for (j = 100 - max; j < 100; j++) {
     rbigintbitnot(BigInt(i));
     rbigintlsh(BigInt(i));
     rbigintrsh(BigInt(i));
+    rbigintasint(BigInt(i));
+    rbigintasuint(BigInt(i));
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

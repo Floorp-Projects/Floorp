@@ -2514,7 +2514,7 @@
 
 - name: BigIntAsIntNResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     bits: Int32Id
@@ -2522,7 +2522,7 @@
 
 - name: BigIntAsUintNResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     bits: Int32Id

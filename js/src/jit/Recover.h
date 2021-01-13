@@ -130,6 +130,8 @@ namespace jit {
   _(ArrayState)                \
   _(SetArrayLength)            \
   _(AtomicIsLockFree)          \
+  _(BigIntAsIntN)              \
+  _(BigIntAsUintN)             \
   _(AssertRecoveredOnBailout)
 
 class RResumePoint;
@@ -346,120 +348,120 @@ class RBigIntAdd final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntAdd, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntSub final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntSub, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntMul final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntMul, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntDiv final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntDiv, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntMod final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntMod, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntPow final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntPow, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntBitAnd final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntBitAnd, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntBitOr final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntBitOr, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntBitXor final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntBitXor, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntLsh final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntLsh, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntRsh final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntRsh, 2)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntIncrement final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntIncrement, 1)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntDecrement final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntDecrement, 1)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntNegate final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntNegate, 1)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RBigIntBitNot final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntBitNot, 1)
 
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
 };
 
 class RConcat final : public RInstruction {
@@ -847,6 +849,22 @@ class RSetArrayLength final : public RInstruction {
 class RAtomicIsLockFree final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(AtomicIsLockFree, 1)
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RBigIntAsIntN final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntAsIntN, 2)
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RBigIntAsUintN final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntAsUintN, 2)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;
