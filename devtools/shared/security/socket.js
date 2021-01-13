@@ -11,7 +11,6 @@ Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
 var Services = require("Services");
 var promise = require("promise");
-var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(
@@ -294,49 +293,48 @@ var _attemptConnect = async function({ host, port, encryption }) {
     clientCert = await cert.local.getOrCreate();
   }
 
-  const deferred = defer();
   let input;
   let output;
-  // Delay opening the input stream until the transport has fully connected.
-  // The goal is to avoid showing the user a client cert UI prompt when
-  // encryption is used.  This prompt is shown when the client opens the input
-  // stream and does not know which client cert to present to the server.  To
-  // specify a client cert programmatically, we need to access the transport's
-  // nsISSLSocketControl interface, which is not accessible until the transport
-  // has connected.
-  s.setEventSink(
-    {
-      onTransportStatus(transport, status) {
-        if (status != Ci.nsISocketTransport.STATUS_CONNECTING_TO) {
-          return;
-        }
-        if (encryption) {
-          const sslSocketControl = transport.securityInfo.QueryInterface(
-            Ci.nsISSLSocketControl
-          );
-          sslSocketControl.clientCert = clientCert;
-        }
-        try {
-          input = s.openInputStream(0, 0, 0);
-        } catch (e) {
-          deferred.reject(e);
-        }
-        deferred.resolve({ s, input, output });
+  return new Promise((resolve, reject) => {
+    // Delay opening the input stream until the transport has fully connected.
+    // The goal is to avoid showing the user a client cert UI prompt when
+    // encryption is used.  This prompt is shown when the client opens the input
+    // stream and does not know which client cert to present to the server.  To
+    // specify a client cert programmatically, we need to access the transport's
+    // nsISSLSocketControl interface, which is not accessible until the transport
+    // has connected.
+    s.setEventSink(
+      {
+        onTransportStatus(transport, status) {
+          if (status != Ci.nsISocketTransport.STATUS_CONNECTING_TO) {
+            return;
+          }
+          if (encryption) {
+            const sslSocketControl = transport.securityInfo.QueryInterface(
+              Ci.nsISSLSocketControl
+            );
+            sslSocketControl.clientCert = clientCert;
+          }
+          try {
+            input = s.openInputStream(0, 0, 0);
+          } catch (e) {
+            reject(e);
+          }
+          resolve({ s, input, output });
+        },
       },
-    },
-    Services.tm.currentThread
-  );
+      Services.tm.currentThread
+    );
 
-  // openOutputStream may throw NS_ERROR_NOT_INITIALIZED if we hit some race
-  // where the nsISocketTransport gets shutdown in between its instantiation and
-  // the call to this method.
-  try {
-    output = s.openOutputStream(0, 0, 0);
-  } catch (e) {
-    deferred.reject(e);
-  }
-
-  deferred.promise.catch(e => {
+    // openOutputStream may throw NS_ERROR_NOT_INITIALIZED if we hit some race
+    // where the nsISocketTransport gets shutdown in between its instantiation and
+    // the call to this method.
+    try {
+      output = s.openOutputStream(0, 0, 0);
+    } catch (e) {
+      reject(e);
+    }
+  }).catch(e => {
     if (input) {
       input.close();
     }
@@ -345,8 +343,6 @@ var _attemptConnect = async function({ host, port, encryption }) {
     }
     DevToolsUtils.reportException("_attemptConnect", e);
   });
-
-  return deferred.promise;
 };
 
 /**
@@ -355,33 +351,33 @@ var _attemptConnect = async function({ host, port, encryption }) {
  * first connection to a new host because the cert is self-signed.
  */
 function _isInputAlive(input) {
-  const deferred = defer();
-  input.asyncWait(
-    {
-      onInputStreamReady(stream) {
-        try {
-          stream.available();
-          deferred.resolve({ alive: true });
-        } catch (e) {
+  return new Promise((resolve, reject) => {
+    input.asyncWait(
+      {
+        onInputStreamReady(stream) {
           try {
-            // getErrorClass may throw if you pass a non-NSS error
-            const errorClass = nssErrorsService.getErrorClass(e.result);
-            if (errorClass === Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
-              deferred.resolve({ certError: true });
-            } else {
-              deferred.reject(e);
+            stream.available();
+            resolve({ alive: true });
+          } catch (e) {
+            try {
+              // getErrorClass may throw if you pass a non-NSS error
+              const errorClass = nssErrorsService.getErrorClass(e.result);
+              if (errorClass === Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
+                resolve({ certError: true });
+              } else {
+                reject(e);
+              }
+            } catch (nssErr) {
+              reject(e);
             }
-          } catch (nssErr) {
-            deferred.reject(e);
           }
-        }
+        },
       },
-    },
-    0,
-    0,
-    Services.tm.currentThread
-  );
-  return deferred.promise;
+      0,
+      0,
+      Services.tm.currentThread
+    );
+  });
 }
 
 /**
@@ -779,50 +775,50 @@ ServerSocketConnection.prototype = {
    * |onHandshakeDone|.
    */
   _listenForTLSHandshake() {
-    this._handshakeDeferred = defer();
     if (!this._listener.encryption) {
-      this._handshakeDeferred.resolve();
+      this._handshakePromise = Promise.resolve();
       return;
     }
-    this._setSecurityObserver(this);
-    this._handshakeTimeout = setTimeout(
-      this._onHandshakeTimeout.bind(this),
-      HANDSHAKE_TIMEOUT
-    );
+
+    this._handshakePromise = new Promise((resolve, reject) => {
+      this._observer = {
+        // nsITLSServerSecurityObserver implementation
+        onHandshakeDone: (socket, clientStatus) => {
+          clearTimeout(this._handshakeTimeout);
+          this._setSecurityObserver(null);
+          dumpv("TLS version:    " + clientStatus.tlsVersionUsed.toString(16));
+          dumpv("TLS cipher:     " + clientStatus.cipherName);
+          dumpv("TLS key length: " + clientStatus.keyLength);
+          dumpv("TLS MAC length: " + clientStatus.macLength);
+          this._clientCert = clientStatus.peerCert;
+          /*
+           * TODO: These rules should be really be set on the TLS socket directly, but
+           * this would need more platform work to expose it via XPCOM.
+           *
+           * Enforcing cipher suites here would be a bad idea, as we want TLS
+           * cipher negotiation to work correctly.  The server already allows only
+           * Gecko's normal set of cipher suites.
+           */
+          if (
+            clientStatus.tlsVersionUsed < Ci.nsITLSClientStatus.TLS_VERSION_1_2
+          ) {
+            reject(Cr.NS_ERROR_CONNECTION_REFUSED);
+            return;
+          }
+
+          resolve();
+        },
+      };
+      this._setSecurityObserver(this._observer);
+      this._handshakeTimeout = setTimeout(() => {
+        dumpv("Client failed to complete TLS handshake");
+        reject(Cr.NS_ERROR_NET_TIMEOUT);
+      }, HANDSHAKE_TIMEOUT);
+    });
   },
 
   _awaitTLSHandshake() {
-    return this._handshakeDeferred.promise;
-  },
-
-  _onHandshakeTimeout() {
-    dumpv("Client failed to complete TLS handshake");
-    this._handshakeDeferred.reject(Cr.NS_ERROR_NET_TIMEOUT);
-  },
-
-  // nsITLSServerSecurityObserver implementation
-  onHandshakeDone(socket, clientStatus) {
-    clearTimeout(this._handshakeTimeout);
-    this._setSecurityObserver(null);
-    dumpv("TLS version:    " + clientStatus.tlsVersionUsed.toString(16));
-    dumpv("TLS cipher:     " + clientStatus.cipherName);
-    dumpv("TLS key length: " + clientStatus.keyLength);
-    dumpv("TLS MAC length: " + clientStatus.macLength);
-    this._clientCert = clientStatus.peerCert;
-    /*
-     * TODO: These rules should be really be set on the TLS socket directly, but
-     * this would need more platform work to expose it via XPCOM.
-     *
-     * Enforcing cipher suites here would be a bad idea, as we want TLS
-     * cipher negotiation to work correctly.  The server already allows only
-     * Gecko's normal set of cipher suites.
-     */
-    if (clientStatus.tlsVersionUsed < Ci.nsITLSClientStatus.TLS_VERSION_1_2) {
-      this._handshakeDeferred.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
-      return;
-    }
-
-    this._handshakeDeferred.resolve();
+    return this._handshakePromise;
   },
 
   async _authenticate() {
