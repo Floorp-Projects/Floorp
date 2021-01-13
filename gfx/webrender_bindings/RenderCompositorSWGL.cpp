@@ -157,13 +157,19 @@ void RenderCompositorSWGL::CommitMappedBuffer(bool aDirty) {
     // are any supplied dirty rects.
     mSurface->Unmap();
     if (aDirty) {
+      // The temporary source surface is always a partial region of the widget
+      // that is offset from the origin to the actual bounds of the dirty
+      // region. The destination DT may also be an offset partial region, but we
+      // must check to see if its size matches the region bounds to verify this.
+      LayoutDeviceIntRect bounds = mRegion.GetBounds();
+      gfx::IntPoint srcOffset = bounds.TopLeft().ToUnknownPoint();
+      gfx::IntPoint dstOffset = mDT->GetSize() == bounds.Size().ToUnknownSize()
+                                    ? srcOffset
+                                    : gfx::IntPoint(0, 0);
       for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
-        const LayoutDeviceIntRect& dirtyRect = iter.Get();
-        gfx::Rect bounds(dirtyRect.x, dirtyRect.y, dirtyRect.width,
-                         dirtyRect.height);
-        mDT->DrawSurface(mSurface, bounds, bounds,
-                         gfx::DrawSurfaceOptions(gfx::SamplingFilter::POINT),
-                         gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
+        gfx::IntRect dirtyRect = iter.Get().ToUnknownRect();
+        mDT->CopySurface(mSurface, dirtyRect - srcOffset,
+                         dirtyRect.TopLeft() - dstOffset);
       }
     }
   } else {
