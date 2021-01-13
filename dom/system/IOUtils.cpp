@@ -285,9 +285,10 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
   }
 
   RunOnBackgroundThread<uint32_t>(
-      promise,
-      [file = std::move(file), str = nsCString(aString),
-       opts = opts.unwrap()]() { return WriteUTF8Sync(file, str, opts); });
+      promise, [file = std::move(file), str = nsCString(aString),
+                opts = opts.unwrap()]() {
+        return WriteSync(file, AsBytes(Span(str)), opts);
+      });
 
   return promise.forget();
 }
@@ -852,18 +853,6 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     }
   }
   return totalWritten;
-}
-
-/* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteUTF8Sync(
-    nsIFile* aFile, const nsCString& aUTF8String,
-    const InternalWriteOpts& aOptions) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  Span utf8Bytes(reinterpret_cast<const uint8_t*>(aUTF8String.get()),
-                 aUTF8String.Length());
-
-  return WriteSync(aFile, utf8Bytes, aOptions);
 }
 
 /* static */
