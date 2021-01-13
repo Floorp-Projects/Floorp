@@ -1341,6 +1341,7 @@ class GeneratedFile(ContextDerived):
         "outputs",
         "inputs",
         "flags",
+        "required_before_export",
         "required_before_compile",
         "required_during_compile",
         "localized",
@@ -1370,6 +1371,14 @@ class GeneratedFile(ContextDerived):
         self.localized = localized
         self.force = force
         self.py2 = py2
+
+        if self.config.substs.get("MOZ_WIDGET_TOOLKIT") == "android":
+            # In GeckoView builds we process Jinja files during pre-export
+            self.required_before_export = [
+                f for f in self.inputs if f.endswith(".jinja")
+            ]
+        else:
+            self.required_before_export = False
 
         suffixes = [
             ".h",
