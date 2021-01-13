@@ -7,6 +7,7 @@
 #define mozilla_TypeInState_h
 
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -98,6 +99,8 @@ class TypeInState final {
    */
   void PreHandleMouseEvent(const dom::MouseEvent& aMouseDownOrUpEvent);
 
+  void PreHandleSelectionChangeCommand(Command aCommand);
+
   void OnSelectionChange(dom::Selection& aSelection, int16_t aReason);
 
   void SetProp(nsAtom* aProp, nsAtom* aAttr, const nsAString& aValue);
@@ -166,6 +169,7 @@ class TypeInState final {
   nsTArray<PropItem*> mClearedArray;
   EditorDOMPoint mLastSelectionPoint;
   int32_t mRelativeFontSize;
+  Command mLastSelectionCommand;
   bool mMouseDownFiredInLinkElement;
   bool mMouseUpFiredInLinkElement;
 };
