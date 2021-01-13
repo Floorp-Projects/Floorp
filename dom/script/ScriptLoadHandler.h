@@ -13,6 +13,7 @@
 
 #include "nsIIncrementalStreamLoader.h"
 #include "nsISupports.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 
@@ -83,8 +84,10 @@ class ScriptLoadHandler final : public nsIIncrementalStreamLoaderObserver {
   /*
    * When streaming bytecode, we have the opportunity to fallback early if SRI
    * does not match the expectation of the document.
+   *
+   * If SRI hash is decoded, `sriLength` is set to the length of the hash.
    */
-  nsresult MaybeDecodeSRI();
+  nsresult MaybeDecodeSRI(uint32_t* sriLength);
 
   // Query the channel to find the data type associated with the input stream.
   nsresult EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader);
