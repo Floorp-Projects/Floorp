@@ -5691,14 +5691,19 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
   }
 
   componentDidMount() {
-    this.contextMenuButtonRef.addEventListener("mouseenter", this.onMenuButtonMouseEnter);
-    this.contextMenuButtonRef.addEventListener("mouseleave", this.onMenuButtonMouseLeave);
+    if (!this.props.Prefs.values["newNewtabExperience.enabled"]) {
+      this.contextMenuButtonRef.addEventListener("mouseenter", this.onMenuButtonMouseEnter);
+      this.contextMenuButtonRef.addEventListener("mouseleave", this.onMenuButtonMouseLeave);
+    }
   }
 
   componentWillUnmount() {
     this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
-    this.contextMenuButtonRef.removeEventListener("mouseenter", this.onMenuButtonMouseEnter);
-    this.contextMenuButtonRef.removeEventListener("mouseleave", this.onMenuButtonMouseLeave);
+
+    if (!this.props.Prefs.values["newNewtabExperience.enabled"]) {
+      this.contextMenuButtonRef.removeEventListener("mouseenter", this.onMenuButtonMouseEnter);
+      this.contextMenuButtonRef.removeEventListener("mouseleave", this.onMenuButtonMouseLeave);
+    }
   }
 
   enableOrDisableAnimation() {
@@ -5906,7 +5911,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
       message: learnMore.link.message
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
       href: learnMore.link.href
-    })))))), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_7__["ContextMenuButton"], {
+    })))))), !isNewNewtabExperienceEnabled && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_7__["ContextMenuButton"], {
       tooltip: "newtab-menu-section-tooltip",
       onUpdate: this.onMenuUpdate,
       refFunction: this.setContextMenuButtonRef
@@ -14325,6 +14330,7 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
+      id: "shortcuts-toggle",
       checked: topSitesEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
@@ -14336,9 +14342,11 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       role: "presentation"
     })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
       id: "custom-shortcuts-title",
-      className: "title",
+      className: "title"
+    }, external_React_default.a.createElement("label", {
+      htmlFor: "shortcuts-toggle",
       "data-l10n-id": "newtab-custom-shortcuts-title"
-    }), external_React_default.a.createElement("p", {
+    })), external_React_default.a.createElement("p", {
       id: "custom-shortcuts-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-shortcuts-subtitle"
@@ -14392,6 +14400,7 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
+      id: "pocket-toggle",
       checked: pocketEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
@@ -14403,9 +14412,11 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       role: "presentation"
     })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
       id: "custom-pocket-title",
-      className: "title",
+      className: "title"
+    }, external_React_default.a.createElement("label", {
+      htmlFor: "pocket-toggle",
       "data-l10n-id": "newtab-custom-pocket-title"
-    }), external_React_default.a.createElement("p", {
+    })), external_React_default.a.createElement("p", {
       id: "custom-pocket-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-pocket-subtitle"
@@ -14435,6 +14446,7 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
+      id: "highlights-toggle",
       checked: highlightsEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
@@ -14447,9 +14459,11 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       role: "presentation"
     })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
       id: "custom-recent-title",
-      className: "title",
+      className: "title"
+    }, external_React_default.a.createElement("label", {
+      htmlFor: "highlights-toggle",
       "data-l10n-id": "newtab-custom-recent-title"
-    }), external_React_default.a.createElement("p", {
+    })), external_React_default.a.createElement("p", {
       id: "custom-recent-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-recent-subtitle"
@@ -14459,6 +14473,7 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     }, external_React_default.a.createElement("label", {
       className: "switch"
     }, external_React_default.a.createElement("input", {
+      id: "snippets-toggle",
       checked: snippetsEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
@@ -14470,9 +14485,11 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       role: "presentation"
     })), external_React_default.a.createElement("div", null, external_React_default.a.createElement("h2", {
       id: "custom-snippets-title",
-      className: "title",
+      className: "title"
+    }, external_React_default.a.createElement("label", {
+      htmlFor: "snippets-toggle",
       "data-l10n-id": "newtab-custom-snippets-title"
-    }), external_React_default.a.createElement("p", {
+    })), external_React_default.a.createElement("p", {
       id: "custom-snippets-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-snippets-subtitle"

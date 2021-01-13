@@ -164,6 +164,19 @@ const struct {
   { 0, false },
 };
 
+bool ValidateVersionTag(ots::Font *font) {
+  switch (font->version) {
+    case 0x000010000:
+    case OTS_TAG('O','T','T','O'):
+      return true;
+    case OTS_TAG('t','r','u','e'):
+      font->version = 0x000010000;
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool ProcessGeneric(ots::FontFile *header,
                     ots::Font *font,
                     uint32_t signature,
@@ -190,9 +203,8 @@ bool ProcessTTF(ots::FontFile *header,
   if (!file.ReadU32(&font->version)) {
     return OTS_FAILURE_MSG_HDR("error reading sfntVersion");
   }
-  if (!ots::IsValidVersionTag(font->version)) {
-    OTS_WARNING_MSG_HDR("invalid sfntVersion: %d", font->version);
-    font->version = 0x000010000;
+  if (!ValidateVersionTag(font)) {
+    return OTS_FAILURE_MSG_HDR("invalid sfntVersion: %d", font->version);
   }
 
   if (!file.ReadU16(&font->num_tables) ||
@@ -366,9 +378,8 @@ bool ProcessWOFF(ots::FontFile *header,
   if (!file.ReadU32(&font->version)) {
     return OTS_FAILURE_MSG_HDR("error reading sfntVersion");
   }
-  if (!ots::IsValidVersionTag(font->version)) {
-    OTS_WARNING_MSG_HDR("invalid sfntVersion: %d", font->version);
-    font->version = 0x000010000;
+  if (!ValidateVersionTag(font)) {
+    return OTS_FAILURE_MSG_HDR("invalid sfntVersion: %d", font->version);
   }
 
   uint32_t reported_length;
@@ -1082,12 +1093,6 @@ bool TablePassthru::Serialize(OTSStream *out) {
   }
 
   return true;
-}
-
-bool IsValidVersionTag(uint32_t tag) {
-  return tag == 0x000010000 ||
-         // OpenType fonts with CFF data have 'OTTO' tag.
-         tag == OTS_TAG('O','T','T','O');
 }
 
 bool OTSContext::Process(OTSStream *output,

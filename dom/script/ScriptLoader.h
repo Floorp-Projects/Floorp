@@ -586,7 +586,8 @@ class ScriptLoader final : public nsISupports {
                      SRICheckDataVerifier* aSRIDataVerifier) const;
 
   nsresult SaveSRIHash(ScriptLoadRequest* aRequest,
-                       SRICheckDataVerifier* aSRIDataVerifier) const;
+                       SRICheckDataVerifier* aSRIDataVerifier,
+                       uint32_t* sriLength) const;
 
   void ReportErrorToConsole(ScriptLoadRequest* aRequest,
                             nsresult aResult) const;

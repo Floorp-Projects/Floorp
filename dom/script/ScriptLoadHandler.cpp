@@ -174,9 +174,13 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
     }
 
     *aConsumedLength = aDataLength;
-    rv = MaybeDecodeSRI();
+    uint32_t sriLength = 0;
+    rv = MaybeDecodeSRI(&sriLength);
     if (NS_FAILED(rv)) {
       return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
+    }
+    if (sriLength) {
+      mRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
     }
   }
 
@@ -262,7 +266,9 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
   return true;
 }
 
-nsresult ScriptLoadHandler::MaybeDecodeSRI() {
+nsresult ScriptLoadHandler::MaybeDecodeSRI(uint32_t* sriLength) {
+  *sriLength = 0;
+
   if (!mSRIDataVerifier || mSRIDataVerifier->IsComplete() ||
       NS_FAILED(mSRIStatus)) {
     return NS_OK;
@@ -286,7 +292,8 @@ nsresult ScriptLoadHandler::MaybeDecodeSRI() {
     return mSRIStatus;
   }
 
-  mRequest->mBytecodeOffset = mSRIDataVerifier->DataSummaryLength();
+  *sriLength = mSRIDataVerifier->DataSummaryLength();
+  MOZ_ASSERT(*sriLength > 0);
   return NS_OK;
 }
 
@@ -415,19 +422,25 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       // the source. Thus, we should not continue in
       // ScriptLoader::OnStreamComplete, which removes the request from the
       // waiting lists.
-      rv = MaybeDecodeSRI();
+      //
+      // We calculate the SRI length below.
+      uint32_t unused;
+      rv = MaybeDecodeSRI(&unused);
       if (NS_FAILED(rv)) {
         return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
       }
 
       // The bytecode cache always starts with the SRI hash, thus even if there
       // is no SRI data verifier instance, we still want to skip the hash.
+      uint32_t sriLength;
       rv = SRICheckDataVerifier::DataSummaryLength(
           mRequest->mScriptBytecode.length(), mRequest->mScriptBytecode.begin(),
-          &mRequest->mBytecodeOffset);
+          &sriLength);
       if (NS_FAILED(rv)) {
         return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
       }
+
+      mRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
     }
   }
 

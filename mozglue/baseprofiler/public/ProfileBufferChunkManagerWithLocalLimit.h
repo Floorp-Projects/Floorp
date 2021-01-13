@@ -144,12 +144,30 @@ class ProfileBufferChunkManagerWithLocalLimit final
         MOZ_ASSERT(mReleasedBufferBytes == aChunk->BufferBytes());
         mReleasedChunks = std::move(aChunk);
       } else {
-        // Add to the end of the released chunks list (oldest first, most recent
-        // last.)
-        MOZ_ASSERT(mReleasedChunks->Last()->ChunkHeader().mDoneTimeStamp <
-                       aChunk->ChunkHeader().mDoneTimeStamp,
-                   "Chunks must be released in increasing timestamps");
-        mReleasedChunks->SetLast(std::move(aChunk));
+        // Insert aChunk in mReleasedChunks to keep done-timestamp order.
+        const TimeStamp& releasedChunkDoneTimeStamp =
+            aChunk->ChunkHeader().mDoneTimeStamp;
+        if (releasedChunkDoneTimeStamp <
+            mReleasedChunks->ChunkHeader().mDoneTimeStamp) {
+          // aChunk is the oldest -> Insert at the beginning.
+          aChunk->SetLast(std::move(mReleasedChunks));
+          mReleasedChunks = std::move(aChunk);
+        } else {
+          // Go through the already-released chunk list, and insert aChunk
+          // before the first younger released chunk, or at the end.
+          ProfileBufferChunk* chunk = mReleasedChunks.get();
+          for (;;) {
+            ProfileBufferChunk* const nextChunk = chunk->GetNext();
+            if (!nextChunk || releasedChunkDoneTimeStamp <
+                                  nextChunk->ChunkHeader().mDoneTimeStamp) {
+              // Either we're at the last released chunk, or the next released
+              // chunk is younger -> Insert right after this released chunk.
+              chunk->InsertNext(std::move(aChunk));
+              break;
+            }
+            chunk = nextChunk;
+          }
+        }
       }
 
       return Update(mUnreleasedBufferBytes, mReleasedBufferBytes,

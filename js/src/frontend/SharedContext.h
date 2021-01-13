@@ -273,7 +273,7 @@ class SharedContext {
                                         const ParserAtom* atomId);
 
   void copyScriptFields(ScriptStencil& script);
-  void copyScriptExtent(SourceExtent& extent);
+  void copyScriptExtraFields(ScriptStencilExtra& scriptExtra);
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
@@ -420,7 +420,9 @@ class FunctionBox : public SuspendableContext {
               const ParserAtom* atom, FunctionFlags flags, ScriptIndex index);
 
   ScriptStencil& functionStencil() const;
-  SourceExtent& functionStencilExtent() const;
+  ScriptStencilExtra& functionExtraStencil() const;
+
+  bool hasFunctionExtraStencil() const;
 
   LexicalScope::ParserData* namedLambdaBindings() {
     return namedLambdaBindings_;
@@ -663,6 +665,7 @@ class FunctionBox : public SuspendableContext {
   void finishScriptFlags();
   void copyScriptFields(ScriptStencil& script);
   void copyFunctionFields(ScriptStencil& script);
+  void copyFunctionExtraFields(ScriptStencilExtra& scriptExtra);
 
   // * setCtorFunctionHasThisBinding can be called to a class constructor
   //   with a lazy function, while parsing enclosing class

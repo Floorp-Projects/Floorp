@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "fluent-bundle"
-version = "0.13.1"
+version = "0.14.1"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>", "Staś Małolepszy <stas@mozilla.com>"]
-include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md"]
+include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A localization system designed to unleash the entire expressive power of\nnatural language translations.\n"
 homepage = "http://www.projectfluent.org"
 readme = "README.md"
@@ -31,16 +31,16 @@ harness = false
 version = "0.13"
 
 [dependencies.fluent-syntax]
-version = "0.10"
+version = "0.10.1"
 
 [dependencies.intl-memoizer]
 version = "0.5"
 
 [dependencies.intl_pluralrules]
-version = "7.0"
+version = "7.0.1"
 
-[dependencies.rental]
-version = "0.5"
+[dependencies.ouroboros]
+version = "0.7"
 
 [dependencies.smallvec]
 version = "1"
@@ -51,7 +51,7 @@ version = "0.9"
 version = "0.3"
 
 [dev-dependencies.rand]
-version = "0.7"
+version = "0.8"
 
 [dev-dependencies.serde]
 version = "1.0"

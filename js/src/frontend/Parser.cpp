@@ -268,7 +268,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   }
 
   if (!handler_.canSkipLazyInnerFunctions()) {
-    if (!compilationState_.scriptExtent.emplaceBack()) {
+    if (!compilationState_.scriptExtra.emplaceBack()) {
       js::ReportOutOfMemory(cx_);
       return nullptr;
     }
@@ -1972,9 +1972,11 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   funbox->finishScriptFlags();
   funbox->copyFunctionFields(script);
   funbox->copyScriptFields(script);
+
   if (!handler_.canSkipLazyInnerFunctions()) {
-    SourceExtent& extent = funbox->functionStencilExtent();
-    funbox->copyScriptExtent(extent);
+    ScriptStencilExtra& scriptExtra = funbox->functionExtraStencil();
+    funbox->copyFunctionExtraFields(scriptExtra);
+    funbox->copyScriptExtraFields(scriptExtra);
   }
 
   return true;
@@ -1994,12 +1996,14 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   FunctionBox* funbox = pc_->functionBox();
   ScriptStencil& script = funbox->functionStencil();
-  SourceExtent& extent = funbox->functionStencilExtent();
 
   funbox->finishScriptFlags();
   funbox->copyFunctionFields(script);
   funbox->copyScriptFields(script);
-  funbox->copyScriptExtent(extent);
+
+  ScriptStencilExtra& scriptExtra = funbox->functionExtraStencil();
+  funbox->copyFunctionExtraFields(scriptExtra);
+  funbox->copyScriptExtraFields(scriptExtra);
 
   // Elide nullptr sentinels from end of binding list. These are inserted for
   // each scope regardless of if any bindings are actually closed over.

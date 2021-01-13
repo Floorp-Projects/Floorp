@@ -83,9 +83,12 @@ NS_IMETHODIMP HTMLEditorEventListener::HandleEvent(Event* aEvent) {
 
       RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
       MOZ_ASSERT(htmlEditor);
-      DebugOnly<nsresult> rvIgnored = htmlEditor->OnMouseMove(mouseMoveEvent);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                           "HTMLEditor::OnMouseMove() failed, but ignored");
+      DebugOnly<nsresult> rvIgnored =
+          htmlEditor->UpdateResizerOrGrabberPositionTo(CSSIntPoint(
+              mouseMoveEvent->ClientX(), mouseMoveEvent->ClientY()));
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "HTMLEditor::UpdateResizerOrGrabberPositionTo() failed, but ignored");
       return NS_OK;
     }
     case eResize: {
@@ -227,6 +230,9 @@ nsresult HTMLEditorEventListener::ListenToWindowResizeEvent(bool aListen) {
 }
 
 nsresult HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent) {
+  MOZ_ASSERT(aMouseEvent);
+  MOZ_ASSERT(aMouseEvent->IsTrusted());
+
   if (DetachedFromEditor()) {
     return NS_OK;
   }
@@ -236,6 +242,8 @@ nsresult HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent) {
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
 
+  htmlEditor->PreHandleMouseUp(*aMouseEvent);
+
   if (NS_WARN_IF(!aMouseEvent->GetTarget())) {
     return NS_ERROR_FAILURE;
   }
@@ -243,11 +251,11 @@ nsresult HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent) {
   //      UI Events, but it may not be not an element node if it occurs
   //      on native anonymous node like a resizer.
 
-  int32_t clientX = aMouseEvent->ClientX();
-  int32_t clientY = aMouseEvent->ClientY();
-  DebugOnly<nsresult> rvIgnored = htmlEditor->OnMouseUp(clientX, clientY);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "HTMLEditor::OnMouseUp() failed, but ignored");
+  DebugOnly<nsresult> rvIgnored = htmlEditor->StopDraggingResizerOrGrabberAt(
+      CSSIntPoint(aMouseEvent->ClientX(), aMouseEvent->ClientY()));
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "HTMLEditor::StopDraggingResizerOrGrabberAt() failed, but ignored");
 
   nsresult rv = EditorEventListener::MouseUp(aMouseEvent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -263,18 +271,6 @@ static bool IsAcceptableMouseEvent(const HTMLEditor& aHTMLEditor,
       aMouseEvent->WidgetEventPtr()->AsMouseEvent();
   MOZ_ASSERT(mousedownEvent);
   return aHTMLEditor.IsAcceptableInputEvent(mousedownEvent);
-}
-
-void HTMLEditorEventListener::MaybeDisplayResizers(HTMLEditor& aHTMLEditor,
-                                                   Element& aElement,
-                                                   MouseEvent& aMouseEvent) {
-  // if the target element is an image, we have to display resizers
-  int32_t clientX = aMouseEvent.ClientX();
-  int32_t clientY = aMouseEvent.ClientY();
-  DebugOnly<nsresult> rvIgnored =
-      aHTMLEditor.OnMouseDown(clientX, clientY, &aElement, &aMouseEvent);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "HTMLEditor::OnMouseDown() failed, but ignored");
 }
 
 nsresult HTMLEditorEventListener::HandlePrimaryMouseButtonDown(
@@ -294,8 +290,14 @@ nsresult HTMLEditorEventListener::HandlePrimaryMouseButtonDown(
   switch (clickCount) {
     case 1:
       if (isElement) {
-        RefPtr<Element> element = eventTargetContent->AsElement();
-        MaybeDisplayResizers(aHTMLEditor, *element, aMouseEvent);
+        OwningNonNull<Element> element(*eventTargetContent->AsElement());
+        DebugOnly<nsresult> rvIgnored =
+            aHTMLEditor.StartToDragResizerOrHandleDragGestureOnGrabber(
+                aMouseEvent, element);
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rvIgnored),
+            "HTMLEditor::StartToDragResizerOrHandleDragGestureOnGrabber() "
+            "failed, but ignored");
       }
       break;
     case 2:
@@ -372,6 +374,9 @@ nsresult HTMLEditorEventListener::HandleSecondaryMouseButtonDown(
 }
 
 nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
+  MOZ_ASSERT(aMouseEvent);
+  MOZ_ASSERT(aMouseEvent->IsTrusted());
+
   if (NS_WARN_IF(!aMouseEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
@@ -386,6 +391,8 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
 
   RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
+
+  htmlEditor->PreHandleMouseDown(*aMouseEvent);
 
   if (!IsAcceptableMouseEvent(*htmlEditor, aMouseEvent)) {
     return EditorEventListener::MouseDown(aMouseEvent);

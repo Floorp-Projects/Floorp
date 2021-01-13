@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::builtins::{FluentDateTime, FluentDateTimeOptions, NumberFormat};
-use fluent::resolver::ResolverError;
 pub use fluent::{FluentArgs, FluentBundle, FluentError, FluentResource, FluentValue};
 use fluent_pseudo::transform_dom;
 pub use intl_memoizer::IntlLangMemoizer;
@@ -92,7 +91,7 @@ fn fluent_bundle_new_internal(
     use_isolating: bool,
     pseudo_strategy: &nsACString,
 ) -> Box<FluentBundleRc> {
-    let mut bundle = FluentBundle::new(langids.iter());
+    let mut bundle = FluentBundle::new(langids.to_vec());
     bundle.set_use_isolating(use_isolating);
 
     bundle.set_formatter(Some(format_numbers));
@@ -265,40 +264,6 @@ fn convert_args<'a>(
 
 fn append_fluent_errors_to_ret_errors(ret_errors: &mut ThinVec<nsCString>, errors: &[FluentError]) {
     for error in errors {
-        match error {
-            FluentError::ResolverError(ref err) => match err {
-                ResolverError::Reference(ref s) => {
-                    let error = format!("ReferenceError: {}", s);
-                    ret_errors.push(error.into());
-                }
-                ResolverError::MissingDefault => {
-                    let error = "RangeError: No default value for selector";
-                    ret_errors.push(error.into());
-                }
-                ResolverError::Cyclic => {
-                    let error =
-                        "RangeError: Cyclic reference encountered while resolving a message";
-                    ret_errors.push(error.into());
-                }
-                ResolverError::TooManyPlaceables => {
-                    let error = "RangeError: Too many placeables in a message";
-                    ret_errors.push(error.into());
-                }
-            },
-            FluentError::Overriding { kind, id } => {
-                let error = format!(
-                    "OverrideError: An entry {} of type {} is already defined in this bundle",
-                    id, kind
-                );
-                ret_errors.push(error.into());
-            }
-            FluentError::ParserError(pe) => {
-                let error = format!(
-                    "ParserError: Error of kind {:#?} in position: ({}, {})",
-                    pe.kind, pe.pos.0, pe.pos.1
-                );
-                ret_errors.push(error.into());
-            }
-        }
+        ret_errors.push(error.to_string().into());
     }
 }

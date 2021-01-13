@@ -441,26 +441,28 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
 
   ScriptStencil& script = compilationInfo.stencil.scriptData[scriptIndex];
-  SourceExtent& extent = compilationInfo.stencil.scriptExtent[scriptIndex];
+  ScriptStencilExtra& scriptExtra =
+      compilationInfo.stencil.scriptExtra[scriptIndex];
 
-  script.immutableFlags = smooshScript.immutable_flags;
+  scriptExtra.immutableFlags = smooshScript.immutable_flags;
 
   // FIXME: The following flags should be set in jsparagus.
-  script.immutableFlags.setFlag(ImmutableFlags::SelfHosted,
-                                options.selfHostingMode);
-  script.immutableFlags.setFlag(ImmutableFlags::ForceStrict,
-                                options.forceStrictMode());
-  script.immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
-                                options.nonSyntacticScope);
+  scriptExtra.immutableFlags.setFlag(ImmutableFlags::SelfHosted,
+                                     options.selfHostingMode);
+  scriptExtra.immutableFlags.setFlag(ImmutableFlags::ForceStrict,
+                                     options.forceStrictMode());
+  scriptExtra.immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
+                                     options.nonSyntacticScope);
 
   if (&smooshScript == &result.scripts.data[0]) {
-    script.immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
-                                  options.isRunOnce);
-    script.immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
-                                  options.noScriptRval);
+    scriptExtra.immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
+                                       options.isRunOnce);
+    scriptExtra.immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
+                                       options.noScriptRval);
   }
 
-  bool isFunction = script.immutableFlags.hasFlag(ImmutableFlags::IsFunction);
+  bool isFunction =
+      scriptExtra.immutableFlags.hasFlag(ImmutableFlags::IsFunction);
 
   if (smooshScript.immutable_script_data.IsSome()) {
     auto index = smooshScript.immutable_script_data.AsSome();
@@ -484,19 +486,19 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     script.setHasSharedData();
   }
 
-  extent.sourceStart = smooshScript.extent.source_start;
-  extent.sourceEnd = smooshScript.extent.source_end;
-  extent.toStringStart = smooshScript.extent.to_string_start;
-  extent.toStringEnd = smooshScript.extent.to_string_end;
-  extent.lineno = smooshScript.extent.lineno;
-  extent.column = smooshScript.extent.column;
+  scriptExtra.extent.sourceStart = smooshScript.extent.source_start;
+  scriptExtra.extent.sourceEnd = smooshScript.extent.source_end;
+  scriptExtra.extent.toStringStart = smooshScript.extent.to_string_start;
+  scriptExtra.extent.toStringEnd = smooshScript.extent.to_string_end;
+  scriptExtra.extent.lineno = smooshScript.extent.lineno;
+  scriptExtra.extent.column = smooshScript.extent.column;
 
   if (isFunction) {
     if (smooshScript.fun_name.IsSome()) {
       script.functionAtom = allAtoms[smooshScript.fun_name.AsSome()]->toIndex();
     }
     script.functionFlags = FunctionFlags(smooshScript.fun_flags);
-    script.nargs = smooshScript.fun_nargs;
+    scriptExtra.nargs = smooshScript.fun_nargs;
     if (smooshScript.lazy_function_enclosing_scope_index.IsSome()) {
       script.setLazyFunctionEnclosingScopeIndex(ScopeIndex(
           smooshScript.lazy_function_enclosing_scope_index.AsSome()));
@@ -630,13 +632,13 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
   }
   compilationInfo.stencil.scriptData = mozilla::Span(pscript, len);
 
-  auto* pextent =
-      compilationInfo.alloc.newArrayUninitialized<SourceExtent>(len);
-  if (!pextent) {
+  auto* pextra =
+      compilationInfo.alloc.newArrayUninitialized<ScriptStencilExtra>(len);
+  if (!pextra) {
     js::ReportOutOfMemory(cx);
     return false;
   }
-  compilationInfo.stencil.scriptExtent = mozilla::Span(pextent, len);
+  compilationInfo.stencil.scriptExtra = mozilla::Span(pextra, len);
 
   // NOTE: Currently we don't support delazification or standalone function.
   //       Once we support, fix the following loop to include 0-th item

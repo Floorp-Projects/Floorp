@@ -5317,7 +5317,7 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     ReportOutOfMemory(cx);
     return false;
   }
-  if (!compilationState.scriptExtent.emplaceBack()) {
+  if (!compilationState.scriptExtra.emplaceBack()) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -5809,9 +5809,8 @@ static bool runOffThreadScript(JSContext* cx, unsigned argc, Value* vp) {
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  DeleteOffThreadJob(cx, job);
-
   RootedScript script(cx, JS::FinishOffThreadScript(cx, token));
+  DeleteOffThreadJob(cx, job);
   if (!script) {
     return false;
   }
@@ -5899,9 +5898,8 @@ static bool FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp) {
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  DeleteOffThreadJob(cx, job);
-
   RootedObject module(cx, JS::FinishOffThreadModule(cx, token));
+  DeleteOffThreadJob(cx, job);
   if (!module) {
     return false;
   }
@@ -6012,9 +6010,8 @@ static bool runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp) {
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  DeleteOffThreadJob(cx, job);
-
   RootedScript script(cx, JS::FinishOffThreadScriptDecoder(cx, token));
+  DeleteOffThreadJob(cx, job);
   if (!script) {
     return false;
   }

@@ -783,14 +783,14 @@ class SpecialPowersChild extends JSWindowActorChild {
     return this.sendQuery("SPProcessCrashService", message);
   }
 
-  _setTimeout(callback) {
+  _setTimeout(callback, delay = 0) {
     // for mochitest-browser
     if (typeof this.chromeWindow != "undefined") {
-      this.chromeWindow.setTimeout(callback, 0);
+      this.chromeWindow.setTimeout(callback, delay);
     }
     // for mochitest-plain
     else {
-      this.contentWindow.setTimeout(callback, 0);
+      this.contentWindow.setTimeout(callback, delay);
     }
   }
 

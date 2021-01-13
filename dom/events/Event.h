@@ -143,6 +143,9 @@ class Event : public nsISupports, public nsWrapperCache {
   virtual void DuplicatePrivateData();
   bool IsDispatchStopped();
   WidgetEvent* WidgetEventPtr();
+  const WidgetEvent* WidgetEventPtr() const {
+    return const_cast<Event*>(this)->WidgetEventPtr();
+  }
   virtual void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
   virtual bool Deserialize(const IPC::Message* aMsg, PickleIterator* aIter);
   void SetOwner(EventTarget* aOwner);

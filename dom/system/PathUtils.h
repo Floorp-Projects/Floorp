@@ -36,6 +36,9 @@ class PathUtils final {
                            const nsAString& aRelativePath, nsString& aResult,
                            ErrorResult& aErr);
 
+  static void CreateUniquePath(const GlobalObject&, const nsAString& aPath,
+                               nsString& aResult, ErrorResult& aErr);
+
   static void Normalize(const GlobalObject&, const nsAString& aPath,
                         nsString& aResult, ErrorResult& aErr);
 
