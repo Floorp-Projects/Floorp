@@ -31,10 +31,6 @@ function openAlert() {
 }
 
 add_task(async function runTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
-
   var state, action;
   // The <button> in this test's HTML opens a prompt when clicked.
   // Here we send the events to simulate clicking it.
