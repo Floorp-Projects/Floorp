@@ -5,28 +5,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #define MOZ_USE_LAUNCHER_ERROR
-#define DONT_SKIP_DEFAULT_DEPENDENT_MODULES
 
 #include "freestanding/SharedSection.cpp"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/NativeNt.h"
 
 const wchar_t kChildArg[] = L"--child";
-
-#if !defined(__MINGW32__)
-// MinGW includes an old winternl.h that defines FILE_BASIC_INFORMATION.
-typedef struct FILE_BASIC_INFORMATION {
-  LARGE_INTEGER CreationTime;
-  LARGE_INTEGER LastAccessTime;
-  LARGE_INTEGER LastWriteTime;
-  LARGE_INTEGER ChangeTime;
-  ULONG FileAttributes;
-} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
-#endif  // !defined(__MINGW32__)
-
-extern "C" NTSTATUS NTAPI
-NtQueryAttributesFile(POBJECT_ATTRIBUTES aObjectAttributes,
-                      PFILE_BASIC_INFORMATION aFileInformation);
+const char kTestStrings[][6] = {
+    "a b c", "A B C", "a b c", "A B C", "X Y Z",
+};
+const wchar_t kTestStringsMerged[] =
+    L"a b c"
+    L"\0"
+    L"X Y Z"
+    L"\0";
 
 using namespace mozilla;
 using namespace mozilla::freestanding;
@@ -65,32 +57,55 @@ static bool VerifySharedSection(SharedSection& aSharedSection) {
 
   HMODULE k32mod = ::GetModuleHandleW(L"kernel32.dll");
   VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, FlushInstructionCache);
+  VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, GetModuleHandleW);
   VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, GetSystemInfo);
   VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, VirtualProtect);
 
-  const uint8_t* const arrayBase =
-      reinterpret_cast<const uint8_t*>(view->mModulePathArray);
-  for (uint32_t i = 0; i < view->mModulePathArrayLength; ++i) {
-    uint32_t offset = view->mModulePathArray[i];
-    // Use NtQueryAttributesFile to check the validity of an NT path.
-    UNICODE_STRING ntpath;
-    ::RtlInitUnicodeString(
-        &ntpath, reinterpret_cast<const wchar_t*>(arrayBase + offset));
-    OBJECT_ATTRIBUTES oa;
-    InitializeObjectAttributes(&oa, &ntpath, OBJ_CASE_INSENSITIVE, nullptr,
-                               nullptr);
-    FILE_BASIC_INFORMATION info;
-    NTSTATUS status = ::NtQueryAttributesFile(&oa, &info);
-    if (!NT_SUCCESS(status)) {
-      printf(
-          "TEST-FAILED | TestCrossProcessWin | "
-          "Invalid path %ls - %08lx.\n",
-          ntpath.Buffer, status);
-      return false;
+  bool matched = memcmp(view->mModulePathArray, kTestStringsMerged,
+                        sizeof(kTestStringsMerged)) == 0;
+  if (!matched) {
+    // Print actual strings on error
+    for (const wchar_t* p = view->mModulePathArray; *p;) {
+      printf("%p: %ls\n", p, p);
+      while (*p) {
+        ++p;
+      }
+      ++p;
     }
+    return false;
+  }
 
-    printf("%p: %ls\n", &offset,
-           reinterpret_cast<const wchar_t*>(arrayBase + offset));
+  return true;
+}
+
+static bool TestAddString() {
+  wchar_t testBuffer[3] = {0};
+  UNICODE_STRING ustr;
+
+  // This makes |testBuffer| full.
+  ::RtlInitUnicodeString(&ustr, L"a");
+  if (!AddString(testBuffer, sizeof(testBuffer), ustr)) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "AddString failed.\n");
+    return false;
+  }
+
+  // Adding a string to a full buffer should fail.
+  ::RtlInitUnicodeString(&ustr, L"b");
+  if (AddString(testBuffer, sizeof(testBuffer), ustr)) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "AddString caused OOB memory access.\n");
+    return false;
+  }
+
+  bool matched = memcmp(testBuffer, L"a\0", sizeof(testBuffer)) == 0;
+  if (!matched) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "AddString wrote wrong values.\n");
+    return false;
   }
 
   return true;
@@ -133,7 +148,7 @@ class ChildProcess final {
     }
 
     auto getDependentModulePaths =
-        reinterpret_cast<uint32_t (*)(uint32_t**)>(::GetProcAddress(
+        reinterpret_cast<const wchar_t (*)()>(::GetProcAddress(
             ::GetModuleHandleW(nullptr), "GetDependentModulePaths"));
     if (!getDependentModulePaths) {
       printf(
@@ -146,8 +161,7 @@ class ChildProcess final {
 #if !defined(DEBUG)
     // GetDependentModulePaths does not allow a caller other than xul.dll.
     // Skip on Debug build because it hits MOZ_ASSERT.
-    uint32_t* modulePathArray;
-    if (getDependentModulePaths(&modulePathArray) || modulePathArray) {
+    if (getDependentModulePaths()) {
       printf(
           "TEST-FAILED | TestCrossProcessWin | "
           "GetDependentModulePaths should return zero if the caller is "
@@ -160,17 +174,27 @@ class ChildProcess final {
       return 1;
     }
 
-    // Test a scenario to transfer a transferred section
+    // Test a scenario to transfer a transferred section as a readonly handle
     static HANDLE copiedHandle = nullptr;
     nt::CrossExecTransferManager tansferToSelf(::GetCurrentProcess());
-    LauncherVoidResult result =
-        gSharedSection.TransferHandle(tansferToSelf, &copiedHandle);
+    LauncherVoidResult result = gSharedSection.TransferHandle(
+        tansferToSelf, GENERIC_READ, &copiedHandle);
     if (result.isErr()) {
       PrintLauncherError(result, "SharedSection::TransferHandle(self) failed");
       return 1;
     }
 
     gSharedSection.Reset(copiedHandle);
+
+    UNICODE_STRING ustr;
+    ::RtlInitUnicodeString(&ustr, L"test");
+    result = gSharedSection.AddDepenentModule(&ustr);
+    if (result.inspectErr() !=
+        WindowsError::FromWin32Error(ERROR_ACCESS_DENIED)) {
+      PrintLauncherError(result, "The readonly section was writable");
+      return 1;
+    }
+
     if (!VerifySharedSection(gSharedSection)) {
       return 1;
     }
@@ -253,6 +277,10 @@ int wmain(int argc, wchar_t* argv[]) {
     return 1;
   }
 
+  if (!TestAddString()) {
+    return 1;
+  }
+
   LauncherResult<HMODULE> remoteImageBase =
       nt::GetProcessExeModule(childProcess);
   if (remoteImageBase.isErr()) {
@@ -312,7 +340,17 @@ int wmain(int argc, wchar_t* argv[]) {
       return 1;
     }
 
-    result = gSharedSection.TransferHandle(transferMgr);
+    for (const auto& testString : kTestStrings) {
+      nt::AllocatedUnicodeString ustr(testString);
+      result = gSharedSection.AddDepenentModule(ustr);
+      if (result.isErr()) {
+        PrintLauncherError(result, "SharedSection::AddDepenentModule failed");
+        return 1;
+      }
+    }
+
+    result = gSharedSection.TransferHandle(transferMgr,
+                                           GENERIC_READ | GENERIC_WRITE);
     if (result.isErr()) {
       PrintLauncherError(result, "SharedSection::TransferHandle failed");
       return 1;
