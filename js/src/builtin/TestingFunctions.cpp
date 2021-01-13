@@ -5067,7 +5067,7 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
 
   Rooted<frontend::CompilationStencilSet> stencilSet(
       cx, frontend::CompilationStencilSet(cx, options));
-  if (!stencilSet.get().initial.input.initForGlobal(cx)) {
+  if (!stencilSet.get().input.initForGlobal(cx)) {
     return false;
   }
 

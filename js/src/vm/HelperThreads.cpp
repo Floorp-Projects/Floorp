@@ -784,9 +784,8 @@ void ScriptDecodeTask::parse(JSContext* cx) {
       return;
     }
 
-    XDRStencilDecoder decoder(cx, &stencilSet.get()->initial.input.options,
-                              range);
-    if (!stencilSet.get()->initial.input.initForGlobal(cx)) {
+    XDRStencilDecoder decoder(cx, &stencilSet.get()->input.options, range);
+    if (!stencilSet.get()->input.initForGlobal(cx)) {
       return;
     }
 
@@ -2118,8 +2117,8 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
         }
       } else {
         auto stencilSet = parseTask->stencilSet_.get();
-        if (!stencilSet->initial.input.source()->xdrEncodeStencils(
-                cx, *stencilSet, xdrEncoder)) {
+        if (!stencilSet->input.source()->xdrEncodeStencils(cx, *stencilSet,
+                                                           xdrEncoder)) {
           return nullptr;
         }
       }

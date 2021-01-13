@@ -581,9 +581,9 @@ struct CompilationInfo : public BaseCompilationStencil {
   void trace(JSTracer* trc);
 };
 
-// A set of CompilationInfo, for XDR purpose.
+// A set of stencils, for XDR purpose.
 // This contains the initial compilation, and a vector of delazification.
-struct CompilationStencilSet {
+struct CompilationStencilSet : public CompilationInfo {
  private:
   using ScriptIndexVector = Vector<ScriptIndex, 0, js::SystemAllocPolicy>;
 
@@ -593,7 +593,6 @@ struct CompilationStencilSet {
   static constexpr size_t LifoAllocChunkSize = 512;
 
  public:
-  CompilationInfo initial;
   LifoAlloc allocForDelazifications;
   Vector<BaseCompilationStencil, 0, js::SystemAllocPolicy> delazifications;
   ScriptIndexVector delazificationIndices;
@@ -601,11 +600,12 @@ struct CompilationStencilSet {
 
   CompilationStencilSet(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options)
-      : initial(cx, options), allocForDelazifications(LifoAllocChunkSize) {}
+      : CompilationInfo(cx, options),
+        allocForDelazifications(LifoAllocChunkSize) {}
 
   // Move constructor is necessary to use Rooted.
   CompilationStencilSet(CompilationStencilSet&& other) noexcept
-      : initial(std::move(other.initial)),
+      : CompilationInfo(std::move(other)),
         allocForDelazifications(LifoAllocChunkSize),
         delazifications(std::move(other.delazifications)),
         delazificationAtomCache(std::move(other.delazificationAtomCache)) {
