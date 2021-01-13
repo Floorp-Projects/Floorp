@@ -345,6 +345,12 @@ class CallObject : public EnvironmentObject {
 
   static CallObject* createHollowForDebug(JSContext* cx, HandleFunction callee);
 
+  // If `env` or any enclosing environment is a CallObject, return that
+  // CallObject; else null.
+  //
+  // `env` may be a DebugEnvironmentProxy, but not a hollow environment.
+  static CallObject* find(JSObject* env);
+
   /*
    * When an aliased formal (var accessed by nested closures) is also
    * aliased by the arguments object, it must of course exist in one

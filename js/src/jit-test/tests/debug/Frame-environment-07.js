@@ -45,11 +45,11 @@ assertEq(
   JSON.stringify(["arguments", "value"])
 );
 
-//FIXME assertEq(frame.environment.getVariable("value"), 42);
+assertEq(frame.environment.getVariable("value"), 42);
 
 frame.environment.setVariable("value", 43);
 
-//FIXME assertEq(frame.environment.getVariable("value"), 43);
+assertEq(frame.environment.getVariable("value"), 43);
 
 result = it.next();
 
@@ -57,7 +57,7 @@ assertEq(
   JSON.stringify(frame.environment.names()),
   JSON.stringify(["block"])
 );
-//FIXME assertEq(frame.environment.getVariable("block"), "block");
+assertEq(frame.environment.getVariable("block"), "block");
 
 result = it.next();
 
@@ -65,7 +65,7 @@ assertEq(
   JSON.stringify(frame.environment.names()),
   JSON.stringify(["loop"])
 );
-//FIXME assertEq(frame.environment.getVariable("loop"), "loop");
+assertEq(frame.environment.getVariable("loop"), "loop");
 
 result = it.next();
 
@@ -73,11 +73,11 @@ assertEq(
   JSON.stringify(frame.environment.names()),
   JSON.stringify(["err"])
 );
-//FIXME assertEq(frame.environment.getVariable("err"), "err");
+assertEq(frame.environment.getVariable("err"), "err");
 
 result = it.next();
 
 assertEq(result.done, true);
-//FIXME assertEq(result.value, 43);
+assertEq(result.value, 43);
 
 assertThrowsInstanceOf(() => frame.environment, Error);
