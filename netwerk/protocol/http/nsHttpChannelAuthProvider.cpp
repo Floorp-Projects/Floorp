@@ -1313,6 +1313,18 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthCancelled(nsISupports* aContext,
     mConnectionBased = false;
   }
 
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(mAuthChannel);
+  if (channel) {
+    nsresult status;
+    Unused << channel->GetStatus(&status);
+    if (NS_FAILED(status)) {
+      // If the channel is already cancelled, there is no need to deal with the
+      // rest challenges.
+      LOG(("  Clear mRemainingChallenges, since mAuthChannel is cancelled"));
+      mRemainingChallenges.Truncate();
+    }
+  }
+
   if (userCancel) {
     if (!mRemainingChallenges.IsEmpty()) {
       // there are still some challenges to process, do so
