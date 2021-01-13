@@ -20,7 +20,7 @@ async function test() {
   // what the expected behaviour is.
   var snapMultiplier = SpecialPowers.getIntPref("slider.snapMultiplier");
 
-  // Much of the code below is "inlined" from dragVerticalScrollbar. Reusing
+  // Much of the code below is "inlined" from promiseVerticalScrollbarDrag. Reusing
   // that code was nontrivial given the modifications we needed to make, and
   // would have increased the complexity of that helper function more than I'd
   // like. However if any bugfixes are made to that function this code might
