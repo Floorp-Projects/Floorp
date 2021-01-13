@@ -29,12 +29,18 @@ class _MomentsPageHub {
     this.id = "moments-page-hub";
     this.state = {};
     this.checkHomepageOverridePref = this.checkHomepageOverridePref.bind(this);
+    this._initialized = false;
   }
 
   async init(
     waitForInitialized,
     { handleMessageRequest, addImpression, blockMessageById, sendTelemetry }
   ) {
+    if (this._initialized) {
+      return;
+    }
+
+    this._initialized = true;
     this._handleMessageRequest = handleMessageRequest;
     this._addImpression = addImpression;
     this._blockMessageById = blockMessageById;
@@ -158,6 +164,7 @@ class _MomentsPageHub {
   uninit() {
     clearInterval(this.state._intervalId);
     this.state = {};
+    this._initialized = false;
   }
 }
 

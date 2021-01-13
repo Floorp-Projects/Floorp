@@ -117,16 +117,23 @@ describe("ToolbarBadgeHub", () => {
     assert.ok(instance);
   });
   describe("#init", () => {
-    it("should make a messageRequest on init", async () => {
+    it("should make a single messageRequest on init", async () => {
       sandbox.stub(instance, "messageRequest");
       const waitForInitialized = sandbox.stub().resolves();
 
+      await instance.init(waitForInitialized, {});
       await instance.init(waitForInitialized, {});
       assert.calledOnce(instance.messageRequest);
       assert.calledWithExactly(instance.messageRequest, {
         template: "toolbar_badge",
         triggerId: "toolbarBadgeUpdate",
       });
+
+      instance.uninit();
+
+      await instance.init(waitForInitialized, {});
+
+      assert.calledTwice(instance.messageRequest);
     });
     it("should add a pref observer", async () => {
       await instance.init(sandbox.stub().resolves(), {});
