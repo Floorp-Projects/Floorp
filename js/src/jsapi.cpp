@@ -5744,10 +5744,9 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
 static JS::TranscodeResult DecodeStencil(
     JSContext* cx, JS::TranscodeBuffer& buffer,
     frontend::CompilationStencilSet& stencilSet, size_t cursorIndex) {
-  XDRStencilDecoder decoder(cx, &stencilSet.initial.input.options, buffer,
-                            cursorIndex);
+  XDRStencilDecoder decoder(cx, &stencilSet.input.options, buffer, cursorIndex);
 
-  if (!stencilSet.initial.input.initForGlobal(cx)) {
+  if (!stencilSet.input.initForGlobal(cx)) {
     return JS::TranscodeResult_Throw;
   }
 
@@ -5840,8 +5839,8 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
   }
 
   UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
-  if (!stencilSet.get().initial.input.source()->xdrEncodeStencils(
-          cx, stencilSet.get(), xdrEncoder)) {
+  if (!stencilSet.get().input.source()->xdrEncodeStencils(cx, stencilSet.get(),
+                                                          xdrEncoder)) {
     return JS::TranscodeResult_Throw;
   }
 

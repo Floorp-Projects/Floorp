@@ -745,12 +745,12 @@ XDRResult XDRStencilDecoder::codeStencils(
     frontend::CompilationStencilSet& stencilSet) {
   MOZ_ASSERT(stencilSet.delazifications.length() == 0);
 
-  frontend::ParserAtomSpanBuilder parserAtomBuilder(
-      cx()->runtime(), stencilSet.initial.parserAtomData);
+  frontend::ParserAtomSpanBuilder parserAtomBuilder(cx()->runtime(),
+                                                    stencilSet.parserAtomData);
   parserAtomBuilder_ = &parserAtomBuilder;
-  stencilAlloc_ = &stencilSet.initial.alloc;
+  stencilAlloc_ = &stencilSet.alloc;
 
-  MOZ_TRY(codeStencil(stencilSet.initial));
+  MOZ_TRY(codeStencil(stencilSet));
 
   if (!stencilSet.delazifications.reserve(nchunks_ - 1)) {
     ReportOutOfMemory(cx());
@@ -780,7 +780,7 @@ XDRResult XDRIncrementalStencilEncoder::codeStencils(
     frontend::CompilationStencilSet& stencilSet) {
   MOZ_ASSERT(encodedFunctions_.count() == 0);
 
-  MOZ_TRY(codeStencil(stencilSet.initial));
+  MOZ_TRY(codeStencil(stencilSet));
 
   for (auto& delazification : stencilSet.delazifications) {
     MOZ_TRY(codeFunctionStencil(delazification));

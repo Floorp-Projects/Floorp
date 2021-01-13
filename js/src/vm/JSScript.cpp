@@ -2817,7 +2817,7 @@ bool ScriptSource::xdrEncodeInitialStencil(
 bool ScriptSource::xdrEncodeStencils(
     JSContext* cx, frontend::CompilationStencilSet& stencilSet,
     UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder) {
-  if (!xdrEncodeInitialStencil(cx, stencilSet.initial, xdrEncoder)) {
+  if (!xdrEncodeInitialStencil(cx, stencilSet, xdrEncoder)) {
     return false;
   }
 
