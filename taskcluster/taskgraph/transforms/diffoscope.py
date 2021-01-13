@@ -28,6 +28,8 @@ diff_description_schema = Schema(
     {
         # Name of the diff task.
         Required("name"): text_type,
+        # Treeherder tier.
+        Required("tier"): int,
         # Treeherder symbol.
         Required("symbol"): text_type,
         # relative path (from config.path) to the file the task was defined in.
@@ -125,7 +127,7 @@ def fill_template(config, tasks):
                 "symbol": task["symbol"],
                 "platform": "diff/opt",
                 "kind": "other",
-                "tier": 2,
+                "tier": task["tier"],
             },
             "worker-type": "b-linux",
             "worker": {
