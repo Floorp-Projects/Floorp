@@ -186,7 +186,7 @@ customElements.define(
 
     update(data = {}) {
       if (data.sheetCount) {
-        if (this.sheetCount !== data.sheetCount && this.currentSheet !== 1) {
+        if (this.sheetCount !== data.sheetCount || this.currentSheet !== 1) {
           // when sheet count changes, scroll position will get reset
           this.currentSheet = 1;
         }
