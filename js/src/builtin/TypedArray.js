@@ -461,44 +461,44 @@ function TypedArrayFilter(callbackfn/*, thisArg*/) {
     return A;
 }
 
-// ES6 draft rev28 (2014/10/14) 22.2.3.10 %TypedArray%.prototype.find(predicate[, thisArg]).
+// ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
+// Plus <https://github.com/tc39/ecma262/pull/2221>
+// 22.2.3.10 %TypedArray%.prototype.find ( predicate [ , thisArg ] )
 function TypedArrayFind(predicate/*, thisArg*/) {
-    // Steps 1-2.
+    // Step 1.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
+    // Step 2.
     var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
 
     // If we got here, `this` is either a typed array or a wrapper for one.
 
-    // Steps 3-5.
+    // Step 3.
     var len;
     if (isTypedArray)
         len = TypedArrayLength(O);
     else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
 
-    // Step 6.
+    // Step 4.
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.find");
     if (!IsCallable(predicate))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
-    // Step 7.
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
 
-    // Steps 8-9.
-    // Steps a (implicit), and g.
+    // Steps 5-6.
     for (var k = 0; k < len; k++) {
-        // Steps a-c.
+        // Steps 6.a-b.
         var kValue = O[k];
-        // Steps d-f.
-        if (callContentFunction(predicate, T, kValue, k, O))
+
+        // Steps 6.c-d.
+        if (callContentFunction(predicate, thisArg, kValue, k, O))
             return kValue;
     }
 
-    // Step 10.
+    // Step 7.
     return undefined;
 }
 
