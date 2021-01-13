@@ -17,9 +17,6 @@ const { ObjectUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-if (AppConstants.MOZ_GLEAN) {
-  Cu.importGlobalProperties(["Glean"]);
-}
 
 const Utils = TelemetryUtils;
 
@@ -1094,11 +1091,6 @@ EnvironmentCache.prototype = {
 
     if (AppConstants.platform == "win") {
       this._hddData = await Services.sysinfo.diskInfo;
-      if (AppConstants.MOZ_GLEAN) {
-        Glean.fogValidation.profileDiskIsSsd.set(
-          this._hddData.profile.type == "SSD"
-        );
-      }
       let osData = await Services.sysinfo.osInfo;
 
       if (!this._initTask) {
