@@ -514,8 +514,8 @@ template XDRResult XDRSharedDataContainer(XDRState<XDR_DECODE>* xdr,
                                           SharedDataContainer& sharedData);
 
 template <XDRMode mode>
-XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
-                                CompilationStencil& stencil) {
+XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
+                                    BaseCompilationStencil& stencil) {
   if (!stencil.asmJS.empty()) {
     return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
   }
@@ -566,10 +566,10 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
 
   return Ok();
 }
-template XDRResult XDRCompilationStencil(XDRState<XDR_ENCODE>* xdr,
-                                         CompilationStencil& stencil);
+template XDRResult XDRBaseCompilationStencil(XDRState<XDR_ENCODE>* xdr,
+                                             BaseCompilationStencil& stencil);
 
-template XDRResult XDRCompilationStencil(XDRState<XDR_DECODE>* xdr,
-                                         CompilationStencil& stencil);
+template XDRResult XDRBaseCompilationStencil(XDRState<XDR_DECODE>* xdr,
+                                             BaseCompilationStencil& stencil);
 
 }  // namespace js

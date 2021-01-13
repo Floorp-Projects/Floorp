@@ -655,7 +655,7 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
 
   for (size_t i = 0; i < len; i++) {
     new (mozilla::KnownNotNull, &compilationInfo.stencil.scriptData[i])
-        CompilationStencil();
+        BaseCompilationStencil();
 
     if (!ConvertScriptStencil(cx, result, result.scripts.data[i], allAtoms,
                               compilationInfo, compilationState,

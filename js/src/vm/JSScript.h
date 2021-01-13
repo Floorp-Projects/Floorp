@@ -81,7 +81,7 @@ class DebugScript;
 
 namespace frontend {
 struct CompilationInfo;
-struct CompilationStencil;
+struct BaseCompilationStencil;
 struct CompilationGCOutput;
 }  // namespace frontend
 
@@ -1058,13 +1058,13 @@ class ScriptSource {
   // Encode a delazified function's stencil.  In case of errors, the XDR
   // encoder is freed.
   bool xdrEncodeFunctionStencil(JSContext* cx,
-                                frontend::CompilationStencil& stencil);
+                                frontend::BaseCompilationStencil& stencil);
 
  private:
   // Encode a delazified function's stencil.  In case of errors, the passed
   // XDR encoder is freed.
   bool xdrEncodeFunctionStencilWith(
-      JSContext* cx, frontend::CompilationStencil& stencil,
+      JSContext* cx, frontend::BaseCompilationStencil& stencil,
       UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder);
 
  public:
@@ -1407,7 +1407,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
 
   static bool InitFromStencil(JSContext* cx, js::HandleScript script,
                               js::frontend::CompilationInput& input,
-                              js::frontend::CompilationStencil& stencil,
+                              js::frontend::BaseCompilationStencil& stencil,
                               js::frontend::CompilationGCOutput& gcOutput,
                               const js::frontend::ScriptIndex scriptIndex);
 
@@ -1903,7 +1903,7 @@ class JSScript : public js::BaseScript {
   friend bool js::PrivateScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
       js::frontend::CompilationInput& input,
-      js::frontend::CompilationStencil& stencil,
+      js::frontend::BaseCompilationStencil& stencil,
       js::frontend::CompilationGCOutput& gcOutput,
       const js::frontend::ScriptIndex scriptIndex);
 
@@ -1929,18 +1929,17 @@ class JSScript : public js::BaseScript {
                                       uint32_t ngcthings);
 
  public:
-  static bool fullyInitFromStencil(JSContext* cx,
-                                   js::frontend::CompilationInput& input,
-                                   js::frontend::CompilationStencil& stencil,
-                                   js::frontend::CompilationGCOutput& gcOutput,
-                                   js::HandleScript script,
-                                   const js::frontend::ScriptIndex scriptIndex);
+  static bool fullyInitFromStencil(
+      JSContext* cx, js::frontend::CompilationInput& input,
+      js::frontend::BaseCompilationStencil& stencil,
+      js::frontend::CompilationGCOutput& gcOutput, js::HandleScript script,
+      const js::frontend::ScriptIndex scriptIndex);
 
   // Allocate a JSScript and initialize it with bytecode. This consumes
   // allocations within the stencil.
   static JSScript* fromStencil(JSContext* cx,
                                js::frontend::CompilationInput& input,
-                               js::frontend::CompilationStencil& stencil,
+                               js::frontend::BaseCompilationStencil& stencil,
                                js::frontend::CompilationGCOutput& gcOutput,
                                const js::frontend::ScriptIndex scriptIndex);
 

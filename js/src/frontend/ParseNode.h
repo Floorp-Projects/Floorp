@@ -59,7 +59,7 @@ namespace frontend {
 
 class ParseContext;
 class ParserAtomsTable;
-struct CompilationStencil;
+struct BaseCompilationStencil;
 class ParserSharedBase;
 class FullParseHandler;
 
@@ -1577,11 +1577,11 @@ class NumericLiteral : public ParseNode {
 };
 
 class BigIntLiteral : public ParseNode {
-  CompilationStencil& stencil_;
+  BaseCompilationStencil& stencil_;
   BigIntIndex index_;
 
  public:
-  BigIntLiteral(BigIntIndex index, CompilationStencil& stencil,
+  BigIntLiteral(BigIntIndex index, BaseCompilationStencil& stencil,
                 const TokenPos& pos)
       : ParseNode(ParseNodeKind::BigIntExpr, pos),
         stencil_(stencil),
@@ -1889,7 +1889,7 @@ class RegExpLiteral : public ParseNode {
 
   // Create a RegExp object of this RegExp literal.
   RegExpObject* create(JSContext* cx, CompilationAtomCache& atomCache,
-                       CompilationStencil& stencil) const;
+                       BaseCompilationStencil& stencil) const;
 
 #ifdef DEBUG
   void dumpImpl(GenericPrinter& out, int indent);

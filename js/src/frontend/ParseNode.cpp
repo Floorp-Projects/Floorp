@@ -405,7 +405,7 @@ RegExpObject* RegExpStencil::createRegExp(
 
 RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
     JSContext* cx, CompilationAtomCache& atomCache,
-    CompilationStencil& stencil) const {
+    BaseCompilationStencil& stencil) const {
   const ParserAtom* parserAtom = stencil.getParserAtomAt(cx, atom_);
   MOZ_ASSERT(parserAtom);
   RootedAtom atom(cx, parserAtom->toJSAtom(cx, atomCache));
@@ -417,7 +417,7 @@ RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
 
 RegExpObject* RegExpLiteral::create(JSContext* cx,
                                     CompilationAtomCache& atomCache,
-                                    CompilationStencil& stencil) const {
+                                    BaseCompilationStencil& stencil) const {
   return stencil.regExpData[index_].createRegExpAndEnsureAtom(cx, atomCache,
                                                               stencil);
 }
