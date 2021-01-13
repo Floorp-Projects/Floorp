@@ -1349,7 +1349,12 @@ var PrintSettingsViewProxy = {
       case "supportsMonochrome":
         return this.availablePrinters[target.printerName].supportsMonochrome;
       case "defaultSystemPrinter":
-        return this.defaultSystemPrinter?.value;
+        return (
+          this.defaultSystemPrinter?.value ||
+          Object.getOwnPropertyNames(this.availablePrinters).find(
+            name => name != PrintUtils.SAVE_TO_PDF_PRINTER
+          )
+        );
 
       case "numCopies":
         return this.get(target, "willSaveToFile") ? 1 : target.numCopies;
