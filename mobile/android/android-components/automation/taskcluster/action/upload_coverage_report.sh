@@ -12,4 +12,4 @@ export CI_BUILD_URL="https://tools.taskcluster.net/tasks/$TASK_ID"
 # bash <(curl -s https://codecov.io/bash)
 # Copied the codecov bash script locally for:
 # https://github.com/mozilla-mobile/android-components/issues/7500
-bash automation/taskcluster/.codecov -t @.cc_token
+bash automation/taskcluster/.codecov -t @.cc_token -X gcov -X coveragepy
