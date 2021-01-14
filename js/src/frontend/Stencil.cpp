@@ -1255,7 +1255,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
                         size_t(functionIndex_));
   }
 
-  json.beginListProperty("flags_");
+  json.beginListProperty("flags");
   if (flags_ & HasEnclosing) {
     json.value("HasEnclosing");
   }
@@ -1718,7 +1718,7 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
     json.endList();
   }
 
-  json.beginListProperty("flags_");
+  json.beginListProperty("flags");
   if (flags_ & WasFunctionEmittedFlag) {
     json.value("WasFunctionEmittedFlag");
   }
