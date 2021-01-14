@@ -73,10 +73,15 @@ into Clang. We strongly recommend that you use the Clang version supplied
 as part of the ``mach bootstrap`` process, as we backported several required
 fixes for TSan on Firefox.
 
-You also currently require a Rust Nightly toolchain because the usage of
-sanitizers is restricted to Nightly toolchains in Rust. Unlike for ASan,
-we really need to instrument *all* code, including Rust code, in order to
-avoid false positives.
+Sanitizer support in Rust is genuinely experimental,
+so our build system only works with a limited range of rust nightlies.
+To install and use that specific version,
+run the following in the root of your mozilla-central checkout:
+
+::
+
+    rustup toolchain install nightly-2020-11-14 --component rust-src
+    rustup override set nightly-2020-11-14
 
 Building Firefox
 ~~~~~~~~~~~~~~~~
