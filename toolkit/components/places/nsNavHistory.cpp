@@ -19,6 +19,7 @@
 #include "DateTimeFormat.h"
 #include "History.h"
 #include "Helpers.h"
+#include "NotifyManyFrecenciesChanged.h"
 
 #include "nsTArray.h"
 #include "nsCollationCID.h"
@@ -222,13 +223,20 @@ class FixAndDecayFrecencyRunnable final : public Runnable {
         mDecayRate(aDecayRate),
         mDecayReason(mozIStorageStatementCallback::REASON_FINISHED) {}
 
-  NS_IMETHOD
-  Run() override {
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is marked
+  // MOZ_CAN_RUN_SCRIPT.  See bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  NS_IMETHOD Run() override {
     if (NS_IsMainThread()) {
       nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
       NS_ENSURE_STATE(navHistory);
 
       navHistory->DecayFrecencyCompleted(mDecayReason);
+
+      if (mozIStorageStatementCallback::REASON_FINISHED == mDecayReason) {
+        ::NotifyManyFrecenciesChanged().Run();
+      }
+
       return NS_OK;
     }
 
