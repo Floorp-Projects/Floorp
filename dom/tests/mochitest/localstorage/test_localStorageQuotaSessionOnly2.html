@@ -84,7 +84,7 @@ SimpleTest.waitForExplicitFinish();
 function startTest() {
   // Initialy setup the quota to testing value of 1024B and
   // set a 500 bytes key with name length 1 (allocate 501 bytes)
-  SpecialPowers.pushPrefEnv({"set": [["dom.storage.default_quota", 1], ["security.mixed_content.block_display_content", false], ["security.mixed_content.block_active_content", false]]}, function() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.storage.default_quota", 1], ["dom.storage.default_site_quota", 1], ["security.mixed_content.block_display_content", false], ["security.mixed_content.block_active_content", false]]}, function() {
       SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, 'context': document}], doNextTest);
   });
 }
