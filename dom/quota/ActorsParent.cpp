@@ -2313,14 +2313,24 @@ class RestoreDirectoryMetadata2Helper final : public StorageOperationBase {
   nsresult ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
-void SanitizeOriginString(nsCString& aOrigin) {
+auto MakeSanitizedOriginCString(const nsACString& aOrigin) {
 #ifdef XP_WIN
   NS_ASSERTION(!strcmp(QuotaManager::kReplaceChars,
                        FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR),
                "Illegal file characters have changed!");
 #endif
 
-  aOrigin.ReplaceChar(QuotaManager::kReplaceChars, '+');
+  nsAutoCString res{aOrigin};
+
+  res.ReplaceChar(QuotaManager::kReplaceChars, '+');
+
+  return res;
+}
+
+auto MakeSanitizedOriginString(const nsACString& aOrigin) {
+  // An origin string is ASCII-only, since it is obtained via
+  // nsIPrincipal::GetOrigin, which returns an ACString.
+  return NS_ConvertASCIItoUTF16(MakeSanitizedOriginCString(aOrigin));
 }
 
 Result<nsAutoString, nsresult> GetPathForStorage(
@@ -4792,10 +4802,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> QuotaManager::GetDirectoryForOrigin(
   QM_TRY_UNWRAP(auto directory,
                 QM_NewLocalFile(GetStoragePath(aPersistenceType)));
 
-  nsAutoCString originSanitized(aASCIIOrigin);
-  SanitizeOriginString(originSanitized);
-
-  QM_TRY(directory->Append(NS_ConvertASCIItoUTF16(originSanitized)));
+  QM_TRY(directory->Append(MakeSanitizedOriginString(aASCIIOrigin)));
 
   return directory;
 }
@@ -5004,8 +5011,8 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
                     // be removed once we have an upgrade to traverse origin
                     // directories and check through the directory metadata
                     // files.
-                    nsAutoCString originSanitized(metadata.mQuotaInfo.mOrigin);
-                    SanitizeOriginString(originSanitized);
+                    const auto originSanitized =
+                        MakeSanitizedOriginCString(metadata.mQuotaInfo.mOrigin);
 
                     NS_ConvertUTF16toUTF8 utf8LeafName(leafName);
                     if (!originSanitized.Equals(utf8LeafName)) {
@@ -5051,9 +5058,8 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
     QM_TRY(([&]() -> Result<Ok, nsresult> {
       QM_TRY(([&directory, &info, this,
                aPersistenceType]() -> Result<Ok, nsresult> {
-               nsAutoCString originSanitized(info.mGroupAndOrigin.mOrigin);
-               SanitizeOriginString(originSanitized);
-               NS_ConvertUTF8toUTF16 originDirName(originSanitized);
+               const auto originDirName =
+                   MakeSanitizedOriginString(info.mGroupAndOrigin.mOrigin);
 
                // Check if targetDirectory exist.
                QM_TRY_INSPECT(const auto& targetDirectory,
@@ -6947,13 +6953,8 @@ bool QuotaManager::IsOriginInternal(const nsACString& aOrigin) {
 // static
 bool QuotaManager::AreOriginsEqualOnDisk(const nsACString& aOrigin1,
                                          const nsACString& aOrigin2) {
-  nsCString origin1Sanitized(aOrigin1);
-  SanitizeOriginString(origin1Sanitized);
-
-  nsCString origin2Sanitized(aOrigin2);
-  SanitizeOriginString(origin2Sanitized);
-
-  return origin1Sanitized == origin2Sanitized;
+  return MakeSanitizedOriginCString(aOrigin1) ==
+         MakeSanitizedOriginCString(aOrigin2);
 }
 
 // static
@@ -6966,12 +6967,9 @@ bool QuotaManager::ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
     return true;
   }
 
-  nsCString sanitizedOrigin(aOrigin);
-  SanitizeOriginString(sanitizedOrigin);
-
   nsCString originalSuffix;
-  OriginParser::ResultType result =
-      OriginParser::ParseOrigin(sanitizedOrigin, aSpec, aAttrs, originalSuffix);
+  OriginParser::ResultType result = OriginParser::ParseOrigin(
+      MakeSanitizedOriginCString(aOrigin), aSpec, aAttrs, originalSuffix);
   if (NS_WARN_IF(result != OriginParser::ValidOrigin)) {
     return false;
   }
@@ -9169,14 +9167,11 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
                [this] {
                  OriginScope originScope = mOriginScope.Clone();
                  if (originScope.IsOrigin()) {
-                   nsCString originSanitized(originScope.GetOrigin());
-                   SanitizeOriginString(originSanitized);
-                   originScope.SetOrigin(originSanitized);
+                   originScope.SetOrigin(
+                       MakeSanitizedOriginCString(originScope.GetOrigin()));
                  } else if (originScope.IsPrefix()) {
-                   nsCString originNoSuffixSanitized(
-                       originScope.GetOriginNoSuffix());
-                   SanitizeOriginString(originNoSuffixSanitized);
-                   originScope.SetOriginNoSuffix(originNoSuffixSanitized);
+                   originScope.SetOriginNoSuffix(MakeSanitizedOriginCString(
+                       originScope.GetOriginNoSuffix()));
                  }
                  return originScope;
                }(),
@@ -10821,10 +10816,8 @@ nsresult UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
                  MOZ_TO_RESULT_INVOKE_TYPED(
                      nsAutoString, aOriginProps.mDirectory, GetLeafName));
 
-  nsAutoCString originSanitized(aOriginProps.mQuotaInfo.mOrigin);
-  SanitizeOriginString(originSanitized);
-
-  NS_ConvertASCIItoUTF16 newName(originSanitized);
+  const auto newName =
+      MakeSanitizedOriginString(aOriginProps.mQuotaInfo.mOrigin);
 
   if (!oldName.Equals(newName)) {
     QM_TRY(aOriginProps.mDirectory->RenameTo(nullptr, newName));
@@ -10901,10 +10894,8 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeStripObsoleteOriginAttributes(
 
   const nsAString& oldLeafName = aOriginProps.mLeafName;
 
-  nsCString originSanitized(aOriginProps.mQuotaInfo.mOrigin);
-  SanitizeOriginString(originSanitized);
-
-  NS_ConvertUTF8toUTF16 newLeafName(originSanitized);
+  const auto newLeafName =
+      MakeSanitizedOriginString(aOriginProps.mQuotaInfo.mOrigin);
 
   if (oldLeafName == newLeafName) {
     return false;
