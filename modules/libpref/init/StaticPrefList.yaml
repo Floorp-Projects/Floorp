@@ -5313,7 +5313,7 @@
 # CompilationStencil back to main thread before allocating GC objects.
 - name: javascript.options.off_thread_parse_global
   type: bool
-  value: true
+  value: false
   mirror: once
 
 - name: javascript.options.wasm_optimizingjit
