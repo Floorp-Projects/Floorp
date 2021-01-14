@@ -39,10 +39,6 @@ this.experiments_urlbar = class extends ExtensionAPI {
             this._addDynamicViewTemplate(name, viewTemplate);
           },
 
-          attributionURL: this._getDefaultSettingsAPI(
-            "browser.partnerlink.attributionURL"
-          ),
-
           clearInput() {
             let window = BrowserWindowTracker.getTopWindow();
             window.gURLBar.value = "";
@@ -51,10 +47,6 @@ this.experiments_urlbar = class extends ExtensionAPI {
 
           engagementTelemetry: this._getDefaultSettingsAPI(
             "browser.urlbar.eventTelemetry.enabled"
-          ),
-
-          extensionTimeout: this._getDefaultSettingsAPI(
-            "browser.urlbar.extension.timeout"
           ),
 
           onViewUpdateRequested: new EventManager({
