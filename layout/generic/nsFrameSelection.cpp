@@ -18,6 +18,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollTypes.h"
+#include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_bidi.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -1317,8 +1318,8 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
   mMaintainedRange.AdjustContentOffsets(offsets, scrollViewStop);
 
   // TODO: no click has happened, rename `HandleClick`.
-  HandleClick(offsets.content, offsets.offset, offsets.offset,
-              FocusMode::kExtendSelection, offsets.associate);
+  HandleClick(MOZ_KnownLive(offsets.content) /* bug 1636889 */, offsets.offset,
+              offsets.offset, FocusMode::kExtendSelection, offsets.associate);
 }
 
 nsresult nsFrameSelection::StartAutoScrollTimer(nsIFrame* aFrame,
@@ -1926,7 +1927,8 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
 
     const FocusMode focusMode =
         aExtend ? FocusMode::kExtendSelection : FocusMode::kCollapseToNewPoint;
-    HandleClick(offsets.content, offsets.offset, offsets.offset, focusMode,
+    HandleClick(MOZ_KnownLive(offsets.content) /* bug 1636889 */,
+                offsets.offset, offsets.offset, focusMode,
                 CARET_ASSOCIATE_AFTER);
 
     selectionChanged = selection->AnchorRef() != oldAnchor ||
