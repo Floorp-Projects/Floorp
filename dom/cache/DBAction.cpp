@@ -41,7 +41,7 @@ nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile) {
 
   MOZ_ASSERT(dbDir);
 
-  rv = RemoveNsIFile(aQuotaInfo, aDBFile);
+  rv = RemoveNsIFile(aQuotaInfo, *aDBFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -50,7 +50,7 @@ nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile) {
   // the new database is created.  No need to explicitly delete it here.
 
   // Delete the morgue as well.
-  rv = BodyDeleteDir(aQuotaInfo, dbDir);
+  rv = BodyDeleteDir(aQuotaInfo, *dbDir);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

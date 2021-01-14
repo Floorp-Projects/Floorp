@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_cache_FileUtilsImpl_h
 #define mozilla_dom_cache_FileUtilsImpl_h
 
+#include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/cache/FileUtils.h"
 
 namespace mozilla {
@@ -14,15 +15,13 @@ namespace dom {
 namespace cache {
 
 template <typename Func>
-nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
+nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
                            const Func& aHandleFileFunc,
                            const bool aCanRemoveFiles, const bool aTrackQuota) {
-  MOZ_DIAGNOSTIC_ASSERT(aBodyDir);
-
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   {
     nsCOMPtr<nsIFile> parentFile;
-    nsresult rv = aBodyDir->GetParent(getter_AddRefs(parentFile));
+    nsresult rv = aBodyDir.GetParent(getter_AddRefs(parentFile));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     MOZ_DIAGNOSTIC_ASSERT(parentFile);
 
@@ -34,21 +33,20 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
   }
 #endif
 
-  bool isEmpty = true;
+  FlippedOnce<true> isEmpty;
   CACHE_TRY(quota::CollectEachFile(
-      *aBodyDir,
+      aBodyDir,
       [&isEmpty, &aQuotaInfo, aTrackQuota, &aHandleFileFunc,
        aCanRemoveFiles](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
         CACHE_TRY_INSPECT(const bool& isDir,
                           MOZ_TO_RESULT_INVOKE(file, IsDirectory));
 
         // If it's a directory somehow, try to remove it and move on
-        if (NS_WARN_IF(isDir)) {
-          DebugOnly<nsresult> result = RemoveNsIFileRecursively(
-              aQuotaInfo, file, /* aTrackQuota */ false);
-          MOZ_ASSERT(NS_SUCCEEDED(result));
-          return Ok{};
-        }
+        CACHE_TRY(OkIf(!isDir), Ok{}, ([&aQuotaInfo, &file](const auto&) {
+                    DebugOnly<nsresult> result = RemoveNsIFileRecursively(
+                        aQuotaInfo, *file, /* aTrackQuota */ false);
+                    MOZ_ASSERT(NS_SUCCEEDED(result));
+                  }));
 
         nsAutoCString leafName;
         CACHE_TRY(file->GetNativeLeafName(leafName));
@@ -58,26 +56,28 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
         if (StringEndsWith(leafName, ".tmp"_ns)) {
           if (aCanRemoveFiles) {
             DebugOnly<nsresult> result =
-                RemoveNsIFile(aQuotaInfo, file, aTrackQuota);
+                RemoveNsIFile(aQuotaInfo, *file, aTrackQuota);
             MOZ_ASSERT(NS_SUCCEEDED(result));
             return Ok{};
           }
-        } else if (NS_WARN_IF(!StringEndsWith(leafName, ".final"_ns))) {
-          // Otherwise, it must be a .final file.  If its not, then try to
-          // remove it and move on
-          DebugOnly<nsresult> result =
-              RemoveNsIFile(aQuotaInfo, file, /* aTrackQuota */ false);
-          MOZ_ASSERT(NS_SUCCEEDED(result));
-          return Ok{};
+        } else {
+          CACHE_TRY(OkIf(StringEndsWith(leafName, ".final"_ns)), Ok{},
+                    ([&aQuotaInfo, &file](const auto&) {
+                      // Otherwise, it must be a .final file.  If its not, then
+                      // try to remove it and move on
+                      DebugOnly<nsresult> result = RemoveNsIFile(
+                          aQuotaInfo, *file, /* aTrackQuota */ false);
+                      MOZ_ASSERT(NS_SUCCEEDED(result));
+                    }));
         }
 
         CACHE_TRY_INSPECT(const bool& fileDeleted,
-                          aHandleFileFunc(file, leafName));
+                          aHandleFileFunc(*file, leafName));
         if (fileDeleted) {
           return Ok{};
         }
 
-        isEmpty = false;
+        isEmpty.EnsureFlipped();
 
         return Ok{};
       }));
