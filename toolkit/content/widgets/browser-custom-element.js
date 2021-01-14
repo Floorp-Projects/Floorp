@@ -604,15 +604,6 @@
         : this.contentDocument.partitionedPrincipal;
     }
 
-    get contentBlockingAllowListPrincipal() {
-      if (!this.isRemoteBrowser) {
-        return this.contentDocument.contentBlockingAllowListPrincipal;
-      }
-
-      return this.browsingContext.currentWindowGlobal
-        .contentBlockingAllowListPrincipal;
-    }
-
     get cookieJarSettings() {
       return this.isRemoteBrowser
         ? this.browsingContext?.currentWindowGlobal?.cookieJarSettings

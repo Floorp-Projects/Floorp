@@ -10,6 +10,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/dom/InProcessParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
@@ -43,6 +44,7 @@
 #include "nsQueryObject.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsNetUtil.h"
+#include "nsSandboxFlags.h"
 #include "nsSerializationHelper.h"
 #include "nsIBrowser.h"
 #include "nsIPromptCollection.h"
@@ -97,8 +99,6 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
                                std::move(fields));
   wgp->mDocumentPrincipal = aInit.principal();
   wgp->mDocumentURI = aInit.documentURI();
-  wgp->mDocContentBlockingAllowListPrincipal =
-      aInit.contentBlockingAllowListPrincipal();
   wgp->mBlockAllMixedContent = aInit.blockAllMixedContent();
   wgp->mUpgradeInsecureRequests = aInit.upgradeInsecureRequests();
   wgp->mSandboxFlags = aInit.sandboxFlags();
@@ -153,6 +153,21 @@ void WindowGlobalParent::Init() {
 
     Unused << SendSetContainerFeaturePolicy(
         BrowsingContext()->GetContainerFeaturePolicy());
+  }
+
+  if (BrowsingContext()->IsTopContent()) {
+    // For top level sandboxed documents we need to create a new principal
+    // from URI + OriginAttributes, since the document principal will be a
+    // NullPrincipal. See Bug 1654546.
+    if (mSandboxFlags & SANDBOXED_ORIGIN) {
+      ContentBlockingAllowList::RecomputePrincipal(
+          mDocumentURI, mDocumentPrincipal->OriginAttributesRef(),
+          getter_AddRefs(mDocContentBlockingAllowListPrincipal));
+    } else {
+      ContentBlockingAllowList::ComputePrincipal(
+          mDocumentPrincipal,
+          getter_AddRefs(mDocContentBlockingAllowListPrincipal));
+    }
   }
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

@@ -652,10 +652,6 @@ class Document : public nsINode,
 
   void ClearActiveStoragePrincipal() { mActiveStoragePrincipal = nullptr; }
 
-  nsIPrincipal* GetContentBlockingAllowListPrincipal() const {
-    return mContentBlockingAllowListPrincipal;
-  }
-
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   EventListenerManager* GetOrCreateListenerManager() override;
@@ -897,13 +893,9 @@ class Document : public nsINode,
   /**
    * Set the principals responsible for this document.  Chances are, you do not
    * want to be using this.
-   * Set aSetContentBlockingAllowListPrincipal to false to skip updating the
-   * content blocking allowlist principal. Currently used to prevent setting it
-   * to a NullPrincipal for sandboxed documents.
    */
   void SetPrincipals(nsIPrincipal* aPrincipal,
-                     nsIPrincipal* aPartitionedPrincipal,
-                     bool aSetContentBlockingAllowListPrincipal = true);
+                     nsIPrincipal* aPartitionedPrincipal);
 
   /**
    * Returns true if exempt from HTTPS-Only Mode upgrade.
@@ -5147,9 +5139,6 @@ class Document : public nsINode,
   // This is mutable so that we can keep EffectiveStoragePrincipal() const
   // which is required due to its CloneDocHelper() call site.  :-(
   mutable nsCOMPtr<nsIPrincipal> mActiveStoragePrincipal;
-
-  // The principal to use for the content blocking allow list.
-  nsCOMPtr<nsIPrincipal> mContentBlockingAllowListPrincipal;
 
   // See GetNextFormNumber and GetNextControlNumber.
   int32_t mNextFormNumber;

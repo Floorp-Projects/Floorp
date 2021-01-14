@@ -66,8 +66,6 @@ WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
 
   init.principal() = aPrincipal;
   Unused << NS_NewURI(getter_AddRefs(init.documentURI()), "about:blank");
-  ContentBlockingAllowList::ComputePrincipal(
-      aPrincipal, getter_AddRefs(init.contentBlockingAllowListPrincipal()));
 
   return init;
 }
@@ -79,8 +77,6 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
                       aWindow->GetOuterWindow()->WindowID());
 
   init.principal() = aWindow->GetPrincipal();
-  init.contentBlockingAllowListPrincipal() =
-      aWindow->GetDocumentContentBlockingAllowListPrincipal();
   init.documentURI() = aWindow->GetDocumentURI();
 
   Document* doc = aWindow->GetDocument();
