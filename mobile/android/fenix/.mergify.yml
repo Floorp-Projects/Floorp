@@ -74,6 +74,7 @@ pull_request_rules:
       - check-success=signing-beta-firebase
       - check-success=signing-nightly-simulation
       - check-success=test-debug
+      - check-success=ui-test-x86-beta
       - files~=(AndroidComponents.kt)
     actions:
       review:
