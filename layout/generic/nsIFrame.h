@@ -2145,13 +2145,12 @@ class nsIFrame : public nsQueryFrame {
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus);
 
-  nsresult SelectByTypeAtPoint(nsPresContext* aPresContext,
-                               const nsPoint& aPoint,
-                               nsSelectionAmount aBeginAmountType,
-                               nsSelectionAmount aEndAmountType,
-                               uint32_t aSelectFlags);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  SelectByTypeAtPoint(nsPresContext* aPresContext, const nsPoint& aPoint,
+                      nsSelectionAmount aBeginAmountType,
+                      nsSelectionAmount aEndAmountType, uint32_t aSelectFlags);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult PeekBackwardAndForward(
+  MOZ_CAN_RUN_SCRIPT nsresult PeekBackwardAndForward(
       nsSelectionAmount aAmountBack, nsSelectionAmount aAmountForward,
       int32_t aStartPos, bool aJumpLines, uint32_t aSelectFlags);
 
