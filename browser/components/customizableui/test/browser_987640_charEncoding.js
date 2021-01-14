@@ -48,9 +48,9 @@ add_task(async function() {
   let encodings = characterEncodingView.querySelectorAll(
     "toolbarbutton:not(.subviewbutton-back)"
   );
-  let newEncoding = encodings[0].hasAttribute("checked")
-    ? encodings[1]
-    : encodings[0];
+  let newEncoding = encodings[1].hasAttribute("checked")
+    ? encodings[2]
+    : encodings[1];
   let browserStopPromise = BrowserTestUtils.browserStopped(gBrowser, TEST_PAGE);
   newEncoding.click();
   await browserStopPromise;
