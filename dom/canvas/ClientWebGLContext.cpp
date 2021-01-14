@@ -3882,7 +3882,6 @@ webgl::TexUnpackBlobDesc FromImageData(GLenum target, uvec3 size,
 Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext&,
                                             GLenum target, uvec3 size,
                                             const dom::Element& src,
-                                            const bool allowBlitImage,
                                             ErrorResult* const out_error);
 }  // namespace webgl
 
@@ -3995,17 +3994,8 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     }
 
     if (src.mDomElem) {
-      bool canUseLayerImage = true;
-      if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
-        canUseLayerImage = false;
-      }
-      if (mNotLost && mNotLost->outOfProcess) {
-        canUseLayerImage = false;
-      }
-
       return webgl::FromDomElem(*this, imageTarget, explicitSize,
-                                *(src.mDomElem), canUseLayerImage,
-                                src.mOut_error);
+                                *(src.mDomElem), src.mOut_error);
     }
 
     return Some(webgl::TexUnpackBlobDesc{
@@ -4021,20 +4011,17 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   // UNPACK_ALIGNMENT are not strictly defined. These restrictions ensure
   // consistent and efficient behavior regardless of implied UNPACK_ params.
 
-  Maybe<gfx::IntSize> structuredSrcSize;
-  if (desc->surf) {
-    structuredSrcSize = Some(desc->surf->GetSize());
-  }
-  if (desc->image) {
-    structuredSrcSize = Some(desc->image->GetSize());
+  Maybe<uvec2> structuredSrcSize;
+  if (desc->dataSurf || desc->sd) {
+    structuredSrcSize = Some(desc->imageSize);
   }
   if (structuredSrcSize) {
     auto& size = desc->size;
     if (!size.x) {
-      size.x = structuredSrcSize->width;
+      size.x = structuredSrcSize->x;
     }
     if (!size.y) {
-      size.y = structuredSrcSize->height;
+      size.y = structuredSrcSize->x;
     }
   }
 
@@ -4057,7 +4044,50 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   // -
 
+  if (desc->sd) {
+    auto fallbackReason = BlitPreventReason(level, offset, pi, *desc);
+
+    const auto& sd = *(desc->sd);
+    const auto sdType = sd.type();
+    const auto& contextInfo = mNotLost->info;
+
+    const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
+    if (!canUploadViaSd) {
+      const nsPrintfCString msg(
+          "Fast uploads for resource type %i not implemented.", int(sdType));
+      fallbackReason.reset();
+      fallbackReason.emplace(ToString(msg));
+    }
+
+    if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
+      fallbackReason.reset();
+      fallbackReason.emplace("DOM blit uploads are disabled.");
+    }
+
+    if (fallbackReason) {
+      EnqueuePerfWarning("Missed GPU-copy fast-path: %s",
+                         fallbackReason->c_str());
+
+      const auto& image = desc->image;
+      const RefPtr<gfx::SourceSurface> surf = image->GetAsSourceSurface();
+      if (surf) {
+        // WARNING: OSX can lose our MakeCurrent here.
+        desc->dataSurf = surf->GetDataSurface();
+      }
+      if (!desc->dataSurf) {
+        EnqueueError(LOCAL_GL_OUT_OF_MEMORY,
+                     "Failed to retrieve source bytes for CPU upload.");
+        return;
+      }
+      desc->sd = Nothing();
+    }
+  }
+  desc->image = nullptr;
+
+  // -
+
   desc->Shrink(pi);
+
   Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
                        CastUvec3(offset), pi, std::move(*desc));
   scopedArr.Reset(); // (For the hazard analysis) Done with the data.
