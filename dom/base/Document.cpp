@@ -3694,8 +3694,7 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     // The principal is only used to enable/disable trackingprotection via
     // permission and can be shared with the top level sandboxed site.
     // See Bug 1654546.
-    SetPrincipals(principal, principal,
-                  /* aSetContentBlockingAllowListPrincipal = */ false);
+    SetPrincipals(principal, principal);
   }
 
   ApplySettingsFromCSP(false);
@@ -4010,8 +4009,7 @@ void Document::UpdateReferrerInfoFromMeta(const nsAString& aMetaReferrer,
 }
 
 void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
-                             nsIPrincipal* aNewPartitionedPrincipal,
-                             bool aSetContentBlockingAllowListPrincipal) {
+                             nsIPrincipal* aNewPartitionedPrincipal) {
   MOZ_ASSERT(!!aNewPrincipal == !!aNewPartitionedPrincipal);
   if (aNewPrincipal && mAllowDNSPrefetch &&
       StaticPrefs::network_dns_disablePrefetchFromHTTPS()) {
@@ -4026,11 +4024,6 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
   mPartitionedPrincipal = aNewPartitionedPrincipal;
 
   mCSSLoader->RegisterInSheetCache();
-
-  if (aSetContentBlockingAllowListPrincipal) {
-    ContentBlockingAllowList::ComputePrincipal(
-        aNewPrincipal, getter_AddRefs(mContentBlockingAllowListPrincipal));
-  }
 
 #ifdef DEBUG
   // Validate that the docgroup is set correctly by calling its getter and
