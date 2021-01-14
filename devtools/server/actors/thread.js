@@ -413,7 +413,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.reconfigure(options);
 
     // Set everything up so that breakpoint can work
-    this._setupForBreaking();
+    this._state = STATES.RUNNING;
 
     // Notify the parent that we've finished attaching. If this is a worker
     // thread which was paused until attaching, this will allow content to
@@ -1273,18 +1273,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
   },
 
-  _setupForBreaking() {
-    this.maybePauseOnExceptions();
-    this._state = STATES.RUNNING;
-  },
-
   /**
    * Only resume and notify necessary observers. This should be used in cases
    * when we do not want to notify the front end of a resume, for example when
    * we are shutting down.
    */
   doResume({ resumeLimit } = {}) {
-    this._setupForBreaking();
+    this._state = STATES.RUNNING;
 
     // Drop the actors in the pause actor pool.
     this._pausePool.destroy();
@@ -1588,7 +1583,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Clear stepping hooks.
     this.dbg.onEnterFrame = undefined;
-    this.dbg.onExceptionUnwind = undefined;
     this._requestedFrameRestart = null;
     this._clearSteppingHooks();
 
@@ -1773,7 +1767,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.sourcesManager.reset();
       this.clearDebuggees();
       this.dbg.enable();
-      this.maybePauseOnExceptions();
       // Update the global no matter if the debugger is on or off,
       // otherwise the global will be wrong when enabled later.
       this.global = window;
@@ -1806,7 +1799,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.removeAllWatchpoints();
     this.disableAllBreakpoints();
     this.dbg.onEnterFrame = undefined;
-    this.dbg.onExceptionUnwind = undefined;
   },
 
   _onNavigate() {
@@ -1925,6 +1917,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *        The exception that was thrown.
    */
   _onExceptionUnwind(youngestFrame, value) {
+    // Ignore any reported exception if we are already paused
+    if (this.isPaused()) {
+      return undefined;
+    }
+
     let willBeCaught = false;
     for (let frame = youngestFrame; frame != null; frame = frame.older) {
       if (frame.script.isInCatchScope(frame.offset)) {
