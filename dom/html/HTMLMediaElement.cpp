@@ -4800,8 +4800,8 @@ void HTMLMediaElement::ReportTelemetry() {
     }
   }
 
-  if (mHadNonEmptyVideo) {
-    // We have a valid video.
+  if (mMediaInfo.HasVideo() && mMediaInfo.mVideo.mImage.height > 0 &&
+      mMediaInfo.mVideo.mImage.width > 0) {
     double playTime = mPlayTime.Total();
     double hiddenPlayTime = mHiddenPlayTime.Total();
     double videoDecodeSuspendTime = mVideoDecodeSuspendTime.Total();
@@ -7347,9 +7347,6 @@ void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
     mAudioChannelWrapper->AudioCaptureTrackChangeIfNeeded();
   }
   UpdateWakeLock();
-  if (mMediaInfo.HasVideo() && mMediaInfo.mVideo.mImage.height > 0) {
-    mHadNonEmptyVideo = true;
-  }
 }
 
 void HTMLMediaElement::AudioCaptureTrackChange(bool aCapture) {
