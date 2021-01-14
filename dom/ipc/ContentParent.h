@@ -633,17 +633,6 @@ class ContentParent final
 
   nsresult TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
 
-  // Whenever receiving a Principal we need to validate that Principal case
-  // by case, where we grant individual callsites to customize the checks!
-  enum class ValidatePrincipalOptions {
-    AllowNullPtr,  // Not a NullPrincipal but a nullptr as Principal.
-    AllowSystem,
-    AllowExpanded,
-  };
-  bool ValidatePrincipal(
-      nsIPrincipal* aPrincipal,
-      const EnumSet<ValidatePrincipalOptions>& aOptions = {});
-
   // This function is called in BrowsingContext immediately before IPC call to
   // load a URI. If aURI is a BlobURL, this method transmits all BlobURLs for
   // aPrincipal that were previously not transmitted. This allows for opening a
