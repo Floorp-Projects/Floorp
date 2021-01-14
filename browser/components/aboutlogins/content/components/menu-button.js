@@ -147,7 +147,7 @@ export default class MenuButton extends HTMLElement {
         successor = items[activeItemIndex - 2];
       }
     }
-    successor.focus();
+    window.AboutLoginsUtils.setFocus(successor);
   }
 
   _hideMenu() {
