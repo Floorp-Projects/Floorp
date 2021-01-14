@@ -236,10 +236,8 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
   // SVG DOM text methods:
   uint32_t GetNumberOfChars(nsIContent* aContent);
   float GetComputedTextLength(nsIContent* aContent);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SelectSubString(nsIContent* aContent,
-                                                   uint32_t charnum,
-                                                   uint32_t nchars,
-                                                   ErrorResult& aRv);
+  void SelectSubString(nsIContent* aContent, uint32_t charnum, uint32_t nchars,
+                       ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT
   float GetSubStringLength(nsIContent* aContent, uint32_t charnum,
                            uint32_t nchars, ErrorResult& aRv);

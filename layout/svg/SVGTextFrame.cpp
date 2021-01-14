@@ -3578,7 +3578,7 @@ void SVGTextFrame::SelectSubString(nsIContent* aContent, uint32_t charnum,
     return;
   }
   charnum = chit.TextElementCharIndex();
-  const RefPtr<nsIContent> content = chit.TextFrame()->GetContent();
+  nsIContent* content = chit.TextFrame()->GetContent();
   chit.NextWithinSubtree(nchars);
   nchars = chit.TextElementCharIndex() - charnum;
 
