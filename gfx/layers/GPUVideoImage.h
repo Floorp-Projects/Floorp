@@ -56,6 +56,10 @@ class GPUVideoImage final : public Image {
 
   gfx::IntSize GetSize() const override { return mSize; }
 
+  Maybe<SurfaceDescriptor> GetDesc() override {
+    return GetDescFromTexClient(mTextureClient);
+  }
+
  private:
   GPUVideoTextureData* GetData() const {
     if (!mTextureClient) {

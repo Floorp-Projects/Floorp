@@ -93,8 +93,6 @@ class D3D9SurfaceImage : public Image {
                           const gfx::IntRect& aRegion);
 
   // Returns the description of the shared surface.
-  const D3DSURFACE_DESC& GetDesc() const;
-
   gfx::IntSize GetSize() const override;
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
