@@ -15,6 +15,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.mozilla.geckoview.GeckoResult;
 
@@ -82,8 +83,8 @@ public class ImageResource {
             final @NonNull String src,
             final @Nullable String type,
             final @Nullable Size[] sizes) {
-        this.src = src.toLowerCase();
-        this.type = type != null ? type.toLowerCase() : null;
+        this.src = src.toLowerCase(Locale.ROOT);
+        this.type = type != null ? type.toLowerCase(Locale.ROOT) : null;
         this.sizes = sizes;
     }
 
@@ -108,7 +109,7 @@ public class ImageResource {
             return null;
         }
 
-        final String[] sizesStrs = sizesStr.toLowerCase().split(" ");
+        final String[] sizesStrs = sizesStr.toLowerCase(Locale.ROOT).split(" ");
         final List<Size> sizes = new ArrayList<Size>();
 
         for (final String sizeStr: sizesStrs) {

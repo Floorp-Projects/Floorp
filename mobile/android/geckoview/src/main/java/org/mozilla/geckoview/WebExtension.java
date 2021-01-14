@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Represents a WebExtension that may be used by GeckoView.
@@ -2541,7 +2542,7 @@ public class WebExtension {
             int conflictActionFlags = CONFLICT_ACTION_UNIQUIFY;
             String conflictActionString = optionsBundle.getString("conflictAction");
             if (conflictActionString != null) {
-                switch (conflictActionString.toLowerCase()) {
+                switch (conflictActionString.toLowerCase(Locale.ROOT)) {
                     case "overwrite":
                         conflictActionFlags |= WebExtension.DownloadRequest.CONFLICT_ACTION_OVERWRITE;
                         break;
