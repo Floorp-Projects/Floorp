@@ -1378,10 +1378,12 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
   }
 
   if (trailingNames) {
-    json.beginListProperty("trailingNames");
+    char index[64];
+    json.beginObjectProperty("trailingNames");
     for (size_t i = 0; i < length; i++) {
       auto& name = (*trailingNames)[i];
-      json.beginObject();
+      SprintfLiteral(index, "%zu", i);
+      json.beginObjectProperty(index);
 
       json.boolProperty("closedOver", name.closedOver());
 
@@ -1393,7 +1395,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
       json.endObject();
     }
-    json.endList();
+    json.endObject();
   }
 
   json.endObject();
