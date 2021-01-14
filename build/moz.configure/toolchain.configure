@@ -2898,6 +2898,26 @@ add_old_configure_assignment("AR", ar)
 set_config("AR_FLAGS", ar_config.flags)
 
 
+@depends(toolchain_prefix, c_compiler)
+def nm_names(toolchain_prefix, c_compiler):
+    names = tuple("%s%s" % (p, "nm") for p in (toolchain_prefix or ()) + ("",))
+    if c_compiler.type == "clang":
+        # Get the llvm-nm path as per the output from clang --print-prog-name=llvm-nm
+        # so that we directly get the one under the clang directory, rather than one
+        # that might be in /usr/bin and that might point to one from a different version
+        # of clang.
+        out = check_cmd_output(
+            c_compiler.compiler, "--print-prog-name=llvm-nm", onerror=lambda: None
+        )
+        llvm_nm = out.rstrip() if out else "llvm-nm"
+        names = (llvm_nm,) + names
+
+    return names
+
+
+check_prog("NM", nm_names, paths=toolchain_search_path, when=target_is_linux)
+
+
 option("--enable-cpp-rtti", help="Enable C++ RTTI")
 
 add_old_configure_assignment("_MOZ_USE_RTTI", "1", when="--enable-cpp-rtti")

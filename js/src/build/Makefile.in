@@ -6,6 +6,7 @@
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef NM
 # check_vanilla_allocations.py is tailored to Linux, so only run it there.
 # That should be enough to catch any problems.
 check-vanilla-allocations:
@@ -16,10 +17,7 @@ check-vanilla-allocations:
 check-vanilla-allocations-aggressive:
 	$(PYTHON3) $(topsrcdir)/config/check_vanilla_allocations.py --aggressive $(REAL_LIBRARY)
 
-ifeq ($(OS_ARCH),Linux)
-ifeq (,$(filter -flto,$(COMPUTED_CFLAGS) $(COMPUTED_CXXFLAGS) $(COMPUTED_LDFLAGS)))
 check:: check-vanilla-allocations
-endif
 endif
 
 $(LIBRARY_NAME).pc: js.pc
