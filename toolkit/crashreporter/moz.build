@@ -57,6 +57,10 @@ if CONFIG["MOZ_CRASHREPORTER"]:
             "google-breakpad/src/common/linux",
             "google-breakpad/src/processor",
         ]
+
+        if CONFIG["OS_TARGET"] != "Android":
+            DIRS += ["rust_minidump_writer_linux"]
+
         if not CONFIG["DUMP_SYMS"] and CONFIG["HOST_OS_ARCH"] == "Linux":
             DIRS += [
                 "google-breakpad/src/tools/linux/dump_syms",
