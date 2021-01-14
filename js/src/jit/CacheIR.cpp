@@ -6748,11 +6748,6 @@ AttachDecision CallIRGenerator::tryAttachSpreadMathMinMax(HandleFunction callee,
     }
   }
 
-  if (!int32Result) {
-    // TODO: NumberMinMaxArrayResult
-    return AttachDecision::NoAction;
-  }
-
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
@@ -6762,7 +6757,11 @@ AttachDecision CallIRGenerator::tryAttachSpreadMathMinMax(HandleFunction callee,
   // Load the argument array
   ObjOperandId argsId = writer.loadSpreadArgs();
 
-  writer.int32MinMaxArrayResult(argsId, isMax);
+  if (int32Result) {
+    writer.int32MinMaxArrayResult(argsId, isMax);
+  } else {
+    writer.numberMinMaxArrayResult(argsId, isMax);
+  }
 
   writer.returnFromIC();
 

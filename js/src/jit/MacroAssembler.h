@@ -1142,6 +1142,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void minMaxArrayInt32(Register array, Register result, Register temp1,
                         Register temp2, Register temp3, bool isMax,
                         Label* fail);
+  void minMaxArrayNumber(Register array, FloatRegister result,
+                         FloatRegister floatTemp, Register temp1,
+                         Register temp2, bool isMax, Label* fail);
 
   // Compute |pow(base, power)| and store the result in |dest|. If the result
   // exceeds the int32 range, jumps to |onOver|.

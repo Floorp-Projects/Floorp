@@ -4652,6 +4652,30 @@ bool CacheIRCompiler::emitInt32MinMaxArrayResult(ObjOperandId arrayId,
   return true;
 }
 
+bool CacheIRCompiler::emitNumberMinMaxArrayResult(ObjOperandId arrayId,
+                                                  bool isMax) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register array = allocator.useRegister(masm, arrayId);
+
+  AutoAvailableFloatRegister result(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch(*this, FloatReg1);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.minMaxArrayNumber(array, result, floatScratch, scratch1, scratch2, isMax,
+                         failure->label());
+  masm.boxDouble(result, output.valueReg(), result);
+  return true;
+}
+
 bool CacheIRCompiler::emitMathFunctionNumberResultShared(
     UnaryMathFunction fun, FloatRegister inputScratch, ValueOperand output) {
   UnaryMathFunctionType funPtr = GetUnaryMathFunctionPtr(fun);

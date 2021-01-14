@@ -1273,6 +1273,14 @@
     array: ObjId
     isMax: BoolImm
 
+- name: NumberMinMaxArrayResult
+  shared: true
+  transpile: false
+  cost_estimate: 3
+  args:
+    array: ObjId
+    isMax: BoolImm
+
 - name: MathFunctionNumberResult
   shared: true
   transpile: true
