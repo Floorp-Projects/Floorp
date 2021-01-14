@@ -52,6 +52,18 @@ class RecentlyClosedMiddleware(
                     )
                 }
             }
+            is UndoAction.AddRecoverableTabs -> {
+                if (context.state.undoHistory.tabs.isNotEmpty()) {
+                    // If new tabs get added to the undo history and there were some previously
+                    // then add them to the list of closed tabs now since they will never go through
+                    // the clear call above.
+                    context.store.dispatch(
+                        RecentlyClosedAction.AddClosedTabsAction(
+                            context.state.undoHistory.tabs.filter { tab -> !tab.private }
+                        )
+                    )
+                }
+            }
             is RecentlyClosedAction.AddClosedTabsAction -> {
                 addTabsToStorage(action.tabs)
             }

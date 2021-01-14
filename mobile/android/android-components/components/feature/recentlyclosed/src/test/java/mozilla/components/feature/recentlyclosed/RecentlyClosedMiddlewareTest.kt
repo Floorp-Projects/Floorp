@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.undo.UndoMiddleware
 import mozilla.components.browser.state.action.RecentlyClosedAction
@@ -31,6 +32,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -266,6 +268,68 @@ class RecentlyClosedMiddlewareTest {
             tab.engineState.engineSessionState,
             closedTabCaptor.value[0].state
         )
+    }
+
+    @Test
+    fun `closed tabs storage adds tabs closed one after the other without clear actions in between`() {
+        val storage = mockStorage()
+        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+
+        var sessionManager: SessionManager? = null
+        val lookup: () -> SessionManager = { sessionManager!! }
+
+        val store = BrowserStore(
+            middleware = listOf(UndoMiddleware(lookup, mainScope = scope), middleware)
+        )
+
+        sessionManager = SessionManager(engine = mock(), store = store)
+        sessionManager.add(Session("https://www.mozilla.org", id = "tab1"))
+        sessionManager.add(Session("https://www.firefox.com", id = "tab2"))
+        sessionManager.add(Session("https://getpocket.com", id = "tab3"))
+        sessionManager.add(Session("https://theverge.com", id = "tab4"))
+        sessionManager.add(Session("https://www.google.com", id = "tab5"))
+
+        assertEquals(5, store.state.tabs.size)
+
+        sessionManager.remove(sessionManager.findSessionById("tab2")!!)
+        sessionManager.remove(sessionManager.findSessionById("tab3")!!)
+        sessionManager.remove(sessionManager.findSessionById("tab1")!!)
+        sessionManager.remove(sessionManager.findSessionById("tab5")!!)
+
+        store.dispatch(UndoAction.ClearRecoverableTabs(store.state.undoHistory.tag)).joinBlocking()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("tab4", store.state.selectedTabId)
+
+        dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        val closedTabCaptor = argumentCaptor<List<RecoverableTab>>()
+
+        verify(storage, times(4)).addTabsToCollectionWithMax(
+            closedTabCaptor.capture(),
+            eq(5)
+        )
+
+        val tabs = closedTabCaptor.allValues
+        assertEquals(4, tabs.size)
+
+        tabs[0].also { tab ->
+            assertEquals(1, tab.size)
+            assertEquals("tab2", tab[0].id)
+        }
+        tabs[1].also { tab ->
+            assertEquals(1, tab.size)
+            assertEquals("tab3", tab[0].id)
+        }
+        tabs[2].also { tab ->
+            assertEquals(1, tab.size)
+            assertEquals("tab1", tab[0].id)
+        }
+        tabs[3].also { tab ->
+            assertEquals(1, tab.size)
+            assertEquals("tab5", tab[0].id)
+        }
     }
 
     @Test
