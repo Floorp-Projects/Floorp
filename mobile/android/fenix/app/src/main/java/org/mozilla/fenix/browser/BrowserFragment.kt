@@ -5,9 +5,7 @@
 package org.mozilla.fenix.browser
 
 import android.content.Context
-import android.os.Bundle
 import android.os.StrictMode
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
@@ -56,17 +54,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private var readerModeAvailable = false
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val view = super.onCreateView(inflater, container, savedInstanceState)
-
-        startPostponedEnterTransition()
-        return view
-    }
 
     @Suppress("LongMethod")
     override fun initializeUI(view: View): Session? {
