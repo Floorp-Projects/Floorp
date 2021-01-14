@@ -215,6 +215,10 @@ def old_configure_for(old_configure_path, extra_env=None):
                         "--localdir=%s" % os.path.dirname(old_configure),
                         old_configure + ".in",
                     ],
+                    # Fix the working directory, so that when m4 is called, that
+                    # includes of relative paths are deterministically resolved
+                    # relative to the directory containing old-configure.
+                    cwd=os.path.dirname(old_configure),
                     env=env,
                 )
             except CalledProcessError as exc:
