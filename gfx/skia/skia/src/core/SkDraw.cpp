@@ -802,7 +802,7 @@ DRAW_PATH:
     this->drawPath(path, paint, nullptr, true);
 }
 
-SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix, SkScalar* overscale) {
+SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix) {
     // Not sure how to handle perspective differently, so we just don't try (yet)
     SkScalar sx = SkPoint::Length(matrix[SkMatrix::kMScaleX], matrix[SkMatrix::kMSkewY]);
     SkScalar sy = SkPoint::Length(matrix[SkMatrix::kMSkewX],  matrix[SkMatrix::kMScaleY]);
@@ -810,11 +810,7 @@ SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix, SkScalar* ov
         SkScalar scale = SkTMax(sx, sy);
         if (scale > 0) {
             static const SkScalar kMaxStrokeScale = 1e5f;
-            if (overscale && scale > kMaxStrokeScale) {
-                *overscale = scale / kMaxStrokeScale;
-                scale = kMaxStrokeScale;
-            }
-            return scale;
+            return SkTMin(scale, kMaxStrokeScale);
         }
     }
     return 1;
@@ -953,17 +949,9 @@ void SkDraw::drawPath(const SkPath& origSrcPath, const SkPaint& origPaint,
         if (this->computeConservativeLocalClipBounds(&cullRect)) {
             cullRectPtr = &cullRect;
         }
-        SkScalar overscale = SK_Scalar1;
         doFill = paint->getFillPath(*pathPtr, tmpPath, cullRectPtr,
-                                    ComputeResScaleForStroking(*fMatrix, &overscale));
+                                    ComputeResScaleForStroking(*fMatrix));
         pathPtr = tmpPath;
-        if (overscale != SK_Scalar1) {
-            if (matrix != &tmpMatrix) {
-                tmpMatrix = *matrix;
-                matrix = &tmpMatrix;
-            }
-            tmpMatrix.postScale(overscale, overscale);
-        }
     }
 
     // avoid possibly allocating a new path in transform if we can
