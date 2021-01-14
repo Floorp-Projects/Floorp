@@ -2707,6 +2707,7 @@ void js::FillSelfHostingCompileOptions(CompileOptions& options) {
   options.setSelfHostingMode(true);
   options.setForceFullParse();
   options.setForceStrictMode();
+  options.setIsRunOnce(true);
 }
 
 GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
@@ -2982,7 +2983,9 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
   }
 
   // Garbage collect the self hosting zone once when it is created. It should
-  // not be modified after this point.
+  // not be modified after this point. Drop top-level script reference before we
+  // do this collection.
+  script.set(nullptr);
   cx->runtime()->gc.freezeSelfHostingZone();
 
   return true;
