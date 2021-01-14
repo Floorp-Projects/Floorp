@@ -28,35 +28,34 @@
 #  define ALWAYS_INLINE __forceinline
 #  define NO_INLINE __declspec(noinline)
 
-   // Including Windows.h brings a huge amount of namespace polution so just
-   // define a couple of things manually
-   typedef int                 BOOL;
-#  define WINAPI      __stdcall
+// Including Windows.h brings a huge amount of namespace polution so just
+// define a couple of things manually
+typedef int BOOL;
+#  define WINAPI __stdcall
 #  define DECLSPEC_IMPORT __declspec(dllimport)
 #  define WINBASEAPI DECLSPEC_IMPORT
-   typedef unsigned long       DWORD;
-   typedef long LONG;
-   typedef __int64 LONGLONG;
+typedef unsigned long DWORD;
+typedef long LONG;
+typedef __int64 LONGLONG;
 #  define DUMMYSTRUCTNAME
 
-   typedef union _LARGE_INTEGER {
-      struct {
-          DWORD LowPart;
-          LONG HighPart;
-      } DUMMYSTRUCTNAME;
-      struct {
-          DWORD LowPart;
-          LONG HighPart;
-      } u;
-      LONGLONG QuadPart;
-   } LARGE_INTEGER;
-   extern "C" {
-    WINBASEAPI BOOL WINAPI
-    QueryPerformanceCounter(LARGE_INTEGER* lpPerformanceCount);
+typedef union _LARGE_INTEGER {
+  struct {
+    DWORD LowPart;
+    LONG HighPart;
+  } DUMMYSTRUCTNAME;
+  struct {
+    DWORD LowPart;
+    LONG HighPart;
+  } u;
+  LONGLONG QuadPart;
+} LARGE_INTEGER;
+extern "C" {
+WINBASEAPI BOOL WINAPI
+QueryPerformanceCounter(LARGE_INTEGER* lpPerformanceCount);
 
-    WINBASEAPI BOOL WINAPI
-    QueryPerformanceFrequency(LARGE_INTEGER* lpFrequency);
-   }
+WINBASEAPI BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER* lpFrequency);
+}
 
 #else
 #  define ALWAYS_INLINE __attribute__((always_inline)) inline
@@ -3844,8 +3843,8 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         float k = prevDist / (prevDist - curDist);
         Point3D clipped = prev + (cur - prev) * k;
         if (prevSide * clipped.select(AXIS) > clipped.w) {
-            k = nextafterf(k, 1.0f);
-            clipped = prev + (cur - prev) * k;
+          k = nextafterf(k, 1.0f);
+          clipped = prev + (cur - prev) * k;
         }
         outP[numClip] = clipped;
         outInterp[numClip] = prevInterp + (curInterp - prevInterp) * k;
@@ -3879,8 +3878,8 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         float k = prevDist / (prevDist - curDist);
         Point3D clipped = prev + (cur - prev) * k;
         if (curSide * clipped.select(AXIS) > clipped.w) {
-            k = nextafterf(k, 0.0f);
-            clipped = prev + (cur - prev) * k;
+          k = nextafterf(k, 0.0f);
+          clipped = prev + (cur - prev) * k;
         }
         outP[numClip] = clipped;
         outInterp[numClip] = prevInterp + (curInterp - prevInterp) * k;
@@ -4015,7 +4014,7 @@ static void draw_perspective(int nump, Interpolants interp_outs[4],
       // result in Inf/NaN, then just set the reciprocal itself to zero so that
       // the coordinates becomes zeroed out, as the only valid point that
       // satisfies -W <= X/Y/Z <= W is all zeroes.
-      if(!isfinite(w)) w = 0.0f;
+      if (!isfinite(w)) w = 0.0f;
       p_clip[i] = Point3D(p_clip[i].sel(X, Y, Z) * w * scale + offset, w);
     }
     draw_perspective_clipped(nump, p_clip, interp_clip, colortex, layer,
@@ -4044,7 +4043,7 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   // result in Inf/NaN, then just set the reciprocal itself to zero so that
   // the coordinates becomes zeroed out, as the only valid point that
   // satisfies -W <= X/Y/Z <= W is all zeroes.
-  if(!isfinite(w)) w = 0.0f;
+  if (!isfinite(w)) w = 0.0f;
   vec2 screen = (pos.sel(X, Y) * w + 1) * 0.5f *
                     vec2_scalar(ctx->viewport.width(), ctx->viewport.height()) +
                 make_vec2(ctx->viewport.origin() - colortex.offset);
@@ -4262,13 +4261,14 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
 
 #ifdef PRINT_TIMINGS
   uint64_t end = get_time_value();
-  printf("%7.3fms draw(%s, %d): %d pixels in %d rows (avg %f pixels/row, %fns/pixel)\n",
-         double(end - start)/(1000.*1000.),
-         ctx->programs[ctx->current_program].impl->get_name(),
-         instancecount,
-         ctx->shaded_pixels, ctx->shaded_rows,
-         double(ctx->shaded_pixels)/ctx->shaded_rows,
-         double(end - start)/max(ctx->shaded_pixels, 1));
+  printf(
+      "%7.3fms draw(%s, %d): %d pixels in %d rows (avg %f pixels/row, "
+      "%fns/pixel)\n",
+      double(end - start) / (1000. * 1000.),
+      ctx->programs[ctx->current_program].impl->get_name(), instancecount,
+      ctx->shaded_pixels, ctx->shaded_rows,
+      double(ctx->shaded_pixels) / ctx->shaded_rows,
+      double(end - start) / max(ctx->shaded_pixels, 1));
 #endif
 }
 
@@ -4317,4 +4317,3 @@ void DestroyContext(Context* c) {
 }
 
 }  // extern "C"
-
