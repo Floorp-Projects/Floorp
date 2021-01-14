@@ -55,7 +55,6 @@ NumericType NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue,
 typedef uint32_t nsCSSFrameType;
 
 #define NS_CSS_FRAME_TYPE_UNKNOWN 0
-#define NS_CSS_FRAME_TYPE_INLINE 1
 
 #define NS_FRAME_GET_TYPE(_ft) (_ft)
 
