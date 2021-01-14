@@ -311,7 +311,7 @@ ImgDrawResult BulletRenderer::Paint(gfxContext& aRenderingContext, nsPoint aPt,
                                     bool aDisableSubpixelAA, nsIFrame* aFrame) {
   if (IsImageType()) {
     return mImageRenderer->DrawLayer(aFrame->PresContext(), aRenderingContext,
-                                     mDest, mDest, nsPoint(), aDirtyRect,
+                                     mDest, mDest, mDest.TopLeft(), aDirtyRect,
                                      mDest.Size(),
                                      /* aOpacity = */ 1.0f);
   }
@@ -385,7 +385,7 @@ ImgDrawResult BulletRenderer::CreateWebRenderCommandsForImage(
   MOZ_RELEASE_ASSERT(IsImageType());
   return mImageRenderer->BuildWebRenderDisplayItemsForLayer(
       aItem->Frame()->PresContext(), aBuilder, aResources, aSc, aManager, aItem,
-      mDest, mDest, nsPoint(), mDest, mDest.Size(),
+      mDest, mDest, mDest.TopLeft(), mDest, mDest.Size(),
       /* aOpacity = */ 1.0f);
 }
 
