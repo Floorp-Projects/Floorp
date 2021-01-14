@@ -7506,7 +7506,7 @@ void HTMLMediaElement::GetEMEInfo(dom::EMEDebugInfo& aInfo) {
 
 void HTMLMediaElement::NotifyDecoderActivityChanges() const {
   if (mDecoder) {
-    mDecoder->NotifyOwnerActivityChanged(!IsHidden(), mVisibilityState,
+    mDecoder->NotifyOwnerActivityChanged(IsActuallyInvisible(),
                                          IsInComposedDoc());
   }
 }

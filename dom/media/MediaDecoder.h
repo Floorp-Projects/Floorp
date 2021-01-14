@@ -50,8 +50,6 @@ class MediaDecoderStateMachine;
 struct MediaPlaybackEvent;
 struct SharedDummyTrack;
 
-enum class Visibility : uint8_t;
-
 struct MOZ_STACK_CLASS MediaDecoderInit {
   MediaDecoderOwner* const mOwner;
   const double mVolume;
@@ -141,9 +139,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   virtual void Play();
 
   // Notify activity of the decoder owner is changed.
-  virtual void NotifyOwnerActivityChanged(bool aIsDocumentVisible,
-                                          Visibility aElementVisibility,
-                                          bool aIsElementInTree);
+  virtual void NotifyOwnerActivityChanged(bool aIsOwnerInvisible,
+                                          bool aIsOwnerConnected);
 
   // Pause video playback.
   virtual void Pause();
@@ -307,9 +304,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   bool CanPlayThrough();
 
   // Called from HTMLMediaElement when owner document activity changes
-  virtual void SetElementVisibility(bool aIsDocumentVisible,
-                                    Visibility aElementVisibility,
-                                    bool aIsElementInTree);
+  virtual void SetElementVisibility(bool aIsOwnerInvisible,
+                                    bool aIsOwnerConnected);
 
   // Force override the visible state to hidden.
   // Called from HTMLMediaElement when testing of video decode suspend from
@@ -569,14 +565,12 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // only be accessed from main thread.
   UniquePtr<MediaInfo> mInfo;
 
-  // Tracks the visibility status of owner element's document.
-  bool mIsDocumentVisible;
+  // True if the owner element is actually visible to users.
+  bool mIsOwnerInvisible;
 
-  // Tracks the visibility status of owner element.
-  Visibility mElementVisibility;
-
-  // Tracks the owner is in-tree or not.
-  bool mIsElementInTree;
+  // True if the owner element is connected to a document tree.
+  // https://dom.spec.whatwg.org/#connected
+  bool mIsOwnerConnected;
 
   // If true, forces the decoder to be considered hidden.
   bool mForcedHidden;
