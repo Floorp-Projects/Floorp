@@ -62,7 +62,7 @@ fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" 
 # changing this version.
 rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
 
-fluent = { version = "0.13.1", features = ["fluent-pseudo"] }
+fluent = { version = "0.14.1", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/firefox-accounts-bridge", optional=true }
 l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }

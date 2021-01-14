@@ -78,13 +78,13 @@ def generate(fd, consts_path, unicodes_path, template_path, compiler):
             #undef {name}
             static inline {ty} WINAPI
             {name}({params})
-            {{
             #ifdef UNICODE
+            {{
               return {name}W({args});
-            #else
-              return {name}A({args});
-            #endif
             }}
+            #else
+            = delete;
+            #endif
             #endif
             """.format(
                 ty=ty, name=name, params=params, args=args

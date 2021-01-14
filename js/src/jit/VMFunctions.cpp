@@ -2510,6 +2510,16 @@ template bool StringBigIntCompare<ComparisonKind::LessThan>(JSContext* cx,
 template bool StringBigIntCompare<ComparisonKind::GreaterThanOrEqual>(
     JSContext* cx, HandleString x, HandleBigInt y, bool* res);
 
+BigInt* BigIntAsIntN(JSContext* cx, HandleBigInt x, int32_t bits) {
+  MOZ_ASSERT(bits >= 0);
+  return BigInt::asIntN(cx, x, uint64_t(bits));
+}
+
+BigInt* BigIntAsUintN(JSContext* cx, HandleBigInt x, int32_t bits) {
+  MOZ_ASSERT(bits >= 0);
+  return BigInt::asUintN(cx, x, uint64_t(bits));
+}
+
 template <typename T>
 static int32_t AtomicsCompareExchange(TypedArrayObject* typedArray,
                                       int32_t index, int32_t expected,

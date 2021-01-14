@@ -2622,3 +2622,7 @@ JS_FRIEND_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj) {
   }
   MOZ_CRASH("invalid ArrayBufferView type");
 }
+
+JS_FRIEND_API size_t JS_MaxMovableTypedArraySize() {
+  return TypedArrayObject::INLINE_BUFFER_LIMIT;
+}

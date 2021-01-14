@@ -782,6 +782,8 @@ void MacroAssembler::branchTest64(Condition cond, Register64 lhs,
     MOZ_ASSERT(lhs.high == rhs.high);
     as_or(ScratchRegister, lhs.low, lhs.high);
     ma_b(ScratchRegister, ScratchRegister, label, cond);
+  } else if (cond == Assembler::Signed || cond == Assembler::NotSigned) {
+    branchTest32(cond, lhs.high, rhs.high, label);
   } else {
     MOZ_CRASH("Unsupported condition");
   }

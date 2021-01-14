@@ -5883,7 +5883,7 @@ class MBigIntAdd : public MBigIntBinaryArithInstruction {
   INSTRUCTION_HEADER(BigIntAdd)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -5900,7 +5900,7 @@ class MBigIntSub : public MBigIntBinaryArithInstruction {
   INSTRUCTION_HEADER(BigIntSub)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -5919,7 +5919,7 @@ class MBigIntMul : public MBigIntBinaryArithInstruction {
   INSTRUCTION_HEADER(BigIntMul)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -5955,7 +5955,7 @@ class MBigIntDiv : public MBigIntBinaryArithInstruction {
     return AliasSet::None();
   }
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return !canBeDivideByZero(); }
 
@@ -5991,7 +5991,7 @@ class MBigIntMod : public MBigIntBinaryArithInstruction {
     return AliasSet::None();
   }
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return !canBeDivideByZero(); }
 
@@ -6027,7 +6027,7 @@ class MBigIntPow : public MBigIntBinaryArithInstruction {
     return AliasSet::None();
   }
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return !canBeNegativeExponent(); }
 
@@ -6046,7 +6046,7 @@ class MBigIntBitAnd : public MBigIntBinaryArithInstruction {
   INSTRUCTION_HEADER(BigIntBitAnd)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -6065,7 +6065,7 @@ class MBigIntBitOr : public MBigIntBinaryArithInstruction {
   INSTRUCTION_HEADER(BigIntBitOr)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -6084,7 +6084,7 @@ class MBigIntBitXor : public MBigIntBinaryArithInstruction {
   INSTRUCTION_HEADER(BigIntBitXor)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -6101,7 +6101,7 @@ class MBigIntLsh : public MBigIntBinaryArithInstruction {
   INSTRUCTION_HEADER(BigIntLsh)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -6118,7 +6118,7 @@ class MBigIntRsh : public MBigIntBinaryArithInstruction {
   INSTRUCTION_HEADER(BigIntRsh)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -6152,7 +6152,7 @@ class MBigIntIncrement : public MBigIntUnaryArithInstruction {
   INSTRUCTION_HEADER(BigIntIncrement)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -6169,7 +6169,7 @@ class MBigIntDecrement : public MBigIntUnaryArithInstruction {
   INSTRUCTION_HEADER(BigIntDecrement)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -6186,7 +6186,7 @@ class MBigIntNegate : public MBigIntUnaryArithInstruction {
   INSTRUCTION_HEADER(BigIntNegate)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -6203,7 +6203,7 @@ class MBigIntBitNot : public MBigIntUnaryArithInstruction {
   INSTRUCTION_HEADER(BigIntBitNot)
   TRIVIAL_NEW_WRAPPERS
 
-  MOZ_MUST_USE bool writeRecoverData(
+  [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
 
@@ -12450,10 +12450,10 @@ class MGuardIsExtensible : public MUnaryInstruction,
   }
 };
 
-// Guard the input index is non-negative.
-class MGuardIndexIsNonNegative : public MUnaryInstruction,
+// Guard the input int32 is non-negative.
+class MGuardInt32IsNonNegative : public MUnaryInstruction,
                                  public UnboxedInt32Policy<0>::Data {
-  explicit MGuardIndexIsNonNegative(MDefinition* index)
+  explicit MGuardInt32IsNonNegative(MDefinition* index)
       : MUnaryInstruction(classOpcode, index) {
     setResultType(MIRType::Int32);
     setMovable();
@@ -12461,7 +12461,7 @@ class MGuardIndexIsNonNegative : public MUnaryInstruction,
   }
 
  public:
-  INSTRUCTION_HEADER(GuardIndexIsNonNegative)
+  INSTRUCTION_HEADER(GuardInt32IsNonNegative)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, index))
 
@@ -12609,6 +12609,66 @@ class MCallObjectHasSparseElement
   }
 
   bool possiblyCalls() const override { return true; }
+};
+
+// Inline implementation of BigInt.asIntN().
+class MBigIntAsIntN
+    : public MBinaryInstruction,
+      public MixPolicy<UnboxedInt32Policy<0>, BigIntPolicy<1>>::Data {
+  MBigIntAsIntN(MDefinition* bits, MDefinition* input)
+      : MBinaryInstruction(classOpcode, bits, input) {
+    setResultType(MIRType::BigInt);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntAsIntN)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, bits), (1, input))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  bool possiblyCalls() const override { return true; }
+
+  [[nodiscard]] bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntAsIntN)
+};
+
+// Inline implementation of BigInt.asUintN().
+class MBigIntAsUintN
+    : public MBinaryInstruction,
+      public MixPolicy<UnboxedInt32Policy<0>, BigIntPolicy<1>>::Data {
+  MBigIntAsUintN(MDefinition* bits, MDefinition* input)
+      : MBinaryInstruction(classOpcode, bits, input) {
+    setResultType(MIRType::BigInt);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntAsUintN)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, bits), (1, input))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  bool possiblyCalls() const override { return true; }
+
+  [[nodiscard]] bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntAsUintN)
 };
 
 // Flips the input's sign bit, independently of the rest of the number's

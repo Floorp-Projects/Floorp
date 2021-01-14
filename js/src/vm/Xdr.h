@@ -81,6 +81,23 @@ class XDRBuffer<XDR_ENCODE> : public XDRBufferBase {
     return ptr;
   }
 
+  bool align32() {
+    size_t extra = cursor_ % 4;
+    if (extra) {
+      size_t padding = 4 - extra;
+      if (!buffer_.appendN(0, padding)) {
+        ReportOutOfMemory(cx());
+        return false;
+      }
+      cursor_ += padding;
+    }
+    return true;
+  }
+
+#ifdef DEBUG
+  bool isAligned32() { return cursor_ % 4 == 0; }
+#endif
+
   const uint8_t* read(size_t n) {
     MOZ_CRASH("Should never read in encode mode");
     return nullptr;
@@ -103,6 +120,24 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
 
   XDRBuffer(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
       : XDRBufferBase(cx, cursor), buffer_(buffer.begin(), buffer.length()) {}
+
+  bool align32() {
+    size_t extra = cursor_ % 4;
+    if (extra) {
+      size_t padding = 4 - extra;
+      cursor_ += padding;
+
+      // Don't let buggy code read past our buffer
+      if (cursor_ > buffer_.length()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+#ifdef DEBUG
+  bool isAligned32() { return cursor_ % 4 == 0; }
+#endif
 
   const uint8_t* read(size_t n) {
     MOZ_ASSERT(cursor_ < buffer_.length());
@@ -301,6 +336,17 @@ class XDRState : public XDRCoderBase {
     return mozilla::Err(code);
   }
 
+  XDRResult align32() {
+    if (!buf->align32()) {
+      return fail(JS::TranscodeResult_Throw);
+    }
+    return Ok();
+  }
+
+#ifdef DEBUG
+  bool isAligned32() { return buf->isAligned32(); }
+#endif
+
   XDRResult readData(const uint8_t** pptr, size_t length) {
     const uint8_t* ptr = buf->read(length);
     if (!ptr) {
@@ -310,12 +356,17 @@ class XDRState : public XDRCoderBase {
     return Ok();
   }
 
-  XDRResult peekData(const uint8_t** pptr, size_t length) {
-    const uint8_t* ptr = buf->peek(length);
+  // Peek the `sizeof(T)` bytes and return the pointer to `*pptr`.
+  // The caller is responsible for aligning the buffer by calling `align32`.
+  template <typename T>
+  XDRResult peekData(const T** pptr) {
+    static_assert(alignof(T) <= 4);
+    MOZ_ASSERT(isAligned32());
+    const uint8_t* ptr = buf->peek(sizeof(T));
     if (!ptr) {
       return fail(JS::TranscodeResult_Failure_BadDecode);
     }
-    *pptr = ptr;
+    *pptr = reinterpret_cast<const T*>(ptr);
     return Ok();
   }
 
@@ -455,6 +506,28 @@ class XDRState : public XDRCoderBase {
     return Ok();
   }
 
+  // While encoding, code the given data to the buffer.
+  // While decoding, borrow the buffer and return it to `*data`.
+  //
+  // The data can have extra bytes after `sizeof(T)`, and the caller should
+  // provide the entire data length as `length`.
+  //
+  // The caller is responsible for aligning the buffer by calling `align32`.
+  template <typename T>
+  XDRResult borrowedData(T** data, uint32_t length) {
+    static_assert(alignof(T) <= 4);
+    MOZ_ASSERT(isAligned32());
+
+    if (mode == XDR_ENCODE) {
+      MOZ_TRY(codeBytes(*data, length));
+    } else {
+      const uint8_t* cursor = nullptr;
+      MOZ_TRY(readData(&cursor, length));
+      *data = reinterpret_cast<T*>(const_cast<uint8_t*>(cursor));
+    }
+    return Ok();
+  }
+
   // Prefer using a variant below that is encoding aware.
   XDRResult codeChars(char* chars, size_t nchars);
 
@@ -517,6 +590,9 @@ class XDRDecoder : public XDRDecoderBase {
  * The decoded stencils are outputted to the default-initialized
  * `compilationInfo` parameter of `codeStencil` method, and decoded atoms are
  * interned into the `parserAtoms` parameter of the ctor.
+ *
+ * The decoded stencils borrow the input `buffer`/`range`, and the consumer
+ * has to keep the buffer alive while the decoded stencils are alive.
  */
 class XDRStencilDecoder : public XDRDecoderBase {
   uint32_t nchunks_ = 0;

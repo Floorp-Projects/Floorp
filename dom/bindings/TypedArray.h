@@ -45,10 +45,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
         mLength(aOther.mLength),
         mShared(aOther.mShared),
         mComputed(aOther.mComputed) {
-    aOther.mData = nullptr;
-    aOther.mLength = 0;
-    aOther.mShared = false;
-    aOther.mComputed = false;
+    aOther.Reset();
   }
 
  private:
@@ -115,6 +112,18 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
     return mData;
   }
 
+  // Return a pointer to data that will not move during a GC.
+  //
+  // For some smaller views, this will copy the data into the provided buffer
+  // and return that buffer as the pointer. Otherwise, this will return a
+  // direct pointer to the actual data with no copying. If the provided buffer
+  // is not large enough, nullptr will be returned. If bufSize is at least
+  // JS_MaxMovableTypedArraySize(), the data is guaranteed to fit.
+  inline T* FixedData(uint8_t* buffer, size_t bufSize) const {
+    MOZ_ASSERT(mComputed);
+    return JS_GetArrayBufferViewFixedData(mImplObj, buffer, bufSize);
+  }
+
   inline uint32_t Length() const {
     MOZ_ASSERT(mComputed);
     return mLength;
@@ -125,6 +134,16 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
     MOZ_ASSERT(!mComputed);
     GetLengthAndDataAndSharedness(mImplObj, &mLength, &mShared, &mData);
     mComputed = true;
+  }
+
+  inline void Reset() {
+    // This method mostly exists to inform the GC rooting hazard analysis that
+    // the variable can be considered dead, at least until you do anything else
+    // with it.
+    mData = nullptr;
+    mLength = 0;
+    mShared = false;
+    mComputed = false;
   }
 
  private:
