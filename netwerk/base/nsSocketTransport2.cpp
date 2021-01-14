@@ -1772,6 +1772,15 @@ bool nsSocketTransport::RecoverFromError() {
   if (mNetAddrIsSet && mNetAddr.raw.family == AF_LOCAL) return false;
 #endif
 
+  if ((mConnectionFlags & nsSocketTransport::USE_IP_HINT_ADDRESS) &&
+      mCondition == NS_ERROR_UNKNOWN_HOST &&
+      (mState == MSG_DNS_LOOKUP_COMPLETE || mState == MSG_ENSURE_CONNECT)) {
+    SOCKET_LOG(("  try again without USE_IP_HINT_ADDRESS"));
+    mConnectionFlags &= ~nsSocketTransport::USE_IP_HINT_ADDRESS;
+    mState = STATE_CLOSED;
+    return NS_SUCCEEDED(PostEvent(MSG_ENSURE_CONNECT, NS_OK));
+  }
+
   // can only recover from errors in these states
   if (mState != STATE_RESOLVING && mState != STATE_CONNECTING) {
     SOCKET_LOG(("  not in a recoverable state"));
