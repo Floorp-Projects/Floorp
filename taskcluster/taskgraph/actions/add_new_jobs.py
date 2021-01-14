@@ -12,6 +12,8 @@ from .util import (
     combine_task_graph_files,
     create_tasks,
     fetch_graph_and_labels,
+    get_tasks_with_downstream,
+    rename_browsertime_vismet_task,
 )
 
 
@@ -47,11 +49,26 @@ def add_new_jobs_action(parameters, graph_config, input, task_group_id, task_id)
     )
 
     to_run = []
+    browsertime_tasks = []
     for elem in input["tasks"]:
         if elem in full_task_graph.tasks:
-            to_run.append(elem)
+            if "browsertime" in elem:
+                label = elem
+                if "vismet" in label:
+                    label = rename_browsertime_vismet_task(label)
+                browsertime_tasks.append(label)
+            else:
+                to_run.append(elem)
         else:
             raise Exception("{} was not found in the task-graph".format(elem))
+    if len(browsertime_tasks) > 0:
+        to_run.extend(
+            list(
+                get_tasks_with_downstream(
+                    browsertime_tasks, full_task_graph, label_to_taskid
+                )
+            )
+        )
 
     times = input.get("times", 1)
     for i in range(times):
