@@ -321,6 +321,7 @@ class BasePopup {
     if (this.extension.remote) {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", this.extension.remoteType);
+      browser.setAttribute("maychangeremoteness", "true");
     }
 
     // We only need flex sizing for the sake of the slide-in sub-views of the
@@ -354,8 +355,6 @@ class BasePopup {
       browser.contentWindow; // eslint-disable-line no-unused-expressions
     }
 
-    ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
-
     let setupBrowser = browser => {
       let mm = browser.messageManager;
       mm.addMessageListener("Extension:BrowserBackgroundChanged", this);
@@ -366,20 +365,11 @@ class BasePopup {
       browser.addEventListener("DoZoomEnlargeBy10", this, true); // eslint-disable-line mozilla/balanced-listeners
       browser.addEventListener("DoZoomReduceBy10", this, true); // eslint-disable-line mozilla/balanced-listeners
 
+      ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
       return browser;
     };
 
-    if (!popupURL) {
-      // For remote browsers, we can't do any setup until the frame loader is
-      // created. Non-remote browsers get a message manager immediately, so
-      // there's no need to wait for the load event.
-      if (this.extension.remote) {
-        return readyPromise.then(() => setupBrowser(browser));
-      }
-      return setupBrowser(browser);
-    }
-
-    return readyPromise.then(() => {
+    const initBrowser = () => {
       setupBrowser(browser);
       let mm = browser.messageManager;
 
@@ -397,7 +387,22 @@ class BasePopup {
         maxHeight: 600,
         stylesheets: this.STYLESHEETS,
       });
+    };
 
+    browser.addEventListener("DidChangeBrowserRemoteness", initBrowser); // eslint-disable-line mozilla/balanced-listeners
+
+    if (!popupURL) {
+      // For remote browsers, we can't do any setup until the frame loader is
+      // created. Non-remote browsers get a message manager immediately, so
+      // there's no need to wait for the load event.
+      if (this.extension.remote) {
+        return readyPromise.then(() => setupBrowser(browser));
+      }
+      return setupBrowser(browser);
+    }
+
+    return readyPromise.then(() => {
+      initBrowser();
       browser.loadURI(popupURL, {
         triggeringPrincipal: this.extension.principal,
       });
