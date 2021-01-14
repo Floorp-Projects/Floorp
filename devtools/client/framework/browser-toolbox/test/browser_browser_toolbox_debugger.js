@@ -67,7 +67,9 @@ add_task(async function runTest() {
     ""
   );
 
-  const ToolboxTask = await initBrowserToolboxTask();
+  const ToolboxTask = await initBrowserToolboxTask({
+    enableBrowserToolboxFission: true,
+  });
   await ToolboxTask.importFunctions({
     // head.js uses this method
     registerCleanupFunction: () => {},
