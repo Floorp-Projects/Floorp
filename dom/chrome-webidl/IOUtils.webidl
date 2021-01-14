@@ -65,12 +65,12 @@ namespace IOUtils {
    * file at |path|. Works exactly like |write|.
    *
    * @param path      An absolute file path.
-   * @param string    A string to encode to UTF-8 and write to the file at path.
+   * @param string    A string to write to the file at path.
    *
    * @return Resolves with the number of bytes successfully written to the file,
    *         otherwise rejects with a DOMException.
    */
-  Promise<unsigned long long> writeUTF8(DOMString path, DOMString string, optional WriteOptions options = {});
+  Promise<unsigned long long> writeUTF8(DOMString path, UTF8String string, optional WriteOptions options = {});
   /**
    * Moves the file from |sourcePath| to |destPath|, creating necessary parents.
    * If |destPath| is a directory, then the source file will be moved into the
