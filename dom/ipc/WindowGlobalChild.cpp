@@ -554,6 +554,12 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvResetScalingZoom() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WindowGlobalChild::RecvSetContainerFeaturePolicy(
+    dom::FeaturePolicy* aContainerFeaturePolicy) {
+  mContainerFeaturePolicy = aContainerFeaturePolicy;
+  return IPC_OK();
+}
+
 IPCResult WindowGlobalChild::RecvRawMessage(
     const JSActorMessageMeta& aMeta, const Maybe<ClonedMessageData>& aData,
     const Maybe<ClonedMessageData>& aStack) {
@@ -680,7 +686,8 @@ void WindowGlobalChild::MaybeSendUpdateDocumentWouldPreloadResources() {
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal,
+                                      mContainerFeaturePolicy)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalChild)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

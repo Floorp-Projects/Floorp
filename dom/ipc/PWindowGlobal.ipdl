@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/dom/FeaturePolicyUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
@@ -30,6 +31,7 @@ using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 using mozilla::UseCounters from "mozilla/UseCounter.h";
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
+using refcounted mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
 
 namespace mozilla {
 namespace dom {
@@ -85,6 +87,8 @@ child:
    * Request from UI to reset the scaling zoom that is controlled by APZ.
    */
   async ResetScalingZoom();
+
+  async SetContainerFeaturePolicy(FeaturePolicy aContainerFeaturePolicy);
 
 both:
   async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,

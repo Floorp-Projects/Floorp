@@ -37,6 +37,7 @@ class DocumentLoadListener;
 namespace dom {
 
 class BrowserParent;
+class FeaturePolicy;
 struct LoadURIOptions;
 class MediaController;
 struct LoadingSessionHistoryInfo;
@@ -263,6 +264,11 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void ResetScalingZoom();
 
+  void SetContainerFeaturePolicy(FeaturePolicy* aContainerFeaturePolicy);
+  FeaturePolicy* GetContainerFeaturePolicy() const {
+    return mContainerFeaturePolicy;
+  }
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -367,6 +373,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<nsSecureBrowserUI> mSecureBrowserUI;
   RefPtr<BrowsingContextWebProgress> mWebProgress;
   RefPtr<nsBrowserStatusFilter> mStatusFilter;
+
+  RefPtr<FeaturePolicy> mContainerFeaturePolicy;
 };
 
 }  // namespace dom
