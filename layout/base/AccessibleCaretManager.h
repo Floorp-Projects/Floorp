@@ -9,6 +9,7 @@
 
 #include "AccessibleCaret.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/CaretStateChangedEvent.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/EnumSet.h"
@@ -191,7 +192,7 @@ class AccessibleCaretManager {
 
   MOZ_CAN_RUN_SCRIPT
   nsresult SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) const;
-  void SetSelectionDragState(bool aState) const;
+  MOZ_CAN_RUN_SCRIPT void SetSelectionDragState(bool aState) const;
 
   // Return true if the candidate string is a phone number.
   bool IsPhoneNumber(nsAString& aCandidate) const;
