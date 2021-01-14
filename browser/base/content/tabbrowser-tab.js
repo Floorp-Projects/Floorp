@@ -336,20 +336,16 @@
             gBrowser.selectedTab = lastSelectedTab;
 
             // Make sure selection is cleared when tab-switch doesn't happen.
-            gBrowser.clearMultiSelectedTabs({ isLastMultiSelectChange: false });
+            gBrowser.clearMultiSelectedTabs();
           }
           gBrowser.addRangeToMultiSelectedTabs(lastSelectedTab, this);
         } else if (accelKey) {
           // Ctrl (Cmd for mac) key is pressed
           eventMaySelectTab = false;
           if (this.multiselected) {
-            gBrowser.removeFromMultiSelectedTabs(this, {
-              isLastMultiSelectChange: true,
-            });
+            gBrowser.removeFromMultiSelectedTabs(this);
           } else if (this != gBrowser.selectedTab) {
-            gBrowser.addToMultiSelectedTabs(this, {
-              isLastMultiSelectChange: true,
-            });
+            gBrowser.addToMultiSelectedTabs(this);
             gBrowser.lastMultiSelectedTab = this;
           }
         } else if (!this.selected && this.multiselected) {
@@ -391,12 +387,7 @@
       ) {
         // Tabs were previously multi-selected and user clicks on a tab
         // without holding Ctrl/Cmd Key
-
-        // Force positional attributes to update when the
-        // target (of the click) is the "active" tab.
-        let isLastMultiSelectChange = gBrowser.selectedTab == this;
-
-        gBrowser.clearMultiSelectedTabs({ isLastMultiSelectChange });
+        gBrowser.clearMultiSelectedTabs();
       }
 
       if (
