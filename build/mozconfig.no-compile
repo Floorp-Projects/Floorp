@@ -33,7 +33,6 @@ unset MOZ_LTO
 unset MOZ_STDCXX_COMPAT
 unset MOZ_NO_PIE_COMPAT
 
-unset NM
 unset NASM
 
 # Don't unset this on Linux artifact builds so the artifact builds correctly

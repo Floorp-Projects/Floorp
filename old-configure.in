@@ -2470,7 +2470,6 @@ dnl = Maintainer debug option (no --enable equivalent)
 dnl =
 dnl ========================================================
 
-AC_SUBST(NM)
 AC_SUBST_LIST(ASFLAGS)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
