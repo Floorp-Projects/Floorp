@@ -105,7 +105,7 @@ enum StructuredDataType : uint32_t {
   SCTAG_REGEXP_OBJECT,
   SCTAG_ARRAY_OBJECT,
   SCTAG_OBJECT_OBJECT,
-  SCTAG_ARRAY_BUFFER_OBJECT,
+  SCTAG_ARRAY_BUFFER_OBJECT_V2,  // Old version, for backwards compatibility.
   SCTAG_BOOLEAN_OBJECT,
   SCTAG_STRING_OBJECT,
   SCTAG_NUMBER_OBJECT,
@@ -131,6 +131,8 @@ enum StructuredDataType : uint32_t {
 
   SCTAG_BIGINT,
   SCTAG_BIGINT_OBJECT,
+
+  SCTAG_ARRAY_BUFFER_OBJECT,
 
   SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
   SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
@@ -428,7 +430,8 @@ struct JSStructuredCloneReader {
   MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint32_t nelems,
                                    MutableHandleValue vp, bool v1Read = false);
   MOZ_MUST_USE bool readDataView(uint32_t byteLength, MutableHandleValue vp);
-  MOZ_MUST_USE bool readArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
+  MOZ_MUST_USE bool readArrayBuffer(StructuredDataType type, uint32_t data,
+                                    MutableHandleValue vp);
   MOZ_MUST_USE bool readSharedArrayBuffer(MutableHandleValue vp);
   MOZ_MUST_USE bool readSharedWasmMemory(uint32_t nbytes,
                                          MutableHandleValue vp);
@@ -1305,9 +1308,16 @@ bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
                                     obj->maybeUnwrapAs<ArrayBufferObject>());
   JSAutoRealm ar(context(), buffer);
 
-  size_t byteLength = buffer->byteLength().deprecatedGetUint32();
-  return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, byteLength) &&
-         out.writeBytes(buffer->dataPointer(), byteLength);
+  if (!out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, 0)) {
+    return false;
+  }
+
+  uint64_t byteLength = buffer->byteLength().get();
+  if (!out.write(byteLength)) {
+    return false;
+  }
+
+  return out.writeBytes(buffer->dataPointer(), byteLength);
 }
 
 bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
@@ -2314,8 +2324,29 @@ bool JSStructuredCloneReader::readDataView(uint32_t byteLength,
   return true;
 }
 
-bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
+bool JSStructuredCloneReader::readArrayBuffer(StructuredDataType type,
+                                              uint32_t data,
                                               MutableHandleValue vp) {
+  // V2 stores the length in |data|. The current version stores the
+  // length separately to allow larger length values.
+  uint64_t nbytes = 0;
+  if (type == SCTAG_ARRAY_BUFFER_OBJECT) {
+    if (!in.read(&nbytes)) {
+      return false;
+    }
+  } else {
+    MOZ_ASSERT(type == SCTAG_ARRAY_BUFFER_OBJECT_V2);
+    nbytes = data;
+  }
+
+  // The maximum ArrayBuffer size depends on the platform and prefs, and we cast
+  // to BufferSize/size_t below, so we have to check this here.
+  if (nbytes > ArrayBufferObject::maxBufferByteLength()) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_BAD_ARRAY_LENGTH);
+    return false;
+  }
+
   JSObject* obj =
       ArrayBufferObject::createZeroed(context(), BufferSize(nbytes));
   if (!obj) {
@@ -2323,7 +2354,7 @@ bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
   }
   vp.setObject(*obj);
   ArrayBufferObject& buffer = obj->as<ArrayBufferObject>();
-  MOZ_ASSERT(buffer.byteLength().deprecatedGetUint32() == nbytes);
+  MOZ_ASSERT(buffer.byteLength().get() == nbytes);
   return in.readArray(buffer.dataPointer(), nbytes);
 }
 
@@ -2658,8 +2689,9 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
                                 JSMSG_SC_BAD_SERIALIZED_DATA, "invalid input");
       return false;
 
+    case SCTAG_ARRAY_BUFFER_OBJECT_V2:
     case SCTAG_ARRAY_BUFFER_OBJECT:
-      if (!readArrayBuffer(data, vp)) {
+      if (!readArrayBuffer(StructuredDataType(tag), data, vp)) {
         return false;
       }
       break;
@@ -2885,12 +2917,13 @@ bool JSStructuredCloneReader::readTransferMap() {
       if (!in.readPair(&tag, &data)) {
         return false;
       }
-      if (tag != SCTAG_ARRAY_BUFFER_OBJECT) {
+      if (tag != SCTAG_ARRAY_BUFFER_OBJECT_V2 &&
+          tag != SCTAG_ARRAY_BUFFER_OBJECT) {
         ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE, closure);
         return false;
       }
       RootedValue val(cx);
-      if (!readArrayBuffer(data, &val)) {
+      if (!readArrayBuffer(StructuredDataType(tag), data, &val)) {
         return false;
       }
       obj = &val.toObject();
