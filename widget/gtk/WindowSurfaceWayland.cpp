@@ -313,7 +313,7 @@ static const struct wl_buffer_listener buffer_listener = {buffer_release};
 bool WindowBackBuffer::Create(int aWidth, int aHeight) {
   MOZ_ASSERT(!IsAttached(), "We can't create attached buffers.");
 
-  ReleaseShmSurface();
+  ReleaseWLBuffer();
 
   int size = aWidth * aHeight * BUFFER_BPP;
   if (!mShmPool.Create(GetWaylandDisplay(), size)) {
@@ -336,7 +336,7 @@ bool WindowBackBuffer::Create(int aWidth, int aHeight) {
   return true;
 }
 
-void WindowBackBuffer::ReleaseShmSurface() {
+void WindowBackBuffer::ReleaseWLBuffer() {
   LOGWAYLAND(("WindowBackBuffer::Release [%p]\n", (void*)this));
   if (mWLBuffer) {
     wl_buffer_destroy(mWLBuffer);
@@ -357,7 +357,7 @@ WindowBackBuffer::WindowBackBuffer(WindowSurfaceWayland* aWindowSurfaceWayland)
       mHeight(0),
       mAttached(false) {}
 
-WindowBackBuffer::~WindowBackBuffer() { ReleaseShmSurface(); }
+WindowBackBuffer::~WindowBackBuffer() { ReleaseWLBuffer(); }
 
 bool WindowBackBuffer::Resize(int aWidth, int aHeight) {
   if (aWidth == mWidth && aHeight == mHeight) {
@@ -565,10 +565,15 @@ WindowBackBuffer* WindowSurfaceWayland::SetNewWaylandBuffer() {
 
   mWaylandBuffer =
       WaylandBufferFindAvailable(mWLBufferRect.width, mWLBufferRect.height);
-  if (!mWaylandBuffer) {
-    mWaylandBuffer =
-        CreateWaylandBuffer(mWLBufferRect.width, mWLBufferRect.height);
+  if (mWaylandBuffer) {
+    if (!mWaylandBuffer->Resize(mWLBufferRect.width, mWLBufferRect.height)) {
+      return nullptr;
+    }
+    return mWaylandBuffer;
   }
+
+  mWaylandBuffer =
+      CreateWaylandBuffer(mWLBufferRect.width, mWLBufferRect.height);
   return mWaylandBuffer;
 }
 
