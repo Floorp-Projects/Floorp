@@ -26,6 +26,7 @@ const sourceOptions = {
     sourceType: "unambiguous",
     tokens: true,
     plugins: [
+      "classProperties",
       "objectRestSpread",
       "optionalChaining",
       "nullishCoalescingOperator",

@@ -37,3 +37,15 @@ function largeArray() {
   }
   debugger;
 }
+
+function classPreview() {
+  class Foo {
+    x = 1;
+    breakFn() {
+      let i = this.x;
+      debugger;
+    }
+  }
+  const foo = new Foo();
+  foo.breakFn();
+}
