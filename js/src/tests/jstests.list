@@ -627,13 +627,6 @@ skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
 skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
 
-skip script test262/built-ins/TypedArray/prototype/join/detached-buffer-during-fromIndex-returns-single-comma.js
-skip script test262/built-ins/TypedArray/prototype/join/BigInt/detached-buffer-during-fromIndex-returns-single-comma.js
-skip script test262/built-ins/TypedArray/prototype/lastIndexOf/detached-buffer-during-fromIndex-returns-minus-one-for-undefined.js
-skip script test262/built-ins/TypedArray/prototype/lastIndexOf/BigInt/detached-buffer-during-fromIndex-returns-minus-one-for-undefined.js
-skip script test262/built-ins/TypedArray/prototype/indexOf/detached-buffer-during-fromIndex-returns-minus-one-for-undefined.js
-skip script test262/built-ins/TypedArray/prototype/indexOf/BigInt/detached-buffer-during-fromIndex-returns-minus-one-for-undefined.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
