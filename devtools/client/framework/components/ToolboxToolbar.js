@@ -119,8 +119,6 @@ class ToolboxToolbar extends Component {
         runtimeInfo: PropTypes.object.isRequired,
         targetType: PropTypes.string.isRequired,
       }),
-      // Number of errors in page
-      errorCount: PropTypes.number.isRequired,
     };
   }
 
@@ -185,10 +183,7 @@ class ToolboxToolbar extends Component {
       return isVisible && (isStart ? isInStartContainer : !isInStartContainer);
     });
 
-    // Add the error icon
-    const errorIcon = isStart ? null : this.renderErrorIcon();
-
-    if (visibleButtons.length === 0 && !errorIcon) {
+    if (visibleButtons.length === 0) {
       return null;
     }
 
@@ -218,6 +213,10 @@ class ToolboxToolbar extends Component {
         return this.renderFrameButton(command);
       }
 
+      if (id === "command-button-errorcount") {
+        return this.renderErrorIcon(command);
+      }
+
       return button({
         id,
         title: description,
@@ -235,12 +234,6 @@ class ToolboxToolbar extends Component {
         },
       });
     });
-
-    if (errorIcon) {
-      // The error icon is unconditionally added before the other buttons of the "end"
-      // toolbox buttons container.
-      renderedButtons.unshift(errorIcon);
-    }
 
     // Add the appropriate separator, if needed.
     const children = renderedButtons;
@@ -289,8 +282,8 @@ class ToolboxToolbar extends Component {
     );
   }
 
-  renderErrorIcon() {
-    let { errorCount } = this.props;
+  renderErrorIcon(command) {
+    let { errorCount, id } = command;
 
     if (!errorCount) {
       return null;
@@ -299,8 +292,10 @@ class ToolboxToolbar extends Component {
     if (errorCount > 99) {
       errorCount = "99+";
     }
+
     return button(
       {
+        id,
         className: "devtools-tabbar-button command-button toolbox-error",
         onClick: () => {
           if (this.props.currentToolId !== "webconsole") {

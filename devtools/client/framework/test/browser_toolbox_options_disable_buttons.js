@@ -10,6 +10,8 @@ let TEST_URL =
 // The frames button is only shown if the page has at least one iframe so we
 // need to add one to the test page.
 TEST_URL += '<iframe src="data:text/plain,iframe"></iframe>';
+// The error count button is only shown if there are errors on the page
+TEST_URL += '<script>console.error("err")</script>';
 
 var modifiedPrefs = [];
 registerCleanupFunction(() => {
@@ -57,7 +59,7 @@ async function testToggleToolboxButtons(toolbox, optionsPanelWin) {
   const visibleToolbarButtons = toolbarButtons.filter(tool => tool.isVisible);
 
   const toolbarButtonNodes = [
-    ...toolbox.doc.querySelectorAll(".command-button:not(.toolbox-error)"),
+    ...toolbox.doc.querySelectorAll(".command-button"),
   ];
 
   is(
@@ -93,11 +95,15 @@ async function testToggleToolboxButtons(toolbox, optionsPanelWin) {
         1,
         "There should be a DOM button for the visible: " + id
       );
-      is(
-        matchedButtons[0].getAttribute("title"),
-        tool.description,
-        "The tooltip for button matches the tool definition."
-      );
+
+      // The error count button title isn't its description
+      if (id !== "command-button-errorcount") {
+        is(
+          matchedButtons[0].getAttribute("title"),
+          tool.description,
+          "The tooltip for button matches the tool definition."
+        );
+      }
     } else {
       is(
         matchedButtons.length,
