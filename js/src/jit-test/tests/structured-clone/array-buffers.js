@@ -60,6 +60,16 @@ function testFloat64Array() {
 }
 testFloat64Array();
 
+function testDataView() {
+    var ta = new Uint8Array([5, 0, 255]);
+    var dv1 = new DataView(ta.buffer);
+    var clonebuf = serialize(dv1, undefined, {scope: "DifferentProcessForIndexedDB"});
+    var dv2 = deserialize(clonebuf);
+    assertEq(dv2 instanceof DataView, true);
+    assertEq(new Uint8Array(dv2.buffer).toString(), "5,0,255");
+}
+testDataView();
+
 function testArrayBuffer() {
     var ta = new Uint8Array([33, 44, 55, 66]);
     var clonebuf = serialize(ta.buffer, undefined, {scope: "DifferentProcessForIndexedDB"});

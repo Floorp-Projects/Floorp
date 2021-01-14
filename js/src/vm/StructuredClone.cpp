@@ -116,8 +116,8 @@ enum StructuredDataType : uint32_t {
   SCTAG_MAP_OBJECT,
   SCTAG_SET_OBJECT,
   SCTAG_END_OF_KEYS,
-  SCTAG_DO_NOT_USE_3,  // Required for backwards compatibility
-  SCTAG_DATA_VIEW_OBJECT,
+  SCTAG_DO_NOT_USE_3,         // Required for backwards compatibility
+  SCTAG_DATA_VIEW_OBJECT_V2,  // Old version, for backwards compatibility.
   SCTAG_SAVED_FRAME_OBJECT,
 
   // No new tags before principals.
@@ -134,6 +134,7 @@ enum StructuredDataType : uint32_t {
 
   SCTAG_ARRAY_BUFFER_OBJECT,
   SCTAG_TYPED_ARRAY_OBJECT,
+  SCTAG_DATA_VIEW_OBJECT,
 
   SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
   SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
@@ -430,7 +431,7 @@ struct JSStructuredCloneReader {
 
   MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint64_t nelems,
                                    MutableHandleValue vp, bool v1Read = false);
-  MOZ_MUST_USE bool readDataView(uint32_t byteLength, MutableHandleValue vp);
+  MOZ_MUST_USE bool readDataView(uint64_t byteLength, MutableHandleValue vp);
   MOZ_MUST_USE bool readArrayBuffer(StructuredDataType type, uint32_t data,
                                     MutableHandleValue vp);
   MOZ_MUST_USE bool readSharedArrayBuffer(MutableHandleValue vp);
@@ -1291,8 +1292,12 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
   Rooted<DataViewObject*> view(context(), obj->maybeUnwrapAs<DataViewObject>());
   JSAutoRealm ar(context(), view);
 
-  if (!out.writePair(SCTAG_DATA_VIEW_OBJECT,
-                     view->byteLength().deprecatedGetUint32())) {
+  if (!out.writePair(SCTAG_DATA_VIEW_OBJECT, 0)) {
+    return false;
+  }
+
+  uint64_t byteLength = view->byteLength().get();
+  if (!out.write(byteLength)) {
     return false;
   }
 
@@ -1302,7 +1307,8 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
     return false;
   }
 
-  return out.write(view->byteOffset().deprecatedGetUint32());
+  uint64_t byteOffset = view->byteOffset().get();
+  return out.write(byteOffset);
 }
 
 bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
@@ -2287,7 +2293,7 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
   return true;
 }
 
-bool JSStructuredCloneReader::readDataView(uint32_t byteLength,
+bool JSStructuredCloneReader::readDataView(uint64_t byteLength,
                                            MutableHandleValue vp) {
   // Push a placeholder onto the allObjs list to stand in for the DataView.
   uint32_t placeholderIndex = allObjs.length();
@@ -2309,11 +2315,10 @@ bool JSStructuredCloneReader::readDataView(uint32_t byteLength,
   }
 
   // Read byteOffset.
-  uint64_t n;
-  if (!in.read(&n)) {
+  uint64_t byteOffset;
+  if (!in.read(&byteOffset)) {
     return false;
   }
-  uint32_t byteOffset = n;
 
   RootedObject buffer(context(), &v.toObject());
   RootedObject obj(context(),
@@ -2735,9 +2740,19 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
       return readTypedArray(arrayType, nelems, vp);
     }
 
+    case SCTAG_DATA_VIEW_OBJECT_V2: {
+      // readDataView adds the array to allObjs.
+      uint64_t byteLength = data;
+      return readDataView(byteLength, vp);
+    }
+
     case SCTAG_DATA_VIEW_OBJECT: {
       // readDataView adds the array to allObjs.
-      return readDataView(data, vp);
+      uint64_t byteLength;
+      if (!in.read(&byteLength)) {
+        return false;
+      }
+      return readDataView(byteLength, vp);
     }
 
     case SCTAG_MAP_OBJECT: {
