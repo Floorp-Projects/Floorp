@@ -7,26 +7,29 @@
   <img srcset> <!-- This tries to add load blockers during bfcache restoration -->
   <script>
     onunload = null; // enable bfcache
-    opener.is(opener.testCount, 0,
-              "We should only run once; otherwise the loadCount variable makes no sense");
-    var loadCount = 0;
+    var bc = new BroadcastChannel('bug1379762');
+    bc.postMessage("init"); 
     onpageshow = function() {
-      ++opener.testCount;
-      if (opener.testCount == 1) {
-        // Navigate forward and then back.
-        // eslint-disable-next-line no-global-assign
-        setTimeout(function() { location = "goback.html"; }, 0);
-      } else if (opener.testCount == 2) {
-        // Do this async so our load event gets a chance to fire if it plans to
-        // do it.
-        setTimeout(function() {
-          opener.finishTest();
-        });
+      bc.onmessage = (messageEvent) => {
+        let message = messageEvent.data;
+        if (message == "forward_back") {
+          // Navigate forward and then back.
+          // eslint-disable-next-line no-global-assign
+          setTimeout(function() { location = "goback.html"; }, 0);
+        } else if (message == "finish_test") {
+          // Do this async so our load event gets a chance to fire if it plans to
+          // do it.
+          setTimeout(function() {
+            bc.postMessage("finished");
+            bc.close();
+            window.close();
+          });
+        }
       }
+      bc.postMessage("increment_testCount");
     };
     onload = function() {
-      ++loadCount;
-      opener.is(loadCount, 1, "Should only get one onload");
+      bc.postMessage("increment_loadCount");
     };
   </script>
 </html>
