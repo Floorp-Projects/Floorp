@@ -38,6 +38,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -70,7 +71,7 @@ class SearchRobot {
 
     fun clickSearchEngineShortcutButton() {
         val searchEnginesShortcutButton = mDevice.findObject(UiSelector()
-            .resourceId("org.mozilla.fenix.debug:id/search_engines_shortcut_button"))
+            .resourceId("$packageName:id/search_engines_shortcut_button"))
         searchEnginesShortcutButton.waitForExists(waitingTime)
         searchEnginesShortcutButton.click()
     }

@@ -35,6 +35,7 @@ import org.junit.Assert.assertEquals
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -189,7 +190,7 @@ class BookmarksRobot {
         }
 
         fun openThreeDotMenu(bookmarkTitle: String, interact: ThreeDotMenuBookmarksRobot.() -> Unit): ThreeDotMenuBookmarksRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(res("org.mozilla.fenix.debug:id/overflow_menu")))
+            mDevice.waitNotNull(Until.findObject(res("$packageName:id/overflow_menu")))
             threeDotMenu(bookmarkTitle).click()
 
             ThreeDotMenuBookmarksRobot().interact()

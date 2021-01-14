@@ -35,6 +35,9 @@ import org.mozilla.fenix.ui.robots.mDevice
 import java.io.File
 
 object TestHelper {
+
+    val packageName = InstrumentationRegistry.getInstrumentation().targetContext.packageName
+
     fun scrollToElementByText(text: String): UiScrollable {
         val appView = UiScrollable(UiSelector().scrollable(true))
         appView.scrollTextIntoView(text)

@@ -41,6 +41,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -57,9 +58,10 @@ class BrowserRobot {
         sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
         mDevice.waitNotNull(
-            Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")),
-            waitingTime
+                Until.findObject(By.res("$packageName:id/mozac_browser_toolbar_url_view")),
+                waitingTime
         )
+
         runWithIdleRes(sessionLoadedIdlingResource) {
             onView(withId(R.id.mozac_browser_toolbar_url_view))
                 .check(matches(withText(containsString(url.replace("http://", "")))))
@@ -87,7 +89,7 @@ class BrowserRobot {
         sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
         mDevice.waitNotNull(
-            Until.findObject(By.res("org.mozilla.fenix.debug:id/engineView")),
+            Until.findObject(By.res("$packageName:id/engineView")),
             waitingTime
         )
 
@@ -419,11 +421,8 @@ class BrowserRobot {
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             mDevice.waitForIdle(waitingTime)
             tabsCounter().click()
-
-            mDevice.waitNotNull(
-                Until.findObject(By.res("org.mozilla.fenix.debug:id/tab_layout")),
-                waitingTime
-            )
+            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/tab_layout")),
+                waitingTime)
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()

@@ -125,9 +125,6 @@ private fun assertOpenLinksInPrivateTabOff() {
 }
 
 private fun assertPrivateBrowsingShortcutIcon() {
-    mDevice.wait(
-        Until.findObject(text("Private Firefox Preview")),
-        waitingTime
-    )
+    mDevice.wait(Until.findObject(text("Private Firefox Preview")), waitingTime)
     assertTrue(mDevice.hasObject(text("Private Firefox Preview")))
 }

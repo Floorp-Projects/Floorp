@@ -49,7 +49,7 @@ jobs:
     x86-debug:
         description: Test Fenix
         run-on-tasks-for: [github-pull-request, github-push]
-        run-on-git-branches: [master]
+        run-on-git-branches: ["^((?!releases[_/]).+)$"]
         run:
             commands:
                 - [automation/taskcluster/androidTest/ui-test.sh, x86, app.apk, android-test.apk, '50']
@@ -66,3 +66,17 @@ jobs:
                 - [automation/taskcluster/androidTest/ui-test.sh, x86-screenshots-tests, app.apk, android-test.apk, '-1']
         treeherder:
             symbol: debug(screenshots-x86)
+    x86-beta:
+        attributes:
+            build-type: beta-firebase
+        description: Test Fenix
+        run-on-tasks-for: [github-push]
+        run-on-git-branches: ["^releases[/_].+$"]
+        dependencies:
+            signing: signing-beta-firebase
+            signing-android-test: signing-android-test-beta
+        run:
+            commands:
+                - [automation/taskcluster/androidTest/ui-test.sh, x86-beta-tests, app.apk, android-test.apk, '50']
+        treeherder:
+            symbol: beta(ui-test-x86-beta)

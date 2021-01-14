@@ -15,6 +15,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.isChecked
@@ -89,7 +90,7 @@ fun enhancedTrackingProtection(interact: EnhancedTrackingProtectionRobot.() -> U
 
 private fun assertEnhancedTrackingProtectionNotice() {
     mDevice.waitNotNull(
-        Until.findObject(By.res("org.mozilla.fenix.debug:id/onboarding_message")),
+        Until.findObject(By.res("$packageName:id/onboarding_message")),
         TestAssetHelper.waitingTime
     )
 }
