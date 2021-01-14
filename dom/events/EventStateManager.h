@@ -15,6 +15,7 @@
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsRefPtrHashtable.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/layers/APZPublicUtils.h"
 #include "Units.h"
@@ -1216,7 +1217,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   void CreateClickHoldTimer(nsPresContext* aPresContext, nsIFrame* aDownFrame,
                             WidgetGUIEvent* aMouseDownEvent);
   void KillClickHoldTimer();
-  void FireContextClick();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireContextClick();
 
   MOZ_CAN_RUN_SCRIPT static void SetPointerLock(nsIWidget* aWidget,
                                                 nsIContent* aElement);
