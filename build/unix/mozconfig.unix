@@ -37,7 +37,6 @@ else
             ac_add_options --with-pgo-profile-path=${MOZ_FETCHES_DIR}/merged.profdata
             export LLVM_PROFDATA="$MOZ_FETCHES_DIR/clang/bin/llvm-profdata"
             export NM="$MOZ_FETCHES_DIR/clang/bin/llvm-nm"
-            export RANLIB="$MOZ_FETCHES_DIR/clang/bin/llvm-ranlib"
         fi
     fi
 
