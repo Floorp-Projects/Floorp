@@ -271,6 +271,10 @@ add_task(async function() {
     set: [["dom.require_user_interaction_for_beforeunload", false]],
   });
 
+  SpecialPowers.pushPrefEnv({
+    set: [["prompts.contentPromptSubDialog", false]],
+  });
+
   for (let actions of PERMUTATIONS) {
     info(
       `Testing frame actions: [${actions.map(action =>
