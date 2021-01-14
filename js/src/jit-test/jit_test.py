@@ -475,7 +475,16 @@ def main(argv):
     job_count = len(test_list)
 
     if options.repeat:
-        job_list = (test for test in job_list for i in range(options.repeat))
+
+        def repeat_copy(job_list, repeat):
+            for i in range(repeat):
+                for test in job_list:
+                    if i == 0:
+                        yield test
+                    else:
+                        yield test.copy()
+
+        job_list = repeat_copy(job_list, options.repeat)
         job_count *= options.repeat
 
     if options.ignore_timeouts:
