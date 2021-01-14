@@ -993,6 +993,14 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
     }
 
     case opGetUsage: {
+      // Bug 1676410 fixed a regression caused by bug 1165214. However, it
+      // turns out that 100% correct checking of the eTLD+1 usage is not
+      // possible to recover easily, see bug 1683299.
+#if 0
+      // This is how it should be done, but due to other problems like lack
+      // of usage synchronization between content processes, we temporarily
+      // disabled the matching using "%".
+
       nsCOMPtr<mozIStorageStatement> stmt =
           aThread->mWorkerStatements.GetCachedStatement(
               "SELECT SUM(LENGTH(key) + LENGTH(value)) FROM webappsstore2 "
@@ -1024,6 +1032,24 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
       rv = stmt->BindUTF8StringByName("usageOrigin"_ns,
                                       originScopeEscaped + "%"_ns);
       NS_ENSURE_SUCCESS(rv, rv);
+#else
+      // This is the code before bug 1676410 and bug 1676973. The returned
+      // usage will be zero in most of the cases, but due to lack of usage
+      // synchronization between content processes we have to live with this
+      // semi-broken behaviour because it causes less harm than the matching
+      // using "%".
+
+      nsCOMPtr<mozIStorageStatement> stmt =
+          aThread->mWorkerStatements.GetCachedStatement(
+              "SELECT SUM(LENGTH(key) + LENGTH(value)) FROM webappsstore2 "
+              "WHERE (originAttributes || ':' || originKey) LIKE :usageOrigin");
+      NS_ENSURE_STATE(stmt);
+
+      mozStorageStatementScoper scope(stmt);
+
+      rv = stmt->BindUTF8StringByName("usageOrigin"_ns, mUsage->OriginScope());
+      NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
       bool exists;
       rv = stmt->ExecuteStep(&exists);
