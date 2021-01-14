@@ -19,29 +19,29 @@ var Ci = SpecialPowers.Ci;
 var Cr = SpecialPowers.Cr;
 
 var inputDatas = [
-  { url: "malware.example.com/",
+  { url: "malware.mochi.test/",
     db: "mochi-block-simple",
   },
-  { url: "malware1.example.com/",
+  { url: "malware1.mochi.test/",
     db: "mochi1-block-simple",
   },
-  { url: "malware1.example.com/",
+  { url: "malware1.mochi.test/",
     db: "mochi1-malware-simple",
     provider: "mozilla",
   },
-  { url: "malware2.example.com/",
+  { url: "malware2.mochi.test/",
     db: "mochi2-unwanted-simple",
     provider: "mozilla",
   },
-  { url: "malware2.example.com/",
+  { url: "malware2.mochi.test/",
     db: "mochi2-malware-simple",
     provider: "mozilla",
   },
-  { url: "malware3.example.com/",
+  { url: "malware3.mochi.test/",
     db: "mochig3-malware-simple",
     provider: "google",
   },
-  { url: "malware3.example.com/",
+  { url: "malware3.mochi.test/",
     db: "mochim3-malware-simple",
     provider: "mozilla",
   },
@@ -68,42 +68,42 @@ function hash(str) {
 
 var testDatas = [
   // Match empty provider
-  { url: "http://malware.example.com",
+  { url: "http://malware.mochi.test",
     expect: { error: Cr.NS_ERROR_BLOCKED_URI,
               table: "mochi-block-simple",
               provider: "",
               fullhash: (function() {
-                return hash("malware.example.com/");
+                return hash("malware.mochi.test/");
               })(),
             },
   },
   // Match multiple tables, only one has valid provider
-  { url: "http://malware1.example.com",
+  { url: "http://malware1.mochi.test",
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochi1-malware-simple",
               provider: "mozilla",
               fullhash: (function() {
-                return hash("malware1.example.com/");
+                return hash("malware1.mochi.test/");
               })(),
             },
   },
   // Match multiple tables, handle order
-  { url: "http://malware2.example.com",
+  { url: "http://malware2.mochi.test",
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochi2-malware-simple",
               provider: "mozilla",
               fullhash: (function() {
-                return hash("malware2.example.com/");
+                return hash("malware2.mochi.test/");
               })(),
             },
   },
   // Match multiple tables, handle order
-  { url: "http://malware3.example.com",
+  { url: "http://malware3.mochi.test",
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochig3-malware-simple",
               provider: "google",
               fullhash: (function() {
-                return hash("malware3.example.com/");
+                return hash("malware3.mochi.test/");
               })(),
             },
   },
