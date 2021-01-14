@@ -31,7 +31,7 @@ function VisitInfo(aTransitionType, aVisitTime) {
   this.visitDate = aVisitTime || Date.now() * 1000;
 }
 
-function promiseUpdatePlaces(aPlaces, aOptions, aBatchFrecencyNotifications) {
+function promiseUpdatePlaces(aPlaces, aOptions = {}) {
   return new Promise((resolve, reject) => {
     asyncHistory.updatePlaces(
       aPlaces,
@@ -54,8 +54,7 @@ function promiseUpdatePlaces(aPlaces, aOptions, aBatchFrecencyNotifications) {
           },
         },
         aOptions
-      ),
-      aBatchFrecencyNotifications
+      )
     );
   });
 }
@@ -1163,7 +1162,7 @@ add_task(async function test_omit_frecency_notifications() {
     };
     PlacesUtils.history.addObserver(frecencyObserverCheck);
   });
-  await promiseUpdatePlaces(places, {}, true);
+  await promiseUpdatePlaces(places);
   await promiseFrecenciesChanged;
 });
 

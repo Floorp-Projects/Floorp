@@ -78,6 +78,7 @@ add_task(async function test_remove_many() {
     }
   }
 
+  let onManyFrecenciesChanged = false;
   let observer = {
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
@@ -94,10 +95,7 @@ add_task(async function test_remove_many() {
       origin.onFrecencyChangedCalled = true;
     },
     onManyFrecenciesChanged() {
-      Assert.ok(
-        false,
-        "Observing onManyFrecenciesChanges, this is most likely correct but not covered by this test"
-      );
+      onManyFrecenciesChanged = true;
     },
     onDeleteURI(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
@@ -184,16 +182,19 @@ add_task(async function test_remove_many() {
       page.hasBookmark,
       "Page is present only if it also has bookmarks"
     );
-    Assert.equal(
-      page.onFrecencyChangedCalled,
+    Assert.notEqual(
+      page.onDeleteURICalled,
       page.onDeleteVisitsCalled,
-      "onDeleteVisits was called iff onFrecencyChanged was called"
-    );
-    Assert.ok(
-      page.onFrecencyChangedCalled ^ page.onDeleteURICalled,
-      "Either onFrecencyChanged or onDeleteURI was called"
+      "Either only onDeleteVisits or onDeleteVisitsCalled should be called"
     );
   }
+
+  Assert.equal(
+    onManyFrecenciesChanged,
+    pages.some(p => p.onDeleteVisitsCalled) ||
+      pages.some(p => p.onDeleteURICalled),
+    "onManyFrecenciesChanged was called if onDeleteVisitsCalled or onDeleteURICalled was called"
+  );
 
   Assert.notEqual(
     visits_in_database(WITNESS_URI),
