@@ -161,6 +161,12 @@ class OSPreferences : public mozIOSPreferences {
                            const nsACString& aLocale, nsACString& aRetVal);
 
   /**
+   * This is called to override the hour cycle in the skeleton based upon
+   * the OS preference for AM/PM or 24 hour display.
+   */
+  void OverrideSkeletonHourCycle(bool aIs24Hour, nsAutoCString& aSkeleton);
+
+  /**
    * This is called by the destructor to clean up any OS specific observers
    * that are registered.
    */
