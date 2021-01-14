@@ -182,7 +182,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._gripDepth = 0;
     this._threadLifetimePool = null;
     this._parentClosed = false;
-    this._scripts = null;
     this._xhrBreakpoints = [];
     this._observingNetwork = false;
     this._activeEventBreakpoints = new Set();
@@ -199,7 +198,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this.breakpointActorMap = new BreakpointActorMap(this);
 
-    this._debuggerSourcesSeen = null;
+    this._debuggerSourcesSeen = new WeakSet();
 
     // A Set of URLs string to watch for when new sources are found by
     // the debugger instance.
@@ -222,6 +221,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.pauseObjectGrip = this.pauseObjectGrip.bind(this);
     this._onOpeningRequest = this._onOpeningRequest.bind(this);
     this._onNewDebuggee = this._onNewDebuggee.bind(this);
+    this._onExceptionUnwind = this._onExceptionUnwind.bind(this);
     this._eventBreakpointListener = this._eventBreakpointListener.bind(this);
     this._onWindowReady = this._onWindowReady.bind(this);
     this._onWillNavigate = this._onWillNavigate.bind(this);
@@ -336,7 +336,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (this._dbg) {
       this.dbg.removeAllDebuggees();
     }
-    this._scripts = null;
   },
 
   /**
@@ -401,8 +400,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.dbg.onDebuggerStatement = this.onDebuggerStatement;
     this.dbg.onNewScript = this.onNewScript;
     this.dbg.onNewDebuggee = this._onNewDebuggee;
-
-    this._debuggerSourcesSeen = new WeakSet();
 
     this._options = { ...this._options, ...options };
     this.sourcesManager.on("newSource", this.onNewSourceEvent);
@@ -1347,7 +1344,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    */
   maybePauseOnExceptions() {
     if (this._options.pauseOnExceptions) {
-      this.dbg.onExceptionUnwind = this.onExceptionUnwind.bind(this);
+      this.dbg.onExceptionUnwind = this._onExceptionUnwind;
     } else {
       this.dbg.onExceptionUnwind = undefined;
     }
@@ -1932,7 +1929,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @param value object
    *        The exception that was thrown.
    */
-  onExceptionUnwind(youngestFrame, value) {
+  _onExceptionUnwind(youngestFrame, value) {
     let willBeCaught = false;
     for (let frame = youngestFrame; frame != null; frame = frame.older) {
       if (frame.script.isInCatchScope(frame.offset)) {
