@@ -104,7 +104,6 @@ else
       sleep 2
     esac
     AC_PROG_CXX
-    AC_PROG_RANLIB
     MOZ_PATH_PROGS(AS, $AS as, $CC)
     AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(OTOOL, otool, :)
@@ -612,7 +611,6 @@ case "$target" in
         LDFLAGS="$LDFLAGS -Wl,--no-insert-timestamp"
     else
         TARGET_COMPILER_ABI=msvc
-        RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         # aarch64 doesn't support subsystems below 6.02
         if test "$CPU_ARCH" = "aarch64"; then

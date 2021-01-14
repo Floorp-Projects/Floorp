@@ -12,7 +12,6 @@ if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
     # Use an updated linker.
     ldflags="-B$MOZ_FETCHES_DIR/cctools/bin"
     export AR=$MOZ_FETCHES_DIR/cctools/bin/ar
-    export RANLIB=$MOZ_FETCHES_DIR/cctools/bin/ranlib
 fi
 
 # Ensure the updated linker doesn't generate things our older build tools
