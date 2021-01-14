@@ -72,12 +72,10 @@ class nsNSSCertificate final : public nsIX509Cert,
 
   mozilla::UniqueCERTCertificate mCert;
   uint32_t mCertType;
-  std::vector<nsString> mSubjectAltNames;
   nsresult GetSortableDate(PRTime aTime, nsAString& _aSortableDate);
   bool InitFromDER(char* certDER, int derLen);  // return false on failure
 
   nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
-  void GetSubjectAltNames();
 };
 
 namespace mozilla {

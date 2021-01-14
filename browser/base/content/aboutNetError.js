@@ -4,12 +4,10 @@
 
 /* eslint-env mozilla/frame-script */
 
-const formatter = new Intl.DateTimeFormat("default");
+import { parse } from "chrome://global/content/certviewer/certDecoder.js";
+import { pemToDER } from "chrome://global/content/certviewer/utils.js";
 
-// Values for telemetry bins: see TLS_ERROR_REPORT_UI in Histograms.json
-const TLS_ERROR_REPORT_TELEMETRY_AUTO_CHECKED = 2;
-const TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED = 3;
-const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
+const formatter = new Intl.DateTimeFormat("default");
 
 const HOST_NAME = new URL(RPMGetInnerMostURI(document.location.href)).hostname;
 
@@ -1097,16 +1095,24 @@ async function setTechnicalDetailsOnCertError(
         setL10NLabel("cert-error-untrusted-default", {}, {}, false);
     }
   } else if (failedCertInfo.isDomainMismatch) {
-    let subjectAltNames = failedCertInfo.subjectAltNames.split(",");
-    subjectAltNames = subjectAltNames.filter(name => !!name.length);
+    let serverCertBase64 = failedCertInfo.certChainStrings[0];
+    let parsed = await parse(pemToDER(serverCertBase64));
+    let subjectAltNamesExtension = parsed.ext.san;
+    let subjectAltNames = [];
+    if (subjectAltNamesExtension) {
+      for (let name of subjectAltNamesExtension.altNames) {
+        if (name[0] == "DNS Name" && name[1].length) {
+          subjectAltNames.push(name[1]);
+        }
+      }
+    }
     let numSubjectAltNames = subjectAltNames.length;
-
     if (numSubjectAltNames != 0) {
       if (numSubjectAltNames == 1) {
         args["alt-name"] = subjectAltNames[0];
 
         // Let's check if we want to make this a link.
-        let okHost = failedCertInfo.subjectAltNames;
+        let okHost = subjectAltNames[0];
         let href = "";
         let thisHost = HOST_NAME;
         let proto = document.location.protocol + "//";
@@ -1248,10 +1254,12 @@ for (let button of document.querySelectorAll(".try-again")) {
   });
 }
 
-// Note: It is important to run the script this way, instead of using
-// an onload handler. This is because error pages are loaded as
-// LOAD_BACKGROUND, which means that onload handlers will not be executed.
-initPage();
-// Dispatch this event so tests can detect that we finished loading the error page.
-let event = new CustomEvent("AboutNetErrorLoad", { bubbles: true });
-document.dispatchEvent(event);
+window.addEventListener("DOMContentLoaded", () => {
+  // Expose this so tests can call it.
+  window.setTechnicalDetailsOnCertError = setTechnicalDetailsOnCertError;
+
+  initPage();
+  // Dispatch this event so tests can detect that we finished loading the error page.
+  let event = new CustomEvent("AboutNetErrorLoad", { bubbles: true });
+  document.dispatchEvent(event);
+});

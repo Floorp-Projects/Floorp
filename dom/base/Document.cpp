@@ -1778,14 +1778,6 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
   }
   aInfo.mValidNotAfter = DOMTimeStamp(validityResult / PR_USEC_PER_MSEC);
 
-  nsAutoString subjectAltNames;
-  rv = cert->GetSubjectAltNames(subjectAltNames);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
-  }
-  aInfo.mSubjectAltNames = subjectAltNames;
-
   nsAutoString issuerCommonName;
   nsAutoString certChainPEMString;
   Sequence<nsString>& certChainStrings = aInfo.mCertChainStrings.Construct();
