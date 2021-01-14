@@ -352,6 +352,9 @@ macosx64-x64-compiler-rt-11:
         script: build-compiler-rt.sh
         arguments:
             - x86_64-apple-darwin
+            - 'build/build-clang/rename_gcov_flush_clang_11.patch'
+        resources:
+            - 'build/build-clang/rename_gcov_flush_clang_11.patch'
         toolchain-artifact: public/build/compiler-rt.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -370,6 +373,9 @@ macosx64-aarch64-compiler-rt-11:
         script: build-compiler-rt.sh
         arguments:
             - aarch64-apple-darwin
+            - 'build/build-clang/rename_gcov_flush_clang_11.patch'
+        resources:
+            - 'build/build-clang/rename_gcov_flush_clang_11.patch'
         toolchain-artifact: public/build/compiler-rt.tar.zst
     fetches:
         fetch:
