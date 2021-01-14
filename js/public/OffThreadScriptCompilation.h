@@ -60,19 +60,19 @@ using OffThreadCompileCallback = void (*)(OffThreadToken* token,
 extern JS_PUBLIC_API bool CanCompileOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
 
-extern JS_PUBLIC_API bool CompileOffThread(
+extern JS_PUBLIC_API OffThreadToken* CompileOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData, OffThreadToken** tokenOut = nullptr);
+    void* callbackData);
 
 // NOTE: Unlike for the normal sync compilation functions, this function NEVER
 //       INFLATES TO UTF-16.  Therefore, it is ALWAYS invoking experimental
 //       UTF-8 support.  Inflate to UTF-16 yourself and use the other overload
 //       if you're unable to take a risk using unstable functionality.
-extern JS_PUBLIC_API bool CompileOffThread(
+extern JS_PUBLIC_API OffThreadToken* CompileOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData, OffThreadToken** tokenOut = nullptr);
+    void* callbackData);
 
 // Finish the off-thread parse/decode task and return the script. Return the
 // script on success, or return null on failure (usually with an error reported)
@@ -94,19 +94,19 @@ extern JS_PUBLIC_API JSScript* FinishOffThreadScriptAndStartIncrementalEncoding(
 extern JS_PUBLIC_API void CancelOffThreadScript(JSContext* cx,
                                                 OffThreadToken* token);
 
-extern JS_PUBLIC_API bool CompileOffThreadModule(
+extern JS_PUBLIC_API OffThreadToken* CompileOffThreadModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData, OffThreadToken** tokenOut = nullptr);
+    void* callbackData);
 
 // NOTE: Unlike for the normal sync compilation functions, this function NEVER
 //       INFLATES TO UTF-16.  Therefore, it is ALWAYS invoking experimental
 //       UTF-8 support.  Inflate to UTF-16 yourself and use the other overload
 //       if you're unable to take a risk using unstable functionality.
-extern JS_PUBLIC_API bool CompileOffThreadModule(
+extern JS_PUBLIC_API OffThreadToken* CompileOffThreadModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData, OffThreadToken** tokenOut = nullptr);
+    void* callbackData);
 
 extern JS_PUBLIC_API JSObject* FinishOffThreadModule(JSContext* cx,
                                                      OffThreadToken* token);
@@ -128,22 +128,20 @@ extern JS_PUBLIC_API bool CanDecodeOffThread(
 // (This should be handled while encoding).
 //
 // `buffer` should be alive until the end of `FinishOffThreadScriptDecoder`.
-extern JS_PUBLIC_API bool DecodeOffThreadScript(
+extern JS_PUBLIC_API OffThreadToken* DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
-    OffThreadCompileCallback callback, void* callbackData,
-    OffThreadToken** tokenOut = nullptr);
+    OffThreadCompileCallback callback, void* callbackData);
 
 // The start of `range` should be meet IsTranscodingBytecodeAligned and
 // AlignTranscodingBytecodeOffset.
 // (This should be handled while encoding).
 //
 // `range` should be alive until the end of `FinishOffThreadScriptDecoder`.
-extern JS_PUBLIC_API bool DecodeOffThreadScript(
+extern JS_PUBLIC_API OffThreadToken* DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
-    OffThreadCompileCallback callback, void* callbackData,
-    OffThreadToken** tokenOut = nullptr);
+    OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API JSScript* FinishOffThreadScriptDecoder(
     JSContext* cx, OffThreadToken* token);
@@ -152,7 +150,7 @@ extern JS_PUBLIC_API void CancelOffThreadScriptDecoder(JSContext* cx,
                                                        OffThreadToken* token);
 
 // Decode multiple JSScript from the sources.
-extern JS_PUBLIC_API bool DecodeMultiOffThreadScripts(
+extern JS_PUBLIC_API OffThreadToken* DecodeMultiOffThreadScripts(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     mozilla::Vector<TranscodeSource>& sources,
     OffThreadCompileCallback callback, void* callbackData);
