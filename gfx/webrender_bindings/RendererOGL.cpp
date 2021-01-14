@@ -206,8 +206,10 @@ RenderedFrameId RendererOGL::UpdateAndRender(
     }
   }
 
-  if (!mCompositor->MaybeGrabScreenshot(size.ToUnknownSize())) {
-    mScreenshotGrabber.MaybeGrabScreenshot(this, size.ToUnknownSize());
+  if (size.Width() != 0 && size.Height() != 0) {
+    if (!mCompositor->MaybeGrabScreenshot(size.ToUnknownSize())) {
+      mScreenshotGrabber.MaybeGrabScreenshot(this, size.ToUnknownSize());
+    }
   }
 
   RenderedFrameId frameId = mCompositor->EndFrame(dirtyRects);
