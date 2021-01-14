@@ -1,4 +1,4 @@
 browser.tabs.create({
   url: "https://www.mozilla.org/en-US/",
-  cookieStoreId: "1",
+  cookieStoreId: "firefox-container-1",
 });
