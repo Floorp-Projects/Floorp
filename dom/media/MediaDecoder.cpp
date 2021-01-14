@@ -57,8 +57,6 @@ LazyLogModule gMediaDecoderLog("MediaDecoder");
 
 static const char* ToPlayStateStr(MediaDecoder::PlayState aState) {
   switch (aState) {
-    case MediaDecoder::PLAY_STATE_START:
-      return "START";
     case MediaDecoder::PLAY_STATE_LOADING:
       return "LOADING";
     case MediaDecoder::PLAY_STATE_PAUSED:
