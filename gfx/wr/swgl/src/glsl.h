@@ -65,8 +65,12 @@ SI bool test_none(Bool cond) { return _mm_movemask_ps(cond) == 0; }
 SI bool test_all(Bool cond) {
   return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0xFFFFFFFFU;
 }
-SI bool test_any(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) != 0; }
-SI bool test_none(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0; }
+SI bool test_any(Bool cond) {
+  return bit_cast<uint32_t>(CONVERT(cond, U8)) != 0;
+}
+SI bool test_none(Bool cond) {
+  return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0;
+}
 #endif
 
 float make_float(float n) { return n; }
@@ -125,7 +129,8 @@ SI int32_t if_then_else(int32_t c, int32_t t, int32_t e) { return c ? t : e; }
 SI float if_then_else(int32_t c, float t, float e) { return c ? t : e; }
 
 SI Float if_then_else(I32 c, float t, float e) {
-  return bit_cast<Float>((c & bit_cast<I32>(Float(t))) | (~c & bit_cast<I32>(Float(e))));
+  return bit_cast<Float>((c & bit_cast<I32>(Float(t))) |
+                         (~c & bit_cast<I32>(Float(e))));
 }
 
 SI I32 if_then_else(I32 c, int32_t t, int32_t e) {
@@ -148,7 +153,8 @@ SI Bool if_then_else(int32_t c, Bool t, Bool e) { return c ? t : e; }
 
 SI I16 if_then_else(I16 c, I16 t, I16 e) { return (c & t) | (~c & e); }
 
-template <typename T> SI void swap(T& a, T& b) {
+template <typename T>
+SI void swap(T& a, T& b) {
   T t(a);
   a = b;
   b = t;
@@ -641,7 +647,10 @@ SI I32 roundfast(Float v, Float scale) {
 #endif
 }
 
-template <typename T> SI auto round_pixel(T v) { return roundfast(v, 255.0f); }
+template <typename T>
+SI auto round_pixel(T v) {
+  return roundfast(v, 255.0f);
+}
 
 #define round __glsl_round
 
@@ -2398,7 +2407,8 @@ Float atan(Float v) { return {atanf(v.x), atanf(v.y), atanf(v.z), atanf(v.w)}; }
 float atan(float a, float b) { return atan2f(a, b); }
 
 Float atan(Float a, Float b) {
-    return {atan2f(a.x, b.x), atan2f(a.y, b.y), atan2f(a.z, b.z), atan2f(a.w, b.w)};
+  return {atan2f(a.x, b.x), atan2f(a.y, b.y), atan2f(a.z, b.z),
+          atan2f(a.w, b.w)};
 }
 
 bvec4 notEqual(ivec4 a, ivec4 b) {

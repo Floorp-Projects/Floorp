@@ -213,7 +213,8 @@ static ALWAYS_INLINE T swgl_linearQuantizeStep(S s, T p) {
                           __VA_ARGS__)
 
 // Convert and pack planar YUV samples to RGB output using a color space
-static ALWAYS_INLINE PackedRGBA8 convertYUV(int colorSpace, U16 y, U16 u, U16 v) {
+static ALWAYS_INLINE PackedRGBA8 convertYUV(int colorSpace, U16 y, U16 u,
+                                            U16 v) {
   auto yy = V8<int16_t>(zip(y, y));
   auto uv = V8<int16_t>(zip(u, v));
   switch (colorSpace) {
