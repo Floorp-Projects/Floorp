@@ -14,6 +14,7 @@ members = [
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
   "toolkit/crashreporter/rust",
+  "toolkit/crashreporter/rust_minidump_writer_linux",
   "toolkit/library/gtest/rust",
   "toolkit/library/rust/",
   "toolkit/mozapps/defaultagent/rust",
@@ -80,6 +81,7 @@ spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu4" }
 # failure's backtrace feature might break our builds, see bug 1608157.
 failure = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
 failure_derive = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
+minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "4ea371049a9cca212cc13c19b7952c1c014085c6" }
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/mozilla-spidermonkey/wasmtime"
