@@ -5580,6 +5580,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
       }
     }
 
+    args.rval().setUndefined();
     return true;
   }
 
