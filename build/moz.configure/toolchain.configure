@@ -2865,20 +2865,13 @@ def rc_names(c_compiler, toolchain_prefix):
 check_prog("RC", rc_names, paths=toolchain_search_path, when=target_is_windows)
 
 
-@depends(link, toolchain_prefix, c_compiler)
-def ar_config(link, toolchain_prefix, c_compiler):
-    if c_compiler.type == "clang-cl" and link:
-        # if LINKER is set, it's either for lld-link or link
-        if "lld-link" in link:
-            return namespace(
-                names=("llvm-lib",),
-                flags=("-llvmlibthin", "-out:$@"),
-            )
-        else:
-            return namespace(
-                names=("lib",),
-                flags=("-NOLOGO", "-OUT:$@"),
-            )
+@depends(toolchain_prefix, c_compiler)
+def ar_config(toolchain_prefix, c_compiler):
+    if c_compiler.type == "clang-cl":
+        return namespace(
+            names=("llvm-lib",),
+            flags=("-llvmlibthin", "-out:$@"),
+        )
     return namespace(
         names=tuple("%s%s" % (p, "ar") for p in (toolchain_prefix or ()) + ("",)),
         flags=("crs", "$@"),
