@@ -4068,8 +4068,7 @@ void Document::AssertDocGroupMatchesKey() const {
 
     // GetKey() can fail, e.g. after the TLD service has shut down.
     nsresult rv = mozilla::dom::DocGroup::GetKey(
-        NodePrincipal(), GetBrowsingContext()->CrossOriginIsolated(),
-        docGroupKey);
+        NodePrincipal(), CrossOriginIsolated(), docGroupKey);
     if (NS_SUCCEEDED(rv)) {
       MOZ_ASSERT(mDocGroup->MatchesKey(docGroupKey));
     }
@@ -7001,14 +7000,24 @@ nsIGlobalObject* Document::GetScopeObject() const {
   return scope;
 }
 
+bool Document::CrossOriginIsolated() const {
+  // For a data document, it doesn't have a browsing context so that we check
+  // the cross-origin-isolated state from its creator's inner window.
+  if (mLoadedAsData) {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
+
+    return window && window->GetBrowsingContext() &&
+           window->GetBrowsingContext()->CrossOriginIsolated();
+  }
+
+  return GetBrowsingContext() && GetBrowsingContext()->CrossOriginIsolated();
+}
+
 DocGroup* Document::GetDocGroupOrCreate() {
   if (!mDocGroup) {
-    bool crossOriginIsolated = GetBrowsingContext()
-                                   ? GetBrowsingContext()->CrossOriginIsolated()
-                                   : false;
     nsAutoCString docGroupKey;
     nsresult rv = mozilla::dom::DocGroup::GetKey(
-        NodePrincipal(), crossOriginIsolated, docGroupKey);
+        NodePrincipal(), CrossOriginIsolated(), docGroupKey);
     if (NS_SUCCEEDED(rv) && mDocumentContainer) {
       BrowsingContextGroup* group = GetBrowsingContext()->Group();
       if (group) {
@@ -7031,15 +7040,11 @@ void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
     BrowsingContextGroup* browsingContextGroup =
         window->GetBrowsingContextGroup();
 
-    bool crossOriginIsolated = GetBrowsingContext()
-                                   ? GetBrowsingContext()->CrossOriginIsolated()
-                                   : false;
-
     // We should already have the principal, and now that we have been added
     // to a window, we should be able to join a DocGroup!
     nsAutoCString docGroupKey;
     nsresult rv = mozilla::dom::DocGroup::GetKey(
-        NodePrincipal(), crossOriginIsolated, docGroupKey);
+        NodePrincipal(), CrossOriginIsolated(), docGroupKey);
     if (mDocGroup) {
       if (NS_SUCCEEDED(rv)) {
         MOZ_RELEASE_ASSERT(mDocGroup->MatchesKey(docGroupKey));
@@ -8405,9 +8410,7 @@ void Document::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
     return;
   }
 
-  if (StaticPrefs::
-          dom_postMessage_sharedArrayBuffer_withCOOP_COEP_AtStartup() &&
-      GetBrowsingContext() && GetBrowsingContext()->CrossOriginIsolated()) {
+  if (CrossOriginIsolated()) {
     WarnOnceAbout(Document::eDocumentSetDomainNotAllowed);
     return;
   }
