@@ -1881,7 +1881,7 @@ class PresShell final : public nsStubDocumentObserver,
   // Utility method to restore the root scrollframe state
   void RestoreRootScrollPosition();
 
-  void MaybeReleaseCapturingContent();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void MaybeReleaseCapturingContent();
 
   class DelayedEvent {
    public:
