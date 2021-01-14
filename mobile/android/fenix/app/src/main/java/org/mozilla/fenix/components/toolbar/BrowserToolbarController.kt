@@ -77,7 +77,7 @@ class DefaultBrowserToolbarController(
         store.updateSearchTermsOfSelectedSession(text)
         activity.components.useCases.searchUseCases.defaultSearch.invoke(
             text,
-            sessionId = sessionManager.selectedSession?.id
+            sessionId = store.state.selectedTabId
         )
     }
 

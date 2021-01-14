@@ -68,6 +68,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                         contentLayout = browserLayout,
                         tabPreview = tabPreview,
                         toolbarLayout = browserToolbarView.view,
+                        store = components.core.store,
                         sessionManager = components.core.sessionManager
                     )
                 )

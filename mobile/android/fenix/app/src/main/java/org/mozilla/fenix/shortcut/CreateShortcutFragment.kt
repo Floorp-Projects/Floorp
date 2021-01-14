@@ -13,6 +13,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.fragment_create_shortcut.*
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.selector.selectedTab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.requireComponents
@@ -32,12 +33,12 @@ class CreateShortcutFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val session = requireComponents.core.sessionManager.selectedSession
+        val tab = requireComponents.core.store.state.selectedTab
 
-        if (session == null) {
+        if (tab == null) {
             dismiss()
         } else {
-            requireComponents.core.icons.loadIntoView(favicon_image, session.url)
+            requireComponents.core.icons.loadIntoView(favicon_image, tab.content.url)
 
             cancel_button.setOnClickListener { dismiss() }
             add_button.setOnClickListener {
@@ -52,7 +53,7 @@ class CreateShortcutFragment : DialogFragment() {
                 updateAddButtonEnabledState()
             }
 
-            shortcut_text.setText(session.title)
+            shortcut_text.setText(tab.content.title)
         }
     }
 

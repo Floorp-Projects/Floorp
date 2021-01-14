@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.SystemAction
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
@@ -398,7 +399,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 onNewTabOverride = {
                     _, engineSession, url ->
                         val shouldCreatePrivateSession =
-                            components.core.sessionManager.selectedSession?.private
+                            components.core.store.state.selectedTab?.content?.private
                                 ?: components.settings.openLinksInAPrivateTab
 
                         val session = Session(url, shouldCreatePrivateSession)

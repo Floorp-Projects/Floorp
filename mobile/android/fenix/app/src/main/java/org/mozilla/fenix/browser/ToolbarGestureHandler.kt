@@ -19,6 +19,8 @@ import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getRectWithScreenLocation
@@ -40,6 +42,7 @@ class ToolbarGestureHandler(
     private val contentLayout: View,
     private val tabPreview: TabPreview,
     private val toolbarLayout: View,
+    private val store: BrowserStore,
     private val sessionManager: SessionManager
 ) : SwipeGestureListener {
 
@@ -145,15 +148,15 @@ class ToolbarGestureHandler(
 
     private fun getDestination(): Destination {
         val isLtr = activity.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_LTR
-        val currentSession = sessionManager.selectedSession ?: return Destination.None
-        val currentIndex = sessionManager.sessionsOfType(currentSession.private).indexOfFirst {
-            it.id == currentSession.id
+        val currentTab = store.state.selectedTab ?: return Destination.None
+        val currentIndex = sessionManager.sessionsOfType(currentTab.content.private).indexOfFirst {
+            it.id == currentTab.id
         }
 
         return if (currentIndex == -1) {
             Destination.None
         } else {
-            val sessions = sessionManager.sessionsOfType(currentSession.private)
+            val sessions = sessionManager.sessionsOfType(currentTab.content.private)
             val index = when (gestureDirection) {
                 GestureDirection.RIGHT_TO_LEFT -> if (isLtr) {
                     currentIndex + 1
