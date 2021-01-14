@@ -10,7 +10,6 @@ export FENNEC_NIGHTLY=1
 
 export MOZILLA_OFFICIAL=1
 
-export AR="$MOZ_FETCHES_DIR/clang/bin/llvm-ar"
 export NM="$MOZ_FETCHES_DIR/clang/bin/llvm-nm"
 export RANLIB="$MOZ_FETCHES_DIR/clang/bin/llvm-ranlib"
 

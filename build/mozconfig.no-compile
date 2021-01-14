@@ -33,7 +33,6 @@ unset MOZ_LTO
 unset MOZ_STDCXX_COMPAT
 unset MOZ_NO_PIE_COMPAT
 
-unset AR
 unset NM
 unset RANLIB
 unset NASM
