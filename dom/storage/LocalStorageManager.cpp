@@ -33,15 +33,8 @@ using namespace StorageUtils;
 LocalStorageManager* LocalStorageManager::sSelf = nullptr;
 
 // static
-uint32_t LocalStorageManager::GetOriginQuota() {
+uint32_t LocalStorageManager::GetQuota() {
   return StaticPrefs::dom_storage_default_quota() * 1024;  // pref is in kBs
-}
-
-// static
-uint32_t LocalStorageManager::GetSiteQuota() {
-  return std::max(StaticPrefs::dom_storage_default_quota(),
-                  StaticPrefs::dom_storage_default_site_quota()) *
-         1024;  // pref is in kBs
 }
 
 NS_IMPL_ISUPPORTS(LocalStorageManager, nsIDOMStorageManager,

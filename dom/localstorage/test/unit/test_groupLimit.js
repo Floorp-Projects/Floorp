@@ -25,7 +25,6 @@ async function testSteps() {
 
   info("Setting pref");
 
-  Services.prefs.setBoolPref("dom.storage.next_gen", true);
   Services.prefs.setBoolPref("dom.storage.snapshot_reusing", false);
 
   info("Setting limits");

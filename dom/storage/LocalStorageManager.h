@@ -37,10 +37,7 @@ class LocalStorageManager final : public nsIDOMStorageManager,
   LocalStorageManager();
 
   // Reads the preference for DOM storage quota
-  static uint32_t GetOriginQuota();
-
-  // Reads the preference for DOM storage site quota
-  static uint32_t GetSiteQuota();
+  static uint32_t GetQuota();
 
   // Gets (but not ensures) cache for the given scope
   LocalStorageCache* GetCache(const nsACString& aOriginSuffix,
