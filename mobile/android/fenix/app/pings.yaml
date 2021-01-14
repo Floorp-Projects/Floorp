@@ -12,8 +12,8 @@ activation:
     an hashed version of the Google Advertising ID.
   include_client_id: false
   bugs:
-    - 1538011
-    - 1501822
+    - https://bugzilla.mozilla.com/1538011/
+    - https://bugzilla.mozilla.com/1501822/
   data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
   notification_emails:
