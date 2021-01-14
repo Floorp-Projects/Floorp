@@ -2875,6 +2875,12 @@
   value: 5 * 1024
   mirror: always
 
+# Per-site quota for legacy LocalStorage implementation.
+- name: dom.storage.default_site_quota
+  type: RelaxedAtomicUint32
+  value: 25 * 1024
+  mirror: always
+
 # Whether or not LSNG (Next Generation Local Storage) is enabled.
 # See bug 1517090 for enabling this on Nightly.
 # See bug 1534736 for changing it to EARLY_BETA_OR_EARLIER.
