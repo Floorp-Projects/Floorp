@@ -119,6 +119,11 @@ impl AtlasAllocator {
         assert!(self.size.height > 0);
         assert!(self.size.width <= std::u16::MAX as i32);
         assert!(self.size.height <= std::u16::MAX as i32);
+        assert!(
+            self.size.width.checked_mul(self.size.height).is_some(),
+            "The area of the atlas must fit in a i32 value"
+        );
+
         assert!(self.alignment.width > 0);
         assert!(self.alignment.height > 0);
 
@@ -172,19 +177,24 @@ impl AtlasAllocator {
 
     /// Allocate a rectangle in the atlas.
     pub fn allocate(&mut self, mut size: Size) -> Option<Allocation> {
-        if size.is_empty() {
+        if size.is_empty()
+            || size.width > std::u16::MAX as i32
+            || size.height > std::u16::MAX as i32 {
             return None;
         }
 
         adjust_size(self.alignment.width, &mut size.width);
         adjust_size(self.alignment.height, &mut size.height);
 
-        let (width, height) = convert_coordinates(self.flip_xy, size.width as u16, size.height as u16);
-        let mut height = shelf_height(height);
+        let (width, height) = convert_coordinates(self.flip_xy, size.width, size.height);
+        let height = shelf_height(height);
 
-        if width > self.shelf_width || height > self.size.height as u16 {
+        if width > self.shelf_width as i32 || height > self.size.height {
             return None;
         }
+
+        let mut width = width as u16;
+        let mut height = height as u16;
 
         let mut selected_shelf_height = std::u16::MAX;
         let mut selected_shelf = ShelfIndex::NONE;
@@ -288,6 +298,8 @@ impl AtlasAllocator {
             if item.next.is_some() {
                 self.items[item.next.index()].prev = new_item_idx;
             }
+        } else {
+            width = item.width;
         }
 
         self.items[selected_item.index()].allocated = true;
@@ -297,14 +309,14 @@ impl AtlasAllocator {
         let x1 = x0 + width;
         let y1 = y0 + height;
 
-        let (x0, y0) = convert_coordinates(self.flip_xy, x0, y0);
-        let (x1, y1) = convert_coordinates(self.flip_xy, x1, y1);
+        let (x0, y0) = convert_coordinates(self.flip_xy, x0 as i32, y0 as i32);
+        let (x1, y1) = convert_coordinates(self.flip_xy, x1 as i32, y1 as i32);
 
         self.check();
 
         let rectangle = Rectangle {
-            min: point2(x0 as i32, y0 as i32),
-            max: point2(x1 as i32, y1 as i32),
+            min: point2(x0, y0),
+            max: point2(x1, y1),
         };
 
         self.allocated_space += rectangle.area();
@@ -625,7 +637,7 @@ fn adjust_size(alignment: i32, size: &mut i32) {
     }
 }
 
-fn convert_coordinates(flip_xy: bool, x: u16, y: u16) -> (u16, u16) {
+fn convert_coordinates(flip_xy: bool, x: i32, y: i32) -> (i32, i32) {
     if flip_xy {
         (y, x)
     } else {
@@ -633,7 +645,7 @@ fn convert_coordinates(flip_xy: bool, x: u16, y: u16) -> (u16, u16) {
     }
 }
 
-fn shelf_height(mut size: u16) -> u16 {
+fn shelf_height(mut size: i32) -> i32 {
     let alignment = match size {
         0 ..= 31 => 8,
         32 ..= 127 => 16,
@@ -651,7 +663,15 @@ fn shelf_height(mut size: u16) -> u16 {
 
 #[test]
 fn test_simple() {
-    let mut atlas = AtlasAllocator::new(size2(1000, 1000));
+    let mut atlas = AtlasAllocator::with_options(
+        size2(2048, 2048),
+        &AllocatorOptions {
+            alignment: size2(4, 8),
+            vertical_shelves: false,
+            num_columns: 2,
+        },
+    );
+
     assert!(atlas.is_empty());
     assert_eq!(atlas.allocated_space(), 0);
 
@@ -839,4 +859,92 @@ fn clear() {
         atlas.allocate(size2(29, 28)).unwrap();
         atlas.allocate(size2(32, 32)).unwrap();
     }
+}
+
+#[test]
+fn fuzz_01() {
+    let s = 65472;
+
+    let mut atlas = AtlasAllocator::new(size2(s, 64));
+    let alloc = atlas.allocate(size2(s, 64)).unwrap();
+    assert_eq!(alloc.rectangle.size().width, s);
+    assert_eq!(alloc.rectangle.size().height, 64);
+
+    let mut atlas = AtlasAllocator::new(size2(64, s));
+    let alloc = atlas.allocate(size2(64, s)).unwrap();
+    assert_eq!(alloc.rectangle.size().width, 64);
+    assert_eq!(alloc.rectangle.size().height, s);
+
+    let mut atlas = AtlasAllocator::new(size2(s, 64));
+    let alloc = atlas.allocate(size2(s - 1, 64)).unwrap();
+    assert_eq!(alloc.rectangle.size().width, s);
+    assert_eq!(alloc.rectangle.size().height, 64);
+
+    let mut atlas = AtlasAllocator::new(size2(64, s));
+    let alloc = atlas.allocate(size2(64, s - 1)).unwrap();
+    assert_eq!(alloc.rectangle.size().width, 64);
+    assert_eq!(alloc.rectangle.size().height, s);
+
+    // Because of potential alignment we won't necessarily
+    // succeed at allocation something this big
+    let s = std::u16::MAX as i32;
+
+    let mut atlas = AtlasAllocator::new(size2(s, 64));
+    if let Some(alloc) = atlas.allocate(size2(s, 64)) {
+        assert_eq!(alloc.rectangle.size().width, s);
+        assert_eq!(alloc.rectangle.size().height, 64);
+    }
+
+    let mut atlas = AtlasAllocator::new(size2(64, s));
+    if let Some(alloc) = atlas.allocate(size2(64, s)) {
+        assert_eq!(alloc.rectangle.size().width, 64);
+        assert_eq!(alloc.rectangle.size().height, s);
+    }
+}
+
+
+#[test]
+fn fuzz_02() {
+    let mut atlas = AtlasAllocator::new(size2(1000, 1000));
+
+    assert!(atlas.allocate(size2(255, 65599)).is_none());
+}
+
+#[test]
+fn fuzz_03() {
+    let mut atlas = AtlasAllocator::new(size2(1000, 1000));
+
+    let sizes = &[
+        size2(999, 128),
+        size2(168492810, 10),
+        size2(45, 96),
+        size2(-16711926, 0),
+    ];
+
+    let mut allocations = Vec::new();
+    let mut allocated_space = 0;
+
+    for size in sizes {
+        if let Some(alloc) = atlas.allocate(*size) {
+            allocations.push(alloc);
+            allocated_space += alloc.rectangle.area();
+            assert_eq!(allocated_space, atlas.allocated_space());
+        }
+    }
+
+    for alloc in &allocations {
+        atlas.deallocate(alloc.id);
+
+        allocated_space -= alloc.rectangle.area();
+        assert_eq!(allocated_space, atlas.allocated_space());
+    }
+
+    assert_eq!(atlas.allocated_space(), 0);
+}
+
+#[test]
+fn fuzz_04() {
+    let mut atlas = AtlasAllocator::new(size2(1000, 1000));
+
+    assert!(atlas.allocate(size2(2560, 2147483647)).is_none());
 }
