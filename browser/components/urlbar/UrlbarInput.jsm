@@ -702,7 +702,7 @@ class UrlbarInput {
     };
 
     let selIndex = result.rowIndex;
-    if (!result.payload.keywordOffer) {
+    if (!result.payload.providesSearchMode) {
       this.view.close(/* elementPicked */ true);
     }
 
@@ -789,7 +789,7 @@ class UrlbarInput {
         return;
       }
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
-        if (result.payload.keywordOffer) {
+        if (result.payload.providesSearchMode) {
           let searchModeParams = this._searchModeForResult(result);
           if (searchModeParams) {
             this.searchMode = searchModeParams;
@@ -994,7 +994,7 @@ class UrlbarInput {
     // we might stay in a search mode of some kind, exit it now.
     if (
       this.searchMode?.isPreview &&
-      result?.payload.keywordOffer != UrlbarUtils.KEYWORD_OFFER.SHOW &&
+      !result?.payload.providesSearchMode &&
       !this.view.oneOffSearchButtons.selectedButton
     ) {
       this.searchMode = null;
@@ -1045,7 +1045,7 @@ class UrlbarInput {
       this._autofillValue(value, selectionStart, selectionEnd);
     }
 
-    if (result.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW) {
+    if (result.payload.providesSearchMode) {
       let enteredSearchMode;
       // Only preview search mode if the result is selected.
       if (this.view.resultIsSelected(result)) {
@@ -1153,7 +1153,7 @@ class UrlbarInput {
     if (
       firstResult.heuristic &&
       firstResult.payload.keyword &&
-      !firstResult.payload.keywordOffer &&
+      !firstResult.payload.providesSearchMode &&
       this.maybeConfirmSearchModeFromResult({
         result: firstResult,
         entry: "typed",
