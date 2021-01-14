@@ -4,10 +4,10 @@
 
 package mozilla.components.browser.session.engine.middleware
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.EngineSession
@@ -21,10 +21,6 @@ import mozilla.components.support.base.log.logger.Logger
  */
 internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("WebExtensionsMiddleware")
-    // This is state. As such it should be in BrowserState (WebExtensionState) and not here.
-    // https://github.com/mozilla-mobile/android-components/issues/7884
-    @VisibleForTesting
-    internal var activeWebExtensionTabId: String? = null
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
@@ -33,7 +29,7 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
     ) {
         when (action) {
             is EngineAction.UnlinkEngineSessionAction -> {
-                if (activeWebExtensionTabId == action.sessionId) {
+                if (context.state.activeWebExtensionTabId == action.sessionId) {
                     val activeTab = context.state.findTab(action.sessionId)
                     activeTab?.engineState?.engineSession?.markActiveForWebExtensions(false)
                 }
@@ -45,17 +41,18 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
         when (action) {
             is TabListAction,
             is EngineAction.LinkEngineSessionAction -> {
-                switchActiveStateIfNeeded(context.state)
+                switchActiveStateIfNeeded(context)
             }
         }
     }
 
-    private fun switchActiveStateIfNeeded(state: BrowserState) {
-        if (activeWebExtensionTabId == state.selectedTabId) {
+    private fun switchActiveStateIfNeeded(context: MiddlewareContext<BrowserState, BrowserAction>) {
+        val state = context.state
+        if (state.activeWebExtensionTabId == state.selectedTabId) {
             return
         }
 
-        val previousActiveTab = activeWebExtensionTabId?.let { state.findTab(it) }
+        val previousActiveTab = state.activeWebExtensionTabId?.let { state.findTab(it) }
         previousActiveTab?.engineState?.engineSession?.markActiveForWebExtensions(false)
 
         val nextActiveTab = state.selectedTabId?.let { state.findTab(it) }
@@ -63,12 +60,12 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
 
         if (engineSession == null) {
             logger.debug("No engine session for new active tab (${nextActiveTab?.id})")
-            activeWebExtensionTabId = null
+            context.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(null))
             return
         } else {
             logger.debug("New active tab (${nextActiveTab.id})")
             engineSession.markActiveForWebExtensions(true)
-            activeWebExtensionTabId = nextActiveTab.id
+            context.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(nextActiveTab.id))
         }
     }
 }

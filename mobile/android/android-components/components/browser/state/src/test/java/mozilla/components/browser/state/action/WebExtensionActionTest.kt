@@ -362,4 +362,22 @@ class WebExtensionActionTest {
         store.dispatch(WebExtensionAction.UpdateWebExtensionAllowedInPrivateBrowsingAction(extension.id, false)).joinBlocking()
         assertFalse(store.state.extensions[extension.id]?.allowedInPrivateBrowsing!!)
     }
+
+    @Test
+    fun `UpdateWebExtensionTabAction - Marks tab active for web extensions`() {
+        val tab = createTab(url = "https://mozilla.org")
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(tab)
+            )
+        )
+
+        assertNull(store.state.activeWebExtensionTabId)
+
+        store.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(tab.id)).joinBlocking()
+        assertEquals(tab.id, store.state.activeWebExtensionTabId)
+
+        store.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(null)).joinBlocking()
+        assertNull(store.state.activeWebExtensionTabId)
+    }
 }

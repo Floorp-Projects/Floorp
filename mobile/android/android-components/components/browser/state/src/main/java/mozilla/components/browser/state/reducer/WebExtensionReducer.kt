@@ -80,6 +80,9 @@ internal object WebExtensionReducer {
             is WebExtensionAction.UpdateWebExtensionAction -> {
                 state.updateWebExtensionState(action.updatedExtension.id) { action.updatedExtension }
             }
+            is WebExtensionAction.UpdateActiveWebExtensionTabAction -> {
+                state.copy(activeWebExtensionTabId = action.activeWebExtensionTabId)
+            }
         }
     }
 

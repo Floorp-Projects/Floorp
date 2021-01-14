@@ -20,6 +20,8 @@ import mozilla.components.lib.state.State
  * @property extensions A map of extension IDs and web extensions of all installed web extensions.
  * The extensions here represent the default values for all [BrowserState.extensions] and can
  * be overridden per [SessionState].
+ * @property activeWebExtensionTabId the ID of the tab that is marked active for web extensions
+ * to support tabs.query({active: true}).
  * @property media The state of all media elements and playback states for all tabs.
  * @property search the state of search for this browser state.
  * @property downloads Downloads ([DownloadState]s) mapped to their IDs.
@@ -34,6 +36,7 @@ data class BrowserState(
     val customTabs: List<CustomTabSessionState> = emptyList(),
     val containers: Map<String, ContainerState> = emptyMap(),
     val extensions: Map<String, WebExtensionState> = emptyMap(),
+    val activeWebExtensionTabId: String? = null,
     val media: MediaState = MediaState(),
     val downloads: Map<String, DownloadState> = emptyMap(),
     val search: SearchState = SearchState(),

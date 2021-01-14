@@ -40,17 +40,17 @@ class WebExtensionMiddlewareTest {
         store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
         store.dispatch(EngineAction.LinkEngineSessionAction("2", engineSession2)).joinBlocking()
 
-        assertNull(middleware.activeWebExtensionTabId)
+        assertNull(store.state.activeWebExtensionTabId)
         verify(engineSession1, never()).markActiveForWebExtensions(anyBoolean())
         verify(engineSession2, never()).markActiveForWebExtensions(anyBoolean())
 
         store.dispatch(TabListAction.SelectTabAction("1")).joinBlocking()
-        assertEquals("1", middleware.activeWebExtensionTabId)
+        assertEquals("1", store.state.activeWebExtensionTabId)
         verify(engineSession1).markActiveForWebExtensions(true)
         verify(engineSession2, never()).markActiveForWebExtensions(anyBoolean())
 
         store.dispatch(TabListAction.SelectTabAction("2")).joinBlocking()
-        assertEquals("2", middleware.activeWebExtensionTabId)
+        assertEquals("2", store.state.activeWebExtensionTabId)
         verify(engineSession1).markActiveForWebExtensions(false)
         verify(engineSession2).markActiveForWebExtensions(true)
     }
@@ -72,12 +72,12 @@ class WebExtensionMiddlewareTest {
 
         val engineSession1: EngineSession = mock()
         val engineSession2: EngineSession = mock()
-        assertNull(middleware.activeWebExtensionTabId)
+        assertNull(store.state.activeWebExtensionTabId)
         verify(engineSession1, never()).markActiveForWebExtensions(anyBoolean())
         verify(engineSession2, never()).markActiveForWebExtensions(anyBoolean())
 
         store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
-        assertEquals("1", middleware.activeWebExtensionTabId)
+        assertEquals("1", store.state.activeWebExtensionTabId)
         verify(engineSession1).markActiveForWebExtensions(true)
         verify(engineSession2, never()).markActiveForWebExtensions(anyBoolean())
     }
@@ -98,7 +98,7 @@ class WebExtensionMiddlewareTest {
 
         val engineSession1: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
-        assertEquals("1", middleware.activeWebExtensionTabId)
+        assertEquals("1", store.state.activeWebExtensionTabId)
         verify(engineSession1).markActiveForWebExtensions(true)
 
         store.dispatch(EngineAction.UnlinkEngineSessionAction("1")).joinBlocking()
@@ -125,11 +125,11 @@ class WebExtensionMiddlewareTest {
         store.dispatch(EngineAction.LinkEngineSessionAction("2", engineSession2)).joinBlocking()
 
         store.dispatch(TabListAction.SelectTabAction("1")).joinBlocking()
-        assertEquals("1", middleware.activeWebExtensionTabId)
+        assertEquals("1", store.state.activeWebExtensionTabId)
         verify(engineSession2, never()).markActiveForWebExtensions(anyBoolean())
 
         store.dispatch(TabListAction.RemoveTabAction("1")).joinBlocking()
-        assertEquals("2", middleware.activeWebExtensionTabId)
+        assertEquals("2", store.state.activeWebExtensionTabId)
         verify(engineSession2).markActiveForWebExtensions(true)
     }
 }

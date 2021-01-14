@@ -656,6 +656,14 @@ sealed class WebExtensionAction : BrowserAction() {
         val extensionId: String,
         val pageAction: WebExtensionPageAction
     ) : WebExtensionAction()
+
+    /**
+     * Updates the [BrowserState.activeWebExtensionTabId] to mark a tab active for web extensions
+     * e.g. to support tabs.query({active: true}).
+     */
+    data class UpdateActiveWebExtensionTabAction(
+        val activeWebExtensionTabId: String?
+    ) : WebExtensionAction()
 }
 
 /**
