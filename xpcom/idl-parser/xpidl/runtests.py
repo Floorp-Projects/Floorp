@@ -236,6 +236,23 @@ attribute long bar;
                 ),
             )
 
+    def testUndefinedConst(self):
+        i = self.p.parse(
+            """
+        [scriptable, uuid(aaa)] interface nsISupports {};
+        [scriptable, uuid(abc)] interface foo : nsISupports {
+          const unsigned long X = Y + 1;
+        };
+        """,
+            filename="f",
+        )
+        self.assertTrue(isinstance(i, xpidl.IDL))
+        try:
+            i.resolve([], self.p, {})
+            self.assertTrue(False, "Must detect undefined symbols")
+        except xpidl.IDLError as e:
+            self.assertEqual(e.message, ("cannot find symbol 'Y'"))
+
 
 if __name__ == "__main__":
     mozunit.main(runwith="unittest")
