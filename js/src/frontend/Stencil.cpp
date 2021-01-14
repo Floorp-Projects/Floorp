@@ -1909,11 +1909,15 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 void CompilationStencil::dumpFields(js::JSONPrinter& json) {
   BaseCompilationStencil::dumpFields(json);
 
-  json.beginListProperty("scriptExtra");
-  for (auto& data : scriptExtra) {
-    data.dump(json);
+  char index[64];
+  json.beginObjectProperty("scriptExtra");
+  for (size_t i = 0; i < scriptExtra.size(); i++) {
+    SprintfLiteral(index, "ScriptIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    scriptExtra[i].dumpFields(json);
+    json.endObject();
   }
-  json.endList();
+  json.endObject();
 
   if (scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
     json.beginObjectProperty("moduleMetadata");
@@ -1922,7 +1926,6 @@ void CompilationStencil::dumpFields(js::JSONPrinter& json) {
   }
 
   json.beginObjectProperty("asmJS");
-  char index[16];
   for (auto iter = asmJS.iter(); !iter.done(); iter.next()) {
     SprintfLiteral(index, "%u", iter.get().key().index);
     json.formatProperty(index, "asm.js");
