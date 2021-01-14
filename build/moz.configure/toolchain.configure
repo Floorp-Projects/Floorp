@@ -2872,8 +2872,21 @@ def ar_config(toolchain_prefix, c_compiler):
             names=("llvm-lib",),
             flags=("-llvmlibthin", "-out:$@"),
         )
+
+    names = tuple("%s%s" % (p, "ar") for p in (toolchain_prefix or ()) + ("",))
+    if c_compiler.type == "clang":
+        # Get the llvm-ar path as per the output from clang --print-prog-name=llvm-ar
+        # so that we directly get the one under the clang directory, rather than one
+        # that might be in /usr/bin and that might point to one from a different version
+        # of clang.
+        out = check_cmd_output(
+            c_compiler.compiler, "--print-prog-name=llvm-ar", onerror=lambda: None
+        )
+        llvm_ar = out.rstrip() if out else "llvm-ar"
+        names = (llvm_ar,) + names
+
     return namespace(
-        names=tuple("%s%s" % (p, "ar") for p in (toolchain_prefix or ()) + ("",)),
+        names=names,
         flags=("crs", "$@"),
     )
 
