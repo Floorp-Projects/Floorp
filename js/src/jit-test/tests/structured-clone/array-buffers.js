@@ -2,6 +2,8 @@
 
 var clonebuffer = serialize("dummy");
 
+// ========= V2 =========
+
 function testV2Int32Array() {
     var buf = new Uint8Array([3,0,0,0,0,0,241,255,3,0,0,0,16,0,255,255,4,0,0,0,0,0,0,0,12,0,0,0,9,0,255,255,1,0,0,0,177,127,57,5,133,255,255,255,0,0,0,0,0,0,0,0,0,0,0,0]);
     clonebuffer.clonebuffer = buf.buffer;
@@ -37,6 +39,26 @@ function testV2ArrayBuffer() {
     assertEq(new Uint8Array(ab).toString(), "33,44,55,66");
 }
 testV2ArrayBuffer();
+
+// ========= Current =========
+
+function testInt32Array() {
+    var ta1 = new Int32Array([1, 87654321, -123]);
+    var clonebuf = serialize(ta1, undefined, {scope: "DifferentProcessForIndexedDB"});
+    var ta2 = deserialize(clonebuf);
+    assertEq(ta2 instanceof Int32Array, true);
+    assertEq(ta2.toString(), "1,87654321,-123");
+}
+testInt32Array();
+
+function testFloat64Array() {
+    var ta1 = new Float64Array([NaN, 3.14, 0, 0]);
+    var clonebuf = serialize(ta1, undefined, {scope: "DifferentProcessForIndexedDB"});
+    var ta2 = deserialize(clonebuf);
+    assertEq(ta2 instanceof Float64Array, true);
+    assertEq(ta2.toString(), "NaN,3.14,0,0");
+}
+testFloat64Array();
 
 function testArrayBuffer() {
     var ta = new Uint8Array([33, 44, 55, 66]);
