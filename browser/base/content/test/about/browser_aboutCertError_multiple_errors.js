@@ -115,8 +115,6 @@ add_task(async function test_alt_svc_bad_cert() {
             errorCodeString: err,
             isUntrusted: true,
             isDomainMismatch: true,
-            subjectAltNames: content.document.getFailedCertSecurityInfo()
-              .subjectAltNames,
           },
           content.window
         );
