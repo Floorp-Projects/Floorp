@@ -67,16 +67,17 @@ class TelemetryProbesReporter final {
       if (!IsStarted()) {
         return;
       }
-      mSum += (TimeStamp::Now() - mStartTime);
+      mSum = (TimeStamp::Now() - mStartTime);
       mStartTime = TimeStamp();
     }
     bool IsStarted() const { return !mStartTime.IsNull(); }
-    double Total() const {
-      if (!IsStarted()) {
-        return mSum.ToSeconds();
-      }
-      // Add current running time until now, but keep it running.
-      return (mSum + (TimeStamp::Now() - mStartTime)).ToSeconds();
+
+    double GetAndClearTotal() {
+      MOZ_ASSERT(!IsStarted(), "only call this when accumulator is paused");
+      double total = mSum.ToSeconds();
+      mStartTime = TimeStamp();
+      mSum = TimeDuration();
+      return total;
     }
 
    private:
