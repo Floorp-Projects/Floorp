@@ -362,7 +362,9 @@ tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach() {
 
     autoCorrect = true
 
+    exclude "**/build.gradle.kts"
     exclude "**/src/androidTest/**"
+    exclude "**/src/iosTest/**"
     exclude "**/src/test/**"
     exclude "**/test/src/**"
     exclude "**/build/**"
