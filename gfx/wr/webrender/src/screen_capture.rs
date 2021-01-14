@@ -115,6 +115,9 @@ impl AsyncScreenshotGrabber {
     ) -> (AsyncScreenshotHandle, DeviceIntSize) {
         let screenshot_size = match self.mode {
             AsyncScreenshotGrabberMode::ProfilerScreenshots => {
+                assert_ne!(window_rect.size.width, 0);
+                assert_ne!(window_rect.size.height, 0);
+
                 let scale = (buffer_size.width as f32 / window_rect.size.width as f32)
                     .min(buffer_size.height as f32 / window_rect.size.height as f32);
 
