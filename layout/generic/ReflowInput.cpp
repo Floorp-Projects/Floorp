@@ -775,20 +775,8 @@ void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
   NS_ASSERTION(
       mFrame->StyleDisplay()->IsFloatingStyle() == disp->IsFloatingStyle(),
       "Unexpected float style");
-  if (mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-    if (disp->IsAbsolutelyPositioned(mFrame)) {
-      frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
-      // XXXfr hack for making frames behave properly when in overflow container
-      // lists
-      //      see bug 154892; need to revisit later
-      if (mFrame->GetPrevInFlow()) frameType = NS_CSS_FRAME_TYPE_BLOCK;
-    } else {
-      NS_ASSERTION(disp->IsFloating(mFrame) ||
-                   disp->mDisplay == StyleDisplay::MozPopup,
-                   "unknown out of flow frame type");
-      frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
-    }
-  } else {
+  frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
+  if (!mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     switch (disp->DisplayOutside()) {
       case StyleDisplayOutside::Block:
       case StyleDisplayOutside::TableCaption:
@@ -2058,12 +2046,10 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
     cbSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   }
 
-  // mFrameType for abs-pos tables is NS_CSS_FRAME_TYPE_BLOCK, so we need to
-  // special case them here.
-  if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE ||
-      (mFrame->IsTableFrame() &&
-       mFrame->IsAbsolutelyPositioned(mStyleDisplay) &&
-       mFrame->GetParent()->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW))) {
+  if ((mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
+       (mFrame->IsTableFrame() &&
+        mFrame->GetParent()->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW))) &&
+      mStyleDisplay->IsAbsolutelyPositioned(mFrame)) {
     // See if the ancestor is block-level or inline-level
     const auto computedPadding = aContainingBlockRI->ComputedLogicalPadding(wm);
     if (NS_FRAME_GET_TYPE(aContainingBlockRI->mFrameType) ==
@@ -2334,8 +2320,12 @@ void ReflowInput::InitConstraints(
       // Doesn't apply to internal table elements
       ComputedMinISize() = ComputedMinBSize() = 0;
       ComputedMaxISize() = ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
-    } else if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
-      // XXX not sure if this belongs here or somewhere else - cwk
+
+    } else if (mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
+               mStyleDisplay->IsAbsolutelyPositionedStyle() &&
+               // XXXfr hack for making frames behave properly when in overflow
+               // container lists, see bug 154892; need to revisit later
+               !mFrame->GetPrevInFlow()) {
       InitAbsoluteConstraints(aPresContext, cbri,
                               cbSize.ConvertTo(cbri->GetWritingMode(), wm),
                               aFrameType);
