@@ -571,7 +571,7 @@ struct SwCompositeGraphNode {
     /// Job to be queued for this graph node once ready.
     job: Option<SwCompositeJob>,
     /// The maximum number of available bands associated with this job.
-    max_bands: u8,
+    max_bands: AtomicU8,
     /// The number of remaining bands associated with this job. When this is
     /// non-zero and the node has no more parents left, then the node is being
     /// actively used by the composite thread to process jobs. Once it hits
@@ -594,7 +594,7 @@ impl SwCompositeGraphNode {
     fn new() -> SwCompositeGraphNodeRef {
         SwCompositeGraphNodeRef::new(SwCompositeGraphNode {
             job: None,
-            max_bands: 0,
+            max_bands: AtomicU8::new(0),
             remaining_bands: AtomicU8::new(0),
             band_index: AtomicU8::new(0),
             parents: AtomicU32::new(0),
@@ -605,7 +605,7 @@ impl SwCompositeGraphNode {
     /// Reset the node's state for a new frame
     fn reset(&mut self) {
         self.job = None;
-        self.max_bands = 0;
+        self.max_bands.store(0, Ordering::SeqCst);
         self.remaining_bands.store(0, Ordering::SeqCst);
         self.band_index.store(0, Ordering::SeqCst);
         // Initialize parents to 1 as sentinel dependency for uninitialized job
@@ -624,7 +624,7 @@ impl SwCompositeGraphNode {
     /// that would block immediate composition.
     fn set_job(&mut self, job: SwCompositeJob, num_bands: u8) -> bool {
         self.job = Some(job);
-        self.max_bands = num_bands;
+        self.max_bands.store(num_bands, Ordering::SeqCst);
         self.remaining_bands.store(num_bands, Ordering::SeqCst);
         // Subtract off the sentinel parent dependency now that job is initialized and check
         // whether there are any remaining parent dependencies to see if this job is ready.
@@ -633,7 +633,7 @@ impl SwCompositeGraphNode {
 
     fn take_band(&self) -> Option<u8> {
         let band_index = self.band_index.fetch_add(1, Ordering::SeqCst);
-        if band_index < self.max_bands {
+        if band_index < self.max_bands.load(Ordering::SeqCst) {
             Some(band_index)
         } else {
             None
