@@ -68,12 +68,23 @@ gtest_start()
     if [ "$i" = "mozpkix_gtest" ]; then
       EXTRA_ASAN_OPTIONS="detect_odr_violation=0"
     fi
+    # NSS CI sets a lower max for PBE iterations, otherwise cert.sh
+    # is very slow. Unset this maxiumum for softoken_gtest, as it
+    # needs to check the default value.
+    if [ "$i" = "softoken_gtest" ]; then
+      OLD_MAX_PBE_ITERATIONS=$NSS_MAX_MP_PBE_ITERATION_COUNT
+      unset NSS_MAX_MP_PBE_ITERATION_COUNT
+    fi
     echo "executing $i"
     ASAN_OPTIONS="$ASAN_OPTIONS:$EXTRA_ASAN_OPTIONS" "${BINDIR}/$i" \
                  "${SOURCE_DIR}/gtests/freebl_gtest/kat/Hash_DRBG.rsp" \
                  -d "$DIR" -w --gtest_output=xml:"${GTESTREPORT}" \
                               --gtest_filter="${GTESTFILTER:-*}"
     html_msg $? 0 "$i run successfully"
+    if [ "$i" = "softoken_gtest" ]; then
+      export NSS_MAX_MP_PBE_ITERATION_COUNT=$OLD_MAX_PBE_ITERATIONS
+    fi
+
     echo "test output dir: ${GTESTREPORT}"
     echo "executing sed to parse the xml report"
     sed -f "${COMMON}/parsegtestreport.sed" "$GTESTREPORT" > "$PARSED_REPORT"
