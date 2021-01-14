@@ -13,9 +13,9 @@
 #include <stdint.h>
 
 #include "frontend/ForOfLoopControl.h"
+#include "frontend/IteratorKind.h"
 #include "frontend/JumpList.h"
 #include "frontend/TDZCheckCache.h"
-#include "vm/Iteration.h"
 
 namespace js {
 namespace frontend {

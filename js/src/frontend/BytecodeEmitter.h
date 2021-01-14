@@ -30,6 +30,7 @@
 #include "frontend/EitherParser.h"         // EitherParser
 #include "frontend/ErrorReporter.h"        // ErrorReporter
 #include "frontend/FullParseHandler.h"     // FullParseHandler
+#include "frontend/IteratorKind.h"         // IteratorKind
 #include "frontend/JumpList.h"             // JumpList, JumpTarget
 #include "frontend/NameAnalysisTypes.h"    // NameLocation
 #include "frontend/NameCollections.h"      // AtomIndexMap
@@ -48,7 +49,6 @@
 #include "vm/FunctionPrefixKind.h"         // FunctionPrefixKind
 #include "vm/GeneratorResumeKind.h"        // GeneratorResumeKind
 #include "vm/Instrumentation.h"            // InstrumentationKind
-#include "vm/Iteration.h"                  // IteratorKind
 #include "vm/JSFunction.h"                 // JSFunction
 #include "vm/JSScript.h"       // JSScript, BaseScript, MemberInitializers
 #include "vm/Runtime.h"        // ReportOutOfMemory
