@@ -2449,22 +2449,22 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     nsresult rv = GetScriptSource(cx, aRequest, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (maybeSource.constructed<SourceText<char16_t>>()
-            ? !JS::CompileOffThreadModule(
+    aRequest->mOffThreadToken =
+        maybeSource.constructed<SourceText<char16_t>>()
+            ? JS::CompileOffThreadModule(
                   cx, options, maybeSource.ref<SourceText<char16_t>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
-                  &aRequest->mOffThreadToken)
-            : !JS::CompileOffThreadModule(
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
+            : JS::CompileOffThreadModule(
                   cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
-                  &aRequest->mOffThreadToken)) {
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
+    if (!aRequest->mOffThreadToken) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else if (aRequest->IsBytecode()) {
-    if (!JS::DecodeOffThreadScript(
-            cx, options, aRequest->mScriptBytecode, aRequest->mBytecodeOffset,
-            OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
-            &aRequest->mOffThreadToken)) {
+    aRequest->mOffThreadToken = JS::DecodeOffThreadScript(
+        cx, options, aRequest->mScriptBytecode, aRequest->mBytecodeOffset,
+        OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
+    if (!aRequest->mOffThreadToken) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
@@ -2473,15 +2473,15 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     nsresult rv = GetScriptSource(cx, aRequest, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (maybeSource.constructed<SourceText<char16_t>>()
-            ? !JS::CompileOffThread(
+    aRequest->mOffThreadToken =
+        maybeSource.constructed<SourceText<char16_t>>()
+            ? JS::CompileOffThread(
                   cx, options, maybeSource.ref<SourceText<char16_t>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
-                  &aRequest->mOffThreadToken)
-            : !JS::CompileOffThread(
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
+            : JS::CompileOffThread(
                   cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
-                  &aRequest->mOffThreadToken)) {
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
+    if (!aRequest->mOffThreadToken) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }

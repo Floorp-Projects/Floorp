@@ -189,44 +189,33 @@ void CancelOffThreadParses(JSRuntime* runtime);
  * Start a parse/emit cycle for a stream of source. The characters must stay
  * alive until the compilation finishes.
  */
-bool StartOffThreadParseScript(JSContext* cx,
-                               const JS::ReadOnlyCompileOptions& options,
-                               JS::SourceText<char16_t>& srcBuf,
-                               JS::OffThreadCompileCallback callback,
-                               void* callbackData,
-                               JS::OffThreadToken** tokenOut);
-bool StartOffThreadParseScript(JSContext* cx,
-                               const JS::ReadOnlyCompileOptions& options,
-                               JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-                               JS::OffThreadCompileCallback callback,
-                               void* callbackData,
-                               JS::OffThreadToken** tokenOut);
+JS::OffThreadToken* StartOffThreadParseScript(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData);
+JS::OffThreadToken* StartOffThreadParseScript(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    JS::OffThreadCompileCallback callback, void* callbackData);
 
-bool StartOffThreadParseModule(JSContext* cx,
-                               const JS::ReadOnlyCompileOptions& options,
-                               JS::SourceText<char16_t>& srcBuf,
-                               JS::OffThreadCompileCallback callback,
-                               void* callbackData,
-                               JS::OffThreadToken** tokenOut);
-bool StartOffThreadParseModule(JSContext* cx,
-                               const JS::ReadOnlyCompileOptions& options,
-                               JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-                               JS::OffThreadCompileCallback callback,
-                               void* callbackData,
-                               JS::OffThreadToken** tokenOut);
+JS::OffThreadToken* StartOffThreadParseModule(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData);
+JS::OffThreadToken* StartOffThreadParseModule(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    JS::OffThreadCompileCallback callback, void* callbackData);
 
-bool StartOffThreadDecodeScript(JSContext* cx,
-                                const JS::ReadOnlyCompileOptions& options,
-                                const JS::TranscodeRange& range,
-                                JS::OffThreadCompileCallback callback,
-                                void* callbackData,
-                                JS::OffThreadToken** tokenOut);
+JS::OffThreadToken* StartOffThreadDecodeScript(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
+    void* callbackData);
 
-bool StartOffThreadDecodeMultiScripts(JSContext* cx,
-                                      const JS::ReadOnlyCompileOptions& options,
-                                      JS::TranscodeSources& sources,
-                                      JS::OffThreadCompileCallback callback,
-                                      void* callbackData);
+JS::OffThreadToken* StartOffThreadDecodeMultiScripts(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::TranscodeSources& sources, JS::OffThreadCompileCallback callback,
+    void* callbackData);
 
 /*
  * Called at the end of GC to enqueue any Parse tasks that were waiting on an
