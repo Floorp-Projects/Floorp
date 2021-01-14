@@ -74,7 +74,7 @@ add_task(async function clickWithPrefSet() {
     await triggerClickOn(tab3, { shiftKey: true });
   }, [tab1, tab2, tab3]);
 
-  info("Expect no event if multiselection doesn't change with Shift+click");
+  info("Expect no event if multiselection doesn't change with Ctrl+Shift");
   await expectNoEvent(async () => {
     await triggerClickOn(tab3, { shiftKey: true });
   }, [tab1, tab2, tab3]);
@@ -136,90 +136,91 @@ add_task(async function clickWithPrefSet() {
     "Unmultiselection tab with removeFromMultiSelectedTabs should trigger event"
   );
   await expectEvent(async () => {
-    gBrowser.removeFromMultiSelectedTabs(tab3);
+    gBrowser.removeFromMultiSelectedTabs(tab3, {
+      isLastMultiSelectChange: true,
+    });
   }, [tab1, tab2]);
 
   info("Expect no event if the tab is not multiselected");
   await expectNoEvent(async () => {
-    gBrowser.removeFromMultiSelectedTabs(tab3);
+    gBrowser.removeFromMultiSelectedTabs(tab3, {
+      isLastMultiSelectChange: true,
+    });
   }, [tab1, tab2]);
 
   info(
     "Clearing multiselection with clearMultiSelectedTabs should trigger event"
   );
   await expectEvent(async () => {
-    gBrowser.clearMultiSelectedTabs();
+    gBrowser.clearMultiSelectedTabs(tab3, {
+      isLastMultiSelectChange: true,
+    });
   }, [tab1]);
 
   info("Expect no event if there is no multiselection to clear");
   await expectNoEvent(async () => {
-    gBrowser.clearMultiSelectedTabs();
+    gBrowser.clearMultiSelectedTabs(tab3, {
+      isLastMultiSelectChange: true,
+    });
   }, [tab1]);
 
   info(
     "Expect no event if clearMultiSelectedTabs counteracts addToMultiSelectedTabs"
   );
   await expectNoEvent(async () => {
-    gBrowser.addToMultiSelectedTabs(tab3);
-    gBrowser.clearMultiSelectedTabs();
+    gBrowser.addToMultiSelectedTabs(tab3, {
+      isLastMultiSelectChange: false,
+    });
+    gBrowser.clearMultiSelectedTabs({ isLastMultiSelectChange: true });
   }, [tab1]);
 
   info(
     "Multiselecting tab with gBrowser.addToMultiSelectedTabs should trigger event"
   );
   await expectEvent(async () => {
-    gBrowser.addToMultiSelectedTabs(tab2);
+    gBrowser.addToMultiSelectedTabs(tab2, {
+      isLastMultiSelectChange: true,
+    });
   }, [tab1, tab2]);
 
   info(
     "Expect no event if addToMultiSelectedTabs counteracts clearMultiSelectedTabs"
   );
   await expectNoEvent(async () => {
-    gBrowser.clearMultiSelectedTabs();
-    gBrowser.addToMultiSelectedTabs(tab1);
-    gBrowser.addToMultiSelectedTabs(tab2);
+    gBrowser.clearMultiSelectedTabs({ isLastMultiSelectChange: false });
+    gBrowser.addToMultiSelectedTabs(tab2, {
+      isLastMultiSelectChange: true,
+    });
   }, [tab1, tab2]);
 
   info(
     "Expect no event if removeFromMultiSelectedTabs counteracts addToMultiSelectedTabs"
   );
   await expectNoEvent(async () => {
-    gBrowser.addToMultiSelectedTabs(tab3);
-    gBrowser.removeFromMultiSelectedTabs(tab3);
+    gBrowser.addToMultiSelectedTabs(tab3, {
+      isLastMultiSelectChange: false,
+    });
+    gBrowser.removeFromMultiSelectedTabs(tab3, {
+      isLastMultiSelectChange: true,
+    });
   }, [tab1, tab2]);
 
   info(
     "Expect no event if addToMultiSelectedTabs counteracts removeFromMultiSelectedTabs"
   );
   await expectNoEvent(async () => {
-    gBrowser.removeFromMultiSelectedTabs(tab2);
-    gBrowser.addToMultiSelectedTabs(tab2);
+    gBrowser.removeFromMultiSelectedTabs(tab2, {
+      isLastMultiSelectChange: false,
+    });
+    gBrowser.addToMultiSelectedTabs(tab2, {
+      isLastMultiSelectChange: true,
+    });
   }, [tab1, tab2]);
 
   info("Multiselection with addRangeToMultiSelectedTabs should trigger event");
   await expectEvent(async () => {
     gBrowser.addRangeToMultiSelectedTabs(tab1, tab3);
   }, [tab1, tab2, tab3]);
-
-  info("Switching to a just multiselected tab should multiselect the old one");
-  await expectEvent(async () => {
-    gBrowser.clearMultiSelectedTabs();
-  }, [tab1]);
-  await expectEvent(async () => {
-    is(tab1.multiselected, false, "tab1 is not multiselected");
-    gBrowser.addToMultiSelectedTabs(tab2);
-    gBrowser.lockClearMultiSelectionOnce();
-    gBrowser.selectedTab = tab2;
-  }, [tab1, tab2]);
-  is(tab1.multiselected, true, "tab1 becomes multiselected");
-
-  info("Switching to a non-multiselected tab should multiselect it");
-  await expectEvent(async () => {
-    is(tab3.multiselected, false, "tab3 is not multiselected");
-    gBrowser.lockClearMultiSelectionOnce();
-    gBrowser.selectedTab = tab3;
-  }, [tab1, tab2, tab3]);
-  is(tab3.multiselected, true, "tab3 becomes multiselected");
 
   detectUnexpected = false;
   BrowserTestUtils.removeTab(tab1);
