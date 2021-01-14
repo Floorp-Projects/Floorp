@@ -45,6 +45,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -221,6 +222,20 @@ class FxaDeviceConstellationTest {
         assertFalse(success)
         verify(constellation.crashReporter!!).submitCaughtException(exceptionCaptor.capture())
         assertSame(exception, exceptionCaptor.value.cause)
+    }
+
+    @Test
+    fun `send command to device won't report network exceptions`() = runBlocking(coroutinesTestRule.testDispatcher) {
+        val exception = FxaException.Network("timeout!")
+        doAnswer { throw exception }.`when`(account).sendSingleTab(any(), any(), any())
+
+        val success = constellation.sendCommandToDevice(
+            "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
+        )
+
+        assertFalse(success)
+        verify(constellation.crashReporter!!, never()).submitCaughtException(any())
+        Unit
     }
 
     @Test

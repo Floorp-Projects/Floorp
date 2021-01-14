@@ -163,7 +163,17 @@ class FxaDeviceConstellation(
         }
 
         if (result != null) {
-            crashReporter?.submitCaughtException(SendCommandException(result))
+            when (result) {
+                // Don't submit network exceptions to our crash reporter. They're just noise.
+                is FxaException.Network -> {
+                    logger.warn("Failed to 'sendCommandToDevice' due to a network exception")
+                }
+                else -> {
+                    logger.warn("Failed to 'sendCommandToDevice'", result)
+                    crashReporter?.submitCaughtException(SendCommandException(result))
+                }
+            }
+
             false
         } else {
             true
