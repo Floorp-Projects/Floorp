@@ -19,7 +19,7 @@
 #include "DateTimeFormat.h"
 #include "History.h"
 #include "Helpers.h"
-#include "NotifyManyFrecenciesChanged.h"
+#include "NotifyRankingChanged.h"
 
 #include "nsTArray.h"
 #include "nsCollationCID.h"
@@ -231,10 +231,10 @@ class FixAndDecayFrecencyRunnable final : public Runnable {
       nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
       NS_ENSURE_STATE(navHistory);
 
-      navHistory->DecayFrecencyCompleted(mDecayReason);
+      navHistory->DecayFrecencyCompleted();
 
       if (mozIStorageStatementCallback::REASON_FINISHED == mDecayReason) {
-        ::NotifyManyFrecenciesChanged().Run();
+        NotifyRankingChanged().Run();
       }
 
       return NS_OK;
@@ -607,11 +607,6 @@ void nsNavHistory::UpdateDaysOfHistory(PRTime visitTime) {
   if (visitTime > mLastCachedEndOfDay || visitTime < mLastCachedStartOfDay) {
     mDaysOfHistory = -1;
   }
-}
-
-void nsNavHistory::NotifyManyFrecenciesChanged() {
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
-                   OnManyFrecenciesChanged());
 }
 
 NS_IMETHODIMP
@@ -2190,12 +2185,9 @@ nsNavHistory::DecayFrecency() {
   return target->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
-void nsNavHistory::DecayFrecencyCompleted(uint16_t reason) {
+void nsNavHistory::DecayFrecencyCompleted() {
   MOZ_ASSERT(mDecayFrecencyPendingCount > 0);
   mDecayFrecencyPendingCount--;
-  if (mozIStorageStatementCallback::REASON_FINISHED == reason) {
-    NotifyManyFrecenciesChanged();
-  }
 }
 
 bool nsNavHistory::IsFrecencyDecaying() const {
@@ -3247,7 +3239,7 @@ nsresult nsNavHistory::UpdateFrecency(int64_t aPlaceId) {
           "SET frecency = CALCULATE_FRECENCY(:page_id) "
           "WHERE id = :page_id");
   NS_ENSURE_STATE(updateFrecencyStmt);
-  NS_DispatchToMainThread(new ::NotifyManyFrecenciesChanged());
+  NS_DispatchToMainThread(new NotifyRankingChanged());
   nsresult rv = updateFrecencyStmt->BindInt64ByName("page_id"_ns, aPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<mozIStorageAsyncStatement> updateHiddenStmt = mDB->GetAsyncStatement(
