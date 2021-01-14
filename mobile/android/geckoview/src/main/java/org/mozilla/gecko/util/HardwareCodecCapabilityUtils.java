@@ -121,7 +121,7 @@ public final class HardwareCodecCapabilityUtils {
             return false;
         }
 
-        if (!Build.MANUFACTURER.toLowerCase(Locale.getDefault()).equals("samsung")) {
+        if (!Build.MANUFACTURER.toLowerCase(Locale.ROOT).equals("samsung")) {
             return false;
         }
 

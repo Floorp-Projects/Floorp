@@ -16,6 +16,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Locale;
 
 /**
  * GeckoSession applications can use this class to handle media events
@@ -473,7 +474,7 @@ public class MediaElement {
     @UiThread
     /* package */ void notifyPlaybackStateChange(final String event) {
         @MediaStateFlags int state;
-        switch (event.toLowerCase()) {
+        switch (event.toLowerCase(Locale.ROOT)) {
             case "play":
                 state = MEDIA_STATE_PLAY;
                 break;

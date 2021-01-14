@@ -1809,7 +1809,7 @@ public class GeckoViewActivity
                 final int mediaSource = sources[i].source;
                 final String name = sources[i].name;
                 if (MediaSource.SOURCE_CAMERA == mediaSource) {
-                    if (name.toLowerCase(Locale.ENGLISH).contains("front")) {
+                    if (name.toLowerCase(Locale.ROOT).contains("front")) {
                         res[i] = getString(R.string.media_front_camera);
                     } else {
                         res[i] = getString(R.string.media_back_camera);

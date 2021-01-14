@@ -15,6 +15,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
+import java.util.Locale;
 
 public class CodeGenerator {
     private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
@@ -381,7 +382,7 @@ public class CodeGenerator {
         // Sanity check
         if (info.dispatchTarget != AnnotationInfo.DispatchTarget.CURRENT) {
             throw new IllegalStateException("Invalid dispatch target \"" +
-                    info.dispatchTarget.name().toLowerCase() +
+                    info.dispatchTarget.name().toLowerCase(Locale.ROOT) +
                     "\" for non-native method " + clsName + "::" + uniqueName);
         }
 
@@ -421,7 +422,7 @@ public class CodeGenerator {
         if (info.exceptionMode != AnnotationInfo.ExceptionMode.ABORT &&
                 info.exceptionMode != AnnotationInfo.ExceptionMode.IGNORE) {
             throw new IllegalStateException("Invalid exception mode \"" +
-                    info.exceptionMode.name().toLowerCase() +
+                    info.exceptionMode.name().toLowerCase(Locale.ROOT) +
                     "\" for native method " + clsName + "::" + uniqueName);
         }
         if (info.dispatchTarget != AnnotationInfo.DispatchTarget.CURRENT &&
@@ -518,7 +519,7 @@ public class CodeGenerator {
         // Sanity check
         if (info.dispatchTarget != AnnotationInfo.DispatchTarget.CURRENT) {
             throw new IllegalStateException("Invalid dispatch target \"" +
-                    info.dispatchTarget.name().toLowerCase() +
+                    info.dispatchTarget.name().toLowerCase(Locale.ROOT) +
                     "\" for field " + clsName + "::" + uniqueName);
         }
 
@@ -610,7 +611,7 @@ public class CodeGenerator {
         // Sanity check
         if (info.dispatchTarget != AnnotationInfo.DispatchTarget.CURRENT) {
             throw new IllegalStateException("Invalid dispatch target \"" +
-                    info.dispatchTarget.name().toLowerCase() +
+                    info.dispatchTarget.name().toLowerCase(Locale.ROOT) +
                     "\" for constructor " + clsName + "::" + uniqueName);
         }
 
