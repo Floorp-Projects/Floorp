@@ -49,15 +49,6 @@ NumericType NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue,
   return result;
 }
 
-/**
- * CSS Frame type. Included as part of the reflow input.
- */
-typedef uint32_t nsCSSFrameType;
-
-#define NS_CSS_FRAME_TYPE_UNKNOWN 0
-
-#define NS_FRAME_GET_TYPE(_ft) (_ft)
-
 namespace mozilla {
 
 // A base class of ReflowInput that computes only the padding,
@@ -225,10 +216,6 @@ struct ReflowInput : public SizeComputationInput {
   // percentage widths, etc.) of this reflow input's frame. It will be setup
   // properly in InitCBReflowInput().
   const ReflowInput* mCBReflowInput = nullptr;
-
-  // The type of frame, from css's perspective. This value is
-  // initialized by the Init method below.
-  nsCSSFrameType mFrameType = NS_CSS_FRAME_TYPE_UNKNOWN;
 
   // The amount the in-flow position of the block is moving vertically relative
   // to its previous in-flow position (i.e. the amount the line containing the
@@ -847,7 +834,6 @@ struct ReflowInput : public SizeComputationInput {
 #endif
 
  protected:
-  void InitFrameType(LayoutFrameType aFrameType);
   void InitCBReflowInput();
   void InitResizeFlags(nsPresContext* aPresContext,
                        mozilla::LayoutFrameType aFrameType);

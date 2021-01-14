@@ -349,7 +349,6 @@ void ReflowInput::Init(nsPresContext* aPresContext,
 
   mFlags.mIsReplaced = mFrame->IsFrameOfType(nsIFrame::eReplaced) ||
                        mFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock);
-  InitFrameType(type);
   InitConstraints(aPresContext, aContainingBlockSize, aBorder, aPadding, type);
 
   InitResizeFlags(aPresContext, type);
@@ -756,59 +755,6 @@ nscoord ReflowInput::GetContainingBlockContentISize(
   return mCBReflowInput->GetWritingMode().IsOrthogonalTo(aWritingMode)
              ? mCBReflowInput->ComputedBSize()
              : mCBReflowInput->ComputedISize();
-}
-
-void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
-  const nsStyleDisplay* disp = mStyleDisplay;
-  nsCSSFrameType frameType;
-
-  DISPLAY_INIT_TYPE(mFrame, this);
-
-  if (aFrameType == LayoutFrameType::Table) {
-    mFrameType = NS_CSS_FRAME_TYPE_UNKNOWN;
-    return;
-  }
-
-  NS_ASSERTION(mFrame->StyleDisplay()->IsAbsolutelyPositionedStyle() ==
-                   disp->IsAbsolutelyPositionedStyle(),
-               "Unexpected position style");
-  NS_ASSERTION(
-      mFrame->StyleDisplay()->IsFloatingStyle() == disp->IsFloatingStyle(),
-      "Unexpected float style");
-  frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
-  if (!mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-    switch (disp->DisplayOutside()) {
-      case StyleDisplayOutside::Block:
-      case StyleDisplayOutside::TableCaption:
-        frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
-        break;
-
-      case StyleDisplayOutside::Inline:
-        frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
-        break;
-
-      case StyleDisplayOutside::InternalRuby:
-        switch (disp->DisplayInside()) {
-          case StyleDisplayInside::RubyTextContainer:
-            frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
-            break;
-          case StyleDisplayInside::RubyBase:
-          case StyleDisplayInside::RubyText:
-          case StyleDisplayInside::RubyBaseContainer:
-            frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
-            break;
-          default:
-            MOZ_ASSERT_UNREACHABLE("unexpected inside for InternalRuby");
-        }
-        break;
-
-      default:
-        frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
-        break;
-    }
-  }
-
-  mFrameType = frameType;
 }
 
 /* static */
