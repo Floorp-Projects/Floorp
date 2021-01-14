@@ -507,10 +507,14 @@ void nsAccessibilityService::DeckPanelSwitched(PresShell* aPresShell,
                                                nsIContent* aDeckNode,
                                                nsIFrame* aPrevBoxFrame,
                                                nsIFrame* aCurrentBoxFrame) {
-  // Ignore tabpanels elements (a deck having an accessible) since their
-  // children are accessible not depending on selected tab.
   DocAccessible* document = GetDocAccessible(aPresShell);
-  if (!document || document->HasAccessible(aDeckNode)) return;
+  if (!document) {
+    return;
+  }
+  // A deck with an Accessible is a tabpanels element.
+  const bool isTabPanels = document->HasAccessible(aDeckNode);
+  MOZ_ASSERT(!isTabPanels || aDeckNode->IsXULElement(nsGkAtoms::tabpanels),
+             "A deck with an Accessible should be a tabpanels element");
 
   if (aPrevBoxFrame) {
     nsIContent* panelNode = aPrevBoxFrame->GetContent();
@@ -522,8 +526,16 @@ void nsAccessibilityService::DeckPanelSwitched(PresShell* aPresShell,
       logging::MsgEnd();
     }
 #endif
-
-    document->ContentRemoved(panelNode);
+    if (isTabPanels) {
+      // Tabpanels are accessible even when not selected.
+      if (Accessible* acc = document->GetAccessible(panelNode)) {
+        RefPtr<AccEvent> event =
+            new AccStateChangeEvent(acc, states::OFFSCREEN, true);
+        document->FireDelayedEvent(event);
+      }
+    } else {
+      document->ContentRemoved(panelNode);
+    }
   }
 
   if (aCurrentBoxFrame) {
@@ -536,8 +548,17 @@ void nsAccessibilityService::DeckPanelSwitched(PresShell* aPresShell,
       logging::MsgEnd();
     }
 #endif
-
-    document->ContentInserted(panelNode, panelNode->GetNextSibling());
+    if (isTabPanels) {
+      // Tabpanels are accessible even when not selected, so we don't have to
+      // insert an Accessible.
+      if (Accessible* acc = document->GetAccessible(panelNode)) {
+        RefPtr<AccEvent> event =
+            new AccStateChangeEvent(acc, states::OFFSCREEN, false);
+        document->FireDelayedEvent(event);
+      }
+    } else {
+      document->ContentInserted(panelNode, panelNode->GetNextSibling());
+    }
   }
 }
 
