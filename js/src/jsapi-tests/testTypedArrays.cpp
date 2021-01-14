@@ -146,7 +146,7 @@ bool TestPlainTypedArray(JSContext* cx) {
 }
 
 template <
-    JSObject* CreateWithBuffer(JSContext*, JS::HandleObject, uint32_t, int32_t),
+    JSObject* CreateWithBuffer(JSContext*, JS::HandleObject, size_t, int64_t),
     JSObject* CreateFromArray(JSContext*, JS::HandleObject), typename Element,
     bool Shared, Element* GetData(JSObject*, bool*, const JS::AutoRequireNoGC&)>
 bool TestArrayFromBuffer(JSContext* cx) {

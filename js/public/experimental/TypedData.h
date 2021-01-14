@@ -94,38 +94,38 @@ extern JS_FRIEND_API JSObject* JS_NewFloat64ArrayFromArray(
  */
 
 extern JS_FRIEND_API JSObject* JS_NewInt8ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewUint8ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewUint8ClampedArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewInt16ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewUint16ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewInt32ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewUint32ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewBigInt64ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewBigUint64ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewFloat32ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 extern JS_FRIEND_API JSObject* JS_NewFloat64ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, uint32_t byteOffset,
-    int32_t length);
+    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
+    int64_t length);
 
 /**
  * Check whether obj supports JS_GetTypedArray* APIs. Note that this may return
@@ -389,8 +389,9 @@ extern JS_FRIEND_API void* JS_GetArrayBufferViewData(
  * more efficient because it requires the caller to ensure that a GC will not
  * occur and thus does not need to handle movable data.
  */
-extern JS_FRIEND_API uint8_t* JS_GetArrayBufferViewFixedData(
-    JSObject* obj, uint8_t* buffer, size_t bufSize);
+extern JS_FRIEND_API uint8_t* JS_GetArrayBufferViewFixedData(JSObject* obj,
+                                                             uint8_t* buffer,
+                                                             size_t bufSize);
 
 /**
  * If the bufSize passed to JS_GetArrayBufferViewFixedData is at least this
@@ -416,6 +417,6 @@ extern JS_FRIEND_API JSObject* JS_GetArrayBufferViewBuffer(
  */
 JS_FRIEND_API JSObject* JS_NewDataView(JSContext* cx,
                                        JS::Handle<JSObject*> buffer,
-                                       uint32_t byteOffset, int32_t byteLength);
+                                       size_t byteOffset, size_t byteLength);
 
 #endif  // js_experimental_TypedData_h
