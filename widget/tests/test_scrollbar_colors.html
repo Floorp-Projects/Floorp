@@ -37,6 +37,8 @@ function countPixels(canvas) {
   return result;
 }
 
+// == Native theme ==
+
 const WIN_REFERENCES = [
   // Yellow background
   ["255,255,0", 6889],
@@ -65,6 +67,28 @@ const LINUX_REFERENCES = [
   ["0,255,255", 1152],
 ];
 
+// == Non-native theme ==
+
+const WIN_NNT_REFERENCES = [
+  // Yellow background
+  ["255,255,0", 7396],
+  // Blue scrollbar face
+  ["0,0,255", 1272],
+  // Cyan scrollbar track
+  ["0,255,255", 1204],
+];
+
+const MAC_NNT_REFERENCES = MAC_REFERENCES;
+
+const LINUX_NNT_REFERENCES = [
+  // Yellow background
+  ["255,255,0", 7744],
+  // Blue scrollbar face
+  ["0,0,255", 368],
+  // Cyan scrollbar track
+  ["0,255,255", 1852],
+];
+
 let outer = document.querySelector(".outer");
 let outerRect = outer.getBoundingClientRect();
 if (outerRect.width == outer.clientWidth &&
@@ -77,13 +101,14 @@ if (outerRect.width == outer.clientWidth &&
 
   let canvas = snapshotRect(window, outerRect);
   let stats = countPixels(canvas);
+  let isNNT = SpecialPowers.getBoolPref("widget.disable-native-theme-for-content");
   let references;
   if (navigator.platform.startsWith("Win")) {
-    references = WIN_REFERENCES;
+    references = isNNT ? WIN_NNT_REFERENCES : WIN_REFERENCES;
   } else if (navigator.platform.startsWith("Mac")) {
-    references = MAC_REFERENCES;
+    references = isNNT ? MAC_NNT_REFERENCES : MAC_REFERENCES;
   } else if (navigator.platform.startsWith("Linux")) {
-    references = LINUX_REFERENCES;
+    references = isNNT ? LINUX_NNT_REFERENCES : LINUX_REFERENCES;
   } else {
     ok(false, "Unsupported platform");
   }
