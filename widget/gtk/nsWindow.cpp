@@ -5090,13 +5090,19 @@ void nsWindow::NativeMoveResize() {
 void nsWindow::PauseRemoteRenderer() {
 #ifdef MOZ_WAYLAND
   if (!mIsDestroyed) {
-    if (mContainer && moz_container_wayland_has_egl_window(mContainer)) {
+    if (mContainer) {
       // Because wl_egl_window is destroyed on moz_container_unmap(),
       // the current compositor cannot use it anymore. To avoid crash,
       // pause the compositor and destroy EGLSurface & resume the compositor
       // and re-create EGLSurface on next expose event.
-      MOZ_ASSERT(GetRemoteRenderer());
-      if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+
+      // moz_container_wayland_has_egl_window() could not be used here, since
+      // there is a case that resume compositor is not completed yet.
+
+      CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
+      bool needsCompositorPause = !mNeedsCompositorResume && !!remoteRenderer &&
+                                  mCompositorWidgetDelegate;
+      if (needsCompositorPause) {
         // XXX slow sync IPC
         remoteRenderer->SendPause();
         // Re-request initial draw callback
