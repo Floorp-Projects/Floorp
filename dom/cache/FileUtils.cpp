@@ -11,6 +11,7 @@
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/Unused.h"
 #include "nsIObjectInputStream.h"
@@ -41,10 +42,11 @@ const int64_t kRoundUpNumber = 20480;
 
 enum BodyFileType { BODY_FILE_FINAL, BODY_FILE_TMP };
 
-nsresult BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
-                      nsIFile** aBodyFileOut);
+Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyIdToFile(nsIFile& aBaseDir,
+                                                          const nsID& aId,
+                                                          BodyFileType aType);
 
-int64_t RoundUp(const int64_t aX, const int64_t aY);
+int64_t RoundUp(int64_t aX, int64_t aY);
 
 // The alogrithm for generating padding refers to the mitigation approach in
 // https://github.com/whatwg/storage/issues/31.
@@ -52,283 +54,178 @@ int64_t RoundUp(const int64_t aX, const int64_t aY);
 // Next, round up the sum of random number and response size to the nearest
 // 20kB.
 // Finally, the virtual padding size will be the result minus the response size.
-int64_t BodyGeneratePadding(const int64_t aBodyFileSize,
-                            const uint32_t aPaddingInfo);
+int64_t BodyGeneratePadding(int64_t aBodyFileSize, uint32_t aPaddingInfo);
 
-nsresult LockedDirectoryPaddingWrite(nsIFile* aBaseDir,
+nsresult LockedDirectoryPaddingWrite(nsIFile& aBaseDir,
                                      DirPaddingFile aPaddingFileType,
                                      int64_t aPaddingSize);
 
-}  // namespace
+const auto kMorgueDirectory = u"morgue"_ns;
 
-// static
-nsresult BodyCreateDir(nsIFile* aBaseDir) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-
-  nsCOMPtr<nsIFile> aBodyDir;
-  nsresult rv = aBaseDir->Clone(getter_AddRefs(aBodyDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aBodyDir->Append(u"morgue"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aBodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755);
-  if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
-    return NS_OK;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return rv;
+template <typename SuccessType = Ok>
+Result<SuccessType, nsresult> MapNotFoundToDefault(const nsresult aRv) {
+  return (aRv == NS_ERROR_FILE_NOT_FOUND ||
+          aRv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+             ? Result<SuccessType, nsresult>{std::in_place}
+             : Err(aRv);
 }
 
-// static
-nsresult BodyDeleteDir(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-
-  nsCOMPtr<nsIFile> aBodyDir;
-  nsresult rv = aBaseDir->Clone(getter_AddRefs(aBodyDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aBodyDir->Append(u"morgue"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = RemoveNsIFileRecursively(aQuotaInfo, aBodyDir);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return rv;
+Result<Ok, nsresult> MapAlreadyExistsToDefault(const nsresult aRv) {
+  return (aRv == NS_ERROR_FILE_ALREADY_EXISTS)
+             ? Result<Ok, nsresult>{std::in_place}
+             : Err(aRv);
 }
 
-// static
-nsresult BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
-                         nsIFile** aCacheDirOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aCacheDirOut);
-
-  *aCacheDirOut = nullptr;
-
-  nsresult rv = aBaseDir->Clone(aCacheDirOut);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  MOZ_DIAGNOSTIC_ASSERT(*aCacheDirOut);
-
-  rv = (*aCacheDirOut)->Append(u"morgue"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyGetCacheDir(nsIFile& aBaseDir,
+                                                             const nsID& aId) {
+  CACHE_TRY_UNWRAP(auto cacheDir,
+                   CloneFileAndAppend(aBaseDir, kMorgueDirectory));
 
   // Some file systems have poor performance when there are too many files
   // in a single directory.  Mitigate this issue by spreading the body
   // files out into sub-directories.  We use the last byte of the ID for
   // the name of the sub-directory.
-  rv = (*aCacheDirOut)->Append(IntToString(aId.m3[7]));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(cacheDir->Append(IntToString(aId.m3[7])));
 
-  rv = (*aCacheDirOut)->Create(nsIFile::DIRECTORY_TYPE, 0755);
-  if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
-    return NS_OK;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755))
+                .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, Ok>));
 
-  return rv;
+  return WrapNotNullUnchecked(std::move(cacheDir));
 }
 
-// static
-nsresult BodyStartWriteStream(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                              nsIInputStream* aSource, void* aClosure,
-                              nsAsyncCopyCallbackFun aCallback, nsID* aIdOut,
-                              nsISupports** aCopyContextOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aSource);
+}  // namespace
+
+nsresult BodyCreateDir(nsIFile& aBaseDir) {
+  CACHE_TRY_INSPECT(const auto& bodyDir,
+                    CloneFileAndAppend(aBaseDir, kMorgueDirectory));
+
+  CACHE_TRY(ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755))
+                .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, Ok>));
+
+  return NS_OK;
+}
+
+nsresult BodyDeleteDir(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir) {
+  CACHE_TRY_INSPECT(const auto& bodyDir,
+                    CloneFileAndAppend(aBaseDir, kMorgueDirectory));
+
+  CACHE_TRY(RemoveNsIFileRecursively(aQuotaInfo, *bodyDir));
+
+  return NS_OK;
+}
+
+Result<std::pair<nsID, nsCOMPtr<nsISupports>>, nsresult> BodyStartWriteStream(
+    const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir, nsIInputStream& aSource,
+    void* aClosure, nsAsyncCopyCallbackFun aCallback) {
   MOZ_DIAGNOSTIC_ASSERT(aClosure);
   MOZ_DIAGNOSTIC_ASSERT(aCallback);
-  MOZ_DIAGNOSTIC_ASSERT(aIdOut);
-  MOZ_DIAGNOSTIC_ASSERT(aCopyContextOut);
 
-  nsresult rv;
-  nsCOMPtr<nsIUUIDGenerator> idGen =
-      do_GetService("@mozilla.org/uuid-generator;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  CACHE_TRY_INSPECT(const auto& idGen, ToResultGet<nsCOMPtr<nsIUUIDGenerator>>(
+                                           MOZ_SELECT_OVERLOAD(do_GetService),
+                                           "@mozilla.org/uuid-generator;1"));
+
+  nsID id;
+  CACHE_TRY(idGen->GenerateUUIDInPlace(&id));
+
+  CACHE_TRY_INSPECT(const auto& finalFile,
+                    BodyIdToFile(aBaseDir, id, BODY_FILE_FINAL));
+
+  {
+    CACHE_TRY_INSPECT(const bool& exists,
+                      MOZ_TO_RESULT_INVOKE(*finalFile, Exists));
+
+    CACHE_TRY(OkIf(!exists), Err(NS_ERROR_FILE_ALREADY_EXISTS));
   }
 
-  rv = idGen->GenerateUUIDInPlace(aIdOut);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const auto& tmpFile,
+                    BodyIdToFile(aBaseDir, id, BODY_FILE_TMP));
 
-  nsCOMPtr<nsIFile> finalFile;
-  rv = BodyIdToFile(aBaseDir, *aIdOut, BODY_FILE_FINAL,
-                    getter_AddRefs(finalFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(*tmpFile, Exists));
 
-  bool exists;
-  rv = finalFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (NS_WARN_IF(exists)) {
-    return NS_ERROR_FILE_ALREADY_EXISTS;
-  }
+  CACHE_TRY(OkIf(!exists), Err(NS_ERROR_FILE_ALREADY_EXISTS));
 
-  nsCOMPtr<nsIFile> tmpFile;
-  rv = BodyIdToFile(aBaseDir, *aIdOut, BODY_FILE_TMP, getter_AddRefs(tmpFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  const nsCOMPtr<nsIOutputStream> fileStream = CreateFileOutputStream(
+      PERSISTENCE_TYPE_DEFAULT, aQuotaInfo, Client::DOMCACHE, tmpFile.get());
 
-  rv = tmpFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (NS_WARN_IF(exists)) {
-    return NS_ERROR_FILE_ALREADY_EXISTS;
-  }
+  CACHE_TRY(OkIf(fileStream), Err(NS_ERROR_UNEXPECTED));
 
-  nsCOMPtr<nsIOutputStream> fileStream = CreateFileOutputStream(
-      PERSISTENCE_TYPE_DEFAULT, aQuotaInfo, Client::DOMCACHE, tmpFile);
-  if (NS_WARN_IF(!fileStream)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  const auto compressed = MakeRefPtr<SnappyCompressOutputStream>(fileStream);
 
-  RefPtr<SnappyCompressOutputStream> compressed =
-      new SnappyCompressOutputStream(fileStream);
-
-  nsCOMPtr<nsIEventTarget> target =
+  const nsCOMPtr<nsIEventTarget> target =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
 
-  rv = NS_AsyncCopy(aSource, compressed, target, NS_ASYNCCOPY_VIA_WRITESEGMENTS,
-                    compressed->BlockSize(), aCallback, aClosure, true,
-                    true,  // close streams
-                    aCopyContextOut);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsCOMPtr<nsISupports> copyContext;
+  CACHE_TRY(NS_AsyncCopy(&aSource, compressed, target,
+                         NS_ASYNCCOPY_VIA_WRITESEGMENTS,
+                         compressed->BlockSize(), aCallback, aClosure, true,
+                         true,  // close streams
+                         getter_AddRefs(copyContext)));
 
-  return rv;
+  return std::make_pair(id, std::move(copyContext));
 }
 
-// static
-void BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aCopyContext);
+void BodyCancelWrite(nsISupports& aCopyContext) {
+  CACHE_TRY(NS_CancelAsyncCopy(&aCopyContext, NS_ERROR_ABORT), QM_VOID);
 
-  nsresult rv = NS_CancelAsyncCopy(aCopyContext, NS_ERROR_ABORT);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-
-  // The partially written file must be cleaned up after the async copy
+  // TODO The partially written file must be cleaned up after the async copy
   // makes its callback.
 }
 
-// static
-nsresult BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+nsresult BodyFinalizeWrite(nsIFile& aBaseDir, const nsID& aId) {
+  CACHE_TRY_INSPECT(const auto& tmpFile,
+                    BodyIdToFile(aBaseDir, aId, BODY_FILE_TMP));
 
-  nsCOMPtr<nsIFile> tmpFile;
-  nsresult rv =
-      BodyIdToFile(aBaseDir, aId, BODY_FILE_TMP, getter_AddRefs(tmpFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> finalFile;
-  rv = BodyIdToFile(aBaseDir, aId, BODY_FILE_FINAL, getter_AddRefs(finalFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const auto& finalFile,
+                    BodyIdToFile(aBaseDir, aId, BODY_FILE_FINAL));
 
   nsAutoString finalFileName;
-  rv = finalFile->GetLeafName(finalFileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(finalFile->GetLeafName(finalFileName));
 
   // It's fine to not notify the QuotaManager that the path has been changed,
   // because its path will be updated and its size will be recalculated when
   // opening file next time.
-  rv = tmpFile->RenameTo(nullptr, finalFileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(tmpFile->RenameTo(nullptr, finalFileName));
 
-  return rv;
+  return NS_OK;
 }
 
-// static
-nsresult BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                  const nsID& aId, nsIInputStream** aStreamOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aStreamOut);
+Result<NotNull<nsCOMPtr<nsIInputStream>>, nsresult> BodyOpen(
+    const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir, const nsID& aId) {
+  CACHE_TRY_INSPECT(const auto& finalFile,
+                    BodyIdToFile(aBaseDir, aId, BODY_FILE_FINAL));
 
-  nsCOMPtr<nsIFile> finalFile;
-  nsresult rv =
-      BodyIdToFile(aBaseDir, aId, BODY_FILE_FINAL, getter_AddRefs(finalFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const bool& exists,
+                    MOZ_TO_RESULT_INVOKE(*finalFile, Exists));
 
-  bool exists;
-  rv = finalFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (NS_WARN_IF(!exists)) {
-    return NS_ERROR_FILE_NOT_FOUND;
-  }
+  // XXX This is somewhat redundant. We could just return
+  // NS_ERROR_FILE_NOT_FOUND if CreateFileInputStream fails? Or, if that might
+  // fail for other reasons, it should probably be changed to return a Result,
+  // and then we can just propagate its result.
+  CACHE_TRY(OkIf(exists), Err(NS_ERROR_FILE_NOT_FOUND));
 
   nsCOMPtr<nsIInputStream> fileStream = CreateFileInputStream(
-      PERSISTENCE_TYPE_DEFAULT, aQuotaInfo, Client::DOMCACHE, finalFile);
-  if (NS_WARN_IF(!fileStream)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+      PERSISTENCE_TYPE_DEFAULT, aQuotaInfo, Client::DOMCACHE, finalFile.get());
+  CACHE_TRY(OkIf(fileStream), Err(NS_ERROR_UNEXPECTED));
 
-  fileStream.forget(aStreamOut);
-
-  return rv;
+  return WrapNotNullUnchecked(std::move(fileStream));
 }
 
-// static
 nsresult BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo,
-                                    nsIFile* aBaseDir, const nsID& aId,
+                                    nsIFile& aBaseDir, const nsID& aId,
                                     const uint32_t aPaddingInfo,
-                                    int64_t* aPaddingSizeOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
+                                    int64_t* aPaddingSizeInOut) {
+  MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeInOut);
 
-  nsCOMPtr<nsIFile> bodyFile;
-  nsresult rv =
-      BodyIdToFile(aBaseDir, aId, BODY_FILE_TMP, getter_AddRefs(bodyFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(bodyFile);
+  CACHE_TRY_INSPECT(const auto& bodyFile,
+                    BodyIdToFile(aBaseDir, aId, BODY_FILE_TMP));
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   int64_t fileSize = 0;
-  RefPtr<QuotaObject> quotaObject =
-      quotaManager->GetQuotaObject(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo,
-                                   Client::DOMCACHE, bodyFile, -1, &fileSize);
+  RefPtr<QuotaObject> quotaObject = quotaManager->GetQuotaObject(
+      PERSISTENCE_TYPE_DEFAULT, aQuotaInfo, Client::DOMCACHE, bodyFile.get(),
+      -1, &fileSize);
   MOZ_DIAGNOSTIC_ASSERT(quotaObject);
   MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
   // XXXtt: bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422815
@@ -336,43 +233,35 @@ nsresult BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (*aPaddingSizeOut == InternalResponse::UNKNOWN_PADDING_SIZE) {
-    *aPaddingSizeOut = BodyGeneratePadding(fileSize, aPaddingInfo);
+  if (*aPaddingSizeInOut == InternalResponse::UNKNOWN_PADDING_SIZE) {
+    *aPaddingSizeInOut = BodyGeneratePadding(fileSize, aPaddingInfo);
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(*aPaddingSizeOut >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(*aPaddingSizeInOut >= 0);
 
-  if (!quotaObject->IncreaseSize(*aPaddingSizeOut)) {
+  if (!quotaObject->IncreaseSize(*aPaddingSizeInOut)) {
     return NS_ERROR_FILE_NO_DEVICE_SPACE;
   }
 
-  return rv;
+  return NS_OK;
 }
 
-// static
-nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
                          const nsTArray<nsID>& aIdList) {
-  nsresult rv = NS_OK;
   for (const auto id : aIdList) {
-    nsCOMPtr<nsIFile> bodyDir;
-    rv = BodyGetCacheDir(aBaseDir, id, getter_AddRefs(bodyDir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    CACHE_TRY_INSPECT(const auto& bodyDir, BodyGetCacheDir(aBaseDir, id));
 
     const auto removeFileForId =
         [&aQuotaInfo, &id](
-            nsIFile* bodyFile,
+            nsIFile& bodyFile,
             const nsACString& leafName) -> Result<bool, nsresult> {
-      MOZ_DIAGNOSTIC_ASSERT(bodyFile);
-
       nsID fileId;
-      if (NS_WARN_IF(!fileId.Parse(leafName.BeginReading()))) {
-        DebugOnly<nsresult> result =
-            RemoveNsIFile(aQuotaInfo, bodyFile, /* aTrackQuota */ false);
-        MOZ_ASSERT(NS_SUCCEEDED(result));
-        return true;
-      }
+      CACHE_TRY(OkIf(fileId.Parse(leafName.BeginReading())), true,
+                ([&aQuotaInfo, &bodyFile](const auto) {
+                  DebugOnly<nsresult> result = RemoveNsIFile(
+                      aQuotaInfo, bodyFile, /* aTrackQuota */ false);
+                  MOZ_ASSERT(NS_SUCCEEDED(result));
+                }));
 
       if (id.Equals(fileId)) {
         DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, bodyFile);
@@ -382,12 +271,9 @@ nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
 
       return false;
     };
-    rv = BodyTraverseFiles(aQuotaInfo, bodyDir, removeFileForId,
-                           /* aCanRemoveFiles */ false,
-                           /* aTrackQuota */ true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    CACHE_TRY(BodyTraverseFiles(aQuotaInfo, *bodyDir, removeFileForId,
+                                /* aCanRemoveFiles */ false,
+                                /* aTrackQuota */ true));
   }
 
   return NS_OK;
@@ -395,18 +281,9 @@ nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
 
 namespace {
 
-nsresult BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
-                      nsIFile** aBodyFileOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aBodyFileOut);
-
-  *aBodyFileOut = nullptr;
-
-  nsresult rv = BodyGetCacheDir(aBaseDir, aId, aBodyFileOut);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  MOZ_DIAGNOSTIC_ASSERT(*aBodyFileOut);
+Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyIdToFile(
+    nsIFile& aBaseDir, const nsID& aId, const BodyFileType aType) {
+  CACHE_TRY_UNWRAP(auto bodyFile, BodyGetCacheDir(aBaseDir, aId));
 
   char idString[NSID_LENGTH];
   aId.ToProvidedString(idString);
@@ -419,12 +296,9 @@ nsresult BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
     fileName.AppendLiteral(".tmp");
   }
 
-  rv = (*aBodyFileOut)->Append(fileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(bodyFile->Append(fileName));
 
-  return rv;
+  return bodyFile;
 }
 
 int64_t RoundUp(const int64_t aX, const int64_t aY) {
@@ -445,66 +319,39 @@ int64_t BodyGeneratePadding(const int64_t aBodyFileSize,
   return RoundUp(randomSize, kRoundUpNumber) - aBodyFileSize;
 }
 
-nsresult LockedDirectoryPaddingWrite(nsIFile* aBaseDir,
+nsresult LockedDirectoryPaddingWrite(nsIFile& aBaseDir,
                                      DirPaddingFile aPaddingFileType,
                                      int64_t aPaddingSize) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aPaddingSize >= 0);
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(
+      const auto& file,
+      CloneFileAndAppend(aBaseDir, aPaddingFileType == DirPaddingFile::TMP_FILE
+                                       ? nsLiteralString(PADDING_TMP_FILE_NAME)
+                                       : nsLiteralString(PADDING_FILE_NAME)));
 
-  if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
-    rv = file->Append(nsLiteralString(PADDING_TMP_FILE_NAME));
-  } else {
-    rv = file->Append(nsLiteralString(PADDING_FILE_NAME));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIOutputStream> outputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const auto& outputStream,
+                    NS_NewLocalFileOutputStream(file));
 
   nsCOMPtr<nsIObjectOutputStream> objectStream =
       NS_NewObjectOutputStream(outputStream);
 
-  rv = objectStream->Write64(aPaddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(objectStream->Write64(aPaddingSize));
 
-  return rv;
+  return NS_OK;
 }
 
 }  // namespace
 
-nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                                 nsTArray<nsID>& aKnownBodyIdList) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-
+nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
+                                 const nsTArray<nsID>& aKnownBodyIdList) {
   // body files are stored in a directory structure like:
   //
   //  /morgue/01/{01fdddb2-884d-4c3d-95ba-0c8062f6c325}.final
   //  /morgue/02/{02fdddb2-884d-4c3d-95ba-0c8062f6c325}.tmp
 
-  nsCOMPtr<nsIFile> dir;
-  nsresult rv = aBaseDir->Clone(getter_AddRefs(dir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Add the root morgue directory
-  rv = dir->Append(u"morgue"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const auto& dir,
+                    CloneFileAndAppend(aBaseDir, kMorgueDirectory));
 
   // Iterate over all the intermediate morgue subdirs
   CACHE_TRY(quota::CollectEachFile(
@@ -515,36 +362,35 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
                           MOZ_TO_RESULT_INVOKE(subdir, IsDirectory));
 
         // If a file got in here somehow, try to remove it and move on
-        if (NS_WARN_IF(!isDir)) {
-          DebugOnly<nsresult> result =
-              RemoveNsIFile(aQuotaInfo, subdir, /* aTrackQuota */ false);
-          MOZ_ASSERT(NS_SUCCEEDED(result));
-          return Ok{};
-        }
+        CACHE_TRY(OkIf(isDir), Ok{}, ([&aQuotaInfo, &subdir](const auto&) {
+                    DebugOnly<nsresult> result = RemoveNsIFile(
+                        aQuotaInfo, *subdir, /* aTrackQuota */ false);
+                    MOZ_ASSERT(NS_SUCCEEDED(result));
+                  }));
 
         const auto removeOrphanedFiles =
             [&aQuotaInfo, &aKnownBodyIdList](
-                nsIFile* bodyFile,
+                nsIFile& bodyFile,
                 const nsACString& leafName) -> Result<bool, nsresult> {
-          MOZ_DIAGNOSTIC_ASSERT(bodyFile);
-          // Finally, parse the uuid out of the name.  If its fails to parse,
-          // the ignore the file.
-          nsID id;
-          if (NS_WARN_IF(!id.Parse(leafName.BeginReading()))) {
+          // Finally, parse the uuid out of the name.  If it fails to parse,
+          // then ignore the file.
+          auto cleanup = MakeScopeExit([&aQuotaInfo, &bodyFile] {
             DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, bodyFile);
             MOZ_ASSERT(NS_SUCCEEDED(result));
+          });
+
+          nsID id;
+          CACHE_TRY(OkIf(id.Parse(leafName.BeginReading())), true);
+
+          if (!aKnownBodyIdList.Contains(id)) {
             return true;
           }
 
-          if (!aKnownBodyIdList.Contains(id)) {
-            DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, bodyFile);
-            MOZ_ASSERT(NS_SUCCEEDED(result));
-            return true;
-          }
+          cleanup.release();
 
           return false;
         };
-        CACHE_TRY(BodyTraverseFiles(aQuotaInfo, subdir, removeOrphanedFiles,
+        CACHE_TRY(BodyTraverseFiles(aQuotaInfo, *subdir, removeOrphanedFiles,
                                     /* aCanRemoveFiles */ true,
                                     /* aTrackQuota */ true));
 
@@ -556,43 +402,23 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
 
 namespace {
 
-nsresult GetMarkerFileHandle(const QuotaInfo& aQuotaInfo, nsIFile** aFileOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aFileOut);
+Result<nsCOMPtr<nsIFile>, nsresult> GetMarkerFileHandle(
+    const QuotaInfo& aQuotaInfo) {
+  CACHE_TRY_UNWRAP(auto marker,
+                   CloneFileAndAppend(*aQuotaInfo.mDir, u"cache"_ns));
 
-  nsCOMPtr<nsIFile> marker;
-  nsresult rv = aQuotaInfo.mDir->Clone(getter_AddRefs(marker));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(marker->Append(u"context_open.marker"_ns));
 
-  rv = marker->Append(u"cache"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = marker->Append(u"context_open.marker"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  marker.forget(aFileOut);
-
-  return rv;
+  return marker;
 }
 
 }  // namespace
 
 nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo) {
-  nsCOMPtr<nsIFile> marker;
-  nsresult rv = GetMarkerFileHandle(aQuotaInfo, getter_AddRefs(marker));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const auto& marker, GetMarkerFileHandle(aQuotaInfo));
 
-  rv = marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
-  if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
-    rv = NS_OK;
-  }
+  CACHE_TRY(ToResult(marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644))
+                .orElse(MapAlreadyExistsToDefault));
 
   // Note, we don't need to fsync here.  We only care about actually
   // writing the marker if later modifications to the Cache are
@@ -600,18 +426,14 @@ nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo) {
   // is written then we are ensured no other changes to the Cache were
   // flushed either.
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult DeleteMarkerFile(const QuotaInfo& aQuotaInfo) {
-  nsCOMPtr<nsIFile> marker;
-  nsresult rv = GetMarkerFileHandle(aQuotaInfo, getter_AddRefs(marker));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const auto& marker, GetMarkerFileHandle(aQuotaInfo));
 
   DebugOnly<nsresult> result =
-      RemoveNsIFile(aQuotaInfo, marker, /* aTrackQuota */ false);
+      RemoveNsIFile(aQuotaInfo, *marker, /* aTrackQuota */ false);
   MOZ_ASSERT(NS_SUCCEEDED(result));
 
   // Again, no fsync is necessary.  If the OS crashes before the file
@@ -623,98 +445,71 @@ nsresult DeleteMarkerFile(const QuotaInfo& aQuotaInfo) {
 }
 
 bool MarkerFileExists(const QuotaInfo& aQuotaInfo) {
-  nsCOMPtr<nsIFile> marker;
-  nsresult rv = GetMarkerFileHandle(aQuotaInfo, getter_AddRefs(marker));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
+  CACHE_TRY_INSPECT(const auto& marker, GetMarkerFileHandle(aQuotaInfo), false);
 
-  bool exists = false;
-  rv = marker->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return exists;
+  CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(marker, Exists), false);
 }
 
-// static
-nsresult RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile* aFile,
+nsresult RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
                                   const bool aTrackQuota) {
-  MOZ_DIAGNOSTIC_ASSERT(aFile);
-
-  bool isDirectory = false;
-  nsresult rv = aFile->IsDirectory(&isDirectory);
-  if (rv == NS_ERROR_FILE_NOT_FOUND ||
-      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+  CACHE_TRY_INSPECT(const Maybe<bool>& maybeIsDirectory,
+                    MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
+                        .map(Some<bool>)
+                        .orElse(MapNotFoundToDefault<Maybe<bool>>));
+  if (!maybeIsDirectory) {
     return NS_OK;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
 
-  if (!isDirectory) {
+  if (!maybeIsDirectory.value()) {
     return RemoveNsIFile(aQuotaInfo, aFile, aTrackQuota);
   }
 
   // Unfortunately, we need to traverse all the entries and delete files one by
   // one to update their usages to the QuotaManager.
   CACHE_TRY(quota::CollectEachFile(
-      *aFile,
+      aFile,
       [&aQuotaInfo,
        &aTrackQuota](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
-        CACHE_TRY(RemoveNsIFileRecursively(aQuotaInfo, file, aTrackQuota));
+        CACHE_TRY(RemoveNsIFileRecursively(aQuotaInfo, *file, aTrackQuota));
 
         return Ok{};
       }));
 
   // In the end, remove the folder
-  rv = aFile->Remove(/* recursive */ false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(aFile.Remove(/* recursive */ false));
 
-  return rv;
+  return NS_OK;
 }
 
-// static
-nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile,
+nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
                        const bool aTrackQuota) {
-  MOZ_DIAGNOSTIC_ASSERT(aFile);
-
-  nsresult rv;
   int64_t fileSize = 0;
   if (aTrackQuota) {
-    rv = aFile->GetFileSize(&fileSize);
-    if (rv == NS_ERROR_FILE_NOT_FOUND ||
-        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    CACHE_TRY_INSPECT(const auto& maybeFileSize,
+                      MOZ_TO_RESULT_INVOKE(aFile, GetFileSize)
+                          .map(Some<int64_t>)
+                          .orElse(MapNotFoundToDefault<Maybe<int64_t>>));
+
+    if (!maybeFileSize) {
       return NS_OK;
     }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+
+    fileSize = *maybeFileSize;
   }
 
-  rv = aFile->Remove(/* recursive */ false);
-  if (rv == NS_ERROR_FILE_NOT_FOUND ||
-      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-    MOZ_ASSERT(!aTrackQuota);
-    return NS_OK;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(ToResult(aFile.Remove(/* recursive */ false))
+                .orElse(MapNotFoundToDefault<>));
 
-  if (aTrackQuota && fileSize > 0) {
+  if (fileSize > 0) {
+    MOZ_ASSERT(aTrackQuota);
     DecreaseUsageForQuotaInfo(aQuotaInfo, fileSize);
   }
 
-  return rv;
+  return NS_OK;
 }
 
-// static
 void DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
-                               const int64_t& aUpdatingSize) {
+                               const int64_t aUpdatingSize) {
   MOZ_DIAGNOSTIC_ASSERT(aUpdatingSize > 0);
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -724,36 +519,21 @@ void DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
                                        Client::DOMCACHE, aUpdatingSize);
 }
 
-// static
-bool DirectoryPaddingFileExists(nsIFile* aBaseDir,
+bool DirectoryPaddingFileExists(nsIFile& aBaseDir,
                                 DirPaddingFile aPaddingFileType) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-
   CACHE_TRY_INSPECT(
       const auto& file,
-      CloneFileAndAppend(*aBaseDir, aPaddingFileType == DirPaddingFile::TMP_FILE
-                                        ? nsLiteralString(PADDING_TMP_FILE_NAME)
-                                        : nsLiteralString(PADDING_FILE_NAME)),
+      CloneFileAndAppend(aBaseDir, aPaddingFileType == DirPaddingFile::TMP_FILE
+                                       ? nsLiteralString(PADDING_TMP_FILE_NAME)
+                                       : nsLiteralString(PADDING_FILE_NAME)),
       false);
 
   CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(file, Exists), false);
 }
 
-nsresult LockedDirectoryPaddingGet(nsIFile* aBaseDir,
-                                   int64_t* aPaddingSizeOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
-
-  CACHE_TRY_INSPECT(const int64_t& paddingSize,
-                    LockedDirectoryPaddingGet(*aBaseDir));
-
-  *aPaddingSizeOut = paddingSize;
-  return NS_OK;
-}
-
 Result<int64_t, nsresult> LockedDirectoryPaddingGet(nsIFile& aBaseDir) {
   MOZ_DIAGNOSTIC_ASSERT(
-      !DirectoryPaddingFileExists(&aBaseDir, DirPaddingFile::TMP_FILE));
+      !DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
 
   CACHE_TRY_INSPECT(
       const auto& file,
@@ -773,191 +553,146 @@ Result<int64_t, nsresult> LockedDirectoryPaddingGet(nsIFile& aBaseDir) {
       }));
 }
 
-// static
-nsresult LockedDirectoryPaddingInit(nsIFile* aBaseDir) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+nsresult LockedDirectoryPaddingInit(nsIFile& aBaseDir) {
+  CACHE_TRY(LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, 0));
 
-  nsresult rv = LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, 0);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-
-  return rv;
+  return NS_OK;
 }
 
-// static
-nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
-                                          mozIStorageConnection* aConn,
+nsresult LockedUpdateDirectoryPaddingFile(nsIFile& aBaseDir,
+                                          mozIStorageConnection& aConn,
                                           const int64_t aIncreaseSize,
                                           const int64_t aDecreaseSize,
                                           const bool aTemporaryFileExist) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aConn);
   MOZ_DIAGNOSTIC_ASSERT(aIncreaseSize >= 0);
   MOZ_DIAGNOSTIC_ASSERT(aDecreaseSize >= 0);
 
-  int64_t currentPaddingSize = 0;
-  nsresult rv = NS_OK;
-  if (aTemporaryFileExist ||
-      NS_WARN_IF(NS_FAILED(
-          rv = LockedDirectoryPaddingGet(aBaseDir, &currentPaddingSize)))) {
-    // Fail to read padding size from the dir padding file, so try to restore.
-    if (rv != NS_ERROR_FILE_NOT_FOUND &&
-        rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-      // Not delete the temporary padding file here, because we're going to
-      // overwrite it below anyway.
-      rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
+  const auto directoryPaddingGetResult =
+      aTemporaryFileExist ? Maybe<int64_t>{} : [&aBaseDir] {
+        CACHE_TRY_RETURN(LockedDirectoryPaddingGet(aBaseDir)
+                             .map(Some<int64_t>)
+                             .orElse(MapNotFoundToDefault<Maybe<int64_t>>),
+                         Maybe<int64_t>{});
+      }();
 
-    // We don't need to add the aIncreaseSize or aDecreaseSize here, because
-    // it's already encompassed within the database.
-    CACHE_TRY_UNWRAP(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
-  } else {
-    bool shouldRevise = false;
-    if (aIncreaseSize > 0) {
-      if (INT64_MAX - currentPaddingSize < aDecreaseSize) {
-        shouldRevise = true;
-      } else {
-        currentPaddingSize += aIncreaseSize;
-      }
-    }
+  CACHE_TRY_INSPECT(
+      const int64_t& currentPaddingSize,
+      ([directoryPaddingGetResult, &aBaseDir, &aConn, aIncreaseSize,
+        aDecreaseSize]() -> Result<int64_t, nsresult> {
+        if (!directoryPaddingGetResult) {
+          // Fail to read padding size from the dir padding file, so try to
+          // restore.
 
-    if (aDecreaseSize > 0) {
-      if (currentPaddingSize < aDecreaseSize) {
-        shouldRevise = true;
-      } else if (!shouldRevise) {
-        currentPaddingSize -= aDecreaseSize;
-      }
-    }
+          // Not delete the temporary padding file here, because we're going
+          // to overwrite it below anyway.
+          CACHE_TRY(
+              LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE));
 
-    if (shouldRevise) {
-      // If somehow runing into this condition, the tracking padding size is
-      // incorrect.
-      // Delete padding file to indicate the padding size is incorrect for
-      // avoiding error happening in the following lines.
-      rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          // We don't need to add the aIncreaseSize or aDecreaseSize here,
+          // because it's already encompassed within the database.
+          CACHE_TRY_RETURN(db::FindOverallPaddingSize(aConn));
+        }
 
-      CACHE_TRY_UNWRAP(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
+        int64_t currentPaddingSize = directoryPaddingGetResult.value();
+        bool shouldRevise = false;
 
-      // XXXtt: we should have an easy way to update (increase or recalulate)
-      // padding size in the QM. For now, only correct the padding size in
-      // padding file and make QM be able to get the correct size in the next QM
-      // initialization.
-      // We still want to catch this in the debug build.
-      MOZ_ASSERT(false, "The padding size is unsync with QM");
-    }
+        if (aIncreaseSize > 0) {
+          if (INT64_MAX - currentPaddingSize < aDecreaseSize) {
+            shouldRevise = true;
+          } else {
+            currentPaddingSize += aIncreaseSize;
+          }
+        }
+
+        if (aDecreaseSize > 0) {
+          if (currentPaddingSize < aDecreaseSize) {
+            shouldRevise = true;
+          } else if (!shouldRevise) {
+            currentPaddingSize -= aDecreaseSize;
+          }
+        }
+
+        if (shouldRevise) {
+          // If somehow runing into this condition, the tracking padding size is
+          // incorrect.
+          // Delete padding file to indicate the padding size is incorrect for
+          // avoiding error happening in the following lines.
+          CACHE_TRY(
+              LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE));
+
+          CACHE_TRY_UNWRAP(currentPaddingSize,
+                           db::FindOverallPaddingSize(aConn));
+
+          // XXXtt: we should have an easy way to update (increase or
+          // recalulate) padding size in the QM. For now, only correct the
+          // padding size in padding file and make QM be able to get the correct
+          // size in the next QM initialization. We still want to catch this in
+          // the debug build.
+          MOZ_ASSERT(false, "The padding size is unsync with QM");
+        }
 
 #ifdef DEBUG
-    int64_t lastPaddingSize = currentPaddingSize;
-    CACHE_TRY_UNWRAP(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
+        const int64_t lastPaddingSize = currentPaddingSize;
+        CACHE_TRY_UNWRAP(currentPaddingSize, db::FindOverallPaddingSize(aConn));
 
-    MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize == lastPaddingSize);
+        MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize == lastPaddingSize);
 #endif  // DEBUG
-  }
+
+        return currentPaddingSize;
+      }()));
 
   MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize >= 0);
 
-  rv = LockedDirectoryPaddingTemporaryWrite(aBaseDir, currentPaddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::TMP_FILE,
+                                        currentPaddingSize));
 
-  return rv;
+  return NS_OK;
 }
 
-// static
-nsresult LockedDirectoryPaddingTemporaryWrite(nsIFile* aBaseDir,
-                                              int64_t aPaddingSize) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-  MOZ_DIAGNOSTIC_ASSERT(aPaddingSize >= 0);
-
-  nsresult rv = LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::TMP_FILE,
-                                            aPaddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return rv;
-}
-
-// static
-nsresult LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+nsresult LockedDirectoryPaddingFinalizeWrite(nsIFile& aBaseDir) {
   MOZ_DIAGNOSTIC_ASSERT(
       DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(
+      const auto& file,
+      CloneFileAndAppend(aBaseDir, nsLiteralString(PADDING_TMP_FILE_NAME)));
 
-  rv = file->Append(nsLiteralString(PADDING_TMP_FILE_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(file->RenameTo(nullptr, nsLiteralString(PADDING_FILE_NAME)));
 
-  rv = file->RenameTo(nullptr, nsLiteralString(PADDING_FILE_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 Result<int64_t, nsresult> LockedDirectoryPaddingRestore(
     nsIFile& aBaseDir, mozIStorageConnection& aConn, const bool aMustRestore) {
   // The content of padding file is untrusted, so remove it here.
-  CACHE_TRY(LockedDirectoryPaddingDeleteFile(&aBaseDir, DirPaddingFile::FILE));
+  CACHE_TRY(LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE));
 
   CACHE_TRY_INSPECT(const int64_t& paddingSize,
                     db::FindOverallPaddingSize(aConn));
   MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
 
   CACHE_TRY(
-      LockedDirectoryPaddingWrite(&aBaseDir, DirPaddingFile::FILE, paddingSize),
+      LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, paddingSize),
       (aMustRestore ? Err(tryTempError)
                     : Result<int64_t, nsresult>{paddingSize}));
 
   CACHE_TRY(
-      LockedDirectoryPaddingDeleteFile(&aBaseDir, DirPaddingFile::TMP_FILE));
+      LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE));
 
   return paddingSize;
 }
 
-// static
-nsresult LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,
+nsresult LockedDirectoryPaddingDeleteFile(nsIFile& aBaseDir,
                                           DirPaddingFile aPaddingFileType) {
-  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  CACHE_TRY_INSPECT(
+      const auto& file,
+      CloneFileAndAppend(aBaseDir, aPaddingFileType == DirPaddingFile::TMP_FILE
+                                       ? nsLiteralString(PADDING_TMP_FILE_NAME)
+                                       : nsLiteralString(PADDING_FILE_NAME)));
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(ToResult(file->Remove(/* recursive */ false))
+                .orElse(MapNotFoundToDefault<>));
 
-  if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
-    rv = file->Append(nsLiteralString(PADDING_TMP_FILE_NAME));
-  } else {
-    rv = file->Append(nsLiteralString(PADDING_FILE_NAME));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = file->Remove(/* recursive */ false);
-  if (rv == NS_ERROR_FILE_NOT_FOUND ||
-      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-    return NS_OK;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return rv;
+  return NS_OK;
 }
 }  // namespace mozilla::dom::cache

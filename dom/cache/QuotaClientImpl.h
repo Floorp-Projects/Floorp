@@ -77,7 +77,7 @@ class CacheQuotaClient final : public quota::Client {
     // the failure happened.
     bool temporaryPaddingFileExist =
         mozilla::dom::cache::DirectoryPaddingFileExists(
-            aBaseDir, DirPaddingFile::TMP_FILE);
+            *aBaseDir, DirPaddingFile::TMP_FILE);
 
     if (aIncreaseSize == aDecreaseSize && !temporaryPaddingFileExist) {
       // Early return here, since most cache actions won't modify padding size.
@@ -89,7 +89,7 @@ class CacheQuotaClient final : public quota::Client {
     {
       MutexAutoLock lock(mDirPaddingFileMutex);
       rv = mozilla::dom::cache::LockedUpdateDirectoryPaddingFile(
-          aBaseDir, aConn, aIncreaseSize, aDecreaseSize,
+          *aBaseDir, *aConn, aIncreaseSize, aDecreaseSize,
           temporaryPaddingFileExist);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         // Don't delete the temporary padding file here to force the next action
@@ -104,15 +104,15 @@ class CacheQuotaClient final : public quota::Client {
         return rv;
       }
 
-      rv = mozilla::dom::cache::LockedDirectoryPaddingFinalizeWrite(aBaseDir);
+      rv = mozilla::dom::cache::LockedDirectoryPaddingFinalizeWrite(*aBaseDir);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         // Force restore file next time.
         Unused << mozilla::dom::cache::LockedDirectoryPaddingDeleteFile(
-            aBaseDir, DirPaddingFile::FILE);
+            *aBaseDir, DirPaddingFile::FILE);
 
         // Ensure that we are able to force the padding file to be restored.
         MOZ_ASSERT(mozilla::dom::cache::DirectoryPaddingFileExists(
-            aBaseDir, DirPaddingFile::TMP_FILE));
+            *aBaseDir, DirPaddingFile::TMP_FILE));
 
         // Since both the body file and header have been stored in the
         // file-system, just make the action be resolve and let the padding file
