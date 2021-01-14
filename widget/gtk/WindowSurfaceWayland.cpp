@@ -595,10 +595,11 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferRecent() {
     return mWaylandBuffer;
   }
 
-  LOGWAYLAND(("    Buffer size does not match, return null.\n"));
-  NS_WARNING(
-      "We can't resize Wayland buffer when it contains "
-      "unsubmitted drawings!");
+  LOGWAYLAND(
+      ("    Buffer size does not match, requested %d x %d got %d x%d, return "
+       "null.\n",
+       mWaylandBuffer->GetWidth(), mWaylandBuffer->GetHeight(),
+       mWLBufferRect.width, mWLBufferRect.height));
   return nullptr;
 }
 
@@ -629,6 +630,11 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
   LayoutDeviceIntRegion region;
   region.And(mLockedScreenRect, mWindow->GetMozContainerSize());
   mWLBufferRect = LayoutDeviceIntRect(region.GetBounds());
+
+  LOGWAYLAND(
+      ("WindowSurfaceWayland::LockWaylandBuffer [%p] Requesting buffer %d x "
+       "%d\n",
+       (void*)this, mWLBufferRect.width, mWLBufferRect.height));
 
   // mCanSwitchWaylandBuffer set means we're getting buffer for fullscreen
   // update.
@@ -773,6 +779,8 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   LOGWAYLAND(("   IsWindowFullScreenUpdate = %d\n",
               IsWindowFullScreenUpdate(lockedScreenRect, aRegion)));
   LOGWAYLAND(("   mBufferNeedsClear = %d\n", mBufferNeedsClear));
+  LOGWAYLAND(("   mBufferPendingCommit = %d\n", mBufferPendingCommit));
+  LOGWAYLAND(("   mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
   LOGWAYLAND(("   windowRedraw = %d\n", windowRedraw));
 
 #if MOZ_LOGGING
@@ -812,6 +820,12 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
             ? windowRedraw
             : (windowRedraw || (lockSize.width * 2 > lockedScreenRect.width &&
                                 lockSize.height * 2 > lockedScreenRect.height));
+  }
+  if (!mDrawToWaylandBufferDirectly) {
+    // Don't switch wl_buffers when we cache drawings.
+    mCanSwitchWaylandBuffer = false;
+    LOGWAYLAND(("   Indirect drawing, mCanSwitchWaylandBuffer = %d\n",
+                mCanSwitchWaylandBuffer));
   }
 
   if (mDrawToWaylandBufferDirectly) {
