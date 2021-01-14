@@ -3,6 +3,7 @@
 set -e
 
 target=$1
+shift
 
 case "$target" in
 aarch64-apple-darwin)
@@ -38,7 +39,9 @@ chmod +x $1
 compiler_wrapper clang
 compiler_wrapper clang++
 
-patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/build/build-clang/rename_gcov_flush_clang_11.patch
+for patchfile in "$@"; do
+  patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/$patchfile
+done
 
 cmake \
   $MOZ_FETCHES_DIR/llvm-project/compiler-rt \
