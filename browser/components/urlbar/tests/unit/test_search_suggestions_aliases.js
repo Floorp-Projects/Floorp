@@ -181,7 +181,7 @@ add_task(async function tokenAlias_noTrailingSpace() {
         makeSearchResult(context, {
           engineName: SUGGESTIONS_ENGINE_NAME,
           alias,
-          keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+          providesSearchMode: true,
           query: "",
           heuristic: false,
         }),
