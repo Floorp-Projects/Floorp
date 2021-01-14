@@ -4,16 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozHunspellFileMgrSandbox_h
-#define mozHunspellFileMgrSandbox_h
+#ifndef mozHunspellRLBoxSandbox_h
+#define mozHunspellRLBoxSandbox_h
 
 #include <string>
 #include <stdint.h>
-
-#include "mozilla/Result.h"
-#include "mozilla/ResultExtensions.h"
-#include "nsIInputStream.h"
-#include "nsReadLine.h"
 
 // Note: This class name and lack of namespacing terrible, but are necessary
 // for Hunspell compatibility.
@@ -38,4 +33,4 @@ class FileMgr final {
   uint32_t mFd;
 };
 
-#endif  // mozHunspellFileMgrSandbox_h
+#endif  // mozHunspellRLBoxSandbox_h
