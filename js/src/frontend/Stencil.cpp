@@ -1210,12 +1210,14 @@ void BigIntStencil::dump() {
 
 void BigIntStencil::dump(js::JSONPrinter& json) {
   GenericPrinter& out = json.beginString();
+  dumpCharsNoQuote(out);
+  json.endString();
+}
 
+void BigIntStencil::dumpCharsNoQuote(GenericPrinter& out) {
   for (size_t i = 0; i < length_; i++) {
     out.putChar(char(buf_[i]));
   }
-
-  json.endString();
 }
 
 void ScopeStencil::dump() {
@@ -1854,11 +1856,14 @@ void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   }
   json.endObject();
 
-  json.beginListProperty("bigIntData");
-  for (auto& data : bigIntData) {
-    data.dump(json);
+  json.beginObjectProperty("bigIntData");
+  for (size_t i = 0; i < bigIntData.length(); i++) {
+    SprintfLiteral(index, "BigIntIndex(%zu)", i);
+    GenericPrinter& out = json.beginStringProperty(index);
+    bigIntData[i].dumpCharsNoQuote(out);
+    json.endStringProperty();
   }
-  json.endList();
+  json.endObject();
 
   json.beginListProperty("objLiteralData");
   for (auto& data : objLiteralData) {
