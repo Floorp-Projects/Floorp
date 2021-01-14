@@ -131,7 +131,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] virtual nsresult Init(
       nsIURI* aURI, uint32_t aCaps, nsProxyInfo* aProxyInfo,
       uint32_t aProxyResolveFlags, nsIURI* aProxyURI, uint64_t aChannelId,
-      nsContentPolicyType aContentPolicyType) override;
+      ExtContentPolicyType aContentPolicyType) override;
 
   [[nodiscard]] nsresult OnPush(uint32_t aPushedStreamId,
                                 const nsACString& aUrl,

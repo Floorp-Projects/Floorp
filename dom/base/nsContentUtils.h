@@ -1355,19 +1355,8 @@ class nsContentUtils {
   /**
    * Map internal content policy types to external ones.
    */
-  static inline nsContentPolicyType InternalContentPolicyTypeToExternal(
+  static inline ExtContentPolicyType InternalContentPolicyTypeToExternal(
       nsContentPolicyType aType);
-
-  /**
-   * Map internal content policy types to external ones or preload types:
-   *   * TYPE_INTERNAL_SCRIPT_PRELOAD
-   *   * TYPE_INTERNAL_IMAGE_PRELOAD
-   *   * TYPE_INTERNAL_STYLESHEET_PRELOAD
-   *
-   * Note: DO NOT call this function unless you know what you're doing!
-   */
-  static inline nsContentPolicyType
-  InternalContentPolicyTypeToExternalOrPreload(nsContentPolicyType aType);
 
   /**
    * Returns true if the content policy type is any of:
@@ -1383,7 +1372,7 @@ class nsContentUtils {
    *   * TYPE_IMAGE
    *   * TYPE_MEDIA
    */
-  static bool IsUpgradableDisplayType(nsContentPolicyType aType);
+  static bool IsUpgradableDisplayType(ExtContentPolicyType aType);
 
   /**
    * Quick helper to determine whether there are any mutation listeners
@@ -3428,7 +3417,7 @@ class nsContentUtils {
   static uint32_t sInnerOrOuterWindowSerialCounter;
 };
 
-/* static */ inline nsContentPolicyType
+/* static */ inline ExtContentPolicyType
 nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType) {
   switch (aType) {
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
@@ -3443,46 +3432,46 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET:
     case nsIContentPolicy::TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT:
-      return nsIContentPolicy::TYPE_SCRIPT;
+      return ExtContentPolicy::TYPE_SCRIPT;
 
     case nsIContentPolicy::TYPE_INTERNAL_EMBED:
     case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
-      return nsIContentPolicy::TYPE_OBJECT;
+      return ExtContentPolicy::TYPE_OBJECT;
 
     case nsIContentPolicy::TYPE_INTERNAL_FRAME:
     case nsIContentPolicy::TYPE_INTERNAL_IFRAME:
-      return nsIContentPolicy::TYPE_SUBDOCUMENT;
+      return ExtContentPolicy::TYPE_SUBDOCUMENT;
 
     case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
     case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
     case nsIContentPolicy::TYPE_INTERNAL_TRACK:
-      return nsIContentPolicy::TYPE_MEDIA;
+      return ExtContentPolicy::TYPE_MEDIA;
 
     case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
     case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
-      return nsIContentPolicy::TYPE_XMLHTTPREQUEST;
+      return ExtContentPolicy::TYPE_XMLHTTPREQUEST;
 
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
-      return nsIContentPolicy::TYPE_IMAGE;
+      return ExtContentPolicy::TYPE_IMAGE;
 
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
-      return nsIContentPolicy::TYPE_STYLESHEET;
+      return ExtContentPolicy::TYPE_STYLESHEET;
 
     case nsIContentPolicy::TYPE_INTERNAL_DTD:
     case nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD:
-      return nsIContentPolicy::TYPE_DTD;
+      return ExtContentPolicy::TYPE_DTD;
 
     case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
-      return nsIContentPolicy::TYPE_FONT;
+      return ExtContentPolicy::TYPE_FONT;
 
     case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
-      return nsIContentPolicy::TYPE_FETCH;
+      return ExtContentPolicy::TYPE_FETCH;
 
     default:
-      return aType;
+      return static_cast<ExtContentPolicyType>(aType);
   }
 }
 
