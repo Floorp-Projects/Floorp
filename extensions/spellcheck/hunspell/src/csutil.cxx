@@ -95,11 +95,7 @@
 #endif
 
 #ifdef MOZILLA_CLIENT
-#include "nsCOMPtr.h"
-#include "nsUnicharUtils.h"
-#include "mozilla/Encoding.h"
-
-using namespace mozilla;
+#include "mozHunspellRLBoxGlue.h"
 #endif
 
 struct unicode_info2 {
@@ -2282,91 +2278,8 @@ struct cs_info* get_current_cs(const std::string& es) {
   return ccs;
 }
 #else
-// XXX This function was rewritten for mozilla. Instead of storing the
-// conversion tables static in this file, create them when needed
-// with help the mozilla backend.
 struct cs_info* get_current_cs(const std::string& es) {
-  struct cs_info* ccs = new cs_info[256];
-  // Initialze the array with dummy data so that we wouldn't need
-  // to return null in case of failures.
-  for (int i = 0; i <= 0xff; ++i) {
-    ccs[i].ccase = false;
-    ccs[i].clower = i;
-    ccs[i].cupper = i;
-  }
-
-  auto encoding = Encoding::ForLabelNoReplacement(es);
-  if (!encoding) {
-    return ccs;
-  }
-  auto encoder = encoding->NewEncoder();
-  auto decoder = encoding->NewDecoderWithoutBOMHandling();
-
-  for (unsigned int i = 0; i <= 0xff; ++i) {
-    bool success = false;
-    // We want to find the upper/lowercase equivalents of each byte
-    // in this 1-byte character encoding.  Call our encoding/decoding
-    // APIs separately for each byte since they may reject some of the
-    // bytes, and we want to handle errors separately for each byte.
-    uint8_t lower, upper;
-    do {
-      if (i == 0)
-        break;
-      uint8_t source = uint8_t(i);
-      char16_t uni[2];
-      char16_t uniCased;
-      uint8_t destination[4];
-      auto src1 = Span(&source, 1);
-      auto dst1 = Span(uni);
-      auto src2 = Span(&uniCased, 1);
-      auto dst2 = Span(destination);
-
-      uint32_t result;
-      size_t read;
-      size_t written;
-      Tie(result, read, written) =
-        decoder->DecodeToUTF16WithoutReplacement(src1, dst1, true);
-      if (result != kInputEmpty || read != 1 || written != 1) {
-        break;
-      }
-
-      uniCased = ToLowerCase(uni[0]);
-      Tie(result, read, written) =
-        encoder->EncodeFromUTF16WithoutReplacement(src2, dst2, true);
-      if (result != kInputEmpty || read != 1 || written != 1) {
-        break;
-      }
-      lower = destination[0];
-
-      uniCased = ToUpperCase(uni[0]);
-      Tie(result, read, written) =
-        encoder->EncodeFromUTF16WithoutReplacement(src2, dst2, true);
-      if (result != kInputEmpty || read != 1 || written != 1) {
-        break;
-      }
-      upper = destination[0];
-
-      success = true;
-    } while (0);
-
-    encoding->NewEncoderInto(*encoder);
-    encoding->NewDecoderWithoutBOMHandlingInto(*decoder);
-
-    if (success) {
-      ccs[i].cupper = upper;
-      ccs[i].clower = lower;
-    } else {
-      ccs[i].cupper = i;
-      ccs[i].clower = i;
-    }
-
-    if (ccs[i].clower != (unsigned char)i)
-      ccs[i].ccase = true;
-    else
-      ccs[i].ccase = false;
-  }
-
-  return ccs;
+  return moz_hunspell_GetCurrentCS(es.c_str());
 }
 #endif
 
@@ -2460,7 +2373,7 @@ unsigned short unicodetoupper(unsigned short c, int langnum) {
   return static_cast<unsigned short>(u_toupper(c));
 #else
 #ifdef MOZILLA_CLIENT
-  return ToUpperCase((char16_t)c);
+  return moz_hunspell_ToUpperCase((char16_t)c);
 #else
   return (utf_tbl) ? utf_tbl[c].cupper : c;
 #endif
@@ -2477,7 +2390,7 @@ unsigned short unicodetolower(unsigned short c, int langnum) {
   return static_cast<unsigned short>(u_tolower(c));
 #else
 #ifdef MOZILLA_CLIENT
-  return ToLowerCase((char16_t)c);
+  return moz_hunspell_ToLowerCase((char16_t)c);
 #else
   return (utf_tbl) ? utf_tbl[c].clower : c;
 #endif

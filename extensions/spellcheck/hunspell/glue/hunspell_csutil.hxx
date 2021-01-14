@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -67,11 +68,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#ifndef EXTENSIONS_SPELLCHECK_HUNSPELL_GLUE_HUNSPELL_CSUTIL_H_
+#define EXTENSIONS_SPELLCHECK_HUNSPELL_GLUE_HUNSPELL_CSUTIL_H_
 
-/* file manager class - read lines of files [filename] OR [filename.hz] */
-#ifndef FILEMGR_HXX_
-#define FILEMGR_HXX_
+/* We need get_current_cs from hunspell's csutil to live outside the RLBox
+ * sandbox (since it relies on a Gecko encoding bits) and then expose it to the
+ * sandboxed hunspell.
+ */
 
-#include "mozHunspellRLBoxSandbox.h"
+struct cs_info {
+  unsigned char ccase;
+  unsigned char clower;
+  unsigned char cupper;
+};
+
+struct cs_info* hunspell_get_current_cs(const std::string& es);
 
 #endif
