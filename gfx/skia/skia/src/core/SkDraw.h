@@ -124,7 +124,7 @@ public:
     static RectType ComputeRectType(const SkPaint&, const SkMatrix&,
                                     SkPoint* strokeSize);
 
-    static SkScalar ComputeResScaleForStroking(const SkMatrix& matrix, SkScalar* overscale = nullptr);
+    static SkScalar ComputeResScaleForStroking(const SkMatrix& matrix);
 private:
     void drawBitmapAsMask(const SkBitmap&, const SkPaint&) const;
 

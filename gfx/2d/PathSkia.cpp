@@ -10,6 +10,7 @@
 #include "Logging.h"
 #include "HelpersSkia.h"
 #include "PathHelpers.h"
+#include "skia/src/core/SkDraw.h"
 
 namespace mozilla::gfx {
 
@@ -138,8 +139,11 @@ bool PathSkia::StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
     return false;
   }
 
+  SkMatrix skiaMatrix;
+  GfxMatrixToSkiaMatrix(aTransform, skiaMatrix);
   SkPath strokePath;
-  paint.getFillPath(mPath, &strokePath);
+  paint.getFillPath(mPath, &strokePath, nullptr,
+                    SkDraw::ComputeResScaleForStroking(skiaMatrix));
 
   return SkPathContainsPoint(strokePath, aPoint, aTransform);
 }
