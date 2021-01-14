@@ -10,6 +10,4 @@ export FENNEC_NIGHTLY=1
 
 export MOZILLA_OFFICIAL=1
 
-export NM="$MOZ_FETCHES_DIR/clang/bin/llvm-nm"
-
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
