@@ -86,7 +86,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   // Enumeration for the valid play states (see mPlayState)
   enum PlayState {
-    PLAY_STATE_START,
     PLAY_STATE_LOADING,
     PLAY_STATE_PAUSED,
     PLAY_STATE_PLAYING,
