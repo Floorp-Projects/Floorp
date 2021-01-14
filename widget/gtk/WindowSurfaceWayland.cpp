@@ -577,11 +577,13 @@ WindowBackBuffer* WindowSurfaceWayland::SetNewWaylandBuffer() {
   return mWaylandBuffer;
 }
 
-WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferRecent() {
+// Recent
+WindowBackBuffer* WindowSurfaceWayland::GetWaylandBuffer() {
   LOGWAYLAND(
-      ("WindowSurfaceWayland::GetWaylandBufferRecent [%p] Requested buffer [%d "
-       "x %d]\n",
-       (void*)this, mWLBufferRect.width, mWLBufferRect.height));
+      ("WindowSurfaceWayland::GetWaylandBuffer [%p] Requested buffer [%d "
+       "x %d] can switch %d\n",
+       (void*)this, mWLBufferRect.width, mWLBufferRect.height,
+       mCanSwitchWaylandBuffer));
 
   // There's no buffer created yet, create a new one for partial screen updates.
   if (!mWaylandBuffer) {
@@ -589,7 +591,10 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferRecent() {
   }
 
   if (mWaylandBuffer->IsAttached()) {
-    LOGWAYLAND(("    Buffer is attached, return null\n"));
+    if (mCanSwitchWaylandBuffer) {
+      return SetNewWaylandBuffer();
+    }
+    LOGWAYLAND(("    Buffer is attached and we can't switch, return null\n"));
     return nullptr;
   }
 
@@ -600,34 +605,23 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferRecent() {
     return mWaylandBuffer;
   }
 
+  if (mCanSwitchWaylandBuffer) {
+    // Reuse existing buffer
+    LOGWAYLAND(("    Reuse buffer with resize [%d x %d]\n", mWLBufferRect.width,
+                mWLBufferRect.height));
+    if (mWaylandBuffer->Resize(mWLBufferRect.width, mWLBufferRect.height)) {
+      return mWaylandBuffer;
+    }
+    // OOM here, just return null to skip this frame.
+    return nullptr;
+  }
+
   LOGWAYLAND(
       ("    Buffer size does not match, requested %d x %d got %d x%d, return "
        "null.\n",
        mWaylandBuffer->GetWidth(), mWaylandBuffer->GetHeight(),
        mWLBufferRect.width, mWLBufferRect.height));
   return nullptr;
-}
-
-WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferWithSwitch() {
-  LOGWAYLAND(
-      ("WindowSurfaceWayland::GetWaylandBufferWithSwitch [%p] Requested buffer "
-       "[%d x %d]\n",
-       (void*)this, mWLBufferRect.width, mWLBufferRect.height));
-
-  // There's no buffer created yet or actual buffer is attached, get a new one.
-  if (!mWaylandBuffer || mWaylandBuffer->IsAttached()) {
-    return SetNewWaylandBuffer();
-  }
-
-  // Reuse existing buffer
-  LOGWAYLAND(("    Reuse buffer with resize [%d x %d]\n", mWLBufferRect.width,
-              mWLBufferRect.height));
-
-  // OOM here, just return null to skip this frame.
-  if (!mWaylandBuffer->Resize(mWLBufferRect.width, mWLBufferRect.height)) {
-    return nullptr;
-  }
-  return mWaylandBuffer;
 }
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
@@ -641,12 +635,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
        "%d\n",
        (void*)this, mWLBufferRect.width, mWLBufferRect.height));
 
-  // mCanSwitchWaylandBuffer set means we're getting buffer for fullscreen
-  // update.
-  WindowBackBuffer* buffer = mCanSwitchWaylandBuffer
-                                 ? GetWaylandBufferWithSwitch()
-                                 : GetWaylandBufferRecent();
-
+  WindowBackBuffer* buffer = GetWaylandBuffer();
   LOGWAYLAND(("WindowSurfaceWayland::LockWaylandBuffer [%p] Got buffer %p\n",
               (void*)this, (void*)buffer));
 
