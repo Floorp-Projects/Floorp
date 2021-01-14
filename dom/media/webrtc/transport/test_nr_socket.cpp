@@ -247,6 +247,8 @@ int TestNrSocket::getaddr(nr_transport_addr* addrp) {
 }
 
 void TestNrSocket::close() {
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s closing", this,
+        internal_socket_->my_addr().as_string);
   if (timer_handle_) {
     NR_async_timer_cancel(timer_handle_);
     timer_handle_ = nullptr;
@@ -259,7 +261,7 @@ void TestNrSocket::close() {
 
 int TestNrSocket::listen(int backlog) {
   MOZ_ASSERT(internal_socket_->my_addr().protocol == IPPROTO_TCP);
-  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s listening",
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s listening", this,
         internal_socket_->my_addr().as_string);
 
   return internal_socket_->listen(backlog);
@@ -452,6 +454,9 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr& from,
 }
 
 int TestNrSocket::connect(nr_transport_addr* addr) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s connecting", this,
+        internal_socket_->my_addr().as_string);
+
   if (connect_invoked_ || !port_mappings_.empty()) {
     MOZ_CRASH("TestNrSocket::connect() called more than once!");
     return R_INTERNAL;
@@ -490,6 +495,9 @@ int TestNrSocket::connect(nr_transport_addr* addr) {
 }
 
 int TestNrSocket::write(const void* msg, size_t len, size_t* written) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s writing", this,
+        internal_socket_->my_addr().as_string);
+
   UCHAR* buf = static_cast<UCHAR*>(const_cast<void*>(msg));
 
   if (nat_->nat_delegate_ &&
@@ -540,6 +548,9 @@ int TestNrSocket::write(const void* msg, size_t len, size_t* written) {
 }
 
 int TestNrSocket::read(void* buf, size_t maxlen, size_t* len) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %p %s reading", this,
+        internal_socket_->my_addr().as_string);
+
   int r;
 
   if (port_mappings_.empty()) {

@@ -633,6 +633,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
               resource.address_family=AF_INET6;
               break;
             default:
+              assert(0);
               ABORT(R_BAD_ARGS);
           }
 
