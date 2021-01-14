@@ -159,7 +159,8 @@ class WebsitePermissionsView(
                 adapter.setDropDownViewResource(R.layout.quicksetting_permission_spinner_dropdown)
                 viewHolder.status.adapter = adapter
 
-                viewHolder.status.setSelection(selectedIndex, false)
+                viewHolder.status.tag = permissionState.autoplayValue
+                viewHolder.status.setSelection(selectedIndex)
                 viewHolder.status.onItemSelectedListener =
                     object : AdapterView.OnItemSelectedListener {
                         override fun onItemSelected(
@@ -168,6 +169,14 @@ class WebsitePermissionsView(
                             position: Int,
                             id: Long
                         ) {
+                            // Unfortunately the spinner component triggers an selection event when initialized,
+                            // to avoid that, we are using the tag property to store the selected value and
+                            // be able to differentiate from an initialization event from a normal selection event
+                            // see https://stackoverflow.com/questions/21747917/undesired-onitemselected-calls/21751327#21751327
+                            if (viewHolder.status.selectedItem == viewHolder.status.tag) {
+                                return
+                            }
+                            viewHolder.status.tag = viewHolder.status.selectedItem
                             val type = viewHolder.status.selectedItem as AutoplayValue
                             interactor.onAutoplayChanged(type)
                         }

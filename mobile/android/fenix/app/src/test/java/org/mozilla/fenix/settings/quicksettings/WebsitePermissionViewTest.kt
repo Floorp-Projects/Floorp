@@ -195,6 +195,18 @@ class WebsitePermissionViewTest {
             0L
         )
 
-        verify { interactor.onAutoplayChanged(permissionView.status.selectedItem as AutoplayValue) }
+        // Selecting the same item should not trigger a selection event.
+        verify(exactly = 0) { interactor.onAutoplayChanged(permissionView.status.selectedItem as AutoplayValue) }
+
+        permissionView.status.setSelection(2)
+        permissionView.status.onItemSelectedListener!!.onItemSelected(
+            mock(),
+            permissionView.status,
+            2,
+            0L
+        )
+
+        // Selecting a different item from the selected one should trigger an selection event.
+        verify(exactly = 1) { interactor.onAutoplayChanged(permissionView.status.selectedItem as AutoplayValue) }
     }
 }
