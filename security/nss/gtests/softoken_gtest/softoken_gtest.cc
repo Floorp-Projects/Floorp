@@ -14,6 +14,7 @@
 #include "databuffer.h"
 #include <fstream>
 #include <chrono>
+#include <sqlite3.h>
 using namespace std::chrono;
 
 #include "softoken_dh_vectors.h"
@@ -41,6 +42,61 @@ class SoftokenTest : public ::testing::Test {
 
   ScopedUniqueDirectory mNSSDBDir;
 };
+
+TEST_F(SoftokenTest, CheckDefaultPbkdf2Iterations) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, "password"));
+
+  // Open key4.db and check encoded PBE algorithm and iteration count.
+  // Compare bytes against the expected values to avoid ASN.1 here.
+  std::string key_db = mNSSDBDir.GetPath() + "/key4.db";
+
+  sqlite3 *sql_db = NULL;
+  ASSERT_EQ(SQLITE_OK, sqlite3_open(key_db.c_str(), &sql_db));
+
+  char *query_str = sqlite3_mprintf("SELECT item2 FROM metaData;");
+  ASSERT_NE(nullptr, query_str);
+
+  sqlite3_stmt *statement = NULL;
+  ASSERT_EQ(SQLITE_OK,
+            sqlite3_prepare_v2(sql_db, query_str, -1, &statement, NULL));
+  ASSERT_EQ(SQLITE_ROW, sqlite3_step(statement));
+  unsigned int len = sqlite3_column_bytes(statement, 0);
+  const unsigned char *reader = sqlite3_column_text(statement, 0);
+
+  ASSERT_NE(nullptr, reader);
+  ASSERT_EQ(133U, len);
+
+  // pkcs5PBES2, pkcs5PBKDF2
+  const uint8_t pkcs5_with_pbkdf2[] = {
+      0x30, 0x81, 0x82, 0x30, 0x6E, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86,
+      0xF7, 0x0D, 0x01, 0x05, 0x0D, 0x30, 0x61, 0x30, 0x42, 0x06, 0x09,
+      0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x05, 0x0C, 0x30, 0x35};
+  EXPECT_EQ(0, memcmp(reader, pkcs5_with_pbkdf2, sizeof(pkcs5_with_pbkdf2)));
+  reader += sizeof(pkcs5_with_pbkdf2);
+
+  // Skip over the 32B random salt
+  const uint8_t salt_prefix[] = {0x04, 0x20};
+  EXPECT_EQ(0, memcmp(reader, salt_prefix, sizeof(salt_prefix)));
+  reader += sizeof(salt_prefix) + 0x20;
+
+  // Expect 10000 iterations
+  const uint8_t iterations[] = {0x02, 0x02, 0x27, 0x10};
+  EXPECT_EQ(0, memcmp(reader, iterations, sizeof(iterations)));
+  reader += sizeof(iterations);
+
+  // hmacWithSHA256, aes256-CBC
+  const uint8_t oids[] = {0x02, 0x01, 0x20, 0x30, 0x0A, 0x06, 0x08,
+                          0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x02,
+                          0x09, 0x30, 0x1B, 0x06, 0x09, 0x60, 0x86,
+                          0x48, 0x01, 0x65, 0x03, 0x04, 0x01, 0x2A};
+  EXPECT_EQ(0, memcmp(reader, oids, sizeof(oids)));
+
+  EXPECT_EQ(SQLITE_OK, sqlite3_finalize(statement));
+  sqlite3_free(query_str);
+  sqlite3_close(sql_db);
+}
 
 TEST_F(SoftokenTest, ResetSoftokenEmptyPassword) {
   ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
