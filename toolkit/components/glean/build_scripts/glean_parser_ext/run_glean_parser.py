@@ -43,6 +43,12 @@ def parse(args):
     # Adapted to how mozbuild sends us a fd, and to expire on versions not dates.
 
     options = get_parser_options(moz_app_version)
+
+    # Lint the yaml first, then lint the metrics.
+    if lint.lint_yaml_files(input_files, parser_config=options):
+        # Warnings are Errors
+        sys.exit(1)
+
     all_objs = parser.parse_objects(input_files, options)
     if util.report_validation_errors(all_objs):
         sys.exit(1)
