@@ -1919,7 +1919,7 @@ void CompilationStencil::dumpFields(js::JSONPrinter& json) {
   }
   json.endObject();
 
-  if (scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
+  if (moduleMetadata) {
     json.beginObjectProperty("moduleMetadata");
     moduleMetadata->dumpFields(json, this);
     json.endObject();
@@ -1927,7 +1927,7 @@ void CompilationStencil::dumpFields(js::JSONPrinter& json) {
 
   json.beginObjectProperty("asmJS");
   for (auto iter = asmJS.iter(); !iter.done(); iter.next()) {
-    SprintfLiteral(index, "%u", iter.get().key().index);
+    SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
     json.formatProperty(index, "asm.js");
   }
   json.endObject();
