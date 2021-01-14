@@ -3136,8 +3136,9 @@ struct ClipRect {
   float x1;
   float y1;
 
-  ClipRect(const IntRect& i) : x0(i.x0), y0(i.y0), x1(i.x1), y1(i.y1) {}
-  ClipRect(const Texture& t) : ClipRect(ctx->apply_scissor(t)) {}
+  explicit ClipRect(const IntRect& i)
+      : x0(i.x0), y0(i.y0), x1(i.x1), y1(i.y1) {}
+  explicit ClipRect(const Texture& t) : ClipRect(ctx->apply_scissor(t)) {}
 
   template <typename P>
   bool overlaps(int nump, const P* p) const {
