@@ -35,9 +35,11 @@ def _import_modules(modules):
 
 
 def get_decision_parameters(graph_config, parameters):
+    # Environment is defined in .taskcluster.yml
     pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
     parameters["pull_request_number"] = None if pr_number is None else int(pr_number)
     parameters["base_rev"] = os.environ.get("MOBILE_BASE_REV")
+    parameters["head_ref"] = os.environ.get("MOBILE_HEAD_REF")
     version = get_version()
     parameters["version"] = version
     parameters.setdefault("next_version", None)
