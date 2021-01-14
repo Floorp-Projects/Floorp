@@ -141,7 +141,9 @@ impl BucketedAtlasAllocator {
 
     /// Allocate a rectangle in the atlas.
     pub fn allocate(&mut self, mut requested_size: Size) -> Option<Allocation> {
-        if requested_size.is_empty() {
+        if requested_size.is_empty()
+            || requested_size.width > std::u16::MAX as i32
+            || requested_size.height > std::u16::MAX as i32 {
             return None;
         }
 
@@ -348,6 +350,7 @@ impl BucketedAtlasAllocator {
     /// The squashed shelves are not removed, their height is just set to zero so no item
     /// can go in, and they will be garbage-collected whenever there's no shelf above them.
     /// For simplicity, the bucket width is not modified.
+
     fn coalesce_shelves(&mut self, w: u16, h: u16) -> (usize, BucketIndex) {
         let len = self.shelves.len();
         let mut coalesce_range = None;
@@ -386,7 +389,9 @@ impl BucketedAtlasAllocator {
         }
 
         if let Some(range) = coalesce_range {
+            let y_top = self.shelves[range.start].y + coalesced_height;
             for i in range.start + 1 .. range.end {
+                self.shelves[i].y = y_top;
                 self.shelves[i].height = 0;
             }
 
@@ -403,10 +408,9 @@ impl BucketedAtlasAllocator {
     fn num_buckets(&self, width: u16, height: u16) -> u16 {
         match self.column_width / u16::max(width, height) {
             0 ..= 4 => 1,
-            5 ..= 15 => 2,
-            16 ..= 64 => 4,
-            65 ..= 256 => 8,
-            _ => 16,
+            5 ..= 16 => 2,
+            17 ..= 32 => 4,
+            n => (n /16 - 1).next_power_of_two(),
         }.min((MAX_BIN_COUNT - self.buckets.len()) as u16)
     }
 
@@ -468,7 +472,7 @@ impl BucketedAtlasAllocator {
                     let prev_shelf = &self.shelves[self.shelves.len() - 2];
                     self.available_height = self.height - (prev_shelf.y + prev_shelf.height);
                 } else {
-                    // Reclaim the height of the bucket.
+                    // Reclaim the height of the shelf.
                     self.available_height += shelf.height;
                 }
             }
@@ -671,14 +675,6 @@ fn atlas_basic() {
     let full = atlas.allocate(size2(1000, 1000)).unwrap().id;
     assert!(atlas.allocate(size2(1, 1)).is_none());
     atlas.deallocate(full);
-}
-
-#[test]
-fn fuzz_01() {
-    let mut atlas = BucketedAtlasAllocator::new(size2(1000, 1000));
-
-    assert!(atlas.allocate(size2(65280, 1)).is_none());
-    assert!(atlas.allocate(size2(1, 65280)).is_none());
 }
 
 #[test]
@@ -891,4 +887,66 @@ fn clear() {
         atlas.allocate(size2(29, 28)).unwrap();
         atlas.allocate(size2(32, 32)).unwrap();
     }
+}
+
+
+#[test]
+fn fuzz_01() {
+    let mut atlas = BucketedAtlasAllocator::new(size2(1000, 1000));
+
+    assert!(atlas.allocate(size2(65280, 1)).is_none());
+    assert!(atlas.allocate(size2(1, 65280)).is_none());
+}
+
+#[test]
+fn fuzz_02() {
+    let mut atlas = BucketedAtlasAllocator::new(size2(1000, 1000));
+
+    assert!(atlas.allocate(size2(255, 65599)).is_none());
+}
+
+#[test]
+fn fuzz_03() {
+    let mut atlas = BucketedAtlasAllocator::new(size2(1000, 1000));
+
+    let sizes = &[
+        size2(999, 128),
+        size2(168492810, 10),
+        size2(45, 96),
+        size2(-16711926, 0),
+    ];
+
+    let mut allocations = Vec::new();
+    let mut allocated_space = 0;
+
+    for size in sizes {
+        if let Some(alloc) = atlas.allocate(*size) {
+            allocations.push(alloc);
+            allocated_space += alloc.rectangle.area();
+            assert_eq!(allocated_space, atlas.allocated_space());
+        }
+    }
+
+    for alloc in &allocations {
+        atlas.deallocate(alloc.id);
+
+        allocated_space -= alloc.rectangle.area();
+        assert_eq!(allocated_space, atlas.allocated_space());
+    }
+
+    assert_eq!(atlas.allocated_space(), 0);
+}
+
+#[test]
+fn fuzz_04() {
+    let mut atlas = BucketedAtlasAllocator::new(size2(1000, 1000));
+
+    assert!(atlas.allocate(size2(2560, 2147483647)).is_none());
+}
+
+#[test]
+fn fuzz_05() {
+    let mut atlas = BucketedAtlasAllocator::new(size2(2048, 2048));
+
+    assert!(atlas.allocate(size2(0, -1978597547)).is_none());
 }
