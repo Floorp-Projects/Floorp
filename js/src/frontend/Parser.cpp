@@ -6120,8 +6120,9 @@ bool GeneralParser<ParseHandler, Unit>::matchInOrOf(bool* isForInp,
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::forHeadStart(
-    YieldHandling yieldHandling, ParseNodeKind* forHeadKind,
-    Node* forInitialPart, Maybe<ParseContext::Scope>& forLoopLexicalScope,
+    YieldHandling yieldHandling, IteratorKind iterKind,
+    ParseNodeKind* forHeadKind, Node* forInitialPart,
+    Maybe<ParseContext::Scope>& forLoopLexicalScope,
     Node* forInOrOfExpression) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftParen));
 
@@ -6155,8 +6156,13 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   // For-in loop backwards compatibility requires that |let| starting a
   // for-loop that's not a (new to ES6) for-of loop, in non-strict mode code,
   // parse as an identifier.  (|let| in for-of is always a declaration.)
+  //
+  // For-of loops can't start with the token sequence "async of", because that
+  // leads to a shift-reduce conflict when parsing |for (async of => {};;)| or
+  // |for (async of [])|.
   bool parsingLexicalDeclaration = false;
   bool letIsIdentifier = false;
+  bool startsWithForOf = false;
   if (tt == TokenKind::Const) {
     parsingLexicalDeclaration = true;
     tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
@@ -6177,6 +6183,18 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
       anyChars.ungetToken();
       letIsIdentifier = true;
     }
+  } else if (tt == TokenKind::Async && iterKind == IteratorKind::Sync) {
+    tokenStream.consumeKnownToken(TokenKind::Async, TokenStream::SlashIsRegExp);
+
+    TokenKind next;
+    if (!tokenStream.peekToken(&next)) {
+      return false;
+    }
+
+    if (next == TokenKind::Of) {
+      startsWithForOf = true;
+    }
+    anyChars.ungetToken();
   }
 
   if (parsingLexicalDeclaration) {
@@ -6242,7 +6260,14 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   //
   // See ES6 13.7.
   if (isForOf && letIsIdentifier) {
-    errorAt(exprOffset, JSMSG_LET_STARTING_FOROF_LHS);
+    errorAt(exprOffset, JSMSG_BAD_STARTING_FOROF_LHS, "let");
+    return false;
+  }
+
+  // In a for-of loop, the LeftHandSideExpression isn't allowed to be an
+  // identifier named "async" per the [lookahead ≠ async of] restriction.
+  if (isForOf && startsWithForOf) {
+    errorAt(exprOffset, JSMSG_BAD_STARTING_FOROF_LHS, "async of");
     return false;
   }
 
@@ -6356,8 +6381,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
   //
   // In either case the subsequent token can be consistently accessed using
   // TokenStream::SlashIsDiv semantics.
-  if (!forHeadStart(yieldHandling, &headKind, &startNode, forLoopLexicalScope,
-                    &iteratedExpr)) {
+  if (!forHeadStart(yieldHandling, iterKind, &headKind, &startNode,
+                    forLoopLexicalScope, &iteratedExpr)) {
     return null();
   }
 
