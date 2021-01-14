@@ -16,7 +16,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/LocationBase.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/UserActivation.h"
@@ -120,7 +119,6 @@ enum class ExplicitActiveStatus : uint8_t {
   /* Hold the audio muted state and should be used on top level browsing     \
    * contexts only */                                                        \
   FIELD(Muted, bool)                                                         \
-  FIELD(FeaturePolicy, RefPtr<mozilla::dom::FeaturePolicy>)                  \
   /* See nsSandboxFlags.h for the possible flags. */                         \
   FIELD(SandboxFlags, uint32_t)                                              \
   FIELD(InitialSandboxFlags, uint32_t)                                       \

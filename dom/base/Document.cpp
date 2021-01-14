@@ -3711,36 +3711,27 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 }
 
 already_AddRefed<dom::FeaturePolicy> Document::GetParentFeaturePolicy() {
-  if (!mDocumentContainer) {
-    return nullptr;
+  BrowsingContext* browsingContext = GetBrowsingContext();
+  NS_ENSURE_TRUE(browsingContext, nullptr);
+  NS_ENSURE_TRUE(browsingContext->IsContentSubframe(), nullptr);
+
+  HTMLIFrameElement* iframe =
+      HTMLIFrameElement::FromNodeOrNull(browsingContext->GetEmbedderElement());
+  if (iframe) {
+    return do_AddRef(iframe->FeaturePolicy());
   }
 
-  nsPIDOMWindowOuter* containerWindow = mDocumentContainer->GetWindow();
-  if (!containerWindow) {
-    return nullptr;
+  if (XRE_IsParentProcess()) {
+    return do_AddRef(browsingContext->Canonical()->GetContainerFeaturePolicy());
   }
 
-  BrowsingContext* context = containerWindow->GetBrowsingContext();
-  if (!context) {
-    return nullptr;
-  }
+  WindowContext* windowContext = browsingContext->GetCurrentWindowContext();
+  NS_ENSURE_TRUE(windowContext, nullptr);
 
-  RefPtr<dom::FeaturePolicy> parentPolicy;
-  if (context->IsContentSubframe() && !context->GetParent()->IsInProcess()) {
-    // We are in cross process, so try to get feature policy from
-    // container's BrowsingContext
-    parentPolicy = context->GetFeaturePolicy();
-    return parentPolicy.forget();
-  }
+  WindowGlobalChild* child = windowContext->GetWindowGlobalChild();
+  NS_ENSURE_TRUE(child, nullptr);
 
-  nsCOMPtr<nsINode> node = containerWindow->GetFrameElementInternal();
-  HTMLIFrameElement* iframe = HTMLIFrameElement::FromNodeOrNull(node);
-  if (!iframe) {
-    return nullptr;
-  }
-
-  parentPolicy = iframe->FeaturePolicy();
-  return parentPolicy.forget();
+  return do_AddRef(child->GetContainerFeaturePolicy());
 }
 
 nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {

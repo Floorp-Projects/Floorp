@@ -81,6 +81,13 @@ Document* WindowContext::GetExtantDoc() const {
   return innerWindow ? innerWindow->GetExtantDoc() : nullptr;
 }
 
+WindowGlobalChild* WindowContext::GetWindowGlobalChild() const {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  NS_ENSURE_TRUE(XRE_IsContentProcess(), nullptr);
+  nsGlobalWindowInner* innerWindow = GetInnerWindow();
+  return innerWindow ? innerWindow->GetWindowGlobalChild() : nullptr;
+}
+
 WindowContext* WindowContext::GetParentWindowContext() {
   return mBrowsingContext->GetParentWindowContext();
 }

@@ -20,6 +20,7 @@ namespace mozilla {
 namespace dom {
 
 class BrowsingContext;
+class FeaturePolicy;
 class WindowContext;
 class WindowGlobalParent;
 class JSWindowActorChild;
@@ -123,6 +124,10 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   void MaybeSendUpdateDocumentWouldPreloadResources();
 
+  dom::FeaturePolicy* GetContainerFeaturePolicy() const {
+    return mContainerFeaturePolicy;
+  }
+
  protected:
   const nsACString& GetRemoteType() override;
 
@@ -164,6 +169,9 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   mozilla::ipc::IPCResult RecvResetScalingZoom();
 
+  mozilla::ipc::IPCResult RecvSetContainerFeaturePolicy(
+      dom::FeaturePolicy* aContainerFeaturePolicy);
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
@@ -175,6 +183,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   RefPtr<nsGlobalWindowInner> mWindowGlobal;
   RefPtr<dom::WindowContext> mWindowContext;
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+  RefPtr<dom::FeaturePolicy> mContainerFeaturePolicy;
   nsCOMPtr<nsIURI> mDocumentURI;
   int64_t mBeforeUnloadListeners = 0;
   bool mDocumentWouldPreloadResources = false;

@@ -1663,6 +1663,15 @@ void CanonicalBrowsingContext::ResetScalingZoom() {
   }
 }
 
+void CanonicalBrowsingContext::SetContainerFeaturePolicy(
+    FeaturePolicy* aContainerFeaturePolicy) {
+  mContainerFeaturePolicy = aContainerFeaturePolicy;
+
+  if (WindowGlobalParent* current = GetCurrentWindowGlobal()) {
+    Unused << current->SendSetContainerFeaturePolicy(mContainerFeaturePolicy);
+  }
+}
+
 void CanonicalBrowsingContext::SetCrossGroupOpenerId(uint64_t aOpenerId) {
   MOZ_DIAGNOSTIC_ASSERT(IsTopContent());
   MOZ_DIAGNOSTIC_ASSERT(mCrossGroupOpenerId == 0,
@@ -1671,7 +1680,7 @@ void CanonicalBrowsingContext::SetCrossGroupOpenerId(uint64_t aOpenerId) {
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CanonicalBrowsingContext, BrowsingContext,
-                                   mSessionHistory)
+                                   mSessionHistory, mContainerFeaturePolicy)
 
 NS_IMPL_ADDREF_INHERITED(CanonicalBrowsingContext, BrowsingContext)
 NS_IMPL_RELEASE_INHERITED(CanonicalBrowsingContext, BrowsingContext)

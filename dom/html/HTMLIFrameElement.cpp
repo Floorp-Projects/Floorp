@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLIFrameElement.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/FeaturePolicy.h"
@@ -234,24 +235,10 @@ void HTMLIFrameElement::MaybeStoreCrossOriginFeaturePolicy() {
     return;
   }
 
-  // If we are in subframe cross origin, store the featurePolicy to
-  // browsingContext
-  nsPIDOMWindowOuter* topWindow = browsingContext->Top()->GetDOMWindow();
-  if (NS_WARN_IF(!topWindow)) {
-    return;
+  if (ContentChild* cc = ContentChild::GetSingleton()) {
+    Unused << cc->SendSetContainerFeaturePolicy(browsingContext,
+                                                mFeaturePolicy);
   }
-
-  Document* topLevelDocument = topWindow->GetExtantDoc();
-  if (NS_WARN_IF(!topLevelDocument)) {
-    return;
-  }
-
-  if (!NS_SUCCEEDED(nsContentUtils::CheckSameOrigin(topLevelDocument, this))) {
-    return;
-  }
-
-  // Return value of setting synced field should be checked. See bug 1656492.
-  Unused << browsingContext->SetFeaturePolicy(mFeaturePolicy);
 }
 
 already_AddRefed<nsIPrincipal>
