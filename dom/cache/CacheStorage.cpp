@@ -16,6 +16,7 @@
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
+#include "mozilla/dom/cache/CacheCommon.h"
 #include "mozilla/dom/cache/CacheStorageChild.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "mozilla/dom/cache/PCacheChild.h"
@@ -77,12 +78,10 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
   }
 
   // Require a ContentPrincipal to avoid null principal, etc.
-  if (NS_WARN_IF(aPrincipalInfo.type() !=
-                 PrincipalInfo::TContentPrincipalInfo)) {
-    return false;
-  }
+  CACHE_TRY(OkIf(aPrincipalInfo.type() == PrincipalInfo::TContentPrincipalInfo),
+            false);
 
-  // If we're in testing mode, then don't do any more work to determing if
+  // If we're in testing mode, then don't do any more work to determine if
   // the origin is trusted.  We have to run some tests as http.
   if (aTestingPrefEnabled) {
     return true;
@@ -97,23 +96,21 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
   // TODO: Implement full secure setting algorithm. (bug 1177856)
 
   const nsCString& flatURL = aPrincipalInfo.get_ContentPrincipalInfo().spec();
-  const char* url = flatURL.get();
+  const char* const url = flatURL.get();
 
   // off the main thread URL parsing using nsStdURLParser.
-  nsCOMPtr<nsIURLParser> urlParser = new nsStdURLParser();
+  const nsCOMPtr<nsIURLParser> urlParser = new nsStdURLParser();
 
   uint32_t schemePos;
   int32_t schemeLen;
   uint32_t authPos;
   int32_t authLen;
-  nsresult rv =
+  CACHE_TRY(
       urlParser->ParseURL(url, flatURL.Length(), &schemePos, &schemeLen,
-                          &authPos, &authLen, nullptr, nullptr);  // ignore path
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
+                          &authPos, &authLen, nullptr, nullptr),  // ignore path
+      false);
 
-  nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
+  const nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
   if (scheme.LowerCaseEqualsLiteral("https") ||
       scheme.LowerCaseEqualsLiteral("file")) {
     return true;
@@ -126,19 +123,15 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
 
   uint32_t hostPos;
   int32_t hostLen;
+  CACHE_TRY(urlParser->ParseAuthority(url + authPos, authLen, nullptr,
+                                      nullptr,           // ignore username
+                                      nullptr, nullptr,  // ignore password
+                                      &hostPos, &hostLen,
+                                      nullptr),  // ignore port
+            false);
 
-  rv = urlParser->ParseAuthority(url + authPos, authLen, nullptr,
-                                 nullptr,           // ignore username
-                                 nullptr, nullptr,  // ignore password
-                                 &hostPos, &hostLen,
-                                 nullptr);  // ignore port
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  nsDependentCSubstring hostname(url + authPos + hostPos, hostLen);
-
-  return nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(hostname);
+  return nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
+      nsDependentCSubstring(url + authPos + hostPos, hostLen));
 }
 
 }  // namespace
@@ -152,19 +145,16 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnMainThread(
   MOZ_ASSERT(NS_IsMainThread());
 
   PrincipalInfo principalInfo;
-  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
+  CACHE_TRY(PrincipalToPrincipalInfo(aPrincipal, &principalInfo), nullptr,
+            [&aRv](const nsresult rv) { aRv.Throw(rv); });
 
-  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
-    NS_WARNING("CacheStorage not supported on invalid origins.");
-    RefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
-    return ref.forget();
-  }
+  CACHE_TRY(OkIf(QuotaManager::IsPrincipalInfoValid(principalInfo)),
+            RefPtr{new CacheStorage(NS_ERROR_DOM_SECURITY_ERR)}.forget(),
+            [](const auto) {
+              NS_WARNING("CacheStorage not supported on invalid origins.");
+            });
 
-  bool testingEnabled =
+  const bool testingEnabled =
       aForceTrustedOrigin ||
       Preferences::GetBool("dom.caches.testing.enabled", false) ||
       StaticPrefs::dom_serviceWorkers_testing_enabled();
@@ -205,10 +195,8 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
   const PrincipalInfo& principalInfo =
       aWorkerPrivate->GetEffectiveStoragePrincipalInfo();
 
-  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
+  CACHE_TRY(OkIf(QuotaManager::IsPrincipalInfoValid(principalInfo)), nullptr,
+            [&aRv](const auto) { aRv.Throw(NS_ERROR_FAILURE); });
 
   // We have a number of cases where we want to skip the https scheme
   // validation:

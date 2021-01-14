@@ -99,7 +99,7 @@ class CacheStorage final : public nsISupports,
 
   const Namespace mNamespace;
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
+  const UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
 
   // weak ref cleared in DestroyInternal
   CacheStorageChild* mActor;
