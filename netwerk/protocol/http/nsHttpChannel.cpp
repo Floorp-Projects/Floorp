@@ -7593,6 +7593,17 @@ nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
 
   if (LoadFallingBack()) return NS_OK;
 
+  if (NS_SUCCEEDED(mStatus) && mResponseHead && mAuthProvider) {
+    uint32_t httpStatus = mResponseHead->Status();
+    if (httpStatus != 401 && httpStatus != 407) {
+      nsresult rv = mAuthProvider->CheckForSuperfluousAuth();
+      if (NS_FAILED(rv)) {
+        LOG(("  CheckForSuperfluousAuth failed (%08x)",
+             static_cast<uint32_t>(rv)));
+      }
+    }
+  }
+
   return CallOnStartRequest();
 }
 
