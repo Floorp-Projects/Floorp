@@ -11,7 +11,7 @@ add_task(
     // two birds with one stone and expect two notifications.  Trigger the path by
     // adding a download.
     let url = Services.io.newURI("http://example.com/a");
-    let promises = [onFrecencyChanged(url), onFrecencyChanged(url)];
+    let promise = onManyFrecenciesChanged();
     await PlacesUtils.history.insert({
       url,
       visits: [
@@ -20,14 +20,14 @@ add_task(
         },
       ],
     });
-    await Promise.all(promises);
+    await promise;
   }
 );
 
 // nsNavHistory::UpdateFrecency
 add_task(async function test_nsNavHistory_UpdateFrecency() {
   let url = Services.io.newURI("http://example.com/b");
-  let promise = onFrecencyChanged(url);
+  let promise = onManyFrecenciesChanged();
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url,
@@ -47,7 +47,7 @@ add_task(async function test_invalidateFrecencies() {
     url,
     title: "test",
   });
-  let promise = onFrecencyChanged(url);
+  let promise = onManyFrecenciesChanged();
   await PlacesUtils.history.removeByFilter({ host: url.host });
   await promise;
 });
@@ -66,19 +66,6 @@ add_task(async function test_nsNavHistory_FixAndDecayFrecency() {
     .observe(null, "idle-daily", "");
   await Promise.all([onManyFrecenciesChanged()]);
 });
-
-function onFrecencyChanged(expectedURI) {
-  return new Promise(resolve => {
-    let obs = new NavHistoryObserver();
-    obs.onFrecencyChanged = (uri, newFrecency, guid, hidden, visitDate) => {
-      PlacesUtils.history.removeObserver(obs);
-      Assert.ok(!!uri);
-      Assert.ok(uri.equals(expectedURI));
-      resolve();
-    };
-    PlacesUtils.history.addObserver(obs);
-  });
-}
 
 function onManyFrecenciesChanged() {
   return new Promise(resolve => {
