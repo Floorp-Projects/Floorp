@@ -304,16 +304,10 @@ void GfxInfo::GetData() {
 
     if (!mesaVendor.IsEmpty()) {
       mVendorId = mesaVendor;
-    } else {
-      NS_WARNING(
-          "Failed to get Mesa vendor ID! GLX_MESA_query_renderer unsupported?");
     }
 
     if (!mesaDevice.IsEmpty()) {
       mDeviceId = mesaDevice;
-    } else {
-      NS_WARNING(
-          "Failed to get Mesa device ID! GLX_MESA_query_renderer unsupported?");
     }
   } else if (glVendor.EqualsLiteral("NVIDIA Corporation")) {
     CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(DeviceVendor::NVIDIA),
