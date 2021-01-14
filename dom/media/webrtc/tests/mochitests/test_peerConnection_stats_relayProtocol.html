@@ -45,7 +45,7 @@ var PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE = test => {
       }
     }
     is(haveRelayProtocol["host-undefined"], undefined, "relayProtocol not set for host candidates");
-    is(haveRelayProtocol["srvflx-undefined"], undefined, "relayProtocol not set for server reflexive candidates");
+    is(haveRelayProtocol["srflx-undefined"], undefined, "relayProtocol not set for server reflexive candidates");
     ok(haveRelayProtocol["relay-udp"], "Has UDP relay candidate");
     ok(haveRelayProtocol["relay-tcp"], "Has TCP relay candidate");
     // TURN/TLS does not work, see https://bugzilla.mozilla.org/show_bug.cgi?id=1323439
