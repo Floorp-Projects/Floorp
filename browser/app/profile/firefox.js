@@ -384,6 +384,10 @@ pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true);
 
 pref("browser.urlbar.eventTelemetry.enabled", false);
 
+// When we send events to Urlbar extensions, we wait this amount of time in
+// milliseconds for them to respond before timing out.
+pref("browser.urlbar.extension.timeout", 400);
+
 // Controls when to DNS resolve single word search strings, after they were
 // searched for. If the string is resolved as a valid host, show a
 // "Did you mean to go to 'host'" prompt.
