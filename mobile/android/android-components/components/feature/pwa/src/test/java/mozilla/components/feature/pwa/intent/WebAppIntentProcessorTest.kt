@@ -73,6 +73,7 @@ class WebAppIntentProcessorTest {
         val addTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
         whenever(addTabUseCase.invoke(
             url = "https://mozilla.com",
+            selectTab = false,
             source = SessionState.Source.HOME_SCREEN,
             customTabConfig = CustomTabConfig(
                 externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP,
@@ -114,6 +115,7 @@ class WebAppIntentProcessorTest {
 
         verify(addTabUseCase).invoke(
             url = "https://mozilla.com",
+            selectTab = false,
             source = SessionState.Source.HOME_SCREEN,
             customTabConfig = CustomTabConfig(
                 externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP,
