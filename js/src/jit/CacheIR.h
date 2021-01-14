@@ -894,6 +894,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return loadArgumentFixedSlot_(slotIndex);
   }
 
+  ObjOperandId loadSpreadArgs() {
+    ArgumentKind kind = ArgumentKind::Arg0;
+    uint32_t argc = 1;
+    CallFlags flags(CallFlags::Spread);
+    return ObjOperandId(loadArgumentFixedSlot(kind, argc, flags).id());
+  }
+
   void callScriptedFunction(ObjOperandId callee, Int32OperandId argc,
                             CallFlags flags) {
     callScriptedFunction_(callee, argc, flags);
@@ -1691,6 +1698,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                        UnaryMathFunction fun);
   AttachDecision tryAttachMathPow(HandleFunction callee);
   AttachDecision tryAttachMathMinMax(HandleFunction callee, bool isMax);
+  AttachDecision tryAttachSpreadMathMinMax(HandleFunction callee, bool isMax);
   AttachDecision tryAttachIsTypedArray(HandleFunction callee,
                                        bool isPossiblyWrapped);
   AttachDecision tryAttachIsTypedArrayConstructor(HandleFunction callee);
