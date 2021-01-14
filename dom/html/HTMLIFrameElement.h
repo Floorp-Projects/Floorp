@@ -8,11 +8,14 @@
 #define mozilla_dom_HTMLIFrameElement_h
 
 #include "mozilla/Attributes.h"
+#include "nsGenericHTMLElement.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsDOMTokenList.h"
 
 namespace mozilla {
 namespace dom {
+
+class FeaturePolicy;
 
 class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
  public:
