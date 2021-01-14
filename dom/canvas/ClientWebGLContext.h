@@ -877,6 +877,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
     EnqueueError(0, format, args...);
   }
 
+  template <typename... Args>
+  void EnqueuePerfWarning(const char* const format, const Args&... args) const {
+    EnqueueError(webgl::kErrorPerfWarning, format, args...);
+  }
+
   void EnqueueError_ArgEnum(const char* argName,
                             GLenum val) const;  // Cold code.
 

@@ -175,8 +175,6 @@ already_AddRefed<IDirect3DSurface9> D3D9SurfaceImage::GetD3D9Surface() const {
   return textureSurface.forget();
 }
 
-const D3DSURFACE_DESC& D3D9SurfaceImage::GetDesc() const { return mDesc; }
-
 HANDLE
 D3D9SurfaceImage::GetShareHandle() const { return mShareHandle; }
 
