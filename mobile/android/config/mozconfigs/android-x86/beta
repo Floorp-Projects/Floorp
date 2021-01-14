@@ -12,7 +12,6 @@ ac_add_options --with-branding=mobile/android/branding/beta
 
 export MOZILLA_OFFICIAL=1
 
-export AR="$MOZ_FETCHES_DIR/clang/bin/llvm-ar"
 export NM="$MOZ_FETCHES_DIR/clang/bin/llvm-nm"
 export RANLIB="$MOZ_FETCHES_DIR/clang/bin/llvm-ranlib"
 
