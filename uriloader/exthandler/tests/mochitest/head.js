@@ -129,7 +129,7 @@ async function waitForSubDialog(browser, url, state) {
   let eventStr = state ? "dialogopen" : "dialogclose";
 
   let tabDialogBox = gBrowser.getTabDialogBox(browser);
-  let dialogStack = tabDialogBox._dialogManager._dialogStack;
+  let dialogStack = tabDialogBox.getTabDialogManager()._dialogStack;
 
   let checkFn;
 

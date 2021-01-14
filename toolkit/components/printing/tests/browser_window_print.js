@@ -175,9 +175,8 @@ add_task(async function test_focused_browsing_context() {
     () =>
       gBrowser
         .getTabDialogBox(newTabBrowser)
-        ._dialogManager._dialogs.find(dlg =>
-          dlg._box.querySelector(".printSettingsBrowser")
-        ),
+        .getTabDialogManager()
+        ._dialogs.find(dlg => dlg._box.querySelector(".printSettingsBrowser")),
     "Wait for dialog"
   );
   await dialog._dialogReady;
