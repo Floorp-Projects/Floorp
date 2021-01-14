@@ -239,11 +239,11 @@ class nsFrameSelection final {
    * @param aHint will tell the selection which direction geometrically to
    * actually show the caret on. 1 = end of this line 0 = beginning of this line
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult HandleClick(nsIContent* aNewFocus,
-                                                   uint32_t aContentOffset,
-                                                   uint32_t aContentEndOffset,
-                                                   FocusMode aFocusMode,
-                                                   CaretAssociateHint aHint);
+  MOZ_CAN_RUN_SCRIPT nsresult HandleClick(nsIContent* aNewFocus,
+                                          uint32_t aContentOffset,
+                                          uint32_t aContentEndOffset,
+                                          FocusMode aFocusMode,
+                                          CaretAssociateHint aHint);
 
   /**
    * HandleDrag extends the selection to contain the frame closest to aPoint.
@@ -256,7 +256,6 @@ class nsFrameSelection final {
    *
    * @param aPoint is relative to aFrame
    */
-  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
   MOZ_CAN_RUN_SCRIPT void HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint);
 
   /**
