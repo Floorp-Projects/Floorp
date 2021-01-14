@@ -2151,10 +2151,9 @@ class nsIFrame : public nsQueryFrame {
                                nsSelectionAmount aEndAmountType,
                                uint32_t aSelectFlags);
 
-  nsresult PeekBackwardAndForward(nsSelectionAmount aAmountBack,
-                                  nsSelectionAmount aAmountForward,
-                                  int32_t aStartPos, bool aJumpLines,
-                                  uint32_t aSelectFlags);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult PeekBackwardAndForward(
+      nsSelectionAmount aAmountBack, nsSelectionAmount aAmountForward,
+      int32_t aStartPos, bool aJumpLines, uint32_t aSelectFlags);
 
   enum { SELECT_ACCUMULATE = 0x01 };
 
