@@ -150,8 +150,7 @@ nsresult WebrtcTCPSocket::Open(
     const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
     const int& aLocalPort, bool aUseTls,
     const Maybe<net::WebrtcProxyConfig>& aProxyConfig) {
-  LOG(("WebrtcTCPSocket::Open %p remote-host=%s local-addr=%s local-port=%d",
-       this, aHost.BeginReading(), aLocalAddress.BeginReading(), aLocalPort));
+  LOG(("WebrtcTCPSocket::Open %p\n", this));
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_WARN_IF(mOpened)) {
@@ -330,19 +329,6 @@ void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
     CloseWithReason(rv);
     return;
   }
-
-  // Binding to a V4 address is not sufficient to cause this socket to use
-  // V4, and the same goes for V6. So, we disable as needed here.
-  uint32_t flags = 0;
-  if (addr.raw.family == AF_INET) {
-    flags |= nsISocketTransport::DISABLE_IPV6;
-  } else if (addr.raw.family == AF_INET6) {
-    flags |= nsISocketTransport::DISABLE_IPV4;
-  } else {
-    MOZ_CRASH();
-  }
-
-  mTransport->SetConnectionFlags(flags);
 
   nsCOMPtr<nsIInputStream> socketIn;
   rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(socketIn));

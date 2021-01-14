@@ -106,11 +106,26 @@ static const char *nr_tcp_type_name(nr_socket_tcp_type tcp_type) {
 
 static int nr_ice_candidate_format_stun_label(char *label, size_t size, nr_ice_candidate *cand)
   {
-  *label = 0;
-  snprintf(label, size, "%s(%s|%s)", nr_ctype_name(cand->type),
-           cand->base.as_string, cand->stun_server->addr.as_string);
+    int _status;
 
-  return (0);
+    *label = 0;
+    switch(cand->stun_server->type) {
+      case NR_ICE_STUN_SERVER_TYPE_ADDR:
+        snprintf(label, size, "%s(%s|%s)", nr_ctype_name(cand->type), cand->base.as_string,
+                 cand->stun_server->u.addr.as_string);
+        break;
+      case NR_ICE_STUN_SERVER_TYPE_DNSNAME:
+        snprintf(label, size, "%s(%s|%s:%u)", nr_ctype_name(cand->type), cand->base.as_string,
+                 cand->stun_server->u.dnsname.host, cand->stun_server->u.dnsname.port);
+        break;
+      default:
+        assert(0);
+        ABORT(R_BAD_ARGS);
+    }
+
+    _status=0;
+   abort:
+    return(_status);
   }
 
 int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket *isock, nr_socket *osock, nr_ice_candidate_type ctype, nr_socket_tcp_type tcp_type, nr_ice_stun_server *stun_server, UCHAR component_id, nr_ice_candidate **candp)
@@ -590,40 +605,28 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
         /* Fall through */
 #endif
       case SERVER_REFLEXIVE:
-        if (nr_transport_addr_cmp(&cand->base, &cand->stun_server->addr,
-                                  NR_TRANSPORT_ADDR_CMP_MODE_PROTOCOL)) {
-          r_log(LOG_ICE, LOG_INFO,
-                "ICE-CANDIDATE(%s): Skipping srflx/relayed candidate because "
-                "of IP version/transport mis-match with STUN/TURN server "
-                "(%u/%s - %u/%s).",
-                cand->label, cand->base.ip_version,
-                cand->base.protocol == IPPROTO_UDP ? "UDP" : "TCP",
-                cand->stun_server->addr.ip_version,
-                cand->stun_server->addr.protocol == IPPROTO_UDP ? "UDP"
-                                                                : "TCP");
-          ABORT(R_NOT_FOUND); /* Same error code when DNS lookup fails */
-        }
+        if(cand->stun_server->type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
+          if(nr_transport_addr_cmp(&cand->base,&cand->stun_server->u.addr,NR_TRANSPORT_ADDR_CMP_MODE_PROTOCOL)) {
+            r_log(LOG_ICE, LOG_INFO, "ICE-CANDIDATE(%s): Skipping srflx/relayed candidate because of IP version/transport mis-match with STUN/TURN server (%u/%s - %u/%s).", cand->label,cand->base.ip_version,cand->base.protocol==IPPROTO_UDP?"UDP":"TCP",cand->stun_server->u.addr.ip_version,cand->stun_server->u.addr.protocol==IPPROTO_UDP?"UDP":"TCP");
+            ABORT(R_NOT_FOUND); /* Same error code when DNS lookup fails */
+          }
 
-        if(cand->stun_server->addr.fqdn[0] != 0 &&
-           cand->stun_server->addr.protocol == IPPROTO_UDP) {
-          /* UDP with FQDN, allow resolver to handle this for now, we
-           * eventually want to allow the UDP socket to handle this for us. */
-          r_log(
-              LOG_ICE, LOG_DEBUG,
-              "ICE-CANDIDATE(%s): Starting DNS resolution (%u/%s - %u/%s).",
-              cand->label, cand->base.ip_version,
-              cand->base.protocol == IPPROTO_UDP ? "UDP" : "TCP",
-              cand->stun_server->addr.ip_version,
-              cand->stun_server->addr.protocol == IPPROTO_UDP ? "UDP" : "TCP");
-          nr_resolver_resource resource;
-          int port;
-          resource.domain_name = cand->stun_server->addr.fqdn;
-          if (r = nr_transport_addr_get_port(&cand->stun_server->addr, &port)) {
+          /* Just copy the address */
+          if (r=nr_transport_addr_copy(&cand->stun_server_addr,
+                                       &cand->stun_server->u.addr)) {
+            r_log(LOG_ICE,LOG_ERR,"ICE-CANDIDATE(%s): Could not copy STUN server addr", cand->label);
             ABORT(r);
           }
-          resource.port = (uint16_t)port;
+
+          if(r=nr_ice_candidate_initialize2(cand))
+            ABORT(r);
+        }
+        else {
+          nr_resolver_resource resource;
+          resource.domain_name=cand->stun_server->u.dnsname.host;
+          resource.port=cand->stun_server->u.dnsname.port;
           resource.stun_turn=protocol;
-          resource.transport_protocol = cand->stun_server->addr.protocol;
+          resource.transport_protocol=cand->stun_server->transport;
 
           switch (cand->base.ip_version) {
             case NR_IPV4:
@@ -633,7 +636,6 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
               resource.address_family=AF_INET6;
               break;
             default:
-              assert(0);
               ABORT(R_BAD_ARGS);
           }
 
@@ -651,16 +653,6 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
             r_log(LOG_ICE,LOG_ERR,"ICE-CANDIDATE(%s): Could not invoke DNS resolver",cand->label);
             ABORT(r);
           }
-        } else {
-          /* No DNS handling needed, just copy the address and finish init */
-          if (r = nr_transport_addr_copy(&cand->stun_server_addr,
-                                         &cand->stun_server->addr)) {
-            r_log(LOG_ICE,LOG_ERR,"ICE-CANDIDATE(%s): Could not copy STUN server addr", cand->label);
-            ABORT(r);
-          }
-
-          if(r=nr_ice_candidate_initialize2(cand))
-            ABORT(r);
         }
         break;
       default:

@@ -628,9 +628,8 @@ int NrSocket::create(nr_transport_addr* addr) {
 #endif
       break;
     case IPPROTO_TCP:
-      // TODO: Rewrite this to use WebrtcTcpSocket.
-      // Also use the same logic for TLS.
-      if (my_addr_.fqdn[0] != '\0') ABORT(R_INTERNAL);
+      // TODO: Add TLS layer with nsISocketProviderService?
+      if (my_addr_.tls_host[0] != '\0') ABORT(R_INTERNAL);
 
       if (!(fd_ = PR_OpenTCPSocket(naddr.raw.family))) {
         r_log(LOG_GENERIC, LOG_CRIT,
