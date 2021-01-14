@@ -401,7 +401,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.dbg.onNewScript = this.onNewScript;
     this.dbg.onNewDebuggee = this._onNewDebuggee;
 
-    this._options = { ...this._options, ...options };
     this.sourcesManager.on("newSource", this.onNewSourceEvent);
 
     // Initialize an event loop stack. This can't be done in the constructor,
@@ -410,18 +409,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       thread: this,
     });
 
-    if (options.breakpoints) {
-      this._setBreakpointsOnAttach(options.breakpoints);
-    }
-    if (options.eventBreakpoints) {
-      this.setActiveEventBreakpoints(options.eventBreakpoints);
-    }
-
     this.dbg.enable();
-
-    if ("observeAsmJS" in this._options) {
-      this.dbg.allowUnobservedAsmJS = !this._options.observeAsmJS;
-    }
+    this.reconfigure(options);
 
     // Set everything up so that breakpoint can work
     this._setupForBreaking();
@@ -443,12 +432,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   toggleEventLogging(logEventBreakpoints) {
     this._options.logEventBreakpoints = logEventBreakpoints;
     return this._options.logEventBreakpoints;
-  },
-
-  _setBreakpointsOnAttach(breakpoints) {
-    for (const { location, options } of Object.values(breakpoints)) {
-      this.setBreakpoint(location, options);
-    }
   },
 
   get pauseOverlay() {
@@ -766,18 +749,30 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         error: "wrongState",
       };
     }
+    this._options = { ...this._options, ...options };
 
     if ("observeAsmJS" in options) {
       this.dbg.allowUnobservedAsmJS = !options.observeAsmJS;
     }
 
-    if ("pauseWorkersUntilAttach" in options) {
-      if (this._parent.pauseWorkersUntilAttach) {
-        this._parent.pauseWorkersUntilAttach(options.pauseWorkersUntilAttach);
+    if (
+      "pauseWorkersUntilAttach" in options &&
+      this._parent.pauseWorkersUntilAttach
+    ) {
+      this._parent.pauseWorkersUntilAttach(options.pauseWorkersUntilAttach);
+    }
+
+    if (options.breakpoints) {
+      for (const breakpoint of Object.values(options.breakpoints)) {
+        this.setBreakpoint(breakpoint.location, breakpoint.options);
       }
     }
 
-    this._options = { ...this._options, ...options };
+    if (options.eventBreakpoints) {
+      this.setActiveEventBreakpoints(options.eventBreakpoints);
+    }
+
+    this.maybePauseOnExceptions();
   },
 
   _eventBreakpointListener(notification) {
