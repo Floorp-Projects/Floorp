@@ -12598,8 +12598,8 @@ void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
     const char* const cssFrameTypes[] = {
         "unknown", "inline", "block", "floating", "absolute", "internal-table"};
     nsCSSFrameType bareType = NS_FRAME_GET_TYPE(aState->mFrameType);
-    bool repNoBlock = NS_FRAME_IS_REPLACED_NOBLOCK(aState->mFrameType);
-    bool repBlock = NS_FRAME_IS_REPLACED_CONTAINS_BLOCK(aState->mFrameType);
+    bool repBlock = aFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock);
+    bool repNoBlock = !repBlock && aFrame->IsFrameOfType(nsIFrame::eReplaced);
 
     if (bareType >= ArrayLength(cssFrameTypes)) {
       printf(" result=type %u", bareType);
