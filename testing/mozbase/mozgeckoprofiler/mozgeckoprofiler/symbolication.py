@@ -312,8 +312,7 @@ class ProfileSymbolicator:
         left = 0
         right = len(libs) - 1
         while left <= right:
-            # pylint --py3k W1619
-            mid = (left + right) / 2
+            mid = (left + right) // 2
             if address >= libs[mid]["end"]:
                 left = mid + 1
             elif address < libs[mid]["start"]:
