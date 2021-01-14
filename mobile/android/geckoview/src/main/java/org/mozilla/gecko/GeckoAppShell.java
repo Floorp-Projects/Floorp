@@ -79,6 +79,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.collection.SimpleArrayMap;
 import android.telephony.TelephonyManager;
+import android.text.format.DateFormat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -2016,6 +2017,12 @@ public class GeckoAppShell {
 
         locales[0] = getLanguageTag(locale);
         return locales;
+    }
+
+    @WrapForJNI
+    public static boolean getIs24HourFormat() {
+        final Context context = getApplicationContext();
+        return DateFormat.is24HourFormat(context);
     }
 
     @WrapForJNI

@@ -117,53 +117,9 @@ bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
   }
 
   // Customize the skeleton if necessary to reflect user's 12/24hr pref
-  switch (HourCycle()) {
-    case 12: {
-      // If skeleton contains 'H' or 'k', replace with 'h' or 'K' respectively,
-      // and add 'a' unless already present.
-      if (skeleton.FindChar('H') == -1 && skeleton.FindChar('k') == -1) {
-        break;  // nothing to do
-      }
-      bool foundA = false;
-      for (size_t i = 0; i < skeleton.Length(); ++i) {
-        switch (skeleton[i]) {
-          case 'a':
-            foundA = true;
-            break;
-          case 'H':
-            skeleton.SetCharAt('h', i);
-            break;
-          case 'k':
-            skeleton.SetCharAt('K', i);
-            break;
-        }
-      }
-      if (!foundA) {
-        skeleton.Append(char16_t('a'));
-      }
-      break;
-    }
-    case 24:
-      // If skeleton contains 'h' or 'K', replace with 'H' or 'k' respectively,
-      // and delete 'a' if present.
-      if (skeleton.FindChar('h') == -1 && skeleton.FindChar('K') == -1) {
-        break;  // nothing to do
-      }
-      for (int32_t i = 0; i < int32_t(skeleton.Length()); ++i) {
-        switch (skeleton[i]) {
-          case 'a':
-            skeleton.Cut(i, 1);
-            --i;
-            break;
-          case 'h':
-            skeleton.SetCharAt('H', i);
-            break;
-          case 'K':
-            skeleton.SetCharAt('k', i);
-            break;
-        }
-      }
-      break;
+  int hourCycle = HourCycle();
+  if (hourCycle == 12 || hourCycle == 24) {
+    OverrideSkeletonHourCycle(hourCycle == 24, skeleton);
   }
 
   if (!GetPatternForSkeleton(skeleton, aLocale, aRetVal)) {
