@@ -3,6 +3,7 @@
     <script>
       let pass = false;
       let initialLoad = false;
+      var bc = new BroadcastChannel("bug145971");
       function checkNavigationTypeEquals2() {
         if (performance.navigation.type == 2) {
           pass = true;
@@ -11,8 +12,8 @@
       }
 
       function testDone() {
-        opener.ok(pass, "Bug 145971: Navigation type does not equal 2 when restoring document from session history.");
-        opener.nextTest();
+        bc.postMessage({result: pass});
+        bc.close();
         window.close();
       }
 
