@@ -330,6 +330,19 @@ void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
     return;
   }
 
+  // Binding to a V4 address is not sufficient to cause this socket to use
+  // V4, and the same goes for V6. So, we disable as needed here.
+  uint32_t flags = 0;
+  if (addr.raw.family == AF_INET) {
+    flags |= nsISocketTransport::DISABLE_IPV6;
+  } else if (addr.raw.family == AF_INET6) {
+    flags |= nsISocketTransport::DISABLE_IPV4;
+  } else {
+    MOZ_CRASH();
+  }
+
+  mTransport->SetConnectionFlags(flags);
+
   nsCOMPtr<nsIInputStream> socketIn;
   rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(socketIn));
   if (NS_WARN_IF(NS_FAILED(rv))) {
