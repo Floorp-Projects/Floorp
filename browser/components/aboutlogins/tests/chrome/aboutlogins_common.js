@@ -76,6 +76,9 @@ Object.defineProperty(window, "AboutLoginsUtils", {
     getLoginOrigin(uriString) {
       return uriString;
     },
+    setFocus(element) {
+      return element.focus();
+    },
     async promptForMasterPassword(resolve, messageId) {
       resolve(true);
     },
