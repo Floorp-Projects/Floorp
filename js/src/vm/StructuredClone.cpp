@@ -110,9 +110,9 @@ enum StructuredDataType : uint32_t {
   SCTAG_STRING_OBJECT,
   SCTAG_NUMBER_OBJECT,
   SCTAG_BACK_REFERENCE_OBJECT,
-  SCTAG_DO_NOT_USE_1,  // Required for backwards compatibility
-  SCTAG_DO_NOT_USE_2,  // Required for backwards compatibility
-  SCTAG_TYPED_ARRAY_OBJECT,
+  SCTAG_DO_NOT_USE_1,           // Required for backwards compatibility
+  SCTAG_DO_NOT_USE_2,           // Required for backwards compatibility
+  SCTAG_TYPED_ARRAY_OBJECT_V2,  // Old version, for backwards compatibility.
   SCTAG_MAP_OBJECT,
   SCTAG_SET_OBJECT,
   SCTAG_END_OF_KEYS,
@@ -133,6 +133,7 @@ enum StructuredDataType : uint32_t {
   SCTAG_BIGINT_OBJECT,
 
   SCTAG_ARRAY_BUFFER_OBJECT,
+  SCTAG_TYPED_ARRAY_OBJECT,
 
   SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
   SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
@@ -427,7 +428,7 @@ struct JSStructuredCloneReader {
 
   BigInt* readBigInt(uint32_t data);
 
-  MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint32_t nelems,
+  MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint64_t nelems,
                                    MutableHandleValue vp, bool v1Read = false);
   MOZ_MUST_USE bool readDataView(uint32_t byteLength, MutableHandleValue vp);
   MOZ_MUST_USE bool readArrayBuffer(StructuredDataType type, uint32_t data,
@@ -1267,12 +1268,12 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
     return false;
   }
 
-  if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT,
-                     tarr->length().deprecatedGetUint32())) {
+  if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, uint32_t(tarr->type()))) {
     return false;
   }
-  uint64_t type = tarr->type();
-  if (!out.write(type)) {
+
+  uint64_t nelems = tarr->length().get();
+  if (!out.write(nelems)) {
     return false;
   }
 
@@ -1282,7 +1283,8 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
     return false;
   }
 
-  return out.write(tarr->byteOffset().deprecatedGetUint32());
+  uint64_t byteOffset = tarr->byteOffset().get();
+  return out.write(byteOffset);
 }
 
 bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
@@ -2187,7 +2189,7 @@ static uint32_t TagToV1ArrayType(uint32_t tag) {
 }
 
 bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
-                                             uint32_t nelems,
+                                             uint64_t nelems,
                                              MutableHandleValue vp,
                                              bool v1Read) {
   if (arrayType > (v1Read ? Scalar::Uint8Clamped : Scalar::BigUint64)) {
@@ -2206,7 +2208,7 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
 
   // Read the ArrayBuffer object and its contents (but no properties)
   RootedValue v(context());
-  uint32_t byteOffset;
+  uint64_t byteOffset;
   if (v1Read) {
     if (!readV1ArrayBuffer(arrayType, nelems, &v)) {
       return false;
@@ -2216,11 +2218,9 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
     if (!startRead(&v)) {
       return false;
     }
-    uint64_t n;
-    if (!in.read(&n)) {
+    if (!in.read(&byteOffset)) {
       return false;
     }
-    byteOffset = n;
   }
   if (!v.isObject() || !v.toObject().is<ArrayBufferObjectMaybeShared>()) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
@@ -2231,6 +2231,10 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
 
   RootedObject buffer(context(), &v.toObject());
   RootedObject obj(context(), nullptr);
+
+  // The length must be valid because we checked the ArrayBuffer length already.
+  uint64_t byteLength = nelems * Scalar::byteSize(Scalar::Type(arrayType));
+  MOZ_RELEASE_ASSERT(byteLength <= TypedArrayObject::maxByteLength());
 
   switch (arrayType) {
     case Scalar::Int8:
@@ -2708,13 +2712,27 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
       }
       break;
 
-    case SCTAG_TYPED_ARRAY_OBJECT: {
+    case SCTAG_TYPED_ARRAY_OBJECT_V2: {
       // readTypedArray adds the array to allObjs.
+      // V2 stores the length (nelems) in |data| and the arrayType separately.
       uint64_t arrayType;
       if (!in.read(&arrayType)) {
         return false;
       }
-      return readTypedArray(arrayType, data, vp);
+      uint64_t nelems = data;
+      return readTypedArray(arrayType, nelems, vp);
+    }
+
+    case SCTAG_TYPED_ARRAY_OBJECT: {
+      // readTypedArray adds the array to allObjs.
+      // The current version stores the array type in |data| and the length
+      // (nelems) separately to support large TypedArrays.
+      uint32_t arrayType = data;
+      uint64_t nelems;
+      if (!in.read(&nelems)) {
+        return false;
+      }
+      return readTypedArray(arrayType, nelems, vp);
     }
 
     case SCTAG_DATA_VIEW_OBJECT: {
@@ -3501,24 +3519,40 @@ JS_PUBLIC_API bool JS_ReadBytes(JSStructuredCloneReader* r, void* p,
 
 JS_PUBLIC_API bool JS_ReadTypedArray(JSStructuredCloneReader* r,
                                      MutableHandleValue vp) {
-  uint32_t tag, nelems;
-  if (!r->input().readPair(&tag, &nelems)) {
+  uint32_t tag, data;
+  if (!r->input().readPair(&tag, &data)) {
     return false;
   }
+
   if (tag >= SCTAG_TYPED_ARRAY_V1_MIN && tag <= SCTAG_TYPED_ARRAY_V1_MAX) {
-    return r->readTypedArray(TagToV1ArrayType(tag), nelems, vp, true);
-  } else if (tag == SCTAG_TYPED_ARRAY_OBJECT) {
+    return r->readTypedArray(TagToV1ArrayType(tag), data, vp, true);
+  }
+
+  if (tag == SCTAG_TYPED_ARRAY_OBJECT_V2) {
+    // V2 stores the length (nelems) in |data| and the arrayType separately.
     uint64_t arrayType;
     if (!r->input().read(&arrayType)) {
       return false;
     }
+    uint64_t nelems = data;
     return r->readTypedArray(arrayType, nelems, vp);
-  } else {
-    JS_ReportErrorNumberASCII(r->context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_BAD_SERIALIZED_DATA,
-                              "expected type array");
-    return false;
   }
+
+  if (tag == SCTAG_TYPED_ARRAY_OBJECT) {
+    // The current version stores the array type in |data| and the length
+    // (nelems) separately to support large TypedArrays.
+    uint32_t arrayType = data;
+    uint64_t nelems;
+    if (!r->input().read(&nelems)) {
+      return false;
+    }
+    return r->readTypedArray(arrayType, nelems, vp);
+  }
+
+  JS_ReportErrorNumberASCII(r->context(), GetErrorMessage, nullptr,
+                            JSMSG_SC_BAD_SERIALIZED_DATA,
+                            "expected type array");
+  return false;
 }
 
 JS_PUBLIC_API bool JS_WriteUint32Pair(JSStructuredCloneWriter* w, uint32_t tag,
