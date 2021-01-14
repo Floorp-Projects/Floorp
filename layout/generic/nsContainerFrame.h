@@ -1161,15 +1161,6 @@ struct DR_init_offsets_cookie {
   void* mValue;
 };
 
-struct DR_init_type_cookie {
-  DR_init_type_cookie(nsIFrame* aFrame, mozilla::ReflowInput* aState);
-  ~DR_init_type_cookie();
-
-  nsIFrame* mFrame;
-  mozilla::ReflowInput* mState;
-  void* mValue;
-};
-
 #  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state,               \
                          dr_rf_metrics, dr_rf_status)                          \
     DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
@@ -1194,8 +1185,6 @@ struct DR_init_type_cookie {
                                dr_pad)                                     \
     DR_init_offsets_cookie dr_cookie(dr_frame, dr_state, dr_pb, dr_cbwm,   \
                                      dr_bdr, dr_pad)
-#  define DISPLAY_INIT_TYPE(dr_frame, dr_result) \
-    DR_init_type_cookie dr_cookie(dr_frame, dr_result)
 
 #else
 
@@ -1216,7 +1205,6 @@ struct DR_init_type_cookie {
 #  define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
                                dr_pad)                                     \
     PR_BEGIN_MACRO PR_END_MACRO
-#  define DISPLAY_INIT_TYPE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
 
 #endif
 // End Display Reflow Debugging
