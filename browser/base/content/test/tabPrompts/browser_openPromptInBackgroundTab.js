@@ -22,6 +22,10 @@ registerCleanupFunction(function() {
  * checking the checkbox does actually enable that behaviour.
  */
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.contentPromptSubDialog", false]],
+  });
+
   let firstTab = gBrowser.selectedTab;
   // load page that opens prompt when page is hidden
   let openedTab = await BrowserTestUtils.openNewForegroundTab(
