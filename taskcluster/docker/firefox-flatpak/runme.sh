@@ -25,8 +25,8 @@ export DATE
 SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TARGET_TAR_XZ_FULL_PATH="$ARTIFACTS_DIR/target.flatpak.tar.xz"
 SOURCE_DEST="${WORKSPACE}/source"
-FREEDESKTOP_VERSION="19.08"
-FIREFOX_BASEAPP_CHANNEL="stable"
+FREEDESKTOP_VERSION="20.08"
+FIREFOX_BASEAPP_CHANNEL="20.08"
 
 
 # XXX: these commands are temporarily, there's an upcoming fix in the upstream Docker image
@@ -75,12 +75,12 @@ cd "${WORKSPACE}"
 
 flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 # XXX: added --user to `flatpak install` to avoid ambiguity
-flatpak install --user -y flathub org.mozilla.Firefox.BaseApp//${FIREFOX_BASEAPP_CHANNEL} --no-deps
+flatpak install --user -y flathub org.mozilla.firefox.BaseApp//${FIREFOX_BASEAPP_CHANNEL} --no-deps
 
 # XXX: this command is temporarily, there's an upcoming fix in the upstream Docker image
 # that we work on top of, from `freedesktopsdk`, that will make these two lines go away eventually
 mkdir -p build
-cp -r ~/.local/share/flatpak/app/org.mozilla.Firefox.BaseApp/current/active/files build/files
+cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files build/files
 
 ARCH=$(flatpak --default-arch)
 cat <<EOF > build/metadata
@@ -88,8 +88,7 @@ cat <<EOF > build/metadata
 name=org.mozilla.firefox
 runtime=org.freedesktop.Platform/${ARCH}/${FREEDESKTOP_VERSION}
 sdk=org.freedesktop.Sdk/${ARCH}/${FREEDESKTOP_VERSION}
-base=app/org.mozilla.Firefox.BaseApp/${ARCH}/${FIREFOX_BASEAPP_CHANNEL}
-
+base=app/org.mozilla.firefox.BaseApp/${ARCH}/${FIREFOX_BASEAPP_CHANNEL}
 [Extension org.mozilla.firefox.Locale]
 directory=share/runtime/langpack
 autodelete=true

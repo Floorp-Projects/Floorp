@@ -9,9 +9,11 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="text/javascript">
 
-function* test(testDriver) {
+async function test() {
   var scrollableDiv = document.getElementById("scrollable");
-  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
+  let scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
 
   // Scroll down a small amount (10px). The bug in this case is that the
   // scrollthumb "jumps" by an additional 40 pixels (height of the "gap" div)
@@ -22,7 +24,7 @@ function* test(testDriver) {
   // the scrollthumb should be approximately 80px tall, and dragging it 10px
   // should scroll approximately 50 pixels. If the bug manifests, it will get
   // dragged 50px and scroll approximately 250px.
-  var dragFinisher = yield* dragVerticalScrollbar(scrollableDiv, testDriver, 10, 10);
+  var dragFinisher = await promiseVerticalScrollbarDrag(scrollableDiv, 10, 10);
   if (!dragFinisher) {
     ok(true, "No scrollbar, can't do this test");
     return;
@@ -31,12 +33,12 @@ function* test(testDriver) {
   // the events above might be stuck in APZ input queue for a bit until the
   // layer is activated, so we wait here until the scroll event listener is
   // triggered.
-  yield;
+  await scrollPromise;
 
-  yield* dragFinisher();
+  await dragFinisher();
 
   // Flush everything just to be safe
-  yield flushApzRepaints(testDriver);
+  await promiseApzRepaintsFlushed();
 
   // In this case we just want to make sure the scroll position moved from 0
   // which indicates the thumb dragging worked properly.
@@ -44,7 +46,7 @@ function* test(testDriver) {
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>

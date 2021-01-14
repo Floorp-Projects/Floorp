@@ -66,26 +66,35 @@ void MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest) {
 }
 
 void MacroAssembler::move8To64SignExtend(Register src, Register64 dest) {
-  MOZ_ASSERT(dest.low == eax);
-  MOZ_ASSERT(dest.high == edx);
-  move8SignExtend(src, eax);
-  masm.cdq();
+  move8SignExtend(src, dest.low);
+  if (dest.low == eax && dest.high == edx) {
+    masm.cdq();
+  } else {
+    movl(dest.low, dest.high);
+    sarl(Imm32(31), dest.high);
+  }
 }
 
 void MacroAssembler::move16To64SignExtend(Register src, Register64 dest) {
-  MOZ_ASSERT(dest.low == eax);
-  MOZ_ASSERT(dest.high == edx);
-  move16SignExtend(src, eax);
-  masm.cdq();
+  move16SignExtend(src, dest.low);
+  if (dest.low == eax && dest.high == edx) {
+    masm.cdq();
+  } else {
+    movl(dest.low, dest.high);
+    sarl(Imm32(31), dest.high);
+  }
 }
 
 void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
-  MOZ_ASSERT(dest.low == eax);
-  MOZ_ASSERT(dest.high == edx);
-  if (src != eax) {
-    movl(src, eax);
+  if (src != dest.low) {
+    movl(src, dest.low);
   }
-  masm.cdq();
+  if (dest.low == eax && dest.high == edx) {
+    masm.cdq();
+  } else {
+    movl(dest.low, dest.high);
+    sarl(Imm32(31), dest.high);
+  }
 }
 
 void MacroAssembler::move32ZeroExtendToPtr(Register src, Register dest) {
@@ -934,6 +943,8 @@ void MacroAssembler::branchTest64(Condition cond, Register64 lhs,
     movl(lhs.low, temp);
     orl(lhs.high, temp);
     branchTestPtr(cond, temp, temp, label);
+  } else if (cond == Assembler::Signed || cond == Assembler::NotSigned) {
+    branchTest32(cond, lhs.high, rhs.high, label);
   } else {
     MOZ_CRASH("Unsupported condition");
   }

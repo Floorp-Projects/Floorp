@@ -493,11 +493,7 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", false);
   pref("media.peerconnection.mute_on_bye_or_timeout", false);
 
   // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
-#ifdef EARLY_BETA_OR_EARLIER
-  pref("media.peerconnection.dtls.version.min", 771);
-#else
-  pref("media.peerconnection.dtls.version.min", 770);
-#endif
+pref("media.peerconnection.dtls.version.min", 771);
 #ifdef NIGHTLY_BUILD
   pref("media.peerconnection.dtls.version.max", 772);
 #else
@@ -1002,7 +998,7 @@ pref("dom.disable_window_move_resize",      false);
 
 pref("dom.allow_scripts_to_close_windows",          false);
 
-pref("dom.popup_allowed_events", "change click dblclick auxclick mouseup pointerup notificationclick reset submit touchend contextmenu");
+pref("dom.popup_allowed_events", "change click dblclick auxclick mousedown mouseup pointerdown pointerup notificationclick reset submit touchend contextmenu");
 
 pref("dom.serviceWorkers.disable_open_click_delay", 1000);
 

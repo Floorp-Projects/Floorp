@@ -39,6 +39,7 @@
 #ifdef MOZ_WAYLAND
 #  include "nsAppRunner.h"  // for IsWaylandDisabled
 #  include "mozilla/widget/mozwayland.h"
+#  include "mozilla/widget/xdg-output-unstable-v1-client-protocol.h"
 #endif
 
 // stuff from glx.h
@@ -625,6 +626,301 @@ static void close_logging() {
 }
 
 #ifdef MOZ_WAYLAND
+typedef void (*print_info_t)(void* info);
+typedef void (*destroy_info_t)(void* info);
+
+struct global_info {
+  struct wl_list link;
+
+  uint32_t id;
+  uint32_t version;
+  char* interface;
+
+  print_info_t print;
+  destroy_info_t destroy;
+};
+
+struct output_info {
+  struct global_info global;
+  struct wl_list global_link;
+
+  struct wl_output* output;
+
+  int32_t version;
+
+  int32_t scale;
+};
+
+struct xdg_output_v1_info {
+  struct wl_list link;
+
+  struct zxdg_output_v1* xdg_output;
+  struct output_info* output;
+
+  struct {
+    int32_t width, height;
+  } logical;
+
+  char *name, *description;
+};
+
+struct xdg_output_manager_v1_info {
+  struct global_info global;
+  struct zxdg_output_manager_v1* manager;
+  struct weston_info* info;
+
+  struct wl_list outputs;
+};
+
+struct weston_info {
+  struct wl_display* display;
+  struct wl_registry* registry;
+
+  struct wl_list infos;
+  bool roundtrip_needed;
+
+  struct wl_list outputs;
+  struct xdg_output_manager_v1_info* xdg_output_manager_v1_info;
+};
+
+static void init_global_info(struct weston_info* info,
+                             struct global_info* global, uint32_t id,
+                             const char* interface, uint32_t version) {
+  global->id = id;
+  global->version = version;
+  global->interface = strdup(interface);
+
+  wl_list_insert(info->infos.prev, &global->link);
+}
+
+static void print_output_info(void* data) {}
+
+static void destroy_xdg_output_v1_info(struct xdg_output_v1_info* info) {
+  wl_list_remove(&info->link);
+  zxdg_output_v1_destroy(info->xdg_output);
+  free(info->name);
+  free(info->description);
+  free(info);
+}
+
+static void print_xdg_output_manager_v1_info(void* data) {
+  struct xdg_output_manager_v1_info* info =
+      (struct xdg_output_manager_v1_info*)data;
+  struct xdg_output_v1_info* output;
+
+  int screen_count = wl_list_length(&info->outputs);
+  if (screen_count != 0) {
+    record_value("SCREEN_INFO\n");
+    wl_list_for_each(output, &info->outputs, link) {
+      record_value("%dx%d:0;", output->logical.width, output->logical.height);
+    }
+    record_value("\n");
+  }
+}
+
+static void destroy_xdg_output_manager_v1_info(void* data) {
+  struct xdg_output_manager_v1_info* info =
+      (struct xdg_output_manager_v1_info*)data;
+  struct xdg_output_v1_info *output, *tmp;
+
+  zxdg_output_manager_v1_destroy(info->manager);
+
+  wl_list_for_each_safe(output, tmp, &info->outputs, link)
+      destroy_xdg_output_v1_info(output);
+}
+
+static void handle_xdg_output_v1_logical_position(void* data,
+                                                  struct zxdg_output_v1* output,
+                                                  int32_t x, int32_t y) {}
+
+static void handle_xdg_output_v1_logical_size(void* data,
+                                              struct zxdg_output_v1* output,
+                                              int32_t width, int32_t height) {
+  struct xdg_output_v1_info* xdg_output = (struct xdg_output_v1_info*)data;
+  xdg_output->logical.width = width;
+  xdg_output->logical.height = height;
+}
+
+static void handle_xdg_output_v1_done(void* data,
+                                      struct zxdg_output_v1* output) {}
+
+static void handle_xdg_output_v1_name(void* data, struct zxdg_output_v1* output,
+                                      const char* name) {
+  struct xdg_output_v1_info* xdg_output = (struct xdg_output_v1_info*)data;
+  xdg_output->name = strdup(name);
+}
+
+static void handle_xdg_output_v1_description(void* data,
+                                             struct zxdg_output_v1* output,
+                                             const char* description) {
+  struct xdg_output_v1_info* xdg_output = (struct xdg_output_v1_info*)data;
+  xdg_output->description = strdup(description);
+}
+
+static const struct zxdg_output_v1_listener xdg_output_v1_listener = {
+    .logical_position = handle_xdg_output_v1_logical_position,
+    .logical_size = handle_xdg_output_v1_logical_size,
+    .done = handle_xdg_output_v1_done,
+    .name = handle_xdg_output_v1_name,
+    .description = handle_xdg_output_v1_description,
+};
+
+static void add_xdg_output_v1_info(
+    struct xdg_output_manager_v1_info* manager_info,
+    struct output_info* output) {
+  struct xdg_output_v1_info* xdg_output =
+      (struct xdg_output_v1_info*)malloc(sizeof *xdg_output);
+
+  wl_list_insert(&manager_info->outputs, &xdg_output->link);
+  xdg_output->xdg_output = zxdg_output_manager_v1_get_xdg_output(
+      manager_info->manager, output->output);
+  zxdg_output_v1_add_listener(xdg_output->xdg_output, &xdg_output_v1_listener,
+                              xdg_output);
+
+  xdg_output->output = output;
+
+  manager_info->info->roundtrip_needed = true;
+}
+
+static void add_xdg_output_manager_v1_info(struct weston_info* info,
+                                           uint32_t id, uint32_t version) {
+  struct output_info* output;
+  struct xdg_output_manager_v1_info* manager =
+      (struct xdg_output_manager_v1_info*)malloc(sizeof *manager);
+
+  wl_list_init(&manager->outputs);
+  manager->info = info;
+
+  init_global_info(info, &manager->global, id,
+                   zxdg_output_manager_v1_interface.name, version);
+  manager->global.print = print_xdg_output_manager_v1_info;
+  manager->global.destroy = destroy_xdg_output_manager_v1_info;
+
+  manager->manager = (struct zxdg_output_manager_v1*)wl_registry_bind(
+      info->registry, id, &zxdg_output_manager_v1_interface,
+      version > 2 ? 2 : version);
+
+  wl_list_for_each(output, &info->outputs, global_link)
+      add_xdg_output_v1_info(manager, output);
+
+  info->xdg_output_manager_v1_info = manager;
+}
+
+static void output_handle_geometry(void* data, struct wl_output* wl_output,
+                                   int32_t x, int32_t y, int32_t physical_width,
+                                   int32_t physical_height, int32_t subpixel,
+                                   const char* make, const char* model,
+                                   int32_t output_transform) {}
+
+static void output_handle_mode(void* data, struct wl_output* wl_output,
+                               uint32_t flags, int32_t width, int32_t height,
+                               int32_t refresh) {}
+
+static void output_handle_done(void* data, struct wl_output* wl_output) {}
+
+static void output_handle_scale(void* data, struct wl_output* wl_output,
+                                int32_t scale) {
+  struct output_info* output = (struct output_info*)data;
+
+  output->scale = scale;
+}
+
+static const struct wl_output_listener output_listener = {
+    output_handle_geometry,
+    output_handle_mode,
+    output_handle_done,
+    output_handle_scale,
+};
+
+static void destroy_output_info(void* data) {
+  struct output_info* output = (struct output_info*)data;
+
+  wl_output_destroy(output->output);
+}
+
+static void add_output_info(struct weston_info* info, uint32_t id,
+                            uint32_t version) {
+  struct output_info* output = (struct output_info*)malloc(sizeof *output);
+
+  init_global_info(info, &output->global, id, "wl_output", version);
+  output->global.print = print_output_info;
+  output->global.destroy = destroy_output_info;
+
+  output->version = MIN(version, 2);
+  output->scale = 1;
+
+  output->output = (struct wl_output*)wl_registry_bind(
+      info->registry, id, &wl_output_interface, output->version);
+  wl_output_add_listener(output->output, &output_listener, output);
+
+  info->roundtrip_needed = true;
+  wl_list_insert(&info->outputs, &output->global_link);
+
+  if (info->xdg_output_manager_v1_info) {
+    add_xdg_output_v1_info(info->xdg_output_manager_v1_info, output);
+  }
+}
+
+static void global_handler(void* data, struct wl_registry* registry,
+                           uint32_t id, const char* interface,
+                           uint32_t version) {
+  struct weston_info* info = (struct weston_info*)data;
+
+  if (!strcmp(interface, "wl_output")) {
+    add_output_info(info, id, version);
+  } else if (!strcmp(interface, zxdg_output_manager_v1_interface.name)) {
+    add_xdg_output_manager_v1_info(info, id, version);
+  }
+}
+
+static void global_remove_handler(void* data, struct wl_registry* registry,
+                                  uint32_t name) {}
+
+static const struct wl_registry_listener registry_listener = {
+    global_handler, global_remove_handler};
+
+static void print_infos(struct wl_list* infos) {
+  struct global_info* info;
+
+  wl_list_for_each(info, infos, link) { info->print(info); }
+}
+
+static void destroy_info(void* data) {
+  struct global_info* global = (struct global_info*)data;
+
+  global->destroy(data);
+  wl_list_remove(&global->link);
+  free(global->interface);
+  free(data);
+}
+
+static void destroy_infos(struct wl_list* infos) {
+  struct global_info *info, *tmp;
+  wl_list_for_each_safe(info, tmp, infos, link) { destroy_info(info); }
+}
+
+static void get_wayland_screen_info(struct wl_display* dpy) {
+  struct weston_info info = {0};
+  info.display = dpy;
+
+  info.xdg_output_manager_v1_info = NULL;
+  wl_list_init(&info.infos);
+  wl_list_init(&info.outputs);
+
+  info.registry = wl_display_get_registry(info.display);
+  wl_registry_add_listener(info.registry, &registry_listener, &info);
+
+  do {
+    info.roundtrip_needed = false;
+    wl_display_roundtrip(info.display);
+  } while (info.roundtrip_needed);
+
+  print_infos(&info.infos);
+  destroy_infos(&info.infos);
+
+  wl_registry_destroy(info.registry);
+}
+
 static bool wayland_egltest() {
   // NOTE: returns false to fall back to X11 when the Wayland socket doesn't
   // exist but fails with record_error if something actually went wrong
@@ -634,6 +930,9 @@ static bool wayland_egltest() {
   }
 
   get_egl_status((EGLNativeDisplayType)dpy, true);
+  get_wayland_screen_info(dpy);
+
+  wl_display_disconnect(dpy);
   return true;
 }
 #endif

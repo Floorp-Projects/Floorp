@@ -48,18 +48,15 @@ impl<'p> WriteValue for ast::Pattern<&'p str> {
 
                     let needs_isolation = scope.bundle.use_isolating
                         && len > 1
-                        && match expression {
-                            ast::Expression::InlineExpression(
-                                ast::InlineExpression::MessageReference { .. },
-                            )
-                            | ast::Expression::InlineExpression(
-                                ast::InlineExpression::TermReference { .. },
-                            )
-                            | ast::Expression::InlineExpression(
-                                ast::InlineExpression::StringLiteral { .. },
-                            ) => false,
-                            _ => true,
-                        };
+                        && !matches!(expression, ast::Expression::InlineExpression(
+                            ast::InlineExpression::MessageReference { .. },
+                        )
+                        | ast::Expression::InlineExpression(
+                            ast::InlineExpression::TermReference { .. },
+                        )
+                        | ast::Expression::InlineExpression(
+                            ast::InlineExpression::StringLiteral { .. },
+                        ));
                     if needs_isolation {
                         w.write_char('\u{2068}')?;
                     }
@@ -104,9 +101,5 @@ impl<'p> ResolveValue for ast::Pattern<&'p str> {
         self.write(&mut result, scope)
             .expect("Failed to write to a string.");
         result.into()
-    }
-
-    fn resolve_error(&self) -> String {
-        unreachable!()
     }
 }

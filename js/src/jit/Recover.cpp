@@ -18,6 +18,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "jit/VMFunctions.h"
+#include "vm/BigIntType.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
@@ -1898,5 +1899,49 @@ bool RAtomicIsLockFree::recover(JSContext* cx, SnapshotIterator& iter) const {
 
   RootedValue rootedResult(cx, js::Int32Value(result));
   iter.storeInstructionResult(rootedResult);
+  return true;
+}
+
+bool MBigIntAsIntN::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntAsIntN));
+  return true;
+}
+
+RBigIntAsIntN::RBigIntAsIntN(CompactBufferReader& reader) {}
+
+bool RBigIntAsIntN::recover(JSContext* cx, SnapshotIterator& iter) const {
+  int32_t bits = iter.read().toInt32();
+  RootedBigInt input(cx, iter.read().toBigInt());
+
+  MOZ_ASSERT(bits >= 0);
+  BigInt* result = BigInt::asIntN(cx, input, bits);
+  if (!result) {
+    return false;
+  }
+
+  iter.storeInstructionResult(JS::BigIntValue(result));
+  return true;
+}
+
+bool MBigIntAsUintN::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntAsUintN));
+  return true;
+}
+
+RBigIntAsUintN::RBigIntAsUintN(CompactBufferReader& reader) {}
+
+bool RBigIntAsUintN::recover(JSContext* cx, SnapshotIterator& iter) const {
+  int32_t bits = iter.read().toInt32();
+  RootedBigInt input(cx, iter.read().toBigInt());
+
+  MOZ_ASSERT(bits >= 0);
+  BigInt* result = BigInt::asUintN(cx, input, bits);
+  if (!result) {
+    return false;
+  }
+
+  iter.storeInstructionResult(JS::BigIntValue(result));
   return true;
 }

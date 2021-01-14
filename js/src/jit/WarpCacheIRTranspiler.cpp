@@ -1147,11 +1147,11 @@ bool WarpCacheIRTranspiler::emitGuardIsExtensible(ObjOperandId objId) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardIndexIsNonNegative(
+bool WarpCacheIRTranspiler::emitGuardInt32IsNonNegative(
     Int32OperandId indexId) {
   MDefinition* index = getOperand(indexId);
 
-  auto* ins = MGuardIndexIsNonNegative::New(alloc(), index);
+  auto* ins = MGuardInt32IsNonNegative::New(alloc(), index);
   add(ins);
   setOperand(indexId, ins);
   return true;
@@ -3687,6 +3687,30 @@ bool WarpCacheIRTranspiler::emitAtomicsIsLockFreeResult(
   add(ilf);
 
   pushResult(ilf);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitBigIntAsIntNResult(Int32OperandId bitsId,
+                                                   BigIntOperandId bigIntId) {
+  MDefinition* bits = getOperand(bitsId);
+  MDefinition* bigInt = getOperand(bigIntId);
+
+  auto* ins = MBigIntAsIntN::New(alloc(), bits, bigInt);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitBigIntAsUintNResult(Int32OperandId bitsId,
+                                                    BigIntOperandId bigIntId) {
+  MDefinition* bits = getOperand(bitsId);
+  MDefinition* bigInt = getOperand(bigIntId);
+
+  auto* ins = MBigIntAsUintN::New(alloc(), bits, bigInt);
+  add(ins);
+
+  pushResult(ins);
   return true;
 }
 

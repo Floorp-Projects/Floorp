@@ -46,38 +46,20 @@ template <XDRMode mode, typename ScopeT>
   static_assert(offsetof(ScopeDataT, trailingNames) == sizeof(SlotInfo),
                 "trailingNames should be the second field");
 
-  constexpr size_t SlotInfoSize = sizeof(SlotInfo);
-  auto ComputeTotalLength = [](size_t length) {
-    return SlotInfoSize +
-           sizeof(AbstractBindingName<TaggedParserAtomIndex>) * length;
-  };
+  MOZ_TRY(xdr->align32());
 
+  const SlotInfo* slotInfo;
   if (mode == XDR_ENCODE) {
     ScopeDataT* scopeData = static_cast<ScopeDataT*>(baseScopeData);
-    const SlotInfo* slotInfo = &scopeData->slotInfo;
-    uint32_t totalLength = ComputeTotalLength(slotInfo->length);
-    MOZ_TRY(xdr->codeBytes(scopeData, totalLength));
+    slotInfo = &scopeData->slotInfo;
   } else {
-    // Peek the SlotInfo bytes without consuming buffer yet. Once we compute the
-    // total length, we will read the entire scope data at once.
-    SlotInfo slotInfo;
-    const uint8_t* cursor = nullptr;
-    MOZ_TRY(xdr->peekData(&cursor, SlotInfoSize));
-    memcpy(&slotInfo, cursor, SlotInfoSize);
-
-    // Allocate scope data with trailing names.
-    uint32_t totalLength = ComputeTotalLength(slotInfo.length);
-    ScopeDataT* scopeData =
-        reinterpret_cast<ScopeDataT*>(xdr->stencilAlloc().alloc(totalLength));
-    if (!scopeData) {
-      js::ReportOutOfMemory(xdr->cx());
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
-
-    // Decode SlotInfo and trailing names at once.
-    MOZ_TRY(xdr->codeBytes(scopeData, totalLength));
-    baseScopeData = scopeData;
+    MOZ_TRY(xdr->peekData(&slotInfo));
   }
+
+  uint32_t totalLength =
+      sizeof(SlotInfo) +
+      sizeof(AbstractBindingName<TaggedParserAtomIndex>) * slotInfo->length;
+  MOZ_TRY(xdr->borrowedData(&baseScopeData, totalLength));
 
   return Ok();
 }
@@ -183,9 +165,24 @@ static XDRResult XDRSpanContent(XDRState<mode>* xdr, mozilla::Span<T>& span) {
                 "Span cannot be bulk-copied to disk.");
 
   uint32_t size;
-  MOZ_TRY(XDRSpanUninitialized(xdr, span, size));
+  if (mode == XDR_ENCODE) {
+    MOZ_ASSERT(span.size() <= UINT32_MAX);
+    size = span.size();
+  }
+
+  MOZ_TRY(xdr->codeUint32(&size));
+
   if (size) {
-    MOZ_TRY(xdr->codeBytes(span.data(), sizeof(T) * size));
+    MOZ_TRY(xdr->align32());
+
+    T* data;
+    if (mode == XDR_ENCODE) {
+      data = span.data();
+    }
+    MOZ_TRY(xdr->borrowedData(&data, sizeof(T) * size));
+    if (mode == XDR_DECODE) {
+      span = mozilla::Span(data, size);
+    }
   }
 
   return Ok();

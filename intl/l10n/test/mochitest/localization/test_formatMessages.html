@@ -69,7 +69,7 @@ key2 =
         ok(false, "Missing argument didn't cause an exception.");
       } catch (e) {
         is(e,
-          "[fluent][resolver] errors in en-US/key2: ReferenceError: Unknown variable: $user.",
+          "[fluent][resolver] errors in en-US/key2: Resolver error: Unknown variable: $user.",
           "Missing key causes an exception.");
       }
     }

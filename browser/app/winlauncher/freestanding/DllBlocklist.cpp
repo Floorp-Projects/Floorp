@@ -242,6 +242,48 @@ struct DllBlockInfoComparator {
 
 static BOOL WINAPI NoOp_DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
 
+// This helper function checks whether a given module is included
+// in the executable's Import Table.  Because an injected module's
+// DllMain may revert the Import Table to the original state, we parse
+// the Import Table every time a module is loaded without creating a cache.
+static bool IsDependentModule(
+    const UNICODE_STRING& aModuleLeafName,
+    mozilla::freestanding::Kernel32ExportsSolver& aK32Exports) {
+  // We enable automatic DLL blocking only in Nightly for now because it caused
+  // a compat issue (bug 1682304).
+#if defined(NIGHTLY_BUILD)
+  aK32Exports.Resolve(mozilla::freestanding::gK32ExportsResolveOnce);
+  if (!aK32Exports.IsResolved()) {
+    return false;
+  }
+
+  mozilla::nt::PEHeaders exeHeaders(aK32Exports.mGetModuleHandleW(nullptr));
+  if (!exeHeaders || !exeHeaders.IsImportDirectoryTampered()) {
+    // If no tampering is detected, no need to enumerate the Import Table.
+    return false;
+  }
+
+  bool isDependent = false;
+  exeHeaders.EnumImportChunks(
+      [&isDependent, &aModuleLeafName, &exeHeaders](const char* aDepModule) {
+        // If |aDepModule| is within the PE image, it's not an injected module
+        // but a legitimate dependent module.
+        if (isDependent || exeHeaders.IsWithinImage(aDepModule)) {
+          return;
+        }
+
+        UNICODE_STRING depModuleLeafName;
+        mozilla::nt::AllocatedUnicodeString depModuleName(aDepModule);
+        mozilla::nt::GetLeafName(&depModuleLeafName, depModuleName);
+        isDependent = (::RtlCompareUnicodeString(
+                           &aModuleLeafName, &depModuleLeafName, TRUE) == 0);
+      });
+  return isDependent;
+#else
+  return false;
+#endif
+}
+
 // Allowing a module to be loaded but detour the entrypoint to NoOp_DllMain
 // so that the module has no chance to interact with our code.  We need this
 // technique to safely block a module injected by IAT tampering because
@@ -249,8 +291,7 @@ static BOOL WINAPI NoOp_DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
 static bool RedirectToNoOpEntryPoint(
     const mozilla::nt::PEHeaders& aModule,
     mozilla::freestanding::Kernel32ExportsSolver& aK32Exports) {
-  static RTL_RUN_ONCE sRunOnce = RTL_RUN_ONCE_INIT;
-  aK32Exports.Resolve(sRunOnce);
+  aK32Exports.Resolve(mozilla::freestanding::gK32ExportsResolveOnce);
   if (!aK32Exports.IsResolved()) {
     return false;
   }
@@ -305,6 +346,7 @@ namespace mozilla {
 namespace freestanding {
 
 CrossProcessDllInterceptor::FuncHookType<LdrLoadDllPtr> stub_LdrLoadDll;
+RTL_RUN_ONCE gK32ExportsResolveOnce = RTL_RUN_ONCE_INIT;
 
 NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR aDllPath, PULONG aFlags,
                                   PUNICODE_STRING aDllName,
@@ -360,31 +402,27 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
     return STATUS_ACCESS_DENIED;
   }
 
-  bool isDependent = false;
-  auto resultView = mozilla::freestanding::gSharedSection.GetView();
-  if (resultView.isOk()) {
-    uint32_t arrayLen = resultView.inspect()->mModulePathArrayLength;
-    const uint32_t* array = resultView.inspect()->mModulePathArray;
-    size_t match;
-    isDependent = mozilla::BinarySearchIf(
-        array, 0, arrayLen,
-        [&sectionFileName, arrayBase = reinterpret_cast<const uint8_t*>(array)](
-            const uint32_t& aOffset) {
-          UNICODE_STRING str;
-          ::RtlInitUnicodeString(
-              &str, reinterpret_cast<const wchar_t*>(arrayBase + aOffset));
-          return static_cast<int>(
-              ::RtlCompareUnicodeString(sectionFileName, &str, TRUE));
-        },
-        &match);
-  }
-
   // Find the leaf name
   UNICODE_STRING leafOnStack;
   nt::GetLeafName(&leafOnStack, sectionFileName);
 
+  bool isDependent = false;
+  auto resultView = freestanding::gSharedSection.GetView();
+  // Small optimization: Since loading a dependent module does not involve
+  // LdrLoadDll, we know isDependent is false if we hold a top frame.
+  if (resultView.isOk() && !ModuleLoadFrame::ExistsTopFrame()) {
+    isDependent =
+        IsDependentModule(leafOnStack, resultView.inspect()->mK32Exports);
+  }
+
   BlockAction blockAction;
   if (isDependent) {
+    // Add an NT dv\path to the shared section so that a sandbox process can
+    // use it to bypass CIG.  In a sandbox process, this addition fails
+    // because we cannot map the section to a writable region, but it's
+    // ignorable because the paths have been added by the browser process.
+    Unused << freestanding::gSharedSection.AddDepenentModule(sectionFileName);
+
     // For a dependent module, try redirection instead of blocking it.
     // If we fail, we reluctantly allow the module for free.
     mozilla::nt::PEHeaders headers(*aBaseAddress);

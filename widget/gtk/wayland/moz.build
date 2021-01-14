@@ -12,6 +12,7 @@ SOURCES += [
     "idle-inhibit-unstable-v1-protocol.c",
     "linux-dmabuf-unstable-v1-protocol.c",
     "primary-selection-unstable-v1-protocol.c",
+    "xdg-output-unstable-v1-protocol.c",
 ]
 
 EXPORTS.mozilla.widget += [
@@ -21,6 +22,7 @@ EXPORTS.mozilla.widget += [
     "linux-dmabuf-unstable-v1-client-protocol.h",
     "primary-selection-unstable-v1-client-protocol.h",
     "va_drmcommon.h",
+    "xdg-output-unstable-v1-client-protocol.h",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

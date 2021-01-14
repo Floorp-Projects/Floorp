@@ -762,8 +762,8 @@ function promiseMoveMouseAndScrollWheelOver(
 
 // Synthesizes events to drag |target|'s vertical scrollbar by the distance
 // specified, synthesizing a mousemove for each increment as specified.
-// Returns false if the element doesn't have a vertical scrollbar. Otherwise,
-// returns a generator that should be invoked after the mousemoves have been
+// Returns null if the element doesn't have a vertical scrollbar. Otherwise,
+// returns an async function that should be invoked after the mousemoves have been
 // processed by the widget code, to end the scrollbar drag. Mousemoves being
 // processed by the widget code can be detected by listening for the mousemove
 // events in the caller, or for some other event that is triggered by the
@@ -775,9 +775,8 @@ function promiseMoveMouseAndScrollWheelOver(
 // Note: helper_scrollbar_snap_bug1501062.html contains a copy of this code
 // with modifications. Fixes here should be copied there if appropriate.
 // |target| can be an element (for subframes) or a window (for root frames).
-function* dragVerticalScrollbar(
+async function promiseVerticalScrollbarDrag(
   target,
-  testDriver,
   distance = 20,
   increment = 5,
   scaleFactor = 1
@@ -788,7 +787,7 @@ function* dragVerticalScrollbar(
   utilsForTarget(target).getScrollbarSizes(targetElement, w, h);
   var verticalScrollbarWidth = w.value;
   if (verticalScrollbarWidth == 0) {
-    return false;
+    return null;
   }
 
   var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
@@ -808,48 +807,43 @@ function* dragVerticalScrollbar(
   );
 
   // Move the mouse to the scrollbar thumb and drag it down
-  yield synthesizeNativeMouseEvent(
+  await promiseNativeMouseEvent(
     target,
     mouseX,
     mouseY,
-    nativeMouseMoveEventMsg(),
-    testDriver
+    nativeMouseMoveEventMsg()
   );
   // mouse down
-  yield synthesizeNativeMouseEvent(
+  await promiseNativeMouseEvent(
     target,
     mouseX,
     mouseY,
-    nativeMouseDownEventMsg(),
-    testDriver
+    nativeMouseDownEventMsg()
   );
   // drag vertically by |increment| until we reach the specified distance
   for (var y = increment; y < distance; y += increment) {
-    yield synthesizeNativeMouseEvent(
+    await promiseNativeMouseEvent(
       target,
       mouseX,
       mouseY + y,
-      nativeMouseMoveEventMsg(),
-      testDriver
+      nativeMouseMoveEventMsg()
     );
   }
-  yield synthesizeNativeMouseEvent(
+  await promiseNativeMouseEvent(
     target,
     mouseX,
     mouseY + distance,
-    nativeMouseMoveEventMsg(),
-    testDriver
+    nativeMouseMoveEventMsg()
   );
 
-  // and return a generator to call afterwards to finish up the drag
-  return function*() {
+  // and return an async function to call afterwards to finish up the drag
+  return async function() {
     dump("Finishing drag of #" + targetElement.id + "\n");
-    yield synthesizeNativeMouseEvent(
+    await promiseNativeMouseEvent(
       target,
       mouseX,
       mouseY + distance,
-      nativeMouseUpEventMsg(),
-      testDriver
+      nativeMouseUpEventMsg()
     );
   };
 }
