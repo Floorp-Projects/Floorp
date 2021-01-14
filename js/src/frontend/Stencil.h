@@ -245,6 +245,7 @@ class BigIntStencil {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
   void dump(JSONPrinter& json);
+  void dumpCharsNoQuote(GenericPrinter& out);
 #endif
 };
 
