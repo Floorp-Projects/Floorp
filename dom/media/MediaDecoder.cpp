@@ -26,7 +26,6 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
-#include "Visibility.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -198,13 +197,11 @@ void MediaDecoder::InitStatics() {
 
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
 
-void MediaDecoder::NotifyOwnerActivityChanged(bool aIsDocumentVisible,
-                                              Visibility aElementVisibility,
-                                              bool aIsElementInTree) {
+void MediaDecoder::NotifyOwnerActivityChanged(bool aIsOwnerInvisible,
+                                              bool aIsOwnerConnected) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  SetElementVisibility(aIsDocumentVisible, aElementVisibility,
-                       aIsElementInTree);
+  SetElementVisibility(aIsOwnerInvisible, aIsOwnerConnected);
 
   NotifyCompositor();
 }
@@ -294,9 +291,8 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       mVideoFrameContainer(aInit.mOwner->GetVideoFrameContainer()),
       mMinimizePreroll(aInit.mMinimizePreroll),
       mFiredMetadataLoaded(false),
-      mIsDocumentVisible(false),
-      mElementVisibility(Visibility::Untracked),
-      mIsElementInTree(false),
+      mIsOwnerInvisible(false),
+      mIsOwnerConnected(false),
       mForcedHidden(false),
       mHasSuspendTaint(aInit.mHasSuspendTaint),
       mPlaybackRate(aInit.mPlaybackRate),
@@ -963,13 +959,11 @@ void MediaDecoder::NotifyCompositor() {
   }
 }
 
-void MediaDecoder::SetElementVisibility(bool aIsDocumentVisible,
-                                        Visibility aElementVisibility,
-                                        bool aIsElementInTree) {
+void MediaDecoder::SetElementVisibility(bool aIsOwnerInvisible,
+                                        bool aIsOwnerConnected) {
   MOZ_ASSERT(NS_IsMainThread());
-  mIsDocumentVisible = aIsDocumentVisible;
-  mElementVisibility = aElementVisibility;
-  mIsElementInTree = aIsElementInTree;
+  mIsOwnerInvisible = aIsOwnerInvisible;
+  mIsOwnerConnected = aIsOwnerConnected;
   UpdateVideoDecodeMode();
 }
 
@@ -1018,8 +1012,8 @@ void MediaDecoder::UpdateVideoDecodeMode() {
     return;
   }
 
-  // Don't suspend elements that is not in tree.
-  if (!mIsElementInTree) {
+  // Don't suspend elements that is not in a connected tree.
+  if (!mIsOwnerConnected) {
     LOG("UpdateVideoDecodeMode(), set Normal because the element is not in "
         "tree.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
@@ -1042,27 +1036,12 @@ void MediaDecoder::UpdateVideoDecodeMode() {
     return;
   }
 
-  // If the element is in-tree with UNTRACKED visibility, that means the element
-  // is not close enough to the viewport so we have not start to update its
-  // visibility. In this case, it's equals to invisible.
-  if (mIsElementInTree && mElementVisibility == Visibility::Untracked) {
-    LOG("UpdateVideoDecodeMode(), set Suspend because element hasn't be "
-        "updated visibility state.");
+  if (mIsOwnerInvisible) {
+    LOG("UpdateVideoDecodeMode(), set Suspend because of invisible element.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
-    return;
-  }
-
-  // Otherwise, depends on the owner's visibility state.
-  // A element is visible only if its document is visible and the element
-  // itself is visible.
-  if (mIsDocumentVisible &&
-      mElementVisibility == Visibility::ApproximatelyVisible) {
-    LOG("UpdateVideoDecodeMode(), set Normal because the element visible.");
-    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
   } else {
-    LOG("UpdateVideoDecodeMode(), set Suspend because the element is not "
-        "visible.");
-    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
+    LOG("UpdateVideoDecodeMode(), set Normal because of visible element.");
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
   }
 }
 
