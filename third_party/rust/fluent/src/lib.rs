@@ -30,7 +30,7 @@
 //!     .expect("Failed to parse an FTL string.");
 //!
 //! let langid_en: LanguageIdentifier = "en-US".parse().expect("Parsing failed");
-//! let mut bundle = FluentBundle::new(&[langid_en]);
+//! let mut bundle = FluentBundle::new(vec![langid_en]);
 //!
 //! bundle
 //!     .add_resource(res)

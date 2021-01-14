@@ -74,7 +74,7 @@ fn add_functions<R>(name: &'static str, bundle: &mut FluentBundle<R>) {
 fn get_bundle(name: &'static str, source: &str) -> (FluentBundle<FluentResource>, Vec<String>) {
     let res = FluentResource::try_new(source.to_owned()).expect("Couldn't parse an FTL source");
     let ids = get_ids(&res);
-    let lids = &[langid!("en")];
+    let lids = vec![langid!("en")];
     let mut bundle = FluentBundle::new(lids);
     bundle
         .add_resource(res)
@@ -89,8 +89,7 @@ fn resolver_bench(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("resolve");
     for name in tests {
-        let source = ftl_strings.get(name)
-            .expect("Failed to find the source.");
+        let source = ftl_strings.get(name).expect("Failed to find the source.");
         group.bench_with_input(BenchmarkId::from_parameter(name), &source, |b, source| {
             let (bundle, ids) = get_bundle(name, source);
             let args = get_args(name);
@@ -104,7 +103,8 @@ fn resolver_bench(c: &mut Criterion) {
                         s.clear();
                     }
                     for attr in msg.attributes {
-                        let _ = bundle.write_pattern(&mut s, attr.value, args.as_ref(), &mut errors);
+                        let _ =
+                            bundle.write_pattern(&mut s, attr.value, args.as_ref(), &mut errors);
                         s.clear();
                     }
                     assert!(errors.len() == 0, "Resolver errors: {:#?}", errors);
@@ -116,8 +116,7 @@ fn resolver_bench(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("resolve_to_str");
     for name in tests {
-        let source = ftl_strings.get(name)
-            .expect("Failed to find the source.");
+        let source = ftl_strings.get(name).expect("Failed to find the source.");
         group.bench_with_input(BenchmarkId::from_parameter(name), &source, |b, source| {
             let (bundle, ids) = get_bundle(name, source);
             let args = get_args(name);

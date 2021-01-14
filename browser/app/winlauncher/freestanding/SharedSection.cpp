@@ -8,6 +8,43 @@
 
 #include "CheckForCaller.h"
 
+namespace {
+
+bool AddString(void* aBuffer, size_t aBufferSize, const UNICODE_STRING& aStr) {
+  size_t offset = 0;
+  while (offset < aBufferSize) {
+    UNICODE_STRING uniStr;
+    ::RtlInitUnicodeString(&uniStr,
+                           reinterpret_cast<wchar_t*>(
+                               reinterpret_cast<uintptr_t>(aBuffer) + offset));
+
+    if (uniStr.Length == 0) {
+      // Reached to the array's last item.
+      break;
+    }
+
+    if (::RtlCompareUnicodeString(&uniStr, &aStr, TRUE) == 0) {
+      // Already included in the array.
+      return true;
+    }
+
+    // Go to the next string.
+    offset += uniStr.MaximumLength;
+  }
+
+  // Ensure enough space including the last empty string at the end.
+  if (offset + aStr.MaximumLength + sizeof(wchar_t) > aBufferSize) {
+    return false;
+  }
+
+  auto newStr = reinterpret_cast<uint8_t*>(aBuffer) + offset;
+  memcpy(newStr, aStr.Buffer, aStr.Length);
+  memset(newStr + aStr.Length, 0, sizeof(wchar_t));
+  return true;
+}
+
+}  // anonymous namespace
+
 namespace mozilla {
 namespace freestanding {
 
@@ -56,6 +93,7 @@ void Kernel32ExportsSolver::Init() {
 
   // Please make sure these functions are not forwarded to another DLL.
   INIT_FUNCTION(k32Exports, FlushInstructionCache);
+  INIT_FUNCTION(k32Exports, GetModuleHandleW);
   INIT_FUNCTION(k32Exports, GetSystemInfo);
   INIT_FUNCTION(k32Exports, VirtualProtect);
 
@@ -81,6 +119,7 @@ void Kernel32ExportsSolver::ResolveInternal() {
       nt::PEHeaders::HModuleToBaseAddr<uintptr_t>(k32Module.unwrap());
 
   RESOLVE_FUNCTION(k32Base, FlushInstructionCache);
+  RESOLVE_FUNCTION(k32Base, GetModuleHandleW);
   RESOLVE_FUNCTION(k32Base, GetSystemInfo);
   RESOLVE_FUNCTION(k32Base, VirtualProtect);
 
@@ -107,74 +146,37 @@ void SharedSection::Reset(HANDLE aNewSecionObject) {
     sWriteCopyView = nullptr;
   }
 
-  if (sSectionHandle) {
-    ::CloseHandle(sSectionHandle);
+  if (sSectionHandle != aNewSecionObject) {
+    if (sSectionHandle) {
+      ::CloseHandle(sSectionHandle);
+    }
+    sSectionHandle = aNewSecionObject;
   }
-  sSectionHandle = aNewSecionObject;
 }
 
-static void PackOffsetVector(const Vector<nt::MemorySectionNameOnHeap>& aSource,
-                             SharedSection::Layout& aDestination,
-                             size_t aStringBufferOffset) {
-  aDestination.mModulePathArrayLength = aSource.length();
-
-  uint32_t* curItem = aDestination.mModulePathArray;
-  uint8_t* const arrayBase = reinterpret_cast<uint8_t*>(curItem);
-  for (const auto& it : aSource) {
-    // Fill the current offset value
-    *(curItem++) = aStringBufferOffset;
-
-    // Fill a string and a null character
-    uint32_t lenInBytes = it.AsUnicodeString()->Length;
-    memcpy(arrayBase + aStringBufferOffset, it.AsUnicodeString()->Buffer,
-           lenInBytes);
-    memset(arrayBase + aStringBufferOffset + lenInBytes, 0, sizeof(WCHAR));
-
-    // Advance the offset
-    aStringBufferOffset += (lenInBytes + sizeof(WCHAR));
+void SharedSection::ConvertToReadOnly() {
+  if (!sSectionHandle) {
+    return;
   }
 
-  // Sort the offset array so that we can binary-search it
-  std::sort(aDestination.mModulePathArray,
-            aDestination.mModulePathArray + aSource.length(),
-            [arrayBase](uint32_t a, uint32_t b) {
-              auto s1 = reinterpret_cast<const wchar_t*>(arrayBase + a);
-              auto s2 = reinterpret_cast<const wchar_t*>(arrayBase + b);
-              return wcsicmp(s1, s2) < 0;
-            });
+  HANDLE readonlyHandle;
+  if (!::DuplicateHandle(nt::kCurrentProcess, sSectionHandle,
+                         nt::kCurrentProcess, &readonlyHandle, GENERIC_READ,
+                         FALSE, 0)) {
+    return;
+  }
+
+  Reset(readonlyHandle);
 }
 
 LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
-  size_t stringBufferSize = 0;
-  Vector<nt::MemorySectionNameOnHeap> modules;
+  static_assert(
+      kSharedViewSize >= sizeof(Layout),
+      "kSharedViewSize is too small to represent SharedSection::Layout.");
 
-  // We enable automatic DLL blocking only in Nightly for now because it caused
-  // a compat issue (bug 1682304).
-#if defined(NIGHTLY_BUILD)
-  aPEHeaders.EnumImportChunks(
-      [&stringBufferSize, &modules, &aPEHeaders](const char* aModule) {
-#  if defined(DONT_SKIP_DEFAULT_DEPENDENT_MODULES)
-        Unused << aPEHeaders;
-#  else
-        if (aPEHeaders.IsWithinImage(aModule)) {
-          return;
-        }
-#  endif
-        HMODULE module = ::GetModuleHandleA(aModule);
-        nt::MemorySectionNameOnHeap ntPath =
-            nt::MemorySectionNameOnHeap::GetBackingFilePath(nt::kCurrentProcess,
-                                                            module);
-        stringBufferSize += (ntPath.AsUnicodeString()->Length + sizeof(WCHAR));
-        Unused << modules.emplaceBack(std::move(ntPath));
-      });
-#endif
-
-  size_t arraySize = modules.length() * sizeof(Layout::mModulePathArray[0]);
-  size_t totalSize =
-      sizeof(Kernel32ExportsSolver) + arraySize + stringBufferSize;
-
-  HANDLE section = ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr,
-                                        PAGE_READWRITE, 0, totalSize, nullptr);
+  HANDLE section =
+      ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0,
+                           kSharedViewSize, nullptr);
   if (!section) {
     return LAUNCHER_ERROR_FROM_LAST();
   }
@@ -191,7 +193,21 @@ LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
 
   SharedSection::Layout* view = writableView.as<SharedSection::Layout>();
   view->mK32Exports.Init();
-  PackOffsetVector(modules, *view, arraySize);
+
+  return Ok();
+}
+
+LauncherVoidResult SharedSection::AddDepenentModule(PCUNICODE_STRING aNtPath) {
+  nt::AutoMappedView writableView(sSectionHandle, PAGE_READWRITE);
+  if (!writableView) {
+    return LAUNCHER_ERROR_FROM_WIN32(::RtlGetLastWin32Error());
+  }
+
+  SharedSection::Layout* view = writableView.as<SharedSection::Layout>();
+  if (!AddString(view->mModulePathArray,
+                 kSharedViewSize - sizeof(Kernel32ExportsSolver), *aNtPath)) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+  }
 
   return Ok();
 }
@@ -200,7 +216,7 @@ LauncherResult<SharedSection::Layout*> SharedSection::GetView() {
   if (!sWriteCopyView) {
     nt::AutoMappedView view(sSectionHandle, PAGE_WRITECOPY);
     if (!view) {
-      return LAUNCHER_ERROR_FROM_LAST();
+      return LAUNCHER_ERROR_FROM_WIN32(::RtlGetLastWin32Error());
     }
     sWriteCopyView = view.release();
   }
@@ -208,11 +224,12 @@ LauncherResult<SharedSection::Layout*> SharedSection::GetView() {
 }
 
 LauncherVoidResult SharedSection::TransferHandle(
-    nt::CrossExecTransferManager& aTransferMgr, HANDLE* aDestinationAddress) {
+    nt::CrossExecTransferManager& aTransferMgr, DWORD aDesiredAccess,
+    HANDLE* aDestinationAddress) {
   HANDLE remoteHandle;
   if (!::DuplicateHandle(nt::kCurrentProcess, sSectionHandle,
                          aTransferMgr.RemoteProcess(), &remoteHandle,
-                         GENERIC_READ, FALSE, 0)) {
+                         aDesiredAccess, FALSE, 0)) {
     return LAUNCHER_ERROR_FROM_LAST();
   }
 
@@ -220,33 +237,29 @@ LauncherVoidResult SharedSection::TransferHandle(
                                sizeof(remoteHandle));
 }
 
-extern "C" MOZ_EXPORT uint32_t GetDependentModulePaths(uint32_t** aOutArray) {
-  if (aOutArray) {
-    *aOutArray = nullptr;
-  }
-
+// This exported function is invoked by SandboxBroker of xul.dll
+// in order to add dependent modules to the CIG exception list.
+extern "C" MOZ_EXPORT const wchar_t* GetDependentModulePaths() {
   // We enable pre-spawn CIG only in Nightly for now because it caused
   // a compat issue (bug 1682304).
 #if defined(NIGHTLY_BUILD)
   const bool isCallerXul = CheckForAddress(RETURN_ADDRESS(), L"xul.dll");
   MOZ_ASSERT(isCallerXul);
   if (!isCallerXul) {
-    return 0;
+    return nullptr;
   }
+
+  // Remap a write-copy section to take the latest update in mModulePathArray.
+  gSharedSection.Reset();
 
   LauncherResult<SharedSection::Layout*> resultView = gSharedSection.GetView();
   if (resultView.isErr()) {
-    return 0;
+    return nullptr;
   }
 
-  if (aOutArray) {
-    // Return a valid address even if the array length is zero
-    // to distinguish it from an error case.
-    *aOutArray = resultView.inspect()->mModulePathArray;
-  }
-  return resultView.inspect()->mModulePathArrayLength;
+  return resultView.inspect()->mModulePathArray;
 #else
-  return 0;
+  return nullptr;
 #endif
 }
 

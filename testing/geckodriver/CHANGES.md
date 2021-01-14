@@ -3,6 +3,32 @@ Change log
 
 All notable changes to this program are documented in this file.
 
+0.29.0  (2021-01-14)
+--------------------
+
+### Known problems
+
+- _macOS 10.15 (Catalina):_
+
+  Due to the requirement from Apple that all programs must be
+  notarized, geckodriver will not work on Catalina if you manually
+  download it through another notarized program, such as Firefox.
+
+  Whilst we are working on a repackaging fix for this problem, you can
+  find more details on how to work around this issue in the [macOS
+  notarization] section of the documentation.
+
+### Added
+
+- Introduced the new boolean capability `moz:debuggerAddress` that can be used
+  to opt-in to the experimental Chrome DevTools Protocol (CDP) implementation.
+  A string capability with the same name will be returned by [`NewSession`],
+  which contains the `host:port` combination of the HTTP server that can be
+  used to query for websockets of available targets.
+
+  Note: For this experimental feature the site-isolation support of
+  Firefox aka [Fission] will be not available.
+
 0.28.0  (2020-11-03, `c00d2b6acd3f`)
 --------------------
 
@@ -21,8 +47,8 @@ All notable changes to this program are documented in this file.
 ### Added
 
 - The command line flag `--android-storage` has been added, to allow geckodriver
-to also control Firefox on root-less Android devices. See the [documentation][Flags]
-for available values.
+  to also control Firefox on root-less Android devices.
+  See the [documentation][Flags] for available values.
 
 ### Fixed
 
@@ -1368,10 +1394,10 @@ and greater.
 [Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
 [WebDriver conformance]: https://wpt.fyi/results/webdriver/tests?label=experimental
 [`moz:firefoxOptions`]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions
+[`moz:debuggerAddress`]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html#moz-debuggeraddress
 [Microsoft Visual Studio redistributable runtime]: https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 [GeckoView]: https://wiki.mozilla.org/Mobile/GeckoView
-[Firefox Preview]: https://play.google.com/store/apps/details?id=org.mozilla.fenix
-[Firefox Reality]: https://play.google.com/store/apps/details?id=org.mozilla.vrbrowser
+[Fission]: https://wiki.mozilla.org/Project_Fission
 [Capabilities]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html
 [Flags]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Flags.html
 [enable remote debugging on the Android device]: https://developers.google.com/web/tools/chrome-devtools/remote-debugging

@@ -812,39 +812,21 @@ XDRResult XDRParserAtomEntry(XDRState<mode>* xdr, ParserAtomEntry** entryp) {
   static_assert(CanCopyDataToDisk<ParserAtomEntry>::value,
                 "ParserAtomEntry cannot be bulk-copied to disk.");
 
-  constexpr size_t HeaderSize = sizeof(ParserAtomEntry);
-  auto ComputeTotalLength = [](bool hasLatin1Chars, size_t length) {
-    const size_t CharSize =
-        hasLatin1Chars ? sizeof(JS::Latin1Char) : sizeof(char16_t);
-    return HeaderSize + (CharSize * length);
-  };
+  MOZ_TRY(xdr->align32());
 
+  const ParserAtomEntry* header;
   if (mode == XDR_ENCODE) {
-    size_t totalLength =
-        ComputeTotalLength((*entryp)->hasLatin1Chars(), (*entryp)->length());
-    MOZ_TRY(xdr->codeBytes(*entryp, totalLength));
+    header = *entryp;
   } else {
-    // Peek the header bytes without consuming buffer yet. Once we compute the
-    // total length, we will read the entire atom at once.
-    ParserAtomEntry header;
-    const uint8_t* cursor = nullptr;
-    MOZ_TRY(xdr->peekData(&cursor, HeaderSize));
-    memcpy(&header, cursor, HeaderSize);
-
-    // Get the entire atom at once. The `raw` pointer is into the XDR buffer and
-    // has no particular alignment.
-    const uint8_t* raw = nullptr;
-    size_t totalLength =
-        ComputeTotalLength(header.hasLatin1Chars(), header.length());
-    MOZ_TRY(xdr->readData(&raw, totalLength));
-
-    // Copy into the LifoAlloc and properly align the data.
-    (*entryp) = ParserAtomEntry::allocateRaw(xdr->cx(), xdr->stencilAlloc(),
-                                             raw, totalLength);
-    if (!*entryp) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
+    MOZ_TRY(xdr->peekData(&header));
   }
+
+  const uint32_t CharSize =
+      header->hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
+  uint32_t totalLength =
+      sizeof(ParserAtomEntry) + (CharSize * header->length());
+
+  MOZ_TRY(xdr->borrowedData(entryp, totalLength));
 
   return Ok();
 }

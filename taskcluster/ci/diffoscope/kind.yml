@@ -21,6 +21,7 @@ transforms:
 # builds because they are signed with an ephemeral private key that is
 # generated for each build.
 job-defaults:
+    tier: 2
     args: >-
         --output-empty
         --no-default-limits
@@ -71,6 +72,7 @@ jobs:
         run-on-projects: ['mozilla-central']  # Do not run linux32 on autoland, Bug 1599197
 
     reproducible-linux32-generated-files:
+        tier: 1
         symbol: Linux32g
         artifact: target.generated-files.tar.gz
         new: build-linux-reproduced/opt

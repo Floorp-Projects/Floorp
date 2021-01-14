@@ -379,6 +379,27 @@ extern JS_FRIEND_API void* JS_GetArrayBufferViewData(
     JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
 
 /**
+ * Return a "fixed" pointer (one that will not move during a GC) to the
+ * ArrayBufferView's data. Note that this will not keep the object alive; the
+ * holding object should be rooted or traced. If the view is storing the data
+ * inline, this will copy the data to the provided buffer, returning nullptr if
+ * bufSize is inadequate.
+ *
+ * Avoid using this unless necessary. JS_GetArrayBufferViewData is simpler and
+ * more efficient because it requires the caller to ensure that a GC will not
+ * occur and thus does not need to handle movable data.
+ */
+extern JS_FRIEND_API uint8_t* JS_GetArrayBufferViewFixedData(
+    JSObject* obj, uint8_t* buffer, size_t bufSize);
+
+/**
+ * If the bufSize passed to JS_GetArrayBufferViewFixedData is at least this
+ * many bytes, then any copied data is guaranteed to fit into the provided
+ * buffer.
+ */
+extern JS_FRIEND_API size_t JS_MaxMovableTypedArraySize();
+
+/**
  * Return the ArrayBuffer or SharedArrayBuffer underlying an ArrayBufferView.
  * This may return a detached buffer.  |obj| must be an object that would
  * return true for JS_IsArrayBufferViewObject().

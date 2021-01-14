@@ -122,7 +122,33 @@ const TEST_DATA = [
           }`
       }
     ]
-  }
+  },
+  {
+    selector: "#doublebind",
+    expected: [
+      {
+        type: "click",
+        filename: TEST_LIB + ":93:417",
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: `function() {}`
+      },
+      {
+        type: "onClick",
+        filename: TEST_URL + ":21:22",
+        attributes: [
+          "Bubbling",
+          "React"
+        ],
+        handler: `
+          function() {
+            alert("inlineFunction");
+          }`
+      }
+    ]
+  },
 ];
 /* eslint-enable */
 

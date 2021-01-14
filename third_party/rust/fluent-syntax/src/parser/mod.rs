@@ -174,12 +174,11 @@ where
                 break;
             }
 
-            match self.get_attribute() {
-                Ok(attr) => attributes.push(attr),
-                Err(_) => {
-                    self.ptr = line_start;
-                    break;
-                }
+            if let Ok(attr) = self.get_attribute() {
+                attributes.push(attr);
+            } else {
+                self.ptr = line_start;
+                break;
             }
         }
         attributes
@@ -339,43 +338,41 @@ where
 
             let expr = self.get_inline_expression()?;
 
-            match expr {
-                ast::InlineExpression::MessageReference {
-                    ref id,
-                    attribute: None,
-                } => {
-                    self.skip_blank();
-                    if self.is_current_byte(b':') {
-                        if argument_names.contains(&id.name) {
-                            return error!(
-                                ErrorKind::DuplicatedNamedArgument(id.name.as_ref().to_owned()),
-                                self.ptr
-                            );
-                        }
-                        self.ptr += 1;
-                        self.skip_blank();
-                        let val = self.get_inline_expression()?;
-
-                        argument_names.push(id.name.clone());
-                        named.push(ast::NamedArgument {
-                            name: ast::Identifier {
-                                name: id.name.clone(),
-                            },
-                            value: val,
-                        });
-                    } else {
-                        if !argument_names.is_empty() {
-                            return error!(ErrorKind::PositionalArgumentFollowsNamed, self.ptr);
-                        }
-                        positional.push(expr);
+            if let ast::InlineExpression::MessageReference {
+                ref id,
+                attribute: None,
+            } = expr
+            {
+                self.skip_blank();
+                if self.is_current_byte(b':') {
+                    if argument_names.contains(&id.name) {
+                        return error!(
+                            ErrorKind::DuplicatedNamedArgument(id.name.as_ref().to_owned()),
+                            self.ptr
+                        );
                     }
-                }
-                _ => {
+                    self.ptr += 1;
+                    self.skip_blank();
+                    let val = self.get_inline_expression()?;
+
+                    argument_names.push(id.name.clone());
+                    named.push(ast::NamedArgument {
+                        name: ast::Identifier {
+                            name: id.name.clone(),
+                        },
+                        value: val,
+                    });
+                } else {
                     if !argument_names.is_empty() {
                         return error!(ErrorKind::PositionalArgumentFollowsNamed, self.ptr);
                     }
                     positional.push(expr);
                 }
+            } else {
+                if !argument_names.is_empty() {
+                    return error!(ErrorKind::PositionalArgumentFollowsNamed, self.ptr);
+                }
+                positional.push(expr);
             }
 
             self.skip_blank();

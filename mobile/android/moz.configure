@@ -17,6 +17,35 @@ project_flag(
 )
 
 option(
+    "--num-content-services",
+    default="40",
+    help="The number of content process services to generate in the GeckoView manifest",
+)
+
+
+@depends("--num-content-services")
+def num_content_services(value):
+    strValue = value[0]
+    intValue = int(strValue)
+    acceptableRange = range(1, 41)
+    if intValue not in acceptableRange:
+        die(
+            "Unacceptable value, must be within range [%d,%d)"
+            % (acceptableRange.start, acceptableRange.stop)
+        )
+    return strValue
+
+
+set_config("MOZ_ANDROID_CONTENT_SERVICE_COUNT", num_content_services)
+set_define("MOZ_ANDROID_CONTENT_SERVICE_COUNT", num_content_services)
+
+project_flag(
+    "MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS",
+    help="Whether to generate content process services with isolatedProcess=true",
+    default=False,
+)
+
+option(
     env="FENNEC_NIGHTLY",
     help="Enable experimental code for Fennec Nightly users. NOTE: This is *not* equivalent "
     "to the NIGHTLY_BUILD flag set during configure.",

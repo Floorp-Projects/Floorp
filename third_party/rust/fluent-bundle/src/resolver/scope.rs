@@ -109,7 +109,7 @@ impl<'scope, 'errors, R, M: MemoizerKind> Scope<'scope, 'errors, R, M> {
     where
         W: fmt::Write,
     {
-        self.add_error(ResolverError::Reference(exp.resolve_error()));
+        self.add_error(exp.into());
         w.write_char('{')?;
         exp.write_error(w)?;
         w.write_char('}')

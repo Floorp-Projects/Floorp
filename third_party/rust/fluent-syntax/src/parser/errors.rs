@@ -1,6 +1,6 @@
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ParserError {
     pub pos: (usize, usize),
     pub slice: Option<(usize, usize)>,
@@ -32,7 +32,7 @@ macro_rules! error {
     }};
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ErrorKind {
     Generic,
     ExpectedEntry,

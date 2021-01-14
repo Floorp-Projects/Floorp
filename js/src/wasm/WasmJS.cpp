@@ -179,7 +179,7 @@ static inline bool WasmDebuggerActive(JSContext* cx) {
 }
 
 /*
- * [WASMDOC] Compiler and feature selection; compiler and feature availability.
+ * [SMDOC] Compiler and feature selection; compiler and feature availability.
  *
  * In order to make the computation of whether a wasm feature or wasm compiler
  * is available predictable, we have established some rules, and implemented

@@ -529,7 +529,7 @@
     obj: ObjId
     shape: ShapeField
 
-- name: GuardIndexIsNonNegative
+- name: GuardInt32IsNonNegative
   shared: true
   transpile: true
   cost_estimate: 1
@@ -2511,6 +2511,22 @@
   cost_estimate: 1
   args:
     val: Int32Id
+
+- name: BigIntAsIntNResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    bits: Int32Id
+    bigInt: BigIntId
+
+- name: BigIntAsUintNResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    bits: Int32Id
+    bigInt: BigIntId
 
 - name: CallPrintString
   shared: true

@@ -101,6 +101,7 @@ if CONFIG["ENABLE_TESTS"]:
         LOCAL_INCLUDES += [
             "/security/sandbox/chromium",
         ]
+        DEFINES["UNICODE"] = True
 
     DIRS += ["benchmark", "mozilla"]
 

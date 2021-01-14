@@ -255,13 +255,19 @@
                 <span class="origin-label field-label" data-l10n-id="login-item-origin-label"></span>
                 <!-- Default text inputs to readonly to reduce jumping of the field
                     size on page load since it always starts readonly. -->
+
                 <input type="url"
-                       name="origin"
-                       required
-                       data-l10n-id="login-item-origin"
-                       dir="auto"
-                       readonly/>
+                      name="origin"
+                      required
+                      data-l10n-id="login-item-origin"
+                      dir="auto"
+                      readonly/>
                 <a class="origin-input" dir="auto" target="_blank" rel="noreferrer" name="origin" href=""></a>
+                <div class="tooltip-container">
+                  <div class="arrow-box">
+                      <p class="tooltip-message" data-l10n-id="login-item-tooltip-message"></p>
+                  </div>
+                </div>
               </label>
             </div>
             <div class="detail-grid">
