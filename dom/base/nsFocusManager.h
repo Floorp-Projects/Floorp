@@ -231,8 +231,7 @@ class nsFocusManager final : public nsIFocusManager,
   /**
    * Called when a window has been lowered.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void WindowLowered(mozIDOMWindowProxy* aWindow,
-                                                 uint64_t aActionId);
+  void WindowLowered(mozIDOMWindowProxy* aWindow, uint64_t aActionId);
 
   /**
    * Called when a new document in a window is shown.
