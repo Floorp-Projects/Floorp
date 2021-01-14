@@ -5,12 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "hunspell_csutil.cxx",
     "mozHunspell.cpp",
-    "mozHunspellRLBoxHost.cpp",
+    "mozHunspellFileMgrHost.cpp",
     "RemoteSpellCheckEngineChild.cpp",
     "RemoteSpellCheckEngineParent.cpp",
-    "RLBoxHunspell.cpp",
 ]
 
 DEFINES["HUNSPELL_STATIC"] = True

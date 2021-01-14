@@ -72,6 +72,6 @@
 #ifndef FILEMGR_HXX_
 #define FILEMGR_HXX_
 
-#include "mozHunspellRLBoxSandbox.h"
+#include "mozHunspellFileMgrSandbox.h"
 
 #endif
