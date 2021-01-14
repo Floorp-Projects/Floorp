@@ -1865,11 +1865,14 @@ void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   }
   json.endObject();
 
-  json.beginListProperty("objLiteralData");
-  for (auto& data : objLiteralData) {
-    data.dump(json, this);
+  json.beginObjectProperty("objLiteralData");
+  for (size_t i = 0; i < objLiteralData.length(); i++) {
+    SprintfLiteral(index, "ObjLiteralIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    objLiteralData[i].dumpFields(json, this);
+    json.endObject();
   }
-  json.endList();
+  json.endObject();
 
   json.beginListProperty("scopeData");
   MOZ_ASSERT(scopeData.size() == scopeNames.size());
