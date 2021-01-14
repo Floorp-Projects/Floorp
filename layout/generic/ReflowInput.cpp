@@ -765,7 +765,7 @@ void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
   DISPLAY_INIT_TYPE(mFrame, this);
 
   if (aFrameType == LayoutFrameType::Table) {
-    mFrameType = NS_CSS_FRAME_TYPE_BLOCK;
+    mFrameType = NS_CSS_FRAME_TYPE_UNKNOWN;
     return;
   }
 
@@ -780,7 +780,7 @@ void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
     switch (disp->DisplayOutside()) {
       case StyleDisplayOutside::Block:
       case StyleDisplayOutside::TableCaption:
-        frameType = NS_CSS_FRAME_TYPE_BLOCK;
+        frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
         break;
 
       case StyleDisplayOutside::Inline:
@@ -790,7 +790,7 @@ void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
       case StyleDisplayOutside::InternalRuby:
         switch (disp->DisplayInside()) {
           case StyleDisplayInside::RubyTextContainer:
-            frameType = NS_CSS_FRAME_TYPE_BLOCK;
+            frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
             break;
           case StyleDisplayInside::RubyBase:
           case StyleDisplayInside::RubyText:
@@ -2332,11 +2332,15 @@ void ReflowInput::InitConstraints(
     } else {
       AutoMaybeDisableFontInflation an(mFrame);
 
-      // Note: all flex and grid items are block-level, even if they have
-      // e.g. 'display:-moz-box' (which doesn't get NS_CSS_FRAME_TYPE_BLOCK).
       const bool isBlockLevel =
-          NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType) ||
-          mFrame->IsFlexOrGridItem();
+          (mStyleDisplay->DisplayOutside() == StyleDisplayOutside::Block ||
+           mStyleDisplay->DisplayOutside() == StyleDisplayOutside::TableCaption ||
+           mFrame->IsTableFrame()) &&
+          // XXX abs.pos. continuations treated like blocks, see comment in
+          // the else-if condition above.
+          (!mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
+           mStyleDisplay->IsAbsolutelyPositionedStyle());
+
       if (!isBlockLevel) {
         mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
       }
