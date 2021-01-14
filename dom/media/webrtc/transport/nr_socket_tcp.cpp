@@ -105,11 +105,7 @@ int NrTcpSocket::connect(nr_transport_addr* aAddr) {
     return R_FAILED;
   }
 
-  bool use_tls = false;
-  if (my_addr_.tls_host[0]) {
-    remote_host = my_addr_.tls_host;
-    use_tls = true;
-  }
+  bool use_tls = aAddr->tls;
 
   nsCString local_addr;
   int local_port;

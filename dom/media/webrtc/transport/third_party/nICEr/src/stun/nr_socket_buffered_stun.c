@@ -346,11 +346,7 @@ static int nr_socket_buffered_stun_recvfrom(void *obj,void * restrict buf,
   sock->read_state = NR_ICE_SOCKET_READ_NONE;
   sock->bytes_needed = (sock->framing_type == ICE_TCP_FRAMING) ? sizeof(nr_frame_header) : sizeof(nr_stun_message_header);
 
-  assert(!nr_transport_addr_is_wildcard(&sock->remote_addr));
-  if (!nr_transport_addr_is_wildcard(&sock->remote_addr)) {
-    if ((r=nr_transport_addr_copy(from, &sock->remote_addr)))
-      ABORT(r);
-  }
+  if ((r = nr_transport_addr_copy(from, &sock->remote_addr))) ABORT(r);
 
   _status=0;
 abort:

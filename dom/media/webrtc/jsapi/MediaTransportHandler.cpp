@@ -375,12 +375,22 @@ static nsresult addNrIceServer(const nsString& aIceUrl,
     if (!server) {
       return NS_ERROR_FAILURE;
     }
+    if (server->HasFqdn()) {
+      // Add an IPv4 entry, then an IPv6 entry
+      aTurnServersOut->push_back(*server);
+      server->SetUseIPv6IfFqdn();
+    }
     aTurnServersOut->emplace_back(std::move(*server));
   } else {
     UniquePtr<NrIceStunServer> server(
         NrIceStunServer::Create(host.get(), port, transport.get()));
     if (!server) {
       return NS_ERROR_FAILURE;
+    }
+    if (server->HasFqdn()) {
+      // Add an IPv4 entry, then an IPv6 entry
+      aStunServersOut->push_back(*server);
+      server->SetUseIPv6IfFqdn();
     }
     aStunServersOut->emplace_back(std::move(*server));
   }

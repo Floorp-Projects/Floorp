@@ -205,35 +205,37 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server* server) const {
   int r;
 
   memset(server, 0, sizeof(nr_ice_stun_server));
+  uint8_t protocol;
   if (transport_ == kNrIceTransportUdp) {
-    server->transport = IPPROTO_UDP;
+    protocol = IPPROTO_UDP;
   } else if (transport_ == kNrIceTransportTcp) {
-    server->transport = IPPROTO_TCP;
+    protocol = IPPROTO_TCP;
   } else if (transport_ == kNrIceTransportTls) {
-    server->transport = IPPROTO_TCP;
+    protocol = IPPROTO_TCP;
     if (has_addr_) {
       // Refuse to try TLS without an FQDN
       return NS_ERROR_INVALID_ARG;
     }
-    server->tls = 1;
+    server->addr.tls = 1;
   } else {
     MOZ_MTLOG(ML_ERROR, "Unsupported STUN server transport: " << transport_);
     return NS_ERROR_FAILURE;
   }
 
   if (has_addr_) {
-    r = nr_praddr_to_transport_addr(&addr_, &server->u.addr, server->transport,
-                                    0);
+    r = nr_praddr_to_transport_addr(&addr_, &server->addr, protocol, 0);
     if (r) {
       return NS_ERROR_FAILURE;
     }
-    server->type = NR_ICE_STUN_SERVER_TYPE_ADDR;
   } else {
-    MOZ_ASSERT(sizeof(server->u.dnsname.host) > host_.size());
-    PL_strncpyz(server->u.dnsname.host, host_.c_str(),
-                sizeof(server->u.dnsname.host));
-    server->u.dnsname.port = port_;
-    server->type = NR_ICE_STUN_SERVER_TYPE_DNSNAME;
+    MOZ_ASSERT(sizeof(server->addr.fqdn) > host_.size());
+    // Dummy information to keep nICEr happy
+    if (use_ipv6_if_fqdn_) {
+      nr_str_port_to_transport_addr("::", port_, protocol, &server->addr);
+    } else {
+      nr_str_port_to_transport_addr("0.0.0.0", port_, protocol, &server->addr);
+    }
+    PL_strncpyz(server->addr.fqdn, host_.c_str(), sizeof(server->addr.fqdn));
   }
 
   return NS_OK;

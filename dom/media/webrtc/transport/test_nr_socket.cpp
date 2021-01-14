@@ -237,9 +237,7 @@ RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
 }
 
 int TestNrSocket::create(nr_transport_addr* addr) {
-  if (addr->tls_host[0] != '\0') {
-    tls_ = true;
-  }
+  tls_ = addr->tls;
 
   return NrSocketBase::CreateSocket(addr, &internal_socket_, nullptr);
 }

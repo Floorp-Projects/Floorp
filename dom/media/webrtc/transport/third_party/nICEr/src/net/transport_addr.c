@@ -57,7 +57,7 @@ int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr)
 
     switch(addr->protocol){
       case IPPROTO_TCP:
-        if (addr->tls_host[0]) {
+        if (addr->tls) {
           protocol = "TLS";
         } else {
           protocol = "TCP";
@@ -279,24 +279,28 @@ int nr_ip6_port_to_transport_addr(struct in6_addr* addr6, UINT2 port, int protoc
 int nr_transport_addr_get_addrstring(const nr_transport_addr *addr, char *str, int maxlen)
   {
     int _status;
-    const char *res;
 
-    switch(addr->ip_version){
-      case NR_IPV4:
-        res = inet_ntop(AF_INET, &addr->u.addr4.sin_addr,str,maxlen);
-        break;
-      case NR_IPV6:
-        res = inet_ntop(AF_INET6, &addr->u.addr6.sin6_addr,str,maxlen);
-        break;
-      default:
-        ABORT(R_INTERNAL);
-    }
-
-    if(!res){
-      if (errno == ENOSPC){
-        ABORT(R_BAD_ARGS);
+    if (addr->fqdn[0]) {
+      strncpy(str, addr->fqdn, maxlen);
+    } else {
+      const char* res;
+      switch (addr->ip_version) {
+        case NR_IPV4:
+          res = inet_ntop(AF_INET, &addr->u.addr4.sin_addr, str, maxlen);
+          break;
+        case NR_IPV6:
+          res = inet_ntop(AF_INET6, &addr->u.addr6.sin6_addr, str, maxlen);
+          break;
+        default:
+          ABORT(R_INTERNAL);
       }
-      ABORT(R_INTERNAL);
+
+      if (!res) {
+        if (errno == ENOSPC) {
+          ABORT(R_BAD_ARGS);
+        }
+        ABORT(R_INTERNAL);
+      }
     }
 
     _status=0;
@@ -485,10 +489,13 @@ int nr_transport_addr_check_compatibility(nr_transport_addr *addr1, nr_transport
         (addr1->protocol != addr2->protocol)) {
       return(1);
     }
-    // now make sure the link local status matches
-    if (nr_transport_addr_is_link_local(addr1) !=
-        nr_transport_addr_is_link_local(addr2)) {
-      return(1);
+
+    if (!addr1->fqdn[0] && !addr2->fqdn[0]) {
+      // now make sure the link local status matches
+      if (nr_transport_addr_is_link_local(addr1) !=
+          nr_transport_addr_is_link_local(addr2)) {
+        return(1);
+      }
     }
     return(0);
   }

@@ -169,14 +169,20 @@ static int nr_socket_multi_tcp_create_stun_server_socket(
     nr_tcp_socket_ctx *tcp_socket_ctx=0;
     nr_socket * nrsock;
 
-    if (stun_server->transport!=IPPROTO_TCP) {
-      r_log(LOG_ICE,LOG_INFO,"%s:%d function %s skipping UDP STUN server(addr:%s)",__FILE__,__LINE__,__FUNCTION__,stun_server->u.addr.as_string);
+    if (stun_server->addr.protocol != IPPROTO_TCP) {
+      r_log(LOG_ICE, LOG_INFO,
+            "%s:%d function %s skipping UDP STUN server(addr:%s)", __FILE__,
+            __LINE__, __FUNCTION__, stun_server->addr.as_string);
       ABORT(R_BAD_ARGS);
     }
 
-    if (stun_server->type == NR_ICE_STUN_SERVER_TYPE_ADDR &&
-        nr_transport_addr_cmp(&stun_server->u.addr,addr,NR_TRANSPORT_ADDR_CMP_MODE_VERSION)) {
-      r_log(LOG_ICE,LOG_INFO,"%s:%d function %s skipping STUN with different IP version (%u) than local socket (%u),",__FILE__,__LINE__,__FUNCTION__,stun_server->u.addr.ip_version,addr->ip_version);
+    if (nr_transport_addr_cmp(&stun_server->addr, addr,
+                              NR_TRANSPORT_ADDR_CMP_MODE_VERSION)) {
+      r_log(LOG_ICE, LOG_INFO,
+            "%s:%d function %s skipping STUN with different IP version (%u) "
+            "than local socket (%u),",
+            __FILE__, __LINE__, __FUNCTION__, stun_server->addr.ip_version,
+            addr->ip_version);
       ABORT(R_BAD_ARGS);
     }
 
@@ -187,19 +193,21 @@ static int nr_socket_multi_tcp_create_stun_server_socket(
     if ((r=nr_tcp_socket_ctx_create(nrsock, 0, max_pending, &tcp_socket_ctx)))
       ABORT(r);
 
-    if (stun_server->type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
-      nr_transport_addr stun_server_addr;
+    nr_transport_addr stun_server_addr;
 
-      nr_transport_addr_copy(&stun_server_addr, &stun_server->u.addr);
-      r=nr_socket_connect(tcp_socket_ctx->inner, &stun_server_addr);
-      if (r && r!=R_WOULDBLOCK) {
-        r_log(LOG_ICE,LOG_WARNING,"%s:%d function %s connect to STUN server(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,stun_server_addr.as_string,r);
-        ABORT(r);
-      }
-
-      if ((r=nr_tcp_socket_ctx_initialize(tcp_socket_ctx, &stun_server_addr, sock)))
-        ABORT(r);
+    nr_transport_addr_copy(&stun_server_addr, &stun_server->addr);
+    r = nr_socket_connect(tcp_socket_ctx->inner, &stun_server_addr);
+    if (r && r != R_WOULDBLOCK) {
+      r_log(LOG_ICE, LOG_WARNING,
+            "%s:%d function %s connect to STUN server(addr:%s) failed with "
+            "error %d",
+            __FILE__, __LINE__, __FUNCTION__, stun_server_addr.as_string, r);
+      ABORT(r);
     }
+
+    if ((r = nr_tcp_socket_ctx_initialize(tcp_socket_ctx, &stun_server_addr,
+                                          sock)))
+      ABORT(r);
 
     TAILQ_INSERT_TAIL(&sock->sockets, tcp_socket_ctx, entry);
 

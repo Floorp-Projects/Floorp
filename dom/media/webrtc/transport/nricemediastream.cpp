@@ -88,7 +88,7 @@ static bool ToNrIceAddr(nr_transport_addr& addr, NrIceAddr* out) {
 
   switch (addr.protocol) {
     case IPPROTO_TCP:
-      if (addr.tls_host[0] != '\0') {
+      if (addr.tls) {
         out->transport = kNrIceTransportTls;
       } else {
         out->transport = kNrIceTransportTcp;
