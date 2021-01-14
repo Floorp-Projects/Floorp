@@ -21,27 +21,29 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
 #include <dlfcn.h>
-#include "nscore.h"
 #include <fcntl.h>
+#include <unistd.h>
+
+#include "mozilla/Unused.h"
+#include "nsAppRunner.h"  // for IsWaylandDisabled on IsX11EGLEnabled
 #include "stdint.h"
 
 #ifdef __SUNPRO_CC
 #  include <stdio.h>
 #endif
 
-#include "X11/Xlib.h"
-#include "X11/Xutil.h"
-
-#include "mozilla/Unused.h"
+#ifdef MOZ_X11
+#  include "X11/Xlib.h"
+#  include "X11/Xutil.h"
+#endif
 
 #ifdef MOZ_WAYLAND
-#  include "nsAppRunner.h"  // for IsWaylandDisabled
 #  include "mozilla/widget/mozwayland.h"
 #  include "mozilla/widget/xdg-output-unstable-v1-client-protocol.h"
 #endif
 
+#ifdef MOZ_X11
 // stuff from glx.h
 typedef struct __GLXcontextRec* GLXContext;
 typedef XID GLXPixmap;
@@ -52,10 +54,11 @@ typedef XID GLXFBConfigID;
 typedef XID GLXContextID;
 typedef XID GLXWindow;
 typedef XID GLXPbuffer;
-#define GLX_RGBA 4
-#define GLX_RED_SIZE 8
-#define GLX_GREEN_SIZE 9
-#define GLX_BLUE_SIZE 10
+#  define GLX_RGBA 4
+#  define GLX_RED_SIZE 8
+#  define GLX_GREEN_SIZE 9
+#  define GLX_BLUE_SIZE 10
+#endif
 
 // stuff from gl.h
 typedef uint8_t GLubyte;
@@ -88,6 +91,17 @@ typedef uint32_t GLenum;
 #define EGL_VENDOR 0x3053
 #define EGL_CONTEXT_CLIENT_VERSION 0x3098
 #define EGL_NO_CONTEXT nullptr
+
+// Open libGL and load needed symbols
+#if defined(__OpenBSD__) || defined(__NetBSD__)
+#  define LIBGL_FILENAME "libGL.so"
+#  define LIBGLES_FILENAME "libGLESv2.so"
+#  define LIBEGL_FILENAME "libEGL.so"
+#else
+#  define LIBGL_FILENAME "libGL.so.1"
+#  define LIBGLES_FILENAME "libGLESv2.so.2"
+#  define LIBEGL_FILENAME "libEGL.so.1"
+#endif
 
 #define EXIT_FAILURE_BUFFER_TOO_SMALL 2
 
@@ -150,6 +164,7 @@ static void record_flush() {
   mozilla::Unused << write(write_end_of_the_pipe, glxtest_buf, glxtest_length);
 }
 
+#ifdef MOZ_X11
 static int x_error_handler(Display*, XErrorEvent* ev) {
   record_value(
       "ERROR\nX error, error_code=%d, "
@@ -159,12 +174,31 @@ static int x_error_handler(Display*, XErrorEvent* ev) {
   _exit(EXIT_FAILURE);
   return 0;
 }
+#endif
 
 // childgltest is declared inside extern "C" so that the name is not mangled.
 // The name is used in build/valgrind/x86_64-pc-linux-gnu.sup to suppress
 // memory leak errors because we run it inside a short lived fork and we don't
 // care about leaking memory
 extern "C" {
+
+static void close_logging() {
+  // we want to redirect to /dev/null stdout, stderr, and while we're at it,
+  // any PR logging file descriptors. To that effect, we redirect all positive
+  // file descriptors up to what open() returns here. In particular, 1 is stdout
+  // and 2 is stderr.
+  int fd = open("/dev/null", O_WRONLY);
+  for (int i = 1; i < fd; i++) {
+    dup2(fd, i);
+  }
+  close(fd);
+
+  if (getenv("MOZ_AVOID_OPENGL_ALTOGETHER")) {
+    const char* msg = "ERROR\nMOZ_AVOID_OPENGL_ALTOGETHER envvar set";
+    mozilla::Unused << write(write_end_of_the_pipe, msg, strlen(msg));
+    exit(EXIT_FAILURE);
+  }
+}
 
 #define PCI_FILL_IDENT 0x0001
 #define PCI_FILL_CLASS 0x0020
@@ -289,30 +323,30 @@ static void get_gles_status(EGLDisplay dpy,
     return;
   }
 
-  void* libgles = dlopen("libGLESv2.so.2", RTLD_LAZY);
-  if (!libgles) {
-    libgles = dlopen("libGLESv2.so", RTLD_LAZY);
-  }
-  if (!libgles) {
-    record_error("libGLESv2 missing");
-    return;
-  }
-
   typedef GLubyte* (*PFNGLGETSTRING)(GLenum);
   PFNGLGETSTRING glGetString =
       cast<PFNGLGETSTRING>(eglGetProcAddress("glGetString"));
 
+  // Implementations disagree about whether eglGetProcAddress or dlsym
+  // should be used for getting functions from the actual API, see
+  // https://github.com/anholt/libepoxy/commit/14f24485e33816139398d1bd170d617703473738
+  void* libgl = nullptr;
   if (!glGetString) {
-    // Implementations disagree about whether eglGetProcAddress or dlsym
-    // should be used for getting functions from the actual API, see
-    // https://github.com/anholt/libepoxy/commit/14f24485e33816139398d1bd170d617703473738
-    glGetString = cast<PFNGLGETSTRING>(dlsym(libgles, "glGetString"));
-  }
+    libgl = dlopen(LIBGL_FILENAME, RTLD_LAZY);
+    if (!libgl) {
+      libgl = dlopen(LIBGLES_FILENAME, RTLD_LAZY);
+      if (!libgl) {
+        record_error("Unable to load " LIBGL_FILENAME " or " LIBGLES_FILENAME);
+        return;
+      }
+    }
 
-  if (!glGetString) {
-    dlclose(libgles);
-    record_error("libGLESv2 glGetString missing");
-    return;
+    glGetString = cast<PFNGLGETSTRING>(dlsym(libgl, "glGetString"));
+    if (!glGetString) {
+      dlclose(libgl);
+      record_error("libGL or libGLESv2 glGetString missing");
+      return;
+    }
   }
 
   EGLint config_attrs[] = {EGL_RED_SIZE,  8, EGL_GREEN_SIZE, 8,
@@ -336,14 +370,13 @@ static void get_gles_status(EGLDisplay dpy,
     record_error("libGLESv2 glGetString returned null");
   }
 
-  dlclose(libgles);
+  if (libgl) {
+    dlclose(libgl);
+  }
 }
 
 static void get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test) {
-  void* libegl = dlopen("libEGL.so.1", RTLD_LAZY);
-  if (!libegl) {
-    libegl = dlopen("libEGL.so", RTLD_LAZY);
-  }
+  void* libegl = dlopen(LIBEGL_FILENAME, RTLD_LAZY);
   if (!libegl) {
     record_warning("libEGL missing");
     return;
@@ -410,13 +443,25 @@ static void get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test) {
   dlclose(libegl);
 }
 
+#ifdef MOZ_X11
+static void get_x11_screen_info(Display* dpy) {
+  int screenCount = ScreenCount(dpy);
+  int defaultScreen = DefaultScreen(dpy);
+  if (screenCount != 0) {
+    record_value("SCREEN_INFO\n");
+    for (int idx = 0; idx < screenCount; idx++) {
+      Screen* scrn = ScreenOfDisplay(dpy, idx);
+      int current_height = scrn->height;
+      int current_width = scrn->width;
+
+      record_value("%dx%d:%d%s", current_width, current_height,
+                   idx == defaultScreen ? 1 : 0,
+                   idx == screenCount - 1 ? ";\n" : ";");
+    }
+  }
+}
+
 static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
-  ///// Open libGL and load needed symbols /////
-#if defined(__OpenBSD__) || defined(__NetBSD__)
-#  define LIBGL_FILENAME "libGL.so"
-#else
-#  define LIBGL_FILENAME "libGL.so.1"
-#endif
   void* libgl = dlopen(LIBGL_FILENAME, RTLD_LAZY);
   if (!libgl) {
     record_error(LIBGL_FILENAME " missing");
@@ -568,21 +613,7 @@ static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
   }
 
   // Get monitor information
-
-  int screenCount = ScreenCount(dpy);
-  int defaultScreen = DefaultScreen(dpy);
-  if (screenCount != 0) {
-    record_value("SCREEN_INFO\n");
-    for (int idx = 0; idx < screenCount; idx++) {
-      Screen* scrn = ScreenOfDisplay(dpy, idx);
-      int current_height = scrn->height;
-      int current_width = scrn->width;
-
-      record_value("%dx%d:%d%s", current_width, current_height,
-                   idx == defaultScreen ? 1 : 0,
-                   idx == screenCount - 1 ? ";\n" : ";");
-    }
-  }
+  get_x11_screen_info(dpy);
 
   ///// Clean up. Indeed, the parent process might fail to kill us (e.g. if it
   ///// doesn't need to check GL info) so we might be staying alive for longer
@@ -595,35 +626,49 @@ static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
   XDestroyWindow(dpy, window);
   XFreeColormap(dpy, swa.colormap);
 
-#ifdef NS_FREE_PERMANENT_DATA  // conditionally defined in nscore.h, don't
-                               // forget to #include it above
+#  ifdef NS_FREE_PERMANENT_DATA  // conditionally defined in nscore.h, don't
+                                 // forget to #include it above
   XCloseDisplay(dpy);
-#else
+#  else
   // This XSync call wanted to be instead:
   //   XCloseDisplay(dpy);
   // but this can cause 1-minute stalls on certain setups using Nouveau, see bug
   // 973192
   XSync(dpy, False);
-#endif
+#  endif
 
   dlclose(libgl);
 }
 
-static void close_logging() {
-  // we want to redirect to /dev/null stdout, stderr, and while we're at it,
-  // any PR logging file descriptors. To that effect, we redirect all positive
-  // file descriptors up to what open() returns here. In particular, 1 is stdout
-  // and 2 is stderr.
-  int fd = open("/dev/null", O_WRONLY);
-  for (int i = 1; i < fd; i++) dup2(fd, i);
-  close(fd);
+static bool x11_egltest() {
+  get_egl_status(nullptr, true);
 
-  if (getenv("MOZ_AVOID_OPENGL_ALTOGETHER")) {
-    const char* msg = "ERROR\nMOZ_AVOID_OPENGL_ALTOGETHER envvar set";
-    mozilla::Unused << write(write_end_of_the_pipe, msg, strlen(msg));
-    exit(EXIT_FAILURE);
+  Display* dpy = XOpenDisplay(nullptr);
+  if (!dpy) {
+    return false;
+  }
+  XSetErrorHandler(x_error_handler);
+
+  get_x11_screen_info(dpy);
+
+  XCloseDisplay(dpy);
+  return true;
+}
+
+static void glxtest() {
+  int gotGlxInfo = 0;
+  int gotDriDriver = 0;
+
+  get_glx_status(&gotGlxInfo, &gotDriDriver);
+  if (!gotGlxInfo) {
+    get_egl_status(nullptr, true);
+  } else if (!gotDriDriver) {
+    // If we failed to get the driver name from X, try via
+    // EGL_MESA_query_driver. We are probably using Wayland.
+    get_egl_status(nullptr, false);
   }
 }
+#endif
 
 #ifdef MOZ_WAYLAND
 typedef void (*print_info_t)(void* info);
@@ -937,20 +982,6 @@ static bool wayland_egltest() {
 }
 #endif
 
-static void glxtest() {
-  int gotGlxInfo = 0;
-  int gotDriDriver = 0;
-
-  get_glx_status(&gotGlxInfo, &gotDriDriver);
-  if (!gotGlxInfo) {
-    get_egl_status(nullptr, true);
-  } else if (!gotDriDriver) {
-    // If we failed to get the driver name from X, try via
-    // EGL_MESA_query_driver. We are probably using Wayland.
-    get_egl_status(nullptr, false);
-  }
-}
-
 int childgltest() {
   enum { bufsize = 2048 };
   char buf[bufsize];
@@ -963,15 +994,21 @@ int childgltest() {
   // Get a list of all GPUs from the PCI bus.
   get_pci_status();
 
-  // TODO: --display command line argument is not properly handled
-  // NOTE: prefers X for now because eglQueryRendererIntegerMESA does not
-  // exist yet
+  bool result = false;
 #ifdef MOZ_WAYLAND
-  if (IsWaylandDisabled() || getenv("DISPLAY") || !wayland_egltest())
+  if (!IsWaylandDisabled()) {
+    result = wayland_egltest();
+  }
 #endif
-  {
+#ifdef MOZ_X11
+  // TODO: --display command line argument is not properly handled
+  if (!result && IsX11EGLEnabled()) {
+    result = x11_egltest();
+  }
+  if (!result) {
     glxtest();
   }
+#endif
 
   // Finally write buffered data to the pipe.
   record_flush();
