@@ -11610,17 +11610,6 @@ DR_init_offsets_cookie::~DR_init_offsets_cookie() {
   SizeComputationInput::DisplayInitOffsetsExit(mFrame, mState, mValue);
 }
 
-DR_init_type_cookie::DR_init_type_cookie(nsIFrame* aFrame, ReflowInput* aState)
-    : mFrame(aFrame), mState(aState) {
-  MOZ_COUNT_CTOR(DR_init_type_cookie);
-  mValue = ReflowInput::DisplayInitFrameTypeEnter(mFrame, mState);
-}
-
-DR_init_type_cookie::~DR_init_type_cookie() {
-  MOZ_COUNT_DTOR(DR_init_type_cookie);
-  ReflowInput::DisplayInitFrameTypeExit(mFrame, mState, mValue);
-}
-
 struct DR_Rule;
 
 struct DR_FrameTypeInfo {
@@ -12552,61 +12541,6 @@ void SizeComputationInput::DisplayInitOffsetsExit(nsIFrame* aFrame,
     const auto bp = aState->ComputedPhysicalBorderPadding();
     DR_state->PrintMargin("b+p", &bp);
     putchar('\n');
-  }
-  DR_state->DeleteTreeNode(*treeNode);
-}
-
-/* static */
-void* ReflowInput::DisplayInitFrameTypeEnter(nsIFrame* aFrame,
-                                             ReflowInput* aState) {
-  MOZ_ASSERT(aFrame, "non-null frame required");
-  MOZ_ASSERT(aState, "non-null state required");
-
-  if (!DR_state->mInited) DR_state->Init();
-  if (!DR_state->mActive) return nullptr;
-
-  // we don't print anything here
-  return DR_state->CreateTreeNode(aFrame, aState);
-}
-
-/* static */
-void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
-                                           ReflowInput* aState, void* aValue) {
-  MOZ_ASSERT(aFrame, "non-null frame required");
-  MOZ_ASSERT(aState, "non-null state required");
-
-  if (!DR_state->mActive) return;
-  if (!aValue) return;
-
-  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aValue;
-  if (treeNode->mDisplay) {
-    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    printf("InitFrameType");
-
-    if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) printf(" out-of-flow");
-    if (aFrame->GetPrevInFlow()) printf(" prev-in-flow");
-    if (aFrame->IsAbsolutelyPositioned()) printf(" abspos");
-    if (aFrame->IsFloating()) printf(" float");
-
-    {
-      nsAutoCString result;
-      aFrame->Style()->GetComputedPropertyValue(eCSSProperty_display, result);
-      printf(" display=%s", result.get());
-    }
-
-    // This array must exactly match the NS_CSS_FRAME_TYPE constants.
-    const char* const cssFrameTypes[] = {
-        "unknown", "inline", "block", "floating", "absolute", "internal-table"};
-    nsCSSFrameType bareType = NS_FRAME_GET_TYPE(aState->mFrameType);
-    bool repBlock = aFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock);
-    bool repNoBlock = !repBlock && aFrame->IsFrameOfType(nsIFrame::eReplaced);
-
-    if (bareType >= ArrayLength(cssFrameTypes)) {
-      printf(" result=type %u", bareType);
-    } else {
-      printf(" result=%s", cssFrameTypes[bareType]);
-    }
-    printf("%s%s\n", repNoBlock ? " +rep" : "", repBlock ? " +repBlk" : "");
   }
   DR_state->DeleteTreeNode(*treeNode);
 }
