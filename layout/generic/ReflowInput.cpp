@@ -120,6 +120,7 @@ SizeComputationInput::SizeComputationInput(
     nsIFrame* aFrame, gfxContext* aRenderingContext,
     WritingMode aContainingBlockWritingMode, nscoord aContainingBlockISize)
     : SizeComputationInput(aFrame, aRenderingContext) {
+  MOZ_ASSERT(!mFrame->IsTableColFrame());
   InitOffsets(aContainingBlockWritingMode, aContainingBlockISize,
               mFrame->Type());
 }
@@ -796,10 +797,6 @@ void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
 
       case StyleDisplayOutside::Inline:
         frameType = NS_CSS_FRAME_TYPE_INLINE;
-        break;
-
-      case StyleDisplayOutside::InternalTable:
-        frameType = NS_CSS_FRAME_TYPE_INTERNAL_TABLE;
         break;
 
       case StyleDisplayOutside::InternalRuby:
@@ -2287,7 +2284,7 @@ void ReflowInput::InitConstraints(
     // Calculate the computed inlineSize and blockSize.
     // This varies by frame type.
 
-    if (NS_CSS_FRAME_TYPE_INTERNAL_TABLE == mFrameType && !mFlags.mIsReplaced) {
+    if (IsInternalTableFrame()) {
       // Internal table elements. The rules vary depending on the type.
       // Calculate the computed isize
       bool rowOrRowGroup = false;
@@ -2951,6 +2948,7 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
   // that's treated as the initial value too.
   // Likewise, if we're a child of a flex container who's measuring our
   // intrinsic height, then we want to disregard our min-height/max-height.
+  const bool isInternalTableFrame = IsInternalTableFrame();
   const nscoord& bPercentageBasis = aCBSize.BSize(wm);
   auto BSizeBehavesAsInitialValue = [&](const auto& aBSize) {
     if (nsLayoutUtils::IsAutoBSize(aBSize, bPercentageBasis)) {
@@ -2959,7 +2957,7 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
     if (mFlags.mIsFlexContainerMeasuringBSize) {
       return true;
     }
-    if (mFrameType == NS_CSS_FRAME_TYPE_INTERNAL_TABLE && !mFlags.mIsReplaced) {
+    if (isInternalTableFrame) {
       return aBSize.HasLengthAndPercentage();
     }
     return false;
@@ -2994,4 +2992,9 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
 
 bool ReflowInput::IsFloating() const {
   return mStyleDisplay->IsFloating(mFrame);
+}
+
+bool ReflowInput::IsInternalTableFrame() const {
+  return mFrame->IsTableRowGroupFrame() || mFrame->IsTableColGroupFrame() ||
+         mFrame->IsTableRowFrame() || mFrame->IsTableCellFrame();
 }

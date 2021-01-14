@@ -58,8 +58,6 @@ typedef uint32_t nsCSSFrameType;
 #define NS_CSS_FRAME_TYPE_INLINE 1
 #define NS_CSS_FRAME_TYPE_BLOCK 2 /* block-level in normal flow */
 #define NS_CSS_FRAME_TYPE_ABSOLUTE 4
-#define NS_CSS_FRAME_TYPE_INTERNAL_TABLE \
-  5 /* row group frame, row frame, cell frame, ... */
 
 #define NS_FRAME_GET_TYPE(_ft) (_ft)
 
@@ -917,6 +915,13 @@ struct ReflowInput : public SizeComputationInput {
                                     nscoord* aOutsideBoxSizing) const;
 
   void CalculateBlockSideMargins(LayoutFrameType aFrameType);
+
+  /**
+   * @return true if mFrame is an internal table frame, i.e. an
+   * ns[RowGroup|ColGroup|Row|Cell]Frame.  (We exclude nsTableColFrame
+   * here since we never setup a ReflowInput for those.)
+   */
+  bool IsInternalTableFrame() const;
 
  private:
   // The available size in which to reflow the frame. The space represents the
