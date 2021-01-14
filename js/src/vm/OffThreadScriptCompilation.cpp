@@ -211,7 +211,7 @@ JS_PUBLIC_API void JS::CancelMultiOffThreadScriptsDecoder(
 }
 
 namespace js {
-bool gUseOffThreadParseGlobal = true;
+bool gUseOffThreadParseGlobal = false;
 }  // namespace js
 
 JS_PUBLIC_API void JS::SetUseOffThreadParseGlobal(bool value) {

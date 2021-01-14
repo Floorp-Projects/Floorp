@@ -2355,7 +2355,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
               JS_ReportErrorASCII(
                   cx,
                   "if both loadBytecode and saveIncrementalBytecode are set "
-                  "and --no-off-thread-parse-global is used, bytecode should "
+                  "and --off-thread-parse-global isn't used, bytecode should "
                   "have been saved with saveIncrementalBytecode");
               return false;
             }
@@ -2367,7 +2367,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
               JS_ReportErrorASCII(
                   cx,
                   "if both loadBytecode and saveIncrementalBytecode are set "
-                  "and --no-off-thread-parse-global isn't used, bytecode "
+                  "and --off-thread-parse-global is used, bytecode "
                   "should have been saved with saveBytecode");
               return false;
             }
@@ -5931,7 +5931,7 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   CompileOptions options(cx);
   options.setIntroductionType("js shell offThreadDecodeScript")
       .setFileAndLine("<string>", 1);
-  // NOTE: If --no-off-thread-parse-global is used, input can be either script
+  // NOTE: If --off-thread-parse-global is not used, input can be either script
   // for saveBytecode, or stencil for saveIncrementalBytecode.
   options.useOffThreadParseGlobal =
       CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Script;
@@ -8697,10 +8697,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      saveIncrementalBytecode: if true, and if the source is a\n"
 "         CacheEntryObject, the bytecode would be incrementally encoded and\n"
 "         saved into the cache entry.\n"
-"         If --no-off-thread-parse-global is used, the encoded bytecode's\n"
+"         If --off-thread-parse-global is not used, the encoded bytecode's\n"
 "         kind is 'stencil'. If not, the encoded bytecode's kind is 'script'\n"
 "         If both loadBytecode and saveIncrementalBytecode are set,\n"
-"         and --no-off-thread-parse-global is used, the input bytecode's\n"
+"         and --off-thread-parse-global is not used, the input bytecode's\n"
 "         kind should be 'stencil'."
 "      assertEqBytecode: if true, and if both loadBytecode and either\n"
 "         saveBytecode or saveIncrementalBytecode is true, then the loaded\n"
@@ -10486,7 +10486,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
                              op.getBoolOption("enable-private-methods");
   enablePrivateClassMethods = op.getBoolOption("enable-private-methods");
   enableTopLevelAwait = op.getBoolOption("enable-top-level-await");
-  useOffThreadParseGlobal = !op.getBoolOption("no-off-thread-parse-global");
+  useOffThreadParseGlobal = op.getBoolOption("off-thread-parse-global");
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
@@ -11475,9 +11475,8 @@ int main(int argc, char** argv, char** envp) {
                         "Enable private class methods") ||
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
-      !op.addBoolOption('\0', "no-off-thread-parse-global",
-                        "Do not use parseGlobal in off-thread compilation and "
-                        "instead instantiate stencil in main-thread") ||
+      !op.addBoolOption('\0', "off-thread-parse-global",
+                        "Use parseGlobal in all off-thread compilation") ||
       !op.addBoolOption('\0', "enable-large-buffers",
                         "Allow creating ArrayBuffers larger than 2 GB on "
                         "64-bit platforms (experimental!)") ||
