@@ -9,6 +9,7 @@ package org.mozilla.geckoview;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
+import java.util.Locale;
 
 import androidx.annotation.AnyThread;
 import androidx.annotation.LongDef;
@@ -178,6 +179,6 @@ public final class StorageController {
         // ensure that the string is safe for Gecko processing, we translate it to
         // its hex representation.
         return String.format("gvctx%x", new BigInteger(contextId.getBytes()))
-               .toLowerCase();
+               .toLowerCase(Locale.ROOT);
     }
 }

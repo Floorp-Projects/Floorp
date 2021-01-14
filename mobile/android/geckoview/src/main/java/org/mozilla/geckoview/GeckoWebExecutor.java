@@ -16,6 +16,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Locale;
 
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -139,7 +140,7 @@ public class GeckoWebExecutor {
         }
 
         // We don't need to fully validate the URI here, just a sanity check
-        if (!request.uri.toLowerCase().matches("(http|blob).*")) {
+        if (!request.uri.toLowerCase(Locale.ROOT).matches("(http|blob).*")) {
             throw new IllegalArgumentException("Unsupported URI scheme");
         }
 

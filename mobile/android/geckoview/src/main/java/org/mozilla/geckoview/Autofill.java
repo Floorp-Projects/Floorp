@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
 
 import android.annotation.TargetApi;
@@ -809,7 +810,7 @@ public class Autofill {
                     }
                 }
 
-                String tag = bundle.getString("tag", "").toLowerCase();
+                String tag = bundle.getString("tag", "").toLowerCase(Locale.ROOT);
                 mNode.setTag(tag);
 
                 final GeckoBundle attrs = bundle.getBundle("attributes");
@@ -838,7 +839,7 @@ public class Autofill {
                 }
 
                 final String type =
-                    bundle.getString("type", "text").toLowerCase();
+                    bundle.getString("type", "text").toLowerCase(Locale.ROOT);
 
                 switch (type) {
                     case "email": {
@@ -869,7 +870,7 @@ public class Autofill {
                     }
                     case "text": {
                         final String autofillHint =
-                            bundle.getString("autofillhint", "").toLowerCase();
+                            bundle.getString("autofillhint", "").toLowerCase(Locale.ROOT);
                         if (autofillHint.equals("username")) {
                             mNode
                                 .setHint(Hint.USERNAME)
