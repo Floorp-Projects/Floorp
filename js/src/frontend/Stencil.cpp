@@ -1842,11 +1842,14 @@ void BaseCompilationStencil::dump(js::JSONPrinter& json) {
 void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   char index[64];
 
-  json.beginListProperty("scriptData");
-  for (auto& data : scriptData) {
-    data.dump(json, this);
+  json.beginObjectProperty("scriptData");
+  for (size_t i = 0; i < scriptData.size(); i++) {
+    SprintfLiteral(index, "ScriptIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    scriptData[i].dumpFields(json, this);
+    json.endObject();
   }
-  json.endList();
+  json.endObject();
 
   json.beginObjectProperty("regExpData");
   for (size_t i = 0; i < regExpData.size(); i++) {
