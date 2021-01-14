@@ -1874,12 +1874,15 @@ void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   }
   json.endObject();
 
-  json.beginListProperty("scopeData");
+  json.beginObjectProperty("scopeData");
   MOZ_ASSERT(scopeData.size() == scopeNames.size());
   for (size_t i = 0; i < scopeData.size(); i++) {
-    scopeData[i].dump(json, scopeNames[i], this);
+    SprintfLiteral(index, "ScopeIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    scopeData[i].dumpFields(json, scopeNames[i], this);
+    json.endObject();
   }
-  json.endList();
+  json.endObject();
 
   json.beginObjectProperty("sharedData");
   sharedData.dumpFields(json);
