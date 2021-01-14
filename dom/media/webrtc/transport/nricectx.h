@@ -113,13 +113,6 @@ class NrIceStunServer {
 
   nsresult ToNicerStunStruct(nr_ice_stun_server* server) const;
 
-  bool HasFqdn() const { return !has_addr_; }
-
-  void SetUseIPv6IfFqdn() {
-    MOZ_ASSERT(HasFqdn());
-    use_ipv6_if_fqdn_ = true;
-  }
-
  protected:
   explicit NrIceStunServer(const char* transport)
       : addr_(), transport_(transport) {}
@@ -148,7 +141,6 @@ class NrIceStunServer {
   uint16_t port_;
   PRNetAddr addr_;
   std::string transport_;
-  bool use_ipv6_if_fqdn_ = false;
 };
 
 class NrIceTurnServer : public NrIceStunServer {
