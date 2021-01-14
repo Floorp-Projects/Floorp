@@ -1499,6 +1499,7 @@ class UrlbarView {
     for (let [name, node] of item._elements) {
       node.id = `${item.id}-${name}`;
       idsByName.set(name, node.id);
+    }
 
     // First, apply highlighting. We do this before updating via getViewUpdate
     // so the dynamic provider can override the highlighting by setting the
