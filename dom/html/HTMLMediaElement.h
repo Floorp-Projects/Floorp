@@ -1842,11 +1842,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Total time a video has (or would have) spent in video-decode-suspend mode.
   TimeDurationAccumulator mVideoDecodeSuspendTime;
 
-  // Total time a video has spent playing on the current load, it would be reset
-  // when media aborts the current load; be paused when the docuemt enters the
-  // bf-cache and be resumed when the docuemt leaves the bf-cache.
-  TimeDurationAccumulator mCurrentLoadPlayTime;
-
   // True if Init() has been called after construction
   bool mInitialized = false;
 

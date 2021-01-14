@@ -2339,7 +2339,6 @@ void HTMLMediaElement::AbortExistingLoads() {
 
   mEventDeliveryPaused = false;
   mPendingEvents.Clear();
-  mCurrentLoadPlayTime.Reset();
 
   AssertReadyStateIsNothing();
 }
@@ -6344,17 +6343,14 @@ void HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName) {
 
   if ((aName.EqualsLiteral("play") || aName.EqualsLiteral("playing"))) {
     mPlayTime.Start();
-    mCurrentLoadPlayTime.Start();
     if (IsHidden()) {
       HiddenVideoStart();
     }
   } else if (aName.EqualsLiteral("waiting")) {
     mPlayTime.Pause();
-    mCurrentLoadPlayTime.Pause();
     HiddenVideoStop();
   } else if (aName.EqualsLiteral("pause")) {
     mPlayTime.Pause();
-    mCurrentLoadPlayTime.Pause();
     HiddenVideoStop();
   }
 }
@@ -6492,7 +6488,6 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
   UpdateAudioChannelPlayingState();
 
   if (aSuspendElement) {
-    mCurrentLoadPlayTime.Pause();
     ReportTelemetry();
 
     if (mDecoder) {
@@ -6505,9 +6500,6 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
     ClearResumeDelayedMediaPlaybackAgentIfNeeded();
     mMediaControlKeyListener->StopIfNeeded();
   } else {
-    if (!mPaused) {
-      mCurrentLoadPlayTime.Start();
-    }
     if (mDecoder) {
       mDecoder->Resume();
       if (!mPaused && !mDecoder->IsEnded()) {
