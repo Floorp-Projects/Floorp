@@ -77,7 +77,7 @@ class SetupAction final : public SyncDBAction {
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
-    nsresult rv = BodyCreateDir(aDBDir);
+    nsresult rv = BodyCreateDir(*aDBDir);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -118,7 +118,7 @@ class SetupAction final : public SyncDBAction {
                 CACHE_TRY_UNWRAP(deletionInfo,
                                  db::DeleteCacheId(*aConn, *element));
 
-                CACHE_TRY(BodyDeleteFiles(aQuotaInfo, aDBDir,
+                CACHE_TRY(BodyDeleteFiles(aQuotaInfo, *aDBDir,
                                           deletionInfo.mDeletedBodyIdList));
 
                 if (deletionInfo.mDeletedPaddingSize > 0) {
@@ -133,7 +133,7 @@ class SetupAction final : public SyncDBAction {
       AutoTArray<nsID, 64> knownBodyIdList;
       CACHE_TRY_UNWRAP(knownBodyIdList, db::GetKnownBodyIds(*aConn));
 
-      rv = BodyDeleteOrphanedFiles(aQuotaInfo, aDBDir, knownBodyIdList);
+      rv = BodyDeleteOrphanedFiles(aQuotaInfo, *aDBDir, knownBodyIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -148,8 +148,8 @@ class SetupAction final : public SyncDBAction {
       Unused << NS_WARN_IF(NS_FAILED(rv));
     }
 
-    if (DirectoryPaddingFileExists(aDBDir, DirPaddingFile::TMP_FILE) ||
-        !DirectoryPaddingFileExists(aDBDir, DirPaddingFile::FILE)) {
+    if (DirectoryPaddingFileExists(*aDBDir, DirPaddingFile::TMP_FILE) ||
+        !DirectoryPaddingFileExists(*aDBDir, DirPaddingFile::FILE)) {
       rv = RestorePaddingFile(aDBDir, aConn);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -195,7 +195,7 @@ class DeleteOrphanedBodyAction final : public Action {
       return;
     }
 
-    rv = BodyDeleteFiles(aQuotaInfo, dbDir, mDeletedBodyIdList);
+    rv = BodyDeleteFiles(aQuotaInfo, *dbDir, mDeletedBodyIdList);
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
     aResolver->Resolve(rv);
@@ -607,6 +607,8 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
+    MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+
     Maybe<SavedResponse> maybeResponse;
     CACHE_TRY_UNWRAP(
         maybeResponse,
@@ -625,14 +627,8 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
 
     nsCOMPtr<nsIInputStream> stream;
     if (mArgs.openMode() == OpenMode::Eager) {
-      nsresult rv = BodyOpen(aQuotaInfo, aDBDir, mResponse.mBodyId,
-                             getter_AddRefs(stream));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (NS_WARN_IF(!stream)) {
-        return NS_ERROR_FILE_NOT_FOUND;
-      }
+      CACHE_TRY_UNWRAP(stream,
+                       BodyOpen(aQuotaInfo, *aDBDir, mResponse.mBodyId));
     }
 
     mStreamList->Add(mResponse.mBodyId, std::move(stream));
@@ -678,6 +674,8 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
+    MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+
     CACHE_TRY_UNWRAP(mSavedResponses,
                      db::CacheMatchAll(*aConn, mCacheId, mArgs.maybeRequest(),
                                        mArgs.params()));
@@ -691,14 +689,8 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
 
       nsCOMPtr<nsIInputStream> stream;
       if (mArgs.openMode() == OpenMode::Eager) {
-        nsresult rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponses[i].mBodyId,
-                               getter_AddRefs(stream));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        if (NS_WARN_IF(!stream)) {
-          return NS_ERROR_FILE_NOT_FOUND;
-        }
+        CACHE_TRY_UNWRAP(
+            stream, BodyOpen(aQuotaInfo, *aDBDir, mSavedResponses[i].mBodyId));
       }
 
       mStreamList->Add(mSavedResponses[i].mBodyId, std::move(stream));
@@ -876,7 +868,7 @@ class Manager::CachePutAllAction final : public DBAction {
     for (uint32_t i = 0; i < mList.Length(); ++i) {
       Entry& e = mList[i];
       if (e.mRequestStream) {
-        rv = BodyFinalizeWrite(mDBDir, e.mRequestBodyId);
+        rv = BodyFinalizeWrite(*mDBDir, e.mRequestBodyId);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           DoResolve(rv);
           return;
@@ -887,7 +879,7 @@ class Manager::CachePutAllAction final : public DBAction {
         if (e.mResponse.type() == ResponseType::Opaque) {
           // It'll generate padding if we've not set it yet.
           rv = BodyMaybeUpdatePaddingSize(
-              mQuotaInfo.ref(), mDBDir, e.mResponseBodyId,
+              mQuotaInfo.ref(), *mDBDir, e.mResponseBodyId,
               e.mResponse.paddingInfo(), &e.mResponse.paddingSize());
           if (NS_WARN_IF(NS_FAILED(rv))) {
             DoResolve(rv);
@@ -899,7 +891,7 @@ class Manager::CachePutAllAction final : public DBAction {
           mUpdatedPaddingSize += e.mResponse.paddingSize();
         }
 
-        rv = BodyFinalizeWrite(mDBDir, e.mResponseBodyId);
+        rv = BodyFinalizeWrite(*mDBDir, e.mResponseBodyId);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           DoResolve(rv);
           return;
@@ -997,32 +989,27 @@ class Manager::CachePutAllAction final : public DBAction {
       return NS_ERROR_ABORT;
     }
 
-    nsCOMPtr<nsIInputStream> source;
-    nsID* bodyId;
+    MOZ_DIAGNOSTIC_ASSERT(aStreamId == RequestStream ||
+                          aStreamId == ResponseStream);
 
-    if (aStreamId == RequestStream) {
-      source = aEntry.mRequestStream;
-      bodyId = &aEntry.mRequestBodyId;
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(aStreamId == ResponseStream);
-      source = aEntry.mResponseStream;
-      bodyId = &aEntry.mResponseBodyId;
-    }
+    const auto& source = aStreamId == RequestStream ? aEntry.mRequestStream
+                                                    : aEntry.mResponseStream;
 
     if (!source) {
       return NS_OK;
     }
 
-    nsCOMPtr<nsISupports> copyContext;
+    CACHE_TRY_INSPECT((const auto& [bodyId, copyContext]),
+                      BodyStartWriteStream(aQuotaInfo, *mDBDir, *source, this,
+                                           AsyncCopyCompleteFunc));
 
-    nsresult rv = BodyStartWriteStream(aQuotaInfo, mDBDir, source, this,
-                                       AsyncCopyCompleteFunc, bodyId,
-                                       getter_AddRefs(copyContext));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (aStreamId == RequestStream) {
+      aEntry.mRequestBodyId = bodyId;
+    } else {
+      aEntry.mResponseBodyId = bodyId;
     }
 
-    mBodyIdWrittenList.AppendElement(*bodyId);
+    mBodyIdWrittenList.AppendElement(bodyId);
 
     if (copyContext) {
       MutexAutoLock lock(mMutex);
@@ -1031,14 +1018,15 @@ class Manager::CachePutAllAction final : public DBAction {
 
     *aCopyCountOut += 1;
 
-    return rv;
+    return NS_OK;
   }
 
   void CancelAllStreamCopying() {
     // May occur on either owning thread or target thread
     MutexAutoLock lock(mMutex);
     for (uint32_t i = 0; i < mCopyContextList.Length(); ++i) {
-      BodyCancelWrite(mDBDir, mCopyContextList[i]);
+      MOZ_DIAGNOSTIC_ASSERT(mCopyContextList[i]);
+      BodyCancelWrite(*mCopyContextList[i]);
     }
     mCopyContextList.Clear();
   }
@@ -1076,7 +1064,7 @@ class Manager::CachePutAllAction final : public DBAction {
 
     // Clean up any files we might have written before hitting the error.
     if (NS_FAILED(aRv)) {
-      BodyDeleteFiles(mQuotaInfo.ref(), mDBDir, mBodyIdWrittenList);
+      BodyDeleteFiles(mQuotaInfo.ref(), *mDBDir, mBodyIdWrittenList);
       if (mUpdatedPaddingSize > 0) {
         DecreaseUsageForQuotaInfo(mQuotaInfo.ref(), mUpdatedPaddingSize);
       }
@@ -1214,6 +1202,8 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
+    MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+
     CACHE_TRY_UNWRAP(
         mSavedRequests,
         db::CacheKeys(*aConn, mCacheId, mArgs.maybeRequest(), mArgs.params()));
@@ -1227,14 +1217,8 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
 
       nsCOMPtr<nsIInputStream> stream;
       if (mArgs.openMode() == OpenMode::Eager) {
-        nsresult rv = BodyOpen(aQuotaInfo, aDBDir, mSavedRequests[i].mBodyId,
-                               getter_AddRefs(stream));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        if (NS_WARN_IF(!stream)) {
-          return NS_ERROR_FILE_NOT_FOUND;
-        }
+        CACHE_TRY_UNWRAP(
+            stream, BodyOpen(aQuotaInfo, *aDBDir, mSavedRequests[i].mBodyId));
       }
 
       mStreamList->Add(mSavedRequests[i].mBodyId, std::move(stream));
@@ -1277,6 +1261,8 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
+    MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+
     auto maybeResponse =
         db::StorageMatch(*aConn, mNamespace, mArgs.request(), mArgs.params());
     if (NS_WARN_IF(maybeResponse.isErr())) {
@@ -1296,14 +1282,8 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
 
     nsCOMPtr<nsIInputStream> stream;
     if (mArgs.openMode() == OpenMode::Eager) {
-      nsresult rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponse.mBodyId,
-                             getter_AddRefs(stream));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (NS_WARN_IF(!stream)) {
-        return NS_ERROR_FILE_NOT_FOUND;
-      }
+      CACHE_TRY_UNWRAP(stream,
+                       BodyOpen(aQuotaInfo, *aDBDir, mSavedResponse.mBodyId));
     }
 
     mStreamList->Add(mSavedResponse.mBodyId, std::move(stream));
@@ -1536,16 +1516,11 @@ class Manager::OpenStreamAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    nsresult rv =
-        BodyOpen(aQuotaInfo, aDBDir, mBodyId, getter_AddRefs(mBodyStream));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (NS_WARN_IF(!mBodyStream)) {
-      return NS_ERROR_FILE_NOT_FOUND;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
-    return rv;
+    CACHE_TRY_UNWRAP(mBodyStream, BodyOpen(aQuotaInfo, *aDBDir, mBodyId));
+
+    return NS_OK;
   }
 
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) override {
