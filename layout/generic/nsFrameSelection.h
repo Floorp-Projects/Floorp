@@ -239,11 +239,11 @@ class nsFrameSelection final {
    * @param aHint will tell the selection which direction geometrically to
    * actually show the caret on. 1 = end of this line 0 = beginning of this line
    */
-  MOZ_CAN_RUN_SCRIPT nsresult HandleClick(nsIContent* aNewFocus,
-                                          uint32_t aContentOffset,
-                                          uint32_t aContentEndOffset,
-                                          FocusMode aFocusMode,
-                                          CaretAssociateHint aHint);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult HandleClick(nsIContent* aNewFocus,
+                                                   uint32_t aContentOffset,
+                                                   uint32_t aContentEndOffset,
+                                                   FocusMode aFocusMode,
+                                                   CaretAssociateHint aHint);
 
   /**
    * HandleDrag extends the selection to contain the frame closest to aPoint.
@@ -256,6 +256,7 @@ class nsFrameSelection final {
    *
    * @param aPoint is relative to aFrame
    */
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
   MOZ_CAN_RUN_SCRIPT void HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint);
 
   /**
@@ -370,7 +371,7 @@ class nsFrameSelection final {
    *
    * @param aState is the new state of drag
    */
-  MOZ_CAN_RUN_SCRIPT
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetDragState(bool aState);
 
   /**
@@ -630,17 +631,17 @@ class nsFrameSelection final {
    * by the selection during MouseDown processing. It can be nullptr
    * if the data is no longer valid.
    */
-  bool HasDelayedCaretData() const { return mDelayedMouseEvent.mIsValid; }
-  bool IsShiftDownInDelayedCaretData() const {
+  bool HasDelayedCaretData() { return mDelayedMouseEvent.mIsValid; }
+  bool IsShiftDownInDelayedCaretData() {
     NS_ASSERTION(mDelayedMouseEvent.mIsValid, "No valid delayed caret data");
     return mDelayedMouseEvent.mIsShift;
   }
-  uint32_t GetClickCountInDelayedCaretData() const {
+  uint32_t GetClickCountInDelayedCaretData() {
     NS_ASSERTION(mDelayedMouseEvent.mIsValid, "No valid delayed caret data");
     return mDelayedMouseEvent.mClickCount;
   }
 
-  bool MouseDownRecorded() const {
+  bool MouseDownRecorded() {
     return !GetDragState() && HasDelayedCaretData() &&
            GetClickCountInDelayedCaretData() < 2;
   }
