@@ -2013,7 +2013,7 @@ bool JSStructuredCloneWriter::transferOwnership() {
           return false;
         }
       } else {
-        size_t nbytes = arrayBuffer->byteLength().deprecatedGetUint32();
+        size_t nbytes = arrayBuffer->byteLength().get();
 
         using BufferContents = ArrayBufferObject::BufferContents;
 
@@ -2938,7 +2938,9 @@ bool JSStructuredCloneReader::readTransferMap() {
         return false;
       }
 
+      MOZ_RELEASE_ASSERT(extraData <= ArrayBufferObject::maxBufferByteLength());
       size_t nbytes = extraData;
+
       MOZ_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA ||
                  data == JS::SCTAG_TMO_MAPPED_DATA);
       if (data == JS::SCTAG_TMO_ALLOC_DATA) {
