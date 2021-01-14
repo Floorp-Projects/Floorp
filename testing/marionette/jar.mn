@@ -52,6 +52,7 @@ marionette.jar:
   content/test_dialog.dtd (chrome/test_dialog.dtd)
   content/test_dialog.properties (chrome/test_dialog.properties)
   content/test_dialog.xhtml (chrome/test_dialog.xhtml)
+  content/test_menupopup.xhtml (chrome/test_menupopup.xhtml)
   content/test_nested_iframe.xhtml (chrome/test_nested_iframe.xhtml)
 #ifdef MOZ_CODE_COVERAGE
   content/PerTestCoverageUtils.jsm (../../tools/code-coverage/PerTestCoverageUtils.jsm)
