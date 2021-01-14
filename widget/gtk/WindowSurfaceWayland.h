@@ -82,7 +82,7 @@ class WindowBackBuffer {
   RefPtr<nsWaylandDisplay> GetWaylandDisplay();
 
  private:
-  void ReleaseShmSurface();
+  void ReleaseWLBuffer();
 
   static gfx::SurfaceFormat mFormat;
   WindowSurfaceWayland* mWindowSurfaceWayland;
