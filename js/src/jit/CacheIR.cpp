@@ -1721,6 +1721,10 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
+  if (mode_ != ICState::Mode::Specialized) {
+    return AttachDecision::NoAction;
+  }
+
   // Receiver should be the object.
   if (isSuper()) {
     return AttachDecision::NoAction;
