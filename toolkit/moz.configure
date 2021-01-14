@@ -2045,7 +2045,6 @@ def wasm_sandboxing_libraries():
     return (
         "graphite",
         "ogg",
-        "hunspell",
     )
 
 

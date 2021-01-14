@@ -60,7 +60,7 @@
 #ifndef mozHunspell_h__
 #define mozHunspell_h__
 
-#include "RLBoxHunspell.h"
+#include <hunspell.hxx>
 #include "mozISpellCheckingEngine.h"
 #include "mozIPersonalDictionary.h"
 #include "nsString.h"
@@ -123,7 +123,7 @@ class mozHunspell final : public mozISpellCheckingEngine,
   nsCOMArray<nsIFile> mDynamicDirectories;
   nsInterfaceHashtable<nsStringHashKey, nsIURI> mDynamicDictionaries;
 
-  RLBoxHunspell* mHunspell;
+  Hunspell* mHunspell;
 };
 
 #endif
