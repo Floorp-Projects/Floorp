@@ -340,12 +340,14 @@ class TextInputSelectionController final : public nsSupportsWeakReference,
                           bool aExtend) override;
   NS_IMETHOD CharacterMove(bool aForward, bool aExtend) override;
   NS_IMETHOD WordMove(bool aForward, bool aExtend) override;
-  NS_IMETHOD LineMove(bool aForward, bool aExtend) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD LineMove(bool aForward,
+                                                  bool aExtend) override;
   NS_IMETHOD IntraLineMove(bool aForward, bool aExtend) override;
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD PageMove(bool aForward, bool aExtend) override;
   NS_IMETHOD CompleteScroll(bool aForward) override;
-  NS_IMETHOD CompleteMove(bool aForward, bool aExtend) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD CompleteMove(bool aForward,
+                                             bool aExtend) override;
   NS_IMETHOD ScrollPage(bool aForward) override;
   NS_IMETHOD ScrollLine(bool aForward) override;
   NS_IMETHOD ScrollCharacter(bool aRight) override;
@@ -699,10 +701,11 @@ TextInputSelectionController::CompleteMove(bool aForward, bool aExtend) {
     }
   }
 
+  const RefPtr<nsIContent> pinnedParentDIV{parentDIV};
   const nsFrameSelection::FocusMode focusMode =
       aExtend ? nsFrameSelection::FocusMode::kExtendSelection
               : nsFrameSelection::FocusMode::kCollapseToNewPoint;
-  frameSelection->HandleClick(parentDIV, offset, offset, focusMode, hint);
+  frameSelection->HandleClick(pinnedParentDIV, offset, offset, focusMode, hint);
 
   // if we got this far, attempt to scroll no matter what the above result is
   return CompleteScroll(aForward);

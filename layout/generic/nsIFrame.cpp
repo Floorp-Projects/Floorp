@@ -27,6 +27,7 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGObserverUtils.h"
@@ -4795,8 +4796,9 @@ nsIFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     return nsFrameSelection::FocusMode::kCollapseToNewPoint;
   }();
 
-  rv = fc->HandleClick(offsets.content, offsets.StartOffset(),
-                       offsets.EndOffset(), focusMode, offsets.associate);
+  rv = fc->HandleClick(MOZ_KnownLive(offsets.content) /* bug 1636889 */,
+                       offsets.StartOffset(), offsets.EndOffset(), focusMode,
+                       offsets.associate);
 
   if (NS_FAILED(rv)) return rv;
 
@@ -4948,12 +4950,14 @@ nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
           ? nsFrameSelection::FocusMode::kMultiRangeSelection
           : nsFrameSelection::FocusMode::kCollapseToNewPoint;
   rv = frameSelection->HandleClick(
-      startpos.mResultContent, startpos.mContentOffset, startpos.mContentOffset,
-      focusMode, CARET_ASSOCIATE_AFTER);
+      MOZ_KnownLive(startpos.mResultContent) /* bug 1636889 */,
+      startpos.mContentOffset, startpos.mContentOffset, focusMode,
+      CARET_ASSOCIATE_AFTER);
   if (NS_FAILED(rv)) return rv;
 
   rv = frameSelection->HandleClick(
-      endpos.mResultContent, endpos.mContentOffset, endpos.mContentOffset,
+      MOZ_KnownLive(endpos.mResultContent) /* bug 1636889 */,
+      endpos.mContentOffset, endpos.mContentOffset,
       nsFrameSelection::FocusMode::kExtendSelection, CARET_ASSOCIATE_BEFORE);
   if (NS_FAILED(rv)) return rv;
 
@@ -5077,8 +5081,9 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult HandleFrameSelection(
               ? nsFrameSelection::FocusMode::kExtendSelection
               : nsFrameSelection::FocusMode::kCollapseToNewPoint;
       rv = aFrameSelection->HandleClick(
-          aOffsets.content, aOffsets.StartOffset(), aOffsets.EndOffset(),
-          focusMode, aOffsets.associate);
+          MOZ_KnownLive(aOffsets.content) /* bug 1636889 */,
+          aOffsets.StartOffset(), aOffsets.EndOffset(), focusMode,
+          aOffsets.associate);
       if (NS_FAILED(rv)) {
         return rv;
       }

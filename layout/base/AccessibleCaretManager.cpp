@@ -19,6 +19,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsCaret.h"
 #include "nsContainerFrame.h"
@@ -631,7 +632,8 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
       if (theFrame && theFrame != ptFrame) {
         SetSelectionDragState(true);
         frameSelection->HandleClick(
-            offsets.content, offsets.StartOffset(), offsets.EndOffset(),
+            MOZ_KnownLive(offsets.content) /* bug 1636889 */,
+            offsets.StartOffset(), offsets.EndOffset(),
             nsFrameSelection::FocusMode::kCollapseToNewPoint,
             offsets.associate);
         SetSelectionDragState(false);
@@ -1251,8 +1253,9 @@ nsresult AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint) {
       (GetCaretMode() == CaretMode::Selection)
           ? nsFrameSelection::FocusMode::kExtendSelection
           : nsFrameSelection::FocusMode::kCollapseToNewPoint;
-  fs->HandleClick(offsets.content, offsets.StartOffset(), offsets.EndOffset(),
-                  focusMode, offsets.associate);
+  fs->HandleClick(MOZ_KnownLive(offsets.content) /* bug 1636889 */,
+                  offsets.StartOffset(), offsets.EndOffset(), focusMode,
+                  offsets.associate);
   return NS_OK;
 }
 
