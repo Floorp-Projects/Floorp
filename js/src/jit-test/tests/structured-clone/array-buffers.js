@@ -37,3 +37,12 @@ function testV2ArrayBuffer() {
     assertEq(new Uint8Array(ab).toString(), "33,44,55,66");
 }
 testV2ArrayBuffer();
+
+function testArrayBuffer() {
+    var ta = new Uint8Array([33, 44, 55, 66]);
+    var clonebuf = serialize(ta.buffer, undefined, {scope: "DifferentProcessForIndexedDB"});
+    var ab = deserialize(clonebuf);
+    assertEq(ab instanceof ArrayBuffer, true);
+    assertEq(new Uint8Array(ab).toString(), "33,44,55,66");
+}
+testArrayBuffer();
