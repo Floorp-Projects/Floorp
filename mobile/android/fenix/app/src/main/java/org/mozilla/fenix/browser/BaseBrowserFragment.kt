@@ -173,6 +173,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     private var fullScreenMediaSessionFeature =
         ViewBoundFeatureWrapper<MediaSessionFullscreenFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
+    private val webAuthnFeature = ViewBoundFeatureWrapper<WebAuthnFeature>()
     private var pipFeature: PictureInPictureFeature? = null
 
     var customTabSessionId: String? = null
@@ -639,6 +640,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                 view = view
             )
 
+            if (FeatureFlags.webAuthFeature) {
+                webAuthnFeature.set(
+                    feature = WebAuthnFeature(
+                        engine = requireComponents.core.engine,
+                        activity = requireActivity()
+                    ),
+                    owner = this,
+                    view = view
+                )
+            }
+
             context.settings().setSitePermissionSettingListener(viewLifecycleOwner) {
                 // If the user connects to WIFI while on the BrowserFragment, this will update the
                 // SitePermissionsRules (specifically autoplay) accordingly
@@ -1024,7 +1036,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
      * Forwards activity results to the prompt feature.
      */
     final override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        promptsFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
+        listOf(
+            promptsFeature,
+            webAuthnFeature
+        ).any { it.onActivityResult(requestCode, resultCode, data) }
     }
 
     /**

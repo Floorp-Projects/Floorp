@@ -56,4 +56,9 @@ object FeatureFlags {
      * Enabled showing site permission indicators in the toolbars.
      */
     val permissionIndicatorsToolbar = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables experimental WebAuthn support. This implementation should never reach release!
+     */
+    val webAuthFeature = Config.channel.isNightlyOrDebug
 }
