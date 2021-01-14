@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -67,11 +69,90 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#include "hunspell_csutil.hxx"
+#include "mozilla/Encoding.h"
 
-/* file manager class - read lines of files [filename] OR [filename.hz] */
-#ifndef FILEMGR_HXX_
-#define FILEMGR_HXX_
+/* This is a copy of get_current_cs from the hunspell csutil.cxx file.
+ */
+struct cs_info* hunspell_get_current_cs(const std::string& es) {
+  struct cs_info* ccs = new cs_info[256];
+  // Initialze the array with dummy data so that we wouldn't need
+  // to return null in case of failures.
+  for (int i = 0; i <= 0xff; ++i) {
+    ccs[i].ccase = false;
+    ccs[i].clower = i;
+    ccs[i].cupper = i;
+  }
 
-#include "mozHunspellRLBoxSandbox.h"
+  auto encoding = Encoding::ForLabelNoReplacement(es);
+  if (!encoding) {
+    return ccs;
+  }
+  auto encoder = encoding->NewEncoder();
+  auto decoder = encoding->NewDecoderWithoutBOMHandling();
 
-#endif
+  for (unsigned int i = 0; i <= 0xff; ++i) {
+    bool success = false;
+    // We want to find the upper/lowercase equivalents of each byte
+    // in this 1-byte character encoding.  Call our encoding/decoding
+    // APIs separately for each byte since they may reject some of the
+    // bytes, and we want to handle errors separately for each byte.
+    uint8_t lower, upper;
+    do {
+      if (i == 0) break;
+      uint8_t source = uint8_t(i);
+      char16_t uni[2];
+      char16_t uniCased;
+      uint8_t destination[4];
+      auto src1 = Span(&source, 1);
+      auto dst1 = Span(uni);
+      auto src2 = Span(&uniCased, 1);
+      auto dst2 = Span(destination);
+
+      uint32_t result;
+      size_t read;
+      size_t written;
+      Tie(result, read, written) =
+          decoder->DecodeToUTF16WithoutReplacement(src1, dst1, true);
+      if (result != kInputEmpty || read != 1 || written != 1) {
+        break;
+      }
+
+      uniCased = ToLowerCase(uni[0]);
+      Tie(result, read, written) =
+          encoder->EncodeFromUTF16WithoutReplacement(src2, dst2, true);
+      if (result != kInputEmpty || read != 1 || written != 1) {
+        break;
+      }
+      lower = destination[0];
+
+      uniCased = ToUpperCase(uni[0]);
+      Tie(result, read, written) =
+          encoder->EncodeFromUTF16WithoutReplacement(src2, dst2, true);
+      if (result != kInputEmpty || read != 1 || written != 1) {
+        break;
+      }
+      upper = destination[0];
+
+      success = true;
+    } while (0);
+
+    encoding->NewEncoderInto(*encoder);
+    encoding->NewDecoderWithoutBOMHandlingInto(*decoder);
+
+    if (success) {
+      ccs[i].cupper = upper;
+      ccs[i].clower = lower;
+    } else {
+      ccs[i].cupper = i;
+      ccs[i].clower = i;
+    }
+
+    if (ccs[i].clower != (unsigned char)i)
+      ccs[i].ccase = true;
+    else
+      ccs[i].ccase = false;
+  }
+
+  return ccs;
+}

@@ -58,8 +58,6 @@
  ******* END LICENSE BLOCK *******/
 
 #include "mozHunspell.h"
-#include "mozHunspellFileMgrGlue.h"
-#include "mozHunspellFileMgrHost.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsIObserverService.h"
@@ -188,10 +186,7 @@ mozHunspell::SetDictionary(const nsACString& aDictionary) {
   mDictionary = dict;
   mAffixFileName = affFileName;
 
-  RegisterHunspellCallbacks(
-      mozHunspellCallbacks::CreateFilemgr, mozHunspellCallbacks::GetLine,
-      mozHunspellCallbacks::GetLineNum, mozHunspellCallbacks::DestructFilemgr);
-  mHunspell = new Hunspell(affFileName.get(), dictFileName.get());
+  mHunspell = new RLBoxHunspell(affFileName, dictFileName);
   if (!mHunspell) return NS_ERROR_OUT_OF_MEMORY;
 
   auto encoding =
