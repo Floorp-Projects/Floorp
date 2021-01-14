@@ -16,6 +16,7 @@
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/CacheChild.h"
+#include "mozilla/dom/cache/CacheCommon.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ErrorResult.h"
@@ -125,46 +126,33 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     AutoTArray<RefPtr<Response>, 256> responseList;
     responseList.SetCapacity(mRequestList.Length());
 
+    const auto failOnErr = [this](const auto) { Fail(); };
+
     bool isArray;
-    if (NS_WARN_IF(!JS::IsArrayObject(aCx, aValue, &isArray) || !isArray)) {
-      Fail();
-      return;
-    }
+    CACHE_TRY(OkIf(JS::IsArrayObject(aCx, aValue, &isArray)), QM_VOID,
+              failOnErr);
+    CACHE_TRY(OkIf(isArray), QM_VOID, failOnErr);
 
     JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
 
     uint32_t length;
-    if (NS_WARN_IF(!JS::GetArrayLength(aCx, obj, &length))) {
-      Fail();
-      return;
-    }
+    CACHE_TRY(OkIf(JS::GetArrayLength(aCx, obj, &length)), QM_VOID, failOnErr);
 
     for (uint32_t i = 0; i < length; ++i) {
       JS::Rooted<JS::Value> value(aCx);
 
-      if (NS_WARN_IF(!JS_GetElement(aCx, obj, i, &value))) {
-        Fail();
-        return;
-      }
+      CACHE_TRY(OkIf(JS_GetElement(aCx, obj, i, &value)), QM_VOID, failOnErr);
 
-      if (NS_WARN_IF(!value.isObject())) {
-        Fail();
-        return;
-      }
+      CACHE_TRY(OkIf(value.isObject()), QM_VOID, failOnErr);
 
       JS::Rooted<JSObject*> responseObj(aCx, &value.toObject());
 
       RefPtr<Response> response;
-      nsresult rv = UNWRAP_OBJECT(Response, responseObj, response);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        Fail();
-        return;
-      }
+      CACHE_TRY((UNWRAP_OBJECT(Response, responseObj, response)), QM_VOID,
+                failOnErr);
 
-      if (NS_WARN_IF(response->Type() == ResponseType::Error)) {
-        Fail();
-        return;
-      }
+      CACHE_TRY(OkIf(response->Type() != ResponseType::Error), QM_VOID,
+                failOnErr);
 
       // Do not allow the convenience methods .add()/.addAll() to store failed
       // or invalid responses.  A consequence of this is that these methods
