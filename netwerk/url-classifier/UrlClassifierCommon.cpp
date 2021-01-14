@@ -81,7 +81,7 @@ bool UrlClassifierCommon::ShouldEnableProtectionForChannel(
   MOZ_ASSERT(loadInfo);
 
   auto policyType = loadInfo->GetExternalContentPolicyType();
-  if (policyType == nsIContentPolicy::TYPE_DOCUMENT) {
+  if (policyType == ExtContentPolicy::TYPE_DOCUMENT) {
     UC_LOG(
         ("UrlClassifierCommon::ShouldEnableProtectionForChannel - "
          "skipping top-level load for channel %p",
@@ -644,14 +644,14 @@ bool UrlClassifierCommon::IsPassiveContent(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  nsContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
+  ExtContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
 
   // Return true if aChannel is loading passive display content, as
   // defined by the mixed content blocker.
   // https://searchfox.org/mozilla-central/rev/c80fa7258c935223fe319c5345b58eae85d4c6ae/dom/security/nsMixedContentBlocker.cpp#532
-  return contentType == nsIContentPolicy::TYPE_IMAGE ||
-         contentType == nsIContentPolicy::TYPE_MEDIA ||
-         (contentType == nsIContentPolicy::TYPE_OBJECT_SUBREQUEST &&
+  return contentType == ExtContentPolicy::TYPE_IMAGE ||
+         contentType == ExtContentPolicy::TYPE_MEDIA ||
+         (contentType == ExtContentPolicy::TYPE_OBJECT_SUBREQUEST &&
           !StaticPrefs::security_mixed_content_block_object_subrequest());
 }
 

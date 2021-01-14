@@ -388,9 +388,9 @@ bool nsNodeInfoManager::InternalSVGEnabled() {
       (SVGEnabled || IsSystemOrAddonOrAboutPrincipal(mPrincipal) ||
        (loadInfo &&
         (loadInfo->GetExternalContentPolicyType() ==
-             nsIContentPolicy::TYPE_IMAGE ||
+             ExtContentPolicy::TYPE_IMAGE ||
          loadInfo->GetExternalContentPolicyType() ==
-             nsIContentPolicy::TYPE_OTHER) &&
+             ExtContentPolicy::TYPE_OTHER) &&
         (IsSystemOrAddonOrAboutPrincipal(loadInfo->GetLoadingPrincipal()) ||
          IsSystemOrAddonOrAboutPrincipal(loadInfo->TriggeringPrincipal()))));
   mSVGEnabled = Some(conclusion);

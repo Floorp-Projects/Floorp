@@ -313,7 +313,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
   if (!doForce) {
     parentIsThird = loadInfo->GetIsInThirdPartyContext();
     if (!parentIsThird && loadInfo->GetExternalContentPolicyType() !=
-                              nsIContentPolicy::TYPE_DOCUMENT) {
+                              ExtContentPolicy::TYPE_DOCUMENT) {
       // Check if the channel itself is third-party to its own requestor.
       // Unfortunately, we have to go through the loading principal.
       loadingPrincipal = BasePrincipal::Cast(loadInfo->GetLoadingPrincipal());

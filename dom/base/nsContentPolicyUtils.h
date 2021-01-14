@@ -151,6 +151,10 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
 
 #undef CASE_RETURN
 
+inline const char* NS_CP_ContentTypeName(ExtContentPolicyType contentType) {
+  return NS_CP_ContentTypeName(static_cast<nsContentPolicyType>(contentType));
+}
+
 /* Passes on parameters from its "caller"'s context. */
 #define CHECK_CONTENT_POLICY(action)                                    \
   PR_BEGIN_MACRO                                                        \

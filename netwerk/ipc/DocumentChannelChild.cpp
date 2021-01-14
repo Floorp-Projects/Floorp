@@ -115,8 +115,8 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   }
 
   switch (mLoadInfo->GetExternalContentPolicyType()) {
-    case nsIContentPolicy::TYPE_DOCUMENT:
-    case nsIContentPolicy::TYPE_SUBDOCUMENT: {
+    case ExtContentPolicy::TYPE_DOCUMENT:
+    case ExtContentPolicy::TYPE_SUBDOCUMENT: {
       DocumentCreationArgs docArgs;
       docArgs.uriModified() = mUriModified;
       docArgs.isXFOError() = mIsXFOError;
@@ -125,7 +125,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
       break;
     }
 
-    case nsIContentPolicy::TYPE_OBJECT: {
+    case ExtContentPolicy::TYPE_OBJECT: {
       ObjectCreationArgs objectArgs;
       objectArgs.embedderInnerWindowId() = InnerWindowIDForExtantDoc(docShell);
       objectArgs.loadFlags() = mLoadFlags;
@@ -142,8 +142,8 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   }
 
   switch (mLoadInfo->GetExternalContentPolicyType()) {
-    case nsIContentPolicy::TYPE_DOCUMENT:
-    case nsIContentPolicy::TYPE_SUBDOCUMENT:
+    case ExtContentPolicy::TYPE_DOCUMENT:
+    case ExtContentPolicy::TYPE_SUBDOCUMENT:
       MOZ_ALWAYS_SUCCEEDS(loadingContext->SetCurrentLoadIdentifier(
           Some(mLoadState->GetLoadIdentifier())));
       break;
@@ -315,7 +315,7 @@ IPCResult DocumentChannelChild::RecvUpgradeObjectLoad(
   MOZ_ASSERT(!(mLoadFlags & nsIChannel::LOAD_DOCUMENT_URI),
              "Shouldn't be a LOAD_DOCUMENT_URI load yet");
   MOZ_ASSERT(mLoadInfo->GetExternalContentPolicyType() ==
-                 nsIContentPolicy::TYPE_OBJECT,
+                 ExtContentPolicy::TYPE_OBJECT,
              "Should have the TYPE_OBJECT content policy type");
 
   // If our load has already failed, or been cancelled, abort this attempt to

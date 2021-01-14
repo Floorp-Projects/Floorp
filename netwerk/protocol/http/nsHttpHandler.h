@@ -117,7 +117,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   [[nodiscard]] nsresult AddStandardRequestHeaders(
       nsHttpRequestHead*, bool isSecure,
-      nsContentPolicyType aContentPolicyType);
+      ExtContentPolicyType aContentPolicyType);
   [[nodiscard]] nsresult AddConnectionHeader(nsHttpRequestHead*,
                                              uint32_t capabilities);
   bool IsAcceptableEncoding(const char* encoding, bool isSecure);
