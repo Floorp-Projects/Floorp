@@ -37,6 +37,10 @@ add_task(async function() {
       fields: [["length", "0"]],
     },
   ]);
+
+  await previews(dbg, "classPreview", [
+    { line: 45, column: 20, expression: "this.x", result: 1 },
+  ]);
 });
 
 async function previews(dbg, fnName, previews) {
