@@ -1905,13 +1905,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return { skip };
   },
 
+  // Bug 1686485 is meant to remove usages of this request
+  // in favor direct call to `reconfigure`
   pauseOnExceptions(pauseOnExceptions, ignoreCaughtExceptions) {
-    this._options = {
-      ...this._options,
+    this.reconfigure({
       pauseOnExceptions,
       ignoreCaughtExceptions,
-    };
-    this.maybePauseOnExceptions();
+    });
     return {};
   },
 
