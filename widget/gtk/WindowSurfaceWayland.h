@@ -173,8 +173,7 @@ class WindowSurfaceWayland : public WindowSurface {
   } RenderingCacheMode;
 
  private:
-  WindowBackBuffer* GetWaylandBufferWithSwitch();
-  WindowBackBuffer* GetWaylandBufferRecent();
+  WindowBackBuffer* GetWaylandBuffer();
   WindowBackBuffer* SetNewWaylandBuffer();
   WindowBackBuffer* CreateWaylandBuffer(int aWidth, int aHeight);
   WindowBackBuffer* WaylandBufferFindAvailable(int aWidth, int aHeight);
