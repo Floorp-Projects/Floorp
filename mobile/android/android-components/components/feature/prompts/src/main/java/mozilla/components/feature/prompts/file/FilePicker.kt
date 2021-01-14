@@ -113,8 +113,9 @@ internal class FilePicker(
      * @param requestCode The code of the app that requested the intent.
      * @param intent The result of the request.
      */
-    fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        val request = getActivePromptRequest() ?: return
+    fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?): Boolean {
+        var resultHandled = false
+        val request = getActivePromptRequest() ?: return false
         if (requestCode == FILE_PICKER_ACTIVITY_REQUEST_CODE && request is File) {
             store.consumePromptFrom(sessionId) {
                 if (resultCode == RESULT_OK) {
@@ -123,10 +124,13 @@ internal class FilePicker(
                     request.onDismiss()
                 }
             }
+            resultHandled = true
         }
         if (request !is File) {
             logger.error("Invalid PromptRequest expected File but $request was provided")
         }
+
+        return resultHandled
     }
 
     private fun getActivePromptRequest(): PromptRequest? =

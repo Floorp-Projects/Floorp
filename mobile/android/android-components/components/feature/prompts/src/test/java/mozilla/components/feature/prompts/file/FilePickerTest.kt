@@ -254,6 +254,14 @@ class FilePickerTest {
     }
 
     @Test
+    fun `onActivityResult returns false if the request code is not the same`() {
+        val intent = Intent()
+        val result = filePicker.onActivityResult(10101, RESULT_OK, intent)
+
+        assertFalse(result)
+    }
+
+    @Test
     fun `onRequestPermissionsResult with FILE_PICKER_REQUEST and PERMISSION_GRANTED will call onPermissionsGranted`() {
         stubContext()
         filePicker = spy(filePicker)

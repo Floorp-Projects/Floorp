@@ -4,6 +4,7 @@
 
 package mozilla.components.support.base.feature
 
+import android.content.Intent
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Lifecycle
@@ -138,7 +139,7 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
     }
 
     /**
-     * Convenient method for invoking [UserInteractionHandler.onBackPressed] on a wrapped
+     * Convenience method for invoking [UserInteractionHandler.onBackPressed] on a wrapped
      * [LifecycleAwareFeature] that implements [UserInteractionHandler]. Returns false if
      * the [LifecycleAwareFeature] was cleared already.
      */
@@ -153,6 +154,24 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
         }
 
         return feature.onBackPressed()
+    }
+
+    /**
+     * Convenience method for invoking [ActivityResultHandler.onActivityResult] on a wrapped
+     * [LifecycleAwareFeature] that implements [ActivityResultHandler]. Returns false if
+     * the [LifecycleAwareFeature] was cleared already.
+     */
+    @Synchronized
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        val feature = feature ?: return false
+
+        if (feature !is ActivityResultHandler) {
+            throw IllegalAccessError(
+                "Feature does not implement ${ActivityResultHandler::class.java.simpleName} interface"
+            )
+        }
+
+        return feature.onActivityResult(requestCode, resultCode, data)
     }
 
     @Synchronized

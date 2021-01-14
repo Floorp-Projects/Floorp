@@ -5,6 +5,8 @@
 package mozilla.components.support.base.feature
 
 import android.app.Activity
+import android.app.Activity.RESULT_OK
+import android.content.Intent
 import android.view.View
 import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
@@ -52,6 +54,32 @@ class ViewBoundFeatureWrapperTest {
             owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
             view = mock()
         ).onBackPressed())
+    }
+
+    @Test
+    fun `Calling onActivityResult on an empty wrapper returns false`() {
+        val wrapper = ViewBoundFeatureWrapper<MockFeature>()
+        assertFalse(wrapper.onActivityResult(0, RESULT_OK, mock()))
+    }
+
+    @Test
+    fun `onActivityResult is forwarded to feature`() {
+        val feature = MockFeatureWithActivityResultHandler(onActivityResult = true)
+
+        val wrapper = ViewBoundFeatureWrapper(
+            feature = feature,
+            owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+            view = mock()
+        )
+
+        assertTrue(wrapper.onActivityResult(1, RESULT_OK, null))
+        assertTrue(feature.onActivityResultHandled)
+
+        assertFalse(ViewBoundFeatureWrapper(
+            feature = MockFeatureWithActivityResultHandler(onActivityResult = false),
+            owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+            view = mock()
+        ).onActivityResult(0, RESULT_OK, mock()))
     }
 
     @Test
@@ -388,6 +416,18 @@ private class MockFeatureWithUserInteractionHandler(
     override fun onBackPressed(): Boolean {
         onBackPressedInvoked = true
         return onBackPressed
+    }
+}
+
+private class MockFeatureWithActivityResultHandler(
+    private val onActivityResult: Boolean = false
+) : MockFeature(), ActivityResultHandler {
+    var onActivityResultHandled = false
+        private set
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        onActivityResultHandled = true
+        return onActivityResult
     }
 }
 

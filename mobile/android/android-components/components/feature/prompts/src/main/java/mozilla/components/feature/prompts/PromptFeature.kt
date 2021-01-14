@@ -64,6 +64,7 @@ import mozilla.components.feature.prompts.login.LoginPickerView
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
@@ -126,7 +127,7 @@ class PromptFeature private constructor(
     private val loginPickerView: LoginPickerView? = null,
     private val onManageLogins: () -> Unit = {},
     onNeedToRequestPermissions: OnNeedToRequestPermissions
-) : LifecycleAwareFeature, PermissionsFeature, Prompter, UserInteractionHandler {
+) : LifecycleAwareFeature, PermissionsFeature, Prompter, ActivityResultHandler, UserInteractionHandler {
     // These three scopes have identical lifetimes. We do not yet have a way of combining scopes
     private var handlePromptScope: CoroutineScope? = null
     private var dismissPromptScope: CoroutineScope? = null
@@ -303,8 +304,8 @@ class PromptFeature private constructor(
      * @param requestCode The code of the app that requested the intent.
      * @param intent The result of the request.
      */
-    fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        filePicker.onActivityResult(requestCode, resultCode, intent)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        return filePicker.onActivityResult(requestCode, resultCode, data)
     }
 
     /**
