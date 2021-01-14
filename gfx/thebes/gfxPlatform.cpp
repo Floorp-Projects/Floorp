@@ -2703,29 +2703,29 @@ void gfxPlatform::InitWebRenderConfig() {
   manager.Init();
   manager.ConfigureWebRender();
 
+  bool hasHardware = gfxConfig::IsEnabled(Feature::WEBRENDER);
+  bool hasSoftware = gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE);
+  bool hasWebRender = hasHardware || hasSoftware;
+
 #ifdef XP_WIN
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_ANGLE)) {
-    gfxVars::SetUseWebRenderANGLE(gfxConfig::IsEnabled(Feature::WEBRENDER));
+    gfxVars::SetUseWebRenderANGLE(hasWebRender);
   }
 #endif
 
   if (Preferences::GetBool("gfx.webrender.program-binary-disk", false)) {
-    gfxVars::SetUseWebRenderProgramBinaryDisk(
-        gfxConfig::IsEnabled(Feature::WEBRENDER));
+    gfxVars::SetUseWebRenderProgramBinaryDisk(hasWebRender);
   }
 
   if (StaticPrefs::gfx_webrender_use_optimized_shaders_AtStartup()) {
-    gfxVars::SetUseWebRenderOptimizedShaders(
-        gfxConfig::IsEnabled(Feature::WEBRENDER));
+    gfxVars::SetUseWebRenderOptimizedShaders(hasWebRender);
   }
 
-  gfxVars::SetUseSoftwareWebRender(
-      gfxConfig::IsEnabled(Feature::WEBRENDER) &&
-      gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE));
+  gfxVars::SetUseSoftwareWebRender(!hasHardware && hasSoftware);
 
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit
   // this feature
-  if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
+  if (hasWebRender) {
     gfxVars::SetUseWebRender(true);
     reporter.SetSuccessful();
 
@@ -3350,13 +3350,26 @@ void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
 }
 
 /* static */
-void gfxPlatform::NotifyGPUProcessDisabled() {
+void gfxPlatform::DisableWebRender(FeatureStatus aStatus, const char* aMessage,
+                                   const nsACString& aFailureId) {
   if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
     gfxConfig::GetFeature(Feature::WEBRENDER)
-        .ForceDisable(FeatureStatus::Unavailable, "GPU Process is disabled",
-                      "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
-    gfxVars::SetUseWebRender(false);
+        .ForceDisable(aStatus, aMessage, aFailureId);
   }
+  // TODO(aosmond): When WebRender Software replaces Basic, we must not disable
+  // it because of GPU process crashes, etc.
+  if (gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE)) {
+    gfxConfig::GetFeature(Feature::WEBRENDER_SOFTWARE)
+        .ForceDisable(aStatus, aMessage, aFailureId);
+  }
+  gfxVars::SetUseWebRender(false);
+  gfxVars::SetUseSoftwareWebRender(false);
+}
+
+/* static */
+void gfxPlatform::NotifyGPUProcessDisabled() {
+  DisableWebRender(FeatureStatus::Unavailable, "GPU Process is disabled",
+                   "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
   gfxVars::SetRemoteCanvasEnabled(false);
 }
 
