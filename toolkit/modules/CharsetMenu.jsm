@@ -28,6 +28,7 @@ ChromeUtils.defineModuleGetter(
  */
 const kEncodings = new Set([
   // Globally relevant
+  "_autodetect_all", // (NOT AN ENCODING NAME; using IE-consistent magic name)
   "UTF-8",
   "windows-1252",
   // Arabic
@@ -78,7 +79,7 @@ const kEncodings = new Set([
 ]);
 
 // Always at the start of the menu, in this order, followed by a separator.
-const kPinned = ["UTF-8", "windows-1252"];
+const kPinned = ["_autodetect_all", "UTF-8", "windows-1252"];
 
 kPinned.forEach(x => kEncodings.delete(x));
 

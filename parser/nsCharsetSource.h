@@ -10,10 +10,13 @@ enum {
   kCharsetUninitialized,
   kCharsetFromFallback,
   kCharsetFromTopLevelDomain,
-  kCharsetFromFileURLGuess,
   kCharsetFromDocTypeDefault,  // This and up confident for XHR
-  kCharsetFromInitialAutoDetection,
-  kCharsetFromFinalAutoDetection,
+  kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8,
+  kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8,
+  kCharsetFromFinalJapaneseAutoDetection,
+  kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8,
+  kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8,
+  kCharsetFromFinalAutoDetectionFile,
   kCharsetFromParentFrame,  // Same-origin parent takes precedence over detector
                             // to avoid breaking tests. (Also, the HTML spec
                             // says so.)
@@ -22,8 +25,12 @@ enum {
   kCharsetFromIrreversibleAutoDetection,
   kCharsetFromChannel,
   kCharsetFromOtherComponent,
+  kCharsetFromPendingUserForcedAutoDetection,  // Marker value to be upgraded
+                                               // later
+  kCharsetFromInitialUserForcedAutoDetection,
+  kCharsetFromFinalUserForcedAutoDetection,
   kCharsetFromUserForced,  // propagates to child frames
-  kCharsetFromUserForcedAutoDetection,
+  kCharsetFromUserForcedJapaneseAutoDetection,
   kCharsetFromByteOrderMark,
   kCharsetFromUtf8OnlyMime,  // For JSON, WebVTT and such
   kCharsetFromBuiltIn,       // resource: URLs

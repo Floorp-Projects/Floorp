@@ -327,6 +327,8 @@ class nsDocShell final : public nsDocLoader,
 
   const mozilla::Encoding* GetForcedCharset() { return mForcedCharset; }
 
+  bool GetForcedAutodetection() { return mForcedAutodetection; }
+
   mozilla::HTMLEditor* GetHTMLEditorInternal();
   nsresult SetHTMLEditorInternal(mozilla::HTMLEditor* aHTMLEditor);
 
@@ -1270,6 +1272,10 @@ class nsDocShell final : public nsDocLoader,
   // This flag indicates whether the media in this docshell should be suspended
   // when the docshell is inactive.
   bool mSuspendMediaWhenInactive : 1;
+
+  // Whether we have a pending encoding autodetection request from the
+  // menu for all encodings.
+  bool mForcedAutodetection : 1;
 };
 
 #endif /* nsDocShell_h__ */

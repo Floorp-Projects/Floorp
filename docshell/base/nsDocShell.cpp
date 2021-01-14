@@ -272,6 +272,11 @@ static int32_t gNumberOfDocumentsLoading = 0;
 // Global count of docshells with the private attribute set
 static uint32_t gNumberOfPrivateDocShells = 0;
 
+static mozilla::LazyLogModule gCharsetMenuLog("CharsetMenu");
+
+#define LOGCHARSETMENU(args) \
+  MOZ_LOG(gCharsetMenuLog, mozilla::LogLevel::Debug, args)
+
 #ifdef DEBUG
 unsigned long nsDocShell::gNumberOfDocShells = 0;
 static uint64_t gDocshellIDCounter = 0;
@@ -413,7 +418,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mTitleValidForCurrentURI(false),
       mWillChangeProcess(false),
       mIsNavigating(false),
-      mSuspendMediaWhenInactive(false) {
+      mSuspendMediaWhenInactive(false),
+      mForcedAutodetection(false) {
   // If no outer window ID was provided, generate a new one.
   if (aContentWindowID == 0) {
     mContentWindowID = nsContentUtils::GenerateWindowId();
@@ -1458,61 +1464,104 @@ nsDocShell::GatherCharsetMenuTelemetry() {
     return NS_OK;
   }
 
-  Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED, true);
+  if (mForcedAutodetection) {
+    LOGCHARSETMENU(("ENCODING_OVERRIDE_USED_AUTOMATIC"));
+    Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED_AUTOMATIC,
+                         true);
+  } else {
+    LOGCHARSETMENU(("ENCODING_OVERRIDE_USED_MANUAL"));
+    Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED_MANUAL,
+                         true);
+  }
 
   nsIURI* url = doc->GetOriginalURI();
   bool isFileURL = url && SchemeIsFile(url);
 
   int32_t charsetSource = doc->GetDocumentCharacterSetSource();
+  auto encoding = doc->GetDocumentCharacterSet();
   switch (charsetSource) {
-    case kCharsetFromTopLevelDomain:
-      // Unlabeled doc on a domain that we map to a fallback encoding
+    case kCharsetFromInitialUserForcedAutoDetection:
+    case kCharsetFromFinalUserForcedAutoDetection:
+      LOGCHARSETMENU(("AutoOverridden"));
       Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::RemoteTld);
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::AutoOverridden);
       break;
-    case kCharsetFromFallback:
-    case kCharsetFromDocTypeDefault:
-    case kCharsetFromParentFrame:
-      // Changing charset on an unlabeled doc.
-      if (isFileURL) {
+    case kCharsetFromUserForced:
+    case kCharsetFromUserForcedJapaneseAutoDetection:
+      LOGCHARSETMENU(("ManuallyOverridden"));
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::ManuallyOverridden);
+      break;
+    case kCharsetFromTopLevelDomain:
+      if (encoding == WINDOWS_1252_ENCODING) {
+        LOGCHARSETMENU(("UnlabeledInLk"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::Local);
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledInLk);
       } else {
+        LOGCHARSETMENU(("UnlabeledJp"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::RemoteNonTld);
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledJp);
       }
       break;
-    case kCharsetFromInitialAutoDetection:
-    case kCharsetFromFinalAutoDetection:
-      // Changing charset on unlabeled doc where chardet fired
-      if (isFileURL) {
+    case kCharsetFromFinalJapaneseAutoDetection:
+      LOGCHARSETMENU(("UnlabeledJp"));
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledJp);
+      break;
+    case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8:
+    case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8:
+      LOGCHARSETMENU(("UnlabeledNonUtf8"));
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledNonUtf8);
+      break;
+    case kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8:
+    case kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8:
+      LOGCHARSETMENU(("UnlabeledUtf8"));
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledUtf8);
+      break;
+    case kCharsetFromChannel:
+      if (encoding == UTF_8_ENCODING) {
+        LOGCHARSETMENU(("ChannelUtf8"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::LocalChardet);
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::ChannelUtf8);
       } else {
+        LOGCHARSETMENU(("ChannelNonUtf8"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::RemoteChardet);
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::ChannelNonUtf8);
       }
       break;
     case kCharsetFromMetaPrescan:
     case kCharsetFromMetaTag:
-    case kCharsetFromChannel:
-      // Changing charset on a doc that had a charset label.
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::Labeled);
+      if (isFileURL) {
+        LOGCHARSETMENU(("LocalLabeled"));
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::LocalLabeled);
+      } else if (encoding == UTF_8_ENCODING) {
+        LOGCHARSETMENU(("MetaUtf8"));
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::MetaUtf8);
+      } else {
+        LOGCHARSETMENU(("MetaNonUtf8"));
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::MetaNonUtf8);
+      }
       break;
-    case kCharsetFromUserForced:
-      // Changing charset on a document that already had an override.
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::AlreadyOverridden);
+    case kCharsetFromFinalAutoDetectionFile:
+      if (isFileURL) {
+        LOGCHARSETMENU(("LocalUnlabeled"));
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::LocalUnlabeled);
+      } else {
+        LOGCHARSETMENU(("Bug"));
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::Bug);
+      }
       break;
-    case kCharsetFromIrreversibleAutoDetection:
-    case kCharsetFromOtherComponent:
-    case kCharsetFromByteOrderMark:
-    case kCharsetUninitialized:
     default:
-      // Bug. This isn't supposed to happen.
+      LOGCHARSETMENU(("Bug"));
       Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::Bug);
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::Bug);
       break;
   }
   return NS_OK;
@@ -1520,8 +1569,14 @@ nsDocShell::GatherCharsetMenuTelemetry() {
 
 NS_IMETHODIMP
 nsDocShell::SetCharset(const nsACString& aCharset) {
+  mForcedAutodetection = false;
   if (aCharset.IsEmpty()) {
     mForcedCharset = nullptr;
+    return NS_OK;
+  }
+  if (aCharset.EqualsLiteral("_autodetect_all")) {
+    mForcedCharset = WINDOWS_1252_ENCODING;
+    mForcedAutodetection = true;
     return NS_OK;
   }
   const Encoding* encoding = Encoding::ForLabel(aCharset);
@@ -1924,9 +1979,17 @@ nsDocShell::GetCharsetAutodetected(bool* aCharsetAutodetected) {
   }
   int32_t source = doc->GetDocumentCharacterSetSource();
 
-  if (source == kCharsetFromInitialAutoDetection ||
-      source == kCharsetFromFinalAutoDetection ||
-      source == kCharsetFromUserForcedAutoDetection) {
+  if (source == kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8 ||
+      source == kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8 ||
+
+      source == kCharsetFromFinalJapaneseAutoDetection ||
+      source == kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 ||
+      source == kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8 ||
+      source == kCharsetFromFinalAutoDetectionFile ||
+      source == kCharsetFromUserForcedJapaneseAutoDetection ||
+      source == kCharsetFromPendingUserForcedAutoDetection ||
+      source == kCharsetFromInitialUserForcedAutoDetection ||
+      source == kCharsetFromFinalUserForcedAutoDetection) {
     *aCharsetAutodetected = true;
   }
 

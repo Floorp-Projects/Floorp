@@ -206,7 +206,9 @@ void nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
                                           nsIDocShell* aDocShell,
                                           int32_t& aCharsetSource,
                                           NotNull<const Encoding*>& aEncoding) {
-  if (kCharsetFromUserForced <= aCharsetSource) return;
+  if (kCharsetFromUserForced <= aCharsetSource) {
+    return;
+  }
 
   // mCharacterSet not updated yet for channel, so check aEncoding, too.
   if (WillIgnoreCharsetOverride() || !IsAsciiCompatible(aEncoding)) {
@@ -222,7 +224,9 @@ void nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
         return;
       }
       aEncoding = WrapNotNull(encoding);
-      aCharsetSource = kCharsetFromUserForced;
+      aCharsetSource = nsDocShell::Cast(aDocShell)->GetForcedAutodetection()
+                           ? kCharsetFromPendingUserForcedAutoDetection
+                           : kCharsetFromUserForced;
       aDocShell->SetCharset(""_ns);
     }
   }
@@ -247,14 +251,21 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
     return;
   }
   if (kCharsetFromUserForced == parentSource ||
-      kCharsetFromUserForcedAutoDetection == parentSource) {
+      kCharsetFromUserForcedJapaneseAutoDetection == parentSource ||
+      kCharsetFromPendingUserForcedAutoDetection == parentSource ||
+      kCharsetFromInitialUserForcedAutoDetection == parentSource ||
+      kCharsetFromFinalUserForcedAutoDetection == parentSource) {
     if (WillIgnoreCharsetOverride() ||
         !IsAsciiCompatible(aEncoding) ||  // if channel said UTF-16
         !IsAsciiCompatible(parentCharset)) {
       return;
     }
     aEncoding = WrapNotNull(parentCharset);
-    aCharsetSource = kCharsetFromUserForced;
+    aCharsetSource =
+        (kCharsetFromUserForced == parentSource ||
+         kCharsetFromUserForcedJapaneseAutoDetection == parentSource)
+            ? kCharsetFromUserForced
+            : kCharsetFromPendingUserForcedAutoDetection;
     return;
   }
 
@@ -262,7 +273,7 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
     return;
   }
 
-  if (kCharsetFromInitialAutoDetection <= parentSource) {
+  if (kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8 <= parentSource) {
     // Make sure that's OK
     if (!NodePrincipal()->Equals(parentPrincipal) ||
         !IsAsciiCompatible(parentCharset)) {
