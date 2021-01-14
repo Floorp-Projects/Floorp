@@ -405,10 +405,6 @@ partial interface Document {
   [ChromeOnly]
   readonly attribute nsICookieJarSettings cookieJarSettings;
 
-  // The principal to use for the content blocking allow list
-  [ChromeOnly]
-  readonly attribute Principal? contentBlockingAllowListPrincipal;
-
   // Touch bits
   // XXXbz I can't find the sane spec for this stuff, so just cribbing
   // from our xpidl for now.

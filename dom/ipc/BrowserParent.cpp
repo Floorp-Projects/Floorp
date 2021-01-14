@@ -2689,7 +2689,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
 
   if (aWebProgressData && aWebProgressData->isTopLevel() &&
       aLocationChangeData.isSome()) {
-    nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
     Unused << browser->SetIsNavigating(aLocationChangeData->isNavigating());
     Unused << browser->UpdateForLocationChange(
         aLocation, aLocationChangeData->charset(),

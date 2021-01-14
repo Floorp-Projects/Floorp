@@ -103,10 +103,6 @@ class WindowGlobalParent final : public WindowContext,
   // |document.domain|.
   nsIPrincipal* DocumentPrincipal() { return mDocumentPrincipal; }
 
-  nsIPrincipal* ContentBlockingAllowListPrincipal() {
-    return mDocContentBlockingAllowListPrincipal;
-  }
-
   // The BrowsingContext which this WindowGlobal has been loaded into.
   // FIXME: It's quite awkward that this method has a slightly different name
   // than the one on WindowContext.
@@ -285,6 +281,7 @@ class WindowGlobalParent final : public WindowContext,
   // NOTE: This document principal doesn't reflect possible |document.domain|
   // mutations which may have been made in the actual document.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+  // The principal to use for the content blocking allow list.
   nsCOMPtr<nsIPrincipal> mDocContentBlockingAllowListPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsString mDocumentTitle;
