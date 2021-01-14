@@ -76,6 +76,7 @@ include "mozilla/GfxMessageUtils.h";
 include "mozilla/dom/BindingIPCUtils.h";
 include "mozilla/dom/CSPMessageUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/dom/FeaturePolicyUtils.h";
 include "mozilla/dom/MediaSessionIPCUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/ipc/ByteBufUtils.h";
@@ -148,6 +149,7 @@ using struct mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHi
 using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
 using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 using mozilla::dom::PerformanceTimingData from "mozilla/dom/PerformanceTiming.h";
+using refcounted mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
 
 union ChromeRegistryItem
 {
@@ -1853,6 +1855,10 @@ child:
     // Tells the child to flush any pending data. Used in tests and ping
     // assembly. Buffer contains bincoded Rust structs.
     async FlushFOGData() returns (ByteBuf buf);
+
+parent:
+    async SetContainerFeaturePolicy(MaybeDiscardedBrowsingContext aContainerContext,
+                                    FeaturePolicy aContainerFeaturePolicy);
 };
 
 }

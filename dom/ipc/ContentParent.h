@@ -1411,6 +1411,10 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvFOGData(ByteBuf&& buf);
 
+  mozilla::ipc::IPCResult RecvSetContainerFeaturePolicy(
+      const MaybeDiscardedBrowsingContext& aContainerContext,
+      FeaturePolicy* aContainerFeaturePolicy);
+
  public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);

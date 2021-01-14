@@ -7310,6 +7310,19 @@ IPCResult ContentParent::RecvFOGData(ByteBuf&& buf) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvSetContainerFeaturePolicy(
+    const MaybeDiscardedBrowsingContext& aContainerContext,
+    FeaturePolicy* aContainerFeaturePolicy) {
+  if (aContainerContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  auto* context = aContainerContext.get_canonical();
+  context->SetContainerFeaturePolicy(aContainerFeaturePolicy);
+
+  return IPC_OK();
+}
+
 NS_IMETHODIMP ContentParent::GetCanSend(bool* aCanSend) {
   *aCanSend = CanSend();
   return NS_OK;
