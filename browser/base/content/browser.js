@@ -8894,9 +8894,10 @@ const SafeBrowsingNotificationBox = {
 };
 
 /**
- * The TabDialogBox supports opening window dialogs as SubDialogs on tab level.
+ * The TabDialogBox supports opening window dialogs as SubDialogs on the tab and content
+ * level. Both tab and content dialogs have their own separate managers.
  * Dialogs will be queued FIFO and cover the web content.
- * Tab dialogs are closed when the user reloads or leaves the page.
+ * Dialogs are closed when the user reloads or leaves the page.
  * While a dialog is open PopupNotifications, such as permission prompts, are
  * suppressed.
  */
@@ -8904,7 +8905,7 @@ class TabDialogBox {
   constructor(browser) {
     this._weakBrowserRef = Cu.getWeakReference(browser);
 
-    // Create parent element for dialogs
+    // Create parent element for tab dialogs
     let template = document.getElementById("dialogStackTemplate");
     let dialogStack = template.content.cloneNode(true).firstElementChild;
     dialogStack.classList.add("tab-prompt-dialog");
@@ -8917,7 +8918,8 @@ class TabDialogBox {
     // Initially the stack only contains the template
     let dialogTemplate = dialogStack.firstElementChild;
 
-    this._dialogManager = new SubDialogManager({
+    // Create dialog manager for prompts at the tab level.
+    this._tabDialogManager = new SubDialogManager({
       dialogStack,
       dialogTemplate,
       orderType: SubDialogManager.ORDER_QUEUE,
@@ -8962,9 +8964,9 @@ class TabDialogBox {
       let dialogManager =
         modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT
           ? this.getContentDialogManager()
-          : this._dialogManager;
+          : this._tabDialogManager;
       let hasDialogs =
-        this._dialogManager.hasDialogs ||
+        this._tabDialogManager.hasDialogs ||
         this._contentDialogManager?.hasDialogs;
 
       if (!hasDialogs) {
@@ -9054,14 +9056,14 @@ class TabDialogBox {
   }
 
   abortAllDialogs() {
-    this._dialogManager.abortDialogs();
+    this._tabDialogManager.abortDialogs();
     this._contentDialogManager?.abortDialogs();
   }
 
   focus() {
     // Prioritize focusing the dialog manager for tab prompts
-    if (this._dialogManager._dialogs.length) {
-      this._dialogManager.focusTopDialog();
+    if (this._tabDialogManager._dialogs.length) {
+      this._tabDialogManager.focusTopDialog();
       return;
     }
     this._contentDialogManager?.focusTopDialog();
@@ -9094,7 +9096,7 @@ class TabDialogBox {
 
     this._lastPrincipal = this.browser.contentPrincipal;
 
-    this._dialogManager.abortDialogs(filterFn);
+    this._tabDialogManager.abortDialogs(filterFn);
     this._contentDialogManager?.abortDialogs(filterFn);
   }
 
@@ -9110,8 +9112,8 @@ class TabDialogBox {
     return browser;
   }
 
-  getManager() {
-    return this._dialogManager;
+  getTabDialogManager() {
+    return this._tabDialogManager;
   }
 
   getContentDialogManager() {
