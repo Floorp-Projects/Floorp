@@ -35,6 +35,7 @@
 namespace mozilla::dom::cache {
 
 using mozilla::dom::quota::Client;
+using mozilla::dom::quota::CloneFileAndAppend;
 using mozilla::dom::quota::DirectoryLock;
 
 namespace {
@@ -58,11 +59,10 @@ nsresult MaybeUpdatePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn,
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  nsresult rv = cacheQuotaClient->MaybeUpdatePaddingFileInternal(
-      aBaseDir, aConn, aIncreaseSize, aDecreaseSize, aCommitHook);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  CACHE_TRY(cacheQuotaClient->MaybeUpdatePaddingFileInternal(
+      aBaseDir, aConn, aIncreaseSize, aDecreaseSize, aCommitHook));
 
-  return rv;
+  return NS_OK;
 }
 
 // An Action that is executed when a Context is first created.  It ensures that
@@ -77,16 +77,10 @@ class SetupAction final : public SyncDBAction {
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
-    nsresult rv = BodyCreateDir(*aDBDir);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    CACHE_TRY(BodyCreateDir(*aDBDir));
 
     // executes in its own transaction
-    rv = db::CreateOrMigrateSchema(*aConn);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    CACHE_TRY(db::CreateOrMigrateSchema(*aConn));
 
     // If the Context marker file exists, then the last session was
     // not cleanly shutdown.  In these cases sqlite will ensure that
@@ -114,9 +108,8 @@ class SetupAction final : public SyncDBAction {
               [aConn, &aQuotaInfo, &aDBDir](
                   CheckedInt64 oldValue, const Maybe<const CacheId&>& element)
                   -> Result<CheckedInt64, nsresult> {
-                DeletionInfo deletionInfo;
-                CACHE_TRY_UNWRAP(deletionInfo,
-                                 db::DeleteCacheId(*aConn, *element));
+                CACHE_TRY_INSPECT(const auto& deletionInfo,
+                                  db::DeleteCacheId(*aConn, *element));
 
                 CACHE_TRY(BodyDeleteFiles(aQuotaInfo, *aDBDir,
                                           deletionInfo.mDeletedBodyIdList));
@@ -130,33 +123,35 @@ class SetupAction final : public SyncDBAction {
               }));
 
       // Clean up orphaned body objects
-      AutoTArray<nsID, 64> knownBodyIdList;
-      CACHE_TRY_UNWRAP(knownBodyIdList, db::GetKnownBodyIds(*aConn));
+      CACHE_TRY_INSPECT(const auto& knownBodyIdList,
+                        db::GetKnownBodyIds(*aConn));
 
-      rv = BodyDeleteOrphanedFiles(aQuotaInfo, *aDBDir, knownBodyIdList);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      CACHE_TRY(BodyDeleteOrphanedFiles(aQuotaInfo, *aDBDir, knownBodyIdList));
 
       // Commit() explicitly here, because we want to ensure the padding file
       // has the correct content.
-      rv =
-          MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
-                                 overallDeletedPaddingSize.value(),
-                                 [&trans]() mutable { return trans.Commit(); });
       // We'll restore padding file below, so just warn here if failure happens.
-      Unused << NS_WARN_IF(NS_FAILED(rv));
+      //
+      // XXX Before, if MaybeUpdatePaddingFile failed but we didn't enter the if
+      // body below, we would have propagated the MaybeUpdatePaddingFile
+      // failure, but if we entered it and RestorePaddingFile succeeded, we
+      // would have returned NS_OK. Now, we will never propagate a
+      // MaybeUpdatePaddingFile failure.
+      [&] {
+        CACHE_TRY(MaybeUpdatePaddingFile(
+                      aDBDir, aConn, /* aIncreaceSize */ 0,
+                      overallDeletedPaddingSize.value(),
+                      [&trans]() mutable { return trans.Commit(); }),
+                  QM_VOID);
+      }();
     }
 
     if (DirectoryPaddingFileExists(*aDBDir, DirPaddingFile::TMP_FILE) ||
         !DirectoryPaddingFileExists(*aDBDir, DirPaddingFile::FILE)) {
-      rv = RestorePaddingFile(aDBDir, aConn);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      CACHE_TRY(RestorePaddingFile(aDBDir, aConn));
     }
 
-    return rv;
+    return NS_OK;
   }
 };
 
@@ -182,23 +177,18 @@ class DeleteOrphanedBodyAction final : public Action {
     // Note that since DeleteOrphanedBodyAction isn't used while the context is
     // being initialized, we don't need to check for cancellation here.
 
-    nsCOMPtr<nsIFile> dbDir;
-    nsresult rv = aQuotaInfo.mDir->Clone(getter_AddRefs(dbDir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    const auto resolve = [&aResolver](const nsresult rv) {
       aResolver->Resolve(rv);
-      return;
-    }
+    };
 
-    rv = dbDir->Append(u"cache"_ns);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResolver->Resolve(rv);
-      return;
-    }
+    CACHE_TRY_INSPECT(const auto& dbDir,
+                      CloneFileAndAppend(*aQuotaInfo.mDir, u"cache"_ns),
+                      QM_VOID, resolve);
 
-    rv = BodyDeleteFiles(aQuotaInfo, *dbDir, mDeletedBodyIdList);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    CACHE_TRY(BodyDeleteFiles(aQuotaInfo, *dbDir, mDeletedBodyIdList), QM_VOID,
+              resolve);
 
-    aResolver->Resolve(rv);
+    aResolver->Resolve(NS_OK);
   }
 
  private:
@@ -244,19 +234,16 @@ class Manager::Factory {
 
     // Ensure there is a factory instance.  This forces the Acquire() call
     // below to use the same factory.
-    nsresult rv = MaybeCreateInstance();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+    CACHE_TRY(MaybeCreateInstance());
 
     SafeRefPtr<Manager> ref = Acquire(*aManagerId);
     if (!ref) {
       // TODO: replace this with a thread pool (bug 1119864)
+      // XXX Can't use CACHE_TRY_INSPECT because that causes a clang-plugin
+      // error of the NoNewThreadsChecker.
       nsCOMPtr<nsIThread> ioThread;
-      rv = NS_NewNamedThread("DOMCacheThread", getter_AddRefs(ioThread));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+      CACHE_TRY(ToResult(
+          NS_NewNamedThread("DOMCacheThread", getter_AddRefs(ioThread))));
 
       ref = MakeSafeRefPtr<Manager>(aManagerId.clonePtr(), ioThread,
                                     ConstructorGuard{});
@@ -264,7 +251,7 @@ class Manager::Factory {
       // There may be an old manager for this origin in the process of
       // cleaning up.  We need to tell the new manager about this so
       // that it won't actually start until the old manager is done.
-      SafeRefPtr<Manager> oldManager = Acquire(*aManagerId, Closing);
+      const SafeRefPtr<Manager> oldManager = Acquire(*aManagerId, Closing);
       ref->Init(oldManager.maybeDeref());
 
       MOZ_ASSERT(!sFactory->mManagerList.Contains(ref));
@@ -427,10 +414,7 @@ class Manager::Factory {
                                      State aState = Open) {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
-    nsresult rv = MaybeCreateInstance();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
+    CACHE_TRY(MaybeCreateInstance(), nullptr);
 
     // Iterate in reverse to find the most recent, matching Manager.  This
     // is important when looking for a Closing Manager.  If a new Manager
@@ -609,9 +593,8 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
-    Maybe<SavedResponse> maybeResponse;
-    CACHE_TRY_UNWRAP(
-        maybeResponse,
+    CACHE_TRY_INSPECT(
+        const auto& maybeResponse,
         db::CacheMatch(*aConn, mCacheId, mArgs.request(), mArgs.params()));
 
     mFoundResponse = maybeResponse.isSome();
@@ -1136,9 +1119,8 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    Maybe<DeletionInfo> maybeDeletionInfo;
     CACHE_TRY_UNWRAP(
-        maybeDeletionInfo,
+        auto maybeDeletionInfo,
         db::CacheDelete(*aConn, mCacheId, mArgs.request(), mArgs.params()));
 
     mSuccess = maybeDeletionInfo.isSome();
@@ -1324,9 +1306,8 @@ class Manager::StorageHasAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    Maybe<CacheId> maybeCacheId;
-    CACHE_TRY_UNWRAP(maybeCacheId,
-                     db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
+    CACHE_TRY_INSPECT(const auto& maybeCacheId,
+                      db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
 
     mCacheFound = maybeCacheId.isSome();
 
@@ -1362,9 +1343,8 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     // Look for existing cache
-    Maybe<CacheId> maybeCacheId;
-    CACHE_TRY_UNWRAP(maybeCacheId,
-                     db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
+    CACHE_TRY_INSPECT(const auto& maybeCacheId,
+                      db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
 
     if (maybeCacheId.isSome()) {
       mCacheId = maybeCacheId.ref();
@@ -1420,9 +1400,8 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    Maybe<CacheId> maybeCacheId;
-    CACHE_TRY_UNWRAP(maybeCacheId,
-                     db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
+    CACHE_TRY_INSPECT(const auto& maybeCacheId,
+                      db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
 
     if (maybeCacheId.isNothing()) {
       mCacheDeleted = false;
