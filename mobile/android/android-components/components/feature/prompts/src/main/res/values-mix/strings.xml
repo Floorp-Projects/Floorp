@@ -14,4 +14,7 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Chika vaá</string>
 
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">Yoo u un</string>
+
     </resources>

@@ -2,4 +2,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versión</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 complemento</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s complementos</string>
     </resources>
