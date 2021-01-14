@@ -14,7 +14,7 @@ class GitHubHost:
 
     def upstream_commit(self, revision):
         """Query the github api for a git commit id and timestamp."""
-        github_api = "https://api.github.com/"
+        github_api = "https://api.github.com"
         repo_url = urllib.parse.urlparse(self.manifest["origin"]["url"])
         repo = repo_url.path[1:]
         url = "/".join([github_api, "repos", repo, "commits", revision])
