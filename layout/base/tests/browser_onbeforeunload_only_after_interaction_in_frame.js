@@ -17,6 +17,10 @@ SpecialPowers.pushPrefEnv({
   ],
 });
 
+SpecialPowers.pushPrefEnv({
+  set: [["prompts.contentPromptSubDialog", false]],
+});
+
 const FRAME_URL =
   "data:text/html," + encodeURIComponent("<body>Just a frame</body>");
 
