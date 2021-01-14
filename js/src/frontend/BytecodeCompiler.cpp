@@ -176,23 +176,6 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
                               SharedContext* sc);
 };
 
-/* If we're on main thread, tell the Debugger about a newly compiled script.
- *
- * See: finishSingleParseTask/finishMultiParseTask for the off-thread case.
- */
-static void tellDebuggerAboutCompiledScript(JSContext* cx, bool hideScript,
-                                            Handle<JSScript*> script) {
-  if (cx->isHelperThreadContext()) {
-    return;
-  }
-
-  // If hideScript then script may not be ready to be interrogated by the
-  // debugger.
-  if (!hideScript) {
-    DebugAPI::onNewScript(cx, script);
-  }
-}
-
 #ifdef JS_ENABLE_SMOOSH
 bool TrySmoosh(JSContext* cx, CompilationStencil& stencil,
                JS::SourceText<Utf8Unit>& srcBuf, bool* fallback) {
@@ -337,11 +320,12 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationStencil& stencil,
     if (!stencil.input.source()->tryCompressOffThread(cx)) {
       return false;
     }
-  }
 
-  Rooted<JSScript*> script(cx, gcOutput.script);
-  tellDebuggerAboutCompiledScript(
-      cx, stencil.input.options.hideScriptFromDebugger, script);
+    Rooted<JSScript*> script(cx, gcOutput.script);
+    if (!stencil.input.options.hideScriptFromDebugger) {
+      DebugAPI::onNewScript(cx, script);
+    }
+  }
 
   return true;
 }
@@ -365,11 +349,12 @@ bool frontend::InstantiateStencils(
     if (!stencilSet.input.source()->tryCompressOffThread(cx)) {
       return false;
     }
-  }
 
-  Rooted<JSScript*> script(cx, gcOutput.script);
-  tellDebuggerAboutCompiledScript(
-      cx, stencilSet.input.options.hideScriptFromDebugger, script);
+    Rooted<JSScript*> script(cx, gcOutput.script);
+    if (!stencilSet.input.options.hideScriptFromDebugger) {
+      DebugAPI::onNewScript(cx, script);
+    }
+  }
 
   return true;
 }
@@ -1172,8 +1157,13 @@ static JSFunction* CompileStandaloneFunction(
     if (parameterListEnd) {
       stencil.get().input.source()->setParameterListEnd(*parameterListEnd);
     }
+
+    MOZ_ASSERT(!cx->isHelperThreadContext());
+
     Rooted<JSScript*> script(cx, gcOutput.get().script);
-    tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger, script);
+    if (!options.hideScriptFromDebugger) {
+      DebugAPI::onNewScript(cx, script);
+    }
   }
 
   assertException.reset();
