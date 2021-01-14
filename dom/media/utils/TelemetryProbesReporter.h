@@ -56,7 +56,7 @@ class TelemetryProbesReporter final {
   // Helper class to measure times for playback telemetry stats
   class TimeDurationAccumulator {
    public:
-    TimeDurationAccumulator() : mCount(0) {}
+    TimeDurationAccumulator() = default;
     void Start() {
       if (IsStarted()) {
         return;
@@ -68,7 +68,6 @@ class TelemetryProbesReporter final {
         return;
       }
       mSum += (TimeStamp::Now() - mStartTime);
-      mCount++;
       mStartTime = TimeStamp();
     }
     bool IsStarted() const { return !mStartTime.IsNull(); }
@@ -79,23 +78,10 @@ class TelemetryProbesReporter final {
       // Add current running time until now, but keep it running.
       return (mSum + (TimeStamp::Now() - mStartTime)).ToSeconds();
     }
-    uint32_t Count() const {
-      if (!IsStarted()) {
-        return mCount;
-      }
-      // Count current run in this report, without increasing the stored count.
-      return mCount + 1;
-    }
-    void Reset() {
-      mStartTime = TimeStamp();
-      mSum = TimeDuration();
-      mCount = 0;
-    }
 
    private:
     TimeStamp mStartTime;
     TimeDuration mSum;
-    uint32_t mCount;
   };
 
   // The owner is HTMLMediaElement that is guaranteed being always alive during
