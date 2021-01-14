@@ -395,14 +395,15 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
             ("  - contentLocation: %s", asciiUrl.get()));
   }
 
-  nsContentPolicyType contentType = aLoadInfo->InternalContentPolicyType();
+  nsContentPolicyType internalContentType =
+      aLoadInfo->InternalContentPolicyType();
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->GetLoadingPrincipal();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
 
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(sMCBLog, LogLevel::Verbose))) {
     MOZ_LOG(sMCBLog, LogLevel::Verbose,
             ("  - internalContentPolicyType: %s",
-             NS_CP_ContentTypeName(contentType)));
+             NS_CP_ContentTypeName(internalContentType)));
 
     if (loadingPrincipal != nullptr) {
       nsAutoCString loadingPrincipalAsciiUrl;
@@ -422,17 +423,17 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   RefPtr<WindowContext> requestingWindow =
       WindowContext::GetById(aLoadInfo->GetInnerWindowID());
 
-  bool isPreload = nsContentUtils::IsPreloadType(contentType);
+  bool isPreload = nsContentUtils::IsPreloadType(internalContentType);
 
   // The content policy type that we receive may be an internal type for
   // scripts.  Let's remember if we have seen a worker type, and reset it to the
   // external type in all cases right now.
   bool isWorkerType =
-      contentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-      contentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
-      contentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER;
-  contentType =
-      nsContentUtils::InternalContentPolicyTypeToExternal(contentType);
+      internalContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
+      internalContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
+      internalContentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER;
+  ExtContentPolicyType contentType =
+      nsContentUtils::InternalContentPolicyTypeToExternal(internalContentType);
 
   // Assume active (high risk) content and blocked by default
   MixedContentTypes classification = eMixedScript;
@@ -499,13 +500,13 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
 
   switch (contentType) {
     // The top-level document cannot be mixed content by definition
-    case TYPE_DOCUMENT:
+    case ExtContentPolicy::TYPE_DOCUMENT:
       *aDecision = ACCEPT;
       return NS_OK;
     // Creating insecure websocket connections in a secure page is blocked
     // already in the websocket constructor. We don't need to check the blocking
     // here and we don't want to un-block
-    case TYPE_WEBSOCKET:
+    case ExtContentPolicy::TYPE_WEBSOCKET:
       *aDecision = ACCEPT;
       return NS_OK;
 
@@ -517,18 +518,18 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       // acceptable. This download is completely disconnected from the docShell,
       // but still using the same loading principal.
 
-    case TYPE_SAVEAS_DOWNLOAD:
+    case ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD:
       *aDecision = ACCEPT;
       return NS_OK;
       break;
 
     // Static display content is considered moderate risk for mixed content so
     // these will be blocked according to the mixed display preference
-    case TYPE_IMAGE:
-    case TYPE_MEDIA:
+    case ExtContentPolicy::TYPE_IMAGE:
+    case ExtContentPolicy::TYPE_MEDIA:
       classification = eMixedDisplay;
       break;
-    case TYPE_OBJECT_SUBREQUEST:
+    case ExtContentPolicy::TYPE_OBJECT_SUBREQUEST:
       if (StaticPrefs::security_mixed_content_block_object_subrequest()) {
         classification = eMixedScript;
       } else {
@@ -539,22 +540,22 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     // Active content (or content with a low value/risk-of-blocking ratio)
     // that has been explicitly evaluated; listed here for documentation
     // purposes and to avoid the assertion and warning for the default case.
-    case TYPE_BEACON:
-    case TYPE_CSP_REPORT:
-    case TYPE_DTD:
-    case TYPE_FETCH:
-    case TYPE_FONT:
-    case TYPE_IMAGESET:
-    case TYPE_OBJECT:
-    case TYPE_SCRIPT:
-    case TYPE_STYLESHEET:
-    case TYPE_SUBDOCUMENT:
-    case TYPE_PING:
-    case TYPE_WEB_MANIFEST:
-    case TYPE_XMLHTTPREQUEST:
-    case TYPE_XSLT:
-    case TYPE_OTHER:
-    case TYPE_SPECULATIVE:
+    case ExtContentPolicy::TYPE_BEACON:
+    case ExtContentPolicy::TYPE_CSP_REPORT:
+    case ExtContentPolicy::TYPE_DTD:
+    case ExtContentPolicy::TYPE_FETCH:
+    case ExtContentPolicy::TYPE_FONT:
+    case ExtContentPolicy::TYPE_IMAGESET:
+    case ExtContentPolicy::TYPE_OBJECT:
+    case ExtContentPolicy::TYPE_SCRIPT:
+    case ExtContentPolicy::TYPE_STYLESHEET:
+    case ExtContentPolicy::TYPE_SUBDOCUMENT:
+    case ExtContentPolicy::TYPE_PING:
+    case ExtContentPolicy::TYPE_WEB_MANIFEST:
+    case ExtContentPolicy::TYPE_XMLHTTPREQUEST:
+    case ExtContentPolicy::TYPE_XSLT:
+    case ExtContentPolicy::TYPE_OTHER:
+    case ExtContentPolicy::TYPE_SPECULATIVE:
       break;
 
     // This content policy works as a allowlist.
@@ -710,7 +711,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // Carve-out: if we're in the parent and we're loading media, e.g. through
   // webbrowserpersist, don't reject it if we can't find a docshell.
   if (XRE_IsParentProcess() && !requestingWindow &&
-      (contentType == TYPE_IMAGE || contentType == TYPE_MEDIA)) {
+      (contentType == ExtContentPolicy::TYPE_IMAGE ||
+       contentType == ExtContentPolicy::TYPE_MEDIA)) {
     *aDecision = ACCEPT;
     return NS_OK;
   }
@@ -775,7 +777,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // When navigating an iframe, the iframe may be https
   // but its parents may not be.  Check the parents to see if any of them are
   // https. If none of the parents are https, allow the load.
-  if (contentType == TYPE_SUBDOCUMENT && !rootHasSecureConnection) {
+  if (contentType == ExtContentPolicyType::TYPE_SUBDOCUMENT &&
+      !rootHasSecureConnection) {
     bool httpsParentExists = false;
 
     RefPtr<WindowContext> curWindow = requestingWindow;
@@ -826,7 +829,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   }
 
   // set hasMixedContentObjectSubrequest on this object if necessary
-  if (contentType == TYPE_OBJECT_SUBREQUEST && aReportError) {
+  if (contentType == ExtContentPolicyType::TYPE_OBJECT_SUBREQUEST &&
+      aReportError) {
     if (!StaticPrefs::security_mixed_content_block_object_subrequest()) {
       nsAutoCString messageLookUpKey(
           "LoadingMixedDisplayObjectSubrequestDeprecation");
@@ -951,7 +955,8 @@ nsMixedContentBlocker::ShouldProcess(nsIURI* aContentLocation,
   if (!aContentLocation) {
     // aContentLocation may be null when a plugin is loading without an
     // associated URI resource
-    if (aLoadInfo->GetExternalContentPolicyType() == TYPE_OBJECT) {
+    if (aLoadInfo->GetExternalContentPolicyType() ==
+        ExtContentPolicyType::TYPE_OBJECT) {
       *aDecision = ACCEPT;
       return NS_OK;
     }

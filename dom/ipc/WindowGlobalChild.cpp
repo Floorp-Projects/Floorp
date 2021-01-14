@@ -89,7 +89,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   nsILoadInfo::CrossOriginOpenerPolicy policy;
   if (httpChan &&
       loadInfo->GetExternalContentPolicyType() ==
-          nsIContentPolicy::TYPE_DOCUMENT &&
+          ExtContentPolicy::TYPE_DOCUMENT &&
       NS_SUCCEEDED(httpChan->GetCrossOriginOpenerPolicy(&policy))) {
     MOZ_DIAGNOSTIC_ASSERT(policy ==
                           aWindow->GetBrowsingContext()->GetOpenerPolicy());

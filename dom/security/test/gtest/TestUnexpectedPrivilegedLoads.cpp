@@ -33,7 +33,7 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
 
   struct testCasesAndResults {
     nsCString urlstring;
-    nsContentPolicyType contentType;
+    ExtContentPolicyType contentType;
     nsCString remoteType;
     testResults expected;
   };
@@ -54,36 +54,36 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
   // no need to replicate all scenarios?!
   testCasesAndResults myTestCases[] = {
       {"chrome://firegestures/content/browser.js"_ns,
-       nsIContentPolicy::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "web"_ns,
        {"chromeuri"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
         "chrome://firegestures/content/browser.js"_ns}},
       {"resource://firegestures/content/browser.js"_ns,
-       nsIContentPolicy::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "web"_ns,
        {"resourceuri"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
         "resource://firegestures/content/browser.js"_ns}},
       {// test that we don't report blob details
        // ..and test that we strip of URLs from remoteTypes
        "blob://000-000"_ns,
-       nsIContentPolicy::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "webIsolated=https://blob.example/"_ns,
        {"bloburi"_ns, "TYPE_SCRIPT"_ns, "webIsolated"_ns, "unknown"_ns}},
       {// test for cases where finalURI is null, due to a broken nested URI
        // .. like malformed moz-icon URLs
        "moz-icon:blahblah"_ns,
-       nsIContentPolicy::TYPE_IMAGE,
+       ExtContentPolicy::TYPE_IMAGE,
        "web"_ns,
        {"other"_ns, "TYPE_IMAGE"_ns, "web"_ns, "unknown"_ns}},
       {// we dont report data urls
        // ..and test that we strip of URLs from remoteTypes
        "data://blahblahblah"_ns,
-       nsIContentPolicy::TYPE_DOCUMENT,
+       ExtContentPolicy::TYPE_DOCUMENT,
        "webCOOP+COEP=https://data.example"_ns,
        {"dataurl"_ns, "TYPE_DOCUMENT"_ns, "webCOOP+COEP"_ns, "unknown"_ns}},
       {// we only report file URLs on windows, where we can easily sanitize
        "file://c/users/tom/file.txt"_ns,
-       nsIContentPolicy::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "web"_ns,
        {
 #if defined(XP_WIN)
@@ -96,13 +96,13 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
        }},
       {// test for cases where finalURI is empty
        ""_ns,
-       nsIContentPolicy::TYPE_IMAGE,
+       ExtContentPolicy::TYPE_IMAGE,
        "web"_ns,
        {"other"_ns, "TYPE_IMAGE"_ns, "web"_ns, "unknown"_ns}},
       {// test for cases where finalURI is null, due to the struct layout, we'll
        // override the URL with nullptr in loop below.
        "URLWillResultInNullPtr"_ns,
-       nsIContentPolicy::TYPE_FONT,
+       ExtContentPolicy::TYPE_FONT,
        "web"_ns,
        {"other"_ns, "TYPE_FONT"_ns, "web"_ns, "unknown"_ns}},
   };

@@ -474,9 +474,9 @@ bool CookieCommons::IsSafeTopLevelNav(nsIChannel* aChannel) {
   }
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (loadInfo->GetExternalContentPolicyType() !=
-          nsIContentPolicy::TYPE_DOCUMENT &&
+          ExtContentPolicy::TYPE_DOCUMENT &&
       loadInfo->GetExternalContentPolicyType() !=
-          nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
+          ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
     return false;
   }
   return NS_IsSafeMethodNav(aChannel);
@@ -500,9 +500,9 @@ bool CookieCommons::IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
   bool isForeign = true;
   nsresult rv;
   if (loadInfo->GetExternalContentPolicyType() ==
-          nsIContentPolicy::TYPE_DOCUMENT ||
+          ExtContentPolicy::TYPE_DOCUMENT ||
       loadInfo->GetExternalContentPolicyType() ==
-          nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
+          ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
     // for loads of TYPE_DOCUMENT we query the hostURI from the
     // triggeringPrincipal which returns the URI of the document that caused the
     // navigation.
@@ -527,7 +527,7 @@ bool CookieCommons::IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
   // was triggered by a cross-origin triggeringPrincipal, we treat the load as
   // foreign.
   if (loadInfo->GetExternalContentPolicyType() ==
-      nsIContentPolicy::TYPE_SUBDOCUMENT) {
+      ExtContentPolicy::TYPE_SUBDOCUMENT) {
     rv = loadInfo->TriggeringPrincipal()->IsThirdPartyChannel(aChannel,
                                                               &isForeign);
     if (NS_FAILED(rv) || isForeign) {

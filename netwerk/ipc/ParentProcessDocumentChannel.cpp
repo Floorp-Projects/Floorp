@@ -141,7 +141,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   MOZ_ASSERT(docShell);
 
   bool isDocumentLoad = mLoadInfo->GetExternalContentPolicyType() !=
-                        nsIContentPolicy::TYPE_OBJECT;
+                        ExtContentPolicy::TYPE_OBJECT;
 
   mDocumentLoadListener = MakeRefPtr<DocumentLoadListener>(
       docShell->GetBrowsingContext()->Canonical(), isDocumentLoad);
