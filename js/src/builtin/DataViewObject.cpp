@@ -1027,8 +1027,7 @@ const JSPropertySpec DataViewObject::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "DataView", JSPROP_READONLY), JS_PS_END};
 
 JS_FRIEND_API JSObject* JS_NewDataView(JSContext* cx, HandleObject buffer,
-                                       uint32_t byteOffset,
-                                       int32_t byteLength) {
+                                       size_t byteOffset, size_t byteLength) {
   JSProtoKey key = JSProto_DataView;
   RootedObject constructor(cx, GlobalObject::getOrCreateConstructor(cx, key));
   if (!constructor) {
@@ -1039,7 +1038,7 @@ JS_FRIEND_API JSObject* JS_NewDataView(JSContext* cx, HandleObject buffer,
 
   cargs[0].setObject(*buffer);
   cargs[1].setNumber(byteOffset);
-  cargs[2].setInt32(byteLength);
+  cargs[2].setNumber(byteLength);
 
   RootedValue fun(cx, ObjectValue(*constructor));
   RootedObject obj(cx);

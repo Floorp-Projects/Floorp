@@ -850,7 +850,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
  public:
   static JSObject* fromBuffer(JSContext* cx, HandleObject bufobj,
-                              uint32_t byteOffset, int32_t lengthInt) {
+                              size_t byteOffset, int64_t lengthInt) {
     if (byteOffset % BYTES_PER_ELEMENT != 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
@@ -2515,8 +2515,8 @@ struct ExternalTypeOf<uint8_clamped> {
   }                                                                          \
                                                                              \
   JS_FRIEND_API JSObject* JS_New##Name##ArrayWithBuffer(                     \
-      JSContext* cx, HandleObject arrayBuffer, uint32_t byteOffset,          \
-      int32_t length) {                                                      \
+      JSContext* cx, HandleObject arrayBuffer, size_t byteOffset,            \
+      int64_t length) {                                                      \
     return TypedArrayObjectTemplate<NativeType>::fromBuffer(                 \
         cx, arrayBuffer, byteOffset, length);                                \
   }                                                                          \
