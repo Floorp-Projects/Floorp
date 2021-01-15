@@ -188,6 +188,15 @@ add_task(async function test_reset_user_pref() {
 });
 
 add_task(async function test_modify() {
+  // Need to wait for the invalid form popup to show and hide, otherwise the later test that
+  // simulates an escape key press fails because it instead closes that popup.
+  let invalidFormPopupHiddenPromise = BrowserTestUtils.waitForEvent(
+    window,
+    "popuphidden",
+    false,
+    event => event.target.id == "invalid-form-popup"
+  );
+
   await AboutConfigTest.withNewTab(async function() {
     // Test toggle for boolean prefs.
     for (let nameOfBoolPref of [
@@ -219,6 +228,13 @@ add_task(async function test_modify() {
     Assert.ok(!row.valueInput);
     Assert.equal(row.value, Preferences.get(PREF_MODIFY_STRING));
 
+    let invalidFormPopupShownPromise = BrowserTestUtils.waitForEvent(
+      window,
+      "popupshown",
+      false,
+      event => event.target.id == "invalid-form-popup"
+    );
+
     // Test validation of integer values.
     for (let invalidValue of [
       "",
@@ -233,6 +249,8 @@ add_task(async function test_modify() {
       // We should still be in edit mode.
       Assert.ok(intRow.valueInput);
     }
+
+    await invalidFormPopupShownPromise;
 
     // Test correct saving and DOM-update.
     for (let [prefName, willDelete] of [
@@ -259,6 +277,8 @@ add_task(async function test_modify() {
       Assert.equal(row.hasClass("deleted"), willDelete);
     }
   });
+
+  await invalidFormPopupHiddenPromise;
 });
 
 add_task(async function test_edit_field_selected() {
