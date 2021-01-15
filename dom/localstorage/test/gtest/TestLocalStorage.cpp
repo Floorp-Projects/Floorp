@@ -71,13 +71,14 @@ void CheckGeneratedOriginKey(nsIPrincipal* aPrincipal, const char* aOriginKey,
   rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
   ASSERT_EQ(rv, NS_OK) << "PrincipalToPrincipalInfo should not fail";
 
-  originKey.Truncate();
-  rv = GenerateOriginKey2(principalInfo, originAttrSuffix, originKey);
+  const auto res = GenerateOriginKey2(principalInfo);
   if (aOriginKey) {
-    ASSERT_EQ(rv, NS_OK) << "GenerateOriginKey2 should not fail";
-    EXPECT_TRUE(originKey == nsDependentCString(aOriginKey));
+    ASSERT_TRUE(res.isOk())
+    << "GenerateOriginKey2 should not fail";
+    EXPECT_TRUE(res.inspect().second == nsDependentCString(aOriginKey));
   } else {
-    ASSERT_NE(rv, NS_OK) << "GenerateOriginKey2 should fail";
+    ASSERT_TRUE(res.isErr())
+    << "GenerateOriginKey2 should fail";
   }
 }
 

@@ -265,9 +265,12 @@ bool NextGenLocalStorageEnabled();
  */
 bool CachedNextGenLocalStorageEnabled();
 
-nsresult GenerateOriginKey2(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                            nsACString& aOriginAttrSuffix,
-                            nsACString& aOriginKey);
+/**
+ * Returns a success value containing a pair of origin attribute suffix and
+ * origin key.
+ */
+Result<std::pair<nsCString, nsCString>, nsresult> GenerateOriginKey2(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
 LogModule* GetLocalStorageLogger();
 
