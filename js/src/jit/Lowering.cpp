@@ -4059,13 +4059,6 @@ void LIRGenerator::visitGuardObjectGroup(MGuardObjectGroup* ins) {
   }
 }
 
-void LIRGenerator::visitGuardString(MGuardString* ins) {
-  // The type policy does all the work, so at this point the input
-  // is guaranteed to be a string.
-  MOZ_ASSERT(ins->input()->type() == MIRType::String);
-  redefine(ins, ins->input());
-}
-
 void LIRGenerator::visitGuardValue(MGuardValue* ins) {
   MOZ_ASSERT(ins->value()->type() == MIRType::Value);
   auto* lir = new (alloc()) LGuardValue(useBox(ins->value()));
