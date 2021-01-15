@@ -12268,16 +12268,6 @@ void CodeGenerator::visitLoadElementHole(LLoadElementHole* lir) {
   masm.bind(&done);
 }
 
-void CodeGenerator::visitUnboxObjectOrNull(LUnboxObjectOrNull* lir) {
-  Register obj = ToRegister(lir->input());
-
-  if (lir->mir()->fallible()) {
-    Label bail;
-    masm.branchTestPtr(Assembler::Zero, obj, obj, &bail);
-    bailoutFrom(&bail, lir->snapshot());
-  }
-}
-
 void CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir) {
   Register elements = ToRegister(lir->elements());
   Register temp = ToTempRegisterOrInvalid(lir->temp());

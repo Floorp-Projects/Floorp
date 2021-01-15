@@ -4213,19 +4213,6 @@ class LLoadElementHole : public LInstructionHelper<BOX_PIECES, 3, 0> {
   const LAllocation* initLength() { return getOperand(2); }
 };
 
-class LUnboxObjectOrNull : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(UnboxObjectOrNull);
-
-  explicit LUnboxObjectOrNull(const LAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  MUnbox* mir() const { return mir_->toUnbox(); }
-  const LAllocation* input() { return getOperand(0); }
-};
-
 // Store a boxed value to a dense array's element vector.
 class LStoreElementV : public LInstructionHelper<0, 2 + BOX_PIECES, 0> {
  public:
