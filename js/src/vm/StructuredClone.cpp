@@ -1364,7 +1364,7 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   // rawbuf - that length can be different, and it can change at any time.
 
   intptr_t p = reinterpret_cast<intptr_t>(rawbuf);
-  uint32_t byteLength = sharedArrayBuffer->byteLength().deprecatedGetUint32();
+  uint64_t byteLength = sharedArrayBuffer->byteLength().get();
   if (!(out.writePair(SCTAG_SHARED_ARRAY_BUFFER_OBJECT,
                       static_cast<uint32_t>(sizeof(p))) &&
         out.writeBytes(&byteLength, sizeof(byteLength)) &&
@@ -2378,9 +2378,17 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
     return false;
   }
 
-  uint32_t byteLength;
+  uint64_t byteLength;
   if (!in.readBytes(&byteLength, sizeof(byteLength))) {
     return in.reportTruncated();
+  }
+
+  // The maximum ArrayBuffer size depends on the platform and prefs, and we cast
+  // to BufferSize/size_t below, so we have to check this here.
+  if (byteLength > ArrayBufferObject::maxBufferByteLength()) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_BAD_ARRAY_LENGTH);
+    return false;
   }
 
   intptr_t p;
@@ -2508,7 +2516,7 @@ bool JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType,
   }
   vp.setObject(*obj);
   ArrayBufferObject& buffer = obj->as<ArrayBufferObject>();
-  MOZ_ASSERT(buffer.byteLength().deprecatedGetUint32() == nbytes);
+  MOZ_ASSERT(buffer.byteLength().get() == nbytes);
 
   switch (arrayType) {
     case Scalar::Int8:
