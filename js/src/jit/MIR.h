@@ -10010,21 +10010,6 @@ class MCallGetIntrinsicValue : public MNullaryInstruction {
   bool possiblyCalls() const override { return true; }
 };
 
-class MSetPropertyInstruction : public MBinaryInstruction {
-  CompilerPropertyName name_;
-  bool strict_;
-
- protected:
-  MSetPropertyInstruction(Opcode op, MDefinition* obj, MDefinition* value,
-                          PropertyName* name, bool strict)
-      : MBinaryInstruction(op, obj, value), name_(name), strict_(strict) {}
-
- public:
-  NAMED_OPERANDS((0, object), (1, value))
-  PropertyName* name() const { return name_; }
-  bool strict() const { return strict_; }
-};
-
 class MSetElementInstruction : public MTernaryInstruction {
   bool strict_;
 
