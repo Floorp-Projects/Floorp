@@ -4845,48 +4845,6 @@ bool MGuardReceiverPolymorphic::congruentTo(const MDefinition* ins) const {
   return congruentIfOperandsEqual(ins);
 }
 
-MDefinition::AliasType MGetPropertyPolymorphic::mightAlias(
-    const MDefinition* store) const {
-  // Allow hoisting this instruction if the store does not write to a
-  // slot read by this instruction.
-
-  if (!store->isStoreFixedSlot() && !store->isStoreDynamicSlot()) {
-    return AliasType::MayAlias;
-  }
-
-  for (size_t i = 0; i < numReceivers(); i++) {
-    const Shape* shape = this->shape(i);
-    if (!shape) {
-      continue;
-    }
-    if (shape->slot() < shape->numFixedSlots()) {
-      // Fixed slot.
-      uint32_t slot = shape->slot();
-      if (store->isStoreFixedSlot() &&
-          store->toStoreFixedSlot()->slot() != slot) {
-        continue;
-      }
-      if (store->isStoreDynamicSlot()) {
-        continue;
-      }
-    } else {
-      // Dynamic slot.
-      uint32_t slot = shape->slot() - shape->numFixedSlots();
-      if (store->isStoreDynamicSlot() &&
-          store->toStoreDynamicSlot()->slot() != slot) {
-        continue;
-      }
-      if (store->isStoreFixedSlot()) {
-        continue;
-      }
-    }
-
-    return AliasType::MayAlias;
-  }
-
-  return AliasType::NoAlias;
-}
-
 MDefinition* MWasmUnsignedToDouble::foldsTo(TempAllocator& alloc) {
   if (input()->isConstant() && input()->type() == MIRType::Int32) {
     return MConstant::New(

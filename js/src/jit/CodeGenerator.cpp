@@ -3942,66 +3942,6 @@ static void GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
   }
 }
 
-void CodeGenerator::emitGetPropertyPolymorphic(
-    LInstruction* ins, Register obj, Register scratch,
-    const TypedOrValueRegister& output) {
-  MGetPropertyPolymorphic* mir = ins->mirRaw()->toGetPropertyPolymorphic();
-
-  Label done;
-
-  for (size_t i = 0; i < mir->numReceivers(); i++) {
-    ReceiverGuard receiver = mir->receiver(i);
-
-    Label next;
-    masm.comment("GuardReceiver");
-    GuardReceiver(masm, receiver, obj, scratch, &next);
-
-    if (receiver.getShape()) {
-      masm.comment("loadTypedOrValue");
-      Register target = obj;
-
-      Shape* shape = mir->shape(i);
-      if (shape->slot() < shape->numFixedSlots()) {
-        // Fixed slot.
-        masm.loadTypedOrValue(
-            Address(target, NativeObject::getFixedSlotOffset(shape->slot())),
-            output);
-      } else {
-        // Dynamic slot.
-        uint32_t offset =
-            (shape->slot() - shape->numFixedSlots()) * sizeof(js::Value);
-        masm.loadPtr(Address(target, NativeObject::offsetOfSlots()), scratch);
-        masm.loadTypedOrValue(Address(scratch, offset), output);
-      }
-    }
-
-    if (i == mir->numReceivers() - 1) {
-      bailoutFrom(&next, ins->snapshot());
-    } else {
-      masm.jump(&done);
-      masm.bind(&next);
-    }
-  }
-
-  masm.bind(&done);
-}
-
-void CodeGenerator::visitGetPropertyPolymorphicV(
-    LGetPropertyPolymorphicV* ins) {
-  Register obj = ToRegister(ins->obj());
-  ValueOperand output = ToOutValue(ins);
-  Register temp = ToRegister(ins->temp());
-  emitGetPropertyPolymorphic(ins, obj, temp, output);
-}
-
-void CodeGenerator::visitGetPropertyPolymorphicT(
-    LGetPropertyPolymorphicT* ins) {
-  Register obj = ToRegister(ins->obj());
-  TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
-  Register temp = ToRegister(ins->temp());
-  emitGetPropertyPolymorphic(ins, obj, temp, output);
-}
-
 void CodeGenerator::emitSetPropertyPolymorphic(
     LInstruction* ins, Register obj, Register scratch,
     const ConstantOrRegister& value) {
