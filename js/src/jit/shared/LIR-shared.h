@@ -4434,59 +4434,6 @@ class LStoreElementHoleT : public LInstructionHelper<0, 4, 1> {
   const LDefinition* spectreTemp() { return getTemp(0); }
 };
 
-// Like LStoreElementV, but can just ignore assignment (for eg. frozen objects)
-class LFallibleStoreElementV : public LInstructionHelper<0, 3 + BOX_PIECES, 1> {
- public:
-  LIR_HEADER(FallibleStoreElementV)
-
-  LFallibleStoreElementV(const LAllocation& object, const LAllocation& elements,
-                         const LAllocation& index, const LBoxAllocation& value,
-                         const LDefinition& spectreTemp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-    setOperand(1, elements);
-    setOperand(2, index);
-    setBoxOperand(Value, value);
-    setTemp(0, spectreTemp);
-  }
-
-  static const size_t Value = 3;
-
-  const MFallibleStoreElement* mir() const {
-    return mir_->toFallibleStoreElement();
-  }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* elements() { return getOperand(1); }
-  const LAllocation* index() { return getOperand(2); }
-  const LDefinition* spectreTemp() { return getTemp(0); }
-};
-
-// Like LStoreElementT, but can just ignore assignment (for eg. frozen objects)
-class LFallibleStoreElementT : public LInstructionHelper<0, 4, 1> {
- public:
-  LIR_HEADER(FallibleStoreElementT)
-
-  LFallibleStoreElementT(const LAllocation& object, const LAllocation& elements,
-                         const LAllocation& index, const LAllocation& value,
-                         const LDefinition& spectreTemp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-    setOperand(1, elements);
-    setOperand(2, index);
-    setOperand(3, value);
-    setTemp(0, spectreTemp);
-  }
-
-  const MFallibleStoreElement* mir() const {
-    return mir_->toFallibleStoreElement();
-  }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* elements() { return getOperand(1); }
-  const LAllocation* index() { return getOperand(2); }
-  const LAllocation* value() { return getOperand(3); }
-  const LDefinition* spectreTemp() { return getTemp(0); }
-};
-
 class LArrayPopShift : public LInstructionHelper<BOX_PIECES, 1, 2> {
  public:
   LIR_HEADER(ArrayPopShift)

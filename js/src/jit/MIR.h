@@ -7973,35 +7973,6 @@ class MStoreElementHole
   ALLOW_CLONE(MStoreElementHole)
 };
 
-// Try to store a value to a dense array slots vector. May fail due to the
-// object being non-extensible/sealed/frozen. Cannot be used on an object that
-// has extra indexed properties.
-class MFallibleStoreElement
-    : public MQuaternaryInstruction,
-      public MStoreElementCommon,
-      public MixPolicy<SingleObjectPolicy, NoFloatPolicy<3>>::Data {
-  bool needsHoleCheck_;
-
-  MFallibleStoreElement(MDefinition* object, MDefinition* elements,
-                        MDefinition* index, MDefinition* value,
-                        bool needsHoleCheck)
-      : MQuaternaryInstruction(classOpcode, object, elements, index, value),
-        needsHoleCheck_(needsHoleCheck) {
-    MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-    MOZ_ASSERT(value->type() != MIRType::MagicHole);
-  }
-
- public:
-  INSTRUCTION_HEADER(FallibleStoreElement)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object), (1, elements), (2, index), (3, value))
-
-  bool needsHoleCheck() const { return needsHoleCheck_; }
-
-  ALLOW_CLONE(MFallibleStoreElement)
-};
-
 // Array.prototype.pop or Array.prototype.shift on a dense array.
 class MArrayPopShift : public MUnaryInstruction,
                        public SingleObjectPolicy::Data {

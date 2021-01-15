@@ -3243,34 +3243,6 @@ void LIRGenerator::visitStoreElementHole(MStoreElementHole* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitFallibleStoreElement(MFallibleStoreElement* ins) {
-  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-
-  const LUse object = useRegister(ins->object());
-  const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegister(ins->index());
-
-  LDefinition spectreTemp =
-      BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
-
-  LInstruction* lir;
-  switch (ins->value()->type()) {
-    case MIRType::Value:
-      lir = new (alloc()) LFallibleStoreElementV(
-          object, elements, index, useBox(ins->value()), spectreTemp);
-      break;
-    default:
-      const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-      lir = new (alloc())
-          LFallibleStoreElementT(object, elements, index, value, spectreTemp);
-      break;
-  }
-
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitEffectiveAddress(MEffectiveAddress* ins) {
   define(new (alloc()) LEffectiveAddress(useRegister(ins->base()),
                                          useRegister(ins->index())),
