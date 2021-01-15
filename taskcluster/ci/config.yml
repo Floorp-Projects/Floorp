@@ -57,6 +57,7 @@ treeherder:
         'l10n-bump': 'L10n Bumper'
         'M': 'Mochitests'
         'M-1proc': 'Mochitests without e10s'
+        'M-a11y-checks': 'Mochitests with accessibility checks enabled'
         'M-fis': 'Mochitests with fission enabled'
         'M-fis-xorig': 'Mochitests with cross-origin and fission enabled'
         'M-gli': 'Mochitests with WebGL over IPC'
