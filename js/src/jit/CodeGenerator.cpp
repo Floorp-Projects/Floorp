@@ -9727,26 +9727,11 @@ void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
   Register output = ToRegister(lir->output());
 
   if (op == JSOp::Eq || op == JSOp::Ne) {
-    MOZ_ASSERT(
-        lir->mir()->lhs()->type() != MIRType::Object ||
-            lir->mir()->operandMightEmulateUndefined(),
-        "Operands which can't emulate undefined should have been folded");
+    auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
+    addOutOfLineCode(ool, lir->mir());
 
-    OutOfLineTestObjectWithLabels* ool = nullptr;
-    Maybe<Label> label1, label2;
-    Label* nullOrLikeUndefined;
-    Label* notNullOrLikeUndefined;
-    if (lir->mir()->operandMightEmulateUndefined()) {
-      ool = new (alloc()) OutOfLineTestObjectWithLabels();
-      addOutOfLineCode(ool, lir->mir());
-      nullOrLikeUndefined = ool->label1();
-      notNullOrLikeUndefined = ool->label2();
-    } else {
-      label1.emplace();
-      label2.emplace();
-      nullOrLikeUndefined = label1.ptr();
-      notNullOrLikeUndefined = label2.ptr();
-    }
+    Label* nullOrLikeUndefined = ool->label1();
+    Label* notNullOrLikeUndefined = ool->label2();
 
     {
       ScratchTagScope tag(masm, value);
@@ -9760,21 +9745,17 @@ void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
         masm.branchTestUndefined(Assembler::Equal, tag, nullOrLikeUndefined);
       }
 
-      if (ool) {
-        // Check whether it's a truthy object or a falsy object that emulates
-        // undefined.
-        masm.branchTestObject(Assembler::NotEqual, tag, notNullOrLikeUndefined);
-
-        ScratchTagScopeRelease _(&tag);
-
-        Register objreg =
-            masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
-        branchTestObjectEmulatesUndefined(objreg, nullOrLikeUndefined,
-                                          notNullOrLikeUndefined,
-                                          ToRegister(lir->temp()), ool);
-        // fall through
-      }
+      // Check whether it's a truthy object or a falsy object that emulates
+      // undefined.
+      masm.branchTestObject(Assembler::NotEqual, tag, notNullOrLikeUndefined);
     }
+
+    Register objreg =
+        masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
+    branchTestObjectEmulatesUndefined(objreg, nullOrLikeUndefined,
+                                      notNullOrLikeUndefined,
+                                      ToRegister(lir->temp()), ool);
+    // fall through
 
     Label done;
 
@@ -9825,23 +9806,15 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
       op = JSOp::Eq;
     }
 
-    MOZ_ASSERT(
-        lir->cmpMir()->lhs()->type() != MIRType::Object ||
-            lir->cmpMir()->operandMightEmulateUndefined(),
-        "Operands which can't emulate undefined should have been folded");
+    auto* ool = new (alloc()) OutOfLineTestObject();
+    addOutOfLineCode(ool, lir->cmpMir());
 
-    OutOfLineTestObject* ool = nullptr;
-    if (lir->cmpMir()->operandMightEmulateUndefined()) {
-      ool = new (alloc()) OutOfLineTestObject();
-      addOutOfLineCode(ool, lir->cmpMir());
-    }
+    Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
+    Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
 
     {
       ScratchTagScope tag(masm, value);
       masm.splitTagForTest(value, tag);
-
-      Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
-      Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
 
       MDefinition* input = lir->cmpMir()->lhs();
       if (input->mightBeType(MIRType::Null)) {
@@ -9851,22 +9824,16 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
         masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
       }
 
-      if (ool) {
-        masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);
-
-        ScratchTagScopeRelease _(&tag);
-
-        // Objects that emulate undefined are loosely equal to null/undefined.
-        Register objreg =
-            masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
-        Register scratch = ToRegister(lir->temp());
-        testObjectEmulatesUndefined(objreg, ifTrueLabel, ifFalseLabel, scratch,
-                                    ool);
-      } else {
-        masm.jump(ifFalseLabel);
-      }
-      return;
+      masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);
     }
+
+    // Objects that emulate undefined are loosely equal to null/undefined.
+    Register objreg =
+        masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
+    Register scratch = ToRegister(lir->temp());
+    testObjectEmulatesUndefined(objreg, ifTrueLabel, ifFalseLabel, scratch,
+                                ool);
+    return;
   }
 
   MOZ_ASSERT(op == JSOp::StrictEq || op == JSOp::StrictNe);
@@ -9891,18 +9858,11 @@ void CodeGenerator::visitIsNullOrLikeUndefinedT(LIsNullOrLikeUndefinedT* lir) {
       lhsType == MIRType::ObjectOrNull || op == JSOp::Eq || op == JSOp::Ne,
       "Strict equality should have been folded");
 
-  MOZ_ASSERT(lhsType == MIRType::ObjectOrNull ||
-                 lir->mir()->operandMightEmulateUndefined(),
-             "If the object couldn't emulate undefined, this should have been "
-             "folded.");
-
   Register objreg = ToRegister(lir->input());
   Register output = ToRegister(lir->output());
 
-  if ((op == JSOp::Eq || op == JSOp::Ne) &&
-      lir->mir()->operandMightEmulateUndefined()) {
-    OutOfLineTestObjectWithLabels* ool =
-        new (alloc()) OutOfLineTestObjectWithLabels();
+  if (op == JSOp::Eq || op == JSOp::Ne) {
+    auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
     addOutOfLineCode(ool, lir->mir());
 
     Label* emulatesUndefined = ool->label1();
@@ -9954,11 +9914,6 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(
       lhsType == MIRType::ObjectOrNull || op == JSOp::Eq || op == JSOp::Ne,
       "Strict equality should have been folded");
 
-  MOZ_ASSERT(lhsType == MIRType::ObjectOrNull ||
-                 lir->cmpMir()->operandMightEmulateUndefined(),
-             "If the object couldn't emulate undefined, this should have been "
-             "folded.");
-
   MBasicBlock* ifTrue;
   MBasicBlock* ifFalse;
 
@@ -9973,9 +9928,8 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(
 
   Register input = ToRegister(lir->getOperand(0));
 
-  if ((op == JSOp::Eq || op == JSOp::Ne) &&
-      lir->cmpMir()->operandMightEmulateUndefined()) {
-    OutOfLineTestObject* ool = new (alloc()) OutOfLineTestObject();
+  if (op == JSOp::Eq || op == JSOp::Ne) {
+    auto* ool = new (alloc()) OutOfLineTestObject();
     addOutOfLineCode(ool, lir->cmpMir());
 
     Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);

@@ -2916,7 +2916,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
  private:
   CompareType compareType_;
   JSOp jsop_;
-  bool operandMightEmulateUndefined_;
   bool operandsAreNeverNaN_;
 
   // When a floating-point comparison is converted to an integer comparison
@@ -2928,7 +2927,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
       : MBinaryInstruction(classOpcode, left, right),
         compareType_(Compare_Unknown),
         jsop_(jsop),
-        operandMightEmulateUndefined_(true),
         operandsAreNeverNaN_(false),
         truncateOperands_(false) {
     setResultType(MIRType::Boolean);
@@ -2944,7 +2942,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
                compareType == Compare_Float32 ||
                compareType == Compare_RefOrNull);
     compareType_ = compareType;
-    operandMightEmulateUndefined_ = false;
     setResultType(MIRType::Int32);
   }
 
@@ -2970,9 +2967,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   MIRType inputType();
 
   JSOp jsop() const { return jsop_; }
-  bool operandMightEmulateUndefined() const {
-    return operandMightEmulateUndefined_;
-  }
   bool operandsAreNeverNaN() const { return operandsAreNeverNaN_; }
   AliasSet getAliasSet() const override {
     // Strict equality is never effectful.

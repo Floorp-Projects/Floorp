@@ -723,33 +723,14 @@ void LIRGenerator::visitTest(MTest* test) {
         comp->compareType() == MCompare::Compare_Undefined) {
       if (left->type() == MIRType::Object ||
           left->type() == MIRType::ObjectOrNull) {
-        MOZ_ASSERT(left->type() == MIRType::ObjectOrNull ||
-                       comp->operandMightEmulateUndefined(),
-                   "MCompare::tryFold should handle the "
-                   "never-emulates-undefined case");
-
-        LDefinition tmp = comp->operandMightEmulateUndefined()
-                              ? temp()
-                              : LDefinition::BogusTemp();
-        LIsNullOrLikeUndefinedAndBranchT* lir =
-            new (alloc()) LIsNullOrLikeUndefinedAndBranchT(
-                comp, useRegister(left), ifTrue, ifFalse, tmp);
+        auto* lir = new (alloc()) LIsNullOrLikeUndefinedAndBranchT(
+            comp, useRegister(left), ifTrue, ifFalse, temp());
         add(lir, test);
         return;
       }
 
-      LDefinition tmp, tmpToUnbox;
-      if (comp->operandMightEmulateUndefined()) {
-        tmp = temp();
-        tmpToUnbox = tempToUnbox();
-      } else {
-        tmp = LDefinition::BogusTemp();
-        tmpToUnbox = LDefinition::BogusTemp();
-      }
-
-      LIsNullOrLikeUndefinedAndBranchV* lir =
-          new (alloc()) LIsNullOrLikeUndefinedAndBranchV(
-              comp, ifTrue, ifFalse, useBox(left), tmp, tmpToUnbox);
+      auto* lir = new (alloc()) LIsNullOrLikeUndefinedAndBranchV(
+          comp, ifTrue, ifFalse, useBox(left), temp(), tempToUnbox());
       add(lir, test);
       return;
     }
@@ -999,25 +980,12 @@ void LIRGenerator::visitCompare(MCompare* comp) {
       comp->compareType() == MCompare::Compare_Undefined) {
     if (left->type() == MIRType::Object ||
         left->type() == MIRType::ObjectOrNull) {
-      MOZ_ASSERT(left->type() == MIRType::ObjectOrNull ||
-                     comp->operandMightEmulateUndefined(),
-                 "MCompare::tryFold should have folded this away");
-
       define(new (alloc()) LIsNullOrLikeUndefinedT(useRegister(left)), comp);
       return;
     }
 
-    LDefinition tmp, tmpToUnbox;
-    if (comp->operandMightEmulateUndefined()) {
-      tmp = temp();
-      tmpToUnbox = tempToUnbox();
-    } else {
-      tmp = LDefinition::BogusTemp();
-      tmpToUnbox = LDefinition::BogusTemp();
-    }
-
-    LIsNullOrLikeUndefinedV* lir =
-        new (alloc()) LIsNullOrLikeUndefinedV(useBox(left), tmp, tmpToUnbox);
+    auto* lir = new (alloc())
+        LIsNullOrLikeUndefinedV(useBox(left), temp(), tempToUnbox());
     define(lir, comp);
     return;
   }
