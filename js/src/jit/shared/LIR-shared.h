@@ -5709,22 +5709,6 @@ class LRest : public LCallInstructionHelper<1, 1, 3> {
   MRest* mir() const { return mir_->toRest(); }
 };
 
-class LGuardReceiverPolymorphic : public LInstructionHelper<1, 1, 1> {
- public:
-  LIR_HEADER(GuardReceiverPolymorphic)
-
-  LGuardReceiverPolymorphic(const LAllocation& in, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setTemp(0, temp);
-  }
-  const LAllocation* object() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
-  const MGuardReceiverPolymorphic* mir() const {
-    return mir_->toGuardReceiverPolymorphic();
-  }
-};
-
 // Convert a Boolean to an Int64, following ToBigInt.
 class LBooleanToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
  public:

@@ -9393,40 +9393,6 @@ class MGuardFunctionScript : public MUnaryInstruction,
   }
 };
 
-// Bail if the object's shape or unboxed group is not in the input list.
-class MGuardReceiverPolymorphic : public MUnaryInstruction,
-                                  public SingleObjectPolicy::Data {
-  Vector<ReceiverGuard, 4, JitAllocPolicy> receivers_;
-
-  MGuardReceiverPolymorphic(TempAllocator& alloc, MDefinition* obj)
-      : MUnaryInstruction(classOpcode, obj), receivers_(alloc) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(GuardReceiverPolymorphic)
-  NAMED_OPERANDS((0, object))
-
-  static MGuardReceiverPolymorphic* New(TempAllocator& alloc,
-                                        MDefinition* obj) {
-    return new (alloc) MGuardReceiverPolymorphic(alloc, obj);
-  }
-
-  [[nodiscard]] bool addReceiver(const ReceiverGuard& receiver) {
-    return receivers_.append(receiver);
-  }
-  size_t numReceivers() const { return receivers_.length(); }
-  const ReceiverGuard& receiver(size_t i) const { return receivers_[i]; }
-
-  bool congruentTo(const MDefinition* ins) const override;
-
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-};
-
 // Guard on an object's group, inclusively or exclusively.
 class MGuardObjectGroup : public MUnaryInstruction,
                           public SingleObjectPolicy::Data {
