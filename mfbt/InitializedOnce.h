@@ -50,6 +50,8 @@ class InitializedOnce final {
   using MaybeType = Maybe<std::remove_const_t<T>>;
 
  public:
+  using ValueType = T;
+
   template <typename Dummy = void>
   explicit constexpr InitializedOnce(
       std::enable_if_t<InitWhenVal == InitWhen::LazyAllowed, Dummy>* =
@@ -135,6 +137,29 @@ class InitializedOnce final {
   bool mWasReset = false;
 #endif
 };
+
+template <typename T, InitWhen InitWhenVal, DestroyWhen DestroyWhenVal,
+          template <typename> class ValueCheckPolicy>
+class LazyInitializer {
+ public:
+  explicit LazyInitializer(InitializedOnce<T, InitWhenVal, DestroyWhenVal,
+                                           ValueCheckPolicy>& aLazyInitialized)
+      : mLazyInitialized{aLazyInitialized} {}
+
+  template <typename U>
+  LazyInitializer& operator=(U&& aValue) {
+    mLazyInitialized.init(std::forward<U>(aValue));
+    return *this;
+  }
+
+  LazyInitializer(const LazyInitializer&) = delete;
+  LazyInitializer& operator=(const LazyInitializer&) = delete;
+
+ private:
+  InitializedOnce<T, InitWhenVal, DestroyWhenVal, ValueCheckPolicy>&
+      mLazyInitialized;
+};
+
 }  // namespace detail
 
 // The following *InitializedOnce* template aliases allow to declare class
@@ -208,6 +233,14 @@ using LazyInitializedOnceNotNullEarlyDestructible =
     detail::InitializedOnce<T, detail::InitWhen::LazyAllowed,
                             detail::DestroyWhen::EarlyAllowed,
                             detail::ValueCheckPolicies::ConvertsToTrue>;
+
+template <typename T, detail::InitWhen InitWhenVal,
+          detail::DestroyWhen DestroyWhenVal,
+          template <typename> class ValueCheckPolicy>
+auto do_Init(detail::InitializedOnce<T, InitWhenVal, DestroyWhenVal,
+                                     ValueCheckPolicy>& aLazyInitialized) {
+  return detail::LazyInitializer(aLazyInitialized);
+}
 
 }  // namespace mozilla
 

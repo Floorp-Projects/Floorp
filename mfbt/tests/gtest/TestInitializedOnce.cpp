@@ -139,6 +139,17 @@ TEST(InitializedOnceAllowLazy, Init)
   ASSERT_EQ(testValue, val.ref().mValue);
 }
 
+TEST(InitializedOnceAllowLazy, do_Init)
+{
+  LazyInitializedOnce<const MoveOnly> val;
+  do_Init(val) = MoveOnly{testValue};
+
+  AssertIsSome(val);
+  ASSERT_EQ(testValue, (*val).mValue);
+  ASSERT_EQ(testValue, val->mValue);
+  ASSERT_EQ(testValue, val.ref().mValue);
+}
+
 TEST(InitializedOnceAllowLazyResettable, DefaultCtor)
 {
   LazyInitializedOnceEarlyDestructible<const MoveOnly> val;
