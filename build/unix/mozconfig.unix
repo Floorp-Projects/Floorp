@@ -7,7 +7,6 @@ if [ -n "$FORCE_GCC" ]; then
     # We want to make sure we use binutils and other binaries in the tooltool
     # package.
     mk_add_options "export PATH=$MOZ_FETCHES_DIR/gcc/bin:$PATH"
-    ac_add_options --with-clang-path=$MOZ_FETCHES_DIR/clang/bin/clang
 else
     # For some builds we don't want to have Clang based static-analysis activated
     if [ -z "$DISABLE_CLANG_PLUGIN" ]; then
