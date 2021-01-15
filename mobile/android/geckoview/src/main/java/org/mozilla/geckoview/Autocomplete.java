@@ -677,23 +677,20 @@ public class Autocomplete {
                     return;
                 }
 
-                result.accept(
-                    logins -> {
-                        if (logins == null) {
-                            callback.sendSuccess(new GeckoBundle[0]);
-                            return;
-                        }
+                callback.resolveTo(result.map(logins -> {
+                    if (logins == null) {
+                        return new GeckoBundle[0];
+                    }
 
-                        // This is a one-liner with streams (API level 24).
-                        final GeckoBundle[] loginBundles =
+                    // This is a one-liner with streams (API level 24).
+                    final GeckoBundle[] loginBundles =
                             new GeckoBundle[logins.length];
-                        for (int i = 0; i < logins.length; ++i) {
-                            loginBundles[i] = logins[i].toBundle();
-                        }
+                    for (int i = 0; i < logins.length; ++i) {
+                        loginBundles[i] = logins[i].toBundle();
+                    }
 
-                        callback.sendSuccess(loginBundles);
-                    },
-                    exception -> callback.sendError(exception.getMessage()));
+                    return loginBundles;
+                }));
             } else if (SAVE_LOGIN_EVENT.equals(event)) {
                 final GeckoBundle loginBundle = message.getBundle("login");
                 final LoginEntry login = new LoginEntry(loginBundle);

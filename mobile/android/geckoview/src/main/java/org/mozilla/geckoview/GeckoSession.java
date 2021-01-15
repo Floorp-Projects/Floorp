@@ -499,16 +499,16 @@ public class GeckoSession {
                         return;
                     }
 
-                    result.accept(value -> {
+                    callback.resolveTo(result.map(value -> {
                         ThreadUtils.assertOnUiThread();
                         if (value == AllowOrDeny.ALLOW) {
-                            callback.sendSuccess(false);
-                        } else  if (value == AllowOrDeny.DENY) {
-                            callback.sendSuccess(true);
-                        } else {
-                            callback.sendError("Invalid response");
+                            return false;
                         }
-                    }, exception -> callback.sendError(exception.getMessage()));
+                        if (value == AllowOrDeny.DENY) {
+                            return true;
+                        }
+                        throw new IllegalArgumentException("Invalid response");
+                    }));
                 } else if ("GeckoView:OnLoadError".equals(event)) {
                     final String uri = message.getString("uri");
                     final long errorCode = message.getLong("error");
@@ -523,13 +523,12 @@ public class GeckoSession {
                         return;
                     }
 
-                    result.accept(url -> {
+                    callback.resolveTo(result.map(url -> {
                         if (url == null) {
-                            callback.sendError("abort");
-                        } else {
-                            callback.sendSuccess(url);
+                            throw new IllegalArgumentException("abort");
                         }
-                    }, exception -> callback.sendError(exception.getMessage()));
+                        return url;
+                    }));
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
                     final GeckoResult<GeckoSession> result = delegate.onNewSession(GeckoSession.this, uri);
@@ -538,24 +537,23 @@ public class GeckoSession {
                         return;
                     }
 
-                    result.accept(session -> {
+                    callback.resolveTo(result.map(session -> {
                         ThreadUtils.assertOnUiThread();
                         if (session == null) {
-                            callback.sendSuccess(null);
-                            return;
+                            return null;
                         }
 
                         if (session.isOpen()) {
-                            throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
+                            throw new AssertionError("Must use an unopened GeckoSession instance");
                         }
 
                         if (GeckoSession.this.mWindow == null) {
-                            callback.sendError("Session is not attached to a window");
-                        } else {
-                            session.open(GeckoSession.this.mWindow.runtime);
-                            callback.sendSuccess(session.getId());
+                            throw new IllegalArgumentException("Session is not attached to a window");
                         }
-                    }, exception -> callback.sendError(exception.getMessage()));
+
+                        session.open(GeckoSession.this.mWindow.runtime);
+                        return session.getId();
+                    }));
                 }
             }
         };

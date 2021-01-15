@@ -813,11 +813,11 @@ public class WebExtensionController {
             return;
         }
 
-        promptResponse.accept(allowOrDeny -> {
+        callback.resolveTo(promptResponse.map(allowOrDeny -> {
             final GeckoBundle response = new GeckoBundle(1);
             response.putBoolean("allow", AllowOrDeny.ALLOW.equals(allowOrDeny));
-            callback.sendSuccess(response);
-        });
+            return response;
+        }));
     }
 
     private void updatePrompt(final GeckoBundle message, final EventCallback callback) {
@@ -852,11 +852,11 @@ public class WebExtensionController {
             return;
         }
 
-        promptResponse.accept(allowOrDeny -> {
+        callback.resolveTo(promptResponse.map(allowOrDeny -> {
             final GeckoBundle response = new GeckoBundle(1);
             response.putBoolean("allow", AllowOrDeny.ALLOW.equals(allowOrDeny));
-            callback.sendSuccess(response);
-        });
+            return response;
+        }));
     }
 
     private void getSettings(final Message message, final WebExtension extension) {
@@ -873,11 +873,8 @@ public class WebExtensionController {
             message.callback.sendError("browsingData.settings is not supported");
             return;
         }
-        settingsResult.accept(
-                settings -> {
-                    message.callback.sendSuccess(settings.toGeckoBundle());
-                },
-                message.callback::sendError);
+        message.callback.resolveTo(
+                settingsResult.map(settings -> settings.toGeckoBundle()));
     }
 
     private void browsingDataClear(final Message message, final WebExtension extension) {
@@ -921,23 +918,17 @@ public class WebExtensionController {
 
         GeckoResult<WebExtension.Download> result = delegate.onDownload(extension, request);
         if (result == null) {
-            message.callback.sendError("downloads.download() is not supported");
+            message.callback.sendError("downloads.download is not supported");
             return;
         }
-        result.then(
-                value -> {
-                    if (value != null) {
-                        message.callback.sendSuccess(value.id);
-                    } else {
-                        message.callback.sendError("downloads.download is not supported");
-                        Log.e(LOGTAG, "onDownload returned invalid null id");
-                    }
-                    return GeckoResult.fromValue(value);
-                },
-                error -> {
-                    message.callback.sendError(error.getCause().getMessage());
-                    return GeckoResult.fromException(error);
-                });
+
+        message.callback.resolveTo(result.map(value -> {
+            if (value == null) {
+                Log.e(LOGTAG, "onDownload returned invalid null id");
+                throw new IllegalArgumentException("downloads.download is not supported");
+            }
+            return value.id;
+        }));
     }
 
     /* package */ void openOptionsPage(

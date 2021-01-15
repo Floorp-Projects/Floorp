@@ -121,7 +121,7 @@ public class WebPushController {
                         return;
                     }
 
-                    result.accept(val -> callback.sendSuccess(null), err -> callback.sendError(err.getMessage()));
+                    callback.resolveTo(result.map(val -> null));
                     break;
                 }
                 case "GeckoView:PushGetSubscription": {
@@ -131,8 +131,8 @@ public class WebPushController {
                         return;
                     }
 
-                    result.accept(subscription -> callback.sendSuccess(subscription != null ? subscription.toBundle() : null),
-                        err -> callback.sendError(err.getMessage()));
+                    callback.resolveTo(result.map(subscription ->
+                            subscription != null ? subscription.toBundle() : null));
                     break;
                 }
             }
