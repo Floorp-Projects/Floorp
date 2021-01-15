@@ -647,6 +647,10 @@ class TextInputDelegateTest : BaseSessionTest() {
     // Bug 1209465, cannot enter ideographic space character by itself (U+3000).
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun inputConnection_bug1209465() {
+        // The ideographic space char may trigger font fallback; we don't want that to be async,
+        // as the resulting deferred reflow may confuse a following test.
+        sessionRule.setPrefsUntilTestEnd(mapOf("gfx.font_rendering.fallback.async" to false))
+
         setupContent("")
 
         val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
