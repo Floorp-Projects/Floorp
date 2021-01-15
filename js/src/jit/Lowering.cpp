@@ -5733,10 +5733,6 @@ void LIRGenerator::visitArrayState(MArrayState* objState) {
   MOZ_CRASH("Unexpected ArrayState node during Lowering.");
 }
 
-void LIRGenerator::visitUnknownValue(MUnknownValue* ins) {
-  MOZ_CRASH("Can not lower unknown value.");
-}
-
 void LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins) {
   // The instruction needs a temp register:
   // - that's not the FramePointer, since wasm is going to use it in the
