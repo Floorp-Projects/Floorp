@@ -3756,23 +3756,6 @@ void LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-  if (ins->value()->type() == MIRType::Value) {
-    LSetPropertyPolymorphicV* lir = new (alloc()) LSetPropertyPolymorphicV(
-        useRegister(ins->object()), useBox(ins->value()), temp());
-    assignSnapshot(lir, ins->bailoutKind());
-    add(lir, ins);
-  } else {
-    LAllocation value = useRegisterOrConstant(ins->value());
-    LSetPropertyPolymorphicT* lir = new (alloc()) LSetPropertyPolymorphicT(
-        useRegister(ins->object()), value, ins->value()->type(), temp());
-    assignSnapshot(lir, ins->bailoutKind());
-    add(lir, ins);
-  }
-}
-
 void LIRGenerator::visitBindNameCache(MBindNameCache* ins) {
   MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Object);
