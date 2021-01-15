@@ -63,6 +63,15 @@ namespace test {
     constexpr impl::TimespanMetric timespan_metric(11);
 
     /**
+     * generated from test.timing_distribution_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::TimingDistributionMetric timing_distribution_metric(12);
+
+    /**
      * generated from test.memory_distribution_metric
      */
     /**

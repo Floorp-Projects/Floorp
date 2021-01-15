@@ -208,7 +208,7 @@ pub extern "C" fn fog_memory_distribution_test_get_value(
     *sum = val.sum;
     for (&bucket, &count) in val.values.iter() {
         buckets.push(bucket);
-        counts.push(count)
+        counts.push(count);
     }
 }
 
@@ -226,4 +226,43 @@ pub extern "C" fn fog_submit_ping_by_id(id: u32, reason: &nsACString) {
         Some(reason.to_utf8())
     };
     pings::submit_ping_by_id(id, reason.as_deref());
+}
+
+#[no_mangle]
+pub extern "C" fn fog_timing_distribution_start(id: u32) -> u64 {
+    let metric = metric_get!(TIMING_DISTRIBUTION_MAP, id);
+    metric.start()
+}
+
+#[no_mangle]
+pub extern "C" fn fog_timing_distribution_stop_and_accumulate(id: u32, timing_id: u64) {
+    let metric = metric_get!(TIMING_DISTRIBUTION_MAP, id);
+    metric.stop_and_accumulate(timing_id);
+}
+
+#[no_mangle]
+pub extern "C" fn fog_timing_distribution_cancel(id: u32, timing_id: u64) {
+    let metric = metric_get!(TIMING_DISTRIBUTION_MAP, id);
+    metric.cancel(timing_id);
+}
+
+#[no_mangle]
+pub extern "C" fn fog_timing_distribution_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    test_has!(TIMING_DISTRIBUTION_MAP, id, ping_name)
+}
+
+#[no_mangle]
+pub extern "C" fn fog_timing_distribution_test_get_value(
+    id: u32,
+    ping_name: &nsACString,
+    sum: &mut u64,
+    buckets: &mut ThinVec<u64>,
+    counts: &mut ThinVec<u64>,
+) {
+    let val = test_get!(TIMING_DISTRIBUTION_MAP, id, ping_name);
+    *sum = val.sum;
+    for (&bucket, &count) in val.values.iter() {
+        buckets.push(bucket);
+        counts.push(count);
+    }
 }

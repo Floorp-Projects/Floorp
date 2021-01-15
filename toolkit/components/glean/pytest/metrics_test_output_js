@@ -57,6 +57,10 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
     {
       return MakeAndAddRef<GleanTimespan>(metricId);
     }
+    case 9: /* TimingDistribution */
+    {
+      return MakeAndAddRef<GleanTimingDistribution>(metricId);
+    }
     case 10: /* MemoryDistribution */
     {
       return MakeAndAddRef<GleanMemoryDistribution>(metricId);

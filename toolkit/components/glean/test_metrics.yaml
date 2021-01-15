@@ -146,6 +146,25 @@ test_only:
     send_in_pings:
       - test-ping
 
+  what_time_is_it:
+    type: timing_distribution
+    time_unit: microsecond
+    description: |
+      Adheres to at least two of the top ten fallacies programmers believe
+      about time.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1673663
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1673663#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+
 test_only.ipc:
   a_counter:
     type: counter
