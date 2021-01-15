@@ -441,15 +441,6 @@ void MInstruction::clearResumePoint() {
   resumePoint_ = nullptr;
 }
 
-bool MDefinition::maybeEmulatesUndefined() {
-  // TODO(no-TI): remove.
-  if (!mightBeType(MIRType::Object)) {
-    return false;
-  }
-
-  return true;
-}
-
 MDefinition* MTest::foldsDoubleNegation(TempAllocator& alloc) {
   MDefinition* op = getOperand(0);
 
