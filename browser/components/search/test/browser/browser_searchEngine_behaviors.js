@@ -45,7 +45,7 @@ const SEARCH_ENGINE_DETAILS = [
   {
     alias: "e",
     baseURL:
-      "https://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.com/sch/foo",
+      "https://www.ebay.com/sch/?toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=711-53200-19255-0&kw=foo",
     codes: {
       context: "",
       keyword: "",

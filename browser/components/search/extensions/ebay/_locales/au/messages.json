@@ -6,13 +6,13 @@
     "message": "eBay - Online auctions"
   },
   "searchUrl": {
-    "message": "https://rover.ebay.com/rover/1/705-53470-19255-0/1"
+    "message": "https://www.ebay.com.au/sch/"
   },
   "searchForm": {
     "message": "https://www.ebay.com.au/"
   },
   "searchUrlGetParams": {
-    "message": "ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.com.au/sch/{searchTerms}"
+    "message": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=705-53470-19255-0&kw={searchTerms}"
   },
   "suggestUrlGetParams": {
     "message": "sId=15&fmt=osr&kwd={searchTerms}"
