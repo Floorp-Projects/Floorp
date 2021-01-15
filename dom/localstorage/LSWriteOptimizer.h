@@ -106,7 +106,7 @@ class LSWriteOptimizerBase::WriteInfo {
 
   enum Type { InsertItem = 0, UpdateItem, DeleteItem, Truncate };
 
-  virtual Type GetType() = 0;
+  virtual Type GetType() const = 0;
 };
 
 class LSWriteOptimizerBase::DeleteItemInfo final : public WriteInfo {
@@ -119,7 +119,7 @@ class LSWriteOptimizerBase::DeleteItemInfo final : public WriteInfo {
   const nsAString& GetKey() const { return mKey; }
 
  private:
-  Type GetType() override { return DeleteItem; }
+  Type GetType() const override { return DeleteItem; }
 };
 
 /**
@@ -130,7 +130,7 @@ class LSWriteOptimizerBase::TruncateInfo final : public WriteInfo {
   explicit TruncateInfo(uint64_t aSerialNumber) : WriteInfo(aSerialNumber) {}
 
  private:
-  Type GetType() override { return Truncate; }
+  Type GetType() const override { return Truncate; }
 };
 
 /**
@@ -168,7 +168,7 @@ class LSWriteOptimizer<T, U>::InsertItemInfo : public WriteInfo {
   const T& GetValue() const { return mValue; }
 
  private:
-  WriteInfo::Type GetType() override { return InsertItem; }
+  WriteInfo::Type GetType() const override { return InsertItem; }
 };
 
 /**
@@ -187,7 +187,7 @@ class LSWriteOptimizer<T, U>::UpdateItemInfo final : public InsertItemInfo {
   bool UpdateWithMove() const { return mUpdateWithMove; }
 
  private:
-  WriteInfo::Type GetType() override { return WriteInfo::UpdateItem; }
+  WriteInfo::Type GetType() const override { return WriteInfo::UpdateItem; }
 };
 
 }  // namespace dom
