@@ -44,6 +44,11 @@
   cursor: text;
 }
 
+#version.update {
+  font-weight: normal;
+  margin-top: 0;
+}
+
 #releasenotes {
   margin-top: 10px;
 }
@@ -102,4 +107,29 @@ description > .text-link:focus {
   margin: 0;
   padding: 0;
   font-weight: bold;
+}
+
+#updateBox {
+  line-height: normal;
+}
+
+#icons > .icon {
+  -moz-context-properties: fill;
+  margin: 8px 5px;
+  width: 16px;
+  height: 16px;
+}
+
+#icons:not(.checkingForUpdates, .downloading, .applying, .restarting) > .update-throbber,
+#icons:not(.noUpdatesFound) > .noUpdatesFound,
+#icons:not(.apply) > .apply {
+  display: none;
+}
+
+#icons > .noUpdatesFound {
+  fill: #30e60b;
+}
+
+#icons > .apply {
+  fill: white;
 }
