@@ -52,6 +52,11 @@ function doNextTest()
     case 5:
       if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
         slaveOrigin = "http://test1.example.com";
+      } else if (SpecialPowers.Services.appinfo.fissionAutostart){
+        // Fission makes the "https://test2.example.com" run in the different
+        // process with the other two and Legacy LS has issues with usage
+        // synchronization within processes, see Bug 1683299 for more details.
+        slaveOrigin = "http://test2.example.com";
       } else {
         slaveOrigin = "https://test2.example.com";
       }
@@ -69,6 +74,8 @@ function doNextTest()
     case 7:
       if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
         slaveOrigin = "http://test1.example.com";
+      } else if (SpecialPowers.Services.appinfo.fissionAutostart){
+        slaveOrigin = "http://test2.example.com";
       } else {
         slaveOrigin = "https://test2.example.com";
       }
