@@ -114,6 +114,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether sink code motion is globally disabled.
   SET_DEFAULT(disableSink, true);
 
+  // Toggles whether we verify that we don't recompile with the same CacheIR.
+  SET_DEFAULT(disableBailoutLoopCheck, false);
+
   // Whether the Baseline Interpreter is enabled.
   SET_DEFAULT(baselineInterpreter, true);
 
