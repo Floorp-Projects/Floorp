@@ -174,7 +174,7 @@ void AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss,
       key.AssignLiteral("JAVASCRIPT");
     } else if (StringBeginsWith(contentType, "text/css"_ns) ||
                (loadInfo && loadInfo->GetExternalContentPolicyType() ==
-                                ExtContentPolicy::TYPE_STYLESHEET)) {
+                                nsIContentPolicy::TYPE_STYLESHEET)) {
       key.AssignLiteral("STYLESHEET");
     } else if (StringBeginsWith(contentType, "application/wasm"_ns)) {
       key.AssignLiteral("WASM");
@@ -404,7 +404,7 @@ void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
 nsresult nsHttpChannel::Init(nsIURI* uri, uint32_t caps, nsProxyInfo* proxyInfo,
                              uint32_t proxyResolveFlags, nsIURI* proxyURI,
                              uint64_t channelId,
-                             ExtContentPolicyType aContentPolicyType) {
+                             nsContentPolicyType aContentPolicyType) {
   nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo, proxyResolveFlags,
                                       proxyURI, channelId, aContentPolicyType);
   if (NS_FAILED(rv)) return rv;
@@ -535,10 +535,10 @@ nsresult nsHttpChannel::OnBeforeConnect() {
   // header for *all* navigational requests instead of all requests as
   // defined in the spec, see:
   // https://www.w3.org/TR/upgrade-insecure-requests/#preference
-  ExtContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
 
-  if (type == ExtContentPolicy::TYPE_DOCUMENT ||
-      type == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+  if (type == nsIContentPolicy::TYPE_DOCUMENT ||
+      type == nsIContentPolicy::TYPE_SUBDOCUMENT) {
     rv = SetRequestHeader("Upgrade-Insecure-Requests"_ns, "1"_ns, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1478,7 +1478,7 @@ HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
   {
     if ((mClassOfService & nsIClassOfService::Leader) &&
         mLoadInfo->GetExternalContentPolicyType() ==
-            ExtContentPolicy::TYPE_SCRIPT) {
+            nsIContentPolicy::TYPE_SCRIPT) {
       cos = HttpTrafficAnalyzer::ClassOfService::eLeader;
     } else if (mLoadFlags & nsIRequest::LOAD_BACKGROUND) {
       cos = HttpTrafficAnalyzer::ClassOfService::eBackground;
@@ -1529,7 +1529,7 @@ void nsHttpChannel::SetCachedContentType() {
     contentType = nsICacheEntry::CONTENT_TYPE_JAVASCRIPT;
   } else if (StringBeginsWith(contentTypeStr, "text/css"_ns) ||
              (mLoadInfo->GetExternalContentPolicyType() ==
-              ExtContentPolicy::TYPE_STYLESHEET)) {
+              nsIContentPolicy::TYPE_STYLESHEET)) {
     contentType = nsICacheEntry::CONTENT_TYPE_STYLESHEET;
   } else if (StringBeginsWith(contentTypeStr, "application/wasm"_ns)) {
     contentType = nsICacheEntry::CONTENT_TYPE_WASM;
@@ -9958,7 +9958,7 @@ nsresult nsHttpChannel::RedirectToInterceptedChannel() {
       InterceptedHttpChannel::CreateForInterception(
           mChannelCreationTime, mChannelCreationTimestamp, mAsyncOpenTime);
 
-  ExtContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
 
   nsresult rv = intercepted->Init(
       mURI, mCaps, static_cast<nsProxyInfo*>(mProxyInfo.get()),

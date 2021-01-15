@@ -146,7 +146,7 @@ LoadInfo::LoadInfo(
     mSecurityFlags &= ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
-  ExtContentPolicyType externalType =
+  nsContentPolicyType externalType =
       nsContentUtils::InternalContentPolicyTypeToExternal(aContentPolicyType);
 
   if (aLoadingContext) {
@@ -186,7 +186,7 @@ LoadInfo::LoadInfo(
         // sub-iframes). If we are loading a sub-document resource, we must
         // calculate what the top-level-storage-area-principal will be for the
         // new context.
-        if (externalType != ExtContentPolicy::TYPE_SUBDOCUMENT) {
+        if (externalType != nsIContentPolicy::TYPE_SUBDOCUMENT) {
           mTopLevelStorageAreaPrincipal =
               innerWindow->GetTopLevelStorageAreaPrincipal();
         } else if (bc->IsTop()) {
@@ -718,10 +718,10 @@ void LoadInfo::ComputeAncestors(
   }
 }
 void LoadInfo::ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow) {
-  ExtContentPolicyType type =
+  nsContentPolicyType type =
       nsContentUtils::InternalContentPolicyTypeToExternal(
           mInternalContentPolicyType);
-  if (type == ExtContentPolicy::TYPE_DOCUMENT) {
+  if (type == nsIContentPolicy::TYPE_DOCUMENT) {
     // Top-level loads are never third-party.
     mIsThirdPartyContext = false;
     return;
@@ -737,7 +737,7 @@ void LoadInfo::ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow) {
 
 void LoadInfo::ComputeIsThirdPartyContext(dom::WindowGlobalParent* aGlobal) {
   if (nsILoadInfo::GetExternalContentPolicyType() ==
-      ExtContentPolicy::TYPE_DOCUMENT) {
+      nsIContentPolicy::TYPE_DOCUMENT) {
     // Top-level loads are never third-party.
     mIsThirdPartyContext = false;
     return;
@@ -1099,11 +1099,8 @@ LoadInfo::SetSendCSPViolationEvents(bool aValue) {
 
 NS_IMETHODIMP
 LoadInfo::GetExternalContentPolicyType(nsContentPolicyType* aResult) {
-  // We have to use nsContentPolicyType because ExtContentPolicyType is not
-  // visible from xpidl.
-  *aResult = static_cast<nsContentPolicyType>(
-      nsContentUtils::InternalContentPolicyTypeToExternal(
-          mInternalContentPolicyType));
+  *aResult = nsContentUtils::InternalContentPolicyTypeToExternal(
+      mInternalContentPolicyType);
   return NS_OK;
 }
 
@@ -1233,7 +1230,7 @@ LoadInfo::GetFrameBrowsingContextID(uint64_t* aResult) {
 NS_IMETHODIMP
 LoadInfo::GetTargetBrowsingContextID(uint64_t* aResult) {
   return (nsILoadInfo::GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_SUBDOCUMENT)
+          nsIContentPolicy::TYPE_SUBDOCUMENT)
              ? GetFrameBrowsingContextID(aResult)
              : GetBrowsingContextID(aResult);
 }
@@ -1752,7 +1749,7 @@ PerformanceStorage* LoadInfo::GetPerformanceStorage() {
   }
 
   if (nsILoadInfo::GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_SUBDOCUMENT &&
+          nsIContentPolicy::TYPE_SUBDOCUMENT &&
       !GetIsFromProcessingFrameAttributes()) {
     // We only report loads caused by processing the attributes of the
     // browsing context container.
