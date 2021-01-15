@@ -169,11 +169,13 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static bool is(HandleValue v);
 
   static bool set(JSContext* cx, unsigned argc, Value* vp);
+  static bool copyWithin(JSContext* cx, unsigned argc, Value* vp);
 
   bool convertForSideEffect(JSContext* cx, HandleValue v) const;
 
  private:
   static bool set_impl(JSContext* cx, const CallArgs& args);
+  static bool copyWithin_impl(JSContext* cx, const CallArgs& args);
 };
 
 MOZ_MUST_USE bool TypedArray_bufferGetter(JSContext* cx, unsigned argc,
