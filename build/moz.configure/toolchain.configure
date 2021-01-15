@@ -689,15 +689,6 @@ def toolchain_search_path(
         )
     ]
 
-    # Also add the rustup install directory for cargo/rustc.
-    cargo_home = environ.get("CARGO_HOME", "")
-    if cargo_home:
-        cargo_home = os.path.abspath(cargo_home)
-    else:
-        cargo_home = os.path.expanduser(os.path.join("~", ".cargo"))
-    rustup_path = os.path.join(cargo_home, "bin")
-    result.append(rustup_path)
-
     if developer_options:
         log.debug(
             "Prioritizing mozbuild state dir in toolchain path because "
@@ -714,6 +705,23 @@ def toolchain_search_path(
 
     log.debug("Search path for toolchain: {}".format(search_path))
     return search_path
+
+
+@depends(original_path)
+@imports("os")
+@imports(_from="os", _import="environ")
+def rust_search_path(original_path):
+    result = list(original_path)
+
+    # Also add the rustup install directory for cargo/rustc.
+    cargo_home = environ.get("CARGO_HOME", "")
+    if cargo_home:
+        cargo_home = os.path.abspath(cargo_home)
+    else:
+        cargo_home = os.path.expanduser(os.path.join("~", ".cargo"))
+    rustup_path = os.path.join(cargo_home, "bin")
+    result.append(rustup_path)
+    return result
 
 
 # As a workaround until bug 1516228 and bug 1516253 are fixed, set the PATH

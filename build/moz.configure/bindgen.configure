@@ -85,7 +85,7 @@ option(env="RUSTFMT", nargs=1, help="Path to the rustfmt program")
 rustfmt = check_prog(
     "RUSTFMT",
     ["rustfmt"],
-    paths=toolchain_search_path,
+    paths=rust_search_path,
     input="RUSTFMT",
     allow_missing=True,
 )
