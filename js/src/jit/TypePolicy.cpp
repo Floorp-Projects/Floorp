@@ -169,58 +169,6 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     return replace->typePolicy()->adjustInputs(alloc, replace);
   };
 
-  // Compare_Boolean specialization is done for "Anything === Bool"
-  // If the LHS is boolean, we set the specialization to Compare_Int32.
-  // This matches other comparisons of the form bool === bool and
-  // generated code of Compare_Int32 is more efficient.
-  if (compare->compareType() == MCompare::Compare_Boolean &&
-      def->getOperand(0)->type() == MIRType::Boolean) {
-    compare->setCompareType(MCompare::Compare_Int32MaybeCoerceBoth);
-  }
-
-  // Compare_Boolean specialization is done for "Anything === Bool"
-  // As of previous line Anything can't be Boolean
-  if (compare->compareType() == MCompare::Compare_Boolean) {
-    // Unbox rhs that is definitely Boolean
-    MDefinition* rhs = def->getOperand(1);
-    if (rhs->type() != MIRType::Boolean) {
-      MInstruction* unbox =
-          MUnbox::New(alloc, rhs, MIRType::Boolean, MUnbox::Infallible);
-      if (!replaceOperand(1, unbox)) {
-        return false;
-      }
-    }
-
-    MOZ_ASSERT(def->getOperand(0)->type() != MIRType::Boolean);
-    MOZ_ASSERT(def->getOperand(1)->type() == MIRType::Boolean);
-    return true;
-  }
-
-  // Compare_StrictString specialization is done for "Anything === String"
-  // If the LHS is string, we set the specialization to Compare_String.
-  if (compare->compareType() == MCompare::Compare_StrictString &&
-      def->getOperand(0)->type() == MIRType::String) {
-    compare->setCompareType(MCompare::Compare_String);
-  }
-
-  // Compare_StrictString specialization is done for "Anything === String"
-  // As of previous line Anything can't be String
-  if (compare->compareType() == MCompare::Compare_StrictString) {
-    // Unbox rhs that is definitely String
-    MDefinition* rhs = def->getOperand(1);
-    if (rhs->type() != MIRType::String) {
-      MInstruction* unbox =
-          MUnbox::New(alloc, rhs, MIRType::String, MUnbox::Infallible);
-      if (!replaceOperand(1, unbox)) {
-        return false;
-      }
-    }
-
-    MOZ_ASSERT(def->getOperand(0)->type() != MIRType::String);
-    MOZ_ASSERT(def->getOperand(1)->type() == MIRType::String);
-    return true;
-  }
-
   if (compare->compareType() == MCompare::Compare_Undefined ||
       compare->compareType() == MCompare::Compare_Null) {
     // Nothing to do for undefined and null, lowering handles all types.
@@ -298,13 +246,6 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
       }
       case MIRType::Int32: {
         IntConversionInputKind convert = IntConversionInputKind::NumbersOnly;
-        if (compare->compareType() == MCompare::Compare_Int32MaybeCoerceBoth ||
-            (compare->compareType() == MCompare::Compare_Int32MaybeCoerceLHS &&
-             i == 0) ||
-            (compare->compareType() == MCompare::Compare_Int32MaybeCoerceRHS &&
-             i == 1)) {
-          convert = IntConversionInputKind::NumbersOrBoolsOnly;
-        }
         replace = MToNumberInt32::New(alloc, in, convert);
         break;
       }

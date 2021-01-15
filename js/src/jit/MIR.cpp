@@ -2957,16 +2957,12 @@ MIRType MCompare::inputType() {
       return MIRType::Null;
     case Compare_UInt32:
     case Compare_Int32:
-    case Compare_Int32MaybeCoerceBoth:
-    case Compare_Int32MaybeCoerceLHS:
-    case Compare_Int32MaybeCoerceRHS:
       return MIRType::Int32;
     case Compare_Double:
       return MIRType::Double;
     case Compare_Float32:
       return MIRType::Float32;
     case Compare_String:
-    case Compare_StrictString:
       return MIRType::String;
     case Compare_Symbol:
       return MIRType::Symbol;
@@ -3649,19 +3645,15 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
     return false;
   }
 
-  MOZ_ASSERT(
-      compareType_ == Compare_Undefined || compareType_ == Compare_Null ||
-      compareType_ == Compare_Boolean || compareType_ == Compare_Int32 ||
-      compareType_ == Compare_Int32MaybeCoerceBoth ||
-      compareType_ == Compare_Int32MaybeCoerceLHS ||
-      compareType_ == Compare_Int32MaybeCoerceRHS ||
-      compareType_ == Compare_UInt32 || compareType_ == Compare_Double ||
-      compareType_ == Compare_Float32 || compareType_ == Compare_String ||
-      compareType_ == Compare_StrictString || compareType_ == Compare_Object ||
-      compareType_ == Compare_Symbol || compareType_ == Compare_BigInt ||
-      compareType_ == Compare_BigInt_Int32 ||
-      compareType_ == Compare_BigInt_Double ||
-      compareType_ == Compare_BigInt_String);
+  MOZ_ASSERT(compareType_ == Compare_Undefined ||
+             compareType_ == Compare_Null || compareType_ == Compare_Int32 ||
+             compareType_ == Compare_UInt32 || compareType_ == Compare_Double ||
+             compareType_ == Compare_Float32 ||
+             compareType_ == Compare_String || compareType_ == Compare_Object ||
+             compareType_ == Compare_Symbol || compareType_ == Compare_BigInt ||
+             compareType_ == Compare_BigInt_Int32 ||
+             compareType_ == Compare_BigInt_Double ||
+             compareType_ == Compare_BigInt_String);
 
   if (isDoubleComparison() || isFloat32Comparison()) {
     if (!operandsAreNeverNaN()) {
@@ -3780,32 +3772,6 @@ bool MCompare::tryFold(bool* result) {
         *result = (op == JSOp::Ne);
         return true;
       }
-    }
-    return false;
-  }
-
-  if (compareType_ == Compare_Boolean) {
-    MOZ_ASSERT(IsStrictEqualityOp(op));
-    MOZ_ASSERT(rhs()->type() == MIRType::Boolean);
-    MOZ_ASSERT(lhs()->type() != MIRType::Boolean,
-               "Should use Int32 comparison");
-
-    if (!lhs()->mightBeType(MIRType::Boolean)) {
-      *result = (op == JSOp::StrictNe);
-      return true;
-    }
-    return false;
-  }
-
-  if (compareType_ == Compare_StrictString) {
-    MOZ_ASSERT(IsStrictEqualityOp(op));
-    MOZ_ASSERT(rhs()->type() == MIRType::String);
-    MOZ_ASSERT(lhs()->type() != MIRType::String,
-               "Should use String comparison");
-
-    if (!lhs()->mightBeType(MIRType::String)) {
-      *result = (op == JSOp::StrictNe);
-      return true;
     }
     return false;
   }

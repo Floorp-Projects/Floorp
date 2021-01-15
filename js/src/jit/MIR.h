@@ -2866,21 +2866,9 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
     // Anything compared to Null
     Compare_Null,
 
-    // Undefined compared to Boolean
-    // Null      compared to Boolean
-    // Double    compared to Boolean
-    // String    compared to Boolean
-    // Symbol    compared to Boolean
-    // Object    compared to Boolean
-    // Value     compared to Boolean
-    Compare_Boolean,
-
     // Int32   compared to Int32
     // Boolean compared to Boolean
     Compare_Int32,
-    Compare_Int32MaybeCoerceBoth,
-    Compare_Int32MaybeCoerceLHS,
-    Compare_Int32MaybeCoerceRHS,
 
     // Int32 compared as unsigneds
     Compare_UInt32,
@@ -2902,15 +2890,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
 
     // Symbol compared to Symbol
     Compare_Symbol,
-
-    // Undefined compared to String
-    // Null      compared to String
-    // Boolean   compared to String
-    // Int32     compared to String
-    // Double    compared to String
-    // Object    compared to String
-    // Value     compared to String
-    Compare_StrictString,
 
     // Object compared to Object
     Compare_Object,
@@ -2981,12 +2960,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
                               bool* filtersUndefined, bool* filtersNull);
 
   CompareType compareType() const { return compareType_; }
-  bool isInt32Comparison() const {
-    return compareType() == Compare_Int32 ||
-           compareType() == Compare_Int32MaybeCoerceBoth ||
-           compareType() == Compare_Int32MaybeCoerceLHS ||
-           compareType() == Compare_Int32MaybeCoerceRHS;
-  }
+  bool isInt32Comparison() const { return compareType() == Compare_Int32; }
   bool isDoubleComparison() const { return compareType() == Compare_Double; }
   bool isFloat32Comparison() const { return compareType() == Compare_Float32; }
   bool isNumericComparison() const {
