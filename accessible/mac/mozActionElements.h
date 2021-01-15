@@ -48,7 +48,10 @@
 
 // Accessible for a radio button
 @interface mozRadioButtonAccessible : mozCheckboxAccessible
-- (id)accessibilityAttributeValue:(NSString*)attribute;
+
+// override
+- (NSArray*)moxLinkedUIElements;
+
 @end
 
 /**
