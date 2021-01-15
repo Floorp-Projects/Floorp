@@ -643,20 +643,10 @@ def original_path():
     return environ["PATH"].split(os.pathsep)
 
 
-@depends(
-    vc_compiler_path,
-    original_path,
-    developer_options,
-    mozbuild_state_path,
-)
+@depends(vc_compiler_path, original_path)
 @imports("os")
 @imports(_from="os", _import="environ")
-def toolchain_search_path(
-    vc_compiler_path,
-    original_path,
-    developer_options,
-    mozbuild_state_path,
-):
+def vc_toolchain_search_path(vc_compiler_path, original_path):
     result = list(original_path)
 
     if vc_compiler_path:
@@ -668,7 +658,24 @@ def toolchain_search_path(
         # The first item is where the programs are going to be
         result.append(vc_compiler_path[0])
 
-    # Also add in the location to which `mach bootstrap` or
+    return result
+
+
+@depends(
+    original_path,
+    developer_options,
+    mozbuild_state_path,
+)
+@imports("os")
+@imports(_from="os", _import="environ")
+def toolchain_search_path(
+    original_path,
+    developer_options,
+    mozbuild_state_path,
+):
+    result = list(original_path)
+
+    # Add in the location to which `mach bootstrap` or
     # `mach artifact toolchain` installs clang, cbindgen, etc.
     bootstrapped = [
         os.path.join(mozbuild_state_path, *rest)
@@ -711,12 +718,12 @@ def toolchain_search_path(
 
 # As a workaround until bug 1516228 and bug 1516253 are fixed, set the PATH
 # variable for the build to contain the toolchain search path.
-@depends(toolchain_search_path)
+@depends(vc_toolchain_search_path)
 @imports("os")
 @imports(_from="os", _import="environ")
-def altered_path(toolchain_search_path):
+def altered_path(vc_toolchain_search_path):
     path = environ["PATH"].split(os.pathsep)
-    altered_path = list(toolchain_search_path)
+    altered_path = list(vc_toolchain_search_path)
     for p in path:
         if p not in altered_path:
             altered_path.append(p)
@@ -2465,7 +2472,7 @@ assembler = check_prog(
     input=provided_assembler.program,
     what="the assembler",
     progs=as_info.names,
-    paths=toolchain_search_path,
+    paths=vc_toolchain_search_path,
 )
 
 
