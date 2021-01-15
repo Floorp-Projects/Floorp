@@ -453,9 +453,14 @@ add_task(async function shouldNavigate() {
     );
 
     // Pick the element.
+    let pickPromise = provider.promisePick();
     await UrlbarTestUtils.promisePopupClose(window, () =>
       EventUtils.synthesizeKey("KEY_Enter")
     );
+    // Verify that pickResult was still called.
+    let [result, pickedElement] = await pickPromise;
+    Assert.equal(result, row.result, "Picked result");
+    Assert.equal(pickedElement, element, "Picked element");
 
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     is(
@@ -482,7 +487,11 @@ add_task(async function shouldNavigate() {
       `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-selectable`
     );
 
+    pickPromise = provider.promisePick();
     EventUtils.synthesizeMouseAtCenter(element, {});
+    [result, pickedElement] = await pickPromise;
+    Assert.equal(result, row.result, "Picked result");
+    Assert.equal(pickedElement, element, "Picked element");
 
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     is(
