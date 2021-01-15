@@ -8059,9 +8059,9 @@ int16_t nsContentUtils::GetButtonsFlagForButton(int32_t aButton) {
       return MouseButtonsFlag::eMiddleFlag;
     case MouseButton::eSecondary:
       return MouseButtonsFlag::eSecondaryFlag;
-    case 4:
+    case 3:
       return MouseButtonsFlag::e4thFlag;
-    case 5:
+    case 4:
       return MouseButtonsFlag::e5thFlag;
     default:
       NS_ERROR("Button not known.");
