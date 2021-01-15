@@ -227,73 +227,72 @@ nsresult CacheFile::Init(const nsACString& aKey, bool aCreateNew,
     mReady = true;
     mDataSize = mMetadata->Offset();
     return NS_OK;
-  } else {
-    uint32_t flags;
-    if (aCreateNew) {
-      MOZ_ASSERT(!aCallback);
-      flags = CacheFileIOManager::CREATE_NEW;
+  }
+  uint32_t flags;
+  if (aCreateNew) {
+    MOZ_ASSERT(!aCallback);
+    flags = CacheFileIOManager::CREATE_NEW;
 
-      // make sure we can use this entry immediately
+    // make sure we can use this entry immediately
+    mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
+    mReady = true;
+    mDataSize = mMetadata->Offset();
+  } else {
+    flags = CacheFileIOManager::CREATE;
+  }
+
+  if (mPriority) {
+    flags |= CacheFileIOManager::PRIORITY;
+  }
+
+  if (mPinned) {
+    flags |= CacheFileIOManager::PINNED;
+  }
+
+  mOpeningFile = true;
+  mListener = aCallback;
+  rv = CacheFileIOManager::OpenFile(mKey, flags, this);
+  if (NS_FAILED(rv)) {
+    mListener = nullptr;
+    mOpeningFile = false;
+
+    if (mPinned) {
+      LOG(
+          ("CacheFile::Init() - CacheFileIOManager::OpenFile() failed "
+           "but we want to pin, fail the file opening. [this=%p]",
+           this));
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    if (aCreateNew) {
+      NS_WARNING("Forcing memory-only entry since OpenFile failed");
+      LOG(
+          ("CacheFile::Init() - CacheFileIOManager::OpenFile() failed "
+           "synchronously. We can continue in memory-only mode since "
+           "aCreateNew == true. [this=%p]",
+           this));
+
+      mMemoryOnly = true;
+    } else if (rv == NS_ERROR_NOT_INITIALIZED) {
+      NS_WARNING(
+          "Forcing memory-only entry since CacheIOManager isn't "
+          "initialized.");
+      LOG(
+          ("CacheFile::Init() - CacheFileIOManager isn't initialized, "
+           "initializing entry as memory-only. [this=%p]",
+           this));
+
+      mMemoryOnly = true;
       mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
       mReady = true;
       mDataSize = mMetadata->Offset();
+
+      RefPtr<NotifyCacheFileListenerEvent> ev;
+      ev = new NotifyCacheFileListenerEvent(aCallback, NS_OK, true);
+      rv = NS_DispatchToCurrentThread(ev);
+      NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      flags = CacheFileIOManager::CREATE;
-    }
-
-    if (mPriority) {
-      flags |= CacheFileIOManager::PRIORITY;
-    }
-
-    if (mPinned) {
-      flags |= CacheFileIOManager::PINNED;
-    }
-
-    mOpeningFile = true;
-    mListener = aCallback;
-    rv = CacheFileIOManager::OpenFile(mKey, flags, this);
-    if (NS_FAILED(rv)) {
-      mListener = nullptr;
-      mOpeningFile = false;
-
-      if (mPinned) {
-        LOG(
-            ("CacheFile::Init() - CacheFileIOManager::OpenFile() failed "
-             "but we want to pin, fail the file opening. [this=%p]",
-             this));
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-
-      if (aCreateNew) {
-        NS_WARNING("Forcing memory-only entry since OpenFile failed");
-        LOG(
-            ("CacheFile::Init() - CacheFileIOManager::OpenFile() failed "
-             "synchronously. We can continue in memory-only mode since "
-             "aCreateNew == true. [this=%p]",
-             this));
-
-        mMemoryOnly = true;
-      } else if (rv == NS_ERROR_NOT_INITIALIZED) {
-        NS_WARNING(
-            "Forcing memory-only entry since CacheIOManager isn't "
-            "initialized.");
-        LOG(
-            ("CacheFile::Init() - CacheFileIOManager isn't initialized, "
-             "initializing entry as memory-only. [this=%p]",
-             this));
-
-        mMemoryOnly = true;
-        mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
-        mReady = true;
-        mDataSize = mMetadata->Offset();
-
-        RefPtr<NotifyCacheFileListenerEvent> ev;
-        ev = new NotifyCacheFileListenerEvent(aCallback, NS_OK, true);
-        rv = NS_DispatchToCurrentThread(ev);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
