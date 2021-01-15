@@ -4431,12 +4431,12 @@ class LArrayPopShift : public LInstructionHelper<BOX_PIECES, 1, 2> {
   const LDefinition* temp1() { return getTemp(1); }
 };
 
-class LArrayPushV : public LInstructionHelper<1, 1 + BOX_PIECES, 2> {
+class LArrayPush : public LInstructionHelper<1, 1 + BOX_PIECES, 2> {
  public:
-  LIR_HEADER(ArrayPushV)
+  LIR_HEADER(ArrayPush)
 
-  LArrayPushV(const LAllocation& object, const LBoxAllocation& value,
-              const LDefinition& temp, const LDefinition& spectreTemp)
+  LArrayPush(const LAllocation& object, const LBoxAllocation& value,
+             const LDefinition& temp, const LDefinition& spectreTemp)
       : LInstructionHelper(classOpcode) {
     setOperand(0, object);
     setBoxOperand(Value, value);

@@ -193,10 +193,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   template <typename T>
   void emitLoadElementT(LLoadElementT* lir, const T& source);
 
-  void emitArrayPush(LInstruction* lir, Register obj,
-                     const ConstantOrRegister& value, Register elementsTemp,
-                     Register length, Register spectreTemp);
-
   void emitRest(LInstruction* lir, Register array, Register numActuals,
                 Register temp0, Register temp1, unsigned numFormals,
                 JSObject* templateObject, bool saveAndRestore,
