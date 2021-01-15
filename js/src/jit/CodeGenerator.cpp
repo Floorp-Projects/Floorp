@@ -10744,10 +10744,13 @@ void CodeGenerator::visitArrayPopShift(LArrayPopShift* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
-void CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
-                                  const ConstantOrRegister& value,
-                                  Register elementsTemp, Register length,
-                                  Register spectreTemp) {
+void CodeGenerator::visitArrayPush(LArrayPush* lir) {
+  Register obj = ToRegister(lir->object());
+  Register elementsTemp = ToRegister(lir->temp());
+  Register length = ToRegister(lir->output());
+  ValueOperand value = ToValue(lir, LArrayPush::Value);
+  Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
+
   using Fn = bool (*)(JSContext*, HandleArrayObject, HandleValue, uint32_t*);
   OutOfLineCode* ool = oolCallVM<Fn, jit::ArrayPushDense>(
       lir, ArgList(obj, value), StoreRegisterTo(length));
@@ -10772,8 +10775,7 @@ void CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
   masm.spectreBoundsCheck32(length, capacity, spectreTemp, ool->entry());
 
   // Do the store.
-  masm.storeConstantOrRegister(value,
-                               BaseObjectElementIndex(elementsTemp, length));
+  masm.storeValue(value, BaseObjectElementIndex(elementsTemp, length));
 
   masm.add32(Imm32(1), length);
 
@@ -10783,16 +10785,6 @@ void CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
                                ObjectElements::offsetOfInitializedLength()));
 
   masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::visitArrayPushV(LArrayPushV* lir) {
-  Register obj = ToRegister(lir->object());
-  Register elementsTemp = ToRegister(lir->temp());
-  Register length = ToRegister(lir->output());
-  ConstantOrRegister value =
-      TypedOrValueRegister(ToValue(lir, LArrayPushV::Value));
-  Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
-  emitArrayPush(lir, obj, value, elementsTemp, length, spectreTemp);
 }
 
 void CodeGenerator::visitArraySlice(LArraySlice* lir) {
