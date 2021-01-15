@@ -1,7 +1,6 @@
 # Sets:
 #    MOZ_AUTOMATION flags
 #    SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE - shouldn't be used?
-#    TOOLTOOL_DIR
 . "$topsrcdir/build/mozconfig.win-common"
 
 # Sets:
@@ -15,7 +14,6 @@
 #  build/mozconfig.automation
 #    MOZ_AUTOMATION_ flags
 #  build/mozconfig.rust
-#    TOOLTOOL_DIR
 #    RUSTC
 #    CARGO
 . "$topsrcdir/browser/config/mozconfigs/common"
