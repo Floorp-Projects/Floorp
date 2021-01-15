@@ -8800,37 +8800,21 @@ QuotaClient::CreateArchivedOriginScope(const OriginScope& aOriginScope) {
   AssertIsOnIOThread();
 
   if (aOriginScope.IsOrigin()) {
-    nsCString spec;
-    OriginAttributes attrs;
-    LS_TRY(
-        OkIf(QuotaManager::ParseOrigin(aOriginScope.GetOrigin(), spec, &attrs)),
-        Err(NS_ERROR_FAILURE));
+    LS_TRY_INSPECT(const auto& principalInfo,
+                   QuotaManager::ParseOrigin(aOriginScope.GetOrigin()));
 
-    ContentPrincipalInfo contentPrincipalInfo;
-    contentPrincipalInfo.attrs() = std::move(attrs);
-    contentPrincipalInfo.spec() = std::move(spec);
-
-    LS_TRY_INSPECT(
-        (const auto& [originAttrSuffix, originKey]),
-        GenerateOriginKey2(PrincipalInfo(std::move(contentPrincipalInfo))));
+    LS_TRY_INSPECT((const auto& [originAttrSuffix, originKey]),
+                   GenerateOriginKey2(principalInfo));
 
     return ArchivedOriginScope::CreateFromOrigin(originAttrSuffix, originKey);
   }
 
   if (aOriginScope.IsPrefix()) {
-    nsCString spec;
-    OriginAttributes attrs;
-    LS_TRY(OkIf(QuotaManager::ParseOrigin(aOriginScope.GetOriginNoSuffix(),
-                                          spec, &attrs)),
-           Err(NS_ERROR_FAILURE));
+    LS_TRY_INSPECT(const auto& principalInfo,
+                   QuotaManager::ParseOrigin(aOriginScope.GetOriginNoSuffix()));
 
-    ContentPrincipalInfo contentPrincipalInfo;
-    contentPrincipalInfo.attrs() = std::move(attrs);
-    contentPrincipalInfo.spec() = std::move(spec);
-
-    LS_TRY_INSPECT(
-        (const auto& [originAttrSuffix, originKey]),
-        GenerateOriginKey2(PrincipalInfo(std::move(contentPrincipalInfo))));
+    LS_TRY_INSPECT((const auto& [originAttrSuffix, originKey]),
+                   GenerateOriginKey2(principalInfo));
 
     Unused << originAttrSuffix;
 
