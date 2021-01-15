@@ -44,6 +44,8 @@
   border-block: 1px solid ThreeDShadow;
   color: inherit;
   background-color: transparent;
+  min-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+  min-height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
 }
 .startItem {
   border-inline-start: 1px solid ThreeDShadow;
@@ -53,11 +55,6 @@
 .endItem {
   border-start-end-radius: 6px;
   border-end-end-radius: 6px;
-}
-
-.toolbarButton {
-  min-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
-  min-height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
 }
 
 .toolbarButton::after {
@@ -129,4 +126,18 @@
 #navigateHome:-moz-locale-dir(ltr)::after,
 #navigateNext:-moz-locale-dir(ltr)::after {
   transform: scaleX(-1);
+}
+
+/* progressively hide the navigation buttons when the print preview is too narrow to fit */
+@media (max-width: 550px) {
+  #navigatePrevious,
+  #navigateNext,
+  #navigateEnd,
+  #navigateHome {
+    display: none;
+  }
+  .toolbarCenter {
+    border-inline-start: 1px solid ThreeDShadow;
+    border-radius: 6px;
+  }
 }
