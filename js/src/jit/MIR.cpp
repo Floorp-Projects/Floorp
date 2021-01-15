@@ -3989,10 +3989,7 @@ MDefinition* MCompare::tryFoldCharCompare(TempAllocator& alloc) {
     return this;
   }
 
-  MCompare* ins = MCompare::New(alloc, left, right, jsop());
-  ins->setCompareType(MCompare::Compare_Int32);
-
-  return ins;
+  return MCompare::New(alloc, left, right, jsop(), MCompare::Compare_Int32);
 }
 
 MDefinition* MCompare::foldsTo(TempAllocator& alloc) {

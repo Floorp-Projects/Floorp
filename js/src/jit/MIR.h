@@ -2915,9 +2915,10 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   // to integer as well.
   bool truncateOperands_;
 
-  MCompare(MDefinition* left, MDefinition* right, JSOp jsop)
+  MCompare(MDefinition* left, MDefinition* right, JSOp jsop,
+           CompareType compareType)
       : MBinaryInstruction(classOpcode, left, right),
-        compareType_(Compare_Unknown),
+        compareType_(compareType),
         jsop_(jsop),
         operandsAreNeverNaN_(false),
         truncateOperands_(false) {
@@ -2937,8 +2938,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
                compareType == Compare_Double ||
                compareType == Compare_Float32 ||
                compareType == Compare_RefOrNull);
-    auto* ins = MCompare::New(alloc, left, right, jsop);
-    ins->setCompareType(compareType);
+    auto* ins = MCompare::New(alloc, left, right, jsop, compareType);
     ins->setResultType(MIRType::Int32);
     return ins;
   }
