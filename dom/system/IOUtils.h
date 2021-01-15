@@ -78,6 +78,11 @@ class IOUtils final {
                                              const nsACString& aString,
                                              const WriteOptions& aOptions);
 
+  static already_AddRefed<Promise> WriteJSON(GlobalObject& aGlobal,
+                                             const nsAString& aPath,
+                                             JS::Handle<JS::Value> aValue,
+                                             const WriteOptions& aOptions);
+
   static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
