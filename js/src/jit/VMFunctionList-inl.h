@@ -132,8 +132,6 @@ namespace jit {
   _(GetSparseElementHelper, js::GetSparseElementHelper)                        \
   _(GlobalDeclInstantiationFromIon, js::jit::GlobalDeclInstantiationFromIon)   \
   _(GlobalOrEvalDeclInstantiation, js::GlobalOrEvalDeclInstantiation)          \
-  _(GreaterThan, js::GreaterThan)                                              \
-  _(GreaterThanOrEqual, js::GreaterThanOrEqual)                                \
   _(HandleDebugTrap, js::jit::HandleDebugTrap)                                 \
   _(ImplicitThisOperation, js::ImplicitThisOperation)                          \
   _(ImportMetaOperation, js::ImportMetaOperation)                              \
@@ -172,11 +170,7 @@ namespace jit {
   _(Lambda, js::Lambda)                                                        \
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
-  _(LessThan, js::LessThan)                                                    \
-  _(LessThanOrEqual, js::LessThanOrEqual)                                      \
   _(LexicalEnvironmentObjectCreate, js::LexicalEnvironmentObject::create)      \
-  _(LooselyEqual, js::jit::LooselyEqual<js::jit::EqualityKind::Equal>)         \
-  _(LooselyNotEqual, js::jit::LooselyEqual<js::jit::EqualityKind::NotEqual>)   \
   _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NamedLambdaObjectCreateTemplateObject,                                     \
@@ -226,8 +220,6 @@ namespace jit {
   _(SetObjectElementWithReceiver, js::SetObjectElementWithReceiver)            \
   _(SetPropertySuper, js::SetPropertySuper)                                    \
   _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
-  _(StrictlyEqual, js::jit::StrictlyEqual<js::jit::EqualityKind::Equal>)       \
-  _(StrictlyNotEqual, js::jit::StrictlyEqual<js::jit::EqualityKind::NotEqual>) \
   _(StringBigIntGreaterThanOrEqual,                                            \
     js::jit::StringBigIntCompare<js::jit::ComparisonKind::GreaterThanOrEqual>) \
   _(StringBigIntLessThan,                                                      \

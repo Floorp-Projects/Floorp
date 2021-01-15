@@ -1772,22 +1772,6 @@ class LCompareBigIntString : public LCallInstructionHelper<1, 2, 0> {
   MCompare* mir() { return mir_->toCompare(); }
 };
 
-class LCompareVM : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CompareVM)
-
-  static const size_t LhsInput = 0;
-  static const size_t RhsInput = BOX_PIECES;
-
-  LCompareVM(const LBoxAllocation& lhs, const LBoxAllocation& rhs)
-      : LCallInstructionHelper(classOpcode) {
-    setBoxOperand(LhsInput, lhs);
-    setBoxOperand(RhsInput, rhs);
-  }
-
-  MCompare* mir() const { return mir_->toCompare(); }
-};
-
 class LBitAndAndBranch : public LControlInstructionHelper<2, 2, 0> {
   Assembler::Condition cond_;
 
