@@ -28,10 +28,7 @@ add_task(async function() {
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#request-tab")
-  );
+  await clickOnSidebarTab(document, "request");
   await wait;
   testParamsTab1('{ "foo": "bar" }', "");
 

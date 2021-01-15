@@ -37,8 +37,7 @@ add_task(async function() {
 
   info("Clicking stack tab and waiting for stack panel to open");
   waitPromise = waitForDOM(document, "#stack-trace-panel");
-  const stackTab = document.querySelector("#stack-trace-tab");
-  await EventUtils.sendMouseEvent({ type: "click" }, stackTab);
+  await clickOnSidebarTab(document, "stack-trace");
   await waitPromise;
 
   info("Waiting for source maps to be applied");

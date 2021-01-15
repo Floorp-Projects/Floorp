@@ -26,10 +26,7 @@ add_task(async function() {
   // Wait for all tree view updated by react
   let wait = waitForDOM(document, "#headers-panel .accordion-item", 3);
   store.dispatch(Actions.toggleNetworkDetails());
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#headers-tab")
-  );
+  await clickOnSidebarTab(document, "headers");
   await wait;
 
   let tabpanel = document.querySelector("#headers-panel");
@@ -75,10 +72,7 @@ add_task(async function() {
 
   // Wait for all tree sections updated by react
   wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#request-tab")
-  );
+  await clickOnSidebarTab(document, "request");
   await wait;
 
   tabpanel = document.querySelector("#request-panel");

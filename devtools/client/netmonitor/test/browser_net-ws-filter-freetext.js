@@ -46,10 +46,7 @@ add_task(async function() {
   await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
   // Click on the "Response" panel
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
   await wait;
 
   // Get all messages present in the "Response" panel

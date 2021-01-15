@@ -87,10 +87,7 @@ add_task(async function() {
   store.dispatch(Actions.toggleMessageColumn("opCode"));
   store.dispatch(Actions.toggleMessageColumn("maskBit"));
   store.dispatch(Actions.toggleMessageColumn("finBit"));
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
 
   // Get all messages present in the "Response" panel
   const frames = document.querySelectorAll(

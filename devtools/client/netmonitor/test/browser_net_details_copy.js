@@ -142,10 +142,7 @@ add_task(async function() {
     "#response-panel .treeTable"
   );
   store.dispatch(Actions.toggleNetworkDetails());
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
   await onResponsePanelReady;
 
   const responsePanel = document.querySelector("#response-panel");
@@ -213,10 +210,7 @@ add_task(async function() {
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#cookies-tab")
-  );
+  await clickOnSidebarTab(document, "cookies");
 
   const cookiesPanel = document.querySelector("#cookies-panel");
 
