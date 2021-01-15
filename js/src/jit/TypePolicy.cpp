@@ -268,38 +268,6 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
   return true;
 }
 
-bool SameValuePolicy::adjustInputs(TempAllocator& alloc,
-                                   MInstruction* def) const {
-  MOZ_ASSERT(def->isSameValue());
-  MSameValue* sameValue = def->toSameValue();
-  MIRType lhsType = sameValue->lhs()->type();
-  MIRType rhsType = sameValue->rhs()->type();
-
-  // If both operands are numbers, convert them to doubles.
-  if (IsNumberType(lhsType) && IsNumberType(rhsType)) {
-    return AllDoublePolicy::staticAdjustInputs(alloc, def);
-  }
-
-  // SameValue(Anything, Double) is specialized, so convert the rhs if it's
-  // not already a double.
-  if (lhsType == MIRType::Value && IsNumberType(rhsType)) {
-    if (rhsType != MIRType::Double) {
-      MInstruction* replace = MToDouble::New(alloc, sameValue->rhs());
-      def->block()->insertBefore(def, replace);
-      def->replaceOperand(1, replace);
-
-      if (!replace->typePolicy()->adjustInputs(alloc, replace)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  // Otherwise box both operands.
-  return BoxInputsPolicy::staticAdjustInputs(alloc, def);
-}
-
 bool TestPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   MDefinition* op = ins->getOperand(0);
   switch (op->type()) {
@@ -1092,7 +1060,6 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(ClampPolicy)                \
   _(ComparePolicy)              \
   _(PowPolicy)                  \
-  _(SameValuePolicy)            \
   _(SignPolicy)                 \
   _(StoreDataViewElementPolicy) \
   _(StoreTypedArrayHolePolicy)  \
