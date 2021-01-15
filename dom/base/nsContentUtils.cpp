@@ -8269,10 +8269,10 @@ bool nsContentUtils::IsPreloadType(nsContentPolicyType aType) {
 }
 
 /* static */
-bool nsContentUtils::IsUpgradableDisplayType(nsContentPolicyType aType) {
+bool nsContentUtils::IsUpgradableDisplayType(ExtContentPolicyType aType) {
   MOZ_ASSERT(NS_IsMainThread());
-  return (aType == nsIContentPolicy::TYPE_IMAGE ||
-          aType == nsIContentPolicy::TYPE_MEDIA);
+  return (aType == ExtContentPolicy::TYPE_IMAGE ||
+          aType == ExtContentPolicy::TYPE_MEDIA);
 }
 
 // static

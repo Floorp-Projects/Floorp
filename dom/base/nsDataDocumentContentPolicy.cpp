@@ -50,12 +50,8 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
     }
   });
 
-  nsContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
+  ExtContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
-
-  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
-                                contentType),
-             "We should only see external content policy types here.");
 
   *aDecision = nsIContentPolicy::ACCEPT;
   // Look for the document.  In most cases, requestingContext is a node.
@@ -71,7 +67,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
   }
 
   // DTDs are always OK to load
-  if (!doc || contentType == nsIContentPolicy::TYPE_DTD) {
+  if (!doc || contentType == ExtContentPolicy::TYPE_DTD) {
     return NS_OK;
   }
 
@@ -85,12 +81,12 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
       // Let static (print/print preview) documents to load fonts and
       // images.
       switch (contentType) {
-        case nsIContentPolicy::TYPE_IMAGE:
-        case nsIContentPolicy::TYPE_IMAGESET:
-        case nsIContentPolicy::TYPE_FONT:
+        case ExtContentPolicy::TYPE_IMAGE:
+        case ExtContentPolicy::TYPE_IMAGESET:
+        case ExtContentPolicy::TYPE_FONT:
         // This one is a bit sketchy, but nsObjectLoadingContent takes care of
         // only getting here if it is an image.
-        case nsIContentPolicy::TYPE_OBJECT:
+        case ExtContentPolicy::TYPE_OBJECT:
           return true;
         default:
           return false;
@@ -134,8 +130,8 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
             "ExternalDataError", sourceSpec, targetSpec,
             requestingPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0);
       }
-    } else if ((contentType == nsIContentPolicy::TYPE_IMAGE ||
-                contentType == nsIContentPolicy::TYPE_IMAGESET) &&
+    } else if ((contentType == ExtContentPolicy::TYPE_IMAGE ||
+                contentType == ExtContentPolicy::TYPE_IMAGESET) &&
                doc->GetDocumentURI()) {
       // Check for (& disallow) recursive image-loads
       bool isRecursiveLoad;
@@ -155,13 +151,13 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
   }
 
   // For resource documents, blacklist some load types
-  if (contentType == nsIContentPolicy::TYPE_OBJECT ||
-      contentType == nsIContentPolicy::TYPE_DOCUMENT ||
-      contentType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
-      contentType == nsIContentPolicy::TYPE_SCRIPT ||
-      contentType == nsIContentPolicy::TYPE_XSLT ||
-      contentType == nsIContentPolicy::TYPE_FETCH ||
-      contentType == nsIContentPolicy::TYPE_WEB_MANIFEST) {
+  if (contentType == ExtContentPolicy::TYPE_OBJECT ||
+      contentType == ExtContentPolicy::TYPE_DOCUMENT ||
+      contentType == ExtContentPolicy::TYPE_SUBDOCUMENT ||
+      contentType == ExtContentPolicy::TYPE_SCRIPT ||
+      contentType == ExtContentPolicy::TYPE_XSLT ||
+      contentType == ExtContentPolicy::TYPE_FETCH ||
+      contentType == ExtContentPolicy::TYPE_WEB_MANIFEST) {
     *aDecision = nsIContentPolicy::REJECT_TYPE;
   }
 
