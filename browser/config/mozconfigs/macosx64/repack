@@ -4,5 +4,4 @@
 export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
 export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
 export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus
-export NODEJS=$MOZ_FETCHES_DIR/node/bin/node
 ac_add_options --disable-compile-environment
