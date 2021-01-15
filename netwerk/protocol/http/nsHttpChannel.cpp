@@ -8470,27 +8470,6 @@ nsHttpChannel::GetCacheTokenExpirationTime(uint32_t* _retval) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetCacheTokenCachedCharset(nsACString& _retval) {
-  nsresult rv;
-
-  if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
-
-  nsCString cachedCharset;
-  rv = mCacheEntry->GetMetaDataElement("charset", getter_Copies(cachedCharset));
-  if (NS_SUCCEEDED(rv)) _retval = cachedCharset;
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetCacheTokenCachedCharset(const nsACString& aCharset) {
-  if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
-
-  return mCacheEntry->SetMetaDataElement("charset",
-                                         PromiseFlatCString(aCharset).get());
-}
-
-NS_IMETHODIMP
 nsHttpChannel::SetAllowStaleCacheContent(bool aAllowStaleCacheContent) {
   LOG(("nsHttpChannel::SetAllowStaleCacheContent [this=%p, allow=%d]", this,
        aAllowStaleCacheContent));

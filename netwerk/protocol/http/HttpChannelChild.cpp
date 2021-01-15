@@ -439,7 +439,6 @@ void HttpChannelChild::OnStartRequest(
   mCacheEntryId = aArgs.cacheEntryId();
   mCacheFetchCount = aArgs.cacheFetchCount();
   mCacheExpirationTime = aArgs.cacheExpirationTime();
-  mCachedCharset = aArgs.cachedCharset();
   mSelfAddr = aArgs.selfAddr();
   mPeerAddr = aArgs.peerAddr();
 
@@ -2408,27 +2407,6 @@ HttpChannelChild::GetCacheTokenExpirationTime(uint32_t* _retval) {
   if (!mCacheEntryAvailable) return NS_ERROR_NOT_AVAILABLE;
 
   *_retval = mCacheExpirationTime;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpChannelChild::GetCacheTokenCachedCharset(nsACString& _retval) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mCacheEntryAvailable) return NS_ERROR_NOT_AVAILABLE;
-
-  _retval = mCachedCharset;
-  return NS_OK;
-}
-NS_IMETHODIMP
-HttpChannelChild::SetCacheTokenCachedCharset(const nsACString& aCharset) {
-  if (!mCacheEntryAvailable || !RemoteChannelExists())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  mCachedCharset = aCharset;
-  if (!SendSetCacheTokenCachedCharset(PromiseFlatCString(aCharset))) {
-    return NS_ERROR_FAILURE;
-  }
   return NS_OK;
 }
 
