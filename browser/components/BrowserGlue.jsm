@@ -691,17 +691,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  SiteSpecificBrowser: {
-    parent: {
-      moduleURI: "resource:///actors/SiteSpecificBrowserParent.jsm",
-    },
-    child: {
-      moduleURI: "resource:///actors/SiteSpecificBrowserChild.jsm",
-    },
-
-    allFrames: true,
-  },
-
   Translation: {
     parent: {
       moduleURI: "resource:///modules/translation/TranslationParent.jsm",
