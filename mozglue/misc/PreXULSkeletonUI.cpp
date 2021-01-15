@@ -1694,7 +1694,7 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   bool explicitProfile = false;
   if (!AreAllCmdlineArgumentsApproved(argc, argv, &explicitProfile) ||
       EnvHasValue("MOZ_SAFE_MODE_RESTART") || EnvHasValue("XRE_PROFILE_PATH") ||
-      EnvHasValue("MOZ_RESET_PROFILE_RESTART")) {
+      EnvHasValue("MOZ_RESET_PROFILE_RESTART") || EnvHasValue("MOZ_HEADLESS")) {
     sPreXULSkeletonUIDisallowed = true;
     return;
   }
