@@ -358,6 +358,59 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
   return promise.forget();
 }
 
+static bool AppendJsonAsUtf8(const char16_t* aData, uint32_t aLen, void* aStr) {
+  nsCString* str = static_cast<nsCString*>(aStr);
+  return AppendUTF16toUTF8(Span<const char16_t>(aData, aLen), *str, fallible);
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
+                                             const nsAString& aPath,
+                                             JS::Handle<JS::Value> aValue,
+                                             const WriteOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  auto opts = InternalWriteOpts::FromBinding(aOptions);
+  if (opts.isErr()) {
+    RejectJSPromise(promise, opts.unwrapErr());
+    return promise.forget();
+  }
+
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JS::Value> rootedValue(cx, aValue);
+  nsCString utf8Str;
+
+  if (!JS_Stringify(cx, &rootedValue, nullptr, JS::NullHandleValue,
+                    AppendJsonAsUtf8, &utf8Str)) {
+    JS::Rooted<JS::Value> exn(cx, JS::UndefinedValue());
+    if (JS_GetPendingException(cx, &exn)) {
+      JS_ClearPendingException(cx);
+      promise->MaybeReject(exn);
+    } else {
+      RejectJSPromise(promise,
+                      IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                          .WithMessage("Could not serialize object to JSON"));
+    }
+    return promise.forget();
+  }
+
+  RunOnBackgroundThreadAndResolve<uint32_t>(
+      promise, [file = std::move(file), utf8Str = std::move(utf8Str),
+                opts = opts.unwrap()]() {
+        return WriteSync(file, AsBytes(Span(utf8Str)), opts);
+      });
+
+  return promise.forget();
+}
+
 /* static */
 already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
