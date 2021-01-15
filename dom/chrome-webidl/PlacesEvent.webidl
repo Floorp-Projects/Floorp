@@ -27,6 +27,10 @@ enum PlacesEventType {
    * data: PlacesHistoryCleared. Fired whenever history is cleared.
    */
   "history-cleared",
+  /**
+   * data: PlacesRanking. Fired whenever pages ranking is changed.
+   */
+  "pages-rank-changed",
 };
 
 [ChromeOnly, Exposed=Window]
@@ -253,5 +257,10 @@ interface PlacesVisitTitle : PlacesEvent {
 
 [ChromeOnly, Exposed=Window]
 interface PlacesHistoryCleared : PlacesEvent {
+  constructor();
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesRanking : PlacesEvent {
   constructor();
 };
