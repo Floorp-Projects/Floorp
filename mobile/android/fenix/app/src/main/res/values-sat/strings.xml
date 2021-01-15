@@ -14,7 +14,7 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ᱥᱮᱸᱫᱽᱨᱟ ᱵᱟᱝᱠᱷᱟᱱ ᱴᱷᱤᱠᱟᱹᱬᱟ ᱟᱫᱮᱨ</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">ᱟᱢᱟᱜ ᱠᱷᱩᱞᱟᱹ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱼᱜᱟ ᱾</string>
+    <string name="no_open_tabs_description">ᱟᱢᱟᱜ ᱠᱷᱩᱞᱟᱹ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱜᱼᱟ ᱾</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ᱟᱢᱟᱜ ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵᱽ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱩᱫᱩᱜ ᱦᱩᱭᱩᱜ-ᱟ ᱾</string>
     <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
@@ -112,7 +112,7 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">ᱡᱷᱤᱡ ᱴᱮᱵᱽ ᱠᱚ</string>
+    <string name="browser_tabs_button">ᱡᱷᱤᱡᱽ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">ᱛᱟᱭᱚᱢ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -266,7 +266,7 @@
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">ᱞᱤᱸᱠ ᱠᱚ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
+    <string name="preferences_open_links_in_a_private_tab">ᱞᱤᱸᱠ ᱠᱚ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱨᱮ ᱥᱠᱨᱤᱱᱥᱚᱴ ᱠᱚ ᱦᱮᱥᱟᱨᱤᱭᱟᱹ ᱢᱮ</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
@@ -533,7 +533,7 @@
     <string name="content_description_close_button">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
     <!-- Option in library for Recently Closed Tabs -->
-    <string name="library_recently_closed_tabs">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵ ᱠᱚ</string>
+    <string name="library_recently_closed_tabs">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Option in library to open Recently Closed Tabs page -->
     <string name="recently_closed_show_full_history">ᱥᱟᱱᱟᱢ ᱦᱤᱛᱟᱹᱞ ᱫᱮᱠᱷᱟᱣᱢᱮ</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
@@ -544,7 +544,7 @@
     <string name="recently_closed_tab">%d ᱴᱮᱵ</string>
 
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
-    <string name="recently_closed_empty_message">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵ ᱠᱚ ᱵᱟᱹᱱᱩᱜ-ᱟ</string>
+    <string name="recently_closed_empty_message">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
 
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
@@ -579,7 +579,7 @@
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">ᱡᱷᱤᱜ ᱴᱮᱵ ᱠᱚ</string>
+    <string name="tab_header_label">ᱡᱷᱤᱡᱽ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">ᱯᱨᱭᱣᱮᱴ ᱯᱟᱲᱤ</string>
     <!-- Title for the list of tabs in the current private session -->
@@ -591,7 +591,7 @@
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">ᱯᱨᱭᱣᱮᱴ</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">ᱡᱷᱤᱜ ᱴᱮᱵ ᱠᱚ</string>
+    <string name="tab_tray_title">ᱡᱷᱤᱡᱽ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱟᱸᱪᱟᱣ ᱢᱮ</string>
     <!-- Text shown in the menu for the collection selector -->
@@ -599,7 +599,7 @@
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ᱡᱷᱚᱛᱚ ᱴᱮᱵ ᱠᱚ ᱦᱟᱹᱴᱧ ᱢᱮ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
-    <string name="tab_tray_menu_recently_closed">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵ ᱠᱚ</string>
+    <string name="tab_tray_menu_recently_closed">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">ᱴᱮᱵ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -653,7 +653,7 @@
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">ᱛᱩᱢᱟᱹᱞ ᱫᱚᱦᱲᱟ ᱧᱩᱛᱩᱢ ᱢᱮ</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">ᱡᱷᱤᱜ ᱴᱮᱵ ᱠᱚ</string>
+    <string name="collection_open_tabs">ᱡᱷᱤᱡᱽ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">ᱛᱩᱢᱟᱹᱞ ᱧᱩᱛᱩᱢ</string>
     <!-- Text for the menu button to rename a top site -->
@@ -1433,7 +1433,7 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">ᱥᱟᱸᱪᱟᱣᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">ᱞᱚᱜᱤᱱ ᱚᱠᱟ %s ᱨᱮ ᱥᱟᱸᱪᱟᱣ ᱟᱨ ᱥᱭᱸᱠ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱚᱱᱟ ᱠᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱼᱜᱟ ᱾</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text">ᱞᱚᱜᱤᱱ ᱚᱠᱟ %s ᱨᱮ ᱥᱟᱸᱪᱟᱣ ᱟᱨ ᱥᱭᱸᱠ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱚᱱᱟ ᱠᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱜᱼᱟ ᱾</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ᱥᱭᱸᱠ ᱵᱟᱵᱚᱛ ᱡᱟᱹᱥᱛᱤ ᱵᱟᱰᱟᱭ ᱢᱮ ᱾</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->

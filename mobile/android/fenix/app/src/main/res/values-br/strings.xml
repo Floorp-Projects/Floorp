@@ -14,9 +14,9 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Klask pe chomlecʼh</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù digoret</string>
+    <string name="no_open_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù digoret.</string>
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù prevez</string>
+    <string name="no_private_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù prevez.</string>
     <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
     <string name="default_top_site_baidu">Baidu</string>
     <!-- Default title for pinned JD top site that links to JD home page  -->
@@ -58,7 +58,9 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s a skarzh ho roll istor klask ha merdeiñ eus an ivinelloù prevez pa guitait anezho pe pa guitait an arload. Daoust ma ne lak ket acʼhanocʼh da vezañ dizanv evit al lecʼhiennoù pe evit ho pourchaser kenrouedad e vo aesocʼh da zercʼhel prevez ar pezh a rit enlinenn evit an dud all a implij an trevnad-mañ.</string>
-    <string name="private_browsing_common_myths">Mojennoù a vez alies diwar-benn ar merdeiñ prevez</string>
+    <string name="private_browsing_common_myths">
+       Mojennoù a vez alies diwar-benn ar merdeiñ prevez
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Dilemel an estez</string>
 
@@ -154,7 +156,7 @@
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Rannañ</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Rannañ gant...</string>
+    <string name="menu_share_with">Rannañ gant…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Digeriñ e %1$s</string>
@@ -292,7 +294,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personelaat</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Goubredit sinedoù, ar roll istor, ha muiocʼh cʼhoazh gant ho kont Firefox.</string>
+    <string name="preferences_sign_in_description">Goubredit sinedoù, ar roll istor, ha muiocʼh cʼhoazh gant ho kont Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Kont Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -352,11 +354,14 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Perc’henn an dastumad (Naoudi an arveriad)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Kemmet eo bet an dastumad askouezhioù. Kuitae vo an arload evit arloañ ar c’hemmoù...</string>
+    <string name="toast_customize_addon_collection_done">Kemmet eo bet an dastumad askouezhioù. Kuitaet e vo an arload evit arloañ ar c’hemmoù…</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Ne vez skoret an enlugellad-mañ</string>
+
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">An enlugellad-mañ a zo bet staliet endeo</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -378,16 +383,16 @@
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">Anv an trevnad nʼhall ket bezañ goullo.</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">O c’houbredañ...</string>
+    <string name="sync_syncing_in_progress">O c’houbredañ…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Goubredañ cʼhwitet. Berzh diwezhañ: %s</string>
 
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">Goubredañ cʼhwitet. Goubredañ diwezhañ: morse</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">Goubredañ diwezhañ : %s</string>
+    <string name="sync_last_synced_summary">Goubredañ diwezhañ: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_never_synced_summary">Goubredañ diwezhañ : morse</string>
+    <string name="sync_never_synced_summary">Goubredañ diwezhañ: morse</string>
 
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
@@ -420,7 +425,7 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Gweredekaat evit an holl lecʼhiennoù</string>
     <!-- Text displayed when there are no exceptions -->
-    <string name="exceptions_empty_message_description">An nemedennoù a laosk acʼhanocʼh diweredekaat ar gwarez heuliañ evit lecʼhiennoù ʼzo</string>
+    <string name="exceptions_empty_message_description">An nemedennoù a laosk acʼhanocʼh da ziweredekaat ar gwarez heuliañ evit lecʼhiennoù ʼzo.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Gouzout hirocʼh</string>
 
@@ -444,7 +449,7 @@
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Arnodoù</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Aotren Mozilla da staliañ ha da zastum roadennoù evit keweriusterioù arnodel.</string>
+    <string name="preference_experiments_summary">Aotren Mozilla da staliañ ha da zastum roadennoù evit keweriusterioù arnodel</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Daneveller sacʼhadennoù</string>
     <!-- Preference switch for Mozilla location service -->
@@ -711,6 +716,12 @@
     <string name="download_delete_all">Goullonderiñ roll ar pellgargadurioù</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Sur oc’h e fell deoc’h skarzhañ ho pellgargadennoù?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Pellgargadurioù dilammet</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Dilamet %1$s</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Restr pellgarget ebet</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d diuzet</string>
@@ -718,6 +729,10 @@
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Digeriñ</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Dilemel</string>
 
 
     <!-- Crashes -->
@@ -748,7 +763,7 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Ha fellout a ra deocʼh dilemel an teuliad-mañ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
-    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s a zilamo an elfennoù diuzet</string>
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s a zilamo an elfennoù diuzet.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Dilamet %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -841,6 +856,8 @@
     <string name="preference_phone_feature_notification">Rebuzadur</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Stokadur padus</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Endalc’had reoliet gant DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Goulenn an aotre</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -951,7 +968,7 @@
     <!-- Text for the warning message on the Add new device screen -->
     <string name="sync_add_new_device_message">Nʼeus trevnad ebet kennasket</string>
     <!-- Text for the button to learn about sending tabs -->
-    <string name="sync_add_new_device_learn_button">Gouzout hirocʼh a-zivout kas ivinelloù...</string>
+    <string name="sync_add_new_device_learn_button">Gouzout hirocʼh a-zivout ar cʼhas ivinelloù...</string>
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">Kennaskañ un trevnad all…</string>
 
@@ -987,7 +1004,7 @@
     <!-- Text shown in snackbar action for viewing bookmarks -->
     <string name="snackbar_message_bookmarks_view">Gwelout</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Ouzhpennet dʼal lecʼhiennoù gwellañ</string>
+    <string name="snackbar_added_to_top_sites">Ouzhpennet dʼal lecʼhiennoù pennañ</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Ivinell prevez serret</string>
     <!-- Text shown in snackbar when user closes all private tabs -->

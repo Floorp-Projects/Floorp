@@ -1188,4 +1188,329 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">A súa privacidade</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Pechar</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Iniciar a navegación</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Escolla o seu tema</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Aforre batería e vista activando o modo escuro.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Automático</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Adáptase á configuración do dispositivo</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Tema escuro</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Tema claro</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Lapelas enviadas!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Lapelas enviadas!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Foi imposíbel enviar</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">TENTAR DE NOVO</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Escanear o código</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[No seu computador, abra o Firefox e vaia a <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Listo para escanear</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Inicie sesión coa súa cámara</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Use o correo electrónico no seu lugar</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Non ten unha conta? <u>Cree unha</u> para sincronizar o Firefox entre dispositivos.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox deterá a sincronización coa súa conta, pero non eliminará ningún dos seus datos de navegación neste dispositivo.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s deterá a sincronización coa súa conta, pero non eliminará ningún dos seus datos de navegación neste dispositivo.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Desconectar</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Cancelar</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Non é posíbel editar os cartafoles predeterminados</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Configuración de protección</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Protección mellorada contra o rastrexo</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Navegar sen ser seguido</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Manteña os seus datos para si mesmo. %s protexe de moitos dos rastreadores máis comúns que seguen o que vostede fai na Rede.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Máis información</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Estándar (predeterminado)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloquea menos rastrexadores. As páxinas cárganse normalmente.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">O que resulta bloqueado pola protección de seguimento estándar</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Estrito</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloquea máis rastreadores, anuncios e xanelas emerxentes. As páxinas cargan máis rápido, pero é posíbel que algunhas funcións non funcionen.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">O que resulta bloqueado pola protección de seguimento estrita</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Personalizado</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Escolla os rastreadores e scripts que bloquear.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">O que resulta bloqueado pola protección de seguimento personalizada</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Rastreadores entre sitios e de redes sociais</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookies de sitios non visitados</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Todas as cookies de terceiros (pode causar erros nos sitios web)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Todas as cookies (pode causar erros nos sitios web)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Contido de rastrexo</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">En todas as lapelas</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Só nas lapelas privadas</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Só nas lapelas personalizadas</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineiros</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Identificadores de pegadas dixitais</string>
+    <string name="enhanced_tracking_protection_blocked">Bloqueado</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Permitido</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Rastrexadores de redes sociais</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Limita a capacidade das redes sociais para rastrexar a súa actividade de navegación pola web.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Cookies de rastrexo entre sitios</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Bloquea as cookies que as redes publicitarias e as empresas de análise utilizan para recompilar os seus datos de navegación en moitos sitios.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Criptomineiros</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Evita que os scripts maliciosos teñan acceso ao seu dispositivo para extraeren moeda dixital.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Identificadores de pegadas dixitais</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Evita que se recompilen datos de identificación única no dispositivo que se poden usar con fins de rastrexo.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Rastrexo de contido</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Detén a carga de anuncios, vídeos e outros contidos que conteñan código de seguimento. Pode afectar a algunhas funcións dos sitios web.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Cada vez que o escudo é púrpura, %s bloqueou os rastreadores dun sitio. Toque para obter máis información.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">As proteccións están ACTIVADAS neste sitio</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">As proteccións están DESACTIVADAS neste sitio</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">A protección mellorada contra o rastrexo está desactivada para estes sitios</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Retroceder no historial</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Os seus dereitos</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Bibliotecas de código aberto que usamos</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Novidades en %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Bibliotecas OSS</string>
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Seguidores de redirección</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Limpa as cookies establecidas por redireccións a sitios web de seguimento coñecidos.</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Asistencia técnica</string>
+
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Quebras</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Aviso de privacidade</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Coñeza os seus dereitos</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Información de licenciamento</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Bibliotecas que empregamos</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menú de depuración: quedan %1$d clic(s) para habilitalo</string>
+    <string name="about_debug_menu_toast_done">Menú de depuración activado</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 lapela</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d lapelas</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Copiar</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Pegar e ir</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Pegar</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Copiouse o URL ao portapapeis</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Engadir á páxina de inicio</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Cancelar</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Engadir</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Continuar ao sitio web</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Nome do atallo</string>
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Pode engadir facilmente este sitio web á pantalla de inicio do dispositivo para ter acceso instantáneo e navegar máis rápido cunha experiencia semellante á dunha aplicación.</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Identificacións e contrasinais</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Gardar Inicios de sesión e contrasinais</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Preguntar para gardar</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Non gardar nunca</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Completado automático</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sincronizar os inicios de sesión</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Activado</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Desactivado</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Conectar de novo</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Inicie sesión para sincronizar</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Identificacións gardadas</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Os inicios de sesión que garde ou sincronice co %s aparecerán aquí.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Obteña máis información sobre Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Excepcións</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Aquí mostraranse os inicios de sesión e os contrasinais que non se garden.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Non se gardarán os inicios de sesión e os contrasinais para estes sitios.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Eliminar todas as excepcións</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Buscar inicios de sesións</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabeticamente</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Usados recentemente</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sitio</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Nome de usuario</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Contrasinal</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Introduza de novo o seu PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Desbloquee para ver os seus inicios de sesión gardados</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Esta conexión non é segura. As identificacións introducidas aquí poderían estar comprometidas.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Máis información</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Desexa que %s garde este inicio de sesión?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Gardar</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Non gardar</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Copiouse o contrasinal ao portapapeis</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Copiouse o nome de usuario ao portapapeis</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Copiouse o sitio ao portapapeis</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Copiar contrasinal</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Limpar contrasinal</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Copiar nome de usuario</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Limpar nome de usuario</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Copiar sitio</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Abrir sitio no navegador</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Mostrar contrasinal</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Agochar contrasinal</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Desbloquee para ver os seus inicios de sesión gardados</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Protexa os seus inicios de sesión e contrasinais</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Configure un patrón de bloqueo de dispositivo, PIN ou contrasinal para protexer os accesos e contrasinais gardados de que non se acceda se outra persoa ten o seu dispositivo.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Máis tarde</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Configurar agora</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Desbloquear o dispositivo</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nome (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Usado por última vez</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordenar o menú de inicio de sesión</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Engadir motor de busca</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Editar motor de busca</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Engadir</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Gardar</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Editar</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Eliminar</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Outro</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Nome</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Cadea de busca para usar</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Substitúír a consulta por «%s». Exemplo:\nhttps://www.google.com/search?q=</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Máis información</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detalles do motor de busca personalizado</string>
+
     </resources>

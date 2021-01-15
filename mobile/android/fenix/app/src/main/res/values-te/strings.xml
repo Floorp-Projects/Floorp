@@ -262,6 +262,8 @@
     <string name="preferences_open_links_in_a_private_tab">లంకెలను అంతరంగిక ట్యాబులో తెరువు</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">అంతరంగిక విహరణలో తెరపట్లను అనుమతించు</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">అనుమతిస్తే, పలు అనువర్తనాలు తెరిచివున్నప్పుడు అంతరంగిక ట్యాబులు కూడా కనిపిస్తాయి</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">అంతరంగిక విహరణ సత్వరమార్గాన్ని చేర్చు</string>
     <!-- Preference for accessibility -->
@@ -427,6 +429,8 @@
     <string name="preferences_marketing_data_description">%1$sలో మీరు ఏయే సౌలభ్యాలు వాడుకుంటున్నారనే డేటాను మా మొబైలు మార్కెటింగ్ విక్రేత లిన్‌ప్లమ్‌తో పంచుకుంటుంది.</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">అధ్యయనాలు</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">అధ్యయనాలను స్థాపించడానికి, నడపడానికి Mozillaకు అనుమతినిస్తుంది</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">ప్రయోగాలు</string>
 
@@ -479,6 +483,9 @@
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">రిఫ్రెష్ చేయడానికి లాగండి</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">పనిముట్లపట్టీని దాచడానికి స్క్రోల్ చేయండి</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
