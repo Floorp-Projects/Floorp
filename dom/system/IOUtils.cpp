@@ -31,7 +31,6 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
-#include "nsSystemInfo.h"
 #include "nsTArray.h"
 #include "nsThreadManager.h"
 #include "nsXULAppAPI.h"
@@ -447,20 +446,13 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
 /* static */
 already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
                                                   const nsAString& aPath,
-                                                  uint32_t aPermissions,
-                                                  const bool aHonorUmask) {
+                                                  const uint32_t aPermissions) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-#if defined(XP_UNIX)
-  if (aHonorUmask) {
-    aPermissions &= ~nsSystemInfo::gUserUmask;
-  }
-#endif
 
   RunOnBackgroundThread<Ok>(
       promise, [file = std::move(file), permissions = aPermissions]() {
