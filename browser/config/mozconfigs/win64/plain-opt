@@ -1,4 +1,3 @@
-TOOLTOOL_DIR=${topsrcdir}
 export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms.exe"
 
 RUSTC="${MOZ_FETCHES_DIR}/rustc/bin/rustc"
