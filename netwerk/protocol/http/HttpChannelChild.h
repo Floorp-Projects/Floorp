@@ -274,7 +274,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   void ReleaseMainThreadOnlyReferences();
 
  private:
-  nsCString mCachedCharset;
   nsCString mProtocolVersion;
 
   RequestHeaderTuples mClientSetRequestHeaders;

@@ -33,8 +33,6 @@ parent:
 
   async SetClassOfService(uint32_t cos);
 
-  async SetCacheTokenCachedCharset(nsCString charset);
-
   async Suspend();
   async Resume();
 

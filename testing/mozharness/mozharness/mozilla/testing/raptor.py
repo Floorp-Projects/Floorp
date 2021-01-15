@@ -494,6 +494,15 @@ class Raptor(
                     "help": "Verbose output",
                 },
             ],
+            [
+                ["--enable-marionette-trace"],
+                {
+                    "action": "store_true",
+                    "dest": "enable_marionette_trace",
+                    "default": False,
+                    "help": "Enable marionette tracing",
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)
@@ -610,6 +619,7 @@ class Raptor(
         self.android_browsers = self.firefox_android_browsers + ["chrome-m"]
         self.browsertime_visualmetrics = False
         self.browsertime_video = False
+        self.enable_marionette_trace = self.config.get("enable_marionette_trace")
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line.
@@ -848,6 +858,7 @@ class Raptor(
         # Extra arguments
         if args is not None:
             options += args
+
         if self.config.get("run_local", False):
             options.extend(["--run-local"])
         if "raptor_cmd_line_args" in self.config:
@@ -886,6 +897,8 @@ class Raptor(
             options.extend(
                 ["--setenv={}".format(i) for i in self.config.get("environment")]
             )
+        if self.config.get("enable_marionette_trace", False):
+            options.extend(["--enable-marionette-trace"])
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line

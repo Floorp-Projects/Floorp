@@ -115,6 +115,49 @@ add_task(async function() {
       expectedErrorCount
   );
 
+  info("Disable the error icon from the options panel");
+  const onOptionsSelected = toolbox.once("options-selected");
+  toolbox.selectTool("options");
+  const optionsPanel = await onOptionsSelected;
+  const errorCountButtonToggleEl = optionsPanel.panelWin.document.querySelector(
+    "input#command-button-errorcount"
+  );
+  errorCountButtonToggleEl.click();
+
+  await waitFor(() => !getErrorIcon(toolbox));
+  ok(true, "The error icon hides when disabling it from the settings panel");
+
+  info("Check that emitting new errors don't show the icon");
+  ContentTask.spawn(tab.linkedBrowser, null, function() {
+    content.console.error("Live Error1 while disabled");
+    content.console.error("Live Error2 while disabled");
+  });
+
+  expectedErrorCount = expectedErrorCount + 2;
+  // Wait until messages are displayed in the console, so the toolbar would have the time
+  // to render the error icon again.
+  await toolbox.selectTool("webconsole");
+  await waitFor(
+    () =>
+      webconsoleDoc.querySelectorAll(".message.error").length ===
+      expectedErrorCount
+  );
+  is(
+    getErrorIcon(toolbox),
+    null,
+    "The icon is still hidden even after generating new errors"
+  );
+
+  info("Re-enable the error icon");
+  await toolbox.selectTool("options");
+  errorCountButtonToggleEl.click();
+  await waitFor(() => getErrorIconCount(toolbox) === expectedErrorCount);
+  ok(
+    true,
+    "The error is displayed again, with the correct error count, after enabling it from the settings panel"
+  );
+  await toolbox.selectTool("webconsole");
+
   info(
     "Navigate to an error-less page and check that the error icon is hidden"
   );
