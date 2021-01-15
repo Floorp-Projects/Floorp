@@ -4,26 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-imply_option("--enable-release", mozilla_official)
-imply_option("--enable-release", depends_if("MOZ_AUTOMATION")(lambda x: True))
-
-option(
-    "--enable-release",
-    default=milestone.is_release_or_beta,
-    help="{Build|Do not build} with more conservative, release "
-    "engineering-oriented options.{ This may slow down builds.|}",
-)
-
-
-@depends("--enable-release")
-def developer_options(value):
-    if not value:
-        return True
-
-
-add_old_configure_assignment("DEVELOPER_OPTIONS", developer_options)
-set_config("DEVELOPER_OPTIONS", developer_options)
-
 # Code optimization
 # ==============================================================
 
