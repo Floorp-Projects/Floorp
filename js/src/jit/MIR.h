@@ -13600,17 +13600,6 @@ class MWasmReduceSimd128 : public MUnaryInstruction, public NoTypePolicy::Data {
 
 // End Wasm SIMD
 
-class MUnknownValue : public MNullaryInstruction {
- protected:
-  MUnknownValue() : MNullaryInstruction(classOpcode) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(UnknownValue)
-  TRIVIAL_NEW_WRAPPERS
-};
-
 // Used by MIR building to represent the bytecode result of an operation for
 // which an MBail was generated, to balance the basic block's MDefinition stack.
 class MUnreachableResult : public MNullaryInstruction {
