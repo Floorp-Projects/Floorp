@@ -302,9 +302,41 @@ fn dont_handle_events_when_uninitialized() {
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
 fn the_app_channel_must_be_correctly_set_if_requested() {
-    todo!()
+    let _lock = lock_test();
+
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+
+    // No appChannel must be set if nothing was provided through the config
+    // options.
+    test_reset_glean(
+        Configuration {
+            data_path: tmpname,
+            application_id: GLOBAL_APPLICATION_ID.into(),
+            upload_enabled: true,
+            max_events: None,
+            delay_ping_lifetime_io: false,
+            channel: None,
+            server_endpoint: Some("invalid-test-host".into()),
+            uploader: None,
+        },
+        ClientInfoMetrics::unknown(),
+        true,
+    );
+    assert!(core_metrics::internal_metrics::app_channel
+        .test_get_value(None)
+        .is_none());
+
+    // The appChannel must be correctly reported if a channel value
+    // was provided.
+    let _t = new_glean(None, true);
+    assert_eq!(
+        "testing",
+        core_metrics::internal_metrics::app_channel
+            .test_get_value(None)
+            .unwrap()
+    );
 }
 
 #[test]
@@ -314,43 +346,201 @@ fn ping_collection_must_happen_after_concurrently_scheduled_metrics_recordings()
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
 fn basic_metrics_should_be_cleared_when_disabling_uploading() {
-    todo!()
+    let _lock = lock_test();
+
+    let _t = new_glean(None, false);
+
+    let metric = private::StringMetric::new(CommonMetricData {
+        name: "string_metric".into(),
+        category: "telemetry".into(),
+        send_in_pings: vec!["default".into()],
+        lifetime: Lifetime::Ping,
+        disabled: false,
+        ..Default::default()
+    });
+
+    assert!(metric.test_get_value(None).is_none());
+
+    metric.set("TEST VALUE");
+    assert!(metric.test_get_value(None).is_some());
+
+    set_upload_enabled(false);
+    assert!(metric.test_get_value(None).is_none());
+    metric.set("TEST VALUE");
+    assert!(metric.test_get_value(None).is_none());
+
+    set_upload_enabled(true);
+    assert!(metric.test_get_value(None).is_none());
+    metric.set("TEST VALUE");
+    assert_eq!("TEST VALUE", metric.test_get_value(None).unwrap());
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
 fn core_metrics_should_be_cleared_and_restored_when_disabling_and_enabling_uploading() {
-    todo!()
+    let _lock = lock_test();
+
+    let _t = new_glean(None, false);
+
+    assert!(core_metrics::internal_metrics::os_version
+        .test_get_value(None)
+        .is_some());
+
+    set_upload_enabled(false);
+    assert!(core_metrics::internal_metrics::os_version
+        .test_get_value(None)
+        .is_none());
+
+    set_upload_enabled(true);
+    assert!(core_metrics::internal_metrics::os_version
+        .test_get_value(None)
+        .is_some());
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
+#[ignore] // TODO: To be done in bug 1686736.
 fn overflowing_the_task_queue_records_telemetry() {
     todo!()
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
 fn sending_deletion_ping_if_disabled_outside_of_run() {
-    todo!()
+    let _lock = lock_test();
+
+    let (s, r) = crossbeam_channel::bounded::<String>(1);
+
+    // Define a fake uploader that reports back the submission URL
+    // using a crossbeam channel.
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(url).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+
+    let cfg = Configuration {
+        data_path: tmpname.clone(),
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        channel: Some("testing".into()),
+        server_endpoint: Some("invalid-test-host".into()),
+        uploader: None,
+    };
+
+    let _t = new_glean(Some(cfg), true);
+
+    crate::block_on_dispatcher();
+
+    // Now reset Glean and disable upload: it should still send a deletion request
+    // ping even though we're just starting.
+    test_reset_glean(
+        Configuration {
+            data_path: tmpname,
+            application_id: GLOBAL_APPLICATION_ID.into(),
+            upload_enabled: false,
+            max_events: None,
+            delay_ping_lifetime_io: false,
+            channel: Some("testing".into()),
+            server_endpoint: Some("invalid-test-host".into()),
+            uploader: Some(Box::new(FakeUploader { sender: s })),
+        },
+        ClientInfoMetrics::unknown(),
+        false,
+    );
+
+    // Wait for the ping to arrive.
+    let url = r.recv().unwrap();
+    assert_eq!(url.contains("deletion-request"), true);
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
 fn no_sending_of_deletion_ping_if_unchanged_outside_of_run() {
-    todo!()
+    let _lock = lock_test();
+
+    let (s, r) = crossbeam_channel::bounded::<String>(1);
+
+    // Define a fake uploader that reports back the submission URL
+    // using a crossbeam channel.
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(url).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+
+    let cfg = Configuration {
+        data_path: tmpname.clone(),
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        channel: Some("testing".into()),
+        server_endpoint: Some("invalid-test-host".into()),
+        uploader: None,
+    };
+
+    let _t = new_glean(Some(cfg), true);
+
+    crate::block_on_dispatcher();
+
+    // Now reset Glean and keep upload enabled: no deletion-request
+    // should be sent.
+    test_reset_glean(
+        Configuration {
+            data_path: tmpname,
+            application_id: GLOBAL_APPLICATION_ID.into(),
+            upload_enabled: true,
+            max_events: None,
+            delay_ping_lifetime_io: false,
+            channel: Some("testing".into()),
+            server_endpoint: Some("invalid-test-host".into()),
+            uploader: Some(Box::new(FakeUploader { sender: s })),
+        },
+        ClientInfoMetrics::unknown(),
+        false,
+    );
+
+    crate::block_on_dispatcher();
+
+    assert_eq!(0, r.len());
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
+#[ignore] // TODO: To be done in bug 1672956.
 fn test_sending_of_startup_baseline_ping_with_application_lifetime_metric() {
     todo!()
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
+#[ignore] // TODO: To be done in bug 1672956.
 fn test_dirty_flag_is_reset_to_false() {
     todo!()
 }
@@ -478,9 +668,76 @@ fn setting_source_tags_before_initialization_should_not_crash() {
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673672.
 fn flipping_upload_enabled_respects_order_of_events() {
-    todo!()
+    // NOTES(janerik):
+    // I'm reasonably sure this test is excercising the right code paths
+    // and from the log output it does the right thing:
+    //
+    // * It fully initializes with the assumption uploadEnabled=true
+    // * It then disables upload
+    // * Then it submits the custom ping, which rightfully is ignored because uploadEnabled=false.
+    //
+    // The test passes.
+    let _lock = lock_test();
+
+    let (s, r) = crossbeam_channel::bounded::<String>(1);
+
+    // Define a fake uploader that reports back the submission URL
+    // using a crossbeam channel.
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(url).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+
+    let cfg = Configuration {
+        data_path: tmpname,
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        channel: Some("testing".into()),
+        server_endpoint: Some("invalid-test-host".into()),
+        uploader: Some(Box::new(FakeUploader { sender: s })),
+    };
+
+    // We create a ping and a metric before we initialize Glean
+    let sample_ping = PingType::new("sample-ping-1", true, false, vec![]);
+    let metric = private::StringMetric::new(CommonMetricData {
+        name: "string_metric".into(),
+        category: "telemetry".into(),
+        send_in_pings: vec!["sample-ping-1".into()],
+        lifetime: Lifetime::Ping,
+        disabled: false,
+        ..Default::default()
+    });
+
+    let _t = new_glean(Some(cfg), true);
+
+    // Glean might still be initializing. Disable upload.
+    set_upload_enabled(false);
+
+    // Set data and try to submit a custom ping.
+    metric.set("some-test-value");
+    sample_ping.submit(None);
+
+    // Wait for the ping to arrive.
+    let url = r.recv().unwrap();
+    assert_eq!(url.contains("deletion-request"), true);
 }
 
 #[test]

@@ -65,12 +65,18 @@ impl glean_core::traits::TimingDistribution for TimingDistributionMetric {
     ) -> Option<DistributionData> {
         crate::block_on_dispatcher();
 
-        let inner = self.0.read().unwrap();
-        let queried_ping_name = ping_name
-            .into()
-            .unwrap_or_else(|| &inner.meta().send_in_pings[0]);
+        crate::with_glean(|glean| {
+            // The order of taking these locks matter. Glean must be first.
+            let inner = self
+                .0
+                .read()
+                .expect("Lock poisoned for timing distribution metric on test_get_value.");
+            let queried_ping_name = ping_name
+                .into()
+                .unwrap_or_else(|| &inner.meta().send_in_pings[0]);
 
-        crate::with_glean(|glean| inner.test_get_value(glean, queried_ping_name))
+            inner.test_get_value(glean, queried_ping_name)
+        })
     }
 
     fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
