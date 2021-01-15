@@ -6,13 +6,13 @@
     "message": "eBay - Online auctions"
   },
   "searchUrl": {
-    "message": "https://rover.ebay.com/rover/1/707-53477-19255-0/1"
+    "message": "https://ebay.de/sch/"
   },
   "searchForm": {
     "message": "https://www.ebay.de/"
   },
   "searchUrlGetParams": {
-    "message": "ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.de/sch/{searchTerms}"
+    "message": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=707-53477-19255-0&kw={searchTerms}"
   },
   "suggestUrlGetParams": {
     "message": "sId=77&fmt=osr&kwd={searchTerms}"
