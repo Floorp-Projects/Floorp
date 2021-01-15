@@ -43,6 +43,15 @@ namespace IOUtils {
    */
   Promise<UTF8String> readUTF8(DOMString path, optional ReadUTF8Options opts = {});
   /**
+   * Read the UTF-8 text file located at |path| and return the contents
+   * parsed as JSON into a JS value.
+   *
+   * @param path An absolute path.
+   *
+   * @return Resolves with the contents of the file parsed as JSON.
+   */
+  Promise<any> readJSON(DOMString path, optional ReadUTF8Options opts = {});
+  /**
    * Attempts to safely write |data| to a file at |path|.
    *
    * This operation can be made atomic by specifying the |tmpFile| option. If

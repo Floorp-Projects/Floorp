@@ -64,6 +64,10 @@ class IOUtils final {
                                             const nsAString& aPath,
                                             const ReadUTF8Options& aOptions);
 
+  static already_AddRefed<Promise> ReadJSON(GlobalObject& aGlobal,
+                                            const nsAString& aPath,
+                                            const ReadUTF8Options& aOptions);
+
   static already_AddRefed<Promise> Write(GlobalObject& aGlobal,
                                          const nsAString& aPath,
                                          const Uint8Array& aData,
