@@ -81,6 +81,10 @@ toolbar[brighttext] {
   width: 16px;
 }
 
+.toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
+  width: 12px;
+}
+
 #TabsToolbar .toolbarbutton-1,
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
@@ -138,6 +142,13 @@ toolbar .toolbarbutton-1 > .toolbarbutton-icon {
   /* horizontal padding + actual icon width */
   width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
   height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+}
+
+toolbar .toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
+  /* same height as regular buttons, but narrower, and for a 12x12 image */
+  padding-inline: 2px;
+  padding-block: calc(var(--toolbarbutton-inner-padding) + (16px - 12px) / 2);
+  width: calc(2 * 2px + 12px);
 }
 
 toolbar .toolbarbutton-1 > .toolbarbutton-text {
