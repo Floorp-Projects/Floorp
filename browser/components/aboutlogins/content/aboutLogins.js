@@ -134,6 +134,10 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       dialog.show(options);
       break;
     }
+    case "RemaskPassword": {
+      window.dispatchEvent(new CustomEvent("AboutLoginsRemaskPassword"));
+      break;
+    }
   }
 });
 
