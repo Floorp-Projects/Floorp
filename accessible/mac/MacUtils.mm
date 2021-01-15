@@ -17,7 +17,7 @@ namespace a11y {
 namespace utils {
 
 // convert an array of Gecko accessibles to an NSArray of native accessibles
-NSMutableArray* ConvertToNSArray(nsTArray<Accessible*>& aArray) {
+NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<Accessible*>& aArray) {
   NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
 
   // iterate through the list, and get each native accessible.
@@ -34,7 +34,7 @@ NSMutableArray* ConvertToNSArray(nsTArray<Accessible*>& aArray) {
 
 // convert an array of Gecko proxy accessibles to an NSArray of native
 // accessibles
-NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray) {
+NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray) {
   NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
 
   // iterate through the list, and get each native accessible.

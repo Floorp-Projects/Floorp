@@ -88,21 +88,7 @@ enum CheckboxValue {
   }
 
   if ([attribute isEqualToString:NSAccessibilityLinkedUIElementsAttribute]) {
-    if (HTMLRadioButtonAccessible* radioAcc =
-            (HTMLRadioButtonAccessible*)mGeckoAccessible.AsAccessible()) {
-      NSMutableArray* radioSiblings = [NSMutableArray new];
-      Relation rel = radioAcc->RelationByType(RelationType::MEMBER_OF);
-      Accessible* tempAcc;
-      while ((tempAcc = rel.Next())) {
-        [radioSiblings addObject:GetNativeFromGeckoAccessible(tempAcc)];
-      }
-      return radioSiblings;
-    } else {
-      ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
-      nsTArray<ProxyAccessible*> accs =
-          proxy->RelationByType(RelationType::MEMBER_OF);
-      return utils::ConvertToNSArray(accs);
-    }
+    return [self getRelationsByType:RelationType::MEMBER_OF];
   }
 
   return [super accessibilityAttributeValue:attribute];
