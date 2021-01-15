@@ -10776,11 +10776,7 @@ void CodeGenerator::visitStoreHoleValueElement(LStoreHoleValueElement* lir) {
   masm.storeValue(MagicValue(JS_ELEMENTS_HOLE), element);
 }
 
-template <typename T>
-void CodeGenerator::emitStoreElementHoleT(T* lir) {
-  static_assert(std::is_same_v<T, LStoreElementHoleT>,
-                "emitStoreElementHoleT called with unexpected argument type");
-
+void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
   OutOfLineStoreElementHole* ool =
       new (alloc()) OutOfLineStoreElementHole(lir, current->mir()->strict());
   addOutOfLineCode(ool, lir->mir());
@@ -10803,22 +10799,14 @@ void CodeGenerator::emitStoreElementHoleT(T* lir) {
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
-  emitStoreElementHoleT(lir);
-}
-
-template <typename T>
-void CodeGenerator::emitStoreElementHoleV(T* lir) {
-  static_assert(std::is_same_v<T, LStoreElementHoleV>,
-                "emitStoreElementHoleV called with unexpected parameter type");
-
+void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
   OutOfLineStoreElementHole* ool =
       new (alloc()) OutOfLineStoreElementHole(lir, current->mir()->strict());
   addOutOfLineCode(ool, lir->mir());
 
   Register elements = ToRegister(lir->elements());
   Register index = ToRegister(lir->index());
-  const ValueOperand value = ToValue(lir, T::Value);
+  const ValueOperand value = ToValue(lir, LStoreElementHoleV::Value);
   Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
 
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
@@ -10832,10 +10820,6 @@ void CodeGenerator::emitStoreElementHoleV(T* lir) {
   masm.storeValue(value, BaseObjectElementIndex(elements, index));
 
   masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
-  emitStoreElementHoleV(lir);
 }
 
 void CodeGenerator::visitOutOfLineStoreElementHole(
