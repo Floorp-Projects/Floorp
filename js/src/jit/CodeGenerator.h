@@ -188,10 +188,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void visitNewArrayCallVM(LNewArray* lir);
   void visitNewObjectVMCall(LNewObject* lir);
 
-  void emitSetPropertyPolymorphic(LInstruction* lir, Register obj,
-                                  Register scratch,
-                                  const ConstantOrRegister& value);
-
   void emitConcat(LInstruction* lir, Register lhs, Register rhs,
                   Register output);
   template <typename T>

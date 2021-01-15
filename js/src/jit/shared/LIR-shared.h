@@ -5216,56 +5216,6 @@ class LGetPropertyCache
   const MGetPropertyCache* mir() const { return mir_->toGetPropertyCache(); }
 };
 
-// Emit code to store a boxed value to an object's slots if its shape matches
-// one of the shapes observed by the baseline IC, else bails out.
-class LSetPropertyPolymorphicV
-    : public LInstructionHelper<0, 1 + BOX_PIECES, 1> {
- public:
-  LIR_HEADER(SetPropertyPolymorphicV)
-
-  LSetPropertyPolymorphicV(const LAllocation& obj, const LBoxAllocation& value,
-                           const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setBoxOperand(Value, value);
-    setTemp(0, temp);
-  }
-
-  static const size_t Value = 1;
-
-  const LAllocation* obj() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
-  const MSetPropertyPolymorphic* mir() const {
-    return mir_->toSetPropertyPolymorphic();
-  }
-};
-
-// Emit code to store a typed value to an object's slots if its shape matches
-// one of the shapes observed by the baseline IC, else bails out.
-class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1> {
-  MIRType valueType_;
-
- public:
-  LIR_HEADER(SetPropertyPolymorphicT)
-
-  LSetPropertyPolymorphicT(const LAllocation& obj, const LAllocation& value,
-                           MIRType valueType, const LDefinition& temp)
-      : LInstructionHelper(classOpcode), valueType_(valueType) {
-    setOperand(0, obj);
-    setOperand(1, value);
-    setTemp(0, temp);
-  }
-
-  const LAllocation* obj() { return getOperand(0); }
-  const LAllocation* value() { return getOperand(1); }
-  const LDefinition* temp() { return getTemp(0); }
-  MIRType valueType() const { return valueType_; }
-  const MSetPropertyPolymorphic* mir() const {
-    return mir_->toSetPropertyPolymorphic();
-  }
-  const char* extraName() const { return StringFromMIRType(valueType_); }
-};
-
 class LBindNameCache : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(BindNameCache)
