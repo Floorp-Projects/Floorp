@@ -11,18 +11,17 @@
 #include "nsStringFwd.h"
 
 @class NSString;
-@class mozAccessible;
 
 namespace mozilla {
 namespace a11y {
 namespace utils {
 
 // convert an array of Gecko accessibles to an NSArray of native accessibles
-NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<Accessible*>& aArray);
+NSMutableArray* ConvertToNSArray(nsTArray<Accessible*>& aArray);
 
 // convert an array of Gecko proxy accessibles to an NSArray of native
 // accessibles
-NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray);
+NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray);
 
 /**
  * Get a localized string from the string bundle.
