@@ -39,9 +39,9 @@ function apzScriptInjector(name) {
   return function(childWin) {
     childWin._ACTIVE_TEST_NAME = name;
     injectScript('/tests/SimpleTest/paint_listener.js', childWin)()
-    .then(injectScript('apz_test_utils.js', childWin))
-    .then(injectScript('apz_test_native_event_utils.js', childWin))
-    .then(injectScript('touch_action_helpers.js', childWin));
+    .then(injectScript('../apz_test_utils.js', childWin))
+    .then(injectScript('../apz_test_native_event_utils.js', childWin))
+    .then(injectScript('../touch_action_helpers.js', childWin));
   };
 }
 
@@ -82,7 +82,7 @@ var testnames = [
 var subtests = [];
 for (var name of testnames) {
   subtests.push({
-    'file': name + '.html',
+    'file': 'wpt/' + name + '.html',
     'prefs': apz_touch_action_prefs,
     'onload': apzScriptInjector(name),
   });

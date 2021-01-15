@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
     <script type="text/javascript">
       SimpleTest.waitForExplicitFinish();
       function startTest() {
-        runTestInNewWindow("pointerevent_pointerout_pen-manual.html");
+        runTestInNewWindow("wpt/pointerevent_pointerout_pen-manual.html");
       }
       function executeTest(int_win) {
         sendMouseEvent(int_win, "target0", "mousedown",   {inputSource:MouseEvent.MOZ_SOURCE_PEN});
