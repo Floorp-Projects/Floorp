@@ -1962,6 +1962,9 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
     let isAll = this._rangePicker.value == "all";
     if (isAll) {
       this._pagesSet.clear();
+      for (let i = 1; i <= this._numPages; i++) {
+        this._pagesSet.add(i);
+      }
       if (!this._rangeInput.checkValidity()) {
         this._rangeInput.setCustomValidity("");
         this._rangeInput.value = "";
@@ -2166,19 +2169,8 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       this._numPages = totalPages;
       this._rangeInput.disabled = false;
 
-      let prevPages = Array.from(this._pagesSet);
       this.updatePageRange();
-      if (
-        prevPages.length != this._pagesSet.size ||
-        !prevPages.every(page => this._pagesSet.has(page))
-      ) {
-        // If the calculated set of pages has changed then we need to dispatch
-        // a new pageRanges setting :(
-        // Ideally this would be resolved in the settings code since it should
-        // only happen for the "N-" case where pages N through the end of the
-        // document are in the range.
-        this.dispatchPageRange(false);
-      }
+      this.dispatchPageRange(false);
 
       return;
     }
