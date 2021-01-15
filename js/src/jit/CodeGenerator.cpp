@@ -6265,21 +6265,6 @@ void CodeGenerator::visitGetDynamicName(LGetDynamicName* lir) {
   bailoutIfFalseBool(ReturnReg, lir->snapshot());
 }
 
-void CodeGenerator::visitCallDirectEval(LCallDirectEval* lir) {
-  Register envChain = ToRegister(lir->getEnvironmentChain());
-  Register string = ToRegister(lir->getString());
-
-  pushArg(ImmPtr(lir->mir()->pc()));
-  pushArg(string);
-  pushArg(ToValue(lir, LCallDirectEval::NewTarget));
-  pushArg(ImmGCPtr(current->mir()->info().script()));
-  pushArg(envChain);
-
-  using Fn = bool (*)(JSContext*, HandleObject, HandleScript, HandleValue,
-                      HandleString, jsbytecode*, MutableHandleValue);
-  callVM<Fn, DirectEvalStringFromIon>(lir);
-}
-
 // Out-of-line path to report over-recursed error and fail.
 class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* lir_;

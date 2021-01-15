@@ -26,12 +26,6 @@ extern MOZ_MUST_USE bool IndirectEval(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool DirectEval(JSContext* cx, HandleValue v,
                                     MutableHandleValue vp);
 
-// Performs a direct eval called from Ion code.
-extern MOZ_MUST_USE bool DirectEvalStringFromIon(
-    JSContext* cx, HandleObject scopeObj, HandleScript callerScript,
-    HandleValue newTargetValue, HandleString str, jsbytecode* pc,
-    MutableHandleValue vp);
-
 // True iff fun is a built-in eval function.
 extern bool IsAnyBuiltinEval(JSFunction* fun);
 
