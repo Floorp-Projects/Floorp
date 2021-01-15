@@ -6,7 +6,7 @@ package mozilla.components.feature.recentlyclosed
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
+import java.util.concurrent.Executors
 
 /**
  * [Middleware] implementation for handling [RecentlyClosedAction]s and syncing the closed tabs in
@@ -31,7 +32,7 @@ class RecentlyClosedMiddleware(
     private val maxSavedTabs: Int,
     private val engine: Engine,
     private val storage: Lazy<Storage> = lazy { RecentlyClosedTabsStorage(applicationContext, engine = engine) },
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private val scope: CoroutineScope = CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 ) : Middleware<BrowserState, BrowserAction> {
 
     @Suppress("ComplexMethod")
