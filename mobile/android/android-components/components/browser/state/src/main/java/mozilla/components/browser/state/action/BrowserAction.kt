@@ -598,7 +598,7 @@ sealed class WebExtensionAction : BrowserAction() {
         WebExtensionAction()
 
     /**
-     * Updates the [WebExtensionState.enabled] flag.
+     * Updates the [WebExtensionState.allowedInPrivateBrowsing] flag.
      */
     data class UpdateWebExtensionAllowedInPrivateBrowsingAction(
         val extensionId: String,
