@@ -6235,36 +6235,6 @@ void CodeGenerator::visitUnreachableResultT(LUnreachableResultT* lir) {
   masm.assumeUnreachable("must be unreachable");
 }
 
-void CodeGenerator::visitGetDynamicName(LGetDynamicName* lir) {
-  Register envChain = ToRegister(lir->getEnvironmentChain());
-  Register name = ToRegister(lir->getName());
-  Register temp1 = ToRegister(lir->temp1());
-  Register temp2 = ToRegister(lir->temp2());
-  Register temp3 = ToRegister(lir->temp3());
-
-  masm.loadJSContext(temp3);
-
-  /* Make space for the outparam. */
-  masm.adjustStack(-int32_t(sizeof(Value)));
-  masm.moveStackPtrTo(temp2);
-
-  using Fn = bool (*)(JSContext * cx, JSObject * scopeChain, JSString * str,
-                      Value * vp);
-  masm.setupUnalignedABICall(temp1);
-  masm.passABIArg(temp3);
-  masm.passABIArg(envChain);
-  masm.passABIArg(name);
-  masm.passABIArg(temp2);
-  masm.callWithABI<Fn, GetDynamicNamePure>();
-
-  const ValueOperand out = ToOutValue(lir);
-
-  masm.loadValue(Address(masm.getStackPointer(), 0), out);
-  masm.adjustStack(sizeof(Value));
-
-  bailoutIfFalseBool(ReturnReg, lir->snapshot());
-}
-
 // Out-of-line path to report over-recursed error and fail.
 class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* lir_;

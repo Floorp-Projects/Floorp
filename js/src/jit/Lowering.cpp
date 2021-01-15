@@ -550,22 +550,6 @@ void LIRGenerator::visitAssertRecoveredOnBailout(
   MOZ_CRASH("AssertRecoveredOnBailout nodes are always recovered on bailouts.");
 }
 
-void LIRGenerator::visitGetDynamicName(MGetDynamicName* ins) {
-  MDefinition* envChain = ins->getEnvironmentChain();
-  MOZ_ASSERT(envChain->type() == MIRType::Object);
-
-  MDefinition* name = ins->getName();
-  MOZ_ASSERT(name->type() == MIRType::String);
-
-  LGetDynamicName* lir = new (alloc())
-      LGetDynamicName(useRegisterAtStart(envChain), useRegisterAtStart(name),
-                      tempFixed(CallTempReg0), tempFixed(CallTempReg1),
-                      tempFixed(CallTempReg2));
-
-  assignSnapshot(lir, ins->bailoutKind());
-  defineReturn(lir, ins);
-}
-
 static JSOp ReorderComparison(JSOp op, MDefinition** lhsp, MDefinition** rhsp) {
   MDefinition* lhs = *lhsp;
   MDefinition* rhs = *rhsp;
