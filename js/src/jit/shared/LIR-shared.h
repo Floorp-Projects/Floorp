@@ -159,32 +159,15 @@ class LInteger64 : public LInstructionHelper<INT64_PIECES, 0, 0> {
 
 // Constant pointer.
 class LPointer : public LInstructionHelper<1, 0, 0> {
- public:
-  enum Kind { GC_THING, NON_GC_THING };
-
- private:
-  void* ptr_;
-  Kind kind_;
+  gc::Cell* ptr_;
 
  public:
   LIR_HEADER(Pointer)
 
   explicit LPointer(gc::Cell* ptr)
-      : LInstructionHelper(classOpcode), ptr_(ptr), kind_(GC_THING) {}
+      : LInstructionHelper(classOpcode), ptr_(ptr) {}
 
-  LPointer(void* ptr, Kind kind)
-      : LInstructionHelper(classOpcode), ptr_(ptr), kind_(kind) {}
-
-  void* ptr() const { return ptr_; }
-  Kind kind() const { return kind_; }
-  const char* extraName() const {
-    return kind_ == GC_THING ? "GC_THING" : "NON_GC_THING";
-  }
-
-  gc::Cell* gcptr() const {
-    MOZ_ASSERT(kind() == GC_THING);
-    return (gc::Cell*)ptr_;
-  }
+  gc::Cell* gcptr() const { return ptr_; }
 };
 
 // Constant double.
