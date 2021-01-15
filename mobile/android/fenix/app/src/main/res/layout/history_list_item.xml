@@ -13,8 +13,10 @@
         android:id="@+id/delete_button"
         style="@style/DestructiveButton"
         android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
         android:text="@string/history_delete_all"
-        android:visibility="gone" />
+        android:visibility="gone"
+        tools:visibility="visible" />
 
     <include layout="@layout/recently_closed_nav_item" />
 
