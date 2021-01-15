@@ -3830,11 +3830,7 @@ void CodeGenerator::visitInteger64(LInteger64* lir) {
 }
 
 void CodeGenerator::visitPointer(LPointer* lir) {
-  if (lir->kind() == LPointer::GC_THING) {
-    masm.movePtr(ImmGCPtr(lir->gcptr()), ToRegister(lir->output()));
-  } else {
-    masm.movePtr(ImmPtr(lir->ptr()), ToRegister(lir->output()));
-  }
+  masm.movePtr(ImmGCPtr(lir->gcptr()), ToRegister(lir->output()));
 }
 
 void CodeGenerator::visitNurseryObject(LNurseryObject* lir) {
