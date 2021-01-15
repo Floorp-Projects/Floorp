@@ -28,10 +28,7 @@ add_task(async function() {
   );
   await wait;
 
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#cookies-tab")
-  );
+  await clickOnSidebarTab(document, "cookies");
 
   info("Checking the SameSite property");
   const expectedValues = [

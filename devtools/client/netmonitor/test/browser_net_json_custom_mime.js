@@ -55,10 +55,7 @@ add_task(async function() {
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
   await Promise.all([wait, waitForPropsView]);
 
   testJsonSectionInResponseTab();

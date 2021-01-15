@@ -89,10 +89,7 @@ add_task(async function() {
     if (testcase.visibleOnSecurityInfo) {
       // click security panel to lazy load the securityState
       await waitUntil(() => document.querySelector("#security-tab"));
-      await EventUtils.sendMouseEvent(
-        { type: "click" },
-        document.querySelector("#security-tab")
-      );
+      await clickOnSidebarTab(document, "security");
       await waitUntil(() =>
         document.querySelector("#security-panel .security-info-value")
       );
