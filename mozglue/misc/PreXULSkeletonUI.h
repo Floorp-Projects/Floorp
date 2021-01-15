@@ -55,6 +55,7 @@ struct ThemeColors {
   uint32_t chromeContentDividerColor;
   uint32_t tabLineColor;
   uint32_t urlbarColor;
+  uint32_t urlbarBorderColor;
   uint32_t animationColor;
 };
 
