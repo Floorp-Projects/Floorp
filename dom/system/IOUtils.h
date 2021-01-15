@@ -70,7 +70,7 @@ class IOUtils final {
 
   static already_AddRefed<Promise> WriteUTF8(GlobalObject& aGlobal,
                                              const nsAString& aPath,
-                                             const nsAString& aString,
+                                             const nsACString& aString,
                                              const WriteOptions& aOptions);
 
   static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
