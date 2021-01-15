@@ -594,13 +594,6 @@ var PlacesProvider = {
   _batchProcessingDepth: 0,
 
   /**
-   * A flag that tracks whether onFrecencyChanged was notified while a batch
-   * operation was in progress, to tell us whether to take special action after
-   * the batch operation completes.
-   **/
-  _batchCalledFrecencyChanged: false,
-
-  /**
    * Set this to change the maximum number of links the provider will provide.
    */
   maxNumLinks: HISTORY_RESULTS_LIMIT,
@@ -720,10 +713,6 @@ var PlacesProvider = {
 
   onEndUpdateBatch() {
     this._batchProcessingDepth -= 1;
-    if (this._batchProcessingDepth == 0 && this._batchCalledFrecencyChanged) {
-      this.onManyFrecenciesChanged();
-      this._batchCalledFrecencyChanged = false;
-    }
   },
 
   handlePlacesEvents(aEvents) {
@@ -764,35 +753,6 @@ var PlacesProvider = {
 
   onClearHistory() {
     this._callObservers("onClearHistory");
-  },
-
-  /**
-   * Called by the history service.
-   */
-  onFrecencyChanged: function PlacesProvider_onFrecencyChanged(
-    aURI,
-    aNewFrecency,
-    aGUID,
-    aHidden,
-    aLastVisitDate
-  ) {
-    // If something is doing a batch update of history entries we don't want
-    // to do lots of work for each record. So we just track the fact we need
-    // to call onManyFrecenciesChanged() once the batch is complete.
-    if (this._batchProcessingDepth > 0) {
-      this._batchCalledFrecencyChanged = true;
-      return;
-    }
-    // The implementation of the query in getLinks excludes hidden and
-    // unvisited pages, so it's important to exclude them here, too.
-    if (!aHidden && aLastVisitDate) {
-      this._callObservers("onLinkChanged", {
-        url: aURI.spec,
-        frecency: aNewFrecency,
-        lastVisitDate: aLastVisitDate,
-        type: "history",
-      });
-    }
   },
 
   /**

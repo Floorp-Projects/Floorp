@@ -40,8 +40,6 @@ add_task(async function test_remove_many() {
       onResultCalled: false,
       // `true` once `onDeleteVisits` has been called for this page
       onDeleteVisitsCalled: false,
-      // `true` once `onFrecencyChangedCalled` has been called for this page
-      onFrecencyChangedCalled: false,
       // `true` once `onDeleteURI` has been called for this page
       onDeleteURICalled: false,
     };
@@ -84,15 +82,6 @@ add_task(async function test_remove_many() {
     onEndUpdateBatch() {},
     onVisits(aVisits) {
       Assert.ok(false, "Unexpected call to onVisits " + aVisits.length);
-    },
-    onFrecencyChanged(aURI) {
-      let origin = pages.find(x => x.uri.spec == aURI.spec);
-      Assert.ok(origin);
-      Assert.ok(
-        origin.hasBookmark,
-        "Observing onFrecencyChanged on a page with a bookmark"
-      );
-      origin.onFrecencyChangedCalled = true;
     },
     onManyFrecenciesChanged() {
       onManyFrecenciesChanged = true;

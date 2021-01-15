@@ -58,10 +58,6 @@ add_task(async function test_insertMany() {
           PlacesUtils.history.removeObserver(obs);
           resolve();
         };
-        obs.onFrecencyChanged = () => {
-          PlacesUtils.history.removeObserver(obs);
-          reject();
-        };
         PlacesUtils.history.addObserver(obs);
       });
     }
