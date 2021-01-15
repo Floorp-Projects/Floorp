@@ -2108,6 +2108,26 @@ class LMinMaxF : public LMinMaxBase {
       : LMinMaxBase(classOpcode, first, second) {}
 };
 
+class LMinMaxArrayI : public LInstructionHelper<1, 1, 3> {
+ public:
+  LIR_HEADER(MinMaxArrayI);
+  LMinMaxArrayI(const LAllocation& array, const LDefinition& temp0,
+                const LDefinition& temp1, const LDefinition& temp2)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, array);
+    setTemp(0, temp0);
+    setTemp(1, temp1);
+    setTemp(2, temp2);
+  }
+
+  const LAllocation* array() { return getOperand(0); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+
+  bool isMax() const { return mir_->toMinMaxArray()->isMax(); }
+};
+
 // Negative of an integer
 class LNegI : public LInstructionHelper<1, 1, 0> {
  public:
