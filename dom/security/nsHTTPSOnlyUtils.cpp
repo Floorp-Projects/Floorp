@@ -66,7 +66,7 @@ void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
   // if we are not dealing with a top-level load, then there is nothing to do
   // here.
   if (loadInfo->GetExternalContentPolicyType() !=
-      nsIContentPolicy::TYPE_DOCUMENT) {
+      ExtContentPolicy::TYPE_DOCUMENT) {
     return;
   }
 
@@ -133,7 +133,7 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
 
   // All subresources of an exempt triggering principal are also exempt
   if (aLoadInfo->GetExternalContentPolicyType() !=
-      nsIContentPolicy::TYPE_DOCUMENT) {
+      ExtContentPolicy::TYPE_DOCUMENT) {
     if (!aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
         TestIfPrincipalIsExempt(aLoadInfo->TriggeringPrincipal())) {
       return false;
@@ -270,8 +270,8 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
   }
 
   // if it's not a top-level load then there is nothing to here.
-  nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
-  if (type != nsIContentPolicy::TYPE_DOCUMENT) {
+  ExtContentPolicyType type = loadInfo->GetExternalContentPolicyType();
+  if (type != ExtContentPolicy::TYPE_DOCUMENT) {
     return;
   }
 
