@@ -55,6 +55,28 @@ function test_sendMouseEventOptionals() {
                        false, pressure, source, false);
 }
 
+function test_sendMouseEvent4thButton() {
+  const x = 1, y = 2, button = 3, clickCount = 1, modifiers = 0;
+
+  window.addEventListener("mousedown", evt => {
+    is(evt.buttons, 2 ** button, "check button");
+    SimpleTest.executeSoon(next);
+  }, { once: true });
+
+  utils.sendMouseEvent("mousedown", x, y, button, clickCount, modifiers);
+}
+
+function test_sendMouseEvent5thButton() {
+  const x = 1, y = 2, button = 4, clickCount = 1, modifiers = 0;
+
+  window.addEventListener("mousedown", evt => {
+    is(evt.buttons, 2 ** button, "check button");
+    SimpleTest.executeSoon(next);
+  }, { once: true });
+
+  utils.sendMouseEvent("mousedown", x, y, button, clickCount, modifiers);
+}
+
 function test_getUnanimatedComputedStyle() {
   SpecialPowers.pushPrefEnv(
     {
@@ -77,6 +99,8 @@ function test_setDynamicToolbarMaxHeight() {
 var tests = [
   test_sendMouseEventDefaults,
   test_sendMouseEventOptionals,
+  test_sendMouseEvent4thButton,
+  test_sendMouseEvent5thButton,
   test_getUnanimatedComputedStyle,
   test_setDynamicToolbarMaxHeight
 ];
