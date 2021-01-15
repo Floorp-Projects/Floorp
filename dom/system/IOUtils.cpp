@@ -261,7 +261,7 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
 /* static */
 already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
                                              const nsAString& aPath,
-                                             const nsAString& aString,
+                                             const nsACString& aString,
                                              const WriteOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
@@ -271,13 +271,6 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  nsCString utf8Str;
-  if (!CopyUTF16toUTF8(aString, utf8Str, fallible)) {
-    promise->MaybeRejectWithOperationError(
-        "Out of memory: Could not allocate buffer while writing to file");
-    return promise.forget();
-  }
-
   auto opts = InternalWriteOpts::FromBinding(aOptions);
   if (opts.isErr()) {
     RejectJSPromise(promise, opts.unwrapErr());
@@ -286,8 +279,8 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
 
   RunOnBackgroundThread<uint32_t>(
       promise,
-      [file = std::move(file), utf8Str = std::move(utf8Str),
-       opts = opts.unwrap()]() { return WriteUTF8Sync(file, utf8Str, opts); });
+      [file = std::move(file), str = nsCString(aString),
+       opts = opts.unwrap()]() { return WriteUTF8Sync(file, str, opts); });
 
   return promise.forget();
 }
