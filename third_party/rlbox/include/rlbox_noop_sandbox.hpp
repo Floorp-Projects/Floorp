@@ -48,8 +48,11 @@ public:
   using T_LongLongType = long long;
   using T_LongType = long;
   using T_IntType = int;
-  using T_PointerType = uintptr_t;
+  using T_PointerType = void*;
   using T_ShortType = short;
+  // no-op sandbox can transfer buffers as there is no sandboxings
+  // Thus transfer is a noop
+  using can_grant_deny_access = void;
 
 private:
   RLBOX_SHARED_LOCK(callback_mutex);
@@ -88,13 +91,13 @@ protected:
   template<typename T>
   inline void* impl_get_unsandboxed_pointer(T_PointerType p) const
   {
-    return reinterpret_cast<void*>(static_cast<uintptr_t>(p));
+    return p;
   }
 
   template<typename T>
   inline T_PointerType impl_get_sandboxed_pointer(const void* p) const
   {
-    return static_cast<T_PointerType>(reinterpret_cast<uintptr_t>(p));
+    return const_cast<T_PointerType>(p);
   }
 
   template<typename T>
@@ -104,7 +107,7 @@ protected:
     rlbox_noop_sandbox* (*/* expensive_sandbox_finder */)(
       const void* example_unsandboxed_ptr))
   {
-    return reinterpret_cast<void*>(static_cast<uintptr_t>(p));
+    return p;
   }
 
   template<typename T>
@@ -114,19 +117,16 @@ protected:
     rlbox_noop_sandbox* (*/* expensive_sandbox_finder */)(
       const void* example_unsandboxed_ptr))
   {
-    return static_cast<T_PointerType>(reinterpret_cast<uintptr_t>(p));
+    return const_cast<T_PointerType>(p);
   }
 
   inline T_PointerType impl_malloc_in_sandbox(size_t size)
   {
     void* p = malloc(size);
-    return reinterpret_cast<uintptr_t>(p);
+    return p;
   }
 
-  inline void impl_free_in_sandbox(T_PointerType p)
-  {
-    free(reinterpret_cast<void*>(p));
-  }
+  inline void impl_free_in_sandbox(T_PointerType p) { free(p); }
 
   static inline bool impl_is_in_same_sandbox(const void*, const void*)
   {
@@ -224,6 +224,22 @@ protected:
         break;
       }
     }
+  }
+
+  template<typename T>
+  inline T* impl_grant_access(T* src, size_t num, bool& success)
+  {
+    RLBOX_UNUSED(num);
+    success = true;
+    return src;
+  }
+
+  template<typename T>
+  inline T* impl_deny_access(T* src, size_t num, bool& success)
+  {
+    RLBOX_UNUSED(num);
+    success = true;
+    return src;
   }
 };
 

@@ -48,8 +48,9 @@ private:
   // callback and the actual callback running The interceptor is responsible for
   // wrapping and converting callback arguments, returns etc. to their
   // appropriate representations
-  using T_Interceptor = decltype(
-    callback_detail::interceptor_type_helper<T_Sbx>(std::declval<T>()));
+  using T_Interceptor =
+    decltype(callback_detail::interceptor_type_helper<T_Sbx>(
+      std::declval<T>()));
   T_Interceptor callback_interceptor;
 
   // The trampoline is the internal sandbox representation of the callback

@@ -454,7 +454,7 @@ public:
   // So that we can support code patterns such as the below
   // tainted<T*> a;
   // a->UNSAFE_unverified();
-  inline auto operator-> () const
+  inline auto operator->() const
   {
     static_assert(std::is_pointer_v<T>,
                   "Operator -> only supported for pointer types");
@@ -464,7 +464,7 @@ public:
     return reinterpret_cast<T_RetWrap*>(ret);
   }
 
-  inline auto operator-> ()
+  inline auto operator->()
   {
     using T_Ret = tainted_volatile<std::remove_pointer_t<T>, T_Sbx>*;
     rlbox_detail_forward_to_const(operator->, T_Ret);
@@ -1142,8 +1142,14 @@ private:
     return ret;
   }
 
-  inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value() const
-    noexcept
+  inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value()
+    const noexcept
+  {
+    return data;
+  };
+
+  inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value(
+    rlbox_sandbox<T_Sbx>& sandbox) const noexcept
   {
     return data;
   };
@@ -1154,6 +1160,13 @@ private:
   }
 
   inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value() noexcept
+  {
+    rlbox_detail_forward_to_const(get_raw_sandbox_value,
+                                  std::remove_cv_t<T_SandboxedType>);
+  };
+
+  inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value(
+    rlbox_sandbox<T_Sbx>& sandbox) noexcept
   {
     rlbox_detail_forward_to_const(get_raw_sandbox_value,
                                   std::remove_cv_t<T_SandboxedType>);
