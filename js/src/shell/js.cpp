@@ -10825,6 +10825,10 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     ArrayBufferObject::supportLargeBuffers = true;
   }
 
+  if (op.getBoolOption("disable-bailout-loop-check")) {
+    jit::JitOptions.disableBailoutLoopCheck = true;
+  }
+
 #if defined(JS_CODEGEN_ARM)
   if (const char* str = op.getStringOption("arm-hwcap")) {
     jit::ParseARMHwCapFlags(str);
@@ -11529,6 +11533,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addStringOption(
           '\0', "ion-osr", "on/off",
           "On-Stack Replacement (default: on, off to disable)") ||
+      !op.addBoolOption('\0', "disable-bailout-loop-check",
+                        "Turn off bailout loop check") ||
       !op.addStringOption(
           '\0', "ion-limit-script-size", "on/off",
           "Don't compile very large scripts (default: on, off to disable)") ||
