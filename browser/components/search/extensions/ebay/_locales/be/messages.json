@@ -6,13 +6,13 @@
     "message": "eBay - Online auctions"
   },
   "searchUrl": {
-    "message": "https://rover.ebay.com/rover/1/1553-53471-19255-0/1"
+    "message": "https://www.befr.ebay.be/sch/"
   },
   "searchForm": {
     "message": "https://www.befr.ebay.be/"
   },
   "searchUrlGetParams": {
-    "message": "ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.befr.ebay.be/sch/{searchTerms}"
+    "message": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=1553-53471-19255-0&kw={searchTerms}"
   },
   "suggestUrlGetParams": {
     "message": "sId=23&fmt=osr&kwd={searchTerms}"
