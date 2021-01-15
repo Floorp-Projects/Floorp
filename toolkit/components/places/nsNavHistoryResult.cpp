@@ -2257,6 +2257,18 @@ nsresult nsNavHistoryQueryResultNode::OnTitleChanged(
   return ChangeTitles(aURI, newTitle, true, onlyOneEntry);
 }
 
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnFrecencyChanged(nsIURI* aURI,
+                                               int32_t aNewFrecency,
+                                               const nsACString& aGUID,
+                                               bool aHidden,
+                                               PRTime aLastVisitDate) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnManyFrecenciesChanged() { return NS_OK; }
+
 /**
  * Here, we can always live update by just deleting all occurrences of
  * the given URI.
@@ -4210,6 +4222,16 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
     }
   }
 }
+
+NS_IMETHODIMP
+nsNavHistoryResult::OnFrecencyChanged(nsIURI* aURI, int32_t aNewFrecency,
+                                      const nsACString& aGUID, bool aHidden,
+                                      PRTime aLastVisitDate) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryResult::OnManyFrecenciesChanged() { return NS_OK; }
 
 NS_IMETHODIMP
 nsNavHistoryResult::OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,

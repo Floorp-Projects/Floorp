@@ -843,9 +843,8 @@ var Bookmarks = Object.freeze({
             item.url.href != updatedItem.url.href
           ) {
             // ...though we don't wait for the calculation.
-            updateFrecency(db, [item.url, updatedItem.url]).catch(
-              Cu.reportError
-            );
+            updateFrecency(db, [item.url]).catch(Cu.reportError);
+            updateFrecency(db, [updatedItem.url]).catch(Cu.reportError);
           }
 
           // Notify onItemChanged to listeners.
@@ -1378,7 +1377,7 @@ var Bookmarks = Object.freeze({
         // We don't wait for the frecency calculation.
         if (urls && urls.length) {
           await PlacesUtils.keywords.eraseEverything();
-          updateFrecency(db, urls).catch(Cu.reportError);
+          updateFrecency(db, urls, true).catch(Cu.reportError);
         }
       }
     );
@@ -2231,7 +2230,7 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
       });
 
       // We don't wait for the frecency calculation.
-      updateFrecency(db, urls).catch(Cu.reportError);
+      updateFrecency(db, urls, true).catch(Cu.reportError);
 
       return items;
     }
@@ -2739,7 +2738,7 @@ function removeBookmarks(items, options) {
 
       if (urls.length) {
         await PlacesUtils.keywords.removeFromURLsIfNotBookmarked(urls);
-        updateFrecency(db, urls).catch(Cu.reportError);
+        updateFrecency(db, urls, urls.length > 1).catch(Cu.reportError);
       }
     }
   );
@@ -3035,15 +3034,25 @@ function validateBookmarkObject(name, input, behavior) {
  *        the Sqlite.jsm connection handle.
  * @param urls
  *        the array of URLs to update.
+ * @param [optional] collapseNotifications
+ *        whether we can send just one onManyFrecenciesChanged
+ *        notification instead of sending one notification for every URL.
  */
-var updateFrecency = async function(db, urls) {
+var updateFrecency = async function(db, urls, collapseNotifications = false) {
   let hrefs = urls.map(url => url.href);
+  let frecencyClause = "CALCULATE_FRECENCY(id)";
+  if (!collapseNotifications) {
+    frecencyClause =
+      "NOTIFY_FRECENCY(" +
+      frecencyClause +
+      ", url, guid, hidden, last_visit_date)";
+  }
   // We just use the hashes, since updating a few additional urls won't hurt.
   for (let chunk of PlacesUtils.chunkArray(hrefs, db.variableLimit)) {
     await db.execute(
       `UPDATE moz_places
        SET hidden = (url_hash BETWEEN hash("place", "prefix_lo") AND hash("place", "prefix_hi")),
-           frecency = CALCULATE_FRECENCY(id)
+           frecency = ${frecencyClause}
        WHERE url_hash IN (${sqlBindPlaceholders(chunk, "hash(", ")")})`,
       chunk
     );
@@ -3052,7 +3061,10 @@ var updateFrecency = async function(db, urls) {
   // Trigger frecency updates for all affected origins.
   await db.executeCached(`DELETE FROM moz_updateoriginsupdate_temp`);
 
-  PlacesObservers.notifyListeners([new PlacesRanking()]);
+  if (collapseNotifications) {
+    let observers = PlacesUtils.history.getObservers();
+    notify(observers, "onManyFrecenciesChanged");
+  }
 };
 
 /**

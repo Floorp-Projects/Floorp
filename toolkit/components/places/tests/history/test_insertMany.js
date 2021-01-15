@@ -51,6 +51,21 @@ add_task(async function test_insertMany() {
   };
 
   let inserter = async function(name, filter, useCallbacks) {
+    function promiseManyFrecenciesChanged() {
+      return new Promise((resolve, reject) => {
+        let obs = new NavHistoryObserver();
+        obs.onManyFrecenciesChanged = () => {
+          PlacesUtils.history.removeObserver(obs);
+          resolve();
+        };
+        obs.onFrecencyChanged = () => {
+          PlacesUtils.history.removeObserver(obs);
+          reject();
+        };
+        PlacesUtils.history.addObserver(obs);
+      });
+    }
+
     info(name);
     info(`filter: ${filter}`);
     info(`useCallbacks: ${useCallbacks}`);
@@ -112,13 +127,9 @@ add_task(async function test_insertMany() {
         "onError callback was called for each bad url"
       );
     } else {
-      const promiseRankingChanged = PlacesTestUtils.waitForNotification(
-        "pages-rank-changed",
-        () => true,
-        "places"
-      );
+      let promiseManyFrecencies = promiseManyFrecenciesChanged();
       result = await PlacesUtils.history.insertMany(pageInfos);
-      await promiseRankingChanged;
+      await promiseManyFrecencies;
     }
 
     Assert.equal(undefined, result, "insertMany returned undefined");

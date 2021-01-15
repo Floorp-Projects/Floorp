@@ -346,6 +346,27 @@ class nsNavHistory final : public nsSupportsWeakReference,
   void UpdateDaysOfHistory(PRTime visitTime);
 
   /**
+   * Fires onFrecencyChanged event to nsINavHistoryService observers
+   */
+  void NotifyFrecencyChanged(const nsACString& aSpec, int32_t aNewFrecency,
+                             const nsACString& aGUID, bool aHidden,
+                             PRTime aLastVisitDate);
+
+  /**
+   * Fires onManyFrecenciesChanged event to nsINavHistoryService observers
+   */
+  void NotifyManyFrecenciesChanged();
+
+  /**
+   * Posts a runnable to the main thread that calls NotifyFrecencyChanged.
+   */
+  void DispatchFrecencyChangedNotification(const nsACString& aSpec,
+                                           int32_t aNewFrecency,
+                                           const nsACString& aGUID,
+                                           bool aHidden,
+                                           PRTime aLastVisitDate) const;
+
+  /**
    * Returns true if frecency is currently being decayed.
    *
    * @return True if frecency is being decayed, false if not.
@@ -379,7 +400,7 @@ class nsNavHistory final : public nsSupportsWeakReference,
       const RefPtr<nsNavHistoryQuery>& aQuery,
       nsNavHistoryQueryOptions* aOptions);
 
-  void DecayFrecencyCompleted();
+  void DecayFrecencyCompleted(uint16_t reason);
 
  private:
   ~nsNavHistory();

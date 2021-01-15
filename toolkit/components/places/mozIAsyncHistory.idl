@@ -152,6 +152,9 @@ interface mozIAsyncHistory : nsISupports
    * @param [optional] aCallback
    *        A mozIVisitInfoCallback object which consists of callbacks to be
    *        notified for successful and/or failed changes.
+   * @param [optional] aGroupNotifications
+   *        If set to true, the implementation will attempt to avoid using
+   *        per-place/visit notifications as much as possible.
    *
    * @throws NS_ERROR_INVALID_ARG
    *         - Passing in NULL for aPlaceInfo.
@@ -165,7 +168,8 @@ interface mozIAsyncHistory : nsISupports
    */
   [implicit_jscontext]
   void updatePlaces(in jsval aPlaceInfo,
-                    [optional] in mozIVisitInfoCallback aCallback);
+                    [optional] in mozIVisitInfoCallback aCallback,
+                    [optional] in bool aGroupNotifications);
 
   /**
    * Checks if a given URI has been visited.
