@@ -1492,11 +1492,6 @@ class LTestVAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 3> {
     setTemp(2, temp2);
   }
 
-  const char* extraName() const {
-    return mir()->operandMightEmulateUndefined() ? "MightEmulateUndefined"
-                                                 : nullptr;
-  }
-
   static const size_t Input = 0;
 
   const LDefinition* tempFloat() { return getTemp(0); }

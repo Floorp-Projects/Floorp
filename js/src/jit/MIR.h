@@ -1878,12 +1878,8 @@ static inline BranchDirection NegateBranchDirection(BranchDirection dir) {
 // Tests if the input instruction evaluates to true or false, and jumps to the
 // start of a corresponding basic block.
 class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
-  // TODO(no-TI): remove here and other MIR instructions.
-  bool operandMightEmulateUndefined_;
-
   MTest(MDefinition* ins, MBasicBlock* trueBranch, MBasicBlock* falseBranch)
-      : MAryControlInstruction(classOpcode),
-        operandMightEmulateUndefined_(true) {
+      : MAryControlInstruction(classOpcode) {
     initOperand(0, ins);
     setSuccessor(0, trueBranch);
     setSuccessor(1, falseBranch);
@@ -1915,10 +1911,6 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
   MDefinition* foldsTo(TempAllocator& alloc) override;
   void filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
                               bool* filtersUndefined, bool* filtersNull);
-
-  bool operandMightEmulateUndefined() const {
-    return operandMightEmulateUndefined_;
-  }
 
 #ifdef DEBUG
   bool isConsistentFloat32Use(MUse* use) const override { return true; }
