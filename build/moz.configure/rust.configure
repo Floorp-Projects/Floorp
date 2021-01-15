@@ -14,7 +14,7 @@ rustc = check_prog(
     "_RUSTC",
     ["rustc"],
     what="rustc",
-    paths=toolchain_search_path,
+    paths=rust_search_path,
     input="RUSTC",
     allow_missing=True,
 )
@@ -22,7 +22,7 @@ cargo = check_prog(
     "_CARGO",
     ["cargo"],
     what="cargo",
-    paths=toolchain_search_path,
+    paths=rust_search_path,
     input="CARGO",
     allow_missing=True,
 )
@@ -512,7 +512,7 @@ option(env="RUSTDOC", nargs=1, help="Path to the rustdoc program")
 rustdoc = check_prog(
     "RUSTDOC",
     ["rustdoc"],
-    paths=toolchain_search_path,
+    paths=rust_search_path,
     input="RUSTDOC",
     allow_missing=True,
 )
