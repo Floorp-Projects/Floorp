@@ -114,10 +114,6 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 // Get ARIA role
 - (nsStaticAtom*)ARIARole;
 
-// Get array of related mozAccessibles
-- (NSArray<mozAccessible*>*)getRelationsByType:
-    (mozilla::a11y::RelationType)relationType;
-
 #pragma mark - mozAccessible protocol / widget
 
 // override
@@ -214,12 +210,6 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 
 // override
 - (NSNumber*)moxElementBusy;
-
-// override
-- (NSArray*)moxLinkedUIElements;
-
-// override
-- (NSArray*)moxARIAControls;
 
 // override
 - (id)moxEditableAncestor;
