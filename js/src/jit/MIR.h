@@ -4546,6 +4546,34 @@ class MMinMax : public MBinaryInstruction, public ArithPolicy::Data {
   ALLOW_CLONE(MMinMax)
 };
 
+class MMinMaxArray : public MUnaryInstruction, public SingleObjectPolicy::Data {
+  bool isMax_;
+
+  MMinMaxArray(MDefinition* array, MIRType type, bool isMax)
+      : MUnaryInstruction(classOpcode, array), isMax_(isMax) {
+    MOZ_ASSERT(type == MIRType::Int32);
+    setResultType(type);
+  }
+
+ public:
+  INSTRUCTION_HEADER(MinMaxArray)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, array))
+
+  bool isMax() const { return isMax_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isMinMaxArray() || ins->toMinMaxArray()->isMax() != isMax()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::Element);
+  }
+};
+
 class MAbs : public MUnaryInstruction, public ArithPolicy::Data {
   bool implicitTruncate_;
 
