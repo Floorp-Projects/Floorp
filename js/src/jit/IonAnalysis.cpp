@@ -2944,7 +2944,6 @@ static bool IsResumableMIRType(MIRType type) {
       return true;
 
     case MIRType::MagicHole:
-    case MIRType::ObjectOrNull:
     case MIRType::None:
     case MIRType::Slots:
     case MIRType::Elements:

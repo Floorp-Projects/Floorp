@@ -67,16 +67,6 @@ void LIRGenerator::visitBox(MBox* box) {
 void LIRGenerator::visitUnbox(MUnbox* unbox) {
   MDefinition* inner = unbox->getOperand(0);
 
-  if (inner->type() == MIRType::ObjectOrNull) {
-    LUnboxObjectOrNull* lir =
-        new (alloc()) LUnboxObjectOrNull(useRegisterAtStart(inner));
-    if (unbox->fallible()) {
-      assignSnapshot(lir, unbox->bailoutKind());
-    }
-    defineReuseInput(lir, unbox, 0);
-    return;
-  }
-
   // An unbox on mips reads in a type tag (either in memory or a register) and
   // a payload. Unlike most instructions consuming a box, we ask for the type
   // second, so that the result can re-use the first input.
