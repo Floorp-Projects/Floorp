@@ -1796,13 +1796,14 @@ void SharedDataContainer::dumpFields(js::JSONPrinter& json) {
     js::JSONPrinter& json;
 
     void operator()(SingleSharedData& ptr) {
-      json.formatProperty("0", "u8[%zu]", ptr->immutableDataLength());
+      json.formatProperty("ScriptIndex(0)", "u8[%zu]",
+                          ptr->immutableDataLength());
     }
 
     void operator()(SharedDataVector& vec) {
-      char index[16];
+      char index[64];
       for (size_t i = 0; i < vec.length(); i++) {
-        SprintfLiteral(index, "%zu", i);
+        SprintfLiteral(index, "ScriptIndex(%zu)", i);
         if (vec[i]) {
           json.formatProperty(index, "u8[%zu]", vec[i]->immutableDataLength());
         } else {
@@ -1812,9 +1813,9 @@ void SharedDataContainer::dumpFields(js::JSONPrinter& json) {
     }
 
     void operator()(SharedDataMap& map) {
-      char index[16];
+      char index[64];
       for (auto iter = map.iter(); !iter.done(); iter.next()) {
-        SprintfLiteral(index, "%u", iter.get().key().index);
+        SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
         json.formatProperty(index, "u8[%zu]",
                             iter.get().value()->immutableDataLength());
       }
