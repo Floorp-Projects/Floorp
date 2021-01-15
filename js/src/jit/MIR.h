@@ -2962,17 +2962,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
 
   JSOp jsop() const { return jsop_; }
   bool operandsAreNeverNaN() const { return operandsAreNeverNaN_; }
-  AliasSet getAliasSet() const override {
-    // Strict equality is never effectful.
-    if (jsop_ == JSOp::StrictEq || jsop_ == JSOp::StrictNe) {
-      return AliasSet::None();
-    }
-    if (compareType_ == Compare_Unknown) {
-      return AliasSet::Store(AliasSet::Any);
-    }
-    MOZ_ASSERT(compareType_ <= Compare_RefOrNull);
-    return AliasSet::None();
-  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 
 #ifdef JS_JITSPEW
   void printOpcode(GenericPrinter& out) const override;

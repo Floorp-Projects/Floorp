@@ -158,11 +158,6 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     }
   }
 
-  // Box inputs to get value
-  if (compare->compareType() == MCompare::Compare_Unknown) {
-    return BoxInputsPolicy::staticAdjustInputs(alloc, def);
-  }
-
   auto replaceOperand = [&](size_t index, auto* replace) {
     def->block()->insertBefore(def, replace);
     def->replaceOperand(index, replace);

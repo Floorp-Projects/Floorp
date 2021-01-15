@@ -943,15 +943,6 @@ void LIRGenerator::visitCompare(MCompare* comp) {
     return;
   }
 
-  // Unknown/unspecialized compare use a VM call.
-  if (comp->compareType() == MCompare::Compare_Unknown) {
-    LCompareVM* lir =
-        new (alloc()) LCompareVM(useBoxAtStart(left), useBoxAtStart(right));
-    defineReturn(lir, comp);
-    assignSafepoint(lir, comp);
-    return;
-  }
-
   // Sniff out if the output of this compare is used only for a branching.
   // If it is, then we will emit an LCompare*AndBranch instruction in place
   // of this compare and any test that uses this compare. Thus, we can

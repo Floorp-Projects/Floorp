@@ -2968,8 +2968,6 @@ MIRType MCompare::inputType() {
     case Compare_BigInt_Double:
     case Compare_BigInt_String:
       return MIRType::BigInt;
-    case Compare_Unknown:
-      return MIRType::Value;
     default:
       MOZ_CRASH("No known conversion");
   }
@@ -3633,10 +3631,6 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
   // to eliminate this case.
 
   if (!IsStrictEqualityOp(jsop())) {
-    return false;
-  }
-
-  if (compareType_ == Compare_Unknown) {
     return false;
   }
 
