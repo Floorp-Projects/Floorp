@@ -455,10 +455,16 @@ bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
   }
 
   if (!JitOptions.isSmallFunction(targetScript)) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: Length is %u (maximum %u)",
-            unsigned(targetScript->length()),
-            unsigned(JitOptions.smallFunctionMaxBytecodeLength));
-    return false;
+    if (!targetScript->isInlinableLargeFunction()) {
+      JitSpew(JitSpew_WarpTrialInlining, "SKIP: Length is %u (maximum %u)",
+              unsigned(targetScript->length()),
+              unsigned(JitOptions.smallFunctionMaxBytecodeLength));
+      return false;
+    }
+
+    JitSpew(JitSpew_WarpTrialInlining,
+            "INFO: Ignored length (%u) of InlinableLargeFunction",
+            unsigned(targetScript->length()));
   }
 
   if (TooManyFormalArguments(target->nargs())) {
