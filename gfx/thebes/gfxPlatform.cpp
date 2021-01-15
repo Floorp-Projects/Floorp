@@ -2780,8 +2780,7 @@ void gfxPlatform::InitWebRenderConfig() {
     }
   }
   if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {
-    // XXX relax win version to windows 8.
-    if (IsWin10OrLater() && UseWebRender() && gfxVars::UseWebRenderANGLE()) {
+    if (UseWebRender() && gfxVars::UseWebRenderANGLE()) {
       gfxVars::SetUseWebRenderFlipSequentialWin(true);
     }
   }
