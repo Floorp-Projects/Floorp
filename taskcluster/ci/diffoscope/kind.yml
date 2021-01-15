@@ -80,6 +80,22 @@ jobs:
         fail-on-diff: true
         run-on-projects: ['mozilla-central']  # Do not run linux32 on autoland, Bug 1599197
 
+    reproducible-linux64:
+        symbol: Linux64
+        new: build-linux64-reproduced/opt
+        original: build-linux64-shippable/opt
+        fail-on-diff: true
+        run-on-projects: ['mozilla-central']
+        pre-diff-commands: ['rm {a,b}/firefox/lib*wasm.so']  # Bug 1612035
+
+    reproducible-linux64-generated-files:
+        tier: 1
+        symbol: Linux64g
+        artifact: target.generated-files.tar.gz
+        new: build-linux64-reproduced/opt
+        original: build-linux64-shippable/opt
+        fail-on-diff: true
+        run-on-projects: ['mozilla-central']
 
 # Make a task for each diff we might want. The following are just examples,
 # Both original and new can point to builds from the full set of tasks or
