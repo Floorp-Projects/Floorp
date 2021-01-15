@@ -3248,33 +3248,19 @@ void LIRGenerator::visitArrayPopShift(MArrayPopShift* ins) {
 
 void LIRGenerator::visitArrayPush(MArrayPush* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->value()->type() == MIRType::Value);
 
   LUse object = useRegister(ins->object());
 
   LDefinition spectreTemp =
       BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
 
-  switch (ins->value()->type()) {
-    case MIRType::Value: {
-      LArrayPushV* lir = new (alloc())
-          LArrayPushV(object, useBox(ins->value()), temp(), spectreTemp);
-      // We will bailout before pushing if the length would overflow INT32_MAX.
-      assignSnapshot(lir, ins->bailoutKind());
-      define(lir, ins);
-      assignSafepoint(lir, ins);
-      break;
-    }
-
-    default: {
-      const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-      LArrayPushT* lir =
-          new (alloc()) LArrayPushT(object, value, temp(), spectreTemp);
-      assignSnapshot(lir, ins->bailoutKind());
-      define(lir, ins);
-      assignSafepoint(lir, ins);
-      break;
-    }
-  }
+  auto* lir = new (alloc())
+      LArrayPushV(object, useBox(ins->value()), temp(), spectreTemp);
+  // We will bailout before pushing if the length would overflow INT32_MAX.
+  assignSnapshot(lir, ins->bailoutKind());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitArraySlice(MArraySlice* ins) {

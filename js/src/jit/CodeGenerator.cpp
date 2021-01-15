@@ -10795,21 +10795,6 @@ void CodeGenerator::visitArrayPushV(LArrayPushV* lir) {
   emitArrayPush(lir, obj, value, elementsTemp, length, spectreTemp);
 }
 
-void CodeGenerator::visitArrayPushT(LArrayPushT* lir) {
-  Register obj = ToRegister(lir->object());
-  Register elementsTemp = ToRegister(lir->temp());
-  Register length = ToRegister(lir->output());
-  mozilla::Maybe<ConstantOrRegister> value;
-  if (lir->value()->isConstant()) {
-    value.emplace(ConstantOrRegister(lir->value()->toConstant()->toJSValue()));
-  } else {
-    value.emplace(TypedOrValueRegister(lir->mir()->value()->type(),
-                                       ToAnyRegister(lir->value())));
-  }
-  Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
-  emitArrayPush(lir, obj, value.ref(), elementsTemp, length, spectreTemp);
-}
-
 void CodeGenerator::visitArraySlice(LArraySlice* lir) {
   Register object = ToRegister(lir->object());
   Register begin = ToRegister(lir->begin());
