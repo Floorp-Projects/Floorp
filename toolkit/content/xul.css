@@ -278,10 +278,10 @@ tooltip {
       -moz-window-opacity: 0;
       -moz-window-transform: translateY(-70px);
     }
-  }
 
-  panel[type="arrow"][side="bottom"]:not([animate="false"]) {
-    -moz-window-transform: translateY(70px);
+    panel[type="arrow"][side="bottom"]:not([animate="false"]) {
+      -moz-window-transform: translateY(70px);
+    }
   }
 
   /* [animate] is here only so that this rule has greater specificity than the
