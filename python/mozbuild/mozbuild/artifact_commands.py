@@ -25,7 +25,6 @@ from mozbuild.base import (
     MachCommandConditions as conditions,
 )
 from mozbuild.util import ensureParentDir
-import mozpack.path as mozpath
 import mozversioncontrol
 
 
@@ -397,18 +396,9 @@ class PackageFrontend(MachCommandBase):
                 )
                 return 1
             from taskgraph.optimize.strategies import IndexSearch
-            from taskgraph.generator import load_tasks_for_kind
+            from mozbuild.toolchains import toolchain_task_definitions
 
-            params = {"level": six.ensure_text(os.environ.get("MOZ_SCM_LEVEL", "3"))}
-
-            root_dir = mozpath.join(self.topsrcdir, "taskcluster/ci")
-            toolchains = load_tasks_for_kind(params, "toolchain", root_dir=root_dir)
-
-            aliases = {}
-            for t in toolchains.values():
-                alias = t.attributes.get("toolchain-alias")
-                if alias:
-                    aliases["toolchain-{}".format(alias)] = t.task["metadata"]["name"]
+            tasks = toolchain_task_definitions()
 
             for b in from_build:
                 user_value = b
@@ -416,7 +406,7 @@ class PackageFrontend(MachCommandBase):
                 if not b.startswith("toolchain-"):
                     b = "toolchain-{}".format(b)
 
-                task = toolchains.get(aliases.get(b, b))
+                task = tasks.get(b)
                 if not task:
                     self.log(
                         logging.ERROR,

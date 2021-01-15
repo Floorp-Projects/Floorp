@@ -239,18 +239,116 @@ def original_path():
     return environ["PATH"].split(os.pathsep)
 
 
+option(
+    "--enable-bootstrap",
+    when=developer_options,
+    help="Automatically update/bootstrap some toolchains when they are present but out of date",
+)
+
+
+@depends("--enable-bootstrap", when=developer_options)
+def bootstrap(value):
+    if value:
+        return True
+
+
+@depends(host, bootstrap_search_path_order, when=bootstrap)
+@imports("os")
+@imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
+@imports(_from="__builtin__", _import="Exception")
+def bootstrap_toolchain_tasks(host, order):
+    prefix = {
+        ("x86_64", "GNU", "Linux"): "linux64",
+        ("x86_64", "OSX", "Darwin"): "macosx64",
+        ("x86_64", "WINNT", "WINNT"): "win64",
+    }.get((host.cpu, host.os, host.kernel))
+    if prefix:
+        try:
+            return namespace(prefix=prefix, tasks=toolchain_task_definitions())
+        except Exception:
+            return None
+
+
 @template
 def bootstrap_search_path(*path_parts, **kwargs):
     when = kwargs.pop("when", None)
     if kwargs:
         configure_error("bootstrap_search_path only takes `when` as keyword argument")
 
-    @depends(bootstrap_search_path_order, original_path, toolchains_base_dir, when=when)
-    def bootstrap_search_path(order, original_path, toolchains_base_dir):
-        path = [os.path.join(toolchains_base_dir, *path_parts)]
+    @depends(
+        bootstrap,
+        bootstrap_search_path_order,
+        original_path,
+        toolchains_base_dir,
+        bootstrap_toolchain_tasks,
+        shell,
+        check_build_environment,
+        when=when,
+    )
+    @imports("os")
+    @imports("subprocess")
+    @imports(_from="mozbuild.util", _import="ensureParentDir")
+    @imports(_from="__builtin__", _import="open")
+    @imports(_from="__builtin__", _import="Exception")
+    def bootstrap_search_path(
+        bootstrap, order, original_path, toolchains_base_dir, tasks, shell, build_env
+    ):
+        def try_bootstrap():
+            label = "toolchain-{}-{}".format(
+                tasks.prefix, path_parts[0].replace("_", "-")
+            )
+            task = tasks.tasks.get(label)
+            if not task:
+                return
+            task_index = task.optimization.get("index-search")
+            if not task_index:
+                return
+            task_index = task_index[0].split(".")[-1]
+            artifact = task.attributes["toolchain-artifact"]
+            # `mach artifact toolchain` doesn't support authentication for
+            # private artifacts.
+            if not artifact.startswith("public/"):
+                return
+            index_file = os.path.join(toolchains_base_dir, "indices", path_parts[0])
+            try:
+                with open(index_file) as fh:
+                    index = fh.read().strip()
+            except Exception:
+                index = None
+            if index == task_index:
+                return
+            log.info(
+                "Updating bootstrapped toolchain in %s",
+                os.path.join(toolchains_base_dir, path_parts[0]),
+            )
+            subprocess.run(
+                [
+                    shell,
+                    os.path.join(build_env.topsrcdir, "mach"),
+                    "--log-no-times",
+                    "artifact",
+                    "toolchain",
+                    "--from-build",
+                    label,
+                ],
+                cwd=toolchains_base_dir,
+                check=True,
+            )
+            ensureParentDir(index_file)
+            with open(index_file, "w") as fh:
+                fh.write(task_index)
+
+        path = os.path.join(toolchains_base_dir, *path_parts)
+        # Only bootstrap toolchains that have been bootstrapped at least once.
+        if bootstrap and os.path.exists(path):
+            try:
+                try_bootstrap()
+            except Exception as e:
+                log.error("%s", e)
+                die("If you can't fix the above, retry with --disable-bootstrap.")
         if order == "prepend":
-            return path + original_path
-        return original_path + path
+            return [path] + original_path
+        return original_path + [path]
 
     return bootstrap_search_path
 
