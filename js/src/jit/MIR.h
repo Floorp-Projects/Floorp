@@ -7006,22 +7006,16 @@ struct LambdaFunctionInfo {
   js::BaseScript* baseScript;
   js::FunctionFlags flags;
   uint16_t nargs;
-  bool singletonType;
 
   LambdaFunctionInfo(JSFunction* fun, BaseScript* baseScript,
-                     FunctionFlags flags, uint16_t nargs, bool singletonType)
-      : fun_(fun),
-        baseScript(baseScript),
-        flags(flags),
-        nargs(nargs),
-        singletonType(singletonType) {}
+                     FunctionFlags flags, uint16_t nargs)
+      : fun_(fun), baseScript(baseScript), flags(flags), nargs(nargs) {}
 
   LambdaFunctionInfo(const LambdaFunctionInfo& other)
       : fun_(static_cast<JSFunction*>(other.fun_)),
         baseScript(other.baseScript),
         flags(other.flags),
-        nargs(other.nargs),
-        singletonType(other.singletonType) {}
+        nargs(other.nargs) {}
 
   // Be careful when calling this off-thread. Don't call any JSFunction*
   // methods that depend on script/lazyScript - this can race with
