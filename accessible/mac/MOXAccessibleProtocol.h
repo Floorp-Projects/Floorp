@@ -127,12 +127,6 @@
 // AXElementBusy
 - (NSNumber* _Nullable)moxElementBusy;
 
-// AXLinkedUIElements
-- (NSArray* _Nullable)moxLinkedUIElements;
-
-// AXARIAControls
-- (NSArray* _Nullable)moxARIAControls;
-
 // AXDOMIdentifier
 - (NSString* _Nullable)moxDOMIdentifier;
 
