@@ -200,11 +200,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   template <typename T>
   void emitLoadElementT(LLoadElementT* lir, const T& source);
 
-  template <typename T>
-  void emitStoreElementHoleT(T* lir);
-  template <typename T>
-  void emitStoreElementHoleV(T* lir);
-
   void emitArrayPush(LInstruction* lir, Register obj,
                      const ConstantOrRegister& value, Register elementsTemp,
                      Register length, Register spectreTemp);
