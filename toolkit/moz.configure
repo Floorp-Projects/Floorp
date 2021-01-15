@@ -2076,12 +2076,12 @@ with only_when(requires_wasm_sandboxing & compile_environment):
         help="Path to wasi sysroot for wasm sandboxing",
     )
 
-    @depends("--with-wasi-sysroot", mozbuild_state_path)
+    @depends("--with-wasi-sysroot", toolchains_base_dir)
     @imports("os")
-    def wasi_sysroot(wasi_sysroot, mozbuild_state_path):
+    def wasi_sysroot(wasi_sysroot, toolchains_base_dir):
         if not wasi_sysroot:
             sysroot = os.path.join(
-                mozbuild_state_path, "wasi-sysroot", "share", "wasi-sysroot"
+                toolchains_base_dir, "wasi-sysroot", "share", "wasi-sysroot"
             )
             if os.path.isdir(sysroot):
                 return sysroot
@@ -2326,6 +2326,7 @@ check_prog(
     "PDBSTR",
     ["pdbstr.exe"],
     allow_missing=True,
+    paths=bootstrap_search_path("pdbstr", when=compile_environment & target_is_windows),
     when=compile_environment & target_is_windows,
 )
 
@@ -2341,6 +2342,9 @@ def allow_missing_winchecksec(automation, c_compiler):
 check_prog(
     "WINCHECKSEC",
     ["winchecksec.exe", "winchecksec"],
+    paths=bootstrap_search_path(
+        "winchecksec", when=compile_environment & target_is_windows
+    ),
     allow_missing=allow_missing_winchecksec,
     when=compile_environment & target_is_windows,
 )

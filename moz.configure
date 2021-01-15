@@ -240,8 +240,12 @@ def original_path():
 
 
 @template
-def bootstrap_search_path(*path_parts):
-    @depends(bootstrap_search_path_order, original_path, toolchains_base_dir)
+def bootstrap_search_path(*path_parts, **kwargs):
+    when = kwargs.pop("when", None)
+    if kwargs:
+        configure_error("bootstrap_search_path only takes `when` as keyword argument")
+
+    @depends(bootstrap_search_path_order, original_path, toolchains_base_dir, when=when)
     def bootstrap_search_path(order, original_path, toolchains_base_dir):
         path = [os.path.join(toolchains_base_dir, *path_parts)]
         if order == "prepend":
@@ -251,13 +255,17 @@ def bootstrap_search_path(*path_parts):
     return bootstrap_search_path
 
 
+@depends(target, host)
+def want_wine(target, host):
+    return target.kernel == "WINNT" and host.kernel != "WINNT"
+
+
 wine = check_prog(
     "WINE",
     ["wine64", "wine"],
     allow_missing=True,
-    when=depends(target, host)(
-        lambda t, h: t.kernel == "WINNT" and h.kernel != "WINNT"
-    ),
+    when=want_wine,
+    paths=bootstrap_search_path("wine", "bin", when=want_wine),
 )
 check_prog("WGET", ("wget",), allow_missing=True)
 
