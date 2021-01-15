@@ -347,6 +347,7 @@ impl SharedTextures {
         };
 
         self.alpha8_linear.clear(texture_dealloc_cb);
+        self.alpha8_glyphs.clear(texture_dealloc_cb);
         self.alpha16_linear.clear(texture_dealloc_cb);
         self.color8_linear.clear(texture_dealloc_cb);
         self.color8_nearest.clear(texture_dealloc_cb);
@@ -804,6 +805,7 @@ impl TextureCache {
         // eviction at the start of the frame frees up a texture, that is then subsequently
         // used during the frame, we avoid doing a free/alloc for it.
         self.shared_textures.alpha8_linear.release_empty_textures(callback);
+        self.shared_textures.alpha8_glyphs.release_empty_textures(callback);
         self.shared_textures.alpha16_linear.release_empty_textures(callback);
         self.shared_textures.color8_linear.release_empty_textures(callback);
         self.shared_textures.color8_nearest.release_empty_textures(callback);
@@ -811,6 +813,8 @@ impl TextureCache {
 
         profile.set(profiler::TEXTURE_CACHE_A8_PIXELS, self.shared_textures.alpha8_linear.allocated_space());
         profile.set(profiler::TEXTURE_CACHE_A8_TEXTURES, self.shared_textures.alpha8_linear.allocated_textures());
+        profile.set(profiler::TEXTURE_CACHE_A8_GLYPHS_PIXELS, self.shared_textures.alpha8_glyphs.allocated_space());
+        profile.set(profiler::TEXTURE_CACHE_A8_GLYPHS_TEXTURES, self.shared_textures.alpha8_glyphs.allocated_textures());
         profile.set(profiler::TEXTURE_CACHE_A16_PIXELS, self.shared_textures.alpha16_linear.allocated_space());
         profile.set(profiler::TEXTURE_CACHE_A16_TEXTURES, self.shared_textures.alpha16_linear.allocated_textures());
         profile.set(profiler::TEXTURE_CACHE_RGBA8_LINEAR_PIXELS, self.shared_textures.color8_linear.allocated_space());
