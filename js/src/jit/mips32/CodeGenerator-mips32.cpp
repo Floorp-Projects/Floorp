@@ -96,28 +96,6 @@ void CodeGenerator::visitCompareB(LCompareB* lir) {
   masm.bind(&done);
 }
 
-void CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir) {
-  MCompare* mir = lir->cmpMir();
-  const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
-  const LAllocation* rhs = lir->rhs();
-
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
-
-  MBasicBlock* mirNotBoolean =
-      (mir->jsop() == JSOp::StrictEq) ? lir->ifFalse() : lir->ifTrue();
-  branchToBlock(lhs.typeReg(), ImmType(JSVAL_TYPE_BOOLEAN), mirNotBoolean,
-                Assembler::NotEqual);
-
-  Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
-  if (rhs->isConstant()) {
-    emitBranch(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()), cond,
-               lir->ifTrue(), lir->ifFalse());
-  } else {
-    emitBranch(lhs.payloadReg(), ToRegister(rhs), cond, lir->ifTrue(),
-               lir->ifFalse());
-  }
-}
-
 void CodeGenerator::visitCompareI64(LCompareI64* lir) {
   MCompare* mir = lir->mir();
   MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
