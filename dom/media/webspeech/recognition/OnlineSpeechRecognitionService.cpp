@@ -320,9 +320,7 @@ void OnlineSpeechRecognitionService::DoSTT() {
   nsSecurityFlags secFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
   nsLoadFlags loadFlags =
       nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-  nsContentPolicyType contentPolicy =
-      nsContentUtils::InternalContentPolicyTypeToExternal(
-          nsIContentPolicy::TYPE_OTHER);
+  nsContentPolicyType contentPolicy = nsIContentPolicy::TYPE_OTHER;
 
   nsPIDOMWindowInner* window = mRecognition->GetOwner();
   if (NS_WARN_IF(!window)) {
