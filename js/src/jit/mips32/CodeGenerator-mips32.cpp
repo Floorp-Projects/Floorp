@@ -68,34 +68,6 @@ void CodeGeneratorMIPS::splitTagForTest(const ValueOperand& value,
   MOZ_ASSERT(value.typeReg() == tag);
 }
 
-void CodeGenerator::visitCompareB(LCompareB* lir) {
-  MCompare* mir = lir->mir();
-
-  const ValueOperand lhs = ToValue(lir, LCompareB::Lhs);
-  const LAllocation* rhs = lir->rhs();
-  const Register output = ToRegister(lir->output());
-
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
-  Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
-
-  Label notBoolean, done;
-  masm.branchTestBoolean(Assembler::NotEqual, lhs, &notBoolean);
-  {
-    if (rhs->isConstant()) {
-      masm.cmp32Set(cond, lhs.payloadReg(),
-                    Imm32(rhs->toConstant()->toBoolean()), output);
-    } else {
-      masm.cmp32Set(cond, lhs.payloadReg(), ToRegister(rhs), output);
-    }
-    masm.jump(&done);
-  }
-
-  masm.bind(&notBoolean);
-  { masm.move32(Imm32(mir->jsop() == JSOp::StrictNe), output); }
-
-  masm.bind(&done);
-}
-
 void CodeGenerator::visitCompareI64(LCompareI64* lir) {
   MCompare* mir = lir->mir();
   MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||

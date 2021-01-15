@@ -128,28 +128,6 @@ void CodeGeneratorMIPS64::splitTagForTest(const ValueOperand& value,
   masm.splitTag(value.valueReg(), tag);
 }
 
-void CodeGenerator::visitCompareB(LCompareB* lir) {
-  MCompare* mir = lir->mir();
-
-  const ValueOperand lhs = ToValue(lir, LCompareB::Lhs);
-  const LAllocation* rhs = lir->rhs();
-  const Register output = ToRegister(lir->output());
-
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
-  Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
-
-  // Load boxed boolean in ScratchRegister.
-  if (rhs->isConstant()) {
-    masm.moveValue(rhs->toConstant()->toJSValue(),
-                   ValueOperand(ScratchRegister));
-  } else {
-    masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchRegister);
-  }
-
-  // Perform the comparison.
-  masm.cmpPtrSet(cond, lhs.valueReg(), ScratchRegister, output);
-}
-
 void CodeGenerator::visitCompareI64(LCompareI64* lir) {
   MCompare* mir = lir->mir();
   MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
