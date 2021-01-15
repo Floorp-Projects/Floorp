@@ -214,11 +214,8 @@ TRRLoadInfo::SetSendCSPViolationEvents(bool aValue) {
 
 NS_IMETHODIMP
 TRRLoadInfo::GetExternalContentPolicyType(nsContentPolicyType* aResult) {
-  // We have to use nsContentPolicyType because ExtContentPolicyType is not
-  // visible from xpidl.
-  *aResult = static_cast<nsContentPolicyType>(
-      nsContentUtils::InternalContentPolicyTypeToExternal(
-          mInternalContentPolicyType));
+  *aResult = nsContentUtils::InternalContentPolicyTypeToExternal(
+      mInternalContentPolicyType);
   return NS_OK;
 }
 

@@ -238,7 +238,7 @@ void mozilla::dom::SecFetch::AddSecFetchMode(nsIHttpChannel* aHTTPChannel) {
 
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
   uint32_t securityMode = loadInfo->GetSecurityMode();
-  ExtContentPolicyType externalType = loadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType externalType = loadInfo->GetExternalContentPolicyType();
 
   if (securityMode ==
           nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT ||
@@ -258,12 +258,12 @@ void mozilla::dom::SecFetch::AddSecFetchMode(nsIHttpChannel* aHTTPChannel) {
         "unhandled security mode");
   }
 
-  if (externalType == ExtContentPolicy::TYPE_DOCUMENT ||
-      externalType == ExtContentPolicy::TYPE_SUBDOCUMENT ||
-      externalType == ExtContentPolicy::TYPE_REFRESH ||
-      externalType == ExtContentPolicy::TYPE_OBJECT) {
+  if (externalType == nsIContentPolicy::TYPE_DOCUMENT ||
+      externalType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
+      externalType == nsIContentPolicy::TYPE_REFRESH ||
+      externalType == nsIContentPolicy::TYPE_OBJECT) {
     mode = "navigate"_ns;
-  } else if (externalType == ExtContentPolicy::TYPE_WEBSOCKET) {
+  } else if (externalType == nsIContentPolicy::TYPE_WEBSOCKET) {
     mode = "websocket"_ns;
   }
 
@@ -296,11 +296,11 @@ void mozilla::dom::SecFetch::AddSecFetchSite(nsIHttpChannel* aHTTPChannel) {
 
 void mozilla::dom::SecFetch::AddSecFetchUser(nsIHttpChannel* aHTTPChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
-  ExtContentPolicyType externalType = loadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType externalType = loadInfo->GetExternalContentPolicyType();
 
   // sec-fetch-user only applies to loads of type document or subdocument
-  if (externalType != ExtContentPolicy::TYPE_DOCUMENT &&
-      externalType != ExtContentPolicy::TYPE_SUBDOCUMENT) {
+  if (externalType != nsIContentPolicy::TYPE_DOCUMENT &&
+      externalType != nsIContentPolicy::TYPE_SUBDOCUMENT) {
     return;
   }
 

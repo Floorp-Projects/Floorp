@@ -331,7 +331,7 @@ static bool IsTopLevelDoc(BrowsingContext* aBrowsingContext,
   MOZ_ASSERT(aLoadInfo);
 
   if (aLoadInfo->GetExternalContentPolicyType() !=
-      ExtContentPolicy::TYPE_DOCUMENT) {
+      nsIContentPolicy::TYPE_DOCUMENT) {
     return false;
   }
 
@@ -10467,10 +10467,10 @@ nsresult nsDocShell::OpenRedirectedChannel(nsDocShellLoadState* aLoadState) {
 
   LoadInfo* li = static_cast<LoadInfo*>(loadInfo.get());
   if (loadInfo->GetExternalContentPolicyType() ==
-      ExtContentPolicy::TYPE_DOCUMENT) {
+      nsIContentPolicy::TYPE_DOCUMENT) {
     li->UpdateBrowsingContextID(mBrowsingContext->Id());
   } else if (loadInfo->GetExternalContentPolicyType() ==
-             ExtContentPolicy::TYPE_SUBDOCUMENT) {
+             nsIContentPolicy::TYPE_SUBDOCUMENT) {
     li->UpdateFrameBrowsingContextID(mBrowsingContext->Id());
   }
   // TODO: more attributes need to be updated on the LoadInfo (bug 1561706)
