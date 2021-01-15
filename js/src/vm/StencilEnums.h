@@ -314,6 +314,10 @@ enum class MutableScriptFlagsEnum : uint32_t {
 
   // A guard inserted by phi specialization failed.
   HadSpeculativePhiBailout = 1 << 26,
+
+  // Large self-hosted methods that should be inlined anyway by the JIT for
+  // performance reasons can be marked with this flag.
+  IsInlinableLargeFunction = 1 << 27,
 };
 
 }  // namespace js

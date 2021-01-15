@@ -4540,6 +4540,11 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
   // Reset the mutable flags to request arguments analysis as needed.
   dst->resetArgsUsageAnalysis();
 
+  // Maintain this flag when cloning self-hosted functions.
+  if (src->isInlinableLargeFunction()) {
+    dst->setIsInlinableLargeFunction();
+  }
+
   // Clone the PrivateScriptData into dst
   if (!PrivateScriptData::Clone(cx, src, dst, scopes)) {
     return nullptr;
