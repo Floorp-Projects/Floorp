@@ -211,7 +211,7 @@ function computeButton(aEvent) {
   return aEvent.type == "contextmenu" ? 2 : 0;
 }
 
-function sendMouseEvent(aEvent, aTarget, aWindow) {
+async function sendMouseEvent(aEvent, aTarget, aWindow) {
   if (
     ![
       "click",
@@ -234,6 +234,10 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
 
   if (typeof aTarget == "string") {
     aTarget = aWindow.document.getElementById(aTarget);
+  }
+
+  if (aEvent.type === "click" && this.AccessibilityUtils) {
+    await this.AccessibilityUtils.assertCanBeClicked(aTarget);
   }
 
   var event = aWindow.document.createEvent("MouseEvent");
