@@ -3525,8 +3525,6 @@ bool jit::AddKeepAliveInstructions(MIRGraph& graph) {
 
       MDefinition* ownerObject;
       switch (ins->op()) {
-        case MDefinition::Opcode::ConstantElements:
-          continue;
         case MDefinition::Opcode::Elements:
         case MDefinition::Opcode::ArrayBufferViewElements:
           MOZ_ASSERT(ins->numOperands() == 1);
