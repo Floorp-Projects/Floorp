@@ -1082,10 +1082,10 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
       -moz-window-opacity: 0;
       -moz-window-transform: translateY(-70px);
     }
-  }
 
-  #BMB_bookmarksPopup[side="bottom"]:not([animate="false"]) {
-    -moz-window-transform: translateY(70px);
+    #BMB_bookmarksPopup[side="bottom"]:not([animate="false"]) {
+      -moz-window-transform: translateY(70px);
+    }
   }
 
   /* [animate] is here only so that this rule has greater specificity than the
