@@ -248,7 +248,7 @@ nsresult InterceptedHttpChannel::RedirectForResponseURL(
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
       CloneLoadInfoForRedirect(aResponseURI, flags);
 
-  nsContentPolicyType contentPolicyType =
+  ExtContentPolicyType contentPolicyType =
       redirectLoadInfo->GetExternalContentPolicyType();
 
   rv = newChannel->Init(

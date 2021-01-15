@@ -1009,15 +1009,15 @@ nsJARChannel::OnStartRequest(nsIRequest* req) {
   GetContentType(contentType);
   auto contentPolicyType = mLoadInfo->GetExternalContentPolicyType();
   if (contentType.Equals(APPLICATION_HTTP_INDEX_FORMAT) &&
-      contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT &&
-      contentPolicyType != nsIContentPolicy::TYPE_FETCH) {
+      contentPolicyType != ExtContentPolicy::TYPE_DOCUMENT &&
+      contentPolicyType != ExtContentPolicy::TYPE_FETCH) {
     return NS_ERROR_CORRUPTED_CONTENT;
   }
-  if (contentPolicyType == nsIContentPolicy::TYPE_STYLESHEET &&
+  if (contentPolicyType == ExtContentPolicy::TYPE_STYLESHEET &&
       !contentType.EqualsLiteral(TEXT_CSS)) {
     return NS_ERROR_CORRUPTED_CONTENT;
   }
-  if (contentPolicyType == nsIContentPolicy::TYPE_SCRIPT &&
+  if (contentPolicyType == ExtContentPolicy::TYPE_SCRIPT &&
       !nsContentUtils::IsJavascriptMIMEType(
           NS_ConvertUTF8toUTF16(contentType))) {
     return NS_ERROR_CORRUPTED_CONTENT;
