@@ -717,14 +717,9 @@ class MDefinition : public MNode {
 
   bool mightBeType(MIRType type) const {
     MOZ_ASSERT(type != MIRType::Value);
-    MOZ_ASSERT(type != MIRType::ObjectOrNull);
 
     if (type == this->type()) {
       return true;
-    }
-
-    if (this->type() == MIRType::ObjectOrNull) {
-      return type == MIRType::Object || type == MIRType::Null;
     }
 
     if (this->type() == MIRType::Value) {

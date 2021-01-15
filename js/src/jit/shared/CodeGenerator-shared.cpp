@@ -394,7 +394,6 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
     case MIRType::Symbol:
     case MIRType::BigInt:
     case MIRType::Object:
-    case MIRType::ObjectOrNull:
     case MIRType::Boolean:
     case MIRType::Double: {
       LAllocation* payload = snapshot->payloadOfSlot(*allocIndex);
@@ -407,9 +406,7 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
         break;
       }
 
-      JSValueType valueType = (type == MIRType::ObjectOrNull)
-                                  ? JSVAL_TYPE_OBJECT
-                                  : ValueTypeFromMIRType(type);
+      JSValueType valueType = ValueTypeFromMIRType(type);
 
       MOZ_DIAGNOSTIC_ASSERT(payload->isMemory() || payload->isRegister());
       if (payload->isMemory()) {
