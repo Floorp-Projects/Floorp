@@ -270,10 +270,24 @@ class PromptParent extends JSWindowActorParent {
       throw new Error("Cannot call openModalWindow on a hidden window");
     }
 
+    let eventDetail =
+      args.modalType === Services.prompt.MODAL_TYPE_CONTENT
+        ? {
+            wasPermitUnload: args.inPermitUnload,
+            promptPrincipal: args.promptPrincipal,
+            tabPrompt: true,
+          }
+        : null;
+
     try {
       if (browser) {
         browser.enterModalState();
-        PromptUtils.fireDialogEvent(win, "DOMWillOpenModalDialog", browser);
+        PromptUtils.fireDialogEvent(
+          win,
+          "DOMWillOpenModalDialog",
+          browser,
+          eventDetail
+        );
       }
 
       args.promptAborted = false;
@@ -316,7 +330,12 @@ class PromptParent extends JSWindowActorParent {
     } finally {
       if (browser) {
         browser.maybeLeaveModalState();
-        PromptUtils.fireDialogEvent(win, "DOMModalDialogClosed", browser);
+        PromptUtils.fireDialogEvent(
+          win,
+          "DOMModalDialogClosed",
+          browser,
+          eventDetail
+        );
       }
     }
     return args;
