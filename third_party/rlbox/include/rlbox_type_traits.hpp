@@ -379,7 +379,8 @@ namespace convert_detail {
     T_LongLongType,
     T_PointerType,
     std::enable_if_t<std::is_unsigned_v<T> && !std::is_same_v<T, bool> &&
-                     !std::is_const_v<T> && !std::is_enum_v<T>>>
+                     !std::is_same_v<T, char> && !std::is_const_v<T> &&
+                     !std::is_enum_v<T>>>
   {
     using type = std::make_unsigned_t<
       typename convert_base_types_t_helper<std::make_signed_t<T>,

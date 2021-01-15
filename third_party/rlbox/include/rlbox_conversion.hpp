@@ -109,7 +109,7 @@ inline constexpr void convert_type_fundamental_or_array(T_To& to,
   }
   else if constexpr (!is_array_v<T_To_C>)
   {
-    return convert_type_fundamental(to, from);
+    convert_type_fundamental(to, from);
   }
   else if_constexpr_named(cond2, !all_extents_same<T_To_C, T_From_C>)
   {
