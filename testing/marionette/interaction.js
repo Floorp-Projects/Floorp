@@ -469,6 +469,23 @@ interaction.isKeyboardInteractable = function(el) {
     return true;
   }
 
+  // context menu popups do not take the focus from the document.
+  const menuPopup = el.closest("menupopup");
+  if (menuPopup) {
+    if (menuPopup.state !== "open") {
+      // closed menupopups are not keyboard interactable.
+      return false;
+    }
+
+    const menuItem = el.closest("menuitem");
+    if (menuItem) {
+      // hidden or disabled menu items are not keyboard interactable.
+      return !menuItem.disabled && !menuItem.hidden;
+    }
+
+    return true;
+  }
+
   el.focus();
   return el === win.document.activeElement;
 };
