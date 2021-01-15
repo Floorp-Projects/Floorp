@@ -6,10 +6,6 @@ ac_add_options --enable-debug
 
 . $topsrcdir/build/mozconfig.wasm-sandboxing
 
-# Use Clang as specified in manifest
-export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
-export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
-
 # Add the static checker
 ac_add_options --enable-clang-plugin
 

@@ -37,10 +37,5 @@ CPPFLAGS="$CPPFLAGS $ANALYSIS_EXTRA_CFLAGS"
 CXXFLAGS="$CXXFLAGS $ANALYSIS_EXTRA_CFLAGS"
 
 if [ -n "$AUTOMATION" ]; then
-    export CARGO="${MOZ_FETCHES_DIR}/rustc/bin/cargo"
-    export RUSTC="${MOZ_FETCHES_DIR}/rustc/bin/rustc"
-    export RUSTDOC="${MOZ_FETCHES_DIR}/rustc/bin/rustdoc"
-    export RUSTFMT="${MOZ_FETCHES_DIR}/rustc/bin/rustfmt"
-
     ac_add_options --with-clang-path="${MOZ_FETCHES_DIR}/clang/bin/clang"
 fi
