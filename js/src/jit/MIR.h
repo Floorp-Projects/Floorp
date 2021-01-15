@@ -734,8 +734,6 @@ class MDefinition : public MNode {
   // Return true if the result-set types are a subset of the given types.
   bool definitelyType(std::initializer_list<MIRType> types) const;
 
-  bool maybeEmulatesUndefined();
-
   // Float32 specialization operations (see big comment in IonAnalysis before
   // the Float32 specialization algorithm).
   virtual bool isFloat32Commutative() const { return false; }
