@@ -64,7 +64,6 @@ add_task(async function test_removeVisitsByFilter() {
           // `true` if there is a bookmark for this URI, i.e. of the page
           // should not be entirely removed.
           hasBookmark,
-          onFrecencyChanged: null,
           onDeleteURI: null,
         },
       };
@@ -148,12 +147,6 @@ add_task(async function test_removeVisitsByFilter() {
       deferred: PromiseUtils.defer(),
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onFrecencyChanged(aURI) {
-        info("onFrecencyChanged " + aURI.spec);
-        let deferred = frecencyChangePromises.get(aURI.spec);
-        Assert.ok(!!deferred, "Observing onFrecencyChanged");
-        deferred.resolve();
-      },
       onManyFrecenciesChanged() {
         info("Many frecencies changed");
         for (let [, deferred] of frecencyChangePromises) {
