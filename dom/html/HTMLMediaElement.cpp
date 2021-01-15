@@ -2151,6 +2151,18 @@ bool HTMLMediaElement::IsVideoDecodingSuspended() const {
   return mDecoder && mDecoder->IsVideoDecodingSuspended();
 }
 
+double HTMLMediaElement::TotalPlayTime() const {
+  return mDecoder ? mDecoder->GetTotalPlayTimeInSeconds() : -1.0;
+}
+
+double HTMLMediaElement::InvisiblePlayTime() const {
+  return mDecoder ? mDecoder->GetInvisibleVideoPlayTimeInSeconds() : -1.0;
+}
+
+double HTMLMediaElement::VideoDecodeSuspendedTime() const {
+  return mDecoder ? mDecoder->GetVideoDecodeSuspendedTimeInSeconds() : -1.0;
+}
+
 already_AddRefed<layers::Image> HTMLMediaElement::GetCurrentImage() {
   MarkAsTainted();
 

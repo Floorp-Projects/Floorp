@@ -1387,6 +1387,18 @@ void MediaDecoder::NotifyAudibleStateChanged() {
   GetOwner()->SetAudibleState(mIsAudioDataAudible);
 }
 
+double MediaDecoder::GetTotalPlayTimeInSeconds() const {
+  return mTelemetryProbesReporter->GetTotalPlayTimeInSeconds();
+}
+
+double MediaDecoder::GetInvisibleVideoPlayTimeInSeconds() const {
+  return mTelemetryProbesReporter->GetInvisibleVideoPlayTimeInSeconds();
+}
+
+double MediaDecoder::GetVideoDecodeSuspendedTimeInSeconds() const {
+  return mTelemetryProbesReporter->GetVideoDecodeSuspendedTimeInSeconds();
+}
+
 MediaMemoryTracker::MediaMemoryTracker() = default;
 
 void MediaMemoryTracker::InitMemoryReporter() {
