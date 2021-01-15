@@ -1169,3 +1169,5 @@ function ArrayAt(index) {
     // Step 7.
     return O[k];
 }
+// This function is only barely too long for normal inlining.
+_SetIsInlinableLargeFunction(ArrayAt);
