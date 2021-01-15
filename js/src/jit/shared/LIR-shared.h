@@ -4452,26 +4452,6 @@ class LArrayPushV : public LInstructionHelper<1, 1 + BOX_PIECES, 2> {
   const LDefinition* spectreTemp() { return getTemp(1); }
 };
 
-class LArrayPushT : public LInstructionHelper<1, 2, 2> {
- public:
-  LIR_HEADER(ArrayPushT)
-
-  LArrayPushT(const LAllocation& object, const LAllocation& value,
-              const LDefinition& temp, const LDefinition& spectreTemp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-    setOperand(1, value);
-    setTemp(0, temp);
-    setTemp(1, spectreTemp);
-  }
-
-  const MArrayPush* mir() const { return mir_->toArrayPush(); }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* value() { return getOperand(1); }
-  const LDefinition* temp() { return getTemp(0); }
-  const LDefinition* spectreTemp() { return getTemp(1); }
-};
-
 class LArraySlice : public LCallInstructionHelper<1, 3, 2> {
  public:
   LIR_HEADER(ArraySlice)
