@@ -883,15 +883,6 @@ class UrlbarInput {
       }
       case UrlbarUtils.RESULT_TYPE.DYNAMIC: {
         url = result.payload.url;
-        let provider = UrlbarProvidersManager.getProvider(result.providerName);
-        if (!provider) {
-          Cu.reportError(`Provider not found: ${result.providerName}`);
-          return;
-        }
-        provider.tryMethod("pickResult", result, element);
-
-        // If the shouldNavigate pref is set and there is a URL, continue in
-        // this function to load the URL.
         if (!url || !result.payload.shouldNavigate) {
           this.handleRevert();
           this.controller.engagementEvent.record(event, {
@@ -900,6 +891,14 @@ class UrlbarInput {
             selType: this.controller.engagementEvent.typeFromElement(element),
             provider: result.providerName,
           });
+          let provider = UrlbarProvidersManager.getProvider(
+            result.providerName
+          );
+          if (!provider) {
+            Cu.reportError(`Provider not found: ${result.providerName}`);
+            return;
+          }
+          provider.tryMethod("pickResult", result, element);
           return;
         }
         break;
