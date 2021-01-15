@@ -105,12 +105,7 @@ add_task(async function() {
       { once: true }
     );
     info("Click on menu and wait for the popup to be visible");
-    AccessibilityUtils.setEnv({
-      // Toobox toolbar buttons are handled with arrow keys.
-      nonNegativeTabIndexRule: false,
-    });
-    await EventUtils.sendMouseEvent({ type: "click" }, button);
-    AccessibilityUtils.resetEnv();
+    EventUtils.sendMouseEvent({ type: "click" }, button);
     await onPopupShown;
 
     const menuItem = toolbox.doc.getElementById(

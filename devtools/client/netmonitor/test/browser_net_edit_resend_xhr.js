@@ -22,7 +22,7 @@ add_task(async function() {
 
   // Selects 1st XHR request
   const xhrRequest = document.querySelectorAll(".request-list-item")[0];
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequest);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequest);
 
   // Stores original request for comparison of values later
   const { getSelectedRequest } = windowRequire(
@@ -31,7 +31,7 @@ add_task(async function() {
   const original = getSelectedRequest(store.getState());
 
   // Context Menu > "Edit & Resend"
-  await EventUtils.sendMouseEvent({ type: "contextmenu" }, xhrRequest);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, xhrRequest);
   getContextMenuItem(monitor, "request-list-context-resend").click();
 
   // 1) Wait for "Edit & Resend" panel to appear
@@ -43,7 +43,7 @@ add_task(async function() {
 
   // Selects cloned request
   const clonedRequest = document.querySelectorAll(".request-list-item")[1];
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, clonedRequest);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, clonedRequest);
   const cloned = getSelectedRequest(store.getState());
 
   // Compares if the requests have the same cause type (XHR)

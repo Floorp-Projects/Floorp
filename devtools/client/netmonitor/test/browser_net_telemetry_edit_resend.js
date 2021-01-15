@@ -33,10 +33,10 @@ add_task(async function() {
   const waitForHeaders = waitUntil(() =>
     document.querySelector(".headers-overview")
   );
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
   await waitForHeaders;
   await waitForRequestData(store, ["requestHeaders", "responseHeaders"]);
-  await EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
 
   // Open "New Request" form and resend.
   getContextMenuItem(monitor, "request-list-context-resend").click();
