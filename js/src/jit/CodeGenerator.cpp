@@ -9320,7 +9320,7 @@ void CodeGenerator::visitTruncF(LTruncF* lir) {
 
 void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
                                  Register right, Register output) {
-  MOZ_ASSERT(lir->isCompareS() || lir->isCompareStrictS());
+  MOZ_ASSERT(lir->isCompareS());
 
   OutOfLineCode* ool = nullptr;
 
@@ -9355,32 +9355,6 @@ void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
   masm.compareStrings(op, left, right, output, ool->entry());
 
   masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::visitCompareStrictS(LCompareStrictS* lir) {
-  JSOp op = lir->mir()->jsop();
-  MOZ_ASSERT(op == JSOp::StrictEq || op == JSOp::StrictNe);
-
-  const ValueOperand leftV = ToValue(lir, LCompareStrictS::Lhs);
-  Register right = ToRegister(lir->right());
-  Register output = ToRegister(lir->output());
-
-  Label string, done;
-
-  masm.branchTestString(Assembler::Equal, leftV, &string);
-  masm.move32(Imm32(op == JSOp::StrictNe), output);
-  masm.jump(&done);
-
-  masm.bind(&string);
-#ifdef JS_NUNBOX32
-  Register left = leftV.payloadReg();
-#else
-  Register left = ToTempUnboxRegister(lir->tempToUnbox());
-#endif
-  masm.unboxString(leftV, left);
-  emitCompareS(lir, op, left, right, output);
-
-  masm.bind(&done);
 }
 
 void CodeGenerator::visitCompareS(LCompareS* lir) {
