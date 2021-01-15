@@ -65,7 +65,7 @@ add_task(async function() {
   const onFocus = () => count++;
   JsCallTreeView.on("focus", onFocus);
 
-  await click(firstTreeItem);
+  click(firstTreeItem);
 
   key("VK_DOWN");
   key("VK_DOWN");

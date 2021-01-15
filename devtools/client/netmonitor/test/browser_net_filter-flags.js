@@ -417,10 +417,7 @@ add_task(async function() {
     for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
       const requestsListStatus = requestItem.querySelector(".status-code");
-      await EventUtils.sendMouseEvent(
-        { type: "mouseover" },
-        requestsListStatus
-      );
+      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
       await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
     }

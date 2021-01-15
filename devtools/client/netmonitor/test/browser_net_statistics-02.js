@@ -16,23 +16,23 @@ add_task(async function() {
   const { document, store, windowRequire, connector } = panel;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-css-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-js-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-ws-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-other-button")
   );
@@ -55,7 +55,7 @@ add_task(async function() {
   );
   ok(true, "Two real pie charts appear to be rendered correctly.");
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".pie-chart-slice")
   );

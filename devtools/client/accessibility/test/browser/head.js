@@ -117,7 +117,7 @@ async function addTestTab(url) {
   const enableButton = doc.getElementById("accessibility-enable-button");
   // If enable button is not found, asume the tool is already enabled.
   if (enableButton) {
-    await EventUtils.sendMouseEvent({ type: "click" }, enableButton, win);
+    EventUtils.sendMouseEvent({ type: "click" }, enableButton, win);
   }
 
   await waitUntilState(
@@ -517,20 +517,14 @@ async function selectProperty(doc, id) {
   let node;
 
   await focusAccessibleProperties(doc);
-  await BrowserTestUtils.waitForCondition(async () => {
+  await BrowserTestUtils.waitForCondition(() => {
     node = doc.getElementById(`${id}`);
     if (node) {
       if (selected) {
         return node.firstChild.classList.contains("focused");
       }
 
-      AccessibilityUtils.setEnv({
-        // Keyboard navigation is handled on the container level using arrow
-        // keys.
-        nonNegativeTabIndexRule: false,
-      });
-      await EventUtils.sendMouseEvent({ type: "click" }, node, win);
-      AccessibilityUtils.resetEnv();
+      EventUtils.sendMouseEvent({ type: "click" }, node, win);
       selected = true;
     } else {
       const tree = doc.querySelector(".tree");
@@ -548,18 +542,13 @@ async function selectProperty(doc, id) {
  * @param  {document} doc       panel documnent.
  * @param  {Number}   rowNumber number of the row/tree node to be selected.
  */
-async function selectRow(doc, rowNumber) {
+function selectRow(doc, rowNumber) {
   info(`Selecting row ${rowNumber}.`);
-  AccessibilityUtils.setEnv({
-    // Keyboard navigation is handled on the container level using arrow keys.
-    nonNegativeTabIndexRule: false,
-  });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     doc.querySelectorAll(".treeRow")[rowNumber],
     doc.defaultView
   );
-  AccessibilityUtils.resetEnv();
 }
 
 /**
@@ -575,13 +564,7 @@ async function toggleRow(doc, rowNumber) {
 
   info(`${expected ? "Expanding" : "Collapsing"} row ${rowNumber}.`);
 
-  AccessibilityUtils.setEnv({
-    // We intentionally remove the twisty from the accessibility tree in the
-    // TreeView component and handle keyboard navigation using the arrow keys.
-    mustHaveAccessibleRule: false,
-  });
-  await EventUtils.sendMouseEvent({ type: "click" }, twisty, win);
-  AccessibilityUtils.resetEnv();
+  EventUtils.sendMouseEvent({ type: "click" }, twisty, win);
   await BrowserTestUtils.waitForCondition(
     () =>
       !twisty.classList.contains("devtools-throbber") &&

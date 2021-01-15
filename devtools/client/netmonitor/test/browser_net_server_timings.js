@@ -29,22 +29,17 @@ add_task(async function() {
   const timingsSelector = "#timings-panel .tabpanel-summary-container.server";
   wait = waitForDOM(document, timingsSelector, 4);
 
-  AccessibilityUtils.setEnv({
-    // Keyboard users will will see the sidebar when the request row is
-    // selected. Accessibility is handled on the container level.
-    actionCountRule: false,
-    interactiveRule: false,
-    labelRule: false,
-  });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelectorAll(".request-list-item")[0]
   );
-  AccessibilityUtils.resetEnv();
 
   store.dispatch(Actions.toggleNetworkDetails());
 
-  await clickOnSidebarTab(document, "timings");
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#timings-tab")
+  );
   await wait;
 
   // Check the UI contains server side timings and correct values

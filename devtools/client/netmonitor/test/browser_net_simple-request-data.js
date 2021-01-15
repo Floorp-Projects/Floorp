@@ -320,10 +320,7 @@ function test() {
         const requestsListStatus = requestListItem.querySelector(
           ".status-code"
         );
-        await EventUtils.sendMouseEvent(
-          { type: "mouseover" },
-          requestsListStatus
-        );
+        EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
         await waitUntil(() => requestsListStatus.title);
         await waitForDOMIfNeeded(
           requestListItem,

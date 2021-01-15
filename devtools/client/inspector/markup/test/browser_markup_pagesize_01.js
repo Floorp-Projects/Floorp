@@ -87,5 +87,5 @@ async function clickShowMoreNodes(inspector) {
   const container = await getContainerForSelector("body", inspector);
   const button = container.elt.querySelector("button");
   const win = button.ownerDocument.defaultView;
-  await EventUtils.sendMouseEvent({ type: "click" }, button, win);
+  EventUtils.sendMouseEvent({ type: "click" }, button, win);
 }

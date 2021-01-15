@@ -43,10 +43,13 @@ add_task(async function() {
   );
 
   // Select the first request
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
   // Click on the "Response" panel
-  await clickOnSidebarTab(document, "response");
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
   await wait;
 
   // Get all messages present in the "Response" panel
@@ -78,7 +81,7 @@ add_task(async function() {
   is(filteredFrames.length, 2, "There should be two frames");
 
   // Select the second request and check that the filter input is cleared
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
   // Wait till the text filter is applied. There should be two frames rendered
   await waitUntil(
     () =>

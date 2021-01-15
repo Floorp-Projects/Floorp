@@ -58,6 +58,6 @@ async function clickFirstStackElement(hud, message, needsExpansion) {
   });
 
   const onSourceOpenedInDebugger = once(hud, "source-in-debugger-opened");
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, frame);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, frame);
   await onSourceOpenedInDebugger;
 }

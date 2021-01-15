@@ -506,7 +506,7 @@ async function checkClickOnNode(
 
   const onSourceInDebuggerOpened = once(hud, "source-in-debugger-opened");
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     frameLinkNode.querySelector(".frame-link-filename")
   );

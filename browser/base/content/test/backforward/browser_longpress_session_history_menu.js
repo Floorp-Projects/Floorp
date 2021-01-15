@@ -57,10 +57,7 @@ add_task(async function restore_history_entry_by_middle_click() {
     "SSTabRestored"
   );
 
-  await EventUtils.sendMouseEvent(
-    { type: "click", button: 1 },
-    historyMenuItem
-  );
+  EventUtils.sendMouseEvent({ type: "click", button: 1 }, historyMenuItem);
 
   info("Waiting for history menu to be hidden");
   await popupHiddenPromise;

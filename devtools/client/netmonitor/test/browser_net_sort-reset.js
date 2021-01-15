@@ -61,24 +61,24 @@ add_task(async function() {
   testHeaders();
   await testContents([0, 2, 4, 3, 1]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-status-button")
   );
   info("Testing sort reset using middle click.");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click", button: 1 },
     document.querySelector("#requests-list-status-button")
   );
   testHeaders();
   await testContents([0, 2, 4, 3, 1]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-status-button")
   );
   info("Testing sort reset using context menu 'Reset Sorting'");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button")
   );
@@ -86,12 +86,12 @@ add_task(async function() {
   testHeaders();
   await testContents([0, 2, 4, 3, 1]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-status-button")
   );
   info("Testing sort reset using context menu 'Reset Columns'");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button")
   );
@@ -197,10 +197,7 @@ add_task(async function() {
     for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
       const requestsListStatus = requestItem.querySelector(".status-code");
-      await EventUtils.sendMouseEvent(
-        { type: "mouseover" },
-        requestsListStatus
-      );
+      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }
 

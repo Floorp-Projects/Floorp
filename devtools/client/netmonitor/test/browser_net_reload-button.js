@@ -14,7 +14,7 @@ add_task(async function() {
   const { document } = monitor.panelWin;
 
   const wait = waitForNetworkEvents(monitor, 1);
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-reload-notice-button")
   );

@@ -554,15 +554,6 @@ class MochitestArguments(ArgumentContainer):
             },
         ],
         [
-            ["--enable-a11y-checks"],
-            {
-                "action": "store_true",
-                "default": False,
-                "dest": "a11y_checks",
-                "help": "Run tests with accessibility checks disabled.",
-            },
-        ],
-        [
             ["--enable-fission"],
             {
                 "action": "store_true",

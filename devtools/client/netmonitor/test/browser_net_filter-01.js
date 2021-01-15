@@ -231,7 +231,7 @@ add_task(async function() {
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -256,7 +256,7 @@ add_task(async function() {
   testFilterButtons(monitor, "all");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
@@ -264,84 +264,84 @@ add_task(async function() {
   await testContents([1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Reset filters
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-css-button")
   );
   testFilterButtons(monitor, "css");
   await testContents([0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-js-button")
   );
   testFilterButtons(monitor, "js");
   await testContents([0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-xhr-button")
   );
   testFilterButtons(monitor, "xhr");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-fonts-button")
   );
   testFilterButtons(monitor, "fonts");
   await testContents([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-images-button")
   );
   testFilterButtons(monitor, "images");
   await testContents([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-media-button")
   );
   testFilterButtons(monitor, "media");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-ws-button")
   );
   testFilterButtons(monitor, "ws");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -350,7 +350,7 @@ add_task(async function() {
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   // Text in filter box that matches nothing should hide all.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -358,7 +358,7 @@ add_task(async function() {
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // ASCII text in filter box that matches should filter out everything else.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -366,7 +366,7 @@ add_task(async function() {
   await testContents([1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // ASCII text in filter box that matches should filter out everything else.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -374,7 +374,7 @@ add_task(async function() {
   await testContents([1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test negative filtering ASCII text(only show unmatched items)
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -382,7 +382,7 @@ add_task(async function() {
   await testContents([0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   // Unicode text in filter box that matches should filter out everything else.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -391,7 +391,7 @@ add_task(async function() {
 
   // Ditto, except the above is for a Unicode URI component, and this one is for
   // a Unicode domain name.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -399,7 +399,7 @@ add_task(async function() {
   await testContents([1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test negative filtering Unicode text(only show unmatched items)
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -408,7 +408,7 @@ add_task(async function() {
 
   // Ditto, except the above is for a Unicode URI component, and this one is for
   // a Unicode domain name.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -419,11 +419,11 @@ add_task(async function() {
 
   // Enable filtering for html and css; should show request of both type.
   setFreetextFilter("");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-css-button")
   );
@@ -441,7 +441,7 @@ add_task(async function() {
   await testContents([1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Disable some filters. Only one left active.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-css-button")
   );
@@ -449,7 +449,7 @@ add_task(async function() {
   await testContents([1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Disable last active filter. Should toggle to all.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
@@ -457,20 +457,20 @@ add_task(async function() {
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   // Enable few filters and click on all. Only "all" should be checked.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-css-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-ws-button")
   );
   testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 1, 0]);
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -493,10 +493,7 @@ add_task(async function() {
     for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
       const requestsListStatus = requestItem.querySelector(".status-code");
-      await EventUtils.sendMouseEvent(
-        { type: "mouseover" },
-        requestsListStatus
-      );
+      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }
 

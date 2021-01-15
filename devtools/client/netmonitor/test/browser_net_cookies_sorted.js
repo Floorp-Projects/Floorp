@@ -23,17 +23,20 @@ add_task(async function() {
   await wait;
 
   wait = waitForDOM(document, ".headers-overview");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
-  await clickOnSidebarTab(document, "cookies");
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#cookies-tab")
+  );
 
   info("Check if Request-Cookies and Response-Cookies are sorted");
   const expectedLabelValues = [

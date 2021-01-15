@@ -28,7 +28,7 @@ add_task(async function() {
   info("Cmd/Ctrl click on the message");
   const urlObject = message.querySelector(".url");
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     {
       type: "click",
       [isMacOS ? "metaKey" : "ctrlKey"]: true,

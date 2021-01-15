@@ -6,15 +6,13 @@
   <body>
     <a id="nested link" href="javascript:(function(){})()">nested link</a>
     <script type="application/javascript">
-      (async function() {
-        var event = location.hash.split("#").pop();
-        await send(document.getElementById("nested link"), event, function() {
-          var popup = window.open("http://example.com"),
-              grandparent = window.open("", "parent260264");
-          try { grandparent.report(popup) }
-          finally { popup && popup.close() }
-        });
-      })();
+      var event = location.hash.split("#").pop();
+      send(document.getElementById("nested link"), event, function() {
+        var popup = window.open("http://example.com"),
+            grandparent = window.open("", "parent260264");
+        try { grandparent.report(popup) }
+        finally { popup && popup.close() }
+      });
     </script>
   </body>
 </html>

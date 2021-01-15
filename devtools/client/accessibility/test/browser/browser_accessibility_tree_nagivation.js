@@ -103,9 +103,7 @@ const tests = [
   },
   {
     desc: "Select third tree node.",
-    setup: async ({ doc }) => {
-      await selectRow(doc, 2);
-    },
+    setup: ({ doc }) => selectRow(doc, 2),
     expected: {
       sidebar: {
         name: "Top level header",

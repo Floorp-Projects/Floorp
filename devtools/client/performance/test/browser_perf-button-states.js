@@ -49,7 +49,7 @@ add_task(async function() {
     expectedArgs: ["recording"],
   });
 
-  await click(recordButton);
+  click(recordButton);
   await uiStartClick;
 
   checkRecordButtonsStates(true, true);
@@ -77,7 +77,7 @@ add_task(async function() {
     expectedArgs: ["recorded"],
   });
 
-  await click(recordButton);
+  click(recordButton);
   await uiStopClick;
   await recordingStopped;
 

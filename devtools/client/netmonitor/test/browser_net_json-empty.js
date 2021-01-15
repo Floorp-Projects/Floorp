@@ -30,7 +30,10 @@ add_task(async function() {
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
-  await clickOnSidebarTab(document, "response");
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
 
   await onResponsePanelReady;
 

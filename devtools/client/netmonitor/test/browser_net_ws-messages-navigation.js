@@ -44,10 +44,13 @@ add_task(async function() {
   );
 
   // Select the first request
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
   // Click on the "Response" panel
-  await clickOnSidebarTab(document, "response");
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
   await wait;
 
   // Get all messages present in the "Response" panel
@@ -65,7 +68,7 @@ add_task(async function() {
     // The first message is actually the second child, there is a hidden row.
     `.message-list-item:nth-child(${2}).selected`
   );
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, frames[0]);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, frames[0]);
   await waitForSelected;
 
   const checkSelected = messageRowNumber => {

@@ -54,16 +54,10 @@ add_task(async function() {
   );
 
   // Click on the first resource to expand it
-  AccessibilityUtils.setEnv({
-    // Keyboard users use arrow keys to expand/collapse tree items.
-    // Accessibility is handled on the container level.
-    mustHaveAccessibleRule: false,
-  });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".search-panel-content .treeRow .treeIcon")
   );
-  AccessibilityUtils.resetEnv();
 
   // Check that there is 5 matches.
   const matches = document.querySelectorAll(

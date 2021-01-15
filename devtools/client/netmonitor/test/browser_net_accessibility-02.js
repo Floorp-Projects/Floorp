@@ -127,7 +127,7 @@ add_task(async function() {
   EventUtils.sendKey("DOWN", window);
   check(19, true);
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelector(".request-list-item")
   );

@@ -57,11 +57,7 @@ add_task(async function() {
   );
 
   const onSelection = inspector.selection.once("new-node-front");
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    elementRep,
-    doc.defaultView
-  );
+  EventUtils.sendMouseEvent({ type: "click" }, elementRep, doc.defaultView);
   await onSelection;
 
   is(

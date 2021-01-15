@@ -175,18 +175,6 @@ def fission_filter(task):
 
 
 TEST_VARIANTS = {
-    "a11y-checks": {
-        "description": "{description} with accessibility checks enabled",
-        "suffix": "a11y-checks",
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--enable-a11y-checks",
-                ],
-            },
-        },
-        "tier": 2,
-    },
     "geckoview-e10s-single": {
         "description": "{description} with single-process e10s",
         "filterfn": gv_e10s_filter,
