@@ -407,9 +407,6 @@ bool OperatorIn(JSContext* cx, HandleValue key, HandleObject obj, bool* out);
                                      HandleObject newTarget,
                                      MutableHandleValue rval);
 
-bool GetDynamicNamePure(JSContext* cx, JSObject* scopeChain, JSString* str,
-                        Value* vp);
-
 void PostWriteBarrier(JSRuntime* rt, js::gc::Cell* cell);
 void PostGlobalWriteBarrier(JSRuntime* rt, GlobalObject* obj);
 

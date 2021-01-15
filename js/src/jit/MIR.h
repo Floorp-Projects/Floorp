@@ -2764,27 +2764,6 @@ class MAssertFloat32 : public MUnaryInstruction, public NoTypePolicy::Data {
   bool mustBeFloat32() const { return mustBeFloat32_; }
 };
 
-class MGetDynamicName
-    : public MBinaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<1>>::Data {
- protected:
-  MGetDynamicName(MDefinition* envChain, MDefinition* name)
-      : MBinaryInstruction(classOpcode, envChain, name) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(GetDynamicName)
-  NAMED_OPERANDS((0, getEnvironmentChain), (1, getName))
-
-  static MGetDynamicName* New(TempAllocator& alloc, MDefinition* envChain,
-                              MDefinition* name) {
-    return new (alloc) MGetDynamicName(envChain, name);
-  }
-
-  bool possiblyCalls() const override { return true; }
-};
-
 class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
  public:
   enum CompareType {

@@ -1338,31 +1338,6 @@ class LConstructArrayGeneric
   const LAllocation* getTempStackCounter() { return getOperand(2); }
 };
 
-class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3> {
- public:
-  LIR_HEADER(GetDynamicName)
-
-  LGetDynamicName(const LAllocation& envChain, const LAllocation& name,
-                  const LDefinition& temp1, const LDefinition& temp2,
-                  const LDefinition& temp3)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, envChain);
-    setOperand(1, name);
-    setTemp(0, temp1);
-    setTemp(1, temp2);
-    setTemp(2, temp3);
-  }
-
-  MGetDynamicName* mir() const { return mir_->toGetDynamicName(); }
-
-  const LAllocation* getEnvironmentChain() { return getOperand(0); }
-  const LAllocation* getName() { return getOperand(1); }
-
-  const LDefinition* temp1() { return getTemp(0); }
-  const LDefinition* temp2() { return getTemp(1); }
-  const LDefinition* temp3() { return getTemp(2); }
-};
-
 // Takes in either an integer or boolean input and tests it for truthiness.
 class LTestIAndBranch : public LControlInstructionHelper<2, 1, 0> {
  public:
