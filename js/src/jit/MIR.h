@@ -3032,21 +3032,6 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
   ALLOW_CLONE(MUnbox)
 };
 
-class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  explicit MGuardObject(MDefinition* ins)
-      : MUnaryInstruction(classOpcode, ins) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(GuardObject)
-  TRIVIAL_NEW_WRAPPERS
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MGuardString : public MUnaryInstruction, public StringPolicy<0>::Data {
   explicit MGuardString(MDefinition* ins)
       : MUnaryInstruction(classOpcode, ins) {
