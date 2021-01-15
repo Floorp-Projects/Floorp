@@ -2529,19 +2529,10 @@ void LIRGenerator::visitDynamicImport(MDynamicImport* ins) {
 }
 
 void LIRGenerator::visitLambda(MLambda* ins) {
-  if (ins->info().singletonType) {
-    // If the function has a singleton type, this instruction will only be
-    // executed once so we don't bother inlining it.
-    LLambdaForSingleton* lir = new (alloc())
-        LLambdaForSingleton(useRegisterAtStart(ins->environmentChain()));
-    defineReturn(lir, ins);
-    assignSafepoint(lir, ins);
-  } else {
-    LLambda* lir =
-        new (alloc()) LLambda(useRegister(ins->environmentChain()), temp());
-    define(lir, ins);
-    assignSafepoint(lir, ins);
-  }
+  auto* lir =
+      new (alloc()) LLambda(useRegister(ins->environmentChain()), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitLambdaArrow(MLambdaArrow* ins) {
