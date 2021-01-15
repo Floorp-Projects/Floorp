@@ -8657,68 +8657,6 @@ struct PolymorphicEntry {
   Shape* shape;
 };
 
-// Emit code to load a value from an object if it matches one of the receivers
-// observed by the baseline IC, else bails out.
-class MGetPropertyPolymorphic : public MUnaryInstruction,
-                                public SingleObjectPolicy::Data {
-  Vector<PolymorphicEntry, 4, JitAllocPolicy> receivers_;
-  CompilerPropertyName name_;
-
-  MGetPropertyPolymorphic(TempAllocator& alloc, MDefinition* obj,
-                          PropertyName* name)
-      : MUnaryInstruction(classOpcode, obj), receivers_(alloc), name_(name) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(GetPropertyPolymorphic)
-  NAMED_OPERANDS((0, object))
-
-  static MGetPropertyPolymorphic* New(TempAllocator& alloc, MDefinition* obj,
-                                      PropertyName* name) {
-    return new (alloc) MGetPropertyPolymorphic(alloc, obj, name);
-  }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    if (!ins->isGetPropertyPolymorphic()) {
-      return false;
-    }
-    if (name() != ins->toGetPropertyPolymorphic()->name()) {
-      return false;
-    }
-    return congruentIfOperandsEqual(ins);
-  }
-
-  [[nodiscard]] bool addReceiver(const ReceiverGuard& receiver, Shape* shape) {
-    PolymorphicEntry entry;
-    entry.receiver = receiver;
-    entry.shape = shape;
-    return receivers_.append(entry);
-  }
-  size_t numReceivers() const { return receivers_.length(); }
-  const ReceiverGuard receiver(size_t i) const {
-    return receivers_[i].receiver;
-  }
-  Shape* shape(size_t i) const { return receivers_[i].shape; }
-  PropertyName* name() const { return name_; }
-  AliasSet getAliasSet() const override {
-    bool hasUnboxedLoad = false;
-    for (size_t i = 0; i < numReceivers(); i++) {
-      if (!shape(i)) {
-        hasUnboxedLoad = true;
-        break;
-      }
-    }
-    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                          AliasSet::DynamicSlot |
-                          (hasUnboxedLoad ? AliasSet::UnboxedElement : 0));
-  }
-
-  AliasType mightAlias(const MDefinition* store) const override;
-};
-
 // Emit code to store a value to an object's slots if its shape/group matches
 // one of the shapes/groups observed by the baseline IC, else bails out.
 class MSetPropertyPolymorphic

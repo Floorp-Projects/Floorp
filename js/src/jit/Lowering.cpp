@@ -3756,22 +3756,6 @@ void LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-  if (ins->type() == MIRType::Value) {
-    LGetPropertyPolymorphicV* lir = new (alloc())
-        LGetPropertyPolymorphicV(useRegister(ins->object()), temp());
-    assignSnapshot(lir, ins->bailoutKind());
-    defineBox(lir, ins);
-  } else {
-    LGetPropertyPolymorphicT* lir = new (alloc())
-        LGetPropertyPolymorphicT(useRegister(ins->object()), temp());
-    assignSnapshot(lir, ins->bailoutKind());
-    define(lir, ins);
-  }
-}
-
 void LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
