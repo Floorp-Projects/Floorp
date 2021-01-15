@@ -636,13 +636,6 @@ def vc_compiler_path(target, paths):
     return paths.get(vc_target)
 
 
-@dependable
-@imports("os")
-@imports(_from="os", _import="environ")
-def original_path():
-    return environ["PATH"].split(os.pathsep)
-
-
 @depends(vc_compiler_path, original_path)
 @imports("os")
 @imports(_from="os", _import="environ")
@@ -661,50 +654,7 @@ def vc_toolchain_search_path(vc_compiler_path, original_path):
     return result
 
 
-@depends(
-    original_path,
-    developer_options,
-    mozbuild_state_path,
-)
-@imports("os")
-@imports(_from="os", _import="environ")
-def toolchain_search_path(
-    original_path,
-    developer_options,
-    mozbuild_state_path,
-):
-    result = list(original_path)
-
-    # Add in the location to which `mach bootstrap` or
-    # `mach artifact toolchain` installs clang, cbindgen, etc.
-    bootstrapped = [
-        os.path.join(mozbuild_state_path, *rest)
-        for rest in (
-            ["clang", "bin"],
-            ["cbindgen"],
-            ["dump_syms"],
-            ["nasm"],
-            ["lucetc"],
-            ["sccache"],
-        )
-    ]
-
-    if developer_options:
-        log.debug(
-            "Prioritizing mozbuild state dir in toolchain path because "
-            "you are not building in release mode."
-        )
-        search_path = bootstrapped + result
-    else:
-        log.debug(
-            "Prioritizing system over mozbuild state dir in "
-            "toolchain path because you are building in "
-            "release mode."
-        )
-        search_path = result + bootstrapped
-
-    log.debug("Search path for toolchain: {}".format(search_path))
-    return search_path
+clang_search_path = bootstrap_search_path("clang", "bin")
 
 
 @depends(original_path)
@@ -712,7 +662,6 @@ def toolchain_search_path(
 @imports(_from="os", _import="environ")
 def rust_search_path(original_path):
     result = list(original_path)
-
     # Also add the rustup install directory for cargo/rustc.
     cargo_home = environ.get("CARGO_HOME", "")
     if cargo_home:
@@ -763,7 +712,11 @@ def ccache(value):
 
 
 ccache = check_prog(
-    "CCACHE", progs=(), input=ccache, paths=toolchain_search_path, allow_missing=True
+    "CCACHE",
+    progs=(),
+    input=ccache,
+    paths=bootstrap_search_path("sccache"),
+    allow_missing=True,
 )
 
 option(env="CCACHE_PREFIX", nargs=1, help="Compiler prefix to use when using ccache")
@@ -1072,7 +1025,7 @@ def compiler(
         what=what,
         progs=default_compilers,
         input=provided_compiler.program,
-        paths=toolchain_search_path,
+        paths=clang_search_path,
     )
 
     @depends(compiler, provided_compiler, compiler_wrapper, host_or_target, macos_sdk)
@@ -1970,7 +1923,9 @@ set_config("MOZ_FRAMEPTR_FLAGS", frame_pointer_flags)
 
 # nasm detection
 # ==============================================================
-nasm = check_prog("NASM", ["nasm"], allow_missing=True, paths=toolchain_search_path)
+nasm = check_prog(
+    "NASM", ["nasm"], allow_missing=True, paths=bootstrap_search_path("nasm")
+)
 
 
 @depends_if(nasm)
@@ -2589,7 +2544,7 @@ llvm_config = check_prog(
     llvm_config,
     what="llvm-config",
     when="--enable-clang-plugin",
-    paths=toolchain_search_path,
+    paths=clang_search_path,
 )
 
 add_old_configure_assignment("LLVM_CONFIG", llvm_config)
@@ -2826,7 +2781,7 @@ def rc_names(c_compiler, toolchain_prefix):
     return ("llvm-rc",)
 
 
-check_prog("RC", rc_names, paths=toolchain_search_path, when=target_is_windows)
+check_prog("RC", rc_names, paths=clang_search_path, when=target_is_windows)
 
 
 @depends(toolchain_prefix, c_compiler)
@@ -2855,7 +2810,7 @@ def ar_config(toolchain_prefix, c_compiler):
     )
 
 
-ar = check_prog("AR", ar_config.names, paths=toolchain_search_path)
+ar = check_prog("AR", ar_config.names, paths=clang_search_path)
 
 add_old_configure_assignment("AR", ar)
 
@@ -2879,7 +2834,7 @@ def nm_names(toolchain_prefix, c_compiler):
     return names
 
 
-check_prog("NM", nm_names, paths=toolchain_search_path, when=target_is_linux)
+check_prog("NM", nm_names, paths=clang_search_path, when=target_is_linux)
 
 
 option("--enable-cpp-rtti", help="Enable C++ RTTI")

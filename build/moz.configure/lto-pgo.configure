@@ -7,7 +7,7 @@
 # PGO
 # ==============================================================
 llvm_profdata = check_prog(
-    "LLVM_PROFDATA", ["llvm-profdata"], allow_missing=True, paths=toolchain_search_path
+    "LLVM_PROFDATA", ["llvm-profdata"], allow_missing=True, paths=clang_search_path
 )
 
 option(
