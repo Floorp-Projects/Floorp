@@ -249,9 +249,8 @@ function runTestInNewWindow(aFile) {
       var e = testWindow.document.createElement("script");
       e.type = "text/javascript";
       e.src =
-        aFile.lastIndexOf("/") < 0
-          ? "mochitest_support_internal.js"
-          : "../mochitest_support_internal.js";
+        "../".repeat(aFile.split("/").length - 1) +
+        "mochitest_support_internal.js";
       testWindow.document.getElementsByTagName("head")[0].appendChild(e);
     },
     { once: true }
