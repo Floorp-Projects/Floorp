@@ -13,26 +13,6 @@ UNIFIED_SOURCES += [
     'macho_walker.cc',
 ]
 
-if CONFIG['HOST_OS_ARCH'] != 'Darwin':
-    HOST_CXXFLAGS += [
-        '-I%s/toolkit/crashreporter/google-breakpad/src/third_party/mac_headers/' % TOPSRCDIR,
-    ]
-
-# This is a little weird, but we're building a host and a target lib here.
-# The host lib is used for dump_syms, and the target lib for the
-# crash reporter client.  Therefore, we don't need all the srcs in both.
-if CONFIG['MOZ_CRASHREPORTER']:
-    HOST_SOURCES += UNIFIED_SOURCES
-    HOST_SOURCES += [
-        'dump_syms.cc',
-    ]
-    HOST_CXXFLAGS += [
-        '-O2',
-        '-g',
-        '-stdlib=libc++',
-    ]
-    HostLibrary('host_breakpad_mac_common_s')
-
 SOURCES += [
     'bootstrap_compat.cc',
     'HTTPMultipartUpload.m',

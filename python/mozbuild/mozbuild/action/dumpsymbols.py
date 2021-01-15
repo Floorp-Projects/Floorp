@@ -29,29 +29,7 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     # Build default args for symbolstore.py based on platform.
     sym_store_args = []
 
-    # Find the `dump_syms` binary to use.
-    dump_syms_bin = None
-    dump_syms_binaries = []
-
-    default_bin = buildconfig.substs.get("DUMP_SYMS")
-    if default_bin:
-        dump_syms_binaries.append(default_bin)
-
-    # Fallback to the in-tree breakpad version.
-    dump_syms_binaries.append(
-        os.path.join(
-            buildconfig.topobjdir,
-            "dist",
-            "host",
-            "bin",
-            "dump_syms" + buildconfig.substs["BIN_SUFFIX"],
-        )
-    )
-
-    for dump_syms_bin in dump_syms_binaries:
-        if os.path.exists(dump_syms_bin):
-            break
-
+    dump_syms_bin = buildconfig.substs["DUMP_SYMS"]
     os_arch = buildconfig.substs["OS_ARCH"]
     if os_arch == "WINNT":
         sym_store_args.extend(["-c", "--vcs-info"])

@@ -1246,13 +1246,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dump_syms_rust_demangle"
-version = "0.1.0"
-dependencies = [
- "rustc-demangle",
-]
-
-[[package]]
 name = "dwrote"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -14,51 +14,6 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         'md5.cc',
     ]
 
-if CONFIG['OS_ARCH'] == 'Linux':
-    HOST_DEFINES['HAVE_A_OUT_H'] = True
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    HOST_DEFINES['HAVE_MACH_O_NLIST_H'] = True
-    HOST_SOURCES += [
-        'stabs_reader.cc',
-        'stabs_to_module.cc',
-    ]
-    if CONFIG['HOST_OS_ARCH'] != 'Darwin':
-        HOST_CXXFLAGS += [
-            '-I%s/toolkit/crashreporter/google-breakpad/src/third_party/mac_headers/' % TOPSRCDIR,
-        ]
-
-if CONFIG['HOST_OS_ARCH'] != 'WINNT':
-    if CONFIG['OS_ARCH'] in ('Darwin', 'Linux'):
-        DIRS += ['dwarf']
-
-    HOST_SOURCES += [
-        'arm_ex_reader.cc',
-        'arm_ex_to_module.cc',
-        'convert_UTF.cc',
-        'dwarf_cfi_to_module.cc',
-        'dwarf_cu_to_module.cc',
-        'dwarf_line_to_module.cc',
-        'dwarf_range_list_handler.cc',
-        'language.cc',
-        'md5.cc',
-        'module.cc',
-        'path_helper.cc',
-        'string_conversion.cc',
-    ]
-    if CONFIG['OS_ARCH'] == 'Darwin':
-        HOST_CXXFLAGS += [
-            '-stdlib=libc++',
-        ]
-    HOST_CXXFLAGS += [
-        '-O2',
-        '-g',
-    ]
-    HOST_DEFINES['HAVE_RUST_DEMANGLE'] = True
-    LOCAL_INCLUDES += [
-        '/toolkit/crashreporter/rust',
-    ]
-    HostLibrary('host_breakpad_common_s')
-
 Library('breakpad_common_s')
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
