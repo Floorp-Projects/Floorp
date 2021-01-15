@@ -412,16 +412,18 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
     return;
   }
 
+  nsIPrincipal* principal = nullptr;
   nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->mCurrentTarget);
-  if (!node) {
-    nsCOMPtr<nsPIDOMWindowOuter> win =
+  if (node) {
+    principal = node->NodePrincipal();
+  } else {
+    nsCOMPtr<nsIScriptObjectPrincipal> sop =
         do_QueryInterface(mEvent->mCurrentTarget);
-    if (!win) {
-      return;
+    if (sop) {
+      principal = sop->GetPrincipal();
     }
-    node = win->GetExtantDoc();
   }
-  if (!nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
+  if (principal && !principal->IsSystemPrincipal()) {
     dragEvent->mDefaultPreventedOnContent = true;
   }
 }
