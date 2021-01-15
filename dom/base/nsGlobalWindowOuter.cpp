@@ -7622,14 +7622,16 @@ void nsGlobalWindowOuter::MaybeResetWindowName(Document* aNewDocument) {
   // If we have an existing doucment, directly check the document prinicpals
   // with the new document to know if it is cross-origin.
   //
-  // When running wpt, we could have an existing about:blank documnet which has
-  // a principal that is the same as the principal of the new document. But the
-  // new document doesn't load an about:blank page. In this case, we should
-  // treat them as cross-origin despite both doucments have same-origin
-  // principals. This only happens when Fission is enabled.
-  if (mDoc && mDoc->NodePrincipal()->Equals(aNewDocument->NodePrincipal()) &&
-      (NS_IsAboutBlank(mDoc->GetDocumentURI()) ==
-       NS_IsAboutBlank(aNewDocument->GetDocumentURI()))) {
+  // Note that there will be an issue of initial document handling in Fission
+  // when running the WPT unset_context_name-1.html. In the test, the first
+  // about:blank page would be loaded with the principal of the testing domain
+  // in Fission and the window.name will be set there. Then, The window.name
+  // won't be reset after navigating to the testing page because the principal
+  // is the same. But, it won't be the case for non-Fission mode that the first
+  // about:blank will be loaded with a null principal and the window.name will
+  // be reset when loading the test page.
+  if (mDoc && mDoc->NodePrincipal()->EqualsConsideringDomain(
+                  aNewDocument->NodePrincipal())) {
     return;
   }
 
