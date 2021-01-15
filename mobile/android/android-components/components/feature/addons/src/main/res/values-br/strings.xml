@@ -159,7 +159,7 @@
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">O pellgargañ hag o wiriañ an askouezh…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
-    <string name="mozac_feature_addons_failed_to_query_add_ons">Ne cʼhaller ket kaout roll an askouezhioù.</string>
+    <string name="mozac_feature_addons_failed_to_query_add_ons">Ne cʼhaller ket kaout roll an askouezhioù!</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
     <string name="mozac_feature_addons_failed_to_translate">N’eo ket bet kavet an droidigezh, nag evit ar yezh %1$s nag evit ar yezh dre ziouer %2$s</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
@@ -201,7 +201,7 @@
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Esae diwezhañ:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
-    <string name="mozac_feature_addons_updater_dialog_status">Stad :</string>
+    <string name="mozac_feature_addons_updater_dialog_status">Stad:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">Ouzhpennet eo bet %1$s da %2$s.</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->

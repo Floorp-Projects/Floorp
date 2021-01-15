@@ -7,5 +7,5 @@
     <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
     <string name="mozac_support_migration_complete_notification_title">Hizivadenn ehuet</string>
     <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
-    <string name="mozac_support_migration_complete_notification_text">Hizivaet ha gwellaet eo Firefox!</string>
+    <string name="mozac_support_migration_complete_notification_text">Hizivaet eo bet Firefox - ha gwellaet ivez!</string>
 </resources>

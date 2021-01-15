@@ -10,7 +10,7 @@
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">Diweredekaet eo bet ar gwarez heuliañ evit al lec\'hienn-mañ</string>
     <!-- Content description: For the site security information icon (the site security icon).-->
-    <string name="mozac_browser_toolbar_content_description_site_info">Titouroù al lec\'hienn</string>
+    <string name="mozac_browser_toolbar_content_description_site_info">Titouroù al lecʼhienn</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">O kargañ</string>
-</resources>
+    </resources>
