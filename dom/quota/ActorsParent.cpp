@@ -6960,23 +6960,25 @@ bool QuotaManager::AreOriginsEqualOnDisk(const nsACString& aOrigin1,
 }
 
 // static
-bool QuotaManager::ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
-                               OriginAttributes* aAttrs) {
-  MOZ_ASSERT(aAttrs);
+Result<PrincipalInfo, nsresult> QuotaManager::ParseOrigin(
+    const nsACString& aOrigin) {
+  // An origin string either corresponds to a SystemPrincipalInfo or a
+  // ContentPrincipalInfo, see
+  // QuotaManager::GetOriginFromValidatedPrincipalInfo.
 
   if (aOrigin.Equals(kChromeOrigin)) {
-    aSpec = kChromeOrigin;
-    return true;
+    return PrincipalInfo{SystemPrincipalInfo{}};
   }
+
+  ContentPrincipalInfo contentPrincipalInfo;
 
   nsCString originalSuffix;
-  OriginParser::ResultType result = OriginParser::ParseOrigin(
-      MakeSanitizedOriginCString(aOrigin), aSpec, aAttrs, originalSuffix);
-  if (NS_WARN_IF(result != OriginParser::ValidOrigin)) {
-    return false;
-  }
+  const OriginParser::ResultType result = OriginParser::ParseOrigin(
+      MakeSanitizedOriginCString(aOrigin), contentPrincipalInfo.spec(),
+      &contentPrincipalInfo.attrs(), originalSuffix);
+  QM_TRY(OkIf(result == OriginParser::ValidOrigin), Err(NS_ERROR_FAILURE));
 
-  return true;
+  return PrincipalInfo{std::move(contentPrincipalInfo)};
 }
 
 // static
