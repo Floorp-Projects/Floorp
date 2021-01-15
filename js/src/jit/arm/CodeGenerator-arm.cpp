@@ -1508,26 +1508,6 @@ void CodeGenerator::visitCompareB(LCompareB* lir) {
   masm.bind(&done);
 }
 
-void CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir) {
-  MCompare* mir = lir->cmpMir();
-  const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
-  const LAllocation* rhs = lir->rhs();
-
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
-
-  Assembler::Condition cond = masm.testBoolean(Assembler::NotEqual, lhs);
-  jumpToBlock((mir->jsop() == JSOp::StrictEq) ? lir->ifFalse() : lir->ifTrue(),
-              cond);
-
-  if (rhs->isConstant()) {
-    masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
-  } else {
-    masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
-  }
-  emitBranch(JSOpToCondition(mir->compareType(), mir->jsop()), lir->ifTrue(),
-             lir->ifFalse());
-}
-
 void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
   ScratchRegisterScope scratch(masm);
   if (baab->right()->isConstant()) {

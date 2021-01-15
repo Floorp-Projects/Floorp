@@ -1812,33 +1812,6 @@ class LCompareB : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
   MCompare* mir() { return mir_->toCompare(); }
 };
 
-class LCompareBAndBranch
-    : public LControlInstructionHelper<2, BOX_PIECES + 1, 0> {
-  MCompare* cmpMir_;
-
- public:
-  LIR_HEADER(CompareBAndBranch)
-
-  LCompareBAndBranch(MCompare* cmpMir, const LBoxAllocation& lhs,
-                     const LAllocation& rhs, MBasicBlock* ifTrue,
-                     MBasicBlock* ifFalse)
-      : LControlInstructionHelper(classOpcode), cmpMir_(cmpMir) {
-    setBoxOperand(Lhs, lhs);
-    setOperand(BOX_PIECES, rhs);
-    setSuccessor(0, ifTrue);
-    setSuccessor(1, ifFalse);
-  }
-
-  static const size_t Lhs = 0;
-
-  const LAllocation* rhs() { return getOperand(BOX_PIECES); }
-
-  MBasicBlock* ifTrue() const { return getSuccessor(0); }
-  MBasicBlock* ifFalse() const { return getSuccessor(1); }
-  MTest* mir() const { return mir_->toTest(); }
-  MCompare* cmpMir() const { return cmpMir_; }
-};
-
 class LCompareVM : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0> {
  public:
   LIR_HEADER(CompareVM)
