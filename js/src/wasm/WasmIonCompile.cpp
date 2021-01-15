@@ -663,7 +663,7 @@ class FunctionCompiler {
     if (inDeadCode()) {
       return nullptr;
     }
-    auto* ins = MCompare::New(alloc(), lhs, rhs, op, type);
+    auto* ins = MCompare::NewWasm(alloc(), lhs, rhs, op, type);
     curBlock_->add(ins);
     return ins;
   }

@@ -2925,21 +2925,23 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
     setMovable();
   }
 
-  MCompare(MDefinition* left, MDefinition* right, JSOp jsop,
-           CompareType compareType)
-      : MCompare(left, right, jsop) {
+ public:
+  INSTRUCTION_HEADER(Compare)
+  TRIVIAL_NEW_WRAPPERS
+
+  static MCompare* NewWasm(TempAllocator& alloc, MDefinition* left,
+                           MDefinition* right, JSOp jsop,
+                           CompareType compareType) {
     MOZ_ASSERT(compareType == Compare_Int32 || compareType == Compare_UInt32 ||
                compareType == Compare_Int64 || compareType == Compare_UInt64 ||
                compareType == Compare_Double ||
                compareType == Compare_Float32 ||
                compareType == Compare_RefOrNull);
-    compareType_ = compareType;
-    setResultType(MIRType::Int32);
+    auto* ins = MCompare::New(alloc, left, right, jsop);
+    ins->setCompareType(compareType);
+    ins->setResultType(MIRType::Int32);
+    return ins;
   }
-
- public:
-  INSTRUCTION_HEADER(Compare)
-  TRIVIAL_NEW_WRAPPERS
 
   [[nodiscard]] bool tryFold(bool* result);
   [[nodiscard]] bool evaluateConstantOperands(TempAllocator& alloc,
