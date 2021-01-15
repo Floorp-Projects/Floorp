@@ -21,7 +21,7 @@ registerCleanupFunction(function() {
  * the user to enable this automatically re-selecting. We then check that
  * checking the checkbox does actually enable that behaviour.
  */
-add_task(async function() {
+add_task(async function test_old_modal_ui() {
   await SpecialPowers.pushPrefEnv({
     set: [["prompts.contentPromptSubDialog", false]],
   });
@@ -123,6 +123,48 @@ add_task(async function() {
   // promise callback of 'openedTabSelectedPromise' could be done at the middle of
   // RemotePrompt.openTabPrompt() while 'DOMModalDialogClosed' event is fired.
   await TestUtils.waitForTick();
+
+  BrowserTestUtils.removeTab(openedTab);
+});
+
+add_task(async function test_new_modal_ui() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.contentPromptSubDialog", true]],
+  });
+  // Make sure we clear the focus tab permission set in the previous test
+  PermissionTestUtils.remove(pageWithAlert, "focus-tab-by-prompt");
+
+  let firstTab = gBrowser.selectedTab;
+  // load page that opens prompt when page is hidden
+  let openedTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    pageWithAlert,
+    true
+  );
+  let openedTabGotAttentionPromise = BrowserTestUtils.waitForAttribute(
+    "attention",
+    openedTab,
+    "true"
+  );
+  // switch away from that tab again - this triggers the alert.
+  await BrowserTestUtils.switchTab(gBrowser, firstTab);
+  // ... but that's async on e10s...
+  await openedTabGotAttentionPromise;
+  // check for attention attribute
+  is(
+    openedTab.getAttribute("attention"),
+    "true",
+    "Tab with alert should have 'attention' attribute."
+  );
+  ok(!openedTab.selected, "Tab with alert should not be selected");
+
+  // switch tab back, and check the checkbox is displayed:
+  await BrowserTestUtils.switchTab(gBrowser, openedTab);
+  // check the prompt is there, and the extra row is present
+  let promptElements = openedTab.linkedBrowser.parentNode.querySelectorAll(
+    ".content-prompt-dialog"
+  );
+  is(promptElements.length, 1, "There should be 1 prompt");
 
   BrowserTestUtils.removeTab(openedTab);
 });
