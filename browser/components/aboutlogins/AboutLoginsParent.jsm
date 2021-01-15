@@ -7,6 +7,9 @@
 // _AboutLogins is only exported for testing
 var EXPORTED_SYMBOLS = ["AboutLoginsParent", "_AboutLogins"];
 
+const { setTimeout, clearTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -66,7 +69,7 @@ const SHOW_PASSWORD_SYNC_NOTIFICATION_PREF =
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
 const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
-
+let _passwordRemaskTimeout;
 const convertSubjectToLogin = subject => {
   subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
   const login = LoginHelper.loginToVanillaObject(subject);
@@ -215,14 +218,19 @@ class AboutLoginsParent extends JSWindowActorParent {
           messageText.value,
           captionText.value
         );
-        if (isAuthorized) {
-          const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-          AboutLogins._authExpirationTime = Date.now() + AUTH_TIMEOUT_MS;
-        }
         this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", {
           result: isAuthorized,
           telemetryEvent,
         });
+        if (isAuthorized) {
+          const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+          AboutLogins._authExpirationTime = Date.now() + AUTH_TIMEOUT_MS;
+          const remaskPasswords = () => {
+            this.sendAsyncMessage("AboutLogins:RemaskPassword");
+          };
+          clearTimeout(_passwordRemaskTimeout);
+          _passwordRemaskTimeout = setTimeout(remaskPasswords, AUTH_TIMEOUT_MS);
+        }
         break;
       }
       case "AboutLogins:Subscribe": {

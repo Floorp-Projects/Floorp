@@ -216,6 +216,9 @@ class AboutLoginsChild extends JSWindowActorChild {
           recordTelemetryEvent(message.data.telemetryEvent);
         }
         break;
+      case "AboutLogins:RemaskPassword":
+        this.sendToContent("RemaskPassword", message.data);
+        break;
       case "AboutLogins:Setup":
         let waivedContent = Cu.waiveXrays(this.browsingContext.window);
         waivedContent.AboutLoginsUtils.masterPasswordEnabled =
