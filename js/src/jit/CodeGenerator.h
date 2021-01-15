@@ -194,8 +194,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitSetPropertyPolymorphic(LInstruction* lir, Register obj,
                                   Register scratch,
                                   const ConstantOrRegister& value);
-  void emitCompareS(LInstruction* lir, JSOp op, Register left, Register right,
-                    Register output);
 
   void emitConcat(LInstruction* lir, Register lhs, Register rhs,
                   Register output);

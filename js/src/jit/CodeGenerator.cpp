@@ -9318,9 +9318,11 @@ void CodeGenerator::visitTruncF(LTruncF* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
-void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
-                                 Register right, Register output) {
-  MOZ_ASSERT(lir->isCompareS());
+void CodeGenerator::visitCompareS(LCompareS* lir) {
+  JSOp op = lir->mir()->jsop();
+  Register left = ToRegister(lir->left());
+  Register right = ToRegister(lir->right());
+  Register output = ToRegister(lir->output());
 
   OutOfLineCode* ool = nullptr;
 
@@ -9355,15 +9357,6 @@ void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
   masm.compareStrings(op, left, right, output, ool->entry());
 
   masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::visitCompareS(LCompareS* lir) {
-  JSOp op = lir->mir()->jsop();
-  Register left = ToRegister(lir->left());
-  Register right = ToRegister(lir->right());
-  Register output = ToRegister(lir->output());
-
-  emitCompareS(lir, op, left, right, output);
 }
 
 void CodeGenerator::visitCompareBigInt(LCompareBigInt* lir) {
