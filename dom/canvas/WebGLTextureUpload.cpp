@@ -189,6 +189,9 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
     if (sd) {
       sd = Some(Flatten(*sd));
     }
+    if (!sd) {
+      NS_WARNING("No SurfaceDescriptor for layers::Image!");
+    }
   }
 
   RefPtr<gfx::DataSourceSurface> dataSurf;
@@ -212,7 +215,7 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
 
   ////
 
-  if (!layersImage && !dataSurf) {
+  if (!sd && !dataSurf) {
     webgl.EnqueueWarning("Resource has no data (yet?). Uploading zeros.");
     return Some(TexUnpackBlobDesc{target, size, gfxAlphaType::NonPremult});
   }
