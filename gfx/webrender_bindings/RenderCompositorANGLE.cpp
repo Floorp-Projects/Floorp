@@ -264,7 +264,7 @@ bool RenderCompositorANGLE::CreateSwapChain(nsACString& aError) {
     return false;
   }
 
-  if (!mSwapChain && dxgiFactory2 && IsWin8OrLater()) {
+  if (!mSwapChain && dxgiFactory2) {
     RefPtr<IDXGISwapChain1> swapChain1;
     bool useTripleBuffering = false;
 
