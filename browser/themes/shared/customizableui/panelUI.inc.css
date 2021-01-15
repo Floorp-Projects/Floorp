@@ -1235,6 +1235,10 @@ panelview .toolbarbutton-1,
   -moz-box-orient: horizontal;
   border: 0;
   border-radius: 0;
+}
+
+.toolbaritem-combined-buttons:not([widget-type="button-and-view"]),
+.toolbaritem-menu-buttons {
   margin-inline-end: 8px;
 }
 
@@ -1446,6 +1450,10 @@ toolbarpaletteitem[place="palette"] > #search-container {
 toolbarpaletteitem[place="menu-panel"],
 toolbarpaletteitem[place="menu-panel"] > toolbaritem {
   -moz-box-flex: 1;
+}
+
+.toolbaritem-combined-buttons[cui-areatype="menu-panel"] > .toolbarbutton-combined-buttons-dropmarker {
+  display: none;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:not(.toolbarbutton-1)[disabled] {

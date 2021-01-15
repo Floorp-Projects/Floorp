@@ -110,9 +110,24 @@ var gPlacements = new Map();
  */
 var gFuturePlacements = new Map();
 
-// XXXunf Temporary. Need a nice way to abstract functions to build widgets
-//       of these types.
-var gSupportedWidgetTypes = new Set(["button", "view", "custom"]);
+var gSupportedWidgetTypes = new Set([
+  // A button that does a command.
+  "button",
+
+  // A button that opens a view in a panel (or in a subview of the panel).
+  "view",
+
+  // A combination of the above, which looks different depending on whether it's
+  // located in the toolbar or in the panel: When located in the toolbar, shown
+  // as a combined item of a button and a dropmarker button. The button triggers
+  // the command and the dropmarker button opens the view. When located in the
+  // panel, shown as one item which opens the view, and the button command
+  // cannot be triggered separately.
+  "button-and-view",
+
+  // A custom widget that defines its own markup.
+  "custom",
+]);
 
 /**
  * gPanelsForWindow is a list of known panels in a window which we may need to close
@@ -1710,7 +1725,29 @@ var CustomizableUIInternal = {
       if (aWidget.onBeforeCreated) {
         aWidget.onBeforeCreated(aDocument);
       }
-      node = aDocument.createXULElement("toolbarbutton");
+
+      let button = aDocument.createXULElement("toolbarbutton");
+      button.classList.add("toolbarbutton-1");
+
+      let viewbutton = null;
+      if (aWidget.type == "button-and-view") {
+        button.setAttribute("id", aWidget.id + "-button");
+        let dropmarker = aDocument.createXULElement("toolbarbutton");
+        dropmarker.setAttribute("id", aWidget.id + "-dropmarker");
+        dropmarker.classList.add(
+          "toolbarbutton-1",
+          "toolbarbutton-combined-buttons-dropmarker"
+        );
+        node = aDocument.createXULElement("toolbaritem");
+        node.classList.add("toolbaritem-combined-buttons");
+        node.append(button, dropmarker);
+        viewbutton = dropmarker;
+      } else {
+        node = button;
+        if (aWidget.type == "view") {
+          viewbutton = button;
+        }
+      }
 
       node.setAttribute("id", aWidget.id);
       node.setAttribute("widget-id", aWidget.id);
@@ -1724,6 +1761,10 @@ var CustomizableUIInternal = {
         node.setAttribute("tabspecific", aWidget.tabSpecific);
       }
       node.setAttribute("label", this.getLocalizedProperty(aWidget, "label"));
+      if (button != node) {
+        button.setAttribute("label", node.getAttribute("label"));
+      }
+
       let additionalTooltipArguments = [];
       if (aWidget.shortcutId) {
         let keyEl = aDocument.getElementById(aWidget.shortcutId);
@@ -1749,6 +1790,9 @@ var CustomizableUIInternal = {
       );
       if (tooltip) {
         node.setAttribute("tooltiptext", tooltip);
+        if (button != node) {
+          button.setAttribute("tooltiptext", tooltip);
+        }
       }
 
       let commandHandler = this.handleWidgetCommand.bind(this, aWidget, node);
@@ -1756,11 +1800,13 @@ var CustomizableUIInternal = {
       let clickHandler = this.handleWidgetClick.bind(this, aWidget, node);
       node.addEventListener("click", clickHandler);
 
-      let nodeClasses = ["toolbarbutton-1", "chromeclass-toolbar-additional"];
+      node.classList.add("chromeclass-toolbar-additional");
 
-      // If the widget has a view, and has view showing / hiding listeners,
-      // hook those up to this widget.
-      if (aWidget.type == "view") {
+      // If the widget has a view, register a keypress handler because opening
+      // a view with the keyboard has slightly different focus handling than
+      // opening a view with the mouse. (When opened with the keyboard, the
+      // first item in the view should be focused after opening.)
+      if (viewbutton) {
         log.debug(
           "Widget " +
             aWidget.id +
@@ -1768,7 +1814,7 @@ var CustomizableUIInternal = {
         );
 
         if (aWidget.source == CustomizableUI.SOURCE_BUILTIN) {
-          nodeClasses.push("subviewbutton-nav");
+          node.classList.add("subviewbutton-nav");
         }
 
         let keyPressHandler = this.handleWidgetKeyPress.bind(
@@ -1776,9 +1822,8 @@ var CustomizableUIInternal = {
           aWidget,
           node
         );
-        node.addEventListener("keypress", keyPressHandler);
+        viewbutton.addEventListener("keypress", keyPressHandler);
       }
-      node.setAttribute("class", nodeClasses.join(" "));
 
       if (aWidget.onCreated) {
         aWidget.onCreated(node);
@@ -1884,6 +1929,41 @@ var CustomizableUIInternal = {
     );
   },
 
+  doWidgetCommand(aWidget, aNode, aEvent) {
+    if (aWidget.onCommand) {
+      try {
+        aWidget.onCommand.call(null, aEvent);
+      } catch (e) {
+        log.error(e);
+      }
+    } else {
+      // XXXunf Need to think this through more, and formalize.
+      Services.obs.notifyObservers(
+        aNode,
+        "customizedui-widget-command",
+        aWidget.id
+      );
+    }
+  },
+
+  showWidgetView(aWidget, aNode, aEvent) {
+    let ownerWindow = aNode.ownerGlobal;
+    let area = this.getPlacementOfWidget(aNode.id).area;
+    let areaType = CustomizableUI.getAreaType(area);
+    let anchor = aNode;
+    if (areaType != CustomizableUI.TYPE_MENU_PANEL) {
+      let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
+
+      let hasMultiView = !!aNode.closest("panelmultiview");
+      if (wrapper && !hasMultiView && wrapper.anchor) {
+        this.hidePanelForNode(aNode);
+        anchor = wrapper.anchor;
+      }
+    }
+
+    ownerWindow.PanelUI.showSubView(aWidget.viewId, anchor, aEvent);
+  },
+
   handleWidgetCommand(aWidget, aNode, aEvent) {
     // Note that aEvent can be a keypress event for widgets of type "view".
     log.debug("handleWidgetCommand");
@@ -1897,36 +1977,24 @@ var CustomizableUIInternal = {
     }
 
     if (aWidget.type == "button") {
-      if (aWidget.onCommand) {
-        try {
-          aWidget.onCommand.call(null, aEvent);
-        } catch (e) {
-          log.error(e);
-        }
-      } else {
-        // XXXunf Need to think this through more, and formalize.
-        Services.obs.notifyObservers(
-          aNode,
-          "customizedui-widget-command",
-          aWidget.id
-        );
-      }
+      this.doWidgetCommand(aWidget, aNode, aEvent);
     } else if (aWidget.type == "view") {
-      let ownerWindow = aNode.ownerGlobal;
+      this.showWidgetView(aWidget, aNode, aEvent);
+    } else if (aWidget.type == "button-and-view") {
+      // Do the command if we're in the toolbar and the button was clicked.
+      // Otherwise, open the view. There is no way to trigger the command while
+      // the widget is in the panel, by design.
+      let button = aNode.firstElementChild;
       let area = this.getPlacementOfWidget(aNode.id).area;
       let areaType = CustomizableUI.getAreaType(area);
-      let anchor = aNode;
-      if (areaType != CustomizableUI.TYPE_MENU_PANEL) {
-        let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
-
-        let hasMultiView = !!aNode.closest("panelmultiview");
-        if (wrapper && !hasMultiView && wrapper.anchor) {
-          this.hidePanelForNode(aNode);
-          anchor = wrapper.anchor;
-        }
+      if (
+        areaType == CustomizableUI.TYPE_TOOLBAR &&
+        button.contains(aEvent.target)
+      ) {
+        this.doWidgetCommand(aWidget, aNode, aEvent);
+      } else {
+        this.showWidgetView(aWidget, aNode, aEvent);
       }
-
-      ownerWindow.PanelUI.showSubView(aWidget.viewId, anchor, aEvent);
     }
   },
 
@@ -2106,7 +2174,8 @@ var CustomizableUIInternal = {
     while (target.parentNode && target.localName != "panel") {
       if (
         target.getAttribute("closemenu") == "none" ||
-        target.getAttribute("widget-type") == "view"
+        target.getAttribute("widget-type") == "view" ||
+        target.getAttribute("widget-type") == "button-and-view"
       ) {
         return;
       }
@@ -2821,10 +2890,11 @@ var CustomizableUIInternal = {
       widget.onBeforeCommand = aData.onBeforeCommand;
     }
 
-    if (widget.type == "button") {
+    if (widget.type == "button" || widget.type == "button-and-view") {
       widget.onCommand =
         typeof aData.onCommand == "function" ? aData.onCommand : null;
-    } else if (widget.type == "view") {
+    }
+    if (widget.type == "view" || widget.type == "button-and-view") {
       if (typeof aData.viewId != "string") {
         log.error(
           "Expected a string for widget " +
@@ -2927,7 +2997,7 @@ var CustomizableUIInternal = {
           true
         );
       }
-      if (widget.type == "view") {
+      if (widget.type == "view" || widget.type == "button-and-view") {
         let viewNode = window.document.getElementById(widget.viewId);
         if (viewNode) {
           for (let eventName of kSubviewEvents) {
@@ -3769,10 +3839,21 @@ var CustomizableUI = {
    *                  'button' - for simple button widgets (the default)
    *                  'view'   - for buttons that open a panel or subview,
    *                             depending on where they are placed.
+   *                  'button-and-view' - A combination of 'button' and 'view',
+   *                             which looks different depending on whether it's
+   *                             located in the toolbar or in the panel: When
+   *                             located in the toolbar, the widget is shown as
+   *                             a combined item of a button and a dropmarker
+   *                             button. The button triggers the command and the
+   *                             dropmarker button opens the view. When located
+   *                             in the panel, shown as one item which opens the
+   *                             view, and the button command cannot be
+   *                             triggered separately.
    *                  'custom' - for fine-grained control over the creation
    *                             of the widget.
-   * - viewId:        Only useful for views (and required there): the id of the
-   *                  <panelview> that should be shown when clicking the widget.
+   * - viewId:        Only useful for views and button-and-view widgets (and
+   *                  required there): the id of the <panelview> that should be
+   *                  shown when clicking the widget.
    * - onBuild(aDoc): Only useful for custom widgets (and required there); a
    *                  function that will be invoked with the document in which
    *                  to build a widget. Should return the DOM node that has
@@ -3797,14 +3878,15 @@ var CustomizableUI = {
    *                          change the button's icon in preparation to the
    *                          pending command action. Called for both type=button
    *                          and type=view.
-   * - onCommand(aEvt): Only useful for button widgets; a function that will be
-   *                    invoked when the user activates the button.
+   * - onCommand(aEvt): Only useful for button and button-and-view widgets; a
+   *                    function that will be invoked when the user activates
+   *                    the button.
    * - onClick(aEvt): Attached to all widgets; a function that will be invoked
    *                  when the user clicks the widget.
-   * - onViewShowing(aEvt): Only useful for views; a function that will be
-   *                  invoked when a user shows your view. If any event
-   *                  handler calls aEvt.preventDefault(), the view will
-   *                  not be shown.
+   * - onViewShowing(aEvt): Only useful for views and button-and-view widgets; a
+   *                  function that will be invoked when a user shows your view.
+   *                  If any event handler calls aEvt.preventDefault(), the view
+   *                  will not be shown.
    *
    *                  The event's `detail` property is an object with an
    *                  `addBlocker` method. Handlers which need to
@@ -4599,8 +4681,13 @@ function WidgetSingleWrapper(aWidget, aNode) {
     if (!anchorId) {
       anchorId = aNode.getAttribute("cui-anchorid");
     }
-
-    return anchorId ? aNode.ownerDocument.getElementById(anchorId) : aNode;
+    if (anchorId) {
+      return aNode.ownerDocument.getElementById(anchorId);
+    }
+    if (aWidget.type == "button-and-view") {
+      return aNode.lastElementChild;
+    }
+    return aNode;
   });
 
   this.__defineGetter__("overflowed", function() {
