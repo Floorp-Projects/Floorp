@@ -12,7 +12,7 @@
    verifyRequestItemTarget, waitFor, waitForDispatch, testFilterButtons,
    performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor,
    testColumnsAlignment, hideColumn, showColumn, performRequests, waitForRequestData,
-   toggleBlockedUrl, registerFaviconNotifier */
+   toggleBlockedUrl, registerFaviconNotifier, clickOnSidebarTab */
 
 "use strict";
 
@@ -1340,3 +1340,23 @@ function compareValues(first, second) {
   }
   return first > second ? 1 : -1;
 }
+
+/**
+ * Click on the "Response" tab to open "Response" panel in the sidebar.
+ * @param {Document} doc
+ *        Network panel document.
+ * @param {String} name
+ *        Network panel sidebar tab name.
+ */
+const clickOnSidebarTab = async (doc, name) => {
+  AccessibilityUtils.setEnv({
+    // Keyboard accessibility is handled on the sidebar tabs container level
+    // (nav). Users can use arrow keys to navigate between and select tabs.
+    nonNegativeTabIndexRule: false,
+  });
+  await EventUtils.sendMouseEvent(
+    { type: "click" },
+    doc.querySelector(`#${name}-tab`)
+  );
+  AccessibilityUtils.resetEnv();
+};

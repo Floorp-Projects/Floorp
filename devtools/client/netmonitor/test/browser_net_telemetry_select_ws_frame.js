@@ -49,10 +49,7 @@ add_task(async function() {
   );
 
   // Click on the "Response" panel.
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
   await wait;
 
   // Get all messages present in the "Response" panel.

@@ -50,10 +50,7 @@ add_task(async function() {
   );
   await wait;
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
   await wait;
 
   ok(
