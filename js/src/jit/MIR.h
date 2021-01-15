@@ -7709,13 +7709,10 @@ class MKeepAliveObject : public MUnaryInstruction,
 
 // Perform !-operation
 class MNot : public MUnaryInstruction, public TestPolicy::Data {
-  bool operandMightEmulateUndefined_;
   bool operandIsNeverNaN_;
 
   explicit MNot(MDefinition* input)
-      : MUnaryInstruction(classOpcode, input),
-        operandMightEmulateUndefined_(true),
-        operandIsNeverNaN_(false) {
+      : MUnaryInstruction(classOpcode, input), operandIsNeverNaN_(false) {
     setResultType(MIRType::Boolean);
     setMovable();
   }
@@ -7734,9 +7731,6 @@ class MNot : public MUnaryInstruction, public TestPolicy::Data {
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
-  bool operandMightEmulateUndefined() const {
-    return operandMightEmulateUndefined_;
-  }
   bool operandIsNeverNaN() const { return operandIsNeverNaN_; }
 
   virtual AliasSet getAliasSet() const override { return AliasSet::None(); }

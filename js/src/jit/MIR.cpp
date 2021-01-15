@@ -4103,11 +4103,6 @@ MDefinition* MNot::foldsTo(TempAllocator& alloc) {
     return MConstant::New(alloc, BooleanValue(false));
   }
 
-  // Not of an object that can't emulate undefined is always false.
-  if (input()->type() == MIRType::Object && !operandMightEmulateUndefined()) {
-    return MConstant::New(alloc, BooleanValue(false));
-  }
-
   return this;
 }
 
