@@ -1792,26 +1792,6 @@ class LCompareBigIntString : public LCallInstructionHelper<1, 2, 0> {
   MCompare* mir() { return mir_->toCompare(); }
 };
 
-// Used for strict-equality comparisons where one side is a boolean
-// and the other is a value. Note that CompareI is used to compare
-// two booleans.
-class LCompareB : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
- public:
-  LIR_HEADER(CompareB)
-
-  LCompareB(const LBoxAllocation& lhs, const LAllocation& rhs)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Lhs, lhs);
-    setOperand(BOX_PIECES, rhs);
-  }
-
-  static const size_t Lhs = 0;
-
-  const LAllocation* rhs() { return getOperand(BOX_PIECES); }
-
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
 class LCompareVM : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0> {
  public:
   LIR_HEADER(CompareVM)

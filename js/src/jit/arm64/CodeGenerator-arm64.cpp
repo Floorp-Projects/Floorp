@@ -1412,30 +1412,6 @@ void CodeGenerator::visitCompareFAndBranch(LCompareFAndBranch* comp) {
   emitBranch(cond, comp->ifTrue(), comp->ifFalse());
 }
 
-void CodeGenerator::visitCompareB(LCompareB* lir) {
-  MCompare* mir = lir->mir();
-  const ValueOperand lhs = ToValue(lir, LCompareB::Lhs);
-  const LAllocation* rhs = lir->rhs();
-  const Register output = ToRegister(lir->output());
-  const Assembler::Condition cond =
-      JSOpToCondition(mir->compareType(), mir->jsop());
-
-  vixl::UseScratchRegisterScope temps(&masm.asVIXL());
-  const Register scratch = temps.AcquireX().asUnsized();
-
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
-
-  // Load boxed boolean into scratch.
-  if (rhs->isConstant()) {
-    masm.moveValue(rhs->toConstant()->toJSValue(), ValueOperand(scratch));
-  } else {
-    masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), scratch);
-  }
-
-  // Compare the entire Value.
-  masm.cmpPtrSet(cond, lhs.valueReg(), scratch, output);
-}
-
 void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
   if (baab->right()->isConstant()) {
     masm.Tst(toWRegister(baab->left()), Operand(ToInt32(baab->right())));
