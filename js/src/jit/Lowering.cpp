@@ -5871,10 +5871,6 @@ void LIRGenerator::visitArrayState(MArrayState* objState) {
   MOZ_CRASH("Unexpected ArrayState node during Lowering.");
 }
 
-void LIRGenerator::visitArgumentState(MArgumentState* objState) {
-  // ArgumentState nodes are always inlined at their uses.
-}
-
 void LIRGenerator::visitUnknownValue(MUnknownValue* ins) {
   MOZ_CRASH("Can not lower unknown value.");
 }

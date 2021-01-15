@@ -2330,34 +2330,6 @@ class MArrayState : public MVariadicInstruction,
   bool canRecoverOnBailout() const override { return true; }
 };
 
-// Hold the arguments of an inlined frame. At the moment this class is not
-// recovered on bailout as it does not have an implementation and it should
-// be inlined at all its uses.
-class MArgumentState : public MVariadicInstruction,
-                       public NoFloatPolicyAfter<0>::Data {
- private:
-  explicit MArgumentState() : MVariadicInstruction(classOpcode) {
-    setResultType(MIRType::Object);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ArgumentState)
-
-  static MArgumentState* New(TempAllocator::Fallible view,
-                             const MDefinitionVector& args);
-  static MArgumentState* Copy(TempAllocator& alloc, MArgumentState* state);
-
-  size_t numElements() const { return numOperands(); }
-
-  MDefinition* getElement(uint32_t index) const { return getOperand(index); }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 // Setting __proto__ in an object literal.
 class MMutateProto : public MBinaryInstruction,
                      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
