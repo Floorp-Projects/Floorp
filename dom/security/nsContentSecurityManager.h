@@ -38,7 +38,7 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
   static bool AllowTopLevelNavigationToDataURI(nsIChannel* aChannel);
   static bool AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel);
   static void MeasureUnexpectedPrivilegedLoads(
-      nsIURI* aFinalURI, ExtContentPolicyType aContentPolicyType,
+      nsIURI* aFinalURI, nsContentPolicyType aContentPolicyType,
       const nsACString& aRemoteType);
 
  private:

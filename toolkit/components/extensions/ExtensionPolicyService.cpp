@@ -399,8 +399,8 @@ nsresult ExtensionPolicyService::InjectContentScripts(
 void ExtensionPolicyService::CheckRequest(nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   auto loadType = loadInfo->GetExternalContentPolicyType();
-  if (loadType != ExtContentPolicy::TYPE_DOCUMENT &&
-      loadType != ExtContentPolicy::TYPE_SUBDOCUMENT) {
+  if (loadType != nsIContentPolicy::TYPE_DOCUMENT &&
+      loadType != nsIContentPolicy::TYPE_SUBDOCUMENT) {
     return;
   }
 

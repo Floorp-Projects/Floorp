@@ -3183,11 +3183,11 @@ bool NS_ShouldClassifyChannel(nsIChannel* aChannel) {
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  ExtContentPolicyType type = loadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
   // Skip classifying channel triggered by system unless it is a top-level
   // load.
   if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
-      ExtContentPolicy::TYPE_DOCUMENT != type) {
+      nsIContentPolicy::TYPE_DOCUMENT != type) {
     return false;
   }
 
