@@ -10,9 +10,10 @@
 #include "mozilla/glean/bindings/Datetime.h"
 #include "mozilla/glean/bindings/Event.h"
 #include "mozilla/glean/bindings/MemoryDistribution.h"
-#include "mozilla/glean/bindings/Timespan.h"
 #include "mozilla/glean/bindings/String.h"
 #include "mozilla/glean/bindings/StringList.h"
+#include "mozilla/glean/bindings/Timespan.h"
+#include "mozilla/glean/bindings/TimingDistribution.h"
 #include "mozilla/glean/bindings/Uuid.h"
 
 #endif  // mozilla_Glean_MetricTypes_h

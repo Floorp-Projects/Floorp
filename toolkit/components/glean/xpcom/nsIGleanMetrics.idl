@@ -97,6 +97,58 @@ interface nsIGleanCounter : nsISupports
   jsval testGetValue([optional] in AUTF8String aPingName);
 };
 
+[scriptable, uuid(92e14730-9b5f-45a1-b018-f588d0b964d8)]
+interface nsIGleanTimingDistribution : nsISupports
+{
+  /**
+   * Starts tracking time for the provided metric.
+   *
+   * @returns A unique timer id for the new timer
+   */
+  [implicit_jscontext]
+  jsval start();
+
+  /**
+   * Stops tracking time for the provided metric and timer id.
+   *
+   * Adds a count to the corresponding bucket in the timing distribution.
+   * This will record an error if no `start` was called for this TimerId or
+   * if this TimerId was used to call `cancel`.
+   *
+   * @param aId The TimerId associated with this timing. This allows for
+   *            concurrent timing of events associated with different ids.
+   */
+  void stopAndAccumulate(in uint64_t aId);
+
+  /**
+   * Aborts a previous `start` call. No error is recorded if no `start` was
+   * called. (But then where did you get that id from?)
+   *
+   * @param aId The TimerID whose `start` you wish to abort.
+   */
+  void cancel(in uint64_t aId);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as a DistributionData.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or Nothing() if there is no value.
+   */
+  [implicit_jscontext]
+	jsval testGetValue([optional] in ACString aPingName);
+};
+
 [scriptable, uuid(eea5ed46-16ba-46cd-bb1f-504581987fe1)]
 interface nsIGleanMemoryDistribution : nsISupports
 {

@@ -187,3 +187,35 @@ add_task(function test_fog_custom_pings() {
   // Don't bother sending it, we'll test that in the integration suite.
   // See also bug 1681742.
 });
+
+add_task(async function test_fog_timing_distribution_works() {
+  let t1 = Glean.testOnly.whatTimeIsIt.start();
+  let t2 = Glean.testOnly.whatTimeIsIt.start();
+
+  await sleep(5);
+
+  let t3 = Glean.testOnly.whatTimeIsIt.start();
+  Glean.testOnly.whatTimeIsIt.cancel(t1);
+
+  await sleep(5);
+
+  Glean.testOnly.whatTimeIsIt.stopAndAccumulate(t2); // 10ms
+  Glean.testOnly.whatTimeIsIt.stopAndAccumulate(t3); // 5ms
+
+  let data = Glean.testOnly.whatTimeIsIt.testGetValue();
+  const NANOS_IN_MILLIS = 1e6;
+
+  // Variance in timing makes getting the sum impossible to know.
+  Assert.greater(data.sum, 15 * NANOS_IN_MILLIS, "Total time elapsed: > 15ms");
+
+  // No guarantees from timers means no guarantees on buckets.
+  // But we can guarantee it's only two samples.
+  Assert.equal(
+    2,
+    Object.entries(data.values).reduce(
+      (acc, [bucket, count]) => acc + count,
+      0
+    ),
+    "Only two buckets with samples"
+  );
+});

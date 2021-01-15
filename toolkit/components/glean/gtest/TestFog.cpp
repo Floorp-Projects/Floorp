@@ -192,3 +192,29 @@ TEST(FOG, TestCppStringLists)
   val = test_only::cheesy_string_list.TestGetValue().value();
   ASSERT_STREQ(kValue3.get(), val[2].get());
 }
+
+TEST(FOG, TestCppTimingDistWorks)
+{
+  auto id1 = test_only::what_time_is_it.Start();
+  auto id2 = test_only::what_time_is_it.Start();
+  PR_Sleep(PR_MillisecondsToInterval(5));
+  auto id3 = test_only::what_time_is_it.Start();
+  test_only::what_time_is_it.Cancel(std::move(id1));
+  PR_Sleep(PR_MillisecondsToInterval(5));
+  test_only::what_time_is_it.StopAndAccumulate(std::move(id2));
+  test_only::what_time_is_it.StopAndAccumulate(std::move(id3));
+
+  DistributionData data = test_only::what_time_is_it.TestGetValue().ref();
+  const uint64_t NANOS_IN_MILLIS = 1e6;
+
+  // We don't know exactly how long those sleeps took, only that it was at
+  // least 15ms total.
+  ASSERT_GT(data.sum, (uint64_t)(15 * NANOS_IN_MILLIS));
+
+  // We also can't guarantee the buckets, but we can guarantee two samples.
+  uint64_t sampleCount = 0;
+  for (auto iter = data.values.Iter(); !iter.Done(); iter.Next()) {
+    sampleCount += iter.UserData();
+  }
+  ASSERT_EQ(sampleCount, (uint64_t)2);
+}

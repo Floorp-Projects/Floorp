@@ -37,12 +37,14 @@ if CONFIG["MOZ_GLEAN"]:
         "bindings/private/Boolean.h",
         "bindings/private/Counter.h",
         "bindings/private/Datetime.h",
+        "bindings/private/DistributionData.h",
         "bindings/private/Event.h",
         "bindings/private/MemoryDistribution.h",
         "bindings/private/Ping.h",
         "bindings/private/String.h",
         "bindings/private/StringList.h",
         "bindings/private/Timespan.h",
+        "bindings/private/TimingDistribution.h",
         "bindings/private/Uuid.h",
     ]
 
@@ -67,6 +69,7 @@ if CONFIG["MOZ_GLEAN"]:
         "bindings/private/String.cpp",
         "bindings/private/StringList.cpp",
         "bindings/private/Timespan.cpp",
+        "bindings/private/TimingDistribution.cpp",
         "bindings/private/Uuid.cpp",
         "ipc/FOGIPC.cpp",
     ]
