@@ -19,13 +19,19 @@
   text-rendering: optimizeLegibility;
 }
 
+@media not print {
+  #preferences-root,
+  #preferences-body {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
 #preferences-root,
 #preferences-body {
   margin: 0;
   padding: 0;
-  height: 100%;
   width: 100%;
-  overflow: hidden;
 }
 
 #preferences-body {
