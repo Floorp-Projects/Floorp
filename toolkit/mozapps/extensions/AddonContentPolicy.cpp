@@ -94,7 +94,11 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
     return NS_ERROR_FAILURE;
   }
 
-  ExtContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
+
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
+                                contentType),
+             "We should only see external content policy types here.");
 
   *aShouldLoad = nsIContentPolicy::ACCEPT;
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->GetLoadingPrincipal();
@@ -109,7 +113,7 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
     return NS_OK;
   }
 
-  if (contentType == ExtContentPolicy::TYPE_SCRIPT) {
+  if (contentType == nsIContentPolicy::TYPE_SCRIPT) {
     NS_ConvertUTF8toUTF16 typeString(aMimeTypeGuess);
     nsContentTypeParser mimeParser(typeString);
 
@@ -141,6 +145,13 @@ AddonContentPolicy::ShouldProcess(nsIURI* aContentLocation,
                                   nsILoadInfo* aLoadInfo,
                                   const nsACString& aMimeTypeGuess,
                                   int16_t* aShouldProcess) {
+#ifdef DEBUG
+  nsContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
+                                contentType),
+             "We should only see external content policy types here.");
+#endif
+
   *aShouldProcess = nsIContentPolicy::ACCEPT;
   return NS_OK;
 }
