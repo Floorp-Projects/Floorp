@@ -130,7 +130,7 @@ const testsTopLevel = [
     setup: async ({ doc }) => {
       await toggleRow(doc, 0);
       await toggleRow(doc, 1);
-      await selectRow(doc, 3);
+      selectRow(doc, 3);
     },
     expected: {
       tree: [documentRow, ...subtree],
@@ -154,9 +154,7 @@ const testsTopLevel = [
   },
   {
     desc: "Select third row in the tree.",
-    setup: async ({ doc }) => {
-      await selectRow(doc, 1);
-    },
+    setup: ({ doc }) => selectRow(doc, 1),
     expected: {
       sidebar: newHeaderSidebar,
     },
@@ -171,7 +169,7 @@ const testsOOP = [
       await toggleRow(doc, 1);
       await toggleRow(doc, 2);
       await toggleRow(doc, 3);
-      await selectRow(doc, 5);
+      selectRow(doc, 5);
     },
     expected: {
       tree: [documentRowOOP, ...subtreeOOP],
@@ -195,9 +193,7 @@ const testsOOP = [
   },
   {
     desc: "Select third row in the tree.",
-    setup: async ({ doc }) => {
-      await selectRow(doc, 1);
-    },
+    setup: ({ doc }) => selectRow(doc, 1),
     expected: {
       sidebar: newHeaderSidebar,
     },

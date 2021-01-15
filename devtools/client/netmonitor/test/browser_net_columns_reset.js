@@ -27,7 +27,7 @@ add_task(async function() {
   await hideColumn(monitor, "status");
   await hideColumn(monitor, "waterfall");
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button")
   );

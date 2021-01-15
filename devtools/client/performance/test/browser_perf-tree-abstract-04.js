@@ -31,7 +31,7 @@ add_task(async function() {
   info("Double clicking on the root item arrow and waiting for focus event.");
 
   const receivedFocusEvent = once(treeRoot, "focus");
-  await dblclick(treeRoot.target.querySelector(".arrow"));
+  dblclick(treeRoot.target.querySelector(".arrow"));
   await receivedFocusEvent;
 
   is(

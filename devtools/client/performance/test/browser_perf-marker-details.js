@@ -109,7 +109,7 @@ async function spawnTest() {
   for (let i = 0; i < bars.length; i++) {
     let bar = bars[i];
     let m = markers[i];
-    await EventUtils.sendMouseEvent({ type: "mousedown" }, bar);
+    EventUtils.sendMouseEvent({ type: "mousedown" }, bar);
 
     if (tests[m.name]) {
       if (!testsDone.includes(m.name)) {

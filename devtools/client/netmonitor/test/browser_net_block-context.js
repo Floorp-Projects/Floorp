@@ -91,7 +91,7 @@ async function waitForBlockingAction(store, action) {
 
 async function openMenuAndClick(monitor, store, document, itemSelector) {
   info(`Right clicking on white-space in the header to get the context menu`);
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector(".request-blocking-contents")
   );

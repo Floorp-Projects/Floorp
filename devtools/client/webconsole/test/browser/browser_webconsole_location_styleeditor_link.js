@@ -38,7 +38,7 @@ async function testViewSource(hud, toolbox, text) {
 
   const onStyleEditorSelected = toolbox.once("styleeditor-selected");
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     messageNode.querySelector(".frame-link-filename")
   );

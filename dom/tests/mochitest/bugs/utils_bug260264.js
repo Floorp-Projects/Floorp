@@ -6,13 +6,13 @@ const PROMPT_ACTION = SpecialPowers.Ci.nsIPermissionManager.PROMPT_ACTION;
 /**
  * Dispatches |handler| to |element|, as if fired in response to |event|.
  */
-async function send(element, event, handler) {
+function send(element, event, handler) {
   function unique_handler() {
     return handler.apply(this, arguments);
   }
   element.addEventListener(event, unique_handler);
   try {
-    await sendMouseEvent({ type: event }, element.id);
+    sendMouseEvent({ type: event }, element.id);
   } finally {
     element.removeEventListener(event, unique_handler);
   }

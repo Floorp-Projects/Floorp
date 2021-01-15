@@ -23,7 +23,7 @@ add_task(async function() {
   const wait = waitUntil(
     () => document.querySelectorAll(".tabpanel-summary-label")[0]
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
