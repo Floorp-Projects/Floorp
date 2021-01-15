@@ -3416,19 +3416,6 @@ class LValueToString : public LInstructionHelper<1, BOX_PIECES, 1> {
   const LDefinition* tempToUnbox() { return getTemp(0); }
 };
 
-// Convert a value to an object.
-class LValueToObject : public LInstructionHelper<1, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(ValueToObject)
-
-  explicit LValueToObject(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  static const size_t Input = 0;
-};
-
 // Double raised to a half power.
 class LPowHalfD : public LInstructionHelper<1, 1, 0> {
  public:

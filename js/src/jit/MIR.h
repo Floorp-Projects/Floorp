@@ -4162,25 +4162,6 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
   ALLOW_CLONE(MToString)
 };
 
-// Converts any type to an object, throwing on null or undefined.
-class MToObject : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MToObject(MDefinition* def) : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::Object);
-    setGuard();  // Throws on null or undefined.
-  }
-
- public:
-  INSTRUCTION_HEADER(ToObject)
-  TRIVIAL_NEW_WRAPPERS
-
-  AliasSet getAliasSet() const override {
-    // Throws on null or undefined.
-    return AliasSet::Store(AliasSet::ExceptionState);
-  }
-
-  ALLOW_CLONE(MToObject)
-};
-
 class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
  protected:
   explicit MBitNot(MDefinition* input) : MUnaryInstruction(classOpcode, input) {
