@@ -3032,21 +3032,6 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
   ALLOW_CLONE(MUnbox)
 };
 
-class MGuardString : public MUnaryInstruction, public StringPolicy<0>::Data {
-  explicit MGuardString(MDefinition* ins)
-      : MUnaryInstruction(classOpcode, ins) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::String);
-  }
-
- public:
-  INSTRUCTION_HEADER(GuardString)
-  TRIVIAL_NEW_WRAPPERS
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MAssertRange : public MUnaryInstruction, public NoTypePolicy::Data {
   // This is the range checked by the assertion. Don't confuse this with the
   // range_ member or the range() accessor. Since MAssertRange doesn't return
