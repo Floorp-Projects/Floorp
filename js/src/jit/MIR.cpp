@@ -1703,6 +1703,13 @@ MDefinition* MUnbox::foldsTo(TempAllocator& alloc) {
 
       return MToDouble::New(alloc, unboxed);
     }
+
+    // MUnbox<Int32>(MBox<Double>(x)) will always fail, even if x can be
+    // represented as an Int32. Fold to avoid unnecessary bailouts.
+    if (type() == MIRType::Int32 && unboxed->type() == MIRType::Double) {
+      return MToNumberInt32::New(alloc, unboxed,
+                                 IntConversionInputKind::NumbersOnly);
+    }
   }
 
   return this;
