@@ -126,7 +126,7 @@ def setup_sample_logger(logger, structured_logger, top_dir):
 @mock.patch("perfdocs.generator.Generator")
 @mock.patch("perfdocs.verifier.Verifier")
 @mock.patch("perfdocs.logger.PerfDocLogger", new=PerfDocsLoggerMock)
-def test_perfdocs_start_and_fail(generator, verifier, structured_logger, config, paths):
+def test_perfdocs_start_and_fail(verifier, generator, structured_logger, config, paths):
     from perfdocs.perfdocs import run_perfdocs
 
     with temp_file("bad", content="foo") as temp:
@@ -135,14 +135,15 @@ def test_perfdocs_start_and_fail(generator, verifier, structured_logger, config,
         assert PerfDocsLoggerMock.PATHS == [temp]
         assert PerfDocsLoggerMock.FAILED
 
-    assert verifier.validate_tree.assert_called_once()
-    assert generator.generate_perfdocs.assert_not_called()
+    assert verifier.call_count == 1
+    assert mock.call().validate_tree() in verifier.mock_calls
+    assert generator.call_count == 0
 
 
 @mock.patch("perfdocs.generator.Generator")
 @mock.patch("perfdocs.verifier.Verifier")
 @mock.patch("perfdocs.logger.PerfDocLogger", new=PerfDocsLoggerMock)
-def test_perfdocs_start_and_pass(generator, verifier, structured_logger, config, paths):
+def test_perfdocs_start_and_pass(verifier, generator, structured_logger, config, paths):
     from perfdocs.perfdocs import run_perfdocs
 
     PerfDocsLoggerMock.FAILED = False
@@ -152,8 +153,10 @@ def test_perfdocs_start_and_pass(generator, verifier, structured_logger, config,
         assert PerfDocsLoggerMock.PATHS == [temp]
         assert not PerfDocsLoggerMock.FAILED
 
-    assert verifier.validate_tree.assert_called_once()
-    assert generator.generate_perfdocs.assert_called_once()
+    assert verifier.call_count == 1
+    assert mock.call().validate_tree() in verifier.mock_calls
+    assert generator.call_count == 1
+    assert mock.call().generate_perfdocs() in generator.mock_calls
 
 
 @mock.patch("perfdocs.logger.PerfDocLogger", new=PerfDocsLoggerMock)
@@ -178,6 +181,194 @@ def test_perfdocs_verification(logger, structured_logger, perfdocs_sample):
     assert logger.warning.call_count == 0
     assert logger.log.call_count == 1
     assert len(logger.mock_calls) == 1
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_validate_yaml_pass(
+    logger, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    yaml_path = perfdocs_sample["config"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.verifier import Verifier
+
+    valid = Verifier(top_dir).validate_yaml(yaml_path)
+
+    assert valid
+
+
+@mock.patch("perfdocs.verifier.jsonschema")
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_invalid_yaml(
+    logger, jsonschema, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    yaml_path = perfdocs_sample["config"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.verifier import Verifier
+
+    jsonschema.validate = mock.Mock(side_effect=Exception("Schema/ValidationError"))
+    verifier = Verifier("top_dir")
+    valid = verifier.validate_yaml(yaml_path)
+
+    expected = ("YAML ValidationError: Schema/ValidationError", yaml_path)
+    args, _ = logger.warning.call_args
+
+    assert logger.warning.call_count == 1
+    assert args == expected
+    assert not valid
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_validate_rst_pass(
+    logger, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    rst_path = perfdocs_sample["index"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.verifier import Verifier
+
+    valid = Verifier(top_dir).validate_rst_content(rst_path)
+
+    assert valid
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_invalid_rst(logger, structured_logger, perfdocs_sample):
+    top_dir = perfdocs_sample["top_dir"]
+    rst_path = perfdocs_sample["index"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    # Replace the target string to invalid Keyword for test
+    with open(rst_path, "r") as file:
+        filedata = file.read()
+
+    filedata = filedata.replace("documentation", "Invalid Keyword")
+
+    with open(rst_path, "w") as file:
+        file.write(filedata)
+
+    from perfdocs.verifier import Verifier
+
+    verifier = Verifier("top_dir")
+    valid = verifier.validate_rst_content(rst_path)
+
+    expected = (
+        "Cannot find a '{documentation}' entry in the given index file",
+        rst_path,
+    )
+    args, _ = logger.warning.call_args
+
+    assert logger.warning.call_count == 1
+    assert args == expected
+    assert not valid
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_validate_descriptions_pass(
+    logger, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.verifier import Verifier
+
+    verifier = Verifier(top_dir)
+    verifier._check_framework_descriptions(verifier._gatherer.perfdocs_tree[0])
+
+    assert logger.warning.call_count == 0
+    assert logger.log.call_count == 1
+    assert len(logger.mock_calls) == 1
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_not_existing_suite_in_test_list(
+    logger, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    manifest_path = perfdocs_sample["manifest"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.verifier import Verifier
+
+    verifier = Verifier(top_dir)
+    os.remove(manifest_path)
+    verifier._check_framework_descriptions(verifier._gatherer.perfdocs_tree[0])
+
+    expected = (
+        "Could not find an existing suite for suite - bad suite name?",
+        perfdocs_sample["config"],
+    )
+    args, _ = logger.warning.call_args
+
+    assert logger.warning.call_count == 1
+    assert args == expected
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_not_existing_tests_in_suites(
+    logger, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    with open(perfdocs_sample["config"], "r") as file:
+        filedata = file.read()
+        filedata = filedata.replace("Example", "DifferentName")
+    with open(perfdocs_sample["config"], "w") as file:
+        file.write(filedata)
+
+    from perfdocs.verifier import Verifier
+
+    verifier = Verifier(top_dir)
+    verifier._check_framework_descriptions(verifier._gatherer.perfdocs_tree[0])
+
+    expected = [
+        "Could not find an existing test for DifferentName - bad test name?",
+        "Could not find a test description for Example",
+    ]
+
+    assert logger.warning.call_count == 2
+    for i, call in enumerate(logger.warning.call_args_list):
+        args, _ = call
+        assert args[0] == expected[i]
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_invalid_dir(logger, structured_logger, perfdocs_sample):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.verifier import Verifier
+
+    verifier = Verifier("invalid_path")
+    with pytest.raises(Exception) as exceinfo:
+        verifier.validate_tree()
+
+    assert str(exceinfo.value) == "No valid perfdocs directories found"
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_file_invalidation(
+    logger, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.verifier import Verifier
+
+    Verifier.validate_yaml = mock.Mock(return_value=False)
+    verifier = Verifier(top_dir)
+    with pytest.raises(Exception):
+        verifier.validate_tree()
+
+    # Check if "File validation error" log is called
+    # and Called with a log inside perfdocs_tree().
+    assert logger.log.call_count == 2
+    assert len(logger.mock_calls) == 2
 
 
 @mock.patch("perfdocs.logger.PerfDocLogger")
