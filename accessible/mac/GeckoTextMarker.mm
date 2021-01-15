@@ -200,7 +200,7 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
     uint32_t startOffset = child.IsProxy()
                                ? child.AsProxy()->StartOffset(&unused)
                                : child.AsAccessible()->StartOffset();
-    return static_cast<uint32_t>(mOffset) < startOffset;
+    return static_cast<uint32_t>(mOffset) <= startOffset;
   }
 
   MOZ_ASSERT_UNREACHABLE("Broken tree?!");
