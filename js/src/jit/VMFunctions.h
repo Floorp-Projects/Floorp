@@ -365,14 +365,6 @@ bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame);
 enum class EqualityKind : bool { NotEqual, Equal };
 
 template <EqualityKind Kind>
-bool LooselyEqual(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
-                  bool* res);
-
-template <EqualityKind Kind>
-bool StrictlyEqual(JSContext* cx, MutableHandleValue lhs,
-                   MutableHandleValue rhs, bool* res);
-
-template <EqualityKind Kind>
 bool StringsEqual(JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 
 enum class ComparisonKind : bool { GreaterThanOrEqual, LessThan };
