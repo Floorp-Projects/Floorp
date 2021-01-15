@@ -3450,6 +3450,87 @@
     "bug_numbers": [1655566],
     "description": "HTTP3: number of times when a stream is blocked by the flow control while sendnig data."
   },
+  "HTTP3_LOSS_RATIO": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 100,
+    "bug_numbers": [1677951],
+    "description": "HTTP3: packet loss ratio (multiply by 10000)."
+  },
+  "HTTP3_LATE_ACK_RATIO": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 100,
+    "keyed": true,
+    "bug_numbers": [1677951],
+    "description": "HTTP3: spurious retransmissions ratio (spurios_retransmission / packet sent * 10000)."
+  },
+  "HTTP3_LATE_ACK": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "keyed": true,
+    "bug_numbers": [1677951],
+    "description": "HTTP3: the number of spurious retransmissions."
+  },
+  "HTTP3_COUNTS_PTO": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "keyed": true,
+    "bug_numbers": [1677951],
+    "description": "HTTP3: the number of PTOs."
+  },
+  "HTTP3_DROP_DGRAMS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1677951],
+    "description": "HTTP3: the number of dropped datagrams."
+  },
+  "HTTP3_SAVED_DGRAMS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1677951],
+    "description": "HTTP3: the number of saved datagrams that are waiting for keys to be available."
+  },
+  "HTTP3_RECEIVED_SENT_DGRAMS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "keyed": true,
+    "bug_numbers": [1677951],
+    "description": "HTTP3: the number of received/sent packets."
+  },
   "HTTP_CONTENT_ENCODING": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

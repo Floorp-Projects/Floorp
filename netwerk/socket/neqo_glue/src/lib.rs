@@ -8,8 +8,9 @@ use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
 use neqo_qpack::QpackSettings;
-use neqo_transport::Error as TransportError;
-use neqo_transport::{ConnectionParameters, FixedConnectionIdManager, Output, QuicVersion};
+use neqo_transport::{
+    ConnectionParameters, Error as TransportError, FixedConnectionIdManager, Output, QuicVersion,
+};
 use nserror::*;
 use nsstring::*;
 use qlog::QlogStreamer;
@@ -773,4 +774,43 @@ pub extern "C" fn neqo_http3conn_set_resumption_token(
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_is_zero_rtt(conn: &mut NeqoHttp3Conn) -> bool {
     conn.conn.state() == Http3State::ZeroRtt
+}
+
+#[repr(C)]
+#[derive(Default)]
+pub struct Http3Stats {
+    /// Total packets received, including all the bad ones.
+    pub packets_rx: usize,
+    /// Duplicate packets received.
+    pub dups_rx: usize,
+    /// Dropped packets or dropped garbage.
+    pub dropped_rx: usize,
+    /// The number of packet that were saved for later processing.
+    pub saved_datagrams: usize,
+    /// Total packets sent.
+    pub packets_tx: usize,
+    /// Total number of packets that are declared lost.
+    pub lost: usize,
+    /// Late acknowledgments, for packets that were declared lost already.
+    pub late_ack: usize,
+    /// Acknowledgments for packets that contained data that was marked
+    /// for retransmission when the PTO timer popped.
+    pub pto_ack: usize,
+    /// Count PTOs. Single PTOs, 2 PTOs in a row, 3 PTOs in row, etc. are counted
+    /// separately.
+    pub pto_counts: [usize; 16],
+}
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_get_stats(conn: &mut NeqoHttp3Conn, stats: &mut Http3Stats) {
+    let t_stats = conn.conn.transport_stats();
+    stats.packets_rx = t_stats.packets_rx;
+    stats.dups_rx = t_stats.dups_rx;
+    stats.dropped_rx = t_stats.dropped_rx;
+    stats.saved_datagrams = t_stats.saved_datagrams;
+    stats.packets_tx = t_stats.packets_tx;
+    stats.lost = t_stats.lost;
+    stats.late_ack = t_stats.late_ack;
+    stats.pto_ack = t_stats.pto_ack;
+    stats.pto_counts = t_stats.pto_counts;
 }

@@ -46,6 +46,7 @@ const uint64_t HTTP3_APP_ERROR_CONNECT_ERROR = 0x10f;
 const uint64_t HTTP3_APP_ERROR_VERSION_FALLBACK = 0x110;
 
 const uint32_t UDP_MAX_PACKET_SIZE = 4096;
+const uint32_t MAX_PTO_COUNTS = 16;
 
 NS_IMPL_ADDREF(Http3Session)
 NS_IMPL_RELEASE(Http3Session)
@@ -1641,6 +1642,39 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
   // connection, this will map to "closing" key and 37 in the graph.
   Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
                         aClosing ? "closing"_ns : "closed"_ns, value);
+
+  Http3Stats stats;
+  mHttp3Connection->GetStats(&stats);
+
+  if (stats.packets_tx > 0) {
+    unsigned long loss = (stats.lost * 10000) / stats.packets_tx;
+    Telemetry::Accumulate(Telemetry::HTTP3_LOSS_RATIO, loss);
+
+    Telemetry::Accumulate(Telemetry::HTTP3_LATE_ACK, "ack"_ns, stats.late_ack);
+    Telemetry::Accumulate(Telemetry::HTTP3_LATE_ACK, "pto"_ns, stats.pto_ack);
+
+    unsigned long late_ack_ratio = (stats.late_ack * 10000) / stats.packets_tx;
+    unsigned long pto_ack_ratio = (stats.pto_ack * 10000) / stats.packets_tx;
+    Telemetry::Accumulate(Telemetry::HTTP3_LATE_ACK_RATIO, "ack"_ns,
+                          late_ack_ratio);
+    Telemetry::Accumulate(Telemetry::HTTP3_LATE_ACK_RATIO, "pto"_ns,
+                          pto_ack_ratio);
+
+    for (uint32_t i = 0; i < MAX_PTO_COUNTS; i++) {
+      nsAutoCString key;
+      key.AppendInt(i);
+      Telemetry::Accumulate(Telemetry::HTTP3_COUNTS_PTO, key,
+                            stats.pto_counts[i]);
+    }
+
+    Telemetry::Accumulate(Telemetry::HTTP3_DROP_DGRAMS, stats.dropped_rx);
+    Telemetry::Accumulate(Telemetry::HTTP3_SAVED_DGRAMS, stats.saved_datagrams);
+  }
+
+  Telemetry::Accumulate(Telemetry::HTTP3_RECEIVED_SENT_DGRAMS, "received"_ns,
+                        stats.packets_rx);
+  Telemetry::Accumulate(Telemetry::HTTP3_RECEIVED_SENT_DGRAMS, "sent"_ns,
+                        stats.packets_tx);
 }
 
 void Http3Session::Finish0Rtt(bool aRestart) {
