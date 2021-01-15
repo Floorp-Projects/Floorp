@@ -3898,6 +3898,14 @@ void CodeGenerator::visitLoadDynamicSlotV(LLoadDynamicSlotV* lir) {
   masm.loadValue(Address(base, offset), dest);
 }
 
+static ConstantOrRegister ToConstantOrRegister(const LAllocation* value,
+                                               MIRType valueType) {
+  if (value->isConstant()) {
+    return ConstantOrRegister(value->toConstant()->toJSValue());
+  }
+  return TypedOrValueRegister(valueType, ToAnyRegister(value));
+}
+
 void CodeGenerator::visitStoreDynamicSlotT(LStoreDynamicSlotT* lir) {
   Register base = ToRegister(lir->slots());
   int32_t offset = lir->mir()->slot() * sizeof(js::Value);
@@ -3908,14 +3916,8 @@ void CodeGenerator::visitStoreDynamicSlotT(LStoreDynamicSlotT* lir) {
   }
 
   MIRType valueType = lir->mir()->value()->type();
-
-  mozilla::Maybe<ConstantOrRegister> value;
-  if (lir->value()->isConstant()) {
-    value.emplace(ConstantOrRegister(lir->value()->toConstant()->toJSValue()));
-  } else {
-    value.emplace(TypedOrValueRegister(valueType, ToAnyRegister(lir->value())));
-  }
-  masm.storeUnboxedValue(value.ref(), valueType, dest, lir->mir()->slotType());
+  ConstantOrRegister value = ToConstantOrRegister(lir->value(), valueType);
+  masm.storeUnboxedValue(value, valueType, dest, lir->mir()->slotType());
 }
 
 void CodeGenerator::visitStoreDynamicSlotV(LStoreDynamicSlotV* lir) {
@@ -10504,14 +10506,6 @@ void CodeGenerator::emitStoreHoleCheck(Register elements,
     masm.branchTestMagic(Assembler::Equal, dest, &bail);
   }
   bailoutFrom(&bail, snapshot);
-}
-
-static ConstantOrRegister ToConstantOrRegister(const LAllocation* value,
-                                               MIRType valueType) {
-  if (value->isConstant()) {
-    return ConstantOrRegister(value->toConstant()->toJSValue());
-  }
-  return TypedOrValueRegister(valueType, ToAnyRegister(value));
 }
 
 void CodeGenerator::emitStoreElementTyped(const LAllocation* value,
