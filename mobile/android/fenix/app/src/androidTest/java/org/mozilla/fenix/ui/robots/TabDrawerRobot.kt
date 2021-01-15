@@ -17,6 +17,7 @@ import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
@@ -67,6 +68,9 @@ class TabDrawerRobot {
     fun verifyBehaviorState(expectedState: Int) = assertBehaviorState(expectedState)
 
     fun closeTab() {
+        mDevice.findObject(
+            UiSelector().resourceId("org.mozilla.fenix.debug:id/mozac_browser_tabstray_close")
+        ).waitForExists(waitingTime)
         closeTabButton().click()
     }
 
@@ -92,6 +96,9 @@ class TabDrawerRobot {
     }
 
     fun snackBarButtonClick(expectedText: String) {
+        mDevice.findObject(
+            UiSelector().resourceId("org.mozilla.fenix.debug:id/snackbar_btn")
+        ).waitForExists(waitingTime)
         onView(allOf(withId(R.id.snackbar_btn), withText(expectedText))).check(
             matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
         ).perform(click())
@@ -111,6 +118,32 @@ class TabDrawerRobot {
     }
 
     fun clickTabMediaControlButton() = tabMediaControlButton().click()
+
+    fun clickSelectTabs() = onView(withText("Select tabs")).click()
+
+    fun clickAddNewCollection() = addNewCollectionButton().click()
+
+    fun selectTab(title: String) = tab(title).click()
+
+    fun clickSaveCollection() = saveTabsToCollectionButton().click()
+
+    fun typeCollectionName(collectionName: String) {
+        collectionNameTextField().perform(replaceText(collectionName))
+        mDevice.findObject(UiSelector().textContains("OK")).click()
+    }
+
+    fun createCollection(
+        tabTitle: String,
+        collectionName: String,
+        firstCollection: Boolean = true
+    ) {
+        clickSelectTabs()
+        selectTab(tabTitle)
+        clickSaveCollection()
+        if (!firstCollection)
+            clickAddNewCollection()
+        typeCollectionName(collectionName)
+    }
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -236,8 +269,8 @@ class TabDrawerRobot {
 
             val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
             mDevice.waitNotNull(
-                    Until.findObject(text("Recently closed tabs")),
-                    waitingTime
+                Until.findObject(text("Recently closed tabs")),
+                waitingTime
             )
 
             val menuRecentlyClosedTabs = mDevice.findObject(text("Recently closed tabs"))
@@ -343,3 +376,9 @@ private fun tabsCounter() = onView(withId(R.id.tab_button))
 
 private fun visibleOrGone(visibility: Boolean) =
     if (visibility) ViewMatchers.Visibility.VISIBLE else ViewMatchers.Visibility.GONE
+
+private fun addNewCollectionButton() = onView(withId(R.id.add_new_collection))
+
+private fun saveTabsToCollectionButton() = onView(withId(R.id.collect_multi_select))
+
+private fun collectionNameTextField() = onView(withId(R.id.collection_name))

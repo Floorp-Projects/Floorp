@@ -52,40 +52,6 @@
 //
 //    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
 //    @Test
-//    fun verifyCreateFirstCollectionFlowItems() {
-//        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-//
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(firstWebPage.url) {
-//        }.openHomeScreen {
-//        }.openNavigationToolbar {
-//        }.enterURLAndEnterToBrowser(secondWebPage.url) {
-//        }.openTabDrawer {
-//        }.openTabsListThreeDotMenu {
-//            verifySaveCollection()
-//        }.clickOpenTabsMenuSaveCollection {
-//            clickSaveCollectionButton()
-//            verifySelectTabsView()
-//            selectAllTabsForCollection()
-//            verifyTabsSelectedCounterText(2)
-//            deselectAllTabsForCollection()
-//            verifyTabsSelectedCounterText(0)
-//            selectTabForCollection(firstWebPage.title)
-//            verifyTabsSelectedCounterText(1)
-//            selectAllTabsForCollection()
-//            saveTabsSelectedForCollection()
-//            verifyNameCollectionView()
-//            verifyDefaultCollectionName("Collection 1")
-//            typeCollectionName(firstCollectionName)
-//            verifySnackBarText("Tabs saved!")
-////            verifyExistingOpenTabs(firstWebPage.title)
-////            verifyExistingOpenTabs(secondWebPage.title)
-//        }
-//    }
-//
-//    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
-//    @Test
 //    // open a webpage, and add currently opened tab to existing collection
 //    fun addTabToExistingCollectionTest() {
 //        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -135,23 +101,6 @@
 //
 //    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
 //    @Test
-//    fun collectionMenuOpenAllTabsTest() {
-//        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        createCollection(firstCollectionName)
-//
-//        homeScreen {
-//            closeTab()
-//            expandCollection(firstCollectionName)
-//            clickCollectionThreeDotButton()
-//            selectOpenTabs()
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs(firstWebPage.title)
-//        }
-//    }
-//
-//    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
-//    @Test
 //    fun renameCollectionTest() {
 //        createCollection(firstCollectionName)
 //
@@ -162,20 +111,6 @@
 //            selectRenameCollection()
 //            typeCollectionName("renamed_collection")
 //            verifyCollectionIsDisplayed("renamed_collection")
-//        }
-//    }
-//
-//    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
-//    @Test
-//    fun deleteCollectionTest() {
-//        createCollection(firstCollectionName)
-//
-//        homeScreen {
-//            expandCollection(firstCollectionName)
-//            clickCollectionThreeDotButton()
-//            selectDeleteCollection()
-//            confirmDeleteCollection()
-//            verifyNoCollectionsHeader()
 //        }
 //    }
 //
@@ -194,42 +129,6 @@
 //            } catch (e: NoMatchingViewException) {
 //                scrollToElementByText(firstCollectionName)
 //            }
-//        }
-//    }
-//
-//    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
-//    @Test
-//    fun verifyExpandedCollectionItemsTest() {
-//        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        createCollection(firstCollectionName)
-//
-//        homeScreen {
-//            verifyCollectionIsDisplayed(firstCollectionName)
-//            verifyCollectionIcon()
-//            expandCollection(firstCollectionName)
-//            verifyItemInCollectionExists(firstWebPage.title)
-//            verifyCollectionItemLogo()
-//            verifyCollectionItemUrl()
-//            verifyShareCollectionButtonIsVisible(true)
-//            verifyCollectionMenuIsVisible(true)
-//            verifyCollectionItemRemoveButtonIsVisible(firstWebPage.title, true)
-//            collapseCollection(firstCollectionName)
-//            verifyItemInCollectionExists(firstWebPage.title, false)
-//            verifyShareCollectionButtonIsVisible(false)
-//            verifyCollectionMenuIsVisible(false)
-//            verifyCollectionItemRemoveButtonIsVisible(firstWebPage.title, false)
-//        }
-//    }
-//
-//    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/10587")
-//    @Test
-//    fun shareCollectionTest() {
-//        createCollection(firstCollectionName)
-//        homeScreen {
-//            expandCollection(firstCollectionName)
-//            clickShareCollectionButton()
-//            verifyShareTabsOverlay()
 //        }
 //    }
 //

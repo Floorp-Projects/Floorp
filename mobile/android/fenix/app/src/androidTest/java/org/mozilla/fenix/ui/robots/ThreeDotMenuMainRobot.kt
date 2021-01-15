@@ -72,7 +72,7 @@ class ThreeDotMenuMainRobot {
     fun verifySaveCollection() = assertSaveCollectionButton()
     fun verifySelectTabs() = assertSelectTabsButton()
 
-    fun clickBrowserViewSaveCollectionButton() {
+    fun clickSaveCollectionButton() {
         browserViewSaveCollectionButton().click()
     }
 
@@ -341,13 +341,6 @@ class ThreeDotMenuMainRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
-        }
-
-        fun clickOpenTabsMenuSaveCollection(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            saveCollectionButton().click()
-
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
         }
 
         fun openSaveToCollection(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {

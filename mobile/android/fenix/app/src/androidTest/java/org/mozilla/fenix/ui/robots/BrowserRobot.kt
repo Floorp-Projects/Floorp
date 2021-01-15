@@ -445,6 +445,15 @@ class BrowserRobot {
             NotificationRobot().interact()
             return NotificationRobot.Transition()
         }
+
+        fun goToHomescreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            openTabDrawer {
+            }.openNewTab {
+            }.dismissSearchBar {}
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
     }
 }
 

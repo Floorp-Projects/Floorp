@@ -30,6 +30,7 @@ import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.tabDrawer
 
 /**
  * Test Suite that contains tests defined as part of the Smoke and Sanity check defined in Test rail.
@@ -48,6 +49,7 @@ class SmokeTest {
         var title = "Ecosia"
         var url = "https://www.ecosia.org/search?q=%s"
     }
+    val collectionName = "First Collection"
 
     // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
     private fun getAwesomebarView(): View? {
@@ -834,6 +836,119 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.openDownloadsManager {
             verifyEmptyDownloadsList()
+        }
+    }
+
+    @Test
+    fun createFirstCollectionTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
+            mDevice.waitForIdle()
+        }.goToHomescreen {
+        }.clickSaveTabsToCollectionButton {
+            selectTab(firstWebPage.title)
+            selectTab(secondWebPage.title)
+            clickSaveCollection()
+            typeCollectionName(collectionName)
+            verifySnackBarText("Collection saved!")
+            snackBarButtonClick("VIEW")
+        }
+
+        homeScreen {
+            verifyCollectionIsDisplayed(collectionName)
+            verifyCollectionIcon()
+        }
+    }
+
+    @Test
+    fun verifyExpandedCollectionItemsTest() {
+        val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.openTabDrawer {
+            createCollection(webPage.title, collectionName)
+            snackBarButtonClick("VIEW")
+        }
+
+        homeScreen {
+            verifyCollectionIsDisplayed(collectionName)
+            verifyCollectionIcon()
+            expandCollection(collectionName)
+            verifyTabSavedInCollection(webPage.title)
+            verifyCollectionTabLogo()
+            verifyCollectionTabUrl()
+            verifyShareCollectionButtonIsVisible(true)
+            verifyCollectionMenuIsVisible(true)
+            verifyCollectionItemRemoveButtonIsVisible(webPage.title, true)
+            collapseCollection(collectionName)
+            verifyTabSavedInCollection(webPage.title, false)
+            verifyShareCollectionButtonIsVisible(false)
+            verifyCollectionMenuIsVisible(false)
+        }
+    }
+
+    @Test
+    fun openAllTabsInCollectionTest() {
+        val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.openTabDrawer {
+            createCollection(webPage.title, collectionName)
+            closeTab()
+        }
+        browserScreen {
+        }.goToHomescreen {
+            expandCollection(collectionName)
+            clickCollectionThreeDotButton()
+            selectOpenTabs()
+        }
+        tabDrawer {
+            verifyExistingOpenTabs(webPage.title)
+        }
+    }
+
+    @Test
+    fun shareCollectionTest() {
+        val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.openTabDrawer {
+            createCollection(webPage.title, collectionName)
+            snackBarButtonClick("VIEW")
+        }
+        homeScreen {
+            expandCollection(collectionName)
+            clickShareCollectionButton()
+            verifyShareTabsOverlay()
+        }
+    }
+
+    @Test
+    fun deleteCollectionTest() {
+        val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.openTabDrawer {
+            createCollection(webPage.title, collectionName)
+            snackBarButtonClick("VIEW")
+        }
+        homeScreen {
+            expandCollection(collectionName)
+            clickCollectionThreeDotButton()
+            selectDeleteCollection()
+            confirmDeleteCollection()
+            verifyNoCollectionsText()
         }
     }
 }
