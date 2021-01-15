@@ -4243,30 +4243,6 @@ MArrayState* MArrayState::Copy(TempAllocator& alloc, MArrayState* state) {
   return res;
 }
 
-MArgumentState* MArgumentState::New(TempAllocator::Fallible view,
-                                    const MDefinitionVector& args) {
-  MArgumentState* res = new (view.alloc) MArgumentState();
-  if (!res || !res->init(view.alloc, args.length())) {
-    return nullptr;
-  }
-  for (size_t i = 0, e = args.length(); i < e; i++) {
-    res->initOperand(i, args[i]);
-  }
-  return res;
-}
-
-MArgumentState* MArgumentState::Copy(TempAllocator& alloc,
-                                     MArgumentState* state) {
-  MArgumentState* res = new (alloc) MArgumentState();
-  if (!res || !res->init(alloc, state->numElements())) {
-    return nullptr;
-  }
-  for (size_t i = 0, e = res->numOperands(); i < e; i++) {
-    res->initOperand(i, state->getOperand(i));
-  }
-  return res;
-}
-
 MNewArray::MNewArray(uint32_t length, MConstant* templateConst,
                      gc::InitialHeap initialHeap, bool vmCall)
     : MUnaryInstruction(classOpcode, templateConst),
