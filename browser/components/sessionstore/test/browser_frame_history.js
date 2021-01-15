@@ -31,7 +31,7 @@ add_task(async function() {
   // We're going to click on the first link, so listen for another load event
   info("Clicking on link 1, 1 load should take place");
   let promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     links[0],
     browser_b.contentWindow
@@ -40,7 +40,7 @@ add_task(async function() {
 
   info("Clicking on link 2, 1 load should take place");
   promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     links[1],
     browser_b.contentWindow
@@ -93,7 +93,7 @@ add_task(async function() {
   // We're going to click on the first link, so listen for another load event
   info("iframe: Clicking on link 1, 1 load should take place");
   let promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     links[0],
     browser_b.contentWindow
@@ -102,7 +102,7 @@ add_task(async function() {
 
   info("iframe: Clicking on link 2, 1 load should take place");
   promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     links[1],
     browser_b.contentWindow
@@ -175,7 +175,7 @@ add_task(async function() {
   // We're going to click on the first link, so listen for another load event
   info("dynamic: Clicking on link 1, 1 load should take place");
   let promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     links[0],
     browser_b.contentWindow
@@ -184,7 +184,7 @@ add_task(async function() {
 
   info("dynamic: Clicking on link 2, 1 load should take place");
   promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     links[1],
     browser_b.contentWindow

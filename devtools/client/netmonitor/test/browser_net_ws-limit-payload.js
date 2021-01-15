@@ -42,10 +42,10 @@ add_task(async function() {
   );
 
   // Select the first request
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
   // Click on the "Response" panel
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );
@@ -61,7 +61,7 @@ add_task(async function() {
 
   // Wait for next tick to do async stuff (The MessagePayload component uses the async function getMessagePayload)
   await waitForTick();
-  EventUtils.sendMouseEvent({ type: "mousedown" }, frames[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, frames[0]);
 
   await waitForDOM(document, "#messages-view .truncated-data-message");
 

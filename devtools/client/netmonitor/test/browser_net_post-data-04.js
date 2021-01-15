@@ -35,7 +35,7 @@ add_task(async function() {
     "#request-panel .CodeMirror-code"
   );
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#request-tab")
   );

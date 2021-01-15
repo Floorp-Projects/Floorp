@@ -29,7 +29,7 @@ add_task(async function() {
   for (const requestItem of document.querySelectorAll(".request-list-item")) {
     const requestsListStatus = requestItem.querySelector(".status-code");
     requestItem.scrollIntoView();
-    EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+    await EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
     await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
   }

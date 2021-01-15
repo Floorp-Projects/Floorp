@@ -21,7 +21,7 @@ add_task(async function() {
 
   // Selects 1st request
   const firstRequest = document.querySelectorAll(".request-list-item")[0];
-  EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
 
   // Stores original request for comparison of values later
   const { getSelectedRequest } = windowRequire(
@@ -31,7 +31,7 @@ add_task(async function() {
 
   const waitForResentRequestEvent = waitForNetworkEvents(monitor, 1);
   // Context Menu > "Resend"
-  EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
+  await EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
   getContextMenuItem(monitor, "request-list-context-resend-only").click();
 
   await waitForResentRequestEvent;

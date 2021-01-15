@@ -34,20 +34,20 @@ add_task(async function() {
 
   info("Selecting secure request.");
   wait = waitForDOM(document, ".tabs");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
 
   info("Selecting security tab.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelector("#security-tab")
   );
 
   info("Selecting insecure request.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]
   );

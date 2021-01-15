@@ -179,8 +179,8 @@ async function testForPlatform(tab, monitor, testData) {
 
     const items = document.querySelectorAll(".request-list-item");
     const itemIndex = items.length - 1;
-    EventUtils.sendMouseEvent({ type: "mousedown" }, items[itemIndex]);
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent({ type: "mousedown" }, items[itemIndex]);
+    await EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[0]
     );

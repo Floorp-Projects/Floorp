@@ -51,7 +51,7 @@ async function spawnTest() {
   for (let i = 0; i < bars.length; i++) {
     let bar = bars[i];
     let mkr = markers[i];
-    EventUtils.sendMouseEvent({ type: "mousedown" }, bar);
+    await EventUtils.sendMouseEvent({ type: "mousedown" }, bar);
 
     let type = $(".marker-details-type").getAttribute("value");
     let tooltip = $(".marker-details-duration").getAttribute("tooltiptext");
