@@ -6,6 +6,7 @@
 
 #include "base/platform_thread.h"
 #include "WinCompositorWindowThread.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/StaticPtr.h"
 #include "transport/runnable_utils.h"
@@ -158,6 +159,11 @@ WinCompositorWnds WinCompositorWindowThread::CreateCompositorWindow() {
             ::CreateWindowEx(WS_EX_TOOLWINDOW, kClassNameCompositorInitalParent,
                              nullptr, WS_POPUP | WS_DISABLED, 0, 0, 1, 1,
                              nullptr, 0, GetModuleHandle(nullptr), 0);
+        if (!initialParentWnd) {
+          gfxCriticalNoteOnce << "Inital parent window failed "
+                              << ::GetLastError();
+          return;
+        }
 
         DWORD extendedStyle = WS_EX_NOPARENTNOTIFY | WS_EX_NOREDIRECTIONBITMAP;
 
@@ -169,6 +175,10 @@ WinCompositorWnds WinCompositorWindowThread::CreateCompositorWindow() {
             extendedStyle, kClassNameCompositor, nullptr,
             WS_CHILDWINDOW | WS_DISABLED | WS_VISIBLE, 0, 0, 1, 1,
             initialParentWnd, 0, GetModuleHandle(nullptr), 0);
+        if (!compositorWnd) {
+          gfxCriticalNoteOnce << "Compositor window failed "
+                              << ::GetLastError();
+        }
       });
 
   Loop()->PostTask(runnable.forget());
