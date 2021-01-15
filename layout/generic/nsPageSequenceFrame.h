@@ -14,6 +14,7 @@
 namespace mozilla {
 
 class PresShell;
+class PrintedSheetFrame;
 
 namespace dom {
 
@@ -179,7 +180,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
                                  nscoord aChildPaddingBoxWidth,
                                  const nsMargin& aChildPhysicalMargin);
 
-  nsIFrame* GetCurrentSheetFrame();
+  mozilla::PrintedSheetFrame* GetCurrentSheetFrame();
 
   nsSize mSize;
 
