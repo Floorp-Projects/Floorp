@@ -58,6 +58,7 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
+import mozilla.components.feature.downloads.share.ShareDownloadFeature
 import mozilla.components.feature.intent.ext.EXTRA_SESSION_ID
 import mozilla.components.feature.media.fullscreen.MediaSessionFullscreenFeature
 import mozilla.components.feature.privatemode.feature.SecureWindowFeature
@@ -161,6 +162,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
+    private val shareDownloadsFeature = ViewBoundFeatureWrapper<ShareDownloadFeature>()
     private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
     private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
@@ -429,6 +431,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             )
         }
 
+        val shareDownloadFeature = ShareDownloadFeature(
+            context = context.applicationContext,
+            httpClient = context.components.core.client,
+            store = store,
+            tabId = customTabSessionId
+        )
+
         val downloadFeature = DownloadsFeature(
             context.applicationContext,
             store = store,
@@ -506,6 +515,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         resumeDownloadDialogState(
             sessionManager.selectedSession?.id,
             store, view, context, toolbarHeight
+        )
+
+        shareDownloadsFeature.set(
+            shareDownloadFeature,
+            owner = this,
+            view = view
         )
 
         downloadsFeature.set(
