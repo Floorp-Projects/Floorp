@@ -29,7 +29,8 @@ jobs:
           - mozilla-central
       when:
           by-project:
-              # Match buildbot starts for now
+              # Please update the `searchfox-index` job `mozilla-central` `when`
+              # times as well if updating the times here.
               mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
               # No default
 
@@ -130,6 +131,8 @@ jobs:
           - {weekday: 'Wednesday', hour: 10, minute: 30}
           - {weekday: 'Friday', hour: 10, minute: 30}
 
+    # For more context on this job, see:
+    # https://github.com/mozsearch/mozsearch-mozilla#how-searchfoxorg-stays-up-to-date
     - name: searchfox-index
       job:
           type: decision-task
@@ -141,7 +144,24 @@ jobs:
           - mozilla-release
           - mozilla-esr78
       when:
-          - {hour: 10, minute: 0}
+          by-project:
+              # We want to run at both of the times the nightly runs.
+              mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
+              # For all other jobs we just run once daily matching the 10 UTC
+              # nightly which is designed to align with searchfox's AWS cron
+              # jobs (for legacy reasons) rather than trying to align with
+              # specific builds.  (Ex: mozilla-beta has a "daily-releases" job
+              # that currently runs 3 times a week.)
+              #
+              # Note that for branches that don't change a lot this will result
+              # in a redundant job being scheduled each day rather than reusing
+              # the previous day's job.  This is only beneficial in the sense
+              # that there's no risk of expiration for artifacts and is a
+              # trade-off to avoid stale indices.  Bug 1686981 tracks fixing
+              # this.
+              mozilla-beta: [{hour: 10, minute: 0}]
+              mozilla-release: [{hour: 10, minute: 0}]
+              mozilla-esr78: [{hour: 10, minute: 0}]
 
     - name: coverity-tree-analysis
       job:
