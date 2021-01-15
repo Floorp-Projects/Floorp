@@ -1788,8 +1788,8 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementExistsResult(
   add(length);
 
   // Unsigned comparison to catch negative indices.
-  auto* ins = MCompare::New(alloc(), index, length, JSOp::Lt);
-  ins->setCompareType(MCompare::Compare_UInt32);
+  auto* ins =
+      MCompare::New(alloc(), index, length, JSOp::Lt, MCompare::Compare_UInt32);
   add(ins);
 
   pushResult(ins);
@@ -2571,8 +2571,7 @@ bool WarpCacheIRTranspiler::emitCompareResult(
   MDefinition* lhs = getOperand(lhsId);
   MDefinition* rhs = getOperand(rhsId);
 
-  auto* ins = MCompare::New(alloc(), lhs, rhs, op);
-  ins->setCompareType(compareType);
+  auto* ins = MCompare::New(alloc(), lhs, rhs, op, compareType);
   add(ins);
 
   pushResult(ins);
@@ -2642,9 +2641,9 @@ bool WarpCacheIRTranspiler::emitCompareNullUndefinedResult(
   // is null or undefined.
   MDefinition* cst =
       isUndefined ? constant(UndefinedValue()) : constant(NullValue());
-  auto* ins = MCompare::New(alloc(), input, cst, op);
-  ins->setCompareType(isUndefined ? MCompare::Compare_Undefined
-                                  : MCompare::Compare_Null);
+  auto compareType =
+      isUndefined ? MCompare::Compare_Undefined : MCompare::Compare_Null;
+  auto* ins = MCompare::New(alloc(), input, cst, op, compareType);
   add(ins);
 
   pushResult(ins);
