@@ -43,10 +43,21 @@ ok(
   "The browser should have a popup to show when a form is invalid"
 );
 
-function checkPopupShow() {
+function isWithinHalfPixel(a, b) {
+  return Math.abs(a - b) <= 0.5;
+}
+
+function checkPopupShow(anchorRect) {
   ok(
     gInvalidFormPopup.state == "showing" || gInvalidFormPopup.state == "open",
     "[Test " + testId + "] The invalid form popup should be shown"
+  );
+  // Just check the vertical position, as the horizontal position of an
+  // arrow panel will be offset.
+  is(
+    isWithinHalfPixel(gInvalidFormPopup.screenY),
+    isWithinHalfPixel(anchorRect.bottom),
+    "popup top"
   );
 }
 
@@ -95,9 +106,13 @@ async function openNewTab(uri, background) {
   return browser;
 }
 
-async function clickChildElement(browser) {
-  await SpecialPowers.spawn(browser, [], async function() {
-    content.document.getElementById("s").click();
+function clickChildElement(browser) {
+  return SpecialPowers.spawn(browser, [], async function() {
+    let element = content.document.getElementById("s");
+    element.click();
+    return {
+      bottom: content.mozInnerScreenY + element.getBoundingClientRect().bottom,
+    };
   });
 }
 
@@ -171,10 +186,11 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser);
+  let anchorRect = await clickChildElement(browser);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
+
   await checkChildFocus(
     browser,
     gInvalidFormPopup.firstElementChild.textContent
@@ -199,10 +215,10 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser);
+  let anchorRect = await clickChildElement(browser);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
   await checkChildFocus(
     browser,
     gInvalidFormPopup.firstElementChild.textContent
@@ -227,10 +243,10 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser);
+  let anchorRect = await clickChildElement(browser);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
   await checkChildFocus(
     browser,
     gInvalidFormPopup.firstElementChild.textContent
@@ -262,10 +278,10 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser);
+  let anchorRect = await clickChildElement(browser);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
   await checkChildFocus(
     browser,
     gInvalidFormPopup.firstElementChild.textContent
@@ -274,7 +290,7 @@ add_task(async function() {
   await new Promise((resolve, reject) => {
     EventUtils.sendString("a");
     executeSoon(function() {
-      checkPopupShow();
+      checkPopupShow(anchorRect);
       resolve();
     });
   });
@@ -298,10 +314,10 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser);
+  let anchorRect = await clickChildElement(browser);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
   await checkChildFocus(
     browser,
     gInvalidFormPopup.firstElementChild.textContent
@@ -332,10 +348,10 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser);
+  let anchorRect = await clickChildElement(browser);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
   await checkChildFocus(
     browser,
     gInvalidFormPopup.firstElementChild.textContent
@@ -366,10 +382,10 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser1);
+  let anchorRect = await clickChildElement(browser1);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
   await checkChildFocus(
     browser1,
     gInvalidFormPopup.firstElementChild.textContent
@@ -403,10 +419,10 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser);
+  let anchorRect = await clickChildElement(browser);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
   await checkChildFocus(
     browser,
     gInvalidFormPopup.firstElementChild.textContent
@@ -486,10 +502,10 @@ add_task(async function() {
     gInvalidFormPopup,
     "popupshown"
   );
-  await clickChildElement(browser);
+  let anchorRect = await clickChildElement(browser);
   await popupShownPromise;
 
-  checkPopupShow();
+  checkPopupShow(anchorRect);
   await checkChildFocus(
     browser,
     gInvalidFormPopup.firstElementChild.textContent

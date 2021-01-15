@@ -154,30 +154,16 @@ class FormValidationChild extends JSWindowActorChild {
 
     panelData.message = this._validationMessage;
 
-    // Note, this is relative to the browser and needs to be translated
-    // in chrome.
-    panelData.contentRect = BrowserUtils.getElementBoundingRect(aElement);
+    panelData.screenRect = BrowserUtils.getElementBoundingScreenRect(aElement);
 
     // We want to show the popup at the middle of checkbox and radio buttons
     // and where the content begin for the other elements.
-    let offset = 0;
-
     if (
       aElement.tagName == "INPUT" &&
       (aElement.type == "radio" || aElement.type == "checkbox")
     ) {
       panelData.position = "bottomcenter topleft";
     } else {
-      let win = aElement.ownerGlobal;
-      let style = win.getComputedStyle(aElement);
-      if (style.direction == "rtl") {
-        offset =
-          parseInt(style.paddingRight) + parseInt(style.borderRightWidth);
-      } else {
-        offset = parseInt(style.paddingLeft) + parseInt(style.borderLeftWidth);
-      }
-      let zoomFactor = this.contentWindow.windowUtils.fullZoom;
-      panelData.offset = Math.round(offset * zoomFactor);
       panelData.position = "after_start";
     }
     this.sendAsyncMessage("FormValidation:ShowPopup", panelData);
