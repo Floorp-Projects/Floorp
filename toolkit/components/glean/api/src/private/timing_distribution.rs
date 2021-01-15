@@ -2,48 +2,40 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use inherent::inherent;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
-    Arc, RwLock,
+    RwLock,
 };
+use std::time::Instant;
 
-use super::{CommonMetricData, Instant, MetricId, TimeUnit};
+use super::{CommonMetricData, MetricId, TimeUnit};
+use glean::{DistributionData, ErrorType};
+use glean_core::metrics::TimerId;
 
-use crate::dispatcher;
 use crate::ipc::{need_ipc, with_ipc_payload};
-
-/// Identifier for a running timer.
-///
-/// *Note*: This is not `Clone` (or `Copy`) and thus is consumable by the TimingDistribution API,
-/// avoiding re-use of a `TimerId` object.
-#[derive(Debug, Eq, PartialEq)]
-pub struct TimerId(glean_core::metrics::TimerId);
+use glean_core::traits::TimingDistribution;
 
 /// A timing distribution metric.
 ///
 /// Timing distributions are used to accumulate and store time measurements for analyzing distributions of the timing data.
-#[derive(Debug)]
 pub enum TimingDistributionMetric {
     Parent {
         /// The metric's ID.
         ///
         /// **TEST-ONLY** - Do not use unless gated with `#[cfg(test)]`.
         id: MetricId,
-        inner: Arc<TimingDistributionMetricImpl>,
+        inner: glean::private::TimingDistributionMetric,
     },
     Child(TimingDistributionMetricIpc),
-}
-#[derive(Debug)]
-pub struct TimingDistributionMetricImpl {
-    inner: RwLock<glean_core::metrics::TimingDistributionMetric>,
 }
 #[derive(Debug)]
 pub struct TimingDistributionMetricIpc {
     metric_id: MetricId,
     next_timer_id: AtomicUsize,
-    instants: RwLock<HashMap<u64, std::time::Instant>>,
+    instants: RwLock<HashMap<u64, Instant>>,
 }
 
 impl TimingDistributionMetric {
@@ -56,7 +48,7 @@ impl TimingDistributionMetric {
                 instants: RwLock::new(HashMap::new()),
             })
         } else {
-            let inner = Arc::new(TimingDistributionMetricImpl::new(meta, time_unit));
+            let inner = glean::private::TimingDistributionMetric::new(meta, time_unit);
             TimingDistributionMetric::Parent { id, inner }
         }
     }
@@ -76,21 +68,23 @@ impl TimingDistributionMetric {
             }
         }
     }
+}
 
-    /// Start tracking time for the provided metric.
+#[inherent(pub)]
+impl TimingDistribution for TimingDistributionMetric {
+    /// Starts tracking time for the provided metric.
     ///
-    /// ## Return
+    /// This records an error if it’s already tracking time (i.e.
+    /// [`start`](TimingDistribution::start) was already called with no corresponding
+    /// [`stop_and_accumulate`](TimingDistribution::stop_and_accumulate)): in that case the
+    /// original start time will be preserved.
     ///
-    /// Returns a new `TimerId` identifying the timer.
-    pub fn start(&self) -> TimerId {
+    /// # Returns
+    ///
+    /// A unique [`TimerId`] for the new timer.
+    fn start(&self) -> TimerId {
         match self {
-            TimingDistributionMetric::Parent { inner, .. } => {
-                // Since this is a synchronous return, we can't use the
-                // Dispatcher, and we can't rely on the Global Glean to provide
-                // mutual exclusion. Use the RwLock to guard the inner metric,
-                // and synchronously create a new TimerId.
-                inner.start()
-            }
+            TimingDistributionMetric::Parent { inner, .. } => inner.start(),
             TimingDistributionMetric::Child(c) => {
                 // There is no glean-core on this process to give us a TimerId,
                 // so we'll have to make our own and do our own bookkeeping.
@@ -103,35 +97,36 @@ impl TimingDistributionMetric {
                     .instants
                     .write()
                     .expect("lock of instants map was poisoned");
-                if let Some(_v) = map.insert(id, std::time::Instant::now()) {
+                if let Some(_v) = map.insert(id, Instant::now()) {
                     // TODO: report an error and find a different TimerId.
                 }
-                TimerId(id)
+                id
             }
         }
     }
 
-    /// Stop tracking time for the provided metric and associated timer id.
+    /// Stops tracking time for the provided metric and associated timer id.
     ///
-    /// Add a count to the corresponding bucket in the timing distribution.
+    /// Adds a count to the corresponding bucket in the timing distribution.
+    /// This will record an error if no [`start`](TimingDistribution::start) was
+    /// called.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
-    /// * `id` - The `TimerId` to associate with this timing.
-    ///          This allows for concurrent timing of events associated
-    ///          with different ids to the same timespan metric.
-    pub fn stop_and_accumulate(&self, id: TimerId) {
+    /// * `id` - The [`TimerId`] to associate with this timing. This allows
+    ///   for concurrent timing of events associated with different ids to the
+    ///   same timespan metric.
+    fn stop_and_accumulate(&self, id: TimerId) {
         match self {
             TimingDistributionMetric::Parent { inner, .. } => {
-                let metric = Arc::clone(&inner);
-                dispatcher::launch(move || metric.stop_and_accumulate(id));
+                inner.stop_and_accumulate(id);
             }
             TimingDistributionMetric::Child(c) => {
                 let mut map = c
                     .instants
                     .write()
                     .expect("Write lock must've been poisoned.");
-                if let Some(start) = map.remove(&id.0) {
+                if let Some(start) = map.remove(&id) {
                     let sample = start.elapsed().as_nanos();
                     with_ipc_payload(move |payload| {
                         if let Some(v) = payload.timing_samples.get_mut(&c.metric_id) {
@@ -147,147 +142,81 @@ impl TimingDistributionMetric {
         }
     }
 
-    /// Cancel a previous `start` call.
+    /// Aborts a previous [`start`](TimingDistribution::start) call. No
+    /// error is recorded if no [`start`](TimingDistribution::start) was
+    /// called.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
-    /// * `id` - The `TimerId` to associate with this timing. This allows
-    ///          for concurrent timing of events associated with different ids to the
-    ///          same timing distribution metric.
-    pub fn cancel(&self, id: TimerId) {
+    /// * `id` - The [`TimerId`] to associate with this timing. This allows
+    ///   for concurrent timing of events associated with different ids to the
+    ///   same timing distribution metric.
+    fn cancel(&self, id: TimerId) {
         match self {
             TimingDistributionMetric::Parent { inner, .. } => {
-                let metric = Arc::clone(&inner);
-                dispatcher::launch(move || metric.cancel(id));
+                inner.cancel(id);
             }
             TimingDistributionMetric::Child(c) => {
                 let mut map = c
                     .instants
                     .write()
                     .expect("Write lock must've been poisoned.");
-                if map.remove(&id.0).is_none() {
+                if map.remove(&id).is_none() {
                     // TODO: report an error (cancelled a non-started id).
                 }
             }
         }
     }
 
-    /// **Test-only API.**
+    /// **Exported for test purposes.**
     ///
-    /// Get the currently-stored histogram as a JSON String of the serialized value.
+    /// Gets the currently stored value of the metric.
+    ///
     /// This doesn't clear the stored value.
     ///
-    /// ## Note
+    /// # Arguments
     ///
-    /// This currently returns the value as a JSON encoded string.
-    /// `glean_core` doesn't expose the underlying histogram type.
-    /// This will eventually change to a proper `DistributionData` type.
-    /// See [Bug 1634415](https://bugzilla.mozilla.org/show_bug.cgi?id=1634415).
-    ///
-    /// ## Arguments
-    ///
-    /// * `storage_name` - the storage name to look into.
-    ///
-    /// ## Return value
-    ///
-    /// Returns the stored value or `None` if nothing stored.
-    pub fn test_get_value(&self, storage_name: &str) -> Option<String> {
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. Defaults to the first value in `send_in_pings`.
+    fn test_get_value<'a, S: Into<Option<&'a str>>>(
+        &self,
+        ping_name: S,
+    ) -> Option<DistributionData> {
         match self {
-            TimingDistributionMetric::Parent { inner, .. } => {
-                dispatcher::block_on_queue();
-                inner.test_get_value(storage_name)
+            TimingDistributionMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
+            TimingDistributionMetric::Child(c) => {
+                panic!("Cannot get test value for {:?} in non-parent process!", c)
             }
-            TimingDistributionMetric::Child(_c) => panic!(
-                "Cannot get test value for {:?} in non-parent process!",
-                self
-            ),
         }
     }
-}
 
-impl TimingDistributionMetricImpl {
-    pub fn new(meta: CommonMetricData, time_unit: TimeUnit) -> Self {
-        let inner = RwLock::new(glean_core::metrics::TimingDistributionMetric::new(
-            meta, time_unit,
-        ));
-        Self { inner }
-    }
-
-    pub fn start(&self) -> TimerId {
-        let now = Instant::now();
-
-        let mut inner = self
-            .inner
-            .write()
-            .expect("lock of wrapped metric was poisoned");
-        TimerId(inner.set_start(now.as_nanos()))
-    }
-
-    /// Stop tracking time for the provided metric and associated timer id.
+    /// **Exported for test purposes.**
     ///
-    /// Add a count to the corresponding bucket in the timing distribution.
+    /// Gets the number of recorded errors for the given error type.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
-    /// * `id` - The `TimerId` to associate with this timing.
-    ///          This allows for concurrent timing of events associated
-    ///          with different ids to the same timespan metric.
-    pub fn stop_and_accumulate(&self, id: TimerId) {
-        crate::with_glean(|glean| {
-            let TimerId(id) = id;
-            let now = Instant::now();
-
-            let mut inner = self
-                .inner
-                .write()
-                .expect("lock of wrapped metric was poisoned");
-            inner.set_stop_and_accumulate(glean, id, now.as_nanos())
-        })
-    }
-
-    /// Cancel a previous `start` call.
+    /// * `error` - The type of error
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. Defaults to the first value in `send_in_pings`.
     ///
-    /// ## Arguments
+    /// # Returns
     ///
-    /// * `id` - The `TimerId` to associate with this timing. This allows
-    ///          for concurrent timing of events associated with different ids to the
-    ///          same timing distribution metric.
-    pub fn cancel(&self, id: TimerId) {
-        let TimerId(id) = id;
-        let mut inner = self
-            .inner
-            .write()
-            .expect("lock of wrapped metric was poisoned");
-        inner.cancel(id)
-    }
-
-    /// **Test-only API.**
-    ///
-    /// Get the currently-stored histogram as a JSON String of the serialized value.
-    /// This doesn't clear the stored value.
-    ///
-    /// ## Note
-    ///
-    /// This currently returns the value as a JSON encoded string.
-    /// `glean_core` doesn't expose the underlying histogram type.
-    /// This will eventually change to a proper `DistributionData` type.
-    /// See [Bug 1634415](https://bugzilla.mozilla.org/show_bug.cgi?id=1634415).
-    ///
-    /// ## Arguments
-    ///
-    /// * `storage_name` - the storage name to look into.
-    ///
-    /// ## Return value
-    ///
-    /// Returns the stored value or `None` if nothing stored.
-    pub fn test_get_value(&self, storage_name: &str) -> Option<String> {
-        crate::with_glean(move |glean| {
-            let inner = self
-                .inner
-                .read()
-                .expect("lock of wrapped metric was poisoned");
-            inner.test_get_value_as_json_string(glean, storage_name)
-        })
+    /// The number of errors recorded.
+    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+        &self,
+        error: ErrorType,
+        ping_name: S,
+    ) -> i32 {
+        match self {
+            TimingDistributionMetric::Parent { inner, .. } => {
+                inner.test_get_num_recorded_errors(error, ping_name)
+            }
+            TimingDistributionMetric::Child(c) => panic!(
+                "Cannot get number of recorded errors for {:?} in non-parent process!",
+                c
+            ),
+        }
     }
 }
 
@@ -296,7 +225,6 @@ mod test {
     use crate::{common_test::*, ipc, metrics};
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677456 lands.
     fn smoke_test_timing_distribution() {
         let _lock = lock_test();
 
@@ -309,11 +237,10 @@ mod test {
         metric.cancel(id);
 
         // We can't inspect the values yet.
-        assert_eq!(None, metric.test_get_value("store1"));
+        assert!(metric.test_get_value("store1").is_none());
     }
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677456 lands.
     fn timing_distribution_child() {
         let _lock = lock_test();
 
