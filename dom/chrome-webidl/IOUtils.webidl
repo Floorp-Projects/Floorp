@@ -43,15 +43,6 @@ namespace IOUtils {
    */
   Promise<UTF8String> readUTF8(DOMString path, optional ReadUTF8Options opts = {});
   /**
-   * Read the UTF-8 text file located at |path| and return the contents
-   * parsed as JSON into a JS value.
-   *
-   * @param path An absolute path.
-   *
-   * @return Resolves with the contents of the file parsed as JSON.
-   */
-  Promise<any> readJSON(DOMString path, optional ReadUTF8Options opts = {});
-  /**
    * Attempts to safely write |data| to a file at |path|.
    *
    * This operation can be made atomic by specifying the |tmpFile| option. If
@@ -80,18 +71,6 @@ namespace IOUtils {
    *         otherwise rejects with a DOMException.
    */
   Promise<unsigned long long> writeUTF8(DOMString path, UTF8String string, optional WriteOptions options = {});
-  /**
-   * Attempts to serialize |value| into a JSON string and encode it as into a
-   * UTF-8 string, then safely write the result to a file at |path|. Works
-   * exactly like |write|.
-   *
-   * @param path   An absolute file path
-   * @param value  The value to be serialized.
-   *
-   * @return Resolves with the number of bytes successfully written to the file,
-   *         otherwise rejects with a DOMException.
-   */
-  Promise<unsigned long long> writeJSON(DOMString path, any value, optional WriteOptions options = {});
   /**
    * Moves the file from |sourcePath| to |destPath|, creating necessary parents.
    * If |destPath| is a directory, then the source file will be moved into the

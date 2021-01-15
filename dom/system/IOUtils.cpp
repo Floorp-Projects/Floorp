@@ -10,7 +10,6 @@
 
 #include "ErrorList.h"
 #include "js/ArrayBuffer.h"
-#include "js/JSON.h"
 #include "js/Utility.h"
 #include "js/experimental/TypedData.h"
 #include "jsfriendapi.h"
@@ -24,10 +23,10 @@
 #include "mozilla/Span.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Unused.h"
-#include "mozilla/Utf8.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsFileStreams.h"
@@ -156,28 +155,23 @@ Atomic<bool> IOUtils::sShutdownStarted = Atomic<bool>(false);
 
 /* static */
 template <typename OkT, typename Fn>
-RefPtr<IOUtils::IOPromise<OkT>> IOUtils::RunOnBackgroundThread(Fn aFunc) {
+void IOUtils::RunOnBackgroundThread(Promise* aPromise, Fn aFunc) {
   nsCOMPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   if (!bg) {
-    return IOPromise<OkT>::CreateAndReject(
-        IOError(NS_ERROR_ABORT)
-            .WithMessage("Could not dispatch task to background thread"),
-        __func__);
+    aPromise->MaybeRejectWithAbortError(
+        "Could not dispatch task to background thread");
+    return;
   }
 
-  return InvokeAsync(bg, __func__, [func = std::move(aFunc)]() {
-    Result<OkT, IOError> result = func();
-    if (result.isErr()) {
-      return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
-    }
-    return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
-  });
-}
-
-/* static */
-template <typename OkT, typename Fn>
-void IOUtils::RunOnBackgroundThreadAndResolve(Promise* aPromise, Fn aFunc) {
-  RunOnBackgroundThread<OkT, Fn>(std::move(aFunc))
+  InvokeAsync(
+      bg, __func__,
+      [func = std::move(aFunc)]() {
+        Result<OkT, IOError> result = func();
+        if (result.isErr()) {
+          return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
+        }
+        return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
+      })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(aPromise)](OkT&& ok) {
@@ -194,9 +188,7 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const ReadOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -213,7 +205,7 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     toRead.emplace(aOptions.mMaxBytes.Value());
   }
 
-  RunOnBackgroundThreadAndResolve<JsBuffer>(
+  RunOnBackgroundThread<JsBuffer>(
       promise,
       [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
         return ReadSync(file, toRead, decompress, BufferKind::Uint8Array);
@@ -227,75 +219,14 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
                                             const ReadUTF8Options& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-  RunOnBackgroundThreadAndResolve<JsBuffer>(
+  RunOnBackgroundThread<JsBuffer>(
       promise, [file = std::move(file), decompress = aOptions.mDecompress]() {
         return ReadUTF8Sync(file, decompress);
       });
-
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
-                                            const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIFile> file = new nsLocalFile();
-  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-  RunOnBackgroundThread<JsBuffer>([file, decompress = aOptions.mDecompress]() {
-    return ReadUTF8Sync(file, decompress);
-  })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise, file](JsBuffer&& aBuffer) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeRejectWithUnknownError(
-                  "Could not initialize JS API");
-              return;
-            }
-            JSContext* cx = jsapi.cx();
-
-            JS::Rooted<JSString*> jsonStr(
-                cx, IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
-            if (!jsonStr) {
-              RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
-              return;
-            }
-
-            JS::Rooted<JS::Value> val(cx);
-            if (!JS_ParseJSON(cx, jsonStr, &val)) {
-              JS::Rooted<JS::Value> exn(cx);
-              if (JS_GetPendingException(cx, &exn)) {
-                JS_ClearPendingException(cx);
-                promise->MaybeReject(exn);
-              } else {
-                RejectJSPromise(
-                    promise,
-                    IOError(NS_ERROR_DOM_UNKNOWN_ERR)
-                        .WithMessage("ParseJSON threw an uncatchable exception "
-                                     "while parsing file(%s)",
-                                     file->HumanReadablePath().get()));
-              }
-
-              return;
-            }
-
-            promise->MaybeResolve(val);
-          },
-          [promise](const IOError& aErr) { RejectJSPromise(promise, aErr); });
 
   return promise.forget();
 }
@@ -307,9 +238,7 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
                                          const WriteOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -329,7 +258,7 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  RunOnBackgroundThreadAndResolve<uint32_t>(
+  RunOnBackgroundThread<uint32_t>(
       promise, [file = std::move(file), buf = std::move(*buf),
                 opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
 
@@ -343,9 +272,7 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
                                              const WriteOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -357,63 +284,10 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  RunOnBackgroundThreadAndResolve<uint32_t>(
+  RunOnBackgroundThread<uint32_t>(
       promise, [file = std::move(file), str = nsCString(aString),
                 opts = opts.unwrap()]() {
         return WriteSync(file, AsBytes(Span(str)), opts);
-      });
-
-  return promise.forget();
-}
-
-static bool AppendJsonAsUtf8(const char16_t* aData, uint32_t aLen, void* aStr) {
-  nsCString* str = static_cast<nsCString*>(aStr);
-  return AppendUTF16toUTF8(Span<const char16_t>(aData, aLen), *str, fallible);
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
-                                             const nsAString& aPath,
-                                             JS::Handle<JS::Value> aValue,
-                                             const WriteOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-  REJECT_IF_SHUTTING_DOWN(promise);
-
-  nsCOMPtr<nsIFile> file = new nsLocalFile();
-  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-  auto opts = InternalWriteOpts::FromBinding(aOptions);
-  if (opts.isErr()) {
-    RejectJSPromise(promise, opts.unwrapErr());
-    return promise.forget();
-  }
-
-  JSContext* cx = aGlobal.Context();
-  JS::Rooted<JS::Value> rootedValue(cx, aValue);
-  nsCString utf8Str;
-
-  if (!JS_Stringify(cx, &rootedValue, nullptr, JS::NullHandleValue,
-                    AppendJsonAsUtf8, &utf8Str)) {
-    JS::Rooted<JS::Value> exn(cx, JS::UndefinedValue());
-    if (JS_GetPendingException(cx, &exn)) {
-      JS_ClearPendingException(cx);
-      promise->MaybeReject(exn);
-    } else {
-      RejectJSPromise(promise,
-                      IOError(NS_ERROR_DOM_UNKNOWN_ERR)
-                          .WithMessage("Could not serialize object to JSON"));
-    }
-    return promise.forget();
-  }
-
-  RunOnBackgroundThreadAndResolve<uint32_t>(
-      promise, [file = std::move(file), utf8Str = std::move(utf8Str),
-                opts = opts.unwrap()]() {
-        return WriteSync(file, AsBytes(Span(utf8Str)), opts);
       });
 
   return promise.forget();
@@ -426,9 +300,7 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const MoveOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
@@ -437,12 +309,11 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> destFile = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
-      promise,
-      [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
-       noOverwrite = aOptions.mNoOverwrite]() {
-        return MoveSync(sourceFile, destFile, noOverwrite);
-      });
+  RunOnBackgroundThread<Ok>(promise, [sourceFile = std::move(sourceFile),
+                                      destFile = std::move(destFile),
+                                      noOverwrite = aOptions.mNoOverwrite]() {
+    return MoveSync(sourceFile, destFile, noOverwrite);
+  });
 
   return promise.forget();
 }
@@ -453,15 +324,13 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                                           const RemoveOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
+  RunOnBackgroundThread<Ok>(
       promise, [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent,
                 recursive = aOptions.mRecursive]() {
         return RemoveSync(file, ignoreAbsent, recursive);
@@ -476,15 +345,13 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
     const MakeDirectoryOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
+  RunOnBackgroundThread<Ok>(
       promise,
       [file = std::move(file), createAncestors = aOptions.mCreateAncestors,
        ignoreExisting = aOptions.mIgnoreExisting,
@@ -500,15 +367,13 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
                                         const nsAString& aPath) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<InternalFileInfo>(
+  RunOnBackgroundThread<InternalFileInfo>(
       promise, [file = std::move(file)]() { return StatSync(file); });
 
   return promise.forget();
@@ -521,9 +386,7 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
                                         const CopyOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
@@ -532,7 +395,7 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> destFile = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
+  RunOnBackgroundThread<Ok>(
       promise,
       [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
        noOverwrite = aOptions.mNoOverwrite, recursive = aOptions.mRecursive]() {
@@ -548,9 +411,7 @@ already_AddRefed<Promise> IOUtils::Touch(
     const Optional<int64_t>& aModification) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -560,9 +421,9 @@ already_AddRefed<Promise> IOUtils::Touch(
     newTime = Some(aModification.Value());
   }
 
-  RunOnBackgroundThreadAndResolve<int64_t>(
-      promise,
-      [file = std::move(file), newTime]() { return TouchSync(file, newTime); });
+  RunOnBackgroundThread<int64_t>(promise, [file = std::move(file), newTime]() {
+    return TouchSync(file, newTime);
+  });
 
   return promise.forget();
 }
@@ -572,14 +433,12 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
                                                const nsAString& aPath) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<nsTArray<nsString>>(
+  RunOnBackgroundThread<nsTArray<nsString>>(
       promise, [file = std::move(file)]() { return GetChildrenSync(file); });
 
   return promise.forget();
@@ -591,14 +450,12 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
                                                   const uint32_t aPermissions) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
+  RunOnBackgroundThread<Ok>(
       promise, [file = std::move(file), permissions = aPermissions]() {
         return SetPermissionsSync(file, permissions);
       });
@@ -611,14 +468,12 @@ already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(!!promise, nullptr);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<bool>(
+  RunOnBackgroundThread<bool>(
       promise, [file = std::move(file)]() { return ExistsSync(file); });
 
   return promise.forget();
@@ -756,9 +611,6 @@ void IOUtils::RejectJSPromise(Promise* aPromise, const IOError& aError) {
     case NS_ERROR_ILLEGAL_VALUE:
       aPromise->MaybeRejectWithDataError(
           errMsg.refOr("Argument is not allowed"_ns));
-      break;
-    case NS_ERROR_ABORT:
-      aPromise->MaybeRejectWithAbortError(errMsg.refOr("Operation aborted"_ns));
       break;
     default:
       aPromise->MaybeRejectWithUnknownError(
