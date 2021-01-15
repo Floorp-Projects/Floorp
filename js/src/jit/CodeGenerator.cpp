@@ -3390,14 +3390,6 @@ void CodeGenerator::visitDynamicImport(LDynamicImport* lir) {
   callVM<Fn, js::StartDynamicModuleImport>(lir);
 }
 
-void CodeGenerator::visitLambdaForSingleton(LLambdaForSingleton* lir) {
-  pushArg(ToRegister(lir->environmentChain()));
-  pushArg(ImmGCPtr(lir->mir()->info().funUnsafe()));
-
-  using Fn = JSObject* (*)(JSContext*, HandleFunction, HandleObject);
-  callVM<Fn, js::Lambda>(lir);
-}
-
 void CodeGenerator::visitLambda(LLambda* lir) {
   Register envChain = ToRegister(lir->environmentChain());
   Register output = ToRegister(lir->output());
