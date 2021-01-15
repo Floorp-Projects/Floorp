@@ -27,7 +27,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelectorAll(".request-list-item")[0]
   );

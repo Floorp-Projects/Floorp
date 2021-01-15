@@ -117,7 +117,7 @@ async function addTestTab(url) {
   const enableButton = doc.getElementById("accessibility-enable-button");
   // If enable button is not found, asume the tool is already enabled.
   if (enableButton) {
-    EventUtils.sendMouseEvent({ type: "click" }, enableButton, win);
+    await EventUtils.sendMouseEvent({ type: "click" }, enableButton, win);
   }
 
   await waitUntilState(
@@ -517,14 +517,14 @@ async function selectProperty(doc, id) {
   let node;
 
   await focusAccessibleProperties(doc);
-  await BrowserTestUtils.waitForCondition(() => {
+  await BrowserTestUtils.waitForCondition(async () => {
     node = doc.getElementById(`${id}`);
     if (node) {
       if (selected) {
         return node.firstChild.classList.contains("focused");
       }
 
-      EventUtils.sendMouseEvent({ type: "click" }, node, win);
+      await EventUtils.sendMouseEvent({ type: "click" }, node, win);
       selected = true;
     } else {
       const tree = doc.querySelector(".tree");
@@ -542,9 +542,9 @@ async function selectProperty(doc, id) {
  * @param  {document} doc       panel documnent.
  * @param  {Number}   rowNumber number of the row/tree node to be selected.
  */
-function selectRow(doc, rowNumber) {
+async function selectRow(doc, rowNumber) {
   info(`Selecting row ${rowNumber}.`);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     doc.querySelectorAll(".treeRow")[rowNumber],
     doc.defaultView
@@ -564,7 +564,7 @@ async function toggleRow(doc, rowNumber) {
 
   info(`${expected ? "Expanding" : "Collapsing"} row ${rowNumber}.`);
 
-  EventUtils.sendMouseEvent({ type: "click" }, twisty, win);
+  await EventUtils.sendMouseEvent({ type: "click" }, twisty, win);
   await BrowserTestUtils.waitForCondition(
     () =>
       !twisty.classList.contains("devtools-throbber") &&

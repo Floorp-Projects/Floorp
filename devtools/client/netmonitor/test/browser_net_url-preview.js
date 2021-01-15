@@ -23,7 +23,7 @@ add_task(async function() {
   await performRequests(monitor, tab, 3);
 
   let wait = waitForDOM(document, "#headers-panel .url-preview", 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -34,7 +34,7 @@ add_task(async function() {
 
   // Select the second request
   wait = waitForDOM(document, "#headers-panel .url-preview", 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]
   );
@@ -54,7 +54,7 @@ add_task(async function() {
 
   // Select the third request
   wait = waitForDOM(document, "#headers-panel .url-preview", 1);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]
   );

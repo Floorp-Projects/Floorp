@@ -117,7 +117,10 @@ add_task(async function() {
     for (const requestItem of requestListItems) {
       requestItem.scrollIntoView();
       const requestsListStatus = requestItem.querySelector(".status-code");
-      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+      await EventUtils.sendMouseEvent(
+        { type: "mouseover" },
+        requestsListStatus
+      );
       await waitUntil(() => requestsListStatus.title);
     }
 
@@ -166,7 +169,7 @@ add_task(async function() {
    * A function that tests "Headers" panel contains correct information.
    */
   async function testHeaders(data, index) {
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -184,7 +187,7 @@ add_task(async function() {
 
     const statusCode = panel.querySelector(".status-code");
 
-    EventUtils.sendMouseEvent({ type: "mouseover" }, statusCode);
+    await EventUtils.sendMouseEvent({ type: "mouseover" }, statusCode);
     await waitUntil(() => statusCode.title);
 
     is(

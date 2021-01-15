@@ -22,7 +22,7 @@ add_task(async function() {
   tab.linkedBrowser.reload();
   await wait;
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -30,7 +30,7 @@ add_task(async function() {
   const requestItem = getSortedRequests(store.getState())[0];
   const { method, httpVersion, status, statusText } = requestItem;
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -76,7 +76,7 @@ add_task(async function() {
     "date: Sun, 3 May 2015 11:11:11 GMT",
   ].join("\n");
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]
   );

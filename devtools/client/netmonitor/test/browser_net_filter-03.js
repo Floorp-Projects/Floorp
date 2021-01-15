@@ -47,7 +47,7 @@ add_task(async function() {
   await performRequestsInContent(requests);
   await wait;
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -72,7 +72,7 @@ add_task(async function() {
   testContents([0, 1, 2, 3, 4, 5, 6], 7, 0);
 
   info("Sorting by size, ascending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-contentSize-button")
   );
@@ -80,7 +80,7 @@ add_task(async function() {
   testContents([6, 4, 5, 0, 1, 2, 3], 7, 6);
 
   info("Testing html filtering.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
@@ -94,7 +94,7 @@ add_task(async function() {
   await wait;
 
   info("Testing html filtering again.");
-  resetSorting();
+  await resetSorting();
   testFilterButtons(monitor, "html");
   testContents([8, 13, 9, 11, 10, 12, 0, 4, 1, 5, 2, 6, 3, 7], 2, 13);
 
@@ -105,7 +105,7 @@ add_task(async function() {
   await wait;
 
   info("Testing html filtering again.");
-  resetSorting();
+  await resetSorting();
   testFilterButtons(monitor, "html");
   testContents(
     [12, 13, 20, 14, 16, 18, 15, 17, 19, 0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11],
@@ -115,12 +115,12 @@ add_task(async function() {
 
   await teardown(monitor);
 
-  function resetSorting() {
-    EventUtils.sendMouseEvent(
+  async function resetSorting() {
+    await EventUtils.sendMouseEvent(
       { type: "click" },
       document.querySelector("#requests-list-initiator-button")
     );
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "click" },
       document.querySelector("#requests-list-contentSize-button")
     );

@@ -24,11 +24,11 @@ add_task(async function() {
   await performRequests(monitor, tab, 12);
 
   let wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#request-tab")
   );
@@ -36,7 +36,7 @@ add_task(async function() {
   testParamsTab1('{ "foo": "bar" }', "");
 
   wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]
   );
@@ -44,7 +44,7 @@ add_task(async function() {
   testParamsTab1('{ "foo": "bar" }', "");
 
   wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]
   );
@@ -54,7 +54,7 @@ add_task(async function() {
   let waitRows, waitSourceEditor;
   waitRows = waitForDOM(document, "#request-panel tr.treeRow", 1);
   waitSourceEditor = waitForDOM(document, "#request-panel .CodeMirror-code");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[3]
   );
@@ -63,7 +63,7 @@ add_task(async function() {
 
   waitRows = waitForDOM(document, "#request-panel tr.treeRow", 1);
   waitSourceEditor = waitForDOM(document, "#request-panel .CodeMirror-code");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[4]
   );
@@ -77,21 +77,21 @@ add_task(async function() {
     1
   );
   waitSourceEditor = waitForDOM(document, "#request-panel .CodeMirror-code");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[5]
   );
   await Promise.all([waitAccordionItems, waitSourceEditor]);
   testParamsTab2("?foo=bar", "text");
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[6]
   );
   testParamsTab3();
 
   wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[7]
   );
@@ -99,7 +99,7 @@ add_task(async function() {
   testParamsTab1('{ "foo": "bar" }', "");
 
   wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[8]
   );

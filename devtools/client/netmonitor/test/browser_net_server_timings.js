@@ -29,14 +29,14 @@ add_task(async function() {
   const timingsSelector = "#timings-panel .tabpanel-summary-container.server";
   wait = waitForDOM(document, timingsSelector, 4);
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelectorAll(".request-list-item")[0]
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#timings-tab")
   );
