@@ -98,7 +98,8 @@ function CreateFormDataFromPayload(payload) {
     return formData;
 }
 
-// Schedules promise_test's for each of the test cases.
+// Schedules async_test's for each of the test cases, treating them as a single session,
+// and wires up the continueAfterSendingBeacon() and waitForResults() calls.
 // Parameters:
 //     testCases: An array of test cases.
 //     suffix [optional]: A string used for the suffix for each test case name.
@@ -107,10 +108,10 @@ function CreateFormDataFromPayload(payload) {
 function runTests(testCases, suffix = '', buildUrl = self.buildUrl, sendData = self.sendData) {
     for (const testCase of testCases) {
         const id = token();
-        promise_test((test) => {
+        async_test((test) => {
             const url = buildUrl(id);
             assert_true(sendData(url, testCase.data), 'sendBeacon should succeed');
-            return waitForResult(id);
+            waitForResult(id).then(() => test.done(), test.step_func((e) => {throw e;}));
         }, `Verify 'navigator.sendbeacon()' successfully sends for variant: ${testCase.name}${suffix}`);
     };
 }

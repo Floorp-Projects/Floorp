@@ -429,7 +429,7 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
             return False
 
         method = extract_method_header(frame.headers)
-        if method != b"CONNECT":
+        if method != "CONNECT":
             return False
 
         protocol = ""
@@ -437,7 +437,7 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
             if key in (b':protocol', u':protocol'):
                 protocol = isomorphic_encode(value)
                 break
-        if protocol != b"websocket":
+        if protocol != "websocket":
             raise ProtocolError("Invalid protocol %s with CONNECT METHOD" % (protocol,))
 
         return True

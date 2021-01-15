@@ -581,7 +581,7 @@ tasks:
         - wpt-base
         - trigger-pr
         - browser-firefox
-      command: ./tools/ci/ci_wptrunner_infrastructure.sh --py2
+      command: ./tools/ci/ci_wptrunner_infrastructure.sh
       install:
         - libnss3-tools
         - libappindicator1
@@ -606,8 +606,7 @@ tasks:
       use:
         - wpt-base
         - trigger-pr
-        - browser-firefox
-      command: ./tools/ci/ci_wptrunner_infrastructure.sh
+      command: ./tools/ci/ci_wptrunner_infrastructure.sh --py3
       install:
         - python3-pip
         - libnss3-tools
@@ -616,7 +615,6 @@ tasks:
       options:
         oom-killer: true
         browser:
-          - firefox
           - chrome
         channel: experimental
         xvfb: true
