@@ -38,11 +38,32 @@ bool OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList) {
   return ReadSystemLocales(aLocaleList);
 }
 
+/*
+ * Similar to Gtk, Android does not provide a way to customize or format
+ * date/time patterns, so we're reusing ICU data here, but we do modify it
+ * according to the Android DateFormat is24HourFormat setting.
+ */
 bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
                                         DateTimeFormatStyle aTimeStyle,
                                         const nsACString& aLocale,
                                         nsACString& aRetVal) {
-  return false;
+  if (!mozilla::jni::IsAvailable()) {
+    return false;
+  }
+
+  nsAutoCString skeleton;
+  if (!GetDateTimeSkeletonForStyle(aDateStyle, aTimeStyle, aLocale, skeleton)) {
+    return false;
+  }
+
+  // Customize the skeleton if necessary to reflect user's 12/24hr pref
+  OverrideSkeletonHourCycle(java::GeckoAppShell::GetIs24HourFormat(), skeleton);
+
+  if (!GetPatternForSkeleton(skeleton, aLocale, aRetVal)) {
+    return false;
+  }
+
+  return true;
 }
 
 void OSPreferences::RemoveObservers() {}

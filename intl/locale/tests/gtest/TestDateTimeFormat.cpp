@@ -134,7 +134,8 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find("1.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("1970") != kNotFound);
-  ASSERT_TRUE(formattedTime.Find("00:00:00") != kNotFound);
+  ASSERT_TRUE(formattedTime.Find("12:00:00 AM") != kNotFound ||
+              formattedTime.Find("00:00:00") != kNotFound);
 
   prExplodedTime = {0, 0, 19, 0, 1, 0, 1970, 4, 0, {(19 * 60), 0}};
   rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
@@ -143,7 +144,8 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find("1.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("1970") != kNotFound);
-  ASSERT_TRUE(formattedTime.Find("00:19:00") != kNotFound);
+  ASSERT_TRUE(formattedTime.Find("12:19:00 AM") != kNotFound ||
+              formattedTime.Find("00:19:00") != kNotFound);
 
   prExplodedTime = {0, 0,    0, 7, 1,
                     0, 1970, 4, 0, {(6 * 60 * 60), (1 * 60 * 60)}};
@@ -153,7 +155,8 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find("1.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("1970") != kNotFound);
-  ASSERT_TRUE(formattedTime.Find("07:00:00") != kNotFound);
+  ASSERT_TRUE(formattedTime.Find("7:00:00 AM") != kNotFound ||
+              formattedTime.Find("07:00:00") != kNotFound);
 
   prExplodedTime = {
       0, 0,    29, 11, 1,
@@ -164,7 +167,8 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find("1.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("1970") != kNotFound);
-  ASSERT_TRUE(formattedTime.Find("11:29:00") != kNotFound);
+  ASSERT_TRUE(formattedTime.Find("11:29:00 AM") != kNotFound ||
+              formattedTime.Find("11:29:00") != kNotFound);
 
   prExplodedTime = {0, 0, 37, 23, 31, 11, 1969, 3, 364, {-(23 * 60), 0}};
   rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
@@ -173,7 +177,8 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find("31.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("1969") != kNotFound);
-  ASSERT_TRUE(formattedTime.Find("23:37:00") != kNotFound);
+  ASSERT_TRUE(formattedTime.Find("11:37:00 PM") != kNotFound ||
+              formattedTime.Find("23:37:00") != kNotFound);
 
   prExplodedTime = {0, 0, 0, 17, 31, 11, 1969, 3, 364, {-(7 * 60 * 60), 0}};
   rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
@@ -182,7 +187,8 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find("31.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("1969") != kNotFound);
-  ASSERT_TRUE(formattedTime.Find("17:00:00") != kNotFound);
+  ASSERT_TRUE(formattedTime.Find("5:00:00 PM") != kNotFound ||
+              formattedTime.Find("17:00:00") != kNotFound);
 
   prExplodedTime = {
       0,  0,    47, 14,  31,
@@ -193,7 +199,8 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find("31.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find("1969") != kNotFound);
-  ASSERT_TRUE(formattedTime.Find("14:47:00") != kNotFound);
+  ASSERT_TRUE(formattedTime.Find("2:47:00 PM") != kNotFound ||
+              formattedTime.Find("14:47:00") != kNotFound);
 }
 
 TEST(DateTimeFormat, DateFormatSelectorsForeign)
