@@ -72,9 +72,8 @@ bool CachedNextGenLocalStorageEnabled() {
   return !!gNextGenLocalStorageEnabled;
 }
 
-nsresult GenerateOriginKey2(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                            nsACString& aOriginAttrSuffix,
-                            nsACString& aOriginKey) {
+Result<std::pair<nsCString, nsCString>, nsresult> GenerateOriginKey2(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
   OriginAttributes attrs;
   nsCString spec;
 
@@ -105,16 +104,14 @@ nsresult GenerateOriginKey2(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
   }
 
   if (spec.IsVoid()) {
-    return NS_ERROR_UNEXPECTED;
+    return Err(NS_ERROR_UNEXPECTED);
   }
 
-  attrs.CreateSuffix(aOriginAttrSuffix);
+  nsCString originAttrSuffix;
+  attrs.CreateSuffix(originAttrSuffix);
 
   RefPtr<MozURL> specURL;
-  nsresult rv = MozURL::Init(getter_AddRefs(specURL), spec);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(MozURL::Init(getter_AddRefs(specURL), spec));
 
   nsCString host(specURL->Host());
   uint32_t length = host.Length();
@@ -133,24 +130,24 @@ nsresult GenerateOriginKey2(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
 
   // Append reversed domain
   nsAutoCString reverseDomain;
-  rv = StorageUtils::CreateReversedDomain(domainOrigin, reverseDomain);
+  nsresult rv = StorageUtils::CreateReversedDomain(domainOrigin, reverseDomain);
   if (NS_FAILED(rv)) {
-    return rv;
+    return Err(rv);
   }
 
-  aOriginKey.Append(reverseDomain);
+  nsCString originKey = reverseDomain;
 
   // Append scheme
-  aOriginKey.Append(':');
-  aOriginKey.Append(specURL->Scheme());
+  originKey.Append(':');
+  originKey.Append(specURL->Scheme());
 
   // Append port if any
   int32_t port = specURL->RealPort();
   if (port != -1) {
-    aOriginKey.Append(nsPrintfCString(":%d", port));
+    originKey.AppendPrintf(":%d", port);
   }
 
-  return NS_OK;
+  return std::make_pair(std::move(originAttrSuffix), std::move(originKey));
 }
 
 LogModule* GetLocalStorageLogger() { return gLogger; }

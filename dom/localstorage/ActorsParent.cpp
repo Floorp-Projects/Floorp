@@ -3073,15 +3073,13 @@ bool VerifyOriginKey(const nsACString& aOriginKey,
                      const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
 
-  nsCString originAttrSuffix;
-  nsCString originKey;
-  LS_TRY(GenerateOriginKey2(aPrincipalInfo, originAttrSuffix, originKey),
-         false);
+  LS_TRY_INSPECT((const auto& [originAttrSuffix, originKey]),
+                 GenerateOriginKey2(aPrincipalInfo), false);
 
   Unused << originAttrSuffix;
 
   LS_TRY(OkIf(originKey == aOriginKey), false,
-         ([&originKey, &aOriginKey](const auto) {
+         ([&originKey = originKey, &aOriginKey](const auto) {
            LS_WARNING("originKey (%s) doesn't match passed one (%s)!",
                       originKey.get(), nsCString(aOriginKey).get());
          }));
@@ -8812,10 +8810,9 @@ QuotaClient::CreateArchivedOriginScope(const OriginScope& aOriginScope) {
     contentPrincipalInfo.attrs() = std::move(attrs);
     contentPrincipalInfo.spec() = std::move(spec);
 
-    nsCString originAttrSuffix;
-    nsCString originKey;
-    LS_TRY(GenerateOriginKey2(PrincipalInfo(std::move(contentPrincipalInfo)),
-                              originAttrSuffix, originKey));
+    LS_TRY_INSPECT(
+        (const auto& [originAttrSuffix, originKey]),
+        GenerateOriginKey2(PrincipalInfo(std::move(contentPrincipalInfo))));
 
     return ArchivedOriginScope::CreateFromOrigin(originAttrSuffix, originKey);
   }
@@ -8831,10 +8828,9 @@ QuotaClient::CreateArchivedOriginScope(const OriginScope& aOriginScope) {
     contentPrincipalInfo.attrs() = std::move(attrs);
     contentPrincipalInfo.spec() = std::move(spec);
 
-    nsCString originAttrSuffix;
-    nsCString originKey;
-    LS_TRY(GenerateOriginKey2(PrincipalInfo(std::move(contentPrincipalInfo)),
-                              originAttrSuffix, originKey));
+    LS_TRY_INSPECT(
+        (const auto& [originAttrSuffix, originKey]),
+        GenerateOriginKey2(PrincipalInfo(std::move(contentPrincipalInfo))));
 
     Unused << originAttrSuffix;
 
