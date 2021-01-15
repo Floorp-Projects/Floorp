@@ -2384,14 +2384,6 @@ void LIRGenerator::visitToString(MToString* ins) {
   }
 }
 
-void LIRGenerator::visitToObject(MToObject* ins) {
-  MOZ_ASSERT(ins->input()->type() == MIRType::Value);
-
-  LValueToObject* lir = new (alloc()) LValueToObject(useBox(ins->input()));
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitRegExp(MRegExp* ins) {
   LRegExp* lir = new (alloc()) LRegExp(temp());
   define(lir, ins);

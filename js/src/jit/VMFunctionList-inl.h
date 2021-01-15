@@ -248,7 +248,6 @@ namespace jit {
   _(ThrowRuntimeLexicalError, js::jit::ThrowRuntimeLexicalError)               \
   _(ThrowUninitializedThis, js::ThrowUninitializedThis)                        \
   _(ToBigInt, js::ToBigInt)                                                    \
-  _(ToObjectSlow, js::ToObjectSlow)                                            \
   _(ToStringSlow, js::ToStringSlow<CanGC>)
 
 // The list below is for tail calls. The third argument specifies the number of

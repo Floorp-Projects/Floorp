@@ -1668,19 +1668,6 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitValueToObject(LValueToObject* lir) {
-  ValueOperand input = ToValue(lir, LValueToObject::Input);
-  Register output = ToRegister(lir->output());
-
-  using Fn = JSObject* (*)(JSContext*, HandleValue, bool);
-  OutOfLineCode* ool = oolCallVM<Fn, ToObjectSlow>(
-      lir, ArgList(input, Imm32(0)), StoreRegisterTo(output));
-
-  masm.fallibleUnboxObject(input, output, ool->entry());
-
-  masm.bind(ool->rejoin());
-}
-
 using StoreBufferMutationFn = void (*)(js::gc::StoreBuffer*, js::gc::Cell**);
 
 static void EmitStoreBufferMutation(MacroAssembler& masm, Register holder,
