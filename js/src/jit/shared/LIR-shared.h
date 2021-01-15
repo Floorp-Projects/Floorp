@@ -4213,29 +4213,6 @@ class LLoadElementHole : public LInstructionHelper<BOX_PIECES, 3, 0> {
   const LAllocation* initLength() { return getOperand(2); }
 };
 
-// Load a typed value from a dense array's elements vector. The array must be
-// known to be packed, so that we don't have to check for the hole value.
-// This instruction does not load the type tag and can directly load into a
-// FP register.
-class LLoadElementT : public LInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(LoadElementT)
-
-  LLoadElementT(const LAllocation& elements, const LAllocation& index)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, elements);
-    setOperand(1, index);
-  }
-
-  const char* extraName() const {
-    return mir()->needsHoleCheck() ? "HoleCheck" : nullptr;
-  }
-
-  const MLoadElement* mir() const { return mir_->toLoadElement(); }
-  const LAllocation* elements() { return getOperand(0); }
-  const LAllocation* index() { return getOperand(1); }
-};
-
 class LUnboxObjectOrNull : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(UnboxObjectOrNull);

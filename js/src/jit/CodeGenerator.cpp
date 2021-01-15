@@ -12214,34 +12214,6 @@ void CodeGenerator::visitToPropertyKeyCache(LToPropertyKeyCache* lir) {
   addIC(lir, allocateIC(ic));
 }
 
-template <typename T>
-void CodeGenerator::emitLoadElementT(LLoadElementT* lir, const T& source) {
-  if (LIRGenerator::allowTypedElementHoleCheck()) {
-    if (lir->mir()->needsHoleCheck()) {
-      Label bail;
-      masm.branchTestMagic(Assembler::Equal, source, &bail);
-      bailoutFrom(&bail, lir->snapshot());
-    }
-  } else {
-    MOZ_ASSERT(!lir->mir()->needsHoleCheck());
-  }
-
-  AnyRegister output = ToAnyRegister(lir->output());
-  masm.loadUnboxedValue(source, lir->mir()->type(), output);
-}
-
-void CodeGenerator::visitLoadElementT(LLoadElementT* lir) {
-  Register elements = ToRegister(lir->elements());
-  const LAllocation* index = lir->index();
-
-  if (index->isConstant()) {
-    int32_t offset = ToInt32(index) * sizeof(js::Value);
-    emitLoadElementT(lir, Address(elements, offset));
-  } else {
-    emitLoadElementT(lir, BaseObjectElementIndex(elements, ToRegister(index)));
-  }
-}
-
 void CodeGenerator::visitLoadElementV(LLoadElementV* load) {
   Register elements = ToRegister(load->elements());
   const ValueOperand out = ToOutValue(load);
