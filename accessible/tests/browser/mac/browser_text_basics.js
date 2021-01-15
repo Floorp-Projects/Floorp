@@ -165,10 +165,27 @@ function testMarkerIntegrity(accDoc, expectedMarkerValues) {
       expectedMarkerValues[count].style
     );
 
+    let prevMarker = marker;
     marker = macDoc.getParameterizedAttributeValue(
       "AXNextTextMarkerForTextMarker",
       marker
     );
+
+    if (marker) {
+      let range = macDoc.getParameterizedAttributeValue(
+        "AXTextMarkerRangeForUnorderedTextMarkers",
+        [prevMarker, marker]
+      );
+      is(
+        macDoc.getParameterizedAttributeValue(
+          "AXLengthForTextMarkerRange",
+          range
+        ),
+        1,
+        "marker moved one character"
+      );
+    }
+
     count++;
   }
 
