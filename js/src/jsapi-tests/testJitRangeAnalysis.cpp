@@ -5,8 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
 #include "jit/IonAnalysis.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
@@ -245,7 +243,8 @@ BEGIN_TEST(testJitRangeAnalysis_StrictCompareBeta) {
   MCompare* cmp = MCompare::New(func.alloc, p, c0, JSOp::StrictEq,
                                 MCompare::Compare_Double);
   entry->add(cmp);
-  entry->end(MTest::New(func.alloc, cmp, thenBlock, elseBlock));
+  auto* test = MTest::New(func.alloc, cmp, thenBlock, elseBlock);
+  entry->end(test);
 
   // {
   //   return p + -0;
@@ -267,12 +266,20 @@ BEGIN_TEST(testJitRangeAnalysis_StrictCompareBeta) {
   // If range analysis inserts a beta node for p, it will be able to compute
   // a meaningful range for p + -0.
 
+  auto replaceCompare = [&](auto compareType) {
+    auto* newCmp =
+        MCompare::New(func.alloc, p, c0, JSOp::StrictEq, compareType);
+    entry->insertBefore(cmp, newCmp);
+    test->replaceOperand(0, newCmp);
+    cmp = newCmp;
+  };
+
   // We can't do beta node insertion with StrictEq and a non-numeric
   // comparison though.
-  MCompare::CompareType nonNumerics[] = {MCompare::Compare_Object,
-                                         MCompare::Compare_String};
-  for (size_t i = 0; i < mozilla::ArrayLength(nonNumerics); ++i) {
-    cmp->setCompareType(nonNumerics[i]);
+  for (auto compareType :
+       {MCompare::Compare_Object, MCompare::Compare_String}) {
+    replaceCompare(compareType);
+
     if (!func.runRangeAnalysis()) {
       return false;
     }
@@ -281,7 +288,7 @@ BEGIN_TEST(testJitRangeAnalysis_StrictCompareBeta) {
   }
 
   // We can do it with a numeric comparison.
-  cmp->setCompareType(MCompare::Compare_Double);
+  replaceCompare(MCompare::Compare_Double);
   if (!func.runRangeAnalysis()) {
     return false;
   }
