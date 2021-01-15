@@ -190,8 +190,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void emitConcat(LInstruction* lir, Register lhs, Register rhs,
                   Register output);
-  template <typename T>
-  void emitLoadElementT(LLoadElementT* lir, const T& source);
 
   void emitRest(LInstruction* lir, Register array, Register numActuals,
                 Register temp0, Register temp1, unsigned numFormals,

@@ -3060,31 +3060,14 @@ void LIRGenerator::visitGuardElementNotHole(MGuardElementNotHole* ins) {
 void LIRGenerator::visitLoadElement(MLoadElement* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->type() == MIRType::Value);
 
-  switch (ins->type()) {
-    case MIRType::Value: {
-      LLoadElementV* lir = new (alloc()) LLoadElementV(
-          useRegister(ins->elements()), useRegisterOrConstant(ins->index()));
-      if (ins->fallible()) {
-        assignSnapshot(lir, ins->bailoutKind());
-      }
-      defineBox(lir, ins);
-      break;
-    }
-    case MIRType::Undefined:
-    case MIRType::Null:
-      MOZ_CRASH("typed load must have a payload");
-
-    default: {
-      LLoadElementT* lir = new (alloc()) LLoadElementT(
-          useRegister(ins->elements()), useRegisterOrConstant(ins->index()));
-      if (ins->fallible()) {
-        assignSnapshot(lir, ins->bailoutKind());
-      }
-      define(lir, ins);
-      break;
-    }
+  auto* lir = new (alloc()) LLoadElementV(useRegister(ins->elements()),
+                                          useRegisterOrConstant(ins->index()));
+  if (ins->fallible()) {
+    assignSnapshot(lir, ins->bailoutKind());
   }
+  defineBox(lir, ins);
 }
 
 void LIRGenerator::visitLoadElementHole(MLoadElementHole* ins) {
