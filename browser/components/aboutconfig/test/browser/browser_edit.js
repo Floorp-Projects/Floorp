@@ -259,6 +259,14 @@ add_task(async function test_modify() {
       Assert.equal(row.hasClass("deleted"), willDelete);
     }
   });
+
+  // This test would have opened the invalid form popup, so just close it so as not to
+  // affect later tests.
+  let invalidFormPopup = window.document.getElementById("invalid-form-popup");
+  invalidFormPopup.hidePopup();
+  await BrowserTestUtils.waitForCondition(() => {
+    return invalidFormPopup.state == "closed";
+  }, "form validation popup closed");
 });
 
 add_task(async function test_edit_field_selected() {
