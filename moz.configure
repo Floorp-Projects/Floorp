@@ -194,8 +194,26 @@ add_old_configure_assignment("DEVELOPER_OPTIONS", developer_options)
 set_config("DEVELOPER_OPTIONS", developer_options)
 
 
-@depends(developer_options)
-def bootstrap_search_path_order(developer_options):
+option(
+    env="MOZ_FETCHES_DIR",
+    nargs=1,
+    when="MOZ_AUTOMATION",
+    help="Directory containing fetched artifacts",
+)
+
+
+@depends("MOZ_FETCHES_DIR", when="MOZ_AUTOMATION")
+def moz_fetches_dir(value):
+    if value:
+        return value[0]
+
+
+@depends(developer_options, moz_fetches_dir)
+def bootstrap_search_path_order(developer_options, moz_fetches_dir):
+    if moz_fetches_dir:
+        log.debug("Prioritizing MOZ_FETCHES_DIR in toolchain path.")
+        return "prepend"
+
     if developer_options:
         log.debug(
             "Prioritizing mozbuild state dir in toolchain paths because "
@@ -211,6 +229,9 @@ def bootstrap_search_path_order(developer_options):
     return "append"
 
 
+toolchains_base_dir = moz_fetches_dir | mozbuild_state_path
+
+
 @dependable
 @imports("os")
 @imports(_from="os", _import="environ")
@@ -220,9 +241,9 @@ def original_path():
 
 @template
 def bootstrap_search_path(*path_parts):
-    @depends(bootstrap_search_path_order, original_path, mozbuild_state_path)
-    def bootstrap_search_path(order, original_path, mozbuild_state_path):
-        path = [os.path.join(mozbuild_state_path, *path_parts)]
+    @depends(bootstrap_search_path_order, original_path, toolchains_base_dir)
+    def bootstrap_search_path(order, original_path, toolchains_base_dir):
+        path = [os.path.join(toolchains_base_dir, *path_parts)]
         if order == "prepend":
             return path + original_path
         return original_path + path
