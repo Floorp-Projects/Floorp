@@ -44,7 +44,7 @@ add_task(async function() {
 
   info("Focus after clicking in the output area");
   await waitForBlurredInput(hud);
-  EventUtils.sendMouseEvent({ type: "click" }, msg);
+  await EventUtils.sendMouseEvent({ type: "click" }, msg);
   ok(isInputFocused(hud), "input node is focused, second time");
 
   is(
@@ -57,7 +57,7 @@ add_task(async function() {
   await waitForBlurredInput(hud);
   const selection = hud.iframeWindow.getSelection();
   selection.selectAllChildren(msg.querySelector(".message-body"));
-  EventUtils.sendMouseEvent({ type: "click" }, msg);
+  await EventUtils.sendMouseEvent({ type: "click" }, msg);
   ok(!isInputFocused(hud), "input node not focused after text is selected");
 });
 

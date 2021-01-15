@@ -25,11 +25,11 @@ add_task(async function() {
 
   // Wait for all tree view updated by react
   const wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#request-tab")
   );

@@ -17,7 +17,7 @@ window.onload = async function() {
   navigateByLocation(frames[0].frames[0]);
   navigateByOpen("child1_child0");
   navigateByForm("child2_child0");
-  navigateByHyperlink("child3_child0");
+  await navigateByHyperlink("child3_child0");
 
   await waitForFinishedFrames(4);
   await isNavigated(frames[0].frames[0], "Should be able to navigate off-domain grandchild by setting location.");

@@ -50,7 +50,7 @@ add_task(async function() {
   await teardown(monitor);
 
   async function testLastMenuItem(column) {
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelector(`#requests-list-${column}-button`)
     );

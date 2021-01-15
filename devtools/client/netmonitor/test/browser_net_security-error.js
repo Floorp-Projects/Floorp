@@ -28,7 +28,7 @@ add_task(async function() {
   store.dispatch(Actions.toggleNetworkDetails());
 
   await waitUntil(() => document.querySelector("#security-tab"));
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#security-tab")
   );

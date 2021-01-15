@@ -29,7 +29,7 @@ add_task(async function() {
   await wait;
 
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#security-tab")
   );

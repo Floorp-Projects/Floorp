@@ -105,7 +105,7 @@ add_task(async function() {
       { once: true }
     );
     info("Click on menu and wait for the popup to be visible");
-    EventUtils.sendMouseEvent({ type: "click" }, button);
+    await EventUtils.sendMouseEvent({ type: "click" }, button);
     await onPopupShown;
 
     const menuItem = toolbox.doc.getElementById(

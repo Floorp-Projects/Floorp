@@ -17,7 +17,7 @@ window.onload = async function() {
   // navigateByLocation(window0);  // Don't have a handle to the window.
   navigateByOpen("window1");
   navigateByForm("window2");
-  navigateByHyperlink("window3");
+  await navigateByHyperlink("window3");
 
   await waitForFinishedFrames(6);
 
