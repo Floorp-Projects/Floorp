@@ -7254,41 +7254,6 @@ class MElements : public MUnaryInstruction, public SingleObjectPolicy::Data {
   ALLOW_CLONE(MElements)
 };
 
-// A constant value for some object's typed array elements.
-class MConstantElements : public MNullaryInstruction {
-  SharedMem<void*> value_;
-
- protected:
-  explicit MConstantElements(SharedMem<void*> v)
-      : MNullaryInstruction(classOpcode), value_(v) {
-    setResultType(MIRType::Elements);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ConstantElements)
-  TRIVIAL_NEW_WRAPPERS
-
-  SharedMem<void*> value() const { return value_; }
-
-#ifdef JS_JITSPEW
-  void printOpcode(GenericPrinter& out) const override;
-#endif
-
-  HashNumber valueHash() const override {
-    return (HashNumber)(size_t)value_.asValue();
-  }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return ins->isConstantElements() &&
-           ins->toConstantElements()->value() == value();
-  }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  ALLOW_CLONE(MConstantElements)
-};
-
 // Load the initialized length from an elements header.
 class MInitializedLength : public MUnaryInstruction, public NoTypePolicy::Data {
   explicit MInitializedLength(MDefinition* elements)
