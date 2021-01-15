@@ -12,6 +12,7 @@ add_task(async function test() {
 
   const getRecordingButton = () =>
     getElementByLabel(document, "Start Recording");
+
   const getDisabledMessage = () =>
     getElementFromDocumentByText(
       document,

@@ -17,7 +17,7 @@ add_task(async function test() {
     "resource://devtools/client/performance-new/popup/background.jsm.js"
   );
 
-  const button = document.getElementById("profiler-button");
+  const button = document.getElementById("profiler-button-button");
   if (!button) {
     throw new Error("Could not find the profiler button.");
   }

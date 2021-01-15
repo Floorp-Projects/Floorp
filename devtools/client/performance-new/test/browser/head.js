@@ -233,17 +233,21 @@ async function _toggleOpenProfilerPopup(window) {
   info("Toggle open the profiler popup.");
 
   info("> Find the profiler menu button.");
-  const profilerButton = document.getElementById("profiler-button");
-  if (!profilerButton) {
-    throw new Error("Could not find the profiler button in the menu.");
+  const profilerDropmarker = document.getElementById(
+    "profiler-button-dropmarker"
+  );
+  if (!profilerDropmarker) {
+    throw new Error(
+      "Could not find the profiler button dropmarker in the toolbar."
+    );
   }
 
   const popupShown = waitForProfilerPopupEvent("popupshown");
 
   info("> Trigger a click on the profiler button dropmarker.");
-  await EventUtils.synthesizeMouseAtCenter(profilerButton.dropmarker, {});
+  await EventUtils.synthesizeMouseAtCenter(profilerDropmarker, {});
 
-  if (profilerButton.getAttribute("open") !== "true") {
+  if (profilerDropmarker.getAttribute("open") !== "true") {
     throw new Error(
       "This test assumes that the button will have an open=true attribute after clicking it."
     );

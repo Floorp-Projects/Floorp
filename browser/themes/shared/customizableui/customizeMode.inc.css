@@ -294,11 +294,13 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 
 /* Squeeze together the multi-button toolbarpaletteitems: */
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-out-button,
-#wrapper-edit-controls[place="palette"] > #edit-controls > #cut-button {
+#wrapper-edit-controls[place="palette"] > #edit-controls > #cut-button,
+#wrapper-profiler-button[place="palette"] > #profiler-button > #profiler-button-button {
   -moz-box-align: end;
 }
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-in-button,
-#wrapper-edit-controls[place="palette"] > #edit-controls > #paste-button {
+#wrapper-edit-controls[place="palette"] > #edit-controls > #paste-button,
+#wrapper-profiler-button[place="palette"] > #profiler-button > #profiler-button-dropmarker {
   -moz-box-align: start;
 }
 #wrapper-edit-controls[place="palette"] > #edit-controls > #copy-button {

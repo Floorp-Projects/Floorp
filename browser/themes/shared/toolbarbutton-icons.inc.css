@@ -256,39 +256,26 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/developer.svg");
 }
 
-#profiler-button > .toolbarbutton-icon {
+#profiler-button-button > .toolbarbutton-icon {
   list-style-image: url("chrome://devtools/skin/images/tool-profiler.svg");
 }
 
-#profiler-button:not(.profiler-active) > image {
+#profiler-button-button:not(.profiler-active) > image {
   transform: scaleX(-1);
 }
 
-#profiler-button.profiler-active > image {
+#profiler-button-button.profiler-active > image {
   fill: #0060df;
   fill-opacity: 1;
   background-color: #0060df33;
 }
 
-#profiler-button.profiler-active:hover > image {
+#profiler-button-button.profiler-active:hover > image {
   background-color: #0060df22;
 }
 
-#profiler-button.profiler-paused > image {
+#profiler-button-button.profiler-paused > image {
   opacity: 0.4;
-}
-
-#profiler-button > .toolbarbutton-menu-dropmarker {
-  /* Inherit the fill and fill-opacity values from the toolbarbutton
-     instead of using the values from .toolbarbutton-menu-dropmarker */
-  -moz-context-properties: fill, fill-opacity;
-  fill: inherit;
-  fill-opacity: inherit;
-}
-
-.widget-overflow-list #profiler-button > .toolbarbutton-menu-dropmarker,
-#customization-palette #profiler-button > .toolbarbutton-menu-dropmarker {
-  display: none;
 }
 
 #preferences-button {
