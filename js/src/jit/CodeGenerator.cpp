@@ -10700,12 +10700,7 @@ void CodeGenerator::visitSetInitializedLength(LSetInitializedLength* lir) {
 }
 
 void CodeGenerator::visitNotO(LNotO* lir) {
-  MOZ_ASSERT(
-      lir->mir()->operandMightEmulateUndefined(),
-      "This should be constant-folded if the object can't emulate undefined.");
-
-  OutOfLineTestObjectWithLabels* ool =
-      new (alloc()) OutOfLineTestObjectWithLabels();
+  auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
   addOutOfLineCode(ool, lir->mir());
 
   Label* ifEmulatesUndefined = ool->label1();
@@ -10729,28 +10724,13 @@ void CodeGenerator::visitNotO(LNotO* lir) {
 }
 
 void CodeGenerator::visitNotV(LNotV* lir) {
-  Maybe<Label> ifTruthyLabel, ifFalsyLabel;
-  Label* ifTruthy;
-  Label* ifFalsy;
-
-  OutOfLineTestObjectWithLabels* ool = nullptr;
   MDefinition* operand = lir->mir()->input();
-  // Unfortunately, it's possible that someone (e.g. phi elimination) switched
-  // out our operand after we did cacheOperandMightEmulateUndefined.  So we
-  // might think it can emulate undefined _and_ know that it can't be an
-  // object.
-  if (lir->mir()->operandMightEmulateUndefined() &&
-      operand->mightBeType(MIRType::Object)) {
-    ool = new (alloc()) OutOfLineTestObjectWithLabels();
-    addOutOfLineCode(ool, lir->mir());
-    ifTruthy = ool->label1();
-    ifFalsy = ool->label2();
-  } else {
-    ifTruthyLabel.emplace();
-    ifFalsyLabel.emplace();
-    ifTruthy = ifTruthyLabel.ptr();
-    ifFalsy = ifFalsyLabel.ptr();
-  }
+
+  auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
+  addOutOfLineCode(ool, lir->mir());
+
+  Label* ifTruthy = ool->label1();
+  Label* ifFalsy = ool->label2();
 
   testValueTruthyKernel(ToValue(lir, LNotV::Input), lir->temp1(), lir->temp2(),
                         ToFloatRegister(lir->tempFloat()), ifTruthy, ifFalsy,
