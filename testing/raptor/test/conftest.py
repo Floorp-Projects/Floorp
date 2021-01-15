@@ -102,6 +102,7 @@ def create_args():
         browsertime=True,
         cold=False,
         live_sites=False,
+        enable_marionette_trace=False,
     )
 
     def inner(**kwargs):
