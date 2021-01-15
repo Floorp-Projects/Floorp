@@ -280,5 +280,17 @@ void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
   }
 }
 
+double TelemetryProbesReporter::GetTotalPlayTimeInSeconds() const {
+  return mTotalPlayTime.PeekTotal();
+}
+
+double TelemetryProbesReporter::GetInvisibleVideoPlayTimeInSeconds() const {
+  return mInvisibleVideoPlayTime.PeekTotal();
+}
+
+double TelemetryProbesReporter::GetVideoDecodeSuspendedTimeInSeconds() const {
+  return mVideoDecodeSuspendedTime.PeekTotal();
+}
+
 #undef LOG
 }  // namespace mozilla
