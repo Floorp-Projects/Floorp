@@ -1696,26 +1696,6 @@ class LCompareS : public LInstructionHelper<1, 2, 0> {
   MCompare* mir() { return mir_->toCompare(); }
 };
 
-// strict-equality between value and string.
-class LCompareStrictS : public LInstructionHelper<1, BOX_PIECES + 1, 1> {
- public:
-  LIR_HEADER(CompareStrictS)
-
-  LCompareStrictS(const LBoxAllocation& lhs, const LAllocation& rhs,
-                  const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Lhs, lhs);
-    setOperand(BOX_PIECES, rhs);
-    setTemp(0, temp);
-  }
-
-  static const size_t Lhs = 0;
-
-  const LAllocation* right() { return getOperand(BOX_PIECES); }
-  const LDefinition* tempToUnbox() { return getTemp(0); }
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
 class LCompareBigInt : public LInstructionHelper<1, 2, 3> {
  public:
   LIR_HEADER(CompareBigInt)
