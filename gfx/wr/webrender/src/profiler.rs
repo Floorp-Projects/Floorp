@@ -69,7 +69,7 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     // Stats about the content of the frame.
     (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
     // Texture cache allocation stats.
-    (&"Texture cache stats", &"Texture cache RGBA8 linear pixels, Texture cache RGBA8 linear textures, Texture cache glyphs pixels, Texture cache glyphs textures, Texture cache A8 pixels, Texture cache A8 textures, Texture cache A16 pixels, Texture cache A16 textures, Texture cache RGBA8 nearest pixels, Texture cache RGBA8 nearest textures, Texture cache shared mem, Texture cache standalone mem"),
+    (&"Texture cache stats", &"Texture cache RGBA8 linear pixels, Texture cache RGBA8 linear textures, Texture cache RGBA8 glyphs pixels, Texture cache RGBA8 glyphs textures, Texture cache A8 glyphs pixels, Texture cache A8 glyphs textures, Texture cache A8 pixels, Texture cache A8 textures, Texture cache A16 pixels, Texture cache A16 textures, Texture cache RGBA8 nearest pixels, Texture cache RGBA8 nearest textures, Texture cache shared mem, Texture cache standalone mem"),
 
     // Graphs:
 
@@ -193,8 +193,10 @@ pub const INTERNED_BACKDROPS: usize = 73;
 
 pub const TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS: usize = 74;
 pub const TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES: usize = 75;
+pub const TEXTURE_CACHE_A8_GLYPHS_PIXELS: usize = 76;
+pub const TEXTURE_CACHE_A8_GLYPHS_TEXTURES: usize = 77;
 
-pub const NUM_PROFILER_EVENTS: usize = 76;
+pub const NUM_PROFILER_EVENTS: usize = 78;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -318,8 +320,10 @@ impl Profiler {
             int("Interned filter data", "", INTERNED_FILTER_DATA, Expected::none()),
             int("Interned backdrops", "", INTERNED_BACKDROPS, Expected::none()),
 
-            int("Texture cache glyphs pixels", "px", TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS, expected(0..4_000_000)),
-            int("Texture cache glyphs textures", "", TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES, expected(0..2)),
+            int("Texture cache RGBA8 glyphs pixels", "px", TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS, expected(0..4_000_000)),
+            int("Texture cache RGBA8 glyphs textures", "", TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES, expected(0..2)),
+            int("Texture cache A8 glyphs pixels", "px", TEXTURE_CACHE_A8_GLYPHS_PIXELS, expected(0..4_000_000)),
+            int("Texture cache A8 glyphs textures", "", TEXTURE_CACHE_A8_GLYPHS_TEXTURES, expected(0..2)),
         ];
 
 
