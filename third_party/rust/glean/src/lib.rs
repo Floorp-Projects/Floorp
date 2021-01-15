@@ -360,25 +360,16 @@ fn initialize_core_metrics(
     client_info: &ClientInfoMetrics,
     channel: Option<String>,
 ) {
-    let core_metrics = core_metrics::InternalMetrics::new();
-
-    core_metrics
-        .app_build
-        .set(glean, &client_info.app_build[..]);
-    core_metrics
-        .app_display_version
-        .set(glean, &client_info.app_display_version[..]);
+    core_metrics::internal_metrics::app_build.set_sync(glean, &client_info.app_build[..]);
+    core_metrics::internal_metrics::app_display_version
+        .set_sync(glean, &client_info.app_display_version[..]);
     if let Some(app_channel) = channel {
-        core_metrics.app_channel.set(glean, app_channel);
+        core_metrics::internal_metrics::app_channel.set_sync(glean, app_channel);
     }
-    core_metrics.os_version.set(glean, "unknown".to_string());
-    core_metrics
-        .architecture
-        .set(glean, system::ARCH.to_string());
-    core_metrics
-        .device_manufacturer
-        .set(glean, "unknown".to_string());
-    core_metrics.device_model.set(glean, "unknown".to_string());
+    core_metrics::internal_metrics::os_version.set_sync(glean, "unknown".to_string());
+    core_metrics::internal_metrics::architecture.set_sync(glean, system::ARCH.to_string());
+    core_metrics::internal_metrics::device_manufacturer.set_sync(glean, "unknown".to_string());
+    core_metrics::internal_metrics::device_model.set_sync(glean, "unknown".to_string());
 }
 
 /// Sets whether upload is enabled or not.

@@ -871,3 +871,38 @@ fn records_database_file_size() {
     // We should see the database containing some data.
     assert!(data.sum > 0);
 }
+
+#[test]
+fn records_io_errors() {
+    use std::fs;
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let (glean, _data_dir) = new_glean(None);
+    let pending_pings_dir = glean.get_data_path().join(crate::PENDING_PINGS_DIRECTORY);
+    fs::create_dir_all(&pending_pings_dir).unwrap();
+    let attr = fs::metadata(&pending_pings_dir).unwrap();
+    let original_permissions = attr.permissions();
+
+    // Remove write permissions on the pending_pings directory.
+    let mut permissions = original_permissions.clone();
+    permissions.set_readonly(true);
+    fs::set_permissions(&pending_pings_dir, permissions).unwrap();
+
+    // Writing the ping file should fail.
+    let submitted = glean.internal_pings.metrics.submit(&glean, None);
+    assert!(submitted.is_err());
+
+    let metric = &glean.core_metrics.io_errors;
+    assert_eq!(
+        1,
+        metric.test_get_value(&glean, "metrics").unwrap(),
+        "Should have recorded an IO error"
+    );
+
+    // Restore write permissions.
+    fs::set_permissions(&pending_pings_dir, original_permissions).unwrap();
+
+    // Now we can submit a ping
+    let submitted = glean.internal_pings.metrics.submit(&glean, None);
+    assert!(submitted.is_ok());
+}

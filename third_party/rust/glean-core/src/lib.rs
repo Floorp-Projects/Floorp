@@ -636,6 +636,7 @@ impl Glean {
                     &content,
                 ) {
                     log::warn!("IO error while writing ping to file: {}", e);
+                    self.core_metrics.io_errors.add(self, 1);
                     return Err(e.into());
                 }
 
