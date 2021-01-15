@@ -58,10 +58,7 @@ add_task(async function() {
     TEST_EVENTS.RECEIVED_RESPONSE_CONTENT
   );
   store.dispatch(Actions.toggleNetworkDetails());
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
   await wait;
   await onResponseContent;
   await testResponse("br");

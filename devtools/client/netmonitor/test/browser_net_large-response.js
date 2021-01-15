@@ -56,10 +56,7 @@ add_task(async function() {
 
   wait = waitForDOM(document, "#response-panel .accordion-item", 2);
   store.dispatch(Actions.toggleNetworkDetails());
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
   await wait;
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");

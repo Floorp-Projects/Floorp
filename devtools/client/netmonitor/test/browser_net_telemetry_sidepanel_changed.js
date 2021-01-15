@@ -42,10 +42,7 @@ add_task(async function() {
 
   // Click on the Cookies panel and wait till it's opened.
   info("Click on the Cookies panel");
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#cookies-tab")
-  );
+  await clickOnSidebarTab(document, "cookies");
   await waitForRequestData(store, ["requestCookies", "responseCookies"]);
 
   checkTelemetryEvent(
