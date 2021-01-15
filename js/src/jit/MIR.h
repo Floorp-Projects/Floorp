@@ -8649,67 +8649,6 @@ class MGetPropSuperCache
   NAMED_OPERANDS((0, object), (1, receiver), (2, idval))
 };
 
-struct PolymorphicEntry {
-  // The group and/or shape to guard against.
-  ReceiverGuard receiver;
-
-  // The property to load, null for loads from unboxed properties.
-  Shape* shape;
-};
-
-// Emit code to store a value to an object's slots if its shape/group matches
-// one of the shapes/groups observed by the baseline IC, else bails out.
-class MSetPropertyPolymorphic
-    : public MBinaryInstruction,
-      public MixPolicy<SingleObjectPolicy, NoFloatPolicy<1>>::Data {
-  Vector<PolymorphicEntry, 4, JitAllocPolicy> receivers_;
-  CompilerPropertyName name_;
-  bool needsBarrier_;
-
-  MSetPropertyPolymorphic(TempAllocator& alloc, MDefinition* obj,
-                          MDefinition* value, PropertyName* name)
-      : MBinaryInstruction(classOpcode, obj, value),
-        receivers_(alloc),
-        name_(name),
-        needsBarrier_(false) {}
-
- public:
-  INSTRUCTION_HEADER(SetPropertyPolymorphic)
-  NAMED_OPERANDS((0, object), (1, value))
-
-  static MSetPropertyPolymorphic* New(TempAllocator& alloc, MDefinition* obj,
-                                      MDefinition* value, PropertyName* name) {
-    return new (alloc) MSetPropertyPolymorphic(alloc, obj, value, name);
-  }
-
-  [[nodiscard]] bool addReceiver(const ReceiverGuard& receiver, Shape* shape) {
-    PolymorphicEntry entry;
-    entry.receiver = receiver;
-    entry.shape = shape;
-    return receivers_.append(entry);
-  }
-  size_t numReceivers() const { return receivers_.length(); }
-  const ReceiverGuard& receiver(size_t i) const {
-    return receivers_[i].receiver;
-  }
-  Shape* shape(size_t i) const { return receivers_[i].shape; }
-  PropertyName* name() const { return name_; }
-  bool needsBarrier() const { return needsBarrier_; }
-  void setNeedsBarrier() { needsBarrier_ = true; }
-  AliasSet getAliasSet() const override {
-    bool hasUnboxedStore = false;
-    for (size_t i = 0; i < numReceivers(); i++) {
-      if (!shape(i)) {
-        hasUnboxedStore = true;
-        break;
-      }
-    }
-    return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                           AliasSet::DynamicSlot |
-                           (hasUnboxedStore ? AliasSet::UnboxedElement : 0));
-  }
-};
-
 class MBindNameCache : public MUnaryInstruction,
                        public SingleObjectPolicy::Data {
   explicit MBindNameCache(MDefinition* envChain)
