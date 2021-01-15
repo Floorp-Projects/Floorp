@@ -2,8 +2,8 @@
   {
     "title": "adidas",
     "urls": ["https://www.adidas.co.uk/", "https://www.adidas.de/", "https://www.adidas.fr/"],
-    "image_url": "images/adidas@2x.jpg",
-    "favicon_url": "favicons/adidas.ico"
+    "image_url": "images/adidas@2x.png",
+    "favicon_url": "favicons/adidas.png"
   },
   {
     "title": "aliexpress",
@@ -81,7 +81,7 @@
     "title": "geico",
     "url": "https://www.geico.com/",
     "image_url": "images/geico@2x.jpg",
-    "favicon_url": "favicons/geico.ico"
+    "favicon_url": "favicons/geico.png"
   },
   {
     "title": "google",
@@ -92,7 +92,7 @@
   {
     "title": "hrblock",
     "url": "https://www.hrblock.com/",
-    "image_url": "images/hrblock@2x.jpg",
+    "image_url": "images/hrblock@2x.png",
     "favicon_url": "favicons/hrblock.ico"
   },
   {
