@@ -173,6 +173,27 @@ option(env="MOZ_PGO", help="Build with profile guided optimizations")
 set_config("MOZ_PGO", depends("MOZ_PGO")(lambda x: bool(x)))
 
 
+imply_option("--enable-release", mozilla_official)
+imply_option("--enable-release", depends_if("MOZ_AUTOMATION")(lambda x: True))
+
+option(
+    "--enable-release",
+    default=milestone.is_release_or_beta,
+    help="{Build|Do not build} with more conservative, release "
+    "engineering-oriented options.{ This may slow down builds.|}",
+)
+
+
+@depends("--enable-release")
+def developer_options(value):
+    if not value:
+        return True
+
+
+add_old_configure_assignment("DEVELOPER_OPTIONS", developer_options)
+set_config("DEVELOPER_OPTIONS", developer_options)
+
+
 wine = check_prog(
     "WINE",
     ["wine64", "wine"],
