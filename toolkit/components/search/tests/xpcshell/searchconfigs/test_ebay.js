@@ -68,7 +68,6 @@ const test = new SearchConfigTest({
       },
     ],
   },
-  searchUrlBase: "https://rover.ebay.com/rover/1/",
   suggestionUrlBase: "https://autosug.ebay.com/autosug",
   details: [
     {
@@ -85,7 +84,7 @@ const test = new SearchConfigTest({
           },
         },
       ],
-      searchUrlEnd: "1553-53471-19255-0/1",
+      searchUrlCode: "mkrid=1553-53471-19255-0",
       suggestUrlCode: "sId=23",
     },
     {
@@ -97,7 +96,7 @@ const test = new SearchConfigTest({
           locales: { matches: ["de", "dsb", "hsb"] },
         },
       ],
-      searchUrlEnd: "5221-53469-19255-0/1",
+      searchUrlCode: "mkrid=5221-53469-19255-0",
       suggestUrlCode: "sId=16",
     },
     {
@@ -126,7 +125,7 @@ const test = new SearchConfigTest({
           },
         },
       ],
-      searchUrlEnd: "706-53473-19255-0/1",
+      searchUrlCode: "mkrid=706-53473-19255-0",
       suggestUrlCode: "sId=2",
     },
     {
@@ -154,7 +153,7 @@ const test = new SearchConfigTest({
           },
         },
       ],
-      searchUrlEnd: "5222-53480-19255-0/1",
+      searchUrlCode: "mkrid=5222-53480-19255-0",
       suggestUrlCode: "sId=193",
     },
     {
@@ -166,7 +165,7 @@ const test = new SearchConfigTest({
         },
       ],
       excluded: [{ regions: ["au", "be", "ca", "ch", "gb", "ie", "nl"] }],
-      searchUrlEnd: "711-53200-19255-0/1",
+      searchUrlCode: "mkrid=711-53200-19255-0",
       suggestUrlCode: "sId=0",
     },
     {
@@ -178,7 +177,7 @@ const test = new SearchConfigTest({
           locales: { matches: ["cy", "unknown", "en-GB", "en-US", "gd"] },
         },
       ],
-      searchUrlEnd: "705-53470-19255-0/1",
+      searchUrlCode: "mkrid=705-53470-19255-0",
       suggestUrlCode: "sId=15",
     },
     {
@@ -193,7 +192,7 @@ const test = new SearchConfigTest({
           locales: { matches: ["cy", "unknown", "en-GB", "en-US", "gd"] },
         },
       ],
-      searchUrlEnd: "5282-53468-19255-0/1",
+      searchUrlCode: "mkrid=5282-53468-19255-0",
       suggestUrlCode: "sId=205",
     },
     {
@@ -209,7 +208,7 @@ const test = new SearchConfigTest({
         },
       ],
       excluded: [{ regions: ["au", "ie"] }],
-      searchUrlEnd: "710-53481-19255-0/1",
+      searchUrlCode: "mkrid=710-53481-19255-0",
       suggestUrlCode: "sId=3",
     },
     {
@@ -221,7 +220,7 @@ const test = new SearchConfigTest({
         },
       ],
       excluded: [{ regions: ["at", "ch"] }],
-      searchUrlEnd: "707-53477-19255-0/1",
+      searchUrlCode: "mkrid=707-53477-19255-0",
       suggestUrlCode: "sId=77",
     },
     {
@@ -234,7 +233,7 @@ const test = new SearchConfigTest({
           },
         },
       ],
-      searchUrlEnd: "1185-53479-19255-0/1",
+      searchUrlCode: "mkrid=1185-53479-19255-0",
       suggestUrlCode: "sId=186",
     },
     {
@@ -246,7 +245,7 @@ const test = new SearchConfigTest({
         },
       ],
       excluded: [{ regions: ["be", "ca", "ch"] }],
-      searchUrlEnd: "709-53476-19255-0/1",
+      searchUrlCode: "mkrid=709-53476-19255-0",
       suggestUrlCode: "sId=71",
     },
     {
@@ -257,7 +256,7 @@ const test = new SearchConfigTest({
           locales: { matches: DOMAIN_LOCALES["ebay-it"] },
         },
       ],
-      searchUrlEnd: "724-53478-19255-0/1",
+      searchUrlCode: "mkrid=724-53478-19255-0",
       suggestUrlCode: "sId=101",
     },
     {
@@ -273,7 +272,7 @@ const test = new SearchConfigTest({
         },
       ],
       excluded: [{ regions: ["be"] }],
-      searchUrlEnd: "1346-53482-19255-0/1",
+      searchUrlCode: "mkrid=1346-53482-19255-0",
       suggestUrlCode: "sId=146",
     },
   ],
