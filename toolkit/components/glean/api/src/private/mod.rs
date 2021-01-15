@@ -40,7 +40,7 @@ pub use self::ping::Ping;
 pub use self::string::StringMetric;
 pub use self::string_list::StringListMetric;
 pub use self::timespan::TimespanMetric;
-pub use self::timing_distribution::{TimerId, TimingDistributionMetric};
+pub use self::timing_distribution::TimingDistributionMetric;
 pub use self::uuid::UuidMetric;
 
 /// An instant in time.
@@ -69,11 +69,6 @@ impl Instant {
                 panic!("timestamp exceeds value range")
             }
         }
-    }
-
-    /// Get this instant as a timestamp in nanoseconds.
-    fn as_nanos(&self) -> u64 {
-        self.0
     }
 }
 
