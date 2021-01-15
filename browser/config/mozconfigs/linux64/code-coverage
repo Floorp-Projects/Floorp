@@ -1,7 +1,5 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
 
-TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
-
 ac_add_options --disable-install-strip
 ac_add_options --disable-elf-hack
 ac_add_options --disable-sandbox

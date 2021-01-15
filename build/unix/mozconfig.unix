@@ -1,7 +1,5 @@
 . "$topsrcdir/build/mozconfig.common"
 
-TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
-
 if [ -n "$FORCE_GCC" ]; then
     CC="$MOZ_FETCHES_DIR/gcc/bin/gcc"
     CXX="$MOZ_FETCHES_DIR/gcc/bin/g++"
