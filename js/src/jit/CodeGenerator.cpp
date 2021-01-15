@@ -10677,9 +10677,7 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
  public:
   explicit OutOfLineStoreElementHole(LInstruction* ins, bool strict)
       : ins_(ins), strict_(strict) {
-    MOZ_ASSERT(ins->isStoreElementHoleV() || ins->isStoreElementHoleT() ||
-               ins->isFallibleStoreElementV() ||
-               ins->isFallibleStoreElementT());
+    MOZ_ASSERT(ins->isStoreElementHoleV() || ins->isStoreElementHoleT());
   }
 
   void accept(CodeGenerator* codegen) override {
@@ -10780,8 +10778,7 @@ void CodeGenerator::visitStoreHoleValueElement(LStoreHoleValueElement* lir) {
 
 template <typename T>
 void CodeGenerator::emitStoreElementHoleT(T* lir) {
-  static_assert(std::is_same_v<T, LStoreElementHoleT> ||
-                    std::is_same_v<T, LFallibleStoreElementT>,
+  static_assert(std::is_same_v<T, LStoreElementHoleT>,
                 "emitStoreElementHoleT called with unexpected argument type");
 
   OutOfLineStoreElementHole* ool =
@@ -10799,19 +10796,6 @@ void CodeGenerator::emitStoreElementHoleT(T* lir) {
     emitPreBarrier(elements, lir->index());
   }
 
-  if (std::is_same_v<T, LFallibleStoreElementT>) {
-    // If the object might be non-extensible, check for frozen elements and
-    // holes.
-    Address flags(elements, ObjectElements::offsetOfFlags());
-    masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
-                      ool->callStub());
-    if (lir->toFallibleStoreElementT()->mir()->needsHoleCheck()) {
-      masm.branchTestMagic(Assembler::Equal,
-                           BaseObjectElementIndex(elements, index),
-                           ool->callStub());
-    }
-  }
-
   masm.bind(ool->rejoinStore());
   emitStoreElementTyped(lir->value(), lir->mir()->value()->type(),
                         lir->mir()->elementType(), elements, lir->index());
@@ -10825,8 +10809,7 @@ void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
 
 template <typename T>
 void CodeGenerator::emitStoreElementHoleV(T* lir) {
-  static_assert(std::is_same_v<T, LStoreElementHoleV> ||
-                    std::is_same_v<T, LFallibleStoreElementV>,
+  static_assert(std::is_same_v<T, LStoreElementHoleV>,
                 "emitStoreElementHoleV called with unexpected parameter type");
 
   OutOfLineStoreElementHole* ool =
@@ -10841,19 +10824,6 @@ void CodeGenerator::emitStoreElementHoleV(T* lir) {
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, initLength, spectreTemp, ool->entry());
 
-  if (std::is_same_v<T, LFallibleStoreElementV>) {
-    // If the object might be non-extensible, check for frozen elements and
-    // holes.
-    Address flags(elements, ObjectElements::offsetOfFlags());
-    masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
-                      ool->callStub());
-    if (lir->toFallibleStoreElementV()->mir()->needsHoleCheck()) {
-      masm.branchTestMagic(Assembler::Equal,
-                           BaseObjectElementIndex(elements, index),
-                           ool->callStub());
-    }
-  }
-
   if (lir->mir()->needsBarrier()) {
     emitPreBarrier(elements, lir->index());
   }
@@ -10865,14 +10835,6 @@ void CodeGenerator::emitStoreElementHoleV(T* lir) {
 }
 
 void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
-  emitStoreElementHoleV(lir);
-}
-
-void CodeGenerator::visitFallibleStoreElementT(LFallibleStoreElementT* lir) {
-  emitStoreElementHoleT(lir);
-}
-
-void CodeGenerator::visitFallibleStoreElementV(LFallibleStoreElementV* lir) {
   emitStoreElementHoleV(lir);
 }
 
@@ -10894,31 +10856,8 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
     value.emplace(
         TypedOrValueRegister(ToValue(store, LStoreElementHoleV::Value)));
     spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
-  } else if (ins->isFallibleStoreElementV()) {
-    LFallibleStoreElementV* store = ins->toFallibleStoreElementV();
-    object = ToRegister(store->object());
-    elements = ToRegister(store->elements());
-    index = store->index();
-    valueType = store->mir()->value()->type();
-    value.emplace(
-        TypedOrValueRegister(ToValue(store, LFallibleStoreElementV::Value)));
-    spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
-  } else if (ins->isStoreElementHoleT()) {
+  } else {
     LStoreElementHoleT* store = ins->toStoreElementHoleT();
-    object = ToRegister(store->object());
-    elements = ToRegister(store->elements());
-    index = store->index();
-    valueType = store->mir()->value()->type();
-    if (store->value()->isConstant()) {
-      value.emplace(
-          ConstantOrRegister(store->value()->toConstant()->toJSValue()));
-    } else {
-      value.emplace(
-          TypedOrValueRegister(valueType, ToAnyRegister(store->value())));
-    }
-    spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
-  } else {  // ins->isFallibleStoreElementT()
-    LFallibleStoreElementT* store = ins->toFallibleStoreElementT();
     object = ToRegister(store->object());
     elements = ToRegister(store->elements());
     index = store->index();
@@ -10969,21 +10908,13 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
 
   masm.sub32(Imm32(1), indexReg);
 
-  if ((ins->isStoreElementHoleT() || ins->isFallibleStoreElementT()) &&
-      valueType != MIRType::Double) {
-    // The inline path for StoreElementHoleT and FallibleStoreElementT does not
-    // always store the type tag, so we do the store on the OOL path. We use
-    // MIRType::None for the element type so that emitStoreElementTyped will
-    // always store the type tag.
-    if (ins->isStoreElementHoleT()) {
-      emitStoreElementTyped(ins->toStoreElementHoleT()->value(), valueType,
-                            MIRType::None, elements, index);
-      masm.jump(ool->rejoin());
-    } else if (ins->isFallibleStoreElementT()) {
-      emitStoreElementTyped(ins->toFallibleStoreElementT()->value(), valueType,
-                            MIRType::None, elements, index);
-      masm.jump(ool->rejoin());
-    }
+  if (ins->isStoreElementHoleT() && valueType != MIRType::Double) {
+    // The inline path for StoreElementHoleT does not always store the type tag,
+    // so we do the store on the OOL path. We use MIRType::None for the element
+    // type so that emitStoreElementTyped will always store the type tag.
+    emitStoreElementTyped(ins->toStoreElementHoleT()->value(), valueType,
+                          MIRType::None, elements, index);
+    masm.jump(ool->rejoin());
   } else {
     // Jump to the inline path where we will store the value.
     masm.jump(ool->rejoinStore());
