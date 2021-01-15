@@ -1472,7 +1472,6 @@ nsDocShell::GatherCharsetMenuTelemetry() {
       break;
     case kCharsetFromFallback:
     case kCharsetFromDocTypeDefault:
-    case kCharsetFromCache:
     case kCharsetFromParentFrame:
       // Changing charset on an unlabeled doc.
       if (isFileURL) {

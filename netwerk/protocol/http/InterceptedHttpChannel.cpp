@@ -1200,22 +1200,6 @@ InterceptedHttpChannel::GetCacheTokenExpirationTime(uint32_t* _retval) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetCacheTokenCachedCharset(nsACString& _retval) {
-  if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->GetCacheTokenCachedCharset(_retval);
-  }
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::SetCacheTokenCachedCharset(const nsACString& aCharset) {
-  if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->SetCacheTokenCachedCharset(aCharset);
-  }
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 InterceptedHttpChannel::SetAllowStaleCacheContent(
     bool aAllowStaleCacheContent) {
   if (mSynthesizedCacheInfo) {

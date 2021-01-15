@@ -30,7 +30,6 @@ struct HttpChannelOnStartRequestArgs
   uint64_t cacheEntryId;
   int32_t cacheFetchCount;
   uint32_t cacheExpirationTime;
-  nsCString cachedCharset;
   nsCString securityInfoSerialization;
   NetAddr selfAddr;
   NetAddr peerAddr;
