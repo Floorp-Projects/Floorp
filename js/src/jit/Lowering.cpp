@@ -617,38 +617,24 @@ void LIRGenerator::visitTest(MTest* test) {
   }
 
   if (opd->type() == MIRType::Value) {
-    LDefinition temp0, temp1;
-    if (test->operandMightEmulateUndefined()) {
-      temp0 = temp();
-      temp1 = temp();
-    } else {
-      temp0 = LDefinition::BogusTemp();
-      temp1 = LDefinition::BogusTemp();
-    }
-    LTestVAndBranch* lir = new (alloc()) LTestVAndBranch(
-        ifTrue, ifFalse, useBox(opd), tempDouble(), temp0, temp1);
+    auto* lir = new (alloc()) LTestVAndBranch(ifTrue, ifFalse, useBox(opd),
+                                              tempDouble(), temp(), temp());
     add(lir, test);
     return;
   }
 
   if (opd->type() == MIRType::ObjectOrNull) {
-    LDefinition temp0 = test->operandMightEmulateUndefined()
-                            ? temp()
-                            : LDefinition::BogusTemp();
-    add(new (alloc()) LTestOAndBranch(useRegister(opd), ifTrue, ifFalse, temp0),
+    add(new (alloc())
+            LTestOAndBranch(useRegister(opd), ifTrue, ifFalse, temp()),
         test);
     return;
   }
 
   // Objects are truthy, except if it might emulate undefined.
   if (opd->type() == MIRType::Object) {
-    if (test->operandMightEmulateUndefined()) {
-      add(new (alloc())
-              LTestOAndBranch(useRegister(opd), ifTrue, ifFalse, temp()),
-          test);
-    } else {
-      add(new (alloc()) LGoto(ifTrue));
-    }
+    add(new (alloc())
+            LTestOAndBranch(useRegister(opd), ifTrue, ifFalse, temp()),
+        test);
     return;
   }
 
