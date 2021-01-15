@@ -63,7 +63,6 @@ clippy:
         # not_unsafe_ptr_arg_deref
         - modules/libpref/parser/
         - tools/profiler/rust-helper/
-        - toolkit/crashreporter/rust/
         - toolkit/library/rust/shared/
         - toolkit/library/gtest/rust/
         # not_unsafe_ptr_arg_deref

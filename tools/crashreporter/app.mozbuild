@@ -4,20 +4,6 @@
 
 DIRS += [
     '/config/external/zlib',
-    '/toolkit/crashreporter/google-breakpad/src/common',
     '/toolkit/crashreporter/google-breakpad/src/processor',
-    '/toolkit/crashreporter/rust',
     '/tools/crashreporter/minidump_stackwalk',
 ]
-
-if CONFIG['OS_ARCH'] == 'Linux':
-    DIRS += [
-        '/toolkit/crashreporter/google-breakpad/src/common/linux',
-        '/toolkit/crashreporter/google-breakpad/src/tools/linux/dump_syms',
-    ]
-
-if CONFIG['OS_ARCH'] == 'Darwin':
-    DIRS += [
-        '/toolkit/crashreporter/google-breakpad/src/common/mac',
-        '/toolkit/crashreporter/google-breakpad/src/tools/mac/dump_syms',
-    ]
