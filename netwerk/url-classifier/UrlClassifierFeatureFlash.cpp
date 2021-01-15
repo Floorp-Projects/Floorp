@@ -108,11 +108,11 @@ void UrlClassifierFeatureFlash::MaybeCreate(
 
   // We use Flash feature just for document loading.
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  ExtContentPolicyType contentPolicyType =
+  nsContentPolicyType contentPolicyType =
       loadInfo->GetExternalContentPolicyType();
 
-  if (contentPolicyType != ExtContentPolicy::TYPE_DOCUMENT &&
-      contentPolicyType != ExtContentPolicy::TYPE_SUBDOCUMENT) {
+  if (contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT &&
+      contentPolicyType != nsIContentPolicy::TYPE_SUBDOCUMENT) {
     return;
   }
 
@@ -129,7 +129,7 @@ void UrlClassifierFeatureFlash::MaybeCreate(
   for (const FlashFeature& flashFeature : sFlashFeaturesMap) {
     MOZ_ASSERT(flashFeature.mFeature);
     if (!flashFeature.mSubdocumentOnly ||
-        contentPolicyType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+        contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
       aFeatures.AppendElement(flashFeature.mFeature);
     }
   }

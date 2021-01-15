@@ -755,7 +755,7 @@ class WellKnownChecker {
     uint64_t channelId;
     nsLoadFlags flags;
 
-    ExtContentPolicyType contentPolicyType =
+    nsContentPolicyType contentPolicyType =
         loadInfo->GetExternalContentPolicyType();
 
     if (NS_FAILED(gHttpHandler->NewChannelId(channelId)) ||
