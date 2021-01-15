@@ -4305,7 +4305,6 @@ MDefinition* WarpCacheIRTranspiler::convertWasmArg(MDefinition* arg,
       // effect-free.
       switch (arg->type()) {
         case MIRType::Object:
-        case MIRType::ObjectOrNull:
           conversion = MWasmAnyRefFromJSObject::New(alloc(), arg);
           break;
         case MIRType::Null:

@@ -104,7 +104,6 @@ namespace jit {
   _(js::jit::AllocateFatInlineString)                                 \
   _(js::jit::AllocateString)                                          \
   _(js::jit::AssertValidBigIntPtr)                                    \
-  _(js::jit::AssertValidObjectOrNullPtr)                              \
   _(js::jit::AssertValidObjectPtr)                                    \
   _(js::jit::AssertValidStringPtr)                                    \
   _(js::jit::AssertValidSymbolPtr)                                    \

@@ -1476,15 +1476,9 @@ void CodeGenerator::testValueTruthy(const ValueOperand& value,
 }
 
 void CodeGenerator::visitTestOAndBranch(LTestOAndBranch* lir) {
-  MIRType inputType = lir->mir()->input()->type();
-
   Label* truthy = getJumpLabelForBranch(lir->ifTruthy());
   Label* falsy = getJumpLabelForBranch(lir->ifFalsy());
   Register input = ToRegister(lir->input());
-
-  if (inputType == MIRType::ObjectOrNull) {
-    masm.branchTestPtr(Assembler::Zero, input, input, falsy);
-  }
 
   auto* ool = new (alloc()) OutOfLineTestObject();
   addOutOfLineCode(ool, lir->mir());
@@ -3915,20 +3909,13 @@ void CodeGenerator::visitStoreDynamicSlotT(LStoreDynamicSlotT* lir) {
 
   MIRType valueType = lir->mir()->value()->type();
 
-  if (valueType == MIRType::ObjectOrNull) {
-    masm.storeObjectOrNull(ToRegister(lir->value()), dest);
+  mozilla::Maybe<ConstantOrRegister> value;
+  if (lir->value()->isConstant()) {
+    value.emplace(ConstantOrRegister(lir->value()->toConstant()->toJSValue()));
   } else {
-    mozilla::Maybe<ConstantOrRegister> value;
-    if (lir->value()->isConstant()) {
-      value.emplace(
-          ConstantOrRegister(lir->value()->toConstant()->toJSValue()));
-    } else {
-      value.emplace(
-          TypedOrValueRegister(valueType, ToAnyRegister(lir->value())));
-    }
-    masm.storeUnboxedValue(value.ref(), valueType, dest,
-                           lir->mir()->slotType());
+    value.emplace(TypedOrValueRegister(valueType, ToAnyRegister(lir->value())));
   }
+  masm.storeUnboxedValue(value.ref(), valueType, dest, lir->mir()->slotType());
 }
 
 void CodeGenerator::visitStoreDynamicSlotV(LStoreDynamicSlotV* lir) {
@@ -5062,11 +5049,7 @@ void CodeGenerator::visitPostWriteBarrierCommon(LPostBarrierType* lir,
 
   Register value = ToRegister(lir->value());
   if constexpr (nurseryType == MIRType::Object) {
-    if (lir->mir()->value()->type() == MIRType::ObjectOrNull) {
-      masm.branchTestPtr(Assembler::Zero, value, value, ool->rejoin());
-    } else {
-      MOZ_ASSERT(lir->mir()->value()->type() == MIRType::Object);
-    }
+    MOZ_ASSERT(lir->mir()->value()->type() == MIRType::Object);
   } else if constexpr (nurseryType == MIRType::String) {
     MOZ_ASSERT(lir->mir()->value()->type() == MIRType::String);
   } else {
@@ -6482,9 +6465,8 @@ void CodeGenerator::branchIfInvalidated(Register temp, Label* invalidated) {
 void CodeGenerator::emitAssertGCThingResult(Register input,
                                             const MDefinition* mir) {
   MIRType type = mir->type();
-  MOZ_ASSERT(type == MIRType::Object || type == MIRType::ObjectOrNull ||
-             type == MIRType::String || type == MIRType::Symbol ||
-             type == MIRType::BigInt);
+  MOZ_ASSERT(type == MIRType::Object || type == MIRType::String ||
+             type == MIRType::Symbol || type == MIRType::BigInt);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
   regs.take(input);
@@ -6514,11 +6496,6 @@ void CodeGenerator::emitAssertGCThingResult(Register input,
       case MIRType::Object: {
         using Fn = void (*)(JSContext * cx, JSObject * obj);
         masm.callWithABI<Fn, AssertValidObjectPtr>();
-        break;
-      }
-      case MIRType::ObjectOrNull: {
-        using Fn = void (*)(JSContext * cx, JSObject * obj);
-        masm.callWithABI<Fn, AssertValidObjectOrNullPtr>();
         break;
       }
       case MIRType::String: {
@@ -6625,7 +6602,6 @@ void CodeGenerator::emitDebugResultChecks(LInstruction* ins) {
 
   switch (mir->type()) {
     case MIRType::Object:
-    case MIRType::ObjectOrNull:
     case MIRType::String:
     case MIRType::Symbol:
     case MIRType::BigInt:
@@ -9755,55 +9731,32 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
 void CodeGenerator::visitIsNullOrLikeUndefinedT(LIsNullOrLikeUndefinedT* lir) {
   MOZ_ASSERT(lir->mir()->compareType() == MCompare::Compare_Undefined ||
              lir->mir()->compareType() == MCompare::Compare_Null);
-
-  MIRType lhsType = lir->mir()->lhs()->type();
-  MOZ_ASSERT(lhsType == MIRType::Object || lhsType == MIRType::ObjectOrNull);
+  MOZ_ASSERT(lir->mir()->lhs()->type() == MIRType::Object);
 
   JSOp op = lir->mir()->jsop();
-  MOZ_ASSERT(
-      lhsType == MIRType::ObjectOrNull || op == JSOp::Eq || op == JSOp::Ne,
-      "Strict equality should have been folded");
+  MOZ_ASSERT(op == JSOp::Eq || op == JSOp::Ne,
+             "Strict equality should have been folded");
 
   Register objreg = ToRegister(lir->input());
   Register output = ToRegister(lir->output());
 
-  if (op == JSOp::Eq || op == JSOp::Ne) {
-    auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
-    addOutOfLineCode(ool, lir->mir());
+  auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
+  addOutOfLineCode(ool, lir->mir());
 
-    Label* emulatesUndefined = ool->label1();
-    Label* doesntEmulateUndefined = ool->label2();
+  Label* emulatesUndefined = ool->label1();
+  Label* doesntEmulateUndefined = ool->label2();
 
-    if (lhsType == MIRType::ObjectOrNull) {
-      masm.branchTestPtr(Assembler::Zero, objreg, objreg, emulatesUndefined);
-    }
+  branchTestObjectEmulatesUndefined(objreg, emulatesUndefined,
+                                    doesntEmulateUndefined, output, ool);
 
-    branchTestObjectEmulatesUndefined(objreg, emulatesUndefined,
-                                      doesntEmulateUndefined, output, ool);
+  Label done;
 
-    Label done;
+  masm.move32(Imm32(op == JSOp::Ne), output);
+  masm.jump(&done);
 
-    masm.move32(Imm32(op == JSOp::Ne), output);
-    masm.jump(&done);
-
-    masm.bind(emulatesUndefined);
-    masm.move32(Imm32(op == JSOp::Eq), output);
-    masm.bind(&done);
-  } else {
-    MOZ_ASSERT(lhsType == MIRType::ObjectOrNull);
-
-    Label isNull, done;
-
-    masm.branchTestPtr(Assembler::Zero, objreg, objreg, &isNull);
-
-    masm.move32(Imm32(op == JSOp::Ne || op == JSOp::StrictNe), output);
-    masm.jump(&done);
-
-    masm.bind(&isNull);
-    masm.move32(Imm32(op == JSOp::Eq || op == JSOp::StrictEq), output);
-
-    masm.bind(&done);
-  }
+  masm.bind(emulatesUndefined);
+  masm.move32(Imm32(op == JSOp::Eq), output);
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(
@@ -9811,14 +9764,11 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(
   DebugOnly<MCompare::CompareType> compareType = lir->cmpMir()->compareType();
   MOZ_ASSERT(compareType == MCompare::Compare_Undefined ||
              compareType == MCompare::Compare_Null);
-
-  MIRType lhsType = lir->cmpMir()->lhs()->type();
-  MOZ_ASSERT(lhsType == MIRType::Object || lhsType == MIRType::ObjectOrNull);
+  MOZ_ASSERT(lir->cmpMir()->lhs()->type() == MIRType::Object);
 
   JSOp op = lir->cmpMir()->jsop();
-  MOZ_ASSERT(
-      lhsType == MIRType::ObjectOrNull || op == JSOp::Eq || op == JSOp::Ne,
-      "Strict equality should have been folded");
+  MOZ_ASSERT(op == JSOp::Eq || op == JSOp::Ne,
+             "Strict equality should have been folded");
 
   MBasicBlock* ifTrue;
   MBasicBlock* ifFalse;
@@ -9834,24 +9784,15 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(
 
   Register input = ToRegister(lir->getOperand(0));
 
-  if (op == JSOp::Eq || op == JSOp::Ne) {
-    auto* ool = new (alloc()) OutOfLineTestObject();
-    addOutOfLineCode(ool, lir->cmpMir());
+  auto* ool = new (alloc()) OutOfLineTestObject();
+  addOutOfLineCode(ool, lir->cmpMir());
 
-    Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
-    Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
+  Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
+  Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
 
-    if (lhsType == MIRType::ObjectOrNull) {
-      masm.branchTestPtr(Assembler::Zero, input, input, ifTrueLabel);
-    }
-
-    // Objects that emulate undefined are loosely equal to null/undefined.
-    Register scratch = ToRegister(lir->temp());
-    testObjectEmulatesUndefined(input, ifTrueLabel, ifFalseLabel, scratch, ool);
-  } else {
-    MOZ_ASSERT(lhsType == MIRType::ObjectOrNull);
-    testZeroEmitBranch(Assembler::Equal, input, ifTrue, ifFalse);
-  }
+  // Objects that emulate undefined are loosely equal to null/undefined.
+  Register scratch = ToRegister(lir->temp());
+  testObjectEmulatesUndefined(input, ifTrueLabel, ifFalseLabel, scratch, ool);
 }
 
 void CodeGenerator::visitSameValueD(LSameValueD* lir) {
@@ -12308,16 +12249,11 @@ void CodeGenerator::visitStoreFixedSlotT(LStoreFixedSlotT* ins) {
     emitPreBarrier(address);
   }
 
-  if (valueType == MIRType::ObjectOrNull) {
-    Register nvalue = ToRegister(value);
-    masm.storeObjectOrNull(nvalue, address);
-  } else {
-    ConstantOrRegister nvalue =
-        value->isConstant()
-            ? ConstantOrRegister(value->toConstant()->toJSValue())
-            : TypedOrValueRegister(valueType, ToAnyRegister(value));
-    masm.storeConstantOrRegister(nvalue, address);
-  }
+  ConstantOrRegister nvalue =
+      value->isConstant()
+          ? ConstantOrRegister(value->toConstant()->toJSValue())
+          : TypedOrValueRegister(valueType, ToAnyRegister(value));
+  masm.storeConstantOrRegister(nvalue, address);
 }
 
 void CodeGenerator::visitGetNameCache(LGetNameCache* ins) {

@@ -623,13 +623,6 @@ void LIRGenerator::visitTest(MTest* test) {
     return;
   }
 
-  if (opd->type() == MIRType::ObjectOrNull) {
-    add(new (alloc())
-            LTestOAndBranch(useRegister(opd), ifTrue, ifFalse, temp()),
-        test);
-    return;
-  }
-
   // Objects are truthy, except if it might emulate undefined.
   if (opd->type() == MIRType::Object) {
     add(new (alloc())
@@ -707,8 +700,7 @@ void LIRGenerator::visitTest(MTest* test) {
     // so just test the first operand.
     if (comp->compareType() == MCompare::Compare_Null ||
         comp->compareType() == MCompare::Compare_Undefined) {
-      if (left->type() == MIRType::Object ||
-          left->type() == MIRType::ObjectOrNull) {
+      if (left->type() == MIRType::Object) {
         auto* lir = new (alloc()) LIsNullOrLikeUndefinedAndBranchT(
             comp, useRegister(left), ifTrue, ifFalse, temp());
         add(lir, test);
@@ -955,8 +947,7 @@ void LIRGenerator::visitCompare(MCompare* comp) {
   // Compare Null and Undefined.
   if (comp->compareType() == MCompare::Compare_Null ||
       comp->compareType() == MCompare::Compare_Undefined) {
-    if (left->type() == MIRType::Object ||
-        left->type() == MIRType::ObjectOrNull) {
+    if (left->type() == MIRType::Object) {
       define(new (alloc()) LIsNullOrLikeUndefinedT(useRegister(left)), comp);
       return;
     }
@@ -2806,8 +2797,7 @@ void LIRGenerator::visitPostWriteBarrier(MPostWriteBarrier* ins) {
   bool useConstantObject = IsNonNurseryConstant(ins->object());
 
   switch (ins->value()->type()) {
-    case MIRType::Object:
-    case MIRType::ObjectOrNull: {
+    case MIRType::Object: {
       LDefinition tmp =
           needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
       LPostWriteBarrierO* lir = new (alloc())
@@ -2871,8 +2861,7 @@ void LIRGenerator::visitPostWriteElementBarrier(MPostWriteElementBarrier* ins) {
       !IsInsideNursery(&ins->object()->toConstant()->toObject());
 
   switch (ins->value()->type()) {
-    case MIRType::Object:
-    case MIRType::ObjectOrNull: {
+    case MIRType::Object: {
       LDefinition tmp =
           needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
       LPostWriteElementBarrierO* lir = new (alloc()) LPostWriteElementBarrierO(

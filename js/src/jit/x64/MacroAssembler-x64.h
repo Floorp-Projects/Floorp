@@ -1030,8 +1030,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void loadUnboxedValue(const T& src, MIRType type, AnyRegister dest) {
     if (dest.isFloat()) {
       loadInt32OrDouble(src, dest.fpu());
-    } else if (type == MIRType::ObjectOrNull) {
-      unboxObjectOrNull(src, dest.gpr());
     } else {
       unboxNonDouble(Operand(src), dest.gpr(), ValueTypeFromMIRType(type));
     }

@@ -1818,8 +1818,8 @@ class LIsNullOrLikeUndefinedV : public LInstructionHelper<1, BOX_PIECES, 2> {
   const LDefinition* tempToUnbox() { return getTemp(1); }
 };
 
-// Takes an object or object-or-null pointer and tests whether it is null or is
-// an object that emulates |undefined|, as above.
+// Takes an object pointer and tests whether it is an object that emulates
+// |undefined|, as above.
 class LIsNullOrLikeUndefinedT : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(IsNullOrLikeUndefinedT)

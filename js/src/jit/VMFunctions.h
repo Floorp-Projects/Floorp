@@ -509,7 +509,6 @@ JSString* StringReplace(JSContext* cx, HandleString string,
                                    bool strict);
 
 void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi);
-void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj);
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj);
 void AssertValidStringPtr(JSContext* cx, JSString* str);
 void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym);

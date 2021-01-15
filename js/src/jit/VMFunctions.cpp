@@ -1589,13 +1589,6 @@ void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
   MOZ_ASSERT(bi->getAllocKind() == gc::AllocKind::BIGINT);
 }
 
-void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj) {
-  AutoUnsafeCallWithABI unsafe;
-  if (obj) {
-    AssertValidObjectPtr(cx, obj);
-  }
-}
-
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj) {
   AutoUnsafeCallWithABI unsafe;
 #ifdef DEBUG

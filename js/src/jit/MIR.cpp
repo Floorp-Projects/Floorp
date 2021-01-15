@@ -368,15 +368,7 @@ bool MDefinition::definitelyType(std::initializer_list<MIRType> types) const {
     return false;
   }
 
-  auto contains = [&types](MIRType type) {
-    return std::find(types.begin(), types.end(), type) != types.end();
-  };
-
-  if (type() == MIRType::ObjectOrNull) {
-    return contains(MIRType::Object) && contains(MIRType::Null);
-  }
-
-  return contains(type());
+  return std::find(types.begin(), types.end(), type()) != types.end();
 }
 
 MDefinition* MInstruction::foldsToStore(TempAllocator& alloc) {
@@ -414,10 +406,6 @@ MDefinition* MInstruction::foldsToStore(TempAllocator& alloc) {
     // If we expect to read a type which is more generic than the type seen
     // by the store, then we box the value used by the store.
     if (type() != MIRType::Value) {
-      return nullptr;
-    }
-    // We cannot unbox ObjectOrNull yet.
-    if (value->type() == MIRType::ObjectOrNull) {
       return nullptr;
     }
 

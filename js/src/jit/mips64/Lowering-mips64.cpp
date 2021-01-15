@@ -108,17 +108,6 @@ void LIRGenerator::visitBox(MBox* box) {
 
 void LIRGenerator::visitUnbox(MUnbox* unbox) {
   MDefinition* box = unbox->getOperand(0);
-
-  if (box->type() == MIRType::ObjectOrNull) {
-    LUnboxObjectOrNull* lir =
-        new (alloc()) LUnboxObjectOrNull(useRegisterAtStart(box));
-    if (unbox->fallible()) {
-      assignSnapshot(lir, unbox->bailoutKind());
-    }
-    defineReuseInput(lir, unbox, 0);
-    return;
-  }
-
   MOZ_ASSERT(box->type() == MIRType::Value);
 
   LUnbox* lir;

@@ -1945,8 +1945,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
       MOZ_ASSERT(scratch64.asUnsized() != address.base);
       Ldr(scratch64, toMemOperand(address));
       int32OrDouble(scratch64.asUnsized(), ARMFPRegister(dest.fpu(), 64));
-    } else if (type == MIRType::ObjectOrNull) {
-      unboxObjectOrNull(address, dest.gpr());
     } else {
       unboxNonDouble(address, dest.gpr(), ValueTypeFromMIRType(type));
     }
@@ -1960,8 +1958,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
       MOZ_ASSERT(scratch64.asUnsized() != address.index);
       doBaseIndex(scratch64, address, vixl::LDR_x);
       int32OrDouble(scratch64.asUnsized(), ARMFPRegister(dest.fpu(), 64));
-    } else if (type == MIRType::ObjectOrNull) {
-      unboxObjectOrNull(address, dest.gpr());
     } else {
       unboxNonDouble(address, dest.gpr(), ValueTypeFromMIRType(type));
     }
