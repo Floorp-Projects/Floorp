@@ -23,7 +23,6 @@ var PKT_SIGNUP_OVERLAY = function(options) {
   this.inoverflowmenu = false;
   this.controlvariant;
   this.pockethost = "getpocket.com";
-  this.fxasignedin = false;
   this.loggedOutVariant = "control";
   this.dictJSON = {};
   this.initCloseTabEvents = function() {
@@ -109,10 +108,6 @@ PKT_SIGNUP_OVERLAY.prototype = {
     if (loggedOutVariant && loggedOutVariant.length > 1) {
       this.loggedOutVariant = loggedOutVariant[1];
     }
-    var fxasignedin = window.location.href.match(/fxasignedin=([\w|\d|\.]*)&?/);
-    if (fxasignedin && fxasignedin.length > 1) {
-      this.fxasignedin = fxasignedin[1] == "1";
-    }
     var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
     if (host && host.length > 1) {
       this.pockethost = host[1];
@@ -135,10 +130,8 @@ PKT_SIGNUP_OVERLAY.prototype = {
 
     // set translations
     this.getTranslations();
-    this.dictJSON.fxasignedin = this.fxasignedin ? 1 : 0;
     this.dictJSON.controlvariant = this.controlvariant == "true" ? 1 : 0;
     this.dictJSON.variant = this.variant ? this.variant : "undefined";
-    this.dictJSON.variant += this.fxasignedin ? "_fxa" : "_nonfxa";
     this.dictJSON.pockethost = this.pockethost;
     this.dictJSON.showlearnmore = true;
 
