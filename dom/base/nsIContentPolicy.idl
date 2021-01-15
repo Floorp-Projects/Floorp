@@ -119,7 +119,7 @@ interface nsIContentPolicy : nsISupports
      * Indicates an XMLHttpRequest. Also used for document.load and for EventSource.
      */
     TYPE_XMLHTTPREQUEST = 11,
-    TYPE_DATAREQUEST    = 11, // alias
+    TYPE_DATAREQUEST    = TYPE_XMLHTTPREQUEST, // alias
 
     /**
      * Indicates a request by a plugin.
@@ -549,3 +549,38 @@ interface nsIContentPolicy : nsISupports
 };
 
 typedef nsIContentPolicy_nsContentPolicyType nsContentPolicyType;
+
+%{C++
+enum class ExtContentPolicyType : uint8_t {
+  /**
+   * The type of ExtContentPolicy::TYPE_*
+   */
+  TYPE_INVALID = nsIContentPolicy::TYPE_INVALID,
+  TYPE_OTHER = nsIContentPolicy::TYPE_OTHER,
+  TYPE_SCRIPT = nsIContentPolicy::TYPE_SCRIPT,
+  TYPE_IMAGE = nsIContentPolicy::TYPE_IMAGE,
+  TYPE_STYLESHEET = nsIContentPolicy::TYPE_STYLESHEET,
+  TYPE_OBJECT = nsIContentPolicy::TYPE_OBJECT,
+  TYPE_DOCUMENT = nsIContentPolicy::TYPE_DOCUMENT,
+  TYPE_SUBDOCUMENT = nsIContentPolicy::TYPE_SUBDOCUMENT,
+  TYPE_REFRESH = nsIContentPolicy::TYPE_REFRESH,
+  TYPE_PING = nsIContentPolicy::TYPE_PING,
+  TYPE_XMLHTTPREQUEST = nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+  TYPE_DATAREQUEST    = nsIContentPolicy::TYPE_DATAREQUEST,
+  TYPE_OBJECT_SUBREQUEST = nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
+  TYPE_DTD = nsIContentPolicy::TYPE_DTD,
+  TYPE_FONT = nsIContentPolicy::TYPE_FONT,
+  TYPE_MEDIA = nsIContentPolicy::TYPE_MEDIA,
+  TYPE_WEBSOCKET = nsIContentPolicy::TYPE_WEBSOCKET,
+  TYPE_CSP_REPORT = nsIContentPolicy::TYPE_CSP_REPORT,
+  TYPE_XSLT = nsIContentPolicy::TYPE_XSLT,
+  TYPE_BEACON = nsIContentPolicy::TYPE_BEACON,
+  TYPE_FETCH = nsIContentPolicy::TYPE_FETCH,
+  TYPE_IMAGESET = nsIContentPolicy::TYPE_IMAGESET,
+  TYPE_WEB_MANIFEST = nsIContentPolicy::TYPE_WEB_MANIFEST,
+  TYPE_SAVEAS_DOWNLOAD = nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD,
+  TYPE_SPECULATIVE = nsIContentPolicy::TYPE_SPECULATIVE,
+};
+
+typedef ExtContentPolicyType ExtContentPolicy;
+%}
