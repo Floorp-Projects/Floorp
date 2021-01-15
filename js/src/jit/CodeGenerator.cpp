@@ -3931,17 +3931,6 @@ void CodeGenerator::visitStoreDynamicSlotV(LStoreDynamicSlotV* lir) {
   masm.storeValue(value, Address(base, offset));
 }
 
-static void GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
-                          Register obj, Register scratch, Label* miss) {
-  if (guard.getGroup()) {
-    masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.getGroup(), scratch,
-                            obj, miss);
-  } else {
-    masm.branchTestObjShape(Assembler::NotEqual, obj, guard.getShape(), scratch,
-                            obj, miss);
-  }
-}
-
 void CodeGenerator::visitElements(LElements* lir) {
   Address elements(ToRegister(lir->object()), NativeObject::offsetOfElements());
   masm.loadPtr(elements, ToRegister(lir->output()));
@@ -4484,31 +4473,6 @@ void CodeGenerator::visitGuardNoDenseElements(LGuardNoDenseElements* guard) {
   // Make sure there are no dense elements.
   Address initLength(temp, ObjectElements::offsetOfInitializedLength());
   bailoutCmp32(Assembler::NotEqual, initLength, Imm32(0), guard->snapshot());
-}
-
-void CodeGenerator::visitGuardReceiverPolymorphic(
-    LGuardReceiverPolymorphic* lir) {
-  const MGuardReceiverPolymorphic* mir = lir->mir();
-  Register obj = ToRegister(lir->object());
-  Register temp = ToRegister(lir->temp());
-
-  Label done;
-
-  for (size_t i = 0; i < mir->numReceivers(); i++) {
-    const ReceiverGuard& receiver = mir->receiver(i);
-
-    Label next;
-    GuardReceiver(masm, receiver, obj, temp, &next);
-
-    if (i == mir->numReceivers() - 1) {
-      bailoutFrom(&next, lir->snapshot());
-    } else {
-      masm.jump(&done);
-      masm.bind(&next);
-    }
-  }
-
-  masm.bind(&done);
 }
 
 void CodeGenerator::visitBooleanToInt64(LBooleanToInt64* lir) {

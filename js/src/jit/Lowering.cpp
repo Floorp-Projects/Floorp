@@ -4073,25 +4073,6 @@ void LIRGenerator::visitGuardString(MGuardString* ins) {
   redefine(ins, ins->input());
 }
 
-void LIRGenerator::visitGuardReceiverPolymorphic(
-    MGuardReceiverPolymorphic* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->type() == MIRType::Object);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    auto* lir = new (alloc())
-        LGuardReceiverPolymorphic(useRegisterAtStart(ins->object()), temp());
-    assignSnapshot(lir, ins->bailoutKind());
-    defineReuseInput(lir, ins, 0);
-  } else {
-    auto* lir = new (alloc())
-        LGuardReceiverPolymorphic(useRegister(ins->object()), temp());
-    assignSnapshot(lir, ins->bailoutKind());
-    add(lir, ins);
-    redefine(ins, ins->object());
-  }
-}
-
 void LIRGenerator::visitGuardValue(MGuardValue* ins) {
   MOZ_ASSERT(ins->value()->type() == MIRType::Value);
   auto* lir = new (alloc()) LGuardValue(useBox(ins->value()));
