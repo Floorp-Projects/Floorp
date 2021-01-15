@@ -21,6 +21,11 @@ function changeCustomToAll(helper) {
   EventUtils.sendKey("return", helper.win);
 }
 
+function getSheetCount(helper) {
+  return helper.doc.l10n.getAttributes(helper.get("sheet-count")).args
+    .sheetCount;
+}
+
 add_task(async function testRangeResetAfterScale() {
   const mockPrinterName = "Fake Printer";
   await PrintHelper.withTestPage(async helper => {
@@ -274,6 +279,193 @@ add_task(async function testErrorClearedAfterSwitchingToAll() {
       "Wait for range error to be hidden"
     );
     ok(customRange.hidden, "Custom range is hidden");
+    await helper.closeDialog();
+  });
+});
+
+add_task(async function testPageCountChangeNoRangeNoRerender() {
+  await PrintHelper.withTestPage(async helper => {
+    let customPrinter = "A printer";
+    helper.addMockPrinter(customPrinter);
+
+    await helper.startPrint();
+
+    await helper.assertSettingsChanged(
+      { printerName: "Mozilla Save to PDF" },
+      { printerName: customPrinter },
+      async () => {
+        let destinationPicker = helper.get("printer-picker");
+        destinationPicker.focus();
+        await Promise.all([
+          helper.waitForPreview(() =>
+            helper.dispatchSettingsChange({ printerName: customPrinter })
+          ),
+          helper.waitForSettingsEvent(),
+        ]);
+      }
+    );
+
+    // Change a setting that will change the number of pages. Since pageRanges
+    // is set to "all" then there shouldn't be a re-render because of it.
+    let previewUpdateCount = 0;
+    ok(!helper.hasPendingPreview, "No preview is pending");
+    helper.doc.addEventListener("preview-updated", () => previewUpdateCount++);
+
+    // Ensure the sheet count will change.
+    let initialSheetCount = getSheetCount(helper);
+
+    await helper.assertSettingsChanged(
+      { marginLeft: 0.5, marginRight: 0.5 },
+      { marginLeft: 3, marginRight: 3 },
+      async () => {
+        await Promise.all([
+          helper.waitForPreview(() =>
+            helper.dispatchSettingsChange({ marginLeft: 3, marginRight: 3 })
+          ),
+          BrowserTestUtils.waitForEvent(helper.doc, "page-count"),
+          helper.waitForSettingsEvent(),
+        ]);
+      }
+    );
+
+    let newSheetCount = getSheetCount(helper);
+    ok(
+      initialSheetCount < newSheetCount,
+      `There are more sheets now ${initialSheetCount} < ${newSheetCount}`
+    );
+
+    ok(!helper.hasPendingPreview, "No preview is pending");
+    is(previewUpdateCount, 1, "Only one preview update fired");
+
+    await helper.closeDialog();
+  });
+});
+
+add_task(async function testPageCountChangeRangeNoRerender() {
+  await PrintHelper.withTestPage(async helper => {
+    let customPrinter = "A printer";
+    helper.addMockPrinter(customPrinter);
+
+    await helper.startPrint();
+
+    await helper.assertSettingsChanged(
+      { printerName: "Mozilla Save to PDF", pageRanges: [] },
+      { printerName: customPrinter, pageRanges: [1, 1] },
+      async () => {
+        let destinationPicker = helper.get("printer-picker");
+        destinationPicker.focus();
+        await Promise.all([
+          helper.waitForPreview(() =>
+            helper.dispatchSettingsChange({ printerName: customPrinter })
+          ),
+          helper.waitForSettingsEvent(),
+        ]);
+
+        await helper.waitForPreview(async () => {
+          changeAllToCustom(helper);
+          helper.text(helper.get("custom-range"), "1");
+        });
+      }
+    );
+
+    // Change a setting that will change the number of pages. Since pageRanges
+    // is set to a page that is in the new range, there shouldn't be a re-render.
+    let previewUpdateCount = 0;
+    ok(!helper.hasPendingPreview, "No preview is pending");
+    helper.doc.addEventListener("preview-updated", () => previewUpdateCount++);
+
+    await helper.assertSettingsChanged(
+      { marginLeft: 0.5, marginRight: 0.5 },
+      { marginLeft: 3, marginRight: 3 },
+      async () => {
+        await Promise.all([
+          helper.waitForPreview(() =>
+            helper.dispatchSettingsChange({ marginLeft: 3, marginRight: 3 })
+          ),
+          BrowserTestUtils.waitForEvent(helper.doc, "page-count"),
+          helper.waitForSettingsEvent(),
+        ]);
+      }
+    );
+
+    let newSheetCount = getSheetCount(helper);
+    is(newSheetCount, 1, "There's still only one sheet");
+
+    ok(!helper.hasPendingPreview, "No preview is pending");
+    is(previewUpdateCount, 1, "Only one preview update fired");
+
+    await helper.closeDialog();
+  });
+});
+
+add_task(async function testPageCountChangeRangeRerender() {
+  await PrintHelper.withTestPage(async helper => {
+    let customPrinter = "A printer";
+    helper.addMockPrinter(customPrinter);
+
+    await helper.startPrint();
+
+    await helper.assertSettingsChanged(
+      { printerName: "Mozilla Save to PDF", pageRanges: [] },
+      { printerName: customPrinter, pageRanges: [1, 1] },
+      async () => {
+        let destinationPicker = helper.get("printer-picker");
+        destinationPicker.focus();
+        await Promise.all([
+          helper.waitForPreview(() =>
+            helper.dispatchSettingsChange({ printerName: customPrinter })
+          ),
+          helper.waitForSettingsEvent(),
+        ]);
+
+        await helper.waitForPreview(async () => {
+          changeAllToCustom(helper);
+          helper.text(helper.get("custom-range"), "1-");
+        });
+      }
+    );
+
+    // Change a setting that will change the number of pages. Since pageRanges
+    // is from 1-N the calculated page range will need to be updated.
+    let previewUpdateCount = 0;
+    ok(!helper.hasPendingPreview, "No preview is pending");
+    helper.doc.addEventListener("preview-updated", () => previewUpdateCount++);
+    let renderedTwice = BrowserTestUtils.waitForCondition(
+      () => previewUpdateCount == 2
+    );
+
+    // Ensure the sheet count will change.
+    let initialSheetCount = getSheetCount(helper);
+
+    await helper.assertSettingsChanged(
+      { marginLeft: 0.5, marginRight: 0.5 },
+      { marginLeft: 3, marginRight: 3 },
+      async () => {
+        await Promise.all([
+          helper.waitForPreview(() =>
+            helper.dispatchSettingsChange({ marginLeft: 3, marginRight: 3 })
+          ),
+          BrowserTestUtils.waitForEvent(helper.doc, "page-count"),
+          helper.waitForSettingsEvent(),
+        ]);
+        await renderedTwice;
+      }
+    );
+
+    let newSheetCount = getSheetCount(helper);
+    ok(
+      initialSheetCount < newSheetCount,
+      `There are more sheets now ${initialSheetCount} < ${newSheetCount}`
+    );
+    Assert.deepEqual(
+      helper.viewSettings.pageRanges,
+      [1, newSheetCount],
+      "The new range is the updated full page range"
+    );
+
+    ok(!helper.hasPendingPreview, "No preview is pending");
+    is(previewUpdateCount, 2, "Preview updated again to show new page range");
+
     await helper.closeDialog();
   });
 });
