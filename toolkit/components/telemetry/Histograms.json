@@ -12879,7 +12879,8 @@
     "kind": "exponential",
     "high": 7200000,
     "n_buckets": 100,
-    "bug_numbers": [1285419, 1570634, 1685399]
+    "bug_numbers": [1285419, 1570634, 1685399],
+    "releaseChannelCollection": "opt-out"
   },
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
     "record_in_processes": ["content"],
@@ -12891,7 +12892,8 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1287987, 1570634, 1685399]
+    "bug_numbers": [1287987, 1570634, 1685399],
+    "releaseChannelCollection": "opt-out"
   },
   "VIDEO_ENCRYPTED_PLAY_TIME_MS" : {
     "record_in_processes": ["content"],
@@ -12939,7 +12941,8 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1293145, 1570634, 1606206, 1685399]
+    "bug_numbers": [1293145, 1570634, 1606206, 1685399],
+    "releaseChannelCollection": "opt-out"
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
     "record_in_processes": ["content"],
