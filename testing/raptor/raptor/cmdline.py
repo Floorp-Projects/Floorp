@@ -360,6 +360,7 @@ def create_parser(mach_interface=False):
         help="Enable cold page-load for browsertime tp6",
     )
     # Arguments for invoking browsertime.
+
     add_arg(
         "--browsertime",
         dest="browsertime",
@@ -423,6 +424,14 @@ def create_parser(mach_interface=False):
         default=False,
         help="Verbose output",
     )
+    add_arg(
+        "--enable-marionette-trace",
+        dest="enable_marionette_trace",
+        action="store_true",
+        default=False,
+        help="Enable marionette tracing",
+    )
+
     add_logging_group(parser)
     return parser
 
