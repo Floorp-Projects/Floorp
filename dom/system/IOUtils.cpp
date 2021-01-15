@@ -155,23 +155,28 @@ Atomic<bool> IOUtils::sShutdownStarted = Atomic<bool>(false);
 
 /* static */
 template <typename OkT, typename Fn>
-void IOUtils::RunOnBackgroundThread(Promise* aPromise, Fn aFunc) {
+RefPtr<IOUtils::IOPromise<OkT>> IOUtils::RunOnBackgroundThread(Fn aFunc) {
   nsCOMPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   if (!bg) {
-    aPromise->MaybeRejectWithAbortError(
-        "Could not dispatch task to background thread");
-    return;
+    return IOPromise<OkT>::CreateAndReject(
+        IOError(NS_ERROR_ABORT)
+            .WithMessage("Could not dispatch task to background thread"),
+        __func__);
   }
 
-  InvokeAsync(
-      bg, __func__,
-      [func = std::move(aFunc)]() {
-        Result<OkT, IOError> result = func();
-        if (result.isErr()) {
-          return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
-        }
-        return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
-      })
+  return InvokeAsync(bg, __func__, [func = std::move(aFunc)]() {
+    Result<OkT, IOError> result = func();
+    if (result.isErr()) {
+      return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
+    }
+    return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
+  });
+}
+
+/* static */
+template <typename OkT, typename Fn>
+void IOUtils::RunOnBackgroundThreadAndResolve(Promise* aPromise, Fn aFunc) {
+  RunOnBackgroundThread<OkT, Fn>(std::move(aFunc))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(aPromise)](OkT&& ok) {
@@ -205,7 +210,7 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     toRead.emplace(aOptions.mMaxBytes.Value());
   }
 
-  RunOnBackgroundThread<JsBuffer>(
+  RunOnBackgroundThreadAndResolve<JsBuffer>(
       promise,
       [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
         return ReadSync(file, toRead, decompress, BufferKind::Uint8Array);
@@ -223,7 +228,7 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-  RunOnBackgroundThread<JsBuffer>(
+  RunOnBackgroundThreadAndResolve<JsBuffer>(
       promise, [file = std::move(file), decompress = aOptions.mDecompress]() {
         return ReadUTF8Sync(file, decompress);
       });
@@ -258,7 +263,7 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  RunOnBackgroundThread<uint32_t>(
+  RunOnBackgroundThreadAndResolve<uint32_t>(
       promise, [file = std::move(file), buf = std::move(*buf),
                 opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
 
@@ -284,7 +289,7 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  RunOnBackgroundThread<uint32_t>(
+  RunOnBackgroundThreadAndResolve<uint32_t>(
       promise, [file = std::move(file), str = nsCString(aString),
                 opts = opts.unwrap()]() {
         return WriteSync(file, AsBytes(Span(str)), opts);
@@ -309,11 +314,12 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> destFile = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
-  RunOnBackgroundThread<Ok>(promise, [sourceFile = std::move(sourceFile),
-                                      destFile = std::move(destFile),
-                                      noOverwrite = aOptions.mNoOverwrite]() {
-    return MoveSync(sourceFile, destFile, noOverwrite);
-  });
+  RunOnBackgroundThreadAndResolve<Ok>(
+      promise,
+      [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
+       noOverwrite = aOptions.mNoOverwrite]() {
+        return MoveSync(sourceFile, destFile, noOverwrite);
+      });
 
   return promise.forget();
 }
@@ -330,7 +336,7 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThread<Ok>(
+  RunOnBackgroundThreadAndResolve<Ok>(
       promise, [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent,
                 recursive = aOptions.mRecursive]() {
         return RemoveSync(file, ignoreAbsent, recursive);
@@ -351,7 +357,7 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThread<Ok>(
+  RunOnBackgroundThreadAndResolve<Ok>(
       promise,
       [file = std::move(file), createAncestors = aOptions.mCreateAncestors,
        ignoreExisting = aOptions.mIgnoreExisting,
@@ -373,7 +379,7 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThread<InternalFileInfo>(
+  RunOnBackgroundThreadAndResolve<InternalFileInfo>(
       promise, [file = std::move(file)]() { return StatSync(file); });
 
   return promise.forget();
@@ -395,7 +401,7 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> destFile = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
-  RunOnBackgroundThread<Ok>(
+  RunOnBackgroundThreadAndResolve<Ok>(
       promise,
       [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
        noOverwrite = aOptions.mNoOverwrite, recursive = aOptions.mRecursive]() {
@@ -421,9 +427,9 @@ already_AddRefed<Promise> IOUtils::Touch(
     newTime = Some(aModification.Value());
   }
 
-  RunOnBackgroundThread<int64_t>(promise, [file = std::move(file), newTime]() {
-    return TouchSync(file, newTime);
-  });
+  RunOnBackgroundThreadAndResolve<int64_t>(
+      promise,
+      [file = std::move(file), newTime]() { return TouchSync(file, newTime); });
 
   return promise.forget();
 }
@@ -438,7 +444,7 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThread<nsTArray<nsString>>(
+  RunOnBackgroundThreadAndResolve<nsTArray<nsString>>(
       promise, [file = std::move(file)]() { return GetChildrenSync(file); });
 
   return promise.forget();
@@ -455,7 +461,7 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThread<Ok>(
+  RunOnBackgroundThreadAndResolve<Ok>(
       promise, [file = std::move(file), permissions = aPermissions]() {
         return SetPermissionsSync(file, permissions);
       });
@@ -473,7 +479,7 @@ already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThread<bool>(
+  RunOnBackgroundThreadAndResolve<bool>(
       promise, [file = std::move(file)]() { return ExistsSync(file); });
 
   return promise.forget();
@@ -611,6 +617,9 @@ void IOUtils::RejectJSPromise(Promise* aPromise, const IOError& aError) {
     case NS_ERROR_ILLEGAL_VALUE:
       aPromise->MaybeRejectWithDataError(
           errMsg.refOr("Argument is not allowed"_ns));
+      break;
+    case NS_ERROR_ABORT:
+      aPromise->MaybeRejectWithAbortError(errMsg.refOr("Operation aborted"_ns));
       break;
     default:
       aPromise->MaybeRejectWithUnknownError(
