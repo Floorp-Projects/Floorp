@@ -13,9 +13,6 @@
 #    --enable-js-shell
 #  build/mozconfig.automation
 #    MOZ_AUTOMATION_ flags
-#  build/mozconfig.rust
-#    RUSTC
-#    CARGO
 . "$topsrcdir/browser/config/mozconfigs/common"
 
 export MOZ_PACKAGE_JSSHELL=1

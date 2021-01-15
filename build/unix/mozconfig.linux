@@ -1,7 +1,5 @@
 . "$topsrcdir/build/unix/mozconfig.unix"
 
-export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
-
 case "$PERFHERDER_EXTRA_OPTIONS" in
 base-toolchains*)
   # We don't build against wayland for base-toolchain builds.

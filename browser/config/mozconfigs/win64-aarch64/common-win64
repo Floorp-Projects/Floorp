@@ -19,7 +19,6 @@ export UPX="${MOZ_FETCHES_DIR}/upx-3.95-win64/upx.exe"
 if [ -f "${UPX}" ]; then
     chmod +x "${UPX}"
 fi
-export WINE=${MOZ_FETCHES_DIR}/wine/bin/wine64
 mk_add_options "export PATH=${VSPATH}/VC/bin/Hostx64/arm64:${MOZ_FETCHES_DIR}/nsis-3.01:${PATH}"
 mk_add_options "export WINEPATH=${VSPATH}/VC/bin/Hostx64/x64"
 
@@ -27,17 +26,7 @@ unset VC_PATH
 
 fi
 
-export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec"
-if [ ! -f "${WINCHECKSEC}" ]; then
-    export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec.exe"
-    if [ ! -f "${WINCHECKSEC}" ]; then
-        unset WINCHECKSEC
-    fi
-fi
-
-export PDBSTR="${MOZ_FETCHES_DIR}/pdbstr/pdbstr.exe"
-if [ -f "${PDBSTR}" ]; then
-    chmod +x "${PDBSTR}"
-else
-    unset PDBSTR
+pdbstr="${MOZ_FETCHES_DIR}/pdbstr/pdbstr.exe"
+if [ -f "${pdbstr}" ]; then
+    chmod +x "${pdbstr}"
 fi
