@@ -524,7 +524,13 @@ async function selectProperty(doc, id) {
         return node.firstChild.classList.contains("focused");
       }
 
+      AccessibilityUtils.setEnv({
+        // Keyboard navigation is handled on the container level using arrow
+        // keys.
+        nonNegativeTabIndexRule: false,
+      });
       await EventUtils.sendMouseEvent({ type: "click" }, node, win);
+      AccessibilityUtils.resetEnv();
       selected = true;
     } else {
       const tree = doc.querySelector(".tree");
@@ -544,11 +550,16 @@ async function selectProperty(doc, id) {
  */
 async function selectRow(doc, rowNumber) {
   info(`Selecting row ${rowNumber}.`);
+  AccessibilityUtils.setEnv({
+    // Keyboard navigation is handled on the container level using arrow keys.
+    nonNegativeTabIndexRule: false,
+  });
   await EventUtils.sendMouseEvent(
     { type: "click" },
     doc.querySelectorAll(".treeRow")[rowNumber],
     doc.defaultView
   );
+  AccessibilityUtils.resetEnv();
 }
 
 /**
@@ -564,7 +575,13 @@ async function toggleRow(doc, rowNumber) {
 
   info(`${expected ? "Expanding" : "Collapsing"} row ${rowNumber}.`);
 
+  AccessibilityUtils.setEnv({
+    // We intentionally remove the twisty from the accessibility tree in the
+    // TreeView component and handle keyboard navigation using the arrow keys.
+    mustHaveAccessibleRule: false,
+  });
   await EventUtils.sendMouseEvent({ type: "click" }, twisty, win);
+  AccessibilityUtils.resetEnv();
   await BrowserTestUtils.waitForCondition(
     () =>
       !twisty.classList.contains("devtools-throbber") &&

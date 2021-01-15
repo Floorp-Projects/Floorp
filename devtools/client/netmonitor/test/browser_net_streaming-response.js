@@ -63,10 +63,7 @@ add_task(async function() {
 
   wait = waitForDOM(document, "#response-panel");
   store.dispatch(Actions.toggleNetworkDetails());
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#response-tab")
-  );
+  await clickOnSidebarTab(document, "response");
   await wait;
 
   store.dispatch(Actions.selectRequest(null));
