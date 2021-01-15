@@ -14,5 +14,4 @@ ac_add_options --enable-nspr-build
 
 if [ -n "$AUTOMATION" ]; then
   mk_add_options MOZ_OBJDIR="${HAZARD_SHELL_OBJDIR}"
-  ac_add_options --with-clang-path="${MOZ_FETCHES_DIR}/clang/bin/clang"
 fi
