@@ -566,22 +566,6 @@ void LIRGenerator::visitGetDynamicName(MGetDynamicName* ins) {
   defineReturn(lir, ins);
 }
 
-void LIRGenerator::visitCallDirectEval(MCallDirectEval* ins) {
-  MDefinition* envChain = ins->getEnvironmentChain();
-  MOZ_ASSERT(envChain->type() == MIRType::Object);
-
-  MDefinition* string = ins->getString();
-  MOZ_ASSERT(string->type() == MIRType::String);
-
-  MDefinition* newTargetValue = ins->getNewTargetValue();
-
-  LInstruction* lir = new (alloc())
-      LCallDirectEval(useRegisterAtStart(envChain), useRegisterAtStart(string),
-                      useBoxAtStart(newTargetValue));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 static JSOp ReorderComparison(JSOp op, MDefinition** lhsp, MDefinition** rhsp) {
   MDefinition* lhs = *lhsp;
   MDefinition* rhs = *rhsp;

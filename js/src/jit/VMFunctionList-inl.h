@@ -109,7 +109,6 @@ namespace jit {
   _(DelPropOperationNonStrict, js::DelPropOperation<false>)                    \
   _(DelPropOperationStrict, js::DelPropOperation<true>)                        \
   _(DeleteNameOperation, js::DeleteNameOperation)                              \
-  _(DirectEvalStringFromIon, js::DirectEvalStringFromIon)                      \
   _(DoCallFallback, js::jit::DoCallFallback)                                   \
   _(DoConcatStringObject, js::jit::DoConcatStringObject)                       \
   _(DoSpreadCallFallback, js::jit::DoSpreadCallFallback)                       \
