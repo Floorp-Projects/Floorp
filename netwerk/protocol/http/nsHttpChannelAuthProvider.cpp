@@ -919,7 +919,7 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
   bool nonWebContent = false;
 
   if (loadInfo->GetExternalContentPolicyType() !=
-      ExtContentPolicy::TYPE_DOCUMENT) {
+      nsIContentPolicy::TYPE_DOCUMENT) {
     topDoc = false;
   }
 
@@ -931,7 +931,7 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
   }
 
   if (loadInfo->GetExternalContentPolicyType() ==
-      ExtContentPolicy::TYPE_XMLHTTPREQUEST) {
+      nsIContentPolicy::TYPE_XMLHTTPREQUEST) {
     xhr = true;
   }
 
@@ -965,9 +965,8 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
                               HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE);
       }
     } else {
-      Telemetry::Accumulate(
-          Telemetry::HTTP_AUTH_DIALOG_STATS_3,
-          static_cast<uint32_t>(loadInfo->GetExternalContentPolicyType()));
+      Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
+                            loadInfo->GetExternalContentPolicyType());
     }
   }
 
@@ -997,9 +996,9 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
               network_auth_subresource_img_cross_origin_http_auth_allow() &&
           loadInfo &&
           ((loadInfo->GetExternalContentPolicyType() ==
-            ExtContentPolicy::TYPE_IMAGE) ||
+            nsIContentPolicy::TYPE_IMAGE) ||
            (loadInfo->GetExternalContentPolicyType() ==
-            ExtContentPolicy::TYPE_IMAGESET))) {
+            nsIContentPolicy::TYPE_IMAGESET))) {
         return true;
       }
       return false;

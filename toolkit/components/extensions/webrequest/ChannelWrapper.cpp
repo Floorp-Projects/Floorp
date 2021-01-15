@@ -706,7 +706,7 @@ nsresult ChannelWrapper::GetFrameAncestors(
   }
 
   bool subFrame = aLoadInfo->GetExternalContentPolicyType() ==
-                  ExtContentPolicy::TYPE_SUBDOCUMENT;
+                  nsIContentPolicy::TYPE_SUBDOCUMENT;
   if (!aFrameAncestors.SetCapacity(subFrame ? size : size + 1, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -772,58 +772,54 @@ already_AddRefed<nsITraceableChannel> ChannelWrapper::GetTraceableChannel(
  * ...
  *****************************************************************************/
 
-MozContentPolicyType GetContentPolicyType(ExtContentPolicyType aType) {
+MozContentPolicyType GetContentPolicyType(uint32_t aType) {
   // Note: Please keep this function in sync with the external types in
   // nsIContentPolicy.idl
   switch (aType) {
-    case ExtContentPolicy::TYPE_DOCUMENT:
+    case nsIContentPolicy::TYPE_DOCUMENT:
       return MozContentPolicyType::Main_frame;
-    case ExtContentPolicy::TYPE_SUBDOCUMENT:
+    case nsIContentPolicy::TYPE_SUBDOCUMENT:
       return MozContentPolicyType::Sub_frame;
-    case ExtContentPolicy::TYPE_STYLESHEET:
+    case nsIContentPolicy::TYPE_STYLESHEET:
       return MozContentPolicyType::Stylesheet;
-    case ExtContentPolicy::TYPE_SCRIPT:
+    case nsIContentPolicy::TYPE_SCRIPT:
       return MozContentPolicyType::Script;
-    case ExtContentPolicy::TYPE_IMAGE:
+    case nsIContentPolicy::TYPE_IMAGE:
       return MozContentPolicyType::Image;
-    case ExtContentPolicy::TYPE_OBJECT:
+    case nsIContentPolicy::TYPE_OBJECT:
       return MozContentPolicyType::Object;
-    case ExtContentPolicy::TYPE_OBJECT_SUBREQUEST:
+    case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
       return MozContentPolicyType::Object_subrequest;
-    case ExtContentPolicy::TYPE_XMLHTTPREQUEST:
+    case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
       return MozContentPolicyType::Xmlhttprequest;
     // TYPE_FETCH returns xmlhttprequest for cross-browser compatibility.
-    case ExtContentPolicy::TYPE_FETCH:
+    case nsIContentPolicy::TYPE_FETCH:
       return MozContentPolicyType::Xmlhttprequest;
-    case ExtContentPolicy::TYPE_XSLT:
+    case nsIContentPolicy::TYPE_XSLT:
       return MozContentPolicyType::Xslt;
-    case ExtContentPolicy::TYPE_PING:
+    case nsIContentPolicy::TYPE_PING:
       return MozContentPolicyType::Ping;
-    case ExtContentPolicy::TYPE_BEACON:
+    case nsIContentPolicy::TYPE_BEACON:
       return MozContentPolicyType::Beacon;
-    case ExtContentPolicy::TYPE_DTD:
+    case nsIContentPolicy::TYPE_DTD:
       return MozContentPolicyType::Xml_dtd;
-    case ExtContentPolicy::TYPE_FONT:
+    case nsIContentPolicy::TYPE_FONT:
       return MozContentPolicyType::Font;
-    case ExtContentPolicy::TYPE_MEDIA:
+    case nsIContentPolicy::TYPE_MEDIA:
       return MozContentPolicyType::Media;
-    case ExtContentPolicy::TYPE_WEBSOCKET:
+    case nsIContentPolicy::TYPE_WEBSOCKET:
       return MozContentPolicyType::Websocket;
-    case ExtContentPolicy::TYPE_CSP_REPORT:
+    case nsIContentPolicy::TYPE_CSP_REPORT:
       return MozContentPolicyType::Csp_report;
-    case ExtContentPolicy::TYPE_IMAGESET:
+    case nsIContentPolicy::TYPE_IMAGESET:
       return MozContentPolicyType::Imageset;
-    case ExtContentPolicy::TYPE_WEB_MANIFEST:
+    case nsIContentPolicy::TYPE_WEB_MANIFEST:
       return MozContentPolicyType::Web_manifest;
-    case ExtContentPolicy::TYPE_SPECULATIVE:
+    case nsIContentPolicy::TYPE_SPECULATIVE:
       return MozContentPolicyType::Speculative;
-    case ExtContentPolicy::TYPE_INVALID:
-    case ExtContentPolicy::TYPE_OTHER:
-    case ExtContentPolicy::TYPE_REFRESH:
-    case ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD:
-      break;
+    default:
+      return MozContentPolicyType::Other;
   }
-  return MozContentPolicyType::Other;
 }
 
 MozContentPolicyType ChannelWrapper::Type() const {
