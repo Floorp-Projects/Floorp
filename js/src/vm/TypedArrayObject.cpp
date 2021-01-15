@@ -1821,10 +1821,149 @@ bool TypedArrayObject::set(JSContext* cx, unsigned argc, Value* vp) {
       cx, args);
 }
 
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// 22.2.3.5 %TypedArray%.prototype.copyWithin ( target, start [ , end ] )
+/* static */
+bool TypedArrayObject::copyWithin_impl(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
+
+  // Steps 1-2.
+  Rooted<TypedArrayObject*> tarray(
+      cx, &args.thisv().toObject().as<TypedArrayObject>());
+  if (tarray->hasDetachedBuffer()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_DETACHED);
+    return false;
+  }
+
+  // Step 3.
+  size_t len = tarray->length().get();
+
+  // Step 4.
+  double relativeTarget;
+  if (!ToInteger(cx, args.get(0), &relativeTarget)) {
+    return false;
+  }
+
+  // Step 5.
+  uint64_t to;
+  if (relativeTarget < 0) {
+    to = std::max(len + relativeTarget, 0.0);
+  } else {
+    to = std::min(relativeTarget, double(len));
+  }
+
+  // Step 6.
+  double relativeStart;
+  if (!ToInteger(cx, args.get(1), &relativeStart)) {
+    return false;
+  }
+
+  // Step 7.
+  uint64_t from;
+  if (relativeStart < 0) {
+    from = std::max(len + relativeStart, 0.0);
+  } else {
+    from = std::min(relativeStart, double(len));
+  }
+
+  // Step 8.
+  double relativeEnd;
+  if (!args.hasDefined(2)) {
+    relativeEnd = len;
+  } else {
+    if (!ToInteger(cx, args[2], &relativeEnd)) {
+      return false;
+    }
+  }
+
+  // Step 9.
+  uint64_t final_;
+  if (relativeEnd < 0) {
+    final_ = std::max(len + relativeEnd, 0.0);
+  } else {
+    final_ = std::min(relativeEnd, double(len));
+  }
+
+  // Step 10.
+  MOZ_ASSERT(to <= len);
+  uint64_t count;
+  if (from <= final_) {
+    count = std::min(final_ - from, len - to);
+  } else {
+    count = 0;
+  }
+
+  // Step 11.
+  //
+  // Note that getting or setting a typed array element must throw if the
+  // underlying buffer is detached, so the code below checks for detachment.
+  // This happens *only* if a get/set occurs, i.e. when |count > 0|.
+  //
+  // Also note that this copies elements effectively by memmove, *not* in
+  // step 11's specified order.  This is unobservable, even when the underlying
+  // buffer is a SharedArrayBuffer instance, because the access is unordered and
+  // therefore is allowed to have data races.
+
+  if (count == 0) {
+    args.rval().setObject(*tarray);
+    return true;
+  }
+
+  if (tarray->hasDetachedBuffer()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_DETACHED);
+    return false;
+  }
+
+  // Don't multiply by |tarray->bytesPerElement()| in case the compiler can't
+  // strength-reduce multiplication by 1/2/4/8 into the equivalent shift.
+  const size_t ElementShift = TypedArrayShift(tarray->type());
+
+  MOZ_ASSERT((SIZE_MAX >> ElementShift) > to);
+  size_t byteDest = to << ElementShift;
+
+  MOZ_ASSERT((SIZE_MAX >> ElementShift) > from);
+  size_t byteSrc = from << ElementShift;
+
+  MOZ_ASSERT((SIZE_MAX >> ElementShift) >= count);
+  size_t byteSize = count << ElementShift;
+
+#ifdef DEBUG
+  {
+    size_t viewByteLength = tarray->byteLength().get();
+    MOZ_ASSERT(byteSize <= viewByteLength);
+    MOZ_ASSERT(byteDest < viewByteLength);
+    MOZ_ASSERT(byteSrc < viewByteLength);
+    MOZ_ASSERT(byteDest <= viewByteLength - byteSize);
+    MOZ_ASSERT(byteSrc <= viewByteLength - byteSize);
+  }
+#endif
+
+  SharedMem<uint8_t*> data = tarray->dataPointerEither().cast<uint8_t*>();
+  if (tarray->isSharedMemory()) {
+    jit::AtomicOperations::memmoveSafeWhenRacy(data + byteDest, data + byteSrc,
+                                               byteSize);
+  } else {
+    memmove(data.unwrapUnshared() + byteDest, data.unwrapUnshared() + byteSrc,
+            byteSize);
+  }
+
+  args.rval().setObject(*tarray);
+  return true;
+}
+
+/* static */
+bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<TypedArrayObject::is,
+                              TypedArrayObject::copyWithin_impl>(cx, args);
+}
+
 /* static */ const JSFunctionSpec TypedArrayObject::protoFunctions[] = {
     JS_SELF_HOSTED_FN("subarray", "TypedArraySubarray", 2, 0),
     JS_FN("set", TypedArrayObject::set, 1, 0),
-    JS_SELF_HOSTED_FN("copyWithin", "TypedArrayCopyWithin", 3, 0),
+    JS_FN("copyWithin", TypedArrayObject::copyWithin, 2, 0),
     JS_SELF_HOSTED_FN("every", "TypedArrayEvery", 1, 0),
     JS_SELF_HOSTED_FN("fill", "TypedArrayFill", 3, 0),
     JS_SELF_HOSTED_FN("filter", "TypedArrayFilter", 1, 0),
