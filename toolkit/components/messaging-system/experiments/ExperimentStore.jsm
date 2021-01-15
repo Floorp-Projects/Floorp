@@ -19,6 +19,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const IS_MAIN_PROCESS =
+  Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+
 const SYNC_DATA_PREF = "messaging-system.syncdatastore.data";
 let tryJSONParse = data => {
   try {
@@ -44,7 +47,21 @@ const DEFAULT_STORE_ID = "ExperimentStoreData";
 const SYNC_ACCESS_FEATURES = ["newtab", "aboutwelcome"];
 
 class ExperimentStore extends SharedDataMap {
-  constructor(sharedDataKey, options) {
+  constructor(sharedDataKey, options = { isParent: IS_MAIN_PROCESS }) {
+    if (!options.path) {
+      // Adding path to options as a lazy loaded property
+      // to give the profile a chance to load first.
+      Object.defineProperty(options, "path", {
+        get: () => {
+          try {
+            const profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+            return PathUtils.join(profileDir, `${sharedDataKey}.json`);
+          } catch (e) {
+            return null;
+          }
+        },
+      });
+    }
     super(sharedDataKey || DEFAULT_STORE_ID, options);
   }
 
