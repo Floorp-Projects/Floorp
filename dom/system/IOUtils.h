@@ -64,10 +64,6 @@ class IOUtils final {
                                             const nsAString& aPath,
                                             const ReadUTF8Options& aOptions);
 
-  static already_AddRefed<Promise> ReadJSON(GlobalObject& aGlobal,
-                                            const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions);
-
   static already_AddRefed<Promise> Write(GlobalObject& aGlobal,
                                          const nsAString& aPath,
                                          const Uint8Array& aData,
@@ -76,11 +72,6 @@ class IOUtils final {
   static already_AddRefed<Promise> WriteUTF8(GlobalObject& aGlobal,
                                              const nsAString& aPath,
                                              const nsACString& aString,
-                                             const WriteOptions& aOptions);
-
-  static already_AddRefed<Promise> WriteJSON(GlobalObject& aGlobal,
-                                             const nsAString& aPath,
-                                             JS::Handle<JS::Value> aValue,
                                              const WriteOptions& aOptions);
 
   static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
@@ -158,10 +149,7 @@ class IOUtils final {
   static void SetShutdownHooks();
 
   template <typename OkT, typename Fn>
-  static RefPtr<IOPromise<OkT>> RunOnBackgroundThread(Fn aFunc);
-
-  template <typename OkT, typename Fn>
-  static void RunOnBackgroundThreadAndResolve(Promise* aPromise, Fn aFunc);
+  static void RunOnBackgroundThread(Promise* aPromise, Fn aFunc);
 
   /**
    * Creates a new JS Promise.
