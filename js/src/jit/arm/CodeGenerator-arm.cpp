@@ -1481,33 +1481,6 @@ void CodeGenerator::visitCompareFAndBranch(LCompareFAndBranch* comp) {
              comp->ifFalse());
 }
 
-void CodeGenerator::visitCompareB(LCompareB* lir) {
-  MCompare* mir = lir->mir();
-
-  const ValueOperand lhs = ToValue(lir, LCompareB::Lhs);
-  const LAllocation* rhs = lir->rhs();
-  const Register output = ToRegister(lir->output());
-
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
-
-  Label notBoolean, done;
-  masm.branchTestBoolean(Assembler::NotEqual, lhs, &notBoolean);
-  {
-    if (rhs->isConstant()) {
-      masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
-    } else {
-      masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
-    }
-    masm.emitSet(JSOpToCondition(mir->compareType(), mir->jsop()), output);
-    masm.jump(&done);
-  }
-
-  masm.bind(&notBoolean);
-  { masm.move32(Imm32(mir->jsop() == JSOp::StrictNe), output); }
-
-  masm.bind(&done);
-}
-
 void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
   ScratchRegisterScope scratch(masm);
   if (baab->right()->isConstant()) {

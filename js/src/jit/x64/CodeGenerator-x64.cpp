@@ -136,28 +136,6 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
   }
 }
 
-void CodeGenerator::visitCompareB(LCompareB* lir) {
-  MCompare* mir = lir->mir();
-
-  const ValueOperand lhs = ToValue(lir, LCompareB::Lhs);
-  const LAllocation* rhs = lir->rhs();
-  const Register output = ToRegister(lir->output());
-
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
-
-  // Load boxed boolean in ScratchReg.
-  ScratchRegisterScope scratch(masm);
-  if (rhs->isConstant()) {
-    masm.moveValue(rhs->toConstant()->toJSValue(), ValueOperand(scratch));
-  } else {
-    masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), scratch);
-  }
-
-  // Perform the comparison.
-  masm.cmpPtr(lhs.valueReg(), scratch);
-  masm.emitSet(JSOpToCondition(mir->compareType(), mir->jsop()), output);
-}
-
 void CodeGenerator::visitCompareI64(LCompareI64* lir) {
   MCompare* mir = lir->mir();
   MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
