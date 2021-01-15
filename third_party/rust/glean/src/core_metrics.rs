@@ -2,7 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use glean_core::{metrics::StringMetric, CommonMetricData, Lifetime};
+use crate::private::StringMetric;
+use crate::{CommonMetricData, Lifetime};
+
+use once_cell::sync::Lazy;
 
 /// Metrics included in every ping as `client_info`.
 #[derive(Debug)]
@@ -23,76 +26,90 @@ impl ClientInfoMetrics {
     }
 }
 
-#[derive(Debug)]
-pub struct InternalMetrics {
-    pub app_build: StringMetric,
-    pub app_display_version: StringMetric,
-    pub app_channel: StringMetric,
-    pub os_version: StringMetric,
-    pub architecture: StringMetric,
-    pub device_manufacturer: StringMetric,
-    pub device_model: StringMetric,
-}
+pub mod internal_metrics {
+    use super::*;
 
-impl InternalMetrics {
-    pub fn new() -> Self {
-        Self {
-            app_build: StringMetric::new(CommonMetricData {
-                name: "app_build".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-            app_display_version: StringMetric::new(CommonMetricData {
-                name: "app_display_version".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-            app_channel: StringMetric::new(CommonMetricData {
-                name: "app_channel".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-            os_version: StringMetric::new(CommonMetricData {
-                name: "os_version".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-            architecture: StringMetric::new(CommonMetricData {
-                name: "architecture".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-            device_manufacturer: StringMetric::new(CommonMetricData {
-                name: "device_manufacturer".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-            device_model: StringMetric::new(CommonMetricData {
-                name: "device_model".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-        }
-    }
+    #[allow(non_upper_case_globals)]
+    pub static app_build: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "app_build".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    #[allow(non_upper_case_globals)]
+    pub static app_display_version: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "app_display_version".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    #[allow(non_upper_case_globals)]
+    pub static app_channel: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "app_channel".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    #[allow(non_upper_case_globals)]
+    pub static os_version: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "os_version".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    #[allow(non_upper_case_globals)]
+    pub static architecture: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "architecture".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    #[allow(non_upper_case_globals)]
+    pub static device_manufacturer: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "device_manufacturer".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    #[allow(non_upper_case_globals)]
+    pub static device_model: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "device_model".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
 }
