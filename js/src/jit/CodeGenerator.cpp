@@ -9623,50 +9623,6 @@ void CodeGenerator::visitCompareBigIntString(LCompareBigIntString* lir) {
   }
 }
 
-void CodeGenerator::visitCompareVM(LCompareVM* lir) {
-  pushArg(ToValue(lir, LCompareVM::RhsInput));
-  pushArg(ToValue(lir, LCompareVM::LhsInput));
-
-  using Fn =
-      bool (*)(JSContext*, MutableHandleValue, MutableHandleValue, bool*);
-  switch (lir->mir()->jsop()) {
-    case JSOp::Eq:
-      callVM<Fn, jit::LooselyEqual<EqualityKind::Equal>>(lir);
-      break;
-
-    case JSOp::Ne:
-      callVM<Fn, jit::LooselyEqual<EqualityKind::NotEqual>>(lir);
-      break;
-
-    case JSOp::StrictEq:
-      callVM<Fn, jit::StrictlyEqual<EqualityKind::Equal>>(lir);
-      break;
-
-    case JSOp::StrictNe:
-      callVM<Fn, jit::StrictlyEqual<EqualityKind::NotEqual>>(lir);
-      break;
-
-    case JSOp::Lt:
-      callVM<Fn, js::LessThan>(lir);
-      break;
-
-    case JSOp::Le:
-      callVM<Fn, js::LessThanOrEqual>(lir);
-      break;
-
-    case JSOp::Gt:
-      callVM<Fn, js::GreaterThan>(lir);
-      break;
-
-    case JSOp::Ge:
-      callVM<Fn, js::GreaterThanOrEqual>(lir);
-      break;
-
-    default:
-      MOZ_CRASH("Unexpected compare op");
-  }
-}
-
 void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
   JSOp op = lir->mir()->jsop();
   MCompare::CompareType compareType = lir->mir()->compareType();
