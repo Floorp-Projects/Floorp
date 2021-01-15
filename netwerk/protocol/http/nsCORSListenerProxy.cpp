@@ -1408,7 +1408,7 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
 
   nsCOMPtr<nsIPrincipal> principal = originalLoadInfo->GetLoadingPrincipal();
   MOZ_ASSERT(principal && originalLoadInfo->GetExternalContentPolicyType() !=
-                              nsIContentPolicy::TYPE_DOCUMENT,
+                              ExtContentPolicy::TYPE_DOCUMENT,
              "Should not do CORS loads for top-level loads, so a "
              "loadingPrincipal should always exist.");
   bool withCredentials =

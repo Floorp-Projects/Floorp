@@ -636,12 +636,12 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean sendCSPViolationEvents;
 
 %{ C++
-  inline nsContentPolicyType GetExternalContentPolicyType()
+  inline ExtContentPolicyType GetExternalContentPolicyType()
   {
     nsContentPolicyType result;
     mozilla::DebugOnly<nsresult> rv = GetExternalContentPolicyType(&result);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
+    return static_cast<ExtContentPolicyType>(result);
   }
 %}
 

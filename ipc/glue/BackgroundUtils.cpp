@@ -697,7 +697,7 @@ nsresult LoadInfoArgsToLoadInfo(
   if (XRE_IsParentProcess() &&
       (nsContentUtils::InternalContentPolicyTypeToExternal(
            loadInfoArgs.contentPolicyType()) !=
-       nsIContentPolicy::TYPE_DOCUMENT)) {
+       ExtContentPolicy::TYPE_DOCUMENT)) {
     // Only fill out ancestor principals and browsing context IDs when we
     // are deserializing LoadInfoArgs to be LoadInfo for a subresource
     RefPtr<BrowsingContext> parentBC =

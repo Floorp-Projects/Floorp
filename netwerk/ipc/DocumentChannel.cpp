@@ -286,7 +286,7 @@ NS_IMETHODIMP DocumentChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
   // Setting load flags for TYPE_OBJECT is OK, so long as the channel to parent
   // isn't opened yet, or we're only setting the `LOAD_DOCUMENT_URI` flag.
   auto contentPolicy = mLoadInfo->GetExternalContentPolicyType();
-  if (contentPolicy == nsIContentPolicy::TYPE_OBJECT) {
+  if (contentPolicy == ExtContentPolicy::TYPE_OBJECT) {
     if (mWasOpened) {
       MOZ_DIAGNOSTIC_ASSERT(
           aLoadFlags == (mLoadFlags | nsIChannel::LOAD_DOCUMENT_URI),
