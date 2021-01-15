@@ -1592,7 +1592,6 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "chrono",
- "crossbeam-channel",
  "glean",
  "glean-core",
  "inherent",
@@ -1602,7 +1601,6 @@ dependencies = [
  "serde",
  "tempfile",
  "thin-vec",
- "thiserror",
  "uuid",
  "xpcom",
 ]

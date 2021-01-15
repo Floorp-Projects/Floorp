@@ -38,41 +38,27 @@ we split the metric into three pieces:
         or logging errors if forbidden non-test APIs are called.
         (Or panicking if test APIs are called.)
         * If on the parent process, dispatching API calls to the core.
-2. The `MetricTypeImpl` is the parent-process implementation.
-    * It talks to the core and supports test APIs too.
+2. The parent-process implementation is supplied by
+   [the RLB](https://crates.io/crates/glean/).
     * For testing, it stores the `MetricId` that identifies this particular metric in a cross-process fashion.
     * For testing, it exposes a `child_metric()` function to create its `Child` equivalent.
     * For testing and if it supports operations in a non-parent-process, it exposes a `metric_id()` function to access the stored `MetricId`.
 3. The `MetricTypeIpc` is the ipc-aware non-parent-process implementation.
     * If it does support operations in non-parent processes it stores the `MetricId` that identifies this particular metric in a cross-process fashion.
 
-**Note:** This will change once the Rust Language Binding is moved into
-[mozilla/glean](https://github.com/mozilla/glean/)
-in
-[bug 1662868](https://bugzilla.mozilla.org/show_bug.cgi?id=1662868).
-
 ## Rust
 
-FOG is being used to test out the ergonomics of a public Rust API,
-so has been granted special permission to implement directly atop `glean_core`.
-For now.
+FOG uses the Rust Language Binding APIs (the `glean` crate) with a layer of IPC on top.
 
-The Rust API is implemented in the
+The IPC additions and glean-core trait implementations are in the
 [`private` module of the `fog` crate](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/api/src/metrics).
 
 Each metric type gets its own file, mimicking the structure in
-[`glean_core`](https://github.com/mozilla/glean/tree/master/glean-core/src/metrics).
+[`glean_core`](https://github.com/mozilla/glean/tree/main/glean-core/src/metrics)
+and [`glean`](https://github.com/mozilla/glean/tree/main/glean-core/rlb/src/private).
 
 Every method on the metric type is public for now,
 including test methods.
-
-To allow for pre-init instrumentation to work
-(and to be sensitive to performance in the event that metric recording is expensive)
-each write to a metric is dispatched to another thread using the
-[`Dispatcher`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/api/src/dispatcher/mod.rs).
-Test methods must first call
-`dispatcher::block_on_queue()`
-before retrieving stored data to ensure pending operations have been completed before we read the value.
 
 ## C++ and JS
 
