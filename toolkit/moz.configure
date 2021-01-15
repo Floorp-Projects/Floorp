@@ -1520,7 +1520,7 @@ llvm_dlltool = check_prog(
     ("llvm-dlltool",),
     what="llvm-dlltool",
     when=check_for_llvm_dlltool,
-    paths=toolchain_search_path,
+    paths=clang_search_path,
 )
 
 
@@ -2067,7 +2067,7 @@ set_config("MOZ_USING_WASM_SANDBOXING", requires_wasm_sandboxing)
 set_define("MOZ_USING_WASM_SANDBOXING", requires_wasm_sandboxing)
 
 with only_when(requires_wasm_sandboxing & compile_environment):
-    lucetc = check_prog("LUCETC", ["lucetc"], paths=toolchain_search_path)
+    lucetc = check_prog("LUCETC", ["lucetc"], paths=bootstrap_search_path("lucetc"))
 
     option(
         "--with-wasi-sysroot",
@@ -2126,7 +2126,7 @@ with only_when(requires_wasm_sandboxing & compile_environment):
         "_WASM_CC",
         ["clang"],
         input=provided_wasm_cc.program,
-        paths=toolchain_search_path,
+        paths=clang_search_path,
         allow_missing=True,
         what="the C->WASM compiler",
     )
@@ -2145,7 +2145,7 @@ with only_when(requires_wasm_sandboxing & compile_environment):
         "_WASM_CXX",
         ["clang++"],
         input=provided_wasm_cxx.program,
-        paths=toolchain_search_path,
+        paths=clang_search_path,
         allow_missing=True,
         what="the C++->WASM compiler",
     )
@@ -2317,7 +2317,7 @@ check_prog(
     "DUMP_SYMS",
     ["dump_syms"],
     allow_missing=True,
-    paths=toolchain_search_path,
+    paths=bootstrap_search_path("dump_syms"),
     when=compile_environment,
 )
 

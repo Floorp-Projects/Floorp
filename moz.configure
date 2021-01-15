@@ -194,6 +194,42 @@ add_old_configure_assignment("DEVELOPER_OPTIONS", developer_options)
 set_config("DEVELOPER_OPTIONS", developer_options)
 
 
+@depends(developer_options)
+def bootstrap_search_path_order(developer_options):
+    if developer_options:
+        log.debug(
+            "Prioritizing mozbuild state dir in toolchain paths because "
+            "you are not building in release mode."
+        )
+        return "prepend"
+
+    log.debug(
+        "Prioritizing system over mozbuild state dir in "
+        "toolchain paths because you are building in "
+        "release mode."
+    )
+    return "append"
+
+
+@dependable
+@imports("os")
+@imports(_from="os", _import="environ")
+def original_path():
+    return environ["PATH"].split(os.pathsep)
+
+
+@template
+def bootstrap_search_path(*path_parts):
+    @depends(bootstrap_search_path_order, original_path, mozbuild_state_path)
+    def bootstrap_search_path(order, original_path, mozbuild_state_path):
+        path = [os.path.join(mozbuild_state_path, *path_parts)]
+        if order == "prepend":
+            return path + original_path
+        return original_path + path
+
+    return bootstrap_search_path
+
+
 wine = check_prog(
     "WINE",
     ["wine64", "wine"],
@@ -769,7 +805,7 @@ llvm_objdump = check_prog(
     llvm_objdump,
     what="llvm-objdump",
     when="--enable-compile-environment",
-    paths=toolchain_search_path,
+    paths=clang_search_path,
 )
 
 add_old_configure_assignment("LLVM_OBJDUMP", llvm_objdump)
