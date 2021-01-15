@@ -580,13 +580,6 @@ interface nsINavHistoryObserver : nsISupports
   void onEndUpdateBatch();
 
   /**
-   * Called when the frecencies of many pages have changed at once.
-   *
-   * onFrecencyChanged is not called for each of those pages.
-   */
-  void onManyFrecenciesChanged();
-
-  /**
    * Removed by the user.
    */
   const unsigned short REASON_DELETED = 0;
