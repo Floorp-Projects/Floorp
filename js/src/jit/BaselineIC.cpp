@@ -43,6 +43,7 @@
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/EqualityOperations.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Opcodes.h"
@@ -2558,25 +2559,26 @@ bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
       }
       break;
     case JSOp::Eq:
-      if (!LooselyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, &out)) {
+      if (!js::LooselyEqual(cx, lhsCopy, rhsCopy, &out)) {
         return false;
       }
       break;
     case JSOp::Ne:
-      if (!LooselyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy, &out)) {
+      if (!js::LooselyEqual(cx, lhsCopy, rhsCopy, &out)) {
         return false;
       }
+      out = !out;
       break;
     case JSOp::StrictEq:
-      if (!StrictlyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, &out)) {
+      if (!js::StrictlyEqual(cx, lhsCopy, rhsCopy, &out)) {
         return false;
       }
       break;
     case JSOp::StrictNe:
-      if (!StrictlyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy,
-                                                 &out)) {
+      if (!js::StrictlyEqual(cx, lhsCopy, rhsCopy, &out)) {
         return false;
       }
+      out = !out;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled baseline compare op");
