@@ -11,7 +11,8 @@
         android:key="@string/pref_key_sign_in"
         android:layout="@layout/sign_in_preference"
         android:summary="@string/preferences_sign_in_description"
-        android:title="@string/preferences_sync" />
+        android:title="@string/preferences_sync"
+        app:allowDividerBelow="false"/>
 
     <androidx.preference.PreferenceCategory
         android:key="@string/pref_key_account_category"
