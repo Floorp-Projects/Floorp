@@ -2785,36 +2785,6 @@ class MGetDynamicName
   bool possiblyCalls() const override { return true; }
 };
 
-class MCallDirectEval
-    : public MTernaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, StringPolicy<1>, BoxPolicy<2>>::Data {
- protected:
-  MCallDirectEval(MDefinition* envChain, MDefinition* string,
-                  MDefinition* newTargetValue, jsbytecode* pc)
-      : MTernaryInstruction(classOpcode, envChain, string, newTargetValue),
-        pc_(pc) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CallDirectEval)
-  NAMED_OPERANDS((0, getEnvironmentChain), (1, getString),
-                 (2, getNewTargetValue))
-
-  static MCallDirectEval* New(TempAllocator& alloc, MDefinition* envChain,
-                              MDefinition* string, MDefinition* newTargetValue,
-                              jsbytecode* pc) {
-    return new (alloc) MCallDirectEval(envChain, string, newTargetValue, pc);
-  }
-
-  jsbytecode* pc() const { return pc_; }
-
-  bool possiblyCalls() const override { return true; }
-
- private:
-  jsbytecode* pc_;
-};
-
 class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
  public:
   enum CompareType {

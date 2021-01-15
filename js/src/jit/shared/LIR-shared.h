@@ -1363,27 +1363,6 @@ class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3> {
   const LDefinition* temp3() { return getTemp(2); }
 };
 
-class LCallDirectEval
-    : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CallDirectEval)
-
-  LCallDirectEval(const LAllocation& envChain, const LAllocation& string,
-                  const LBoxAllocation& newTarget)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, envChain);
-    setOperand(1, string);
-    setBoxOperand(NewTarget, newTarget);
-  }
-
-  static const size_t NewTarget = 2;
-
-  MCallDirectEval* mir() const { return mir_->toCallDirectEval(); }
-
-  const LAllocation* getEnvironmentChain() { return getOperand(0); }
-  const LAllocation* getString() { return getOperand(1); }
-};
-
 // Takes in either an integer or boolean input and tests it for truthiness.
 class LTestIAndBranch : public LControlInstructionHelper<2, 1, 0> {
  public:
