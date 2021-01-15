@@ -857,6 +857,7 @@ var DownloadsView = {
     }
 
     if (aEvent.charCode == " ".charCodeAt(0)) {
+      aEvent.preventDefault();
       goDoCommand("downloadsCmd_pauseResume");
       return;
     }
