@@ -473,11 +473,6 @@
   --arrowpanel-background: #fbfbfb;
 }
 
-#pageAction-panel-launchSSB,
-#pageAction-urlbar-launchSSB {
-  list-style-image: url("chrome://browser/skin/install-ssb.svg");
-}
-
 /* URL bar and page action buttons */
 
 #page-action-buttons {

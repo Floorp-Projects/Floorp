@@ -4,11 +4,6 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "SiteSpecificBrowser",
-  "resource:///modules/SiteSpecificBrowserService.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "SearchUIUtils",
   "resource:///modules/SearchUIUtils.jsm"
 );
@@ -1130,33 +1125,6 @@ BrowserPageActions.pinTab = {
     } else {
       gBrowser.pinTab(gBrowser.selectedTab);
     }
-  },
-};
-
-// SiteSpecificBrowser
-BrowserPageActions.launchSSB = {
-  updateState() {
-    let action = PageActions.actionForID("launchSSB");
-    let browser = gBrowser.selectedBrowser;
-    action.setDisabled(!browser.currentURI.schemeIs("https"), window);
-  },
-
-  async onCommand(event, buttonNode) {
-    if (!gBrowser.currentURI.schemeIs("https")) {
-      return;
-    }
-
-    let ssb = await SiteSpecificBrowser.createFromBrowser(
-      gBrowser.selectedBrowser
-    );
-
-    // Launching through the UI implies installing.
-    await ssb.install();
-
-    // The site's manifest may point to a different start page so explicitly
-    // open the SSB to the current page.
-    ssb.launch(gBrowser.selectedBrowser.currentURI);
-    gBrowser.removeTab(gBrowser.selectedTab, { closeWindowWithLastTab: false });
   },
 };
 
