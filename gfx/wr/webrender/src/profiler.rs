@@ -206,6 +206,9 @@ pub struct Profiler {
     avg_over_period: u64,
     num_graph_samples: usize,
 
+    // For FPS computation. Updated in update().
+    frame_timestamps_within_last_second: Vec<u64>,
+
     ui: Vec<Item>,
 }
 
@@ -342,6 +345,7 @@ impl Profiler {
             avg_over_period: ONE_SECOND_NS / 2,
 
             num_graph_samples: 500, // Would it be useful to control this via a pref?
+            frame_timestamps_within_last_second: Vec::new(),
             ui: Vec::new(),
         }
     }
@@ -370,6 +374,9 @@ impl Profiler {
         if update_avg {
             self.start = now;
         }
+        let one_second_ago = now - ONE_SECOND_NS;
+        self.frame_timestamps_within_last_second.retain(|t| *t > one_second_ago);
+        self.frame_timestamps_within_last_second.push(now);
 
         self.update_slow_event(
             SLOW_FRAME,
@@ -1027,7 +1034,8 @@ impl Profiler {
                     rect
                 }
                 Item::Fps => {
-                    set_text!(&mut text_buffer, "{:.2} fps", 1000.0 / self.counters[FRAME_TIME].max);
+                    let fps = self.frame_timestamps_within_last_second.len();
+                    set_text!(&mut text_buffer, "{} fps", fps);
                     let mut rect = debug_renderer.add_text(
                         x + PROFILE_PADDING,
                         y + PROFILE_PADDING + 5.0,
