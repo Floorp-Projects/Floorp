@@ -248,7 +248,7 @@ impl AutoCfg {
             command.arg("--target").arg(target);
         }
 
-        command.arg("-").stdin(Stdio::piped());
+        command.arg("-").stdin(Stdio::piped()).stderr(Stdio::null());
         let mut child = try!(command.spawn().map_err(error::from_io));
         let mut stdin = child.stdin.take().expect("rustc stdin");
 

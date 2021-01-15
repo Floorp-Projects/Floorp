@@ -89,3 +89,11 @@ rev = "3334d92350da40b90d2529c147db3ea44918b558"
 [patch.crates-io.cranelift-wasm]
 git = "https://github.com/mozilla-spidermonkey/wasmtime"
 rev = "3334d92350da40b90d2529c147db3ea44918b558"
+
+# Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
+[patch.crates-io.autocfg]
+path = "third_party/rust/autocfg"
+
+[patch.crates-io.autocfg01]
+path = "third_party/rust/autocfg-0.1.6"
+package = "autocfg"
