@@ -244,7 +244,7 @@ const AddonCardListenerHandler = new Proxy(
           elements = document.querySelectorAll(
             `${cardSelector}, ${cardSelector} addon-details`
           );
-        } else {
+        } else if (name == "onUpdateModeChanged") {
           elements = document.querySelectorAll("addon-card");
         }
 
