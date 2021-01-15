@@ -112,6 +112,10 @@ mochitest-browser-chrome:
     treeherder-symbol: M(bc)
     schedules-component: mochitest-browser-chrome
     loopback-video: true
+    variants:
+        by-test-platform:
+            linux.*64-.*/opt: ['fission', 'a11y-checks']
+            default: ['fission']
     fission-run-on-projects:
         by-test-platform:
             linux.*64(-qr)?/debug: ['trunk']
@@ -207,6 +211,10 @@ mochitest-devtools-chrome:
     schedules-component: mochitest-browser-chrome
     treeherder-symbol: M(dt)
     loopback-video: true
+    variants:
+        by-test-platform:
+            linux.*64-.*/opt: ['fission', 'a11y-checks']
+            default: ['fission']
     fission-run-on-projects:
         by-test-platform:
             linux.*64(-qr)?/debug: ['trunk']
