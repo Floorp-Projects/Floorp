@@ -3755,18 +3755,6 @@ class LDynamicImport : public LCallInstructionHelper<1, BOX_PIECES, 0> {
   const MDynamicImport* mir() const { return mir_->toDynamicImport(); }
 };
 
-class LLambdaForSingleton : public LCallInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(LambdaForSingleton)
-
-  explicit LLambdaForSingleton(const LAllocation& envChain)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, envChain);
-  }
-  const LAllocation* environmentChain() { return getOperand(0); }
-  const MLambda* mir() const { return mir_->toLambda(); }
-};
-
 class LLambda : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(Lambda)
