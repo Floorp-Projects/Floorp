@@ -7863,6 +7863,19 @@ void CodeGenerator::visitMinMaxI(LMinMaxI* ins) {
   }
 }
 
+void CodeGenerator::visitMinMaxArrayI(LMinMaxArrayI* ins) {
+  Register array = ToRegister(ins->array());
+  Register output = ToRegister(ins->output());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register temp3 = ToRegister(ins->temp3());
+  bool isMax = ins->isMax();
+
+  Label bail;
+  masm.minMaxArrayInt32(array, output, temp1, temp2, temp3, isMax, &bail);
+  bailoutFrom(&bail, ins->snapshot());
+}
+
 void CodeGenerator::visitAbsI(LAbsI* ins) {
   Register input = ToRegister(ins->input());
   MOZ_ASSERT(input == ToRegister(ins->output()));

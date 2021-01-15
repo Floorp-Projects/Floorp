@@ -1271,6 +1271,13 @@ void LIRGenerator::visitMinMax(MMinMax* ins) {
   defineReuseInput(lir, ins, 0);
 }
 
+void LIRGenerator::visitMinMaxArray(MMinMaxArray* ins) {
+  LMinMaxArrayI* lir = new (alloc())
+      LMinMaxArrayI(useRegisterAtStart(ins->array()), temp(), temp(), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitAbs(MAbs* ins) {
   MDefinition* num = ins->input();
   MOZ_ASSERT(IsNumberType(num->type()));
