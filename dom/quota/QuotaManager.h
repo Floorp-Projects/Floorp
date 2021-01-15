@@ -378,7 +378,7 @@ class QuotaManager final : public BackgroundThreadObject {
   void StartIdleMaintenance() {
     AssertIsOnOwningThread();
 
-    for (auto& client : mClients) {
+    for (const auto& client : *mClients) {
       client->StartIdleMaintenance();
     }
   }
@@ -386,7 +386,7 @@ class QuotaManager final : public BackgroundThreadObject {
   void StopIdleMaintenance() {
     AssertIsOnOwningThread();
 
-    for (auto& client : mClients) {
+    for (const auto& client : *mClients) {
       client->StopIdleMaintenance();
     }
   }
@@ -395,10 +395,7 @@ class QuotaManager final : public BackgroundThreadObject {
     mQuotaMutex.AssertCurrentThreadOwns();
   }
 
-  nsIThread* IOThread() {
-    NS_ASSERTION(mIOThread, "This should never be null!");
-    return mIOThread;
-  }
+  nsIThread* IOThread() { return mIOThread->get(); }
 
   Client* GetClient(Client::Type aClientType);
 
@@ -408,20 +405,20 @@ class QuotaManager final : public BackgroundThreadObject {
 
   const nsString& GetStorageName() const { return mStorageName; }
 
-  const nsString& GetStoragePath() const { return mStoragePath; }
+  const nsString& GetStoragePath() const { return *mStoragePath; }
 
   const nsString& GetStoragePath(PersistenceType aPersistenceType) const {
     if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-      return mPermanentStoragePath;
+      return *mPermanentStoragePath;
     }
 
     if (aPersistenceType == PERSISTENCE_TYPE_TEMPORARY) {
-      return mTemporaryStoragePath;
+      return *mTemporaryStoragePath;
     }
 
     MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
 
-    return mDefaultStoragePath;
+    return *mDefaultStoragePath;
   }
 
   uint64_t GetGroupLimit() const;
@@ -573,7 +570,7 @@ class QuotaManager final : public BackgroundThreadObject {
     AssertIsOnIOThread();
 
     for (Client::Type type : AllClientTypes()) {
-      mClients[type]->ReleaseIOThreadObjects();
+      (*mClients)[type]->ReleaseIOThreadObjects();
     }
   }
 
@@ -587,12 +584,12 @@ class QuotaManager final : public BackgroundThreadObject {
                                const nsACString& aStepDescription);
 
   // Thread on which IO is performed.
-  nsCOMPtr<nsIThread> mIOThread;
+  LazyInitializedOnceNotNull<const nsCOMPtr<nsIThread>> mIOThread;
 
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
 
   // A timer that gets activated at shutdown to ensure we close all storages.
-  nsCOMPtr<nsITimer> mShutdownTimer;
+  LazyInitializedOnceNotNull<const nsCOMPtr<nsITimer>> mShutdownTimer;
 
   EnumeratedArray<Client::Type, Client::TYPE_MAX, nsCString> mShutdownSteps;
   LazyInitializedOnce<const TimeStamp> mShutdownStartedAt;
@@ -644,20 +641,22 @@ class QuotaManager final : public BackgroundThreadObject {
 
   // This array is populated at initialization time and then never modified, so
   // it can be iterated on any thread.
-  AutoTArray<RefPtr<Client>, Client::TYPE_MAX> mClients;
+  LazyInitializedOnce<const AutoTArray<RefPtr<Client>, Client::TYPE_MAX>>
+      mClients;
 
-  AutoTArray<Client::Type, Client::TYPE_MAX> mAllClientTypes;
-  AutoTArray<Client::Type, Client::TYPE_MAX> mAllClientTypesExceptLS;
+  using ClientTypesArray = AutoTArray<Client::Type, Client::TYPE_MAX>;
+  LazyInitializedOnce<const ClientTypesArray> mAllClientTypes;
+  LazyInitializedOnce<const ClientTypesArray> mAllClientTypesExceptLS;
 
   InitializationInfo mInitializationInfo;
 
-  nsString mBasePath;
-  nsString mStorageName;
-  nsString mIndexedDBPath;
-  nsString mStoragePath;
-  nsString mPermanentStoragePath;
-  nsString mTemporaryStoragePath;
-  nsString mDefaultStoragePath;
+  const nsString mBasePath;
+  const nsString mStorageName;
+  LazyInitializedOnce<const nsString> mIndexedDBPath;
+  LazyInitializedOnce<const nsString> mStoragePath;
+  LazyInitializedOnce<const nsString> mPermanentStoragePath;
+  LazyInitializedOnce<const nsString> mTemporaryStoragePath;
+  LazyInitializedOnce<const nsString> mDefaultStoragePath;
 
   uint64_t mTemporaryStorageLimit;
   uint64_t mTemporaryStorageUsage;
