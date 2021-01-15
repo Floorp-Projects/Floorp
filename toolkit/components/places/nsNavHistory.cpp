@@ -19,7 +19,6 @@
 #include "DateTimeFormat.h"
 #include "History.h"
 #include "Helpers.h"
-#include "NotifyRankingChanged.h"
 
 #include "nsTArray.h"
 #include "nsCollationCID.h"
@@ -223,20 +222,13 @@ class FixAndDecayFrecencyRunnable final : public Runnable {
         mDecayRate(aDecayRate),
         mDecayReason(mozIStorageStatementCallback::REASON_FINISHED) {}
 
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is marked
-  // MOZ_CAN_RUN_SCRIPT.  See bug 1535398.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD Run() override {
+  NS_IMETHOD
+  Run() override {
     if (NS_IsMainThread()) {
       nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
       NS_ENSURE_STATE(navHistory);
 
-      navHistory->DecayFrecencyCompleted();
-
-      if (mozIStorageStatementCallback::REASON_FINISHED == mDecayReason) {
-        NotifyRankingChanged().Run();
-      }
-
+      navHistory->DecayFrecencyCompleted(mDecayReason);
       return NS_OK;
     }
 
@@ -607,6 +599,42 @@ void nsNavHistory::UpdateDaysOfHistory(PRTime visitTime) {
   if (visitTime > mLastCachedEndOfDay || visitTime < mLastCachedStartOfDay) {
     mDaysOfHistory = -1;
   }
+}
+
+void nsNavHistory::NotifyFrecencyChanged(const nsACString& aSpec,
+                                         int32_t aNewFrecency,
+                                         const nsACString& aGUID, bool aHidden,
+                                         PRTime aLastVisitDate) {
+  MOZ_ASSERT(!aGUID.IsEmpty());
+
+  nsCOMPtr<nsIURI> uri;
+  Unused << NS_NewURI(getter_AddRefs(uri), aSpec);
+  // We cannot assert since some automated tests are checking this path.
+  NS_WARNING_ASSERTION(uri,
+                       "Invalid URI in nsNavHistory::NotifyFrecencyChanged");
+  // Notify a frecency change only if we have a valid uri, otherwise
+  // the observer couldn't gather any useful data from the notification.
+  if (!uri) {
+    return;
+  }
+  NOTIFY_OBSERVERS(
+      mCanNotify, mObservers, nsINavHistoryObserver,
+      OnFrecencyChanged(uri, aNewFrecency, aGUID, aHidden, aLastVisitDate));
+}
+
+void nsNavHistory::NotifyManyFrecenciesChanged() {
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
+                   OnManyFrecenciesChanged());
+}
+
+void nsNavHistory::DispatchFrecencyChangedNotification(
+    const nsACString& aSpec, int32_t aNewFrecency, const nsACString& aGUID,
+    bool aHidden, PRTime aLastVisitDate) const {
+  Unused << NS_DispatchToMainThread(
+      NewRunnableMethod<nsCString, int32_t, nsCString, bool, PRTime>(
+          "nsNavHistory::NotifyFrecencyChanged",
+          const_cast<nsNavHistory*>(this), &nsNavHistory::NotifyFrecencyChanged,
+          aSpec, aNewFrecency, aGUID, aHidden, aLastVisitDate));
 }
 
 NS_IMETHODIMP
@@ -2185,9 +2213,12 @@ nsNavHistory::DecayFrecency() {
   return target->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
-void nsNavHistory::DecayFrecencyCompleted() {
+void nsNavHistory::DecayFrecencyCompleted(uint16_t reason) {
   MOZ_ASSERT(mDecayFrecencyPendingCount > 0);
   mDecayFrecencyPendingCount--;
+  if (mozIStorageStatementCallback::REASON_FINISHED == reason) {
+    NotifyManyFrecenciesChanged();
+  }
 }
 
 bool nsNavHistory::IsFrecencyDecaying() const {
@@ -3236,10 +3267,11 @@ nsresult nsNavHistory::UpdateFrecency(int64_t aPlaceId) {
   nsCOMPtr<mozIStorageAsyncStatement> updateFrecencyStmt =
       mDB->GetAsyncStatement(
           "UPDATE moz_places "
-          "SET frecency = CALCULATE_FRECENCY(:page_id) "
+          "SET frecency = NOTIFY_FRECENCY("
+          "CALCULATE_FRECENCY(:page_id), url, guid, hidden, last_visit_date"
+          ") "
           "WHERE id = :page_id");
   NS_ENSURE_STATE(updateFrecencyStmt);
-  NS_DispatchToMainThread(new NotifyRankingChanged());
   nsresult rv = updateFrecencyStmt->BindInt64ByName("page_id"_ns, aPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<mozIStorageAsyncStatement> updateHiddenStmt = mDB->GetAsyncStatement(

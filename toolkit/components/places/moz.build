@@ -28,7 +28,6 @@ if CONFIG["MOZ_PLACES"]:
         "Database.h",
         "History.h",
         "INativePlacesEventCallback.h",
-        "NotifyRankingChanged.h",
         "PageIconProtocolHandler.h",
         "Shutdown.h",
         "SyncedBookmarksMirror.h",
