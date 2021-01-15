@@ -623,25 +623,17 @@ def vc_compiler_paths_for_version(
         }
 
 
-@template
-def vc_compiler_path_for(host_or_target):
-    @depends(host_or_target, vc_compiler_paths_for_version, when=host_is_windows)
-    def vc_compiler_path(target, paths):
-        vc_target = {
-            "x86": "x86",
-            "x86_64": "x64",
-            "arm": "arm",
-            "aarch64": "arm64",
-        }.get(target.cpu)
-        if not paths:
-            return
-        return paths.get(vc_target)
-
-    return vc_compiler_path
-
-
-vc_compiler_path = vc_compiler_path_for(target)
-host_vc_compiler_path = vc_compiler_path_for(host)
+@depends(target, vc_compiler_paths_for_version, when=host_is_windows)
+def vc_compiler_path(target, paths):
+    vc_target = {
+        "x86": "x86",
+        "x86_64": "x64",
+        "arm": "arm",
+        "aarch64": "arm64",
+    }.get(target.cpu)
+    if not paths:
+        return
+    return paths.get(vc_target)
 
 
 @dependable
@@ -651,98 +643,80 @@ def original_path():
     return environ["PATH"].split(os.pathsep)
 
 
-@template
-def toolchain_search_path_for(host_or_target):
-    arch_alias, vc_path = {
-        host: ("host", host_vc_compiler_path),
-        target: ("target", vc_compiler_path),
-    }[host_or_target]
+@depends(
+    vc_compiler_path,
+    original_path,
+    developer_options,
+    mozbuild_state_path,
+)
+@imports("os")
+@imports(_from="os", _import="environ")
+def toolchain_search_path(
+    vc_compiler_path,
+    original_path,
+    developer_options,
+    mozbuild_state_path,
+):
+    result = list(original_path)
 
-    @depends(
-        dependable(arch_alias),
-        vc_path,
-        original_path,
-        developer_options,
-        mozbuild_state_path,
-    )
-    @imports("os")
-    @imports(_from="os", _import="environ")
-    def toolchain_search_path(
-        arch_alias,
-        vc_compiler_path,
-        original_path,
-        developer_options,
-        mozbuild_state_path,
-    ):
-        result = list(original_path)
+    if vc_compiler_path:
+        # The second item, if there is one, is necessary to have in $PATH for
+        # Windows to load the required DLLs from there.
+        if len(vc_compiler_path) > 1:
+            environ["PATH"] = os.pathsep.join(result + vc_compiler_path[1:])
 
-        if vc_compiler_path:
-            # The second item, if there is one, is necessary to have in $PATH for
-            # Windows to load the required DLLs from there.
-            if len(vc_compiler_path) > 1:
-                environ["PATH"] = os.pathsep.join(result + vc_compiler_path[1:])
+        # The first item is where the programs are going to be
+        result.append(vc_compiler_path[0])
 
-            # The first item is where the programs are going to be
-            result.append(vc_compiler_path[0])
+    # Also add in the location to which `mach bootstrap` or
+    # `mach artifact toolchain` installs clang, cbindgen, etc.
+    bootstrapped = [
+        os.path.join(mozbuild_state_path, *rest)
+        for rest in (
+            ["clang", "bin"],
+            ["cbindgen"],
+            ["dump_syms"],
+            ["nasm"],
+            ["lucetc"],
+            ["sccache"],
+        )
+    ]
 
-        # Also add in the location to which `mach bootstrap` or
-        # `mach artifact toolchain` installs clang, cbindgen, etc.
-        bootstrapped = [
-            os.path.join(mozbuild_state_path, *rest)
-            for rest in (
-                ["clang", "bin"],
-                ["cbindgen"],
-                ["dump_syms"],
-                ["nasm"],
-                ["lucetc"],
-                ["sccache"],
-            )
-        ]
+    # Also add the rustup install directory for cargo/rustc.
+    cargo_home = environ.get("CARGO_HOME", "")
+    if cargo_home:
+        cargo_home = os.path.abspath(cargo_home)
+    else:
+        cargo_home = os.path.expanduser(os.path.join("~", ".cargo"))
+    rustup_path = os.path.join(cargo_home, "bin")
+    result.append(rustup_path)
 
-        # Also add the rustup install directory for cargo/rustc.
-        cargo_home = environ.get("CARGO_HOME", "")
-        if cargo_home:
-            cargo_home = os.path.abspath(cargo_home)
-        else:
-            cargo_home = os.path.expanduser(os.path.join("~", ".cargo"))
-        rustup_path = os.path.join(cargo_home, "bin")
-        result.append(rustup_path)
+    if developer_options:
+        log.debug(
+            "Prioritizing mozbuild state dir in toolchain path because "
+            "you are not building in release mode."
+        )
+        search_path = bootstrapped + result
+    else:
+        log.debug(
+            "Prioritizing system over mozbuild state dir in "
+            "toolchain path because you are building in "
+            "release mode."
+        )
+        search_path = result + bootstrapped
 
-        if developer_options:
-            log.debug(
-                "Prioritizing mozbuild state dir in {} toolchain path because "
-                "you are not building in release mode.".format(arch_alias)
-            )
-            search_path = bootstrapped + result
-        else:
-            log.debug(
-                "Prioritizing system over mozbuild state dir in {} "
-                "toolchain path because you are building in "
-                "release mode.".format(arch_alias)
-            )
-            search_path = result + bootstrapped
-
-        log.debug("Search path for {} toolchain: {}".format(arch_alias, search_path))
-        return search_path
-
-    return toolchain_search_path
-
-
-toolchain_search_path = toolchain_search_path_for(target)
-host_toolchain_search_path = toolchain_search_path_for(host)
+    log.debug("Search path for toolchain: {}".format(search_path))
+    return search_path
 
 
 # As a workaround until bug 1516228 and bug 1516253 are fixed, set the PATH
 # variable for the build to contain the toolchain search path.
-@depends(toolchain_search_path, host_toolchain_search_path)
+@depends(toolchain_search_path)
 @imports("os")
 @imports(_from="os", _import="environ")
-def altered_path(toolchain_search_path, host_toolchain_search_path):
+def altered_path(toolchain_search_path):
     path = environ["PATH"].split(os.pathsep)
     altered_path = list(toolchain_search_path)
-    for p in host_toolchain_search_path:
-        if p not in altered_path:
-            altered_path.append(p)
     for p in path:
         if p not in altered_path:
             altered_path.append(p)
@@ -1074,11 +1048,6 @@ def compiler(
     # HOST_CXX variables.
     provided_compiler = provided_program(var)
 
-    search_path = {
-        host: host_toolchain_search_path,
-        target: toolchain_search_path,
-    }[host_or_target]
-
     # Normally, we'd use `var` instead of `_var`, but the interaction with
     # old-configure complicates things, and for now, we a) can't take the plain
     # result from check_prog as CC/CXX/HOST_CC/HOST_CXX and b) have to let
@@ -1088,7 +1057,7 @@ def compiler(
         what=what,
         progs=default_compilers,
         input=provided_compiler.program,
-        paths=search_path,
+        paths=toolchain_search_path,
     )
 
     @depends(compiler, provided_compiler, compiler_wrapper, host_or_target, macos_sdk)
