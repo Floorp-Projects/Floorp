@@ -312,39 +312,40 @@ nsresult nsJSThunk::EvaluateScript(
 
   if (NS_FAILED(rv) || !(v.isString() || v.isUndefined())) {
     return NS_ERROR_MALFORMED_URI;
-  } else if (v.isUndefined()) {
+  }
+  if (v.isUndefined()) {
     return NS_ERROR_DOM_RETVAL_UNDEFINED;
-  } else {
-    MOZ_ASSERT(rv != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW,
-               "How did we get a non-undefined return value?");
-    nsAutoJSString result;
-    if (!result.init(cx, v)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  }
+  MOZ_ASSERT(rv != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW,
+             "How did we get a non-undefined return value?");
+  nsAutoJSString result;
+  if (!result.init(cx, v)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    char* bytes;
-    uint32_t bytesLen;
-    constexpr auto isoCharset = "windows-1252"_ns;
-    constexpr auto utf8Charset = "UTF-8"_ns;
-    const nsLiteralCString* charset;
-    if (IsISO88591(result)) {
-      // For compatibility, if the result is ISO-8859-1, we use
-      // windows-1252, so that people can compatibly create images
-      // using javascript: URLs.
-      bytes = ToNewCString(result, mozilla::fallible);
-      bytesLen = result.Length();
-      charset = &isoCharset;
-    } else {
-      bytes = ToNewUTF8String(result, &bytesLen);
-      charset = &utf8Charset;
-    }
-    aChannel->SetContentCharset(*charset);
-    if (bytes)
-      rv = NS_NewByteInputStream(getter_AddRefs(mInnerStream),
-                                 mozilla::Span(bytes, bytesLen),
-                                 NS_ASSIGNMENT_ADOPT);
-    else
-      rv = NS_ERROR_OUT_OF_MEMORY;
+  char* bytes;
+  uint32_t bytesLen;
+  constexpr auto isoCharset = "windows-1252"_ns;
+  constexpr auto utf8Charset = "UTF-8"_ns;
+  const nsLiteralCString* charset;
+  if (IsISO88591(result)) {
+    // For compatibility, if the result is ISO-8859-1, we use
+    // windows-1252, so that people can compatibly create images
+    // using javascript: URLs.
+    bytes = ToNewCString(result, mozilla::fallible);
+    bytesLen = result.Length();
+    charset = &isoCharset;
+  } else {
+    bytes = ToNewUTF8String(result, &bytesLen);
+    charset = &utf8Charset;
+  }
+  aChannel->SetContentCharset(*charset);
+  if (bytes) {
+    rv = NS_NewByteInputStream(getter_AddRefs(mInnerStream),
+                               mozilla::Span(bytes, bytesLen),
+                               NS_ASSIGNMENT_ADOPT);
+  } else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
   return rv;

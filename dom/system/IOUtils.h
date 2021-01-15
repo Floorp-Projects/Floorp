@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_IOUtils__
 #define mozilla_dom_IOUtils__
 
+#include "js/Utility.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Buffer.h"
@@ -70,7 +71,7 @@ class IOUtils final {
 
   static already_AddRefed<Promise> WriteUTF8(GlobalObject& aGlobal,
                                              const nsAString& aPath,
-                                             const nsAString& aString,
+                                             const nsACString& aString,
                                              const WriteOptions& aOptions);
 
   static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
@@ -107,6 +108,19 @@ class IOUtils final {
 
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath);
+
+  class JsBuffer;
+
+  /**
+   * The kind of buffer to allocate.
+   *
+   * This controls what kind of JS object (a JSString or a Uint8Array) is
+   * returned by |ToJSValue()|.
+   */
+  enum class BufferKind {
+    String,
+    Uint8Array,
+  };
 
  private:
   ~IOUtils() = default;
@@ -153,7 +167,7 @@ class IOUtils final {
    * Resolves |aPromise| with an appropriate JS value for |aValue|.
    */
   template <typename T>
-  static void ResolveJSPromise(Promise* aPromise, const T& aValue);
+  static void ResolveJSPromise(Promise* aPromise, T&& aValue);
   /**
    * Rejects |aPromise| with an appropriate |DOMException| describing |aError|.
    */
@@ -167,14 +181,17 @@ class IOUtils final {
    *                    otherwise attempt to read the whole file.
    * @param aDecompress If true, decompress the bytes read from disk before
    *                    returning the result to the caller.
+   * @param aBufferKind The kind of buffer to allocate.
    *
-   * @return A byte array of the entire (decompressed) file contents, or an
+   * @return A buffer containing the entire (decompressed) file contents, or an
    *         error.
    */
-  static Result<nsTArray<uint8_t>, IOError> ReadSync(
-      nsIFile* aFile, const Maybe<uint32_t>& aMaxBytes, const bool aDecompress);
+  static Result<JsBuffer, IOError> ReadSync(nsIFile* aFile,
+                                            const Maybe<uint32_t>& aMaxBytes,
+                                            const bool aDecompress,
+                                            BufferKind aBufferKind);
 
-  /**
+  /*
    * Attempts to read the entire file at |aPath| as a UTF-8 string.
    *
    * @param aFile       The location of the file.
@@ -184,7 +201,7 @@ class IOUtils final {
    * @return The (decompressed) contents of the file re-encoded as a UTF-16
    *         string.
    */
-  static Result<nsString, IOError> ReadUTF8Sync(nsIFile* aFile,
+  static Result<JsBuffer, IOError> ReadUTF8Sync(nsIFile* aFile,
                                                 const bool aDecompress);
 
   /**
@@ -201,22 +218,6 @@ class IOUtils final {
    */
   static Result<uint32_t, IOError> WriteSync(
       nsIFile* aFile, const Span<const uint8_t>& aByteArray,
-      const InternalWriteOpts& aOptions);
-
-  /**
-   * Attempt to write the entirety of |aUTF8String| to the file at |aFile|.
-   * This may occur by writing to an intermediate destination and performing a
-   * move, depending on |aOptions|.
-   *
-   * @param aFile The location of the file.
-   * @param aByteArray The data to write to the file.
-   * @param aOptions Options to modify the way the write is completed.
-   *
-   * @return The number of bytes written to the file, or an error if the write
-   *         failed or was incomplete.
-   */
-  static Result<uint32_t, IOError> WriteUTF8Sync(
-      nsIFile* aFile, const nsCString& aUTF8String,
       const InternalWriteOpts& aOptions);
 
   /**
@@ -463,8 +464,8 @@ class IOUtils::MozLZ4 {
    * Checks |aFileContents| for the correct file header, and returns the
    * decompressed content.
    */
-  static Result<nsTArray<uint8_t>, IOError> Decompress(
-      Span<const uint8_t> aFileContents);
+  static Result<IOUtils::JsBuffer, IOError> Decompress(
+      Span<const uint8_t> aFileContents, IOUtils::BufferKind);
 };
 
 class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {
@@ -474,6 +475,111 @@ class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {
 
  private:
   virtual ~IOUtilsShutdownBlocker() = default;
+};
+
+/**
+ * A buffer that is allocated inside one of JS heaps so that it can be converted
+ * to a JSString or Uint8Array object with at most one copy in the worst case.
+ */
+class IOUtils::JsBuffer final {
+ public:
+  /**
+   * Create a new buffer of the given kind with the requested capacity.
+   *
+   * @param aBufferKind The kind of buffer to create (either a string or an
+   *                    array).
+   * @param aCapacity The capacity of the buffer.
+   *
+   * @return Either a successfully created buffer or an error if it could not be
+   * allocated.
+   */
+  static Result<JsBuffer, IOUtils::IOError> Create(
+      IOUtils::BufferKind aBufferKind, size_t aCapacity);
+
+  /**
+   * Create a new, empty buffer.
+   *
+   * This operation cannot fail.
+   *
+   * @param aBufferKind The kind of buffer to create (either a string or an
+   *                    array).
+   *
+   * @return An empty JsBuffer.
+   */
+  static JsBuffer CreateEmpty(IOUtils::BufferKind aBufferKind);
+
+  JsBuffer(const JsBuffer&) = delete;
+  JsBuffer(JsBuffer&& aOther) noexcept;
+  JsBuffer& operator=(const JsBuffer&) = delete;
+  JsBuffer& operator=(JsBuffer&& aOther) noexcept;
+
+  size_t Length() { return mLength; }
+  char* Elements() { return mBuffer.get(); }
+  void SetLength(size_t aNewLength) {
+    MOZ_RELEASE_ASSERT(aNewLength <= mCapacity);
+    mLength = aNewLength;
+  }
+
+  /**
+   * Return a span for writing to the buffer.
+   *
+   * |SetLength| should be called after the buffer has been written to.
+   *
+   * @returns A span for writing to. The size of the span is the entire
+   *          allocated capacity.
+   */
+  Span<char> BeginWriting() {
+    MOZ_RELEASE_ASSERT(mBuffer.get());
+    return Span(mBuffer.get(), mCapacity);
+  }
+
+  /**
+   * Return a span for reading from.
+   *
+   * @returns A span for reading form. The size of the span is the set length
+   *          of the buffer.
+   */
+  Span<const char> BeginReading() const {
+    MOZ_RELEASE_ASSERT(mBuffer.get() || mLength == 0);
+    return Span(mBuffer.get(), mLength);
+  }
+
+  /**
+   * Consume the JsBuffer and convert it into a JSString.
+   *
+   * NOTE: This method asserts the buffer was allocated as a string buffer.
+   *
+   * @param aBuffer The buffer to convert to a string. After this call, the
+   *                buffer will be invaldated and |IntoString| cannot be called
+   *                again.
+   *
+   * @returns A JSString with the contents of |aBuffer|.
+   */
+  static JSString* IntoString(JSContext* aCx, JsBuffer aBuffer);
+
+  /**
+   * Consume the JsBuffer and convert it into a Uint8Array.
+   *
+   * NOTE: This method asserts the buffer was allocated as an array buffer.
+   *
+   * @param aBuffer The buffer to convert to an array. After this call, the
+   *                buffer will be invalidated and |IntoUint8Array| cannot be
+   *                called again.
+   *
+   * @returns A JSBuffer
+   */
+  static JSObject* IntoUint8Array(JSContext* aCx, JsBuffer aBuffer);
+
+  friend MOZ_MUST_USE bool ToJSValue(JSContext* aCx, JsBuffer&& aBuffer,
+                                     JS::MutableHandle<JS::Value> aValue);
+
+ private:
+  IOUtils::BufferKind mBufferKind;
+  size_t mCapacity;
+  size_t mLength;
+  JS::UniqueChars mBuffer;
+
+  JsBuffer(BufferKind aBufferKind, size_t aCapacity);
 };
 
 }  // namespace dom

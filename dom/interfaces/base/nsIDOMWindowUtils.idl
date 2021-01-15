@@ -1287,6 +1287,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * issues, and NS_ERROR_INVALID_ARG for coordinates that are outside
    * this window.
    */
+  [can_run_script]
   boolean selectAtPoint(in float aX,
                         in float aY,
                         in unsigned long aSelectBehavior);

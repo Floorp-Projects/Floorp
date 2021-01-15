@@ -788,3 +788,42 @@ add_task(async function testPromptOnBackgroundUpdateCheck() {
   await closeView(win);
   await extension.unload();
 });
+
+add_task(async function testNoUpdateAvailableOnUnrelatedAddonCards() {
+  let idNoUpdate = "no-update@mochi.test";
+
+  let extensionNoUpdate = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      name: "TestAddonNoUpdate",
+      applications: { gecko: { id: idNoUpdate } },
+    },
+  });
+  await extensionNoUpdate.startup();
+
+  let win = await loadInitialView("extension");
+
+  let cardNoUpdate = getAddonCard(win, idNoUpdate);
+  ok(cardNoUpdate, `Got AddonCard for ${idNoUpdate}`);
+
+  // Assert that there is not an update badge
+  assertUpdateState({ card: cardNoUpdate, shown: false, expanded: false });
+
+  // Trigger a onNewInstall event by install another unrelated addon.
+  const XPI_URL = `${SECURE_TESTROOT}../xpinstall/amosigned.xpi`;
+  let install = await AddonManager.getInstallForURL(XPI_URL);
+  await AddonManager.installAddonFromAOM(
+    gBrowser.selectedBrowser,
+    win.document.documentURIObject,
+    install
+  );
+
+  // Cancel the install used to trigger the onNewInstall install event.
+  await install.cancel();
+  // Assert that the previously installed addon isn't marked with the
+  // update available badge after installing an unrelated addon.
+  assertUpdateState({ card: cardNoUpdate, shown: false, expanded: false });
+
+  await closeView(win);
+  await extensionNoUpdate.unload();
+});

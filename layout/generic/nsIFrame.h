@@ -2145,13 +2145,24 @@ class nsIFrame : public nsQueryFrame {
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus);
 
-  nsresult SelectByTypeAtPoint(nsPresContext* aPresContext,
-                               const nsPoint& aPoint,
-                               nsSelectionAmount aBeginAmountType,
-                               nsSelectionAmount aEndAmountType,
-                               uint32_t aSelectFlags);
+  /**
+   * Search for selectable content at point and attempt to select
+   * based on the start and end selection behaviours.
+   *
+   * @param aPresContext Presentation context
+   * @param aPoint Point at which selection will occur. Coordinates
+   * should be relative to this frame.
+   * @param aBeginAmountType, aEndAmountType Selection behavior, see
+   * nsIFrame for definitions.
+   * @param aSelectFlags Selection flags defined in nsIFrame.h.
+   * @return success or failure at finding suitable content to select.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult
+  SelectByTypeAtPoint(nsPresContext* aPresContext, const nsPoint& aPoint,
+                      nsSelectionAmount aBeginAmountType,
+                      nsSelectionAmount aEndAmountType, uint32_t aSelectFlags);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult PeekBackwardAndForward(
+  MOZ_CAN_RUN_SCRIPT nsresult PeekBackwardAndForward(
       nsSelectionAmount aAmountBack, nsSelectionAmount aAmountForward,
       int32_t aStartPos, bool aJumpLines, uint32_t aSelectFlags);
 
@@ -2168,10 +2179,9 @@ class nsIFrame : public nsQueryFrame {
   HandlePress(nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
               nsEventStatus* aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
-                                 mozilla::WidgetGUIEvent* aEvent,
-                                 nsEventStatus* aEventStatus,
-                                 bool aControlHeld);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD HandleMultiplePress(
+      nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
+      nsEventStatus* aEventStatus, bool aControlHeld);
 
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,

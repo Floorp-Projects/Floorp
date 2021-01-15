@@ -1297,9 +1297,108 @@ mozilla::ipc::IPCResult ContentParent::RecvUngrabPointer(
 #endif
 }
 
+bool ContentParent::ValidatePrincipal(
+    nsIPrincipal* aPrincipal,
+    const EnumSet<ValidatePrincipalOptions>& aOptions) {
+  // If there is no principal, then there is nothing to validate!
+  if (!aPrincipal) {
+    return aOptions.contains(ValidatePrincipalOptions::AllowNullPtr);
+  }
+
+  // We currently do not track relationships between specific null principals
+  // and content processes, so we can not validate much here - just allow all
+  // null principals we see because they are generally safe anyway!
+  if (aPrincipal->GetIsNullPrincipal()) {
+    return true;
+  }
+
+  // Only allow the system principal if the passed in options flags
+  // request permitting the system principal.
+  if (aPrincipal->IsSystemPrincipal()) {
+    return aOptions.contains(ValidatePrincipalOptions::AllowSystem);
+  }
+
+  // XXXckerschb: we should eliminate the resource carve-out here and always
+  // validate the Principal, see Bug 1686200: Investigate Principal for pdf.js
+  if (aPrincipal->SchemeIs("resource")) {
+    return true;
+  }
+
+  // Validate each inner principal individually, allowing us to catch expanded
+  // principals containing the system principal, etc.
+  if (aPrincipal->GetIsExpandedPrincipal()) {
+    if (!aOptions.contains(ValidatePrincipalOptions::AllowExpanded)) {
+      return false;
+    }
+    // FIXME: There are more constraints on expanded principals in-practice,
+    // such as the structure of extension expanded principals. This may need
+    // to be investigated more in the future.
+    nsCOMPtr<nsIExpandedPrincipal> expandedPrincipal =
+        do_QueryInterface(aPrincipal);
+    const auto& allowList = expandedPrincipal->AllowList();
+    for (const auto& innerPrincipal : allowList) {
+      if (!ValidatePrincipal(innerPrincipal, aOptions)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // A URI with a file:// scheme can never load in a non-file content process
+  // due to sandboxing.
+  if (aPrincipal->SchemeIs("file")) {
+    return mRemoteType == FILE_REMOTE_TYPE;
+  }
+
+  if (aPrincipal->SchemeIs("about")) {
+    uint32_t flags = 0;
+    if (NS_FAILED(aPrincipal->GetAboutModuleFlags(&flags))) {
+      return false;
+    }
+
+    // Block principals for about: URIs which can't load in this process.
+    if (!(flags & (nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
+                   nsIAboutModule::URI_MUST_LOAD_IN_CHILD))) {
+      return false;
+    }
+    if (flags & nsIAboutModule::URI_MUST_LOAD_IN_EXTENSION_PROCESS) {
+      return mRemoteType == EXTENSION_REMOTE_TYPE;
+    }
+    return true;
+  }
+
+  if (RemoteTypePrefix(mRemoteType) != FISSION_WEB_REMOTE_TYPE) {
+    return true;
+  }
+
+  // Web content can contain extension content frames, so a content process may
+  // send us an extension's principal.
+  auto* addonPolicy = BasePrincipal::Cast(aPrincipal)->AddonPolicy();
+  if (addonPolicy) {
+    return true;
+  }
+
+  // Ensure that the expected site-origin matches the one specified by our
+  // mRemoteTypeIsolationPrincipal.
+  nsAutoCString siteOriginNoSuffix;
+  if (NS_FAILED(aPrincipal->GetSiteOriginNoSuffix(siteOriginNoSuffix))) {
+    return false;
+  }
+  nsAutoCString remoteTypeSiteOriginNoSuffix;
+  if (NS_FAILED(mRemoteTypeIsolationPrincipal->GetSiteOriginNoSuffix(
+          remoteTypeSiteOriginNoSuffix))) {
+    return false;
+  }
+
+  return remoteTypeSiteOriginNoSuffix.Equals(siteOriginNoSuffix);
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvRemovePermission(
     const IPC::Principal& aPrincipal, const nsCString& aPermissionType,
     nsresult* aRv) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   *aRv = Permissions::RemovePermission(aPrincipal, aPermissionType);
   return IPC_OK();
 }
@@ -3148,6 +3247,11 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
     const IPC::Principal& aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType,
     const int32_t& aWhichClipboard) {
+  if (!ValidatePrincipal(aRequestingPrincipal,
+                         {ValidatePrincipalOptions::AllowNullPtr})) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
+
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   NS_ENSURE_SUCCESS(rv, IPC_OK());
@@ -4376,12 +4480,18 @@ mozilla::ipc::IPCResult ContentParent::RecvCloseAlert(const nsString& aName) {
 
 mozilla::ipc::IPCResult ContentParent::RecvDisableNotifications(
     const IPC::Principal& aPrincipal) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   Unused << Notification::RemovePermission(aPrincipal);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvOpenNotificationSettings(
     const IPC::Principal& aPrincipal) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   Unused << Notification::OpenSettings(aPrincipal);
   return IPC_OK();
 }
@@ -4929,6 +5039,9 @@ bool ContentParent::DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor) {
 
 mozilla::ipc::IPCResult ContentParent::RecvSetOfflinePermission(
     const Principal& aPrincipal) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
       components::OfflineCacheUpdate::Service();
   if (!updateService) {
@@ -5263,6 +5376,11 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
     nsIReferrerInfo* aReferrerInfo, const OriginAttributes& aOriginAttributes,
     CreateWindowResolver&& aResolve) {
+  if (!ValidatePrincipal(aTriggeringPrincipal,
+                         {ValidatePrincipalOptions::AllowSystem})) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
+
   nsresult rv = NS_OK;
   CreatedWindowInfo cwi;
 
@@ -5575,6 +5693,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyBenchmarkResult(
 mozilla::ipc::IPCResult ContentParent::RecvNotifyPushObservers(
     const nsCString& aScope, const IPC::Principal& aPrincipal,
     const nsString& aMessageId) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
@@ -5583,6 +5704,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyPushObservers(
 mozilla::ipc::IPCResult ContentParent::RecvNotifyPushObserversWithData(
     const nsCString& aScope, const IPC::Principal& aPrincipal,
     const nsString& aMessageId, nsTArray<uint8_t>&& aData) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId,
                                    Some(std::move(aData)));
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
@@ -5592,6 +5716,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyPushObserversWithData(
 mozilla::ipc::IPCResult
 ContentParent::RecvNotifyPushSubscriptionChangeObservers(
     const nsCString& aScope, const IPC::Principal& aPrincipal) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   PushSubscriptionChangeDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
@@ -5600,6 +5727,9 @@ ContentParent::RecvNotifyPushSubscriptionChangeObservers(
 mozilla::ipc::IPCResult ContentParent::RecvPushError(
     const nsCString& aScope, const IPC::Principal& aPrincipal,
     const nsString& aMessage, const uint32_t& aFlags) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   PushErrorDispatcher dispatcher(aScope, aPrincipal, aMessage, aFlags);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
@@ -5608,6 +5738,9 @@ mozilla::ipc::IPCResult ContentParent::RecvPushError(
 mozilla::ipc::IPCResult
 ContentParent::RecvNotifyPushSubscriptionModifiedObservers(
     const nsCString& aScope, const IPC::Principal& aPrincipal) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
   return IPC_OK();
@@ -5678,6 +5811,9 @@ void ContentParent::BroadcastBlobURLUnregistration(
 mozilla::ipc::IPCResult ContentParent::RecvStoreAndBroadcastBlobURLRegistration(
     const nsCString& aURI, const IPCBlob& aBlob, const Principal& aPrincipal,
     const Maybe<nsID>& aAgentClusterId) {
+  if (!ValidatePrincipal(aPrincipal, {ValidatePrincipalOptions::AllowSystem})) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
   if (NS_WARN_IF(!blobImpl)) {
     return IPC_FAIL_NO_REASON(this);
@@ -5698,6 +5834,9 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreAndBroadcastBlobURLRegistration(
 mozilla::ipc::IPCResult
 ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
     const nsCString& aURI, const Principal& aPrincipal) {
+  if (!ValidatePrincipal(aPrincipal, {ValidatePrincipalOptions::AllowSystem})) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   BlobURLProtocolHandler::RemoveDataEntry(aURI, false /* Don't broadcast */);
   BroadcastBlobURLUnregistration(aURI, aPrincipal, this);
   mBlobURLs.RemoveElement(aURI);
@@ -6042,6 +6181,10 @@ PURLClassifierParent* ContentParent::AllocPURLClassifierParent(
 
 mozilla::ipc::IPCResult ContentParent::RecvPURLClassifierConstructor(
     PURLClassifierParent* aActor, const Principal& aPrincipal, bool* aSuccess) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
+
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActor);
   *aSuccess = false;
@@ -6051,6 +6194,9 @@ mozilla::ipc::IPCResult ContentParent::RecvPURLClassifierConstructor(
   if (!principal) {
     actor->ClassificationFailed();
     return IPC_OK();
+  }
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
   }
   return actor->StartClassify(principal, aSuccess);
 }
@@ -6218,6 +6364,9 @@ mozilla::ipc::IPCResult
 ContentParent::RecvAutomaticStorageAccessPermissionCanBeGranted(
     const Principal& aPrincipal,
     AutomaticStorageAccessPermissionCanBeGrantedResolver&& aResolver) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   aResolver(Document::AutomaticStorageAccessPermissionCanBeGranted(aPrincipal));
   return IPC_OK();
 }
@@ -6289,6 +6438,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCompleteAllowAccessFor(
 
 mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
     const Principal& aPrincipal) {
+  if (!ValidatePrincipal(aPrincipal)) {
+    return IPC_FAIL(this, "receiving unexpected principal");
+  }
   ContentBlockingUserInteraction::Observe(aPrincipal);
   return IPC_OK();
 }

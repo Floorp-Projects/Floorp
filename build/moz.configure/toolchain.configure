@@ -4,26 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-imply_option("--enable-release", mozilla_official)
-imply_option("--enable-release", depends_if("MOZ_AUTOMATION")(lambda x: True))
-
-option(
-    "--enable-release",
-    default=milestone.is_release_or_beta,
-    help="{Build|Do not build} with more conservative, release "
-    "engineering-oriented options.{ This may slow down builds.|}",
-)
-
-
-@depends("--enable-release")
-def developer_options(value):
-    if not value:
-        return True
-
-
-add_old_configure_assignment("DEVELOPER_OPTIONS", developer_options)
-set_config("DEVELOPER_OPTIONS", developer_options)
-
 # Code optimization
 # ==============================================================
 
@@ -643,126 +623,64 @@ def vc_compiler_paths_for_version(
         }
 
 
-@template
-def vc_compiler_path_for(host_or_target):
-    @depends(host_or_target, vc_compiler_paths_for_version, when=host_is_windows)
-    def vc_compiler_path(target, paths):
-        vc_target = {
-            "x86": "x86",
-            "x86_64": "x64",
-            "arm": "arm",
-            "aarch64": "arm64",
-        }.get(target.cpu)
-        if not paths:
-            return
-        return paths.get(vc_target)
-
-    return vc_compiler_path
+@depends(target, vc_compiler_paths_for_version, when=host_is_windows)
+def vc_compiler_path(target, paths):
+    vc_target = {
+        "x86": "x86",
+        "x86_64": "x64",
+        "arm": "arm",
+        "aarch64": "arm64",
+    }.get(target.cpu)
+    if not paths:
+        return
+    return paths.get(vc_target)
 
 
-vc_compiler_path = vc_compiler_path_for(target)
-host_vc_compiler_path = vc_compiler_path_for(host)
-
-
-@dependable
+@depends(vc_compiler_path, original_path)
 @imports("os")
 @imports(_from="os", _import="environ")
-def original_path():
-    return environ["PATH"].split(os.pathsep)
+def vc_toolchain_search_path(vc_compiler_path, original_path):
+    result = list(original_path)
+
+    if vc_compiler_path:
+        # The second item, if there is one, is necessary to have in $PATH for
+        # Windows to load the required DLLs from there.
+        if len(vc_compiler_path) > 1:
+            environ["PATH"] = os.pathsep.join(result + vc_compiler_path[1:])
+
+        # The first item is where the programs are going to be
+        result.append(vc_compiler_path[0])
+
+    return result
 
 
-@template
-def toolchain_search_path_for(host_or_target):
-    arch_alias, vc_path = {
-        host: ("host", host_vc_compiler_path),
-        target: ("target", vc_compiler_path),
-    }[host_or_target]
-
-    @depends(
-        dependable(arch_alias),
-        vc_path,
-        original_path,
-        developer_options,
-        mozbuild_state_path,
-    )
-    @imports("os")
-    @imports(_from="os", _import="environ")
-    def toolchain_search_path(
-        arch_alias,
-        vc_compiler_path,
-        original_path,
-        developer_options,
-        mozbuild_state_path,
-    ):
-        result = list(original_path)
-
-        if vc_compiler_path:
-            # The second item, if there is one, is necessary to have in $PATH for
-            # Windows to load the required DLLs from there.
-            if len(vc_compiler_path) > 1:
-                environ["PATH"] = os.pathsep.join(result + vc_compiler_path[1:])
-
-            # The first item is where the programs are going to be
-            result.append(vc_compiler_path[0])
-
-        # Also add in the location to which `mach bootstrap` or
-        # `mach artifact toolchain` installs clang, cbindgen, etc.
-        bootstrapped = [
-            os.path.join(mozbuild_state_path, *rest)
-            for rest in (
-                ["clang", "bin"],
-                ["cbindgen"],
-                ["dump_syms"],
-                ["nasm"],
-                ["lucetc"],
-                ["sccache"],
-            )
-        ]
-
-        # Also add the rustup install directory for cargo/rustc.
-        cargo_home = environ.get("CARGO_HOME", "")
-        if cargo_home:
-            cargo_home = os.path.abspath(cargo_home)
-        else:
-            cargo_home = os.path.expanduser(os.path.join("~", ".cargo"))
-        rustup_path = os.path.join(cargo_home, "bin")
-        result.append(rustup_path)
-
-        if developer_options:
-            log.debug(
-                "Prioritizing mozbuild state dir in {} toolchain path because "
-                "you are not building in release mode.".format(arch_alias)
-            )
-            search_path = bootstrapped + result
-        else:
-            log.debug(
-                "Prioritizing system over mozbuild state dir in {} "
-                "toolchain path because you are building in "
-                "release mode.".format(arch_alias)
-            )
-            search_path = result + bootstrapped
-
-        log.debug("Search path for {} toolchain: {}".format(arch_alias, search_path))
-        return search_path
-
-    return toolchain_search_path
+clang_search_path = bootstrap_search_path("clang", "bin")
 
 
-toolchain_search_path = toolchain_search_path_for(target)
-host_toolchain_search_path = toolchain_search_path_for(host)
+@depends(bootstrap_search_path("rustc", "bin", when="MOZ_AUTOMATION"), original_path)
+@imports("os")
+@imports(_from="os", _import="environ")
+def rust_search_path(rust_path, original_path):
+    result = list(rust_path or original_path)
+    # Also add the rustup install directory for cargo/rustc.
+    cargo_home = environ.get("CARGO_HOME", "")
+    if cargo_home:
+        cargo_home = os.path.abspath(cargo_home)
+    else:
+        cargo_home = os.path.expanduser(os.path.join("~", ".cargo"))
+    rustup_path = os.path.join(cargo_home, "bin")
+    result.append(rustup_path)
+    return result
 
 
 # As a workaround until bug 1516228 and bug 1516253 are fixed, set the PATH
 # variable for the build to contain the toolchain search path.
-@depends(toolchain_search_path, host_toolchain_search_path)
+@depends(vc_toolchain_search_path)
 @imports("os")
 @imports(_from="os", _import="environ")
-def altered_path(toolchain_search_path, host_toolchain_search_path):
+def altered_path(vc_toolchain_search_path):
     path = environ["PATH"].split(os.pathsep)
-    altered_path = list(toolchain_search_path)
-    for p in host_toolchain_search_path:
-        if p not in altered_path:
-            altered_path.append(p)
+    altered_path = list(vc_toolchain_search_path)
     for p in path:
         if p not in altered_path:
             altered_path.append(p)
@@ -794,7 +712,11 @@ def ccache(value):
 
 
 ccache = check_prog(
-    "CCACHE", progs=(), input=ccache, paths=toolchain_search_path, allow_missing=True
+    "CCACHE",
+    progs=(),
+    input=ccache,
+    paths=bootstrap_search_path("sccache"),
+    allow_missing=True,
 )
 
 option(env="CCACHE_PREFIX", nargs=1, help="Compiler prefix to use when using ccache")
@@ -1094,11 +1016,6 @@ def compiler(
     # HOST_CXX variables.
     provided_compiler = provided_program(var)
 
-    search_path = {
-        host: host_toolchain_search_path,
-        target: toolchain_search_path,
-    }[host_or_target]
-
     # Normally, we'd use `var` instead of `_var`, but the interaction with
     # old-configure complicates things, and for now, we a) can't take the plain
     # result from check_prog as CC/CXX/HOST_CC/HOST_CXX and b) have to let
@@ -1108,7 +1025,7 @@ def compiler(
         what=what,
         progs=default_compilers,
         input=provided_compiler.program,
-        paths=search_path,
+        paths=clang_search_path,
     )
 
     @depends(compiler, provided_compiler, compiler_wrapper, host_or_target, macos_sdk)
@@ -2006,7 +1923,9 @@ set_config("MOZ_FRAMEPTR_FLAGS", frame_pointer_flags)
 
 # nasm detection
 # ==============================================================
-nasm = check_prog("NASM", ["nasm"], allow_missing=True, paths=toolchain_search_path)
+nasm = check_prog(
+    "NASM", ["nasm"], allow_missing=True, paths=bootstrap_search_path("nasm")
+)
 
 
 @depends_if(nasm)
@@ -2516,7 +2435,7 @@ assembler = check_prog(
     input=provided_assembler.program,
     what="the assembler",
     progs=as_info.names,
-    paths=toolchain_search_path,
+    paths=vc_toolchain_search_path,
 )
 
 
@@ -2625,7 +2544,7 @@ llvm_config = check_prog(
     llvm_config,
     what="llvm-config",
     when="--enable-clang-plugin",
-    paths=toolchain_search_path,
+    paths=clang_search_path,
 )
 
 add_old_configure_assignment("LLVM_CONFIG", llvm_config)
@@ -2862,7 +2781,7 @@ def rc_names(c_compiler, toolchain_prefix):
     return ("llvm-rc",)
 
 
-check_prog("RC", rc_names, paths=toolchain_search_path, when=target_is_windows)
+check_prog("RC", rc_names, paths=clang_search_path, when=target_is_windows)
 
 
 @depends(toolchain_prefix, c_compiler)
@@ -2891,7 +2810,7 @@ def ar_config(toolchain_prefix, c_compiler):
     )
 
 
-ar = check_prog("AR", ar_config.names, paths=toolchain_search_path)
+ar = check_prog("AR", ar_config.names, paths=clang_search_path)
 
 add_old_configure_assignment("AR", ar)
 
@@ -2915,7 +2834,7 @@ def nm_names(toolchain_prefix, c_compiler):
     return names
 
 
-check_prog("NM", nm_names, paths=toolchain_search_path, when=target_is_linux)
+check_prog("NM", nm_names, paths=clang_search_path, when=target_is_linux)
 
 
 option("--enable-cpp-rtti", help="Enable C++ RTTI")

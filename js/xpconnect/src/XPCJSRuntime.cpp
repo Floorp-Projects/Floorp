@@ -2652,6 +2652,9 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
     case JSUseCounter::WASM:
       SetUseCounter(obj, eUseCounter_custom_JS_wasm);
       break;
+    case JSUseCounter::WASM_DUPLICATE_IMPORTS:
+      SetUseCounter(obj, eUseCounter_custom_JS_wasm_duplicate_imports);
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected JSUseCounter id");
   }
