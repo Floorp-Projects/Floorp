@@ -34,6 +34,7 @@ async function waitForProfileAndCloseTab() {
   });
 }
 var button;
+var dropmarker;
 
 add_task(async function setup() {
   info(
@@ -43,34 +44,35 @@ add_task(async function setup() {
     "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html"
   );
   await makeSureProfilerPopupIsEnabled();
-  button = document.getElementById("profiler-button");
+  button = document.getElementById("profiler-button-button");
+  dropmarker = document.getElementById("profiler-button-dropmarker");
 });
 
 add_task(async function click_icon() {
   info("Test that the profiler icon starts and captures a profile.");
 
-  ok(!button.hasAttribute("open"), "should start with the panel closed");
+  ok(!dropmarker.hasAttribute("open"), "should start with the panel closed");
   ok(!isActive(), "should start with the profiler inactive");
 
-  await EventUtils.synthesizeMouseAtCenter(button.icon, {});
+  button.click();
   ok(isActive(), "should have started the profiler");
 
-  await EventUtils.synthesizeMouseAtCenter(button.icon, {});
+  button.click();
   await waitForProfileAndCloseTab();
 });
 
 add_task(async function click_dropmarker() {
   info("Test that the profiler icon dropmarker opens the panel.");
 
-  ok(!button.hasAttribute("open"), "should start with the panel closed");
+  ok(!dropmarker.hasAttribute("open"), "should start with the panel closed");
   ok(!isActive(), "should start with the profiler inactive");
 
   const popupShownPromise = waitForProfilerPopupEvent("popupshown");
-  await EventUtils.synthesizeMouseAtCenter(button.dropmarker, {});
+  dropmarker.click();
   await popupShownPromise;
 
   info("Ensure the panel is open and the profiler still inactive.");
-  ok(button.getAttribute("open") == "true", "panel should be open");
+  ok(dropmarker.getAttribute("open") == "true", "panel should be open");
   ok(!isActive(), "profiler should still be inactive");
   await getElementByLabel(document, "Start Recording");
 
@@ -78,13 +80,13 @@ add_task(async function click_dropmarker() {
   const popupHiddenPromise = waitForProfilerPopupEvent("popuphidden");
   EventUtils.synthesizeKey("KEY_Escape");
   await popupHiddenPromise;
-  ok(!button.hasAttribute("open"), "panel should be closed");
+  ok(!dropmarker.hasAttribute("open"), "panel should be closed");
 });
 
 add_task(async function space_key() {
   info("Test that the Space key starts and captures a profile.");
 
-  ok(!button.hasAttribute("open"), "should start with the panel closed");
+  ok(!dropmarker.hasAttribute("open"), "should start with the panel closed");
   ok(!isActive(), "should start with the profiler inactive");
   forceFocus(button);
 
@@ -100,9 +102,16 @@ add_task(async function space_key() {
 add_task(async function enter_key() {
   info("Test that the Enter key starts and captures a profile.");
 
-  ok(!button.hasAttribute("open"), "should start with the panel closed");
+  ok(!dropmarker.hasAttribute("open"), "should start with the panel closed");
   ok(!isActive(), "should start with the profiler inactive");
   forceFocus(button);
+
+  const isMacOS = Services.appinfo.OS === "Darwin";
+  if (isMacOS) {
+    // On macOS, pressing Enter on a focused toolbarbutton does not fire a
+    // command event, so we do not expect Enter to start the profiler.
+    return;
+  }
 
   info("Pressing Enter should start the profiler.");
   EventUtils.synthesizeKey("KEY_Enter");
@@ -111,25 +120,4 @@ add_task(async function enter_key() {
   info("Pressing Enter again to capture the profile.");
   EventUtils.synthesizeKey("KEY_Enter");
   await waitForProfileAndCloseTab();
-});
-
-add_task(async function arrowDown_key() {
-  info("Test that ArrowDown key dropmarker opens the panel.");
-
-  ok(!button.hasAttribute("open"), "should start with the panel closed");
-  ok(!isActive(), "should start with the profiler inactive");
-  forceFocus(button);
-
-  info("Pressing the down arrow should open the panel.");
-  const popupShownPromise = waitForProfilerPopupEvent("popupshown");
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  await popupShownPromise;
-  ok(!isActive(), "profiler should still be inactive");
-  ok(button.getAttribute("open") == "true", "panel should be open");
-
-  info("Press Escape to close the panel.");
-  const popupHiddenPromise = waitForProfilerPopupEvent("popuphidden");
-  EventUtils.synthesizeKey("KEY_Escape");
-  await popupHiddenPromise;
-  ok(!button.hasAttribute("open"), "panel should be closed");
 });
