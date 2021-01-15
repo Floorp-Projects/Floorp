@@ -16,7 +16,6 @@ pub mod metrics;
 pub mod pings;
 pub mod private;
 
-pub mod dispatcher;
 pub mod ipc;
 
 #[cfg(test)]
