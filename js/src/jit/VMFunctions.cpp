@@ -1090,39 +1090,6 @@ bool CreateThisFromIon(JSContext* cx, HandleObject callee,
   return true;
 }
 
-bool GetDynamicNamePure(JSContext* cx, JSObject* envChain, JSString* str,
-                        Value* vp) {
-  // Lookup a string on the env chain, returning the value found through rval.
-  // This function is infallible, and cannot GC or invalidate.
-  // Returns false if the lookup could not be completed without GC.
-
-  AutoUnsafeCallWithABI unsafe;
-
-  JSAtom* atom;
-  if (str->isAtom()) {
-    atom = &str->asAtom();
-  } else {
-    atom = AtomizeString(cx, str);
-    if (!atom) {
-      cx->recoverFromOutOfMemory();
-      return false;
-    }
-  }
-
-  if (!frontend::IsIdentifier(atom) || frontend::IsKeyword(atom)) {
-    return false;
-  }
-
-  PropertyResult prop;
-  JSObject* scope = nullptr;
-  JSObject* pobj = nullptr;
-  if (LookupNameNoGC(cx, atom->asPropertyName(), envChain, &scope, &pobj,
-                     &prop)) {
-    return FetchNameNoGC(pobj, prop, vp);
-  }
-  return false;
-}
-
 void PostWriteBarrier(JSRuntime* rt, js::gc::Cell* cell) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(!IsInsideNursery(cell));
