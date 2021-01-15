@@ -4,35 +4,54 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_glean_GleanMemoryDistribution_h
-#define mozilla_glean_GleanMemoryDistribution_h
+#ifndef mozilla_glean_GleanTimingDistribution_h
+#define mozilla_glean_GleanTimingDistribution_h
 
 #include "mozilla/glean/bindings/DistributionData.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
+#include "nsDataHashtable.h"
 #include "nsIGleanMetrics.h"
 #include "nsTArray.h"
 
 namespace mozilla::glean {
 
+typedef uint64_t TimerId;
+
 namespace impl {
 
-class MemoryDistributionMetric {
+class TimingDistributionMetric {
  public:
-  constexpr explicit MemoryDistributionMetric(uint32_t aId) : mId(aId) {}
+  constexpr explicit TimingDistributionMetric(uint32_t aId) : mId(aId) {}
 
   /*
-   * Accumulates the provided sample in the metric.
+   * Starts tracking time for the provided metric.
    *
-   * @param aSample The sample to be recorded by the metric. The sample is
-   *                assumed to be in the confgured memory unit of the metric.
-   *
-   * Notes: Values bigger than 1 Terabyte (2^40 bytes) are truncated and an
-   * InvalidValue error is recorded.
+   * @returns A unique TimerId for the new timer
    */
-  void Accumulate(uint64_t aSample) const {
-    fog_memory_distribution_accumulate(mId, aSample);
+  TimerId Start() const { return fog_timing_distribution_start(mId); }
+
+  /*
+   * Stops tracking time for the provided metric and associated timer id.
+   *
+   * Adds a count to the corresponding bucket in the timing distribution.
+   * This will record an error if no `Start` was called on this TimerId or
+   * if this TimerId was used to call `Cancel`.
+   *
+   * @param aId The TimerId to associate with this timing. This allows for
+   *            concurrent timing of events associated with different ids.
+   */
+  void StopAndAccumulate(TimerId&& aId) const {
+    fog_timing_distribution_stop_and_accumulate(mId, aId);
   }
+
+  /*
+   * Aborts a previous `Start` call. No error is recorded if no `Start` was
+   * called.
+   *
+   * @param aId The TimerId whose `Start` you wish to abort.
+   */
+  void Cancel(TimerId&& aId) const { fog_timing_distribution_cancel(mId, aId); }
 
   /**
    * **Test-only API**
@@ -53,13 +72,13 @@ class MemoryDistributionMetric {
    */
   Maybe<DistributionData> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
-    if (!fog_memory_distribution_test_has_value(mId, &aPingName)) {
+    if (!fog_timing_distribution_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
     nsTArray<uint64_t> buckets;
     nsTArray<uint64_t> counts;
     DistributionData ret;
-    fog_memory_distribution_test_get_value(mId, &aPingName, &ret.sum, &buckets,
+    fog_timing_distribution_test_get_value(mId, &aPingName, &ret.sum, &buckets,
                                            &counts);
     for (size_t i = 0; i < buckets.Length(); ++i) {
       ret.values.Put(buckets[i], counts[i]);
@@ -72,19 +91,19 @@ class MemoryDistributionMetric {
 };
 }  // namespace impl
 
-class GleanMemoryDistribution final : public nsIGleanMemoryDistribution {
+class GleanTimingDistribution final : public nsIGleanTimingDistribution {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANMEMORYDISTRIBUTION
+  NS_DECL_NSIGLEANTIMINGDISTRIBUTION
 
-  explicit GleanMemoryDistribution(uint64_t aId) : mMemoryDist(aId){};
+  explicit GleanTimingDistribution(uint64_t aId) : mTimingDist(aId){};
 
  private:
-  virtual ~GleanMemoryDistribution() = default;
+  virtual ~GleanTimingDistribution() = default;
 
-  const impl::MemoryDistributionMetric mMemoryDist;
+  const impl::TimingDistributionMetric mTimingDist;
 };
 
 }  // namespace mozilla::glean
 
-#endif /* mozilla_glean_GleanMemoryDistribution_h */
+#endif /* mozilla_glean_GleanTimingDistribution_h */

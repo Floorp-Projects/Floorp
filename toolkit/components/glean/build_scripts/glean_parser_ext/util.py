@@ -63,6 +63,7 @@ IMPLEMENTED_CPP_TYPES = [
     "string",
     "string_list",
     "timespan",
+    "timing_distribution",
     "uuid",
 ]
 
