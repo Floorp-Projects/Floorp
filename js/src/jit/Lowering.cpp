@@ -2654,13 +2654,6 @@ void LIRGenerator::visitElements(MElements* ins) {
   define(new (alloc()) LElements(useRegisterAtStart(ins->object())), ins);
 }
 
-void LIRGenerator::visitConstantElements(MConstantElements* ins) {
-  define(new (alloc()) LPointer(
-             ins->value().unwrap(/*safe - pointer does not flow back to C++*/),
-             LPointer::NON_GC_THING),
-         ins);
-}
-
 void LIRGenerator::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
   switch (ins->type()) {
     case MIRType::Value:
