@@ -7992,25 +7992,6 @@ class MStoreElementCommon {
   void setNeedsBarrier() { needsBarrier_ = true; }
 };
 
-// This instruction is used to load an element of a non-escaped inlined array.
-class MLoadElementFromState : public MBinaryInstruction,
-                              public SingleObjectPolicy::Data {
-  MLoadElementFromState(MDefinition* array, MDefinition* index)
-      : MBinaryInstruction(classOpcode, array, index) {
-    MOZ_ASSERT(array->isArgumentState());
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-    setResultType(MIRType::Value);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(LoadElementFromState)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, array), (1, index));
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 // Store a value to a dense array slots vector.
 class MStoreElement : public MTernaryInstruction,
                       public MStoreElementCommon,
