@@ -295,7 +295,7 @@ class ElementSpecific {
    */
   static bool setFromTypedArray(Handle<TypedArrayObject*> target,
                                 Handle<TypedArrayObject*> source,
-                                uint32_t offset) {
+                                size_t offset) {
     // WARNING: |source| may be an unwrapped typed array from a different
     // compartment. Proceed with caution!
 
@@ -304,9 +304,8 @@ class ElementSpecific {
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
     MOZ_ASSERT(!source->hasDetachedBuffer(), "source isn't detached");
 
-    MOZ_ASSERT(offset <= target->length().deprecatedGetUint32());
-    MOZ_ASSERT(source->length().deprecatedGetUint32() <=
-               target->length().deprecatedGetUint32() - offset);
+    MOZ_ASSERT(offset <= target->length().get());
+    MOZ_ASSERT(source->length().get() <= target->length().get() - offset);
 
     if (TypedArrayObject::sameBuffer(target, source)) {
       return setFromOverlappingTypedArray(target, source, offset);
