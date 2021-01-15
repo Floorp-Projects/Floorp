@@ -106,7 +106,7 @@ class FennecWebAppIntentProcessor(
         if (path.isNullOrEmpty()) return null
 
         val file = File(path)
-        if (!file.isUnderFennecManifestDirectory()) return null
+        if (!isUnderFennecManifestDirectory(file)) return null
 
         return try {
             // Gecko in Fennec added some add some additional data, such as cached_icon, in
@@ -127,12 +127,13 @@ class FennecWebAppIntentProcessor(
     /**
      * Fennec manifests should be located in <filesDir>/mozilla/<profile>/manifests/
      */
-    private fun File.isUnderFennecManifestDirectory(): Boolean {
-        val manifestsDir = canonicalFile.parentFile
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun isUnderFennecManifestDirectory(file: File): Boolean {
+        val manifestsDir = file.canonicalFile.parentFile
         // Check that manifest is in a folder named "manifests"
-        return manifestsDir == null || manifestsDir.name != "manifests" ||
+        return manifestsDir != null && manifestsDir.name == "manifests" &&
             // Check that the folder two levels up is named "mozilla"
-            manifestsDir.parentFile?.parentFile != getMozillaDirectory()
+            manifestsDir.parentFile?.parentFile?.canonicalPath == getMozillaDirectory().canonicalPath
     }
 
     private fun createFallbackCustomTabConfig(): CustomTabConfig {
