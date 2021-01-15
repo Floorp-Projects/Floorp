@@ -98,6 +98,7 @@ def geckoprofile_action(parameters, graph_config, input, task_group_id, task_id)
                     cmd, ["--gecko-profile"]
                 )
                 task.task["extra"]["treeherder"]["symbol"] += "-p"
+                task.task["extra"]["treeherder"]["groupName"] += " (profiling)"
                 return task
 
             create_tasks(
