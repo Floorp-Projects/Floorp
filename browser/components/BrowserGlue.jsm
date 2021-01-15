@@ -121,8 +121,8 @@ const PREF_PDFJS_ISDEFAULT_CACHE_STATE = "pdfjs.enabledCache.state";
 /**
  * Fission-compatible JSProcess implementations.
  * Each actor options object takes the form of a ProcessActorOptions dictionary.
- * Detailed documentation of these options is in dom/docs/Fission.rst,
- * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jsprocessactor
+ * Detailed documentation of these options is in dom/docs/ipc/jsactors.rst,
+ * available at https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html
  */
 let JSPROCESSACTORS = {
   // Miscellaneous stuff that needs to be initialized per process.
@@ -172,8 +172,8 @@ let JSPROCESSACTORS = {
 
 /**
  * Fission-compatible JSWindowActor implementations.
- * Detailed documentation of these is in dom/docs/Fission.rst,
- * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor
+ * Detailed documentation of these options is in dom/docs/ipc/jsactors.rst,
+ * available at https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html
  */
 let JSWINDOWACTORS = {
   AboutLogins: {

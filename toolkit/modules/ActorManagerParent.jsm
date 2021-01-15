@@ -18,8 +18,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 /**
  * Fission-compatible JSProcess implementations.
  * Each actor options object takes the form of a ProcessActorOptions dictionary.
- * Detailed documentation of these options is in dom/docs/Fission.rst,
- * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jsprocessactor
+ * Detailed documentation of these options is in dom/docs/ipc/jsactors.rst,
+ * available at https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html
  */
 let JSPROCESSACTORS = {
   AsyncPrefs: {
@@ -50,8 +50,8 @@ let JSPROCESSACTORS = {
 /**
  * Fission-compatible JSWindowActor implementations.
  * Each actor options object takes the form of a WindowActorOptions dictionary.
- * Detailed documentation of these options is in dom/docs/Fission.rst,
- * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor
+ * Detailed documentation of these options is in dom/docs/ipc/jsactors.rst,
+ * available at https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html
  */
 let JSWINDOWACTORS = {
   AboutCertViewer: {
