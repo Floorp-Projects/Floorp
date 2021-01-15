@@ -3062,21 +3062,6 @@ class MGuardString : public MUnaryInstruction, public StringPolicy<0>::Data {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-class MPolyInlineGuard : public MUnaryInstruction,
-                         public SingleObjectPolicy::Data {
-  explicit MPolyInlineGuard(MDefinition* ins)
-      : MUnaryInstruction(classOpcode, ins) {
-    setGuard();
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(PolyInlineGuard)
-  TRIVIAL_NEW_WRAPPERS
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MAssertRange : public MUnaryInstruction, public NoTypePolicy::Data {
   // This is the range checked by the assertion. Don't confuse this with the
   // range_ member or the range() accessor. Since MAssertRange doesn't return
