@@ -67,8 +67,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/BuiltinObjectKind.h"
-#include "vm/EqualityOperations.h"  // js::SameValue
-#include "vm/FunctionFlags.h"       // js::FunctionFlags
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
@@ -9592,28 +9591,6 @@ void CodeGenerator::visitSameValueD(LSameValueD* lir) {
   Register output = ToRegister(lir->output());
 
   masm.sameValueDouble(left, right, temp, output);
-}
-
-void CodeGenerator::visitSameValueV(LSameValueV* lir) {
-  ValueOperand left = ToValue(lir, LSameValueV::LhsInput);
-  FloatRegister right = ToFloatRegister(lir->right());
-  FloatRegister temp1 = ToFloatRegister(lir->tempFloat1());
-  FloatRegister temp2 = ToFloatRegister(lir->tempFloat2());
-  Register output = ToRegister(lir->output());
-
-  Label nonDouble;
-  masm.move32(Imm32(0), output);
-  masm.ensureDouble(left, temp1, &nonDouble);
-  masm.sameValueDouble(temp1, right, temp2, output);
-  masm.bind(&nonDouble);
-}
-
-void CodeGenerator::visitSameValueVM(LSameValueVM* lir) {
-  pushArg(ToValue(lir, LSameValueVM::RhsInput));
-  pushArg(ToValue(lir, LSameValueVM::LhsInput));
-
-  using Fn = bool (*)(JSContext*, HandleValue, HandleValue, bool*);
-  callVM<Fn, js::SameValue>(lir);
 }
 
 void CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs,

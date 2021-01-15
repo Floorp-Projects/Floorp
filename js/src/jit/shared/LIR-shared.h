@@ -1856,40 +1856,6 @@ class LSameValueD : public LInstructionHelper<1, 2, 1> {
   const LDefinition* tempFloat() { return getTemp(0); }
 };
 
-class LSameValueV : public LInstructionHelper<1, BOX_PIECES + 1, 2> {
- public:
-  LIR_HEADER(SameValueV)
-
-  static const size_t LhsInput = 0;
-
-  LSameValueV(const LBoxAllocation& left, const LAllocation& right,
-              const LDefinition& temp1, const LDefinition& temp2)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(LhsInput, left);
-    setOperand(BOX_PIECES, right);
-    setTemp(0, temp1);
-    setTemp(1, temp2);
-  }
-
-  const LAllocation* right() { return getOperand(BOX_PIECES); }
-  const LDefinition* tempFloat1() { return getTemp(0); }
-  const LDefinition* tempFloat2() { return getTemp(1); }
-};
-
-class LSameValueVM : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0> {
- public:
-  LIR_HEADER(SameValueVM)
-
-  static const size_t LhsInput = 0;
-  static const size_t RhsInput = BOX_PIECES;
-
-  LSameValueVM(const LBoxAllocation& left, const LBoxAllocation& right)
-      : LCallInstructionHelper(classOpcode) {
-    setBoxOperand(LhsInput, left);
-    setBoxOperand(RhsInput, right);
-  }
-};
-
 // Not operation on an integer.
 class LNotI : public LInstructionHelper<1, 1, 0> {
  public:

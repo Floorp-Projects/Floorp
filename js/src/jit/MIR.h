@@ -2914,7 +2914,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   }
 };
 
-class MSameValue : public MBinaryInstruction, public SameValuePolicy::Data {
+class MSameValue : public MBinaryInstruction, public AllDoublePolicy::Data {
   MSameValue(MDefinition* left, MDefinition* right)
       : MBinaryInstruction(classOpcode, left, right) {
     setResultType(MIRType::Boolean);
