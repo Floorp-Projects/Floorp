@@ -2607,23 +2607,9 @@ void LIRGenerator::visitElements(MElements* ins) {
 }
 
 void LIRGenerator::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
-  switch (ins->type()) {
-    case MIRType::Value:
-      defineBox(new (alloc())
-                    LLoadDynamicSlotV(useRegisterAtStart(ins->slots())),
-                ins);
-      break;
-
-    case MIRType::Undefined:
-    case MIRType::Null:
-      MOZ_CRASH("typed load must have a payload");
-
-    default:
-      define(new (alloc()) LLoadDynamicSlotT(
-                 useRegisterForTypedLoad(ins->slots(), ins->type())),
-             ins);
-      break;
-  }
+  MOZ_ASSERT(ins->type() == MIRType::Value);
+  defineBox(new (alloc()) LLoadDynamicSlotV(useRegisterAtStart(ins->slots())),
+            ins);
 }
 
 void LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment* ins) {
