@@ -40,7 +40,6 @@ enum EStateRule {
   eARIAPressed,
   eARIAReadonly,
   eARIAReadonlyOrEditable,
-  eARIAReadonlyOrEditableIfDefined,
   eARIARequired,
   eARIASelectable,
   eARIASelectableIfDefined,
