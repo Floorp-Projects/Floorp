@@ -968,9 +968,14 @@
           ? "Private"
           : "Default";
       if (title) {
+        // We're using a function rather than just using `title` as the
+        // new substring to avoid `$$`, `$'` etc. having a special
+        // meaning to `replace`.
+        // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#specifying_a_string_as_a_parameter
+        // and the documentation for functions for more info about this.
         return docElement.dataset["contentTitle" + dataSuffix].replace(
           "CONTENTTITLE",
-          title
+          () => title
         );
       }
 
