@@ -90,6 +90,10 @@ class NeqoHttp3Conn final {
   nsrefcnt AddRef() { return neqo_http3conn_addref(this); }
   nsrefcnt Release() { return neqo_http3conn_release(this); }
 
+  void GetStats(Http3Stats* aStats) {
+    return neqo_http3conn_get_stats(this, aStats);
+  }
+
  private:
   NeqoHttp3Conn() = delete;
   ~NeqoHttp3Conn() = delete;
