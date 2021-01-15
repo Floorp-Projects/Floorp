@@ -519,7 +519,7 @@ link = check_prog(
     ("lld-link",),
     input="LINKER",
     when=target_is_windows,
-    paths=toolchain_search_path,
+    paths=clang_search_path,
 )
 
 option(env="HOST_LINKER", nargs=1, when=host_is_windows, help="Path to the host linker")
@@ -529,7 +529,7 @@ host_link = check_prog(
     ("lld-link",),
     input="HOST_LINKER",
     when=host_is_windows,
-    paths=toolchain_search_path,
+    paths=clang_search_path,
 )
 
 add_old_configure_assignment("LINKER", link)
