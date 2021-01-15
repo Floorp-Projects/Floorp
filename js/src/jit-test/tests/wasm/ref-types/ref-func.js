@@ -242,3 +242,51 @@ for (let mutable of [true, false]) {
     }
   }
 }
+
+// Test invalid ref.func indices
+
+function testCodeRefFuncIndex(index) {
+  assertErrorMessage(() => {
+      new WebAssembly.Module(moduleWithSections(
+        [v2vSigSection,
+         declSection([0]), // One function
+         bodySection(
+          [funcBody(
+              {locals:[],
+               body:[
+                 RefFuncCode,
+                 ...varU32(index),
+                 DropCode
+                 ]})])
+          ]))
+    },
+    WebAssembly.CompileError,
+    /(function index out of range)|(function index out of bounds)/);
+}
+
+testCodeRefFuncIndex(1);
+testCodeRefFuncIndex(2);
+testCodeRefFuncIndex(10);
+testCodeRefFuncIndex(1000);
+
+function testGlobalRefFuncIndex(index) {
+  assertErrorMessage(() => {
+      new WebAssembly.Module(moduleWithSections(
+        [v2vSigSection,
+          globalSection([
+           {
+             valType: AnyFuncCode,
+             flags: 0,
+             initExpr: [RefFuncCode, ...varU32(index), EndCode],
+           }
+         ])
+        ]))
+    },
+    WebAssembly.CompileError,
+    /(function index out of range)|(function index out of bounds)/);
+}
+
+testGlobalRefFuncIndex(1);
+testGlobalRefFuncIndex(2);
+testGlobalRefFuncIndex(10);
+testGlobalRefFuncIndex(1000);
