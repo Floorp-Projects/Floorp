@@ -19,6 +19,7 @@ var { getScriptGlobals } = require("./utils");
 // When updating this list, be sure to also update the 'support-files' config
 // in `tools/lint/eslint.yml`.
 const simpleTestFiles = [
+  "AccessibilityUtils.js",
   "ExtensionTestUtils.js",
   "EventUtils.js",
   "MockObjects.js",

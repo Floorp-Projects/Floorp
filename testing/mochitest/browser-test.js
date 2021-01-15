@@ -157,6 +157,15 @@ function Tester(aTests, structuredLogger, aCallback) {
     this.EventUtils
   );
 
+  this._scriptLoader.loadSubScript(
+    "chrome://mochikit/content/tests/SimpleTest/AccessibilityUtils.js",
+    // AccessibilityUtils are integrated with EventUtils to perform additional
+    // accessibility checks for certain user interactions (clicks, etc). Load
+    // them into the EventUtils scope here.
+    this.EventUtils
+  );
+  this.AccessibilityUtils = this.EventUtils.AccessibilityUtils;
+
   // Make sure our SpecialPowers actor is instantiated, in case it was
   // registered after our DOMWindowCreated event was fired (which it
   // most likely was).
@@ -264,12 +273,14 @@ function Tester(aTests, structuredLogger, aCallback) {
 }
 Tester.prototype = {
   EventUtils: {},
+  AccessibilityUtils: {},
   SimpleTest: {},
   ContentTask: null,
   ExtensionTestUtils: null,
   Assert: null,
 
   repeat: 0,
+  a11y_checks: false,
   runUntilFailure: false,
   checker: null,
   currentTestIndex: -1,
@@ -295,6 +306,10 @@ Tester.prototype = {
 
     if (gConfig.runUntilFailure) {
       this.runUntilFailure = true;
+    }
+
+    if (gConfig.a11y_checks != undefined) {
+      this.a11y_checks = gConfig.a11y_checks;
     }
 
     if (gConfig.repeat) {
@@ -501,6 +516,7 @@ Tester.prototype = {
 
     // Tests complete, notify the callback and return
     this.callback(this.tests);
+    this.accService = null;
     this.callback = null;
     this.tests = null;
   },
@@ -938,6 +954,8 @@ Tester.prototype = {
     this.structuredLogger.testStart(this.currentTest.path);
 
     this.SimpleTest.reset();
+    // Reset accessibility environment.
+    this.AccessibilityUtils.reset(this.a11y_checks);
 
     // Load the tests into a testscope
     let currentScope = (this.currentTest.scope = new testScope(
@@ -950,6 +968,7 @@ Tester.prototype = {
     // Import utils in the test scope.
     let { scope } = this.currentTest;
     scope.EventUtils = this.EventUtils;
+    scope.AccessibilityUtils = this.AccessibilityUtils;
     scope.SimpleTest = this.SimpleTest;
     scope.gTestPath = this.currentTest.path;
     scope.ContentTask = this.ContentTask;
@@ -1543,6 +1562,7 @@ testScope.prototype = {
   __expectedMaxAsserts: 0,
 
   EventUtils: {},
+  AccessibilityUtils: {},
   SimpleTest: {},
   ContentTask: null,
   BrowserTestUtils: null,
