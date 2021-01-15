@@ -5,13 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@depends(mozbuild_state_path, "--help")
+@depends(toolchains_base_dir, "--help")
 @imports(_from="os.path", _import="isdir")
 @imports(_from="mozboot.android", _import="NDK_VERSION")
-def default_android_ndk_root(mozbuild_state_path, _):
-    path = os.path.join(mozbuild_state_path, "android-ndk-%s" % NDK_VERSION)
-    if isdir(path):
-        return path
+def default_android_ndk_root(toolchains_base_dir, _):
+    for ndk in ("android-ndk-%s" % NDK_VERSION, "android-ndk"):
+        path = os.path.join(toolchains_base_dir, ndk)
+        if isdir(path):
+            return path
 
 
 option(
