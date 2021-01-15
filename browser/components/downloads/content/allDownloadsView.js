@@ -785,11 +785,17 @@ DownloadsPlacesView.prototype = {
         }
       }
     } else if (aEvent.charCode == " ".charCodeAt(0)) {
+      let atLeastOneDownloadToggled = false;
       // Pause/Resume every selected download
       for (let element of selectedElements) {
         if (element._shell.isCommandEnabled("downloadsCmd_pauseResume")) {
           element._shell.doCommand("downloadsCmd_pauseResume");
+          atLeastOneDownloadToggled = true;
         }
+      }
+
+      if (atLeastOneDownloadToggled) {
+        aEvent.preventDefault();
       }
     }
   },
