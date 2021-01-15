@@ -717,6 +717,11 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   TelemetryProbesReporter::Visibility OwnerVisibility() const;
 
+  // They are used for reporting telemetry related results.
+  double GetTotalPlayTimeInSeconds() const;
+  double GetInvisibleVideoPlayTimeInSeconds() const;
+  double GetVideoDecodeSuspendedTimeInSeconds() const;
+
  private:
   // Notify owner when the audible state changed
   void NotifyAudibleStateChanged();

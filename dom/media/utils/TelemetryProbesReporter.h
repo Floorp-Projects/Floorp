@@ -42,6 +42,10 @@ class TelemetryProbesReporter final {
   void OnDecodeResumed();
   void OnShutdown();
 
+  double GetTotalPlayTimeInSeconds() const;
+  double GetInvisibleVideoPlayTimeInSeconds() const;
+  double GetVideoDecodeSuspendedTimeInSeconds() const;
+
  private:
   void StartInvisibleVideoTimeAcculator();
   void PauseInvisibleVideoTimeAcculator();
@@ -78,6 +82,13 @@ class TelemetryProbesReporter final {
       mStartTime = TimeStamp();
       mSum = TimeDuration();
       return total;
+    }
+
+    double PeekTotal() const {
+      if (!IsStarted()) {
+        return mSum.ToSeconds();
+      }
+      return (TimeStamp::Now() - mStartTime).ToSeconds();
     }
 
    private:
