@@ -45,13 +45,6 @@ add_task(async function test_remove_single() {
       observer = {
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},
-        onManyFrecenciesChanged() {
-          try {
-            Assert.ok(!shouldRemove, "Observing onManyFrecenciesChanged");
-          } finally {
-            resolve();
-          }
-        },
         onDeleteURI(aURI) {
           try {
             Assert.ok(shouldRemove, "Observing onDeleteURI");

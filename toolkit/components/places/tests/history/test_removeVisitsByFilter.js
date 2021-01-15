@@ -144,12 +144,6 @@ add_task(async function test_removeVisitsByFilter() {
       deferred: PromiseUtils.defer(),
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onManyFrecenciesChanged() {
-        info("Many frecencies changed");
-        for (let [, deferred] of rankingChangePromises) {
-          deferred.resolve();
-        }
-      },
       onDeleteURI(aURI) {
         info("onDeleteURI " + aURI.spec);
         let deferred = uriDeletePromises.get(aURI.spec);

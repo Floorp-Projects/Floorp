@@ -345,7 +345,6 @@ var DownloadCache = {
   },
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onManyFrecenciesChanged() {},
   onDeleteVisits() {},
 };
 
