@@ -486,19 +486,11 @@ class SearchConfigTest {
 
     let submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
 
-    if (this._config.searchUrlBase) {
-      this.assertEqual(
-        submission.uri.prePath + submission.uri.filePath,
-        this._config.searchUrlBase + rules.searchUrlEnd,
-        `Should have the correct domain for type: ${URLTYPE_SEARCH_HTML} ${location}.`
-      );
-    } else {
-      this.assertOk(
-        submission.uri.host.endsWith(rules.domain),
-        `Should have the correct domain for type: ${URLTYPE_SEARCH_HTML} ${location}.
-         Got "${submission.uri.host}", expected to end with "${rules.domain}".`
-      );
-    }
+    this.assertOk(
+      submission.uri.host.endsWith(rules.domain),
+      `Should have the correct domain for type: ${URLTYPE_SEARCH_HTML} ${location}.
+       Got "${submission.uri.host}", expected to end with "${rules.domain}".`
+    );
 
     submission = engine.getSubmission("test", URLTYPE_SUGGEST_JSON);
     if (this._config.noSuggestionsURL || rules.noSuggestionsURL) {
