@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>bug 1686716</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+  function test() {
+    var ifr = document.getElementsByTagName("iframe")[0];
+    ifr.contentWindow.addEventListener("drop",
+      function(event) {
+        ifr.remove();
+        event.preventDefault();
+      });
+    sendDragEvent({type: "drop"}, ifr.contentDocument.body, ifr.contentWindow);
+    ok(true, "Should not crash.");
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body onload="test()">
+<iframe></iframe>
+<p id="display"></p>
+</body>
+</html>
