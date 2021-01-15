@@ -109,8 +109,8 @@ var SiteDataTestUtils = {
    * Adds a new localStorage entry for the specified origin, with the specified contents.
    *
    * @param {String} origin - the origin of the site to add test data for
-   * @param {String} [key] - the localStorage key
-   * @param {String} [value] - the localStorage value
+   * @param {String} key [optional] - the localStorage key
+   * @param {String} value [optional] - the localStorage value
    */
   addToLocalStorage(origin, key = "foo", value = "bar") {
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -122,19 +122,17 @@ var SiteDataTestUtils = {
       principal,
       ""
     );
-    storage.setItem(key, value);
+    storage.setItem("key", "value");
   },
 
   /**
    * Checks whether the given origin is storing data in localStorage
    *
    * @param {String} origin - the origin of the site to check
-   * @param {{key: String, value: String}[]} [testEntries] - An array of entries
-   * to test for.
    *
    * @returns {Boolean} whether the origin has localStorage data
    */
-  hasLocalStorage(origin, testEntries) {
+  hasLocalStorage(origin) {
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       origin
     );
@@ -144,16 +142,7 @@ var SiteDataTestUtils = {
       principal,
       ""
     );
-    if (!storage.length) {
-      return false;
-    }
-    if (!testEntries) {
-      return true;
-    }
-    return (
-      storage.length >= testEntries.length &&
-      testEntries.every(({ key, value }) => storage.getItem(key) == value)
-    );
+    return !!storage.length;
   },
 
   /**
@@ -191,37 +180,22 @@ var SiteDataTestUtils = {
     });
   },
 
-  hasCookies(origin, testEntries) {
+  hasCookies(origin) {
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       origin
     );
-
-    let filterFn = cookie => {
-      return (
+    for (let cookie of Services.cookies.cookies) {
+      if (
         ChromeUtils.isOriginAttributesEqual(
           principal.originAttributes,
           cookie.originAttributes
-        ) && cookie.host.includes(principal.host)
-      );
-    };
-
-    // Return on first cookie found for principal.
-    if (!testEntries) {
-      return Services.cookies.cookies.some(filterFn);
+        ) &&
+        cookie.host.includes(principal.host)
+      ) {
+        return true;
+      }
     }
-
-    // Collect all cookies that match the principal
-    let cookies = Services.cookies.cookies.filter(filterFn);
-
-    if (cookies.length < testEntries.length) {
-      return false;
-    }
-
-    // This code isn't very efficient. It should only be used for testing
-    // a small amount of cookies.
-    return testEntries.every(({ key, value }) =>
-      cookies.some(cookie => cookie.name == key && cookie.value == value)
-    );
+    return false;
   },
 
   hasIndexedDB(origin) {
