@@ -3409,8 +3409,6 @@ void CodeGenerator::visitLambda(LLambda* lir) {
       lir, ArgList(ImmGCPtr(info.funUnsafe()), envChain),
       StoreRegisterTo(output));
 
-  MOZ_ASSERT(!info.singletonType);
-
   TemplateObject templateObject(info.funUnsafe());
   masm.createGCObject(output, tempReg, templateObject, gc::DefaultHeap,
                       ool->entry());
@@ -3443,14 +3441,6 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
   OutOfLineCode* ool = oolCallVM<Fn, LambdaArrow>(
       lir, ArgList(ImmGCPtr(info.funUnsafe()), envChain, newTarget),
       StoreRegisterTo(output));
-
-  if (info.singletonType) {
-    // If the function has a singleton type, this instruction will only be
-    // executed once so we don't bother inlining it.
-    masm.jump(ool->entry());
-    masm.bind(ool->rejoin());
-    return;
-  }
 
   TemplateObject templateObject(info.funUnsafe());
   masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
