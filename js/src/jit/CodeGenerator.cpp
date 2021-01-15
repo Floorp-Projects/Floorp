@@ -3858,14 +3858,6 @@ void CodeGenerator::visitSlots(LSlots* lir) {
   masm.loadPtr(slots, ToRegister(lir->output()));
 }
 
-void CodeGenerator::visitLoadDynamicSlotT(LLoadDynamicSlotT* lir) {
-  Register base = ToRegister(lir->slots());
-  int32_t offset = lir->mir()->slot() * sizeof(js::Value);
-  AnyRegister result = ToAnyRegister(lir->output());
-
-  masm.loadUnboxedValue(Address(base, offset), lir->mir()->type(), result);
-}
-
 void CodeGenerator::visitLoadDynamicSlotV(LLoadDynamicSlotV* lir) {
   ValueOperand dest = ToOutValue(lir);
   Register base = ToRegister(lir->input());
