@@ -46,14 +46,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   void copySlots(MBasicBlock* from);
   [[nodiscard]] bool inherit(TempAllocator& alloc, size_t stackDepth,
                              MBasicBlock* maybePred, uint32_t popped);
-  [[nodiscard]] bool inheritResumePoint(MBasicBlock* pred);
-  void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
   // This block cannot be reached by any means.
   bool unreachable_;
-
-  // Keeps track if the phis has been type specialized already.
-  bool specialized_;
 
   // Pushes a copy of a local variable or argument.
   void pushVariable(uint32_t slot) { push(slots_[slot]); }
@@ -116,10 +111,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   static MBasicBlock* NewPopN(MIRGraph& graph, const CompileInfo& info,
                               MBasicBlock* pred, BytecodeSite* site, Kind kind,
                               uint32_t popn);
-  static MBasicBlock* NewWithResumePoint(MIRGraph& graph,
-                                         const CompileInfo& info,
-                                         MBasicBlock* pred, BytecodeSite* site,
-                                         MResumePoint* resumePoint);
   static MBasicBlock* NewPendingLoopHeader(MIRGraph& graph,
                                            const CompileInfo& info,
                                            MBasicBlock* pred,
@@ -291,22 +282,13 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   // with multiple entries.
   void setLoopHeader(MBasicBlock* newBackedge);
 
-  // Propagates phis placed in a loop header down to this successor block.
-  void inheritPhis(MBasicBlock* header);
-
   // Propagates backedge slots into phis operands of the loop header.
   [[nodiscard]] bool inheritPhisFromBackedge(MBasicBlock* backedge);
-
-  // Compute the types for phis in this block according to their inputs.
-  [[nodiscard]] bool specializePhis(TempAllocator& alloc);
 
   void insertBefore(MInstruction* at, MInstruction* ins);
   void insertAfter(MInstruction* at, MInstruction* ins);
 
   void insertAtEnd(MInstruction* ins);
-
-  // Add an instruction to this block, from elsewhere in the graph.
-  void addFromElsewhere(MInstruction* ins);
 
   // Move an instruction. Movement may cross block boundaries.
   void moveBefore(MInstruction* at, MInstruction* ins);
