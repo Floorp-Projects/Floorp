@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1399740
+-->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1399740</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="mochitest_support_external.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+      function startTest() {
+        runTestInNewWindow("wpt/pointerlock/pointerevent_movementxy-manual.html");
+      }
+      function executeTest(int_win) {
+        let box1 = int_win.document.getElementById("box1");
+        let box2 = int_win.document.getElementById("box2");
+        let rect1 = box1.getBoundingClientRect();
+        let rect2 = box2.getBoundingClientRect();
+        let offsetX = rect1.left + rect1.width / 2;
+        let offsetY = rect1.top + rect1.height / 2;
+        let stepX = (rect2.left + rect2.width / 2 - offsetX) / 10;
+        let stepY = (rect2.top + rect2.height / 2 - offsetY) / 10;
+        sendMouseEventAtPoint(int_win, offsetX, offsetY, "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_MOUSE});
+        sendMouseEventAtPoint(int_win, offsetX, offsetY, "mousedown", {inputSource:MouseEvent.MOZ_SOURCE_MOUSE});
+        sendMouseEventAtPoint(int_win, offsetX, offsetY, "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_MOUSE});
+        for (var i = 0; i < 10; ++i) {
+          offsetX += stepX;
+          offsetY += stepY;
+          sendMouseEventAtPoint(int_win, offsetX, offsetY, "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_MOUSE});
+        }
+        sendMouseEventAtPoint(int_win, offsetX, offsetY, "mouseup", {inputSource:MouseEvent.MOZ_SOURCE_MOUSE});
+
+        offsetX = rect1.left + rect1.width / 2;
+        offsetY = rect1.top + rect1.height / 2;
+        sendMouseEventAtPoint(int_win, offsetX, offsetY, "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_TOUCH});
+        sendMouseEventAtPoint(int_win, offsetX, offsetY, "mousedown", {inputSource:MouseEvent.MOZ_SOURCE_TOUCH});
+        sendMouseEventAtPoint(int_win, offsetX, offsetY, "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_TOUCH});
+        for (var i = 0; i < 10; ++i) {
+          offsetX += stepX;
+          offsetY += stepY;
+          sendMouseEventAtPoint(int_win, offsetX, offsetY, "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_TOUCH});
+        }
+        sendMouseEventAtPoint(int_win, offsetX, offsetY, "mouseup", {inputSource:MouseEvent.MOZ_SOURCE_TOUCH});
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

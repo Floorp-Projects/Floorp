@@ -898,8 +898,9 @@ nsresult AccessibleCaretManager::SelectWord(nsIFrame* aFrame,
   AC_LOGV("%s", __FUNCTION__);
 
   SetSelectionDragState(true);
-  nsresult rs = aFrame->SelectByTypeAtPoint(
-      mPresShell->GetPresContext(), aPoint, eSelectWord, eSelectWord, 0);
+  const RefPtr<nsPresContext> pinnedPresContext{mPresShell->GetPresContext()};
+  nsresult rs = aFrame->SelectByTypeAtPoint(pinnedPresContext, aPoint,
+                                            eSelectWord, eSelectWord, 0);
 
   SetSelectionDragState(false);
   ClearMaintainedSelection();

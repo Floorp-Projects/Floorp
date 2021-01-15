@@ -802,12 +802,6 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult HttpChannelParent::RecvSetCacheTokenCachedCharset(
-    const nsCString& charset) {
-  if (mCacheEntry) mCacheEntry->SetMetaDataElement("charset", charset.get());
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
     const nsresult& aResult, const RequestHeaderTuples& changedHeaders,
     const uint32_t& aSourceRequestBlockingReason,
@@ -1190,7 +1184,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     httpChannelImpl->GetCacheEntryId(&args.cacheEntryId());
     httpChannelImpl->GetCacheTokenFetchCount(&args.cacheFetchCount());
     httpChannelImpl->GetCacheTokenExpirationTime(&args.cacheExpirationTime());
-    httpChannelImpl->GetCacheTokenCachedCharset(args.cachedCharset());
 
     mDataSentToChildProcess = httpChannelImpl->DataSentToChildProcess();
 
@@ -1230,7 +1223,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 
   chan->GetStatus(&args.channelStatus());
 
-  // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
+  // Keep the cache entry for future use when opening alternative streams.
   // It could be already released by nsHttpChannel at that time.
   nsCOMPtr<nsISupports> cacheEntry;
 

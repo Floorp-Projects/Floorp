@@ -173,13 +173,99 @@ option(env="MOZ_PGO", help="Build with profile guided optimizations")
 set_config("MOZ_PGO", depends("MOZ_PGO")(lambda x: bool(x)))
 
 
+imply_option("--enable-release", mozilla_official)
+imply_option("--enable-release", depends_if("MOZ_AUTOMATION")(lambda x: True))
+
+option(
+    "--enable-release",
+    default=milestone.is_release_or_beta,
+    help="{Build|Do not build} with more conservative, release "
+    "engineering-oriented options.{ This may slow down builds.|}",
+)
+
+
+@depends("--enable-release")
+def developer_options(value):
+    if not value:
+        return True
+
+
+add_old_configure_assignment("DEVELOPER_OPTIONS", developer_options)
+set_config("DEVELOPER_OPTIONS", developer_options)
+
+
+option(
+    env="MOZ_FETCHES_DIR",
+    nargs=1,
+    when="MOZ_AUTOMATION",
+    help="Directory containing fetched artifacts",
+)
+
+
+@depends("MOZ_FETCHES_DIR", when="MOZ_AUTOMATION")
+def moz_fetches_dir(value):
+    if value:
+        return value[0]
+
+
+@depends(developer_options, moz_fetches_dir)
+def bootstrap_search_path_order(developer_options, moz_fetches_dir):
+    if moz_fetches_dir:
+        log.debug("Prioritizing MOZ_FETCHES_DIR in toolchain path.")
+        return "prepend"
+
+    if developer_options:
+        log.debug(
+            "Prioritizing mozbuild state dir in toolchain paths because "
+            "you are not building in release mode."
+        )
+        return "prepend"
+
+    log.debug(
+        "Prioritizing system over mozbuild state dir in "
+        "toolchain paths because you are building in "
+        "release mode."
+    )
+    return "append"
+
+
+toolchains_base_dir = moz_fetches_dir | mozbuild_state_path
+
+
+@dependable
+@imports("os")
+@imports(_from="os", _import="environ")
+def original_path():
+    return environ["PATH"].split(os.pathsep)
+
+
+@template
+def bootstrap_search_path(*path_parts, **kwargs):
+    when = kwargs.pop("when", None)
+    if kwargs:
+        configure_error("bootstrap_search_path only takes `when` as keyword argument")
+
+    @depends(bootstrap_search_path_order, original_path, toolchains_base_dir, when=when)
+    def bootstrap_search_path(order, original_path, toolchains_base_dir):
+        path = [os.path.join(toolchains_base_dir, *path_parts)]
+        if order == "prepend":
+            return path + original_path
+        return original_path + path
+
+    return bootstrap_search_path
+
+
+@depends(target, host)
+def want_wine(target, host):
+    return target.kernel == "WINNT" and host.kernel != "WINNT"
+
+
 wine = check_prog(
     "WINE",
     ["wine64", "wine"],
     allow_missing=True,
-    when=depends(target, host)(
-        lambda t, h: t.kernel == "WINNT" and h.kernel != "WINNT"
-    ),
+    when=want_wine,
+    paths=bootstrap_search_path("wine", "bin", when=want_wine),
 )
 check_prog("WGET", ("wget",), allow_missing=True)
 
@@ -748,7 +834,7 @@ llvm_objdump = check_prog(
     llvm_objdump,
     what="llvm-objdump",
     when="--enable-compile-environment",
-    paths=toolchain_search_path,
+    paths=clang_search_path,
 )
 
 add_old_configure_assignment("LLVM_OBJDUMP", llvm_objdump)

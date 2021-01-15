@@ -12,7 +12,6 @@ enum {
   kCharsetFromTopLevelDomain,
   kCharsetFromFileURLGuess,
   kCharsetFromDocTypeDefault,  // This and up confident for XHR
-  kCharsetFromCache,
   kCharsetFromInitialAutoDetection,
   kCharsetFromFinalAutoDetection,
   kCharsetFromParentFrame,  // Same-origin parent takes precedence over detector

@@ -1210,12 +1210,14 @@ void BigIntStencil::dump() {
 
 void BigIntStencil::dump(js::JSONPrinter& json) {
   GenericPrinter& out = json.beginString();
+  dumpCharsNoQuote(out);
+  json.endString();
+}
 
+void BigIntStencil::dumpCharsNoQuote(GenericPrinter& out) {
   for (size_t i = 0; i < length_; i++) {
     out.putChar(char(buf_[i]));
   }
-
-  json.endString();
 }
 
 void ScopeStencil::dump() {
@@ -1253,7 +1255,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
                         size_t(functionIndex_));
   }
 
-  json.beginListProperty("flags_");
+  json.beginListProperty("flags");
   if (flags_ & HasEnclosing) {
     json.value("HasEnclosing");
   }
@@ -1376,10 +1378,12 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
   }
 
   if (trailingNames) {
-    json.beginListProperty("trailingNames");
+    char index[64];
+    json.beginObjectProperty("trailingNames");
     for (size_t i = 0; i < length; i++) {
       auto& name = (*trailingNames)[i];
-      json.beginObject();
+      SprintfLiteral(index, "%zu", i);
+      json.beginObjectProperty(index);
 
       json.boolProperty("closedOver", name.closedOver());
 
@@ -1391,7 +1395,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
       json.endObject();
     }
-    json.endList();
+    json.endObject();
   }
 
   json.endObject();
@@ -1714,7 +1718,7 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
     json.endList();
   }
 
-  json.beginListProperty("flags_");
+  json.beginListProperty("flags");
   if (flags_ & WasFunctionEmittedFlag) {
     json.value("WasFunctionEmittedFlag");
   }
@@ -1794,13 +1798,14 @@ void SharedDataContainer::dumpFields(js::JSONPrinter& json) {
     js::JSONPrinter& json;
 
     void operator()(SingleSharedData& ptr) {
-      json.formatProperty("0", "u8[%zu]", ptr->immutableDataLength());
+      json.formatProperty("ScriptIndex(0)", "u8[%zu]",
+                          ptr->immutableDataLength());
     }
 
     void operator()(SharedDataVector& vec) {
-      char index[16];
+      char index[64];
       for (size_t i = 0; i < vec.length(); i++) {
-        SprintfLiteral(index, "%zu", i);
+        SprintfLiteral(index, "ScriptIndex(%zu)", i);
         if (vec[i]) {
           json.formatProperty(index, "u8[%zu]", vec[i]->immutableDataLength());
         } else {
@@ -1810,9 +1815,9 @@ void SharedDataContainer::dumpFields(js::JSONPrinter& json) {
     }
 
     void operator()(SharedDataMap& map) {
-      char index[16];
+      char index[64];
       for (auto iter = map.iter(); !iter.done(); iter.next()) {
-        SprintfLiteral(index, "%u", iter.get().key().index);
+        SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
         json.formatProperty(index, "u8[%zu]",
                             iter.get().value()->immutableDataLength());
       }
@@ -1837,36 +1842,53 @@ void BaseCompilationStencil::dump(js::JSONPrinter& json) {
 }
 
 void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
-  json.beginListProperty("scriptData");
-  for (auto& data : scriptData) {
-    data.dump(json, this);
-  }
-  json.endList();
+  char index[64];
 
-  json.beginListProperty("regExpData");
-  for (auto& data : regExpData) {
-    data.dump(json, this);
+  json.beginObjectProperty("scriptData");
+  for (size_t i = 0; i < scriptData.size(); i++) {
+    SprintfLiteral(index, "ScriptIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    scriptData[i].dumpFields(json, this);
+    json.endObject();
   }
-  json.endList();
+  json.endObject();
 
-  json.beginListProperty("bigIntData");
-  for (auto& data : bigIntData) {
-    data.dump(json);
+  json.beginObjectProperty("regExpData");
+  for (size_t i = 0; i < regExpData.size(); i++) {
+    SprintfLiteral(index, "RegExpIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    regExpData[i].dumpFields(json, this);
+    json.endObject();
   }
-  json.endList();
+  json.endObject();
 
-  json.beginListProperty("objLiteralData");
-  for (auto& data : objLiteralData) {
-    data.dump(json, this);
+  json.beginObjectProperty("bigIntData");
+  for (size_t i = 0; i < bigIntData.length(); i++) {
+    SprintfLiteral(index, "BigIntIndex(%zu)", i);
+    GenericPrinter& out = json.beginStringProperty(index);
+    bigIntData[i].dumpCharsNoQuote(out);
+    json.endStringProperty();
   }
-  json.endList();
+  json.endObject();
 
-  json.beginListProperty("scopeData");
+  json.beginObjectProperty("objLiteralData");
+  for (size_t i = 0; i < objLiteralData.length(); i++) {
+    SprintfLiteral(index, "ObjLiteralIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    objLiteralData[i].dumpFields(json, this);
+    json.endObject();
+  }
+  json.endObject();
+
+  json.beginObjectProperty("scopeData");
   MOZ_ASSERT(scopeData.size() == scopeNames.size());
   for (size_t i = 0; i < scopeData.size(); i++) {
-    scopeData[i].dump(json, scopeNames[i], this);
+    SprintfLiteral(index, "ScopeIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    scopeData[i].dumpFields(json, scopeNames[i], this);
+    json.endObject();
   }
-  json.endList();
+  json.endObject();
 
   json.beginObjectProperty("sharedData");
   sharedData.dumpFields(json);
@@ -1889,22 +1911,25 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 void CompilationStencil::dumpFields(js::JSONPrinter& json) {
   BaseCompilationStencil::dumpFields(json);
 
-  json.beginListProperty("scriptExtra");
-  for (auto& data : scriptExtra) {
-    data.dump(json);
+  char index[64];
+  json.beginObjectProperty("scriptExtra");
+  for (size_t i = 0; i < scriptExtra.size(); i++) {
+    SprintfLiteral(index, "ScriptIndex(%zu)", i);
+    json.beginObjectProperty(index);
+    scriptExtra[i].dumpFields(json);
+    json.endObject();
   }
-  json.endList();
+  json.endObject();
 
-  if (scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
+  if (moduleMetadata) {
     json.beginObjectProperty("moduleMetadata");
     moduleMetadata->dumpFields(json, this);
     json.endObject();
   }
 
   json.beginObjectProperty("asmJS");
-  char index[16];
   for (auto iter = asmJS.iter(); !iter.done(); iter.next()) {
-    SprintfLiteral(index, "%u", iter.get().key().index);
+    SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
     json.formatProperty(index, "asm.js");
   }
   json.endObject();

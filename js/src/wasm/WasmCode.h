@@ -330,6 +330,7 @@ struct MetadataCacheablePod {
   bool filenameIsURL;
   bool v128Enabled;
   bool omitsBoundsChecks;
+  bool usesDuplicateImports;
 
   explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
@@ -338,7 +339,8 @@ struct MetadataCacheablePod {
         globalDataLength(0),
         filenameIsURL(false),
         v128Enabled(false),
-        omitsBoundsChecks(false) {}
+        omitsBoundsChecks(false),
+        usesDuplicateImports(false) {}
 };
 
 typedef uint8_t ModuleHash[8];

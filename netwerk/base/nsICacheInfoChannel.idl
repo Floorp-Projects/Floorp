@@ -43,13 +43,6 @@ interface nsICacheInfoChannel : nsISupports
   readonly attribute uint32_t cacheTokenExpirationTime;
 
   /**
-   * Set/get charset of cache entry. Accessing this attribute is equivalent to
-   * calling nsICachingChannel.cacheToken.getMetaDataElement("charset") and
-   * nsICachingChannel.cacheToken.setMetaDataElement("charset").
-   */
-  attribute ACString cacheTokenCachedCharset;
-
-  /**
    * TRUE if this channel's data is being loaded from the cache.  This value
    * is undefined before the channel fires its OnStartRequest notification
    * and after the channel fires its OnStopRequest notification.

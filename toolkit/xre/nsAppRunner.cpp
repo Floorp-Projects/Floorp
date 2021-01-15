@@ -4124,6 +4124,13 @@ bool IsWaylandDisabled() {
 }
 #endif
 
+#if defined(MOZ_X11)
+bool IsX11EGLEnabled() {
+  const char* eglPref = PR_GetEnv("MOZ_X11_EGL");
+  return (eglPref && *eglPref);
+}
+#endif
+
 namespace mozilla::startup {
 Result<nsCOMPtr<nsIFile>, nsresult> GetIncompleteStartupFile(nsIFile* aProfLD) {
   nsCOMPtr<nsIFile> crashFile;

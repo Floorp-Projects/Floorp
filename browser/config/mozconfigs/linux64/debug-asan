@@ -19,8 +19,6 @@ ac_add_options --enable-fuzzing
 # globally in mozconfig.asan because it requires an unstable -Z flag.
 export RUSTFLAGS="$RUSTFLAGS -Zsanitizer=address"
 
-export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
-
 # Include 'SourceRepository' in application.ini which
 # is used by Pernosco to locate source
 export MOZ_INCLUDE_SOURCE_INFO=1

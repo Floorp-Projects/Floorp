@@ -65,6 +65,7 @@ class RaptorRunner(MozbuildObject):
         self.disable_perf_tuning = kwargs["disable_perf_tuning"]
         self.conditioned_profile_scenario = kwargs["conditioned_profile_scenario"]
         self.device_name = kwargs["device_name"]
+        self.enable_marionette_trace = kwargs["enable_marionette_trace"]
 
         if Conditions.is_android(self) or kwargs["app"] in ANDROID_BROWSERS:
             self.binary_path = None
@@ -174,6 +175,7 @@ class RaptorRunner(MozbuildObject):
             "conditioned_profile_scenario": self.conditioned_profile_scenario,
             "is_release_build": self.is_release_build,
             "device_name": self.device_name,
+            "enable_marionette_trace": self.enable_marionette_trace,
         }
 
         sys.path.insert(0, os.path.join(self.topsrcdir, "tools", "browsertime"))

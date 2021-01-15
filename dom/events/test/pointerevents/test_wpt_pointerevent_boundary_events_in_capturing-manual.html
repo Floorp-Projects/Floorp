@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>W3C pointerevent_boundary_events_in_capturing-manual.html in Mochitest form</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="mochitest_support_external.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+      function startTest() {
+        runTestInNewWindow("wpt/pointerevent_boundary_events_in_capturing-manual.html", true);
+      }
+      function executeTest(int_win) {
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "target0", "mousedown");
+        sendMouseEvent(int_win, "target0", "mousemove", {buttons: 1});
+        sendMouseEvent(int_win, "target0", "mousemove", {buttons: 1});
+        sendMouseEvent(int_win, "target0", "mouseup");
+
+        window.addEventListener("message", function(aEvent) {
+          if (aEvent.data == "Test Touch") {
+            // Synthesize touch events to run this test.
+            sendTouchEvent(int_win, "target0", "touchstart");
+            sendTouchEvent(int_win, "target0", "touchmove", {offsetX: 10});
+            sendTouchEvent(int_win, "target0", "touchmove", {offsetX: 15});
+            sendTouchEvent(int_win, "target0", "touchmove", {offsetX: 20});
+            sendTouchEvent(int_win, "target0", "touchend");
+            window.postMessage("Test Pen", "*");
+          } else if (aEvent.data == "Test Pen") {
+            // Synthesize pen events to run this test.
+            sendMouseEvent(int_win, "target0", "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_PEN});
+            sendMouseEvent(int_win, "target0", "mousedown", {inputSource:MouseEvent.MOZ_SOURCE_PEN});
+            sendMouseEvent(int_win, "target0", "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_PEN, buttons: 1});
+            sendMouseEvent(int_win, "target0", "mousemove", {inputSource:MouseEvent.MOZ_SOURCE_PEN, buttons: 1});
+            sendMouseEvent(int_win, "target0", "mouseup", {inputSource:MouseEvent.MOZ_SOURCE_PEN});
+          }
+        });
+        window.postMessage("Test Touch", "*");
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

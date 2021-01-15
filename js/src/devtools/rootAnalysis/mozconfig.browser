@@ -10,8 +10,3 @@ ac_add_options --enable-application=browser
 ac_add_options --enable-js-shell
 
 . $topsrcdir/js/src/devtools/rootAnalysis/mozconfig.common
-
-if [ -n "$AUTOMATION" ]; then
-    export CBINDGEN="${MOZ_FETCHES_DIR}/cbindgen/cbindgen"
-    export NASM="${MOZ_FETCHES_DIR}/nasm/nasm"
-fi

@@ -7,16 +7,16 @@
 # Ensure Android SDK and build-tools versions depending on mobile target.
 
 
-@depends(host, mozbuild_state_path, "--help")
+@depends(host, toolchains_base_dir, "--help")
 @imports(_from="os.path", _import="isdir")
-def default_android_sdk_root(host, mozbuild_state_path, _):
+def default_android_sdk_root(host, toolchains_base_dir, _):
     sdk_basename = {
         "Darwin": "android-sdk-macosx",
         "Linux": "android-sdk-linux",
         "WINNT": "android-sdk-windows",
-    }.get(host.kernel)
-    if sdk_basename:
-        path = os.path.join(mozbuild_state_path, sdk_basename)
+    }.get(host.kernel, "android-sdk")
+    for sdk_basename in (sdk_basename, "android-sdk"):
+        path = os.path.join(toolchains_base_dir, sdk_basename)
         if isdir(path):
             return path
 

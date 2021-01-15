@@ -9,9 +9,15 @@
 #include <cstdint>
 
 #include "ErrorList.h"
+#include "js/ArrayBuffer.h"
+#include "js/Utility.h"
+#include "js/experimental/TypedData.h"
+#include "jsfriendapi.h"
 #include "mozilla/Compression.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorNames.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/Span.h"
@@ -20,6 +26,7 @@
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsFileStreams.h"
@@ -167,8 +174,8 @@ void IOUtils::RunOnBackgroundThread(Promise* aPromise, Fn aFunc) {
       })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(aPromise)](const OkT& ok) {
-            ResolveJSPromise(promise, ok);
+          [promise = RefPtr(aPromise)](OkT&& ok) {
+            ResolveJSPromise(promise, std::forward<OkT>(ok));
           },
           [promise = RefPtr(aPromise)](const IOError& err) {
             RejectJSPromise(promise, err);
@@ -198,10 +205,10 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     toRead.emplace(aOptions.mMaxBytes.Value());
   }
 
-  RunOnBackgroundThread<nsTArray<uint8_t>>(
+  RunOnBackgroundThread<JsBuffer>(
       promise,
       [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
-        return ReadSync(file, toRead, decompress);
+        return ReadSync(file, toRead, decompress, BufferKind::Uint8Array);
       });
   return promise.forget();
 }
@@ -216,7 +223,7 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-  RunOnBackgroundThread<nsString>(
+  RunOnBackgroundThread<JsBuffer>(
       promise, [file = std::move(file), decompress = aOptions.mDecompress]() {
         return ReadUTF8Sync(file, decompress);
       });
@@ -261,7 +268,7 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
 /* static */
 already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
                                              const nsAString& aPath,
-                                             const nsAString& aString,
+                                             const nsACString& aString,
                                              const WriteOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
@@ -271,13 +278,6 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  nsCString utf8Str;
-  if (!CopyUTF16toUTF8(aString, utf8Str, fallible)) {
-    promise->MaybeRejectWithOperationError(
-        "Out of memory: Could not allocate buffer while writing to file");
-    return promise.forget();
-  }
-
   auto opts = InternalWriteOpts::FromBinding(aOptions);
   if (opts.isErr()) {
     RejectJSPromise(promise, opts.unwrapErr());
@@ -285,9 +285,10 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
   }
 
   RunOnBackgroundThread<uint32_t>(
-      promise,
-      [file = std::move(file), utf8Str = std::move(utf8Str),
-       opts = opts.unwrap()]() { return WriteUTF8Sync(file, utf8Str, opts); });
+      promise, [file = std::move(file), str = nsCString(aString),
+                opts = opts.unwrap()]() {
+        return WriteSync(file, AsBytes(Span(str)), opts);
+      });
 
   return promise.forget();
 }
@@ -552,14 +553,11 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 
 /* static */
 template <typename T>
-void IOUtils::ResolveJSPromise(Promise* aPromise, const T& aValue) {
-  if constexpr (std::is_same_v<T, nsTArray<uint8_t>>) {
-    TypedArrayCreator<Uint8Array> arr(aValue);
-    aPromise->MaybeResolve(arr);
-  } else if constexpr (std::is_same_v<T, Ok>) {
+void IOUtils::ResolveJSPromise(Promise* aPromise, T&& aValue) {
+  if constexpr (std::is_same_v<T, Ok>) {
     aPromise->MaybeResolveWithUndefined();
   } else {
-    aPromise->MaybeResolve(aValue);
+    aPromise->MaybeResolve(std::forward<T>(aValue));
   }
 }
 
@@ -621,8 +619,9 @@ void IOUtils::RejectJSPromise(Promise* aPromise, const IOError& aError) {
 }
 
 /* static */
-Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
-    nsIFile* aFile, const Maybe<uint32_t>& aMaxBytes, const bool aDecompress) {
+Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
+    nsIFile* aFile, const Maybe<uint32_t>& aMaxBytes, const bool aDecompress,
+    IOUtils::BufferKind aBufferKind) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (aMaxBytes.isSome() && aDecompress) {
@@ -666,14 +665,21 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
     bufSize = aMaxBytes.value();
   }
 
-  nsTArray<uint8_t> buffer;
-  if (!buffer.SetCapacity(bufSize, fallible)) {
-    return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
-                   .WithMessage("Could not allocate buffer to read file(%s)",
-                                aFile->HumanReadablePath().get()));
+  JsBuffer buffer = JsBuffer::CreateEmpty(aBufferKind);
+  Span<char> toRead;
+
+  if (aDecompress || bufSize > 0) {
+    auto result = JsBuffer::Create(aBufferKind, bufSize);
+    if (result.isErr()) {
+      return result.propagateErr();
+    }
+    buffer = result.unwrap();
+  } else {
+    // No need to read an empty file.
+    return buffer;
   }
 
-  Span<char> toRead(reinterpret_cast<char*>(buffer.Elements()), bufSize);
+  toRead = buffer.BeginWriting();
 
   // Read the file from disk.
   uint32_t totalRead = 0;
@@ -692,30 +698,27 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
     totalRead += bytesRead;
     toRead = toRead.From(bytesRead);
   }
-  DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
-  MOZ_ASSERT(success);
+
+  buffer.SetLength(totalRead);
 
   // Decompress the file contents, if required.
   if (aDecompress) {
-    return MozLZ4::Decompress(Span(buffer));
+    return MozLZ4::Decompress(AsBytes(buffer.BeginReading()), aBufferKind);
   }
+
   return std::move(buffer);
 }
 
 /* static */
-Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
-    nsIFile* aFile, const bool aDecompress) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  auto rv = ReadSync(aFile, Nothing(), aDecompress);
-  if (rv.isErr()) {
-    return Err(rv.unwrapErr());
+Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadUTF8Sync(
+    nsIFile* aFile, bool aDecompress) {
+  auto result = ReadSync(aFile, Nothing{}, aDecompress, BufferKind::String);
+  if (result.isErr()) {
+    return result.propagateErr();
   }
 
-  const nsTArray<uint8_t> bytes = rv.unwrap();
-  auto utf8Span =
-      Span(reinterpret_cast<const char*>(bytes.Elements()), bytes.Length());
-  if (!IsUtf8(utf8Span)) {
+  JsBuffer buffer = result.unwrap();
+  if (!IsUtf8(buffer.BeginReading())) {
     return Err(
         IOError(NS_ERROR_FILE_CORRUPTED)
             .WithMessage(
@@ -723,16 +726,7 @@ Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
                 aFile->HumanReadablePath().get()));
   }
 
-  nsDependentCSubstring utf8Str(utf8Span.Elements(), utf8Span.Length());
-  nsString utf16Str;
-  if (!CopyUTF8toUTF16(utf8Str, utf16Str, fallible)) {
-    return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
-                   .WithMessage("Could not allocate buffer to convert UTF-8 "
-                                "contents of file at (%s) to UTF-16",
-                                aFile->HumanReadablePath().get()));
-  }
-
-  return utf16Str;
+  return buffer;
 }
 
 /* static */
@@ -748,7 +742,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
   MOZ_TRY(aFile->Exists(&exists));
 
   if (aOptions.mNoOverwrite && exists) {
-    return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS)
+    return Err(IOError(NS_ERROR_DOM_TYPE_MISMATCH_ERR)
                    .WithMessage("Refusing to overwrite the file at %s\n"
                                 "Specify `noOverwrite: false` to allow "
                                 "overwriting the destination",
@@ -860,18 +854,6 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     }
   }
   return totalWritten;
-}
-
-/* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteUTF8Sync(
-    nsIFile* aFile, const nsCString& aUTF8String,
-    const InternalWriteOpts& aOptions) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  Span utf8Bytes(reinterpret_cast<const uint8_t*>(aUTF8String.get()),
-                 aUTF8String.Length());
-
-  return WriteSync(aFile, utf8Bytes, aOptions);
 }
 
 /* static */
@@ -1295,8 +1277,8 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
 }
 
 /* static */
-Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
-    Span<const uint8_t> aFileContents) {
+Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
+    Span<const uint8_t> aFileContents, IOUtils::BufferKind aBufferKind) {
   if (aFileContents.LengthBytes() < HEADER_SIZE) {
     return Err(
         IOError(NS_ERROR_FILE_CORRUPTED)
@@ -1323,15 +1305,15 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
   uint32_t expectedDecompressedSize =
       LittleEndian::readUint32(sizeBytes.data());
   if (expectedDecompressedSize == 0) {
-    return nsTArray<uint8_t>(0);
+    return JsBuffer::CreateEmpty(aBufferKind);
   }
   auto contents = aFileContents.From(HEADER_SIZE);
-  nsTArray<uint8_t> decompressed;
-  if (!decompressed.SetCapacity(expectedDecompressedSize, fallible)) {
-    return Err(
-        IOError(NS_ERROR_OUT_OF_MEMORY)
-            .WithMessage("Could not allocate buffer to decompress data"));
+  auto result = JsBuffer::Create(aBufferKind, expectedDecompressedSize);
+  if (result.isErr()) {
+    return result.propagateErr();
   }
+
+  JsBuffer decompressed = result.unwrap();
   size_t actualSize = 0;
   if (!Compression::LZ4::decompress(
           reinterpret_cast<const char*>(contents.Elements()), contents.Length(),
@@ -1414,6 +1396,137 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
 
   opts.mCompress = aOptions.mCompress;
   return opts;
+}
+
+/* static */
+Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::JsBuffer::Create(
+    IOUtils::BufferKind aBufferKind, size_t aCapacity) {
+  JsBuffer buffer(aBufferKind, aCapacity);
+  if (aCapacity != 0 && !buffer.mBuffer) {
+    return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
+                   .WithMessage("Could not allocate buffer"));
+  }
+  return buffer;
+}
+
+/* static */
+IOUtils::JsBuffer IOUtils::JsBuffer::CreateEmpty(
+    IOUtils::BufferKind aBufferKind) {
+  JsBuffer buffer(aBufferKind, 0);
+  MOZ_RELEASE_ASSERT(buffer.mBuffer == nullptr);
+  return buffer;
+}
+
+IOUtils::JsBuffer::JsBuffer(IOUtils::BufferKind aBufferKind, size_t aCapacity)
+    : mBufferKind(aBufferKind), mCapacity(aCapacity), mLength(0) {
+  if (mCapacity) {
+    if (aBufferKind == BufferKind::String) {
+      mBuffer = JS::UniqueChars(
+          js_pod_arena_malloc<char>(js::StringBufferArena, mCapacity));
+    } else {
+      MOZ_RELEASE_ASSERT(aBufferKind == BufferKind::Uint8Array);
+      mBuffer = JS::UniqueChars(
+          js_pod_arena_malloc<char>(js::ArrayBufferContentsArena, mCapacity));
+    }
+  }
+}
+
+IOUtils::JsBuffer::JsBuffer(IOUtils::JsBuffer&& aOther) noexcept
+    : mBufferKind(aOther.mBufferKind),
+      mCapacity(aOther.mCapacity),
+      mLength(aOther.mLength),
+      mBuffer(std::move(aOther.mBuffer)) {
+  aOther.mCapacity = 0;
+  aOther.mLength = 0;
+}
+
+IOUtils::JsBuffer& IOUtils::JsBuffer::operator=(
+    IOUtils::JsBuffer&& aOther) noexcept {
+  mBufferKind = aOther.mBufferKind;
+  mCapacity = aOther.mCapacity;
+  mLength = aOther.mLength;
+  mBuffer = std::move(aOther.mBuffer);
+
+  // Invalidate aOther.
+  aOther.mCapacity = 0;
+  aOther.mLength = 0;
+
+  return *this;
+}
+
+/* static */
+JSString* IOUtils::JsBuffer::IntoString(JSContext* aCx, JsBuffer aBuffer) {
+  MOZ_RELEASE_ASSERT(aBuffer.mBufferKind == IOUtils::BufferKind::String);
+
+  if (!aBuffer.mCapacity) {
+    return JS_GetEmptyString(aCx);
+  }
+
+  if (IsAscii(aBuffer.BeginReading())) {
+    // If the string is just plain ASCII, then we can hand the buffer off to
+    // JavaScript as a Latin1 string (since ASCII is a subset of Latin1).
+    JS::UniqueLatin1Chars asLatin1(
+        reinterpret_cast<JS::Latin1Char*>(aBuffer.mBuffer.release()));
+    return JS_NewLatin1String(aCx, std::move(asLatin1), aBuffer.mLength);
+  }
+
+  // If the string is encodable as Latin1, we need to deflate the string to a
+  // Latin1 string to accoutn for UTF-8 characters that are encoded as more than
+  // a single byte.
+  //
+  // Otherwise, the string contains characters outside Latin1 so we have to
+  // inflate to UTF-16.
+  return JS_NewStringCopyUTF8N(
+      aCx, JS::UTF8Chars(aBuffer.mBuffer.get(), aBuffer.mLength));
+}
+
+/* static */
+JSObject* IOUtils::JsBuffer::IntoUint8Array(JSContext* aCx, JsBuffer aBuffer) {
+  MOZ_RELEASE_ASSERT(aBuffer.mBufferKind == IOUtils::BufferKind::Uint8Array);
+
+  if (!aBuffer.mCapacity) {
+    return JS_NewUint8Array(aCx, 0);
+  }
+
+  char* rawBuffer = aBuffer.mBuffer.release();
+  MOZ_RELEASE_ASSERT(rawBuffer);
+  JS::Rooted<JSObject*> arrayBuffer(
+      aCx, JS::NewArrayBufferWithContents(aCx, aBuffer.mLength,
+                                          reinterpret_cast<void*>(rawBuffer)));
+
+  if (!arrayBuffer) {
+    // The array buffer does not take ownership of the data pointer unless
+    // creation succeeds. We are still on the hook to free it.
+    //
+    // aBuffer will be destructed at end of scope, but its destructor does not
+    // take into account |mCapacity| or |mLength|, so it is OK for them to be
+    // non-zero here with a null |mBuffer|.
+    js_free(rawBuffer);
+    return nullptr;
+  }
+
+  return JS_NewUint8ArrayWithBuffer(aCx, arrayBuffer, 0, aBuffer.mLength);
+}
+
+MOZ_MUST_USE bool ToJSValue(JSContext* aCx, IOUtils::JsBuffer&& aBuffer,
+                            JS::MutableHandle<JS::Value> aValue) {
+  if (aBuffer.mBufferKind == IOUtils::BufferKind::String) {
+    JSString* str = IOUtils::JsBuffer::IntoString(aCx, std::move(aBuffer));
+    if (!str) {
+      return false;
+    }
+
+    aValue.setString(str);
+    return true;
+  }
+
+  JSObject* array = IOUtils::JsBuffer::IntoUint8Array(aCx, std::move(aBuffer));
+  if (!array) {
+    return false;
+  }
+
+  aValue.setObject(*array);
+  return true;
 }
 
 }  // namespace mozilla::dom

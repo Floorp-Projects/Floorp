@@ -55,6 +55,13 @@ def main(args=sys.argv[1:]):
             }
         )
 
+    if args.enable_marionette_trace:
+        args.extra_prefs.update(
+            {
+                "marionette.log.level": "Trace",
+            }
+        )
+
     if args.extra_prefs and args.extra_prefs.get("fission.autostart", False):
         args.enable_fission = True
 

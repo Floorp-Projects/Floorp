@@ -17,9 +17,17 @@
       }
     ],
     "properties": {
+      "attributionURL": {
+        "$ref": "types.Setting",
+        "description": "Gets or sets the attribution URL for the current browser session."
+      },
       "engagementTelemetry": {
         "$ref": "types.Setting",
         "description": "Enables or disables the engagement telemetry for the current browser session."
+      },
+      "extensionTimeout": {
+        "$ref": "types.Setting",
+        "description": "Sets the amount of time in ms that extensions have to return results to the browser.urlbar API."
       }
     },
     "events": [

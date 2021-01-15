@@ -278,14 +278,14 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
     )
 
 
-@depends(c_compiler, host_c_compiler, toolchain_search_path)
+@depends(c_compiler, host_c_compiler, vc_toolchain_search_path)
 @imports("os")
-def vc_path(c_compiler, host_c_compiler, toolchain_search_path):
+def vc_path(c_compiler, host_c_compiler, vc_toolchain_search_path):
     if c_compiler.type != "clang-cl" and host_c_compiler.type != "clang-cl":
         return
 
     # In clang-cl builds, we need the headers and libraries from an MSVC installation.
-    vc_program = find_program("cl.exe", paths=toolchain_search_path)
+    vc_program = find_program("cl.exe", paths=vc_toolchain_search_path)
     if not vc_program:
         die("Cannot find a Visual C++ install for e.g. ATL headers.")
 
@@ -519,7 +519,7 @@ link = check_prog(
     ("lld-link",),
     input="LINKER",
     when=target_is_windows,
-    paths=toolchain_search_path,
+    paths=clang_search_path,
 )
 
 option(env="HOST_LINKER", nargs=1, when=host_is_windows, help="Path to the host linker")
@@ -529,7 +529,7 @@ host_link = check_prog(
     ("lld-link",),
     input="HOST_LINKER",
     when=host_is_windows,
-    paths=host_toolchain_search_path,
+    paths=clang_search_path,
 )
 
 add_old_configure_assignment("LINKER", link)

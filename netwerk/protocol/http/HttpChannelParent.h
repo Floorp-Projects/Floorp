@@ -176,8 +176,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const int16_t& priority) override;
   virtual mozilla::ipc::IPCResult RecvSetClassOfService(
       const uint32_t& cos) override;
-  virtual mozilla::ipc::IPCResult RecvSetCacheTokenCachedCharset(
-      const nsCString& charset) override;
   virtual mozilla::ipc::IPCResult RecvSuspend() override;
   virtual mozilla::ipc::IPCResult RecvResume() override;
   virtual mozilla::ipc::IPCResult RecvCancel(
