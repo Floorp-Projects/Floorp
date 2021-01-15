@@ -13,7 +13,7 @@ async function runTest() {
   navigateByLocation(window0.frames[0]);
   navigateByOpen("window1_child0");
   navigateByForm("window2_child0");
-  navigateByHyperlink("window3_child0");
+  await navigateByHyperlink("window3_child0");
 
   await waitForFinishedFrames(4);
 

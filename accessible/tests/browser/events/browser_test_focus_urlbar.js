@@ -280,7 +280,7 @@ async function runTests() {
     nsIAccessibleEvent.EVENT_MENUPOPUP_START,
     isEventForMenuPopup
   );
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     gURLBar.querySelector("moz-input-box")
   );

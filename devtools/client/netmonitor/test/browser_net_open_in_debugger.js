@@ -23,11 +23,11 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]
   );
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[2]
   );

@@ -56,8 +56,11 @@ add_task(async function() {
     const { document } = monitor.panelWin;
 
     const items = document.querySelectorAll(".request-list-item");
-    EventUtils.sendMouseEvent({ type: "mousedown" }, items[items.length - 1]);
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
+      { type: "mousedown" },
+      items[items.length - 1]
+    );
+    await EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[0]
     );

@@ -34,7 +34,7 @@ add_task(async function() {
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );

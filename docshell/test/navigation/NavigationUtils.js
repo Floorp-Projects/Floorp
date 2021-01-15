@@ -43,13 +43,13 @@ function navigateByForm(name) {
 
 var hyperlink_count = 0;
 
-function navigateByHyperlink(name) {
+async function navigateByHyperlink(name) {
   var link = document.createElement("a");
   link.href = target_url;
   link.target = name;
   link.id = "navigation_hyperlink_" + hyperlink_count++;
   document.body.appendChild(link);
-  sendMouseEvent({ type: "click" }, link.id);
+  await sendMouseEvent({ type: "click" }, link.id);
 }
 
 // /////////////////////////////////////////////////////////////////////////
