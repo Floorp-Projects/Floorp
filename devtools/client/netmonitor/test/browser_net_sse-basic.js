@@ -35,7 +35,7 @@ add_task(async function() {
   is(requests.length, 1, "There should be one request");
 
   // Select the request to open the side panel.
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
   // Wait for messages to be displayed in DevTools
   const wait = waitForDOM(
@@ -45,7 +45,7 @@ add_task(async function() {
   );
 
   // Click on the "Response" panel
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#response-tab")
   );
@@ -109,7 +109,7 @@ add_task(async function() {
 
   await waitForTick();
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector(".message-list-headers")
   );

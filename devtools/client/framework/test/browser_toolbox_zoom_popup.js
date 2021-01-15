@@ -131,7 +131,7 @@ add_task(async function() {
 async function getButtonAndMenuInfo(toolbox, menuButton) {
   const { doc, topDoc } = toolbox;
   info("Show popup menu with click event.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     {
       type: "click",
       screenX: 1,

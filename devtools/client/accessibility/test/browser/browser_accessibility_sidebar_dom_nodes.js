@@ -25,7 +25,7 @@ addA11YPanelTask(
   async ({ toolbox, doc }) => {
     info("Select an item having an actual associated DOM node");
     await toggleRow(doc, 0);
-    selectRow(doc, 1);
+    await selectRow(doc, 1);
 
     await BrowserTestUtils.waitForCondition(
       () => getPropertyValue(doc, "name") === `"Hello"`,

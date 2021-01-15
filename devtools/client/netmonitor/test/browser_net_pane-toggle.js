@@ -81,7 +81,7 @@ add_task(async function() {
     "The first item should be selected in the requests menu."
   );
 
-  EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
+  await EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
 
   is(
     !!document.querySelector(".network-details-bar"),

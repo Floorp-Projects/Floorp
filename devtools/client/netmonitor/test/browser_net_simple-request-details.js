@@ -353,7 +353,7 @@ add_task(async function() {
     )[pos];
 
     const onPanelOpen = waitForDOM(document, `#${tabName}-panel`);
-    EventUtils.sendMouseEvent({ type: "click" }, tabEl);
+    await EventUtils.sendMouseEvent({ type: "click" }, tabEl);
     await onPanelOpen;
 
     is(

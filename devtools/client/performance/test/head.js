@@ -46,23 +46,23 @@ const either = (value, a, b, message) => {
 };
 
 // Shortcut for simulating a click on an element.
-const click = (node, win = window) => {
-  EventUtils.sendMouseEvent({ type: "click" }, node, win);
+const click = async (node, win = window) => {
+  await EventUtils.sendMouseEvent({ type: "click" }, node, win);
 };
 
 // Shortcut for simulating a double click on an element.
-const dblclick = (node, win = window) => {
-  EventUtils.sendMouseEvent({ type: "dblclick" }, node, win);
+const dblclick = async (node, win = window) => {
+  await EventUtils.sendMouseEvent({ type: "dblclick" }, node, win);
 };
 
 // Shortcut for simulating a mousedown on an element.
-const mousedown = (node, win = window) => {
-  EventUtils.sendMouseEvent({ type: "mousedown" }, node, win);
+const mousedown = async (node, win = window) => {
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, node, win);
 };
 
 // Shortcut for simulating a mousedown using the right mouse button on an element.
-const rightMousedown = (node, win = window) => {
-  EventUtils.sendMouseEvent({ type: "mousedown", button: 2 }, node, win);
+const rightMousedown = async (node, win = window) => {
+  await EventUtils.sendMouseEvent({ type: "mousedown", button: 2 }, node, win);
 };
 
 // Shortcut for firing a key event, like "VK_UP", "VK_DOWN", etc.

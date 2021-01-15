@@ -36,14 +36,14 @@ async function spawnTest() {
   let targetMarker = gcMarkers[1];
   let targetBar = bars[1];
   info(`Clicking GC Marker of type ${targetMarker.causeName} ${targetMarker.start}:${targetMarker.end}`);
-  EventUtils.sendMouseEvent({ type: "mousedown" }, targetBar);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, targetBar);
   let showAllocsButton;
   // On slower machines this can not be found immediately?
   await waitUntil(() => showAllocsButton = $("#waterfall-details .custom-button[type='show-allocations']"));
   ok(showAllocsButton, "GC buttons when allocations are enabled");
 
   rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
-  EventUtils.sendMouseEvent({ type: "click" }, showAllocsButton);
+  await EventUtils.sendMouseEvent({ type: "click" }, showAllocsButton);
   await rendered;
 
   is(OverviewView.getTimeInterval().startTime, 0, "When clicking first GC, should use 0 as start time");
@@ -64,13 +64,13 @@ async function spawnTest() {
   targetBar = bars[4];
 
   info(`Clicking GC Marker of type ${targetMarker.causeName} ${targetMarker.start}:${targetMarker.end}`);
-  EventUtils.sendMouseEvent({ type: "mousedown" }, targetBar);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, targetBar);
   // On slower machines this can not be found immediately?
   await waitUntil(() => showAllocsButton = $("#waterfall-details .custom-button[type='show-allocations']"));
   ok(showAllocsButton, "GC buttons when allocations are enabled");
 
   rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
-  EventUtils.sendMouseEvent({ type: "click" }, showAllocsButton);
+  await EventUtils.sendMouseEvent({ type: "click" }, showAllocsButton);
   await rendered;
 
   within(OverviewView.getTimeInterval().startTime, gcMarkers[2].end, EPSILON,
@@ -107,7 +107,7 @@ async function spawnTest() {
   bars = $$(".waterfall-marker-bar");
   gcMarkers = PerformanceController.getCurrentRecording().getMarkers();
 
-  EventUtils.sendMouseEvent({ type: "mousedown" }, bars[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, bars[0]);
   showAllocsButton = $("#waterfall-details .custom-button[type='show-allocations']");
   ok(!showAllocsButton, "No GC buttons when allocations are disabled");
 

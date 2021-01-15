@@ -21,13 +21,13 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   const wait = waitForDOM(document, ".headers-overview");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#request-tab")
   );

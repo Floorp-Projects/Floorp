@@ -22,13 +22,13 @@ add_task(async function() {
   await wait;
 
   wait = waitForDOM(document, ".headers-overview");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#cookies-tab")
   );

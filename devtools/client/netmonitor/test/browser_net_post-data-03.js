@@ -26,7 +26,7 @@ add_task(async function() {
   // Wait for all tree view updated by react
   let wait = waitForDOM(document, "#headers-panel .accordion-item", 3);
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#headers-tab")
   );
@@ -75,7 +75,7 @@ add_task(async function() {
 
   // Wait for all tree sections updated by react
   wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#request-tab")
   );

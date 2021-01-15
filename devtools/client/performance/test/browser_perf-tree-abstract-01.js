@@ -61,7 +61,7 @@ add_task(async function() {
 
   let receivedExpandEvent = once(treeRoot, "expand", { spreadArgs: true });
   let receivedFocusEvent = once(treeRoot, "focus");
-  mousedown(treeRoot.target.querySelector(".arrow"));
+  await mousedown(treeRoot.target.querySelector(".arrow"));
 
   let [eventItem] = await receivedExpandEvent;
   is(eventItem, treeRoot, "The 'expand' event target is correct (1).");
@@ -130,7 +130,7 @@ add_task(async function() {
   // Test clicking on the `foo` node...
 
   receivedFocusEvent = once(treeRoot, "focus", { spreadArgs: true });
-  mousedown(fooItem.target);
+  await mousedown(fooItem.target);
 
   [eventItem] = await receivedFocusEvent;
   is(eventItem, fooItem, "The 'focus' event target is correct (2).");
@@ -144,7 +144,7 @@ add_task(async function() {
 
   receivedExpandEvent = once(treeRoot, "expand", { spreadArgs: true });
   receivedFocusEvent = once(treeRoot, "focus");
-  dblclick(barItem.target);
+  await dblclick(barItem.target);
 
   [eventItem] = await receivedExpandEvent;
   is(eventItem, barItem, "The 'expand' event target is correct (3).");
