@@ -1493,6 +1493,8 @@ nsresult Database::InitFunctions() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = FixupURLFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = FrecencyNotificationFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = StoreLastInsertedIdFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = HashFunction::create(mMainConn);
