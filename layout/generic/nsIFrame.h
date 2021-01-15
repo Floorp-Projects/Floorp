@@ -2157,7 +2157,7 @@ class nsIFrame : public nsQueryFrame {
    * @param aSelectFlags Selection flags defined in nsIFrame.h.
    * @return success or failure at finding suitable content to select.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  MOZ_CAN_RUN_SCRIPT nsresult
   SelectByTypeAtPoint(nsPresContext* aPresContext, const nsPoint& aPoint,
                       nsSelectionAmount aBeginAmountType,
                       nsSelectionAmount aEndAmountType, uint32_t aSelectFlags);
@@ -2179,10 +2179,9 @@ class nsIFrame : public nsQueryFrame {
   HandlePress(nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
               nsEventStatus* aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
-                                 mozilla::WidgetGUIEvent* aEvent,
-                                 nsEventStatus* aEventStatus,
-                                 bool aControlHeld);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD HandleMultiplePress(
+      nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
+      nsEventStatus* aEventStatus, bool aControlHeld);
 
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
