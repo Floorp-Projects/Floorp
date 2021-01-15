@@ -63,12 +63,12 @@ add_task(async function() {
 
   return teardown(monitor);
 
-  function testCopyUrlParamsHidden(index, hidden) {
-    EventUtils.sendMouseEvent(
+  async function testCopyUrlParamsHidden(index, hidden) {
+    await EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -86,11 +86,11 @@ add_task(async function() {
   }
 
   async function testCopyUrlParams(index, queryString) {
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -103,12 +103,12 @@ add_task(async function() {
     ok(true, "The url query string copied from the selected item is correct.");
   }
 
-  function testCopyPostDataHidden(index, hidden) {
-    EventUtils.sendMouseEvent(
+  async function testCopyPostDataHidden(index, hidden) {
+    await EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -125,12 +125,12 @@ add_task(async function() {
     );
   }
 
-  function testCopyRequestDataLabel(index, method) {
-    EventUtils.sendMouseEvent(
+  async function testCopyRequestDataLabel(index, method) {
+    await EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -155,11 +155,11 @@ add_task(async function() {
       const { formDataSections, requestPostData } = requests[index];
       return formDataSections && requestPostData;
     });
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );

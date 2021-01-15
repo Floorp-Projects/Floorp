@@ -152,7 +152,7 @@ add_task(async function() {
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -177,7 +177,7 @@ add_task(async function() {
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   info("Testing html filtering.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
@@ -232,7 +232,7 @@ add_task(async function() {
   ]);
 
   info("Resetting filters.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
@@ -283,7 +283,10 @@ add_task(async function() {
     for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
       const requestsListStatus = requestItem.querySelector(".status-code");
-      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+      await EventUtils.sendMouseEvent(
+        { type: "mouseover" },
+        requestsListStatus
+      );
       await waitUntil(() => requestsListStatus.title);
     }
 

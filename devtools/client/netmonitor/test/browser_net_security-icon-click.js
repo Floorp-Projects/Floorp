@@ -29,13 +29,13 @@ add_task(async function() {
   await clickAndTestSecurityIcon();
 
   info("Selecting headers panel again.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#headers-tab")
   );
 
   info("Sorting the items by filename.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-file-button")
   );

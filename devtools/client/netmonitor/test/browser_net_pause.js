@@ -35,20 +35,20 @@ add_task(async function() {
   });
 
   // Click pause, load second request and make sure they don't show up.
-  EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
+  await EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
   await performPausedRequest(tab, monitor, toolbox);
   ok(noRequest, "There should be no activity when paused.");
   assertRequestCount(store, 1);
 
   // Click pause again to resume monitoring. Load a third request
   // and make sure they will show up.
-  EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
+  await EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
   await performRequestAndWait(tab, monitor);
   assertRequestCount(store, 2);
 
   // Click pause, reload the page and check that there are
   // some requests. Page reload should auto-resume.
-  EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
+  await EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
   const networkEvents = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await networkEvents;

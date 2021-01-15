@@ -54,7 +54,7 @@ add_task(async function() {
   );
 
   // Click on the first resource to expand it
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".search-panel-content .treeRow .treeIcon")
   );

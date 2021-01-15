@@ -64,7 +64,7 @@ add_task(async function() {
   testFilterButtons(monitor, "js");
   ok(true, "Only the correct filter type was taken into consideration.");
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
