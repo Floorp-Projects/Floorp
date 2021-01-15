@@ -76,7 +76,7 @@ def start_server(address=None, authkey=None, mp_context=None):
     manager.start()
 
     address = manager._address
-    if not isinstance(address, str):
+    if isinstance(address, bytes):
         address = address.decode("ascii")
     return (manager, address, manager._authkey)
 
