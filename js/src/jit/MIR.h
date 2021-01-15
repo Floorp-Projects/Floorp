@@ -2970,9 +2970,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   MIRType inputType();
 
   JSOp jsop() const { return jsop_; }
-  void markNoOperandEmulatesUndefined() {
-    operandMightEmulateUndefined_ = false;
-  }
   bool operandMightEmulateUndefined() const {
     return operandMightEmulateUndefined_;
   }
@@ -7737,9 +7734,6 @@ class MNot : public MUnaryInstruction, public TestPolicy::Data {
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
-  void markNoOperandEmulatesUndefined() {
-    operandMightEmulateUndefined_ = false;
-  }
   bool operandMightEmulateUndefined() const {
     return operandMightEmulateUndefined_;
   }
