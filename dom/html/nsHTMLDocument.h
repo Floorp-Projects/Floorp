@@ -202,6 +202,11 @@ inline nsHTMLDocument* Document::AsHTMLDocument() {
   return static_cast<nsHTMLDocument*>(this);
 }
 
+inline const nsHTMLDocument* Document::AsHTMLDocument() const {
+  MOZ_ASSERT(IsHTMLOrXHTML());
+  return static_cast<const nsHTMLDocument*>(this);
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
