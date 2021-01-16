@@ -1142,7 +1142,7 @@ already_AddRefed<StyleSheet> StyleSheet::CreateEmptyChildSheet(
 // (3) The stylesheet is a chrome stylesheet, since those can use
 //     -moz-bool-pref, which needs to access the pref service, which is not
 //     threadsafe.
-static bool AllowParallelParse(css::Loader& aLoader, URLExtraData* aUrlData) {
+static bool AllowParallelParse(css::Loader& aLoader, nsIURI* aSheetURI) {
   // If the browser is recording CSS errors, we need to use the sequential path
   // because the parallel path doesn't support that.
   Document* doc = aLoader.GetDocument();
@@ -1157,7 +1157,7 @@ static bool AllowParallelParse(css::Loader& aLoader, URLExtraData* aUrlData) {
   //
   // Note that UA stylesheets can also use -moz-bool-pref, but those are always
   // parsed sync.
-  if (aUrlData->ChromeRulesEnabled()) {
+  if (dom::IsChromeURI(aSheetURI)) {
     return false;
   }
 
@@ -1179,7 +1179,7 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
                               : StyleAllowImportRules::Yes;
   const bool shouldRecordCounters =
       aLoader.GetDocument() && aLoader.GetDocument()->GetStyleUseCounters();
-  if (!AllowParallelParse(aLoader, Inner().mURLData)) {
+  if (!AllowParallelParse(aLoader, GetSheetURI())) {
     UniquePtr<StyleUseCounters> counters =
         shouldRecordCounters ? Servo_UseCounters_Create().Consume() : nullptr;
 
