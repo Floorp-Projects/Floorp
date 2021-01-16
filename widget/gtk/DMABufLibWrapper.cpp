@@ -201,24 +201,21 @@ bool nsDMABufDevice::Configure() {
     return false;
   }
 
-  nsAutoCString drm_render_node(getenv("MOZ_WAYLAND_DRM_DEVICE"));
-  if (drm_render_node.IsEmpty()) {
-    drm_render_node.Assign(gfx::gfxVars::DrmRenderDevice());
-    if (drm_render_node.IsEmpty()) {
-      return false;
-    }
+  // TODO - Better DRM device detection/configuration.
+  const char* drm_render_node = getenv("MOZ_WAYLAND_DRM_DEVICE");
+  if (!drm_render_node) {
+    drm_render_node = "/dev/dri/renderD128";
   }
 
-  mGbmFd = open(drm_render_node.get(), O_RDWR);
+  mGbmFd = open(drm_render_node, O_RDWR);
   if (mGbmFd < 0) {
-    LOGDMABUF(("Failed to open drm render node %s\n", drm_render_node.get()));
+    LOGDMABUF(("Failed to open drm render node %s\n", drm_render_node));
     return false;
   }
 
   mGbmDevice = nsGbmLib::CreateDevice(mGbmFd);
-  if (!mGbmDevice) {
-    LOGDMABUF(
-        ("Failed to create drm render device %s\n", drm_render_node.get()));
+  if (mGbmDevice == nullptr) {
+    LOGDMABUF(("Failed to create drm render device %s\n", drm_render_node));
     close(mGbmFd);
     mGbmFd = -1;
     return false;
