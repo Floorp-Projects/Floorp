@@ -167,6 +167,8 @@ void GfxInfo::GetData() {
   nsCString screenInfo;
   nsCString adapterRam;
 
+  nsCString drmRenderDevice;
+
   AutoTArray<nsCString, 2> pciVendors;
   AutoTArray<nsCString, 2> pciDevices;
 
@@ -207,6 +209,8 @@ void GfxInfo::GetData() {
       stringToFill = pciVendors.AppendElement();
     } else if (!strcmp(line, "PCI_DEVICE_ID")) {
       stringToFill = pciDevices.AppendElement();
+    } else if (!strcmp(line, "DRM_RENDERDEVICE")) {
+      stringToFill = &drmRenderDevice;
     } else if (!strcmp(line, "WARNING")) {
       logString = true;
     } else if (!strcmp(line, "ERROR")) {
@@ -264,6 +268,8 @@ void GfxInfo::GetData() {
   if (mGLMajorVersion == 0) {
     NS_WARNING("Failed to parse GL version!");
   }
+
+  mDrmRenderDevice = std::move(drmRenderDevice);
 
   // Mesa always exposes itself in the GL_VERSION string, but not always the
   // GL_VENDOR string.
@@ -1093,6 +1099,13 @@ NS_IMETHODIMP
 GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) {
   // This is never the case, as the active GPU should be the primary GPU.
   *aIsGPU2Active = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDrmRenderDevice(nsACString& aDrmRenderDevice) {
+  GetData();
+  aDrmRenderDevice.Assign(mDrmRenderDevice);
   return NS_OK;
 }
 

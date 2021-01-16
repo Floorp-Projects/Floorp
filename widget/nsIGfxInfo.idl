@@ -77,6 +77,8 @@ interface nsIGfxInfo : nsISupports
 
   readonly attribute boolean isGPU2Active;
 
+  readonly attribute ACString drmRenderDevice;
+
   /**
    * Information about display devices
    */
