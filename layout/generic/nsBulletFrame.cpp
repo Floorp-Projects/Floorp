@@ -104,6 +104,10 @@ void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
       loader->AssociateRequestToFrame(
           newListImage, this,
           css::ImageLoader::Flags::RequiresReflowOnSizeAvailable);
+
+      // Image bullets can affect the layout of the page, so boost the image
+      // load priority.
+      newListImage->BoostPriority(imgIRequest::CATEGORY_SIZE_QUERY);
     }
   }
 
