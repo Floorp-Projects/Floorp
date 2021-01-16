@@ -14,13 +14,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500174
 SimpleTest.waitForExplicitFinish();
 
 function run() {
-  var div = document.getElementById("div");
-  // Get the coords of the origin of the SVG canvas:
-  var originX = div.offsetLeft;
-  var originY = div.offsetTop;
-  var circle = document.getElementById("circle");
+  pass();
 
-  var elementFromPoint = document.elementFromPoint(originX + 55, originY + 55);
+  document.getElementById("circle").setAttribute("clip-path", "#(unknown)");
+
+  pass();
+
+  SimpleTest.finish();
+}
+
+function pass() {
+  let div = document.getElementById("div");
+  // Get the coords of the origin of the SVG canvas:
+  let originX = div.offsetLeft;
+  let originY = div.offsetTop;
+  let circle = document.getElementById("circle");
+
+  let elementFromPoint = document.elementFromPoint(originX + 55, originY + 55);
   is(elementFromPoint, circle, 'Over circle stroke with pointer-events="all"');
 
   elementFromPoint = document.elementFromPoint(originX + 205, originY + 55);
@@ -29,8 +39,6 @@ function run() {
   elementFromPoint = document.elementFromPoint(originX + 225, originY + 75);
   // XXX disabled. See See https://bugzilla.mozilla.org/show_bug.cgi?id=580983#c116
   // is(elementFromPoint, path, 'Over foreignObject, inside clip path');
-
-  SimpleTest.finish();
 }
 
 ]]>
