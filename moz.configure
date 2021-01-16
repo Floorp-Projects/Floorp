@@ -252,11 +252,11 @@ def bootstrap(value):
         return True
 
 
-@depends(host, bootstrap_search_path_order, when=bootstrap)
+@depends(host, when=bootstrap)
 @imports("os")
 @imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
 @imports(_from="__builtin__", _import="Exception")
-def bootstrap_toolchain_tasks(host, order):
+def bootstrap_toolchain_tasks(host):
     prefix = {
         ("x86_64", "GNU", "Linux"): "linux64",
         ("x86_64", "OSX", "Darwin"): "macosx64",
