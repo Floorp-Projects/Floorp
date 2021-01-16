@@ -102,11 +102,6 @@ gfxPlatformGtk::gfxPlatformGtk() {
 #endif
     if (IsWaylandDisplay() || useEGLOnX11) {
       gfxVars::SetUseEGL(true);
-
-      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-      nsAutoCString drmRenderDevice;
-      gfxInfo->GetDrmRenderDevice(drmRenderDevice);
-      gfxVars::SetDrmRenderDevice(drmRenderDevice);
     }
   }
 
