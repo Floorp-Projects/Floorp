@@ -2,6 +2,10 @@
 
 gczeal(0);
 
+gcparam("minNurseryBytes", 4096 * 1024);
+gcparam("maxNurseryBytes", 4096 * 1024);
+gc();
+
 // String allocation in the nursery is initially enabled.
 assertEq(nurseryStringsEnabled(), true);
 
