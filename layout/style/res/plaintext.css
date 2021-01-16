@@ -17,6 +17,16 @@ html:not([dir]) pre { /* Not a UA sheet, so doesn't use :-moz-has-dir-attr */
   unicode-bidi: plaintext;
 }
 
+@-moz-document unobservable-document() {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* in-content-page-{color, background} for dark theme. */
+      background: #2a2a2e;
+      color: rgb(249, 249, 250);
+    }
+  }
+}
+
 /* NOTE(emilio): For some reason some pages, mainly bing.com, load a bunch of
  * scripts in zero-size <object> elements, see bug 1548449.
  *

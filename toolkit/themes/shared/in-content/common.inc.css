@@ -104,9 +104,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Keep this in sync with layout/base/PresShell.cpp! */
+    /* Keep these in sync with layout/base/PresShell.cpp, and plaintext.css */
     --in-content-page-background: #2A2A2E;
     --in-content-page-color: rgb(249, 249, 250);
+
     --in-content-text-color: var(--in-content-page-color);
     --in-content-deemphasized-text: var(--grey-40);
     --in-content-box-background: #202023;
