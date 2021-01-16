@@ -279,7 +279,6 @@ impl DocumentCondition {
 
     #[cfg(feature = "gecko")]
     fn allowed_in(&self, context: &ParserContext) -> bool {
-        use crate::stylesheets::Origin;
         use static_prefs::pref;
 
         if context.in_ua_or_chrome_sheet() {
