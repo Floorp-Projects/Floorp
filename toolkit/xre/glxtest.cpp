@@ -84,23 +84,62 @@ typedef uint32_t GLenum;
 // clang-format on
 
 // stuff from egl.h
+typedef intptr_t EGLAttrib;
+typedef int EGLBoolean;
+typedef void* EGLConfig;
+typedef void* EGLContext;
+typedef void* EGLDeviceEXT;
+typedef void* EGLDisplay;
+typedef int EGLint;
+typedef void* EGLNativeDisplayType;
+typedef void* EGLSurface;
+typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
+
+#define EGL_NO_CONTEXT nullptr
+#define EGL_FALSE 0
+#define EGL_TRUE 1
 #define EGL_BLUE_SIZE 0x3022
 #define EGL_GREEN_SIZE 0x3023
 #define EGL_RED_SIZE 0x3024
 #define EGL_NONE 0x3038
 #define EGL_VENDOR 0x3053
 #define EGL_CONTEXT_CLIENT_VERSION 0x3098
-#define EGL_NO_CONTEXT nullptr
+#define EGL_DEVICE_EXT 0x322C
+#define EGL_DRM_DEVICE_FILE_EXT 0x3233
+
+// stuff from xf86drm.h
+#define DRM_NODE_RENDER 2
+#define DRM_NODE_MAX 3
+
+typedef struct _drmDevice {
+  char** nodes;
+  int available_nodes;
+  int bustype;
+  union {
+    void* pci;
+    void* usb;
+    void* platform;
+    void* host1x;
+  } businfo;
+  union {
+    void* pci;
+    void* usb;
+    void* platform;
+    void* host1x;
+  } deviceinfo;
+} drmDevice, *drmDevicePtr;
 
 // Open libGL and load needed symbols
 #if defined(__OpenBSD__) || defined(__NetBSD__)
 #  define LIBGL_FILENAME "libGL.so"
 #  define LIBGLES_FILENAME "libGLESv2.so"
 #  define LIBEGL_FILENAME "libEGL.so"
+#  define LIBDRM_FILENAME "libdrm.so"
 #else
 #  define LIBGL_FILENAME "libGL.so.1"
 #  define LIBGLES_FILENAME "libGLESv2.so.2"
 #  define LIBEGL_FILENAME "libEGL.so.1"
+#  define LIBDRM_FILENAME "libdrm.so.2"
 #endif
 
 #define EXIT_FAILURE_BUFFER_TOO_SMALL 2
@@ -282,18 +321,91 @@ static void get_pci_status() {
   dlclose(libpci);
 }
 
-typedef void* EGLNativeDisplayType;
-typedef void* EGLDisplay;
-typedef int EGLBoolean;
-typedef int EGLint;
-typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
+#ifdef MOZ_WAYLAND
+static bool device_has_name(const drmDevice* device, const char* name) {
+  for (size_t i = 0; i < DRM_NODE_MAX; i++) {
+    if (!(device->available_nodes & (1 << i))) {
+      continue;
+    }
+    if (strcmp(device->nodes[i], name) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static char* get_render_name(const char* name) {
+  void* libdrm = dlopen(LIBDRM_FILENAME, RTLD_LAZY);
+  if (!libdrm) {
+    record_warning("Failed to open libdrm");
+    return nullptr;
+  }
+
+  typedef int (*DRMGETDEVICES2)(uint32_t, drmDevicePtr*, int);
+  DRMGETDEVICES2 drmGetDevices2 =
+      cast<DRMGETDEVICES2>(dlsym(libdrm, "drmGetDevices2"));
+
+  typedef void (*DRMFREEDEVICE)(drmDevicePtr*);
+  DRMFREEDEVICE drmFreeDevice =
+      cast<DRMFREEDEVICE>(dlsym(libdrm, "drmFreeDevice"));
+
+  if (!drmGetDevices2 || !drmFreeDevice) {
+    record_warning(
+        "libdrm missing methods for drmGetDevices2 or drmFreeDevice");
+    dlclose(libdrm);
+    return nullptr;
+  }
+
+  uint32_t flags = 0;
+  int devices_len = drmGetDevices2(flags, nullptr, 0);
+  if (devices_len < 0) {
+    record_warning("drmGetDevices2 failed");
+    dlclose(libdrm);
+    return nullptr;
+  }
+  drmDevice** devices = (drmDevice**)calloc(devices_len, sizeof(drmDevice*));
+  if (!devices) {
+    record_warning("Allocation error");
+    dlclose(libdrm);
+    return nullptr;
+  }
+  devices_len = drmGetDevices2(flags, devices, devices_len);
+  if (devices_len < 0) {
+    free(devices);
+    record_warning("drmGetDevices2 failed");
+    dlclose(libdrm);
+    return nullptr;
+  }
+
+  const drmDevice* match = nullptr;
+  for (int i = 0; i < devices_len; i++) {
+    if (device_has_name(devices[i], name)) {
+      match = devices[i];
+      break;
+    }
+  }
+
+  char* render_name = nullptr;
+  if (!match) {
+    record_warning("Cannot find DRM device");
+  } else if (!(match->available_nodes & (1 << DRM_NODE_RENDER))) {
+    record_warning("DRM device has no render node");
+  } else {
+    render_name = strdup(match->nodes[DRM_NODE_RENDER]);
+  }
+
+  for (int i = 0; i < devices_len; i++) {
+    drmFreeDevice(&devices[i]);
+  }
+  free(devices);
+
+  dlclose(libdrm);
+  return render_name;
+}
+#endif
 
 static void get_gles_status(EGLDisplay dpy,
                             PFNEGLGETPROCADDRESS eglGetProcAddress) {
-  typedef void* EGLConfig;
-  typedef void* EGLContext;
-  typedef void* EGLSurface;
-
   typedef EGLBoolean (*PFNEGLCHOOSECONFIGPROC)(
       EGLDisplay dpy, EGLint const* attrib_list, EGLConfig* configs,
       EGLint config_size, EGLint* num_config);
@@ -316,6 +428,18 @@ static void get_gles_status(EGLDisplay dpy,
       EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext context);
   PFNEGLMAKECURRENTPROC eglMakeCurrent =
       cast<PFNEGLMAKECURRENTPROC>(eglGetProcAddress("eglMakeCurrent"));
+
+  typedef const char* (*PFNEGLQUERYDEVICESTRINGEXTPROC)(EGLDeviceEXT device,
+                                                        EGLint name);
+  PFNEGLQUERYDEVICESTRINGEXTPROC eglQueryDeviceStringEXT =
+      cast<PFNEGLQUERYDEVICESTRINGEXTPROC>(
+          eglGetProcAddress("eglQueryDeviceStringEXT"));
+
+  typedef EGLBoolean (*PFNEGLQUERYDISPLAYATTRIBEXTPROC)(
+      EGLDisplay dpy, EGLint name, EGLAttrib * value);
+  PFNEGLQUERYDISPLAYATTRIBEXTPROC eglQueryDisplayAttribEXT =
+      cast<PFNEGLQUERYDISPLAYATTRIBEXTPROC>(
+          eglGetProcAddress("eglQueryDisplayAttribEXT"));
 
   if (!eglChooseConfig || !eglCreateContext || !eglCreatePbufferSurface ||
       !eglMakeCurrent) {
@@ -368,6 +492,28 @@ static void get_gles_status(EGLDisplay dpy,
                  vendorString, rendererString, versionString);
   } else {
     record_error("libGLESv2 glGetString returned null");
+  }
+
+  if (eglQueryDeviceStringEXT) {
+    EGLDeviceEXT device = nullptr;
+
+    if (eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, (EGLAttrib*)&device) ==
+        EGL_TRUE) {
+      const char* deviceString =
+          eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
+      if (deviceString) {
+        record_value("MESA_ACCELERATED\nTRUE\n");
+
+#ifdef MOZ_WAYLAND
+        char* renderDeviceName = get_render_name(deviceString);
+        if (renderDeviceName) {
+          record_value("DRM_RENDERDEVICE\n%s\n", renderDeviceName);
+        } else {
+          record_warning("Can't find render node name for DRM device");
+        }
+#endif
+      }
+    }
   }
 
   if (libgl) {
