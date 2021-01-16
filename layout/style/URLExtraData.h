@@ -34,8 +34,7 @@ struct URLExtraData {
     // When we hold the URI data of a style sheet, referrer is always
     // equal to the sheet URI.
     nsCOMPtr<nsIURI> referrer = mReferrerInfo->GetOriginalReferrer();
-    mChromeRulesEnabled = referrer && (referrer->SchemeIs("chrome") ||
-                                       referrer->SchemeIs("resource"));
+    mIsChrome = referrer ? dom::IsChromeURI(referrer) : false;
   }
 
   URLExtraData(nsIURI* aBaseURI, nsIReferrerInfo* aReferrerInfo,
@@ -74,7 +73,8 @@ struct URLExtraData {
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
-  bool mChromeRulesEnabled;
+  // True if referrer is a chrome:// URI.
+  bool mIsChrome;
 
   static StaticRefPtr<URLExtraData> sDummy;
   static StaticRefPtr<URLExtraData> sDummyChrome;
