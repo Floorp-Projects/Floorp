@@ -4,8 +4,8 @@
 
 //! Command, response, and status types.
 
-use std::ffi::OsString;
 use std::error::Error as StdError;
+use std::ffi::OsString;
 use std::fmt;
 use std::result;
 
