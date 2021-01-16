@@ -1951,7 +1951,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
       logicalBSize =
           pfd->mBounds.BSize(lineWM) + pfd->mMargin.BStartEnd(lineWM);
       if (logicalBSize < 0 &&
-          mPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
+          mPresContext->CompatibilityMode() != eCompatibility_FullStandards) {
         pfd->mAscent -= logicalBSize;
         logicalBSize = 0;
       }
