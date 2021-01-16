@@ -1061,8 +1061,8 @@ impl SwCompositor {
             Some(overlap_rect) => overlap_rect,
             None => {
                 overlap_tile.overlaps.set(overlaps);
-                return
-            },
+                return;
+            }
         };
 
         for &(ref id, ref transform, ref clip_rect, _) in &self.frame_surfaces {
