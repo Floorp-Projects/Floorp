@@ -300,10 +300,13 @@ bool RenderCompositorANGLE::CreateSwapChain(nsACString& aError) {
       mSwapChain1 = swapChain1;
       mUseTripleBuffering = useTripleBuffering;
     } else if (gfx::gfxVars::UseWebRenderFlipSequentialWin()) {
-      MOZ_ASSERT(GetCompositorHwnd());
-      aError.Assign(
-          nsPrintfCString("RcANGLE(swap chain hwnd create failed %x)", hr));
-      return false;
+      gfxCriticalNoteOnce << "FLIP_SEQUENTIAL is not supported. Fallback";
+
+      if (mWidget->AsWindows()->GetCompositorHwnd()) {
+        // Destroy compositor window.
+        mWidget->AsWindows()->DestroyCompositorWindow();
+        hwnd = mWidget->AsWindows()->GetHwnd();
+      }
     }
   }
 
