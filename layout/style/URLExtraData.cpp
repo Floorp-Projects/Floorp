@@ -27,7 +27,7 @@ void URLExtraData::Init() {
   sDummyChrome =
       new URLExtraData(baseURI.forget(), referrerInfo.forget(),
                        NullPrincipal::CreateWithoutOriginAttributes());
-  sDummyChrome->mChromeRulesEnabled = true;
+  sDummyChrome->mIsChrome = true;
 }
 
 /* static */
