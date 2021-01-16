@@ -12,6 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=814907
     @-moz-document media-document(image) {}
     @-moz-document media-document(plugin) {}
     @-moz-document media-document(all) {}
+    @-moz-document plain-text-document() {}
+    @-moz-document unobservable-document() {}
 
     @-moz-document url(http://www.example.com/) {}
     @-moz-document url('http://www.example.com/') {}
@@ -60,6 +62,8 @@ function runTest()
     "media-document(image)",
     "media-document(plugin)",
     "media-document(all)",
+    "plain-text-document()",
+    "unobservable-document()",
     "url(\"http://www.example.com/\")",
     "url(\"http://www.example.com/\")",
     "url(\"http://www.example.com/\")",
