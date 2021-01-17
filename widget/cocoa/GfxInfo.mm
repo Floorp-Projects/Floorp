@@ -450,16 +450,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::AppleAll,
                                    nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
                                    "FEATURE_ROLLOUT_APPLE_SILICON_MAC");
-
-    // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
-#ifdef NIGHTLY_BUILD
-#  if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__i386) || \
-      defined(__amd64__)
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::All, nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, "FEATURE_ROLLOUT_NIGHTLY_SOFTWARE_WR_S_M_SCRN");
-#  endif
-#endif
   }
   return *sDriverInfo;
 }
