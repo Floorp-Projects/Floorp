@@ -9,8 +9,9 @@
 #include "mozilla/RefPtr.h"   // RefPtr
 #include "mozilla/Sprintf.h"  // SprintfLiteral
 
-#include "frontend/AbstractScopePtr.h"  // ScopeIndex
-#include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
+#include "frontend/AbstractScopePtr.h"     // ScopeIndex
+#include "frontend/BytecodeCompilation.h"  // CanLazilyParse
+#include "frontend/BytecodeSection.h"      // EmitScriptThingsVector
 #include "frontend/CompilationInfo.h"  // CompilationStencil, CompilationStencilSet, CompilationGCOutput
 #include "frontend/SharedContext.h"
 #include "gc/AllocKind.h"    // gc::AllocKind
@@ -674,7 +675,7 @@ bool CompilationStencil::instantiateStencilsAfterPreparation(
   // !! Must be infallible from here forward !!
 
   // Phase 6: Update lazy scripts.
-  {
+  if (CanLazilyParse(input.options)) {
     UpdateEmittedInnerFunctions(cx, input, stencil, gcOutput);
 
     if (isInitialParse) {
