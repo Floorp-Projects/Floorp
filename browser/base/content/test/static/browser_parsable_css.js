@@ -22,6 +22,13 @@ let whitelist = [
     errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
     isFromDevTools: true,
   },
+  // UA-only media features.
+  {
+    sourceName: /\b(autocomplete-item)\.css$/,
+    errorMessage: /Expected media feature name but found \u2018-moz.*/i,
+    isFromDevTools: false,
+    platforms: ["windows"],
+  },
   {
     sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua|pluginproblem)\.css$/i,
     errorMessage: /Unknown pseudo-class.*-moz-/i,
