@@ -73,6 +73,7 @@ class Components(private val context: Context) {
             core.store,
             useCases.sessionUseCases,
             useCases.tabsUseCases,
+            useCases.customTabsUseCases,
             useCases.searchUseCases,
             core.relationChecker,
             core.customTabsStore,

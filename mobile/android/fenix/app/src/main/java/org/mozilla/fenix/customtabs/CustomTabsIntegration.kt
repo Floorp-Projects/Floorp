@@ -11,6 +11,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
+import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
@@ -20,6 +21,7 @@ import org.mozilla.fenix.ext.settings
 class CustomTabsIntegration(
     sessionManager: SessionManager,
     store: BrowserStore,
+    useCases: CustomTabsUseCases,
     toolbar: BrowserToolbar,
     sessionId: String,
     activity: Activity,
@@ -84,9 +86,10 @@ class CustomTabsIntegration(
     }
 
     private val feature = CustomTabsToolbarFeature(
-        sessionManager,
+        store,
         toolbar,
         sessionId,
+        useCases,
         menuBuilder = customTabToolbarMenu.menuBuilder,
         menuItemIndex = START_OF_MENU_ITEMS_INDEX,
         window = activity.window,

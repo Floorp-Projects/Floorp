@@ -18,6 +18,7 @@ import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
+import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesStorage
 import mozilla.components.feature.top.sites.TopSitesUseCases
@@ -47,6 +48,13 @@ class UseCases(
      * Use cases that provide tab management.
      */
     val tabsUseCases: TabsUseCases by lazyMonitored { TabsUseCases(store, sessionManager) }
+
+    /**
+     * Use cases for managing custom tabs.
+     */
+    val customTabsUseCases: CustomTabsUseCases by lazyMonitored {
+        CustomTabsUseCases(sessionManager, sessionUseCases.loadUrl)
+    }
 
     /**
      * Use cases that provide search engine integration.
