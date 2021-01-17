@@ -9,8 +9,6 @@
 #include "mozilla/RefPtr.h"   // RefPtr
 #include "mozilla/Sprintf.h"  // SprintfLiteral
 
-#include <memory>  // std::uninitialized_fill
-
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
 #include "frontend/CompilationInfo.h"  // CompilationStencil, CompilationStencilSet, CompilationGCOutput
@@ -272,6 +270,11 @@ static bool InstantiateModuleObject(JSContext* cx, CompilationInput& input,
 static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
                                  BaseCompilationStencil& stencil,
                                  CompilationGCOutput& gcOutput) {
+  if (!gcOutput.functions.resize(stencil.scriptData.size())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
   for (auto item :
        CompilationStencil::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
@@ -569,19 +572,16 @@ static void AssertDelazificationFieldsMatch(BaseCompilationStencil& stencil,
 // parsing to work at all.
 static void FunctionsFromExistingLazy(CompilationInput& input,
                                       CompilationGCOutput& gcOutput) {
-  MOZ_ASSERT(input.lazy);
-
-  size_t idx = 0;
-  gcOutput.functions[idx++] = input.lazy->function();
+  MOZ_ASSERT(gcOutput.functions.empty());
+  gcOutput.functions.infallibleAppend(input.lazy->function());
 
   for (JS::GCCellPtr elem : input.lazy->gcthings()) {
     if (!elem.is<JSObject>()) {
       continue;
     }
-    gcOutput.functions[idx++] = &elem.as<JSObject>().as<JSFunction>();
+    JSFunction* fun = &elem.as<JSObject>().as<JSFunction>();
+    gcOutput.functions.infallibleAppend(fun);
   }
-
-  MOZ_ASSERT(idx == gcOutput.functions.length());
 }
 
 /* static */
@@ -605,11 +605,6 @@ bool CompilationStencil::instantiateStencilsAfterPreparation(
   // Distinguish between the initial (possibly lazy) compile and any subsequent
   // delazification compiles. Delazification will update existing GC things.
   bool isInitialParse = (input.lazy == nullptr);
-
-  if (!gcOutput.functions.resize(stencil.scriptData.size())) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
 
   // Phase 1: Instantate JSAtoms.
   if (!InstantiateAtoms(cx, input, stencil)) {
@@ -651,6 +646,7 @@ bool CompilationStencil::instantiateStencilsAfterPreparation(
                BaseCompilationStencil::toFunctionKey(input.lazy->extent()));
 
     FunctionsFromExistingLazy(input, gcOutput);
+    MOZ_ASSERT(gcOutput.functions.length() == stencil.scriptData.size());
 
 #ifdef DEBUG
     AssertDelazificationFieldsMatch(stencil, gcOutput);
