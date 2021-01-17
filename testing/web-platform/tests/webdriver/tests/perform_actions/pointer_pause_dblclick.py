@@ -1,6 +1,5 @@
 from tests.perform_actions.support.mouse import get_inview_center, get_viewport_rect
-from tests.perform_actions.support.refine import get_events
-from tests.support.helpers import filter_dict
+from tests.perform_actions.support.refine import filter_dict, get_events
 
 _DBLCLICK_INTERVAL = 640
 

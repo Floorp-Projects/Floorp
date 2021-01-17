@@ -5,8 +5,7 @@ from collections import defaultdict
 import pytest
 
 from tests.perform_actions.support.keys import ALL_EVENTS, Keys, ALTERNATIVE_KEY_NAMES
-from tests.perform_actions.support.refine import get_events, get_keys
-from tests.support.helpers import filter_dict
+from tests.perform_actions.support.refine import filter_dict, get_events, get_keys
 
 
 def test_keyup_only_sends_no_events(session, key_reporter, key_chain):
