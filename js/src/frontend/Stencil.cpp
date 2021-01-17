@@ -607,31 +607,22 @@ bool CompilationStencil::instantiateStencils(JSContext* cx,
 bool CompilationStencil::instantiateStencilsAfterPreparation(
     JSContext* cx, CompilationInput& input, BaseCompilationStencil& stencil,
     CompilationGCOutput& gcOutput) {
+  // Distinguish between the initial (possibly lazy) compile and any subsequent
+  // delazification compiles. Delazification will update existing GC things.
+  bool isInitialParse = (input.lazy == nullptr);
+
   if (!gcOutput.functions.resize(stencil.scriptData.size())) {
     ReportOutOfMemory(cx);
     return false;
   }
 
+  // Phase 1: Instantate JSAtoms.
   if (!InstantiateAtoms(cx, input, stencil)) {
     return false;
   }
 
-  if (input.lazy) {
-    MOZ_ASSERT(
-        stencil.scriptData[CompilationStencil::TopLevelIndex].isFunction());
-
-    // FunctionKey is used when caching to map a delazification stencil to a
-    // specific lazy script. It is not used by instantiation, but we should
-    // ensure it is correctly defined.
-    MOZ_ASSERT(stencil.functionKey ==
-               BaseCompilationStencil::toFunctionKey(input.lazy->extent()));
-
-    FunctionsFromExistingLazy(input, gcOutput);
-
-#ifdef DEBUG
-    AssertDelazificationFieldsMatch(stencil, gcOutput);
-#endif
-  } else {
+  // Phase 2: Instantiate ScriptSourceObject, ModuleObject, JSFunctions.
+  if (isInitialParse) {
     if (stencil.asCompilationStencil()
             .scriptExtra[CompilationStencil::TopLevelIndex]
             .isModule()) {
@@ -653,29 +644,50 @@ bool CompilationStencil::instantiateStencilsAfterPreparation(
     if (!InstantiateFunctions(cx, input, stencil, gcOutput)) {
       return false;
     }
+  } else {
+    MOZ_ASSERT(
+        stencil.scriptData[CompilationStencil::TopLevelIndex].isFunction());
+
+    // FunctionKey is used when caching to map a delazification stencil to a
+    // specific lazy script. It is not used by instantiation, but we should
+    // ensure it is correctly defined.
+    MOZ_ASSERT(stencil.functionKey ==
+               BaseCompilationStencil::toFunctionKey(input.lazy->extent()));
+
+    FunctionsFromExistingLazy(input, gcOutput);
+
+#ifdef DEBUG
+    AssertDelazificationFieldsMatch(stencil, gcOutput);
+#endif
   }
 
+  // Phase 3: Instantiate js::Scopes.
   if (!InstantiateScopes(cx, input, stencil, gcOutput)) {
     return false;
   }
 
-  if (!input.lazy) {
+  // Phase 4: Instantiate (inner) BaseScripts.
+  if (isInitialParse) {
     if (!InstantiateScriptStencils(cx, input, stencil.asCompilationStencil(),
                                    gcOutput)) {
       return false;
     }
   }
 
+  // Phase 5: Finish top-level handling
   if (!InstantiateTopLevel(cx, input, stencil, gcOutput)) {
     return false;
   }
 
-  // Must be infallible from here forward.
+  // !! Must be infallible from here forward !!
 
-  UpdateEmittedInnerFunctions(cx, input, stencil, gcOutput);
+  // Phase 6: Update lazy scripts.
+  {
+    UpdateEmittedInnerFunctions(cx, input, stencil, gcOutput);
 
-  if (!input.lazy) {
-    LinkEnclosingLazyScript(stencil, gcOutput);
+    if (isInitialParse) {
+      LinkEnclosingLazyScript(stencil, gcOutput);
+    }
   }
 
   return true;
