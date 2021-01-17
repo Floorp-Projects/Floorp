@@ -22,13 +22,6 @@ let whitelist = [
     errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
     isFromDevTools: true,
   },
-  // UA-only media features.
-  {
-    sourceName: /\b(autocomplete-item|svg|ua)\.css$/,
-    errorMessage: /Expected media feature name but found \u2018-moz.*/i,
-    isFromDevTools: false,
-  },
-
   {
     sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua|pluginproblem)\.css$/i,
     errorMessage: /Unknown pseudo-class.*-moz-/i,
@@ -75,36 +68,6 @@ if (!Services.prefs.getBoolPref("layout.css.math-style.enabled")) {
   whitelist.push({
     sourceName: /(?:res|gre-resources)\/mathml\.css$/i,
     errorMessage: /Unknown property .*\bmath-style\b/i,
-    isFromDevTools: false,
-  });
-}
-
-if (
-  !Services.prefs.getBoolPref(
-    "layout.css.xul-box-display-values.content.enabled"
-  )
-) {
-  // These are UA sheets which use non-content-exposed `display` values.
-  whitelist.push({
-    sourceName: /(skin\/shared\/Heartbeat|((?:res|gre-resources)\/(ua|html)))\.css$/i,
-    errorMessage: /Error in parsing value for .*\bdisplay\b/i,
-    isFromDevTools: false,
-  });
-}
-
-// System colors reserved to UA / chrome sheets
-whitelist.push({
-  sourceName: /(?:res|gre-resources)\/forms\.css$/i,
-  errorMessage: /Expected color but found \u2018-moz.*/i,
-  platforms: ["linux"],
-  isFromDevTools: false,
-});
-
-if (!Services.prefs.getBoolPref("layout.css.autofill.enabled")) {
-  // Reserved to UA sheets, behind a pref for content.
-  whitelist.push({
-    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
-    errorMessage: /Unknown pseudo-.*autofill/i,
     isFromDevTools: false,
   });
 }
