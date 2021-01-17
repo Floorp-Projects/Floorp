@@ -117,6 +117,12 @@ extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
 extern bool InstantiateStencilsForDelazify(JSContext* cx,
                                            CompilationStencil& stencil);
 
+// Certain compile options will disable the syntax parser entirely.
+inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
+  return !options.discardSource && !options.sourceIsLazy &&
+         !options.forceFullParse();
+}
+
 }  // namespace frontend
 
 }  // namespace js
