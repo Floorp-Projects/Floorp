@@ -393,19 +393,18 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   MOZ_ASSERT(stencil.sharedData.get(CompilationStencil::TopLevelIndex));
 
   if (input.lazy) {
-    gcOutput.script = JSScript::CastFromLazy(input.lazy);
-
-    Rooted<JSScript*> script(cx, gcOutput.script);
+    RootedScript script(cx, JSScript::CastFromLazy(input.lazy));
     if (!JSScript::fullyInitFromStencil(cx, input, stencil, gcOutput, script,
                                         CompilationStencil::TopLevelIndex)) {
       return false;
     }
 
     if (scriptStencil.allowRelazify()) {
-      MOZ_ASSERT(gcOutput.script->isRelazifiable());
-      gcOutput.script->setAllowRelazify();
+      MOZ_ASSERT(script->isRelazifiable());
+      script->setAllowRelazify();
     }
 
+    gcOutput.script = script;
     return true;
   }
 
@@ -427,12 +426,12 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
 
   // Finish initializing the ModuleObject if needed.
   if (scriptExtra.isModule()) {
-    Rooted<JSScript*> script(cx, gcOutput.script);
+    RootedScript script(cx, gcOutput.script);
 
     gcOutput.module->initScriptSlots(script);
     gcOutput.module->initStatusSlot();
 
-    Rooted<ModuleObject*> module(cx, gcOutput.module);
+    RootedModuleObject module(cx, gcOutput.module);
     if (!ModuleObject::createEnvironment(cx, module)) {
       return false;
     }
