@@ -212,7 +212,7 @@ struct ShareableBytes : ShareableBase<ShareableBytes> {
   const uint8_t* begin() const { return bytes.begin(); }
   const uint8_t* end() const { return bytes.end(); }
   size_t length() const { return bytes.length(); }
-  bool append(const uint8_t* start, uint32_t len) {
+  bool append(const uint8_t* start, size_t len) {
     return bytes.append(start, len);
   }
 };
