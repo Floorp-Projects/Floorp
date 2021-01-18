@@ -522,7 +522,6 @@ class SVGElement : public SVGElementBase  // nsIContent
         : mEnums(aEnums), mEnumInfo(aEnumInfo), mEnumCount(aEnumCount) {}
 
     void Reset(uint8_t aAttrEnum);
-    void SetUnknownValue(uint8_t aAttrEnum);
   };
 
   struct NumberListInfo {
