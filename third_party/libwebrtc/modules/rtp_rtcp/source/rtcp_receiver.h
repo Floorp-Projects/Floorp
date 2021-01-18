@@ -49,11 +49,6 @@ class RTCPReceiver final {
     virtual void OnReceivedRtcpReportBlocks(
         const ReportBlockList& report_blocks) = 0;
 
-    virtual bool GetSendReportMetadata(const uint32_t send_report,
-                                       uint64_t *time_of_send,
-                                       uint32_t *packet_count,
-                                       uint64_t *octet_count) = 0;
-
    protected:
     virtual ~ModuleRtpRtcp() = default;
   };

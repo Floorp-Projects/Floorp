@@ -247,11 +247,6 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
   void SendCombinedRtcpPacket(
       std::vector<std::unique_ptr<rtcp::RtcpPacket>> rtcp_packets) override;
 
-  bool GetSendReportMetadata(const uint32_t send_report,
-                             uint64_t *time_of_send,
-                             uint32_t *packet_count,
-                             uint64_t *octet_count) override;
-
   // (APP) Application specific data.
   int32_t SetRTCPApplicationSpecificData(uint8_t sub_type,
                                          uint32_t name,
