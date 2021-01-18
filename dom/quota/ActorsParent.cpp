@@ -7859,13 +7859,17 @@ nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
                  aQuotaManager.GetDirectoryForOrigin(mPersistenceType.Value(),
                                                      mOriginScope.GetOrigin()));
 
-  QM_TRY(file->Append(nsLiteralString(METADATA_V2_FILE_NAME)));
+  // The origin directory might not exist
+  // anymore, because it was deleted by a clear operation.
+  QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(file, Exists));
 
-  QM_TRY_INSPECT(const auto& stream,
-                 GetBinaryOutputStream(*file, kUpdateFileFlag));
+  if (exists) {
+    QM_TRY(file->Append(nsLiteralString(METADATA_V2_FILE_NAME)));
 
-  // The origin directory may not exist anymore.
-  if (stream) {
+    QM_TRY_INSPECT(const auto& stream,
+                   GetBinaryOutputStream(*file, kUpdateFileFlag));
+    MOZ_ASSERT(stream);
+
     QM_TRY(stream->Write64(mTimestamp));
   }
 
