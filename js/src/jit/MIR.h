@@ -1319,7 +1319,6 @@ class MStart : public MNullaryInstruction {
 // OSR may occur at loop headers (at JSOp::LoopHead).
 // There is at most one MOsrEntry per MIRGraph.
 class MOsrEntry : public MNullaryInstruction {
- protected:
   MOsrEntry() : MNullaryInstruction(classOpcode) {
     setResultType(MIRType::Pointer);
   }
@@ -1332,7 +1331,6 @@ class MOsrEntry : public MNullaryInstruction {
 // No-op instruction. This cannot be moved or eliminated, and is intended for
 // anchoring resume points at arbitrary points in a block.
 class MNop : public MNullaryInstruction {
- protected:
   MNop() : MNullaryInstruction(classOpcode) {}
 
  public:
@@ -1348,11 +1346,9 @@ class MNop : public MNullaryInstruction {
 // follow-up truncation optimizations.
 class MLimitedTruncate : public MUnaryInstruction,
                          public ConvertToInt32Policy<0>::Data {
- public:
   TruncateKind truncate_;
   TruncateKind truncateLimit_;
 
- protected:
   MLimitedTruncate(MDefinition* input, TruncateKind limit)
       : MUnaryInstruction(classOpcode, input),
         truncate_(TruncateKind::NoTruncate),
@@ -1403,7 +1399,6 @@ class MConstant : public MNullaryInstruction {
   void assertInitializedPayload() const {}
 #endif
 
- protected:
   MConstant(TempAllocator& alloc, const Value& v);
   explicit MConstant(JSObject* obj);
   explicit MConstant(float f);
@@ -2327,7 +2322,6 @@ class MArrayState : public MVariadicInstruction,
 // Setting __proto__ in an object literal.
 class MMutateProto : public MBinaryInstruction,
                      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
- protected:
   MMutateProto(MDefinition* obj, MDefinition* value)
       : MBinaryInstruction(classOpcode, obj, value) {
     setResultType(MIRType::None);
@@ -2526,7 +2520,6 @@ class MCallDOMNative : public MCall {
 
   DOMObjectKind objectKind_;
 
- protected:
   MCallDOMNative(WrappedFunction* target, uint32_t numActualArgs,
                  DOMObjectKind objectKind)
       : MCall(target, numActualArgs, false, false), objectKind_(objectKind) {
@@ -2566,7 +2559,6 @@ class MCallDOMNative : public MCall {
 class MApplyArgs : public MTernaryInstruction,
                    public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>,
                                     BoxPolicy<2>>::Data {
- protected:
   // Monomorphic cache of single target from TI, or nullptr.
   WrappedFunction* target_;
   bool maybeCrossRealm_ = true;
@@ -2602,7 +2594,6 @@ class MApplyArgs : public MTernaryInstruction,
 // fun.apply(fn, array)
 class MApplyArray : public MTernaryInstruction,
                     public MixPolicy<ObjectPolicy<0>, BoxPolicy<2>>::Data {
- protected:
   // Monomorphic cache of single target from TI, or nullptr.
   WrappedFunction* target_;
   bool maybeCrossRealm_ = true;
@@ -2673,7 +2664,6 @@ class MConstructArray
 };
 
 class MBail : public MNullaryInstruction {
- protected:
   explicit MBail(BailoutKind kind) : MNullaryInstruction(classOpcode) {
     setBailoutKind(kind);
     setGuard();
@@ -2707,7 +2697,6 @@ class MUnreachable : public MAryControlInstruction<0, 0>,
 // is no resume point using it.  This is useful to run MAssertRecoveredOnBailout
 // assertions.
 class MEncodeSnapshot : public MNullaryInstruction {
- protected:
   MEncodeSnapshot() : MNullaryInstruction(classOpcode) { setGuard(); }
 
  public:
@@ -2717,7 +2706,6 @@ class MEncodeSnapshot : public MNullaryInstruction {
 
 class MAssertRecoveredOnBailout : public MUnaryInstruction,
                                   public NoTypePolicy::Data {
- protected:
   bool mustBeRecovered_;
 
   MAssertRecoveredOnBailout(MDefinition* ins, bool mustBeRecovered)
@@ -2740,7 +2728,6 @@ class MAssertRecoveredOnBailout : public MUnaryInstruction,
 };
 
 class MAssertFloat32 : public MUnaryInstruction, public NoTypePolicy::Data {
- protected:
   bool mustBeFloat32_;
 
   MAssertFloat32(MDefinition* value, bool mustBeFloat32)
@@ -3403,7 +3390,6 @@ class MToDouble : public MToFPInstruction {
 // Converts a primitive (either typed or untyped) to a float32. If the input is
 // not primitive at runtime, a bailout occurs.
 class MToFloat32 : public MToFPInstruction {
- protected:
   bool mustPreserveNaN_;
 
   explicit MToFloat32(MDefinition* def,
@@ -4142,7 +4128,6 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
 };
 
 class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
- protected:
   explicit MBitNot(MDefinition* input) : MUnaryInstruction(classOpcode, input) {
     setResultType(MIRType::Int32);
     setMovable();
@@ -6533,7 +6518,6 @@ class MOsrReturnValue : public MUnaryInstruction, public NoTypePolicy::Data {
 
 class MBinaryCache : public MBinaryInstruction,
                      public MixPolicy<BoxPolicy<0>, BoxPolicy<1>>::Data {
- protected:
   explicit MBinaryCache(MDefinition* left, MDefinition* right, MIRType resType)
       : MBinaryInstruction(classOpcode, left, right) {
     setResultType(resType);
@@ -7683,7 +7667,6 @@ class MLoadElementAndUnbox : public MBinaryInstruction,
                              public NoTypePolicy::Data {
   MUnbox::Mode mode_;
 
- protected:
   MLoadElementAndUnbox(MDefinition* elements, MDefinition* index,
                        MUnbox::Mode mode, MIRType type, BailoutKind kind)
       : MBinaryInstruction(classOpcode, elements, index), mode_(mode) {
@@ -8390,7 +8373,6 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
   size_t slot_;
   MUnbox::Mode mode_;
 
- protected:
   MLoadFixedSlotAndUnbox(MDefinition* obj, size_t slot, MUnbox::Mode mode,
                          MIRType type, BailoutKind kind)
       : MUnaryInstruction(classOpcode, obj), slot_(slot), mode_(mode) {
@@ -8435,7 +8417,6 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
   size_t slot_;
   MUnbox::Mode mode_;
 
- protected:
   MLoadDynamicSlotAndUnbox(MDefinition* slots, size_t slot, MUnbox::Mode mode,
                            MIRType type, BailoutKind kind)
       : MUnaryInstruction(classOpcode, slots), slot_(slot), mode_(mode) {
@@ -9902,7 +9883,6 @@ class MDeleteProperty : public MUnaryInstruction, public BoxInputsPolicy::Data {
   CompilerPropertyName name_;
   bool strict_;
 
- protected:
   MDeleteProperty(MDefinition* val, PropertyName* name, bool strict)
       : MUnaryInstruction(classOpcode, val), name_(name), strict_(strict) {
     setResultType(MIRType::Boolean);
@@ -10088,7 +10068,6 @@ class MGetDOMProperty : public MGetDOMPropertyBase {
   Realm* getterRealm_;
   DOMObjectKind objectKind_;
 
- protected:
   MGetDOMProperty(const JSJitInfo* jitinfo, DOMObjectKind objectKind,
                   Realm* getterRealm)
       : MGetDOMPropertyBase(classOpcode, jitinfo),
@@ -11559,7 +11538,6 @@ class MAtomicTypedArrayElementBinop
   AtomicOp op_;
   Scalar::Type arrayType_;
 
- protected:
   explicit MAtomicTypedArrayElementBinop(AtomicOp op, MDefinition* elements,
                                          MDefinition* index,
                                          Scalar::Type arrayType,
@@ -12551,7 +12529,6 @@ class MAsmJSStoreHeap
 };
 
 class MWasmFence : public MNullaryInstruction {
- protected:
   MWasmFence() : MNullaryInstruction(classOpcode) { setGuard(); }
 
  public:
@@ -13514,7 +13491,6 @@ class MWasmReduceSimd128 : public MUnaryInstruction, public NoTypePolicy::Data {
 // Used by MIR building to represent the bytecode result of an operation for
 // which an MBail was generated, to balance the basic block's MDefinition stack.
 class MUnreachableResult : public MNullaryInstruction {
- protected:
   explicit MUnreachableResult(MIRType type) : MNullaryInstruction(classOpcode) {
     MOZ_ASSERT(type != MIRType::None);
     setResultType(type);
