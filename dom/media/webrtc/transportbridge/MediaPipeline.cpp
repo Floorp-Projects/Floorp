@@ -222,15 +222,9 @@ class AudioProxyThread {
   }
 
  protected:
-  virtual ~AudioProxyThread() {
-    // Conduits must be released on MainThread, and we might have the last
-    // reference We don't need to worry about runnables still trying to access
-    // the conduit, since the runnables hold a ref to AudioProxyThread.
-    NS_ReleaseOnMainThread("AudioProxyThread::mConduit", mConduit.forget());
-    MOZ_COUNT_DTOR(AudioProxyThread);
-  }
+  virtual ~AudioProxyThread() { MOZ_COUNT_DTOR(AudioProxyThread); }
 
-  RefPtr<AudioSessionConduit> mConduit;
+  const RefPtr<AudioSessionConduit> mConduit;
   const RefPtr<TaskQueue> mTaskQueue;
   // Only accessed on mTaskQueue
   UniquePtr<AudioPacketizer<int16_t, int16_t>> mPacketizer;
@@ -247,10 +241,10 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
                              RefPtr<nsISerialEventTarget> aMainThread,
                              RefPtr<nsISerialEventTarget> aStsThread,
                              RefPtr<MediaSessionConduit> aConduit)
-    : mDirection(aDirection),
+    : mConduit(std::move(aConduit)),
+      mDirection(aDirection),
       mLevel(0),
       mTransportHandler(std::move(aTransportHandler)),
-      mConduit(std::move(aConduit)),
       mMainThread(std::move(aMainThread)),
       mStsThread(aStsThread),
       mTransport(new PipelineTransport(std::move(aStsThread))),
@@ -274,7 +268,6 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
 MediaPipeline::~MediaPipeline() {
   MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
           ("Destroying MediaPipeline: %s", mDescription.c_str()));
-  NS_ReleaseOnMainThread("MediaPipeline::mConduit", mConduit.forget());
 }
 
 void MediaPipeline::Shutdown_m() {
@@ -676,7 +669,6 @@ class MediaPipelineTransmit::PipelineListener
         mDirectConnect(false) {}
 
   ~PipelineListener() {
-    NS_ReleaseOnMainThread("MediaPipeline::mConduit", mConduit.forget());
     if (mConverter) {
       mConverter->Shutdown();
     }
@@ -721,7 +713,7 @@ class MediaPipelineTransmit::PipelineListener
  private:
   void NewData(const MediaSegment& aMedia, TrackRate aRate = 0);
 
-  RefPtr<MediaSessionConduit> mConduit;
+  const RefPtr<MediaSessionConduit> mConduit;
   RefPtr<AudioProxyThread> mAudioProcessing;
   RefPtr<VideoFrameConverter> mConverter;
 
@@ -789,8 +781,8 @@ MediaPipelineTransmit::MediaPipelineTransmit(
                                     // VideoConduit.
       mTransmitting(false) {
   if (!IsVideo()) {
-    mAudioProcessing = MakeAndAddRef<AudioProxyThread>(
-        static_cast<AudioSessionConduit*>(Conduit()));
+    mAudioProcessing =
+        MakeAndAddRef<AudioProxyThread>(*mConduit->AsAudioSessionConduit());
     mListener->SetAudioProxy(mAudioProcessing);
   } else {  // Video
     mConverter = MakeAndAddRef<VideoFrameConverter>();
@@ -1400,9 +1392,7 @@ class MediaPipelineReceiveAudio::PipelineListener
   }
 
  private:
-  ~PipelineListener() {
-    NS_ReleaseOnMainThread("MediaPipeline::mConduit", mConduit.forget());
-  }
+  ~PipelineListener() = default;
 
   void NotifyPullImpl(TrackTime aDesiredTime) {
     TRACE_COMMENT("PiplineListener::NotifyPullImpl", "PipelineListener %p",
@@ -1482,7 +1472,7 @@ class MediaPipelineReceiveAudio::PipelineListener
     }
   }
 
-  RefPtr<MediaSessionConduit> mConduit;
+  const RefPtr<MediaSessionConduit> mConduit;
   // This conduit's sampling rate. This is either 16, 32, 44.1 or 48kHz, and
   // tries to be the same as the graph rate. If the graph rate is higher than
   // 48kHz, mRate is capped to 48kHz. If mRate does not match the graph rate,
@@ -1734,9 +1724,7 @@ void MediaPipelineReceiveVideo::OnRtpPacketReceived() {
   }
 }
 
-DOMHighResTimeStamp MediaPipeline::GetNow() const {
-  return Conduit()->GetNow();
-}
+DOMHighResTimeStamp MediaPipeline::GetNow() const { return mConduit->GetNow(); }
 
 DOMHighResTimeStamp MediaPipeline::RtpCSRCStats::GetExpiryFromTime(
     const DOMHighResTimeStamp aTime) {
