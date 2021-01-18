@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.intent
 
 import android.content.Intent
 import androidx.navigation.NavController
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import org.mozilla.fenix.BrowserDirection
@@ -25,11 +26,14 @@ class OpenSpecificTabIntentProcessor(
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         if (intent.action == getAction()) {
-            val sessionManager = activity.components.core.sessionManager
-            val sessionId = intent.extras?.getString(getTabId())
-            val session = sessionId?.let { sessionManager.findSessionById(it) }
+            val browserStore = activity.components.core.store
+            val tabId = intent.extras?.getString(getTabId())
+
+            // Technically the additional lookup here isn't necessary, but this way we
+            // can make sure that we never try and select a custom tab by mistake.
+            val session = tabId?.let { browserStore.state.findTab(tabId) }
             if (session != null) {
-                sessionManager.select(session)
+                activity.components.useCases.tabsUseCases.selectTab(tabId)
                 activity.openToBrowser(BrowserDirection.FromGlobal)
                 return true
             }

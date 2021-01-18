@@ -11,10 +11,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.feature.media.service.AbstractMediaSessionService
+import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -42,7 +44,7 @@ class OpenSpecificTabIntentProcessorTest {
     }
 
     @Test
-    fun `GIVEN a blank intent, WHEN it is processed, THEN nothing should happen`() {
+    fun `GIVEN a blank intent WHEN it is processed THEN nothing should happen`() {
         assertFalse(processor.process(Intent(), navController, out))
 
         verify { activity wasNot Called }
@@ -51,7 +53,7 @@ class OpenSpecificTabIntentProcessorTest {
     }
 
     @Test
-    fun `GIVEN an intent with wrong action, WHEN it is processed, THEN nothing should happen`() {
+    fun `GIVEN an intent with wrong action WHEN it is processed THEN nothing should happen`() {
         val intent = Intent().apply {
             action = TEST_WRONG_ACTION
         }
@@ -64,11 +66,10 @@ class OpenSpecificTabIntentProcessorTest {
     }
 
     @Test
-    fun `GIVEN an intent with null extra string, WHEN it is processed, THEN openToBrowser should not be called`() {
+    fun `GIVEN an intent with null extra string WHEN it is processed THEN openToBrowser should not be called`() {
         val intent = Intent().apply {
             action = AbstractMediaService.Companion.ACTION_SWITCH_TAB
         }
-        every { activity.components.core.sessionManager } returns mockk(relaxed = true)
 
         assertFalse(processor.process(intent, navController, out))
 
@@ -78,7 +79,7 @@ class OpenSpecificTabIntentProcessorTest {
     }
 
     @Test
-    fun `GIVEN an intent with correct action and extra string, WHEN it is processed, THEN session should be selected and openToBrowser should be called`() {
+    fun `GIVEN an intent with correct action and extra string WHEN it is processed THEN session should be selected and openToBrowser should be called`() {
         val intent = Intent().apply {
             if (newMediaSessionApi) {
                 action = AbstractMediaSessionService.Companion.ACTION_SWITCH_TAB
@@ -88,15 +89,15 @@ class OpenSpecificTabIntentProcessorTest {
                 putExtra(AbstractMediaService.Companion.EXTRA_TAB_ID, TEST_SESSION_ID)
             }
         }
-        val sessionManager: SessionManager = mockk(relaxed = true)
-        val session: Session = mockk(relaxed = true)
-        every { activity.components.core.sessionManager } returns sessionManager
-        every { sessionManager.findSessionById(TEST_SESSION_ID) } returns session
+        val store = BrowserStore(BrowserState(tabs = listOf(createTab(id = TEST_SESSION_ID, url = "https:mozilla.org"))))
+        val tabUseCases: TabsUseCases = mockk(relaxed = true)
+        every { activity.components.core.store } returns store
+        every { activity.components.useCases.tabsUseCases } returns tabUseCases
 
         assertTrue(processor.process(intent, navController, out))
 
         verifyOrder {
-            sessionManager.select(session)
+            tabUseCases.selectTab(TEST_SESSION_ID)
             activity.openToBrowser(BrowserDirection.FromGlobal)
         }
         verify { navController wasNot Called }
