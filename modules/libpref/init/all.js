@@ -589,11 +589,6 @@ pref("gfx.downloadable_fonts.fallback_delay_short", 100);
 // the uncached load behavior across pages (useful for testing reflow problems)
 pref("gfx.downloadable_fonts.disable_cache", false);
 
-#ifdef ANDROID
-  pref("gfx.bundled_fonts.enabled", true);
-  pref("gfx.bundled_fonts.force-enabled", false);
-#endif
-
 // Do we fire a notification about missing fonts, so the front-end can decide
 // whether to try and do something about it (e.g. download additional fonts)?
 pref("gfx.missing_fonts.notify", false);
