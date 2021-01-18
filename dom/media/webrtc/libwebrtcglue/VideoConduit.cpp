@@ -1991,12 +1991,6 @@ void WebrtcVideoConduit::CollectTelemetryData() {
   }
 }
 
-void WebrtcVideoConduit::SetRtcpEventObserver(
-    mozilla::RtcpEventObserver* observer) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mRtcpEventObserver = observer;
-}
-
 uint64_t WebrtcVideoConduit::CodecPluginID() {
   MOZ_ASSERT(NS_IsMainThread());
 
