@@ -13,6 +13,7 @@
 
 #include "AudioConduit.h"
 #include "nsCOMPtr.h"
+#include "mozilla/dom/RTCRtpSourcesBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -23,6 +24,7 @@
 
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "audio/audio_receive_stream.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
@@ -312,14 +314,6 @@ bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
   */
   return false;
 }
-/*
-void WebrtcAudioConduit::OnRtpPacket(const webrtc::RTPHeader& aHeader,
-                                     const int64_t aTimestamp,
-                                     const uint32_t aJitter) {
-  ASSERT_ON_THREAD(mStsThread);
-  mRtpSourceObserver->OnRtpPacket(aHeader, aJitter);
-}
-*/
 
 void WebrtcAudioConduit::SetRtcpEventObserver(
     mozilla::RtcpEventObserver* observer) {
@@ -330,22 +324,38 @@ void WebrtcAudioConduit::SetRtcpEventObserver(
 void WebrtcAudioConduit::GetRtpSources(
     nsTArray<dom::RTCRtpSourceEntry>& outSources) {
   MOZ_ASSERT(NS_IsMainThread());
-  return mRtpSourceObserver->GetRtpSources(outSources);
-}
-
-// test-only: inserts a CSRC entry in a RtpSourceObserver's history for
-// getContributingSources mochitests
-void InsertAudioLevelForContributingSource(RtpSourceObserver& observer,
-                                           const uint32_t aCsrcSource,
-                                           const int64_t aTimestamp,
-                                           const uint32_t aRtpTimestamp,
-                                           const bool aHasAudioLevel,
-                                           const uint8_t aAudioLevel) {
-  using EntryType = dom::RTCRtpSourceEntryType;
-  auto key = RtpSourceObserver::GetKey(aCsrcSource, EntryType::Contributing);
-  auto& hist = observer.mRtpSources[key];
-  hist.Insert(aTimestamp, aTimestamp, aRtpTimestamp, aHasAudioLevel,
-              aAudioLevel);
+  outSources.Clear();
+  if (!mRecvStream) {
+    return;
+  }
+  std::vector<webrtc::RtpSource> sources = mRecvStream->GetSources();
+  for (const auto& source : sources) {
+    dom::RTCRtpSourceEntry domEntry;
+    domEntry.mSource = source.source_id();
+    switch (source.source_type()) {
+      case webrtc::RtpSourceType::SSRC:
+        domEntry.mSourceType = dom::RTCRtpSourceEntryType::Synchronization;
+        break;
+      case webrtc::RtpSourceType::CSRC:
+        domEntry.mSourceType = dom::RTCRtpSourceEntryType::Contributing;
+        break;
+      default:
+        MOZ_CRASH("Unexpected RTCRtpSourceEntryType");
+    }
+    domEntry.mTimestamp = source.timestamp_ms();
+    domEntry.mRtpTimestamp = source.rtp_timestamp();
+    if (source.audio_level()) {
+      if (*source.audio_level() == 127) {
+        // Spec indicates that a value of 127 should be set to 0
+        domEntry.mAudioLevel.Construct(0);
+      } else {
+        // All other values are calculated as 10^(-rfc_level/20)
+        domEntry.mAudioLevel.Construct(
+            std::pow(10, -*source.audio_level() / 20.0));
+      }
+    }
+    outSources.AppendElement(std::move(domEntry));
+  }
 }
 
 void WebrtcAudioConduit::InsertAudioLevelForContributingSource(
@@ -353,9 +363,17 @@ void WebrtcAudioConduit::InsertAudioLevelForContributingSource(
     const uint32_t aRtpTimestamp, const bool aHasAudioLevel,
     const uint8_t aAudioLevel) {
   MOZ_ASSERT(NS_IsMainThread());
-  mozilla::InsertAudioLevelForContributingSource(
-      *mRtpSourceObserver, aCsrcSource, aTimestamp, aRtpTimestamp,
-      aHasAudioLevel, aAudioLevel);
+
+  if (!mRecvStream) {
+    return;
+  }
+
+  webrtc::RtpPacketInfos infos({webrtc::RtpPacketInfo(
+      mRecvSSRC, {aCsrcSource}, aRtpTimestamp,
+      aHasAudioLevel ? absl::optional(aAudioLevel) : absl::nullopt,
+      absl::nullopt, aTimestamp)});
+
+  mRecvStream->InsertAudioLevelForContributingSource(infos);
 }
 
 /*
