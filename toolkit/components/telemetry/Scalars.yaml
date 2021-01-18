@@ -1938,6 +1938,20 @@ pictureinpicture:
       - 'firefox'
     record_in_processes:
       - content
+  most_concurrent_players:
+    bug_numbers:
+      - 1677107
+    description:
+      The most concurrent Picture-in-Picture players the user had open at any one time.
+    expires: "91"
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 preferences:
   created_new_user_prefs_file:
