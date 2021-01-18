@@ -20,7 +20,6 @@ UNIFIED_SOURCES += [
     "AudioConduit.cpp",
     "GmpVideoCodec.cpp",
     "MediaDataCodec.cpp",
-    "RtpSourceObserver.cpp",
     "VideoConduit.cpp",
     "VideoStreamFactory.cpp",
     "WebrtcGmpVideoCodec.cpp",

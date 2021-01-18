@@ -12,7 +12,6 @@
 
 #include "MediaConduitInterface.h"
 #include "common/MediaEngineWrapper.h"
-#include "RtpSourceObserver.h"
 #include "RtpPacketQueue.h"
 
 // Audio Engine Includes
@@ -32,7 +31,6 @@ DOMHighResTimeStamp NTPtoDOMHighResTimeStamp(uint32_t ntpHigh, uint32_t ntpLow);
  */
 class WebrtcAudioConduit : public AudioSessionConduit,
                            public webrtc::Transport {
-  // public webrtc::RtpPacketObserver {
  public:
   // VoiceEngine defined constant for Payload Name Size.
   static const unsigned int CODEC_PLNAME_SIZE;
@@ -193,7 +191,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         mSendChannel(-1),
         mDtmfEnabled(false),
         mMutex("WebrtcAudioConduit::mMutex"),
-        mRtpSourceObserver(new RtpSourceObserver(mCall->GetTimestampMaker())),
         mStsThread(aStsThread) {}
 
   virtual ~WebrtcAudioConduit();
@@ -239,10 +236,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
                       int attenuationDb) override;
 
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
-  /*
-    void OnRtpPacket(const webrtc::RTPHeader& aRtpHeader,
-                     const int64_t aTimestamp, const uint32_t aJitter) override;
-  */
   void SetRtcpEventObserver(mozilla::RtcpEventObserver* observer) override;
 
   // test-only: inserts fake CSRCs and audio level data
@@ -349,9 +342,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Accessed from audio thread.
   webrtc::AudioFrame mAudioFrame;  // for output pulls
-
-  // Accessed from both main and mStsThread. Uses locks internally.
-  RefPtr<RtpSourceObserver> mRtpSourceObserver;
 
   // Socket transport service thread. Any thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;

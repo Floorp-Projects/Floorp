@@ -11,7 +11,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/UniquePtr.h"
-#include "RtpSourceObserver.h"
 #include "RtcpEventObserver.h"
 #include "CodecConfig.h"
 #include "VideoTypes.h"
@@ -35,6 +34,9 @@ class VideoFrame;
 }
 
 namespace mozilla {
+namespace dom {
+struct RTCRtpSourceEntry;
+}
 
 enum class MediaSessionConduitLocalDirection : int { kSend, kRecv };
 

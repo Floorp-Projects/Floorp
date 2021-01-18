@@ -13,6 +13,7 @@
 #include "common/YuvStamper.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "mozilla/TemplateLib.h"
+#include "mozilla/dom/RTCRtpSourcesBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/UniquePtr.h"
@@ -514,8 +515,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(
       ,
       mRecvSSRC(0),
       mRemoteSSRC(0),
-      mVideoStatsTimer(NS_NewTimer()),
-      mRtpSourceObserver(new RtpSourceObserver(mCall->GetTimestampMaker())) {
+      mVideoStatsTimer(NS_NewTimer()) {
   mCall->RegisterConduit(this);
   mRecvStreamConfig.renderer = this;
 }
@@ -692,7 +692,6 @@ void WebrtcVideoConduit::DeleteRecvStream() {
   mMutex.AssertCurrentThreadOwns();
 
   if (mRecvStream) {
-    mRecvStream->RemoveSecondarySink(this);
     mCall->Call()->DestroyVideoReceiveStream(mRecvStream);
     mRecvStream = nullptr;
     mDecoders.clear();
@@ -750,9 +749,6 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateRecvStream() {
     mDecoders.clear();
     return kMediaConduitUnknownError;
   }
-
-  // Add RTPPacketSinkInterface for synchronization source tracking
-  mRecvStream->AddSecondarySink(this);
 
   CSFLogDebug(LOGTAG, "Created VideoReceiveStream %p for SSRC %u (0x%x)",
               mRecvStream, mRecvStreamConfig.rtp.remote_ssrc,
@@ -1314,7 +1310,26 @@ WebrtcVideoConduit::GetBandwidthEstimation() {
 void WebrtcVideoConduit::GetRtpSources(
     nsTArray<dom::RTCRtpSourceEntry>& outSources) {
   MOZ_ASSERT(NS_IsMainThread());
-  return mRtpSourceObserver->GetRtpSources(outSources);
+  std::vector<webrtc::RtpSource> sources = mRecvStream->GetSources();
+  outSources.Clear();
+  for (const auto& source : sources) {
+    MOZ_ASSERT(!source.audio_level(), "Video cannot have an audio level");
+    dom::RTCRtpSourceEntry domEntry;
+    domEntry.mSource = source.source_id();
+    switch (source.source_type()) {
+      case webrtc::RtpSourceType::SSRC:
+        domEntry.mSourceType = dom::RTCRtpSourceEntryType::Synchronization;
+        break;
+      case webrtc::RtpSourceType::CSRC:
+        domEntry.mSourceType = dom::RTCRtpSourceEntryType::Contributing;
+        break;
+      default:
+        MOZ_CRASH("Unexpected RTCRtpSourceEntryType");
+    }
+    domEntry.mTimestamp = source.timestamp_ms();
+    domEntry.mRtpTimestamp = source.rtp_timestamp();
+    outSources.AppendElement(std::move(domEntry));
+  }
 }
 
 MediaConduitErrorCode WebrtcVideoConduit::InitMain() {
@@ -2402,20 +2417,6 @@ uint64_t WebrtcVideoConduit::MozVideoLatencyAvg() {
   mTransportMonitor.AssertCurrentThreadIn();
 
   return mVideoLatencyAvg / sRoundingPadding;
-}
-
-void WebrtcVideoConduit::OnRtpPacket(const webrtc::RtpPacketReceived& aPacket) {
-  ASSERT_ON_THREAD(mStsThread);
-  webrtc::RTPHeader header;
-  aPacket.GetHeader(&header);
-  if (header.extension.hasAudioLevel ||
-      header.extension.csrcAudioLevels.numAudioLevels) {
-    CSFLogDebug(LOGTAG,
-                "Video packet has audio level extension."
-                "RTP source tracking ignored for this packet.");
-    return;
-  }
-  mRtpSourceObserver->OnRtpPacket(header, mRecvStreamStats.JitterMs());
 }
 
 void WebrtcVideoConduit::SetRtcpEventObserver(
