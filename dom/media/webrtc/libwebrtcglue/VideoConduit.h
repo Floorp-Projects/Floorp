@@ -269,8 +269,6 @@ class WebrtcVideoConduit
 
   void CollectTelemetryData() override;
 
-  void SetRtcpEventObserver(mozilla::RtcpEventObserver* observer) override;
-
  private:
   // Don't allow copying/assigning.
   WebrtcVideoConduit(const WebrtcVideoConduit&) = delete;
@@ -476,9 +474,6 @@ class WebrtcVideoConduit
 
   // Accessed only on mStsThread
   Maybe<DOMHighResTimeStamp> mLastRtcpReceived;
-
-  // Accessed only on main thread.
-  mozilla::RtcpEventObserver* mRtcpEventObserver = nullptr;
 
   // Tracking the attributes of received frames over time
   // Protected by mTransportMonitor

@@ -197,12 +197,6 @@ bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
       mDtmfPayloadType, mDtmfPayloadFrequency, eventCode, lengthMs);
 }
 
-void WebrtcAudioConduit::SetRtcpEventObserver(
-    mozilla::RtcpEventObserver* observer) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mRtcpEventObserver = observer;
-}
-
 void WebrtcAudioConduit::GetRtpSources(
     nsTArray<dom::RTCRtpSourceEntry>& outSources) {
   MOZ_ASSERT(NS_IsMainThread());
