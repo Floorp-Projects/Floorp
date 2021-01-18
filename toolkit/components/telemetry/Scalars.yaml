@@ -571,6 +571,7 @@ browser.startup:
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -587,6 +588,7 @@ browser.startup:
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -603,6 +605,7 @@ browser.startup:
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -619,6 +622,7 @@ browser.startup:
     kind: uint
     notification_emails:
       - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -635,6 +639,7 @@ browser.startup:
     kind: uint
     notification_emails:
       - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -655,6 +660,7 @@ browser.startup:
     kind: uint
     notification_emails:
       - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -683,6 +689,7 @@ browser.startup:
     kind: uint
     notification_emails:
       - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -701,6 +708,7 @@ browser.startup:
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -3008,7 +3016,6 @@ devtools.toolbox:
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
       - daisuke@mozilla.com
-      - hkirschner@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4457,7 +4464,7 @@ timestamps:
     expires: never
     kind: uint
     notification_emails:
-      - hkirschner@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4474,7 +4481,7 @@ timestamps:
     expires: never
     kind: uint
     notification_emails:
-      - hkirschner@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - gfx-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
@@ -4492,6 +4499,7 @@ timestamps:
     expires: never
     kind: uint
     notification_emails:
+      - perf-telemetry-alerts@mozilla.com
       - mconley@mozilla.com
     release_channel_collection: opt-out
     products:
@@ -4511,6 +4519,7 @@ browser.timings:
     expires: never
     kind: uint
     notification_emails:
+      - perf-telemetry-alerts@mozilla.com
       - florian@mozilla.com
     release_channel_collection: opt-in
     products:
