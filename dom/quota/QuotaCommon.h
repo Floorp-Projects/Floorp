@@ -858,9 +858,9 @@ auto Reduce(Range&& aRange, T aInit, const BinaryOp& aBinaryOp) {
 }
 
 template <typename Range, typename Body>
-auto CollectEachInRange(const Range& aRange, const Body& aBody)
+auto CollectEachInRange(Range&& aRange, const Body& aBody)
     -> Result<mozilla::Ok, nsresult> {
-  for (const auto& element : aRange) {
+  for (auto&& element : aRange) {
     MOZ_TRY(aBody(element));
   }
 
