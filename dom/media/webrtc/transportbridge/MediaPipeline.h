@@ -155,8 +155,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   // Gets the current time as a DOMHighResTimeStamp
   DOMHighResTimeStamp GetNow() const;
 
-  MediaSessionConduit* Conduit() const { return mConduit; }
-
   // Thread counting
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPipeline)
 
@@ -217,12 +215,14 @@ class MediaPipeline : public sigslot::has_slots<> {
   // pipelines do not enter data into the graph under a content principal.
   virtual void MakePrincipalPrivate_s() {}
 
+ public:
+  const RefPtr<MediaSessionConduit> mConduit;
   const DirectionType mDirection;
+
+ protected:
   Atomic<size_t> mLevel;
   std::string mTransportId;
   const RefPtr<MediaTransportHandler> mTransportHandler;
-  RefPtr<MediaSessionConduit> mConduit;  // Our conduit. Written on the main
-                                         // thread. Read on STS thread.
 
   TransportLayer::State mRtpState = TransportLayer::TS_NONE;
   TransportLayer::State mRtcpState = TransportLayer::TS_NONE;
