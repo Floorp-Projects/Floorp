@@ -245,15 +245,6 @@ describe("EvaluationResult component:", () => {
     expect(wrapper.find(".message-body").text()).toBe("Object { a: 1 }");
   });
 
-  it("renders an jsterm command error result", () => {
-    const message = stubPreparedMessages.get("cd(document)");
-    const wrapper = render(EvaluationResult({ message, serviceContainer }));
-
-    expect(wrapper.find(".message-body").text()).toBe(
-      "Cannot cd() to the given window. Invalid argument."
-    );
-  });
-
   it("displays a [Learn more] link", () => {
     const store = setupStore();
 

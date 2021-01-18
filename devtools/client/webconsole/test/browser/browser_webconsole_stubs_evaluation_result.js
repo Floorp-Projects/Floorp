@@ -75,7 +75,6 @@ function getCommands() {
     "asdf()",
     "1 + @",
     "inspect({a: 1})",
-    "cd(document)",
     "undefined",
   ];
 
