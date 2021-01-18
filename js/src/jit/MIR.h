@@ -6168,10 +6168,6 @@ class MPhi final : public MDefinition,
   // flow, such that removing branches is properly accounted for.
   PhiUsage usageAnalysis_;
 
-#if DEBUG
-  bool specialized_;
-#endif
-
  protected:
   MUse* getUseFor(size_t index) override {
     MOZ_ASSERT(index < numOperands());
@@ -6193,10 +6189,6 @@ class MPhi final : public MDefinition,
         canProduceFloat32_(false),
         canConsumeFloat32_(false),
         usageAnalysis_(PhiUsage::Unknown)
-#if DEBUG
-        ,
-        specialized_(false)
-#endif
   {
     setResultType(resultType);
   }
@@ -6229,7 +6221,6 @@ class MPhi final : public MDefinition,
     triedToSpecialize_ = true;
     setResultType(type);
   }
-  bool specializeType(TempAllocator& alloc);
 
 #ifdef DEBUG
   // Assert that this is a phi in a loop header with a unique predecessor and
