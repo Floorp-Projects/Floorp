@@ -11033,10 +11033,6 @@ exports.PREFERENCES = [
     "layout.css.touch_action.enabled"
   ],
   [
-    "transform-box",
-    "svg.transform-box.enabled"
-  ],
-  [
     "-webkit-line-clamp",
     "layout.css.webkit-line-clamp.enabled"
   ],

@@ -4956,13 +4956,8 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_TEMPORARY ||
              aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
 
-  auto directoryOrErr = QM_NewLocalFile(GetStoragePath(aPersistenceType));
-  if (NS_WARN_IF(directoryOrErr.isErr())) {
-    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_NewLocalFile);
-    return directoryOrErr.unwrapErr();
-  }
-
-  nsCOMPtr<nsIFile> directory = directoryOrErr.unwrap();
+  QM_TRY_INSPECT(const auto& directory,
+                 QM_NewLocalFile(GetStoragePath(aPersistenceType)));
 
   QM_TRY_INSPECT(const bool& created, EnsureDirectory(*directory));
 
@@ -7859,13 +7854,17 @@ nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
                  aQuotaManager.GetDirectoryForOrigin(mPersistenceType.Value(),
                                                      mOriginScope.GetOrigin()));
 
-  QM_TRY(file->Append(nsLiteralString(METADATA_V2_FILE_NAME)));
+  // The origin directory might not exist
+  // anymore, because it was deleted by a clear operation.
+  QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(file, Exists));
 
-  QM_TRY_INSPECT(const auto& stream,
-                 GetBinaryOutputStream(*file, kUpdateFileFlag));
+  if (exists) {
+    QM_TRY(file->Append(nsLiteralString(METADATA_V2_FILE_NAME)));
 
-  // The origin directory may not exist anymore.
-  if (stream) {
+    QM_TRY_INSPECT(const auto& stream,
+                   GetBinaryOutputStream(*file, kUpdateFileFlag));
+    MOZ_ASSERT(stream);
+
     QM_TRY(stream->Write64(mTimestamp));
   }
 

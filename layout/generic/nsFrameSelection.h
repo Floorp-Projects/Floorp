@@ -747,10 +747,40 @@ class nsFrameSelection final {
                      uint32_t aContentEndOffset, CaretAssociateHint aHint,
                      FocusMode aFocusMode);
 
+  /**
+   * After moving the caret, its Bidi level is set according to the following
+   * rules:
+   *
+   * After moving over a character with left/right arrow, set to the Bidi level
+   * of the last moved over character. After Home and End, set to the paragraph
+   * embedding level. After up/down arrow, PageUp/Down, set to the lower level
+   * of the 2 surrounding characters. After mouse click, set to the level of the
+   * current frame.
+   *
+   * The following two methods use GetPrevNextBidiLevels to determine the new
+   * Bidi level. BidiLevelFromMove is called when the caret is moved in response
+   * to a keyboard event
+   *
+   * @param aPresShell is the presentation shell
+   * @param aNode is the content node
+   * @param aContentOffset is the new caret position, as an offset into aNode
+   * @param aAmount is the amount of the move that gave the caret its new
+   * position
+   * @param aHint is the hint indicating in what logical direction the caret
+   * moved
+   */
   void BidiLevelFromMove(mozilla::PresShell* aPresShell, nsIContent* aNode,
                          uint32_t aContentOffset, nsSelectionAmount aAmount,
                          CaretAssociateHint aHint);
+  /**
+   * BidiLevelFromClick is called when the caret is repositioned by clicking the
+   * mouse
+   *
+   * @param aNode is the content node
+   * @param aContentOffset is the new caret position, as an offset into aNode
+   */
   void BidiLevelFromClick(nsIContent* aNewFocus, uint32_t aContentOffset);
+
   static nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent* aNode,
                                                     uint32_t aContentOffset,
                                                     CaretAssociateHint aHint,

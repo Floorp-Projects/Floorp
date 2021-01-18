@@ -43,6 +43,11 @@ const TOGGLE_ENABLED_PREF =
 let gCloseReasons = new WeakMap();
 
 /**
+ * Tracks the number of currently open player windows for Telemetry tracking
+ */
+let gCurrentPlayerCount = 0;
+
+/**
  * To differentiate windows in the Telemetry Event Log, each Picture-in-Picture
  * player window is given a unique ID.
  */
@@ -78,7 +83,6 @@ class PictureInPictureToggleParent extends JSWindowActorParent {
  * This module is responsible for creating a Picture in Picture window to host
  * a clone of a video element running in web content.
  */
-
 class PictureInPictureParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
     switch (aMessage.name) {
@@ -315,7 +319,19 @@ var PictureInPicture = {
       // If there's a pre-existing PiP window, close it first if multiple
       // pips are disabled
       await this.closeAllPipWindows({ reason: "new-pip" });
+
+      gCurrentPlayerCount = 1;
+    } else {
+      // track specific number of open pip players if multi pip is
+      // enabled
+
+      gCurrentPlayerCount += 1;
     }
+
+    Services.telemetry.scalarSetMaximum(
+      "pictureinpicture.most_concurrent_players",
+      gCurrentPlayerCount
+    );
 
     let browser = wgp.browsingContext.top.embedderElement;
     let parentWin = browser.ownerGlobal;
@@ -359,6 +375,7 @@ var PictureInPicture = {
       reason,
       1
     );
+    gCurrentPlayerCount -= 1;
     // Saves the location of the Picture in Picture window
     this.savePosition(window);
     this.clearPipTabIcon(window);

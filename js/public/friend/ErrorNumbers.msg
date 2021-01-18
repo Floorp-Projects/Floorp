@@ -745,13 +745,13 @@ MSG_DEF(JSMSG_READABLESTREAM_NYI,                        0, JSEXN_ERR,     "full
 MSG_DEF(JSMSG_STREAM_INVALID_HIGHWATERMARK,              0, JSEXN_RANGEERR, "'highWaterMark' must be a non-negative, non-NaN number.")
 MSG_DEF(JSMSG_STREAM_CONSUME_ERROR,                      0, JSEXN_TYPEERR,  "error consuming stream body")
 
-// Response-related
-MSG_DEF(JSMSG_ERROR_CONSUMING_RESPONSE,                  0, JSEXN_TYPEERR,  "there was an error consuming the Response")
-MSG_DEF(JSMSG_BAD_RESPONSE_VALUE,                        0, JSEXN_TYPEERR,  "expected Response or Promise resolving to Response")
-MSG_DEF(JSMSG_BAD_RESPONSE_MIME_TYPE,                    0, JSEXN_TYPEERR,  "Response has unsupported MIME type")
-MSG_DEF(JSMSG_BAD_RESPONSE_CORS_SAME_ORIGIN,             0, JSEXN_TYPEERR,  "Response.type must be 'basic', 'cors' or 'default'")
-MSG_DEF(JSMSG_BAD_RESPONSE_STATUS,                       0, JSEXN_TYPEERR,  "Response does not have ok status")
-MSG_DEF(JSMSG_RESPONSE_ALREADY_CONSUMED,                 0, JSEXN_TYPEERR,  "Response already consumed")
+// (wasm) Response-related
+MSG_DEF(JSMSG_WASM_ERROR_CONSUMING_RESPONSE,             0, JSEXN_TYPEERR,  "WebAssembly: There was an error consuming the Response")
+MSG_DEF(JSMSG_WASM_BAD_RESPONSE_VALUE,                   0, JSEXN_TYPEERR,  "WebAssembly: Expected Response or Promise resolving to Response")
+MSG_DEF(JSMSG_WASM_BAD_RESPONSE_MIME_TYPE,               2, JSEXN_TYPEERR,  "WebAssembly: Response has unsupported MIME type '{0}' expected '{1}'")
+MSG_DEF(JSMSG_WASM_BAD_RESPONSE_CORS_SAME_ORIGIN,        0, JSEXN_TYPEERR,  "WebAssembly: Response.type must be 'basic', 'cors' or 'default'")
+MSG_DEF(JSMSG_WASM_BAD_RESPONSE_STATUS,                  0, JSEXN_TYPEERR,  "WebAssembly: Response does not have ok status")
+MSG_DEF(JSMSG_WASM_RESPONSE_ALREADY_CONSUMED,            0, JSEXN_TYPEERR,  "WebAssembly: Response already consumed")
 
 // BigInt
 MSG_DEF(JSMSG_BIGINT_TO_NUMBER, 0, JSEXN_TYPEERR, "can't convert BigInt to number")

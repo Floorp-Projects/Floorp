@@ -9708,12 +9708,6 @@
 # Prefs starting with "svg."
 #---------------------------------------------------------------------------
 
-# Is support for transform-box enabled?
-- name: svg.transform-box.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # This pref controls whether the 'context-fill' and 'context-stroke' keywords
 # can be used in SVG-as-an-image in the content processes to use the fill/
 # stroke specified on the element that embeds the image. (These keywords are
