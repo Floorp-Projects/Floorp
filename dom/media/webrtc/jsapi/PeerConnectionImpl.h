@@ -448,9 +448,7 @@ class PeerConnectionImpl final
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
 
-  RefPtr<dom::RTCStatsPromise> GetReceiverStats(
-      const RefPtr<MediaPipelineReceive>& aPipeline);
-  RefPtr<dom::RTCStatsPromise> GetSenderStats(
+  nsTArray<RefPtr<dom::RTCStatsPromise>> GetSenderStats(
       const RefPtr<MediaPipelineTransmit>& aPipeline);
   RefPtr<dom::RTCStatsPromise> GetDataChannelStats(
       const RefPtr<DataChannelConnection>& aDataChannelConnection,

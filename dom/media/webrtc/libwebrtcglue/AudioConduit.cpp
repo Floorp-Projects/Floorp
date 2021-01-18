@@ -145,126 +145,29 @@ void WebrtcAudioConduit::SetSyncGroup(const std::string& group) {
   mRecvStreamConfig.sync_group = group;
 }
 
-bool WebrtcAudioConduit::GetSendPacketTypeStats(
-    webrtc::RtcpPacketTypeCounter* aPacketCounts) {
-  ASSERT_ON_THREAD(mStsThread);
-  MutexAutoLock lock(mMutex);
-  if (!mSendStream) {
-    return false;
-  }
-  /*
-    return mSendChannelProxy->GetRTCPPacketTypeCounters(*aPacketCounts);
-  */
-  return false;
-}
-
-bool WebrtcAudioConduit::GetRecvPacketTypeStats(
-    webrtc::RtcpPacketTypeCounter* aPacketCounts) {
-  ASSERT_ON_THREAD(mStsThread);
-  MutexAutoLock lock(mMutex);
-  if (!mEngineReceiving) {
-    return false;
-  }
-  /*
-    return mRecvChannelProxy->GetRTCPPacketTypeCounters(*aPacketCounts);
-  */
-  return false;
-}
-
-bool WebrtcAudioConduit::GetRTPReceiverStats(unsigned int* jitterMs,
-                                             unsigned int* cumulativeLost) {
-  ASSERT_ON_THREAD(mStsThread);
-  *jitterMs = 0;
-  *cumulativeLost = 0;
-  MutexAutoLock lock(mMutex);
+Maybe<webrtc::AudioReceiveStream::Stats> WebrtcAudioConduit::GetReceiverStats()
+    const {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mRecvStream) {
-    return false;
+    return Nothing();
   }
-  auto stats = mRecvStream->GetStats();
-  *jitterMs = stats.jitter_ms;
-  *cumulativeLost = stats.packets_lost;
-  return true;
+  return Some(mRecvStream->GetStats());
 }
 
-bool WebrtcAudioConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
-                                               uint32_t* packetsReceived,
-                                               uint64_t* bytesReceived,
-                                               uint32_t* cumulativeLost,
-                                               Maybe<double>* aOutRttSec) {
-  ASSERT_ON_THREAD(mStsThread);
-  /*
-    double fractionLost = 0.0;
-    int64_t timestampTmp = 0;
-    int64_t rttMsTmp = 0;
-  */
-  bool res = false;
-  MutexAutoLock lock(mMutex);
-  /*
-    if (mSendChannelProxy) {
-      res = mSendChannelProxy->GetRTCPReceiverStatistics(
-          &timestampTmp, jitterMs, cumulativeLost, packetsReceived,
-    bytesReceived, &fractionLost, &rttMsTmp);
-    }
-  */
-  const auto stats = mCall->Call()->GetStats();
-  const auto rtt = stats.rtt_ms;
-  if (rtt > static_cast<decltype(stats.rtt_ms)>(INT32_MAX)) {
-    // If we get a bogus RTT we will keep using the previous RTT
-#ifdef DEBUG
-    CSFLogError(LOGTAG,
-                "%s for AudioConduit:%p RTT is larger than the"
-                " maximum size of an RTCP RTT.",
-                __FUNCTION__, this);
-#endif
-  } else {
-    if (mRttSec && rtt < 0) {
-      CSFLogError(LOGTAG,
-                  "%s for AudioConduit:%p RTT returned an error after "
-                  " previously succeeding.",
-                  __FUNCTION__, this);
-      mRttSec = Nothing();
-    }
-    if (rtt >= 0) {
-      mRttSec = Some(static_cast<DOMHighResTimeStamp>(rtt) / 1000.0);
-    }
+Maybe<webrtc::AudioSendStream::Stats> WebrtcAudioConduit::GetSenderStats()
+    const {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mSendStream) {
+    return Nothing();
   }
-  *aOutRttSec = mRttSec;
-  return res;
+  return Some(mSendStream->GetStats());
 }
 
-bool WebrtcAudioConduit::GetRTCPSenderReport(
-    unsigned int* packetsSent, uint64_t* bytesSent,
-    DOMHighResTimeStamp* aRemoteTimestamp) {
-  ASSERT_ON_THREAD(mStsThread);
-  MutexAutoLock lock(mMutex);
-  /*
-    if (!mRecvChannelProxy) {
-      return false;
-    }
-
-    webrtc::CallStatistics stats = mRecvChannelProxy->GetRTCPStatistics();
-    *packetsSent = stats.rtcp_sender_packets_sent;
-    *bytesSent = stats.rtcp_sender_octets_sent;
-    *aRemoteTimestamp = stats.rtcp_sender_ntp_timestamp.ToMs();
-  */
-  return *packetsSent > 0 && *bytesSent > 0;
+webrtc::Call::Stats WebrtcAudioConduit::GetCallStats() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mCall->Call()->GetStats();
 }
 
-Maybe<mozilla::dom::RTCBandwidthEstimationInternal>
-WebrtcAudioConduit::GetBandwidthEstimation() {
-  ASSERT_ON_THREAD(mStsThread);
-
-  const auto& stats = mCall->Call()->GetStats();
-  dom::RTCBandwidthEstimationInternal bw;
-  bw.mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
-  bw.mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
-  bw.mReceiveBandwidthBps.Construct(stats.recv_bandwidth_bps / 8);
-  bw.mPacerDelayMs.Construct(stats.pacer_delay_ms);
-  if (stats.rtt_ms >= 0) {
-    bw.mRttMs.Construct(stats.rtt_ms);
-  }
-  return Some(std::move(bw));
-}
 bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type, int freq) {
   CSFLogInfo(LOGTAG, "%s : setting dtmf payload %d", __FUNCTION__, (int)type);
   MOZ_ASSERT(NS_IsMainThread());

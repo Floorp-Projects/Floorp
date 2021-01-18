@@ -229,30 +229,6 @@ class MediaSessionConduit {
 
   virtual void SetSyncGroup(const std::string& group) = 0;
 
-  /**
-   * Functions returning stats needed by w3c stats model.
-   */
-
-  virtual bool GetSendPacketTypeStats(
-      webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
-
-  virtual bool GetRecvPacketTypeStats(
-      webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
-
-  virtual bool GetRTPReceiverStats(unsigned int* jitterMs,
-                                   unsigned int* cumulativeLost) = 0;
-  virtual bool GetRTCPReceiverReport(uint32_t* jitterMs,
-                                     uint32_t* packetsReceived,
-                                     uint64_t* bytesReceived,
-                                     uint32_t* cumulativeLost,
-                                     Maybe<double>* aOutRttMs) = 0;
-  virtual bool GetRTCPSenderReport(unsigned int* packetsSent,
-                                   uint64_t* bytesSent,
-                                   DOMHighResTimeStamp* aRemoteTimestamp) = 0;
-
-  virtual Maybe<mozilla::dom::RTCBandwidthEstimationInternal>
-  GetBandwidthEstimation() = 0;
-
   virtual void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
 
   virtual uint64_t CodecPluginID() = 0;
@@ -263,8 +239,10 @@ class MediaSessionConduit {
 
   virtual void DeleteStreams() = 0;
 
+  virtual Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() = 0;
   virtual Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() = 0;
 
+  virtual webrtc::Call::Stats GetCallStats() const = 0;
   virtual void SetRtcpEventObserver(RtcpEventObserver* observer) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
@@ -391,6 +369,14 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   Type type() const override { return VIDEO; }
 
+  Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() override {
+    return Nothing();
+  }
+
+  Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() override {
+    return Some(RefPtr<VideoSessionConduit>(this));
+  }
+
   /**
    * Function to attach Renderer end-point of the Media-Video conduit.
    * @param aRenderer : Reference to the concrete Video renderer implementation
@@ -456,19 +442,10 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   bool UsingFEC() const { return mUsingFEC; }
 
-  virtual bool GetVideoEncoderStats(double* framerateMean,
-                                    double* framerateStdDev,
-                                    double* bitrateMean, double* bitrateStdDev,
-                                    uint32_t* droppedFrames,
-                                    uint32_t* framesEncoded,
-                                    Maybe<uint64_t>* qpSum) = 0;
-  virtual bool GetVideoDecoderStats(double* framerateMean,
-                                    double* framerateStdDev,
-                                    double* bitrateMean, double* bitrateStdDev,
-                                    uint32_t* discardedPackets,
-                                    uint32_t* framesDecoded) = 0;
+  virtual Maybe<webrtc::VideoReceiveStream::Stats> GetReceiverStats() const = 0;
+  virtual Maybe<webrtc::VideoSendStream::Stats> GetSenderStats() const = 0;
 
-  virtual void RecordTelemetry() const = 0;
+  virtual void RecordTelemetry() = 0;
 
   virtual bool AddFrameHistory(
       dom::Sequence<dom::RTCVideoFrameHistoryInternal>* outHistories) const = 0;
@@ -502,6 +479,10 @@ class AudioSessionConduit : public MediaSessionConduit {
   virtual ~AudioSessionConduit() {}
 
   Type type() const override { return AUDIO; }
+
+  Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() override {
+    return Some(this);
+  }
 
   Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() override {
     return Nothing();
@@ -563,6 +544,9 @@ class AudioSessionConduit : public MediaSessionConduit {
 
   virtual bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
                               int lengthMs, int attenuationDb) = 0;
+
+  virtual Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const = 0;
+  virtual Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const = 0;
 };
 }  // namespace mozilla
 #endif
