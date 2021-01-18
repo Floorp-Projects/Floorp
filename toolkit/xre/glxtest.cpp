@@ -894,18 +894,39 @@ static void destroy_xdg_output_v1_info(struct xdg_output_v1_info* info) {
   free(info);
 }
 
+static int cmpOutputIds(const void* a, const void* b) {
+  return (((struct xdg_output_v1_info*)a)->output->global.id -
+          ((struct xdg_output_v1_info*)b)->output->global.id);
+}
+
 static void print_xdg_output_manager_v1_info(void* data) {
   struct xdg_output_manager_v1_info* info =
       (struct xdg_output_manager_v1_info*)data;
   struct xdg_output_v1_info* output;
 
   int screen_count = wl_list_length(&info->outputs);
-  if (screen_count != 0) {
-    record_value("SCREEN_INFO\n");
+  if (screen_count > 0) {
+    struct xdg_output_v1_info* infos = (struct xdg_output_v1_info*)malloc(
+        screen_count * sizeof(xdg_output_v1_info));
+
+    int pos = 0;
     wl_list_for_each(output, &info->outputs, link) {
-      record_value("%dx%d:0;", output->logical.width, output->logical.height);
+      infos[pos] = *output;
+      pos++;
+    }
+
+    if (screen_count > 1) {
+      qsort(infos, screen_count, sizeof(struct xdg_output_v1_info),
+            cmpOutputIds);
+    }
+
+    record_value("SCREEN_INFO\n");
+    for (int i = 0; i < screen_count; i++) {
+      record_value("%dx%d:0;", infos[i].logical.width, infos[i].logical.height);
     }
     record_value("\n");
+
+    free(infos);
   }
 }
 
