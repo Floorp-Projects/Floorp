@@ -53,6 +53,7 @@ struct nsWidgetInitData;
 namespace mozilla {
 class PresShell;
 class AppWindowTimerCallback;
+class L10nReadyPromiseHandler;
 }  // namespace mozilla
 
 // AppWindow
