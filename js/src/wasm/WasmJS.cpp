@@ -4238,7 +4238,7 @@ static bool ResolveResponse_OnFulfilled(JSContext* cx, unsigned argc,
   }
 
   if (!callArgs.get(0).isObject()) {
-    return RejectWithErrorNumber(cx, JSMSG_BAD_RESPONSE_VALUE, promise);
+    return RejectWithErrorNumber(cx, JSMSG_WASM_BAD_RESPONSE_VALUE, promise);
   }
 
   RootedObject response(cx, &callArgs.get(0).toObject());
