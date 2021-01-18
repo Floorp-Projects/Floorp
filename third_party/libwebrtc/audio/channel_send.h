@@ -41,6 +41,7 @@ struct CallSendStatistics {
   int packetsSent;
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-retransmittedpacketssent
   uint64_t retransmitted_packets_sent;
+  RtcpPacketTypeCounter rtcp_packet_type_counts;
   // A snapshot of Report Blocks with additional data of interest to statistics.
   // Within this list, the sender-source SSRC pair is unique and per-pair the
   // ReportBlockData represents the latest Report Block that was received for

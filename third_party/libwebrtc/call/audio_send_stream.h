@@ -30,6 +30,7 @@
 #include "call/rtp_config.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
+#include "modules/rtp_rtcp/include/rtcp_statistics.h"
 
 namespace webrtc {
 
@@ -63,6 +64,7 @@ class AudioSendStream : public AudioSender {
 
     ANAStats ana_statistics;
     AudioProcessingStats apm_statistics;
+    RtcpPacketTypeCounter rtcp_packet_type_counts;
 
     int64_t target_bitrate_bps = 0;
     // A snapshot of Report Blocks with additional data of interest to
