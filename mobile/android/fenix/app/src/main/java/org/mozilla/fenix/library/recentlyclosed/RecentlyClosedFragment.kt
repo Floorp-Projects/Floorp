@@ -83,7 +83,6 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>() {
                 store = requireComponents.core.store,
                 activity = activity as HomeActivity,
                 tabsUseCases = requireComponents.useCases.tabsUseCases,
-                sessionManager = requireComponents.core.sessionManager,
                 resources = requireContext().resources,
                 snackbar = FenixSnackbar.make(
                     view = requireActivity().getRootView()!!,

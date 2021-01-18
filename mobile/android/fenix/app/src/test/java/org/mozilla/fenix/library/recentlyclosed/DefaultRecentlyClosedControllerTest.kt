@@ -17,7 +17,6 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -46,7 +45,6 @@ class DefaultRecentlyClosedControllerTest {
     private val snackbar: FenixSnackbar = mockk(relaxed = true)
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val openToBrowser: (RecoverableTab, BrowsingMode?) -> Unit = mockk(relaxed = true)
-    private val sessionManager: SessionManager = mockk(relaxed = true)
     private val activity: HomeActivity = mockk(relaxed = true)
     private val store: BrowserStore = mockk(relaxed = true)
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
@@ -55,7 +53,6 @@ class DefaultRecentlyClosedControllerTest {
     private val controller = DefaultRecentlyClosedController(
         navController,
         store,
-        sessionManager,
         tabsUseCases,
         resources,
         snackbar,

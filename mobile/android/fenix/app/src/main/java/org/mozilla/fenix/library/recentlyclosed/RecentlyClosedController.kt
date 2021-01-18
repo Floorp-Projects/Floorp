@@ -9,7 +9,6 @@ import android.content.ClipboardManager
 import android.content.res.Resources
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -33,7 +32,6 @@ interface RecentlyClosedController {
 class DefaultRecentlyClosedController(
     private val navController: NavController,
     private val store: BrowserStore,
-    private val sessionManager: SessionManager,
     private val tabsUseCases: TabsUseCases,
     private val resources: Resources,
     private val snackbar: FenixSnackbar,
