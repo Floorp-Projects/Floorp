@@ -194,7 +194,9 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const ReadOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -225,7 +227,9 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
                                             const ReadUTF8Options& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -303,7 +307,9 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
                                          const WriteOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -337,7 +343,9 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
                                              const WriteOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -418,7 +426,9 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const MoveOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
@@ -443,7 +453,9 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                                           const RemoveOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -464,7 +476,9 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
     const MakeDirectoryOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -486,7 +500,9 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
                                         const nsAString& aPath) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
@@ -505,7 +521,9 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
                                         const CopyOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
   REJECT_IF_SHUTTING_DOWN(promise);
 
   nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
@@ -530,7 +548,9 @@ already_AddRefed<Promise> IOUtils::Touch(
     const Optional<int64_t>& aModification) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -552,7 +572,9 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
                                                const nsAString& aPath) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -569,7 +591,9 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
                                                   const uint32_t aPermissions) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -587,7 +611,9 @@ already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  if (!promise) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
