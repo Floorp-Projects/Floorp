@@ -97,7 +97,7 @@ for (let source of validTestCases) {
 
 const validTestCasesAsync = [
   // for-await-of loop: LHS can start with an identifier named "async".
-  // "for await ( async of [] ) ;",
+  "for await ( async of [] ) ;",
   "for await ( \\u0061sync of [] ) ;",
 
   // for-await-of loop: LHS can start with an property assignment starting with "async".
