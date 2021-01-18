@@ -26,8 +26,8 @@ export class InfoItem extends HTMLElement {
   handleTimeZone(infoElement) {
     let localTime = this.item.info.local;
     let UTCTime = this.item.info.utc;
-    infoElement.textContent = localTime;
-    infoElement.setAttribute("title", UTCTime);
+    infoElement.textContent = UTCTime;
+    infoElement.setAttribute("title", localTime);
   }
 
   addLongHexOverflow(info) {
