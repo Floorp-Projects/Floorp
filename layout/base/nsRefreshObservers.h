@@ -76,12 +76,15 @@ namespace mozilla {
  */
 class OneShotPostRefreshObserver : public nsAPostRefreshObserver {
  public:
-  using Action = std::function<void(mozilla::PresShell*)>;
+  using Action =
+      std::function<void(mozilla::PresShell*, OneShotPostRefreshObserver*)>;
+  NS_INLINE_DECL_REFCOUNTING(OneShotPostRefreshObserver)
   OneShotPostRefreshObserver(mozilla::PresShell* aPresShell, Action&& aAction);
-  virtual ~OneShotPostRefreshObserver();
+  explicit OneShotPostRefreshObserver(mozilla::PresShell* aPresShell);
   void DidRefresh() override;
 
  protected:
+  virtual ~OneShotPostRefreshObserver();
   RefPtr<mozilla::PresShell> mPresShell;
   Action mAction;
 };

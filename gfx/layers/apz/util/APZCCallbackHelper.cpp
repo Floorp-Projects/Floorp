@@ -682,17 +682,23 @@ static void SendLayersDependentApzcTargetConfirmation(
 DisplayportSetListener::DisplayportSetListener(
     nsIWidget* aWidget, PresShell* aPresShell, const uint64_t& aInputBlockId,
     nsTArray<ScrollableLayerGuid>&& aTargets)
-    : OneShotPostRefreshObserver(
-          aPresShell,
-          [this](PresShell* aPresShell) { OnPostRefresh(this, aPresShell); }),
+    : OneShotPostRefreshObserver(aPresShell),
       mWidget(aWidget),
       mInputBlockId(aInputBlockId),
-      mTargets(std::move(aTargets)) {}
+      mTargets(std::move(aTargets)) {
+  MOZ_ASSERT(!mAction, "Setting Action twice");
+  mAction = [](PresShell* aPresShell,
+               OneShotPostRefreshObserver* aThisObserver) {
+    OnPostRefresh(static_cast<DisplayportSetListener*>(aThisObserver),
+                  aPresShell);
+  };
+}
 
 DisplayportSetListener::~DisplayportSetListener() = default;
 
 bool DisplayportSetListener::Register() {
-  if (mPresShell->AddPostRefreshObserver(this)) {
+  if (nsPresContext* presContext = mPresShell->GetPresContext()) {
+    presContext->RegisterOneShotPostRefreshObserver(this);
     APZCCH_LOG("Successfully registered post-refresh observer\n");
     return true;
   }

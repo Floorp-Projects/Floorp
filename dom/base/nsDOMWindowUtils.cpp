@@ -2797,12 +2797,16 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     }
   }
   if (waitForRefresh) {
-    waitForRefresh =
-        presShell->AddPostRefreshObserver(new OneShotPostRefreshObserver(
-            presShell, [widget = RefPtr<nsIWidget>(widget), presShellId, viewId,
-                        bounds, flags](PresShell*) {
-              widget->ZoomToRect(presShellId, viewId, bounds, flags);
-            }));
+    waitForRefresh = false;
+    if (nsPresContext* presContext = presShell->GetPresContext()) {
+      waitForRefresh = presContext->RegisterOneShotPostRefreshObserver(
+          new OneShotPostRefreshObserver(
+              presShell,
+              [widget = RefPtr<nsIWidget>(widget), presShellId, viewId, bounds,
+               flags](PresShell*, OneShotPostRefreshObserver*) {
+                widget->ZoomToRect(presShellId, viewId, bounds, flags);
+              }));
+    }
   }
   if (!waitForRefresh) {
     widget->ZoomToRect(presShellId, viewId, bounds, flags);
