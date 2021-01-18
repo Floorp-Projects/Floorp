@@ -13,7 +13,6 @@ const HELPERS = [
   "$$",
   "$0",
   "$x",
-  "cd",
   "clear",
   "clearHistory",
   "copy",
