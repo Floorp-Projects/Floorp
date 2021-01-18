@@ -11203,9 +11203,7 @@ class MHasClass : public MUnaryInstruction, public SingleObjectPolicy::Data {
 
   MHasClass(MDefinition* object, const JSClass* clasp)
       : MUnaryInstruction(classOpcode, object), class_(clasp) {
-    MOZ_ASSERT(object->type() == MIRType::Object ||
-               (object->type() == MIRType::Value &&
-                object->mightBeType(MIRType::Object)));
+    MOZ_ASSERT(object->type() == MIRType::Object);
     setResultType(MIRType::Boolean);
     setMovable();
   }
