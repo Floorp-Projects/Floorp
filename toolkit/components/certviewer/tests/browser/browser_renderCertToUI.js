@@ -124,14 +124,36 @@ add_task(async function test() {
           if (
             adjustedCertsElemLabel === "timestamp" ||
             adjustedCertsElemLabel === "not-after" ||
-            adjustedCertsElemLabel === "not-before" ||
-            adjustedCertsElemLabel === "download"
+            adjustedCertsElemLabel === "not-before"
           ) {
             Assert.equal(
-              infoElem.getAttribute("title"),
+              infoElem.textContent,
               adjustedCertsElemInfo.utc,
               "Timestamps must be equal"
             );
+            i++;
+            continue;
+          }
+          if (adjustedCertsElemLabel === "download") {
+            Assert.equal(infoElem.children.length, 2, "Should have 2 links.");
+            for (let kid of infoElem.children) {
+              Assert.equal(kid.localName, "a", "Should get a cert/chain link.");
+              Assert.ok(
+                kid.download.endsWith("pem"),
+                "Link `download` attribute should point to pem file."
+              );
+              Assert.ok(
+                kid.dataset.l10nId.includes("pem"),
+                "Link should be labeled"
+              );
+              Assert.equal(
+                kid.dataset.l10nId.includes("chain"),
+                kid.download.includes("chain"),
+                "Download label and filename should match"
+              );
+            }
+            // Remaining tests in browser_downloadLink.js
+
             i++;
             continue;
           }

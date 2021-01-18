@@ -36,18 +36,13 @@ async function checValiditySection(url) {
           .getAttribute("data-l10n-id");
 
         Assert.notEqual(label, "", "Label shouldn't be empty");
-        Assert.equal(
-          label.includes("utc"),
-          false,
-          "UTC timezone shouldn't be displayed"
-        );
 
         let infoElem = infoItem.shadowRoot.querySelector(".info");
-        let title = infoElem.getAttribute("title");
+        let title = infoElem.textContent;
         Assert.equal(
           title.includes("GMT"),
           true,
-          "UTC timezone should be displayed on title"
+          "UTC timezone should be displayed in the label"
         );
       }
     });
