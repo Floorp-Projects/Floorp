@@ -30,7 +30,7 @@
         <org.mozilla.fenix.utils.LinkTextView
             android:id="@+id/exceptions_learn_more"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/component_exceptions_learn_more_height"
             android:padding="4dp"
             android:text="@string/exceptions_empty_message_learn_more_link"
             android:textAlignment="viewStart"
