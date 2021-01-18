@@ -58,8 +58,10 @@ fn main() {
         .collect::<Vec<&str>>()
         .join("\r\n");
 
-    if let Err(why) = webrtc_sdp::parse_sdp(&s, true) {
-        panic!("Failed to parse SDP with error: {}", why);
+    let res = webrtc_sdp::parse_sdp(&s, true);
+    match res {
+        Err(why) => panic!("Failed to parse SDP with error: {}", why),
+        Ok(sdp) => println!("Parsed SDP structure:\n{:#?}", sdp),
     }
 
     if expect_failure {

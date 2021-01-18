@@ -37,10 +37,10 @@ impl FromStr for Address {
             }
         }
         Host::parse(s)
-            .and_then(|host| match host {
-                Host::Domain(s) => Ok(Address::Fqdn(s)),
-                Host::Ipv4(ip) => Ok(Address::Ip(IpAddr::V4(ip))),
-                Host::Ipv6(ip) => Ok(Address::Ip(IpAddr::V6(ip))),
+            .map(|host| match host {
+                Host::Domain(s) => Address::Fqdn(s),
+                Host::Ipv4(ip) => Address::Ip(IpAddr::V4(ip)),
+                Host::Ipv6(ip) => Address::Ip(IpAddr::V6(ip)),
             })
             .map_err(|err| e.unwrap_or_else(|| err.into()))
     }
