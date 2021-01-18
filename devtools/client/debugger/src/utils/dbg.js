@@ -24,17 +24,6 @@ function findSources(dbg: any, url: URL): Source[] {
   return sources.filter(s => (s.url || "").includes(url));
 }
 
-function sendPacket(dbg: any, packet: any) {
-  return dbg.client.sendPacket(packet);
-}
-
-function sendPacketToThread(dbg: Object, packet: any) {
-  return sendPacket(dbg, {
-    to: getThreadFront(dbg).actor,
-    ...packet,
-  });
-}
-
 function evaluate(dbg: Object, expression: any) {
   return dbg.client.evaluate(expression);
 }
@@ -93,8 +82,6 @@ export function setupHelper(obj: Object) {
       findSource: url => findSource(dbg, url),
       findSources: url => findSources(dbg, url),
       evaluate: expression => evaluate(dbg, expression),
-      sendPacketToThread: packet => sendPacketToThread(dbg, packet),
-      sendPacket: packet => sendPacket(dbg, packet),
       dumpThread: () => getThreadFront(dbg).dumpThread(),
       getDocument: url => getDocumentForUrl(dbg, url),
     },
