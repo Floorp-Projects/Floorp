@@ -6,6 +6,8 @@ permalink: /contributing/app-services-upgrades
 
 Upgrading to a newer [version of App Services][as_version] upgrades the dependencies for multiple components, so it can be prudent to run a quick smoke test before it lands to ensure new functionality works and there are no regressions in the existing components.
 
+## Automated PR testing
+
 A quick first step is to run the automated smoke test on the Android Components PR by commenting:
 
 ```
@@ -13,6 +15,8 @@ bors try
 ```
 
 This will run the `test-ui-browser` task, which will execute on-device tests of a sample browser built against the A-S version. If it's totally broken, that should blow up.
+
+## Fenix
 
 The next step is to build a [local version of Android Components][local_build] against [Fenix][fenix] and test the followings items:
  - Check general storage components works by adding/editing/removing: bookmarks, history

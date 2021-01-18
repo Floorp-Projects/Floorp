@@ -33,6 +33,7 @@ Before contributing, please review our [Community Participation Guidelines](http
 * [Deprecating components and code]({{ site.baseurl }}/contributing/deprecating)
 * [Merge day process]({{ site.baseurl }}/contributing/merge-day)
 * [Updating the tracking protection lists process]({{ site.baseurl }}/contributing/update-tracking-protection-list)
+* [Updating to a newer Application Services]({{ site.baseurl }}/contributing/app-services-upgrades)
 
 ### Accepted RFCs
 
