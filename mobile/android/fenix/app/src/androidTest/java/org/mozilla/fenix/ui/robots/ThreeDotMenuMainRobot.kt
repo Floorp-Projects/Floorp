@@ -48,6 +48,10 @@ import org.mozilla.fenix.share.ShareFragment
  * Implementation of Robot Pattern for the three dot (main) menu.
  */
 class ThreeDotMenuMainRobot {
+    fun verifyTabSettingsButton() = assertTabSettingsButton()
+    fun verifyRecentlyClosedTabsButton() = assertRecentlyClosedTabsButton()
+    fun verifyShareAllTabsButton() = assertShareAllTabsButton()
+    fun clickShareAllTabsButton() = shareAllTabsButton().click()
     fun verifySettingsButton() = assertSettingsButton()
     fun verifyAddOnsButton() = assertAddOnsButton()
     fun verifyHistoryButton() = assertHistoryButton()
@@ -117,6 +121,7 @@ class ThreeDotMenuMainRobot {
     fun verifyAddToMobileHome() = assertAddToMobileHome()
     fun verifyDesktopSite() = assertDesktopSite()
     fun verifyDownloadsButton() = assertDownloadsButton()
+    fun verifyShareTabsOverlay() = assertShareTabsOverlay()
 
     fun verifyThreeDotMainMenuItems() {
         verifyAddOnsButton()
@@ -134,6 +139,13 @@ class ThreeDotMenuMainRobot {
         verifyShareButton()
         verifyForwardButton()
         verifyRefreshButton()
+    }
+
+    private fun assertShareTabsOverlay() {
+        onView(withId(R.id.shared_site_list)).check(matches(isDisplayed()))
+        onView(withId(R.id.share_tab_title)).check(matches(isDisplayed()))
+        onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
+        onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
     }
 
     class Transition {
@@ -543,3 +555,30 @@ private fun clickAddonsManagerButton() {
 }
 
 private fun exitSaveCollectionButton() = onView(withId(R.id.back_button)).check(matches(isDisplayed()))
+
+private fun tabSettingsButton() =
+    onView(allOf(withText("Tab settings"))).inRoot(RootMatchers.isPlatformPopup())
+
+private fun assertTabSettingsButton() {
+    tabSettingsButton()
+        .check(
+            matches(isDisplayed()))
+}
+
+private fun recentlyClosedTabsButton() =
+    onView(allOf(withText("Recently closed tabs"))).inRoot(RootMatchers.isPlatformPopup())
+
+private fun assertRecentlyClosedTabsButton() {
+    recentlyClosedTabsButton()
+        .check(
+            matches(isDisplayed()))
+}
+
+private fun shareAllTabsButton() =
+    onView(allOf(withText("Share all tabs"))).inRoot(RootMatchers.isPlatformPopup())
+
+private fun assertShareAllTabsButton() {
+    shareAllTabsButton()
+        .check(
+            matches(isDisplayed()))
+}

@@ -52,6 +52,19 @@ import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorStateMatcher
  * Implementation of Robot Pattern for the home screen menu.
  */
 class TabDrawerRobot {
+
+    fun verifyBrowserTabsTrayURL(url: String) {
+        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        mDevice.waitNotNull(
+            Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_tabstray_url")),
+            waitingTime
+        )
+        onView(withId(R.id.mozac_browser_tabstray_url))
+            .check(matches(withText(containsString(url))))
+    }
+
+    fun verifyNormalBrowsingButtonIsDisplayed() = assertNormalBrowsingButton()
     fun verifyExistingOpenTabs(title: String) = assertExistingOpenTabs(title)
     fun verifyCloseTabsButton(title: String) = assertCloseTabsButton(title)
 
@@ -66,6 +79,7 @@ class TabDrawerRobot {
     fun verifyTabTrayIsClosed() = assertTabTrayDoesNotExist()
     fun verifyHalfExpandedRatio() = assertMinisculeHalfExpandedRatio()
     fun verifyBehaviorState(expectedState: Int) = assertBehaviorState(expectedState)
+    fun verifyOpenedTabThumbnail() = assertTabThumbnail()
 
     fun closeTab() {
         mDevice.findObject(
@@ -362,6 +376,15 @@ private fun assertMinisculeHalfExpandedRatio() {
 private fun assertBehaviorState(expectedState: Int) {
     onView(withId(R.id.tab_wrapper))
         .check(matches(BottomSheetBehaviorStateMatcher(expectedState)))
+}
+
+private fun assertNormalBrowsingButton() {
+    normalBrowsingButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+}
+
+private fun assertTabThumbnail() {
+    onView(withId(R.id.mozac_browser_tabstray_thumbnail))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun tab(title: String) =

@@ -995,4 +995,67 @@ class SmokeTest {
             verifyBookmarksButton()
         }
     }
+
+    @Test
+    fun shareTabsFromTabsTrayTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            verifyNormalModeSelected()
+            verifyExistingTabList()
+            verifyExistingOpenTabs("Test_Page_1")
+            verifyTabTrayOverflowMenu(true)
+        }.openTabsListThreeDotMenu {
+            verifyShareAllTabsButton()
+            clickShareAllTabsButton()
+            verifyShareTabsOverlay()
+        }
+    }
+
+    @Test
+    fun emptyTabsTrayViewPrivateBrowsingTest() {
+        homeScreen {
+        }.dismissOnboarding()
+
+        homeScreen {
+        }.openTabDrawer {
+        }.toggleToPrivateTabs() {
+            verifyPrivateModeSelected()
+            verifyNormalBrowsingButtonIsDisplayed()
+            verifyNoTabsOpened()
+            verifyTabTrayOverflowMenu(true)
+            verifyNewTabButton()
+        }.openTabsListThreeDotMenu {
+            verifyTabSettingsButton()
+            verifyRecentlyClosedTabsButton()
+        }
+    }
+
+    @Test
+    fun privateTabsTrayWithOpenedTabTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            verifyPrivateModeSelected()
+            verifyNormalBrowsingButtonIsDisplayed()
+            verifyExistingTabList()
+            verifyExistingOpenTabs("Test_Page_1")
+            verifyCloseTabsButton("Test_Page_1")
+            verifyOpenedTabThumbnail()
+            verifyBrowserTabsTrayURL("localhost")
+            verifyTabTrayOverflowMenu(true)
+            verifyNewTabButton()
+        }
+    }
 }
