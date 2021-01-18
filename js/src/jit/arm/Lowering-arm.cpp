@@ -1078,7 +1078,6 @@ void LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins) {
               ins);
 }
 
-
 void LIRGenerator::visitWasmBitselectSimd128(MWasmBitselectSimd128* ins) {
   MOZ_CRASH("bitselect NYI");
 }

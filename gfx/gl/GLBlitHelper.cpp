@@ -680,10 +680,10 @@ const DrawBlitProg* GLBlitHelper::CreateDrawBlitProg(
 // -----------------------------------------------------------------------------
 
 #ifdef XP_MACOSX
-static RefPtr<MacIOSurface> LookupSurface(const layers::SurfaceDescriptorMacIOSurface& sd) {
-  return MacIOSurface::LookupSurface(
-          sd.surfaceId(), sd.scaleFactor(),
-          !sd.isOpaque(), sd.yUVColorSpace());
+static RefPtr<MacIOSurface> LookupSurface(
+    const layers::SurfaceDescriptorMacIOSurface& sd) {
+  return MacIOSurface::LookupSurface(sd.surfaceId(), sd.scaleFactor(),
+                                     !sd.isOpaque(), sd.yUVColorSpace());
 }
 #endif
 

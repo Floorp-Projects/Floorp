@@ -2279,7 +2279,8 @@ void ReflowInput::InitConstraints(
 
       const bool isBlockLevel =
           (mStyleDisplay->DisplayOutside() == StyleDisplayOutside::Block ||
-           mStyleDisplay->DisplayOutside() == StyleDisplayOutside::TableCaption ||
+           mStyleDisplay->DisplayOutside() ==
+               StyleDisplayOutside::TableCaption ||
            mFrame->IsTableFrame()) &&
           // XXX abs.pos. continuations treated like blocks, see comment in
           // the else-if condition above.
