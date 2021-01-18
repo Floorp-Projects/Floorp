@@ -211,22 +211,6 @@ function computeButton(aEvent) {
   return aEvent.type == "contextmenu" ? 2 : 0;
 }
 
-function computeButtons(aEvent, utils) {
-  if (typeof aEvent.buttons != "undefined") {
-    return aEvent.buttons;
-  }
-
-  if (typeof aEvent.button != "undefined") {
-    return utils.MOUSE_BUTTONS_NOT_SPECIFIED;
-  }
-
-  if (typeof aEvent.type != "undefined" && aEvent.type != "mousedown") {
-    return utils.MOUSE_BUTTONS_NO_BUTTON;
-  }
-
-  return utils.MOUSE_BUTTONS_NOT_SPECIFIED;
-}
-
 function sendMouseEvent(aEvent, aTarget, aWindow) {
   if (
     ![
@@ -600,6 +584,8 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window) {
       "isWidgetEventSynthesized" in aEvent
         ? aEvent.isWidgetEventSynthesized
         : false;
+    var buttons =
+      "buttons" in aEvent ? aEvent.buttons : utils.MOUSE_BUTTONS_NOT_SPECIFIED;
     if ("type" in aEvent && aEvent.type) {
       defaultPrevented = utils.sendMouseEvent(
         aEvent.type,
@@ -613,7 +599,7 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window) {
         inputSource,
         isDOMEventSynthesized,
         isWidgetEventSynthesized,
-        computeButtons(aEvent, utils),
+        buttons,
         id
       );
     } else {
@@ -629,7 +615,7 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window) {
         inputSource,
         isDOMEventSynthesized,
         isWidgetEventSynthesized,
-        computeButtons(Object.assign({ type: "mousedown" }, aEvent), utils),
+        buttons,
         id
       );
       utils.sendMouseEvent(
@@ -644,7 +630,7 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window) {
         inputSource,
         isDOMEventSynthesized,
         isWidgetEventSynthesized,
-        computeButtons(Object.assign({ type: "mouseup" }, aEvent), utils),
+        buttons,
         id
       );
     }
