@@ -13589,35 +13589,23 @@ void CodeGenerator::visitIsObjectAndBranch(LIsObjectAndBranch* ins) {
 }
 
 void CodeGenerator::visitIsNullOrUndefined(LIsNullOrUndefined* ins) {
-  MDefinition* input = ins->mir()->value();
   Register output = ToRegister(ins->output());
   ValueOperand value = ToValue(ins, LIsNullOrUndefined::Input);
 
-  if (input->mightBeType(MIRType::Null)) {
-    if (input->mightBeType(MIRType::Undefined)) {
-      Label isNotNull, done;
-      masm.branchTestNull(Assembler::NotEqual, value, &isNotNull);
+  Label isNotNull, done;
+  masm.branchTestNull(Assembler::NotEqual, value, &isNotNull);
 
-      masm.move32(Imm32(1), output);
-      masm.jump(&done);
+  masm.move32(Imm32(1), output);
+  masm.jump(&done);
 
-      masm.bind(&isNotNull);
-      masm.testUndefinedSet(Assembler::Equal, value, output);
+  masm.bind(&isNotNull);
+  masm.testUndefinedSet(Assembler::Equal, value, output);
 
-      masm.bind(&done);
-    } else {
-      masm.testNullSet(Assembler::Equal, value, output);
-    }
-  } else if (input->mightBeType(MIRType::Undefined)) {
-    masm.testUndefinedSet(Assembler::Equal, value, output);
-  } else {
-    masm.move32(Imm32(0), output);
-  }
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitIsNullOrUndefinedAndBranch(
     LIsNullOrUndefinedAndBranch* ins) {
-  MDefinition* input = ins->isNullOrUndefinedMir()->value();
   Label* ifTrue = getJumpLabelForBranch(ins->ifTrue());
   Label* ifFalse = getJumpLabelForBranch(ins->ifFalse());
   ValueOperand value = ToValue(ins, LIsNullOrUndefinedAndBranch::Input);
@@ -13625,12 +13613,9 @@ void CodeGenerator::visitIsNullOrUndefinedAndBranch(
   ScratchTagScope tag(masm, value);
   masm.splitTagForTest(value, tag);
 
-  if (input->mightBeType(MIRType::Null)) {
-    masm.branchTestNull(Assembler::Equal, tag, ifTrue);
-  }
-  if (input->mightBeType(MIRType::Undefined)) {
-    masm.branchTestUndefined(Assembler::Equal, tag, ifTrue);
-  }
+  masm.branchTestNull(Assembler::Equal, tag, ifTrue);
+  masm.branchTestUndefined(Assembler::Equal, tag, ifTrue);
+
   if (!isNextBlock(ins->ifFalse()->lir())) {
     masm.jump(ifFalse);
   }
