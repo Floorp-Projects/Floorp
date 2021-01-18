@@ -4439,67 +4439,53 @@ void CodeGenerator::visitValueToInt64(LValueToInt64* lir) {
   Register temp = ToRegister(lir->temp());
   Register64 output = ToOutRegister64(lir);
 
-  bool maybeBigInt = lir->mir()->input()->mightBeType(MIRType::BigInt);
-  bool maybeBool = lir->mir()->input()->mightBeType(MIRType::Boolean);
-  bool maybeString = lir->mir()->input()->mightBeType(MIRType::String);
-  int checks = int(maybeBigInt) + int(maybeBool) + int(maybeString);
+  int checks = 3;
 
-  if (checks == 0) {
-    // Bail on other types.
-    bailout(lir->snapshot());
-  } else {
-    Label fail, done;
-    // Jump to fail if this is the last check and we fail it,
-    // otherwise to the next test.
-    auto emitTestAndUnbox = [&](auto testAndUnbox) {
-      MOZ_ASSERT(checks > 0);
+  Label fail, done;
+  // Jump to fail if this is the last check and we fail it,
+  // otherwise to the next test.
+  auto emitTestAndUnbox = [&](auto testAndUnbox) {
+    MOZ_ASSERT(checks > 0);
 
-      checks--;
-      Label notType;
-      Label* target = checks ? &notType : &fail;
+    checks--;
+    Label notType;
+    Label* target = checks ? &notType : &fail;
 
-      testAndUnbox(target);
+    testAndUnbox(target);
 
-      if (checks) {
-        masm.jump(&done);
-        masm.bind(&notType);
-      }
-    };
-
-    Register tag = masm.extractTag(input, temp);
-
-    // BigInt.
-    if (maybeBigInt) {
-      emitTestAndUnbox([&](Label* target) {
-        masm.branchTestBigInt(Assembler::NotEqual, tag, target);
-        masm.unboxBigInt(input, temp);
-        masm.loadBigInt64(temp, output);
-      });
+    if (checks) {
+      masm.jump(&done);
+      masm.bind(&notType);
     }
+  };
 
-    // Boolean
-    if (maybeBool) {
-      emitTestAndUnbox([&](Label* target) {
-        masm.branchTestBoolean(Assembler::NotEqual, tag, target);
-        masm.unboxBoolean(input, temp);
-        masm.move32To64ZeroExtend(temp, output);
-      });
-    }
+  Register tag = masm.extractTag(input, temp);
 
-    // String
-    if (maybeString) {
-      emitTestAndUnbox([&](Label* target) {
-        masm.branchTestString(Assembler::NotEqual, tag, target);
-        masm.unboxString(input, temp);
-        emitStringToInt64(lir, temp, output);
-      });
-    }
+  // BigInt.
+  emitTestAndUnbox([&](Label* target) {
+    masm.branchTestBigInt(Assembler::NotEqual, tag, target);
+    masm.unboxBigInt(input, temp);
+    masm.loadBigInt64(temp, output);
+  });
 
-    MOZ_ASSERT(checks == 0);
+  // Boolean
+  emitTestAndUnbox([&](Label* target) {
+    masm.branchTestBoolean(Assembler::NotEqual, tag, target);
+    masm.unboxBoolean(input, temp);
+    masm.move32To64ZeroExtend(temp, output);
+  });
 
-    bailoutFrom(&fail, lir->snapshot());
-    masm.bind(&done);
-  }
+  // String
+  emitTestAndUnbox([&](Label* target) {
+    masm.branchTestString(Assembler::NotEqual, tag, target);
+    masm.unboxString(input, temp);
+    emitStringToInt64(lir, temp, output);
+  });
+
+  MOZ_ASSERT(checks == 0);
+
+  bailoutFrom(&fail, lir->snapshot());
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitTruncateBigIntToInt64(LTruncateBigIntToInt64* lir) {
