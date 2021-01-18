@@ -754,6 +754,11 @@ bool CompilationStencilSet::instantiateStencilsAfterPreparation(
     BaseScript* lazy = fun->baseScript();
     MOZ_ASSERT(!lazy->hasBytecode());
 
+    if (!lazy->isReadyForDelazification()) {
+      MOZ_ASSERT(false, "Delazification target is not ready. Bad XDR?");
+      continue;
+    }
+
     Rooted<CompilationInput> delazificationInput(
         cx, CompilationInput(input.options));
     delazificationInput.get().initFromLazy(lazy);
