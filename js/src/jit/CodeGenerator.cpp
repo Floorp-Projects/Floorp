@@ -9318,13 +9318,8 @@ void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
       ScratchTagScope tag(masm, value);
       masm.splitTagForTest(value, tag);
 
-      MDefinition* input = lir->mir()->lhs();
-      if (input->mightBeType(MIRType::Null)) {
-        masm.branchTestNull(Assembler::Equal, tag, nullOrLikeUndefined);
-      }
-      if (input->mightBeType(MIRType::Undefined)) {
-        masm.branchTestUndefined(Assembler::Equal, tag, nullOrLikeUndefined);
-      }
+      masm.branchTestNull(Assembler::Equal, tag, nullOrLikeUndefined);
+      masm.branchTestUndefined(Assembler::Equal, tag, nullOrLikeUndefined);
 
       // Check whether it's a truthy object or a falsy object that emulates
       // undefined.
@@ -9397,13 +9392,8 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
       ScratchTagScope tag(masm, value);
       masm.splitTagForTest(value, tag);
 
-      MDefinition* input = lir->cmpMir()->lhs();
-      if (input->mightBeType(MIRType::Null)) {
-        masm.branchTestNull(Assembler::Equal, tag, ifTrueLabel);
-      }
-      if (input->mightBeType(MIRType::Undefined)) {
-        masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
-      }
+      masm.branchTestNull(Assembler::Equal, tag, ifTrueLabel);
+      masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
 
       masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);
     }
