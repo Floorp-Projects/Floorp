@@ -80,7 +80,7 @@ where
 
 pub fn maybe_print_bool_param(name: &str, param: bool, default_value: bool) -> String {
     if param != default_value {
-        name.to_owned() + "=" + &(if param { "1" } else { "0" }).to_string()
+        name.to_owned() + "=" + &(param as i32).to_string()
     } else {
         "".to_string()
     }
@@ -179,6 +179,7 @@ impl fmt::Display for SdpAttributeCandidateTcpType {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeCandidate {
     pub foundation: String,
     pub component: u32,
@@ -299,6 +300,7 @@ impl AnonymizingClone for SdpAttributeCandidate {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpAttributeDtlsMessage {
     Client(String),
     Server(String),
@@ -316,6 +318,7 @@ impl fmt::Display for SdpAttributeDtlsMessage {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeRemoteCandidate {
     pub component: u32,
     pub address: Address,
@@ -346,6 +349,7 @@ impl AnonymizingClone for SdpAttributeRemoteCandidate {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeSimulcastId {
     pub id: String,
     pub paused: bool,
@@ -353,9 +357,9 @@ pub struct SdpAttributeSimulcastId {
 
 impl SdpAttributeSimulcastId {
     pub fn new(idstr: &str) -> SdpAttributeSimulcastId {
-        if idstr.starts_with('~') {
+        if let Some(idstr) = idstr.strip_prefix('~') {
             SdpAttributeSimulcastId {
-                id: idstr[1..].to_string(),
+                id: idstr.to_string(),
                 paused: true,
             }
         } else {
@@ -379,6 +383,7 @@ impl fmt::Display for SdpAttributeSimulcastId {
 #[repr(C)]
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeSimulcastVersion {
     pub ids: Vec<SdpAttributeSimulcastId>,
 }
@@ -407,6 +412,7 @@ impl fmt::Display for SdpAttributeSimulcastVersion {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeSimulcast {
     pub send: Vec<SdpAttributeSimulcastVersion>,
     pub receive: Vec<SdpAttributeSimulcastVersion>,
@@ -425,6 +431,7 @@ impl fmt::Display for SdpAttributeSimulcast {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeRtcp {
     pub port: u16,
     pub unicast_addr: Option<ExplicitlyTypedAddress>,
@@ -454,6 +461,7 @@ impl fmt::Display for SdpAttributeRtcp {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpAttributeRtcpFbType {
     Ack = 0,
     Ccm = 2, // This is explicitly 2 to make the conversion to the
@@ -481,6 +489,7 @@ impl fmt::Display for SdpAttributeRtcpFbType {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeRtcpFb {
     pub payload_type: SdpAttributePayloadType,
     pub feedback_type: SdpAttributeRtcpFbType,
@@ -505,6 +514,7 @@ impl fmt::Display for SdpAttributeRtcpFb {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpAttributeDirection {
     Recvonly,
     Sendonly,
@@ -524,6 +534,7 @@ impl fmt::Display for SdpAttributeDirection {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeExtmap {
     pub id: u16,
     pub direction: Option<SdpAttributeDirection>,
@@ -546,6 +557,7 @@ impl fmt::Display for SdpAttributeExtmap {
 
 #[derive(Clone, Copy)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct RtxFmtpParameters {
     pub apt: u8,
     pub rtx_time: Option<u32>,
@@ -563,6 +575,7 @@ impl fmt::Display for RtxFmtpParameters {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeFmtpParameters {
     // H264
     // TODO(bug 1466859): Support sprop-parameter-sets
@@ -614,13 +627,17 @@ impl fmt::Display for SdpAttributeFmtpParameters {
             f,
             "{parameters}{red}{dtmf}{unknown}",
             parameters = non_empty_string_vec![
-                maybe_print_param("packetization-mode=", self.packetization_mode, 0),
+                maybe_print_param(
+                    "profile-level-id=",
+                    format!("{:06x}", self.profile_level_id),
+                    "420010".to_string()
+                ),
                 maybe_print_bool_param(
                     "level-asymmetry-allowed",
                     self.level_asymmetry_allowed,
                     false
                 ),
-                maybe_print_param("profile-level-id=", self.profile_level_id, 0x0042_0010),
+                maybe_print_param("packetization-mode=", self.packetization_mode, 0),
                 maybe_print_param("max-fs=", self.max_fs, 0),
                 maybe_print_param("max-cpb=", self.max_cpb, 0),
                 maybe_print_param("max-dpb=", self.max_dpb, 0),
@@ -647,6 +664,7 @@ impl fmt::Display for SdpAttributeFmtpParameters {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeFmtp {
     pub payload_type: u8,
     pub parameters: SdpAttributeFmtpParameters,
@@ -665,6 +683,7 @@ impl fmt::Display for SdpAttributeFmtp {
 
 #[derive(Clone, Copy)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpAttributeFingerprintHashType {
     Sha1,
     Sha224,
@@ -688,6 +707,7 @@ impl fmt::Display for SdpAttributeFingerprintHashType {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeFingerprint {
     pub hash_algorithm: SdpAttributeFingerprintHashType,
     pub fingerprint: Vec<u8>,
@@ -833,6 +853,7 @@ impl fmt::Display for SdpAttributeImageAttrSetList {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeImageAttr {
     pub pt: SdpAttributePayloadType,
     pub send: SdpAttributeImageAttrSetList,
@@ -856,6 +877,7 @@ impl fmt::Display for SdpAttributeImageAttr {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeSctpmap {
     pub port: u16,
     pub channels: u32,
@@ -874,6 +896,7 @@ impl fmt::Display for SdpAttributeSctpmap {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpAttributeGroupSemantic {
     LipSynchronization,          // RFC5888
     FlowIdentification,          // RFC5888
@@ -901,6 +924,7 @@ impl fmt::Display for SdpAttributeGroupSemantic {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeGroup {
     pub semantics: SdpAttributeGroupSemantic,
     pub tags: Vec<String>,
@@ -919,6 +943,7 @@ impl fmt::Display for SdpAttributeGroup {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeMsid {
     pub id: String,
     pub appdata: Option<String>,
@@ -950,6 +975,7 @@ impl fmt::Display for SdpAttributeMsidSemantic {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeRidParameters {
     pub max_width: u32,
     pub max_height: u32,
@@ -979,6 +1005,7 @@ impl fmt::Display for SdpAttributeRidParameters {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeRid {
     pub id: String,
     pub direction: SdpSingleDirection,
@@ -1011,6 +1038,7 @@ impl fmt::Display for SdpAttributeRid {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeRtpmap {
     pub payload_type: u8,
     pub codec_name: String,
@@ -1048,6 +1076,7 @@ impl fmt::Display for SdpAttributeRtpmap {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpAttributeSetup {
     Active,
     Actpass,
@@ -1069,6 +1098,7 @@ impl fmt::Display for SdpAttributeSetup {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpAttributeSsrc {
     pub id: u32,
     pub attribute: Option<String>,
@@ -1121,6 +1151,7 @@ impl AnonymizingClone for SdpAttributeSsrc {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpSsrcGroupSemantic {
     Duplication,              // RFC7104
     FlowIdentification,       // RFC5576
@@ -1144,12 +1175,14 @@ impl fmt::Display for SdpSsrcGroupSemantic {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpAttribute {
     BundleOnly,
     Candidate(SdpAttributeCandidate),
     DtlsMessage(SdpAttributeDtlsMessage),
     EndOfCandidates,
     Extmap(SdpAttributeExtmap),
+    ExtmapAllowMixed,
     Fingerprint(SdpAttributeFingerprint),
     Fmtp(SdpAttributeFmtp),
     Group(SdpAttributeGroup),
@@ -1217,6 +1250,7 @@ impl SdpAttribute {
             SdpAttribute::DtlsMessage { .. }
             | SdpAttribute::EndOfCandidates
             | SdpAttribute::Extmap(..)
+            | SdpAttribute::ExtmapAllowMixed
             | SdpAttribute::Fingerprint(..)
             | SdpAttribute::Group(..)
             | SdpAttribute::IceLite
@@ -1247,6 +1281,7 @@ impl SdpAttribute {
             | SdpAttribute::Candidate(..)
             | SdpAttribute::EndOfCandidates
             | SdpAttribute::Extmap(..)
+            | SdpAttribute::ExtmapAllowMixed
             | SdpAttribute::Fingerprint(..)
             | SdpAttribute::Fmtp(..)
             | SdpAttribute::IceMismatch
@@ -1293,8 +1328,9 @@ impl FromStr for SdpAttribute {
         };
         if tokens.len() > 1 {
             match name.as_str() {
-                "bundle-only" | "end-of-candidates" | "ice-lite" | "ice-mismatch" | "inactive"
-                | "recvonly" | "rtcp-mux" | "rtcp-rsize" | "sendonly" | "sendrecv" => {
+                "bundle-only" | "end-of-candidates" | "extmap-allow-mixed" | "ice-lite"
+                | "ice-mismatch" | "inactive" | "recvonly" | "rtcp-mux" | "rtcp-rsize"
+                | "sendonly" | "sendrecv" => {
                     return Err(SdpParserInternalError::Generic(format!(
                         "{} attribute is not allowed to have a value",
                         name
@@ -1309,6 +1345,7 @@ impl FromStr for SdpAttribute {
             "end-of-candidates" => Ok(SdpAttribute::EndOfCandidates),
             "ice-lite" => Ok(SdpAttribute::IceLite),
             "ice-mismatch" => Ok(SdpAttribute::IceMismatch),
+            "extmap-allow-mixed" => Ok(SdpAttribute::ExtmapAllowMixed),
             "ice-pwd" => Ok(SdpAttribute::IcePwd(string_or_empty(val)?)),
             "ice-ufrag" => Ok(SdpAttribute::IceUfrag(string_or_empty(val)?)),
             "identity" => Ok(SdpAttribute::Identity(string_or_empty(val)?)),
@@ -1362,6 +1399,7 @@ impl fmt::Display for SdpAttribute {
             SdpAttribute::DtlsMessage(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::EndOfCandidates => SdpAttributeType::EndOfCandidates.to_string(),
             SdpAttribute::Extmap(ref a) => attr_to_string(a.to_string()),
+            SdpAttribute::ExtmapAllowMixed => SdpAttributeType::ExtmapAllowMixed.to_string(),
             SdpAttribute::Fingerprint(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::Fmtp(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::Group(ref a) => attr_to_string(a.to_string()),
@@ -1427,6 +1465,7 @@ pub enum SdpAttributeType {
     DtlsMessage,
     EndOfCandidates,
     Extmap,
+    ExtmapAllowMixed,
     Fingerprint,
     Fmtp,
     Group,
@@ -1472,6 +1511,7 @@ impl<'a> From<&'a SdpAttribute> for SdpAttributeType {
             SdpAttribute::DtlsMessage { .. } => SdpAttributeType::DtlsMessage,
             SdpAttribute::EndOfCandidates { .. } => SdpAttributeType::EndOfCandidates,
             SdpAttribute::Extmap { .. } => SdpAttributeType::Extmap,
+            SdpAttribute::ExtmapAllowMixed { .. } => SdpAttributeType::ExtmapAllowMixed,
             SdpAttribute::Fingerprint { .. } => SdpAttributeType::Fingerprint,
             SdpAttribute::Fmtp { .. } => SdpAttributeType::Fmtp,
             SdpAttribute::Group { .. } => SdpAttributeType::Group,
@@ -1519,6 +1559,7 @@ impl fmt::Display for SdpAttributeType {
             SdpAttributeType::DtlsMessage => "dtls-message",
             SdpAttributeType::EndOfCandidates => "end-of-candidates",
             SdpAttributeType::Extmap => "extmap",
+            SdpAttributeType::ExtmapAllowMixed => "extmap-allow-mixed",
             SdpAttributeType::Fingerprint => "fingerprint",
             SdpAttributeType::Fmtp => "fmtp",
             SdpAttributeType::Group => "group",
@@ -2405,8 +2446,7 @@ fn parse_image_attr_set(
     };
 
     for current_token in tokens {
-        if current_token.starts_with("sar=") {
-            let value_token = &current_token[4..];
+        if let Some(value_token) = current_token.strip_prefix("sar=") {
             if value_token.starts_with('[') {
                 let sar_values = parse_imagettr_braced_token(value_token).ok_or_else(|| {
                     SdpParserInternalError::Generic(
@@ -2450,8 +2490,7 @@ fn parse_image_attr_set(
                     value_token.parse::<f32>()?,
                 ]))
             }
-        } else if current_token.starts_with("par=") {
-            let braced_value_token = &current_token[4..];
+        } else if let Some(braced_value_token) = current_token.strip_prefix("par=") {
             if !braced_value_token.starts_with('[') {
                 return Err(SdpParserInternalError::Generic(
                     "imageattr's par value must start with '['".to_string(),
@@ -2468,8 +2507,8 @@ fn parse_image_attr_set(
                 min: range.0,
                 max: range.1,
             })
-        } else if current_token.starts_with("q=") {
-            q = Some(current_token[2..].parse::<f32>()?);
+        } else if let Some(qval) = current_token.strip_prefix("q=") {
+            q = Some(qval.parse::<f32>()?);
         }
     }
 
@@ -2750,12 +2789,10 @@ fn parse_rid(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
         // The 'pt' parameter must be the first parameter if present, so it
         // cannot be checked along with the other parameters below
         if let Some(maybe_fmt_parameter) = parameters.clone().peek() {
-            if maybe_fmt_parameter.starts_with("pt=") {
-                let fmt_list = maybe_fmt_parameter[3..].split(',');
-                for fmt in fmt_list {
+            if let Some(fmt_list) = maybe_fmt_parameter.strip_prefix("pt=") {
+                for fmt in fmt_list.split(',') {
                     formats.push(fmt.trim().parse::<u16>()?);
                 }
-
                 parameters.next();
             }
         }
@@ -3614,6 +3651,9 @@ mod tests {
             make_check_parse_and_serialize!(check_parse, SdpAttribute::Fmtp);
 
         check_parse_and_serialize("fmtp:109 maxplaybackrate=46000;stereo=1;useinbandfec=1");
+        check_parse_and_serialize(
+            "fmtp:126 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1",
+        );
         check_parse_and_serialize("fmtp:66 0-15");
         check_parse_and_serialize("fmtp:109 0-15,66");
         check_parse_and_serialize("fmtp:66 111/115");
@@ -3675,10 +3715,10 @@ mod tests {
         check_parse_and_serialize("group:BUNDLE sdparta_0 sdparta_1 sdparta_2");
 
         assert!(parse_attribute("group:").is_err());
-        assert!(match parse_attribute("group:NEVER_SUPPORTED_SEMANTICS") {
-            Err(SdpParserInternalError::Unsupported(_)) => true,
-            _ => false,
-        })
+        assert!(matches!(
+            parse_attribute("group:NEVER_SUPPORTED_SEMANTICS"),
+            Err(SdpParserInternalError::Unsupported(_))
+        ));
     }
 
     #[test]
@@ -3699,6 +3739,16 @@ mod tests {
         check_parse_and_serialize("ice-lite");
 
         assert!(parse_attribute("ice-lite foobar").is_err());
+    }
+
+    #[test]
+    fn test_parse_attribute_extmap_allow_mixed() {
+        let check_parse = make_check_parse!(SdpAttribute::ExtmapAllowMixed);
+        let check_parse_and_serialize = make_check_parse_and_serialize!(check_parse);
+
+        check_parse_and_serialize("extmap-allow-mixed");
+
+        assert!(parse_attribute("extmap-allow-mixed 100").is_err());
     }
 
     #[test]

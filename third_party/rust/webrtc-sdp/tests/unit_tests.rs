@@ -254,6 +254,7 @@ fn parse_firefox_video_offer() {
 o=mozilla...THIS_IS_SDPARTA-52.0a1 506705521068071134 0 IN IP4 0.0.0.0\r\n\
 s=-\r\n\
 t=0 0\r\n\
+a=extmap-allow-mixed\r\n
 a=fingerprint:sha-256 CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC:BF:2F:E3:91:CB:57:A9:9D:4A:A2:0B:40\r\n\
 a=group:BUNDLE sdparta_2\r\n\
 a=ice-options:trickle\r\n\
@@ -284,6 +285,7 @@ a=rtpmap:126 H264/90000\r\n\
 a=rtpmap:120 VP8/90000\r\n\
 a=rtpmap:97 H264/90000\r\n\
 a=setup:actpass\r\n\
+a=extmap-allow-mixed\r\n
 a=ssrc:2709871439 cname:{735484ea-4f6c-f74a-bd66-7425f8476c2e}";
     let sdp_res = webrtc_sdp::parse_sdp(sdp_str, true);
     assert!(sdp_res.is_ok());
