@@ -1552,7 +1552,6 @@ class BrowsertimeOutput(PerftestOutput):
                     subtest["replicates"].extend(replicates)
 
             elif "benchmark" in test["type"]:
-                subtests = None
                 if "speedometer" in test["name"]:
                     subtests, vals = self.parseSpeedometerOutput(test)
                 if "ares6" in test["name"]:
@@ -1563,11 +1562,6 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
                 if "unity-webgl" in test["name"]:
                     subtests, vals = self.parseUnityWebGLOutput(test)
-
-                if subtests is None:
-                    raise Exception(
-                        "No benchmark metrics found in browsertime results"
-                    )
 
                 suite["subtests"] = subtests
                 # summarize results for both benchmark type tests
