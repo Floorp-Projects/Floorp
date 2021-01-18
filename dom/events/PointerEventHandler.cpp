@@ -122,6 +122,7 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
       sActivePointersIds->Remove(aEvent->pointerId);
       break;
     default:
+      MOZ_ASSERT_UNREACHABLE("event has invalid type");
       break;
   }
 }
