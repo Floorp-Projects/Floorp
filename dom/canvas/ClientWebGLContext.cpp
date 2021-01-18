@@ -4035,7 +4035,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
       EnqueueError(LOCAL_GL_INVALID_OPERATION,
                    "Non-DOM-Element uploads with alpha-premult"
                    " or y-flip do not support subrect selection.");
-      scopedArr.Reset(); // (For the hazard analysis) Done with the data.
+      scopedArr.Reset();  // (For the hazard analysis) Done with the data.
       return;
     }
   }
@@ -4090,7 +4090,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
                        CastUvec3(offset), pi, std::move(*desc));
-  scopedArr.Reset(); // (For the hazard analysis) Done with the data.
+  scopedArr.Reset();  // (For the hazard analysis) Done with the data.
 }
 
 void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,

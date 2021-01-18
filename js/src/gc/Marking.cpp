@@ -271,10 +271,10 @@ void js::CheckTracedThing(JSTracer* trc, const T& thing) {
 }
 
 namespace js {
-#define IMPL_CHECK_TRACED_THING(_, type, _1, _2) \
-  template void CheckTracedThing<type>(JSTracer*, type*);
+#  define IMPL_CHECK_TRACED_THING(_, type, _1, _2) \
+    template void CheckTracedThing<type>(JSTracer*, type*);
 JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
-#undef IMPL_CHECK_TRACED_THING
+#  undef IMPL_CHECK_TRACED_THING
 }  // namespace js
 
 #endif

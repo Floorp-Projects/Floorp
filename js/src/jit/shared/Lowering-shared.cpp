@@ -1031,4 +1031,4 @@ void LIRGeneratorShared::ReportShuffleSpecialization(const Shuffle& s) {
 }
 #  endif  // DEBUG
 
-#endif // ENABLE_WASM_SIMD
+#endif  // ENABLE_WASM_SIMD

@@ -895,8 +895,8 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   array.Reset();
 
   if (NS_IsMainThread()) {
-    data = CreateImageFromRawData(imageSize, imageStride, FORMAT,
-                                  fixedData, dataLength, aCropRect);
+    data = CreateImageFromRawData(imageSize, imageStride, FORMAT, fixedData,
+                                  dataLength, aCropRect);
   } else {
     RefPtr<CreateImageFromRawDataInMainThreadSyncTask> task =
         new CreateImageFromRawDataInMainThreadSyncTask(
