@@ -145,10 +145,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.LOCAL_STORAGE]: hasBrowserElement,
           [Resources.TYPES.SESSION_STORAGE]: hasBrowserElement,
           [Resources.TYPES.PLATFORM_MESSAGE]: true,
-          [Resources.TYPES.NETWORK_EVENT]:
-            enableServerWatcher && hasBrowserElement,
-          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]:
-            enableServerWatcher && hasBrowserElement,
+          [Resources.TYPES.NETWORK_EVENT]: hasBrowserElement,
+          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: hasBrowserElement,
           [Resources.TYPES.STYLESHEET]:
             enableServerWatcher && hasBrowserElement,
           [Resources.TYPES.SOURCE]: hasBrowserElement,
