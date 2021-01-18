@@ -92,3 +92,34 @@ function addListeners(elem) {
     });
   });
 }
+
+// mock the touchScrollInTarget to make the test work.
+function touchScrollInTarget() {
+  return Promise.resolve();
+}
+
+// mock test_driver to make the test work.
+function Actions() {}
+Actions.prototype = {
+  addPointer() {
+    return this;
+  },
+  pointerMove() {
+    return this;
+  },
+  pointerDown() {
+    return this;
+  },
+  pause() {
+    return this;
+  },
+  pointerUp() {
+    return this;
+  },
+  send() {
+    return Promise.resolve();
+  },
+};
+const test_driver = {
+  Actions,
+};
