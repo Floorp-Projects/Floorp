@@ -10,6 +10,7 @@
 
 #include "ErrorList.h"
 #include "js/ArrayBuffer.h"
+#include "js/JSON.h"
 #include "js/Utility.h"
 #include "js/experimental/TypedData.h"
 #include "jsfriendapi.h"
@@ -23,10 +24,10 @@
 #include "mozilla/Span.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/dom/IOUtilsBinding.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
+#include "mozilla/dom/IOUtilsBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsFileStreams.h"
@@ -232,6 +233,65 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
       promise, [file = std::move(file), decompress = aOptions.mDecompress]() {
         return ReadUTF8Sync(file, decompress);
       });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
+                                            const nsAString& aPath,
+                                            const ReadUTF8Options& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThread<JsBuffer>([file, decompress = aOptions.mDecompress]() {
+    return ReadUTF8Sync(file, decompress);
+  })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise, file](JsBuffer&& aBuffer) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeRejectWithUnknownError(
+                  "Could not initialize JS API");
+              return;
+            }
+            JSContext* cx = jsapi.cx();
+
+            JS::Rooted<JSString*> jsonStr(
+                cx, IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
+            if (!jsonStr) {
+              RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
+              return;
+            }
+
+            JS::Rooted<JS::Value> val(cx);
+            if (!JS_ParseJSON(cx, jsonStr, &val)) {
+              JS::Rooted<JS::Value> exn(cx);
+              if (JS_GetPendingException(cx, &exn)) {
+                JS_ClearPendingException(cx);
+                promise->MaybeReject(exn);
+              } else {
+                RejectJSPromise(
+                    promise,
+                    IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                        .WithMessage("ParseJSON threw an uncatchable exception "
+                                     "while parsing file(%s)",
+                                     file->HumanReadablePath().get()));
+              }
+
+              return;
+            }
+
+            promise->MaybeResolve(val);
+          },
+          [promise](const IOError& aErr) { RejectJSPromise(promise, aErr); });
 
   return promise.forget();
 }
