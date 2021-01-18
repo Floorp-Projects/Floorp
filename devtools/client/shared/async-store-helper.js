@@ -35,7 +35,7 @@ function asyncStoreHelper(root, mappings) {
         return value || getMappingDefaultValue(key);
       },
       set(value) {
-        return asyncStorage.setItem(`${root}.${getMappingKey(key)}`, value);
+        asyncStorage.setItem(`${root}.${getMappingKey(key)}`, value);
       },
     })
   );

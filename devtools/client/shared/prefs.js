@@ -144,7 +144,9 @@ function map(
   Object.defineProperty(self, accessorName, {
     get: () =>
       serializer.in(get(cache, prefType, prefsRoot, prefName, fallbackValue)),
-    set: e => set(cache, prefType, prefsRoot, prefName, serializer.out(e)),
+    set: e => {
+      set(cache, prefType, prefsRoot, prefName, serializer.out(e));
+    },
   });
 }
 
