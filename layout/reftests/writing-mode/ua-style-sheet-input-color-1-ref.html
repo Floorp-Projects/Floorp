@@ -18,6 +18,16 @@
   width: 23px;
   padding: 8px 0px;
 }
+
+@supports -moz-bool-pref("widget.disable-native-theme-for-content") {
+  /* The non-native theme has 4px of widget-supplied padding on all four
+   * sides. */
+  .ltr input[type="color"]:not(.a),
+  .rtl input[type="color"]:not(.a),
+  .v-rl input[type="color"]:not(.a) {
+    padding: 4px;
+  }
+}
 </style>
 <div class=ltr>
   <input type=color><br>
