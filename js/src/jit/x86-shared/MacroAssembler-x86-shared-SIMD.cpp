@@ -64,9 +64,10 @@ void MacroAssemblerX86Shared::extractLaneInt32x4(FloatRegister input,
 void MacroAssemblerX86Shared::extractLaneFloat32x4(FloatRegister input,
                                                    FloatRegister output,
                                                    unsigned lane) {
+  MOZ_ASSERT(input.isSimd128() && output.isSingle());
   if (lane == 0) {
     // The value we want to extract is in the low double-word
-    if (input != output) {
+    if (input.asSingle() != output) {
       moveFloat32(input, output);
     }
   } else if (lane == 2) {
@@ -80,9 +81,10 @@ void MacroAssemblerX86Shared::extractLaneFloat32x4(FloatRegister input,
 void MacroAssemblerX86Shared::extractLaneFloat64x2(FloatRegister input,
                                                    FloatRegister output,
                                                    unsigned lane) {
+  MOZ_ASSERT(input.isSimd128() && output.isDouble());
   if (lane == 0) {
     // The value we want to extract is in the low quadword
-    if (input != output) {
+    if (input.asDouble() != output) {
       moveDouble(input, output);
     }
   } else {
