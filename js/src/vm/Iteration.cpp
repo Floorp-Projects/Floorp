@@ -214,7 +214,17 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
     // Collect any typed array or shared typed array elements from this
     // object.
     if (pobj->is<TypedArrayObject>()) {
-      size_t len = pobj->as<TypedArrayObject>().length().deprecatedGetUint32();
+      size_t len = pobj->as<TypedArrayObject>().length().get();
+
+      // Fail early if the typed array is enormous, because this will be very
+      // slow and will likely report OOM. This also means we don't need to
+      // handle indices greater than JSID_INT_MAX in the loop below.
+      static_assert(JSID_INT_MAX == INT32_MAX);
+      if (len > INT32_MAX) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
+
       for (size_t i = 0; i < len; i++) {
         if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
                                            /* enumerable = */ true, flags,
