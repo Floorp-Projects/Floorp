@@ -17,10 +17,8 @@ const networkContentSpec = generateActorSpec({
     },
     getStackTrace: {
       request: { resourceId: Arg(0) },
-      response: {
-        // stacktrace is an "array:string", but not always.
-        stacktrace: RetVal("json"),
-      },
+      // stacktrace is an "array:string", but not always.
+      response: RetVal("json"),
     },
   },
 });
