@@ -53,11 +53,11 @@
                  attributes to a list of all possible errors. The a11y APIs
                  will filter this down to visible items only. -->
             <input
-              id="percent-scale" class="photon-number"
-              type="number" min="10" max="200" step="1" size="6"
+              id="percent-scale" class="photon-number" is="setting-number"
+              min="10" max="200" step="1" size="6"
               aria-labelledby="percent-scale-label"
               aria-errormessage="error-invalid-scale"
-              autocomplete="off" disabled required>
+              disabled required>
           </span>
         </div>
         <p id="error-invalid-scale" hidden data-l10n-id="printui-error-invalid-scale" class="error-message" role="alert"></p>
@@ -75,36 +75,36 @@
       <div id="custom-margins" class="margin-group" role="group" hidden>
         <div class="vertical-margins">
           <div class="margin-pair">
-            <input type="number"
+            <input is="setting-number"
                    id="custom-margin-top" class="margin-input photon-number"
                    aria-describedby="margins-custom-margin-top-desc"
-                   min="0" step="0.01" autocomplete="off" required>
+                   min="0" step="0.01" required>
             <label for="custom-margin-top" class="margin-descriptor" data-l10n-id="printui-margins-custom-top"></label>
             <label hidden id="margins-custom-margin-top-desc" data-l10n-id="printui-margins-custom-top-inches"></label>
           </div>
           <div class="margin-pair">
-            <input type="number"
+            <input is="setting-number"
                    id="custom-margin-bottom" class="margin-input photon-number"
                    aria-describedby="margins-custom-margin-bottom-desc"
-                   min="0" step="0.01" autocomplete="off" required>
+                   min="0" step="0.01" required>
             <label for="custom-margin-bottom" class="margin-descriptor" data-l10n-id="printui-margins-custom-bottom"></label>
             <label hidden id="margins-custom-margin-bottom-desc" data-l10n-id="printui-margins-custom-bottom-inches"></label>
           </div>
         </div>
         <div class="horizontal-margins">
           <div class="margin-pair">
-            <input type="number"
+            <input is="setting-number"
                    id="custom-margin-left" class="margin-input photon-number"
                    aria-describedby="margins-custom-margin-left-desc"
-                   min="0" step="0.01" autocomplete="off" required>
+                   min="0" step="0.01" required>
             <label for="custom-margin-left" class="margin-descriptor" data-l10n-id="printui-margins-custom-left"></label>
             <label hidden id="margins-custom-margin-left-desc" data-l10n-id="printui-margins-custom-left-inches"></label>
           </div>
           <div class="margin-pair">
-            <input type="number"
+            <input is="setting-number"
                    id="custom-margin-right" class="margin-input photon-number"
                    aria-describedby="margins-custom-margin-right-desc"
-                   min="0" step="0.01" autocomplete="off" required>
+                   min="0" step="0.01" required>
             <label for="custom-margin-right" class="margin-descriptor" data-l10n-id="printui-margins-custom-right"></label>
             <label hidden id="margins-custom-margin-right-desc" data-l10n-id="printui-margins-custom-right-inches"></label>
           </div>
@@ -131,7 +131,7 @@
         <section id="settings">
           <section id="copies" class="section-block">
             <label for="copies-count" class="block-label" data-l10n-id="printui-copies-label"></label>
-            <input id="copies-count" is="copy-count-input" data-setting-name="numCopies" type="number" min="1" max="10000" class="copy-count-input photon-number" autocomplete="off" required>
+            <input id="copies-count" is="setting-number" data-setting-name="numCopies" min="1" max="10000" class="copy-count-input photon-number" required>
           </section>
 
           <section id="orientation" class="section-block">
@@ -187,7 +187,7 @@
             <section id="two-sided-printing" class="section-block">
               <label class="block-label" data-l10n-id="printui-two-sided-printing"></label>
               <div class="row cols-2">
-                <input is="setting-checkbox" type="checkbox" id="duplex-enabled" data-setting-name="printDuplex">
+                <input is="setting-checkbox" id="duplex-enabled" data-setting-name="printDuplex">
                 <label for="duplex-enabled" data-l10n-id="printui-duplex-checkbox"></label>
               </div>
             </section>
@@ -195,15 +195,15 @@
             <section id="more-settings-options" class="section-block">
               <label class="block-label" data-l10n-id="printui-options"></label>
               <div id="headers-footers" class="row cols-2">
-                <input is="setting-checkbox" type="checkbox" id="headers-footers-enabled" data-setting-name="printFootersHeaders">
+                <input is="setting-checkbox" id="headers-footers-enabled" data-setting-name="printFootersHeaders">
                 <label for="headers-footers-enabled" data-l10n-id="printui-headers-footers-checkbox"></label>
               </div>
               <div id="backgrounds" class="row cols-2">
-                <input is="setting-checkbox" type="checkbox" id="backgrounds-enabled" data-setting-name="printBackgrounds">
+                <input is="setting-checkbox" id="backgrounds-enabled" data-setting-name="printBackgrounds">
                 <label for="backgrounds-enabled" data-l10n-id="printui-backgrounds-checkbox"></label>
               </div>
               <div id="print-selection-container" class="row cols-2" hidden>
-                <input is="setting-checkbox" type="checkbox" id="print-selection-enabled" data-setting-name="printSelectionOnly">
+                <input is="setting-checkbox" id="print-selection-enabled" data-setting-name="printSelectionOnly">
                 <label for="print-selection-enabled" data-l10n-id="printui-selection-checkbox"></label>
               </div>
             </section>
