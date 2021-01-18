@@ -1164,43 +1164,26 @@ void CodeGenerator::visitValueToBigInt(LValueToBigInt* lir) {
   ValueOperand operand = ToValue(lir, LValueToBigInt::Input);
   Register output = ToRegister(lir->output());
 
-  bool maybeBigInt = lir->mir()->input()->mightBeType(MIRType::BigInt);
-  bool maybeBool = lir->mir()->input()->mightBeType(MIRType::Boolean);
-  bool maybeString = lir->mir()->input()->mightBeType(MIRType::String);
-
-  Maybe<OutOfLineCode*> ool;
-  if (maybeBool || maybeString) {
-    using Fn = BigInt* (*)(JSContext*, HandleValue);
-    ool = mozilla::Some(oolCallVM<Fn, ToBigInt>(lir, ArgList(operand),
-                                                StoreRegisterTo(output)));
-  }
+  using Fn = BigInt* (*)(JSContext*, HandleValue);
+  auto* ool =
+      oolCallVM<Fn, ToBigInt>(lir, ArgList(operand), StoreRegisterTo(output));
 
   Register tag = masm.extractTag(operand, output);
 
-  Label done;
-  if (maybeBigInt) {
-    Label notBigInt;
-    masm.branchTestBigInt(Assembler::NotEqual, tag, &notBigInt);
-    masm.unboxBigInt(operand, output);
-    masm.jump(&done);
-    masm.bind(&notBigInt);
-  }
-  if (maybeBool) {
-    masm.branchTestBoolean(Assembler::Equal, tag, (*ool)->entry());
-  }
-  if (maybeString) {
-    masm.branchTestString(Assembler::Equal, tag, (*ool)->entry());
-  }
+  Label notBigInt, done;
+  masm.branchTestBigInt(Assembler::NotEqual, tag, &notBigInt);
+  masm.unboxBigInt(operand, output);
+  masm.jump(&done);
+  masm.bind(&notBigInt);
+
+  masm.branchTestBoolean(Assembler::Equal, tag, ool->entry());
+  masm.branchTestString(Assembler::Equal, tag, ool->entry());
 
   // ToBigInt(object) can have side-effects; all other types throw a TypeError.
   bailout(lir->snapshot());
 
-  if (ool) {
-    masm.bind((*ool)->rejoin());
-  }
-  if (maybeBigInt) {
-    masm.bind(&done);
-  }
+  masm.bind(ool->rejoin());
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitInt32ToDouble(LInt32ToDouble* lir) {
