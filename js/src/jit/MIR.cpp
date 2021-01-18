@@ -1644,9 +1644,6 @@ void MUnbox::printOpcode(GenericPrinter& out) const {
     case Infallible:
       out.printf(" (infallible)");
       break;
-    case TypeBarrier:
-      out.printf(" (typebarrier)");
-      break;
     default:
       break;
   }
