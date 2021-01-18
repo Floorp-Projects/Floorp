@@ -149,7 +149,10 @@ class IOUtils final {
   static void SetShutdownHooks();
 
   template <typename OkT, typename Fn>
-  static void RunOnBackgroundThread(Promise* aPromise, Fn aFunc);
+  static RefPtr<IOPromise<OkT>> RunOnBackgroundThread(Fn aFunc);
+
+  template <typename OkT, typename Fn>
+  static void RunOnBackgroundThreadAndResolve(Promise* aPromise, Fn aFunc);
 
   /**
    * Creates a new JS Promise.
