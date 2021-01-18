@@ -435,23 +435,6 @@ class AliasSet {
 
 typedef Vector<MDefinition*, 6, JitAllocPolicy> MDefinitionVector;
 typedef Vector<MInstruction*, 6, JitAllocPolicy> MInstructionVector;
-typedef Vector<MDefinition*, 1, JitAllocPolicy> MStoreVector;
-
-class StoreDependency : public TempObject {
-  MStoreVector all_;
-
- public:
-  explicit StoreDependency(TempAllocator& alloc) : all_(alloc) {}
-
-  [[nodiscard]] bool init(MDefinitionVector& all) {
-    if (!all_.appendAll(all)) {
-      return false;
-    }
-    return true;
-  }
-
-  MStoreVector& get() { return all_; }
-};
 
 // When a floating-point value is used by nodes which would prefer to
 // receive integer inputs, we may be able to help by computing our result
@@ -506,8 +489,7 @@ class MDefinition : public MNode {
   union {
     MDefinition*
         loadDependency_;  // Implicit dependency (store, call, etc.) of this
-    StoreDependency*
-        storeDependency_;  // instruction. Used by alias analysis, GVN and LICM.
+                          // instruction. Used by alias analysis, GVN and LICM.
     uint32_t virtualRegister_;  // Used by lowering to map definitions to
                                 // virtual registers.
   };
@@ -902,14 +884,6 @@ class MDefinition : public MNode {
   void setDependency(MDefinition* dependency) {
     MOZ_ASSERT(!getAliasSet().isStore());
     loadDependency_ = dependency;
-  }
-  void setStoreDependency(StoreDependency* dependency) {
-    MOZ_ASSERT(getAliasSet().isStore());
-    storeDependency_ = dependency;
-  }
-  StoreDependency* storeDependency() {
-    MOZ_ASSERT_IF(!getAliasSet().isStore(), !storeDependency_);
-    return storeDependency_;
   }
   bool isEffectful() const { return getAliasSet().isStore(); }
 
