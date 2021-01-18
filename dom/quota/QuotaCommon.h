@@ -702,11 +702,6 @@ class NotNull;
 
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
-#  define REPORT_TELEMETRY_INIT_ERR(_key, _label)   \
-    mozilla::Telemetry::AccumulateCategoricalKeyed( \
-        mozilla::dom::quota::_key,                  \
-        mozilla::Telemetry::LABELS_QM_INIT_TELEMETRY_ERROR::_label);
-
 #  define RECORD_IN_NIGHTLY(_recorder, _status) \
     do {                                        \
       if (NS_SUCCEEDED(_recorder)) {            \
@@ -720,9 +715,6 @@ class NotNull;
 #  define RETURN_STATUS_OR_RESULT(_status, _rv) \
     return Err(NS_FAILED(_status) ? (_status) : (_rv))
 #else
-#  define REPORT_TELEMETRY_INIT_ERR(_key, _label) \
-    {}
-
 #  define RECORD_IN_NIGHTLY(_dummy, _status) \
     {}
 
