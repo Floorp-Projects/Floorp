@@ -235,15 +235,6 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   void SendCombinedRtcpPacket(
       std::vector<std::unique_ptr<rtcp::RtcpPacket>> rtcp_packets) override;
 
-  bool GetSendReportMetadata(const uint32_t send_report,
-                             uint64_t *time_of_send,
-                             uint32_t *packet_count,
-                             uint64_t *octet_count) override
-  {
-    // Not implemented.
-    RTC_CHECK(false);
-  }
-
   // (XR) Receiver reference time report.
   void SetRtcpXrRrtrStatus(bool enable) override;
 
