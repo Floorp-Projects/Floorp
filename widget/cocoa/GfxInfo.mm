@@ -389,6 +389,9 @@ GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GfxInfo::GetDrmRenderDevice(nsACString& aDrmRenderDevice) { return NS_ERROR_NOT_IMPLEMENTED; }
+
 /* readonly attribute boolean isGPU2Active; */
 NS_IMETHODIMP
 GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) { return NS_ERROR_FAILURE; }
