@@ -530,4 +530,27 @@ async function testCopyPaste(isXHTML) {
   await new Promise(resolve => {
     setTimeout(resolve, 0);
   });
+
+  if (!isXHTML) {
+    // ============ copy from ruby
+
+    const ruby1 = $("ruby1");
+    const ruby1Container = ruby1.parentNode;
+
+    // Ruby annotation is included when selecting inside ruby.
+    await copyRangeToClipboard(ruby1, 0, ruby1, 6);
+    testClipboardValue("text/unicode", "aabb(AABB)");
+
+    // Ruby annotation is ignored when selecting across ruby.
+    await copyRangeToClipboard(ruby1Container, 0, ruby1Container, 3);
+    testClipboardValue("text/unicode", "XaabbY");
+
+    // ... unless converter.html2txt.always_include_ruby is set
+    await SpecialPowers.pushPrefEnv({
+      set: [["converter.html2txt.always_include_ruby", true]],
+    });
+    await copyRangeToClipboard(ruby1Container, 0, ruby1Container, 3);
+    testClipboardValue("text/unicode", "Xaabb(AABB)Y");
+    await SpecialPowers.popPrefEnv();
+  }
 }
