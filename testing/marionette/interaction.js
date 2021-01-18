@@ -177,7 +177,22 @@ async function webdriverClickElement(el, a11y) {
   } else {
     // step 9
     let clicked = interaction.flushEventLoop(containerEl);
+
+    // Synthesize a pointerMove action.
+    event.synthesizeMouseAtPoint(
+      clickPoint.x,
+      clickPoint.y,
+      {
+        type: "mousemove",
+        // Remove buttons attribute with https://bugzilla.mozilla.org/show_bug.cgi?id=1686361
+        buttons: 0,
+      },
+      win
+    );
+
+    // Synthesize a pointerDown + pointerUp action.
     event.synthesizeMouseAtPoint(clickPoint.x, clickPoint.y, {}, win);
+
     await clicked;
   }
 
