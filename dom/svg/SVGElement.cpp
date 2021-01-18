@@ -29,6 +29,7 @@
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/Unused.h"
 
+#include "DOMSVGAnimatedEnumeration.h"
 #include "mozAutoDocUpdate.h"
 #include "nsAttrValueOrString.h"
 #include "nsCSSProps.h"
@@ -520,7 +521,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
             // Exact error value does not matter; we just need to mark the
             // parse as failed.
             rv = NS_ERROR_FAILURE;
-            enumInfo.Reset(i);
+            enumInfo.SetUnknownValue(i);
           } else {
             aResult.SetTo(valAtom);
             didSetResult = true;
@@ -1964,6 +1965,11 @@ SVGElement::EnumAttributesInfo SVGElement::GetEnumInfo() {
 
 void SVGElement::EnumAttributesInfo::Reset(uint8_t aAttrEnum) {
   mEnums[aAttrEnum].Init(aAttrEnum, mEnumInfo[aAttrEnum].mDefaultValue);
+}
+
+void SVGElement::EnumAttributesInfo::SetUnknownValue(uint8_t aAttrEnum) {
+  // Fortunately in SVG every enum's unknown value is 0
+  mEnums[aAttrEnum].Init(aAttrEnum, 0);
 }
 
 void SVGElement::DidChangeEnum(uint8_t aAttrEnum) {
