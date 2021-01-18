@@ -4460,7 +4460,7 @@ class MBinaryArithInstruction : public MBinaryInstruction,
   // exact reciprocal.
   bool mustPreserveNaN_;
 
- public:
+ protected:
   MBinaryArithInstruction(Opcode op, MDefinition* left, MDefinition* right,
                           MIRType type)
       : MBinaryInstruction(op, left, right),
@@ -4471,12 +4471,7 @@ class MBinaryArithInstruction : public MBinaryInstruction,
     setMovable();
   }
 
-  static MBinaryArithInstruction* New(TempAllocator& alloc, Opcode op,
-                                      MDefinition* left, MDefinition* right,
-                                      MIRType specialization);
-
-  bool constantDoubleResult(TempAllocator& alloc);
-
+ public:
   void setMustPreserveNaN(bool b) { mustPreserveNaN_ = b; }
   bool mustPreserveNaN() const { return mustPreserveNaN_; }
 
