@@ -2401,12 +2401,10 @@ void MacroAssembler::convertDoubleToInt(FloatRegister src, Register output,
 }
 
 void MacroAssembler::convertValueToInt(
-    ValueOperand value, MDefinition* maybeInput, Label* handleStringEntry,
-    Label* handleStringRejoin, Label* truncateDoubleSlow, Register stringReg,
-    FloatRegister temp, Register output, Label* fail,
-    IntConversionBehavior behavior, IntConversionInputKind conversion) {
-  MOZ_ASSERT_IF(maybeInput, maybeInput->type() == MIRType::Value);
-
+    ValueOperand value, Label* handleStringEntry, Label* handleStringRejoin,
+    Label* truncateDoubleSlow, Register stringReg, FloatRegister temp,
+    Register output, Label* fail, IntConversionBehavior behavior,
+    IntConversionInputKind conversion) {
   Label done, isInt32, isBool, isDouble, isNull, isString;
 
   bool handleStrings = (behavior == IntConversionBehavior::Truncate ||
