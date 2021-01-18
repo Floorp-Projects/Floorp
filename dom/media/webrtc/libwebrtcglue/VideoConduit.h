@@ -64,7 +64,6 @@ class WebrtcVideoDecoder : public VideoDecoder, public webrtc::VideoDecoder {};
  */
 class WebrtcVideoConduit
     : public VideoSessionConduit,
-      public webrtc::RtpPacketSinkInterface,
       public webrtc::Transport,
       public webrtc::VideoEncoderFactory,
       public rtc::VideoSinkInterface<webrtc::VideoFrame>,
@@ -293,12 +292,6 @@ class WebrtcVideoConduit
     ASSERT_ON_THREAD(mStsThread);
     mAllowSsrcChange = false;
   }
-
-  /**
-   * Callback from libwebrtc with the parsed packet for synchronization
-   * source tracking. STS thread only.
-   */
-  void OnRtpPacket(const webrtc::RtpPacketReceived& packet) override;
 
   Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() override {
     return Some(RefPtr<VideoSessionConduit>(this));
@@ -668,8 +661,6 @@ class WebrtcVideoConduit
   // Accessed only on main thread.
   mozilla::RtcpEventObserver* mRtcpEventObserver = nullptr;
 
-  // Accessed from main and mStsThread. Uses locks internally.
-  RefPtr<RtpSourceObserver> mRtpSourceObserver;
   // Tracking the attributes of received frames over time
   // Protected by mTransportMonitor
   dom::RTCVideoFrameHistoryInternal mReceivedFrameHistory;
