@@ -68,7 +68,8 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::ALLOW_SCRIPT},
     {"privatebrowsing", "chrome://browser/content/aboutPrivateBrowsing.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-         nsIAboutModule::URI_MUST_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT},
+         nsIAboutModule::URI_MUST_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT |
+         nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS},
     {"profiling",
      "chrome://devtools/content/performance-new/aboutprofiling/index.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
