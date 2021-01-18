@@ -750,7 +750,14 @@ NetworkObserver.prototype = {
   }),
 
   /**
+   * Craft the "event" object passed to the Watcher class in order
+   * to instantiate the NetworkEventActor.
    *
+   * /!\ This method does many other important things:
+   * - Cancel requests blocked by DevTools
+   * - Fetch request headers/cookies
+   * - Set a few attributes on http activity object
+   * - Register listener to record response content
    */
   _createNetworkEvent: function(
     channel,
@@ -870,24 +877,6 @@ NetworkObserver.prototype = {
     event.discardRequestBody = !this.saveRequestAndResponseBodies;
     event.discardResponseBody = !this.saveRequestAndResponseBodies;
 
-    const headers = [];
-    let cookies = [];
-    let cookieHeader = null;
-
-    // Copy the request header data.
-    channel.visitRequestHeaders({
-      visitHeader: function(name, value) {
-        if (name == "Cookie") {
-          cookieHeader = value;
-        }
-        headers.push({ name: name, value: value });
-      },
-    });
-
-    if (cookieHeader) {
-      cookies = NetworkHelper.parseCookieHeader(cookieHeader);
-    }
-
     // Check the request URL with ones manually blocked by the user in DevTools.
     // If it's meant to be blocked, we cancel the request and annotate the event.
     if (!blockedReason) {
@@ -918,10 +907,38 @@ NetworkObserver.prototype = {
       this._setupResponseListener(httpActivity, fromCache);
     }
 
-    httpActivity.owner.addRequestHeaders(headers, extraStringData);
-    httpActivity.owner.addRequestCookies(cookies);
+    this.fetchRequestHeadersAndCookies(channel, httpActivity, extraStringData);
 
     return httpActivity;
+  },
+
+  /**
+   * For a given channel, with its associated http activity object,
+   * fetch the request's headers and cookies.
+   * This data is passed to the owner, i.e. the NetworkEventActor,
+   * so that the frontend can later fetch it via getRequestHeaders/getRequestCookies.
+   */
+  fetchRequestHeadersAndCookies(channel, httpActivity, extraStringData) {
+    const headers = [];
+    let cookies = [];
+    let cookieHeader = null;
+
+    // Copy the request header data.
+    channel.visitRequestHeaders({
+      visitHeader: function(name, value) {
+        if (name == "Cookie") {
+          cookieHeader = value;
+        }
+        headers.push({ name: name, value: value });
+      },
+    });
+
+    if (cookieHeader) {
+      cookies = NetworkHelper.parseCookieHeader(cookieHeader);
+    }
+
+    httpActivity.owner.addRequestHeaders(headers, extraStringData);
+    httpActivity.owner.addRequestCookies(cookies);
   },
 
   /**
