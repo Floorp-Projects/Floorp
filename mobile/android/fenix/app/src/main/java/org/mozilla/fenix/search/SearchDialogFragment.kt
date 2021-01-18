@@ -141,8 +141,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         interactor = SearchDialogInteractor(
             SearchDialogController(
                 activity = activity,
-                sessionManager = requireComponents.core.sessionManager,
                 store = requireComponents.core.store,
+                tabsUseCases = requireComponents.useCases.tabsUseCases,
                 fragmentStore = store,
                 navController = findNavController(),
                 settings = requireContext().settings(),

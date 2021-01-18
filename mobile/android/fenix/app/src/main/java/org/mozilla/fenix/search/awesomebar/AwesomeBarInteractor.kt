@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.search.awesomebar
 
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.search.SearchEngine
 
 /**
@@ -35,11 +34,6 @@ interface AwesomeBarInteractor {
      * Called whenever the "Search Engine Settings" item is tapped
      */
     fun onClickSearchEngineSettings()
-
-    /**
-     * Called whenever an existing session is selected from the sessionSuggestionProvider
-     */
-    fun onExistingSessionSelected(session: Session)
 
     /**
      * Called whenever an existing session is selected from the sessionSuggestionProvider

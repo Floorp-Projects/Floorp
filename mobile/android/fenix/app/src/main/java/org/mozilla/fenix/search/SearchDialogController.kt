@@ -12,10 +12,9 @@ import android.text.SpannableString
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -40,7 +39,6 @@ interface SearchController {
     fun handleSearchTermsTapped(searchTerms: String)
     fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine)
     fun handleClickSearchEngineSettings()
-    fun handleExistingSessionSelected(session: Session)
     fun handleExistingSessionSelected(tabId: String)
     fun handleSearchShortcutsButtonClicked()
     fun handleCameraPermissionsNeeded()
@@ -49,8 +47,8 @@ interface SearchController {
 @Suppress("TooManyFunctions", "LongParameterList")
 class SearchDialogController(
     private val activity: HomeActivity,
-    private val sessionManager: SessionManager,
     private val store: BrowserStore,
+    private val tabsUseCases: TabsUseCases,
     private val fragmentStore: SearchFragmentStore,
     private val navController: NavController,
     private val settings: Settings,
@@ -199,19 +197,14 @@ class SearchDialogController(
         navController.navigateSafe(R.id.searchDialogFragment, directions)
     }
 
-    override fun handleExistingSessionSelected(session: Session) {
+    override fun handleExistingSessionSelected(tabId: String) {
         clearToolbarFocus()
-        sessionManager.select(session)
+
+        tabsUseCases.selectTab(tabId)
+
         activity.openToBrowser(
             from = BrowserDirection.FromSearchDialog
         )
-    }
-
-    override fun handleExistingSessionSelected(tabId: String) {
-        val session = sessionManager.findSessionById(tabId)
-        if (session != null) {
-            handleExistingSessionSelected(session)
-        }
     }
 
     /**

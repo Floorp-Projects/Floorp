@@ -100,10 +100,10 @@ class SearchDialogInteractorTest {
     fun onExistingSessionSelected() {
         val session = Session("http://mozilla.org", false)
 
-        interactor.onExistingSessionSelected(session)
+        interactor.onExistingSessionSelected(session.id)
 
         verify {
-            searchController.handleExistingSessionSelected(session)
+            searchController.handleExistingSessionSelected(session.id)
         }
     }
 

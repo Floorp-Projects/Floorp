@@ -23,6 +23,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -68,10 +69,12 @@ class SearchDialogControllerTest {
         }
         every { MetricsUtils.createSearchEvent(searchEngine, browserStore, any()) } returns null
 
+        val tabsUseCases = TabsUseCases(browserStore, sessionManager)
+
         controller = SearchDialogController(
             activity = activity,
-            sessionManager = sessionManager,
             store = browserStore,
+            tabsUseCases = tabsUseCases,
             fragmentStore = store,
             navController = navController,
             settings = settings,
@@ -324,7 +327,9 @@ class SearchDialogControllerTest {
     fun handleExistingSessionSelected() {
         val session = mockk<Session>()
 
-        controller.handleExistingSessionSelected(session)
+        every { sessionManager.findSessionById("selected") } returns session
+
+        controller.handleExistingSessionSelected("selected")
 
         verify { sessionManager.select(session) }
         verify { activity.openToBrowser(from = BrowserDirection.FromSearchDialog) }
@@ -337,7 +342,7 @@ class SearchDialogControllerTest {
         controller.handleExistingSessionSelected("tab-id")
 
         verify(inverse = true) { sessionManager.select(any()) }
-        verify(inverse = true) { activity.openToBrowser(from = BrowserDirection.FromSearchDialog) }
+        verify { activity.openToBrowser(from = BrowserDirection.FromSearchDialog) }
     }
 
     @Test
