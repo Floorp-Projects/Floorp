@@ -4956,13 +4956,8 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_TEMPORARY ||
              aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
 
-  auto directoryOrErr = QM_NewLocalFile(GetStoragePath(aPersistenceType));
-  if (NS_WARN_IF(directoryOrErr.isErr())) {
-    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_NewLocalFile);
-    return directoryOrErr.unwrapErr();
-  }
-
-  nsCOMPtr<nsIFile> directory = directoryOrErr.unwrap();
+  QM_TRY_INSPECT(const auto& directory,
+                 QM_NewLocalFile(GetStoragePath(aPersistenceType)));
 
   QM_TRY_INSPECT(const bool& created, EnsureDirectory(*directory));
 
