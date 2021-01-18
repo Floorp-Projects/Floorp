@@ -18,6 +18,7 @@
 #include "jsdate.h"
 #include "jsfriendapi.h"
 #include "jsmath.h"
+#include "jsnum.h"
 #include "selfhosted.out.h"
 
 #include "builtin/Array.h"
@@ -51,6 +52,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/ErrorReport.h"  // JS::PrintError
 #include "js/Exception.h"
@@ -1371,8 +1373,8 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args.length() == 4);
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[1].isObject());
-  MOZ_RELEASE_ASSERT(args[2].isInt32());
-  MOZ_RELEASE_ASSERT(args[3].isInt32());
+  MOZ_RELEASE_ASSERT(args[2].isNumber());
+  MOZ_RELEASE_ASSERT(args[3].isNumber());
 
   Rooted<TypedArrayObject*> source(cx,
                                    &args[0].toObject().as<TypedArrayObject>());
@@ -1395,16 +1397,19 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
     return true;
   }
 
-  MOZ_ASSERT(args[2].toInt32() >= 0);
-  uint32_t sourceOffset = uint32_t(args[2].toInt32());
+  MOZ_ASSERT(args[2].toNumber() >= 0);
+  MOZ_ASSERT(args[2].toNumber() < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(JS::ToInteger(args[2].toNumber()) == args[2].toNumber());
+  size_t sourceOffset = size_t(args[2].toNumber());
 
-  MOZ_ASSERT(args[3].toInt32() >= 0);
-  uint32_t count = uint32_t(args[3].toInt32());
+  MOZ_ASSERT(args[3].toNumber() >= 0);
+  MOZ_ASSERT(args[3].toNumber() < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(JS::ToInteger(args[3].toNumber()) == args[3].toNumber());
+  size_t count = size_t(args[3].toNumber());
 
-  MOZ_ASSERT(count > 0 && count <= source->length().deprecatedGetUint32());
-  MOZ_ASSERT(sourceOffset <= source->length().deprecatedGetUint32() - count);
-  MOZ_ASSERT(count <=
-             unsafeTypedArrayCrossCompartment->length().deprecatedGetUint32());
+  MOZ_ASSERT(count > 0 && count <= source->length().get());
+  MOZ_ASSERT(sourceOffset <= source->length().get() - count);
+  MOZ_ASSERT(count <= unsafeTypedArrayCrossCompartment->length().get());
 
   size_t elementSize = TypedArrayElemSize(sourceType);
   MOZ_ASSERT(elementSize ==
@@ -1416,7 +1421,7 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   SharedMem<uint8_t*> unsafeTargetDataCrossCompartment =
       unsafeTypedArrayCrossCompartment->dataPointerEither().cast<uint8_t*>();
 
-  uint32_t byteLength = count * elementSize;
+  size_t byteLength = count * elementSize;
 
   // The same-type case requires exact copying preserving the bit-level
   // encoding of the source data, so use memcpy if possible. If source and
