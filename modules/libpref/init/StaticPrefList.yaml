@@ -4340,6 +4340,16 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: once
 
+# Whether to load fonts (e.g. Twemoji Mozilla) bundled with the application:
+#  -1 - Auto behavior based on OS version (currently, disables loading on Win8.1 or later,
+#       or on "low-memory" Android devices)
+#   0 - Skip loading any bundled fonts
+#   1 - Always load bundled fonts
+- name: gfx.bundled-fonts.activate
+  type: int32_t
+  value: -1
+  mirror: once
+
 - name: gfx.font_loader.delay
   type: uint32_t
 #if defined(XP_WIN)

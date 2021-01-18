@@ -27,6 +27,7 @@
 #include "GeckoProfiler.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Telemetry.h"
 
 #include <usp10.h>
@@ -513,7 +514,9 @@ void GDIFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
 
 gfxGDIFontList::gfxGDIFontList() : mFontSubstitutes(32) {
 #ifdef MOZ_BUNDLED_FONTS
-  ActivateBundledFonts();
+  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
+    ActivateBundledFonts();
+  }
 #endif
 }
 

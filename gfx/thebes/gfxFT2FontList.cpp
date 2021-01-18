@@ -1471,9 +1471,9 @@ void gfxFT2FontList::FindFonts() {
   // (Prefs may disable this, or force-enable it even with low memory.)
   bool lowmem;
   nsCOMPtr<nsIMemory> mem = nsMemory::GetGlobalMemoryService();
-  if ((NS_SUCCEEDED(mem->IsLowMemoryPlatform(&lowmem)) && !lowmem &&
-       Preferences::GetBool("gfx.bundled_fonts.enabled")) ||
-      Preferences::GetBool("gfx.bundled_fonts.force-enabled")) {
+  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() > 0 ||
+      (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() < 0 &&
+       NS_SUCCEEDED(mem->IsLowMemoryPlatform(&lowmem)) && !lowmem)) {
     FindFontsInOmnijar(mFontNameCache.get());
   }
 
