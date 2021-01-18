@@ -81,6 +81,124 @@ add_task(async function() {
   gBrowser.removeTab(tab);
 });
 
+add_task(async function testSynthesizeMouseAtPointsButtons() {
+  let onMouseEvt =
+    'document.getElementById("mouselog").textContent += "/" + [event.type,event.clientX,event.clientY,event.button,event.buttons].join(",");';
+
+  let getLastMouseEventDetails = browser => {
+    return SpecialPowers.spawn(browser, [], async () => {
+      let log = content.document.getElementById("mouselog").textContent;
+      content.document.getElementById("mouselog").textContent = "";
+      return log;
+    });
+  };
+
+  const url =
+    "<body" +
+    "' onmousedown='" +
+    onMouseEvt +
+    "' onmousemove='" +
+    onMouseEvt +
+    "' onmouseup='" +
+    onMouseEvt +
+    "' style='margin: 0'>" +
+    "<div style='margin: 0; width: 80px; height: 60px;'>Mouse area</div>" +
+    "<span id='mouselog'></span>" +
+    "</body>";
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/html," + url
+  );
+
+  let browser = tab.linkedBrowser;
+  let details;
+
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    21,
+    22,
+    {
+      type: "mousemove",
+    },
+    browser.browsingContext
+  );
+  details = await getLastMouseEventDetails(browser);
+  is(details, "/mousemove,21,22,0,0", "synthesizeMouseAtPoint mousemove");
+
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    22,
+    23,
+    {},
+    browser.browsingContext
+  );
+  details = await getLastMouseEventDetails(browser);
+  is(
+    details,
+    "/mousedown,22,23,0,1/mouseup,22,23,0,0",
+    "synthesizeMouseAtPoint default action includes buttons on mousedown only"
+  );
+
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    20,
+    22,
+    {
+      type: "mousedown",
+    },
+    browser.browsingContext
+  );
+  details = await getLastMouseEventDetails(browser);
+  is(
+    details,
+    "/mousedown,20,22,0,1",
+    "synthesizeMouseAtPoint mousedown includes buttons"
+  );
+
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    21,
+    20,
+    {
+      type: "mouseup",
+    },
+    browser.browsingContext
+  );
+  details = await getLastMouseEventDetails(browser);
+  is(details, "/mouseup,21,20,0,0", "synthesizeMouseAtPoint mouseup");
+
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    20,
+    22,
+    {
+      type: "mousedown",
+      button: 2,
+    },
+    browser.browsingContext
+  );
+  details = await getLastMouseEventDetails(browser);
+  is(
+    details,
+    "/mousedown,20,22,2,2",
+
+    "synthesizeMouseAtPoint mousedown respects specified button 2"
+  );
+
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    21,
+    20,
+    {
+      type: "mouseup",
+      button: 2,
+    },
+    browser.browsingContext
+  );
+  details = await getLastMouseEventDetails(browser);
+  is(
+    details,
+    "/mouseup,21,20,2,0",
+    "synthesizeMouseAtPoint mouseup with button 2"
+  );
+
+  gBrowser.removeTab(tab);
+});
+
 add_task(async function mouse_in_iframe() {
   let onClickEvt = "document.body.lastChild.textContent = event.target.id;";
   const url = `<iframe style='margin: 30px;' src='data:text/html,<body onclick="${onClickEvt}">
