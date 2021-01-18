@@ -44,17 +44,3 @@ Services.scriptloader.loadSubScript(
 
 const EXAMPLE_URL =
   "http://example.com/browser/devtools/client/debugger/test/mochitest/examples/";
-
-// NOTE: still experimental, the screenshots might not be exactly correct
-async function takeScreenshot(dbg) {
-  let canvas = dbg.win.document.createElementNS(
-    "http://www.w3.org/1999/xhtml",
-    "html:canvas"
-  );
-  let context = canvas.getContext("2d");
-  canvas.width = dbg.win.innerWidth;
-  canvas.height = dbg.win.innerHeight;
-  context.drawWindow(dbg.win, 0, 0, canvas.width, canvas.height, "white");
-  await waitForTime(1000);
-  dump(`[SCREENSHOT] ${canvas.toDataURL()}\n`);
-}
