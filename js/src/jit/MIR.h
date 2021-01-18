@@ -2973,7 +2973,6 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
   enum Mode {
     Fallible,    // Check the type, and deoptimize if unexpected.
     Infallible,  // Type guard is not necessary.
-    TypeBarrier  // Guard on the type, and act like a TypeBarrier on failure.
   };
 
  private:
@@ -2994,7 +2993,7 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
     setResultType(type);
     setMovable();
 
-    if (mode_ == TypeBarrier || mode_ == Fallible) {
+    if (mode_ == Fallible) {
       setGuard();
     }
   }
@@ -3021,11 +3020,6 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
 #ifdef JS_JITSPEW
   void printOpcode(GenericPrinter& out) const override;
 #endif
-  void makeInfallible() {
-    // Should only be called if we're already Infallible or TypeBarrier
-    MOZ_ASSERT(mode() != Fallible);
-    mode_ = Infallible;
-  }
 
   ALLOW_CLONE(MUnbox)
 };
@@ -7708,7 +7702,7 @@ class MLoadElementAndUnbox : public MBinaryInstruction,
       : MBinaryInstruction(classOpcode, elements, index), mode_(mode) {
     setResultType(type);
     setMovable();
-    if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible) {
+    if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
     setBailoutKind(kind);
@@ -8415,7 +8409,7 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, obj), slot_(slot), mode_(mode) {
     setResultType(type);
     setMovable();
-    if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible) {
+    if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
     setBailoutKind(kind);
@@ -8460,7 +8454,7 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, slots), slot_(slot), mode_(mode) {
     setResultType(type);
     setMovable();
-    if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible) {
+    if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
     setBailoutKind(kind);
