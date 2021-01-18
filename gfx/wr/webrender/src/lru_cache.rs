@@ -12,19 +12,29 @@ use std::{mem, num};
   texture cache requires, but should be usable as a general LRU cache
   type if useful in other areas.
 
-  The cache is implemented with two backing freelists. These allow
+  The cache is implemented with two types of backing freelists. These allow
   random access to the underlying data, while being efficient in both
   memory access and allocation patterns.
 
-  The first freelist stores the elements being cached (for example, the
+  The "entries" freelist stores the elements being cached (for example, the
   CacheEntry structure for the texture cache). These elements are stored
   in arbitrary order, reusing empty slots in the freelist where possible.
 
-  The second freelist stores the LRU tracking information. Although the
+  The "lru_index" freelists store the LRU tracking information. Although the
   tracking elements are stored in arbitrary order inside a freelist for
   efficiency, they use next/prev links to represent a doubly-linked list,
   kept sorted in order of recent use. The next link is also used to store
   the current freelist within the array when the element is not occupied.
+
+  The LRU cache allows having multiple LRU "partitions". Every entry is tracked
+  by exactly one partition at any time; all partitions refer to entries in the
+  shared freelist. Entries can move between partitions, if replace_or_insert is
+  called with a new partition index for an existing handle.
+  The partitioning is used by the texture cache so that, for example, allocating
+  more glyph entries does not cause eviction of image entries (which go into
+  a different shared texture). If an existing handle's entry is reallocated with
+  a new size, it might need to move from a shared texture to a standalone
+  texture; in this case the handle will move to a different LRU partition.
  */
 
 /// Stores the data supplied by the user to be cached, and an index
@@ -33,8 +43,13 @@ use std::{mem, num};
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(MallocSizeOf)]
 struct LRUCacheEntry<T> {
-    /// The location of the LRU tracking element for this cache entry.
+    /// The LRU partition that tracks this entry.
+    partition_index: u8,
+
+    /// The location of the LRU tracking element for this cache entry in the
+    /// right LRU partition.
     lru_index: ItemIndex,
+
     /// The cached data provided by the caller for this element.
     value: T,
 }
@@ -47,15 +62,16 @@ pub struct LRUCache<T, M> {
     /// A free list of cache entries, and indices into the LRU tracking list
     entries: FreeList<LRUCacheEntry<T>, M>,
     /// The LRU tracking list, allowing O(1) access to the oldest element
-    lru: LRUTracker<FreeListHandle<M>>,
+    lru: Vec<LRUTracker<FreeListHandle<M>>>,
 }
 
 impl<T, M> LRUCache<T, M> {
     /// Construct a new LRU cache
-    pub fn new() -> Self {
+    pub fn new(lru_partition_count: usize) -> Self {
+        assert!(lru_partition_count <= u8::MAX as usize + 1);
         LRUCache {
             entries: FreeList::new(),
-            lru: LRUTracker::new(),
+            lru: (0..lru_partition_count).map(|_| LRUTracker::new()).collect(),
         }
     }
 
@@ -64,6 +80,7 @@ impl<T, M> LRUCache<T, M> {
     /// may be evicted at any time.
     pub fn push_new(
         &mut self,
+        partition_index: u8,
         value: T,
     ) -> WeakFreeListHandle<M> {
         // It's a slightly awkward process to insert an element, since we don't know
@@ -72,6 +89,7 @@ impl<T, M> LRUCache<T, M> {
 
         // Insert the data provided by the caller
         let handle = self.entries.insert(LRUCacheEntry {
+            partition_index: 0,
             lru_index: ItemIndex(num::NonZeroU32::new(1).unwrap()),
             value
         });
@@ -82,7 +100,9 @@ impl<T, M> LRUCache<T, M> {
         // Add an LRU tracking node that owns the strong handle, and store the location
         // of this inside the cache entry.
         let entry = self.entries.get_mut(&handle);
-        entry.lru_index = self.lru.push_new(handle);
+        let lru_index = self.lru[partition_index as usize].push_new(handle);
+        entry.partition_index = partition_index;
+        entry.lru_index = lru_index;
 
         weak_handle
     }
@@ -115,8 +135,8 @@ impl<T, M> LRUCache<T, M> {
 
     /// Return a reference to the oldest item in the cache, keeping it in the cache.
     /// If the cache is empty, this will return None.
-    pub fn peek_oldest(&self) -> Option<&T> {
-        self.lru
+    pub fn peek_oldest(&self, partition_index: u8) -> Option<&T> {
+        self.lru[partition_index as usize]
             .peek_front()
             .map(|handle| {
                 let entry = self.entries.get(handle);
@@ -128,8 +148,9 @@ impl<T, M> LRUCache<T, M> {
     /// be evicted. If the cache is empty, this will return None.
     pub fn pop_oldest(
         &mut self,
+        partition_index: u8,
     ) -> Option<T> {
-        self.lru
+        self.lru[partition_index as usize]
             .pop_front()
             .map(|handle| {
                 let entry = self.entries.free(handle);
@@ -146,14 +167,22 @@ impl<T, M> LRUCache<T, M> {
     pub fn replace_or_insert(
         &mut self,
         handle: &mut WeakFreeListHandle<M>,
+        partition_index: u8,
         data: T,
     ) -> Option<T> {
         match self.entries.get_opt_mut(handle) {
             Some(entry) => {
+                if entry.partition_index != partition_index {
+                    // Move to a different partition.
+                    let strong_handle = self.lru[entry.partition_index as usize].remove(entry.lru_index);
+                    let lru_index = self.lru[partition_index as usize].push_new(strong_handle);
+                    entry.partition_index = partition_index;
+                    entry.lru_index = lru_index;
+                }
                 Some(mem::replace(&mut entry.value, data))
             }
             None => {
-                *handle = self.push_new(data);
+                *handle = self.push_new(partition_index, data);
                 None
             }
         }
@@ -165,14 +194,14 @@ impl<T, M> LRUCache<T, M> {
     /// the underlying data in case the client wants to mutate it.
     pub fn touch(
         &mut self,
-        handle: &WeakFreeListHandle<M>
+        handle: &WeakFreeListHandle<M>,
     ) -> Option<&mut T> {
         let lru = &mut self.lru;
 
         self.entries
             .get_opt_mut(handle)
             .map(|entry| {
-                lru.mark_used(entry.lru_index);
+                lru[entry.partition_index as usize].mark_used(entry.lru_index);
                 &mut entry.value
             })
     }
@@ -180,7 +209,9 @@ impl<T, M> LRUCache<T, M> {
     /// Try to validate that the state of the cache is consistent
     #[cfg(test)]
     fn validate(&self) {
-        self.lru.validate();
+        for lru in &self.lru {
+            lru.validate();
+        }
     }
 }
 
@@ -392,8 +423,8 @@ impl<H> LRUTracker<H> where H: std::fmt::Debug {
         handle
     }
 
-    /// Manually remove an item from the LRU tracking list.
-    #[allow(dead_code)]
+    /// Manually remove an item from the LRU tracking list. This is used
+    /// when an element switches from one LRU partition to a different one.
     fn remove(
         &mut self,
         index: ItemIndex,
@@ -504,21 +535,21 @@ fn test_lru_tracker_push_peek() {
     struct CacheMarker;
     const NUM_ELEMENTS: usize = 50;
 
-    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new();
+    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new(1);
     cache.validate();
 
-    assert_eq!(cache.peek_oldest(), None);
+    assert_eq!(cache.peek_oldest(0), None);
 
     for i in 0 .. NUM_ELEMENTS {
-        cache.push_new(i);
+        cache.push_new(0, i);
     }
     cache.validate();
 
-    assert_eq!(cache.peek_oldest(), Some(&0));
-    assert_eq!(cache.peek_oldest(), Some(&0));
+    assert_eq!(cache.peek_oldest(0), Some(&0));
+    assert_eq!(cache.peek_oldest(0), Some(&0));
 
-    cache.pop_oldest();
-    assert_eq!(cache.peek_oldest(), Some(&1));
+    cache.pop_oldest(0);
+    assert_eq!(cache.peek_oldest(0), Some(&1));
 }
 
 #[test]
@@ -529,20 +560,20 @@ fn test_lru_tracker_push_pop() {
     struct CacheMarker;
     const NUM_ELEMENTS: usize = 50;
 
-    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new();
+    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new(1);
     cache.validate();
 
     for i in 0 .. NUM_ELEMENTS {
-        cache.push_new(i);
+        cache.push_new(0, i);
     }
     cache.validate();
 
     for i in 0 .. NUM_ELEMENTS {
-        assert_eq!(cache.pop_oldest(), Some(i));
+        assert_eq!(cache.pop_oldest(0), Some(i));
     }
     cache.validate();
 
-    assert_eq!(cache.pop_oldest(), None);
+    assert_eq!(cache.pop_oldest(0), None);
 }
 
 #[test]
@@ -553,12 +584,12 @@ fn test_lru_tracker_push_touch_pop() {
     struct CacheMarker;
     const NUM_ELEMENTS: usize = 50;
 
-    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new();
+    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new(1);
     let mut handles = Vec::new();
     cache.validate();
 
     for i in 0 .. NUM_ELEMENTS {
-        handles.push(cache.push_new(i));
+        handles.push(cache.push_new(0, i));
     }
     cache.validate();
 
@@ -568,15 +599,15 @@ fn test_lru_tracker_push_touch_pop() {
     cache.validate();
 
     for i in 0 .. NUM_ELEMENTS/2 {
-        assert_eq!(cache.pop_oldest(), Some(i*2+1));
+        assert_eq!(cache.pop_oldest(0), Some(i*2+1));
     }
     cache.validate();
     for i in 0 .. NUM_ELEMENTS/2 {
-        assert_eq!(cache.pop_oldest(), Some(i*2));
+        assert_eq!(cache.pop_oldest(0), Some(i*2));
     }
     cache.validate();
 
-    assert_eq!(cache.pop_oldest(), None);
+    assert_eq!(cache.pop_oldest(0), None);
 }
 
 #[test]
@@ -586,12 +617,12 @@ fn test_lru_tracker_push_get() {
     struct CacheMarker;
     const NUM_ELEMENTS: usize = 50;
 
-    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new();
+    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new(1);
     let mut handles = Vec::new();
     cache.validate();
 
     for i in 0 .. NUM_ELEMENTS {
-        handles.push(cache.push_new(i));
+        handles.push(cache.push_new(0, i));
     }
     cache.validate();
 
@@ -609,17 +640,17 @@ fn test_lru_tracker_push_replace_get() {
     struct CacheMarker;
     const NUM_ELEMENTS: usize = 50;
 
-    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new();
+    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new(1);
     let mut handles = Vec::new();
     cache.validate();
 
     for i in 0 .. NUM_ELEMENTS {
-        handles.push(cache.push_new(i));
+        handles.push(cache.push_new(0, i));
     }
     cache.validate();
 
     for i in 0 .. NUM_ELEMENTS {
-        assert_eq!(cache.replace_or_insert(&mut handles[i], i * 2), Some(i));
+        assert_eq!(cache.replace_or_insert(&mut handles[i], 0, i * 2), Some(i));
     }
     cache.validate();
 
@@ -629,6 +660,6 @@ fn test_lru_tracker_push_replace_get() {
     cache.validate();
 
     let mut empty_handle = WeakFreeListHandle::invalid();
-    assert_eq!(cache.replace_or_insert(&mut empty_handle, 100), None);
+    assert_eq!(cache.replace_or_insert(&mut empty_handle, 0, 100), None);
     assert_eq!(cache.get_opt(&empty_handle), Some(&100));
 }

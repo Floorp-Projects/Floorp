@@ -273,6 +273,44 @@ impl EvictionNotice {
     }
 }
 
+/// The different budget types for the texture cache. Each type has its own
+/// memory budget. Once the budget is exceeded, entries with automatic eviction
+/// are evicted. Entries with manual eviction share the same budget but are not
+/// evicted once the budget is exceeded.
+/// Keeping separate budgets ensures that we don't evict entries from unrelated
+/// textures if one texture gets full.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u8)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+enum BudgetType {
+    SharedColor8Linear,
+    SharedColor8Nearest,
+    SharedColor8Glyphs,
+    SharedAlpha8,
+    SharedAlpha8Glyphs,
+    SharedAlpha16,
+    Standalone,
+}
+
+impl BudgetType {
+    pub const COUNT: usize = 7;
+
+    pub const VALUES: [BudgetType; BudgetType::COUNT] = [
+        BudgetType::SharedColor8Linear,
+        BudgetType::SharedColor8Nearest,
+        BudgetType::SharedColor8Glyphs,
+        BudgetType::SharedAlpha8,
+        BudgetType::SharedAlpha8Glyphs,
+        BudgetType::SharedAlpha16,
+        BudgetType::Standalone,
+    ];
+
+    pub fn iter() -> impl Iterator<Item = BudgetType> {
+        BudgetType::VALUES.iter().cloned()
+    }
+}
+
 /// A set of lazily allocated, fixed size, texture arrays for each format the
 /// texture cache supports.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -392,26 +430,34 @@ impl SharedTextures {
     /// Returns a mutable borrow for the shared texture array matching the parameters.
     fn select(
         &mut self, external_format: ImageFormat, filter: TextureFilter, shader: TargetShader,
-    ) -> &mut dyn AtlasAllocatorList<TextureParameters> {
+    ) -> (&mut dyn AtlasAllocatorList<TextureParameters>, BudgetType) {
         match external_format {
             ImageFormat::R8 => {
                 assert_eq!(filter, TextureFilter::Linear);
                 match shader {
-                    TargetShader::Text => &mut self.alpha8_glyphs,
-                    _ => &mut self.alpha8_linear,
+                    TargetShader::Text => {
+                        (&mut self.alpha8_glyphs, BudgetType::SharedAlpha8Glyphs)
+                    },
+                    _ => (&mut self.alpha8_linear, BudgetType::SharedAlpha8),
                 }
             }
             ImageFormat::R16 => {
                 assert_eq!(filter, TextureFilter::Linear);
-                &mut self.alpha16_linear
+                (&mut self.alpha16_linear, BudgetType::SharedAlpha16)
             }
             ImageFormat::RGBA8 |
             ImageFormat::BGRA8 => {
                 match (filter, shader) {
-                    (TextureFilter::Linear, TargetShader::Text) => &mut self.color8_glyphs,
-                    (TextureFilter::Linear, _) => &mut self.color8_linear,
-                    (TextureFilter::Nearest, _) => &mut self.color8_nearest,
-                    _ => panic!("Unexpexcted filter {:?}", filter),
+                    (TextureFilter::Linear, TargetShader::Text) => {
+                        (&mut self.color8_glyphs, BudgetType::SharedColor8Glyphs)
+                    },
+                    (TextureFilter::Linear, _) => {
+                        (&mut self.color8_linear, BudgetType::SharedColor8Linear)
+                    },
+                    (TextureFilter::Nearest, _) => {
+                        (&mut self.color8_nearest, BudgetType::SharedColor8Nearest)
+                    },
+                    _ => panic!("Unexpected filter {:?}", filter),
                 }
             }
             _ => panic!("Unexpected format {:?}", external_format),
@@ -703,20 +749,12 @@ pub struct TextureCache {
     /// Strong handles for the manual_entries FreeList.
     manual_handles: Vec<FreeListHandle<ManualCacheEntryMarker>>,
 
-    /// Estimated memory usage of allocated entries in all of the shared textures. This
-    /// is used to decide when to evict old items from the cache.
-    shared_bytes_allocated: usize,
-
-    /// Number of bytes allocated in standalone textures. Used as an input to deciding
-    /// when to run texture cache eviction.
-    standalone_bytes_allocated: usize,
+    /// Memory usage of allocated entries in all of the shared or standalone
+    /// textures. Includes both manually and automatically evicted entries.
+    bytes_allocated: [usize ; BudgetType::COUNT],
 }
 
 impl TextureCache {
-    /// If the total bytes allocated in shared / standalone cache is less
-    /// than this, then allow the cache to grow without forcing an eviction.
-    const EVICTION_THRESHOLD_SIZE: usize = 64 * 1024 * 1024;
-
     /// The maximum number of items that will be evicted per frame. This limit helps avoid jank
     /// on frames where we want to evict a large number of items. Instead, we'd prefer to drop
     /// the items incrementally over a number of frames, even if that means the total allocated
@@ -752,13 +790,12 @@ impl TextureCache {
             next_id: next_texture_id,
             pending_updates,
             now: FrameStamp::INVALID,
-            lru_cache: LRUCache::new(),
+            lru_cache: LRUCache::new(BudgetType::COUNT),
             picture_cache_entries: FreeList::new(),
             picture_cache_handles: Vec::new(),
             manual_entries: FreeList::new(),
             manual_handles: Vec::new(),
-            shared_bytes_allocated: 0,
-            standalone_bytes_allocated: 0,
+            bytes_allocated: [0 ; BudgetType::COUNT],
         }
     }
 
@@ -811,9 +848,11 @@ impl TextureCache {
         }
 
         // Evict all auto (LRU) cache handles
-        while let Some(entry) = self.lru_cache.pop_oldest() {
-            entry.evict();
-            self.free(&entry);
+        for budget_type in BudgetType::iter() {
+            while let Some(entry) = self.lru_cache.pop_oldest(budget_type as u8) {
+                entry.evict();
+                self.free(&entry);
+            }
         }
 
         // Free the picture and shared textures
@@ -868,8 +907,18 @@ impl TextureCache {
 
         self.picture_textures.update_profile(profile);
 
-        profile.set(profiler::TEXTURE_CACHE_SHARED_MEM, profiler::bytes_to_mb(self.shared_bytes_allocated));
-        profile.set(profiler::TEXTURE_CACHE_STANDALONE_MEM, profiler::bytes_to_mb(self.standalone_bytes_allocated));
+        let shared_bytes = [
+            BudgetType::SharedColor8Linear,
+            BudgetType::SharedColor8Nearest,
+            BudgetType::SharedColor8Glyphs,
+            BudgetType::SharedAlpha8,
+            BudgetType::SharedAlpha8Glyphs,
+            BudgetType::SharedAlpha16,
+        ].iter().map(|b| self.bytes_allocated[*b as usize]).sum();
+        let standalone_bytes = self.bytes_allocated[BudgetType::Standalone as usize];
+
+        profile.set(profiler::TEXTURE_CACHE_SHARED_MEM, profiler::bytes_to_mb(shared_bytes));
+        profile.set(profiler::TEXTURE_CACHE_STANDALONE_MEM, profiler::bytes_to_mb(standalone_bytes));
 
         self.now = FrameStamp::INVALID;
     }
@@ -1165,33 +1214,52 @@ impl TextureCache {
         }
     }
 
+    /// Get the eviction threshold, in bytes, for the given budget.
+    fn get_eviction_threshold(budget_type: BudgetType) -> usize {
+        match budget_type {
+            BudgetType::SharedColor8Linear => 16 * 1024 * 1024,
+            BudgetType::SharedColor8Nearest => 1 * 1024 * 1024,
+            BudgetType::SharedColor8Glyphs => 8 * 1024 * 1024,
+            BudgetType::SharedAlpha8 => 4 * 1024 * 1024,
+            BudgetType::SharedAlpha8Glyphs => 4 * 1024 * 1024,
+            BudgetType::SharedAlpha16 => 1 * 1024 * 1024,
+            BudgetType::Standalone => 16 * 1024 * 1024,
+        }
+    }
+
     /// Evict old items from the shared and standalone caches, if we're over a
     /// threshold memory usage value
     fn evict_items_from_cache_if_required(&mut self) {
+        let previous_frame_id = self.now.frame_id() - 1;
         let mut eviction_count = 0;
 
-        // Keep evicting while memory is above the threshold, and we haven't
-        // reached a maximum number of evictions this frame.
-        while self.should_continue_evicting(eviction_count) {
-            let should_evict = match self.lru_cache.peek_oldest() {
-                // Only evict this item if it wasn't used in the previous frame. The reason being that if it
-                // was used the previous frame then it will likely be used in this frame too, and we don't
-                // want to be continually evicting and reuploading the item every frame.
-                Some(entry) => entry.last_access.frame_id() < self.now.frame_id() - 1,
-                // It's possible that we could fail to pop an item from the LRU list to evict, if every
-                // item in the cache is set to manual eviction mode. In this case, just break out of the
-                // loop as there's nothing we can do until the calling code manually evicts items to
-                // reduce the allocated cache size.
-                None => false,
-            };
-
-            if should_evict {
-                let entry = self.lru_cache.pop_oldest().unwrap();
-                entry.evict();
-                self.free(&entry);
-                eviction_count += 1;
-            } else {
-                break;
+        for budget in BudgetType::iter() {
+            let threshold = TextureCache::get_eviction_threshold(budget);
+            while self.should_continue_evicting(
+                self.bytes_allocated[budget as usize],
+                threshold,
+                eviction_count,
+            ) {
+                if let Some(entry) = self.lru_cache.peek_oldest(budget as u8) {
+                    // Only evict this item if it wasn't used in the previous frame. The reason being that if it
+                    // was used the previous frame then it will likely be used in this frame too, and we don't
+                    // want to be continually evicting and reuploading the item every frame.
+                    if entry.last_access.frame_id() >= previous_frame_id {
+                        // Since the LRU cache is ordered by frame access, we can break out of the loop here because
+                        // we know that all remaining items were also used in the previous frame (or more recently).
+                        break;
+                    }
+                    let entry = self.lru_cache.pop_oldest(budget as u8).unwrap();
+                    entry.evict();
+                    self.free(&entry);
+                    eviction_count += 1;
+                } else {
+                    // The LRU cache is empty, all remaining items use manual
+                    // eviction. In this case, there's nothing we can do until
+                    // the calling code manually evicts items to reduce the
+                    // allocated cache size.
+                    break;
+                }
             }
         }
     }
@@ -1199,20 +1267,17 @@ impl TextureCache {
     /// Returns true if texture cache eviction loop should continue
     fn should_continue_evicting(
         &self,
+        bytes_allocated: usize,
+        threshold: usize,
         eviction_count: usize,
     ) -> bool {
-        // Get the total used bytes in standalone and shared textures. Note that
-        // this does not include memory allocated to picture cache tiles, which are
-        // considered separately for the purposes of texture cache eviction.
-        let current_memory_estimate = self.standalone_bytes_allocated + self.shared_bytes_allocated;
-
         // If current memory usage is below selected threshold, we can stop evicting items
-        if current_memory_estimate < Self::EVICTION_THRESHOLD_SIZE {
+        if bytes_allocated < threshold {
             return false;
         }
 
         // If current memory usage is significantly more than the threshold, keep evicting this frame
-        if current_memory_estimate > 4 * Self::EVICTION_THRESHOLD_SIZE {
+        if bytes_allocated > 4 * threshold {
             return true;
         }
 
@@ -1240,13 +1305,13 @@ impl TextureCache {
                 }
             }
             EntryDetails::Standalone { size_in_bytes, .. } => {
-                self.standalone_bytes_allocated -= size_in_bytes;
+                self.bytes_allocated[BudgetType::Standalone as usize] -= size_in_bytes;
 
                 // This is a standalone texture allocation. Free it directly.
                 self.pending_updates.push_free(entry.texture_id);
             }
             EntryDetails::Cache { origin, alloc_id, allocated_size_in_bytes } => {
-                let allocator_list = self.shared_textures.select(
+                let (allocator_list, budget_type) = self.shared_textures.select(
                     entry.input_format,
                     entry.filter,
                     entry.shader,
@@ -1254,7 +1319,7 @@ impl TextureCache {
 
                 allocator_list.deallocate(entry.texture_id, alloc_id);
 
-                self.shared_bytes_allocated -= allocated_size_in_bytes;
+                self.bytes_allocated[budget_type as usize] -= allocated_size_in_bytes;
 
                 if self.debug_flags.contains(
                     DebugFlags::TEXTURE_CACHE_DBG |
@@ -1276,8 +1341,8 @@ impl TextureCache {
     fn allocate_from_shared_cache(
         &mut self,
         params: &CacheAllocParams,
-    ) -> CacheEntry {
-        let allocator_list = self.shared_textures.select(
+    ) -> (CacheEntry, BudgetType) {
+        let (allocator_list, budget_type) = self.shared_textures.select(
             params.descriptor.format,
             params.filter,
             params.shader,
@@ -1323,9 +1388,9 @@ impl TextureCache {
 
         let bpp = formats.internal.bytes_per_pixel();
         let allocated_size_in_bytes = (allocated_rect.size.area() * bpp) as usize;
-        self.shared_bytes_allocated += allocated_size_in_bytes;
+        self.bytes_allocated[budget_type as usize] += allocated_size_in_bytes;
 
-        CacheEntry {
+        (CacheEntry {
             size: params.descriptor.size,
             user_data: params.user_data,
             last_access: self.now,
@@ -1342,7 +1407,7 @@ impl TextureCache {
             eviction_notice: None,
             uv_rect_kind: params.uv_rect_kind,
             shader: params.shader
-        }
+        }, budget_type)
     }
 
     // Returns true if the given image descriptor *may* be
@@ -1414,7 +1479,7 @@ impl TextureCache {
     fn allocate_standalone_entry(
         &mut self,
         params: &CacheAllocParams,
-    ) -> CacheEntry {
+    ) -> (CacheEntry, BudgetType) {
         let texture_id = self.next_id;
         self.next_id.0 += 1;
 
@@ -1431,7 +1496,7 @@ impl TextureCache {
         };
 
         let size_in_bytes = (info.width * info.height * info.format.bytes_per_pixel()) as usize;
-        self.standalone_bytes_allocated += size_in_bytes;
+        self.bytes_allocated[BudgetType::Standalone as usize] += size_in_bytes;
 
         self.pending_updates.push_alloc(texture_id, info);
 
@@ -1442,13 +1507,13 @@ impl TextureCache {
             None
         };
 
-        CacheEntry::new_standalone(
+        (CacheEntry::new_standalone(
             texture_id,
             self.now,
             params,
             swizzle.unwrap_or_default(),
             size_in_bytes,
-        )
+        ), BudgetType::Standalone)
     }
 
     /// Allocates a cache entry appropriate for the given parameters.
@@ -1459,7 +1524,7 @@ impl TextureCache {
     fn allocate_cache_entry(
         &mut self,
         params: &CacheAllocParams,
-    ) -> CacheEntry {
+    ) -> (CacheEntry, BudgetType) {
         assert!(!params.descriptor.size.is_empty());
 
         // If this image doesn't qualify to go in the shared (batching) cache,
@@ -1480,7 +1545,7 @@ impl TextureCache {
         eviction: Eviction,
     ) {
         debug_assert!(self.now.is_valid());
-        let new_cache_entry = self.allocate_cache_entry(params);
+        let (new_cache_entry, budget_type) = self.allocate_cache_entry(params);
 
         // If the handle points to a valid cache entry, we want to replace the
         // cache entry with our newly updated location. We also need to ensure
@@ -1491,7 +1556,7 @@ impl TextureCache {
         // result to the corresponding vector.
         let old_entry = match (&mut *handle, eviction) {
             (TextureCacheHandle::Auto(handle), Eviction::Auto) => {
-                self.lru_cache.replace_or_insert(handle, new_cache_entry)
+                self.lru_cache.replace_or_insert(handle, budget_type as u8, new_cache_entry)
             },
             (TextureCacheHandle::Manual(handle), Eviction::Manual) => {
                 let entry = self.manual_entries.get_opt_mut(handle)
@@ -1503,7 +1568,7 @@ impl TextureCache {
                 panic!("Can't change eviction policy after initial allocation");
             },
             (TextureCacheHandle::Empty, Eviction::Auto) => {
-                let new_handle = self.lru_cache.push_new(new_cache_entry);
+                let new_handle = self.lru_cache.push_new(budget_type as u8, new_cache_entry);
                 *handle = TextureCacheHandle::Auto(new_handle);
                 None
             },
@@ -1588,7 +1653,7 @@ impl TextureCache {
 
     #[cfg(test)]
     pub fn total_allocated_bytes_for_testing(&self) -> usize {
-        self.standalone_bytes_allocated + self.shared_bytes_allocated
+        BudgetType::iter().map(|b| self.bytes_allocated[b as usize]).sum()
     }
 
     pub fn report_memory(&self, ops: &mut MallocSizeOfOps) -> usize {
