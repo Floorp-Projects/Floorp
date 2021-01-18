@@ -508,6 +508,40 @@ gfx.webrender:
       - gfx-telemetry-alerts@mozilla.com
       - jmuizelaar@mozilla.com
     expires: never
+  sceneswap_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: WR_SCENESWAP_TIME
+    description: >
+      The time taken to do a webrender scene swap. This is book-keeping that
+      APZ must perform once webrender has built a new scene.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jmuizelaar@mozilla.com
+    expires: never
+  framebuild_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: WR_FRAMEBUILD_TIME
+    description: >
+      The time taken to build a webrender frame.
+      This involves calculating the visibility of primitives, requesting
+      resources, and building the render passes which will be used to render
+      the frame.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jmuizelaar@mozilla.com
+    expires: never
 
 gfx.display:
   count:
@@ -743,42 +777,6 @@ gfx.status:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
     expires: 2022-02-01
-
-  sceneswap_time:
-    type: timing_distribution
-    time_unit: millisecond
-    gecko_datapoint: WR_SCENESWAP_TIME
-    description: >
-      The time taken to do a webrender scene swap. This is book-keeping that
-      APZ must perform once webrender has built a new scene.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
-    notification_emails:
-      - gfx-telemetry-alerts@mozilla.com
-      - jmuizelaar@mozilla.com
-    expires: never
-
-  framebuild_time:
-    type: timing_distribution
-    time_unit: millisecond
-    gecko_datapoint: WR_FRAMEBUILD_TIME
-    description: >
-      The time taken to build a webrender frame.
-      This involves calculating the visibility of primitives, requesting
-      resources, and building the render passes which will be used to render
-      the frame.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
-    notification_emails:
-      - gfx-telemetry-alerts@mozilla.com
-      - jmuizelaar@mozilla.com
-    expires: never
 
 avif:
   decode_result:
