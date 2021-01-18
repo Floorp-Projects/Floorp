@@ -571,8 +571,6 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
   }
 
-  PointerEventHandler::UpdateActivePointerState(mouseEvent, aTargetContent);
-
   switch (aEvent->mMessage) {
     case eContextMenu:
       if (sIsPointerLocked) {
@@ -624,6 +622,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       break;
     }
     case eMouseEnterIntoWidget:
+      PointerEventHandler::UpdateActivePointerState(mouseEvent, aTargetContent);
       // In some cases on e10s eMouseEnterIntoWidget
       // event was sent twice into child process of content.
       // (From specific widget code (sending is not permanent) and
@@ -679,6 +678,8 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     case eMouseMove:
     case ePointerDown:
       if (aEvent->mMessage == ePointerDown) {
+        PointerEventHandler::UpdateActivePointerState(mouseEvent,
+                                                      aTargetContent);
         PointerEventHandler::ImplicitlyCapturePointer(aTargetFrame, aEvent);
         if (mouseEvent->mInputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
           NotifyTargetUserActivation(aEvent, aTargetContent);
@@ -3411,6 +3412,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // Implicitly releasing capture for given pointer. ePointerLostCapture
       // should be send after ePointerUp or ePointerCancel.
       PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
+      PointerEventHandler::UpdateActivePointerState(pointerEvent);
 
       if (pointerEvent->mMessage == ePointerCancel ||
           pointerEvent->mInputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
@@ -3810,6 +3812,10 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
                                            getter_AddRefs(targetContent));
         SetContentState(targetContent, NS_EVENT_STATE_HOVER);
       }
+      break;
+
+    case eMouseExitFromWidget:
+      PointerEventHandler::UpdateActivePointerState(aEvent->AsMouseEvent());
       break;
 
 #ifdef XP_MACOSX

@@ -73,7 +73,7 @@ class PointerEventHandler final {
   // Called in ESM::PreHandleEvent to update current active pointers in a hash
   // table.
   static void UpdateActivePointerState(WidgetMouseEvent* aEvent,
-                                       nsIContent* aTargetContent);
+                                       nsIContent* aTargetContent = nullptr);
 
   // Request/release pointer capture of the specified pointer by the element.
   static void RequestPointerCaptureById(uint32_t aPointerId,
