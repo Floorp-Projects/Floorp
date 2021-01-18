@@ -64,8 +64,8 @@ bool SVGAnimatedEnumeration::SetBaseValueAtom(const nsAtom* aValue,
 
   while (mapping && mapping->mKey) {
     if (aValue == mapping->mKey) {
-      mIsBaseSet = true;
-      if (mBaseVal != mapping->mVal) {
+      if (!mIsBaseSet || mBaseVal != mapping->mVal) {
+        mIsBaseSet = true;
         // We don't need to call DidChange* here - we're only called by
         // SVGElement::ParseAttribute under Element::SetAttr,
         // which takes care of notifying.
@@ -104,8 +104,8 @@ void SVGAnimatedEnumeration::SetBaseValue(uint16_t aValue,
 
   while (mapping && mapping->mKey) {
     if (mapping->mVal == aValue) {
-      mIsBaseSet = true;
-      if (mBaseVal != uint8_t(aValue)) {
+      if (!mIsBaseSet || mBaseVal != uint8_t(aValue)) {
+        mIsBaseSet = true;
         AutoChangeEnumNotifier notifier(this, aSVGElement);
 
         mBaseVal = uint8_t(aValue);
