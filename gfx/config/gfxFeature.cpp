@@ -259,6 +259,26 @@ const nsCString& FeatureState::GetFailureId() const {
   return mDefault.mFailureId;
 }
 
+nsCString FeatureState::GetStatusAndFailureIdString() const {
+  nsCString status;
+  auto value = GetValue();
+  switch (value) {
+    case FeatureStatus::Blocklisted:
+    case FeatureStatus::Disabled:
+    case FeatureStatus::Unavailable:
+    case FeatureStatus::UnavailableNoAngle:
+    case FeatureStatus::Blocked:
+      status.AppendPrintf("%s:%s", FeatureStatusToString(value),
+                          GetFailureId().get());
+      break;
+    default:
+      status.Append(FeatureStatusToString(value));
+      break;
+  }
+
+  return status;
+}
+
 void FeatureState::Reset() {
   mDefault.Set(FeatureStatus::Unused);
   mUser.Set(FeatureStatus::Unused);

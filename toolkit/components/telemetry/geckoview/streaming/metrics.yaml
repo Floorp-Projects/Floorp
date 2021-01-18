@@ -778,6 +778,20 @@ gfx.status:
       - gfx-telemetry-alerts@mozilla.com
     expires: 2022-02-01
 
+gfx.feature:
+  webrender:
+    type: string
+    description: Whether webrender is enabled or disabled, and why.
+    gecko_datapoint: gfx.feature.webrender
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687312
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687312#c5
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jnicol@mozilla.com
+    expires: never
+
 avif:
   decode_result:
     type: labeled_counter
