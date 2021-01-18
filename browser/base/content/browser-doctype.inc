@@ -2,8 +2,6 @@
 %brandDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
 %browserDTD;
-<!ENTITY % baseMenuDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd" >
-%baseMenuDTD;
 <!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetMenu.dtd" >
 %charsetDTD;
 <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
