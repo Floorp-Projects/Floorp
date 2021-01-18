@@ -7,6 +7,51 @@
 #
 # NOTE: For Engineers, please don't re-use these strings outside of the menubar.
 
+## Application Menu (macOS only)
+
+menu-application-services =
+    .label = Services
+menu-application-hide-this =
+    .label = Hide { -brand-shorter-name }
+menu-application-hide-other =
+    .label = Hide Others
+menu-application-show-all =
+    .label = Show All
+menu-application-touch-bar =
+    .label = Customize Touch Bar…
+
+##
+
+# These menu-quit strings are only used on Windows and Linux.
+menu-quit =
+    .label =
+        { PLATFORM() ->
+            [windows] Exit
+           *[other] Quit
+        }
+    .accesskey =
+        { PLATFORM() ->
+            [windows] x
+           *[other] Q
+        }
+
+# This menu-quit-mac string is only used on macOS.
+menu-quit-mac =
+    .label = Quit { -brand-shorter-name }
+
+# This menu-quit-button string is only used on Linux.
+menu-quit-button =
+    .label = { menu-quit.label }
+
+# This menu-quit-button-win string is only used on Windows.
+menu-quit-button-win =
+    .label = { menu-quit.label }
+    .tooltip = Exit { -brand-shorter-name }
+
+menu-about =
+    .label = About { -brand-shorter-name }
+    .accesskey = A
+
 ## File Menu
 
 menu-file =

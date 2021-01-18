@@ -75,16 +75,11 @@
                 <menuitem id="goOfflineMenuitem"
                           type="checkbox"
                           command="cmd_toggleOfflineStatus" data-l10n-id="menu-file-go-offline"/>
-<!-- We need to leave those strings in DTD until bug 1568133 is fixed. -->
                 <menuitem id="menu_FileQuitItem"
-#ifdef XP_WIN
-                          label="&quitApplicationCmdWin2.label;"
-                          accesskey="&quitApplicationCmdWin2.accesskey;"
-#elifdef XP_MACOSX
-                          label="&quitApplicationCmdMac2.label;"
+#ifdef XP_MACOSX
+                          data-l10n-id="menu-quit-mac"
 #else
-                          label="&quitApplicationCmd.label;"
-                          accesskey="&quitApplicationCmd.accesskey;"
+                          data-l10n-id="menu-quit"
 #endif
                           key="key_quitApplication"
                           command="cmd_quitApplication"/>
@@ -434,13 +429,12 @@
 #endif
 #ifdef XP_MACOSX
 <!-- nsMenuBarX hides these and uses them to build the Application menu. -->
-<!-- We need to leave those strings in DTD until bug 1568133 is fixed. -->
-              <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences(undefined);"/>
-              <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
-              <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac2.label;" key="key_hideThisAppCmdMac"/>
-              <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>
-              <menuitem id="menu_mac_show_all" label="&showAllAppsCmdMac.label;"/>
-              <menuitem id="menu_mac_touch_bar" label="&touchBarCmdMac.label;"/>
+              <menuitem id="menu_preferences" data-l10n-id="menu-preferences" key="key_preferencesCmdMac" oncommand="openPreferences(undefined);"/>
+              <menuitem id="menu_mac_services" data-l10n-id="menu-application-services"/>
+              <menuitem id="menu_mac_hide_app" data-l10n-id="menu-application-hide-this" key="key_hideThisAppCmdMac"/>
+              <menuitem id="menu_mac_hide_others" data-l10n-id="menu-application-hide-other" key="key_hideOtherAppsCmdMac"/>
+              <menuitem id="menu_mac_show_all" data-l10n-id="menu-application-show-all"/>
+              <menuitem id="menu_mac_touch_bar" data-l10n-id="menu-application-touch-bar"/>
 #endif
               </menupopup>
             </menu>
@@ -513,11 +507,8 @@
                           oncommand="openUILinkIn(Services.policies.getSupportMenu().URL.href, 'tab', {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
                           onclick="checkForMiddleClick(this, event);"/>
                 <menuseparator id="aboutSeparator"/>
-                <!-- We need to leave those strings in DTD until bug 1568133 is fixed. -->
                 <menuitem id="aboutName"
-                          accesskey="&aboutProduct2.accesskey;"
-                          label="&aboutProduct2.label;"
-                          oncommand="openAboutDialog();"/>
+                          oncommand="openAboutDialog();" data-l10n-id="menu-about"/>
               </menupopup>
           </menu>
         </menubar>
