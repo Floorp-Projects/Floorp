@@ -385,7 +385,7 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
   UnaryNodeType newAwaitExpression(uint32_t begin, Node value) {
-    return NodeGeneric;
+    return NodeUnparenthesizedUnary;
   }
   UnaryNodeType newOptionalChain(uint32_t begin, Node value) {
     return NodeGeneric;
