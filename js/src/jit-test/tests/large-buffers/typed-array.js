@@ -98,3 +98,24 @@ function testIterators() {
     assertEq(ex, "out of memory");
 }
 testIterators();
+
+function testArraySliceSparse() {
+    // Length mustn't exceed UINT32_MAX.
+    var len = 4 * gb - 1;
+    var ta2 = new Int8Array(ta.buffer, 0, len);
+    ta2[len - 1] = 1;
+
+    // The SliceSparse optimisation is only used for native objects which have the
+    // "indexed" flag set.
+    var o = {
+        length: len,
+        100000: 0, // sparse + indexed
+        __proto__: ta2,
+    };
+
+    // Collect sufficient elements to trigger the SliceSparse optimisation.
+    var r = Array.prototype.slice.call(o, -2000);
+    assertEq(r.length, 2000);
+    assertEq(r[r.length - 1], 1);
+}
+testArraySliceSparse();
