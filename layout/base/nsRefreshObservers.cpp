@@ -13,6 +13,9 @@ OneShotPostRefreshObserver::OneShotPostRefreshObserver(PresShell* aPresShell,
                                                        Action&& aAction)
     : mPresShell(aPresShell), mAction(std::move(aAction)) {}
 
+OneShotPostRefreshObserver::OneShotPostRefreshObserver(PresShell* aPresShell)
+    : mPresShell(aPresShell) {}
+
 OneShotPostRefreshObserver::~OneShotPostRefreshObserver() = default;
 
 void OneShotPostRefreshObserver::DidRefresh() {
@@ -23,9 +26,12 @@ void OneShotPostRefreshObserver::DidRefresh() {
     return;
   }
 
-  mAction(mPresShell);
+  RefPtr<OneShotPostRefreshObserver> kungfuDeathGrip = this;
 
-  if (!mPresShell->RemovePostRefreshObserver(this)) {
+  mAction(mPresShell, this);
+
+  nsPresContext* presContext = mPresShell->GetPresContext();
+  if (!presContext) {
     MOZ_ASSERT_UNREACHABLE(
         "Unable to unregister post-refresh observer! Leaking it instead of "
         "leaving garbage registered");
@@ -34,8 +40,7 @@ void OneShotPostRefreshObserver::DidRefresh() {
     mAction = Action();
     return;
   }
-
-  delete this;
+  presContext->UnregisterOneShotPostRefreshObserver(this);
 }
 
 }  // namespace mozilla

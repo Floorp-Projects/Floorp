@@ -990,12 +990,15 @@ void nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent) {
   bool waitForRefresh = InputAPZContext::HavePendingLayerization();
   nsIWidget* widget = this->GetNearestWidget();
   if (waitForRefresh) {
-    waitForRefresh =
-        presShell->AddPostRefreshObserver(new OneShotPostRefreshObserver(
-            presShell, [widget = RefPtr<nsIWidget>(widget),
-                        dragMetrics](mozilla::PresShell*) {
-              widget->StartAsyncScrollbarDrag(dragMetrics);
-            }));
+    waitForRefresh = false;
+    if (nsPresContext* presContext = presShell->GetPresContext()) {
+      waitForRefresh = presContext->RegisterOneShotPostRefreshObserver(
+          new OneShotPostRefreshObserver(
+              presShell, [widget = RefPtr<nsIWidget>(widget), dragMetrics](
+                             mozilla::PresShell*, OneShotPostRefreshObserver*) {
+                widget->StartAsyncScrollbarDrag(dragMetrics);
+              }));
+    }
   }
   if (!waitForRefresh) {
     widget->StartAsyncScrollbarDrag(dragMetrics);
