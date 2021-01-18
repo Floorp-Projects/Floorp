@@ -9,12 +9,11 @@ use crate::frame_builder::FrameBuilderConfig;
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::picture::{PrimitiveList, PictureCompositeMode, PictureOptions, PicturePrimitive, SliceId};
 use crate::picture::{Picture3DContext, TileCacheParams, TileOffset};
-use crate::prim_store::{PrimitiveInstance, PrimitiveInstanceKind, PrimitiveStore, PictureIndex, SegmentInstanceIndex};
-use crate::prim_store::picture::{Picture, PictureKey, PictureCompositeKey};
+use crate::prim_store::{PrimitiveInstance, PrimitiveInstanceKind, PrimitiveStore, PictureIndex};
 use crate::scene_building::SliceFlags;
 use crate::scene_builder_thread::Interners;
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, SpatialTree};
-use crate::util::{MaxRect, VecHelper};
+use crate::util::VecHelper;
 
 /*
  Types and functionality related to picture caching. In future, we'll
@@ -292,22 +291,20 @@ impl TileCacheBuilder {
     pub fn build(
         self,
         config: &FrameBuilderConfig,
-        interners: &mut Interners,
         clip_store: &mut ClipStore,
         prim_store: &mut PrimitiveStore,
-    ) -> (TileCacheConfig, PrimitiveList) {
+    ) -> (TileCacheConfig, Vec<PictureIndex>) {
         let mut result = TileCacheConfig::new(self.pending_tile_caches.len());
-        let mut root_prim_list = PrimitiveList::empty();
+        let mut tile_cache_pictures = Vec::new();
 
         for pending_tile_cache in self.pending_tile_caches {
-            let prim_instance = create_tile_cache(
+            let pic_index = create_tile_cache(
                 pending_tile_cache.params.slice,
                 pending_tile_cache.params.slice_flags,
                 pending_tile_cache.params.spatial_node_index,
                 pending_tile_cache.prim_list,
                 pending_tile_cache.params.background_color,
                 pending_tile_cache.params.shared_clips,
-                interners,
                 prim_store,
                 clip_store,
                 &mut result.picture_cache_spatial_nodes,
@@ -315,15 +312,10 @@ impl TileCacheBuilder {
                 &mut result.tile_caches,
             );
 
-            root_prim_list.add_prim(
-                prim_instance,
-                LayoutRect::zero(),
-                pending_tile_cache.params.spatial_node_index,
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
-            );
+            tile_cache_pictures.push(pic_index);
         }
 
-        (result, root_prim_list)
+        (result, tile_cache_pictures)
     }
 
     /// Find the scroll root for a given spatial node
@@ -381,28 +373,15 @@ fn create_tile_cache(
     prim_list: PrimitiveList,
     background_color: Option<ColorF>,
     shared_clips: Vec<ClipInstance>,
-    interners: &mut Interners,
     prim_store: &mut PrimitiveStore,
     clip_store: &mut ClipStore,
     picture_cache_spatial_nodes: &mut FastHashSet<SpatialNodeIndex>,
     frame_builder_config: &FrameBuilderConfig,
     tile_caches: &mut FastHashMap<SliceId, TileCacheParams>,
-) -> PrimitiveInstance {
+) -> PictureIndex {
     // Add this spatial node to the list to check for complex transforms
     // at the start of a frame build.
     picture_cache_spatial_nodes.insert(scroll_root);
-
-    // Now, create a picture with tile caching enabled that will hold all
-    // of the primitives selected as belonging to the main scroll root.
-    let pic_key = PictureKey::new(
-        Picture {
-            composite_mode_key: PictureCompositeKey::Identity,
-        },
-    );
-
-    let pic_data_handle = interners
-        .picture
-        .intern(&pic_key, || ());
 
     // Build a clip-chain for the tile cache, that contains any of the shared clips
     // we will apply when drawing the tiles. In all cases provided by Gecko, these
@@ -410,6 +389,7 @@ fn create_tile_cache(
     // a simple local clip rect in the vertex shader. However, this should in theory
     // also work with any complex clips, such as rounded rects and image masks, by
     // producing a clip mask that is applied to the picture cache tiles.
+
     let mut parent_clip_chain_id = ClipChainId::NONE;
     for clip_instance in &shared_clips {
         // Add this spatial node to the list to check for complex transforms
@@ -448,15 +428,7 @@ fn create_tile_cache(
         PictureOptions::default(),
     ));
 
-    PrimitiveInstance::new(
-        LayoutRect::max_rect(),
-        PrimitiveInstanceKind::Picture {
-            data_handle: pic_data_handle,
-            pic_index: PictureIndex(pic_index),
-            segment_instance_index: SegmentInstanceIndex::INVALID,
-        },
-        parent_clip_chain_id,
-    )
+    PictureIndex(pic_index)
 }
 
 /// Debug information about a set of picture cache slices, exposed via RenderResults

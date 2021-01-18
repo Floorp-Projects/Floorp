@@ -330,25 +330,10 @@ impl<'a> SceneBuilder<'a> {
         builder.build_all(&root_pipeline);
 
         // Construct the picture cache primitive instance(s) from the tile cache builder
-        let (tile_cache_config, prim_list) = builder.tile_cache_builder.build(
+        let (tile_cache_config, tile_cache_pictures) = builder.tile_cache_builder.build(
             &builder.config,
-            &mut builder.interners,
             &mut builder.clip_store,
             &mut builder.prim_store,
-        );
-
-        let root_pic_index = PictureIndex(builder.prim_store.pictures
-            .alloc()
-            .init(PicturePrimitive::new_image(
-                None,
-                Picture3DContext::Out,
-                true,
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                RasterSpace::Screen,
-                prim_list,
-                ROOT_SPATIAL_NODE_INDEX,
-                PictureOptions::default(),
-            ))
         );
 
         BuiltScene {
@@ -360,9 +345,9 @@ impl<'a> SceneBuilder<'a> {
             spatial_tree: builder.spatial_tree,
             prim_store: builder.prim_store,
             clip_store: builder.clip_store,
-            root_pic_index,
             config: builder.config,
             tile_cache_config,
+            tile_cache_pictures,
         }
     }
 

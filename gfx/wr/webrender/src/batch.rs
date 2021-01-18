@@ -1569,34 +1569,11 @@ impl BatchBuilder {
                             && surface.opaque_rect.contains_rect(&surface.rect);
 
                         match raster_config.composite_mode {
-                            PictureCompositeMode::TileCache { slice_id } => {
-                                // Tile cache instances are added to the composite config, rather than
-                                // directly added to batches. This allows them to be drawn with various
-                                // present modes during render, such as partial present etc.
-                                let tile_cache = &ctx.tile_caches[&slice_id];
-                                let map_local_to_world = SpaceMapper::new_with_target(
-                                    ROOT_SPATIAL_NODE_INDEX,
-                                    tile_cache.spatial_node_index,
-                                    ctx.screen_world_rect,
-                                    ctx.spatial_tree,
-                                );
-                                // TODO(gw): As a follow up to the valid_rect work, see why we use
-                                //           prim_info.combined_local_clip_rect here instead of the
-                                //           local_clip_rect built in the TileCacheInstance. Perhaps
-                                //           these can be unified or are different for a good reason?
-                                let world_clip_rect = map_local_to_world
-                                    .map(&prim_info.combined_local_clip_rect)
-                                    .expect("bug: unable to map clip rect");
-                                let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round();
-
-                                composite_state.push_surface(
-                                    tile_cache,
-                                    device_clip_rect,
-                                    ctx.global_device_pixel_scale,
-                                    ctx.resource_cache,
-                                    gpu_cache,
-                                    deferred_resolves,
-                                );
+                            PictureCompositeMode::TileCache { .. } => {
+                                // TODO(gw): For now, TileCache is still a composite mode, even though
+                                //           it will only exist as a top level primitive and never
+                                //           be encountered during batching. Consider making TileCache
+                                //           a standalone type, not a picture.
                             }
                             PictureCompositeMode::Filter(ref filter) => {
                                 assert!(filter.is_visible());
