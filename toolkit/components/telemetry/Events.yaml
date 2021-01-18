@@ -1188,7 +1188,7 @@ devtools.main:
   activate:
     objects: ["responsive_design", "split_console"]
     bug_numbers: [1455273]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1203,7 +1203,7 @@ devtools.main:
   add_breakpoint:
     objects: ["debugger"]
     bug_numbers: [1463123]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1216,7 +1216,7 @@ devtools.main:
   blackbox:
     objects: ["debugger"]
     bug_numbers: [1463126]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1229,7 +1229,7 @@ devtools.main:
   close:
     objects: ["tools"]
     bug_numbers: [1453312]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1244,7 +1244,7 @@ devtools.main:
   close_adbg:
     objects: ["aboutdebugging"]
     bug_numbers: [1504173]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1258,7 +1258,7 @@ devtools.main:
   close_source_tab:
     objects: ["debugger"]
     bug_numbers: [1647346]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com", "dwalsh@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "dwalsh@mozilla.com"]
     products:
       - "firefox"
     record_in_processes: ["main"]
@@ -1271,7 +1271,7 @@ devtools.main:
   connection_attempt:
     objects: ["aboutdebugging"]
     bug_numbers: [1549970]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1288,7 +1288,7 @@ devtools.main:
   continue:
     objects: ["debugger"]
     bug_numbers: [1463122]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1301,7 +1301,7 @@ devtools.main:
   deactivate:
     objects: ["responsive_design", "split_console"]
     bug_numbers: [1455275]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1316,7 +1316,7 @@ devtools.main:
   device_added:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1331,7 +1331,7 @@ devtools.main:
   device_removed:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1346,7 +1346,7 @@ devtools.main:
   edit_html:
     objects: ["inspector"]
     bug_numbers: [1463080]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1361,7 +1361,7 @@ devtools.main:
   edit_resend:
     objects: ["netmonitor"]
     bug_numbers: [1463171]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1374,7 +1374,7 @@ devtools.main:
   edit_rule:
     objects: ["ruleview"]
     bug_numbers: [1463081]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1387,7 +1387,7 @@ devtools.main:
   enter:
     objects: ["accessibility", "application", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "storage", "styleeditor", "webconsole", "whatsnew","other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1441070]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1406,7 +1406,7 @@ devtools.main:
   execute_js:
     objects: ["webconsole"]
     bug_numbers: [1463083]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1421,7 +1421,7 @@ devtools.main:
   reverse_search:
     objects: ["webconsole"]
     bug_numbers: [1489489]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1435,7 +1435,7 @@ devtools.main:
   exit:
     objects: ["accessibility", "application", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "storage", "styleeditor", "webconsole", "whatsnew", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1455270]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1453,7 +1453,7 @@ devtools.main:
   f12_enabled:
     objects: ["tools"]
     bug_numbers: [1630228]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
     record_in_processes: ["main"]
@@ -1465,7 +1465,7 @@ devtools.main:
   f12_popup_displayed:
     objects: ["tools"]
     bug_numbers: [1630228]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
     record_in_processes: ["main"]
@@ -1477,7 +1477,7 @@ devtools.main:
   filters_changed:
     objects: ["netmonitor", "webconsole"]
     bug_numbers: [1463144, 1463095]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1493,7 +1493,7 @@ devtools.main:
   inspect:
     objects: ["aboutdebugging"]
     bug_numbers: [1504173]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1508,7 +1508,7 @@ devtools.main:
   jump_to_definition:
     objects: ["webconsole"]
     bug_numbers: [1463101]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1521,7 +1521,7 @@ devtools.main:
   jump_to_source:
     objects: ["webconsole"]
     bug_numbers: [1463092]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1534,7 +1534,7 @@ devtools.main:
   object_expanded:
     objects: ["webconsole"]
     bug_numbers: [1463104]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1547,7 +1547,7 @@ devtools.main:
   open:
     objects: ["tools"]
     bug_numbers: [1416024, 1456984]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1566,7 +1566,7 @@ devtools.main:
   open_adbg:
     objects: ["aboutdebugging"]
     bug_numbers: [1504173]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1580,7 +1580,7 @@ devtools.main:
   pause_on_exceptions:
     objects: ["debugger"]
     bug_numbers: [1463117]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1595,7 +1595,7 @@ devtools.main:
   pause:
     objects: ["debugger"]
     bug_numbers: [1463118]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1610,7 +1610,7 @@ devtools.main:
   persist_changed:
     objects: ["netmonitor", "webconsole"]
     bug_numbers: [1531395, 1542312]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1623,7 +1623,7 @@ devtools.main:
   pretty_print:
     objects: ["debugger"]
     bug_numbers: [1463125]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1636,7 +1636,7 @@ devtools.main:
   remove_breakpoint:
     objects: ["debugger"]
     bug_numbers: [1463124]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1649,7 +1649,7 @@ devtools.main:
   runtime_added:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1666,7 +1666,7 @@ devtools.main:
   runtime_connected:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507, 1530997]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1685,7 +1685,7 @@ devtools.main:
   runtime_disconnected:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1702,7 +1702,7 @@ devtools.main:
   runtime_removed:
     objects: ["aboutdebugging"]
     bug_numbers: [1521507]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1719,7 +1719,7 @@ devtools.main:
   select_page:
     objects: ["aboutdebugging", "application"]
     bug_numbers: [1504173, 1643253]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1733,7 +1733,7 @@ devtools.main:
   show_profiler:
     objects: ["aboutdebugging"]
     bug_numbers: [1521511]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1747,7 +1747,7 @@ devtools.main:
   select_ws_frame:
     objects: ["netmonitor"]
     bug_numbers: [1555638]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1760,7 +1760,7 @@ devtools.main:
   sidepanel_changed:
     objects: ["inspector", "netmonitor"]
     bug_numbers: [1463083, 1463169]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1776,7 +1776,7 @@ devtools.main:
   start_worker:
     objects: ["application"]
     bug_numbers: [1643253]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
     record_in_processes: ["main"]
@@ -1788,7 +1788,7 @@ devtools.main:
   throttle_changed:
     objects: ["netmonitor"]
     bug_numbers: [1463147]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1802,7 +1802,7 @@ devtools.main:
   tool_timer:
     objects: ["animationinspector", "compatibilityview", "computedview", "changesview", "fontinspector", "layoutview", "ruleview"]
     bug_numbers: [1483817, 1639454]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -1817,7 +1817,7 @@ devtools.main:
   unregister_worker:
     objects: ["application"]
     bug_numbers: [1643253]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
     record_in_processes: ["main"]
@@ -1829,7 +1829,7 @@ devtools.main:
   update_conn_prompt:
     objects: ["aboutdebugging"]
     bug_numbers: [1521511]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
     products:
       - "firefox"
       - "fennec"
@@ -2464,6 +2464,7 @@ slow_script_warning:
     notification_emails:
       - esmyth@mozilla.com
       - gkruitbosch@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     # Whether the hung script was for a content or browser process.
     objects: [
       "browser",

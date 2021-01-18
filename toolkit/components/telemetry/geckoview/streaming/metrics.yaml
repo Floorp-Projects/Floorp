@@ -111,7 +111,7 @@ geckoview:
     notification_emails:
       - geckoview-team@mozilla.com
       - sefeng@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   startup_runtime:
@@ -152,7 +152,7 @@ geckoview:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1589700#c5
     notification_emails:
       - sefeng@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   per_document_site_origins:
@@ -176,7 +176,7 @@ geckoview:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1603185#c13
     notification_emails:
       - barret@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
 gfx:
@@ -217,7 +217,7 @@ gfx:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1604818#c4
     notification_emails:
       - sefeng@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
 gfx.checkerboard:
@@ -1021,7 +1021,7 @@ performance.pageload:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   load_time_responsestart:
@@ -1037,7 +1037,7 @@ performance.pageload:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   dcl:
@@ -1053,7 +1053,7 @@ performance.pageload:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   dcl_responsestart:
@@ -1069,7 +1069,7 @@ performance.pageload:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   fcp:
@@ -1088,7 +1088,7 @@ performance.pageload:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   fcp_responsestart:
@@ -1107,7 +1107,7 @@ performance.pageload:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   req_anim_frame_callback:
@@ -1123,7 +1123,7 @@ performance.pageload:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
 performance.responsiveness:
@@ -1140,7 +1140,7 @@ performance.responsiveness:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
 
@@ -1159,9 +1159,8 @@ performance.time:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - hkirschner@mozilla.com
       - vchin@mozilla.com
-      - sphilp@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   dom_interactive:
@@ -1180,6 +1179,7 @@ performance.time:
     notification_emails:
       - hbambas@mozilla.com
       - vgosu@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   dom_content_loaded_start:
@@ -1213,9 +1213,8 @@ performance.time:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - hkirschner@mozilla.com
       - vchin@mozilla.com
-      - sphilp@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   dom_complete:
@@ -1234,6 +1233,7 @@ performance.time:
     notification_emails:
       - hbambas@mozilla.com
       - vgosu@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   load_event_start:
@@ -1267,9 +1267,8 @@ performance.time:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - hkirschner@mozilla.com
       - vchin@mozilla.com
-      - sphilp@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   load_event_start_preload:
@@ -1367,9 +1366,8 @@ performance.page:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - hkirschner@mozilla.com
       - vchin@mozilla.com
-      - sphilp@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
   total_content_page_load:
@@ -1420,7 +1418,7 @@ performance.interaction:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
       - mconley@mozilla.com
-      - dolske@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: never
 
 js:
@@ -1440,7 +1438,7 @@ js:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: 2021-03-18
   delazification_percentage:
     type: custom_distribution
@@ -1459,7 +1457,7 @@ js:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: 2021-03-18
   xdr_encode_percentage:
     type: custom_distribution
@@ -1478,7 +1476,7 @@ js:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: 2021-03-18
   baseline_compile_percentage:
     type: custom_distribution
@@ -1497,7 +1495,7 @@ js:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: 2021-03-18
   bytecode_caching_time:
     type: timing_distribution
@@ -1511,7 +1509,7 @@ js:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
     notification_emails:
       - dpalmeiro@mozilla.com
-      - perfteam@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
     expires: 2021-03-18
 
 javascript.gc:
