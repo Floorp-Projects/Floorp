@@ -1515,142 +1515,6 @@ function PrintUIControlMixin(superClass) {
   };
 }
 
-class PrintSettingSelect extends PrintUIControlMixin(HTMLSelectElement) {
-  initialize() {
-    super.initialize();
-    this.addEventListener("keypress", this);
-  }
-
-  connectedCallback() {
-    this.settingName = this.dataset.settingName;
-    super.connectedCallback();
-  }
-
-  setOptions(optionValues = []) {
-    this.textContent = "";
-    for (let optionData of optionValues) {
-      let opt = new Option(
-        optionData.name,
-        "value" in optionData ? optionData.value : optionData.name
-      );
-      if (optionData.nameId) {
-        document.l10n.setAttributes(opt, optionData.nameId);
-      }
-      // option selectedness is set via update() and assignment to this.value
-      this.options.add(opt);
-    }
-  }
-
-  update(settings) {
-    if (this.settingName) {
-      this.value = settings[this.settingName];
-    }
-  }
-
-  handleEvent(e) {
-    if (e.type == "input" && this.settingName) {
-      this.dispatchSettingsChange({
-        [this.settingName]: e.target.value,
-      });
-    } else if (e.type == "keypress") {
-      if (
-        e.key == "Enter" &&
-        (!e.metaKey || AppConstants.platform == "macosx")
-      ) {
-        this.form.requestPrint();
-      }
-    }
-  }
-}
-customElements.define("setting-select", PrintSettingSelect, {
-  extends: "select",
-});
-
-class DestinationPicker extends PrintSettingSelect {
-  initialize() {
-    super.initialize();
-    document.addEventListener("available-destinations", this);
-  }
-
-  update(settings) {
-    super.update(settings);
-    let isPdf = settings.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF;
-    this.setAttribute("output", isPdf ? "pdf" : "paper");
-  }
-
-  handleEvent(e) {
-    super.handleEvent(e);
-
-    if (e.type == "available-destinations") {
-      this.setOptions(e.detail);
-    }
-  }
-}
-customElements.define("destination-picker", DestinationPicker, {
-  extends: "select",
-});
-
-class ColorModePicker extends PrintSettingSelect {
-  update(settings) {
-    this.value = settings[this.settingName] ? "color" : "bw";
-    let canSwitch = settings.supportsColor && settings.supportsMonochrome;
-    if (this.disablePicker != canSwitch) {
-      this.toggleAttribute("disallowed", !canSwitch);
-      this.disabled = !canSwitch;
-    }
-    this.disablePicker = canSwitch;
-  }
-
-  handleEvent(e) {
-    if (e.type == "input") {
-      // turn our string value into the expected boolean
-      this.dispatchSettingsChange({
-        [this.settingName]: this.value == "color",
-      });
-    }
-  }
-}
-customElements.define("color-mode-select", ColorModePicker, {
-  extends: "select",
-});
-
-class PaperSizePicker extends PrintSettingSelect {
-  initialize() {
-    super.initialize();
-    this._printerName = null;
-  }
-
-  update(settings) {
-    if (settings.printerName !== this._printerName) {
-      this._printerName = settings.printerName;
-      this.setOptions(settings.paperSizes);
-    }
-    this.value = settings.paperId;
-  }
-}
-customElements.define("paper-size-select", PaperSizePicker, {
-  extends: "select",
-});
-
-class OrientationInput extends PrintUIControlMixin(HTMLElement) {
-  get templateId() {
-    return "orientation-template";
-  }
-
-  update(settings) {
-    for (let input of this.querySelectorAll("input")) {
-      input.checked = settings.orientation == input.value;
-    }
-  }
-
-  handleEvent(e) {
-    this.dispatchSettingsChange({
-      orientation: e.target.value,
-    });
-  }
-}
-customElements.define("orientation-input", OrientationInput);
-
 class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   initialize() {
     super.initialize();
@@ -1783,6 +1647,226 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   }
 }
 customElements.define("print-form", PrintUIForm, { extends: "form" });
+
+class PrintSettingSelect extends PrintUIControlMixin(HTMLSelectElement) {
+  initialize() {
+    super.initialize();
+    this.addEventListener("keypress", this);
+  }
+
+  connectedCallback() {
+    this.settingName = this.dataset.settingName;
+    super.connectedCallback();
+  }
+
+  setOptions(optionValues = []) {
+    this.textContent = "";
+    for (let optionData of optionValues) {
+      let opt = new Option(
+        optionData.name,
+        "value" in optionData ? optionData.value : optionData.name
+      );
+      if (optionData.nameId) {
+        document.l10n.setAttributes(opt, optionData.nameId);
+      }
+      // option selectedness is set via update() and assignment to this.value
+      this.options.add(opt);
+    }
+  }
+
+  update(settings) {
+    if (this.settingName) {
+      this.value = settings[this.settingName];
+    }
+  }
+
+  handleEvent(e) {
+    if (e.type == "input" && this.settingName) {
+      this.dispatchSettingsChange({
+        [this.settingName]: e.target.value,
+      });
+    } else if (e.type == "keypress") {
+      if (
+        e.key == "Enter" &&
+        (!e.metaKey || AppConstants.platform == "macosx")
+      ) {
+        this.form.requestPrint();
+      }
+    }
+  }
+}
+customElements.define("setting-select", PrintSettingSelect, {
+  extends: "select",
+});
+
+class PrintSettingNumber extends PrintUIControlMixin(HTMLInputElement) {
+  initialize() {
+    super.initialize();
+    this.addEventListener("keypress", e => this.handleKeypress(e));
+    this.addEventListener("paste", e => this.handlePaste(e));
+  }
+
+  connectedCallback() {
+    this.type = "number";
+    this.settingName = this.dataset.settingName;
+    super.connectedCallback();
+  }
+
+  update(settings) {
+    if (this.settingName) {
+      this.value = settings[this.settingName];
+    }
+  }
+
+  handleKeypress(e) {
+    let char = String.fromCharCode(e.charCode);
+    let acceptedChar = e.target.step.includes(".")
+      ? char.match(/^[0-9.]$/)
+      : char.match(/^[0-9]$/);
+    if (!acceptedChar && !char.match("\x00") && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+    }
+  }
+
+  handlePaste(e) {
+    let paste = (e.clipboardData || window.clipboardData)
+      .getData("text")
+      .trim();
+    let acceptedChars = e.target.step.includes(".")
+      ? paste.match(/^[0-9.]*$/)
+      : paste.match(/^[0-9]*$/);
+    if (!acceptedChars) {
+      e.preventDefault();
+    }
+  }
+
+  handleEvent(e) {
+    switch (e.type) {
+      case "paste":
+        this.handlePaste();
+        break;
+      case "keypress":
+        this.handleKeypress();
+        break;
+      case "input":
+        if (this.settingName && this.checkValidity()) {
+          this.dispatchSettingsChange({
+            [this.settingName]: this.value,
+          });
+        }
+        break;
+    }
+  }
+}
+customElements.define("setting-number", PrintSettingNumber, {
+  extends: "input",
+});
+
+class PrintSettingCheckbox extends PrintUIControlMixin(HTMLInputElement) {
+  connectedCallback() {
+    this.type = "checkbox";
+    this.settingName = this.dataset.settingName;
+    super.connectedCallback();
+  }
+
+  update(settings) {
+    this.checked = settings[this.settingName];
+  }
+
+  handleEvent(e) {
+    this.dispatchSettingsChange({
+      [this.settingName]: this.checked,
+    });
+  }
+}
+customElements.define("setting-checkbox", PrintSettingCheckbox, {
+  extends: "input",
+});
+
+class DestinationPicker extends PrintSettingSelect {
+  initialize() {
+    super.initialize();
+    document.addEventListener("available-destinations", this);
+  }
+
+  update(settings) {
+    super.update(settings);
+    let isPdf = settings.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF;
+    this.setAttribute("output", isPdf ? "pdf" : "paper");
+  }
+
+  handleEvent(e) {
+    super.handleEvent(e);
+
+    if (e.type == "available-destinations") {
+      this.setOptions(e.detail);
+    }
+  }
+}
+customElements.define("destination-picker", DestinationPicker, {
+  extends: "select",
+});
+
+class ColorModePicker extends PrintSettingSelect {
+  update(settings) {
+    this.value = settings[this.settingName] ? "color" : "bw";
+    let canSwitch = settings.supportsColor && settings.supportsMonochrome;
+    if (this.disablePicker != canSwitch) {
+      this.toggleAttribute("disallowed", !canSwitch);
+      this.disabled = !canSwitch;
+    }
+    this.disablePicker = canSwitch;
+  }
+
+  handleEvent(e) {
+    if (e.type == "input") {
+      // turn our string value into the expected boolean
+      this.dispatchSettingsChange({
+        [this.settingName]: this.value == "color",
+      });
+    }
+  }
+}
+customElements.define("color-mode-select", ColorModePicker, {
+  extends: "select",
+});
+
+class PaperSizePicker extends PrintSettingSelect {
+  initialize() {
+    super.initialize();
+    this._printerName = null;
+  }
+
+  update(settings) {
+    if (settings.printerName !== this._printerName) {
+      this._printerName = settings.printerName;
+      this.setOptions(settings.paperSizes);
+    }
+    this.value = settings.paperId;
+  }
+}
+customElements.define("paper-size-select", PaperSizePicker, {
+  extends: "select",
+});
+
+class OrientationInput extends PrintUIControlMixin(HTMLElement) {
+  get templateId() {
+    return "orientation-template";
+  }
+
+  update(settings) {
+    for (let input of this.querySelectorAll("input")) {
+      input.checked = settings.orientation == input.value;
+    }
+  }
+
+  handleEvent(e) {
+    this.dispatchSettingsChange({
+      orientation: e.target.value,
+    });
+  }
+}
+customElements.define("orientation-input", OrientationInput);
 
 class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   get templateId() {
@@ -2313,90 +2397,6 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
   }
 }
 customElements.define("margins-select", MarginsPicker);
-
-class PrintSettingNumber extends PrintUIControlMixin(HTMLInputElement) {
-  initialize() {
-    super.initialize();
-    this.addEventListener("keypress", e => this.handleKeypress(e));
-    this.addEventListener("paste", e => this.handlePaste(e));
-  }
-
-  connectedCallback() {
-    this.type = "number";
-    this.settingName = this.dataset.settingName;
-    super.connectedCallback();
-  }
-
-  update(settings) {
-    if (this.settingName) {
-      this.value = settings[this.settingName];
-    }
-  }
-
-  handleKeypress(e) {
-    let char = String.fromCharCode(e.charCode);
-    let acceptedChar = e.target.step.includes(".")
-      ? char.match(/^[0-9.]$/)
-      : char.match(/^[0-9]$/);
-    if (!acceptedChar && !char.match("\x00") && !e.ctrlKey && !e.metaKey) {
-      e.preventDefault();
-    }
-  }
-
-  handlePaste(e) {
-    let paste = (e.clipboardData || window.clipboardData)
-      .getData("text")
-      .trim();
-    let acceptedChars = e.target.step.includes(".")
-      ? paste.match(/^[0-9.]*$/)
-      : paste.match(/^[0-9]*$/);
-    if (!acceptedChars) {
-      e.preventDefault();
-    }
-  }
-
-  handleEvent(e) {
-    switch (e.type) {
-      case "paste":
-        this.handlePaste();
-        break;
-      case "keypress":
-        this.handleKeypress();
-        break;
-      case "input":
-        if (this.settingName && this.checkValidity()) {
-          this.dispatchSettingsChange({
-            [this.settingName]: this.value,
-          });
-        }
-        break;
-    }
-  }
-}
-customElements.define("setting-number", PrintSettingNumber, {
-  extends: "input",
-});
-
-class PrintSettingCheckbox extends PrintUIControlMixin(HTMLInputElement) {
-  connectedCallback() {
-    this.type = "checkbox";
-    this.settingName = this.dataset.settingName;
-    super.connectedCallback();
-  }
-
-  update(settings) {
-    this.checked = settings[this.settingName];
-  }
-
-  handleEvent(e) {
-    this.dispatchSettingsChange({
-      [this.settingName]: this.checked,
-    });
-  }
-}
-customElements.define("setting-checkbox", PrintSettingCheckbox, {
-  extends: "input",
-});
 
 class TwistySummary extends PrintUIControlMixin(HTMLElement) {
   get isOpen() {
