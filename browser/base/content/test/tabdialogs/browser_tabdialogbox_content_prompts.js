@@ -6,7 +6,6 @@
 const CONTENT_PROMPT_PREF = "prompts.contentPromptSubDialog";
 const TEST_ROOT_CHROME = getRootDirectory(gTestPath);
 const TEST_DIALOG_PATH = TEST_ROOT_CHROME + "subdialog.xhtml";
-const TEST_URL = "data:text/html,<body onload='alert(1)'>";
 
 /**
  * Test that a manager for content prompts is added to tab dialog box.
@@ -41,29 +40,5 @@ add_task(async function test_tabdialog_content_prompts() {
       1,
       "Content prompt manager should have 1 dialog box."
     );
-  });
-});
-
-/**
- * Test that title text is shown in tabmodal alert/confirm/prompt dialogs.
- */
-add_task(async function test_tabdialog_show_title() {
-  await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
-    await SpecialPowers.pushPrefEnv({
-      set: [[CONTENT_PROMPT_PREF, true]],
-    });
-
-    info("Check the title is visible.");
-    let dialogBox = gBrowser.getTabDialogBox(browser);
-    let contentPromptManager = dialogBox.getContentDialogManager();
-    let dialog = contentPromptManager._dialogs[0];
-
-    info("Waiting for dialog to open.");
-    await dialog._dialogReady;
-
-    let dialogDoc = dialog._frame.contentWindow.document;
-    let infoTitle = dialogDoc.querySelector("#infoTitle");
-
-    ok(BrowserTestUtils.is_visible(infoTitle), "Title text is visible");
   });
 });
