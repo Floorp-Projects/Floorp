@@ -1898,7 +1898,7 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     mOMTASampler->SetWebRenderWindowId(windowId);
   }
 
-  nsCString error("FEATURE_FAILTURE_WEBRENDER_INITIALIZE_UNSPECIFIED");
+  nsCString error("FEATURE_FAILURE_WEBRENDER_INITIALIZE_UNSPECIFIED");
   RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(
       this, std::move(widget), windowId, aSize, aWindowKind, error);
   if (!api) {
