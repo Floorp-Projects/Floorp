@@ -12835,18 +12835,11 @@ void CodeGenerator::visitClampVToUint8(LClampVToUint8* lir) {
   Register output = ToRegister(lir->output());
   MDefinition* input = lir->mir()->input();
 
-  Label* stringEntry;
-  Label* stringRejoin;
-  if (input->mightBeType(MIRType::String)) {
-    using Fn = bool (*)(JSContext*, JSString*, double*);
-    OutOfLineCode* oolString = oolCallVM<Fn, StringToNumber>(
-        lir, ArgList(output), StoreFloatRegisterTo(tempFloat));
-    stringEntry = oolString->entry();
-    stringRejoin = oolString->rejoin();
-  } else {
-    stringEntry = nullptr;
-    stringRejoin = nullptr;
-  }
+  using Fn = bool (*)(JSContext*, JSString*, double*);
+  OutOfLineCode* oolString = oolCallVM<Fn, StringToNumber>(
+      lir, ArgList(output), StoreFloatRegisterTo(tempFloat));
+  Label* stringEntry = oolString->entry();
+  Label* stringRejoin = oolString->rejoin();
 
   Label fails;
   masm.clampValueToUint8(operand, input, stringEntry, stringRejoin, output,
