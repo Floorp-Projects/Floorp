@@ -518,38 +518,44 @@ class FirefoxDataProvider {
     // Emit event that tell we just start fetching some data
     this.emitForTests(EVENTS[updatingEventName], actor);
 
-    let response = await new Promise((resolve, reject) => {
-      // Do a RDP request to fetch data from the actor.
-      if (
-        clientMethodName == "getStackTrace" &&
-        this.resourceWatcher.hasResourceWatcherSupport(
-          this.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
-        )
-      ) {
-        const requestInfo = this.stackTraceRequestInfoByActorID.get(actor);
-        resolve(this._getStackTraceFromWatcher(requestInfo));
-      } else if (typeof this.webConsoleFront[clientMethodName] === "function") {
-        // Make sure we fetch the real actor data instead of cloned actor
-        // e.g. CustomRequestPanel will clone a request with additional '-clone' actor id
-        this.webConsoleFront[clientMethodName](
-          actor.replace("-clone", ""),
-          res => {
-            if (res.error) {
-              reject(
-                new Error(
-                  `Error while calling method ${clientMethodName}: ${res.message}`
-                )
-              );
+    let response;
+    if (
+      clientMethodName == "getStackTrace" &&
+      this.resourceWatcher.hasResourceWatcherSupport(
+        this.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
+      )
+    ) {
+      const requestInfo = this.stackTraceRequestInfoByActorID.get(
+        actor.replace("-clone", "")
+      );
+      const { stacktrace } = await this._getStackTraceFromWatcher(requestInfo);
+      response = { from: actor, stacktrace };
+    } else {
+      response = await new Promise((resolve, reject) => {
+        // Do a RDP request to fetch data from the actor.
+        if (typeof this.webConsoleFront[clientMethodName] === "function") {
+          // Make sure we fetch the real actor data instead of cloned actor
+          // e.g. CustomRequestPanel will clone a request with additional '-clone' actor id
+          this.webConsoleFront[clientMethodName](
+            actor.replace("-clone", ""),
+            res => {
+              if (res.error) {
+                reject(
+                  new Error(
+                    `Error while calling method ${clientMethodName}: ${res.message}`
+                  )
+                );
+              }
+              resolve(res);
             }
-            resolve(res);
-          }
-        );
-      } else {
-        reject(
-          new Error(`Error: No such client method '${clientMethodName}'!`)
-        );
-      }
-    });
+          );
+        } else {
+          reject(
+            new Error(`Error: No such client method '${clientMethodName}'!`)
+          );
+        }
+      });
+    }
 
     // Restore clone actor id
     if (actor.includes("-clone")) {
