@@ -113,6 +113,7 @@ std::string RtpExtension::ToString() const {
 
 constexpr char RtpExtension::kEncryptHeaderExtensionsUri[];
 constexpr char RtpExtension::kAudioLevelUri[];
+constexpr char RtpExtension::kCsrcAudioLevelUri[];
 constexpr char RtpExtension::kTimestampOffsetUri[];
 constexpr char RtpExtension::kAbsSendTimeUri[];
 constexpr char RtpExtension::kAbsoluteCaptureTimeUri[];
@@ -128,7 +129,6 @@ constexpr char RtpExtension::kColorSpaceUri[];
 constexpr char RtpExtension::kMidUri[];
 constexpr char RtpExtension::kRidUri[];
 constexpr char RtpExtension::kRepairedRidUri[];
-constexpr char RtpExtension::kCsrcAudioLevelUri[];
 
 constexpr int RtpExtension::kMinId;
 constexpr int RtpExtension::kMaxId;
@@ -138,14 +138,14 @@ constexpr int RtpExtension::kOneByteHeaderExtensionMaxValueSize;
 
 bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
   return uri == webrtc::RtpExtension::kAudioLevelUri ||
+         uri == webrtc::RtpExtension::kCsrcAudioLevelUri;
          uri == webrtc::RtpExtension::kAbsSendTimeUri ||
          uri == webrtc::RtpExtension::kAbsoluteCaptureTimeUri ||
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
          uri == webrtc::RtpExtension::kTransportSequenceNumberV2Uri ||
          uri == webrtc::RtpExtension::kMidUri ||
          uri == webrtc::RtpExtension::kRidUri ||
-         uri == webrtc::RtpExtension::kRepairedRidUri ||
-         uri == webrtc::RtpExtension::kCsrcAudioLevelUri;
+         uri == webrtc::RtpExtension::kRepairedRidUri;
 }
 
 bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
