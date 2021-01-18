@@ -35,7 +35,6 @@ object Versions {
     const val mozilla_glean = "33.1.2"
 
     const val material = "1.2.1"
-    const val nearby = "17.0.0"
 
     object AndroidX {
         const val annotation = "1.1.0"
@@ -118,7 +117,6 @@ object Dependencies {
     const val androidx_swiperefreshlayout = "androidx.swiperefreshlayout:swiperefreshlayout:${Versions.AndroidX.swiperefreshlayout}"
 
     const val google_material = "com.google.android.material:material:${Versions.material}"
-    const val google_nearby = "com.google.android.gms:play-services-nearby:${Versions.nearby}"
 
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
 

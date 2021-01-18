@@ -61,6 +61,9 @@ permalink: /changelog/
 * **feature-tabs**
   * ⚠️ **This is a breaking change**: Removed the `TabCounterToolbarButton#privateColor` attribute which are replaced by the `tabCounterTintColor` Android styleable attribute.
 
+* **lib-nearby**, **feature-p2p**, **samples-nearby**
+  * ⚠️ **This is a breaking change**: Removed Nearby component and related samples.
+
 # 70.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v69.0.0...v70.0.0)

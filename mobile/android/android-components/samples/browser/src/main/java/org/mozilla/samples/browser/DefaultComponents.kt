@@ -74,7 +74,6 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
-import mozilla.components.lib.nearby.NearbyConnection
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.location.LocationService
@@ -82,7 +81,6 @@ import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
-import org.mozilla.samples.browser.integration.P2PIntegration
 import org.mozilla.samples.browser.media.MediaSessionService
 import org.mozilla.samples.browser.request.SampleUrlEncodedRequestInterceptor
 import java.util.concurrent.TimeUnit
@@ -226,11 +224,6 @@ open class DefaultComponents(private val applicationContext: Context) {
     val webAppShortcutManager by lazy { WebAppShortcutManager(applicationContext, client, webAppManifestStorage) }
     val webAppUseCases by lazy { WebAppUseCases(applicationContext, store, webAppShortcutManager) }
 
-    // P2P communication
-    val nearbyConnection by lazy {
-        NearbyConnection(applicationContext)
-    }
-
     // Digital Asset Links checking
     val relationChecker by lazy {
         StatementRelationChecker(StatementApi(client))
@@ -286,9 +279,6 @@ open class DefaultComponents(private val applicationContext: Context) {
             },
             SimpleBrowserMenuItem("Find In Page") {
                 FindInPageIntegration.launch?.invoke()
-            },
-            SimpleBrowserMenuItem("P2P") {
-                P2PIntegration.launch?.invoke()
             },
             SimpleBrowserMenuItem("Restore after crash") {
                 sessionUseCases.crashRecovery.invoke()

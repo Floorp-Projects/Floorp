@@ -142,8 +142,6 @@ _Combined components to implement feature-specific use cases._
 
 * ⚪ [**Progressive Web Apps (PWA)**](components/feature/pwa/README.md) - A component that provides functionality for supporting Progressive Web Apps (PWA).
 
-* 🔴 [**P2P**](components/feature/p2p/README.md) - A component that provides peer-to-peer communication.
-
 * 🔵 [**Reader View**](components/feature/readerview/README.md) - A component that provides Reader View functionality.
 
 * 🔵 [**QR**](components/feature/qr/README.md) - A component that provides functionality for scanning QR codes.
@@ -250,8 +248,6 @@ _Supporting components with generic helper code._
 
 * ⚪ [**JEXL**](components/lib/jexl/README.md) - Javascript Expression Language: Context-based expression parser and evaluator.
 
-* 🔴  [**Nearby**](components/lib/nearby/README.md) - A library simplifying access to the [Google Connections API](https://developers.google.com/nearby/connections/overview) for peer-to-peer networking.
-
 * 🔵 [**Public Suffix List**](components/lib/publicsuffixlist/README.md) - A library for reading and using the [public suffix list](https://publicsuffix.org/).
 
 * 🔵 [**Push-Firebase**](components/lib/push-firebase/README.md) - A [concept-push](concept/push/README.md) implementation using [Firebase Cloud Messaging](https://firebase.google.com/products/cloud-messaging/).
@@ -281,8 +277,6 @@ _Sample apps using various components._
 * [**DataProtect**](samples/dataprotect) - An app demoing how to use the [**Dataprotect**](components/lib/dataprotect/README.md) component to load and store encrypted data in `SharedPreferences`.
 
 * [**Glean**](samples/glean) - An app demoing how to use the [**Glean**](components/service/glean/README.md) library to collect and send telemetry data.
-
-* [**Nearby Chat**](samples/nearby-chat) - An app demoing how to use the [**Nearby**](components/lib/nearby/README.md) library for peer-to-peer communication between devices.
 
 * [**Toolbar**](samples/toolbar) - An app demoing multiple customized toolbars using the [**browser-toolbar**](components/browser/toolbar/README.md) component.
 

@@ -83,10 +83,6 @@ projects:
     path: components/feature/logins
     description: 'Feature component for logins related features.'
     publish: true
-  feature-p2p:
-    path: components/feature/p2p
-    description: 'Feature used for peer-to-peer communication.'
-    publish: true
   feature-webnotifications:
     path: components/feature/webnotifications
     description: 'Feature component for Web Notifications.'
@@ -387,10 +383,6 @@ projects:
     path: components/lib/jexl
     description: 'Javascript Expression Language: Powerful context-based expression parser and evaluator.'
     publish: true
-  lib-nearby:
-    path: components/lib/nearby
-    description: 'A library for communication with nearby devices Android devices.'
-    publish: true
   lib-publicsuffixlist:
     path: components/lib/publicsuffixlist
     description: 'A library for reading and using the public suffix list.'
@@ -438,10 +430,6 @@ projects:
   samples-glean-library:
     path: samples/glean/samples-glean-library
     description: 'A third-party library used by samples-glean to demonstrate multi-library support for Glean.'
-    publish: false
-  samples-nearby-chat:
-    path: samples/nearby-chat
-    description: 'A simple app demoing use of the Nearby library to communicate between two devices.'
     publish: false
   samples-sync:
     path: samples/sync

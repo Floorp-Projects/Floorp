@@ -48,7 +48,6 @@ treeherder:
         feature-intent: feature-intent
         feature-logins: feature-logins
         feature-media: feature-media
-        feature-p2p: feature-p2p
         feature-privatemode: feature-privatemode
         feature-prompts: feature-prompts
         feature-push: feature-push
@@ -71,7 +70,6 @@ treeherder:
         lib-dataprotect: lib-dataprotect
         lib-fetch-okhttp: lib-fetch-okhttp
         lib-jexl: lib-jexl
-        lib-nearby: lib-nearby
         lib-publicsuffixlist: lib-publicsuffixlist
         lib-push-amazon: lib-push-amazon
         lib-push-firebase: lib-push-firebase
@@ -86,7 +84,6 @@ treeherder:
         samples-firefox-accounts: samples-firefox-accounts
         samples-glean-library: samples-glean-library
         samples-glean: samples-glean
-        samples-nearby-chat: samples-nearby-chat
         samples-sync-logins: samples-sync-logins
         samples-sync: samples-sync
         samples-toolbar: samples-toolbar

@@ -70,7 +70,6 @@
 /components/feature/findinpage/             @Amejia481
 /components/feature/intent/                 @mozilla-mobile/act
 /components/feature/media/                  @pocmo @rocketsroger
-/components/feature/p2p/                    @espertus @jonalmeida
 /components/feature/privatemode/            @mozilla-mobile/act
 /components/feature/prompts/                @amejia481 @ekager
 /components/feature/push/                   @jonalmeida @grigoryk
@@ -96,7 +95,6 @@
 /components/lib/fetch-httpurlconnection/    @pocmo
 /components/lib/fetch-okhttp/               @pocmo
 /components/lib/jexl/                       @pocmo
-/components/lib/nearby/                     @espertus @jonalmeida
 /components/lib/publicsuffixlist/           @pocmo
 /components/lib/push-amazon/                @jonalmeida
 /components/lib/push-firebase/              @jonalmeida
@@ -144,7 +142,6 @@
 /samples/dataprotect/                       @mozilla-mobile/act
 /samples/firefox-accounts/                  @grigoryk
 /samples/glean/                             @mozilla-mobile/telemetry
-/samples/nearby-chat/                       @jonalmeida
 /samples/sync-logins/                       @ekager
 /samples/sync/                              @grigoryk
 /samples/toolbar/                           @pocmo
