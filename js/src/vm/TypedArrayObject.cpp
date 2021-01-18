@@ -1775,8 +1775,7 @@ bool TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args) {
           return false;
         }
 
-        double unused;
-        if (!ToNumber(cx, v, &unused)) {
+        if (!target->convertForSideEffect(cx, v)) {
           return false;
         }
 
