@@ -20,17 +20,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=646641
 
 /** Test for Bug 646641 **/
 
-/*
- * In a popup (because navigating the main frame confuses Mochitest), do the
- * following:
- *
- *  * Call history.pushState().
- *  * Navigate to a new page.
- *  * Go back two history entries.
- *
- * Check that we go back, we retrieve the document from bfcache.
+/**
+ * Steps:
+ * - Main page (this one) opens file_bfcache_plus_hash_1.html (subpage 1)
+ * - subpage 1 sends msg { "childLoad", 1 }
+ * - subpage 1 sends msg { "childPageshow", 1 }
+ * - main page sends message "pushState"
+ * - subpage 1 does pushState()
+ * - subpage 1 navigates to file_bfcache_plus_hash_2.html (subpage 2)
+ * - subpage 2 sends msg { "childLoad", 2 }
+ * - subpage 2 sends msg { "childPageshow", 2 }
+ * - main page sends msg "go-2"
+ * - subpage 2 goes back two history entries
+ * - subpage 1 sends msg  { "childPageshow", 1 }
+ *  - Receiving only this msg shows we have retrieved the document from bfcache
+ * - main page sends msg "close"
+ * - subpage 1 sends msg "closed"
  */
-
 SimpleTest.waitForExplicitFinish();
 
 function debug(msg) {
@@ -39,35 +45,7 @@ function debug(msg) {
 }
 
 var expectedLoadNum = -1;
-function childLoad(n) {
-  if (n == expectedLoadNum) {
-    debug("Got load " + n);
-    expectedLoadNum = -1;
-
-    // Spin the event loop before calling gGen.next() so the generator runs
-    // outside the onload handler.  This prevents us from encountering all
-    // sorts of docshell quirks.
-    setTimeout(function() { gGen.next(); }, 0);
-  } else {
-    debug("Got unexpected load " + n);
-    ok(false, "Got unexpected load " + n);
-  }
-}
-
 var expectedPageshowNum = -1;
-function childPageshow(n) {
-  if (n == expectedPageshowNum) {
-    debug("Got expected pageshow " + n);
-    expectedPageshowNum = -1;
-    ok(true, "Got expected pageshow " + n);
-    setTimeout(function() { gGen.next(); }, 0);
-  } else {
-    debug("Got pageshow " + n);
-  }
-
-  // Since a pageshow comes along with an onload, don't fail the test if we get
-  // an unexpected pageshow.
-}
 
 function waitForLoad(n) {
   debug("Waiting for load " + n);
@@ -80,27 +58,59 @@ function waitForShow(n) {
 }
 
 function* test() {
-  var popup = window.open("file_bfcache_plus_hash_1.html");
+  window.open("file_bfcache_plus_hash_1.html", "", "noopener");
   waitForLoad(1);
+  waitForShow(1);
+  yield undefined;
   yield undefined;
 
-  popup.history.pushState("", "", "");
+  bc.postMessage("pushState");
 
-  popup.location = "file_bfcache_plus_hash_2.html";
   waitForLoad(2);
   waitForShow(2);
   yield undefined;
   yield undefined;
 
   // Now go back 2.  The first page should be retrieved from bfcache.
-  popup.history.go(-2);
+  bc.postMessage("go-2");
   waitForShow(1);
   yield undefined;
 
-  popup.close();
-  SimpleTest.finish();
+  bc.postMessage("close");
 }
 
+var bc = new BroadcastChannel("bug646641");
+bc.onmessage = (msgEvent) => {
+  var msg = msgEvent.data.message;
+  var n = msgEvent.data.num;
+  if (msg == "childLoad") {
+    if (n == expectedLoadNum) {
+      debug("Got load " + n);
+      expectedLoadNum = -1;
+
+      // Spin the event loop before calling gGen.next() so the generator runs
+      // outside the onload handler.  This prevents us from encountering all
+      // sorts of docshell quirks.
+      setTimeout(function() { gGen.next(); }, 0);
+    } else {
+      debug("Got unexpected load " + n);
+      ok(false, "Got unexpected load " + n);
+    }
+  } else if (msg == "childPageshow") {
+    if (n == expectedPageshowNum) {
+      debug("Got expected pageshow " + n);
+      expectedPageshowNum = -1;
+      ok(true, "Got expected pageshow " + n);
+      setTimeout(function() { gGen.next(); }, 0);
+    } else {
+      debug("Got unexpected pageshow " + n);
+      ok(false, "Got unexpected pageshow " + n);
+    }
+  } else if (msg == "closed") {
+    bc.close();
+    SimpleTest.finish();
+  }
+}
 var gGen = test();
 gGen.next();
 
