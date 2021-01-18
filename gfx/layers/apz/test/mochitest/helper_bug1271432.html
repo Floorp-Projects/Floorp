@@ -4,7 +4,7 @@
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
 <script type="application/javascript">
-function* test(testDriver) {
+async function test() {
   var scroller = document.getElementById("scroller");
   var scrollerPos = scroller.scrollTop;
   var dx = 100, dy = 50;
@@ -12,24 +12,23 @@ function* test(testDriver) {
   is(window.scrollY, 0, "Initial page scroll position should be 0");
   is(scrollerPos, 0, "Initial scroller position should be 0");
 
-  yield moveMouseAndScrollWheelOver(scroller, dx, dy, testDriver);
+  await promiseMoveMouseAndScrollWheelOver(scroller, dx, dy);
 
   is(window.scrollY, 0, "Page scroll position should still be 0");
   ok(scroller.scrollTop > scrollerPos, "Scroller should have scrolled");
 
   // wait for it to layerize fully and then try again
-  yield waitForAllPaints(function() {
-    flushApzRepaints(testDriver);
-  });
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
   scrollerPos = scroller.scrollTop;
 
-  yield moveMouseAndScrollWheelOver(scroller, dx, dy, testDriver);
+  await promiseMoveMouseAndScrollWheelOver(scroller, dx, dy);
   is(window.scrollY, 0, "Page scroll position should still be 0 after layerization");
   ok(scroller.scrollTop > scrollerPos, "Scroller should have continued scrolling");
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
 </script>
