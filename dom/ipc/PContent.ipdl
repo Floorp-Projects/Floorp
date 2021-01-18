@@ -1801,7 +1801,7 @@ both:
     async WindowClose(MaybeDiscardedBrowsingContext aContext,
                       bool aTrustedCaller);
     async WindowFocus(MaybeDiscardedBrowsingContext aContext,
-                      CallerType aCallerType);
+                      CallerType aCallerType, uint64_t aActionId);
     async WindowBlur(MaybeDiscardedBrowsingContext aContext);
     async RaiseWindow(MaybeDiscardedBrowsingContext aContext, CallerType aCallerType, uint64_t aActionId);
     async ClearFocus(MaybeDiscardedBrowsingContext aContext);
