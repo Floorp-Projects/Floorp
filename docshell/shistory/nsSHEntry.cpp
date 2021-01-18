@@ -33,7 +33,7 @@ static uint32_t gEntryID = 0;
 nsSHEntry::nsSHEntry()
     : mShared(new nsSHEntryShared()),
       mLoadType(0),
-      mID(gEntryID++),
+      mID(++gEntryID),  // SessionStore has special handling for 0 values.
       mScrollPositionX(0),
       mScrollPositionY(0),
       mParent(nullptr),
