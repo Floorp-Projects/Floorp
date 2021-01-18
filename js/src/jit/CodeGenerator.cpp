@@ -991,21 +991,12 @@ void CodeGenerator::visitValueToInt32(LValueToInt32* lir) {
 
     // We can only handle strings in truncation contexts, like bitwise
     // operations.
-    Label* stringEntry;
-    Label* stringRejoin;
-    Register stringReg;
-    if (input->mightBeType(MIRType::String)) {
-      stringReg = ToRegister(lir->temp());
-      using Fn = bool (*)(JSContext*, JSString*, double*);
-      OutOfLineCode* oolString = oolCallVM<Fn, StringToNumber>(
-          lir, ArgList(stringReg), StoreFloatRegisterTo(temp));
-      stringEntry = oolString->entry();
-      stringRejoin = oolString->rejoin();
-    } else {
-      stringReg = InvalidReg;
-      stringEntry = nullptr;
-      stringRejoin = nullptr;
-    }
+    Register stringReg = ToRegister(lir->temp());
+    using Fn = bool (*)(JSContext*, JSString*, double*);
+    auto* oolString = oolCallVM<Fn, StringToNumber>(lir, ArgList(stringReg),
+                                                    StoreFloatRegisterTo(temp));
+    Label* stringEntry = oolString->entry();
+    Label* stringRejoin = oolString->rejoin();
 
     masm.truncateValueToInt32(operand, input, stringEntry, stringRejoin,
                               oolDouble->entry(), stringReg, temp, output,
