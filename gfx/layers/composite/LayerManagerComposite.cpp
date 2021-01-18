@@ -542,6 +542,10 @@ void LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
   mInTransaction = false;
   mRenderStartTime = TimeStamp::Now();
 
+  // Ensure we read unlock textures, even if we end up
+  // not compositing this frame.
+  TextureSourceProvider::AutoReadUnlockTextures unlock(mCompositor);
+
   if (!mIsCompositorReady) {
     return;
   }
