@@ -11843,6 +11843,10 @@ freeboxos.fr
 // Submitted by Daniel Stone <daniel@fooishbar.org>
 freedesktop.org
 
+// freemyip.com : https://freemyip.com
+// Submitted by Cadence <contact@freemyip.com>
+freemyip.com
+
 // FunkFeuer - Verein zur Förderung freier Netze : https://www.funkfeuer.at
 // Submitted by Daniel A. Maierhofer <vorstand@funkfeuer.at>
 wien.funkfeuer.at
@@ -12513,8 +12517,11 @@ pp.ru
 // Submitted by Paul Cammish <kelduum@mythic-beasts.com>
 hostedpi.com
 customer.mythic-beasts.com
+caracal.mythic-beasts.com
+fentiger.mythic-beasts.com
 lynx.mythic-beasts.com
 ocelot.mythic-beasts.com
+oncilla.mythic-beasts.com
 onza.mythic-beasts.com
 sphinx.mythic-beasts.com
 vs.mythic-beasts.com
@@ -13169,11 +13176,6 @@ user.srcf.net
 // Sub 6 Limited: http://www.sub6.com
 // Submitted by Dan Miller <dm@sub6.com>
 temp-dns.com
-
-// Swisscom Application Cloud: https://developer.swisscom.com
-// Submitted by Matthias.Winzeler <matthias.winzeler@swisscom.com>
-applicationcloud.io
-scapp.io
 
 // Symfony, SAS : https://symfony.com/
 // Submitted by Fabien Potencier <fabien@symfony.com>
