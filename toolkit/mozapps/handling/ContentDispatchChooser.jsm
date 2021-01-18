@@ -453,6 +453,10 @@ class nsContentDispatchChooser {
       return false;
     }
 
+    if (aPrincipal.isAddonOrExpandedAddonPrincipal) {
+      return true;
+    }
+
     let key = this._getSkipProtoDialogPermissionKey(scheme);
     return (
       Services.perms.testPermissionFromPrincipal(aPrincipal, key) ===

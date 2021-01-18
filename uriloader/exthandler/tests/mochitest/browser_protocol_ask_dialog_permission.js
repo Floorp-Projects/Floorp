@@ -40,6 +40,8 @@ const PRINCIPAL3 = Services.scriptSecurityManager.createContentPrincipalFromOrig
   ORIGIN3
 );
 
+let testExtension;
+
 /**
  * Get the open protocol handler permission key for a given protocol scheme.
  * @param {string} aProtocolScheme - Scheme of protocol to construct permission
@@ -106,15 +108,18 @@ function testAlwaysAsk(scheme, ask) {
  * load with. Defaults to the browsers content principal.
  * @param {boolean} [opts.useNullPrincipal] - If true, we will trigger the load
  * with a null principal.
+ * @param {boolean} [opts.useExtensionPrincipal] - If true, we will trigger the
+ * load with an extension.
  * @param {boolean} [opts.omitTriggeringPrincipal] - If true, we will directly
  * call the protocol handler dialogs without a principal.
  */
-function triggerOpenProto(
+async function triggerOpenProto(
   browser,
   scheme,
   {
     triggeringPrincipal = browser.contentPrincipal,
     useNullPrincipal = false,
+    useExtensionPrincipal = false,
     omitTriggeringPrincipal = false,
   } = {}
 ) {
@@ -128,6 +133,26 @@ function triggerOpenProto(
       frame.src = `data:text/html,<script>location.href="${args.uri}"</script>`;
       content.document.body.appendChild(frame);
     });
+    return;
+  }
+
+  if (useExtensionPrincipal) {
+    const EXTENSION_DATA = {
+      manifest: {
+        content_scripts: [
+          {
+            matches: [browser.currentURI.spec],
+            js: ["navigate.js"],
+          },
+        ],
+      },
+      files: {
+        "navigate.js": `window.location.href = "${uri}";`,
+      },
+    };
+
+    testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+    await testExtension.startup();
     return;
   }
 
@@ -185,7 +210,7 @@ async function testOpenProto(
     info("Should see chooser dialog");
     chooserDialogOpenPromise = waitForProtocolAppChooserDialog(browser, true);
   }
-  triggerOpenProto(browser, scheme, loadOptions);
+  await triggerOpenProto(browser, scheme, loadOptions);
   let webHandlerLoadedPromise;
 
   let webHandlerShouldOpen =
@@ -274,6 +299,9 @@ async function testOpenProto(
   } else {
     info("Web handler open canceled");
   }
+
+  // Clean up test extension if needed.
+  await testExtension?.unload();
 }
 
 /**
@@ -698,6 +726,24 @@ add_task(async function test_no_principal() {
         chooserIsNext: true,
         hasChangeApp: false,
         actionConfirm: true,
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+  });
+});
+
+/**
+ * Tests that we skip the permission dialog for extension callers.
+ */
+add_task(async function test_extension_principal() {
+  let scheme = TEST_PROTOS[0];
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    await testOpenProto(browser, scheme, {
+      loadOptions: {
+        useExtensionPrincipal: true,
       },
       chooserDialogOptions: {
         hasCheckbox: true,
