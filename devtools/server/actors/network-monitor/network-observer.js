@@ -405,8 +405,10 @@ NetworkObserver.prototype = {
       //   but that doesn't mean the request is blocked, so check for its status.
       const { status } = channel;
       if (status == 0) {
-        // Do not pass any blocked reason, as this request is just fine
-        this._createNetworkEvent(subject, {});
+        // Do not pass any blocked reason, as this request is just fine.
+        // Bug 1489217 - Prevent watching for this request response content,
+        // as this request is already running, this is too late to watch for it.
+        this._createNetworkEvent(subject, { inProgressRequest: true });
       } else {
         if (reason == 0) {
           // If we get there, we have a non-zero status, but no clear blocking reason
@@ -759,6 +761,7 @@ NetworkObserver.prototype = {
       fromServiceWorker,
       blockedReason,
       blockingExtension,
+      inProgressRequest,
     }
   ) {
     const httpActivity = this.createOrGetActivityObject(channel);
@@ -908,7 +911,10 @@ NetworkObserver.prototype = {
 
     httpActivity.owner = this.owner.onNetworkEvent(event);
 
-    if (!event.blockedReason) {
+    // Bug 1489217 - Avoid watching for response content for blocked or in-progress requests
+    // as it can't be observed and would throw if we try.
+    const recordRequestContent = !event.blockedReason && !inProgressRequest;
+    if (recordRequestContent) {
       this._setupResponseListener(httpActivity, fromCache);
     }
 
