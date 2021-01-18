@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
@@ -19,7 +18,7 @@ import org.mozilla.fenix.utils.Settings
 
 class CrashReporterController(
     private val crash: Crash,
-    private val session: Session?,
+    private val sessionId: String?,
     private val navController: NavController,
     private val components: Components,
     private val settings: Settings
@@ -50,10 +49,10 @@ class CrashReporterController(
      * @return Job if report is submitted through an IO thread, null otherwise
      */
     fun handleCloseAndRemove(sendCrash: Boolean): Job? {
-        session ?: return null
+        sessionId ?: return null
         val job = submitReportIfNecessary(sendCrash)
 
-        components.useCases.tabsUseCases.removeTab(session)
+        components.useCases.tabsUseCases.removeTab(sessionId)
         components.useCases.sessionUseCases.crashRecovery.invoke()
 
         navController.nav(

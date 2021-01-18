@@ -32,7 +32,7 @@ class CrashReporterFragment : Fragment(R.layout.fragment_crash_reporter) {
 
         val controller = CrashReporterController(
             crash,
-            session = requireComponents.core.sessionManager.selectedSession,
+            sessionId = requireComponents.core.store.state.selectedTabId,
             navController = findNavController(),
             components = requireComponents,
             settings = requireContext().settings()

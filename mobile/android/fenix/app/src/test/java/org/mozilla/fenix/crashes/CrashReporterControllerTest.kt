@@ -9,7 +9,6 @@ import androidx.navigation.NavDestination
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Before
@@ -23,7 +22,7 @@ class CrashReporterControllerTest {
 
     private lateinit var components: Components
     private lateinit var crash: Crash
-    private lateinit var session: Session
+    private lateinit var sessionId: String
     private lateinit var navContoller: NavController
     private lateinit var settings: Settings
 
@@ -31,7 +30,7 @@ class CrashReporterControllerTest {
     fun setup() {
         components = mockk(relaxed = true)
         crash = mockk()
-        session = mockk()
+        sessionId = "testId"
         navContoller = mockk(relaxed = true)
         settings = mockk()
 
@@ -42,14 +41,14 @@ class CrashReporterControllerTest {
 
     @Test
     fun `reports crash reporter opened`() {
-        CrashReporterController(crash, session, navContoller, components, settings)
+        CrashReporterController(crash, sessionId, navContoller, components, settings)
 
         verify { components.analytics.metrics.track(Event.CrashReporterOpened) }
     }
 
     @Test
     fun `handle close and restore tab`() {
-        val controller = CrashReporterController(crash, session, navContoller, components, settings)
+        val controller = CrashReporterController(crash, sessionId, navContoller, components, settings)
         controller.handleCloseAndRestore(sendCrash = false)?.joinBlocking()
 
         verify { components.analytics.metrics.track(Event.CrashReporterClosed(false)) }
@@ -59,11 +58,11 @@ class CrashReporterControllerTest {
 
     @Test
     fun `handle close and remove tab`() {
-        val controller = CrashReporterController(crash, session, navContoller, components, settings)
+        val controller = CrashReporterController(crash, sessionId, navContoller, components, settings)
         controller.handleCloseAndRemove(sendCrash = false)?.joinBlocking()
 
         verify { components.analytics.metrics.track(Event.CrashReporterClosed(false)) }
-        verify { components.useCases.tabsUseCases.removeTab(session) }
+        verify { components.useCases.tabsUseCases.removeTab(sessionId) }
         verify { components.useCases.sessionUseCases.crashRecovery.invoke() }
         verify {
             navContoller.navigate(CrashReporterFragmentDirections.actionGlobalHome(), null)
@@ -74,7 +73,7 @@ class CrashReporterControllerTest {
     fun `don't submit report if setting is turned off`() {
         every { settings.isCrashReportingEnabled } returns false
 
-        val controller = CrashReporterController(crash, session, navContoller, components, settings)
+        val controller = CrashReporterController(crash, sessionId, navContoller, components, settings)
         controller.handleCloseAndRestore(sendCrash = true)?.joinBlocking()
 
         verify { components.analytics.metrics.track(Event.CrashReporterClosed(false)) }
@@ -84,7 +83,7 @@ class CrashReporterControllerTest {
     fun `submit report if setting is turned on`() {
         every { settings.isCrashReportingEnabled } returns true
 
-        val controller = CrashReporterController(crash, session, navContoller, components, settings)
+        val controller = CrashReporterController(crash, sessionId, navContoller, components, settings)
         controller.handleCloseAndRestore(sendCrash = true)?.joinBlocking()
 
         verify { components.analytics.crashReporter.submitReport(crash) }
