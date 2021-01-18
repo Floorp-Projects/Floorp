@@ -128,6 +128,7 @@ const SET_USAGE_PREF_BUTTONS = [
   "fxa-toolbar-menu-button",
   "home-button",
   "sidebar-button",
+  "library-button",
 ];
 
 function telemetryId(widgetId, obscureAddons = true) {
