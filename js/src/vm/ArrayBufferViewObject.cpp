@@ -177,8 +177,7 @@ JS_FRIEND_API void* JS_GetArrayBufferViewData(JSObject* obj,
 
 JS_FRIEND_API uint8_t* JS_GetArrayBufferViewFixedData(JSObject* obj,
                                                       uint8_t* buffer,
-                                                      size_t bufSize)
-{
+                                                      size_t bufSize) {
   ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!view) {
     return nullptr;
@@ -196,7 +195,7 @@ JS_FRIEND_API uint8_t* JS_GetArrayBufferViewFixedData(JSObject* obj,
     if (ta->hasInlineElements()) {
       size_t bytes = ta->byteLength().get();
       if (bytes > bufSize) {
-        return nullptr; // Does not fit.
+        return nullptr;  // Does not fit.
       }
       memcpy(buffer, view->dataPointerUnshared(), bytes);
       return buffer;

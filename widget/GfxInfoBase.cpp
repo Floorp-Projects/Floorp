@@ -1655,8 +1655,7 @@ void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
       gfxConfig::GetFeature(gfx::Feature::OPENGL_COMPOSITING);
   InitFeatureObject(aCx, aObj, "openglCompositing", openglCompositing, &obj);
 
-  gfx::FeatureState& omtp =
-      gfxConfig::GetFeature(gfx::Feature::OMTP);
+  gfx::FeatureState& omtp = gfxConfig::GetFeature(gfx::Feature::OMTP);
   InitFeatureObject(aCx, aObj, "omtp", omtp, &obj);
 
   // Only include AL if the platform attempted to use it.

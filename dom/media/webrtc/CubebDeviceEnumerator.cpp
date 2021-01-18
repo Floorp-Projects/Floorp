@@ -265,10 +265,9 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
     // Bug 1660391: we can't use fluent here yet to get localized strings, so
     // those are hard-coded en_US strings for now.
     RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(
-        nullptr, name, u""_ns, u""_ns,
-        type, CUBEB_DEVICE_STATE_ENABLED, CUBEB_DEVICE_PREF_ALL,
-        CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE, channels, 44100, 44100,
-        44100, 441, 128);
+        nullptr, name, u""_ns, u""_ns, type, CUBEB_DEVICE_STATE_ENABLED,
+        CUBEB_DEVICE_PREF_ALL, CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE,
+        channels, 44100, 44100, 44100, 441, 128);
     devices.AppendElement(info);
   }
 #else
