@@ -394,11 +394,39 @@ nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
   return NS_OK;
 }
 
-void PrototypeDocumentContentSink::CloseElement(Element* aElement) {
+void PrototypeDocumentContentSink::CloseElement(Element* aElement,
+                                                bool aHadChildren) {
   if (nsIContent::RequiresDoneAddingChildren(
           aElement->NodeInfo()->NamespaceID(),
           aElement->NodeInfo()->NameAtom())) {
     aElement->DoneAddingChildren(false);
+  }
+
+  if (!aHadChildren) {
+    return;
+  }
+
+  // See bug 370111 and bug 1495946. We don't cache inline styles nor module
+  // scripts in the prototype cache, and we don't notify on node insertion, so
+  // we need to do this for the stylesheet / script to be properly processed.
+  // This kinda sucks, but notifying was a pretty sizeable perf regression so...
+  if (aElement->IsHTMLElement(nsGkAtoms::script) ||
+      aElement->IsSVGElement(nsGkAtoms::script)) {
+    nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aElement);
+    MOZ_ASSERT(sele, "Node didn't QI to script.");
+    if (sele->GetScriptIsModule()) {
+      DebugOnly<bool> block = sele->AttemptToExecute();
+      MOZ_ASSERT(!block, "<script type=module> shouldn't block the parser");
+    }
+  }
+
+  if (aElement->IsHTMLElement(nsGkAtoms::style) ||
+      aElement->IsSVGElement(nsGkAtoms::style)) {
+    auto* linkStyle = LinkStyle::FromNode(*aElement);
+    NS_ASSERTION(linkStyle,
+                 "<html:style> doesn't implement "
+                 "nsIStyleSheetLinkingElement?");
+    Unused << linkStyle->UpdateStyleSheet(nullptr);
   }
 }
 
@@ -447,18 +475,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
       if (indx >= (int32_t)proto->mChildren.Length()) {
         if (element) {
           // We've processed all of the prototype's children.
-          CloseElement(element->AsElement());
-          if (element->NodeInfo()->Equals(nsGkAtoms::style,
-                                          kNameSpaceID_XHTML) ||
-              element->NodeInfo()->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
-            // XXX sucks that we have to do this -
-            // see bug 370111
-            auto* linkStyle = LinkStyle::FromNode(*element);
-            NS_ASSERTION(linkStyle,
-                         "<html:style> doesn't implement "
-                         "nsIStyleSheetLinkingElement?");
-            Unused << linkStyle->UpdateStyleSheet(nullptr);
-          }
+          CloseElement(element->AsElement(), /* aHadChildren = */ true);
         }
         // Now pop the context stack back up to the parent
         // element and continue the prototype walk.
@@ -506,7 +523,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
             if (NS_FAILED(rv)) return rv;
           } else {
             // If there are no children, close the element immediately.
-            CloseElement(child);
+            CloseElement(child, /* aHadChildren = */ false);
           }
         } break;
 
@@ -1036,9 +1053,19 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     if (isScript) {
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(result);
       MOZ_ASSERT(sele, "Node didn't QI to script.");
+
+      sele->FreezeExecutionAttrs(doc);
       // Script loading is handled by the this content sink, so prevent the
       // script from loading when it is bound to the document.
-      sele->PreventExecution();
+      //
+      // NOTE(emilio): This is only done for non-module scripts, because we
+      // don't support caching modules properly yet, see the comment in
+      // XULContentSinkImpl::OpenScript. For non-inline scripts, this is enough,
+      // since we can start the load when the node is inserted. Non-inline
+      // scripts need another special-case in CloseElement.
+      if (!sele->GetScriptIsModule()) {
+        sele->PreventExecution();
+      }
     }
   }
 
