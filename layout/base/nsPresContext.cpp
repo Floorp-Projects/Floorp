@@ -298,6 +298,7 @@ void nsPresContext::Destroy() {
                                    gExactCallbackPrefs, this);
 
   mRefreshDriver = nullptr;
+  MOZ_ASSERT(mOneShotPostRefreshObservers.IsEmpty());
 }
 
 nsPresContext::~nsPresContext() {
@@ -1505,6 +1506,33 @@ void nsPresContext::EmulateMedium(nsAtom* aMediaType) {
 void nsPresContext::ContentLanguageChanged() {
   PostRebuildAllStyleDataEvent(nsChangeHint(0),
                                RestyleHint::RecascadeSubtree());
+}
+
+bool nsPresContext::RegisterOneShotPostRefreshObserver(
+    mozilla::OneShotPostRefreshObserver* aObserver) {
+  RefreshDriver()->AddPostRefreshObserver(
+      static_cast<nsAPostRefreshObserver*>(aObserver));
+  mOneShotPostRefreshObservers.AppendElement(aObserver);
+  return true;
+}
+
+void nsPresContext::UnregisterOneShotPostRefreshObserver(
+    mozilla::OneShotPostRefreshObserver* aObserver) {
+  RefreshDriver()->RemovePostRefreshObserver(
+      static_cast<nsAPostRefreshObserver*>(aObserver));
+  DebugOnly<bool> removed =
+      mOneShotPostRefreshObservers.RemoveElement(aObserver);
+  MOZ_ASSERT(removed,
+             "OneShotPostRefreshObserver should be owned by PresContext");
+}
+
+void nsPresContext::ClearOneShotPostRefreshObservers() {
+  for (const auto& observer : mOneShotPostRefreshObservers) {
+    RefreshDriver()->RemovePostRefreshObserver(
+        static_cast<nsAPostRefreshObserver*>(observer));
+  }
+
+  mOneShotPostRefreshObservers.Clear();
 }
 
 void nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
