@@ -22,7 +22,17 @@ class ContentProcessStorage {
         return targetActor.conn;
       },
       get windows() {
-        return targetActor.windows;
+        // about:blank pages that are included via an iframe, do not get their
+        // own process, and they will be present in targetActor.windows.
+        // We need to ignore them unless they are the top level page.
+        // Otherwise about:blank loads with the same principal as their parent document
+        // and would expose the same storage values as its parent.
+        const windows = targetActor.windows.filter(win => {
+          const isTopPage = win.parent === win;
+          return isTopPage || win.location.href !== "about:blank";
+        });
+
+        return windows;
       },
       get window() {
         return targetActor.window;
