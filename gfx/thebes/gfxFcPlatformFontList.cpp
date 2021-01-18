@@ -16,6 +16,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/TimeStamp.h"
 #include "nsGkAtoms.h"
 #include "nsUnicodeProperties.h"
@@ -1385,7 +1386,9 @@ void gfxFcPlatformFontList::AddPatternToFontList(
 
 nsresult gfxFcPlatformFontList::InitFontListForPlatform() {
 #ifdef MOZ_BUNDLED_FONTS
-  ActivateBundledFonts();
+  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
+    ActivateBundledFonts();
+  }
 #endif
 
   mLocalNames.Clear();
@@ -1473,8 +1476,10 @@ nsresult gfxFcPlatformFontList::InitFontListForPlatform() {
   AddFontSetFamilies(systemFonts, policy.get(), /* aAppFonts = */ false);
 
 #ifdef MOZ_BUNDLED_FONTS
-  FcFontSet* appFonts = FcConfigGetFonts(nullptr, FcSetApplication);
-  AddFontSetFamilies(appFonts, policy.get(), /* aAppFonts = */ true);
+  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
+    FcFontSet* appFonts = FcConfigGetFonts(nullptr, FcSetApplication);
+    AddFontSetFamilies(appFonts, policy.get(), /* aAppFonts = */ true);
+  }
 #endif
 
   return NS_OK;
@@ -1531,7 +1536,9 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
   }
 
 #ifdef MOZ_BUNDLED_FONTS
-  ActivateBundledFonts();
+  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
+    ActivateBundledFonts();
+  }
 #endif
 
   UniquePtr<SandboxPolicy> policy;
@@ -1698,8 +1705,10 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
   addFontSetFamilies(systemFonts, policy.get(), /* aAppFonts = */ false);
 
 #ifdef MOZ_BUNDLED_FONTS
-  FcFontSet* appFonts = FcConfigGetFonts(nullptr, FcSetApplication);
-  addFontSetFamilies(appFonts, policy.get(), /* aAppFonts = */ true);
+  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
+    FcFontSet* appFonts = FcConfigGetFonts(nullptr, FcSetApplication);
+    addFontSetFamilies(appFonts, policy.get(), /* aAppFonts = */ true);
+  }
 #endif
 
   mozilla::fontlist::FontList* list = SharedFontList();

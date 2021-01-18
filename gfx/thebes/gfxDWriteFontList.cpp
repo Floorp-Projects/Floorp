@@ -15,7 +15,9 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -1487,7 +1489,13 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
     return;
   }
 #ifdef MOZ_BUNDLED_FONTS
-  mBundledFonts = CreateBundledFontsCollection(factory);
+  // If the bundled-fonts pref is < 0 (auto), we skip the bundled fonts on
+  // Windows 8.1 or later, where Segoe UI Emoji is available.
+  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() > 0 ||
+      (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() < 0 &&
+       !IsWin8Point1OrLater())) {
+    mBundledFonts = CreateBundledFontsCollection(factory);
+  }
 #endif
 
   if (XRE_IsParentProcess()) {
@@ -1569,7 +1577,13 @@ nsresult gfxDWriteFontList::InitFontListForPlatform() {
   // Get bundled fonts before the system collection, so that in the case of
   // duplicate names, we have recorded the family as bundled (and therefore
   // available regardless of visibility settings).
-  mBundledFonts = CreateBundledFontsCollection(factory);
+  // If the bundled-fonts pref is < 0 (auto), we skip the bundled fonts on
+  // Windows 8.1 or later, where Segoe UI Emoji is available.
+  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() > 0 ||
+      (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() < 0 &&
+       !IsWin8Point1OrLater())) {
+    mBundledFonts = CreateBundledFontsCollection(factory);
+  }
   if (mBundledFonts) {
     GetFontsFromCollection(mBundledFonts);
   }
