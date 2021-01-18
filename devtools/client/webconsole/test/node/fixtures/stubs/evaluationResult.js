@@ -177,21 +177,6 @@ rawPackets.set(`inspect({a: 1})`, {
   "timestamp": 1572867483805
 });
 
-rawPackets.set(`cd(document)`, {
-  "resultID": "1573832025125-4",
-  "hasException": false,
-  "helperResult": {
-    "type": "error",
-    "message": "cdFunctionInvalidArgument"
-  },
-  "input": "cd(document)",
-  "result": {
-    "type": "undefined"
-  },
-  "startTime": 1572867483805,
-  "timestamp": 1572867483805
-});
-
 rawPackets.set(`undefined`, {
   "resultID": "1573832025127-5",
   "hasException": false,

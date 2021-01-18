@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci, Cu, Cc } = require("chrome");
+const { Cu } = require("chrome");
 
 // Note that this is only used in WebConsoleCommands, see $0 and screenshot.
 if (!isWorker) {
@@ -516,63 +516,6 @@ WebConsoleCommands._registerOriginal("values", function(owner, object) {
  */
 WebConsoleCommands._registerOriginal("help", function(owner) {
   owner.helperResult = { type: "help" };
-});
-
-/**
- * Change the JS evaluation scope.
- *
- * @param DOMElement|string|window window
- *        The window object to use for eval scope. This can be a string that
- *        is used to perform document.querySelector(), to find the iframe that
- *        you want to cd() to. A DOMElement can be given as well, the
- *        .contentWindow property is used. Lastly, you can directly pass
- *        a window object. If you call cd() with no arguments, the current
- *        eval scope is cleared back to its default (the top window).
- */
-WebConsoleCommands._registerOriginal("cd", function(owner, window) {
-  // Log a deprecation warning.
-  const scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
-  const scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
-
-  const deprecationMessage =
-    "The `cd` command will be disabled in a future release. " +
-    "See https://bugzilla.mozilla.org/show_bug.cgi?id=1605327 for more information.";
-
-  scriptError.initWithWindowID(
-    deprecationMessage,
-    null,
-    null,
-    0,
-    0,
-    1,
-    "content javascript",
-    owner.window.windowGlobalChild.innerWindowId
-  );
-  const Services = require("Services");
-  Services.console.logMessage(scriptError);
-
-  if (!window) {
-    owner.consoleActor.evalGlobal = null;
-    owner.helperResult = { type: "cd" };
-    return;
-  }
-
-  if (typeof window == "string") {
-    window = owner.window.document.querySelector(window);
-  }
-  if (Element.isInstance(window) && window.contentWindow) {
-    window = window.contentWindow;
-  }
-  if (!(window instanceof Ci.nsIDOMWindow)) {
-    owner.helperResult = {
-      type: "error",
-      message: "cdFunctionInvalidArgument",
-    };
-    return;
-  }
-
-  owner.consoleActor.evalGlobal = window;
-  owner.helperResult = { type: "cd" };
 });
 
 /**
