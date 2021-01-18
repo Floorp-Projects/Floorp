@@ -632,6 +632,28 @@ function synthesizeNativeTouchDrag(
   ]);
 }
 
+// Promise-returning variant of synthesizeNativeTouchDrag
+function promiseNativeTouchDrag(
+  aTarget,
+  aX,
+  aY,
+  aDeltaX,
+  aDeltaY,
+  aTouchId = 0
+) {
+  return new Promise(resolve => {
+    synthesizeNativeTouchDrag(
+      aTarget,
+      aX,
+      aY,
+      aDeltaX,
+      aDeltaY,
+      resolve,
+      aTouchId
+    );
+  });
+}
+
 function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
   var pt = coordinatesRelativeToScreen(aX, aY, aElement);
   var utils = SpecialPowers.getDOMWindowUtils(
@@ -959,6 +981,24 @@ function promiseTopic(aTopic) {
 // Returns a promise that is resolved when a APZ transform ends.
 function promiseTransformEnd() {
   return promiseTopic("APZ:TransformEnd");
+}
+
+// Returns a promise that resolves after the indicated number
+// of touchend events have fired on the given target element.
+function promiseTouchEnd(element, count = 1) {
+  return new Promise(resolve => {
+    var eventCount = 0;
+    var counterFunction = function(e) {
+      eventCount++;
+      if (eventCount == count) {
+        element.removeEventListener("touchend", counterFunction, {
+          passive: true,
+        });
+        resolve();
+      }
+    };
+    element.addEventListener("touchend", counterFunction, { passive: true });
+  });
 }
 
 // This generates a touch-based pinch zoom-in gesture that is expected
