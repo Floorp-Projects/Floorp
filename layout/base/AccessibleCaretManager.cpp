@@ -837,17 +837,17 @@ Element* AccessibleCaretManager::GetEditingHostForFrame(
 }
 
 AccessibleCaretManager::CaretMode AccessibleCaretManager::GetCaretMode() const {
-  Selection* selection = GetSelection();
+  const Selection* selection = GetSelection();
   if (!selection) {
     return CaretMode::None;
   }
 
-  uint32_t rangeCount = selection->RangeCount();
+  const uint32_t rangeCount = selection->RangeCount();
   if (rangeCount <= 0) {
     return CaretMode::None;
   }
 
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  const nsFocusManager* fm = nsFocusManager::GetFocusManager();
   MOZ_ASSERT(fm);
   if (fm->GetFocusedWindow() != mPresShell->GetDocument()->GetWindow()) {
     // Hide carets if the window is not focused.
