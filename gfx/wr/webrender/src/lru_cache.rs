@@ -34,8 +34,7 @@ use std::{mem, num};
 #[derive(MallocSizeOf)]
 struct LRUCacheEntry<T> {
     /// The location of the LRU tracking element for this cache entry.
-    /// This is None if the entry has manual eviction policy enabled.
-    lru_index: Option<ItemIndex>,
+    lru_index: ItemIndex,
     /// The cached data provided by the caller for this element.
     value: T,
 }
@@ -73,8 +72,8 @@ impl<T, M> LRUCache<T, M> {
 
         // Insert the data provided by the caller
         let handle = self.entries.insert(LRUCacheEntry {
-            lru_index: None,
-            value,
+            lru_index: ItemIndex(num::NonZeroU32::new(1).unwrap()),
+            value
         });
 
         // Get a weak handle to return to the caller
@@ -83,20 +82,9 @@ impl<T, M> LRUCache<T, M> {
         // Add an LRU tracking node that owns the strong handle, and store the location
         // of this inside the cache entry.
         let entry = self.entries.get_mut(&handle);
-        entry.lru_index = Some(self.lru.push_new(handle));
+        entry.lru_index = self.lru.push_new(handle);
 
         weak_handle
-    }
-
-    /// Get immutable access to the data at a given slot. Since this takes a strong
-    /// handle, it's guaranteed to be valid.
-    pub fn get(
-        &self,
-        handle: &FreeListHandle<M>,
-    ) -> &T {
-        &self.entries
-            .get(handle)
-            .value
     }
 
     /// Get immutable access to the data at a given slot. Since this takes a weak
@@ -126,22 +114,18 @@ impl<T, M> LRUCache<T, M> {
     }
 
     /// Return a reference to the oldest item in the cache, keeping it in the cache.
-    /// If the cache is empty, or all elements in the cache have manual eviction enabled,
-    /// this will return None.
+    /// If the cache is empty, this will return None.
     pub fn peek_oldest(&self) -> Option<&T> {
         self.lru
             .peek_front()
             .map(|handle| {
                 let entry = self.entries.get(handle);
-                // We should only find elements in this list with valid LRU location
-                debug_assert!(entry.lru_index.is_some());
                 &entry.value
             })
     }
 
     /// Remove the oldest item from the cache. This is used to select elements to
-    /// be evicted. If the cache is empty, or all elements in the cache have manual
-    /// eviction enabled, this will return None
+    /// be evicted. If the cache is empty, this will return None.
     pub fn pop_oldest(
         &mut self,
     ) -> Option<T> {
@@ -149,8 +133,6 @@ impl<T, M> LRUCache<T, M> {
             .pop_front()
             .map(|handle| {
                 let entry = self.entries.free(handle);
-                // We should only find elements in this list with valid LRU location
-                debug_assert!(entry.lru_index.is_some());
                 entry.value
             })
     }
@@ -190,43 +172,9 @@ impl<T, M> LRUCache<T, M> {
         self.entries
             .get_opt_mut(handle)
             .map(|entry| {
-                // Only have a valid LRU index if eviction mode is auto
-                if let Some(lru_index) = entry.lru_index {
-                    lru.mark_used(lru_index);
-                }
-
+                lru.mark_used(entry.lru_index);
                 &mut entry.value
             })
-    }
-
-    /// In some special cases, the caller may want to manually manage the
-    /// lifetime of a resource. This method removes the LRU tracking information
-    /// for an element, and returns the strong handle to the caller to manage.
-    #[must_use]
-    pub fn set_manual_eviction(
-        &mut self,
-        handle: &WeakFreeListHandle<M>,
-    ) -> Option<FreeListHandle<M>> {
-        let entry = self.entries
-            .get_opt_mut(handle)
-            .expect("bug: trying to set manual eviction on an invalid handle");
-
-        // Remove the LRU tracking information from this element, if it exists.
-        // (it may be None if manual eviction was already enabled for this element).
-        entry.lru_index.take().map(|lru_index| {
-            self.lru.remove(lru_index)
-        })
-    }
-
-    /// Remove an element that is in manual eviction mode. This takes the caller
-    /// managed strong handle, and removes this element from the freelist.
-    pub fn remove_manual_handle(
-        &mut self,
-        handle: FreeListHandle<M>,
-    ) -> T {
-        let entry = self.entries.free(handle);
-        debug_assert_eq!(entry.lru_index, None, "Must be manual eviction mode!");
-        entry.value
     }
 
     /// Try to validate that the state of the cache is consistent
@@ -444,9 +392,8 @@ impl<H> LRUTracker<H> where H: std::fmt::Debug {
         handle
     }
 
-    /// Manually remove an item from the LRU tracking list. This is used
-    /// when an element switches from having its lifetime managed by the LRU
-    /// algorithm to having a manual eviction policy.
+    /// Manually remove an item from the LRU tracking list.
+    #[allow(dead_code)]
     fn remove(
         &mut self,
         index: ItemIndex,
@@ -684,40 +631,4 @@ fn test_lru_tracker_push_replace_get() {
     let mut empty_handle = WeakFreeListHandle::invalid();
     assert_eq!(cache.replace_or_insert(&mut empty_handle, 100), None);
     assert_eq!(cache.get_opt(&empty_handle), Some(&100));
-}
-
-#[test]
-fn test_lru_tracker_manual_evict() {
-    // Push elements, set even as manual eviction, ensure:
-    // - correctly pop auto handles in correct order
-    // - correctly remove manual handles, and have expected value
-    struct CacheMarker;
-    const NUM_ELEMENTS: usize = 50;
-
-    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new();
-    let mut handles = Vec::new();
-    let mut manual_handles = Vec::new();
-    cache.validate();
-
-    for i in 0 .. NUM_ELEMENTS {
-        handles.push(cache.push_new(i));
-    }
-    cache.validate();
-
-    for i in 0 .. NUM_ELEMENTS/2 {
-        manual_handles.push(cache.set_manual_eviction(&handles[i*2]).unwrap());
-    }
-    cache.validate();
-
-    for i in 0 .. NUM_ELEMENTS/2 {
-        assert!(cache.pop_oldest() == Some(i*2 + 1));
-    }
-    cache.validate();
-
-    assert!(cache.pop_oldest().is_none());
-
-    for (i, manual_handle) in manual_handles.drain(..).enumerate() {
-        assert_eq!(*cache.get(&manual_handle), i*2);
-        assert_eq!(cache.remove_manual_handle(manual_handle), i*2);
-    }
 }
