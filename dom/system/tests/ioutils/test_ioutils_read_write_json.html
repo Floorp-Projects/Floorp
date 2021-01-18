@@ -93,6 +93,54 @@
       await cleanup(filename, invalidFilename);
     });
 
+    add_task(async function write_json() {
+      const tmpDir = await PathUtils.getTempDir();
+      const filename = PathUtils.join(tmpDir, "test_ioutils_write_json.tmp");
+
+      info("Testing IOUtils.writeJSON() with an object...");
+      await IOUtils.writeJSON(filename, OBJECT);
+      const readObject = await IOUtils.readJSON(filename);
+      const readObjectStr = await IOUtils.readUTF8(filename);
+      ok(ObjectUtils.deepEqual(OBJECT, readObject), "JSON objects should round-trip");
+      ok(
+        readObjectStr === JSON.stringify(OBJECT),
+        "IOUtils.writeJSON() eqvuialent to JSON.stringify() for an object"
+      );
+
+      info("Testing IOUtils.writeJSON() with an array...");
+      await IOUtils.writeJSON(filename, ARRAY);
+      const readArray = await IOUtils.readJSON(filename);
+      const readArrayStr = await IOUtils.readUTF8(filename);
+      ok(ObjectUtils.deepEqual(ARRAY, readArray), "JSON arrays should round-trip");
+      ok(
+        readArrayStr === JSON.stringify(ARRAY),
+        "IOUtils.writeJSON() equivalent to JSON.stringify() for an array"
+      );
+
+      info("Testing IOUtils.writeJSON() with primitives...");
+      for (const primitive of PRIMITIVES) {
+        await IOUtils.writeJSON(filename, primitive);
+        const readPrimitive = await IOUtils.readJSON(filename);
+        const readPrimitiveStr = await IOUtils.readUTF8(filename);
+        ok(
+          primitive === readPrimitive,
+          `${primitive} === ${readPrimitive} -- IOUtils.writeJSON() should round trip primitive`
+        );
+        ok(
+          readPrimitiveStr === JSON.stringify(primitive),
+          `${readPrimitiveStr} === ${JSON.stringify(primitive)} -- IOUtils.writeJSON() equivalent to JSON.stringify for primitive`
+        );
+      }
+
+      info("Testing IOUtils.writeJSON() with unserializable objects...");
+      await Assert.rejects(
+        IOUtils.writeJSON(filename, window),
+        /TypeError: cyclic object value/,
+        "IOUtils.writeJSON() cannot write cyclic objects"
+      );
+
+      await cleanup(filename);
+    });
   </script>
 </head>
 
