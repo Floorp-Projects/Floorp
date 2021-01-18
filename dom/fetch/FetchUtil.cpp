@@ -469,7 +469,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
   RefPtr<Response> response;
   nsresult rv = UNWRAP_OBJECT(Response, aObj, response);
   if (NS_FAILED(rv)) {
-    return ThrowException(aCx, JSMSG_BAD_RESPONSE_VALUE);
+    return ThrowException(aCx, JSMSG_WASM_BAD_RESPONSE_VALUE);
   }
 
   const char* requiredMimeType = nullptr;
@@ -483,26 +483,29 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
   response->GetMimeType(mimeType);
 
   if (!mimeType.EqualsASCII(requiredMimeType)) {
-    return ThrowException(aCx, JSMSG_BAD_RESPONSE_MIME_TYPE);
+    JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+                              JSMSG_WASM_BAD_RESPONSE_MIME_TYPE, mimeType.get(),
+                              requiredMimeType);
+    return false;
   }
 
   if (response->Type() != ResponseType::Basic &&
       response->Type() != ResponseType::Cors &&
       response->Type() != ResponseType::Default) {
-    return ThrowException(aCx, JSMSG_BAD_RESPONSE_CORS_SAME_ORIGIN);
+    return ThrowException(aCx, JSMSG_WASM_BAD_RESPONSE_CORS_SAME_ORIGIN);
   }
 
   if (!response->Ok()) {
-    return ThrowException(aCx, JSMSG_BAD_RESPONSE_STATUS);
+    return ThrowException(aCx, JSMSG_WASM_BAD_RESPONSE_STATUS);
   }
 
   IgnoredErrorResult result;
   bool used = response->GetBodyUsed(result);
   if (NS_WARN_IF(result.Failed())) {
-    return ThrowException(aCx, JSMSG_ERROR_CONSUMING_RESPONSE);
+    return ThrowException(aCx, JSMSG_WASM_ERROR_CONSUMING_RESPONSE);
   }
   if (used) {
-    return ThrowException(aCx, JSMSG_RESPONSE_ALREADY_CONSUMED);
+    return ThrowException(aCx, JSMSG_WASM_RESPONSE_ALREADY_CONSUMED);
   }
 
   switch (aMimeType) {
@@ -513,7 +516,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
       nsCString sourceMapUrl;
       response->GetInternalHeaders()->Get("SourceMap"_ns, sourceMapUrl, result);
       if (NS_WARN_IF(result.Failed())) {
-        return ThrowException(aCx, JSMSG_ERROR_CONSUMING_RESPONSE);
+        return ThrowException(aCx, JSMSG_WASM_ERROR_CONSUMING_RESPONSE);
       }
       NS_ConvertUTF16toUTF8 urlUTF8(url);
       aConsumer->noteResponseURLs(
@@ -536,7 +539,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
   IgnoredErrorResult error;
   response->SetBodyUsed(aCx, error);
   if (NS_WARN_IF(error.Failed())) {
-    return ThrowException(aCx, JSMSG_ERROR_CONSUMING_RESPONSE);
+    return ThrowException(aCx, JSMSG_WASM_ERROR_CONSUMING_RESPONSE);
   }
 
   nsIGlobalObject* global = xpc::NativeGlobal(js::UncheckedUnwrap(aObj));

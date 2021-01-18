@@ -3895,6 +3895,14 @@ var gCSSProperties = {
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20%, 10%, 15, 16)",
     ],
   },
+  "transform-box": {
+    domProp: "transformBox",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["border-box"],
+    other_values: ["fill-box", "view-box"],
+    invalid_values: ["content-box", "padding-box", "stroke-box", "margin-box"],
+  },
   "transform-origin": {
     domProp: "transformOrigin",
     inherited: false,
@@ -12021,17 +12029,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
   gCSSProperties["font-variation-settings"].other_values.push(
     "'vert' calc(2.5)"
   );
-}
-
-if (IsCSSPropertyPrefEnabled("svg.transform-box.enabled")) {
-  gCSSProperties["transform-box"] = {
-    domProp: "transformBox",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["border-box"],
-    other_values: ["fill-box", "view-box"],
-    invalid_values: ["content-box", "padding-box", "stroke-box", "margin-box"],
-  };
 }
 
 var isGridTemplateSubgridValueEnabled = IsCSSPropertyPrefEnabled(

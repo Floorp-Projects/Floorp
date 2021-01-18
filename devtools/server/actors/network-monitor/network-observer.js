@@ -405,8 +405,10 @@ NetworkObserver.prototype = {
       //   but that doesn't mean the request is blocked, so check for its status.
       const { status } = channel;
       if (status == 0) {
-        // Do not pass any blocked reason, as this request is just fine
-        this._createNetworkEvent(subject, {});
+        // Do not pass any blocked reason, as this request is just fine.
+        // Bug 1489217 - Prevent watching for this request response content,
+        // as this request is already running, this is too late to watch for it.
+        this._createNetworkEvent(subject, { inProgressRequest: true });
       } else {
         if (reason == 0) {
           // If we get there, we have a non-zero status, but no clear blocking reason
@@ -748,7 +750,14 @@ NetworkObserver.prototype = {
   }),
 
   /**
+   * Craft the "event" object passed to the Watcher class in order
+   * to instantiate the NetworkEventActor.
    *
+   * /!\ This method does many other important things:
+   * - Cancel requests blocked by DevTools
+   * - Fetch request headers/cookies
+   * - Set a few attributes on http activity object
+   * - Register listener to record response content
    */
   _createNetworkEvent: function(
     channel,
@@ -759,6 +768,7 @@ NetworkObserver.prototype = {
       fromServiceWorker,
       blockedReason,
       blockingExtension,
+      inProgressRequest,
     }
   ) {
     const httpActivity = this.createOrGetActivityObject(channel);
@@ -867,24 +877,6 @@ NetworkObserver.prototype = {
     event.discardRequestBody = !this.saveRequestAndResponseBodies;
     event.discardResponseBody = !this.saveRequestAndResponseBodies;
 
-    const headers = [];
-    let cookies = [];
-    let cookieHeader = null;
-
-    // Copy the request header data.
-    channel.visitRequestHeaders({
-      visitHeader: function(name, value) {
-        if (name == "Cookie") {
-          cookieHeader = value;
-        }
-        headers.push({ name: name, value: value });
-      },
-    });
-
-    if (cookieHeader) {
-      cookies = NetworkHelper.parseCookieHeader(cookieHeader);
-    }
-
     // Check the request URL with ones manually blocked by the user in DevTools.
     // If it's meant to be blocked, we cancel the request and annotate the event.
     if (!blockedReason) {
@@ -908,14 +900,45 @@ NetworkObserver.prototype = {
 
     httpActivity.owner = this.owner.onNetworkEvent(event);
 
-    if (!event.blockedReason) {
+    // Bug 1489217 - Avoid watching for response content for blocked or in-progress requests
+    // as it can't be observed and would throw if we try.
+    const recordRequestContent = !event.blockedReason && !inProgressRequest;
+    if (recordRequestContent) {
       this._setupResponseListener(httpActivity, fromCache);
+    }
+
+    this.fetchRequestHeadersAndCookies(channel, httpActivity, extraStringData);
+
+    return httpActivity;
+  },
+
+  /**
+   * For a given channel, with its associated http activity object,
+   * fetch the request's headers and cookies.
+   * This data is passed to the owner, i.e. the NetworkEventActor,
+   * so that the frontend can later fetch it via getRequestHeaders/getRequestCookies.
+   */
+  fetchRequestHeadersAndCookies(channel, httpActivity, extraStringData) {
+    const headers = [];
+    let cookies = [];
+    let cookieHeader = null;
+
+    // Copy the request header data.
+    channel.visitRequestHeaders({
+      visitHeader: function(name, value) {
+        if (name == "Cookie") {
+          cookieHeader = value;
+        }
+        headers.push({ name: name, value: value });
+      },
+    });
+
+    if (cookieHeader) {
+      cookies = NetworkHelper.parseCookieHeader(cookieHeader);
     }
 
     httpActivity.owner.addRequestHeaders(headers, extraStringData);
     httpActivity.owner.addRequestCookies(cookies);
-
-    return httpActivity;
   },
 
   /**

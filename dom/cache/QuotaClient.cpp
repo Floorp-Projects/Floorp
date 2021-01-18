@@ -268,12 +268,9 @@ nsresult CacheQuotaClient::UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) {
 
   MutexAutoLock lock(mDirPaddingFileMutex);
 
-  nsresult rv = LockedDirectoryPaddingInit(*aDirectory);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(LockedDirectoryPaddingInit(*aDirectory));
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult CacheQuotaClient::RestorePaddingFileInternal(
@@ -332,22 +329,15 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
     DecreaseUsageForQuotaInfo(aQuotaInfo, paddingSize);
   }
 
-  nsresult rv =
-      LockedDirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::FILE);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(LockedDirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::FILE));
 
   // Remove temporary file if we have one.
-  rv = LockedDirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::TMP_FILE);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(
+      LockedDirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::TMP_FILE));
 
-  rv = LockedDirectoryPaddingInit(*aBaseDir);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  CACHE_TRY(LockedDirectoryPaddingInit(*aBaseDir));
 
-  return rv;
+  return NS_OK;
 }
 
 CacheQuotaClient::~CacheQuotaClient() {
@@ -486,10 +476,9 @@ nsresult RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn) {
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  nsresult rv = cacheQuotaClient->RestorePaddingFileInternal(aBaseDir, aConn);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  CACHE_TRY(cacheQuotaClient->RestorePaddingFileInternal(aBaseDir, aConn));
 
-  return rv;
+  return NS_OK;
 }
 
 // static
@@ -500,10 +489,9 @@ nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir) {
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  nsresult rv = cacheQuotaClient->WipePaddingFileInternal(aQuotaInfo, aBaseDir);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  CACHE_TRY(cacheQuotaClient->WipePaddingFileInternal(aQuotaInfo, aBaseDir));
 
-  return rv;
+  return NS_OK;
 }
 
 }  // namespace mozilla::dom::cache

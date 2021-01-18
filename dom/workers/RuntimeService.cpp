@@ -688,7 +688,7 @@ static bool ConsumeStream(JSContext* aCx, JS::HandleObject aObj,
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   if (!worker) {
     JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
-                              JSMSG_ERROR_CONSUMING_RESPONSE);
+                              JSMSG_WASM_ERROR_CONSUMING_RESPONSE);
     return false;
   }
 

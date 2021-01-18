@@ -162,7 +162,12 @@ function compileStreamingBadMime() {
     var init = { headers: { "Content-Type": mimeType } };
     promises.push(
       WebAssembly.compileStreaming(new Response(sampleCode, init))
-      .then(() => Promise.reject(), err => Promise.resolve())
+      .then(() => Promise.reject(), err => {
+        is(err.message,
+          `WebAssembly: Response has unsupported MIME type '${mimeType}' expected 'application/wasm'`,
+          "correct MIME type error message");
+        return Promise.resolve();
+      })
     );
   }
   Promise.all(promises)
