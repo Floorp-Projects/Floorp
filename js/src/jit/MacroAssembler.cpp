@@ -2405,6 +2405,8 @@ void MacroAssembler::convertValueToInt(
     Label* handleStringRejoin, Label* truncateDoubleSlow, Register stringReg,
     FloatRegister temp, Register output, Label* fail,
     IntConversionBehavior behavior, IntConversionInputKind conversion) {
+  MOZ_ASSERT_IF(maybeInput, maybeInput->type() == MIRType::Value);
+
   Label done, isInt32, isBool, isDouble, isNull, isString;
 
   bool handleStrings = (behavior == IntConversionBehavior::Truncate ||
@@ -2417,12 +2419,12 @@ void MacroAssembler::convertValueToInt(
     ScratchTagScope tag(*this, value);
     splitTagForTest(value, tag);
 
-    maybeBranchTestType(MIRType::Int32, maybeInput, tag, &isInt32);
+    branchTestInt32(Equal, tag, &isInt32);
     if (conversion == IntConversionInputKind::Any ||
         conversion == IntConversionInputKind::NumbersOrBoolsOnly) {
-      maybeBranchTestType(MIRType::Boolean, maybeInput, tag, &isBool);
+      branchTestBoolean(Equal, tag, &isBool);
     }
-    maybeBranchTestType(MIRType::Double, maybeInput, tag, &isDouble);
+    branchTestDouble(Equal, tag, &isDouble);
 
     if (conversion == IntConversionInputKind::Any) {
       // If we are not truncating, we fail for anything that's not
@@ -2436,9 +2438,9 @@ void MacroAssembler::convertValueToInt(
         case IntConversionBehavior::Truncate:
         case IntConversionBehavior::TruncateNoWrap:
         case IntConversionBehavior::ClampToUint8:
-          maybeBranchTestType(MIRType::Null, maybeInput, tag, &isNull);
+          branchTestNull(Equal, tag, &isNull);
           if (handleStrings) {
-            maybeBranchTestType(MIRType::String, maybeInput, tag, &isString);
+            branchTestString(Equal, tag, &isString);
           }
           branchTestUndefined(Assembler::NotEqual, tag, fail);
           break;
@@ -3501,40 +3503,6 @@ void MacroAssembler::branchIfObjectNotExtensible(Register obj, Register scratch,
   // based on this check.
   branchTest32(Assembler::NonZero, Address(scratch, BaseShape::offsetOfFlags()),
                Imm32(js::BaseShape::NOT_EXTENSIBLE), label);
-}
-
-void MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef,
-                                         Register tag, Label* label) {
-  if (!maybeDef || maybeDef->mightBeType(type)) {
-    switch (type) {
-      case MIRType::Null:
-        branchTestNull(Equal, tag, label);
-        break;
-      case MIRType::Boolean:
-        branchTestBoolean(Equal, tag, label);
-        break;
-      case MIRType::Int32:
-        branchTestInt32(Equal, tag, label);
-        break;
-      case MIRType::Double:
-        branchTestDouble(Equal, tag, label);
-        break;
-      case MIRType::String:
-        branchTestString(Equal, tag, label);
-        break;
-      case MIRType::Symbol:
-        branchTestSymbol(Equal, tag, label);
-        break;
-      case MIRType::BigInt:
-        branchTestBigInt(Equal, tag, label);
-        break;
-      case MIRType::Object:
-        branchTestObject(Equal, tag, label);
-        break;
-      default:
-        MOZ_CRASH("Unsupported type");
-    }
-  }
 }
 
 void MacroAssembler::wasmTrap(wasm::Trap trap,
