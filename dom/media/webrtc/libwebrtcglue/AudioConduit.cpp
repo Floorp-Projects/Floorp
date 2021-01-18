@@ -327,7 +327,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
   // Try Applying the codecs in the list.
   // We succeed if at least one codec was applied and reception was
   // started successfully.
-  mRecvStreamConfig.decoder_factory = mCall->mDecoderFactory;
+  mRecvStreamConfig.decoder_factory = mCall->mAudioDecoderFactory;
   mRecvStreamConfig.decoder_map.clear();
   for (const auto& codec : codecConfigList) {
     // if the codec param is invalid or diplicate, return error

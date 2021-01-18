@@ -14,17 +14,15 @@
 #include "RtcpEventObserver.h"
 #include "CodecConfig.h"
 #include "VideoTypes.h"
+#include "jsapi/PeerConnectionCtx.h"
 #include "MediaConduitErrors.h"
 #include "jsapi/RTCStatsReport.h"
+#include "TaskQueueWrapper.h"
 
 #include "ImageContainer.h"
 
-#include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/video/video_frame_buffer.h"
 #include "call/call.h"
-#include "modules/audio_device/include/fake_audio_device.h"
-#include "modules/audio_mixer/audio_mixer_impl.h"
-#include "modules/audio_processing/include/audio_processing.h"
 
 #include <vector>
 #include <set>
@@ -254,11 +252,33 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
   typedef webrtc::Call::Config Config;
 
   static RefPtr<WebRtcCallWrapper> Create(
-      const dom::RTCStatsTimestampMaker& aTimestampMaker) {
-    return new WebRtcCallWrapper(aTimestampMaker);
+      const dom::RTCStatsTimestampMaker& aTimestampMaker,
+      SharedWebrtcState* aSharedState, webrtc::WebRtcKeyValueConfig* aTrials) {
+    return Create(aTimestampMaker, aSharedState->GetModuleThread(),
+                  aSharedState->mAudioStateConfig,
+                  aSharedState->mAudioDecoderFactory, aTrials);
   }
 
-  static RefPtr<WebRtcCallWrapper> Create(UniquePtr<webrtc::Call>&& aCall) {
+  static RefPtr<WebRtcCallWrapper> Create(
+      const dom::RTCStatsTimestampMaker& aTimestampMaker,
+      webrtc::SharedModuleThread* aModuleThread,
+      const webrtc::AudioState::Config& aAudioStateConfig,
+      webrtc::AudioDecoderFactory* aAudioDecoderFactory,
+      webrtc::WebRtcKeyValueConfig* aTrials) {
+    auto eventLog = MakeUnique<webrtc::RtcEventLogNull>();
+    webrtc::Call::Config config(eventLog.get());
+    config.audio_state = webrtc::AudioState::Create(aAudioStateConfig);
+    auto taskQueueFactory =
+        MakeUnique<SharedThreadPoolWebRtcTaskQueueFactory>();
+    config.task_queue_factory = taskQueueFactory.get();
+    config.trials = aTrials;
+    return new WebRtcCallWrapper(
+        aAudioDecoderFactory,
+        WrapUnique(webrtc::Call::Create(config, aModuleThread)),
+        std::move(eventLog), std::move(taskQueueFactory), aTimestampMaker);
+  }
+
+  static RefPtr<WebRtcCallWrapper> Create(UniquePtr<webrtc::Call> aCall) {
     return new WebRtcCallWrapper(std::move(aCall));
   }
 
@@ -296,24 +316,33 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(WebRtcCallWrapper)
 
-  rtc::scoped_refptr<webrtc::AudioDecoderFactory> mDecoderFactory;
-
  private:
-  explicit WebRtcCallWrapper(const dom::RTCStatsTimestampMaker& aTimestampMaker)
-      : mTimestampMaker(aTimestampMaker) {}
+  WebRtcCallWrapper(RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
+                    UniquePtr<webrtc::Call> aCall,
+                    UniquePtr<webrtc::RtcEventLog> aEventLog,
+                    UniquePtr<webrtc::TaskQueueFactory> aTaskQueueFactory,
+                    const dom::RTCStatsTimestampMaker& aTimestampMaker)
+      : mTimestampMaker(aTimestampMaker),
+        mAudioDecoderFactory(std::move(aAudioDecoderFactory)),
+        mEventLog(std::move(aEventLog)),
+        mTaskQueueFactory(std::move(aTaskQueueFactory)),
+        mCall(std::move(aCall)) {}
 
-  explicit WebRtcCallWrapper(UniquePtr<webrtc::Call>&& aCall) {
-    MOZ_ASSERT(aCall);
-    mCall = std::move(aCall);
+  explicit WebRtcCallWrapper(UniquePtr<webrtc::Call> aCall)
+      : mCall(std::move(aCall)) {
+    MOZ_ASSERT(mCall);
   }
 
-  UniquePtr<webrtc::Call> mCall;
-  UniquePtr<webrtc::FakeAudioDeviceModule> mFakeAudioDeviceModule;
-  webrtc::RtcEventLogNull mEventLog;
   // Allows conduits to know about one another, to avoid remote SSRC
   // collisions.
   std::set<MediaSessionConduit*> mConduits;
   dom::RTCStatsTimestampMaker mTimestampMaker;
+
+ public:
+  const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
+  const UniquePtr<webrtc::RtcEventLog> mEventLog;
+  const UniquePtr<webrtc::TaskQueueFactory> mTaskQueueFactory;
+  const UniquePtr<webrtc::Call> mCall;
 };
 
 // Abstract base classes for external encoder/decoder.

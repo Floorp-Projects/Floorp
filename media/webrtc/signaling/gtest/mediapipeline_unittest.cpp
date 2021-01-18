@@ -9,8 +9,14 @@
 #include "logging.h"
 #include "nss.h"
 
+#include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "api/scoped_refptr.h"
+#include "call/call.h"
 #include "AudioSegment.h"
 #include "AudioStreamTrack.h"
+#include "modules/audio_device/include/fake_audio_device.h"
+#include "modules/audio_mixer/audio_mixer_impl.h"
+#include "modules/audio_processing/include/audio_processing.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -242,12 +248,25 @@ class LoopbackTransport : public MediaTransportHandler {
   RefPtr<MediaTransportHandler> peer_;
 };
 
+class NoTrialsConfig : public webrtc::WebRtcKeyValueConfig {
+ public:
+  NoTrialsConfig() = default;
+  std::string Lookup(absl::string_view key) const override {
+    return std::string();
+  }
+};
+
 class TestAgent {
  public:
-  TestAgent()
+  TestAgent(webrtc::SharedModuleThread* aModuleThread,
+            const webrtc::AudioState::Config& aAudioStateConfig,
+            webrtc::AudioDecoderFactory* aAudioDecoderFactory,
+            webrtc::WebRtcKeyValueConfig* aTrials)
       : audio_config_(109, "opus", 48000, 2, false),
         audio_conduit_(mozilla::AudioSessionConduit::Create(
-            WebRtcCallWrapper::Create(dom::RTCStatsTimestampMaker()),
+            WebRtcCallWrapper::Create(dom::RTCStatsTimestampMaker(),
+                                      aModuleThread, aAudioStateConfig,
+                                      aAudioDecoderFactory, aTrials),
             test_utils->sts_target())),
         audio_pipeline_(),
         transport_(new LoopbackTransport) {}
@@ -327,7 +346,12 @@ class TestAgent {
 
 class TestAgentSend : public TestAgent {
  public:
-  TestAgentSend() {
+  TestAgentSend(webrtc::SharedModuleThread* aModuleThread,
+                const webrtc::AudioState::Config& aAudioStateConfig,
+                webrtc::AudioDecoderFactory* aAudioDecoderFactory,
+                webrtc::WebRtcKeyValueConfig* aTrials)
+      : TestAgent(aModuleThread, aAudioStateConfig, aAudioDecoderFactory,
+                  aTrials) {
     mozilla::MediaConduitErrorCode err =
         static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get())
             ->ConfigureSendMediaCodec(&audio_config_);
@@ -355,7 +379,12 @@ class TestAgentSend : public TestAgent {
 
 class TestAgentReceive : public TestAgent {
  public:
-  TestAgentReceive() {
+  TestAgentReceive(webrtc::SharedModuleThread* aModuleThread,
+                   const webrtc::AudioState::Config& aAudioStateConfig,
+                   webrtc::AudioDecoderFactory* aAudioDecoderFactory,
+                   webrtc::WebRtcKeyValueConfig* aTrials)
+      : TestAgent(aModuleThread, aAudioStateConfig, aAudioDecoderFactory,
+                  aTrials) {
     std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
     codecs.emplace_back(new AudioCodecConfig(audio_config_));
 
@@ -400,8 +429,28 @@ void WaitFor(TimeDuration aDuration) {
       "WaitFor(TimeDuration aDuration)"_ns, [&] { return done; });
 }
 
+webrtc::AudioState::Config CreateAudioStateConfig() {
+  webrtc::AudioState::Config audio_state_config;
+  audio_state_config.audio_mixer = webrtc::AudioMixerImpl::Create();
+  webrtc::AudioProcessingBuilder audio_processing_builder;
+  audio_state_config.audio_processing = audio_processing_builder.Create();
+  audio_state_config.audio_device_module = new webrtc::FakeAudioDeviceModule();
+  return audio_state_config;
+}
+
 class MediaPipelineTest : public ::testing::Test {
  public:
+  MediaPipelineTest()
+      : module_thread_(webrtc::SharedModuleThread::Create(
+            webrtc::ProcessThread::Create("SharedModThread"), nullptr)),
+        audio_state_config_(CreateAudioStateConfig()),
+        audio_decoder_factory_(webrtc::CreateBuiltinAudioDecoderFactory()),
+        trials_(new NoTrialsConfig()),
+        p1_(module_thread_.get(), audio_state_config_,
+            audio_decoder_factory_.get(), trials_.get()),
+        p2_(module_thread_.get(), audio_state_config_,
+            audio_decoder_factory_.get(), trials_.get()) {}
+
   ~MediaPipelineTest() {
     p1_.Shutdown();
     p2_.Shutdown();
@@ -513,6 +562,10 @@ class MediaPipelineTest : public ::testing::Test {
   }
 
  protected:
+  const rtc::scoped_refptr<webrtc::SharedModuleThread> module_thread_;
+  const webrtc::AudioState::Config audio_state_config_;
+  const RefPtr<webrtc::AudioDecoderFactory> audio_decoder_factory_;
+  const UniquePtr<webrtc::WebRtcKeyValueConfig> trials_;
   TestAgentSend p1_;
   TestAgentReceive p2_;
 };

@@ -4,10 +4,16 @@
 
 #include "PeerConnectionCtx.h"
 
+#include "api/audio/audio_mixer.h"
+#include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "call/audio_state.h"
+#include "call/call.h"
 #include "common/browser_logging/CSFLog.h"
 #include "common/browser_logging/WebRtcLog.h"
 #include "gmp-video-decode.h"  // GMP_API_VIDEO_DECODER
 #include "gmp-video-encode.h"  // GMP_API_VIDEO_ENCODER
+#include "modules/audio_device/include/fake_audio_device.h"
+#include "modules/audio_processing/include/audio_processing.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -31,9 +37,152 @@ static const char* pccLogTag = "PeerConnectionCtx";
 #endif
 #define LOGTAG pccLogTag
 
+using namespace webrtc;
+
+namespace {
+class DummyAudioMixer : public AudioMixer {
+ public:
+  bool AddSource(Source*) override { return true; }
+  void RemoveSource(Source*) override {}
+  void Mix(size_t, AudioFrame*) override { MOZ_CRASH("Unexpected call"); }
+};
+
+class DummyAudioProcessing : public AudioProcessing {
+ public:
+  int Initialize() override {
+    MOZ_CRASH("Unexpected call");
+    return kNoError;
+  }
+  int Initialize(const ProcessingConfig&) override { return Initialize(); }
+  int Initialize(int, int, int, ChannelLayout, ChannelLayout,
+                 ChannelLayout) override {
+    return Initialize();
+  }
+  void ApplyConfig(const Config&) override { MOZ_CRASH("Unexpected call"); }
+  int proc_sample_rate_hz() const override {
+    MOZ_CRASH("Unexpected call");
+    return 0;
+  }
+  int proc_split_sample_rate_hz() const override {
+    MOZ_CRASH("Unexpected call");
+    return 0;
+  }
+  size_t num_input_channels() const override {
+    MOZ_CRASH("Unexpected call");
+    return 0;
+  }
+  size_t num_proc_channels() const override {
+    MOZ_CRASH("Unexpected call");
+    return 0;
+  }
+  size_t num_output_channels() const override {
+    MOZ_CRASH("Unexpected call");
+    return 0;
+  }
+  size_t num_reverse_channels() const override {
+    MOZ_CRASH("Unexpected call");
+    return 0;
+  }
+  void set_output_will_be_muted(bool) override { MOZ_CRASH("Unexpected call"); }
+  void SetRuntimeSetting(RuntimeSetting) override {
+    MOZ_CRASH("Unexpected call");
+  }
+  int ProcessStream(const int16_t* const, const StreamConfig&,
+                    const StreamConfig&, int16_t* const) override {
+    MOZ_CRASH("Unexpected call");
+    return kNoError;
+  }
+  int ProcessStream(const float* const*, const StreamConfig&,
+                    const StreamConfig&, float* const*) override {
+    MOZ_CRASH("Unexpected call");
+    return kNoError;
+  }
+  int ProcessReverseStream(const int16_t* const, const StreamConfig&,
+                           const StreamConfig&, int16_t* const) override {
+    MOZ_CRASH("Unexpected call");
+    return kNoError;
+  }
+  int ProcessReverseStream(const float* const*, const StreamConfig&,
+                           const StreamConfig&, float* const*) override {
+    MOZ_CRASH("Unexpected call");
+    return kNoError;
+  }
+  int AnalyzeReverseStream(const float* const*, const StreamConfig&) override {
+    MOZ_CRASH("Unexpected call");
+    return kNoError;
+  }
+  bool GetLinearAecOutput(
+      rtc::ArrayView<std::array<float, 160>>) const override {
+    MOZ_CRASH("Unexpected call");
+    return false;
+  }
+  void set_stream_analog_level(int) override { MOZ_CRASH("Unexpected call"); }
+  int recommended_stream_analog_level() const override {
+    MOZ_CRASH("Unexpected call");
+    return -1;
+  }
+  int set_stream_delay_ms(int) override {
+    MOZ_CRASH("Unexpected call");
+    return kNoError;
+  }
+  int stream_delay_ms() const override {
+    MOZ_CRASH("Unexpected call");
+    return 0;
+  }
+  void set_stream_key_pressed(bool) override { MOZ_CRASH("Unexpected call"); }
+  bool CreateAndAttachAecDump(const std::string&, int64_t,
+                              rtc::TaskQueue*) override {
+    MOZ_CRASH("Unexpected call");
+    return false;
+  }
+  bool CreateAndAttachAecDump(FILE*, int64_t, rtc::TaskQueue*) override {
+    MOZ_CRASH("Unexpected call");
+    return false;
+  }
+  void AttachAecDump(std::unique_ptr<AecDump>) override {
+    MOZ_CRASH("Unexpected call");
+  }
+  void DetachAecDump() override { MOZ_CRASH("Unexpected call"); }
+  AudioProcessingStats GetStatistics() override {
+    return AudioProcessingStats();
+  }
+  AudioProcessingStats GetStatistics(bool) override { return GetStatistics(); }
+  AudioProcessing::Config GetConfig() const override {
+    MOZ_CRASH("Unexpected call");
+    return Config();
+  }
+};
+
+class NoTrialsConfig : public WebRtcKeyValueConfig {
+ public:
+  NoTrialsConfig() = default;
+  std::string Lookup(absl::string_view key) const override {
+    return std::string();
+  }
+};
+}  // namespace
+
 namespace mozilla {
 
 using namespace dom;
+
+SharedWebrtcState::SharedWebrtcState(
+    webrtc::AudioState::Config&& aAudioStateConfig,
+    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory)
+    : mAudioStateConfig(std::move(aAudioStateConfig)),
+      mAudioDecoderFactory(std::move(aAudioDecoderFactory)) {}
+
+SharedModuleThread* SharedWebrtcState::GetModuleThread() {
+  if (!mModuleThread) {
+    mModuleThread = webrtc::SharedModuleThread::Create(
+        webrtc::ProcessThread::Create("libwebrtcModuleThread"),
+        [this, self = RefPtr<SharedWebrtcState>(this)] {
+          mModuleThread = nullptr;
+        });
+  }
+
+  return mModuleThread.get();
+}
 
 class PeerConnectionCtxObserver : public nsIObserver {
  public:
@@ -288,9 +437,17 @@ void PeerConnectionCtx::UpdateNetworkState(bool online) {
   }
 }
 
+SharedWebrtcState* PeerConnectionCtx::GetSharedWebrtcState() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mSharedWebrtcState;
+}
+
 void PeerConnectionCtx::RemovePeerConnection(const std::string& aKey) {
   MOZ_ASSERT(NS_IsMainThread());
-  mPeerConnections.erase(aKey);
+  size_t result = mPeerConnections.erase(aKey);
+  if (mPeerConnections.size() == 0 && result > 0) {
+    mSharedWebrtcState = nullptr;
+  }
 }
 
 void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
@@ -298,6 +455,23 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPeerConnections.count(aKey) == 0,
              "PeerConnection with this key should not already exist");
+  if (mPeerConnections.size() == 0) {
+    AudioState::Config audioStateConfig;
+    audioStateConfig.audio_mixer = new rtc::RefCountedObject<DummyAudioMixer>();
+    AudioProcessingBuilder audio_processing_builder;
+    audioStateConfig.audio_processing =
+        new rtc::RefCountedObject<DummyAudioProcessing>();
+    audioStateConfig.audio_device_module =
+        new rtc::RefCountedObject<FakeAudioDeviceModule>();
+
+    mSharedWebrtcState = MakeAndAddRef<SharedWebrtcState>(
+        std::move(audioStateConfig),
+        already_AddRefed(CreateBuiltinAudioDecoderFactory().release()));
+
+    if (!mTrials) {
+      mTrials.reset(new NoTrialsConfig());
+    }
+  }
   mPeerConnections[aKey] = aPeerConnection;
 }
 
@@ -382,6 +556,7 @@ nsresult PeerConnectionCtx::Cleanup() {
     pc->Close();
   }
   mPeerConnections.clear();
+  mSharedWebrtcState = nullptr;
   return NS_OK;
 }
 
