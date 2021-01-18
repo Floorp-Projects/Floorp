@@ -137,9 +137,7 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
     const stacktrace = this.networkEventStackTraceWatcher.getStackTrace(
       resourceId
     );
-    return {
-      stacktrace: WebConsoleUtils.removeFramesAboveDebuggerEval(stacktrace),
-    };
+    return WebConsoleUtils.removeFramesAboveDebuggerEval(stacktrace);
   },
 });
 
