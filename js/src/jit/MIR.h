@@ -1995,8 +1995,8 @@ class MNewTypedArrayDynamicLength : public MUnaryInstruction,
  public:
   INSTRUCTION_HEADER(NewTypedArrayDynamicLength)
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  NAMED_OPERANDS((0, length))
 
-  MDefinition* length() const { return getOperand(0); }
   JSObject* templateObject() const { return templateObject_; }
   gc::InitialHeap initialHeap() const { return initialHeap_; }
 
@@ -2024,8 +2024,8 @@ class MNewTypedArrayFromArray : public MUnaryInstruction,
  public:
   INSTRUCTION_HEADER(NewTypedArrayFromArray)
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  NAMED_OPERANDS((0, array))
 
-  MDefinition* array() const { return getOperand(0); }
   JSObject* templateObject() const { return templateObject_; }
   gc::InitialHeap initialHeap() const { return initialHeap_; }
 
@@ -2053,10 +2053,8 @@ class MNewTypedArrayFromArrayBuffer
  public:
   INSTRUCTION_HEADER(NewTypedArrayFromArrayBuffer)
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+  NAMED_OPERANDS((0, arrayBuffer), (1, byteOffset), (2, length))
 
-  MDefinition* arrayBuffer() const { return getOperand(0); }
-  MDefinition* byteOffset() const { return getOperand(1); }
-  MDefinition* length() const { return getOperand(2); }
   JSObject* templateObject() const { return templateObject_; }
   gc::InitialHeap initialHeap() const { return initialHeap_; }
 
@@ -12354,6 +12352,7 @@ class MAsmJSLoadHeap
 
  public:
   INSTRUCTION_HEADER(AsmJSLoadHeap)
+  NAMED_OPERANDS((0, base), (1, boundsCheckLimit))
 
   static MAsmJSLoadHeap* New(TempAllocator& alloc, MDefinition* memoryBase,
                              MDefinition* base, MDefinition* boundsCheckLimit,
@@ -12376,13 +12375,11 @@ class MAsmJSLoadHeap
     return load;
   }
 
-  MDefinition* base() const { return getOperand(0); }
   bool hasMemoryBase() const { return memoryBaseIndex_ != UINT32_MAX; }
   MDefinition* memoryBase() const {
     MOZ_ASSERT(hasMemoryBase());
     return getOperand(memoryBaseIndex_);
   }
-  MDefinition* boundsCheckLimit() const { return getOperand(1); }
 
   bool congruentTo(const MDefinition* ins) const override;
   AliasSet getAliasSet() const override {
@@ -12405,6 +12402,7 @@ class MAsmJSStoreHeap
 
  public:
   INSTRUCTION_HEADER(AsmJSStoreHeap)
+  NAMED_OPERANDS((0, base), (1, value), (2, boundsCheckLimit))
 
   static MAsmJSStoreHeap* New(TempAllocator& alloc, MDefinition* memoryBase,
                               MDefinition* base, MDefinition* boundsCheckLimit,
@@ -12428,14 +12426,11 @@ class MAsmJSStoreHeap
     return store;
   }
 
-  MDefinition* base() const { return getOperand(0); }
-  MDefinition* value() const { return getOperand(1); }
   bool hasMemoryBase() const { return memoryBaseIndex_ != UINT32_MAX; }
   MDefinition* memoryBase() const {
     MOZ_ASSERT(hasMemoryBase());
     return getOperand(memoryBaseIndex_);
   }
-  MDefinition* boundsCheckLimit() const { return getOperand(2); }
 
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::WasmHeap);
@@ -12470,6 +12465,8 @@ class MWasmCompareExchangeHeap : public MVariadicInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmCompareExchangeHeap)
+  NAMED_OPERANDS((0, base), (1, oldValue), (2, newValue), (3, tls),
+                 (4, memoryBase))
 
   static MWasmCompareExchangeHeap* New(TempAllocator& alloc,
                                        wasm::BytecodeOffset bytecodeOffset,
@@ -12496,12 +12493,6 @@ class MWasmCompareExchangeHeap : public MVariadicInstruction,
   const wasm::MemoryAccessDesc& access() const { return access_; }
   wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
-  MDefinition* base() const { return getOperand(0); }
-  MDefinition* oldValue() const { return getOperand(1); }
-  MDefinition* newValue() const { return getOperand(2); }
-  MDefinition* tls() const { return getOperand(3); }
-  MDefinition* memoryBase() const { return getOperand(4); }
-
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::WasmHeap);
   }
@@ -12523,6 +12514,7 @@ class MWasmAtomicExchangeHeap : public MVariadicInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmAtomicExchangeHeap)
+  NAMED_OPERANDS((0, base), (1, value), (2, tls), (3, memoryBase))
 
   static MWasmAtomicExchangeHeap* New(TempAllocator& alloc,
                                       wasm::BytecodeOffset bytecodeOffset,
@@ -12549,11 +12541,6 @@ class MWasmAtomicExchangeHeap : public MVariadicInstruction,
   const wasm::MemoryAccessDesc& access() const { return access_; }
   wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
-  MDefinition* base() const { return getOperand(0); }
-  MDefinition* value() const { return getOperand(1); }
-  MDefinition* tls() const { return getOperand(2); }
-  MDefinition* memoryBase() const { return getOperand(3); }
-
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::WasmHeap);
   }
@@ -12578,6 +12565,7 @@ class MWasmAtomicBinopHeap : public MVariadicInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmAtomicBinopHeap)
+  NAMED_OPERANDS((0, base), (1, value), (2, tls), (3, memoryBase))
 
   static MWasmAtomicBinopHeap* New(TempAllocator& alloc,
                                    wasm::BytecodeOffset bytecodeOffset,
@@ -12604,11 +12592,6 @@ class MWasmAtomicBinopHeap : public MVariadicInstruction,
   AtomicOp operation() const { return op_; }
   const wasm::MemoryAccessDesc& access() const { return access_; }
   wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
-
-  MDefinition* base() const { return getOperand(0); }
-  MDefinition* value() const { return getOperand(1); }
-  MDefinition* tls() const { return getOperand(2); }
-  MDefinition* memoryBase() const { return getOperand(3); }
 
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::WasmHeap);
@@ -13151,15 +13134,12 @@ class MWasmBitselectSimd128 : public MTernaryInstruction,
  public:
   INSTRUCTION_HEADER(WasmBitselectSimd128)
   TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, lhs), (1, rhs), (2, control))
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
-
-  MDefinition* lhs() const { return getOperand(0); }
-  MDefinition* rhs() const { return getOperand(1); }
-  MDefinition* control() const { return getOperand(2); }
 
   ALLOW_CLONE(MWasmBitselectSimd128)
 };
