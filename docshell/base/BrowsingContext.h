@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_BrowsingContext_h
 #define mozilla_dom_BrowsingContext_h
 
+#include <tuple>
 #include "GVAutoplayRequestUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HalScreenConfiguration.h"
@@ -18,6 +19,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LocationBase.h"
 #include "mozilla/dom/MaybeDiscarded.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ScreenOrientationBinding.h"
@@ -775,6 +777,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void ResetLocationChangeRateLimit();
 
   mozilla::dom::DisplayMode DisplayMode() { return Top()->GetDisplayMode(); }
+
+  // Returns canFocus, isActive
+  std::tuple<bool, bool> CanFocusCheck(CallerType aCallerType);
+
+  PopupBlocker::PopupControlState RevisePopupAbuseLevel(
+      PopupBlocker::PopupControlState aControl);
 
  protected:
   virtual ~BrowsingContext();
