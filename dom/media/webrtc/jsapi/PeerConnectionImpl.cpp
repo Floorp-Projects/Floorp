@@ -973,9 +973,11 @@ already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
     aSendTrack->AddPrincipalChangeObserver(this);
   }
 
+  PeerConnectionCtx* ctx = PeerConnectionCtx::GetInstance();
   RefPtr<TransceiverImpl> transceiverImpl;
-
-  aRv = mMedia->AddTransceiver(aJsepTransceiver, aSendTrack, &transceiverImpl);
+  aRv = mMedia->AddTransceiver(aJsepTransceiver, aSendTrack,
+                               ctx->GetSharedWebrtcState(), ctx->GetTrials(),
+                               &transceiverImpl);
 
   return transceiverImpl.forget();
 }

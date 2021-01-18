@@ -653,9 +653,12 @@ void PeerConnectionMedia::ShutdownMediaTransport_s() {
 
 nsresult PeerConnectionMedia::AddTransceiver(
     JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack* aSendTrack,
+    SharedWebrtcState* aSharedWebrtcState,
+    webrtc::WebRtcKeyValueConfig* aTrials,
     RefPtr<TransceiverImpl>* aTransceiverImpl) {
   if (!mCall) {
-    mCall = WebRtcCallWrapper::Create(mParent->GetTimestampMaker());
+    mCall = WebRtcCallWrapper::Create(mParent->GetTimestampMaker(),
+                                      aSharedWebrtcState, aTrials);
   }
 
   RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(

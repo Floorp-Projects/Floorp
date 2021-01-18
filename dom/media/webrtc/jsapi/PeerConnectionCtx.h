@@ -8,12 +8,20 @@
 #include <map>
 #include <string>
 
+#include "api/scoped_refptr.h"
+#include "call/audio_state.h"
 #include "MediaTransportHandler.h"  // Mostly for IceLogPromise
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIRunnable.h"
 #include "PeerConnectionImpl.h"
+
+namespace webrtc {
+class AudioDecoderFactory;
+class SharedModuleThread;
+class WebRtcKeyValueConfig;
+}  // namespace webrtc
 
 namespace mozilla {
 class PeerConnectionCtxObserver;
@@ -22,10 +30,42 @@ namespace dom {
 class WebrtcGlobalInformation;
 }
 
+/**
+ * Refcounted class containing state shared across all PeerConnections and all
+ * Call instances. Managed by PeerConnectionCtx, and kept around while there are
+ * registered peer connections.
+ */
+class SharedWebrtcState {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWebrtcState)
+
+  SharedWebrtcState(webrtc::AudioState::Config&& aAudioStateConfig,
+                    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory);
+
+  webrtc::SharedModuleThread* GetModuleThread();
+
+  // AudioState config containing dummy implementations of the audio stack,
+  // since we use our own audio stack instead. Shared across all Call instances.
+  const webrtc::AudioState::Config mAudioStateConfig;
+
+  // AudioDecoderFactory instance shared between calls, to limit the number of
+  // instances in large calls.
+  const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
+
+ private:
+  virtual ~SharedWebrtcState() = default;
+
+  // SharedModuleThread used for processing in all Call instances.
+  // Only accessed on the global Call worker task queue. Set on first
+  // GetModuleThread(), Unset on the last external Release.
+  rtc::scoped_refptr<webrtc::SharedModuleThread> mModuleThread;
+};
+
 // A class to hold some of the singleton objects we need:
 // * The global PeerConnectionImpl table and its associated lock.
 // * Stats report objects for PCs that are gone
 // * GMP related state
+// * Upstream webrtc state shared across all Calls (processing thread)
 class PeerConnectionCtx {
  public:
   static nsresult InitializeGlobal(nsIThread* mainThread);
@@ -51,6 +91,10 @@ class PeerConnectionCtx {
   RefPtr<MediaTransportHandler> GetTransportHandler() const {
     return mTransportHandler;
   }
+
+  SharedWebrtcState* GetSharedWebrtcState() const;
+
+  webrtc::WebRtcKeyValueConfig* GetTrials() const { return mTrials.get(); }
 
   // WebrtcGlobalInformation uses this; we put it here so we don't need to
   // create another shutdown observer class.
@@ -101,6 +145,16 @@ class PeerConnectionCtx {
 
   // Not initted, just for ICE logging stuff
   RefPtr<MediaTransportHandler> mTransportHandler;
+
+  // State used by libwebrtc that needs to be shared across all PeerConnections
+  // and all Call instances. Set while there is at least one peer connection
+  // registered.
+  RefPtr<SharedWebrtcState> mSharedWebrtcState;
+
+  // Trials instance shared between calls, to limit the number of instances in
+  // large calls. Note that this has to outlive the Call instances owned by
+  // PeerConnections, and as such is not unset prior to the ctx dtor.
+  UniquePtr<webrtc::WebRtcKeyValueConfig> mTrials;
 
   static PeerConnectionCtx* gInstance;
 
