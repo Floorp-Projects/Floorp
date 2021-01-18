@@ -976,15 +976,6 @@ void CodeGenerator::visitValueToInt32(LValueToInt32* lir) {
   Register output = ToRegister(lir->output());
   FloatRegister temp = ToFloatRegister(lir->tempFloat());
 
-  MDefinition* input;
-  if (lir->mode() == LValueToInt32::NORMAL) {
-    input = lir->mirNormal()->input();
-  } else if (lir->mode() == LValueToInt32::TRUNCATE_NOWRAP) {
-    input = lir->mirTruncateNoWrap()->input();
-  } else {
-    input = lir->mirTruncate()->input();
-  }
-
   Label fails;
   if (lir->mode() == LValueToInt32::TRUNCATE) {
     OutOfLineCode* oolDouble = oolTruncateDouble(temp, output, lir->mir());
@@ -998,7 +989,7 @@ void CodeGenerator::visitValueToInt32(LValueToInt32* lir) {
     Label* stringEntry = oolString->entry();
     Label* stringRejoin = oolString->rejoin();
 
-    masm.truncateValueToInt32(operand, input, stringEntry, stringRejoin,
+    masm.truncateValueToInt32(operand, stringEntry, stringRejoin,
                               oolDouble->entry(), stringReg, temp, output,
                               &fails);
     masm.bind(oolDouble->rejoin());
@@ -1006,11 +997,11 @@ void CodeGenerator::visitValueToInt32(LValueToInt32* lir) {
     auto* ool = new (alloc()) OutOfLineZeroIfNaN(lir, temp, output);
     addOutOfLineCode(ool, lir->mir());
 
-    masm.truncateNoWrapValueToInt32(operand, input, temp, output, ool->entry(),
+    masm.truncateNoWrapValueToInt32(operand, temp, output, ool->entry(),
                                     &fails);
     masm.bind(ool->rejoin());
   } else {
-    masm.convertValueToInt32(operand, input, temp, output, &fails,
+    masm.convertValueToInt32(operand, temp, output, &fails,
                              lir->mirNormal()->needsNegativeZeroCheck(),
                              lir->mirNormal()->conversion());
   }
@@ -12833,7 +12824,6 @@ void CodeGenerator::visitClampVToUint8(LClampVToUint8* lir) {
   ValueOperand operand = ToValue(lir, LClampVToUint8::Input);
   FloatRegister tempFloat = ToFloatRegister(lir->tempFloat());
   Register output = ToRegister(lir->output());
-  MDefinition* input = lir->mir()->input();
 
   using Fn = bool (*)(JSContext*, JSString*, double*);
   OutOfLineCode* oolString = oolCallVM<Fn, StringToNumber>(
@@ -12842,8 +12832,8 @@ void CodeGenerator::visitClampVToUint8(LClampVToUint8* lir) {
   Label* stringRejoin = oolString->rejoin();
 
   Label fails;
-  masm.clampValueToUint8(operand, input, stringEntry, stringRejoin, output,
-                         tempFloat, output, &fails);
+  masm.clampValueToUint8(operand, stringEntry, stringRejoin, output, tempFloat,
+                         output, &fails);
 
   bailoutFrom(&fails, lir->snapshot());
 }

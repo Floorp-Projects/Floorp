@@ -4351,20 +4351,19 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // passed the unboxed string in |stringReg| and should convert it to a
   // double store into |temp|.
   void convertValueToInt(
-      ValueOperand value, MDefinition* input, Label* handleStringEntry,
-      Label* handleStringRejoin, Label* truncateDoubleSlow, Register stringReg,
-      FloatRegister temp, Register output, Label* fail,
-      IntConversionBehavior behavior,
+      ValueOperand value, Label* handleStringEntry, Label* handleStringRejoin,
+      Label* truncateDoubleSlow, Register stringReg, FloatRegister temp,
+      Register output, Label* fail, IntConversionBehavior behavior,
       IntConversionInputKind conversion = IntConversionInputKind::Any);
 
   // This carries over the MToNumberInt32 operation on the ValueOperand
   // input; see comment at the top of this class.
   void convertValueToInt32(
-      ValueOperand value, MDefinition* input, FloatRegister temp,
-      Register output, Label* fail, bool negativeZeroCheck,
+      ValueOperand value, FloatRegister temp, Register output, Label* fail,
+      bool negativeZeroCheck,
       IntConversionInputKind conversion = IntConversionInputKind::Any) {
     convertValueToInt(
-        value, input, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
+        value, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
         negativeZeroCheck ? IntConversionBehavior::NegativeZeroCheck
                           : IntConversionBehavior::Normal,
         conversion);
@@ -4372,38 +4371,37 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // This carries over the MTruncateToInt32 operation on the ValueOperand
   // input; see the comment at the top of this class.
-  void truncateValueToInt32(ValueOperand value, MDefinition* input,
-                            Label* handleStringEntry, Label* handleStringRejoin,
+  void truncateValueToInt32(ValueOperand value, Label* handleStringEntry,
+                            Label* handleStringRejoin,
                             Label* truncateDoubleSlow, Register stringReg,
                             FloatRegister temp, Register output, Label* fail) {
-    convertValueToInt(value, input, handleStringEntry, handleStringRejoin,
+    convertValueToInt(value, handleStringEntry, handleStringRejoin,
                       truncateDoubleSlow, stringReg, temp, output, fail,
                       IntConversionBehavior::Truncate);
   }
 
   void truncateValueToInt32(ValueOperand value, FloatRegister temp,
                             Register output, Label* fail) {
-    truncateValueToInt32(value, nullptr, nullptr, nullptr, nullptr, InvalidReg,
-                         temp, output, fail);
+    truncateValueToInt32(value, nullptr, nullptr, nullptr, InvalidReg, temp,
+                         output, fail);
   }
 
   // Truncates, i.e. removes any fractional parts, but doesn't wrap around to
   // the int32 range.
-  void truncateNoWrapValueToInt32(ValueOperand value, MDefinition* input,
-                                  FloatRegister temp, Register output,
-                                  Label* truncateDoubleSlow, Label* fail) {
-    convertValueToInt(value, input, nullptr, nullptr, truncateDoubleSlow,
-                      InvalidReg, temp, output, fail,
+  void truncateNoWrapValueToInt32(ValueOperand value, FloatRegister temp,
+                                  Register output, Label* truncateDoubleSlow,
+                                  Label* fail) {
+    convertValueToInt(value, nullptr, nullptr, truncateDoubleSlow, InvalidReg,
+                      temp, output, fail,
                       IntConversionBehavior::TruncateNoWrap);
   }
 
   // Convenience functions for clamping values to uint8.
-  void clampValueToUint8(ValueOperand value, MDefinition* input,
-                         Label* handleStringEntry, Label* handleStringRejoin,
-                         Register stringReg, FloatRegister temp,
-                         Register output, Label* fail) {
-    convertValueToInt(value, input, handleStringEntry, handleStringRejoin,
-                      nullptr, stringReg, temp, output, fail,
+  void clampValueToUint8(ValueOperand value, Label* handleStringEntry,
+                         Label* handleStringRejoin, Register stringReg,
+                         FloatRegister temp, Register output, Label* fail) {
+    convertValueToInt(value, handleStringEntry, handleStringRejoin, nullptr,
+                      stringReg, temp, output, fail,
                       IntConversionBehavior::ClampToUint8);
   }
 
