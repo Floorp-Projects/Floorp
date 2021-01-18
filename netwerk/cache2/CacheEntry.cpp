@@ -1100,9 +1100,12 @@ nsresult CacheEntry::GetIsForcedValid(bool* aIsForcedValid) {
 
   MOZ_ASSERT(mState > LOADING);
 
-  if (mPinned) {
-    *aIsForcedValid = true;
-    return NS_OK;
+  {
+    mozilla::MutexAutoLock lock(mLock);
+    if (mPinned) {
+      *aIsForcedValid = true;
+      return NS_OK;
+    }
   }
 
   nsAutoCString key;
