@@ -527,6 +527,7 @@ static bool IsInputReused(LInstruction* ins, LUse* use) {
  * a loop gain a range covering the entire loop.
  */
 bool BacktrackingAllocator::buildLivenessInfo() {
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Beginning liveness analysis");
 
   Vector<MBasicBlock*, 1, SystemAllocPolicy> loopWorkList;
@@ -854,6 +855,7 @@ bool BacktrackingAllocator::buildLivenessInfo() {
 }
 
 bool BacktrackingAllocator::go() {
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Beginning register allocation");
 
   if (!init()) {
@@ -874,9 +876,10 @@ bool BacktrackingAllocator::go() {
   }
 
   if (JitSpewEnabled(JitSpew_RegAlloc)) {
-    dumpVregs();
+    dumpVregs("after grouping/queueing regs");
   }
 
+  JitSpewCont(JitSpew_RegAlloc, "\n");
   JitSpew(JitSpew_RegAlloc, "Beginning main allocation loop");
 
   // Allocate, spill and split bundles until finished.
@@ -902,6 +905,7 @@ bool BacktrackingAllocator::go() {
   }
 
   if (JitSpewEnabled(JitSpew_RegAlloc)) {
+    JitSpewCont(JitSpew_RegAlloc, "\n");
     dumpAllocations();
   }
 
@@ -920,6 +924,9 @@ bool BacktrackingAllocator::go() {
   if (!annotateMoveGroups()) {
     return false;
   }
+
+  JitSpewCont(JitSpew_RegAlloc, "\n");
+  JitSpew(JitSpew_RegAlloc, "Finished register allocation");
 
   return true;
 }
@@ -2641,26 +2648,30 @@ UniqueChars LiveBundle::toString() const {
 
 #endif  // JS_JITSPEW
 
-void BacktrackingAllocator::dumpVregs() {
+void BacktrackingAllocator::dumpVregs(const char* who) {
 #ifdef JS_JITSPEW
   MOZ_ASSERT(!vregs[0u].hasRanges());
 
-  fprintf(stderr, "Live ranges by virtual register:\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
+  JitSpew(JitSpew_RegAlloc, "Live ranges by virtual register (%s):", who);
 
   for (uint32_t i = 1; i < graph.numVirtualRegisters(); i++) {
-    fprintf(stderr, "  ");
+    JitSpewHeader(JitSpew_RegAlloc);
+    JitSpewCont(JitSpew_RegAlloc, "  ");
     VirtualRegister& reg = vregs[i];
     for (LiveRange::RegisterLinkIterator iter = reg.rangesBegin(); iter;
          iter++) {
       if (iter != reg.rangesBegin()) {
-        fprintf(stderr, " ## ");
+        JitSpewCont(JitSpew_RegAlloc, " ## ");
       }
-      fprintf(stderr, "%s", LiveRange::get(*iter)->toString().get());
+      JitSpewCont(JitSpew_RegAlloc, "%s",
+                  LiveRange::get(*iter)->toString().get());
     }
-    fprintf(stderr, "\n");
+    JitSpewCont(JitSpew_RegAlloc, "\n");
   }
 
-  fprintf(stderr, "\nLive ranges by bundle:\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
+  JitSpew(JitSpew_RegAlloc, "Live ranges by bundle (%s):", who);
 
   for (uint32_t i = 1; i < graph.numVirtualRegisters(); i++) {
     VirtualRegister& reg = vregs[i];
@@ -2669,15 +2680,17 @@ void BacktrackingAllocator::dumpVregs() {
       LiveRange* range = LiveRange::get(*baseIter);
       LiveBundle* bundle = range->bundle();
       if (range == bundle->firstRange()) {
-        fprintf(stderr, "  ");
+        JitSpewHeader(JitSpew_RegAlloc);
+        JitSpewCont(JitSpew_RegAlloc, "  ");
         for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter;
              iter++) {
           if (iter != bundle->rangesBegin()) {
-            fprintf(stderr, " ## ");
+            JitSpewCont(JitSpew_RegAlloc, " ## ");
           }
-          fprintf(stderr, "%s", LiveRange::get(*iter)->toString().get());
+          JitSpewCont(JitSpew_RegAlloc, "%s",
+                      LiveRange::get(*iter)->toString().get());
         }
-        fprintf(stderr, "\n");
+        JitSpewCont(JitSpew_RegAlloc, "\n");
       }
     }
   }
@@ -2703,22 +2716,24 @@ struct BacktrackingAllocator::PrintLiveRange {
 
 void BacktrackingAllocator::dumpAllocations() {
 #ifdef JS_JITSPEW
-  fprintf(stderr, "Allocations:\n");
+  JitSpew(JitSpew_RegAlloc, "Allocations:");
 
-  dumpVregs();
+  dumpVregs("in dumpAllocations()");
 
-  fprintf(stderr, "Allocations by physical register:\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
+  JitSpew(JitSpew_RegAlloc, "Allocations by physical register:");
 
   for (size_t i = 0; i < AnyRegister::Total; i++) {
     if (registers[i].allocatable && !registers[i].allocations.empty()) {
-      fprintf(stderr, "  %s:", AnyRegister::FromCode(i).name());
+      JitSpewHeader(JitSpew_RegAlloc);
+      JitSpewCont(JitSpew_RegAlloc, "  %s:", AnyRegister::FromCode(i).name());
       bool first = true;
       registers[i].allocations.forEach(PrintLiveRange(first));
-      fprintf(stderr, "\n");
+      JitSpewCont(JitSpew_RegAlloc, "\n");
     }
   }
 
-  fprintf(stderr, "\n");
+  JitSpewCont(JitSpew_RegAlloc, "\n");
 #endif  // JS_JITSPEW
 }
 

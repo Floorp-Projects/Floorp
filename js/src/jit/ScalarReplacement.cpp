@@ -1209,6 +1209,8 @@ void ArrayMemoryView::visitArrayLength(MArrayLength* ins) {
 }
 
 bool ScalarReplacement(MIRGenerator* mir, MIRGraph& graph) {
+  JitSpew(JitSpew_Escape, "Begin (ScalarReplacement)");
+
   EmulateStateOf<ObjectMemoryView> replaceObject(mir, graph);
   EmulateStateOf<ArrayMemoryView> replaceArray(mir, graph);
   bool addedPhi = false;

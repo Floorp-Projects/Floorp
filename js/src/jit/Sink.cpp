@@ -44,6 +44,7 @@ static MBasicBlock* CommonDominator(MBasicBlock* commonDominator,
 }
 
 bool Sink(MIRGenerator* mir, MIRGraph& graph) {
+  JitSpew(JitSpew_Sink, "Begin");
   TempAllocator& alloc = graph.alloc();
   bool sinkEnabled = mir->optimizationInfo().sinkEnabled();
 
