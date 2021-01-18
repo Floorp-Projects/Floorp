@@ -7,14 +7,16 @@
 from __future__ import absolute_import
 
 import os
+import shutil
+import tempfile
 
-from mozdevice import ADBDeviceFactory
-
+import mozcrash
 from logger.logger import RaptorLogger
+from mozdevice import ADBDeviceFactory
 from performance_tuning import tune_performance
 from perftest import PerftestAndroid
-from power import enable_charging, disable_charging
 
+from power import enable_charging, disable_charging
 from .base import Browsertime
 
 LOG = RaptorLogger(component="raptor-browsertime-android")
@@ -88,6 +90,14 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                     activity,
                 ]
             )
+            if self.browsertime_geckodriver:
+                args_list.extend(
+                    [
+                        # Set geckoprofile location to internal so we are able to get crashes
+                        '--firefox.geckodriverArgs="--android-storage"',
+                        "--firefox.geckodriverArgs=internal",
+                    ]
+                )
 
         # Setup power testing
         if self.config["power_test"]:
@@ -170,8 +180,38 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         self.clear_app_data()
         self.set_debug_app_flag()
         self.device.run_as_package = self.config["binary"]
-        self.remote_test_root = os.path.join(self.device.test_root, "raptor")
-        self.remote_profile = os.path.join(self.remote_test_root, "profile")
+        self.remote_test_root = self.device.test_root
+        self.geckodriver_profile = os.path.join(
+            self.remote_test_root, "%s-geckodriver-profile" % self.config["binary"]
+        )
+
+        # make sure no remote profile exists
+        if self.device.exists(self.geckodriver_profile):
+            self.device.rm(self.geckodriver_profile, force=True, recursive=True)
+
+    def check_for_crashes(self):
+        super(BrowsertimeAndroid, self).check_for_crashes()
+
+        try:
+            dump_dir = tempfile.mkdtemp()
+            remote_dir = os.path.join(self.geckodriver_profile, "minidumps")
+            if not self.device.is_dir(remote_dir):
+                return
+            self.device.pull(remote_dir, dump_dir)
+            self.crashes += mozcrash.log_crashes(
+                LOG, dump_dir, self.config["symbols_path"]
+            )
+        except Exception as e:
+            LOG.error(
+                "Could not pull the crash data!",
+                exc_info=True,
+            )
+            raise e
+        finally:
+            try:
+                shutil.rmtree(dump_dir)
+            except Exception:
+                LOG.warning("unable to remove directory: %s" % dump_dir)
 
     def run_test_setup(self, test):
         super(BrowsertimeAndroid, self).run_test_setup(test)
