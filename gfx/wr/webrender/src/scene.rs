@@ -269,13 +269,13 @@ pub struct BuiltScene {
     pub pipeline_epochs: FastHashMap<PipelineId, Epoch>,
     pub output_rect: DeviceIntRect,
     pub background_color: Option<ColorF>,
-    pub root_pic_index: PictureIndex,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub config: FrameBuilderConfig,
     pub spatial_tree: SpatialTree,
     pub hit_testing_scene: Arc<HitTestingScene>,
     pub tile_cache_config: TileCacheConfig,
+    pub tile_cache_pictures: Vec<PictureIndex>,
 }
 
 impl BuiltScene {
@@ -285,12 +285,12 @@ impl BuiltScene {
             pipeline_epochs: FastHashMap::default(),
             output_rect: DeviceIntRect::zero(),
             background_color: None,
-            root_pic_index: PictureIndex(0),
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
             clip_store: ClipStore::new(),
             spatial_tree: SpatialTree::new(),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             tile_cache_config: TileCacheConfig::new(0),
+            tile_cache_pictures: Vec::new(),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
