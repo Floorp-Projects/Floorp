@@ -9866,19 +9866,6 @@ class MCallGetIntrinsicValue : public MNullaryInstruction {
   bool possiblyCalls() const override { return true; }
 };
 
-class MSetElementInstruction : public MTernaryInstruction {
-  bool strict_;
-
- protected:
-  MSetElementInstruction(Opcode op, MDefinition* object, MDefinition* index,
-                         MDefinition* value, bool strict)
-      : MTernaryInstruction(op, object, index, value), strict_(strict) {}
-
- public:
-  NAMED_OPERANDS((0, object), (1, index), (2, value))
-  bool strict() const { return strict_; }
-};
-
 class MDeleteProperty : public MUnaryInstruction, public BoxInputsPolicy::Data {
   CompilerPropertyName name_;
   bool strict_;
@@ -9930,15 +9917,21 @@ class MSetPropertyCache : public MTernaryInstruction,
   bool strict() const { return strict_; }
 };
 
-class MCallSetElement : public MSetElementInstruction,
+class MCallSetElement : public MTernaryInstruction,
                         public CallSetElementPolicy::Data {
+  bool strict_;
+
   MCallSetElement(MDefinition* object, MDefinition* index, MDefinition* value,
                   bool strict)
-      : MSetElementInstruction(classOpcode, object, index, value, strict) {}
+      : MTernaryInstruction(classOpcode, object, index, value),
+        strict_(strict) {}
 
  public:
   INSTRUCTION_HEADER(CallSetElement)
   TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, index), (2, value))
+
+  bool strict() const { return strict_; }
 
   bool possiblyCalls() const override { return true; }
 };
