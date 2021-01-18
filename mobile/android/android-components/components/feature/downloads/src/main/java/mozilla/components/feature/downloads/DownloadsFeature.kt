@@ -154,28 +154,26 @@ class DownloadsFeature(
      */
     @VisibleForTesting
     internal fun processDownload(tab: SessionState, download: DownloadState): Boolean {
-        return if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
+        val apps = getDownloaderApps(applicationContext, download)
+        // We only show the dialog If we have multiple apps that can handle the download.
+        val shouldShowAppDownloaderDialog = shouldForwardToThirdParties() && apps.size > 1
 
-            if (shouldForwardToThirdParties()) {
-                val apps = getDownloaderApps(applicationContext, download)
-
-                // We only show the dialog If we have multiple apps that can handle the download.
-                if (apps.size > 1) {
-                    showAppDownloaderDialog(tab, download, apps)
-                    return false
-                }
-            }
-
-            if (fragmentManager != null && !download.skipConfirmation) {
-                showDownloadDialog(tab, download)
-                false
-            } else {
-                useCases.consumeDownload(tab.id, download.id)
-                startDownload(download)
-            }
-        } else {
-            onNeedToRequestPermissions(downloadManager.permissions)
+        return if (shouldShowAppDownloaderDialog) {
+            showAppDownloaderDialog(tab, download, apps)
             false
+        } else {
+            if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
+                if (fragmentManager != null && !download.skipConfirmation) {
+                    showDownloadDialog(tab, download)
+                    false
+                } else {
+                    useCases.consumeDownload(tab.id, download.id)
+                    startDownload(download)
+                }
+            } else {
+                onNeedToRequestPermissions(downloadManager.permissions)
+                false
+            }
         }
     }
 
@@ -204,7 +202,12 @@ class DownloadsFeature(
 
         withActiveDownload { (tab, download) ->
             if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
-                processDownload(tab, download)
+                if (shouldForwardToThirdParties()) {
+                    startDownload(download)
+                    useCases.consumeDownload(tab.id, download.id)
+                } else {
+                    processDownload(tab, download)
+                }
             } else {
                 useCases.consumeDownload(tab.id, download.id)
             }
@@ -260,7 +263,12 @@ class DownloadsFeature(
         appChooserDialog.setApps(apps)
         appChooserDialog.onAppSelected = { app ->
             if (app.packageName == applicationContext.packageName) {
-                startDownload(download)
+                if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
+                    startDownload(download)
+                    useCases.consumeDownload(tab.id, download.id)
+                } else {
+                    onNeedToRequestPermissions(downloadManager.permissions)
+                }
             } else {
                 try {
                     applicationContext.startActivity(app.toIntent())
@@ -271,8 +279,8 @@ class DownloadsFeature(
                     )
                     Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
                 }
+                useCases.consumeDownload(tab.id, download.id)
             }
-            useCases.consumeDownload(tab.id, download.id)
         }
 
         appChooserDialog.onDismiss = {
