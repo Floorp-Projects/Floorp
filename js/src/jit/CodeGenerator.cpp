@@ -1541,7 +1541,7 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
   const JSAtomState& names = gen->runtime->names();
 
   // String
-  if (lir->mir()->input()->mightBeType(MIRType::String)) {
+  {
     Label notString;
     masm.branchTestString(Assembler::NotEqual, tag, &notString);
     masm.unboxString(input, output);
@@ -1550,7 +1550,7 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
   }
 
   // Integer
-  if (lir->mir()->input()->mightBeType(MIRType::Int32)) {
+  {
     Label notInteger;
     masm.branchTestInt32(Assembler::NotEqual, tag, &notInteger);
     Register unboxed = ToTempUnboxRegister(lir->tempToUnbox());
@@ -1561,14 +1561,14 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
   }
 
   // Double
-  if (lir->mir()->input()->mightBeType(MIRType::Double)) {
+  {
     // Note: no fastpath. Need two extra registers and can only convert doubles
     // that fit integers and are smaller than StaticStrings::INT_STATIC_LIMIT.
     masm.branchTestDouble(Assembler::Equal, tag, ool->entry());
   }
 
   // Undefined
-  if (lir->mir()->input()->mightBeType(MIRType::Undefined)) {
+  {
     Label notUndefined;
     masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
     masm.movePtr(ImmGCPtr(names.undefined), output);
@@ -1577,7 +1577,7 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
   }
 
   // Null
-  if (lir->mir()->input()->mightBeType(MIRType::Null)) {
+  {
     Label notNull;
     masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
     masm.movePtr(ImmGCPtr(names.null), output);
@@ -1586,7 +1586,7 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
   }
 
   // Boolean
-  if (lir->mir()->input()->mightBeType(MIRType::Boolean)) {
+  {
     Label notBoolean, true_;
     masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
     masm.branchTestBooleanTruthy(true, input, &true_);
@@ -1598,40 +1598,33 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
     masm.bind(&notBoolean);
   }
 
-  // Note: when phis are involved, |mir->input()->mightBeType(MIRType::Object)|
-  // could return true even though |mir->mightHaveSideEffects()| is (still)
-  // false. In this case objects/symbols are not actually possible so we check
-  // |mir->mightHaveSideEffects()| first to avoid assertion failures.
+  // Objects/symbols are only possible when |mir->mightHaveSideEffects()|.
   if (lir->mir()->mightHaveSideEffects()) {
     // Object
-    if (lir->mir()->input()->mightBeType(MIRType::Object)) {
-      if (lir->mir()->supportSideEffects()) {
-        masm.branchTestObject(Assembler::Equal, tag, ool->entry());
-      } else {
-        // Bail.
-        MOZ_ASSERT(lir->mir()->needsSnapshot());
-        Label bail;
-        masm.branchTestObject(Assembler::Equal, tag, &bail);
-        bailoutFrom(&bail, lir->snapshot());
-      }
+    if (lir->mir()->supportSideEffects()) {
+      masm.branchTestObject(Assembler::Equal, tag, ool->entry());
+    } else {
+      // Bail.
+      MOZ_ASSERT(lir->mir()->needsSnapshot());
+      Label bail;
+      masm.branchTestObject(Assembler::Equal, tag, &bail);
+      bailoutFrom(&bail, lir->snapshot());
     }
 
     // Symbol
-    if (lir->mir()->input()->mightBeType(MIRType::Symbol)) {
-      if (lir->mir()->supportSideEffects()) {
-        masm.branchTestSymbol(Assembler::Equal, tag, ool->entry());
-      } else {
-        // Bail.
-        MOZ_ASSERT(lir->mir()->needsSnapshot());
-        Label bail;
-        masm.branchTestSymbol(Assembler::Equal, tag, &bail);
-        bailoutFrom(&bail, lir->snapshot());
-      }
+    if (lir->mir()->supportSideEffects()) {
+      masm.branchTestSymbol(Assembler::Equal, tag, ool->entry());
+    } else {
+      // Bail.
+      MOZ_ASSERT(lir->mir()->needsSnapshot());
+      Label bail;
+      masm.branchTestSymbol(Assembler::Equal, tag, &bail);
+      bailoutFrom(&bail, lir->snapshot());
     }
   }
 
   // BigInt
-  if (lir->mir()->input()->mightBeType(MIRType::BigInt)) {
+  {
     // No fastpath currently implemented.
     masm.branchTestBigInt(Assembler::Equal, tag, ool->entry());
   }
