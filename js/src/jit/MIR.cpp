@@ -1868,36 +1868,6 @@ bool MPhi::updateForReplacement(MDefinition* def) {
   return true;
 }
 
-static MIRType MergeTypes(MIRType type, MIRType newType) {
-  if (type == newType) {
-    return type;
-  }
-  if (IsTypeRepresentableAsDouble(type) &&
-      IsTypeRepresentableAsDouble(newType)) {
-    return MIRType::Double;
-  }
-  return MIRType::Value;
-}
-
-bool MPhi::specializeType(TempAllocator& alloc) {
-#ifdef DEBUG
-  MOZ_ASSERT(!specialized_);
-  specialized_ = true;
-#endif
-
-  MOZ_ASSERT(!inputs_.empty());
-
-  MIRType resultType = getOperand(0)->type();
-
-  for (size_t i = 1; i < inputs_.length(); i++) {
-    MDefinition* def = getOperand(i);
-    resultType = MergeTypes(resultType, def->type());
-  }
-
-  setResultType(resultType);
-  return true;
-}
-
 /* static */
 bool MPhi::markIteratorPhis(const PhiVector& iterators) {
   // Find and mark phis that must transitively hold an iterator live.
