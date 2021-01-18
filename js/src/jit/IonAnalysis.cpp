@@ -362,6 +362,7 @@ static void ConvertToBailingBlock(TempAllocator& alloc, MBasicBlock* block) {
 }
 
 bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
+  JitSpew(JitSpew_Prune, "Begin");
   MOZ_ASSERT(!mir->compilingWasm(),
              "wasm compilation has no code coverage support.");
 
@@ -4323,10 +4324,17 @@ void jit::DumpMIRExpressions(MIRGraph& graph, const CompileInfo& info,
   out.printf("===== %s =====\n", phase);
 
   size_t depth = 2;
+  bool isFirstBlock = true;
   for (ReversePostorderIterator block(graph.rpoBegin());
        block != graph.rpoEnd(); block++) {
+    if (isFirstBlock) {
+      isFirstBlock = false;
+    } else {
+      out.printf("  --\n");
+    }
     for (MInstructionIterator iter(block->begin()), end(block->end());
          iter != end; iter++) {
+      out.printf("  ");
       DumpDefinition(out, *iter, depth);
       out.printf("\n");
     }

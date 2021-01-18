@@ -109,8 +109,9 @@ static void IonSpewDependency(MInstruction* load, MInstruction* store,
     return;
   }
 
+  JitSpewHeader(JitSpew_Alias);
   Fprinter& out = JitSpewPrinter();
-  out.printf("Load ");
+  out.printf("  Load ");
   load->printName(out);
   out.printf(" %s on store ", verb);
   store->printName(out);
@@ -125,8 +126,9 @@ static void IonSpewAliasInfo(const char* pre, MInstruction* ins,
     return;
   }
 
+  JitSpewHeader(JitSpew_Alias);
   Fprinter& out = JitSpewPrinter();
-  out.printf("%s ", pre);
+  out.printf("  %s ", pre);
   ins->printName(out);
   out.printf(" %s\n", post);
 #endif
@@ -149,6 +151,7 @@ static void IonSpewAliasInfo(const char* pre, MInstruction* ins,
 // The algorithm depends on the invariant that both control instructions and
 // effectful instructions (stores) are never hoisted.
 bool AliasAnalysis::analyze() {
+  JitSpew(JitSpew_Alias, "Begin");
   Vector<MInstructionVector, AliasSet::NumCategories, JitAllocPolicy> stores(
       alloc());
 
@@ -213,6 +216,7 @@ bool AliasAnalysis::analyze() {
 
 #ifdef JS_JITSPEW
         if (JitSpewEnabled(JitSpew_Alias)) {
+          JitSpewHeader(JitSpew_Alias);
           Fprinter& out = JitSpewPrinter();
           out.printf("Processing store ");
           def->printName(out);

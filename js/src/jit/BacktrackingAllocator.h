@@ -787,7 +787,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
 
   bool compilingWasm() { return mir->outerInfo().compilingWasm(); }
 
-  void dumpVregs();
+  void dumpVregs(const char* who);
 };
 
 }  // namespace jit

@@ -5483,7 +5483,10 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
   GenerateTrapExitMachineState(&trapExitLayout, &trapExitLayoutNumWords);
 
   for (const FuncCompileInput& func : inputs) {
-    JitSpew(JitSpew_Codegen, "# ========================================");
+    JitSpewCont(JitSpew_Codegen, "\n");
+    JitSpew(JitSpew_Codegen,
+            "# ================================"
+            "==================================");
     JitSpew(JitSpew_Codegen, "# ==");
     JitSpew(JitSpew_Codegen,
             "# wasm::IonCompileFunctions: starting on function index %d",
@@ -5565,7 +5568,10 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
             "# wasm::IonCompileFunctions: completed function index %d",
             (int)func.index);
     JitSpew(JitSpew_Codegen, "# ==");
-    JitSpew(JitSpew_Codegen, "# ========================================");
+    JitSpew(JitSpew_Codegen,
+            "# ================================"
+            "==================================");
+    JitSpewCont(JitSpew_Codegen, "\n");
   }
 
   masm.finish();

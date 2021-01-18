@@ -370,6 +370,7 @@ static void PrintHelpAndExit(int status = 0) {
       "  pools         Literal Pools (ARM only for now)\n"
       "  cacheflush    Instruction Cache flushes (ARM only for now)\n"
       "  range         Range Analysis\n"
+      "  wasmbce       Wasm Bounds Check Elimination\n"
       "  logs          JSON visualization logging\n"
       "  logs-sync     Same as logs, but flushes between each pass (sync. "
       "compiled functions only).\n"
@@ -437,6 +438,8 @@ void jit::CheckLogging() {
       EnableChannel(JitSpew_GVN);
     } else if (IsFlag(found, "range")) {
       EnableChannel(JitSpew_Range);
+    } else if (IsFlag(found, "wasmbce")) {
+      EnableChannel(JitSpew_WasmBCE);
     } else if (IsFlag(found, "licm")) {
       EnableChannel(JitSpew_LICM);
     } else if (IsFlag(found, "flac")) {
