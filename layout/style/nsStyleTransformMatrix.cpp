@@ -13,7 +13,6 @@
 #include "nsPresContext.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/SVGUtils.h"
 #include "gfxMatrix.h"
@@ -49,14 +48,7 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
   mIsCached = true;
 
   if (mFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
-    if (!StaticPrefs::svg_transform_box_enabled()) {
-      mX = -mFrame->GetPosition().x;
-      mY = -mFrame->GetPosition().y;
-      Size contextSize = SVGUtils::GetContextSize(mFrame);
-      mWidth = nsPresContext::CSSPixelsToAppUnits(contextSize.width);
-      mHeight = nsPresContext::CSSPixelsToAppUnits(contextSize.height);
-    } else if (mFrame->StyleDisplay()->mTransformBox ==
-               StyleGeometryBox::FillBox) {
+    if (mFrame->StyleDisplay()->mTransformBox == StyleGeometryBox::FillBox) {
       // Percentages in transforms resolve against the SVG bbox, and the
       // transform is relative to the top-left of the SVG bbox.
       nsRect bboxInAppUnits = nsLayoutUtils::ComputeGeometryBox(
