@@ -1005,10 +1005,13 @@ bool OptimizeMIR(MIRGenerator* mir) {
   gs.spewPass("BuildSSA");
   AssertBasicGraphCoherency(graph);
 
-  DumpMIRExpressions(graph, mir->outerInfo(), "BuildSSA");
+  JitSpewCont(JitSpew_MIRExpressions, "\n");
+  DumpMIRExpressions(graph, mir->outerInfo(),
+                     "BuildSSA (== input to OptimizeMIR)");
 
   if (!JitOptions.disablePgo && !mir->compilingWasm()) {
     AutoTraceLog log(logger, TraceLogger_PruneUnusedBranches);
+    JitSpewCont(JitSpew_Prune, "\n");
     if (!PruneUnusedBranches(mir, graph)) {
       return false;
     }
@@ -1115,6 +1118,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().scalarReplacementEnabled()) {
     AutoTraceLog log(logger, TraceLogger_ScalarReplacement);
+    JitSpewCont(JitSpew_Escape, "\n");
     if (!ScalarReplacement(mir, graph)) {
       return false;
     }
@@ -1163,6 +1167,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
       AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
 
       AliasAnalysis analysis(mir, graph);
+      JitSpewCont(JitSpew_Alias, "\n");
       if (!analysis.analyze()) {
         return false;
       }
@@ -1191,6 +1196,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   if (mir->optimizationInfo().gvnEnabled()) {
     AutoTraceLog log(logger, TraceLogger_GVN);
+    JitSpewCont(JitSpew_GVN, "\n");
     if (!gvn.run(ValueNumberer::UpdateAliasAnalysis)) {
       return false;
     }
@@ -1208,6 +1214,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
     // trigger bailouts. Disable it if bailing out of a hoisted
     // instruction has previously invalidated this script.
     if (!mir->outerInfo().hadLICMInvalidation()) {
+      JitSpewCont(JitSpew_LICM, "\n");
       if (!LICM(mir, graph)) {
         return false;
       }
@@ -1223,6 +1230,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   RangeAnalysis r(mir, graph);
   if (mir->optimizationInfo().rangeAnalysisEnabled()) {
     AutoTraceLog log(logger, TraceLogger_RangeAnalysis);
+    JitSpewCont(JitSpew_Range, "\n");
     if (!r.addBetaNodes()) {
       return false;
     }
@@ -1293,6 +1301,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   if (!JitOptions.disableRecoverIns) {
     AutoTraceLog log(logger, TraceLogger_Sink);
+    JitSpewCont(JitSpew_Sink, "\n");
     if (!Sink(mir, graph)) {
       return false;
     }
@@ -1307,6 +1316,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().rangeAnalysisEnabled()) {
     AutoTraceLog log(logger, TraceLogger_RemoveUnnecessaryBitops);
+    JitSpewCont(JitSpew_Range, "\n");
     if (!r.removeUnnecessaryBitops()) {
       return false;
     }
@@ -1320,6 +1330,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   {
     AutoTraceLog log(logger, TraceLogger_FoldLinearArithConstants);
+    JitSpewCont(JitSpew_FLAC, "\n");
     if (!FoldLinearArithConstants(mir, graph)) {
       return false;
     }
@@ -1334,6 +1345,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   if (mir->optimizationInfo().eaaEnabled()) {
     AutoTraceLog log(logger, TraceLogger_EffectiveAddressAnalysis);
     EffectiveAddressAnalysis eaa(mir, graph);
+    JitSpewCont(JitSpew_EAA, "\n");
     if (!eaa.analyze()) {
       return false;
     }
@@ -1347,6 +1359,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   // BCE marks bounds checks as dead, so do BCE before DCE.
   if (mir->compilingWasm()) {
+    JitSpewCont(JitSpew_WasmBCE, "\n");
     if (!EliminateBoundsChecks(mir, graph)) {
       return false;
     }
@@ -1452,7 +1465,9 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   AssertGraphCoherency(graph, /* force = */ true);
 
-  DumpMIRExpressions(graph, mir->outerInfo(), "BeforeLIR");
+  JitSpewCont(JitSpew_MIRExpressions, "\n");
+  DumpMIRExpressions(graph, mir->outerInfo(),
+                     "BeforeLIR (== result of OptimizeMIR)");
 
   return true;
 }

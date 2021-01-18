@@ -43,6 +43,8 @@ namespace jit {
   _(FLAC)                                  \
   /* Effective address analysis info */    \
   _(EAA)                                   \
+  /* Wasm Bounds Check Elimination */      \
+  _(WasmBCE)                               \
   /* Information during regalloc */        \
   _(RegAlloc)                              \
   /* Information during inlining */        \

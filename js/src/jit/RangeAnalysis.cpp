@@ -124,9 +124,11 @@ static inline void SpewRange(MDefinition* def) {
       def->range()) {
     JitSpewHeader(JitSpew_Range);
     Fprinter& out = JitSpewPrinter();
+    out.printf("  ");
     def->printName(out);
     out.printf(" has range ");
     def->range()->dump(out);
+    out.printf("\n");
   }
 #endif
 }
@@ -152,6 +154,7 @@ static inline void SpewTruncate(MDefinition* def, TruncateKind kind,
   if (JitSpewEnabled(JitSpew_Range)) {
     JitSpewHeader(JitSpew_Range);
     Fprinter& out = JitSpewPrinter();
+    out.printf("  ");
     out.printf("truncating ");
     def->printName(out);
     out.printf(" (kind: %s, clone: %d)\n", TruncateKindString(kind),
@@ -247,14 +250,14 @@ bool RangeAnalysis::addBetaNodes() {
             Range::NewInt32Range(alloc(), JSVAL_INT_MIN, JSVAL_INT_MAX - 1));
         block->insertBefore(*block->begin(), beta);
         replaceDominatedUsesWith(smaller, beta, block);
-        JitSpew(JitSpew_Range, "Adding beta node for smaller %u",
+        JitSpew(JitSpew_Range, "  Adding beta node for smaller %u",
                 smaller->id());
         beta = MBeta::New(
             alloc(), greater,
             Range::NewInt32Range(alloc(), JSVAL_INT_MIN + 1, JSVAL_INT_MAX));
         block->insertBefore(*block->begin(), beta);
         replaceDominatedUsesWith(greater, beta, block);
-        JitSpew(JitSpew_Range, "Adding beta node for greater %u",
+        JitSpew(JitSpew_Range, "  Adding beta node for greater %u",
                 greater->id());
       }
       continue;
@@ -339,8 +342,9 @@ bool RangeAnalysis::addBetaNodes() {
     if (JitSpewEnabled(JitSpew_Range)) {
       JitSpewHeader(JitSpew_Range);
       Fprinter& out = JitSpewPrinter();
-      out.printf("Adding beta node for %u with range ", val->id());
+      out.printf("  Adding beta node for %u with range ", val->id());
       comp.dump(out);
+      out.printf("\n");
     }
 
     if (!alloc().ensureBallast()) {
@@ -364,7 +368,7 @@ bool RangeAnalysis::removeBetaNodes() {
       MDefinition* def = *iter++;
       if (def->isBeta()) {
         MDefinition* op = def->getOperand(0);
-        JitSpew(JitSpew_Range, "Removing beta node %u for %u", def->id(),
+        JitSpew(JitSpew_Range, "  Removing beta node %u for %u", def->id(),
                 op->id());
         def->justReplaceAllUsesWith(op);
         block->discardDef(def);
@@ -3233,6 +3237,7 @@ bool RangeAnalysis::truncate() {
 }
 
 bool RangeAnalysis::removeUnnecessaryBitops() {
+  JitSpew(JitSpew_Range, "Begin (removeUnnecessaryBitops)");
   // Note: This operation change the semantic of the program in a way which
   // uniquely works with Int32, Recover Instructions added by the Sink phase
   // expects the MIR Graph to still have a valid flow as-if they were double

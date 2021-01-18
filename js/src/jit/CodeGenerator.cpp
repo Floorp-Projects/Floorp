@@ -6347,7 +6347,8 @@ void CodeGenerator::emitDebugForceBailing(LInstruction* lir) {
 #endif
 
 bool CodeGenerator::generateBody() {
-  JitSpew(JitSpew_Codegen, "==== BEGIN CodeGenerator::generateBody ====\n");
+  JitSpewCont(JitSpew_Codegen, "\n");
+  JitSpew(JitSpew_Codegen, "==== BEGIN CodeGenerator::generateBody ====");
   IonScriptCounts* counts = maybeCreateScriptCounts();
 
 #if defined(JS_ION_PERF)
