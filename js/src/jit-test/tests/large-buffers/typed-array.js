@@ -77,3 +77,24 @@ function testSlice() {
     assertEq(ta2.toString(), "100,101,102");
 }
 testSlice();
+
+function testIterators() {
+    var ex;
+
+    ex = null;
+    try {
+        for (var p in ta) {}
+    } catch (e) {
+        ex = e;
+    }
+    assertEq(ex, "out of memory");
+
+    ex = null;
+    try {
+        Object.getOwnPropertyNames(ta);
+    } catch (e) {
+        ex = e;
+    }
+    assertEq(ex, "out of memory");
+}
+testIterators();
