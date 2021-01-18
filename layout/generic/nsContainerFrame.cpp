@@ -17,6 +17,7 @@
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsFlexContainerFrame.h"
+#include "nsFrameSelection.h"
 #include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
