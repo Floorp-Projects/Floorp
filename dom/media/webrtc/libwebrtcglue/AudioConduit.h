@@ -179,21 +179,9 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   void SetSyncGroup(const std::string& group) override;
 
-  bool GetSendPacketTypeStats(
-      webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
-
-  bool GetRecvPacketTypeStats(
-      webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
-
-  bool GetRTPReceiverStats(unsigned int* jitterMs,
-                           unsigned int* cumulativeLost) override;
-  bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,
-                             uint64_t* bytesReceived, uint32_t* cumulativeLost,
-                             Maybe<double>* aOutRttSec) override;
-  bool GetRTCPSenderReport(unsigned int* packetsSent, uint64_t* bytesSent,
-                           DOMHighResTimeStamp* aRemoteTimestamp) override;
-  Maybe<mozilla::dom::RTCBandwidthEstimationInternal> GetBandwidthEstimation()
-      override;
+  Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const override;
+  Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const override;
+  webrtc::Call::Stats GetCallStats() const override;
 
   bool SetDtmfPayloadType(unsigned char type, int freq) override;
 
