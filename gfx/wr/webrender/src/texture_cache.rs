@@ -322,94 +322,126 @@ struct SharedTextures {
     alpha16_linear: AllocatorList<SlabAllocator, TextureParameters>,
     color8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     color8_glyphs: AllocatorList<ShelfAllocator, TextureParameters>,
+    bytes_per_texture_of_type: [i32 ; BudgetType::COUNT],
 }
 
 impl SharedTextures {
     /// Mints a new set of shared textures.
     fn new(color_formats: TextureFormatPair<ImageFormat>, config: &TextureCacheConfig) -> Self {
+        let mut bytes_per_texture_of_type = [0 ; BudgetType::COUNT];
+
+        // Used primarily for cached shadow masks. There can be lots of
+        // these on some pages like francine, but most pages don't use it
+        // much.
+        // Most content tends to fit into two 512x512 textures. We are
+        // conservatively using 1024x1024 to fit everything in a single
+        // texture and avoid breaking batches, but it's worth checking
+        // whether it would actually lead to a lot of batch breaks in
+        // practice.
+        let alpha8_linear = AllocatorList::new(
+            config.alpha8_texture_size,
+            ShelfAllocatorOptions {
+                num_columns: 1,
+                alignment: size2(8, 8),
+                .. ShelfAllocatorOptions::default()
+            },
+            TextureParameters {
+                formats: TextureFormatPair::from(ImageFormat::R8),
+                filter: TextureFilter::Linear,
+            },
+        );
+        bytes_per_texture_of_type[BudgetType::SharedAlpha8 as usize] =
+            config.alpha8_texture_size * config.alpha8_texture_size;
+
+        // The cache for alpha glyphs (separate to help with batching).
+        let alpha8_glyphs = AllocatorList::new(
+            config.alpha8_glyph_texture_size,
+            ShelfAllocatorOptions {
+                num_columns: if config.alpha8_glyph_texture_size >= 1024 { 2 } else { 1 },
+                alignment: size2(4, 8),
+                .. ShelfAllocatorOptions::default()
+            },
+            TextureParameters {
+                formats: TextureFormatPair::from(ImageFormat::R8),
+                filter: TextureFilter::Linear,
+            },
+        );
+        bytes_per_texture_of_type[BudgetType::SharedAlpha8Glyphs as usize] =
+            config.alpha8_glyph_texture_size * config.alpha8_glyph_texture_size;
+
+        // Used for experimental hdr yuv texture support, but not used in
+        // production Firefox.
+        let alpha16_linear = AllocatorList::new(
+            config.alpha16_texture_size,
+            SlabAllocatorParameters {
+                region_size: TEXTURE_REGION_DIMENSIONS,
+            },
+            TextureParameters {
+                formats: TextureFormatPair::from(ImageFormat::R16),
+                filter: TextureFilter::Linear,
+            },
+        );
+        bytes_per_texture_of_type[BudgetType::SharedAlpha16 as usize] =
+            ImageFormat::R16.bytes_per_pixel() *
+            config.alpha16_texture_size * config.alpha16_texture_size;
+
+        // The primary cache for images, etc.
+        let color8_linear = AllocatorList::new(
+            config.color8_linear_texture_size,
+            ShelfAllocatorOptions {
+                num_columns: if config.color8_linear_texture_size >= 1024 { 2 } else { 1 },
+                alignment: size2(16, 16),
+                .. ShelfAllocatorOptions::default()
+            },
+            TextureParameters {
+                formats: color_formats.clone(),
+                filter: TextureFilter::Linear,
+            },
+        );
+        bytes_per_texture_of_type[BudgetType::SharedColor8Linear as usize] =
+            color_formats.internal.bytes_per_pixel() *
+            config.color8_linear_texture_size * config.color8_linear_texture_size;
+
+        // The cache for subpixel-AA and bitmap glyphs (separate to help with batching).
+        let color8_glyphs = AllocatorList::new(
+            config.color8_glyph_texture_size,
+            ShelfAllocatorOptions {
+                num_columns: if config.color8_glyph_texture_size >= 1024 { 2 } else { 1 },
+                alignment: size2(4, 8),
+                .. ShelfAllocatorOptions::default()
+            },
+            TextureParameters {
+                formats: color_formats.clone(),
+                filter: TextureFilter::Linear,
+            },
+        );
+        bytes_per_texture_of_type[BudgetType::SharedColor8Glyphs as usize] =
+            color_formats.internal.bytes_per_pixel() *
+            config.color8_glyph_texture_size * config.color8_glyph_texture_size;
+
+        // Used for image-rendering: crisp. This is mostly favicons, which
+        // are small. Some other images use it too, but those tend to be
+        // larger than 512x512 and thus don't use the shared cache anyway.
+        let color8_nearest = AllocatorList::new(
+            config.color8_nearest_texture_size,
+            ShelfAllocatorOptions::default(),
+            TextureParameters {
+                formats: color_formats.clone(),
+                filter: TextureFilter::Nearest,
+            }
+        );
+        bytes_per_texture_of_type[BudgetType::SharedColor8Nearest as usize] =
+            color_formats.internal.bytes_per_pixel() *
+            config.color8_nearest_texture_size * config.color8_nearest_texture_size;
+
         Self {
-            // Used primarily for cached shadow masks. There can be lots of
-            // these on some pages like francine, but most pages don't use it
-            // much.
-            // Most content tends to fit into two 512x512 textures. We are
-            // conservatively using 1024x1024 to fit everything in a single
-            // texture and avoid breaking batches, but it's worth checking
-            // whether it would actually lead to a lot of batch breaks in
-            // practice.
-            alpha8_linear: AllocatorList::new(
-                config.alpha8_texture_size,
-                ShelfAllocatorOptions {
-                    num_columns: 1,
-                    alignment: size2(8, 8),
-                    .. ShelfAllocatorOptions::default()
-                },
-                TextureParameters {
-                    formats: TextureFormatPair::from(ImageFormat::R8),
-                    filter: TextureFilter::Linear,
-                },
-            ),
-            // The cache for alpha glyphs (separate to help with batching).
-            alpha8_glyphs: AllocatorList::new(
-                config.alpha8_glyph_texture_size,
-                ShelfAllocatorOptions {
-                    num_columns: if config.alpha8_glyph_texture_size >= 1024 { 2 } else { 1 },
-                    alignment: size2(4, 8),
-                    .. ShelfAllocatorOptions::default()
-                },
-                TextureParameters {
-                    formats: TextureFormatPair::from(ImageFormat::R8),
-                    filter: TextureFilter::Linear,
-                },
-            ),
-            // Used for experimental hdr yuv texture support, but not used in
-            // production Firefox.
-            alpha16_linear: AllocatorList::new(
-                config.alpha16_texture_size,
-                SlabAllocatorParameters {
-                    region_size: TEXTURE_REGION_DIMENSIONS,
-                },
-                TextureParameters {
-                    formats: TextureFormatPair::from(ImageFormat::R16),
-                    filter: TextureFilter::Linear,
-                },
-            ),
-            // The primary cache for images, etc.
-            color8_linear: AllocatorList::new(
-                config.color8_linear_texture_size,
-                ShelfAllocatorOptions {
-                    num_columns: if config.color8_linear_texture_size >= 1024 { 2 } else { 1 },
-                    alignment: size2(16, 16),
-                    .. ShelfAllocatorOptions::default()
-                },
-                TextureParameters {
-                    formats: color_formats.clone(),
-                    filter: TextureFilter::Linear,
-                },
-            ),
-            // The cache for subpixel-AA and bitmap glyphs (separate to help with batching).
-            color8_glyphs: AllocatorList::new(
-                config.color8_glyph_texture_size,
-                ShelfAllocatorOptions {
-                    num_columns: if config.color8_glyph_texture_size >= 1024 { 2 } else { 1 },
-                    alignment: size2(4, 8),
-                    .. ShelfAllocatorOptions::default()
-                },
-                TextureParameters {
-                    formats: color_formats.clone(),
-                    filter: TextureFilter::Linear,
-                },
-            ),
-            // Used for image-rendering: crisp. This is mostly favicons, which
-            // are small. Some other images use it too, but those tend to be
-            // larger than 512x512 and thus don't use the shared cache anyway.
-            color8_nearest: AllocatorList::new(
-                config.color8_nearest_texture_size,
-                ShelfAllocatorOptions::default(),
-                TextureParameters {
-                    formats: color_formats,
-                    filter: TextureFilter::Nearest,
-                }
-            ),
+            alpha8_linear,
+            alpha8_glyphs,
+            alpha16_linear,
+            color8_linear,
+            color8_glyphs,
+            color8_nearest,
+            bytes_per_texture_of_type,
         }
     }
 
@@ -462,6 +494,12 @@ impl SharedTextures {
             }
             _ => panic!("Unexpected format {:?}", external_format),
         }
+    }
+
+    /// How many bytes a single texture of the given type takes up, for the
+    /// configured texture sizes.
+    fn bytes_per_shared_texture(&self, budget_type: BudgetType) -> usize {
+        self.bytes_per_texture_of_type[budget_type as usize] as usize
     }
 }
 
@@ -1214,17 +1252,55 @@ impl TextureCache {
         }
     }
 
-    /// Get the eviction threshold, in bytes, for the given budget.
-    fn get_eviction_threshold(budget_type: BudgetType) -> usize {
-        match budget_type {
-            BudgetType::SharedColor8Linear => 16 * 1024 * 1024,
-            BudgetType::SharedColor8Nearest => 1 * 1024 * 1024,
-            BudgetType::SharedColor8Glyphs => 8 * 1024 * 1024,
-            BudgetType::SharedAlpha8 => 4 * 1024 * 1024,
-            BudgetType::SharedAlpha8Glyphs => 4 * 1024 * 1024,
-            BudgetType::SharedAlpha16 => 1 * 1024 * 1024,
-            BudgetType::Standalone => 16 * 1024 * 1024,
+    /// Get the eviction threshold, in bytes, for the given budget type.
+    fn get_eviction_threshold(&self, budget_type: BudgetType) -> usize {
+        if budget_type == BudgetType::Standalone {
+            // For standalone textures, the only reason to evict textures is
+            // to save GPU memory. Batching / draw call concerns do not apply
+            // to standalone textures, because unused textures don't cause
+            // extra draw calls.
+            return 16 * 1024 * 1024;
         }
+
+        // For shared textures, evicting an entry only frees up GPU memory if it
+        // causes one of the shared textures to become empty.
+        // The bigger concern for shared textures is batching: The entries that
+        // are needed in the current frame should be distributed across as few
+        // shared textures as possible, to minimize the number of draw calls.
+        // Ideally we only want one or two textures per type.
+        let expected_texture_count = match budget_type {
+            BudgetType::SharedColor8Nearest | BudgetType::SharedAlpha16 => {
+                // These types are only rarely used, we don't want more than
+                // one of each.
+                1
+            },
+
+            _ => {
+                // For the other types, having two textures is acceptable.
+                2
+            },
+        };
+
+        // The threshold that we pick here will be compared to the number of
+        // bytes that are *occupied by entries*. And we're trying to target a
+        // certain number of textures.
+        // Unfortunately, it's hard to predict the number of needed textures
+        // purely based on number of occupied bytes: Due to the different
+        // rectangular shape of each entry, and due to decisions made by the
+        // allocator, sometimes we may need a new texture even if there are
+        // still large gaps in the existing textures.
+        // Let's assume that we have an average allocator wastage of 50%.
+        let average_used_bytes_per_texture_when_full =
+            self.shared_textures.bytes_per_shared_texture(budget_type) / 2;
+
+        // Compute the threshold.
+        // Because of varying allocator wastage, we may still need to use more
+        // than the expected number of textures; that's fine. We'll also go over
+        // the expected texture count whenever a large number of entries are
+        // needed to draw a complex frame (since we don't evict entries which
+        // are needed for the current frame), or if eviction hasn't had a chance
+        // to catch up after a large allocation burst.
+        expected_texture_count * average_used_bytes_per_texture_when_full
     }
 
     /// Evict old items from the shared and standalone caches, if we're over a
@@ -1234,7 +1310,7 @@ impl TextureCache {
         let mut eviction_count = 0;
 
         for budget in BudgetType::iter() {
-            let threshold = TextureCache::get_eviction_threshold(budget);
+            let threshold = self.get_eviction_threshold(budget);
             while self.should_continue_evicting(
                 self.bytes_allocated[budget as usize],
                 threshold,
