@@ -239,7 +239,7 @@ class PrototypeDocumentContentSink final : public nsIStreamLoaderObserver,
   nsresult InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
                                  nsINode* aParent, nsINode* aBeforeThis,
                                  XMLStylesheetProcessingInstruction* aPINode);
-  void CloseElement(Element* aElement);
+  void CloseElement(Element* aElement, bool aHadChildren);
 };
 
 }  // namespace dom
