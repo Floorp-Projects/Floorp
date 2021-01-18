@@ -585,7 +585,7 @@ function messages(
           ? [{ id: action.id, data: action.data }]
           : action.updates;
       for (const { id, data } of updates) {
-        const request = networkMessagesUpdateById[id];
+        const request = newState.networkMessagesUpdateById[id];
         if (!request) {
           continue;
         }

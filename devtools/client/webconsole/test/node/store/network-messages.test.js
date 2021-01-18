@@ -61,6 +61,29 @@ describe("Network message reducer:", () => {
       expect(networkUpdates.message1.requestHeaders).toBe(headers);
     });
 
+    it("makes sure multiple HTTP updates of same request does not override", () => {
+      dispatch(
+        actions.networkUpdateRequests([
+          {
+            id: "message1",
+            data: {
+              stacktrace: [{}],
+            },
+          },
+          {
+            id: "message1",
+            data: {
+              requestHeaders: { headers: [] },
+            },
+          },
+        ])
+      );
+
+      const networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      expect(networkUpdates.message1.requestHeaders).toNotBe(undefined);
+      expect(networkUpdates.message1.stacktrace).toNotBe(undefined);
+    });
+
     it("adds fetched HTTP security info", () => {
       const securityInfo = {
         state: "insecure",
