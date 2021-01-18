@@ -9,6 +9,7 @@ const BUTTONS_TO_TEST = {
     "browser.engagement.fxa-toolbar-menu-button.has-used",
   "home-button": "browser.engagement.home-button.has-used",
   "sidebar-button": "browser.engagement.sidebar-button.has-used",
+  "library-button": "browser.engagement.library-button.has-used",
 };
 
 /**
