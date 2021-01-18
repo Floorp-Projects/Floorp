@@ -544,31 +544,6 @@ MDefinition* MTest::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
-void MTest::filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
-                                   bool* filtersUndefined, bool* filtersNull) {
-  MDefinition* ins = getOperand(0);
-  if (ins->isCompare()) {
-    ins->toCompare()->filtersUndefinedOrNull(trueBranch, subject,
-                                             filtersUndefined, filtersNull);
-    return;
-  }
-
-  if (!trueBranch && ins->isNot()) {
-    *subject = ins->getOperand(0);
-    *filtersUndefined = *filtersNull = true;
-    return;
-  }
-
-  if (trueBranch) {
-    *subject = ins;
-    *filtersUndefined = *filtersNull = true;
-    return;
-  }
-
-  *filtersUndefined = *filtersNull = false;
-  *subject = nullptr;
-}
-
 #ifdef JS_JITSPEW
 void MDefinition::printOpcode(GenericPrinter& out) const {
   PrintOpcodeName(out, op());
@@ -3985,38 +3960,6 @@ void MCompare::trySpecializeFloat32(TempAllocator& alloc) {
       ConvertDefinitionToDouble<1>(alloc, rhs, this);
     }
   }
-}
-
-void MCompare::filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
-                                      bool* filtersUndefined,
-                                      bool* filtersNull) {
-  *filtersNull = *filtersUndefined = false;
-  *subject = nullptr;
-
-  if (compareType() != Compare_Undefined && compareType() != Compare_Null) {
-    return;
-  }
-
-  MOZ_ASSERT(IsEqualityOp(jsop()));
-
-  // JSOp::*Ne only removes undefined/null from if/true branch
-  if (!trueBranch && (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne)) {
-    return;
-  }
-
-  // JSOp::*Eq only removes undefined/null from else/false branch
-  if (trueBranch && (jsop() == JSOp::StrictEq || jsop() == JSOp::Eq)) {
-    return;
-  }
-
-  if (IsStrictEqualityOp(jsop())) {
-    *filtersUndefined = compareType() == Compare_Undefined;
-    *filtersNull = compareType() == Compare_Null;
-  } else {
-    *filtersUndefined = *filtersNull = true;
-  }
-
-  *subject = lhs();
 }
 
 MDefinition* MNot::foldsTo(TempAllocator& alloc) {

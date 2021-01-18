@@ -1843,8 +1843,6 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
   MDefinition* foldsTypes(TempAllocator& alloc);
   MDefinition* foldsNeedlessControlFlow(TempAllocator& alloc);
   MDefinition* foldsTo(TempAllocator& alloc) override;
-  void filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
-                              bool* filtersUndefined, bool* filtersNull);
 
 #ifdef DEBUG
   bool isConsistentFloat32Use(MUse* use) const override { return true; }
@@ -2791,8 +2789,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   [[nodiscard]] bool evaluateConstantOperands(TempAllocator& alloc,
                                               bool* result);
   MDefinition* foldsTo(TempAllocator& alloc) override;
-  void filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
-                              bool* filtersUndefined, bool* filtersNull);
 
   CompareType compareType() const { return compareType_; }
   bool isInt32Comparison() const { return compareType() == Compare_Int32; }
