@@ -755,16 +755,6 @@ void ModuleRtpRtcpImpl::OnRequestSendReport() {
   SendRTCP(kRtcpSr);
 }
 
-bool ModuleRtpRtcpImpl::GetSendReportMetadata(const uint32_t send_report,
-                                              uint64_t *time_of_send,
-                                              uint32_t *packet_count,
-                                              uint64_t *octet_count) {
-  return rtcp_sender_.GetSendReportMetadata(send_report,
-                                            time_of_send,
-                                            packet_count,
-                                            octet_count);
-}
-
 void ModuleRtpRtcpImpl::OnReceivedNack(
     const std::vector<uint16_t>& nack_sequence_numbers) {
   if (!rtp_sender_)

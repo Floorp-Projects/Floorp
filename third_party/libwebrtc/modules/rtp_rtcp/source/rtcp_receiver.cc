@@ -583,16 +583,6 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   if (registered_ssrcs_.count(report_block.source_ssrc()) == 0)
     return;
 
-  // To avoid problem with acquiring _criticalSectionRTCPSender while holding
-  // _criticalSectionRTCPReceiver.
-  rtcp_receiver_lock_.Unlock();
-  uint64_t sendTimeMS = 0;
-  uint32_t sentPackets = 0;
-  uint64_t sentOctets = 0;
-  rtp_rtcp_->GetSendReportMetadata(report_block.last_sr(),
-                                   &sendTimeMS, &sentPackets, &sentOctets);
-  rtcp_receiver_lock_.Lock();
-
   last_received_rb_ = clock_->CurrentTime();
 
   ReportBlockData* report_block_data =

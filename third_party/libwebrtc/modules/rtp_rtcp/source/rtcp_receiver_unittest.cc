@@ -122,11 +122,6 @@ class MockModuleRtpRtcp : public RTCPReceiver::ModuleRtpRtcp {
               OnReceivedRtcpReportBlocks,
               (const ReportBlockList&),
               (override));
-
-  bool GetSendReportMetadata(const uint32_t send_report,
-                             uint64_t *time_of_send,
-                             uint32_t *packet_count,
-                             uint64_t *octet_count) override { return false; }
 };
 
 class MockVideoBitrateAllocationObserver
