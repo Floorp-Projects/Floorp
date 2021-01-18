@@ -5053,47 +5053,14 @@ void nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
   }
 }
 
-void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType) {
+void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType,
+                                     uint64_t aActionId) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return;
   }
 
-  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mDocShell);
-  if (!baseWin) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> caller = do_QueryInterface(GetEntryGlobal());
-  nsPIDOMWindowOuter* callerOuter = caller ? caller->GetOuterWindow() : nullptr;
-  BrowsingContext* callerBC =
-      callerOuter ? callerOuter->GetBrowsingContext() : nullptr;
-  RefPtr<BrowsingContext> openerBC = GetOpenerBrowsingContext();
-
-  // Enforce dom.disable_window_flip (for non-chrome), but still allow the
-  // window which opened us to raise us at times when popups are allowed
-  // (bugs 355482 and 369306).
-  bool canFocus = CanSetProperty("dom.disable_window_flip") ||
-                  (openerBC == callerBC &&
-                   RevisePopupAbuseLevel(PopupBlocker::GetPopupControlState()) <
-                       PopupBlocker::openBlocked);
-
-  bool isActive = false;
-  if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsPIDOMWindowOuter> activeWindow = fm->GetActiveWindow();
-
-    nsCOMPtr<nsIDocShellTreeItem> rootItem;
-    mDocShell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
-    nsCOMPtr<nsPIDOMWindowOuter> rootWin =
-        rootItem ? rootItem->GetWindow() : nullptr;
-    isActive = (rootWin == activeWindow);
-  } else {
-    BrowsingContext* activeBrowsingContext = fm->GetActiveBrowsingContext();
-    BrowsingContext* bc = GetBrowsingContext();
-    if (bc) {
-      isActive = (activeBrowsingContext == bc->Top());
-    }
-  }
+  auto [canFocus, isActive] = GetBrowsingContext()->CanFocusCheck(aCallerType);
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (treeOwnerAsWin && (canFocus || isActive)) {
@@ -5124,11 +5091,10 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType) {
       parent = bc->Canonical()->GetParentCrossChromeBoundary();
     }
   }
-  uint64_t actionId = nsFocusManager::GenerateFocusActionId();
   if (parent) {
     if (!parent->IsInProcess()) {
       if (isActive) {
-        fm->WindowRaised(this, actionId);
+        fm->WindowRaised(this, aActionId);
         // XXX we still need to notify framer about the focus moves to OOP
         // iframe to generate corresponding blur event for bug 1677474.
       } else {
@@ -5153,7 +5119,7 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType) {
     // if there is no parent, this must be a toplevel window, so raise the
     // window if canFocus is true. If this is a child process, the raise
     // window request will get forwarded to the parent by the puppet widget.
-    fm->RaiseWindow(this, aCallerType, actionId);
+    fm->RaiseWindow(this, aCallerType, aActionId);
   }
 }
 
@@ -5698,91 +5664,6 @@ bool nsGlobalWindowOuter::CanSetProperty(const char* aPrefName) {
   // If the pref is set to true, we can not set the property
   // and vice versa.
   return !Preferences::GetBool(aPrefName, true);
-}
-
-bool nsGlobalWindowOuter::IsPopupAllowed() {
-  return mBrowsingContext->IsPopupAllowed();
-}
-
-/*
- * Examine the current document state to see if we're in a way that is
- * typically abused by web designers. The window.open code uses this
- * routine to determine whether to allow the new window.
- * Returns a value from the PopupControlState enum.
- */
-PopupBlocker::PopupControlState nsGlobalWindowOuter::RevisePopupAbuseLevel(
-    PopupBlocker::PopupControlState aControl) {
-  NS_ASSERTION(mDocShell, "Must have docshell");
-
-  if (mDocShell->ItemType() != nsIDocShellTreeItem::typeContent) {
-    return PopupBlocker::openAllowed;
-  }
-
-  PopupBlocker::PopupControlState abuse = aControl;
-  switch (abuse) {
-    case PopupBlocker::openControlled:
-    case PopupBlocker::openBlocked:
-    case PopupBlocker::openOverridden:
-      if (IsPopupAllowed()) {
-        abuse = PopupBlocker::PopupControlState(abuse - 1);
-      }
-      break;
-    case PopupBlocker::openAbused:
-      if (IsPopupAllowed()) {
-        // Skip PopupBlocker::openBlocked
-        abuse = PopupBlocker::openControlled;
-      }
-      break;
-    case PopupBlocker::openAllowed:
-      break;
-    default:
-      NS_WARNING("Strange PopupControlState!");
-  }
-
-  // limit the number of simultaneously open popups
-  if (abuse == PopupBlocker::openAbused || abuse == PopupBlocker::openBlocked ||
-      abuse == PopupBlocker::openControlled) {
-    int32_t popupMax = StaticPrefs::dom_popup_maximum();
-    if (popupMax >= 0 &&
-        PopupBlocker::GetOpenPopupSpamCount() >= (uint32_t)popupMax) {
-      abuse = PopupBlocker::openOverridden;
-    }
-  }
-
-  // HACK: Some pages using bogus library + UA sniffing call window.open() from
-  // a blank iframe, only on Firefox, see bug 1685056.
-  //
-  // This is a hack-around to preserve behavior in that particular and specific
-  // case, by consuming activation on the parent document, so we don't care
-  // about the InProcessParent bits not being fission-safe or what not.
-  auto ConsumeTransientUserActivationForMultiplePopupBlocking = [&]() -> bool {
-    if (mDoc->ConsumeTransientUserGestureActivation()) {
-      return true;
-    }
-    if (!mDoc->IsInitialDocument()) {
-      return false;
-    }
-    Document* parentDoc = mDoc->GetInProcessParentDocument();
-    if (!parentDoc ||
-        !parentDoc->NodePrincipal()->Equals(mDoc->NodePrincipal())) {
-      return false;
-    }
-    return parentDoc->ConsumeTransientUserGestureActivation();
-  };
-
-  // If this popup is allowed, let's block any other for this event, forcing
-  // PopupBlocker::openBlocked state.
-  if ((abuse == PopupBlocker::openAllowed ||
-       abuse == PopupBlocker::openControlled) &&
-      StaticPrefs::dom_block_multiple_popups() && !IsPopupAllowed() &&
-      !ConsumeTransientUserActivationForMultiplePopupBlocking()) {
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns, mDoc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "MultiplePopupsBlockedNoUserActivation");
-    abuse = PopupBlocker::openBlocked;
-  }
-
-  return abuse;
 }
 
 /* If a window open is blocked, fire the appropriate DOM events. */
@@ -7114,7 +6995,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
   PopupBlocker::PopupControlState abuseLevel =
       PopupBlocker::GetPopupControlState();
   if (checkForPopup) {
-    abuseLevel = RevisePopupAbuseLevel(abuseLevel);
+    abuseLevel = mBrowsingContext->RevisePopupAbuseLevel(abuseLevel);
     if (abuseLevel >= PopupBlocker::openBlocked) {
       if (!aCalledNoScript) {
         // If script in some other window is doing a window.open on us and

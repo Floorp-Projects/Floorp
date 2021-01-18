@@ -3721,7 +3721,8 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowClose(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvWindowFocus(
-    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType) {
+    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType,
+    uint64_t aActionId) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
@@ -3735,7 +3736,7 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowFocus(
         ("ChildIPC: Trying to send a message to a context without a window"));
     return IPC_OK();
   }
-  nsGlobalWindowOuter::Cast(window)->FocusOuter(aCallerType);
+  nsGlobalWindowOuter::Cast(window)->FocusOuter(aCallerType, aActionId);
   return IPC_OK();
 }
 

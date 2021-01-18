@@ -1957,15 +1957,148 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   }
 }
 
+/*
+ * Examine the current document state to see if we're in a way that is
+ * typically abused by web designers. The window.open code uses this
+ * routine to determine whether to allow the new window.
+ * Returns a value from the PopupControlState enum.
+ */
+PopupBlocker::PopupControlState BrowsingContext::RevisePopupAbuseLevel(
+    PopupBlocker::PopupControlState aControl) {
+  if (!IsContent()) {
+    return PopupBlocker::openAllowed;
+  }
+
+  PopupBlocker::PopupControlState abuse = aControl;
+  switch (abuse) {
+    case PopupBlocker::openControlled:
+    case PopupBlocker::openBlocked:
+    case PopupBlocker::openOverridden:
+      if (IsPopupAllowed()) {
+        abuse = PopupBlocker::PopupControlState(abuse - 1);
+      }
+      break;
+    case PopupBlocker::openAbused:
+      if (IsPopupAllowed()) {
+        // Skip PopupBlocker::openBlocked
+        abuse = PopupBlocker::openControlled;
+      }
+      break;
+    case PopupBlocker::openAllowed:
+      break;
+    default:
+      NS_WARNING("Strange PopupControlState!");
+  }
+
+  // limit the number of simultaneously open popups
+  if (abuse == PopupBlocker::openAbused || abuse == PopupBlocker::openBlocked ||
+      abuse == PopupBlocker::openControlled) {
+    int32_t popupMax = StaticPrefs::dom_popup_maximum();
+    if (popupMax >= 0 &&
+        PopupBlocker::GetOpenPopupSpamCount() >= (uint32_t)popupMax) {
+      abuse = PopupBlocker::openOverridden;
+    }
+  }
+
+  // If we're currently in-process, attempt to consume transient user gesture
+  // activations.
+  if (RefPtr<Document> doc = GetExtantDocument()) {
+    // HACK: Some pages using bogus library + UA sniffing call window.open()
+    // from a blank iframe, only on Firefox, see bug 1685056.
+    //
+    // This is a hack-around to preserve behavior in that particular and
+    // specific case, by consuming activation on the parent document, so we
+    // don't care about the InProcessParent bits not being fission-safe or what
+    // not.
+    auto ConsumeTransientUserActivationForMultiplePopupBlocking =
+        [&]() -> bool {
+      if (doc->ConsumeTransientUserGestureActivation()) {
+        return true;
+      }
+      if (!doc->IsInitialDocument()) {
+        return false;
+      }
+      Document* parentDoc = doc->GetInProcessParentDocument();
+      if (!parentDoc ||
+          !parentDoc->NodePrincipal()->Equals(doc->NodePrincipal())) {
+        return false;
+      }
+      return parentDoc->ConsumeTransientUserGestureActivation();
+    };
+
+    // If this popup is allowed, let's block any other for this event, forcing
+    // PopupBlocker::openBlocked state.
+    if ((abuse == PopupBlocker::openAllowed ||
+         abuse == PopupBlocker::openControlled) &&
+        StaticPrefs::dom_block_multiple_popups() && !IsPopupAllowed() &&
+        !ConsumeTransientUserActivationForMultiplePopupBlocking()) {
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                      doc, nsContentUtils::eDOM_PROPERTIES,
+                                      "MultiplePopupsBlockedNoUserActivation");
+      abuse = PopupBlocker::openBlocked;
+    }
+  }
+
+  return abuse;
+}
+
+std::tuple<bool, bool> BrowsingContext::CanFocusCheck(CallerType aCallerType) {
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return {false, false};
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> caller = do_QueryInterface(GetEntryGlobal());
+  BrowsingContext* callerBC = caller ? caller->GetBrowsingContext() : nullptr;
+  RefPtr<BrowsingContext> openerBC = GetOpener();
+  MOZ_DIAGNOSTIC_ASSERT(!openerBC || openerBC->Group() == Group());
+
+  // Enforce dom.disable_window_flip (for non-chrome), but still allow the
+  // window which opened us to raise us at times when popups are allowed
+  // (bugs 355482 and 369306).
+  bool canFocus = aCallerType == CallerType::System ||
+                  !Preferences::GetBool("dom.disable_window_flip", true);
+  if (!canFocus && openerBC == callerBC) {
+    canFocus = (RevisePopupAbuseLevel(PopupBlocker::GetPopupControlState()) <
+                PopupBlocker::openBlocked);
+  }
+
+  bool isActive = false;
+  if (XRE_IsParentProcess()) {
+    RefPtr<CanonicalBrowsingContext> chromeTop =
+        Canonical()->TopCrossChromeBoundary();
+    nsCOMPtr<nsPIDOMWindowOuter> activeWindow = fm->GetActiveWindow();
+    isActive = (activeWindow == chromeTop->GetDOMWindow());
+  } else {
+    isActive = (fm->GetActiveBrowsingContext() == Top());
+  }
+
+  return {canFocus, isActive};
+}
+
 void BrowsingContext::Focus(CallerType aCallerType, ErrorResult& aError) {
+  // These checks need to happen before the RequestFrameFocus call, which
+  // is why they are done in an untrusted process. If we wanted to enforce
+  // these in the parent, we'd need to do the checks there _also_.
+  // These should be kept in sync with nsGlobalWindowOuter::FocusOuter.
+
+  auto [canFocus, isActive] = CanFocusCheck(aCallerType);
+
+  if (!(canFocus || isActive)) {
+    return;
+  }
+
+  // Permission check passed
+
   if (mEmbedderElement) {
     // Make the activeElement in this process update synchronously.
     nsContentUtils::RequestFrameFocus(*mEmbedderElement, true, aCallerType);
   }
+  uint64_t actionId = nsFocusManager::GenerateFocusActionId();
   if (ContentChild* cc = ContentChild::GetSingleton()) {
-    cc->SendWindowFocus(this, aCallerType);
+    cc->SendWindowFocus(this, aCallerType, actionId);
   } else if (ContentParent* cp = Canonical()->GetContentParent()) {
-    Unused << cp->SendWindowFocus(this, aCallerType);
+    Unused << cp->SendWindowFocus(this, aCallerType, actionId);
   }
 }
 
