@@ -77,6 +77,8 @@
 #  include "mozilla/XULStore.h"
 #endif
 
+#include "mozilla/dom/DocumentL10n.h"
+
 #ifdef XP_MACOSX
 #  include "nsINativeMenuService.h"
 #  define USE_NATIVE_MENUS
@@ -3002,6 +3004,35 @@ static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
     nms->CreateNativeMenuBar(aParentWindow, nullptr);
   }
 }
+
+class L10nReadyPromiseHandler final : public dom::PromiseNativeHandler {
+ public:
+  NS_DECL_ISUPPORTS
+
+  L10nReadyPromiseHandler(Document* aDoc, nsIWidget* aParentWindow)
+      : mDocument(aDoc), mWindow(aParentWindow) {}
+
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    LoadNativeMenus(mDocument, mWindow);
+  }
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    // Again, this shouldn't happen, but fallback to loading the menus as is.
+    NS_WARNING(
+        "L10nReadyPromiseHandler rejected - loading fallback native "
+        "menu.");
+    LoadNativeMenus(mDocument, mWindow);
+  }
+
+ private:
+  ~L10nReadyPromiseHandler() = default;
+
+  RefPtr<Document> mDocument;
+  nsCOMPtr<nsIWidget> mWindow;
+};
+
+NS_IMPL_ISUPPORTS0(L10nReadyPromiseHandler)
+
 #endif
 
 class AppWindowTimerCallback final : public nsITimerCallback, public nsINamed {
@@ -3099,7 +3130,22 @@ AppWindow::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
     RefPtr<Document> menubarDoc = cv->GetDocument();
-    if (menubarDoc) LoadNativeMenus(menubarDoc, mWindow);
+    if (menubarDoc) {
+      RefPtr<DocumentL10n> l10n = menubarDoc->GetL10n();
+      if (l10n) {
+        // Wait for l10n to be ready so the menus are localized.
+        RefPtr<Promise> promise = l10n->Ready();
+        MOZ_ASSERT(promise);
+        RefPtr<L10nReadyPromiseHandler> handler =
+          new L10nReadyPromiseHandler(menubarDoc, mWindow);
+        promise->AppendNativeHandler(handler);
+      } else {
+        // Something went wrong loading the doc and l10n wasn't created. This
+        // shouldn't really happen, but if it does fallback to trying to load
+        // the menus as is.
+        LoadNativeMenus(menubarDoc, mWindow);
+      }
+    }
   }
 #endif  // USE_NATIVE_MENUS
 

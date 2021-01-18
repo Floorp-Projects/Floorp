@@ -2185,9 +2185,8 @@ void nsCocoaWindow::SetMenuBar(nsMenuBarX* aMenuBar) {
   // Only paint for active windows, or paint the hidden window menu bar if no
   // other menu bar has been painted yet so that some reasonable menu bar is
   // displayed when the app starts up.
-  id windowDelegate = [mWindow delegate];
   if (mMenuBar && ((!gSomeMenuBarPainted && nsMenuUtilsX::GetHiddenWindowMenuBar() == mMenuBar) ||
-                   (windowDelegate && [windowDelegate toplevelActiveState])))
+                   [mWindow isMainWindow]))
     mMenuBar->Paint();
 }
 
