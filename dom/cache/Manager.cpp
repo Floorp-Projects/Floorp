@@ -60,7 +60,7 @@ nsresult MaybeUpdatePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn,
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
   CACHE_TRY(cacheQuotaClient->MaybeUpdatePaddingFileInternal(
-      aBaseDir, aConn, aIncreaseSize, aDecreaseSize, aCommitHook));
+      *aBaseDir, *aConn, aIncreaseSize, aDecreaseSize, aCommitHook));
 
   return NS_OK;
 }
