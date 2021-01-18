@@ -921,7 +921,8 @@ class FullParseHandler {
              kind == ParseNodeKind::NotExpr ||
              kind == ParseNodeKind::BitNotExpr ||
              kind == ParseNodeKind::PosExpr || kind == ParseNodeKind::NegExpr ||
-             IsTypeofKind(kind) || IsDeleteKind(kind);
+             kind == ParseNodeKind::AwaitExpr || IsTypeofKind(kind) ||
+             IsDeleteKind(kind);
     }
     return false;
   }
