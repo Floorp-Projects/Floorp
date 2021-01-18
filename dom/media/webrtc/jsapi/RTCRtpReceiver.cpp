@@ -104,11 +104,11 @@ RTCRtpReceiver::RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
     mPipeline = new MediaPipelineReceiveAudio(
         mPCHandle, aTransportHandler, mMainThread.get(), mStsThread.get(),
-        static_cast<AudioSessionConduit*>(aConduit), mTrack, principalHandle);
+        *aConduit->AsAudioSessionConduit(), mTrack, principalHandle);
   } else {
     mPipeline = new MediaPipelineReceiveVideo(
         mPCHandle, aTransportHandler, mMainThread.get(), mStsThread.get(),
-        static_cast<VideoSessionConduit*>(aConduit), mTrack, principalHandle);
+        *aConduit->AsVideoSessionConduit(), mTrack, principalHandle);
   }
 }
 
@@ -178,7 +178,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
     auto report = MakeUnique<dom::RTCStatsCollection>();
     if (dom::RTCBandwidthEstimationInternal* bw =
             report->mBandwidthEstimations.AppendElement(fallible)) {
-      const auto& stats = mPipeline->Conduit()->GetCallStats();
+      const auto& stats = mPipeline->mConduit->GetCallStats();
       bw->mTrackIdentifier = recvTrackId;
       bw->mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
       bw->mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
@@ -195,9 +195,9 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
   using TimeStampPromise = MozPromise<Maybe<DOMHighResTimeStamp>, bool, true>;
   promises.AppendElement(
       InvokeAsync(mStsThread, __func__,
-                  [cond = RefPtr<MediaSessionConduit>(mPipeline->Conduit())] {
+                  [conduit = mPipeline->mConduit] {
                     return TimeStampPromise::CreateAndResolve(
-                        cond->LastRtcpReceived(), __func__);
+                        conduit->LastRtcpReceived(), __func__);
                   })
           ->Then(
               mMainThread, __func__,
@@ -208,8 +208,8 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                     aValue.ResolveValue();
 
                 auto report = MakeUnique<dom::RTCStatsCollection>();
-                auto asAudio = pipeline->Conduit()->AsAudioSessionConduit();
-                auto asVideo = pipeline->Conduit()->AsVideoSessionConduit();
+                auto asAudio = pipeline->mConduit->AsAudioSessionConduit();
+                auto asVideo = pipeline->mConduit->AsVideoSessionConduit();
 
                 nsString kind = asVideo.isNothing() ? u"audio"_ns : u"video"_ns;
                 nsString idstr = kind + u"_"_ns;
@@ -217,7 +217,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
 
                 Maybe<uint32_t> ssrc;
                 unsigned int ssrcval;
-                if (pipeline->Conduit()->GetRemoteSSRC(&ssrcval)) {
+                if (pipeline->mConduit->GetRemoteSSRC(&ssrcval)) {
                   ssrc = Some(ssrcval);
                 }
 
@@ -463,9 +463,9 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
 void RTCRtpReceiver::GetContributingSources(
     nsTArray<RTCRtpContributingSource>& aSources) {
   // Duplicate code...
-  if (mPipeline && mPipeline->Conduit()) {
+  if (mPipeline && mPipeline->mConduit) {
     RefPtr<AudioSessionConduit> conduit(
-        static_cast<AudioSessionConduit*>(mPipeline->Conduit()));
+        *mPipeline->mConduit->AsAudioSessionConduit());
     nsTArray<dom::RTCRtpSourceEntry> sources;
     conduit->GetRtpSources(sources);
     sources.RemoveElementsBy([](const dom::RTCRtpSourceEntry& aEntry) {
@@ -479,9 +479,9 @@ void RTCRtpReceiver::GetContributingSources(
 void RTCRtpReceiver::GetSynchronizationSources(
     nsTArray<dom::RTCRtpSynchronizationSource>& aSources) {
   // Duplicate code...
-  if (mPipeline && mPipeline->Conduit()) {
+  if (mPipeline && mPipeline->mConduit) {
     RefPtr<AudioSessionConduit> conduit(
-        static_cast<AudioSessionConduit*>(mPipeline->Conduit()));
+        *mPipeline->mConduit->AsAudioSessionConduit());
     nsTArray<dom::RTCRtpSourceEntry> sources;
     conduit->GetRtpSources(sources);
     sources.RemoveElementsBy([](const dom::RTCRtpSourceEntry& aEntry) {
@@ -548,7 +548,7 @@ void RTCRtpReceiver::UpdateTransport() {
 }
 
 nsresult RTCRtpReceiver::UpdateConduit() {
-  if (mPipeline->Conduit()->type() == MediaSessionConduit::VIDEO) {
+  if (mPipeline->mConduit->type() == MediaSessionConduit::VIDEO) {
     return UpdateVideoConduit();
   }
   return UpdateAudioConduit();
@@ -556,7 +556,7 @@ nsresult RTCRtpReceiver::UpdateConduit() {
 
 nsresult RTCRtpReceiver::UpdateVideoConduit() {
   RefPtr<VideoSessionConduit> conduit =
-      static_cast<VideoSessionConduit*>(mPipeline->Conduit());
+      *mPipeline->mConduit->AsVideoSessionConduit();
 
   // NOTE(pkerr) - this is new behavior. Needed because the
   // CreateVideoReceiveStream method of the Call API will assert (in debug)
@@ -622,7 +622,7 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
 
 nsresult RTCRtpReceiver::UpdateAudioConduit() {
   RefPtr<AudioSessionConduit> conduit =
-      static_cast<AudioSessionConduit*>(mPipeline->Conduit());
+      *mPipeline->mConduit->AsAudioSessionConduit();
 
   if (!mJsepTransceiver->mRecvTrack.GetSsrcs().empty()) {
     MOZ_LOG(gReceiverLog, LogLevel::Debug,
@@ -727,11 +727,11 @@ void RTCRtpReceiver::UpdateStreams(StreamAssociationChanges* aChanges) {
 void RTCRtpReceiver::MozInsertAudioLevelForContributingSource(
     const uint32_t aSource, const DOMHighResTimeStamp aTimestamp,
     const uint32_t aRtpTimestamp, const bool aHasLevel, const uint8_t aLevel) {
-  if (!mPipeline || mPipeline->IsVideo() || !mPipeline->Conduit()) {
+  if (!mPipeline || mPipeline->IsVideo() || !mPipeline->mConduit) {
     return;
   }
   WebrtcAudioConduit* audio_conduit =
-      static_cast<WebrtcAudioConduit*>(mPipeline->Conduit());
+      static_cast<WebrtcAudioConduit*>(mPipeline->mConduit.get());
   audio_conduit->InsertAudioLevelForContributingSource(
       aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
 }

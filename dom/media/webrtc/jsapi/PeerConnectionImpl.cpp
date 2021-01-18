@@ -2573,7 +2573,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
     auto report = MakeUnique<dom::RTCStatsCollection>();
     if (dom::RTCBandwidthEstimationInternal* bw =
             report->mBandwidthEstimations.AppendElement(fallible)) {
-      const auto& stats = aPipeline->Conduit()->GetCallStats();
+      const auto& stats = aPipeline->mConduit->GetCallStats();
       bw->mTrackIdentifier = trackName;
       bw->mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
       bw->mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
@@ -2590,9 +2590,9 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
   using TimeStampPromise = MozPromise<Maybe<DOMHighResTimeStamp>, bool, true>;
   promises.AppendElement(
       InvokeAsync(mSTSThread, __func__,
-                  [cond = RefPtr<MediaSessionConduit>(aPipeline->Conduit())] {
+                  [conduit = aPipeline->mConduit] {
                     return TimeStampPromise::CreateAndResolve(
-                        cond->LastRtcpReceived(), __func__);
+                        conduit->LastRtcpReceived(), __func__);
                   })
           ->Then(
               GetMainThreadSerialEventTarget(), __func__,
@@ -2602,8 +2602,8 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
                     aValue.ResolveValue();
 
                 auto report = MakeUnique<dom::RTCStatsCollection>();
-                auto asAudio = aPipeline->Conduit()->AsAudioSessionConduit();
-                auto asVideo = aPipeline->Conduit()->AsVideoSessionConduit();
+                auto asAudio = aPipeline->mConduit->AsAudioSessionConduit();
+                auto asVideo = aPipeline->mConduit->AsVideoSessionConduit();
 
                 nsString kind = asVideo.isNothing() ? u"audio"_ns : u"video"_ns;
                 nsString idstr = kind + u"_"_ns;
@@ -2615,7 +2615,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
                 nsString remoteId;
                 Maybe<uint32_t> ssrc;
                 std::vector<unsigned int> ssrcvals =
-                    aPipeline->Conduit()->GetLocalSSRCs();
+                    aPipeline->mConduit->GetLocalSSRCs();
                 if (!ssrcvals.empty()) {
                   ssrc = Some(ssrcvals[0]);
                 }

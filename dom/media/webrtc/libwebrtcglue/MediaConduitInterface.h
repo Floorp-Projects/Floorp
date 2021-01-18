@@ -291,6 +291,7 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
   virtual ~WebRtcCallWrapper() = default;
 
   bool UnsetRemoteSSRC(uint32_t ssrc) {
+    MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
     for (auto conduit : mConduits) {
       if (!conduit->UnsetRemoteSSRC(ssrc)) {
         return false;
@@ -300,11 +301,15 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
     return true;
   }
 
+  // Idempotent.
   void RegisterConduit(MediaSessionConduit* conduit) {
+    MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
     mConduits.insert(conduit);
   }
 
+  // Idempotent.
   void UnregisterConduit(MediaSessionConduit* conduit) {
+    MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
     mConduits.erase(conduit);
   }
 
