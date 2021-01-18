@@ -2343,28 +2343,28 @@ bool js::IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer,
   if (object->is<TypedArrayObject>()) {
     TypedArrayObject& view = object->as<TypedArrayObject>();
     *dataPointer = view.dataPointerEither().cast<uint8_t*>();
-    *byteLength = view.byteLength().deprecatedGetUint32();
+    *byteLength = view.byteLength().get();
     return true;
   }
 
   if (object->is<DataViewObject>()) {
     DataViewObject& view = object->as<DataViewObject>();
     *dataPointer = view.dataPointerEither().cast<uint8_t*>();
-    *byteLength = view.byteLength().deprecatedGetUint32();
+    *byteLength = view.byteLength().get();
     return true;
   }
 
   if (object->is<ArrayBufferObject>()) {
     ArrayBufferObject& buffer = object->as<ArrayBufferObject>();
     *dataPointer = buffer.dataPointerShared();
-    *byteLength = buffer.byteLength().deprecatedGetUint32();
+    *byteLength = buffer.byteLength().get();
     return true;
   }
 
   if (object->is<SharedArrayBufferObject>()) {
     SharedArrayBufferObject& buffer = object->as<SharedArrayBufferObject>();
     *dataPointer = buffer.dataPointerShared();
-    *byteLength = buffer.byteLength().deprecatedGetUint32();
+    *byteLength = buffer.byteLength().get();
     return true;
   }
 
