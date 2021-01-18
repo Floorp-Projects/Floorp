@@ -3723,9 +3723,7 @@ void nsGlobalWindowInner::Prompt(const nsAString& aMessage,
 }
 
 void nsGlobalWindowInner::Focus(CallerType aCallerType, ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(
-      FocusOuter, (aCallerType, nsFocusManager::GenerateFocusActionId()),
-      aError, );
+  FORWARD_TO_OUTER_OR_THROW(FocusOuter, (aCallerType), aError, );
 }
 
 nsresult nsGlobalWindowInner::Focus(CallerType aCallerType) {
