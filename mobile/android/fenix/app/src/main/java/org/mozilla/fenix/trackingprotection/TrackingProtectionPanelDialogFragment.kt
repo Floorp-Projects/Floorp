@@ -145,7 +145,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
 
     private fun toggleTrackingProtection(isEnabled: Boolean) {
         context?.let { context ->
-            val session = context.components.core.sessionManager.findSessionById(args.sessionId)
+            val session = context.components.core.store.state.findTabOrCustomTab(args.sessionId)
             session?.let {
                 if (isEnabled) {
                     trackingProtectionUseCases.removeException(it.id)
@@ -155,7 +155,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
                 }
 
                 with(context.components) {
-                    useCases.sessionUseCases.reload.invoke(session)
+                    useCases.sessionUseCases.reload.invoke(session.id)
                 }
             }
         }
