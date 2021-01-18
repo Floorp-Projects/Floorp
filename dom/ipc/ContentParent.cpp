@@ -6736,8 +6736,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
-    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType,
-    uint64_t aActionId) {
+    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -6749,7 +6748,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   ContentParent* cp =
       cpm->GetContentProcessById(ContentParentId(context->OwnerProcessId()));
-  Unused << cp->SendWindowFocus(context, aCallerType, aActionId);
+  Unused << cp->SendWindowFocus(context, aCallerType);
   return IPC_OK();
 }
 
