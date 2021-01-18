@@ -8941,7 +8941,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 }
 
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
-                                                 ObjLiteralFlags flags) {
+                                                 ObjLiteralFlags flags,
+                                                 bool useObjLiteralValues) {
   ObjLiteralWriter writer;
 
   writer.beginObject(flags);
@@ -8964,7 +8965,8 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
       writer.setPropIndex(i);
     }
 
-    if (singleton) {
+    if (useObjLiteralValues) {
+      MOZ_ASSERT(singleton);
       ParseNode* value = prop->right();
       if (!emitObjLiteralValue(writer, value)) {
         return false;
@@ -9690,7 +9692,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   // object literals at the end of parse, when we're allowed to allocate GC
   // things.
   //
-  // There are three cases here, in descending order of preference:
+  // There are four cases here, in descending order of preference:
   //
   // 1. The list of property names is "normal" and constant (no computed
   //    values, no integer indices), the values are all simple constants
@@ -9700,17 +9702,23 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   //    attached to a JSOp::Object opcode, whose semantics are for the backend
   //    to simply steal the object from the script.
   //
-  // 2. The list of property names is "normal" and constant as above, but some
-  //    values are complex (computed expressions, sub-objects, functions,
-  //    etc.), or else this occurs in a non-run-once (non-singleton) context.
-  //    In this case, we can use the ObjLiteral functionality to describe an
-  //    *empty* object (all values left undefined) with the right fields, which
-  //    will become a JSOp::NewObject opcode using this template object to speed
-  //    the creation of the object each time it executes (stealing its shape,
-  //    etc.). The emitted bytecode still needs InitProp ops to set the values
-  //    in this case.
+  // 2. The list of property names is "normal" and constant as above, *and* this
+  //    occurs in a run-once (singleton) context, but some values are complex
+  //    (computed expressions, sub-objects, functions, etc.). In this case, we
+  //    can still use JSOp::Object (because singleton context), but the object
+  //    has |undefined| property values and InitProp ops are emitted to set the
+  //    values.
   //
-  // 3. Any other case. As a fallback, we use NewInit to create a new, empty
+  // 3. The list of property names is "normal" and constant as above, but this
+  //    occurs in a non-run-once (non-singleton) context. In this case, we can
+  //    use the ObjLiteral functionality to describe an *empty* object (all
+  //    values left undefined) with the right fields, which will become a
+  //    JSOp::NewObject opcode using this template object to speed the creation
+  //    of the object each time it executes (stealing its shape, etc.). The
+  //    emitted bytecode still needs InitProp ops to set the values in this
+  //    case.
+  //
+  // 4. Any other case. As a fallback, we use NewInit to create a new, empty
   //    object (i.e., `{}`) and then emit bytecode to initialize its properties
   //    one-by-one.
 
@@ -9723,21 +9731,24 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   //
   ObjectEmitter oe(this);
   if (useObjLiteral) {
-    bool singleton = checkSingletonContext() && useObjLiteralValues &&
+    bool singleton = checkSingletonContext() &&
                      !objNode->hasNonConstInitializer() && objNode->head();
 
     ObjLiteralFlags flags;
     if (singleton) {
-      // Case 1 above.
+      // Case 1 or 2.
       flags += ObjLiteralFlag::Singleton;
+    } else {
+      // Case 3.
+      useObjLiteralValues = false;
     }
 
     // Use an ObjLiteral op. This will record ObjLiteral insns in the
     // objLiteralWriter's buffer and add a fixup to the list of ObjLiteral
-    // fixups so that at GC-publish time at the end of parse, the full (case 1)
-    // or template-without-values (case 2) object can be allocated and the
-    // bytecode can be patched to refer to it.
-    if (!emitPropertyListObjLiteral(objNode, flags)) {
+    // fixups so that at GC-publish time at the end of parse, the full (case 1
+    // or 2) or template-without-values (case 3) object can be allocated and
+    // the bytecode can be patched to refer to it.
+    if (!emitPropertyListObjLiteral(objNode, flags, useObjLiteralValues)) {
       //              [stack] OBJ
       return false;
     }
@@ -9748,16 +9759,16 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
       //              [stack] OBJ
       return false;
     }
-    if (!singleton) {
-      // Case 2 above: the ObjLiteral only created a template object. We still
-      // need to emit bytecode to fill in its values.
+    if (!useObjLiteralValues) {
+      // Case 2 or 3 above: we still need to emit bytecode to fill in the
+      // object's property values.
       if (!emitPropertyList(objNode, oe, ObjectLiteral)) {
         //              [stack] OBJ
         return false;
       }
     }
   } else {
-    // Case 3 above: no ObjLiteral use, just bytecode to build the object from
+    // Case 4 above: no ObjLiteral use, just bytecode to build the object from
     // scratch.
     if (!oe.emitObject(objNode->count())) {
       //              [stack] OBJ
