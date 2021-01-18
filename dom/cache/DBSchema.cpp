@@ -2371,6 +2371,8 @@ Result<SavedRequest, nsresult> ReadRequest(mozIStorageConnection& aConn,
                           return Ok{};
                         }));
 
+  CACHE_TRY(OkIf(state), Err(NS_ERROR_UNEXPECTED));
+
   nsresult rv = state->GetUTF8String(0, savedRequest.mValue.method());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
