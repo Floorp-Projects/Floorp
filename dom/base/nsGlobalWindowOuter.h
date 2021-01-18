@@ -532,7 +532,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   bool GetClosedOuter();
   bool Closed() override;
   void StopOuter(mozilla::ErrorResult& aError);
-  void FocusOuter(mozilla::dom::CallerType aCallerType);
+  void FocusOuter(mozilla::dom::CallerType aCallerType, uint64_t aActionId);
   nsresult Focus(mozilla::dom::CallerType aCallerType) override;
   void BlurOuter();
   mozilla::dom::WindowProxyHolder GetFramesOuter();
@@ -1060,9 +1060,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   virtual mozilla::AbstractThread* AbstractMainThreadFor(
       mozilla::TaskCategory aCategory) override;
-
- private:
-  bool IsPopupAllowed();
 
  protected:
   bool mFullscreen : 1;
