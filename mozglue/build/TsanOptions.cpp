@@ -299,11 +299,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1682951
          "race:storage::Connection::Release\n"
 
-         // Bug 1682948
-         "race:CacheEntry::OpenOutputStream\n"
-         "race:CacheEntry::GetSecurityInfo\n"
-         "race:CacheEntry::GetIsForcedValid\n"
-
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
