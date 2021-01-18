@@ -11,7 +11,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/UniquePtr.h"
-#include "RtcpEventObserver.h"
 #include "CodecConfig.h"
 #include "VideoTypes.h"
 #include "jsapi/PeerConnectionCtx.h"
@@ -241,7 +240,6 @@ class MediaSessionConduit {
   virtual Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() = 0;
 
   virtual webrtc::Call::Stats GetCallStats() const = 0;
-  virtual void SetRtcpEventObserver(RtcpEventObserver* observer) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
 };
