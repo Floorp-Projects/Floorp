@@ -90,6 +90,7 @@ class FeatureState {
 
   const char* GetFailureMessage() const;
   const nsCString& GetFailureId() const;
+  nsCString GetStatusAndFailureIdString() const;
 
   bool DisabledByDefault() const;
 

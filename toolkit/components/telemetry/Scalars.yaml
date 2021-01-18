@@ -3731,6 +3731,23 @@ gfx.adapter:
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
+gfx.feature:
+  webrender:
+    bug_numbers:
+      - 1687312
+    description:
+      Whether webrender is enabled or disabled, and why.
+    expires: never
+    kind: string
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jnicol@mozilla.com
+    products:
+      - geckoview_streaming
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+
 gfx:
   compositor:
     bug_numbers:
