@@ -1544,10 +1544,7 @@ class MWasmNullConstant : public MNullaryInstruction {
 
  public:
   INSTRUCTION_HEADER(WasmNullConstant)
-
-  static MWasmNullConstant* New(TempAllocator& alloc) {
-    return new (alloc) MWasmNullConstant();
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   HashNumber valueHash() const override;
   bool congruentTo(const MDefinition* ins) const override {
@@ -1743,8 +1740,7 @@ class MTableSwitch final : public MControlInstruction,
 
  public:
   INSTRUCTION_HEADER(TableSwitch)
-  static MTableSwitch* New(TempAllocator& alloc, MDefinition* ins, int32_t low,
-                           int32_t high);
+  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
   size_t numSuccessors() const override { return successors_.length(); }
 
@@ -2716,10 +2712,7 @@ class MEncodeSnapshot : public MNullaryInstruction {
 
  public:
   INSTRUCTION_HEADER(EncodeSnapshot)
-
-  static MEncodeSnapshot* New(TempAllocator& alloc) {
-    return new (alloc) MEncodeSnapshot();
-  }
+  TRIVIAL_NEW_WRAPPERS
 };
 
 class MAssertRecoveredOnBailout : public MUnaryInstruction,
@@ -2933,20 +2926,17 @@ class MSameValue : public MBinaryInstruction, public AllDoublePolicy::Data {
 
 // Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
-  MBox(TempAllocator& alloc, MDefinition* ins)
-      : MUnaryInstruction(classOpcode, ins) {
+  explicit MBox(MDefinition* ins) : MUnaryInstruction(classOpcode, ins) {
+    // Cannot box a box.
+    MOZ_ASSERT(ins->type() != MIRType::Value);
+
     setResultType(MIRType::Value);
     setMovable();
   }
 
  public:
   INSTRUCTION_HEADER(Box)
-  static MBox* New(TempAllocator& alloc, MDefinition* ins) {
-    // Cannot box a box.
-    MOZ_ASSERT(ins->type() != MIRType::Value);
-
-    return new (alloc) MBox(alloc, ins);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
@@ -2978,7 +2968,7 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
  private:
   Mode mode_;
 
-  MUnbox(MDefinition* ins, MIRType type, Mode mode, TempAllocator& alloc)
+  MUnbox(MDefinition* ins, MIRType type, Mode mode)
       : MUnaryInstruction(classOpcode, ins), mode_(mode) {
     // Only allow unboxing a non MIRType::Value when input and output types
     // don't match. This is often used to force a bailout. Boxing happens
@@ -3000,10 +2990,7 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
  public:
   INSTRUCTION_HEADER(Unbox)
-  static MUnbox* New(TempAllocator& alloc, MDefinition* ins, MIRType type,
-                     Mode mode) {
-    return new (alloc) MUnbox(ins, type, mode, alloc);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   Mode mode() const { return mode_; }
   bool fallible() const { return mode() != Infallible; }
@@ -13272,11 +13259,7 @@ class MWasmBitselectSimd128 : public MTernaryInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmBitselectSimd128)
-
-  static MWasmBitselectSimd128* New(TempAllocator& alloc, MDefinition* lhs,
-                                    MDefinition* rhs, MDefinition* control) {
-    return new (alloc) MWasmBitselectSimd128(lhs, rhs, control);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -13307,12 +13290,7 @@ class MWasmBinarySimd128 : public MBinaryInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmBinarySimd128)
-
-  static MWasmBinarySimd128* New(TempAllocator& alloc, MDefinition* lhs,
-                                 MDefinition* rhs, bool commutative,
-                                 wasm::SimdOp simdOp) {
-    return new (alloc) MWasmBinarySimd128(lhs, rhs, commutative, simdOp);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -13346,13 +13324,7 @@ class MWasmBinarySimd128WithConstant : public MUnaryInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmBinarySimd128WithConstant)
-
-  static MWasmBinarySimd128WithConstant* New(TempAllocator& alloc,
-                                             MDefinition* lhs,
-                                             const SimdConstant& rhs,
-                                             wasm::SimdOp simdOp) {
-    return new (alloc) MWasmBinarySimd128WithConstant(lhs, rhs, simdOp);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -13380,11 +13352,7 @@ class MWasmShiftSimd128 : public MBinaryInstruction, public NoTypePolicy::Data {
 
  public:
   INSTRUCTION_HEADER(WasmShiftSimd128)
-
-  static MWasmShiftSimd128* New(TempAllocator& alloc, MDefinition* lhs,
-                                MDefinition* rhs, wasm::SimdOp simdOp) {
-    return new (alloc) MWasmShiftSimd128(lhs, rhs, simdOp);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -13410,11 +13378,7 @@ class MWasmShuffleSimd128 : public MBinaryInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmShuffleSimd128)
-
-  static MWasmShuffleSimd128* New(TempAllocator& alloc, MDefinition* lhs,
-                                  MDefinition* rhs, SimdConstant control) {
-    return new (alloc) MWasmShuffleSimd128(lhs, rhs, control);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -13444,12 +13408,7 @@ class MWasmReplaceLaneSimd128 : public MBinaryInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmReplaceLaneSimd128)
-
-  static MWasmReplaceLaneSimd128* New(TempAllocator& alloc, MDefinition* lhs,
-                                      MDefinition* rhs, uint32_t laneIndex,
-                                      wasm::SimdOp simdOp) {
-    return new (alloc) MWasmReplaceLaneSimd128(lhs, rhs, laneIndex, simdOp);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -13476,11 +13435,7 @@ class MWasmUnarySimd128 : public MUnaryInstruction, public NoTypePolicy::Data {
 
  public:
   INSTRUCTION_HEADER(WasmUnarySimd128)
-
-  static MWasmUnarySimd128* New(TempAllocator& alloc, MDefinition* src,
-                                wasm::SimdOp simdOp) {
-    return new (alloc) MWasmUnarySimd128(src, simdOp);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -13506,11 +13461,7 @@ class MWasmScalarToSimd128 : public MUnaryInstruction,
 
  public:
   INSTRUCTION_HEADER(WasmScalarToSimd128)
-
-  static MWasmScalarToSimd128* New(TempAllocator& alloc, MDefinition* src,
-                                   wasm::SimdOp simdOp) {
-    return new (alloc) MWasmScalarToSimd128(src, simdOp);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -13540,12 +13491,7 @@ class MWasmReduceSimd128 : public MUnaryInstruction, public NoTypePolicy::Data {
 
  public:
   INSTRUCTION_HEADER(WasmReduceSimd128)
-
-  static MWasmReduceSimd128* New(TempAllocator& alloc, MDefinition* src,
-                                 wasm::SimdOp simdOp, MIRType outType,
-                                 uint32_t imm) {
-    return new (alloc) MWasmReduceSimd128(src, simdOp, outType, imm);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
