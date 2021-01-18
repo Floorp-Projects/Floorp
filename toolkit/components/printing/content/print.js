@@ -1466,6 +1466,7 @@ var PrintSettingsViewProxy = {
 function PrintUIControlMixin(superClass) {
   return class PrintUIControl extends superClass {
     connectedCallback() {
+      this.setAttribute("autocomplete", "off");
       this.initialize();
       this.render();
     }
@@ -1508,28 +1509,6 @@ function PrintUIControlMixin(superClass) {
           detail: changedSettings,
         })
       );
-    }
-
-    handleKeypress(e) {
-      let char = String.fromCharCode(e.charCode);
-      let acceptedChar = e.target.step.includes(".")
-        ? char.match(/^[0-9.]$/)
-        : char.match(/^[0-9]$/);
-      if (!acceptedChar && !char.match("\x00") && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-      }
-    }
-
-    handlePaste(e) {
-      let paste = (e.clipboardData || window.clipboardData)
-        .getData("text")
-        .trim();
-      let acceptedChars = e.target.step.includes(".")
-        ? paste.match(/^[0-9.]*$/)
-        : paste.match(/^[0-9]*$/);
-      if (!acceptedChars) {
-        e.preventDefault();
-      }
     }
 
     handleEvent(event) {}
@@ -1671,39 +1650,6 @@ class OrientationInput extends PrintUIControlMixin(HTMLElement) {
   }
 }
 customElements.define("orientation-input", OrientationInput);
-
-class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
-  initialize() {
-    super.initialize();
-    this.addEventListener("keypress", this);
-    this.addEventListener("paste", this);
-  }
-
-  update(settings) {
-    this.value = settings.numCopies;
-  }
-
-  handleEvent(e) {
-    if (e.type == "keypress") {
-      this.handleKeypress(e);
-      return;
-    }
-
-    if (e.type === "paste") {
-      this.handlePaste(e);
-      return;
-    }
-
-    if (this.checkValidity()) {
-      this.dispatchSettingsChange({
-        numCopies: e.target.value,
-      });
-    }
-  }
-}
-customElements.define("copy-count-input", CopiesInput, {
-  extends: "input",
-});
 
 class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   initialize() {
@@ -1850,9 +1796,6 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     this._shrinkToFitChoice = this.querySelector("#fit-choice");
     this._scaleChoice = this.querySelector("#percent-scale-choice");
     this._scaleError = this.querySelector("#error-invalid-scale");
-
-    this._percentScale.addEventListener("keypress", this);
-    this._percentScale.addEventListener("paste", this);
   }
 
   updateScale() {
@@ -1893,16 +1836,6 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    if (e.type == "keypress") {
-      this.handleKeypress(e);
-      return;
-    }
-
-    if (e.type === "paste") {
-      this.handlePaste(e);
-      return;
-    }
-
     if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
       if (!this._percentScale.checkValidity()) {
         this._percentScale.value = 100;
@@ -2208,9 +2141,6 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
     this._customLeftMargin = this.querySelector("#custom-margin-left");
     this._customRightMargin = this.querySelector("#custom-margin-right");
     this._marginError = this.querySelector("#error-invalid-margin");
-
-    this.addEventListener("keypress", this);
-    this.addEventListener("paste", this);
   }
 
   get templateId() {
@@ -2327,16 +2257,6 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    if (e.type == "keypress") {
-      this.handleKeypress(e);
-      return;
-    }
-
-    if (e.type === "paste") {
-      this.handlePaste(e);
-      return;
-    }
-
     if (e.target == this._marginPicker) {
       let customMargin = e.target.value == "custom";
       this.querySelector(".margin-group").hidden = !customMargin;
@@ -2395,19 +2315,62 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
 customElements.define("margins-select", MarginsPicker);
 
 class PrintSettingNumber extends PrintUIControlMixin(HTMLInputElement) {
+  initialize() {
+    super.initialize();
+    this.addEventListener("keypress", e => this.handleKeypress(e));
+    this.addEventListener("paste", e => this.handlePaste(e));
+  }
+
   connectedCallback() {
     this.type = "number";
     this.settingName = this.dataset.settingName;
     super.connectedCallback();
   }
+
   update(settings) {
-    this.value = settings[this.settingName];
+    if (this.settingName) {
+      this.value = settings[this.settingName];
+    }
+  }
+
+  handleKeypress(e) {
+    let char = String.fromCharCode(e.charCode);
+    let acceptedChar = e.target.step.includes(".")
+      ? char.match(/^[0-9.]$/)
+      : char.match(/^[0-9]$/);
+    if (!acceptedChar && !char.match("\x00") && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+    }
+  }
+
+  handlePaste(e) {
+    let paste = (e.clipboardData || window.clipboardData)
+      .getData("text")
+      .trim();
+    let acceptedChars = e.target.step.includes(".")
+      ? paste.match(/^[0-9.]*$/)
+      : paste.match(/^[0-9]*$/);
+    if (!acceptedChars) {
+      e.preventDefault();
+    }
   }
 
   handleEvent(e) {
-    this.dispatchSettingsChange({
-      [this.settingName]: this.value,
-    });
+    switch (e.type) {
+      case "paste":
+        this.handlePaste();
+        break;
+      case "keypress":
+        this.handleKeypress();
+        break;
+      case "input":
+        if (this.settingName && this.checkValidity()) {
+          this.dispatchSettingsChange({
+            [this.settingName]: this.value,
+          });
+        }
+        break;
+    }
   }
 }
 customElements.define("setting-number", PrintSettingNumber, {
