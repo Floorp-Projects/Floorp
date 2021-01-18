@@ -3349,6 +3349,11 @@ void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
     Telemetry::ScalarSet(
         Telemetry::ScalarID::GFX_COMPOSITOR,
         NS_ConvertUTF8toUTF16(GetLayersBackendName(mCompositorBackend)));
+
+    Telemetry::ScalarSet(
+        Telemetry::ScalarID::GFX_FEATURE_WEBRENDER,
+        NS_ConvertUTF8toUTF16(gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
+                                  .GetStatusAndFailureIdString()));
   }
 
   // Notify that we created a compositor, so telemetry can update.
