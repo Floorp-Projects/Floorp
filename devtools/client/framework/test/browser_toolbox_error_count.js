@@ -46,7 +46,10 @@ add_task(async function() {
   ContentTask.spawn(tab.linkedBrowser, null, function() {
     content.console.clear();
   });
-  await waitFor(() => !getErrorIcon(toolbox));
+  await waitFor(
+    () => !getErrorIcon(toolbox),
+    "Wait until the error button hides"
+  );
   ok(true, "The button was hidden after calling console.clear()");
 
   info("Check that realtime errors increase the counter");
@@ -182,11 +185,9 @@ add_task(async function() {
       webconsoleDoc.querySelectorAll(".message.error").length ===
       expectedErrorCount
   );
-  is(
-    getErrorIcon(toolbox).textContent,
-    "99+",
-    "The message count doesn't go higher than 99"
-  );
+
+  await waitFor(() => getErrorIcon(toolbox)?.textContent === "99+");
+  ok(true, "The message count doesn't go higher than 99");
 
   toolbox.destroy();
 });
