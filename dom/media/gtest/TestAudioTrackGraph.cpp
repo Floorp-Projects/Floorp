@@ -17,6 +17,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "WaitFor.h"
+#include "WavDumper.h"
 
 #define DRIFT_BUFFERING_PREF "media.clockdrift.buffering"
 
@@ -534,6 +535,8 @@ TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
   EXPECT_TRUE(stream->mHasInput);
   Unused << WaitFor(p);
 
+  stream->SetOutputRecordingEnabled(true);
+
   // Wait for a second worth of audio data. GoFaster is dispatched through a
   // ControlMessage so that it is called in the first audio driver iteration.
   // Otherwise the audio driver might be going very fast while the fallback
@@ -590,6 +593,19 @@ TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
   uint32_t nrDiscontinuities;
   Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
       WaitFor(stream->OutputVerificationEvent());
+
+  const char* dir = getenv("MOZ_UPLOAD_DIR");
+  if (dir && nrDiscontinuities != ITERATION_COUNT) {
+    WavDumper dumper;
+    char uploadPath[256];
+    SprintfLiteral(
+        uploadPath, "%s/%s.wav", dir,
+        ::testing::UnitTest::GetInstance()->current_test_info()->name());
+    printf("Writing debug WAV to %s\n", uploadPath);
+    dumper.OpenExplicit(uploadPath, 1, graph->GraphRate());
+    auto data = stream->TakeRecordedOutput();
+    dumper.Write(data.Elements(), data.Length());
+  }
 
   // We're enabling/disabling the track ITERATION_COUNT times, so we expect the
   // same number of discontinuities.
