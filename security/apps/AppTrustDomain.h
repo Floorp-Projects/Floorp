@@ -10,11 +10,7 @@
 #include "mozilla/Span.h"
 #include "mozpkix/pkixtypes.h"
 #include "nsDebug.h"
-#ifdef MOZ_NEW_CERT_STORAGE
-#  include "nsICertStorage.h"
-#else
-#  include "nsICertBlocklist.h"
-#endif
+#include "nsICertStorage.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -81,11 +77,7 @@ class AppTrustDomain final : public mozilla::pkix::TrustDomain {
   Span<const uint8_t> mTrustedRoot;
   Span<const uint8_t> mAddonsIntermediate;
   nsTArray<Span<const uint8_t>> mIntermediates;
-#ifdef MOZ_NEW_CERT_STORAGE
   nsCOMPtr<nsICertStorage> mCertBlocklist;
-#else
-  nsCOMPtr<nsICertBlocklist> mCertBlocklist;
-#endif
 };
 
 }  // namespace psm

@@ -65,9 +65,6 @@ if CONFIG['MOZ_BITS_DOWNLOAD']:
 if CONFIG['MOZ_NEW_XULSTORE']:
     gkrust_features += ['new_xulstore']
 
-if CONFIG['MOZ_NEW_CERT_STORAGE']:
-    gkrust_features += ['new_cert_storage']
-
 if CONFIG['LIBFUZZER']:
     gkrust_features += ['libfuzzer']
 
