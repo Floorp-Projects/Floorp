@@ -1,7 +1,6 @@
 {
    "results" : [
       {
-         "heading_text" : "Tigers Matter ** DON'T DELTE ME**",
          "description_text" : "",
          "addon" : {
             "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
@@ -101,12 +100,9 @@
                ]
             }
          },
-         "description" : "",
-         "is_recommendation" : false,
-         "heading" : "Tigers Matter ** DON&#39;T DELTE ME** <span>by <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/tigers-matter/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Sondergaard</a></span>"
+         "is_recommendation" : false
       },
       {
-         "heading" : "Customize new tab pages <span> with <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/awesome-screenshot-plus-/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Awesome Screenshot Plus - Capture, Annotate &amp; More by Diigo Inc.</a> </span>",
          "is_recommendation" : false,
          "addon" : {
             "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/awesome-screenshot-plus-/",
@@ -206,12 +202,9 @@
             "name" : "Awesome Screenshot Plus - Capture, Annotate & More",
             "id" : 287841
          },
-         "description" : "<blockquote>Capture the whole page or any portion, annotate it with rectangles, circles, arrows, lines and text, blur sensitive info, one-click upload to share. And more! Capture the whole page or any portion, annotate it with rectangles, circles, arrows, lines</blockquote>",
-         "heading_text" : "Customize new tab pages  with Awesome Screenshot Plus - Capture, Annotate & More ",
          "description_text" : "Capture the whole page or any portion, annotate it with rectangles, circles, arrows, lines and text, blur sensitive info, one-click upload to share. And more! Capture the whole page or any portion, annotate it with rectangles, circles, arrows, lines"
       },
       {
-         "heading_text" : "Perform better as an admin  with Admin Assistant ",
          "description_text" : "Help Admins in their daily work",
          "addon" : {
             "slug" : "amo-admin-assistant-test",
@@ -267,9 +260,7 @@
             "previews" : [],
             "name" : "AMO Admin Assistant Test"
          },
-         "description" : "<blockquote>Help Admins in their daily work</blockquote>",
-         "is_recommendation" : false,
-         "heading" : "Perform better as an admin <span> with <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/amo-admin-assistant-test/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Admin Assistant by Jorge Villalobos</a> </span>"
+         "is_recommendation" : false
       },
       {
          "addon" : {
@@ -370,16 +361,11 @@
             },
             "average_daily_users" : 1
          },
-         "description" : "",
-         "heading_text" : "Custom heading  for a theme",
          "description_text" : "",
-         "heading" : "Custom heading  for a theme",
          "is_recommendation" : false
       },
       {
          "description_text" : "Get international weather forecasts",
-         "heading_text" : "Have a nice day   with Forcastfox ",
-         "description" : "<blockquote>Get international weather forecasts</blockquote>",
          "addon" : {
             "id" : 502855,
             "authors" : [
@@ -445,13 +431,10 @@
                "text_count" : 0
             }
          },
-         "is_recommendation" : false,
-         "heading" : "Have a nice day  <span> with <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/forecastfox-fix-version/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Forcastfox by Amoga-dev</a> </span>"
+         "is_recommendation" : false
       },
       {
          "description_text" : "A test extension from webext-generator.",
-         "heading_text" : "...because cats are awesome  with Tabby Cat ",
-         "description" : "<blockquote>A test extension from webext-generator.</blockquote>",
          "addon" : {
             "name" : "tabby cat",
             "previews" : [],
@@ -507,8 +490,7 @@
             "average_daily_users" : 1,
             "slug" : "tabby-catextension"
          },
-         "is_recommendation" : false,
-         "heading" : "...because cats are awesome <span> with <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/tabby-catextension/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Tabby Cat by úþÿ Ψ Φ ֎</a> </span>"
+         "is_recommendation" : false
       },
       {
          "addon" : {
@@ -609,16 +591,11 @@
             "name" : "the Moon Cat",
             "id" : 502859
          },
-         "description" : "",
-         "heading_text" : "cool moon cat",
          "description_text" : "",
-         "heading" : "cool moon cat <span>by <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/the-moon-cat/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Rallara</a></span>",
          "is_recommendation" : false
       },
       {
-         "heading" : "Testptcustomheading",
          "is_recommendation" : false,
-         "description" : "<blockquote>AAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGG</blockquote>",
          "addon" : {
             "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
             "guid" : "{2e5ff8c8-32fe-46d0-9fc8-6b8986621f3c}",
@@ -683,11 +660,9 @@
             },
             "average_daily_users" : 374
          },
-         "description_text" : "AAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGG",
-         "heading_text" : "Testptcustomheading"
+         "description_text" : "AAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGG"
       },
       {
-         "description" : "",
          "addon" : {
             "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
             "guid" : "{f5e7a6ee-ebe0-4add-8f75-b5e4015feca1}",
@@ -787,8 +762,6 @@
             }
          },
          "description_text" : "",
-         "heading_text" : "Purple Sparkles",
-         "heading" : "Purple Sparkles <span>by <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/purple-sparkles/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">michellet</a></span>",
          "is_recommendation" : false
       }
    ],

@@ -37,7 +37,7 @@ const SUMO_BASE_URL = Services.urlFormatter.formatURLPref(
   "app.support.baseURL"
 );
 const ADDONS_API_URL =
-  "https://services.addons.mozilla.org/api/v3/addons/addon";
+  "https://services.addons.mozilla.org/api/v4/addons/addon";
 
 const DELAY_BEFORE_EXPAND_MS = 1000;
 const CATEGORY_ICONS = {
