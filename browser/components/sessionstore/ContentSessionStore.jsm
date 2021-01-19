@@ -95,16 +95,9 @@ class EventListener extends Handler {
     }
 
     if (this.contentRestoreInitialized) {
-      // Restore the form data and scroll position (if we're restoring a
-      // document).
-      if (
-        this.contentRestore.restoreDocument() &&
-        Services.appinfo.sessionHistoryInParent
-      ) {
-        this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {
-          epoch: this.store.epoch,
-        });
-      }
+      // Restore the form data and scroll position. If we're not currently
+      // restoring a tab state then this call will simply be a noop.
+      this.contentRestore.restoreDocument();
     }
   }
 }
@@ -510,13 +503,14 @@ class MessageQueue extends Handler {
  */
 const MESSAGES = [
   "SessionStore:restoreHistory",
-  "SessionStore:restoreDocShellState",
+  "SessionStore:finishRestoreHistory",
+  "SessionStore:OnHistoryReload",
+  "SessionStore:OnHistoryNewEntry",
   "SessionStore:restoreTabContent",
   "SessionStore:resetRestore",
   "SessionStore:flush",
   "SessionStore:becomeActiveProcess",
   "SessionStore:prepareForProcessChange",
-  "SessionStore:setRestoringDocument",
 ];
 
 class ContentSessionStore {
@@ -528,13 +522,18 @@ class ContentSessionStore {
 
     this.contentRestoreInitialized = false;
 
+    this.waitRestoreSHistoryInParent = false;
+    this.restoreTabContentData = null;
+
     XPCOMUtils.defineLazyGetter(this, "contentRestore", () => {
       this.contentRestoreInitialized = true;
       return new ContentRestore(mm);
     });
 
     this.handlers = [new EventListener(this), this.messageQueue];
-    if (Services.appinfo.sessionHistoryInParent) {
+
+    this._shistoryInParent = Services.appinfo.sessionHistoryInParent;
+    if (this._shistoryInParent) {
       this.mm.sendAsyncMessage("SessionStore:addSHistoryListener");
     } else {
       this.handlers.push(new SessionHistoryListener(this));
@@ -567,11 +566,45 @@ class ContentSessionStore {
       case "SessionStore:restoreHistory":
         this.restoreHistory(data);
         break;
-      case "SessionStore:restoreDocShellState":
-        this.restoreDocShellState(data);
+      case "SessionStore:finishRestoreHistory":
+        this.finishRestoreHistory();
+        break;
+      case "SessionStore:OnHistoryNewEntry":
+        this.contentRestore.restoreOnNewEntry(data.uri);
+        break;
+      case "SessionStore:OnHistoryReload":
+        // On reload, restore tab contents.
+        this.contentRestore.restoreTabContent(
+          null,
+          false,
+          () => {
+            // Tell SessionStore.jsm that it may want to restore some more tabs,
+            // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
+            this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {
+              epoch: this.epoch,
+            });
+          },
+          () => {
+            // Tell SessionStore.jsm to remove restoreListener.
+            this.mm.sendAsyncMessage("SessionStore:removeRestoreListener", {
+              epoch: this.epoch,
+            });
+          },
+          () => {
+            // Tell SessionStore.jsm to reload currentEntry.
+            this.mm.sendAsyncMessage("SessionStore:reloadCurrentEntry", {
+              epoch: this.epoch,
+            });
+          }
+        );
         break;
       case "SessionStore:restoreTabContent":
-        this.restoreTabContent(data);
+        if (this.waitRestoreSHistoryInParent) {
+          // Queue the TabContentData if we haven't finished sHistoryRestore yet.
+          this.restoreTabContentData = data;
+        } else {
+          this.restoreTabContent(data);
+        }
         break;
       case "SessionStore:resetRestore":
         this.contentRestore.resetRestore();
@@ -580,7 +613,7 @@ class ContentSessionStore {
         this.flush(data);
         break;
       case "SessionStore:becomeActiveProcess":
-        if (!Services.appinfo.sessionHistoryInParent) {
+        if (!this._shistoryInParent) {
           SessionHistoryListener.collect();
         }
         break;
@@ -593,40 +626,62 @@ class ContentSessionStore {
         // parent process.
         this.mm.docShell.persistLayoutHistoryState();
         break;
-      case "SessionStore:setRestoringDocument":
-        this.contentRestore.setRestoringDocument(data);
-        break;
       default:
         debug("received unknown message '" + name + "'");
         break;
     }
   }
 
-  // non-SHIP only
-  restoreHistory(data) {
-    let { epoch, tabData, loadArguments, isRemotenessUpdate } = data;
+  restoreHistory({ epoch, tabData, loadArguments, isRemotenessUpdate }) {
+    this.contentRestore.restoreHistory(
+      tabData,
+      loadArguments,
+      {
+        // Note: The callbacks passed here will only be used when a load starts
+        // that was not initiated by sessionstore itself. This can happen when
+        // some code calls browser.loadURI() or browser.reload() on a pending
+        // browser/tab.
 
-    this.contentRestore.restoreHistory(tabData, loadArguments, {
-      // Note: The callbacks passed here will only be used when a load starts
-      // that was not initiated by sessionstore itself. This can happen when
-      // some code calls browser.loadURI() or browser.reload() on a pending
-      // browser/tab.
+        onLoadStarted: () => {
+          // Notify the parent that the tab is no longer pending.
+          this.mm.sendAsyncMessage("SessionStore:restoreTabContentStarted", {
+            epoch,
+          });
+        },
 
-      onLoadStarted: () => {
-        // Notify the parent that the tab is no longer pending.
-        this.mm.sendAsyncMessage("SessionStore:restoreTabContentStarted", {
-          epoch,
-        });
+        onLoadFinished: () => {
+          // Tell SessionStore.jsm that it may want to restore some more tabs,
+          // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
+          this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {
+            epoch,
+          });
+        },
+
+        removeRestoreListener: () => {
+          if (!this._shistoryInParent) {
+            return;
+          }
+
+          // Notify the parent that the tab is no longer pending.
+          this.mm.sendAsyncMessage("SessionStore:removeRestoreListener", {
+            epoch,
+          });
+        },
+
+        requestRestoreSHistory: () => {
+          if (!this._shistoryInParent) {
+            return;
+          }
+
+          this.waitRestoreSHistoryInParent = true;
+          // Send tabData to the parent process.
+          this.mm.sendAsyncMessage("SessionStore:restoreSHistoryInParent", {
+            epoch,
+          });
+        },
       },
-
-      onLoadFinished: () => {
-        // Tell SessionStore.jsm that it may want to restore some more tabs,
-        // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
-        this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {
-          epoch,
-        });
-      },
-    });
+      this._shistoryInParent
+    );
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
       // For non-remote tabs, when restoreHistory finishes, we send a synchronous
@@ -643,7 +698,7 @@ class ContentSessionStore {
         epoch,
         isRemotenessUpdate,
       });
-    } else {
+    } else if (!this._shistoryInParent) {
       this.mm.sendAsyncMessage("SessionStore:restoreHistoryComplete", {
         epoch,
         isRemotenessUpdate,
@@ -651,35 +706,50 @@ class ContentSessionStore {
     }
   }
 
-  // SHIP only
-  restoreDocShellState(data) {
-    let { epoch, tabData } = data;
+  finishRestoreHistory() {
+    this.contentRestore.finishRestoreHistory({
+      // Note: The callbacks passed here will only be used when a load starts
+      // that was not initiated by sessionstore itself. This can happen when
+      // some code calls browser.loadURI() or browser.reload() on a pending
+      // browser/tab.
+      onLoadStarted: () => {
+        // Notify the parent that the tab is no longer pending.
+        this.mm.sendAsyncMessage("SessionStore:restoreTabContentStarted", {
+          epoch: this.epoch,
+        });
+      },
 
-    if (!Services.appinfo.sessionHistoryInParent) {
-      throw new Error("This function should only be used with SHIP");
-    }
-    let { docShell } = this.mm;
+      onLoadFinished: () => {
+        // Tell SessionStore.jsm that it may want to restore some more tabs,
+        // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
+        this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {
+          epoch: this.epoch,
+        });
+      },
 
-    if (tabData.uri) {
-      docShell.setCurrentURI(Services.io.newURI(tabData.uri));
-    }
+      removeRestoreListener: () => {
+        if (!this._shistoryInParent) {
+          return;
+        }
 
-    if (tabData.disallow) {
-      SessionStoreUtils.restoreDocShellCapabilities(docShell, tabData.disallow);
-    }
+        // Notify the parent that the tab is no longer pending.
+        this.mm.sendAsyncMessage("SessionStore:removeRestoreListener", {
+          epoch: this.epoch,
+        });
+      },
+    });
 
-    if (tabData.storage) {
-      SessionStoreUtils.restoreSessionStorage(docShell, tabData.storage);
+    this.mm.sendAsyncMessage("SessionStore:restoreHistoryComplete", {
+      epoch: this.epoch,
+    });
+    if (this.restoreTabContentData) {
+      this.restoreTabContent(this.restoreTabContentData);
+      this.restoreTabContentData = null;
     }
-    // Since we don't send restoreHistory, we need to tell the parent when
-    // to call SSTabRestoring (via restoreHistoryComplete)
-    this.mm.sendAsyncMessage("SessionStore:restoreHistoryComplete", { epoch });
+    this.waitRestoreSHistoryInParent = false;
   }
 
   restoreTabContent({ loadArguments, isRemotenessUpdate, reason }) {
-    if (Services.appinfo.sessionHistoryInParent) {
-      throw new Error("This function should be unused with SHIP");
-    }
     let epoch = this.epoch;
 
     // We need to pass the value of didStartLoad back to SessionStore.jsm.
@@ -692,6 +762,17 @@ class ContentSessionStore {
         this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {
           epoch,
           isRemotenessUpdate,
+        });
+      },
+      () => {
+        // Tell SessionStore.jsm to remove restore listener.
+        this.mm.sendAsyncMessage("SessionStore:removeRestoreListener", {
+          epoch,
+        });
+      },
+      () => {
+        this.mm.sendAsyncMessage("SessionStore:reloadCurrentEntry", {
+          epoch,
         });
       }
     );
