@@ -2058,7 +2058,7 @@ static void CacheEntry_setKind(JSContext* cx, HandleObject cache,
 }
 
 static uint8_t* CacheEntry_getBytecode(JSContext* cx, HandleObject cache,
-                                       uint32_t* length) {
+                                       size_t* length) {
   MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
   Value v = JS::GetReservedSlot(cache, CacheEntry_BYTECODE);
   if (!v.isObject() || !v.toObject().is<ArrayBufferObject>()) {
@@ -2069,7 +2069,7 @@ static uint8_t* CacheEntry_getBytecode(JSContext* cx, HandleObject cache,
   }
 
   ArrayBufferObject* arrayBuffer = &v.toObject().as<ArrayBufferObject>();
-  *length = arrayBuffer->byteLength().deprecatedGetUint32();
+  *length = arrayBuffer->byteLength().get();
   return arrayBuffer->dataPointer();
 }
 
@@ -2322,7 +2322,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   BytecodeCacheKind saveCacheKind = BytecodeCacheKind::Undefined;
 
   if (loadBytecode) {
-    uint32_t loadLength = 0;
+    size_t loadLength = 0;
     uint8_t* loadData = nullptr;
     loadData = CacheEntry_getBytecode(cx, cacheEntry, &loadLength);
     if (!loadData) {
@@ -5960,7 +5960,7 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   options.forceAsync = true;
 
   JS::TranscodeBuffer loadBuffer;
-  uint32_t loadLength = 0;
+  size_t loadLength = 0;
   uint8_t* loadData = nullptr;
   loadData = CacheEntry_getBytecode(cx, cacheEntry, &loadLength);
   if (!loadData) {
