@@ -25,7 +25,7 @@ var bar = null;
 var mouseDown = false;
 var mouseDownY = -1;
 
-function moveTo(mouseY, testDriver) {
+async function moveTo(mouseY) {
   var fraction = (mouseY - bar.getBoundingClientRect().top) / bar.getBoundingClientRect().height;
   fraction = Math.max(0, fraction);
   fraction = Math.min(1, fraction);
@@ -35,71 +35,92 @@ function moveTo(mouseY, testDriver) {
   // split the scroll in two with a paint in between, just to increase the
   // complexity of the simulated web content, and to ensure this works as well.
   document.scrollingElement.scrollTop = (oldScrollPos + newScrollPos) / 2;
-  waitForAllPaints(function() {
-    document.scrollingElement.scrollTop = newScrollPos;
-    testDriver();
-  });
+  await promiseAllPaintsDone();
+  document.scrollingElement.scrollTop = newScrollPos;
 }
 
-function setupDragging(testDriver) {
-  bar = document.getElementById("scrollbar");
-  mouseDown = false;
-  mouseDownY = -1;
+async function downMouseAndHandleEvent(x, y) {
+  let mouseDownHandledPromise = new Promise(resolve => {
+    bar.addEventListener("mousedown", async function(e) {
+      dump("Got mousedown clientY " + e.clientY + "\n");
+      mouseDown = true;
+      mouseDownY = e.clientY;
+      await moveTo(e.clientY);
+      resolve();
+    }, {capture: true, once: true});
+  });
+  synthesizeNativeMouseEvent(bar, x, y, nativeMouseDownEventMsg());
+  await mouseDownHandledPromise;
+}
 
-  bar.addEventListener("mousedown", function(e) {
-    dump("Got mousedown clientY " + e.clientY + "\n");
-    mouseDown = true;
-    mouseDownY = e.clientY;
-    moveTo(e.clientY, testDriver);
-  }, true);
-
-  bar.addEventListener("mousemove", function(e) {
-    if (mouseDown) {
+async function moveMouseAndHandleEvent(x, y) {
+  let mouseMoveHandledPromise = new Promise(resolve => {
+    async function mouseOnTarget(e) {
+      if (!mouseDown) {
+        return;
+      }
       dump("Got mousemove clientY " + e.clientY + "\n");
       e.stopPropagation();
       if (e.clientY == mouseDownY) {
         dump("Discarding spurious mousemove\n");
         return;
       }
-      moveTo(e.clientY, testDriver);
+      await moveTo(e.clientY);
+      handled();
     }
-  }, true);
+
+    function mouseOffTarget(e) {
+      if (!mouseDown) {
+        return;
+      }
+      ok(false, "The mousemove at " + e.clientY + " was not stopped by the bar listener, and is a glitchy event!");
+      handled();
+    }
+
+    function handled() {
+      bar.removeEventListener("mousemove", mouseOnTarget, true);
+      window.removeEventListener("mousemove", mouseOffTarget);
+      resolve();
+    }
+
+    bar.addEventListener("mousemove", mouseOnTarget, true);
+    window.addEventListener("mousemove", mouseOffTarget);
+  });
+  synthesizeNativeMouseEvent(bar, x, y, nativeMouseMoveEventMsg());
+  await mouseMoveHandledPromise;
+}
+
+async function test() {
+  bar = document.getElementById("scrollbar");
+  mouseDown = false;
+  mouseDownY = -1;
 
   bar.addEventListener("mouseup", function(e) {
     mouseDown = false;
     dump("Got mouseup clientY " + e.clientY + "\n");
   }, true);
 
-  window.addEventListener("mousemove", function(e) {
-    if (mouseDown) {
-      ok(false, "The mousemove at " + e.clientY + " was not stopped by the bar listener, and is a glitchy event!");
-      setTimeout(testDriver, 0);
-    }
-  });
-}
-
-function* test(testDriver) {
-  setupDragging(testDriver);
-
   // Move the mouse to the "scrollbar" (the div upon which dragging changes scroll position)
-  yield synthesizeNativeMouseEvent(bar, 10, 10, nativeMouseMoveEventMsg(), testDriver);
+  await promiseNativeMouseEvent(bar, 10, 10, nativeMouseMoveEventMsg());
+
   // mouse down
-  yield synthesizeNativeMouseEvent(bar, 10, 10, nativeMouseDownEventMsg());
+  await downMouseAndHandleEvent(10, 10);
+
   // drag vertically by 400px, in 50px increments
-  yield synthesizeNativeMouseEvent(bar, 10, 60, nativeMouseMoveEventMsg());
-  yield synthesizeNativeMouseEvent(bar, 10, 110, nativeMouseMoveEventMsg());
-  yield synthesizeNativeMouseEvent(bar, 10, 160, nativeMouseMoveEventMsg());
-  yield synthesizeNativeMouseEvent(bar, 10, 210, nativeMouseMoveEventMsg());
-  yield synthesizeNativeMouseEvent(bar, 10, 260, nativeMouseMoveEventMsg());
-  yield synthesizeNativeMouseEvent(bar, 10, 310, nativeMouseMoveEventMsg());
-  yield synthesizeNativeMouseEvent(bar, 10, 360, nativeMouseMoveEventMsg());
-  yield synthesizeNativeMouseEvent(bar, 10, 410, nativeMouseMoveEventMsg());
+  await moveMouseAndHandleEvent(10, 60);
+  await moveMouseAndHandleEvent(10, 110);
+  await moveMouseAndHandleEvent(10, 160);
+  await moveMouseAndHandleEvent(10, 210);
+  await moveMouseAndHandleEvent(10, 260);
+  await moveMouseAndHandleEvent(10, 310);
+  await moveMouseAndHandleEvent(10, 360);
+  await moveMouseAndHandleEvent(10, 410);
   // and release
-  yield synthesizeNativeMouseEvent(bar, 10, 410, nativeMouseUpEventMsg(), testDriver);
+  await promiseNativeMouseEvent(bar, 10, 410, nativeMouseUpEventMsg());
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
