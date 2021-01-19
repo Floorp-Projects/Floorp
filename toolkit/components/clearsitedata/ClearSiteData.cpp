@@ -158,8 +158,9 @@ void ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel) {
   }
 
   nsCOMPtr<nsIPrincipal> principal;
-  rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  rv = ssm->GetChannelResultStoragePrincipal(aChannel,
+                                             getter_AddRefs(principal));
+  if (NS_WARN_IF(NS_FAILED(rv) || !principal)) {
     return;
   }
 
