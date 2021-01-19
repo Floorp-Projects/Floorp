@@ -36,7 +36,7 @@
       return visual - (visual / RESOLUTION) + OFFSET_CSS_PX;
     }
 
-    function* test(testDriver) {
+    async function test() {
       const cases = [
         {
           x: 0,
@@ -61,20 +61,19 @@
       ];
 
       for (let c of cases) {
-        yield synthesizeNativeTouchDrag(window,
-                                        c.x,
-                                        c.y,
-                                        c.dx(document.documentElement.clientWidth),
-                                        c.dy(document.documentElement.clientHeight),
-                                        testDriver);
-        yield waitForApzFlushedRepaints(testDriver);
+        await promiseNativeTouchDrag(window,
+                                     c.x,
+                                     c.y,
+                                     c.dx(document.documentElement.clientWidth),
+                                     c.dy(document.documentElement.clientHeight));
+        await promiseApzFlushedRepaints();
         is(window.scrollX, c.expected.x[0], c.expected.x[1]);
         is(window.scrollY, c.expected.y[0], c.expected.y[1]);
       }
     }
 
     SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(RESOLUTION);
-    waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>
