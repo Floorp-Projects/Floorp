@@ -2190,13 +2190,13 @@ bool TypedArrayObject::getElementPure(size_t index, Value* vp) {
 bool TypedArrayObject::getElements(JSContext* cx,
                                    Handle<TypedArrayObject*> tarray,
                                    Value* vp) {
-  uint32_t length = tarray->length().deprecatedGetUint32();
+  size_t length = tarray->length().get();
   MOZ_ASSERT_IF(length > 0, !tarray->hasDetachedBuffer());
 
   switch (tarray->type()) {
 #define GET_ELEMENTS(T, N)                                                     \
   case Scalar::N:                                                              \
-    for (uint32_t i = 0; i < length; ++i, ++vp) {                              \
+    for (size_t i = 0; i < length; ++i, ++vp) {                                \
       if (!N##Array::getElement(cx, tarray, i,                                 \
                                 MutableHandleValue::fromMarkedLocation(vp))) { \
         return false;                                                          \
