@@ -209,10 +209,6 @@ void TaskController::RunPoolThread() {
 
   MutexAutoLock lock(mGraphMutex);
   while (true) {
-    if (mShuttingDown) {
-      IOInterposer::UnregisterCurrentThread();
-      return;
-    }
     bool ranTask = false;
 
     if (!mThreadableTasks.empty()) {
@@ -297,6 +293,12 @@ void TaskController::RunPoolThread() {
     }
 
     if (!ranTask) {
+      if (mShuttingDown) {
+        IOInterposer::UnregisterCurrentThread();
+        MOZ_ASSERT(mThreadableTasks.empty());
+        return;
+      }
+
       AUTO_PROFILER_LABEL("TaskController::RunPoolThread", IDLE);
       mThreadPoolCV.Wait();
     }
