@@ -48,11 +48,16 @@ add_task(async function test_manifest_csp_v3() {
     },
   });
 
-  equal(normalized.error, undefined, "Should not have an error");
-  equal(normalized.errors.length, 0, "Should not have warnings");
+  Assert.deepEqual(
+    normalized.errors,
+    [
+      "Error processing content_security_policy.extension_pages: ‘script-src’ directive contains a forbidden 'unsafe-eval' keyword",
+    ],
+    "Should have the expected warning"
+  );
   equal(
     normalized.value.content_security_policy.extension_pages,
-    "script-src 'self' 'unsafe-eval'; object-src 'none'",
+    null,
     "Should have the expected policy string"
   );
 

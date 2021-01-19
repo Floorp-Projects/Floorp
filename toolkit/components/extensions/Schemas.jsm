@@ -388,7 +388,7 @@ class Context {
       }
     }
 
-    let props = ["preprocessors", "isChromeCompat"];
+    let props = ["preprocessors", "isChromeCompat", "manifestVersion"];
     for (let prop of props) {
       if (prop in params) {
         if (prop in this && typeof this[prop] == "object") {
@@ -1099,7 +1099,14 @@ const FORMATS = {
   },
 
   contentSecurityPolicy(string, context) {
-    let error = contentPolicyService.validateAddonCSP(string);
+    // Manifest V3 extension_pages allows localhost.  When sandbox is
+    // implemented, or any other V3 or later directive, the flags
+    // logic will need to be updated.
+    let flags =
+      context.manifestVersion < 3
+        ? Ci.nsIAddonContentPolicy.CSP_ALLOW_ANY
+        : Ci.nsIAddonContentPolicy.CSP_ALLOW_LOCALHOST;
+    let error = contentPolicyService.validateAddonCSP(string, flags);
     if (error != null) {
       // The CSP validation error is not reported as part of the "choices" error message,
       // we log the CSP validation error explicitly here to make it easier for the addon developers

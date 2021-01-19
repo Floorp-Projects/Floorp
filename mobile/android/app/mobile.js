@@ -196,11 +196,6 @@ pref("extensions.installDistroAddons", false);
 pref("extensions.webextPermissionPrompts", true);
 pref("extensions.webextOptionalPermissionPrompts", true);
 
-// Add-on content security policies.
-pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
-pref("extensions.webextensions.base-content-security-policy.v3", "script-src 'self'; object-src 'self'; style-src 'self'; worker-src 'self';");
-pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
-
 pref("extensions.webextensions.background-delayed-startup", true);
 
 pref("extensions.experiments.enabled", false);

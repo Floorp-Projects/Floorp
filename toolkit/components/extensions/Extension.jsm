@@ -883,6 +883,7 @@ class ExtensionData {
         this.manifestWarning(error);
       },
       preprocessors: {},
+      manifestVersion: this.manifest.manifest_version,
     };
 
     if (this.fluentL10n || this.localeData) {
