@@ -7154,15 +7154,15 @@ struct SharedObjectMailbox {
   union Value {
     struct {
       SharedArrayRawBuffer* buffer;
-      uint32_t length;
+      BufferSize length;
     } sarb;
     JS::WasmModule* module;
     double number;
+
+    Value() : number(0.0) {}
   };
 
-  SharedObjectMailbox() : tag(MailboxTag::Empty) {}
-
-  MailboxTag tag;
+  MailboxTag tag = MailboxTag::Empty;
   Value val;
 };
 
@@ -7225,7 +7225,7 @@ static bool GetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
         // incremented prior to the SAB creation.
 
         SharedArrayRawBuffer* buf = mbx->val.sarb.buffer;
-        uint32_t length = mbx->val.sarb.length;
+        BufferSize length = mbx->val.sarb.length;
         if (!buf->addReference()) {
           JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                     JSMSG_SC_SAB_REFCNT_OFLO);
@@ -7236,7 +7236,7 @@ static bool GetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
         // returning.
 
         Rooted<ArrayBufferObjectMaybeShared*> maybesab(
-            cx, SharedArrayBufferObject::New(cx, buf, BufferSize(length)));
+            cx, SharedArrayBufferObject::New(cx, buf, length));
         if (!maybesab) {
           buf->dropReference();
           return false;
@@ -7310,7 +7310,7 @@ static bool SetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
                                            &obj->as<SharedArrayBufferObject>());
       tag = MailboxTag::SharedArrayBuffer;
       value.sarb.buffer = sab->rawBufferObject();
-      value.sarb.length = sab->byteLength().deprecatedGetUint32();
+      value.sarb.length = sab->byteLength();
       if (!value.sarb.buffer->addReference()) {
         JS_ReportErrorASCII(cx,
                             "Reference count overflow on SharedArrayBuffer");
@@ -7326,7 +7326,7 @@ static bool SetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
                      .as<SharedArrayBufferObject>());
         tag = MailboxTag::WasmMemory;
         value.sarb.buffer = sab->rawBufferObject();
-        value.sarb.length = sab->byteLength().deprecatedGetUint32();
+        value.sarb.length = sab->byteLength();
         if (!value.sarb.buffer->addReference()) {
           JS_ReportErrorASCII(cx,
                               "Reference count overflow on SharedArrayBuffer");
