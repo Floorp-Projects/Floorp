@@ -1589,7 +1589,6 @@ impl<'a> SceneBuilder<'a> {
             &composite_ops,
             prim_flags,
             blit_reason,
-            requested_raster_space,
             self.sc_stack.last(),
         );
 
@@ -3399,7 +3398,6 @@ impl FlattenedStackingContext {
         composite_ops: &CompositeOps,
         prim_flags: PrimitiveFlags,
         blit_reason: BlitReason,
-        requested_raster_space: RasterSpace,
         parent: Option<&FlattenedStackingContext>,
     ) -> bool {
         // If this is a backdrop or blend container, it's needed
@@ -3435,20 +3433,6 @@ impl FlattenedStackingContext {
         // If backface visibility is explicitly set.
         if !prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
             return false;
-        }
-
-        // If rasterization space is different
-        match parent {
-            Some(parent) => {
-                if requested_raster_space != parent.requested_raster_space {
-                    return false;
-                }
-            }
-            None => {
-                if requested_raster_space != RasterSpace::Screen {
-                    return false;
-                }
-            }
         }
 
         // If need to isolate in surface due to clipping / mix-blend-mode
