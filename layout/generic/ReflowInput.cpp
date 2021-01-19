@@ -220,9 +220,11 @@ inline nscoord SizeComputationInput::ComputeISizeValue(
     const WritingMode aWM, const LogicalSize& aContainingBlockSize,
     const LogicalSize& aContentEdgeToBoxSizing, nscoord aBoxSizingToMarginEdge,
     const SizeOrMaxSize& aSize) const {
-  return mFrame->ComputeISizeValue(mRenderingContext, aWM, aContainingBlockSize,
-                                   aContentEdgeToBoxSizing,
-                                   aBoxSizingToMarginEdge, aSize);
+  return mFrame
+      ->ComputeISizeValue(mRenderingContext, aWM, aContainingBlockSize,
+                          aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
+                          aSize)
+      .mISize;
 }
 
 template <typename SizeOrMaxSize>
