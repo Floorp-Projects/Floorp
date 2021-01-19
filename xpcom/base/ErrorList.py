@@ -86,6 +86,9 @@ modules["URL_CLASSIFIER"] = Mod(42)
 # ErrorResult gets its own module to reduce the chance of someone accidentally
 # defining an error code matching one of the ErrorResult ones.
 modules["ERRORRESULT"] = Mod(43)
+# Win32 system error codes, which are not mapped to a specific other value,
+# see Bug 1686041.
+modules["WIN32"] = Mod(44)
 
 # NS_ERROR_MODULE_GENERAL should be used by modules that do not
 # care if return code values overlap. Callers of methods that
