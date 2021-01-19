@@ -641,13 +641,12 @@ add_task(async function sessionTimeExcludingAndIncludingSuspend() {
   // clocks are from different system calls, and it can fail in test condition
   // because the machine has not been suspended.
   if (
-    !(
-      AppConstants.platform == "windows" &&
-      !AppConstants.isPlatformAndVersionAtLeast("win", "10")
-    )
+    AppConstants.platform != "windows" ||
+    AppConstants.isPlatformAndVersionAtLeast("win", "10.0")
   ) {
-    Assert.ok(
-      withSuspend >= withoutSuspend,
+    Assert.greaterOrEqual(
+      withSuspend,
+      withoutSuspend,
       `The uptime with suspend must always been greater or equal to the uptime
        without suspend`
     );
