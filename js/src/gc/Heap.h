@@ -491,7 +491,7 @@ MOZ_ALWAYS_INLINE bool ChunkBitmap::markBit(const TenuredCell* cell,
                                             ColorBit colorBit) {
   MarkBitmapWord* word;
   uintptr_t mask;
-  GetMarkWordAndMask(cell, colorBit, &word, &mask);
+  getMarkWordAndMask(cell, colorBit, &word, &mask);
   return *word & mask;
 }
 
@@ -514,7 +514,7 @@ MOZ_ALWAYS_INLINE bool ChunkBitmap::markIfUnmarked(const TenuredCell* cell,
                                                    MarkColor color) {
   MarkBitmapWord* word;
   uintptr_t mask;
-  GetMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
+  getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
   if (*word & mask) {
     return false;
   }
@@ -522,10 +522,10 @@ MOZ_ALWAYS_INLINE bool ChunkBitmap::markIfUnmarked(const TenuredCell* cell,
     *word |= mask;
   } else {
     /*
-     * We use GetMarkWordAndMask to recalculate both mask and word as
+     * We use getMarkWordAndMask to recalculate both mask and word as
      * doing just mask << color may overflow the mask.
      */
-    GetMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
+    getMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
     if (*word & mask) {
       return false;
     }
@@ -537,20 +537,21 @@ MOZ_ALWAYS_INLINE bool ChunkBitmap::markIfUnmarked(const TenuredCell* cell,
 MOZ_ALWAYS_INLINE void ChunkBitmap::markBlack(const TenuredCell* cell) {
   MarkBitmapWord* word;
   uintptr_t mask;
-  GetMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
+  getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
   *word |= mask;
 }
 
 MOZ_ALWAYS_INLINE void ChunkBitmap::copyMarkBit(TenuredCell* dst,
                                                 const TenuredCell* src,
                                                 ColorBit colorBit) {
+  ChunkBase* srcChunk = detail::GetCellChunkBase(src);
   MarkBitmapWord* srcWord;
   uintptr_t srcMask;
-  GetMarkWordAndMask(src, colorBit, &srcWord, &srcMask);
+  srcChunk->bitmap.getMarkWordAndMask(src, colorBit, &srcWord, &srcMask);
 
   MarkBitmapWord* dstWord;
   uintptr_t dstMask;
-  GetMarkWordAndMask(dst, colorBit, &dstWord, &dstMask);
+  getMarkWordAndMask(dst, colorBit, &dstWord, &dstMask);
 
   *dstWord &= ~dstMask;
   if (*srcWord & srcMask) {
@@ -561,9 +562,9 @@ MOZ_ALWAYS_INLINE void ChunkBitmap::copyMarkBit(TenuredCell* dst,
 MOZ_ALWAYS_INLINE void ChunkBitmap::unmark(const TenuredCell* cell) {
   MarkBitmapWord* word;
   uintptr_t mask;
-  GetMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
+  getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
   *word &= ~mask;
-  GetMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
+  getMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
   *word &= ~mask;
 }
 
@@ -582,7 +583,7 @@ inline MarkBitmapWord* ChunkBitmap::arenaBits(Arena* arena) {
 
   MarkBitmapWord* word;
   uintptr_t unused;
-  GetMarkWordAndMask(reinterpret_cast<TenuredCell*>(arena->address()),
+  getMarkWordAndMask(reinterpret_cast<TenuredCell*>(arena->address()),
                      ColorBit::BlackBit, &word, &unused);
   return word;
 }
