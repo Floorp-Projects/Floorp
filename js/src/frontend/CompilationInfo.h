@@ -205,10 +205,8 @@ struct CompilationInput {
 
   ScriptSource* source() { return source_.get(); }
 
- private:
   void setSource(ScriptSource* ss) { return source_.reset(ss); }
 
- public:
   template <typename Unit>
   MOZ_MUST_USE bool assignSource(JSContext* cx,
                                  JS::SourceText<Unit>& sourceBuffer) {
