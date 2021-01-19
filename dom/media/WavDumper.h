@@ -40,7 +40,11 @@ class WavDumper {
 
     char buf[100];
     SprintfLiteral(buf, "%s-%d.wav", aBaseName, ++sDumpedAudioCount);
-    mFile = fopen(buf, "wb");
+    OpenExplicit(buf, aChannels, aRate);
+  }
+
+  void OpenExplicit(const char* aPath, uint32_t aChannels, uint32_t aRate) {
+    mFile = fopen(aPath, "wb");
     if (!mFile) {
       NS_WARNING("Could not open file to DUMP a wav. Is sandboxing disabled?");
       return;
