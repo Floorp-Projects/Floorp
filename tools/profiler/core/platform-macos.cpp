@@ -58,7 +58,7 @@ class PlatformData {
     MOZ_COUNT_DTOR(PlatformData);
   }
 
-  thread_act_t ProfiledThread() { return mProfiledThread; }
+  thread_act_t ProfiledThread() const { return mProfiledThread; }
 
   RunningTimes& PreviousThreadRunningTimesRef() {
     return mPreviousThreadRunningTimes;
@@ -92,27 +92,30 @@ static RunningTimes GetThreadRunningTimesDiff(
   PlatformData* platformData = aRegisteredThread.GetPlatformData();
   MOZ_RELEASE_ASSERT(platformData);
 
-  RunningTimes newRunningTimes;
+  const RunningTimes newRunningTimes = GetRunningTimesWithTightTimestamp(
+      [platformData](RunningTimes& aRunningTimes) {
+        AUTO_PROFILER_STATS(GetRunningTimes_thread_info);
+        thread_basic_info_data_t threadBasicInfo;
+        mach_msg_type_number_t basicCount = THREAD_BASIC_INFO_COUNT;
+        if (thread_info(platformData->ProfiledThread(), THREAD_BASIC_INFO,
+                        reinterpret_cast<thread_info_t>(&threadBasicInfo),
+                        &basicCount) == KERN_SUCCESS &&
+            basicCount == THREAD_BASIC_INFO_COUNT) {
+          uint64_t userTimeUs =
+              uint64_t(threadBasicInfo.user_time.seconds) *
+                  uint64_t(USEC_PER_SEC) +
+              uint64_t(threadBasicInfo.user_time.microseconds);
+          uint64_t systemTimeUs =
+              uint64_t(threadBasicInfo.system_time.seconds) *
+                  uint64_t(USEC_PER_SEC) +
+              uint64_t(threadBasicInfo.system_time.microseconds);
+          aRunningTimes.ResetThreadCPUDelta(userTimeUs + systemTimeUs);
+        } else {
+          aRunningTimes.ClearThreadCPUDelta();
+        }
+      });
 
-  thread_basic_info_data_t threadBasicInfo;
-  mach_msg_type_number_t basicCount = THREAD_BASIC_INFO_COUNT;
-  if (thread_info(platformData->ProfiledThread(), THREAD_BASIC_INFO,
-                  reinterpret_cast<thread_info_t>(&threadBasicInfo),
-                  &basicCount) == KERN_SUCCESS &&
-      basicCount == THREAD_BASIC_INFO_COUNT) {
-    uint64_t userTimeUs =
-        uint64_t(threadBasicInfo.user_time.seconds) * uint64_t(USEC_PER_SEC) +
-        uint64_t(threadBasicInfo.user_time.microseconds);
-    uint64_t systemTimeUs =
-        uint64_t(threadBasicInfo.system_time.seconds) * uint64_t(USEC_PER_SEC) +
-        uint64_t(threadBasicInfo.system_time.microseconds);
-    newRunningTimes.SetThreadCPUDelta(userTimeUs + systemTimeUs);
-  }
-
-  // Reminder: This must stay *after* the CPU measurements.
-  newRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::NowUnfuzzed());
-
-  RunningTimes diff =
+  const RunningTimes diff =
       newRunningTimes - platformData->PreviousThreadRunningTimesRef();
   platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
   return diff;

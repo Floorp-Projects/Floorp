@@ -3130,8 +3130,69 @@ class Sampler {
 // END Sampler
 ////////////////////////////////////////////////////////////////////////
 
+// Platform-specific function that retrieves per-thread CPU measurements.
 static RunningTimes GetThreadRunningTimesDiff(
     PSLockRef aLock, const RegisteredThread& aRegisteredThread);
+
+// Template function to be used by `GetThreadRunningTimesDiff()` (unless some
+// platform has a better way to achieve this).
+// It help perform CPU measurements and tie them to a timestamp, such that the
+// measurements and timestamp are very close together.
+// This is necessary, because the relative CPU usage is computed by dividing
+// consecutive CPU measurements by their timestamp difference; if there was an
+// unexpected big gap, it could skew this computation and produce impossible
+// spikes that would hide the rest of the data. See bug 1685938 for more info.
+// Note that this may call the measurement function more than once; it is
+// assumed to normally be fast.
+// This was verified experimentally, but there is currently no regression
+// testing for it; see follow-up bug 1687402.
+template <typename GetCPURunningTimesFunction>
+RunningTimes GetRunningTimesWithTightTimestamp(
+    GetCPURunningTimesFunction&& aGetCPURunningTimesFunction) {
+  // Once per process, compute a threshold over which running times and their
+  // timestamp is considered too far apart.
+  static const TimeDuration scMaxRunningTimesReadDuration = [&]() {
+    // Run the main CPU measurements + timestamp a number of times and capture
+    // their durations.
+    constexpr int loops = 128;
+    TimeDuration durations[loops];
+    RunningTimes runningTimes;
+    TimeStamp before = TimeStamp::NowUnfuzzed();
+    for (int i = 0; i < loops; ++i) {
+      AUTO_PROFILER_STATS(GetRunningTimes_MaxRunningTimesReadDuration);
+      aGetCPURunningTimesFunction(runningTimes);
+      const TimeStamp after = TimeStamp::NowUnfuzzed();
+      durations[i] = after - before;
+      before = after;
+    }
+    // Move median duration to the middle.
+    std::nth_element(&durations[0], &durations[loops / 2], &durations[loops]);
+    // Use median*8 as cut-off point.
+    // Typical durations should be around a microsecond, the cut-off should then
+    // be around 10 microseconds, well below the expected minimum inter-sample
+    // interval (observed as a few milliseconds), so overall this should keep
+    // cpu/interval spikes
+    return durations[loops / 2] * 8;
+  }();
+
+  // Record CPU measurements between two timestamps.
+  RunningTimes runningTimes;
+  TimeStamp before = TimeStamp::NowUnfuzzed();
+  aGetCPURunningTimesFunction(runningTimes);
+  TimeStamp after = TimeStamp::NowUnfuzzed();
+  // In most cases, the above should be quick enough. But if not, repeat:
+  while (MOZ_UNLIKELY(after - before > scMaxRunningTimesReadDuration)) {
+    AUTO_PROFILER_STATS(GetRunningTimes_REDO);
+    before = after;
+    aGetCPURunningTimesFunction(runningTimes);
+    after = TimeStamp::NowUnfuzzed();
+  }
+  // Finally, record the closest timestamp just after the final measurement was
+  // done. This must stay *after* the CPU measurements.
+  runningTimes.SetPostMeasurementTimeStamp(after);
+
+  return runningTimes;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN SamplerThread
