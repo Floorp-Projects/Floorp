@@ -2894,7 +2894,7 @@ bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
 
   auto cleanup = mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
 
-  XDRResult res = xdrEncoder_->linearize(buffer);
+  XDRResult res = xdrEncoder_->linearize(buffer, this);
   return res.isOk();
 }
 
