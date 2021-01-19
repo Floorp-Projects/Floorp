@@ -33,3 +33,8 @@ TESTING_JS_MODULES += [
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Editor")
+
+SPHINX_TREES["/editor"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]

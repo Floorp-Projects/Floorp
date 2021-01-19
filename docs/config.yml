@@ -11,6 +11,7 @@ categories:
     source_doc:
         - browser
         - dom
+        - editor
         - layout
         - gfx
         - devtools
