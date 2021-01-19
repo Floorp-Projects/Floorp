@@ -13,6 +13,7 @@
 #include "MediaDecoderOwner.h"
 #include "MediaPlaybackDelayPolicy.h"
 #include "MediaPromiseDefs.h"
+#include "TelemetryProbesReporter.h"
 #include "nsCycleCollectionParticipant.h"
 #include "Visibility.h"
 #include "mozilla/CORSMode.h"
@@ -108,7 +109,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                          public MediaDecoderOwner,
                          public PrincipalChangeObserver<MediaStreamTrack>,
                          public SupportsWeakPtr,
-                         public nsStubMutationObserver {
+                         public nsStubMutationObserver,
+                         public TelemetryProbesReporterOwner {
  public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::layers::ImageContainer ImageContainer;
@@ -248,7 +250,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void NotifySuspendedByCache(bool aSuspendedByCache) final;
 
   // Return true if the media element is actually invisible to users.
-  bool IsActuallyInvisible() const;
+  bool IsActuallyInvisible() const override;
 
   // Return true if the element is in the view port.
   bool IsInViewPort() const;
@@ -729,6 +731,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // End testing only methods
 
   void SetMediaInfo(const MediaInfo& aInfo);
+  MediaInfo GetMediaInfo() const override;
+
+  // Gives access to the decoder's frame statistics, if present.
+  FrameStatistics* GetFrameStatistics() const override;
 
   AbstractThread* AbstractMainThread() const final;
 
@@ -770,6 +776,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   bool GetShowPosterFlag() const { return mShowPoster; }
 
   bool IsAudible() const;
+
+  // Return key system in use if we have one, otherwise return nothing.
+  Maybe<nsAutoString> GetKeySystem() const override;
 
  protected:
   virtual ~HTMLMediaElement();
@@ -1209,25 +1218,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Return true if decoding should be paused
   bool GetPaused() final { return Paused(); }
 
-  /**
-   * Video has been playing while hidden and, if feature was enabled, would
-   * trigger suspending decoder.
-   * Used to track hidden-video-decode-suspend telemetry.
-   */
-  static void VideoDecodeSuspendTimerCallback(nsITimer* aTimer, void* aClosure);
-  /**
-   * Video is now both: playing and hidden.
-   * Used to track hidden-video telemetry.
-   */
-  void HiddenVideoStart();
-  /**
-   * Video is not playing anymore and/or has become visible.
-   * Used to track hidden-video telemetry.
-   */
-  void HiddenVideoStop();
-
-  void ReportTelemetry();
-
   // Seeks to aTime seconds. aSeekType can be Exact to seek to exactly the
   // seek target, or PrevSyncPoint if a quicker but less precise seek is
   // desired, and we'll seek to the sync point (keyframe and/or start of the
@@ -1570,9 +1560,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Timer used for updating progress events.
   nsCOMPtr<nsITimer> mProgressTimer;
 
-  // Timer used to simulate video-suspend.
-  nsCOMPtr<nsITimer> mVideoDecodeSuspendTimer;
-
   // Encrypted Media Extension media keys.
   RefPtr<MediaKeys> mMediaKeys;
   RefPtr<MediaKeys> mIncomingMediaKeys;
@@ -1764,52 +1751,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // element's list of text tracks has its text track mode change value
   void NotifyTextTrackModeChanged();
 
- public:
-  // Helper class to measure times for playback telemetry stats
-  class TimeDurationAccumulator {
-   public:
-    TimeDurationAccumulator() : mCount(0) {}
-    void Start() {
-      if (IsStarted()) {
-        return;
-      }
-      mStartTime = TimeStamp::Now();
-    }
-    void Pause() {
-      if (!IsStarted()) {
-        return;
-      }
-      mSum += (TimeStamp::Now() - mStartTime);
-      mCount++;
-      mStartTime = TimeStamp();
-    }
-    bool IsStarted() const { return !mStartTime.IsNull(); }
-    double Total() const {
-      if (!IsStarted()) {
-        return mSum.ToSeconds();
-      }
-      // Add current running time until now, but keep it running.
-      return (mSum + (TimeStamp::Now() - mStartTime)).ToSeconds();
-    }
-    uint32_t Count() const {
-      if (!IsStarted()) {
-        return mCount;
-      }
-      // Count current run in this report, without increasing the stored count.
-      return mCount + 1;
-    }
-    void Reset() {
-      mStartTime = TimeStamp();
-      mSum = TimeDuration();
-      mCount = 0;
-    }
-
-   private:
-    TimeStamp mStartTime;
-    TimeDuration mSum;
-    uint32_t mCount;
-  };
-
  private:
   already_AddRefed<PlayPromise> CreatePlayPromise(ErrorResult& aRv) const;
 
@@ -1827,15 +1768,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * @param aNotify Whether we plan to notify document observers.
    */
   void AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName, bool aNotify);
-
-  // Total time a video has spent playing.
-  TimeDurationAccumulator mPlayTime;
-
-  // Total time a video has spent playing while hidden.
-  TimeDurationAccumulator mHiddenPlayTime;
-
-  // Total time a video has (or would have) spent in video-decode-suspend mode.
-  TimeDurationAccumulator mVideoDecodeSuspendTime;
 
   // True if Init() has been called after construction
   bool mInitialized = false;

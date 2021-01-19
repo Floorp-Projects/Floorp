@@ -295,10 +295,6 @@ JSObject* HTMLVideoElement::WrapNode(JSContext* aCx,
   return HTMLVideoElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-FrameStatistics* HTMLVideoElement::GetFrameStatistics() {
-  return mDecoder ? &(mDecoder->GetFrameStatistics()) : nullptr;
-}
-
 already_AddRefed<VideoPlaybackQuality>
 HTMLVideoElement::GetVideoPlaybackQuality() {
   DOMHighResTimeStamp creationTime = 0;
@@ -527,6 +523,7 @@ void HTMLVideoElement::MaybeBeginCloningVisually() {
   if (mDecoder) {
     mDecoder->SetSecondaryVideoContainer(
         mVisualCloneTarget->GetVideoFrameContainer());
+    NotifyDecoderActivityChanges();
     UpdateMediaControlAfterPictureInPictureModeChanged();
     OwnerDoc()->EnableChildElementInPictureInPictureMode();
   } else if (mSrcStream) {
@@ -550,6 +547,7 @@ void HTMLVideoElement::EndCloningVisually() {
 
   if (mDecoder) {
     mDecoder->SetSecondaryVideoContainer(nullptr);
+    NotifyDecoderActivityChanges();
     OwnerDoc()->DisableChildElementInPictureInPictureMode();
   } else if (mSrcStream) {
     if (mSecondaryVideoOutput) {

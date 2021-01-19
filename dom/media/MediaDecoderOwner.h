@@ -184,6 +184,9 @@ class MediaDecoderOwner {
   virtual void OnSecondaryVideoContainerInstalled(
       const RefPtr<VideoFrameContainer>& aSecondaryContainer) {}
 
+  // Return true is the owner is actually invisible to users.
+  virtual bool IsActuallyInvisible() const = 0;
+
   /*
    * Servo only methods go here. Please provide default implementations so they
    * can build in Gecko without any modification.

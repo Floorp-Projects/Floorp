@@ -47,6 +47,7 @@ DIRS += [
     "ogg",
     "platforms",
     "systemservices",
+    "utils",
     "wave",
     "webaudio",
     "webm",
