@@ -6313,10 +6313,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
     MOZ_ASSERT(!IsFrameOfType(eReplaced),
                "aspect-ratio minimums should not apply to replaced elements");
-    // We use min-content on the inline-axis as the minimum size.
-    minISize = ComputeISizeValue(aRenderingContext, aWM, aCBSize,
-                                 boxSizingAdjust, boxSizingToMarginEdgeISize,
-                                 StyleExtremumLength::MinContent, aFlags);
+    // The inline size computed by aspect-ratio shouldn't less than the content
+    // size.
+    minISize = GetMinISize(aRenderingContext);
   } else {
     // Treat "min-width: auto" as 0.
     // NOTE: Technically, "auto" is supposed to behave like "min-content" on
@@ -6474,6 +6473,29 @@ nscoord nsIFrame::ShrinkWidthToFit(gfxContext* aRenderingContext,
   return result;
 }
 
+Maybe<nscoord> nsIFrame::ComputeInlineSizeFromAspectRatio(
+    WritingMode aWM, const LogicalSize& aCBSize,
+    const LogicalSize& aContentEdgeToBoxSizing, ComputeSizeFlags aFlags) const {
+  // FIXME: Bug 1670151: Use GetAspectRatio() to cover replaced elements.
+  const AspectRatio aspectRatio = StylePosition()->mAspectRatio.ToLayoutRatio();
+  if (aFlags.contains(ComputeSizeFlag::SkipAspectRatio) || !aspectRatio) {
+    return Nothing();
+  }
+
+  const StyleSize& styleBSize = StylePosition()->BSize(aWM);
+  if (aFlags.contains(ComputeSizeFlag::UseAutoBSize) ||
+      nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM))) {
+    return Nothing();
+  }
+
+  MOZ_ASSERT(styleBSize.IsLengthPercentage());
+  nscoord bSize = nsLayoutUtils::ComputeBSizeValue(
+      aCBSize.BSize(aWM), aContentEdgeToBoxSizing.BSize(aWM),
+      styleBSize.AsLengthPercentage());
+  return Some(aspectRatio.ComputeRatioDependentSize(
+      LogicalAxis::eLogicalAxisInline, aWM, bSize, aContentEdgeToBoxSizing));
+}
+
 nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
                                     const WritingMode aWM,
                                     const LogicalSize& aContainingBlockSize,
@@ -6484,15 +6506,24 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
   // If 'this' is a container for font size inflation, then shrink
   // wrapping inside of it should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
-  // TODO: Calculate aspect-ratio
+  // If we have an aspect-ratio and a definite block size, we resolve the
+  // min-content and max-content size by the aspect-ratio and the block size.
+  // https://github.com/w3c/csswg-drafts/issues/5032
+  Maybe<nscoord> intrinsicSizeFromAspectRatio =
+      aSize == StyleExtremumLength::MozAvailable
+          ? Nothing()
+          : ComputeInlineSizeFromAspectRatio(aWM, aContainingBlockSize,
+                                             aContentEdgeToBoxSizing, aFlags);
   nscoord result;
   switch (aSize) {
     case StyleExtremumLength::MaxContent:
-      result = GetPrefISize(aRenderingContext);
+      result = intrinsicSizeFromAspectRatio ? *intrinsicSizeFromAspectRatio
+                                            : GetPrefISize(aRenderingContext);
       NS_ASSERTION(result >= 0, "inline-size less than zero");
       return result;
     case StyleExtremumLength::MinContent:
-      result = GetMinISize(aRenderingContext);
+      result = intrinsicSizeFromAspectRatio ? *intrinsicSizeFromAspectRatio
+                                            : GetMinISize(aRenderingContext);
       NS_ASSERTION(result >= 0, "inline-size less than zero");
       if (MOZ_UNLIKELY(
               aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize))) {
@@ -6503,11 +6534,19 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
       }
       return result;
     case StyleExtremumLength::MozFitContent: {
-      nscoord pref = GetPrefISize(aRenderingContext),
-              min = GetMinISize(aRenderingContext),
-              fill =
-                  aContainingBlockSize.ISize(aWM) -
-                  (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing.ISize(aWM));
+      nscoord pref = NS_UNCONSTRAINEDSIZE;
+      nscoord min = 0;
+      if (intrinsicSizeFromAspectRatio) {
+        // The min-content and max-content size are identical and equal to the
+        // size computed from the block size and the aspect ratio.
+        pref = min = *intrinsicSizeFromAspectRatio;
+      } else {
+        pref = GetPrefISize(aRenderingContext);
+        min = GetMinISize(aRenderingContext);
+      }
+      nscoord fill =
+          aContainingBlockSize.ISize(aWM) -
+          (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing.ISize(aWM));
       if (MOZ_UNLIKELY(
               aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize))) {
         min = std::min(min, fill);
