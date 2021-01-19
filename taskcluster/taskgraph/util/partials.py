@@ -121,7 +121,7 @@ def _retry_on_http_errors(url, verify, params, errors):
     logger.info("Connecting to %s?%s", url, params_str)
     for _ in redo.retrier(sleeptime=5, max_sleeptime=30, attempts=10):
         try:
-            req = requests.get(url, verify=verify, params=params, timeout=4)
+            req = requests.get(url, verify=verify, params=params, timeout=10)
             req.raise_for_status()
             return req
         except requests.HTTPError as e:
