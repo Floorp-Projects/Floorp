@@ -279,16 +279,25 @@ class SmokeTest {
     @Test
     // Verifies the Add to home screen option in a tab's 3 dot menu
     fun mainMenuAddToHomeScreenTest() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
         }.openThreeDotMenu {
         }.openAddToHomeScreen {
-            verifyShortcutNameField(defaultWebPage.title)
+            clickCancelShortcutButton()
+        }
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openAddToHomeScreen {
+            verifyShortcutNameField("Test_Page_1")
+            addShortcutName("Test Page")
             clickAddShortcutButton()
             clickAddAutomaticallyButton()
-        }.openHomeScreenShortcut(defaultWebPage.title) {}
+        }.openHomeScreenShortcut("Test Page") {
+        }
     }
 
     @Test
@@ -1056,6 +1065,38 @@ class SmokeTest {
             verifyBrowserTabsTrayURL("localhost")
             verifyTabTrayOverflowMenu(true)
             verifyNewTabButton()
+        }
+    }
+
+    @Test
+    fun noHistoryInPrivateBrowsingTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+        }.openHistory {
+            verifyEmptyHistoryView()
+        }
+    }
+
+    @Test
+    fun addPrivateBrowsingShortcutTest() {
+        homeScreen {
+        }.dismissOnboarding()
+
+        homeScreen {
+        }.triggerPrivateBrowsingShortcutPrompt {
+            verifyNoThanksPrivateBrowsingShortcutButton()
+            verifyAddPrivateBrowsingShortcutButton()
+            clickAddPrivateBrowsingShortcutButton()
+            clickAddAutomaticallyButton()
+        }.openHomeScreenShortcut("Private Firefox Preview") {
         }
     }
 }

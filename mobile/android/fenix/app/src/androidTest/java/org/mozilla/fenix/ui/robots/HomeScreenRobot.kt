@@ -37,8 +37,8 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
-import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.support.ktx.android.content.appName
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
@@ -47,7 +47,6 @@ import org.hamcrest.Matchers
 import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
@@ -268,7 +267,7 @@ class HomeScreenRobot {
 
     fun verifySnackBarText(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.waitNotNull(findObject(By.text(expectedText)), TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(findObject(By.text(expectedText)), waitingTime)
     }
 
     fun snackBarButtonClick(expectedText: String) {
@@ -338,6 +337,22 @@ class HomeScreenRobot {
         fun togglePrivateBrowsingMode() {
             onView(ViewMatchers.withResourceName("privateBrowsingButton"))
                 .perform(click())
+        }
+
+        fun triggerPrivateBrowsingShortcutPrompt(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
+        // Loop to press the PB icon for 5 times to display the Add the Private Browsing Shortcut CFR
+            for (i in 1..5) {
+                mDevice.findObject(UiSelector().resourceId("$packageName:id/privateBrowsingButton"))
+                    .waitForExists(
+                            waitingTime
+                    )
+
+                onView(ViewMatchers.withResourceName("privateBrowsingButton"))
+                    .perform(click())
+            }
+
+            AddToHomeScreenRobot().interact()
+            return AddToHomeScreenRobot.Transition()
         }
 
         fun pressBack() {

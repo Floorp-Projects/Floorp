@@ -9,18 +9,16 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.By.textContains
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.anyOf
-import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
@@ -31,7 +29,11 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 class AddToHomeScreenRobot {
 
-    fun verifyShortcutIcon() = assertShortcutIcon()
+    fun verifyAddPrivateBrowsingShortcutButton() = assertAddPrivateBrowsingShortcutButton()
+
+    fun verifyNoThanksPrivateBrowsingShortcutButton() = assertNoThanksPrivateBrowsingShortcutButton()
+
+    fun clickAddPrivateBrowsingShortcutButton() = addPrivateBrowsingShortcutButton().click()
 
     fun addShortcutName(title: String) {
         mDevice.waitNotNull(Until.findObject(By.text("Add to Home screen")), waitingTime)
@@ -43,6 +45,8 @@ class AddToHomeScreenRobot {
     fun verifyShortcutNameField(expectedText: String) = assertShortcutNameField(expectedText)
 
     fun clickAddShortcutButton() = addButton().click()
+
+    fun clickCancelShortcutButton() = cancelAddToHomeScreenButton().click()
 
     fun clickAddAutomaticallyButton() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -92,15 +96,19 @@ private fun assertShortcutNameField(expectedText: String) {
         .check(matches(isCompletelyDisplayed()))
 }
 
-private fun addButton() = onView(anyOf(withText("ADD")))
+private fun addButton() = onView((withText("ADD")))
+
+private fun cancelAddToHomeScreenButton() = onView((withText("CANCEL")))
 
 private fun addAutomaticallyButton() =
     mDevice.findObject(UiSelector().textContains("add automatically"))
 
-private fun assertShortcutIcon() {
-    mDevice.wait(
-        Until.findObject(text("Firefox Preview")),
-        waitingTime
-    )
-    Assert.assertTrue(mDevice.hasObject(By.text("Firefox Preview")))
-}
+private fun addPrivateBrowsingShortcutButton() = onView(withId(R.id.cfr_pos_button))
+
+private fun assertAddPrivateBrowsingShortcutButton() = addPrivateBrowsingShortcutButton()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun noThanksPrivateBrowsingShortcutButton() = onView(withId(R.id.cfr_neg_button))
+
+private fun assertNoThanksPrivateBrowsingShortcutButton() = noThanksPrivateBrowsingShortcutButton()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
