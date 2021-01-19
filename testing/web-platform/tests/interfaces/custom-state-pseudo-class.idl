@@ -13,8 +13,3 @@ interface CustomStateSet {
   undefined add(DOMString value);
 };
 
-[Exposed=Window]
-interface CustomStateSet {
-  setlike<DOMString>;
-  undefined add(DOMString value);
-};
