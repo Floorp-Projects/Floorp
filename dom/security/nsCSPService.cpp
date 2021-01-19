@@ -41,10 +41,8 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
 
   // These content types are not subject to CSP content policy checks:
   // TYPE_CSP_REPORT -- csp can't block csp reports
-  // TYPE_REFRESH    -- never passed to ShouldLoad (see nsIContentPolicy.idl)
   // TYPE_DOCUMENT   -- used for frame-ancestors
   if (contentType == ExtContentPolicy::TYPE_CSP_REPORT ||
-      contentType == ExtContentPolicy::TYPE_REFRESH ||
       contentType == ExtContentPolicy::TYPE_DOCUMENT) {
     return false;
   }

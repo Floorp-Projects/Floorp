@@ -89,7 +89,7 @@ inline const char* NS_CP_ResponseName(int16_t response) {
  * @param contentType the content type code
  * @return the name of the given content type code
  */
-inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
+inline const char* NS_CP_ContentTypeName(nsContentPolicyType contentType) {
   switch (contentType) {
     CASE_RETURN(TYPE_OTHER);
     CASE_RETURN(TYPE_SCRIPT);
@@ -98,7 +98,6 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
     CASE_RETURN(TYPE_OBJECT);
     CASE_RETURN(TYPE_DOCUMENT);
     CASE_RETURN(TYPE_SUBDOCUMENT);
-    CASE_RETURN(TYPE_REFRESH);
     CASE_RETURN(TYPE_PING);
     CASE_RETURN(TYPE_XMLHTTPREQUEST);
     CASE_RETURN(TYPE_OBJECT_SUBREQUEST);
@@ -144,9 +143,11 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
     CASE_RETURN(TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT);
     CASE_RETURN(TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT);
     CASE_RETURN(TYPE_INTERNAL_FETCH_PRELOAD);
-    default:
-      return "<Unknown Type>";
+    case nsIContentPolicy::TYPE_INVALID:
+      break;
+      // Do not add default: so that compilers can catch the missing case.
   }
+  return "<Unknown Type>";
 }
 
 #undef CASE_RETURN

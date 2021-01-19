@@ -294,10 +294,8 @@ static_assert(
         nsIContentPolicy::TYPE_OBJECT == 5 &&
         nsIContentPolicy::TYPE_DOCUMENT == 6 &&
         nsIContentPolicy::TYPE_SUBDOCUMENT == 7 &&
-        nsIContentPolicy::TYPE_REFRESH == 8 &&
         nsIContentPolicy::TYPE_PING == 10 &&
         nsIContentPolicy::TYPE_XMLHTTPREQUEST == 11 &&
-        nsIContentPolicy::TYPE_DATAREQUEST == 11 &&
         nsIContentPolicy::TYPE_OBJECT_SUBREQUEST == 12 &&
         nsIContentPolicy::TYPE_DTD == 13 && nsIContentPolicy::TYPE_FONT == 14 &&
         nsIContentPolicy::TYPE_MEDIA == 15 &&
@@ -3040,9 +3038,9 @@ nsresult MigrateFrom18To19(mozIStorageConnection& aConn, bool& aRewriteSchema) {
                     int(nsIContentPolicy::TYPE_SUBDOCUMENT) == 7 &&
                     int(nsIContentPolicy::TYPE_INTERNAL_FRAME) == 28 &&
                     int(nsIContentPolicy::TYPE_INTERNAL_IFRAME) == 29 &&
-                    int(nsIContentPolicy::TYPE_REFRESH) == 8 &&
                     int(RequestMode::Navigate) == 3,
                 "This is where the numbers below come from!");
+  // 8 is former TYPE_REFRESH.
   nsresult rv = aConn.ExecuteSimpleSQL(nsLiteralCString(
       "UPDATE entries SET request_mode = 3 "
       "WHERE request_contentpolicytype IN (6, 7, 28, 29, 8);"));
