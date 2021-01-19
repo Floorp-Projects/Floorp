@@ -24,6 +24,7 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -65,6 +66,7 @@ class CustomTabIntentProcessorTest {
         val sessionCaptor = argumentCaptor<Session>()
         verify(sessionManager).add(sessionCaptor.capture(), eq(false), eq(null), eq(null), eq(null))
 
+        store.waitUntilIdle()
         middleware.assertFirstAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals(sessionCaptor.value.id, action.sessionId)
             assertEquals("http://mozilla.org", action.url)
@@ -110,6 +112,7 @@ class CustomTabIntentProcessorTest {
         val sessionCaptor = argumentCaptor<Session>()
         verify(sessionManager).add(sessionCaptor.capture(), eq(false), eq(null), eq(null), eq(null))
 
+        store.waitUntilIdle()
         middleware.assertFirstAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals(sessionCaptor.value.id, action.sessionId)
             assertEquals("http://mozilla.org", action.url)
@@ -150,6 +153,7 @@ class CustomTabIntentProcessorTest {
         val sessionCaptor = argumentCaptor<Session>()
         verify(sessionManager).add(sessionCaptor.capture(), eq(false), eq(null), eq(null), eq(null))
 
+        store.waitUntilIdle()
         middleware.assertFirstAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals(sessionCaptor.value.id, action.sessionId)
             assertEquals("http://mozilla.org", action.url)
