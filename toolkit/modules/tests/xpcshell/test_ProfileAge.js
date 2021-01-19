@@ -1,6 +1,7 @@
 const { ProfileAge } = ChromeUtils.import(
   "resource://gre/modules/ProfileAge.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
@@ -11,10 +12,10 @@ let ID = 0;
 // Creates a unique profile directory to use for a test.
 function withDummyProfile(task) {
   return async () => {
-    let profile = PathUtils.join(gProfD.path, "" + ID++);
-    await IOUtils.makeDirectory(profile);
+    let profile = OS.Path.join(gProfD.path, "" + ID++);
+    await OS.File.makeDir(profile);
     await task(profile);
-    await IOUtils.remove(profile, { recursive: true });
+    await OS.File.removeDir(profile);
   };
 }
 
@@ -46,7 +47,7 @@ add_task(
       {
         created: CREATED_TIME,
       },
-      PathUtils.join(profile, "times.json")
+      OS.Path.join(profile, "times.json")
     );
 
     let times = await ProfileAge(profile);
@@ -73,7 +74,7 @@ add_task(
     await promise;
 
     let results = await CommonUtils.readJSON(
-      PathUtils.join(profile, "times.json")
+      OS.Path.join(profile, "times.json")
     );
     Assert.deepEqual(
       results,
@@ -99,7 +100,7 @@ add_task(
     ]);
 
     let results = await CommonUtils.readJSON(
-      PathUtils.join(profile, "times.json")
+      OS.Path.join(profile, "times.json")
     );
     delete results.firstUse;
     Assert.deepEqual(
@@ -121,7 +122,7 @@ add_task(
         created: CREATED_TIME,
         firstUse: null,
       },
-      PathUtils.join(profile, "times.json")
+      OS.Path.join(profile, "times.json")
     );
 
     let times = await ProfileAge(profile);

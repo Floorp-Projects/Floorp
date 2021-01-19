@@ -10,7 +10,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
 
 const FILE_TIMES = "times.json";
 
@@ -31,7 +35,13 @@ function getElapsedTimeInDays(aStartDate, aEndDate) {
 async function getOldestProfileTimestamp(profilePath, log) {
   let start = Date.now();
   let oldest = start + 1000;
+  let iterator = new OS.File.DirectoryIterator(profilePath);
   log.debug("Iterating over profile " + profilePath);
+  if (!iterator) {
+    throw new Error(
+      "Unable to fetch oldest profile entry: no profile iterator."
+    );
+  }
 
   Services.telemetry.scalarAdd("telemetry.profile_directory_scans", 1);
   let histogram = Services.telemetry.getHistogramById(
@@ -39,35 +49,43 @@ async function getOldestProfileTimestamp(profilePath, log) {
   );
 
   try {
-    for (const childPath of await IOUtils.getChildren(profilePath)) {
+    await iterator.forEach(async entry => {
       try {
-        let info = await IOUtils.stat(childPath);
-        let timestamp;
-        if (info.creationTime !== undefined) {
-          timestamp = info.creationTime;
-        } else {
-          // We only support file creation times on Mac and Windows. We have to
-          // settle for mtime on Linux.
+        let info = await OS.File.stat(entry.path);
+
+        // OS.File doesn't seem to be behaving. See Bug 827148.
+        // Let's do the best we can. This whole function is defensive.
+        let date = info.winBirthDate || info.macBirthDate;
+        if (!date || !date.getTime()) {
+          // OS.File will only return file creation times of any kind on Mac
+          // and Windows, where birthTime is defined.
+          // That means we're unable to function on Linux, so we use mtime
+          // instead.
           log.debug("No birth date. Using mtime.");
-          timestamp = info.lastModified;
+          date = info.lastModificationDate;
         }
 
-        // Get the age relative to now.
-        // We don't care about dates in the future.
-        let ageInDays = Math.max(0, getElapsedTimeInDays(timestamp, start));
-        histogram.add(ageInDays);
+        if (date) {
+          let timestamp = date.getTime();
+          // Get the age relative to now.
+          // We don't care about dates in the future.
+          let age_in_days = Math.max(0, getElapsedTimeInDays(timestamp, start));
+          histogram.add(age_in_days);
 
-        log.debug(`Using date: ${childPath} = ${timestamp}`);
-        if (timestamp < oldest) {
-          oldest = timestamp;
+          log.debug("Using date: " + entry.path + " = " + date);
+          if (timestamp < oldest) {
+            oldest = timestamp;
+          }
         }
       } catch (e) {
         // Never mind.
         log.debug("Stat failure", e);
       }
-    }
+    });
   } catch (reason) {
     throw new Error("Unable to fetch oldest profile entry: " + reason);
+  } finally {
+    iterator.close();
   }
 
   return oldest;
@@ -80,7 +98,7 @@ async function getOldestProfileTimestamp(profilePath, log) {
  */
 class ProfileAgeImpl {
   constructor(profile, times) {
-    this._profilePath = profile;
+    this.profilePath = profile || OS.Constants.Path.profileDir;
     this._times = times;
     this._log = Log.repository.getLogger("Toolkit.ProfileAge");
 
@@ -89,17 +107,6 @@ class ProfileAgeImpl {
       this._times.firstUse = Date.now();
       this.writeTimes();
     }
-  }
-
-  get profilePath() {
-    if (this._profilePath) {
-      return Promise.resolve(this._profilePath);
-    }
-
-    return PathUtils.getProfileDir().then(profilePath => {
-      this._profilePath = profilePath;
-      return profilePath;
-    });
   }
 
   /**
@@ -142,10 +149,10 @@ class ProfileAgeImpl {
   /**
    * Return a promise representing the writing the current times to the profile.
    */
-  async writeTimes() {
-    await IOUtils.writeJSON(
-      PathUtils.join(await this.profilePath, FILE_TIMES),
-      this._times
+  writeTimes() {
+    return CommonUtils.writeJSON(
+      this._times,
+      OS.Path.join(this.profilePath, FILE_TIMES)
     );
   }
 
@@ -155,10 +162,7 @@ class ProfileAgeImpl {
    * that resolves when all of that is complete.
    */
   async computeAndPersistCreated() {
-    let oldest = await getOldestProfileTimestamp(
-      await this.profilePath,
-      this._log
-    );
+    let oldest = await getOldestProfileTimestamp(this.profilePath, this._log);
     this._times.created = oldest;
     Services.telemetry.scalarSet(
       "telemetry.profile_directory_scan_date",
@@ -195,10 +199,10 @@ class ProfileAgeImpl {
 const PROFILES = new Map();
 
 async function initProfileAge(profile) {
-  let timesPath = PathUtils.join(profile, FILE_TIMES);
+  let timesPath = OS.Path.join(profile, FILE_TIMES);
 
   try {
-    let times = await IOUtils.readJSON(timesPath);
+    let times = await CommonUtils.readJSON(timesPath);
     return new ProfileAgeImpl(profile, times || {});
   } catch (e) {
     // Indicates that the file was missing or broken. In this case we want to
@@ -215,11 +219,7 @@ async function initProfileAge(profile) {
  * @param {string} profile The path to the profile directory.
  * @return {Promise<ProfileAgeImpl>} Resolves to the ProfileAgeImpl.
  */
-async function ProfileAge(profile) {
-  if (!profile) {
-    profile = await PathUtils.getProfileDir();
-  }
-
+function ProfileAge(profile = OS.Constants.Path.profileDir) {
   if (PROFILES.has(profile)) {
     return PROFILES.get(profile);
   }
