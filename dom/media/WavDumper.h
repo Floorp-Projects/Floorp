@@ -29,6 +29,7 @@ class WavDumper {
       fclose(mFile);
     }
   }
+
   void Open(const char* aBaseName, uint32_t aChannels, uint32_t aRate) {
     using namespace mozilla;
 
