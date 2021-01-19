@@ -70,11 +70,10 @@ LinkStyle::LinkStyle()
 LinkStyle::~LinkStyle() { LinkStyle::SetStyleSheet(nullptr); }
 
 StyleSheet* LinkStyle::GetSheetForBindings() const {
-  if (!StaticPrefs::dom_expose_incomplete_stylesheets() && mStyleSheet &&
-      !mStyleSheet->IsComplete()) {
-    return nullptr;
+  if (mStyleSheet && mStyleSheet->IsComplete()) {
+    return mStyleSheet;
   }
-  return mStyleSheet;
+  return nullptr;
 }
 
 void LinkStyle::GetTitleAndMediaForElement(const Element& aSelf,
@@ -215,8 +214,7 @@ Result<LinkStyle::Update, nsresult> LinkStyle::DoUpdateStyleSheet(
     //
     // We want to do this even if updates are disabled, since otherwise a sheet
     // with a stale linking element pointer will be hanging around -- not good!
-    if (mStyleSheet->IsComplete() ||
-        StaticPrefs::dom_expose_incomplete_stylesheets()) {
+    if (mStyleSheet->IsComplete()) {
       if (aOldShadowRoot) {
         aOldShadowRoot->RemoveStyleSheet(*mStyleSheet);
       } else {
@@ -252,8 +250,7 @@ Result<LinkStyle::Update, nsresult> LinkStyle::DoUpdateStyleSheet(
   }
 
   if (mStyleSheet) {
-    if (mStyleSheet->IsComplete() ||
-        StaticPrefs::dom_expose_incomplete_stylesheets()) {
+    if (mStyleSheet->IsComplete()) {
       if (thisContent.IsInShadowTree()) {
         ShadowRoot* containingShadow = thisContent.GetContainingShadow();
         // Could be null only during unlink.
