@@ -13,6 +13,7 @@ DIRS += ["rust"]
 UNIFIED_SOURCES += [
     "/mfbt/Poison.cpp",
     "/mfbt/Unused.cpp",
+    "Cache.cpp",
     "common.cpp",
     "DefaultBrowser.cpp",
     "EventLog.cpp",
@@ -48,6 +49,8 @@ LOCAL_INCLUDES += [
 ]
 
 OS_LIBS += [
+    "advapi32",
+    "kernel32",
     "netapi32",
     "ole32",
     "oleaut32",
