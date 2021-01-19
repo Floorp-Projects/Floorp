@@ -3816,7 +3816,8 @@ bool nsFrameLoader::EnsureBrowsingContextAttached() {
   rv = mPendingBrowsingContext->SetRemoteSubframes(useRemoteSubframes);
   NS_ENSURE_SUCCESS(rv, false);
 
-  if (isContent && mOwnerContent->IsXULElement() &&
+  if (isContent && mPendingBrowsingContext->IsTop() &&
+      mOwnerContent->IsXULElement() &&
       !mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::initiallyactive,
                                   nsGkAtoms::_false, eIgnoreCase)) {
     // Content <browser> elements are active, unless told otherwise by the
