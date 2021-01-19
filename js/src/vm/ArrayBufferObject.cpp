@@ -1488,9 +1488,9 @@ void ArrayBufferObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
 /* static */
 void ArrayBufferObject::copyData(Handle<ArrayBufferObject*> toBuffer,
-                                 uint32_t toIndex,
+                                 size_t toIndex,
                                  Handle<ArrayBufferObject*> fromBuffer,
-                                 uint32_t fromIndex, uint32_t count) {
+                                 size_t fromIndex, size_t count) {
   MOZ_ASSERT(toBuffer->byteLength().get() >= count);
   MOZ_ASSERT(toBuffer->byteLength().get() >= toIndex + count);
   MOZ_ASSERT(fromBuffer->byteLength().get() >= fromIndex);

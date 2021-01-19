@@ -329,9 +329,9 @@ void SharedArrayBufferObject::addSizeOfExcludingThis(
 
 /* static */
 void SharedArrayBufferObject::copyData(
-    Handle<SharedArrayBufferObject*> toBuffer, uint32_t toIndex,
-    Handle<SharedArrayBufferObject*> fromBuffer, uint32_t fromIndex,
-    uint32_t count) {
+    Handle<SharedArrayBufferObject*> toBuffer, size_t toIndex,
+    Handle<SharedArrayBufferObject*> fromBuffer, size_t fromIndex,
+    size_t count) {
   MOZ_ASSERT(toBuffer->byteLength().get() >= count);
   MOZ_ASSERT(toBuffer->byteLength().get() >= toIndex + count);
   MOZ_ASSERT(fromBuffer->byteLength().get() >= fromIndex);

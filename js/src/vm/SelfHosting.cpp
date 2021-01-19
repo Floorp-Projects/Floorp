@@ -1089,9 +1089,8 @@ static bool intrinsic_ArrayBufferByteLength(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[0].toObject().is<T>());
 
-  size_t byteLength =
-      args[0].toObject().as<T>().byteLength().deprecatedGetUint32();
-  args.rval().setInt32(mozilla::AssertedCast<int32_t>(byteLength));
+  size_t byteLength = args[0].toObject().as<T>().byteLength().get();
+  args.rval().setNumber(byteLength);
   return true;
 }
 
@@ -1108,9 +1107,16 @@ static bool intrinsic_PossiblyWrappedArrayBufferByteLength(JSContext* cx,
     return false;
   }
 
-  uint32_t length = obj->byteLength().deprecatedGetUint32();
-  args.rval().setInt32(mozilla::AssertedCast<int32_t>(length));
+  size_t byteLength = obj->byteLength().get();
+  args.rval().setNumber(byteLength);
   return true;
+}
+
+static void AssertNonNegativeInteger(const Value& v) {
+  MOZ_ASSERT(v.isNumber());
+  MOZ_ASSERT(v.toNumber() >= 0);
+  MOZ_ASSERT(v.toNumber() < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(JS::ToInteger(v.toNumber()) == v.toNumber());
 }
 
 template <typename T>
@@ -1118,9 +1124,9 @@ static bool intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc,
                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 6);
-  MOZ_RELEASE_ASSERT(args[1].isInt32());
-  MOZ_RELEASE_ASSERT(args[3].isInt32());
-  MOZ_RELEASE_ASSERT(args[4].isInt32());
+  AssertNonNegativeInteger(args[1]);
+  AssertNonNegativeInteger(args[3]);
+  AssertNonNegativeInteger(args[4]);
 
   bool isWrapped = args[5].toBoolean();
   Rooted<T*> toBuffer(cx);
@@ -1135,10 +1141,10 @@ static bool intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc,
       return false;
     }
   }
-  uint32_t toIndex = uint32_t(args[1].toInt32());
+  size_t toIndex = size_t(args[1].toNumber());
   Rooted<T*> fromBuffer(cx, &args[2].toObject().as<T>());
-  uint32_t fromIndex = uint32_t(args[3].toInt32());
-  uint32_t count = uint32_t(args[4].toInt32());
+  size_t fromIndex = size_t(args[3].toNumber());
+  size_t count = size_t(args[4].toNumber());
 
   T::copyData(toBuffer, toIndex, fromBuffer, fromIndex, count);
 
@@ -1372,8 +1378,8 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args.length() == 4);
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[1].isObject());
-  MOZ_RELEASE_ASSERT(args[2].isNumber());
-  MOZ_RELEASE_ASSERT(args[3].isNumber());
+  AssertNonNegativeInteger(args[2]);
+  AssertNonNegativeInteger(args[3]);
 
   Rooted<TypedArrayObject*> source(cx,
                                    &args[0].toObject().as<TypedArrayObject>());
@@ -1396,14 +1402,7 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
     return true;
   }
 
-  MOZ_ASSERT(args[2].toNumber() >= 0);
-  MOZ_ASSERT(args[2].toNumber() < DOUBLE_INTEGRAL_PRECISION_LIMIT);
-  MOZ_ASSERT(JS::ToInteger(args[2].toNumber()) == args[2].toNumber());
   size_t sourceOffset = size_t(args[2].toNumber());
-
-  MOZ_ASSERT(args[3].toNumber() >= 0);
-  MOZ_ASSERT(args[3].toNumber() < DOUBLE_INTEGRAL_PRECISION_LIMIT);
-  MOZ_ASSERT(JS::ToInteger(args[3].toNumber()) == args[3].toNumber());
   size_t count = size_t(args[3].toNumber());
 
   MOZ_ASSERT(count > 0 && count <= source->length().get());
