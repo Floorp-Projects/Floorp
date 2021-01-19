@@ -8,6 +8,18 @@
 // the hopes of avoiding mass test failures when the certificates all expire.
 // If this test fails, the certificates probably need to be regenerated.
 // See bug 1525191.
+
+// If this test and only this test fails, do the following:
+// 1. Create a bug for the issue in "Core :: Security: PSM".
+// 2. Write a patch to temporarily disable the test.
+// 3. Land the patch.
+// 4. Write a patch to reenable the test but don't land it.
+// 5. Needinfo the triage owner of Bugzilla's "Core :: Security: PSM" component
+//    in the bug.
+// 6. Patches to update certificates get created.
+// 7. Test the patches with a Try push.
+// 8. Land the patches on all trees whose code will still be used when the
+//    certificates expire in 3 weeks.
 add_task(async function() {
   do_get_profile();
   let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
