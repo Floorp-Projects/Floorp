@@ -333,7 +333,7 @@ struct BaseCompilationStencil {
   // next in a reproducible way. It allows us to match delazification data with
   // initial parse data, even across different runs. This is only used for
   // delazification stencils.
-  using FunctionKey = uint64_t;
+  using FunctionKey = uint32_t;
 
   static constexpr FunctionKey NullFunctionKey = 0;
 
@@ -361,8 +361,9 @@ struct BaseCompilationStencil {
   }
 
   static FunctionKey toFunctionKey(const SourceExtent& extent) {
-    auto result = static_cast<FunctionKey>(extent.sourceStart) << 32 |
-                  static_cast<FunctionKey>(extent.sourceEnd);
+    // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
+    // conflicts with the NullFunctionKey, so shift all keys by 1 instead.
+    auto result = extent.sourceStart + 1;
     MOZ_ASSERT(result != NullFunctionKey);
     return result;
   }
