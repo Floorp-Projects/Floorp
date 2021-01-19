@@ -3745,16 +3745,14 @@ bool nsFrameLoader::EnsureBrowsingContextAttached() {
 
   // Inherit the `use` flags from our parent BrowsingContext.
   bool usePrivateBrowsing = parentContext->UsePrivateBrowsing();
-  const bool useRemoteSubframes = parentContext->UseRemoteSubframes();
-  const bool useRemoteTabs = parentContext->UseRemoteTabs();
-
-  const bool isContent = mPendingBrowsingContext->IsContent();
+  bool useRemoteSubframes = parentContext->UseRemoteSubframes();
+  bool useRemoteTabs = parentContext->UseRemoteTabs();
 
   // Determine the exact OriginAttributes which should be used for our
   // BrowsingContext. This will be used to initialize OriginAttributes if the
   // BrowsingContext has not already been created.
   OriginAttributes attrs;
-  if (isContent) {
+  if (mPendingBrowsingContext->IsContent()) {
     if (mPendingBrowsingContext->GetParent()) {
       MOZ_ASSERT(mPendingBrowsingContext->GetParent() == parentContext);
       parentContext->GetOriginAttributes(attrs);
@@ -3786,7 +3784,8 @@ bool nsFrameLoader::EnsureBrowsingContextAttached() {
     // <iframe mozbrowser> is allowed to set `mozprivatebrowsing` to
     // force-enable private browsing.
     if (OwnerIsMozBrowserFrame()) {
-      if (mOwnerContent->HasAttr(nsGkAtoms::mozprivatebrowsing)) {
+      if (mOwnerContent->HasAttr(kNameSpaceID_None,
+                                 nsGkAtoms::mozprivatebrowsing)) {
         attrs.SyncAttributesWithPrivateBrowsing(true);
         usePrivateBrowsing = true;
       }
@@ -3815,15 +3814,6 @@ bool nsFrameLoader::EnsureBrowsingContextAttached() {
   NS_ENSURE_SUCCESS(rv, false);
   rv = mPendingBrowsingContext->SetRemoteSubframes(useRemoteSubframes);
   NS_ENSURE_SUCCESS(rv, false);
-
-  if (isContent && mPendingBrowsingContext->IsTop() &&
-      mOwnerContent->IsXULElement() &&
-      !mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::initiallyactive,
-                                  nsGkAtoms::_false, eIgnoreCase)) {
-    // Content <browser> elements are active, unless told otherwise by the
-    // initiallyactive attribute.
-    mPendingBrowsingContext->SetInitiallyActive();
-  }
 
   // Finish attaching.
   mPendingBrowsingContext->EnsureAttached();

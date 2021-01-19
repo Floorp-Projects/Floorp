@@ -498,8 +498,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                       aRv);
   }
 
-  void SetInitiallyActive();
-
   bool AuthorStyleDisabledDefault() const {
     return GetAuthorStyleDisabledDefault();
   }
