@@ -662,8 +662,6 @@ module.exports = {
     },
     {
       files: [
-        "dom/base/SlowScriptDebug.jsm",
-        "dom/media/PeerConnection.jsm",
         "mobile/android/chrome/geckoview/SessionStateAggregator.js",
         "mobile/android/modules/geckoview/DelayedInit.jsm",
       ],
