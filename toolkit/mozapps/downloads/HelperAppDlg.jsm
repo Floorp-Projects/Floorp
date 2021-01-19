@@ -1030,7 +1030,6 @@ nsUnknownContentTypeDialog.prototype = {
   },
 
   onOK(aEvent) {
-    let shouldLogAction = this.dialogElement("basicBox").collapsed;
     // Verify typed app path, if necessary.
     if (this.useOtherHandler) {
       var helperApp = this.helperAppChoice();
@@ -1060,7 +1059,6 @@ nsUnknownContentTypeDialog.prototype = {
 
         // Leave dialog up.
         aEvent.preventDefault();
-        shouldLogAction = false;
       }
     }
 
@@ -1072,12 +1070,10 @@ nsUnknownContentTypeDialog.prototype = {
     // certain circumstances (e.g. The user clicks cancel in the
     // "Save to Disk" dialog. In those cases, we don't want to
     // update the helper application preferences in the RDF file.
-    let action;
     try {
       var needUpdate = this.updateMIMEInfo();
 
       if (this.dialogElement("save").selected) {
-        action = "SAVE";
         // see @notify
         // we cannot use opener's setTimeout, see bug 420405
         this._saveToDiskTimer = Cc["@mozilla.org/timer;1"].createInstance(
@@ -1085,7 +1081,6 @@ nsUnknownContentTypeDialog.prototype = {
         );
         this._saveToDiskTimer.initWithCallback(this, 0, nsITimer.TYPE_ONE_SHOT);
       } else {
-        action = this.getOpenWithActionForTelemetry();
         this.mLauncher.launchWithApplication(this.handleInternally);
       }
 
@@ -1100,19 +1095,12 @@ nsUnknownContentTypeDialog.prototype = {
       ) {
         this.updateHelperAppPref();
       }
-    } catch (e) {
-    } finally {
-      if (shouldLogAction) {
-        this.logActionInTelemetryIfExtensionIsPDF(action);
-      }
-    }
+    } catch (e) {}
 
     this.onUnload();
   },
 
   onCancel() {
-    this.logActionInTelemetryIfExtensionIsPDF("CANCEL");
-
     // Remove our web progress listener.
     this.mLauncher.setWebProgressListener(null);
 
@@ -1337,63 +1325,6 @@ nsUnknownContentTypeDialog.prototype = {
         primaryExtension
       )
     );
-  },
-
-  getOpenWithActionForTelemetry() {
-    if (this.handleInternally) {
-      return "OPEN_WITH_INTERNAL_HANDLER";
-    }
-    let name = this.mLauncher.MIMEInfo.preferredApplicationHandler?.name;
-    let { defaultDescription } = this.mLauncher.MIMEInfo;
-    if (name) {
-      name = name.toLowerCase();
-      // Reduce "firefox-bin", "Firefox.app", and "firefox.exe" to just "firefox"
-      let delimeter = AppConstants.platform == "linux" ? "-" : ".";
-      name = name.substring(0, name.indexOf(delimeter));
-    } else if (defaultDescription.includes("Edge")) {
-      name = "msedge";
-    } else if (defaultDescription.includes("Chrome")) {
-      name = "chrome";
-    } else if (defaultDescription == "Preview") {
-      name = "preview";
-    }
-    switch (name) {
-      case "acrobat":
-      case "acrord32":
-      case "adobe acrobat reader dc":
-        return "OPEN_WITH_ACROBAT";
-      case "chrome":
-        // Chromium also uses "chrome.exe" as the executable name.
-        return "OPEN_WITH_CHROMIUM";
-      case "foxitreader":
-        return "OPEN_WITH_FOXIT";
-      case "msedge":
-        return "OPEN_WITH_MSEDGE";
-      case "preview":
-        return "OPEN_WITH_PREVIEW";
-      case undefined:
-        if (
-          this.mLauncher.MIMEInfo.preferredAction ==
-          this.mLauncher.MIMEInfo.useSystemDefault
-        ) {
-          return "OPEN_WITH_SYSTEM_DEFAULT";
-        }
-      // Fall through
-      default:
-        return "OPEN_WITH_OTHER";
-    }
-  },
-
-  logActionInTelemetryIfExtensionIsPDF(action) {
-    try {
-      if (this.mLauncher.MIMEInfo.primaryExtension == "pdf") {
-        Services.telemetry.keyedScalarAdd(
-          "unknowncontenttype.pdf_action",
-          action,
-          1
-        );
-      }
-    } catch (ex) {}
   },
 
   // Turn this on to get debugging messages.
