@@ -78,7 +78,6 @@ finishgc();
 
 // Two-slice zeal modes that yield once during sweeping.
 for (let mode of [ 17, 19 ]) {
-    print(mode);
     gczeal(mode, 0);
     gcslice(1);
     assertEq(gcstate(), "Sweep");
@@ -89,7 +88,6 @@ for (let mode of [ 17, 19 ]) {
 // Two-slice zeal modes that yield per-zone during sweeping.
 const sweepingZealModes = [ 20, 21, 22, 23 ];
 for (let mode of sweepingZealModes) {
-    print(mode);
     gczeal(mode, 0);
     gcslice(1);
     while (gcstate() === "Sweep")
