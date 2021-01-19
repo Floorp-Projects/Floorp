@@ -6195,9 +6195,11 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
                            aFlags.contains(ComputeSizeFlag::UseAutoISize);
   // Compute inline-axis size
   if (!isAutoISize) {
-    result.ISize(aWM) = ComputeISizeValue(
+    auto iSizeResult = ComputeISizeValue(
         aRenderingContext, aWM, aCBSize, boxSizingAdjust,
         boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags);
+    result.ISize(aWM) = iSizeResult.mISize;
+    aspectRatioUsage = iSizeResult.mAspectRatioUsage;
   } else if (stylePos->mAspectRatio.HasFiniteRatio() &&
              !nsLayoutUtils::IsAutoBSize(*blockStyleCoord,
                                          aCBSize.BSize(aWM))) {
@@ -6278,7 +6280,8 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   if (!maxISizeCoord.IsNone() && !isFlexItemInlineAxisMainAxis) {
     maxISize =
         ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, maxISizeCoord, aFlags);
+                          boxSizingToMarginEdgeISize, maxISizeCoord, aFlags)
+            .mISize;
     result.ISize(aWM) = std::min(maxISize, result.ISize(aWM));
   }
 
@@ -6287,7 +6290,8 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   if (!minISizeCoord.IsAuto() && !isFlexItemInlineAxisMainAxis) {
     minISize =
         ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, minISizeCoord, aFlags);
+                          boxSizingToMarginEdgeISize, minISizeCoord, aFlags)
+            .mISize;
   } else if (MOZ_UNLIKELY(
                  aFlags.contains(ComputeSizeFlag::IApplyAutoMinSize))) {
     // This implements "Implied Minimum Size of Grid Items".
@@ -6496,13 +6500,11 @@ Maybe<nscoord> nsIFrame::ComputeInlineSizeFromAspectRatio(
       LogicalAxis::eLogicalAxisInline, aWM, bSize, aContentEdgeToBoxSizing));
 }
 
-nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
-                                    const WritingMode aWM,
-                                    const LogicalSize& aContainingBlockSize,
-                                    const LogicalSize& aContentEdgeToBoxSizing,
-                                    nscoord aBoxSizingToMarginEdge,
-                                    StyleExtremumLength aSize,
-                                    ComputeSizeFlags aFlags) {
+nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
+    gfxContext* aRenderingContext, const WritingMode aWM,
+    const LogicalSize& aContainingBlockSize,
+    const LogicalSize& aContentEdgeToBoxSizing, nscoord aBoxSizingToMarginEdge,
+    StyleExtremumLength aSize, ComputeSizeFlags aFlags) {
   // If 'this' is a container for font size inflation, then shrink
   // wrapping inside of it should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
@@ -6520,7 +6522,9 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
       result = intrinsicSizeFromAspectRatio ? *intrinsicSizeFromAspectRatio
                                             : GetPrefISize(aRenderingContext);
       NS_ASSERTION(result >= 0, "inline-size less than zero");
-      return result;
+      return {result, intrinsicSizeFromAspectRatio
+                          ? AspectRatioUsage::ToComputeISize
+                          : AspectRatioUsage::None};
     case StyleExtremumLength::MinContent:
       result = intrinsicSizeFromAspectRatio ? *intrinsicSizeFromAspectRatio
                                             : GetMinISize(aRenderingContext);
@@ -6532,7 +6536,9 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
             (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing.ISize(aWM));
         result = std::min(available, result);
       }
-      return result;
+      return {result, intrinsicSizeFromAspectRatio
+                          ? AspectRatioUsage::ToComputeISize
+                          : AspectRatioUsage::None};
     case StyleExtremumLength::MozFitContent: {
       nscoord pref = NS_UNCONSTRAINEDSIZE;
       nscoord min = 0;
@@ -6553,14 +6559,14 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
       }
       result = std::max(min, std::min(pref, fill));
       NS_ASSERTION(result >= 0, "inline-size less than zero");
-      return result;
+      return {result};
     }
     case StyleExtremumLength::MozAvailable:
-      return aContainingBlockSize.ISize(aWM) -
-             (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing.ISize(aWM));
+      return {aContainingBlockSize.ISize(aWM) -
+              (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing.ISize(aWM))};
   }
   MOZ_ASSERT_UNREACHABLE("Unknown extremum length?");
-  return 0;
+  return {};
 }
 
 nscoord nsIFrame::ComputeISizeValue(const WritingMode aWM,
