@@ -692,7 +692,8 @@ void XDRIncrementalEncoder::endSubTree() {
   }
 }
 
-XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
+XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer,
+                                           ScriptSource* ss) {
   if (oom_) {
     ReportOutOfMemory(cx());
     return fail(JS::TranscodeResult_Throw);
@@ -751,7 +752,8 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
   return Ok();
 }
 
-XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer) {
+XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
+                                                  ScriptSource* ss) {
   // NOTE: If buffer is empty, buffer.begin() doesn't point valid buffer.
   MOZ_ASSERT_IF(!buffer.empty(),
                 JS::IsTranscodingBytecodeAligned(buffer.begin()));
