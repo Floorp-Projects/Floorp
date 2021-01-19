@@ -20,6 +20,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Rect, Point } = ChromeUtils.import(
+  "resource://gre/modules/Geometry.jsm"
+);
+
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
 var PLAYER_FEATURES =
   "chrome,titlebar=yes,alwaysontop,lockaspectratio,resizable";
@@ -411,8 +415,15 @@ var PictureInPicture = {
       actorReference
     );
 
+    let [resolvedLeft, resolvedTop] = this.resolveOverlapConflicts(
+      left,
+      top,
+      width,
+      height
+    );
+
     let features =
-      `${PLAYER_FEATURES},top=${top},left=${left},` +
+      `${PLAYER_FEATURES},top=${resolvedTop},left=${resolvedLeft},` +
       `outerWidth=${width},outerHeight=${height}`;
 
     let pipWindow = Services.ww.openWindow(
@@ -638,6 +649,141 @@ var PictureInPicture = {
     top = screenTop + screenHeight - height;
 
     return { top, left, width, height };
+  },
+
+  /**
+   * This function will take the size and potential location of a new Picture-in-Picture player
+   * window, and try to return the location coordinates that will best ensure
+   * that the player window will not overlap with other pre-existing player windows.
+   *
+   * @param left x position of left edge for Picture-in-Picture window that is being opened
+   * @param top y position of top edge for Picture-in-Picture window that is being opened
+   * @param width width of Picture-in-Picture window that is being opened
+   * @param height height of Picture-in-Picture window that is being opened
+   *
+   * @returns A list of [left, top] coordinates to where the passed Picture-in-Picture window should be opened
+   */
+  resolveOverlapConflicts(left, top, width, height) {
+    if (!this.isMultiPipEnabled) {
+      // conflicts are not possible here since an additional PiP would be needed
+      return [left, top];
+    }
+
+    // This algorithm works by first identifying the possible candidate locations that the new
+    // PiP could be placed without overlapping other PiPs (Assuming that a confict is discovered at all of course).
+    // The optimal candidate is then selected by its distance to the original conflict, shorter distances are better.
+    //
+    // Candidates are discovered by iterating over each of the sides of every preexisting PiP (One candidate is collected for each side).
+    // This is done to ensure that the new PiP will be opened to tightly fit along the edge of another PiP (This looks very nice).
+    // These candidates are then pruned for candidates that will introduce further conflicts. Finally the ideal candidate is selected from
+    // this pool of remaining candidates, optimized for minimizing distance to the original conflict
+    let playerRects = [];
+
+    for (let playerWin of Services.wm.getEnumerator(WINDOW_TYPE)) {
+      playerRects.push(
+        new Rect(
+          playerWin.screenX,
+          playerWin.screenY,
+          playerWin.outerWidth,
+          playerWin.outerHeight
+        )
+      );
+    }
+
+    const newPlayerRect = new Rect(left, top, width, height);
+    let conflictingPipRect = playerRects.find(rect =>
+      rect.intersects(newPlayerRect)
+    );
+
+    if (!conflictingPipRect) {
+      // no conflicts found
+      return [left, top];
+    }
+
+    const conflictLoc = conflictingPipRect.center();
+
+    // Will try to resolve a better placement only on the screen where
+    // the conflict occurred
+    const conflictScreen = this.getWorkingScreen(conflictLoc.x, conflictLoc.y);
+
+    const [
+      screenTop,
+      screenLeft,
+      screenWidth,
+      screenHeight,
+    ] = this.getAvailScreenSize(conflictScreen);
+
+    const screenRect = new Rect(
+      screenTop,
+      screenLeft,
+      screenWidth,
+      screenHeight
+    );
+
+    const getEdgeCandidates = rect => {
+      return [
+        // left edge's candidate
+        new Point(rect.left - newPlayerRect.width, rect.top),
+        // top edge's candidate
+        new Point(rect.left, rect.top - newPlayerRect.height),
+        // right edge's candidate
+        new Point(rect.right + newPlayerRect.width, rect.top),
+        // bottom edge's candidate
+        new Point(rect.left, rect.bottom),
+      ];
+    };
+
+    let candidateLocations = [];
+    for (const playerRect of playerRects) {
+      for (let candidateLoc of getEdgeCandidates(playerRect)) {
+        const candidateRect = new Rect(
+          candidateLoc.x,
+          candidateLoc.y,
+          width,
+          height
+        );
+
+        if (!screenRect.contains(candidateRect)) {
+          continue;
+        }
+
+        // test that no PiPs conflict with this candidate box
+        if (playerRects.some(rect => rect.intersects(candidateRect))) {
+          continue;
+        }
+
+        const candidateCenter = candidateRect.center();
+        const candidateDistanceToConflict =
+          Math.abs(conflictLoc.x - candidateCenter.x) +
+          Math.abs(conflictLoc.y - candidateCenter.y);
+
+        candidateLocations.push({
+          distanceToConflict: candidateDistanceToConflict,
+          location: candidateLoc,
+        });
+      }
+    }
+
+    if (!candidateLocations.length) {
+      // if no suitable candidates can be found, return the original location
+      return [left, top];
+    }
+
+    // sort candidates by distance to the conflict, select the closest
+    const closestCandidate = candidateLocations.sort(
+      (firstCand, secondCand) =>
+        firstCand.distanceToConflict - secondCand.distanceToConflict
+    )[0];
+
+    if (!closestCandidate) {
+      // can occur if there were no valid candidates, return original location
+      return [left, top];
+    }
+
+    const resolvedX = closestCandidate.location.x;
+    const resolvedY = closestCandidate.location.y;
+
+    return [resolvedX, resolvedY];
   },
 
   resizePictureInPictureWindow(videoData, actorRef) {
