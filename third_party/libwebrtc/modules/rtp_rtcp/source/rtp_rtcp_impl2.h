@@ -199,6 +199,10 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
       StreamDataCounters* rtp_counters,
       StreamDataCounters* rtx_counters) const override;
 
+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
+                            uint32_t* octet_count,
+                            int64_t* ntp_timestamp_ms) const override;
+
   // Get received RTCP report, report block.
   int32_t RemoteRTCPStat(
       std::vector<RTCPReportBlock>* receive_blocks) const override;

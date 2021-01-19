@@ -203,6 +203,9 @@ webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats(
   if (clockrate_khz > 0) {
     stats.jitter_ms = call_stats.jitterSamples / clockrate_khz;
   }
+  stats.rtcp_sender_packets_sent = call_stats.rtcp_sender_packets_sent;
+  stats.rtcp_sender_octets_sent = call_stats.rtcp_sender_octets_sent;
+  stats.rtcp_sender_ntp_timestamp_ms = call_stats.rtcp_sender_ntp_timestamp_ms;
   stats.delay_estimate_ms = channel_receive_->GetDelayEstimate();
   stats.audio_level = channel_receive_->GetSpeechOutputLevelFullRange();
   stats.total_output_energy = channel_receive_->GetTotalOutputEnergy();
