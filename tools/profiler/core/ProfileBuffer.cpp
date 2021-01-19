@@ -129,22 +129,22 @@ size_t ProfileBuffer::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
+void ProfileBuffer::CollectOverheadStats(double aSamplingTimeMs,
                                          TimeDuration aLocking,
                                          TimeDuration aCleaning,
                                          TimeDuration aCounters,
                                          TimeDuration aThreads) {
-  double time = aSamplingTime.ToMilliseconds() * 1000.0;
+  double timeUs = aSamplingTimeMs * 1000.0;
   if (mFirstSamplingTimeUs == 0.0) {
-    mFirstSamplingTimeUs = time;
+    mFirstSamplingTimeUs = timeUs;
   } else {
     // Note that we'll have 1 fewer interval than other numbers (because
     // we need both ends of an interval to know its duration). The final
     // difference should be insignificant over the expected many thousands
     // of iterations.
-    mIntervalsUs.Count(time - mLastSamplingTimeUs);
+    mIntervalsUs.Count(timeUs - mLastSamplingTimeUs);
   }
-  mLastSamplingTimeUs = time;
+  mLastSamplingTimeUs = timeUs;
   double locking = aLocking.ToMilliseconds() * 1000.0;
   double cleaning = aCleaning.ToMilliseconds() * 1000.0;
   double counters = aCounters.ToMilliseconds() * 1000.0;
@@ -156,7 +156,7 @@ void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
   mCountersUs.Count(counters);
   mThreadsUs.Count(threads);
 
-  AddEntry(ProfileBufferEntry::ProfilerOverheadTime(time));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadTime(aSamplingTimeMs));
   AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(locking));
   AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(cleaning));
   AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(counters));
