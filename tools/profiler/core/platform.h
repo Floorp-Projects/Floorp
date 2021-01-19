@@ -34,6 +34,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "nsString.h"
@@ -141,9 +142,23 @@ class RunningTimes {
  public:
   constexpr RunningTimes() = default;
 
+  // Constructor with only a timestamp, useful when no measurements will be
+  // taken.
+  constexpr explicit RunningTimes(const mozilla::TimeStamp& aTimeStamp)
+      : mPostMeasurementTimeStamp(aTimeStamp) {}
+
   constexpr void Clear() { *this = RunningTimes{}; }
 
   constexpr bool IsEmpty() const { return mKnownBits == 0; }
+
+  // This should be called right after CPU measurements have been taken.
+  void SetPostMeasurementTimeStamp(const mozilla::TimeStamp& aTimeStamp) {
+    mPostMeasurementTimeStamp = aTimeStamp;
+  }
+
+  const mozilla::TimeStamp& PostMeasurementTimeStamp() const {
+    return mPostMeasurementTimeStamp;
+  }
 
   // Should be filled for any registered thread.
 
@@ -187,8 +202,12 @@ class RunningTimes {
   }
 
   // Difference from `aBefore` to `this`. Any unknown makes the result unknown.
+  // PostMeasurementTimeStamp set to `this` PostMeasurementTimeStamp, to keep
+  // the most recent timestamp associated with the end of the interval over
+  // which the difference applies.
   RunningTimes operator-(const RunningTimes& aBefore) const {
     RunningTimes diff;
+    diff.mPostMeasurementTimeStamp = mPostMeasurementTimeStamp;
 #define RUNNING_TIME_SUB(index, name, unit, jsonProperty)           \
   if (Is##name##unit##Known() && aBefore.Is##name##unit##Known()) { \
     diff.Set##name##unit(m##name##unit - aBefore.m##name##unit);    \
@@ -203,6 +222,8 @@ class RunningTimes {
  private:
   friend mozilla::ProfileBufferEntryWriter::Serializer<RunningTimes>;
   friend mozilla::ProfileBufferEntryReader::Deserializer<RunningTimes>;
+
+  mozilla::TimeStamp mPostMeasurementTimeStamp;
 
   uint32_t mKnownBits = 0u;
 
