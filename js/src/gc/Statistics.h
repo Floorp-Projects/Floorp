@@ -199,7 +199,7 @@ struct Statistics {
   void nonincremental(GCAbortReason reason) {
     MOZ_ASSERT(reason != GCAbortReason::None);
     nonincrementalReason_ = reason;
-    writeLogMessage("Non-incremental reason: %s", nonincrementalReason());
+    log("Non-incremental reason: %s", nonincrementalReason());
   }
 
   bool nonincremental() const {
@@ -314,9 +314,9 @@ struct Statistics {
 
 #ifdef DEBUG
   // Print a logging message.
-  void writeLogMessage(const char* fmt, ...);
+  void log(const char* fmt, ...);
 #else
-  void writeLogMessage(const char* fmt, ...){};
+  void log(const char* fmt, ...){};
 #endif
 
  private:
