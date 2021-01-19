@@ -833,10 +833,10 @@ void TaskController::MaybeInterruptTask(Task* aTask) {
     return;
   }
 
-  EnsureMainThreadTasksScheduled();
-
   if (aTask->IsMainThreadOnly()) {
     mMayHaveMainThreadTask = true;
+
+    EnsureMainThreadTasksScheduled();
 
     if (mCurrentTasksMT.empty()) {
       return;
@@ -855,6 +855,7 @@ void TaskController::MaybeInterruptTask(Task* aTask) {
     Task* lowestPriorityTask = nullptr;
     for (PoolThread& thread : mPoolThreads) {
       if (!thread.mCurrentTask) {
+        mThreadPoolCV.Notify();
         // There's a free thread, no need to interrupt anything.
         return;
       }
