@@ -781,6 +781,28 @@ oss_put_play_frames(cubeb_stream * s, unsigned int nframes)
   return 0;
 }
 
+static int
+oss_wait_playfd_for_space(cubeb_stream * s)
+{
+  /* For non-duplex stream we have to wait until we have space in the
+   * buffer */
+  int rate = s->play.info.sample_rate;
+  struct pollfd pfd;
+
+  pfd.events = POLLOUT|POLLHUP;
+  pfd.revents = 0;
+  pfd.fd = s->play.fd;
+
+  if (poll(&pfd, 1, s->nfr * 1000 + rate - 1 / rate) == -1) {
+    return CUBEB_ERROR;
+  }
+
+  if (pfd.revents & POLLHUP) {
+    return CUBEB_ERROR;
+  }
+  return 0;
+}
+
 /* 1 - Stopped by cubeb_stream_stop, otherwise 0 */
 static int
 oss_audio_loop(cubeb_stream * s, cubeb_state *new_state)
@@ -873,26 +895,31 @@ oss_audio_loop(cubeb_stream * s, cubeb_state *new_state)
       goto breakdown;
     }
 
-    audio_buf_info bi;
     if (play_on) {
-      if (ioctl(s->play.fd, SNDCTL_DSP_GETOSPACE, &bi)) {
-        state = CUBEB_STATE_ERROR;
-        goto breakdown;
-      }
       /*
        * In duplex mode, playback direction drives recording direction to
        * prevent building up latencies.
        */
+
+      if (oss_wait_playfd_for_space(s) != 0) {
+        state = CUBEB_STATE_ERROR;
+        goto breakdown;
+      }
+
+      audio_buf_info bi;
+      if (ioctl(s->play.fd, SNDCTL_DSP_GETOSPACE, &bi)) {
+        state = CUBEB_STATE_ERROR;
+        goto breakdown;
+      }
       nfr = bi.fragsize * bi.fragments / s->play.frame_size;
       if (nfr > s->bufframes) {
         nfr = s->bufframes;
       }
+    } else {
+      nfr = s->nfr;
     }
 
     if (record_on) {
-      if (nfr == 0) {
-        nfr = s->nfr;
-      }
       if (oss_get_rec_frames(s, nfr) == CUBEB_ERROR) {
         state = CUBEB_STATE_ERROR;
         goto breakdown;
