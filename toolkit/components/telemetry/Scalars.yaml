@@ -671,6 +671,7 @@ browser.startup:
     bug_numbers:
       - 1622263
       - 1614351
+      - 1683101
     description: >
       How the about:home startup cache functioned on startup.
 
@@ -685,7 +686,7 @@ browser.startup:
       8: User did not load about:home on its own by default.
       9: Cache is disabled because about:newtab preloading is disabled.
 
-    expires: "87"
+    expires: "92"
     kind: uint
     notification_emails:
       - mconley@mozilla.com
@@ -700,11 +701,12 @@ browser.startup:
     bug_numbers:
       - 1622263
       - 1614351
+      - 1683101
     description: >
       True if the about:home startup cache was written via the AsyncShutdown
       blocker.
 
-    expires: "87"
+    expires: "92"
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
