@@ -676,20 +676,16 @@ class XDRIncrementalEncoderBase : public XDREncoder {
  protected:
   JS::TranscodeBuffer slices_;
 
-  // Header buffer.
-  JS::TranscodeBuffer header_;
-  XDRBuffer<XDR_ENCODE> headerBuf_;
-
  public:
   explicit XDRIncrementalEncoderBase(JSContext* cx)
-      : XDREncoder(cx, slices_, 0), headerBuf_(cx, header_, 0) {}
+      : XDREncoder(cx, slices_, 0) {}
+
+  void switchToBuffer(XDRBuffer<XDR_ENCODE>* target) { buf = target; }
 
   bool isMainBuf() override { return buf == &mainBuf; }
 
   // Switch to streaming into the main buffer.
-  void switchToMainBuf() override { buf = &mainBuf; }
-  // Switch to streaming into the header buffer.
-  void switchToHeaderBuf() override { buf = &headerBuf_; }
+  void switchToMainBuf() override { switchToBuffer(&mainBuf); }
 
   virtual XDRResult linearize(JS::TranscodeBuffer& buffer,
                               js::ScriptSource* ss) {
@@ -755,6 +751,10 @@ class XDRIncrementalEncoder : public XDRIncrementalEncoderBase {
       HashMap<AutoXDRTree::Key, SlicesNode, DefaultHasher<AutoXDRTree::Key>,
               SystemAllocPolicy>;
 
+  // Header buffer.
+  JS::TranscodeBuffer header_;
+  XDRBuffer<XDR_ENCODE> headerBuf_;
+
   // Atom buffer.
   JS::TranscodeBuffer atoms_;
   XDRBuffer<XDR_ENCODE> atomBuf_;
@@ -776,6 +776,7 @@ class XDRIncrementalEncoder : public XDRIncrementalEncoderBase {
  public:
   explicit XDRIncrementalEncoder(JSContext* cx)
       : XDRIncrementalEncoderBase(cx),
+        headerBuf_(cx, header_, 0),
         atomBuf_(cx, atoms_, 0),
         scope_(nullptr),
         node_(nullptr),
@@ -787,7 +788,10 @@ class XDRIncrementalEncoder : public XDRIncrementalEncoderBase {
   uint32_t& natoms() override { return natoms_; }
 
   // Switch from streaming into the main buffer into the atom buffer.
-  void switchToAtomBuf() override { buf = &atomBuf_; }
+  void switchToAtomBuf() override { switchToBuffer(&atomBuf_); }
+
+  // Switch to streaming into the header buffer.
+  void switchToHeaderBuf() override { switchToBuffer(&headerBuf_); }
 
   bool hasAtomMap() const override { return true; }
   XDRAtomMap& atomMap() override { return atomMap_; }
