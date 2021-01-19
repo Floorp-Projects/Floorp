@@ -599,7 +599,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   PRIntervalTime mIdleTimeout;
   PRIntervalTime mSpdyTimeout;
   PRIntervalTime mResponseTimeout;
-  bool mResponseTimeoutEnabled;
+  Atomic<bool, Relaxed> mResponseTimeoutEnabled;
   uint32_t mNetworkChangedTimeout;  // milliseconds
   uint16_t mMaxRequestAttempts;
   uint16_t mMaxRequestDelay;
@@ -792,7 +792,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   uint32_t mFastOpenConsecutiveFailureCounter;
   uint32_t mFastOpenStallsLimit;
   uint32_t mFastOpenStallsCounter;
-  uint32_t mFastOpenStallsIdleTime;
+  Atomic<uint32_t, Relaxed> mFastOpenStallsIdleTime;
   uint32_t mFastOpenStallsTimeout;
 
   // If true, the transactions from active tab will be dispatched first.
