@@ -100,6 +100,7 @@ body {
   --newtab-snippets-hairline-color: transparent;
 
   // New New Tab
+  --newtab-background-primary-text-color: #{$newtab-background-primary-text-color};
   --newtab-focus-outline: #{$newtab-focus-outline-color};
   --newtab-focus-border: #{$blue-60};
   --newtab-focus-border-selected: #{$newtab-card-tint};
@@ -197,6 +198,7 @@ body {
     --newtab-snippets-hairline-color: #{$white-10};
 
     // New New Tab
+    --newtab-background-primary-text-color: #{$newtab-background-darktheme-primary-text-color};
     --newtab-focus-outline: #{$newtab-darktheme-focus-outline-color};
     --newtab-focus-border: #{$newtab-darktheme-focus-border};
     --newtab-focus-border-selected: #{$newtab-darktheme-focus-border-selected};

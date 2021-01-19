@@ -83,6 +83,7 @@ body {
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
   --newtab-snippets-background-color: #FFF;
   --newtab-snippets-hairline-color: transparent;
+  --newtab-background-primary-text-color: #151515;
   --newtab-focus-outline: rgba(0, 96, 223, 0.25);
   --newtab-focus-border: #0060DF;
   --newtab-focus-border-selected: rgba(0, 0, 0, 0.15);
@@ -159,6 +160,7 @@ body {
     --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.2);
     --newtab-snippets-background-color: #38383D;
     --newtab-snippets-hairline-color: rgba(255, 255, 255, 0.1);
+    --newtab-background-primary-text-color: #CDCDD4;
     --newtab-focus-outline: rgba(80, 145, 241, 0.5);
     --newtab-focus-border: #B5D3FF;
     --newtab-focus-border-selected: #B5D3FF;
@@ -1036,10 +1038,10 @@ main {
     inset-inline-end: -9px;
     opacity: 0;
     position: absolute;
-    top: -20px; }
+    top: -20px;
+    transition: opacity 200ms; }
     .outer-wrapper.newtab-experience .top-site-outer .context-menu-button:is(:active, :focus) {
-      opacity: 1;
-      transform: scale(1); }
+      opacity: 1; }
   .outer-wrapper.newtab-experience .top-site-outer .edit-button {
     background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg"); }
   .outer-wrapper.newtab-experience .top-site-outer .tile {
@@ -1052,9 +1054,11 @@ main {
     height: 80px;
     width: 80px; }
   .outer-wrapper.newtab-experience .top-site-outer .title {
-    width: 80px; }
+    color: var(--newtab-background-primary-text-color);
+    padding-top: 8px; }
     .outer-wrapper.newtab-experience .top-site-outer .title .icon {
-      margin-inline-end: 2px; }
+      margin-inline-end: 2px;
+      fill: var(--newtab-background-primary-text-color); }
   .outer-wrapper.newtab-experience .top-site-outer .default-icon,
   .outer-wrapper.newtab-experience .top-site-outer .search-topsite {
     height: 32px;
@@ -1123,8 +1127,7 @@ main {
 .outer-wrapper.newtab-experience:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
   background: var(--newtab-topsites-outer-card-hover); }
   .outer-wrapper.newtab-experience:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) .context-menu-button {
-    opacity: 1;
-    transform: scale(1); }
+    opacity: 1; }
 
 @keyframes fade-up-tt {
   0% {

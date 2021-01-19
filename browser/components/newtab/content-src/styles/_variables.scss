@@ -98,6 +98,9 @@ $newtab-background-button-default-hover-color: rgba(196, 196, 196, 0.5);
 $newtab-background-button-darktheme-hover-color: rgba(114, 114, 114, 0.5);
 $newtab-background-button-default-active-color: rgba(151, 151, 151, 0.5);
 $newtab-background-button-darktheme-active-color: rgba(173, 173, 173, 0.5);
+$newtab-background-primary-text-color: #151515;
+$newtab-background-darktheme-primary-text-color: #CDCDD4;
+
 $newtab-card-primary-text-color: #20123A;
 $newtab-card-darktheme-primary-text-color: #E0E0E6;
 $newtab-card-line-color: #716F87;
@@ -226,10 +229,10 @@ $customize-menu-border-tint: 1px solid $newtab-card-tint;
     opacity: 0;
     position: absolute;
     top: -20px;
+    transition: opacity 200ms;
 
     &:is(:active, :focus) {
       opacity: 1;
-      transform: scale(1);
     }
   }
 }
@@ -273,7 +276,6 @@ $customize-menu-border-tint: 1px solid $newtab-card-tint;
 @mixin nt-experience-context-menu-button-hover {
   .context-menu-button {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
