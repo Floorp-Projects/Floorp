@@ -11,6 +11,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 function CommonDialog(args, ui) {
   this.args = args;
   this.ui = ui;
@@ -107,9 +111,23 @@ CommonDialog.prototype = {
 
     // set the document title
     let title = this.args.title;
-    // OS X doesn't have a title on modal dialogs, this is hidden on other platforms.
     let infoTitle = this.ui.infoTitle;
     infoTitle.appendChild(infoTitle.ownerDocument.createTextNode(title));
+
+    // Hide it, unless we're displaying a content modal, or are on macOS (where there is no titlebar):
+    let contentSubDialogPromptEnabled = Services.prefs.getBoolPref(
+      "prompts.contentPromptSubDialog"
+    );
+    // For prompts opened with TabModalPrompt, hide it.
+    let hideForTabPromptModal =
+      !contentSubDialogPromptEnabled &&
+      this.args.modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT;
+
+    infoTitle.hidden =
+      hideForTabPromptModal ||
+      (this.args.modalType != Ci.nsIPrompt.MODAL_TYPE_CONTENT &&
+        AppConstants.platform != "macosx");
+
     if (commonDialogEl) {
       commonDialogEl.ownerDocument.title = title;
     }
