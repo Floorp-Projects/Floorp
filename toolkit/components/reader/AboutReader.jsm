@@ -48,9 +48,15 @@ const isAppLocaleRTL = Services.locale.isAppLocaleRTL;
 var AboutReader = function(actor, articlePromise) {
   let win = actor.contentWindow;
   let url = this._getOriginalUrl(win);
-  if (!(url.startsWith("http://") || url.startsWith("https://"))) {
+  if (
+    !(
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("file://")
+    )
+  ) {
     let errorMsg =
-      "Only http:// and https:// URLs can be loaded in about:reader.";
+      "Only http://, https:// and file:// URLs can be loaded in about:reader.";
     if (Services.prefs.getBoolPref("reader.errors.includeURLs")) {
       errorMsg += " Tried to load: " + url + ".";
     }
