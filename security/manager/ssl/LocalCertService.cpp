@@ -273,16 +273,6 @@ class LocalCertGetTask final : public LocalCertTask {
   }
 
   nsresult Validate() {
-    // Verify cert is self-signed
-    bool selfSigned;
-    nsresult rv = mCert->GetIsSelfSigned(&selfSigned);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (!selfSigned) {
-      return NS_ERROR_FAILURE;
-    }
-
     // Check that subject and issuer match nickname
     nsAutoString subjectName;
     nsAutoString issuerName;

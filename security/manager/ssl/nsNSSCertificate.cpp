@@ -148,14 +148,6 @@ nsresult nsNSSCertificate::GetCertType(uint32_t* aCertType) {
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetIsSelfSigned(bool* aIsSelfSigned) {
-  NS_ENSURE_ARG(aIsSelfSigned);
-
-  *aIsSelfSigned = mCert->isRoot;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot) {
   NS_ENSURE_ARG(aIsBuiltInRoot);
 

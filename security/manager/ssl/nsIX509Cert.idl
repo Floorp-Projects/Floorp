@@ -168,13 +168,6 @@ interface nsIX509Cert : nsISupports {
   readonly attribute unsigned long certType;
 
   /**
-   *  True if the certificate is self-signed. CA issued
-   *  certificates are always self-signed.
-   */
-  [must_use]
-  readonly attribute boolean isSelfSigned;
-
-  /**
    * A comma separated list of localized strings representing the contents of
    * the certificate's key usage extension, if present. The empty string if the
    * certificate doesn't have the key usage extension, or has an empty extension.

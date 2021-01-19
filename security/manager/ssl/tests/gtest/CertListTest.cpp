@@ -190,12 +190,6 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   ASSERT_EQ(intCerts.Length(), static_cast<size_t>(0))
       << "There should be no intermediates";
 
-  bool selfSigned;
-  ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))
-  << "Getters should work.";
-  ASSERT_FALSE(selfSigned)
-  << "Roots are self signed, but this was ca-second-intermediate";
-
   nsAutoString rootCn;
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn)))
   << "Getters should work.";
@@ -235,11 +229,6 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   << "End entity cert should be filled in";
   ASSERT_EQ(intCerts.Length(), static_cast<size_t>(2))
       << "There should be two intermediates";
-
-  ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))
-  << "Getters should work.";
-  ASSERT_TRUE(selfSigned)
-  << "Roots are self signed";
 
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn)))
   << "Getters should work.";
@@ -290,11 +279,6 @@ TEST_F(psm_CertList, TestGetRootCertificateChainTwo) {
   ASSERT_TRUE(rootCert)
   << "Root cert should be filled in";
 
-  bool selfSigned;
-  EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))
-      << "Getters should work.";
-  EXPECT_TRUE(selfSigned) << "Roots are self signed";
-
   nsAutoString rootCn;
   EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn)))
       << "Getters should work.";
@@ -330,11 +314,6 @@ TEST_F(psm_CertList, TestGetRootCertificateChainFour) {
   EXPECT_EQ(NS_OK, rv) << "Should have again fetched the root OK";
   ASSERT_TRUE(rootCert)
   << "Root cert should be filled in";
-
-  bool selfSigned;
-  EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))
-      << "Getters should work.";
-  EXPECT_TRUE(selfSigned) << "Roots are self signed";
 
   nsAutoString rootCn;
   EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn)))
