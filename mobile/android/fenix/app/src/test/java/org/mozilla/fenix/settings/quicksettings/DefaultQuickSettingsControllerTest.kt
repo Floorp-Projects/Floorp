@@ -18,7 +18,10 @@ import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
@@ -43,6 +46,10 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultQuickSettingsControllerTest {
     private val context = testContext
+
+    private lateinit var browserStore: BrowserStore
+    private lateinit var tab: TabSessionState
+
     @MockK
     private lateinit var store: QuickSettingsFragmentStore
     private val coroutinesScope = TestCoroutineScope()
@@ -51,7 +58,6 @@ class DefaultQuickSettingsControllerTest {
     private lateinit var navController: NavController
 
     @MockK(relaxed = true)
-    private lateinit var browserSession: Session
     private lateinit var sitePermissions: SitePermissions
 
     @MockK(relaxed = true)
@@ -81,15 +87,18 @@ class DefaultQuickSettingsControllerTest {
     fun setUp() {
         MockKAnnotations.init(this)
 
+        tab = createTab("https://mozilla.org")
+        browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
         sitePermissions = SitePermissions(origin = "", savedAt = 123)
 
         controller = spyk(
             DefaultQuickSettingsController(
                 context = context,
                 quickSettingsStore = store,
+                browserStore = browserStore,
+                sessionId = tab.id,
                 ioScope = coroutinesScope,
                 navController = navController,
-                session = browserSession,
                 sitePermissions = sitePermissions,
                 settings = appSettings,
                 permissionStorage = permissionStorage,
@@ -158,9 +167,10 @@ class DefaultQuickSettingsControllerTest {
         val invalidSitePermissionsController = DefaultQuickSettingsController(
             context = context,
             quickSettingsStore = store,
+            browserStore = BrowserStore(),
             ioScope = coroutinesScope,
             navController = navController,
-            session = browserSession,
+            sessionId = "123",
             sitePermissions = null,
             settings = appSettings,
             permissionStorage = permissionStorage,
@@ -189,7 +199,6 @@ class DefaultQuickSettingsControllerTest {
         val autoplayValue = mockk<AutoplayValue.AllowAll>(relaxed = true)
 
         every { store.dispatch(any()) } returns mockk()
-        every { browserSession.url } returns "https://www.mozilla.org"
         every { controller.handleAutoplayAdd(any()) } returns Unit
 
         controller.sitePermissions = null
@@ -207,7 +216,6 @@ class DefaultQuickSettingsControllerTest {
         val autoplayValue = mockk<AutoplayValue.AllowAll>(relaxed = true)
 
         every { store.dispatch(any()) } returns mockk()
-        every { browserSession.url } returns "https://www.mozilla.org"
         every { controller.handleAutoplayAdd(any()) } returns Unit
         every { controller.handlePermissionsChange(any()) } returns Unit
         every { autoplayValue.updateSitePermissions(any()) } returns mock()
@@ -256,7 +264,7 @@ class DefaultQuickSettingsControllerTest {
 
         coVerifyOrder {
             permissionStorage.updateSitePermissions(testPermissions)
-            reload(browserSession)
+            reload(tab.id)
         }
     }
 
@@ -269,7 +277,7 @@ class DefaultQuickSettingsControllerTest {
 
         coVerifyOrder {
             permissionStorage.add(testPermissions)
-            reload(browserSession)
+            reload(tab.id)
         }
     }
 }

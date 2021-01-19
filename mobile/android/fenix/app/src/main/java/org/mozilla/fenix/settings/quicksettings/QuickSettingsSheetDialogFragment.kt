@@ -77,9 +77,10 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         quickSettingsController = DefaultQuickSettingsController(
             context = context,
             quickSettingsStore = quickSettingsStore,
+            browserStore = components.core.store,
             ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
             navController = findNavController(),
-            session = components.core.sessionManager.findSessionById(args.sessionId),
+            sessionId = args.sessionId,
             sitePermissions = args.sitePermissions,
             settings = components.settings,
             permissionStorage = components.core.permissionStorage,

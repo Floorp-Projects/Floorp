@@ -11,6 +11,8 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.tabs.TabsUseCases.AddNewTabUseCase
@@ -78,10 +80,11 @@ interface QuickSettingsController {
 class DefaultQuickSettingsController(
     private val context: Context,
     private val quickSettingsStore: QuickSettingsFragmentStore,
+    private val browserStore: BrowserStore,
     private val ioScope: CoroutineScope,
     private val navController: NavController,
     @VisibleForTesting
-    internal val session: Session?,
+    internal val sessionId: String,
     @VisibleForTesting
     internal var sitePermissions: SitePermissions?,
     private val settings: Settings,
@@ -136,7 +139,8 @@ class DefaultQuickSettingsController(
         val permissions = sitePermissions
 
         sitePermissions = if (permissions == null) {
-            val origin = requireNotNull(session?.url?.toUri()?.host) {
+            val tab = browserStore.state.findTabOrCustomTab(sessionId)
+            val origin = requireNotNull(tab?.content?.url?.toUri()?.host) {
                 "An origin is required to change a autoplay settings from the door hanger"
             }
             val sitePermissions =
@@ -175,7 +179,7 @@ class DefaultQuickSettingsController(
     fun handlePermissionsChange(updatedPermissions: SitePermissions) {
         ioScope.launch {
             permissionStorage.updateSitePermissions(updatedPermissions)
-            reload(session)
+            reload(sessionId)
         }
     }
 
@@ -183,7 +187,7 @@ class DefaultQuickSettingsController(
     internal fun handleAutoplayAdd(sitePermissions: SitePermissions) {
         ioScope.launch {
             permissionStorage.add(sitePermissions)
-            reload(session)
+            reload(sessionId)
         }
     }
 
