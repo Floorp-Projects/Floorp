@@ -177,12 +177,12 @@ var Impl = {
         // we can get rid of our proxy property.
         if (prop.get || prop.set) {
           Object.defineProperty(object, name, prop);
-          return prop.set.call(object);
+          prop.set.call(object);
+          return;
         }
 
         prop.value = newVal;
         Object.defineProperty(object, name, prop);
-        return newVal;
       },
       configurable: true,
       enumerable: true,
