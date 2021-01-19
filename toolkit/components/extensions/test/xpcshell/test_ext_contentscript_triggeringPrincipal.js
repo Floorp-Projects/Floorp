@@ -39,7 +39,6 @@ var gContentSecurityPolicy = null;
 
 const BASE_URL = `http://example.com`;
 const CSP_REPORT_PATH = "/csp-report.sjs";
-const CSP_REPORT_URL = `http://csplog.example.net/csp-report.sjs`;
 
 /**
  * Registers a static HTML document with the given content at the given
@@ -1320,24 +1319,7 @@ add_task(async function test_contentscript_csp() {
  * content page.
  */
 add_task(async function test_extension_contentscript_csp() {
-  Services.prefs.setBoolPref("extensions.content_script_csp.enabled", true);
-  Services.prefs.setBoolPref(
-    "extensions.content_script_csp.report_only",
-    false
-  );
-
-  // Add reporting to base and default CSP as this cannot be done via manifest.
-  let baseCSP = Services.prefs.getStringPref(
-    "extensions.webextensions.base-content-security-policy"
-  );
-  Services.prefs.setStringPref(
-    "extensions.webextensions.base-content-security-policy",
-    `${baseCSP} report-uri ${CSP_REPORT_URL};`
-  );
-  Services.prefs.setStringPref(
-    "extensions.webextensions.default-content-security-policy",
-    `script-src 'self' 'report-sample'; object-src 'self' 'report-sample'; report-uri ${CSP_REPORT_URL};`
-  );
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 
   // TODO bug 1408193: We currently don't get the full set of CSP reports when
   // running in network scheduling chaos mode. It's not entirely clear why.
@@ -1346,7 +1328,14 @@ add_task(async function test_extension_contentscript_csp() {
 
   gContentSecurityPolicy = `default-src 'none' 'report-sample'; script-src 'nonce-deadbeef' 'unsafe-eval' 'report-sample'; report-uri ${CSP_REPORT_PATH};`;
 
-  let extension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+  let data = {
+    ...EXTENSION_DATA,
+    manifest: {
+      ...EXTENSION_DATA.manifest,
+      manifest_version: 3,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(data);
   await extension.startup();
 
   let urlsPromise = extension.awaitMessage("css-sources").then(msg => {
@@ -1369,4 +1358,5 @@ add_task(async function test_extension_contentscript_csp() {
 
   await extension.unload();
   await contentPage.close();
+  Services.prefs.clearUserPref("extensions.manifestV3.enabled");
 });
