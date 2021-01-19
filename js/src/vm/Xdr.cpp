@@ -323,8 +323,8 @@ static XDRResult AtomTable(XDRState<mode>* xdr) {
 }
 
 template <XDRMode mode>
-static XDRResult ParserAtomTable(XDRState<mode>* xdr,
-                                 frontend::BaseCompilationStencil& stencil) {
+static XDRResult XDRParserAtomTable(XDRState<mode>* xdr,
+                                    frontend::BaseCompilationStencil& stencil) {
   if (mode == XDR_ENCODE) {
     uint32_t atomVectorLength = stencil.parserAtomData.size();
     MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
@@ -454,6 +454,21 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
 }
 
 template <XDRMode mode>
+static XDRResult XDRStencilHeader(
+    XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
+    MutableHandle<ScriptSourceHolder> source, uint32_t* pNumChunks) {
+  // The XDR-Stencil header is inserted at beginning of buffer, but it is
+  // computed at the end the incremental-encoding process.
+
+  MOZ_TRY(VersionCheck(xdr, XDRFormatType::Stencil));
+  MOZ_TRY(ScriptSource::XDR(xdr, maybeOptions, source));
+  MOZ_TRY(XDRChunkCount(xdr, pNumChunks));
+  MOZ_TRY(xdr->align32());
+
+  return Ok();
+}
+
+template <XDRMode mode>
 XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
 #ifdef DEBUG
   auto sanityCheck = mozilla::MakeScopeExit(
@@ -470,26 +485,19 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
     }
   }
 
-  if (hasOptions()) {
-    MOZ_ASSERT(&options() == &stencil.input.options);
-  }
-
-  // If we are incrementally encoding, the number of chunks are encoded in
-  // XDRIncrementalStencilEncoder::linearize, after the header.
+  // Process the header now if decoding. If we are encoding, we defer generating
+  // the header data until the `linearize` call, but still prepend it to final
+  // buffer before giving to the caller.
   if (mode == XDR_DECODE) {
-    MOZ_TRY(VersionCheck(this, XDRFormatType::Stencil));
-
     Rooted<ScriptSourceHolder> holder(cx());
-    MOZ_TRY(ScriptSource::XDR(this, &stencil.input.options, &holder));
-    stencil.input.source_.reset(holder.get().get());
-
-    MOZ_TRY(XDRChunkCount(this, &nchunks()));
-    MOZ_TRY(align32());
+    MOZ_TRY(
+        XDRStencilHeader(this, &stencil.input.options, &holder, &nchunks()));
+    stencil.input.setSource(holder.get().get());
   }
 
   MOZ_ASSERT(isMainBuf());
 
-  MOZ_TRY(ParserAtomTable(this, stencil));
+  MOZ_TRY(XDRParserAtomTable(this, stencil));
   MOZ_TRY(XDRCompilationStencil(this, stencil));
 
   return Ok();
@@ -508,8 +516,7 @@ XDRResult XDRState<mode>::codeFunctionStencil(
     return Ok();
   }
 
-  MOZ_TRY(ParserAtomTable(this, stencil));
-
+  MOZ_TRY(XDRParserAtomTable(this, stencil));
   MOZ_TRY(XDRBaseCompilationStencil(this, stencil));
 
   return Ok();
@@ -749,17 +756,11 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
                 JS::IsTranscodingBytecodeAligned(buffer.begin()));
   MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(buffer.length()));
 
-  switchToHeaderBuf();
-
-  MOZ_TRY(VersionCheck(this, XDRFormatType::Stencil));
-
   Rooted<ScriptSourceHolder> holder(cx(), ss);
-  MOZ_TRY(ScriptSource::XDR(this, nullptr, &holder));
+  uint32_t nchunks = 1 + encodedFunctions_.count();
 
-  uint32_t nchunks = encodedFunctions_.count() + 1;
-  MOZ_TRY(XDRChunkCount(this, &nchunks));
-  MOZ_TRY(align32());
-
+  switchToHeaderBuf();
+  MOZ_TRY(XDRStencilHeader(this, nullptr, &holder, &nchunks));
   switchToMainBuf();
 
   size_t totalLength = buffer.length() + header_.length() + slices_.length();

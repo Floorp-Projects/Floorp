@@ -809,20 +809,19 @@ class XDRIncrementalEncoder : public XDRIncrementalEncoderBase {
 class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   // The structure of the resulting buffer is:
   //
-  // 1. header
-  //   a. version
-  //   b. CompilationInput (ScriptSource)
-  // 2. number of chunks (initial compilation + delazification)
-  // 3. initial compilation chunk
-  //   a. number of atoms
-  //   b. atoms
-  //   c. BaseCompilationStencil
-  //   d. ScriptStencilExtra array
-  //   e. moduleMetadata if exists
-  // 4. array of delazification chunks
-  //   a. number of atoms
-  //   b. atoms
-  //   c. BaseCompilationStencil
+  // 1. Header
+  //   a. Version
+  //   b. ScriptSource
+  //   c. Chunk count
+  //   d. Alignment padding
+  // 2. Initial Chunk
+  //   a. ParseAtomTable
+  //   b. BaseCompilationStencil
+  //   c. ScriptStencilExtra[]
+  //   d. StencilModuleMetadata (if exists)
+  // 3. Array of Delazification Chunks
+  //   a. ParseAtomTable
+  //   b. BaseCompilationStencil
 
   // A set of functions that is passed to codeFunctionStencil.
   // Used to avoid encoding delazification for same function twice.
