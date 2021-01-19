@@ -9,9 +9,6 @@ const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -186,98 +183,75 @@ function hasPriorData(dataType) {
  *
  * @param {Object} data   Current records in the local db.
  */
-const updateCertBlocklist = AppConstants.MOZ_NEW_CERT_STORAGE
-  ? async function({ data: { current, created, updated, deleted } }) {
-      let items = [];
+const updateCertBlocklist = async function({
+  data: { current, created, updated, deleted },
+}) {
+  let items = [];
 
-      // See if we have prior revocation data (this can happen when we can't open
-      // the database and we have to re-create it (see bug 1546361)).
-      let hasPriorRevocationData = await hasPriorData(
-        Ci.nsICertStorage.DATA_TYPE_REVOCATION
+  // See if we have prior revocation data (this can happen when we can't open
+  // the database and we have to re-create it (see bug 1546361)).
+  let hasPriorRevocationData = await hasPriorData(
+    Ci.nsICertStorage.DATA_TYPE_REVOCATION
+  );
+
+  // If we don't have prior data, make it so we re-load everything.
+  if (!hasPriorRevocationData) {
+    deleted = [];
+    updated = [];
+    created = current;
+  }
+
+  for (let item of deleted) {
+    if (item.issuerName && item.serialNumber) {
+      items.push(
+        new IssuerAndSerialRevocationState(
+          item.issuerName,
+          item.serialNumber,
+          Ci.nsICertStorage.STATE_UNSET
+        )
       );
-
-      // If we don't have prior data, make it so we re-load everything.
-      if (!hasPriorRevocationData) {
-        deleted = [];
-        updated = [];
-        created = current;
-      }
-
-      for (let item of deleted) {
-        if (item.issuerName && item.serialNumber) {
-          items.push(
-            new IssuerAndSerialRevocationState(
-              item.issuerName,
-              item.serialNumber,
-              Ci.nsICertStorage.STATE_UNSET
-            )
-          );
-        } else if (item.subject && item.pubKeyHash) {
-          items.push(
-            new SubjectAndPubKeyRevocationState(
-              item.subject,
-              item.pubKeyHash,
-              Ci.nsICertStorage.STATE_UNSET
-            )
-          );
-        }
-      }
-
-      const toAdd = created.concat(updated.map(u => u.new));
-
-      for (let item of toAdd) {
-        if (item.issuerName && item.serialNumber) {
-          items.push(
-            new IssuerAndSerialRevocationState(
-              item.issuerName,
-              item.serialNumber,
-              Ci.nsICertStorage.STATE_ENFORCE
-            )
-          );
-        } else if (item.subject && item.pubKeyHash) {
-          items.push(
-            new SubjectAndPubKeyRevocationState(
-              item.subject,
-              item.pubKeyHash,
-              Ci.nsICertStorage.STATE_ENFORCE
-            )
-          );
-        }
-      }
-
-      try {
-        const certList = Cc["@mozilla.org/security/certstorage;1"].getService(
-          Ci.nsICertStorage
-        );
-        await setRevocations(certList, items);
-      } catch (e) {
-        Cu.reportError(e);
-      }
+    } else if (item.subject && item.pubKeyHash) {
+      items.push(
+        new SubjectAndPubKeyRevocationState(
+          item.subject,
+          item.pubKeyHash,
+          Ci.nsICertStorage.STATE_UNSET
+        )
+      );
     }
-  : async function({ data: { current: records } }) {
-      const certList = Cc["@mozilla.org/security/certblocklist;1"].getService(
-        Ci.nsICertBlocklist
+  }
+
+  const toAdd = created.concat(updated.map(u => u.new));
+
+  for (let item of toAdd) {
+    if (item.issuerName && item.serialNumber) {
+      items.push(
+        new IssuerAndSerialRevocationState(
+          item.issuerName,
+          item.serialNumber,
+          Ci.nsICertStorage.STATE_ENFORCE
+        )
       );
-      for (let item of records) {
-        try {
-          if (item.issuerName && item.serialNumber) {
-            certList.revokeCertByIssuerAndSerial(
-              item.issuerName,
-              item.serialNumber
-            );
-          } else if (item.subject && item.pubKeyHash) {
-            certList.revokeCertBySubjectAndPubKey(
-              item.subject,
-              item.pubKeyHash
-            );
-          }
-        } catch (e) {
-          // Prevent errors relating to individual blocklist entries from causing sync to fail.
-          Cu.reportError(e);
-        }
-      }
-      certList.saveEntries();
-    };
+    } else if (item.subject && item.pubKeyHash) {
+      items.push(
+        new SubjectAndPubKeyRevocationState(
+          item.subject,
+          item.pubKeyHash,
+          Ci.nsICertStorage.STATE_ENFORCE
+        )
+      );
+    }
+  }
+
+  try {
+    const certList = Cc["@mozilla.org/security/certstorage;1"].getService(
+      Ci.nsICertStorage
+    );
+    await setRevocations(certList, items);
+  } catch (e) {
+    Cu.reportError(e);
+  }
+};
 
 /**
  * Modify the appropriate security pins based on records from the remote
@@ -343,12 +317,8 @@ var RemoteSecuritySettings = {
     );
     PinningBlocklistClient.on("sync", updatePinningList);
 
-    let IntermediatePreloadsClient;
-    let CRLiteFiltersClient;
-    if (AppConstants.MOZ_NEW_CERT_STORAGE) {
-      IntermediatePreloadsClient = new IntermediatePreloads();
-      CRLiteFiltersClient = new CRLiteFilters();
-    }
+    let IntermediatePreloadsClient = new IntermediatePreloads();
+    let CRLiteFiltersClient = new CRLiteFilters();
 
     this.OneCRLBlocklistClient = OneCRLBlocklistClient;
     this.PinningBlocklistClient = PinningBlocklistClient;

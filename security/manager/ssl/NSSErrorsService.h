@@ -5,13 +5,11 @@
 #ifndef NSSErrorsService_h
 #define NSSErrorsService_h
 
-#include "nsINSSErrorsService.h"
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
-#ifdef MOZ_NEW_CERT_STORAGE
-#  include "nsILineInputStream.h"
-#  include "nsISafeOutputStream.h"
-#endif
+#include "nsILineInputStream.h"
+#include "nsINSSErrorsService.h"
+#include "nsISafeOutputStream.h"
 #include "nsIStringBundle.h"
 #include "prerror.h"
 

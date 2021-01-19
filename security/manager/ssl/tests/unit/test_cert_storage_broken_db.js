@@ -53,48 +53,43 @@ async function check_has_prior_crlite_data(certStorage, expectedResult) {
   );
 }
 
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function() {
-    // Create an invalid database.
-    let fileToCopy = do_get_file("test_cert_storage_broken_db.js");
-    let dbDirectory = do_get_profile();
-    dbDirectory.append("security_state");
-    fileToCopy.copyTo(dbDirectory, "data.mdb");
+add_task(async function() {
+  // Create an invalid database.
+  let fileToCopy = do_get_file("test_cert_storage_broken_db.js");
+  let dbDirectory = do_get_profile();
+  dbDirectory.append("security_state");
+  fileToCopy.copyTo(dbDirectory, "data.mdb");
 
-    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
-      Ci.nsICertStorage
-    );
-    check_has_prior_revocation_data(certStorage, false);
-    check_has_prior_cert_data(certStorage, false);
-    check_has_prior_crlite_data(certStorage, false);
+  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+    Ci.nsICertStorage
+  );
+  check_has_prior_revocation_data(certStorage, false);
+  check_has_prior_cert_data(certStorage, false);
+  check_has_prior_crlite_data(certStorage, false);
 
-    let result = await new Promise(resolve => {
-      certStorage.setRevocations([], resolve);
-    });
-    Assert.equal(result, Cr.NS_OK, "setRevocations should succeed");
+  let result = await new Promise(resolve => {
+    certStorage.setRevocations([], resolve);
+  });
+  Assert.equal(result, Cr.NS_OK, "setRevocations should succeed");
 
-    check_has_prior_revocation_data(certStorage, true);
-    check_has_prior_cert_data(certStorage, false);
-    check_has_prior_crlite_data(certStorage, false);
+  check_has_prior_revocation_data(certStorage, true);
+  check_has_prior_cert_data(certStorage, false);
+  check_has_prior_crlite_data(certStorage, false);
 
-    result = await new Promise(resolve => {
-      certStorage.addCerts([], resolve);
-    });
-    Assert.equal(result, Cr.NS_OK, "addCerts should succeed");
+  result = await new Promise(resolve => {
+    certStorage.addCerts([], resolve);
+  });
+  Assert.equal(result, Cr.NS_OK, "addCerts should succeed");
 
-    check_has_prior_revocation_data(certStorage, true);
-    check_has_prior_cert_data(certStorage, true);
-    check_has_prior_crlite_data(certStorage, false);
+  check_has_prior_revocation_data(certStorage, true);
+  check_has_prior_cert_data(certStorage, true);
+  check_has_prior_crlite_data(certStorage, false);
 
-    result = await new Promise(resolve => {
-      certStorage.setCRLiteState([], resolve);
-    });
-    Assert.equal(result, Cr.NS_OK, "setCRLiteState should succeed");
-    check_has_prior_revocation_data(certStorage, true);
-    check_has_prior_cert_data(certStorage, true);
-    check_has_prior_crlite_data(certStorage, true);
-  }
-);
+  result = await new Promise(resolve => {
+    certStorage.setCRLiteState([], resolve);
+  });
+  Assert.equal(result, Cr.NS_OK, "setCRLiteState should succeed");
+  check_has_prior_revocation_data(certStorage, true);
+  check_has_prior_cert_data(certStorage, true);
+  check_has_prior_crlite_data(certStorage, true);
+});
