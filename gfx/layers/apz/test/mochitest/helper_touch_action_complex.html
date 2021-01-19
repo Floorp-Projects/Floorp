@@ -14,7 +14,7 @@ function checkScroll(target, x, y, desc) {
   is(target.scrollTop, y, desc + " - y axis");
 }
 
-function resetConfiguration(config, testDriver) {
+async function resetConfiguration(config) {
   // Cycle through all the configuration_X elements, setting them to display:none
   // except for when X == config, in which case set it to display:block
   var i = 0;
@@ -40,32 +40,30 @@ function resetConfiguration(config, testDriver) {
   s.scrollLeft = 0;
   s.scrollTop = 0;
 
-  return waitForAllPaints(function() {
-    flushApzRepaints(testDriver);
-  });
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
 }
 
-function* test(testDriver) {
+async function test() {
   var scrollframe = document.getElementById("scrollframe");
-
-  document.body.addEventListener("touchend", testDriver, { passive: true });
 
   // Helper function for the tests below.
   // Touch-pan configuration |configuration| towards scroll offset (dx, dy) with
   // the pan touching down at (x, y). Check that the final scroll offset is
   // (ex, ey). |desc| is some description string.
-  function* scrollAndCheck(configuration, x, y, dx, dy, ex, ey, desc) {
+  async function scrollAndCheck(configuration, x, y, dx, dy, ex, ey, desc) {
     // Start with a clean slate
-    yield resetConfiguration(configuration, testDriver);
+    await resetConfiguration(configuration);
     // Reverse the touch delta in order to scroll in the desired direction
     dx = -dx;
     dy = -dy;
     // Do the pan
-    yield ok(synthesizeNativeTouchDrag(scrollframe, x, y, dx, dy),
+    let touchEndPromise = promiseTouchEnd(document.body);
+    ok(synthesizeNativeTouchDrag(scrollframe, x, y, dx, dy),
         "Synthesized drag of (" + dx + ", " + dy + ") on configuration " + configuration);
-    yield waitForAllPaints(function() {
-      flushApzRepaints(testDriver);
-    });
+    await touchEndPromise;
+    await promiseAllPaintsDone();
+    await promiseApzRepaintsFlushed();
     // Check for expected scroll position
     checkScroll(scrollframe, ex, ey, "configuration " + configuration + " " + desc);
   }
@@ -73,40 +71,40 @@ function* test(testDriver) {
   // Test configuration_1, which contains two sibling elements that are
   // overlapping. The touch-action from the second sibling (which is on top)
   // should be used for the overlapping area.
-  yield* scrollAndCheck(1, 25, 75, 20, 0, 20, 0, "first element horizontal scroll");
-  yield* scrollAndCheck(1, 25, 75, 0, 50, 0, 0, "first element vertical scroll");
-  yield* scrollAndCheck(1, 75, 75, 50, 0, 0, 0, "overlap horizontal scroll");
-  yield* scrollAndCheck(1, 75, 75, 0, 50, 0, 50, "overlap vertical scroll");
-  yield* scrollAndCheck(1, 125, 75, 20, 0, 0, 0, "second element horizontal scroll");
-  yield* scrollAndCheck(1, 125, 75, 0, 50, 0, 50, "second element vertical scroll");
+  await scrollAndCheck(1, 25, 75, 20, 0, 20, 0, "first element horizontal scroll");
+  await scrollAndCheck(1, 25, 75, 0, 50, 0, 0, "first element vertical scroll");
+  await scrollAndCheck(1, 75, 75, 50, 0, 0, 0, "overlap horizontal scroll");
+  await scrollAndCheck(1, 75, 75, 0, 50, 0, 50, "overlap vertical scroll");
+  await scrollAndCheck(1, 125, 75, 20, 0, 0, 0, "second element horizontal scroll");
+  await scrollAndCheck(1, 125, 75, 0, 50, 0, 50, "second element vertical scroll");
 
   // Test configuration_2, which contains two overlapping elements with a
   // parent/child relationship. The parent has pan-x and the child has pan-y,
   // which means that panning on the parent should work horizontally only, and
   // on the child no panning should occur at all.
-  yield* scrollAndCheck(2, 125, 125, 50, 50, 0, 0, "child scroll");
-  yield* scrollAndCheck(2, 75, 75, 50, 50, 0, 0, "overlap scroll");
-  yield* scrollAndCheck(2, 25, 75, 0, 50, 0, 0, "parent vertical scroll");
-  yield* scrollAndCheck(2, 75, 25, 50, 0, 50, 0, "parent horizontal scroll");
+  await scrollAndCheck(2, 125, 125, 50, 50, 0, 0, "child scroll");
+  await scrollAndCheck(2, 75, 75, 50, 50, 0, 0, "overlap scroll");
+  await scrollAndCheck(2, 25, 75, 0, 50, 0, 0, "parent vertical scroll");
+  await scrollAndCheck(2, 75, 25, 50, 0, 50, 0, "parent horizontal scroll");
 
   // Test configuration_3, which is the same as configuration_2, except the child
   // has a rotation transform applied. This forces the event regions on the two
   // elements to be built separately and then get merged.
-  yield* scrollAndCheck(3, 125, 125, 50, 50, 0, 0, "child scroll");
-  yield* scrollAndCheck(3, 75, 75, 50, 50, 0, 0, "overlap scroll");
-  yield* scrollAndCheck(3, 25, 75, 0, 50, 0, 0, "parent vertical scroll");
-  yield* scrollAndCheck(3, 75, 25, 50, 0, 50, 0, "parent horizontal scroll");
+  await scrollAndCheck(3, 125, 125, 50, 50, 0, 0, "child scroll");
+  await scrollAndCheck(3, 75, 75, 50, 50, 0, 0, "overlap scroll");
+  await scrollAndCheck(3, 25, 75, 0, 50, 0, 0, "parent vertical scroll");
+  await scrollAndCheck(3, 75, 25, 50, 0, 50, 0, "parent horizontal scroll");
 
   // Test configuration_4 has two elements, one above the other, not overlapping,
   // and the second element is a child of the first. The parent has pan-x, the
   // child has pan-y, but that means panning horizontally on the parent should
   // work and panning in any direction on the child should not do anything.
-  yield* scrollAndCheck(4, 75, 75, 50, 50, 50, 0, "parent diagonal scroll");
-  yield* scrollAndCheck(4, 75, 150, 50, 50, 0, 0, "child diagonal scroll");
+  await scrollAndCheck(4, 75, 75, 50, 50, 50, 0, "parent diagonal scroll");
+  await scrollAndCheck(4, 75, 150, 50, 50, 0, 0, "child diagonal scroll");
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
