@@ -123,7 +123,7 @@ class StructuredSpewer {
  public:
   StructuredSpewer()
       : outputInitializationAttempted_(false),
-        spewingEnabled_(false),
+        spewingEnabled_(0),
         json_(mozilla::Nothing()),
         selectedChannel_() {
     if (getenv("SPEW")) {
@@ -131,11 +131,21 @@ class StructuredSpewer {
     }
   }
 
-  ~StructuredSpewer() { finishSpew(); }
+  ~StructuredSpewer() {
+    if (json_.isSome()) {
+      json_->endList();
+      output_.flush();
+      output_.finish();
+      json_.reset();
+    }
+  }
 
-  void enableSpewing() { spewingEnabled_ = true; }
+  void enableSpewing() { spewingEnabled_++; }
 
-  void disableSpewing() { spewingEnabled_ = false; }
+  void disableSpewing() {
+    MOZ_ASSERT(spewingEnabled_ > 0);
+    spewingEnabled_--;
+  }
 
   // Check if the spewer is enabled for a particular script, used to power
   // script level filtering.
@@ -167,7 +177,9 @@ class StructuredSpewer {
   // attemped in the right place.
   bool outputInitializationAttempted_;
 
-  bool spewingEnabled_;
+  // Indicates the number of times spewing has been enabled. If
+  // spewingEnabled_ is greater than zero, then spewing is enabled.
+  size_t spewingEnabled_;
 
   Fprinter output_;
   mozilla::Maybe<JSONPrinter> json_;
@@ -197,23 +209,11 @@ class StructuredSpewer {
 
   // Returns true iff the channels is enabled
   bool enabled(SpewChannel channel) {
-    return (spewingEnabled_ && selectedChannel_.enabled(channel));
+    return (spewingEnabled_ > 0 && selectedChannel_.enabled(channel));
   }
 
   // Start a record
   void startObject(JSContext* cx, const JSScript* script, SpewChannel channel);
-
-  void finishSpew() {
-    if (json_.isSome()) {
-      json_->endList();
-      output_.flush();
-      output_.finish();
-      json_.reset();
-    }
-
-    spewingEnabled_ = false;
-    outputInitializationAttempted_ = false;
-  }
 
   friend class AutoSpewChannel;
   friend class AutoStructuredSpewer;

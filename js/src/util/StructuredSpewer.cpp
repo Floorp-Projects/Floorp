@@ -96,7 +96,7 @@ static bool MatchJSScript(JSScript* script, const char* pattern) {
 }
 
 bool StructuredSpewer::enabled(JSScript* script) {
-  if (!spewingEnabled_) {
+  if (spewingEnabled_ == 0) {
     return false;
   }
 
