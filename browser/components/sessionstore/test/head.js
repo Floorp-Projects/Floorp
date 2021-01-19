@@ -712,3 +712,7 @@ function promiseOnHistoryReplaceEntry(browser) {
     });
   });
 }
+
+function loadTestSubscript(filePath) {
+  Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
+}
