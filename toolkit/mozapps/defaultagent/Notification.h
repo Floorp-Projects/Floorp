@@ -44,5 +44,10 @@ NotificationActivities MaybeShowNotification(
 std::string GetStringForNotificationType(NotificationType type);
 std::string GetStringForNotificationShown(NotificationShown shown);
 std::string GetStringForNotificationAction(NotificationAction action);
+// If actionString is a valid action string (i.e. corresponds to one of the
+// NotificationAction values), this function has no effect. If actionString is
+// not a valid action string, its value will be replaced with the string for
+// NotificationAction::NoAction.
+void EnsureValidNotificationAction(std::string& actionString);
 
 #endif  // __DEFAULT_BROWSER_NOTIFICATION_H__
