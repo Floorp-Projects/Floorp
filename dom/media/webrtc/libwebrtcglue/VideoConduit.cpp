@@ -2,56 +2,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "common/browser_logging/CSFLog.h"
-#include "nspr.h"
-#include "plstr.h"
-
-#include "AudioConduit.h"
-#include "RtpRtcpConfig.h"
 #include "VideoConduit.h"
-#include "VideoStreamFactory.h"
+
+#include <algorithm>
+#include <cinttypes>
+#include <cmath>
+
+#include "common/browser_logging/CSFLog.h"
 #include "common/YuvStamper.h"
-#include "modules/rtp_rtcp/source/rtp_packet_received.h"
-#include "mozilla/TemplateLib.h"
+#include "GmpVideoCodec.h"
+#include "MediaDataCodec.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/UniquePtr.h"
-#include "nsComponentManagerUtils.h"
-#include "nsIPrefBranch.h"
+#include "mozilla/TemplateLib.h"
 #include "nsIGfxInfo.h"
+#include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
+#include "RtpRtcpConfig.h"
+#include "VideoStreamFactory.h"
+#include "WebrtcGmpVideoCodec.h"
 
-#include "nsThreadUtils.h"
-
-#include "pk11pub.h"
-
+// libwebrtc includes
 #include "api/transport/bitrate_settings.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
-#include "common_video/include/video_frame_buffer.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "media/base/media_constants.h"
 #include "media/engine/encoder_simulcast_proxy.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 
-#include "mozilla/Unused.h"
-
-#if defined(MOZ_WIDGET_ANDROID)
+#ifdef MOZ_WIDGET_ANDROID
 #  include "VideoEngine.h"
 #endif
-
-#include "GmpVideoCodec.h"
 
 #ifdef MOZ_WEBRTC_MEDIACODEC
 #  include "MediaCodecVideoCodec.h"
 #endif
-#include "WebrtcGmpVideoCodec.h"
-
-#include "MediaDataCodec.h"
 
 // for ntohs
 #ifdef _MSC_VER
@@ -59,10 +48,6 @@
 #else
 #  include <netinet/in.h>
 #endif
-
-#include <algorithm>
-#include <math.h>
-#include <cinttypes>
 
 #define DEFAULT_VIDEO_MAX_FRAMERATE 30
 #define INVALID_RTP_PAYLOAD 255  // valid payload types are 0 to 127
