@@ -414,9 +414,6 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
 
   nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
   if (!csp) {
-    if (!StaticPrefs::extensions_content_script_csp_enabled()) {
-      return true;
-    }
     // Get the CSP for addon sandboxes.  If the principal is expanded and has a
     // csp, we're probably in luck.
     auto* basePrin = BasePrincipal::Cast(subjectPrincipal);
