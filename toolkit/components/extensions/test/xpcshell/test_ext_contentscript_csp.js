@@ -6,9 +6,6 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-// Enable and turn off report-only so we can validate the results.
-Services.prefs.setBoolPref("extensions.content_script_csp.enabled", true);
-Services.prefs.setBoolPref("extensions.content_script_csp.report_only", false);
 Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 
 const server = createHttpServer({

@@ -1113,9 +1113,6 @@ bool xpc::GlobalProperties::DefineInSandbox(JSContext* cx,
  * provided by the extension in its manifest.
  */
 nsresult ApplyAddonContentScriptCSP(nsISupports* prinOrSop) {
-  if (!StaticPrefs::extensions_content_script_csp_enabled()) {
-    return NS_OK;
-  }
   nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(prinOrSop);
   if (!principal) {
     return NS_OK;
@@ -1166,9 +1163,7 @@ nsresult ApplyAddonContentScriptCSP(nsISupports* prinOrSop) {
   csp = new nsCSPContext();
   MOZ_TRY(csp->SetRequestContextWithPrincipal(expanded, selfURI, u""_ns, 0));
 
-  bool reportOnly = StaticPrefs::extensions_content_script_csp_report_only();
-
-  MOZ_TRY(csp->AppendPolicy(baseCSP, reportOnly, false));
+  MOZ_TRY(csp->AppendPolicy(baseCSP, false, false));
 
   expanded->SetCsp(csp);
   return NS_OK;
