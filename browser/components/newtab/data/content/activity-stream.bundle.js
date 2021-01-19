@@ -5893,7 +5893,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("span", {
       className: "click-target-container"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("span", {
-      className: `click-target ${isNewNewtabExperienceEnabled ? " new-header" : " click-pointer"}`,
+      className: "click-target",
       role: "button",
       tabIndex: "0",
       onKeyPress: this.onKeyPress,

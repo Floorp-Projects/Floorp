@@ -5,6 +5,12 @@ $search-icon-width: 2 * $search-icon-padding + $search-icon-size -2;
 $search-button-width: 48px;
 $glyph-forward: url('chrome://browser/skin/forward.svg');
 
+.outer-wrapper.newtab-experience {
+  .search-wrapper {
+    padding-bottom: 38px;
+  }
+}
+
 .search-wrapper {
   padding: 34px 0 64px;
 
@@ -169,6 +175,12 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 @media (max-height: 700px) {
   .search-wrapper {
     padding: 0 0 30px;
+  }
+
+  .outer-wrapper.newtab-experience {
+    .search-wrapper {
+      padding-bottom: 38px;
+    }
   }
 
   .non-collapsible-section + .below-search-snippet-wrapper {
