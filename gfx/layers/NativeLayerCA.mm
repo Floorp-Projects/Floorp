@@ -618,7 +618,11 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
 }
 
 bool NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
-  MOZ_RELEASE_ASSERT(!mSize.IsEmpty(), "NextSurface invalid mSize.");
+  if (mSize.IsEmpty()) {
+    gfxCriticalError() << "NextSurface returning false because of invalid mSize (" << mSize.width
+                       << ", " << mSize.height << ").";
+    return false;
+  }
 
   MOZ_RELEASE_ASSERT(
       !mInProgressSurface,
@@ -703,7 +707,7 @@ Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(const IntRect& aDisplayRec
                                                       const IntRegion& aUpdateRegion,
                                                       bool aNeedsDepth) {
   MutexAutoLock lock(mMutex);
-  NextSurface(lock);
+  MOZ_RELEASE_ASSERT(NextSurface(lock), "NextSurfaceAsFramebuffer needs a surface.");
 
   Maybe<GLuint> fbo =
       mSurfacePoolHandle->GetFramebufferForSurface(mInProgressSurface->mSurface, aNeedsDepth);
