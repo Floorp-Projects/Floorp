@@ -405,7 +405,13 @@ var PrintEventHandler = {
     try {
       // We'll provide our own progress indicator.
       this.settings.showPrintProgress = false;
+      let l10nId =
+        settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER
+          ? "printui-print-progress-indicator-saving"
+          : "printui-print-progress-indicator";
+      document.l10n.setAttributes(this.printProgressIndicator, l10nId);
       this.printProgressIndicator.hidden = false;
+
       let bc = this.currentPreviewBrowser.browsingContext;
       await this._doPrint(bc, settings);
     } catch (e) {
@@ -2543,6 +2549,10 @@ async function pickFileName(contentTitle, currentURI) {
       ].createInstance(Ci.nsIFileOutputStream);
       fstream.init(picker.file, 0x2a, 0o666, 0); // ioflags = write|create|truncate, file permissions = rw-rw-rw-
       fstream.close();
+
+      // Remove the file to reduce the likelihood of the user opening an empty or damaged fle when the
+      // preview is loading
+      await IOUtils.remove(picker.file.path);
     } catch (e) {
       throw new Error({ reason: retval == 0 ? "not_saved" : "not_replaced" });
     }
