@@ -1016,9 +1016,11 @@ class GCRuntime {
   /* The incremental state at the start of this slice. */
   MainThreadOrGCTaskData<State> initialState;
 
-#ifdef JS_GC_ZEAL
   /* Whether to pay attention the zeal settings in this incremental slice. */
+#ifdef JS_GC_ZEAL
   MainThreadData<bool> useZeal;
+#else
+  const bool useZeal;
 #endif
 
   /* Indicates that the last incremental slice exhausted the mark stack. */
