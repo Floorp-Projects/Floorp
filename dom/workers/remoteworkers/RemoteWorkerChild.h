@@ -66,6 +66,8 @@ class RemoteWorkerChild final
 
   RefPtr<GenericPromise> MaybeSendSetServiceWorkerSkipWaitingFlag();
 
+  const nsTArray<uint64_t>& WindowIDs() const { return mWindowIDs; }
+
  private:
   class InitializeWorkerRunnable;
 
