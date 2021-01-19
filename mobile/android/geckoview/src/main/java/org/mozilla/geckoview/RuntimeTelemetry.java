@@ -120,8 +120,6 @@ public final class RuntimeTelemetry {
 
         public Proxy(final @NonNull Delegate delegate) {
             mDelegate = delegate;
-            // We might want to remove implicit attaching in future.
-            attach();
         }
 
         // Attach to current runtime.
