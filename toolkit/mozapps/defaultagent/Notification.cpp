@@ -644,3 +644,15 @@ std::string GetStringForNotificationAction(NotificationAction action) {
       return std::string("no-action");
   }
 }
+
+void EnsureValidNotificationAction(std::string& actionString) {
+  if (actionString != "dismissed-by-timeout" &&
+      actionString != "dismissed-to-action-center" &&
+      actionString != "dismissed-by-button" &&
+      actionString != "dismissed-by-application-hidden" &&
+      actionString != "remind-me-later" &&
+      actionString != "make-firefox-default-button" &&
+      actionString != "toast-clicked" && actionString != "no-action") {
+    actionString = "no-action";
+  }
+}

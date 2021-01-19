@@ -31,6 +31,7 @@ Here's the format of the ping data, with example values for each property:
       notification_type: <string>, // ex. "initial" or "followup"
       notification_shown: <string>, // ex. "shown", or "not-shown", or "error"
       notification_action: <string>, // ex. "no-action" or "make-firefox-default-button"
+      previous_notification_action: <string>, // Same possible values as notification_action
     }
 
 ``build_channel``
@@ -74,3 +75,11 @@ Whether a notification was shown or not. Possible value include "shown", "not-sh
 The action that the user took in response to the notification. Possible values currently include "dismissed-by-timeout", "dismissed-to-action-center", "dismissed-by-button", "dismissed-by-application-hidden", "remind-me-later", "make-firefox-default-button", "toast-clicked", "no-action".
 
 Many of the values correspond to buttons on the notification and should be pretty self explanatory, but a few are less so. The action "no-action" will be used if and only if the value of ``notification_shown`` is not "shown" to indicate that no action was taken because no notification was displayed. The action "dismissed-to-action-center" will be used if the user clicks the arrow in the top right corner of the notification to dismiss it to the action center. The action "dismissed-by-application-hidden" is provided because that is a method of dismissal that the notification API could give but, in practice, should never be seen. The action "dismissed-by-timeout" indicates that the user did not interact with the notification and it timed out.
+
+``previous_notification_action``
+--------------------------------
+The action that the user took in response to the previous notification. Possible values are the same as those of ``notification_action``.
+
+If no notification has ever been shown, this will be "no-action". If ``notification_shown`` is "shown", this will be the action that was taken on the notification before the one that was just shown (or "no-action" if there was no previous notification). Otherwise, this will be the action that the user took the last time a notification was shown.
+
+Note that because this feature was added later, there may be people in configurations that might seem impossible, like having the combination of ``notification_type`` being "followup" with a ``previous_notification_action`` of "no-action", because the first notification action was taken before we started storing that value.
