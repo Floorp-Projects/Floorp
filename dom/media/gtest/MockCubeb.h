@@ -149,12 +149,20 @@ class MockCubebStream {
   cubeb_devid GetOutputDeviceID() const;
 
   uint32_t InputChannels() const;
+  uint32_t OutputChannels() const;
   uint32_t InputSampleRate() const;
   uint32_t InputFrequency() const;
 
   void SetDriftFactor(float aDriftFactor);
   void ForceError();
   void Thaw();
+
+  // Enable input recording for this driver. This is best called before
+  // the thread is running, but is safe to call whenever.
+  void SetOutputRecordingEnabled(bool aEnabled);
+  // Get the recorded output from this stream. This doesn't copy, and therefore
+  // only works once.
+  nsTArray<AudioDataValue>&& TakeRecordedOutput();
 
   MediaEventSource<uint32_t>& FramesProcessedEvent();
   MediaEventSource<uint32_t>& FramesVerifiedEvent();
@@ -178,6 +186,10 @@ class MockCubebStream {
   bool mFrozenStart;
   // Signal to the audio thread that stream is stopped.
   std::atomic_bool mStreamStop{true};
+  // Whether or not the output-side of this stream (what is written from the
+  // callback output buffer) is recorded in an internal buffer. The data is then
+  // available via `GetRecordedOutput`.
+  std::atomic_bool mOutputRecordingEnabled{false};
   // The audio buffer used on data callback.
   AudioDataValue mOutputBuffer[NUM_OF_CHANNELS * 1920] = {};
   AudioDataValue mInputBuffer[NUM_OF_CHANNELS * 1920] = {};
@@ -204,6 +216,9 @@ class MockCubebStream {
   MediaEventProducer<uint32_t> mFramesVerifiedEvent;
   MediaEventProducer<Tuple<uint64_t, float, uint32_t>> mOutputVerificationEvent;
   MediaEventProducer<void> mErrorForcedEvent;
+  // The recorded data, copied from the output_buffer of the callback.
+  // Interleaved.
+  nsTArray<AudioDataValue> mRecordedOutput;
 };
 
 class SmartMockCubebStream
