@@ -470,36 +470,26 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
     }
   }
 
-  // As with codeScript, use header buffer when incrementally encoding.
-  if (mode == XDR_ENCODE) {
-    switchToHeaderBuf();
-  }
-  MOZ_TRY(VersionCheck(this, XDRFormatType::Stencil));
-
   if (hasOptions()) {
     MOZ_ASSERT(&options() == &stencil.input.options);
-  }
-
-  // Transcode the ScriptSource.
-  Rooted<ScriptSourceHolder> holder(cx(), stencil.input.source());
-  MOZ_TRY(ScriptSource::XDR(this, &stencil.input.options, &holder));
-  if (mode == XDR_DECODE) {
-    stencil.input.setSource(holder.get().get());
   }
 
   // If we are incrementally encoding, the number of chunks are encoded in
   // XDRIncrementalStencilEncoder::linearize, after the header.
   if (mode == XDR_DECODE) {
+    MOZ_TRY(VersionCheck(this, XDRFormatType::Stencil));
+
+    Rooted<ScriptSourceHolder> holder(cx());
+    MOZ_TRY(ScriptSource::XDR(this, &stencil.input.options, &holder));
+    stencil.input.source_.reset(holder.get().get());
+
     MOZ_TRY(XDRChunkCount(this, &nchunks()));
     MOZ_TRY(align32());
   }
 
-  if (mode == XDR_ENCODE) {
-    switchToMainBuf();
-  }
-  MOZ_TRY(ParserAtomTable(this, stencil));
-
   MOZ_ASSERT(isMainBuf());
+
+  MOZ_TRY(ParserAtomTable(this, stencil));
   MOZ_TRY(XDRCompilationStencil(this, stencil));
 
   return Ok();
@@ -760,6 +750,11 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
   MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(buffer.length()));
 
   switchToHeaderBuf();
+
+  MOZ_TRY(VersionCheck(this, XDRFormatType::Stencil));
+
+  Rooted<ScriptSourceHolder> holder(cx(), ss);
+  MOZ_TRY(ScriptSource::XDR(this, nullptr, &holder));
 
   uint32_t nchunks = encodedFunctions_.count() + 1;
   MOZ_TRY(XDRChunkCount(this, &nchunks));
