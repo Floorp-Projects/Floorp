@@ -51,10 +51,15 @@ let NewTabPagePreloading = {
       BROWSER_NEW_TAB_URL,
     } = win;
 
+    let oa = E10SUtils.predictOriginAttributes({ window: win });
+
     let remoteType = E10SUtils.getRemoteTypeForURI(
       BROWSER_NEW_TAB_URL,
       gMultiProcessBrowser,
-      gFissionBrowser
+      gFissionBrowser,
+      E10SUtils.DEFAULT_REMOTE_TYPE,
+      null,
+      oa
     );
     let browser = gBrowser.createBrowser({
       isPreloadBrowser: true,
