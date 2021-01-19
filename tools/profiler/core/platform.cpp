@@ -3369,13 +3369,15 @@ void SamplerThread::Run() {
                 thread.mProfiledThreadData.get();
             RefPtr<ThreadInfo> info = registeredThread->Info();
 
-            RunningTimes runningTimesDiff;
-            if (cpuUtilization) {
-              runningTimesDiff =
-                  GetThreadRunningTimesDiff(lock, *registeredThread);
-            }
+            const RunningTimes runningTimesDiff = [&]() {
+              if (!cpuUtilization) {
+                // If we don't need CPU measurements, we only need a timestamp.
+                return RunningTimes(TimeStamp::NowUnfuzzed());
+              }
+              return GetThreadRunningTimesDiff(lock, *registeredThread);
+            }();
 
-            TimeStamp now = TimeStamp::NowUnfuzzed();
+            const TimeStamp& now = runningTimesDiff.PostMeasurementTimeStamp();
             double threadSampleDeltaMs =
                 (now - CorePS::ProcessStartTime()).ToMilliseconds();
 

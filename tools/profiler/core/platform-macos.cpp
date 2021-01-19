@@ -109,6 +109,9 @@ static RunningTimes GetThreadRunningTimesDiff(
     newRunningTimes.SetThreadCPUDelta(userTimeUs + systemTimeUs);
   }
 
+  // Reminder: This must stay *after* the CPU measurements.
+  newRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::NowUnfuzzed());
+
   RunningTimes diff =
       newRunningTimes - platformData->PreviousThreadRunningTimesRef();
   platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
