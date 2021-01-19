@@ -324,6 +324,14 @@
       // if available, to ensure we don't spawn a new process.
       let remoteType;
       let initialBrowsingContextGroupId;
+
+      if (tabArgument && tabArgument.hasAttribute("usercontextid")) {
+        // The window's first argument is a tab if and only if we are swapping tabs.
+        // We must set the browser's usercontextid so that the newly created remote
+        // tab child has the correct usercontextid.
+        userContextId = parseInt(tabArgument.getAttribute("usercontextid"), 10);
+      }
+
       if (tabArgument && tabArgument.linkedBrowser) {
         remoteType = tabArgument.linkedBrowser.remoteType;
         initialBrowsingContextGroupId =
@@ -342,22 +350,21 @@
         }
 
         if (uriToLoad && typeof uriToLoad == "string") {
+          let oa = E10SUtils.predictOriginAttributes({
+            window,
+            userContextId,
+          });
           remoteType = E10SUtils.getRemoteTypeForURI(
             uriToLoad,
             gMultiProcessBrowser,
             gFissionBrowser,
-            E10SUtils.DEFAULT_REMOTE_TYPE
+            E10SUtils.DEFAULT_REMOTE_TYPE,
+            null,
+            oa
           );
         } else {
           remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
         }
-      }
-
-      if (tabArgument && tabArgument.hasAttribute("usercontextid")) {
-        // The window's first argument is a tab if and only if we are swapping tabs.
-        // We must set the browser's usercontextid so that the newly created remote
-        // tab child has the correct usercontextid.
-        userContextId = parseInt(tabArgument.getAttribute("usercontextid"), 10);
       }
 
       let createOptions = {
@@ -1944,12 +1951,15 @@
 
       let oldRemoteType = aBrowser.remoteType;
 
+      let oa = E10SUtils.predictOriginAttributes({ browser: aBrowser });
+
       aOptions.remoteType = E10SUtils.getRemoteTypeForURI(
         aURL,
         gMultiProcessBrowser,
         gFissionBrowser,
         oldRemoteType,
-        aBrowser.currentURI
+        aBrowser.currentURI,
+        oa
       );
 
       // If this URL can't load in the current browser then flip it to the
@@ -2162,12 +2172,17 @@
               } else {
                 uri = browser._cachedCurrentURI = Services.io.newURI(url);
               }
+              let oa = E10SUtils.predictOriginAttributes({
+                browser,
+                userContextId: aTab.getAttribute("usercontextid"),
+              });
               return E10SUtils.getRemoteTypeForURI(
                 url,
                 gMultiProcessBrowser,
                 gFissionBrowser,
                 undefined,
-                uri
+                uri,
+                oa
               );
             };
             break;
@@ -2610,6 +2625,8 @@
           preferredRemoteType = openerBrowser.remoteType;
         }
 
+        var oa = E10SUtils.predictOriginAttributes({ window, userContextId });
+
         // If URI is about:blank and we don't have a preferred remote type,
         // then we need to use the referrer, if we have one, to get the
         // correct remote type for the new tab.
@@ -2622,7 +2639,10 @@
           preferredRemoteType = E10SUtils.getRemoteTypeForURI(
             referrerInfo.originalReferrer.spec,
             gMultiProcessBrowser,
-            gFissionBrowser
+            gFissionBrowser,
+            E10SUtils.DEFAULT_REMOTE_TYPE,
+            null,
+            oa
           );
         }
 
@@ -2632,7 +2652,9 @@
               aURI,
               gMultiProcessBrowser,
               gFissionBrowser,
-              preferredRemoteType
+              preferredRemoteType,
+              null,
+              oa
             );
 
         // If we open a new tab with the newtab URL in the default
