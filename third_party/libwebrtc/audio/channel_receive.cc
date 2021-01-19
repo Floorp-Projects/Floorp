@@ -763,6 +763,11 @@ CallReceiveStatistics ChannelReceive::GetRTCPStatistics() const {
     MutexLock lock(&ts_stats_lock_);
     stats.capture_start_ntp_time_ms_ = capture_start_ntp_time_ms_;
   }
+
+  // --- Remote side
+  rtp_rtcp_->RemoteRTCPSenderInfo(&stats.rtcp_sender_packets_sent,
+                                  &stats.rtcp_sender_octets_sent,
+                                  &stats.rtcp_sender_ntp_timestamp_ms);
   return stats;
 }
 
