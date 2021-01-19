@@ -167,10 +167,19 @@ class RunningTimes {
     return (mKnownBits & mGot##name##unit) != 0;                      \
   }                                                                   \
                                                                       \
-  constexpr void Set##name##unit(uint64_t a##name##unit) {            \
-    MOZ_ASSERT(!Is##name##unit##Known(), #name #unit " already set"); \
+  constexpr void Clear##name##unit() {                                \
+    m##name##unit = 0;                                                \
+    mKnownBits &= ~mGot##name##unit;                                  \
+  }                                                                   \
+                                                                      \
+  constexpr void Reset##name##unit(uint64_t a##name##unit) {          \
     m##name##unit = a##name##unit;                                    \
     mKnownBits |= mGot##name##unit;                                   \
+  }                                                                   \
+                                                                      \
+  constexpr void Set##name##unit(uint64_t a##name##unit) {            \
+    MOZ_ASSERT(!Is##name##unit##Known(), #name #unit " already set"); \
+    Reset##name##unit(a##name##unit);                                 \
   }                                                                   \
                                                                       \
   constexpr mozilla::Maybe<uint64_t> Get##name##unit() const {        \

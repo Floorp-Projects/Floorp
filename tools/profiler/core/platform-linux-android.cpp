@@ -331,21 +331,27 @@ static RunningTimes GetThreadRunningTimesDiff(
 
   PlatformData* platformData = aRegisteredThread.GetPlatformData();
   MOZ_RELEASE_ASSERT(platformData);
+  Maybe<clockid_t> maybeCid = platformData->GetClockId();
 
-  RunningTimes newRunningTimes;
-
-  if (Maybe<clockid_t> cid = platformData->GetClockId(); cid.isSome()) {
-    AUTO_PROFILER_STATS(GetRunningTimes_clock_gettime_thread_gettime);
-    if (timespec ts; clock_gettime(*cid, &ts) == 0) {
-      newRunningTimes.SetThreadCPUDelta(uint64_t(ts.tv_sec) * 1'000'000'000u +
-                                        uint64_t(ts.tv_nsec));
-    }
+  if (MOZ_UNLIKELY(!maybeCid)) {
+    // No clock id -> Nothing to measure apart from the timestamp.
+    RunningTimes emptyRunningTimes;
+    emptyRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::NowUnfuzzed());
+    return emptyRunningTimes;
   }
 
-  // Reminder: This must stay *after* the CPU measurements.
-  newRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::NowUnfuzzed());
+  const RunningTimes newRunningTimes = GetRunningTimesWithTightTimestamp(
+      [cid = *maybeCid](RunningTimes& aRunningTimes) {
+        AUTO_PROFILER_STATS(GetRunningTimes_clock_gettime);
+        if (timespec ts; clock_gettime(cid, &ts) == 0) {
+          aRunningTimes.ResetThreadCPUDelta(
+              uint64_t(ts.tv_sec) * 1'000'000'000u + uint64_t(ts.tv_nsec));
+        } else {
+          aRunningTimes.ClearThreadCPUDelta();
+        }
+      });
 
-  RunningTimes diff =
+  const RunningTimes diff =
       newRunningTimes - platformData->PreviousThreadRunningTimesRef();
   platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
   return diff;
