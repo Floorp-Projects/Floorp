@@ -32,3 +32,9 @@ function testSlice() {
     assertEq(ta2.toString(), "100,101,102");
 }
 testSlice();
+
+function testSharedMailbox() {
+    setSharedObject(sab);
+    assertEq(getSharedObject().byteLength, 4 * gb + 10);
+}
+testSharedMailbox();
