@@ -128,9 +128,13 @@ void TelemetryProbesReporter::PauseInvisibleVideoTimeAcculator() {
 }
 
 bool TelemetryProbesReporter::HasOwnerHadValidVideo() const {
-  const MediaInfo info = mOwner->GetMediaInfo();
-  return info.HasVideo() && info.mVideo.mImage.height > 0 &&
-         info.mVideo.mImage.width > 0;
+  // Checking both image and display dimensions helps address cases such as
+  // suspending, where we use a null decoder. In that case a null decoder
+  // produces 0x0 video frames, which might cause layout to resize the display
+  // size, but the image dimensions would be still non-null.
+  const VideoInfo info = mOwner->GetMediaInfo().mVideo;
+  return (info.mDisplay.height > 0 && info.mDisplay.width > 0) ||
+         (info.mImage.height > 0 && info.mImage.width > 0);
 }
 
 void TelemetryProbesReporter::AssertOnMainThreadAndNotShutdown() const {
