@@ -53,7 +53,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
             "google-breakpad/src/processor",
         ]
 
-        if CONFIG["OS_TARGET"] != "Android":
+        if CONFIG["MOZ_OXIDIZED_BREAKPAD"]:
             DIRS += ["rust_minidump_writer_linux"]
 
     DIRS += [
