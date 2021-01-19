@@ -182,17 +182,10 @@ var ModuleManager = {
     this.forEach(module => {
       module.onDestroyBrowser();
     });
-
-    // TODO: Bug 1673683: `docShellIsActive` is sometimes not preserved when
-    // switching process.
-    this.docShellIsActiveWhileSwitchingProcess = this.browser.docShellIsActive;
   },
 
   didChangeBrowserRemoteness() {
     debug`DidChangeBrowserRemoteness`;
-
-    this.browser.docShellIsActive = this.docShellIsActiveWhileSwitchingProcess;
-    this.docShellIsActiveWhileSwitchingProcess = undefined;
 
     this.forEach(module => {
       if (module.impl) {
