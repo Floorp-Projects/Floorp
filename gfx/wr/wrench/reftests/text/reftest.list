@@ -62,7 +62,7 @@ fuzzy(1,1) platform(linux) == two-shadows.yaml two-shadows.png
 == shadow-fast-clip.yaml shadow-fast-clip-ref.yaml
 skip_on(android,device) == shadow-partial-glyph.yaml shadow-partial-glyph-ref.yaml  # Fails on Pixel2
 fuzzy(2,212) platform(linux) == shadow-transforms.yaml shadow-transforms.png
-fuzzy(2,320) platform(linux) == raster-space.yaml raster-space.png
+fuzzy(2,350) platform(linux) == raster-space.yaml raster-space.png
 skip_on(android) skip_on(mac,>=10.14) != allow-subpixel.yaml allow-subpixel-ref.yaml  # Android: we don't enable sub-px aa on this platform.
 skip_on(android,device) == bg-color.yaml bg-color-ref.yaml  # Fails on Pixel2
 != large-glyphs.yaml blank.yaml
