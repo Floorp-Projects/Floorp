@@ -220,10 +220,8 @@ struct ChunkBitmap {
   static constexpr size_t WordCount = ArenaBitmapWords * ArenasPerChunk;
   MarkBitmapWord bitmap[WordCount];
 
-  static inline void GetMarkWordAndMask(const TenuredCell* cell,
-                                        ColorBit colorBit,
-                                        MarkBitmapWord** wordp,
-                                        uintptr_t* maskp);
+  inline void getMarkWordAndMask(const TenuredCell* cell, ColorBit colorBit,
+                                 MarkBitmapWord** wordp, uintptr_t* maskp);
 
   // The following are not exported and are defined in gc/Heap.h:
   inline bool markBit(const TenuredCell* cell, ColorBit colorBit);
@@ -518,7 +516,7 @@ namespace js {
 namespace gc {
 
 /* static */
-MOZ_ALWAYS_INLINE void ChunkBitmap::GetMarkWordAndMask(const TenuredCell* cell,
+MOZ_ALWAYS_INLINE void ChunkBitmap::getMarkWordAndMask(const TenuredCell* cell,
                                                        ColorBit colorBit,
                                                        MarkBitmapWord** wordp,
                                                        uintptr_t* maskp) {
@@ -527,12 +525,11 @@ MOZ_ALWAYS_INLINE void ChunkBitmap::GetMarkWordAndMask(const TenuredCell* cell,
 
   MOZ_ASSERT(size_t(colorBit) < MarkBitsPerCell);
 
-  auto* chunk = reinterpret_cast<ChunkBase*>(uintptr_t(cell) & ~ChunkMask);
   size_t offset = uintptr_t(cell) & ChunkMask;
   const size_t bit = offset / CellBytesPerMarkBit + size_t(colorBit);
   size_t word = bit / MarkBitmapWordBits - FirstArenaAdjustmentWords;
   MOZ_ASSERT(word < WordCount);
-  *wordp = &chunk->bitmap.bitmap[word];
+  *wordp = &bitmap[word];
   *maskp = uintptr_t(1) << (bit % MarkBitmapWordBits);
 }
 
@@ -541,6 +538,11 @@ namespace detail {
 static MOZ_ALWAYS_INLINE ChunkHeader* GetCellChunkHeader(const Cell* cell) {
   MOZ_ASSERT(cell);
   return reinterpret_cast<ChunkHeader*>(uintptr_t(cell) & ~ChunkMask);
+}
+
+static MOZ_ALWAYS_INLINE ChunkBase* GetCellChunkBase(const TenuredCell* cell) {
+  MOZ_ASSERT(cell);
+  return reinterpret_cast<ChunkBase*>(uintptr_t(cell) & ~ChunkMask);
 }
 
 static MOZ_ALWAYS_INLINE JS::Zone* GetTenuredGCThingZone(const uintptr_t addr) {
@@ -556,16 +558,17 @@ static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedGray(const TenuredCell* cell) {
 
   MarkBitmapWord* grayWord;
   uintptr_t grayMask;
-  ChunkBitmap::GetMarkWordAndMask(cell, js::gc::ColorBit::GrayOrBlackBit,
-                                  &grayWord, &grayMask);
+  ChunkBase* chunk = GetCellChunkBase(cell);
+  chunk->bitmap.getMarkWordAndMask(cell, js::gc::ColorBit::GrayOrBlackBit,
+                                   &grayWord, &grayMask);
   if (!(*grayWord & grayMask)) {
     return false;
   }
 
   MarkBitmapWord* blackWord;
   uintptr_t blackMask;
-  ChunkBitmap::GetMarkWordAndMask(cell, js::gc::ColorBit::BlackBit, &blackWord,
-                                  &blackMask);
+  chunk->bitmap.getMarkWordAndMask(cell, js::gc::ColorBit::BlackBit, &blackWord,
+                                   &blackMask);
   return !(*blackWord & blackMask);
 }
 
