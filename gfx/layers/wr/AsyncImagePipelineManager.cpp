@@ -250,6 +250,8 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
                    previousTexture->GetSize() == texture->GetSize() &&
                    previousTexture->GetFormat() == texture->GetFormat() &&
                    previousTexture->NeedsYFlip() == texture->NeedsYFlip() &&
+                   previousTexture->SupportsExternalCompositing() ==
+                       texture->SupportsExternalCompositing() &&
                    aPipeline->mKeys.Length() == numKeys;
 
   if (!canUpdate) {
