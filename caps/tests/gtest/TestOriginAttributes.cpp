@@ -74,7 +74,7 @@ TEST(OriginAttributes, FirstPartyDomain_default)
   TEST_FPD(u"moz-extension://f5b6ca10-5bd4-4ed6-9baf-820dc5152bc1", u"");
 
   Preferences::SetBool(FPI_PREF, oldFpiPref);
-  Preferences::SetBool(FPI_PREF, oldSitePref);
+  Preferences::SetBool(SITE_PREF, oldSitePref);
 }
 
 TEST(OriginAttributes, FirstPartyDomain_site)
@@ -100,7 +100,7 @@ TEST(OriginAttributes, FirstPartyDomain_site)
   TEST_FPD(u"moz-extension://f5b6ca10-5bd4-4ed6-9baf-820dc5152bc1", u"");
 
   Preferences::SetBool(FPI_PREF, oldFpiPref);
-  Preferences::SetBool(FPI_PREF, oldSitePref);
+  Preferences::SetBool(SITE_PREF, oldSitePref);
 }
 
 TEST(OriginAttributes, NullPrincipal)
@@ -122,7 +122,7 @@ TEST(OriginAttributes, NullPrincipal)
   EXPECT_TRUE(prin->OriginAttributesRef().mFirstPartyDomain.Equals(expected));
 
   Preferences::SetBool(FPI_PREF, oldFpiPref);
-  Preferences::SetBool(FPI_PREF, oldSitePref);
+  Preferences::SetBool(SITE_PREF, oldSitePref);
 }
 
 }  // namespace mozilla
