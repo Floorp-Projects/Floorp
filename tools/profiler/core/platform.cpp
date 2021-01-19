@@ -2258,8 +2258,6 @@ static void DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
 // is `aSamplePos`, we can write the rest to `aBuffer` (which may be different).
 static inline void DoPeriodicSample(PSLockRef aLock,
                                     RegisteredThread& aRegisteredThread,
-                                    ProfiledThreadData& aProfiledThreadData,
-                                    const TimeStamp& aNow,
                                     const Registers& aRegs, uint64_t aSamplePos,
                                     ProfileBuffer& aBuffer) {
   // WARNING: this function runs within the profiler's "critical section".
@@ -3424,8 +3422,7 @@ void SamplerThread::Run() {
               mSampler.SuspendAndSampleAndResumeThread(
                   lock, *registeredThread, now,
                   [&](const Registers& aRegs, const TimeStamp& aNow) {
-                    DoPeriodicSample(lock, *registeredThread,
-                                     *profiledThreadData, now, aRegs, samplePos,
+                    DoPeriodicSample(lock, *registeredThread, aRegs, samplePos,
                                      localProfileBuffer);
 
                     // For "eventDelay", we want the input delay - but if
