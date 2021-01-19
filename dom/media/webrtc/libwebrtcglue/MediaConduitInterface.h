@@ -5,26 +5,21 @@
 #ifndef MEDIA_CONDUIT_ABSTRACTION_
 #define MEDIA_CONDUIT_ABSTRACTION_
 
-#include "nsISupportsImpl.h"
-#include "nsXPCOM.h"
-#include "nsDOMNavigationTiming.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/RefCounted.h"
-#include "mozilla/UniquePtr.h"
-#include "CodecConfig.h"
-#include "VideoTypes.h"
-#include "jsapi/PeerConnectionCtx.h"
-#include "MediaConduitErrors.h"
-#include "jsapi/RTCStatsReport.h"
-#include "TaskQueueWrapper.h"
-
-#include "ImageContainer.h"
-
-#include "api/video/video_frame_buffer.h"
-#include "call/call.h"
-
 #include <vector>
 #include <set>
+
+#include "CodecConfig.h"
+#include "ImageContainer.h"
+#include "jsapi/PeerConnectionCtx.h"
+#include "jsapi/RTCStatsReport.h"
+#include "MediaConduitErrors.h"
+#include "mozilla/RefCounted.h"
+#include "TaskQueueWrapper.h"
+#include "VideoTypes.h"
+
+// libwebrtc includes
+#include "api/video/video_frame_buffer.h"
+#include "call/call.h"
 
 namespace webrtc {
 class VideoFrame;

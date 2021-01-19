@@ -2,33 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "common/browser_logging/CSFLog.h"
-#include "nspr.h"
+#include "AudioConduit.h"
 
+#include "common/browser_logging/CSFLog.h"
+#include "mozilla/dom/RTCRtpSourcesBinding.h"
+#include "mozilla/media/MediaUtils.h"
+#include "mozilla/Telemetry.h"
+#include "transport/runnable_utils.h"
+
+// libwebrtc includes
+#include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "audio/audio_receive_stream.h"
+
+// for ntohs
 #ifdef HAVE_NETINET_IN_H
 #  include <netinet/in.h>
 #elif defined XP_WIN
 #  include <winsock2.h>
 #endif
-
-#include "AudioConduit.h"
-#include "nsCOMPtr.h"
-#include "mozilla/dom/RTCRtpSourcesBinding.h"
-#include "mozilla/media/MediaUtils.h"
-#include "nsServiceManagerUtils.h"
-#include "nsThreadUtils.h"
-#include "mozilla/Telemetry.h"
-#include "transport/runnable_utils.h"
-
-#include "pk11pub.h"
-
-#include "api/audio_codecs/builtin_audio_decoder_factory.h"
-#include "api/audio_codecs/builtin_audio_encoder_factory.h"
-#include "audio/audio_receive_stream.h"
-#include "modules/audio_processing/include/audio_processing.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp.h"
-#include "modules/rtp_rtcp/source/rtp_packet_received.h"
-#include "system_wrappers/include/clock.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"
