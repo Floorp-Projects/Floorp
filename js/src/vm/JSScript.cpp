@@ -1184,7 +1184,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
       ssHolder.get().reset(sourceObject->source());
     }
 
-    MOZ_TRY(ScriptSource::XDR(xdr, options, &ssHolder));
+    MOZ_TRY(ScriptSource::XDR(xdr, options.ptrOr(nullptr), &ssHolder));
 
     if (mode == XDR_DECODE) {
       sourceObject = ScriptSourceObject::create(cx, ssHolder.get().get());
@@ -3236,7 +3236,7 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
 template <XDRMode mode>
 /* static */
 XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
-                            const mozilla::Maybe<JS::CompileOptions>& options,
+                            const ReadOnlyCompileOptions* maybeOptions,
                             MutableHandle<ScriptSourceHolder> holder) {
   JSContext* cx = xdr->cx();
   ScriptSource* ss = nullptr;
@@ -3255,7 +3255,7 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     // Most CompileOptions fields aren't used by ScriptSourceObject, and those
     // that are (element; elementAttributeName) aren't preserved by XDR. So
     // this can be simple.
-    if (!ss->initFromOptions(cx, *options)) {
+    if (!ss->initFromOptions(cx, *maybeOptions)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
   }
@@ -3323,12 +3323,12 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
 template /* static */
     XDRResult
     ScriptSource::XDR(XDRState<XDR_ENCODE>* xdr,
-                      const mozilla::Maybe<JS::CompileOptions>& options,
+                      const ReadOnlyCompileOptions* maybeOptions,
                       MutableHandle<ScriptSourceHolder> holder);
 template /* static */
     XDRResult
     ScriptSource::XDR(XDRState<XDR_DECODE>* xdr,
-                      const mozilla::Maybe<JS::CompileOptions>& options,
+                      const ReadOnlyCompileOptions* maybeOptions,
                       MutableHandle<ScriptSourceHolder> holder);
 
 // Format and return a cx->pod_malloc'ed URL for a generated script like:

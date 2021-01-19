@@ -460,6 +460,16 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
 #endif
 
+  // Instrumented scripts cannot be encoded, as they have extra instructions
+  // which are not normally present. Globals with instrumentation enabled must
+  // compile scripts via the bytecode emitter, which will insert these
+  // instructions.
+  if (mode == XDR_ENCODE) {
+    if (!!stencil.input.options.instrumentationKinds) {
+      return fail(JS::TranscodeResult_Failure);
+    }
+  }
+
   // As with codeScript, use header buffer when incrementally encoding.
   if (mode == XDR_ENCODE) {
     switchToHeaderBuf();
@@ -469,7 +479,13 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
   if (hasOptions()) {
     MOZ_ASSERT(&options() == &stencil.input.options);
   }
-  MOZ_TRY(XDRCompilationInput(this, stencil.input));
+
+  // Transcode the ScriptSource.
+  Rooted<ScriptSourceHolder> holder(cx(), stencil.input.source());
+  MOZ_TRY(ScriptSource::XDR(this, &stencil.input.options, &holder));
+  if (mode == XDR_DECODE) {
+    stencil.input.setSource(holder.get().get());
+  }
 
   // If we are incrementally encoding, the number of chunks are encoded in
   // XDRIncrementalStencilEncoder::linearize, after the header.
