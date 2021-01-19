@@ -1497,7 +1497,7 @@ static nscoord PartiallyResolveAutoMinSize(
       // responsible for computing the min-content inline-size and min()'ing it
       // with the value we return.
       specifiedSizeSuggestion = aFlexItem.Frame()->ComputeISizeValue(
-          percentBasis.ISize(cbWM), boxSizingAdjust.ISize(cbWM),
+          cbWM, percentBasis, boxSizingAdjust,
           mainStyleSize.AsLengthPercentage());
     }
   } else {
