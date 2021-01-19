@@ -230,8 +230,9 @@ class GeckoEngineSession(
         if (state !is GeckoEngineSessionState) {
             throw IllegalStateException("Can only restore from GeckoEngineSessionState")
         }
-
-        if (state.actualState == null) {
+        // Also checking if SessionState is empty as a workaround for:
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1687523
+        if (state.actualState.isNullOrEmpty()) {
             return false
         }
 

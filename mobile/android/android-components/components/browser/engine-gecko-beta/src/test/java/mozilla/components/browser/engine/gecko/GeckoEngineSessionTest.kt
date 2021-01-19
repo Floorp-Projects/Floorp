@@ -571,6 +571,20 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `restoreState returns false for empty state`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+        val actualState: GeckoSession.SessionState = mock()
+
+        whenever(actualState.isEmpty()).thenReturn(true)
+
+        val state = GeckoEngineSessionState(actualState)
+
+        assertFalse(engineSession.restoreState(state))
+        verify(geckoSession, never()).restoreState(any())
+    }
+
+    @Test
     fun progressDelegateIgnoresInitialLoadOfAboutBlank() {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
