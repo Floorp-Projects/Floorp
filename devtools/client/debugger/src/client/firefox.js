@@ -5,9 +5,11 @@
 // @flow
 
 import { setupCommands, clientCommands } from "./firefox/commands";
-import { setupEvents, clientEvents } from "./firefox/events";
+import { setupEvents, ensureSourceActor } from "./firefox/events";
+import { createPause, prepareSourcePayload } from "./firefox/create";
 import { features, prefs } from "../utils/prefs";
-import { prepareSourcePayload } from "./firefox/create";
+
+import { recordEvent } from "../utils/telemetry";
 
 let actions;
 let targetList;
@@ -45,8 +47,13 @@ export async function onConnect(
     onTargetDestroyed
   );
 
+  // Use independant listeners for SOURCE and BREAKPOINT in order to ease
+  // doing batching and notify about a set of SOURCE's in one redux action.
   await resourceWatcher.watchResources([resourceWatcher.TYPES.SOURCE], {
     onAvailable: onSourceAvailable,
+  });
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.BREAKPOINT], {
+    onAvailable: onBreakpointAvailable,
   });
 }
 
@@ -58,6 +65,9 @@ export function onDisconnect() {
   );
   resourceWatcher.unwatchResources([resourceWatcher.TYPES.SOURCE], {
     onAvailable: onSourceAvailable,
+  });
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.BREAKPOINT], {
+    onAvailable: onBreakpointAvailable,
   });
 }
 
@@ -123,7 +133,6 @@ async function onTargetAvailable({
     targetFront.isWebExtension
   );
 
-  await clientCommands.checkIfAlreadyPaused();
   await actions.addTarget(targetFront);
 }
 
@@ -146,4 +155,23 @@ async function onSourceAvailable(sources) {
   await actions.newGeneratedSources(frontendSources);
 }
 
-export { clientCommands, clientEvents };
+async function onBreakpointAvailable(breakpoints) {
+  for (const resource of breakpoints) {
+    const threadFront = await resource.targetFront.getFront("thread");
+    if (resource.state == "paused") {
+      if (resource.frame) {
+        // When reloading we might receive a pause event before the
+        // top frame's source has arrived.
+        await ensureSourceActor(resource.frame.where.actor);
+      }
+
+      const pause = createPause(threadFront.actor, resource);
+      actions.paused(pause);
+      recordEvent("pause", { reason: resource.why.type });
+    } else if (resource.state == "resumed") {
+      actions.resumed(threadFront.actorID);
+    }
+  }
+}
+
+export { clientCommands };

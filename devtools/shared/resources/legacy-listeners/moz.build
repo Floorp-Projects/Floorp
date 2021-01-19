@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    "breakpoint.js",
     "cache-storage.js",
     "console-messages.js",
     "cookie.js",
