@@ -6651,6 +6651,19 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 #endif
 
+  void computeEffectiveAddress(MemoryAccessDesc* access) {
+    if (access->offset()) {
+      Label ok;
+      RegI32 ptr = popI32();
+      masm.branchAdd32(Assembler::CarryClear, Imm32(access->offset()), ptr,
+                       &ok);
+      masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
+      masm.bind(&ok);
+      access->clearOffset();
+      pushI32(ptr);
+    }
+  }
+
   void needLoadTemps(const MemoryAccessDesc& access, RegI32* temp1,
                      RegI32* temp2, RegI32* temp3) {
 #if defined(JS_CODEGEN_ARM)
@@ -12070,16 +12083,38 @@ bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
   }
 
   switch (type.kind()) {
-    case ValType::I32:
+    case ValType::I32: {
+      RegI64 timeout = popI64();
+      RegI32 val = popI32();
+
+      MemoryAccessDesc access(Scalar::Int32, addr.align, addr.offset,
+                              bytecodeOffset());
+      computeEffectiveAddress(&access);
+
+      pushI32(val);
+      pushI64(timeout);
+
       if (!emitInstanceCall(lineOrBytecode, SASigWaitI32)) {
         return false;
       }
       break;
-    case ValType::I64:
+    }
+    case ValType::I64: {
+      RegI64 timeout = popI64();
+      RegI64 val = popI64();
+
+      MemoryAccessDesc access(Scalar::Int64, addr.align, addr.offset,
+                              bytecodeOffset());
+      computeEffectiveAddress(&access);
+
+      pushI64(val);
+      pushI64(timeout);
+
       if (!emitInstanceCall(lineOrBytecode, SASigWaitI64)) {
         return false;
       }
       break;
+    }
     default:
       MOZ_CRASH();
   }
@@ -12099,6 +12134,14 @@ bool BaseCompiler::emitWake() {
   if (deadCode_) {
     return true;
   }
+
+  RegI32 count = popI32();
+
+  MemoryAccessDesc access(Scalar::Int32, addr.align, addr.offset,
+                          bytecodeOffset());
+  computeEffectiveAddress(&access);
+
+  pushI32(count);
 
   return emitInstanceCall(lineOrBytecode, SASigWake);
 }
