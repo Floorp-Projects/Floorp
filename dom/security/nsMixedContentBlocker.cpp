@@ -494,10 +494,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // amplifies these concerns.
   //
 
-  static_assert(TYPE_DATAREQUEST == TYPE_XMLHTTPREQUEST,
-                "TYPE_DATAREQUEST is not a synonym for "
-                "TYPE_XMLHTTPREQUEST");
-
   switch (contentType) {
     // The top-level document cannot be mixed content by definition
     case ExtContentPolicy::TYPE_DOCUMENT:
@@ -558,9 +554,9 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     case ExtContentPolicy::TYPE_SPECULATIVE:
       break;
 
-    // This content policy works as a allowlist.
-    default:
+    case ExtContentPolicy::TYPE_INVALID:
       MOZ_ASSERT(false, "Mixed content of unknown type");
+      // Do not add default: so that compilers can catch the missing case.
   }
 
   // Make sure to get the URI the load started with. No need to check

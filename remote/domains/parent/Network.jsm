@@ -29,7 +29,6 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_OBJECT]: "Object",
   [Ci.nsIContentPolicy.TYPE_DOCUMENT]: "Document",
   [Ci.nsIContentPolicy.TYPE_SUBDOCUMENT]: "Subdocument",
-  [Ci.nsIContentPolicy.TYPE_REFRESH]: "Refresh",
   [Ci.nsIContentPolicy.TYPE_PING]: "Ping",
   [Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST]: "Xhr",
   [Ci.nsIContentPolicy.TYPE_OBJECT_SUBREQUEST]: "ObjectSubdoc",

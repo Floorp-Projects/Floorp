@@ -218,16 +218,18 @@ void nsHTTPSOnlyStreamListener::RecordUpgradeTelemetry(nsIRequest* request,
         typeKey = "ping"_ns;
         break;
 
-      case ExtContentPolicy::TYPE_REFRESH:
-        typeKey = "refresh"_ns;
-        break;
-
       case ExtContentPolicy::TYPE_XSLT:
         typeKey = "xslt"_ns;
         break;
 
-      default:
+      case ExtContentPolicy::TYPE_INVALID:
+      case ExtContentPolicy::TYPE_OTHER:
+      case ExtContentPolicy::TYPE_MEDIA:  // already handled above
+      case ExtContentPolicy::TYPE_BEACON:
+      case ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD:
+      case ExtContentPolicy::TYPE_SPECULATIVE:
         break;
+        // Do not add default: so that compilers can catch the missing case.
     }
   }
 

@@ -230,8 +230,6 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
       return RequestDestination::Iframe;
     case nsIContentPolicy::TYPE_INTERNAL_FRAME:
       return RequestDestination::Frame;
-    case nsIContentPolicy::TYPE_REFRESH:
-      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_PING:
       return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
@@ -279,6 +277,7 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
       return RequestDestination::Paintworklet;
     case nsIContentPolicy::TYPE_INVALID:
       break;
+      // Do not add default: so that compilers can catch the missing case.
   }
 
   MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
@@ -295,16 +294,10 @@ bool InternalRequest::IsNavigationContentPolicy(
   // "location", "metarefresh", and "prerender".
   //
   // Note, all of these request types are effectively initiated by nsDocShell.
-  //
-  // The TYPE_REFRESH is used in some code paths for metarefresh, but will not
-  // be seen during the actual load.  Instead the new load gets a normal
-  // nsDocShell policy type.  We include it here in case this utility method
-  // is called before the load starts.
   return aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
          aContentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
          aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME ||
-         aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
-         aContentPolicyType == nsIContentPolicy::TYPE_REFRESH;
+         aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IFRAME;
 }
 
 // static
