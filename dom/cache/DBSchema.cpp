@@ -2165,10 +2165,25 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
 
 #ifdef DEBUG
     nsDependentCSubstring scheme = url->Scheme();
+
     MOZ_ASSERT(
         scheme == "http" || scheme == "https" || scheme == "file" ||
-        (StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup() &&
-         scheme == "moz-extension"));
+        // A cached response entry may have a moz-extension principal if:
+        //
+        // - This is an extension background service worker. The response for
+        //   the main script is expected tobe a moz-extension content principal
+        //   (the pref "extensions.backgroundServiceWorker.enabled" must be
+        //   enabled, if the pref is toggled to false at runtime then any
+        //   service worker registered for a moz-extension principal will be
+        //   unregistered on the next startup).
+        //
+        // - An extension is redirecting a script being imported info a worker
+        //   created from a regular webpage to a web-accessible extension
+        //   script. The reponse for these redirects will have a moz-extension
+        //   principal. Although extensions can attempt to redirect the main
+        //   script of service workers, this will always cause the install
+        //   process to fail.
+        scheme == "moz-extension");
 #endif
 
     nsCString origin;
