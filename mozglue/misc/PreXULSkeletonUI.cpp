@@ -819,7 +819,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   ColorRect tabBar = {};
   tabBar.color = currentTheme.tabBarColor;
   tabBar.x = 0;
-  tabBar.y = menubar.height;
+  tabBar.y = menubar.height + topBorder.height;
   tabBar.width = sWindowWidth;
   tabBar.height = tabBarHeight;
   tabBar.flipIfRTL = false;
@@ -831,7 +831,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   ColorRect tabLine = {};
   tabLine.color = currentTheme.tabLineColor;
   tabLine.x = titlebarSpacerWidth;
-  tabLine.y = menubar.height;
+  tabLine.y = menubar.height + topBorder.height;
   tabLine.width = selectedTabWidth;
   tabLine.height = tabLineHeight;
   tabLine.flipIfRTL = true;
