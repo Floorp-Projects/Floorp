@@ -552,7 +552,7 @@ html|input[type="checkbox"] {
 }
 
 xul|checkbox:not([disabled="true"]):hover > xul|*.checkbox-check,
-html|input[type="checkbox"]:not(:disabled):hover {
+html|input[type="checkbox"]:enabled:hover {
   background-color: var(--grey-90-a20);
 }
 
@@ -573,7 +573,7 @@ html|input[type="checkbox"]:checked {
 }
 
 xul|checkbox:not([disabled="true"])[checked]:hover > xul|*.checkbox-check,
-html|input[type="checkbox"]:not(:disabled):checked:hover {
+html|input[type="checkbox"]:enabled:checked:hover {
   background-color: var(--blue-70);
 }
 

@@ -338,7 +338,7 @@ document.addEventListener("DOMContentLoaded", e => {
           "none";
       }
 
-      let firstRadio = document.querySelector("input:not(:disabled)");
+      let firstRadio = document.querySelector("input:enabled");
       // There will be no radio options if we are showing the
       firstRadio.checked = true;
       document.body.setAttribute("focuseddatatype", firstRadio.dataset.type);

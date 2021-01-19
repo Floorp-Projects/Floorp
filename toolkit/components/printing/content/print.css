@@ -140,12 +140,12 @@ input[type="radio"]:checked {
   fill: #3485ff;
 }
 
-input[type="radio"]:not(:disabled):-moz-focusring,
-input[type="radio"]:not(:disabled):hover {
+input[type="radio"]:enabled:-moz-focusring,
+input[type="radio"]:enabled:hover {
   border-color: var(--in-content-border-focus);
 }
 
-input[type="radio"]:not(:disabled):-moz-focusring {
+input[type="radio"]:enabled:-moz-focusring {
   outline: 2px solid var(--in-content-border-active);
   /* offset outline to align with 1px border-width set for buttons/menulists above. */
   outline-offset: -1px;

@@ -47,12 +47,12 @@
   padding: 0;
 }
 
-.ui-button:not(:disabled):hover {
+.ui-button:enabled:hover {
   background: var(--button-background-hover-color);
   color: var(--button-text-hover-color);
 }
 
-.ui-button:not(:disabled):active {
+.ui-button:enabled:active {
   background: var(--button-background-pressed-color);
   color: var(--button-text-pressed-color);
 }
