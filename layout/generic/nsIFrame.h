@@ -4389,6 +4389,11 @@ class nsIFrame : public nsQueryFrame {
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
+  Maybe<nscoord> ComputeInlineSizeFromAspectRatio(
+      mozilla::WritingMode aWM, const mozilla::LogicalSize& aCBSize,
+      const mozilla::LogicalSize& aContentEdgeToBoxSizing,
+      mozilla::ComputeSizeFlags aFlags) const;
+
  public:
   /**
    * @return true if this text frame ends with a newline character.  It

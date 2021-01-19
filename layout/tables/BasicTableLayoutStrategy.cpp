@@ -172,8 +172,9 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   // it separately on the columns.
   const LogicalSize zeroSize(aWM);
   if (maxISize.ConvertsToLength() || maxISize.IsExtremumLength()) {
-    nscoord c = aFrame->ComputeISizeValue(aRenderingContext, aWM, zeroSize,
-                                          zeroSize, 0, maxISize);
+    nscoord c =
+        aFrame->ComputeISizeValue(aRenderingContext, aWM, zeroSize, zeroSize, 0,
+                                  maxISize, {ComputeSizeFlag::SkipAspectRatio});
     minCoord = std::min(c, minCoord);
     prefCoord = std::min(c, prefCoord);
   } else if (maxISize.ConvertsToPercentage()) {
@@ -195,8 +196,9 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
     }
   }
   if (minISize.ConvertsToLength() || minISize.IsExtremumLength()) {
-    nscoord c = aFrame->ComputeISizeValue(aRenderingContext, aWM, zeroSize,
-                                          zeroSize, 0, minISize);
+    nscoord c =
+        aFrame->ComputeISizeValue(aRenderingContext, aWM, zeroSize, zeroSize, 0,
+                                  minISize, {ComputeSizeFlag::SkipAspectRatio});
     minCoord = std::max(c, minCoord);
     prefCoord = std::max(c, prefCoord);
   } else if (minISize.ConvertsToPercentage()) {
