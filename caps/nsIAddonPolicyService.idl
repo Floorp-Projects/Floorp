@@ -75,10 +75,21 @@ interface nsIAddonPolicyService : nsISupports
 [scriptable, uuid(7a4fe60b-9131-45f5-83f3-dc63b5d71a5d)]
 interface nsIAddonContentPolicy : nsISupports
 {
+  /* options to pass to validateAddonCSP
+   *
+   * Manifest V2 uses CSP_ALLOW_ANY.
+   * In Manifest V3, extension_pages would use CSP_ALLOW_LOCALHOST and
+   * sandbox would use CSP_ALLOW_EVAL.
+   */
+  const unsigned long CSP_ALLOW_ANY = 0xFFFF;
+  const unsigned long CSP_ALLOW_LOCALHOST = (1<<0);
+  const unsigned long CSP_ALLOW_EVAL = (1<<1);
+  const unsigned long CSP_ALLOW_REMOTE = (1<<2);
+
   /**
    * Checks a custom content security policy string, to ensure that it meets
    * minimum security requirements. Returns null for valid policies, or a
    * string describing the error for invalid policies.
    */
-  AString validateAddonCSP(in AString aPolicyString);
+  AString validateAddonCSP(in AString aPolicyString, in unsigned long aPermittedPolicy);
 };

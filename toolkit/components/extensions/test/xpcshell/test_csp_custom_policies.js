@@ -141,6 +141,26 @@ add_task(async function test_extension_csp() {
       expectedPolicy: aps.defaultCSP,
     },
     {
+      name: "manifest_v2 allows https protocol",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: {
+          extension_pages: `script-src 'self' https://*; object-src 'self'`,
+        },
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest_v2 allows unsafe-eval",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: {
+          extension_pages: `script-src 'self' 'unsafe-eval'; object-src 'self'`,
+        },
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
       name: "manifest_v3 invalid csp results in default csp used",
       manifest: {
         manifest_version: 3,
@@ -149,6 +169,46 @@ add_task(async function test_extension_csp() {
         },
       },
       expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest_v3 forbidden protocol results in default csp used",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: {
+          extension_pages: `script-src 'self' https://*; object-src 'self'`,
+        },
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest_v3 forbidden eval results in default csp used",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: {
+          extension_pages: `script-src 'self' 'unsafe-eval'; object-src 'self'`,
+        },
+      },
+      expectedPolicy: aps.defaultCSP,
+    },
+    {
+      name: "manifest_v3 allows localhost",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: {
+          extension_pages: `script-src 'self' https://localhost; object-src 'self'`,
+        },
+      },
+      expectedPolicy: `script-src 'self' https://localhost; object-src 'self'`,
+    },
+    {
+      name: "manifest_v3 allows 127.0.0.1",
+      manifest: {
+        manifest_version: 3,
+        content_security_policy: {
+          extension_pages: `script-src 'self' https://127.0.0.1; object-src 'self'`,
+        },
+      },
+      expectedPolicy: `script-src 'self' https://127.0.0.1; object-src 'self'`,
     },
     {
       name: "manifest_v2 csp",
