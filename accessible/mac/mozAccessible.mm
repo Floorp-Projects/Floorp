@@ -96,7 +96,7 @@ using namespace mozilla::a11y;
 }
 
 - (BOOL)moxIgnoreChild:(mozAccessible*)child {
-  return NO;
+  return nsAccUtils::MustPrune(mGeckoAccessible);
 }
 
 - (id)childAt:(uint32_t)i {

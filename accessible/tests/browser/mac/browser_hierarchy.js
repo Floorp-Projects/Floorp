@@ -27,3 +27,49 @@ addAccessibleTask(
     is(index, 1, "link is second child");
   }
 );
+
+/**
+ * Test textbox with more than one child
+ */
+addAccessibleTask(
+  `<div id="textbox" role="textbox">Hello <a href="#">strange</a> world</div>`,
+  (browser, accDoc) => {
+    let textbox = getNativeInterface(accDoc, "textbox");
+
+    is(
+      textbox.getAttributeValue("AXChildren").length,
+      3,
+      "textbox has 3 children"
+    );
+  }
+);
+
+/**
+ * Test textbox with one child
+ */
+addAccessibleTask(
+  `<div id="textbox" role="textbox">Hello </div>`,
+  async (browser, accDoc) => {
+    let textbox = getNativeInterface(accDoc, "textbox");
+
+    is(
+      textbox.getAttributeValue("AXChildren").length,
+      0,
+      "textbox with one child is pruned"
+    );
+
+    let reorder = waitForEvent(EVENT_REORDER, "textbox");
+    await SpecialPowers.spawn(browser, [], () => {
+      let link = content.document.createElement("a");
+      link.textContent = "World";
+      content.document.getElementById("textbox").appendChild(link);
+    });
+    await reorder;
+
+    is(
+      textbox.getAttributeValue("AXChildren").length,
+      2,
+      "textbox with two child is not pruned"
+    );
+  }
+);
