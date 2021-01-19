@@ -42,7 +42,7 @@ add_task(async function() {
 
   // Load a non-remote page.
   BrowserTestUtils.loadURI(browser, "about:robots");
-  await promiseTabRestored(tab);
+  await promiseBrowserLoaded(browser);
   ok(!browser.isRemoteBrowser, "browser is not remote anymore");
 
   // Check that we didn't lose any shistory entries.
