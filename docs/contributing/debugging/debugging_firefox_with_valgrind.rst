@@ -30,15 +30,16 @@ Where to get Valgrind
 ---------------------
 
 Linux: Download `Valgrind <http://valgrind.org/>`__ directly, or use
-your distribution's package manager.
+your distribution's package manager (if it has a recent enough version).
 
 MacOSX: `Get Valgrind trunk from
 SVN <http://valgrind.org/downloads/repository.html>`__ and build it.
 Don't use 3.10.x or any other tarball.
 
-Make sure you have version 3.10.1 or later of Valgrind. Newer versions
-tend to have better compatibility with both Firefox's JITs and newer
-toolchain components (compiler, libc and linker versions).
+Make sure you have Valgrind 3.14 or later, version 3.16.1 is known to work,
+3.13.0 did not.  Newer versions tend to have better compatibility with both
+Firefox's JITs and newer toolchain components (compiler, libc and linker
+versions).
 
 Basics
 ------
@@ -55,6 +56,7 @@ accuracy.
    ac_add_options --disable-strip
    ac_add_options --enable-valgrind
    ac_add_options --enable-optimize="-g -O2"
+   ac_add_options --disable-sandbox
 
 Run
 ~~~
