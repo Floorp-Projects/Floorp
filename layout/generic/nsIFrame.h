@@ -4729,8 +4729,9 @@ class nsIFrame : public nsQueryFrame {
    * a more complex version to resolve a StyleExtremumLength.
    */
   nscoord ComputeISizeValue(gfxContext* aRenderingContext,
-                            nscoord aContainingBlockISize,
-                            nscoord aContentEdgeToBoxSizing,
+                            const mozilla::WritingMode aWM,
+                            const mozilla::LogicalSize& aContainingBlockSize,
+                            const mozilla::LogicalSize& aContentEdgeToBoxSizing,
                             nscoord aBoxSizingToMarginEdge,
                             StyleExtremumLength aSize,
                             mozilla::ComputeSizeFlags aFlags);
@@ -4739,24 +4740,27 @@ class nsIFrame : public nsQueryFrame {
    * Helper function - computes the content-box inline size for aSize, which is
    * a simpler version to resolve a LengthPercentage.
    */
-  nscoord ComputeISizeValue(nscoord aContainingBlockISize,
-                            nscoord aContentEdgeToBoxSizing,
+  nscoord ComputeISizeValue(const mozilla::WritingMode aWM,
+                            const mozilla::LogicalSize& aContainingBlockSize,
+                            const mozilla::LogicalSize& aContentEdgeToBoxSizing,
                             const LengthPercentage& aSize);
 
   template <typename SizeOrMaxSize>
   nscoord ComputeISizeValue(gfxContext* aRenderingContext,
-                            nscoord aContainingBlockISize,
-                            nscoord aContentEdgeToBoxSizing,
+                            const mozilla::WritingMode aWM,
+                            const mozilla::LogicalSize& aContainingBlockSize,
+                            const mozilla::LogicalSize& aContentEdgeToBoxSizing,
                             nscoord aBoxSizingToMarginEdge,
                             const SizeOrMaxSize& aSize,
                             mozilla::ComputeSizeFlags aFlags = {}) {
     MOZ_ASSERT(aSize.IsExtremumLength() || aSize.IsLengthPercentage(),
                "This doesn't handle auto / none");
     if (aSize.IsLengthPercentage()) {
-      return ComputeISizeValue(aContainingBlockISize, aContentEdgeToBoxSizing,
+      return ComputeISizeValue(aWM, aContainingBlockSize,
+                               aContentEdgeToBoxSizing,
                                aSize.AsLengthPercentage());
     }
-    return ComputeISizeValue(aRenderingContext, aContainingBlockISize,
+    return ComputeISizeValue(aRenderingContext, aWM, aContainingBlockSize,
                              aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
                              aSize.AsExtremumLength(), aFlags);
   }
