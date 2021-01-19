@@ -3907,6 +3907,12 @@ pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/is
   pref("extensions.webcompat-reporter.enabled", false);
 #endif
 
+// Add-on content security policies.
+pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* http://localhost:* http://127.0.0.1:* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' moz-extension: blob: filesystem:;");
+pref("extensions.webextensions.base-content-security-policy.v3", "script-src 'self' http://localhost:* http://127.0.0.1:*; object-src 'self';");
+pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
+
+
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
 
