@@ -375,9 +375,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                                                    WasmArrayRawBuffer* buffer,
                                                    BufferSize initialSize);
 
-  static void copyData(Handle<ArrayBufferObject*> toBuffer, uint32_t toIndex,
-                       Handle<ArrayBufferObject*> fromBuffer,
-                       uint32_t fromIndex, uint32_t count);
+  static void copyData(Handle<ArrayBufferObject*> toBuffer, size_t toIndex,
+                       Handle<ArrayBufferObject*> fromBuffer, size_t fromIndex,
+                       size_t count);
 
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
