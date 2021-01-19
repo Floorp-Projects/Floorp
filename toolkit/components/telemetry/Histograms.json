@@ -12859,7 +12859,7 @@
     "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
   },
   "VIDEO_PLAY_TIME_MS" : {
-    "record_in_processes": ["content"],
+    "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "never",
@@ -12871,7 +12871,7 @@
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_HIDDEN_PLAY_TIME_MS" : {
-    "record_in_processes": ["content"],
+    "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "never",
@@ -12883,7 +12883,7 @@
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
-    "record_in_processes": ["content"],
+    "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "never",
@@ -12932,7 +12932,7 @@
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
-    "record_in_processes": ["content"],
+    "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "88",

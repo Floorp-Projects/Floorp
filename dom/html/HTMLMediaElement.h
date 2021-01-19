@@ -742,6 +742,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Gives access to the decoder's frame statistics, if present.
   FrameStatistics* GetFrameStatistics() const override;
 
+  void DispatchAsyncTestingEvent(const nsAString& aName) override;
+
   AbstractThread* AbstractMainThread() const final;
 
   // Telemetry: to record the usage of a {visible / invisible} video element as

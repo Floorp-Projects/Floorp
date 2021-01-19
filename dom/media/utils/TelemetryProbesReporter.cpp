@@ -46,6 +46,7 @@ void TelemetryProbesReporter::OnPlay(Visibility aVisibility) {
   }
   LOG("Start time accumulation for total play time");
   mTotalPlayTime.Start();
+  mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimestarted"_ns);
   if (aVisibility == Visibility::eInvisible) {
     StartInvisibleVideoTimeAcculator();
   }
@@ -61,6 +62,7 @@ void TelemetryProbesReporter::OnPause(Visibility aVisibility) {
   }
   LOG("Pause time accumulation for total play time");
   mTotalPlayTime.Pause();
+  mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimepaused"_ns);
   ReportTelemetry();
 }
 
@@ -89,6 +91,7 @@ void TelemetryProbesReporter::OnDecodeSuspended() {
   }
   LOG("Start time accumulation for video decoding suspension");
   mVideoDecodeSuspendedTime.Start();
+  mOwner->DispatchAsyncTestingEvent(u"mozvideodecodesuspendedstarted"_ns);
 }
 
 void TelemetryProbesReporter::OnDecodeResumed() {
@@ -98,6 +101,7 @@ void TelemetryProbesReporter::OnDecodeResumed() {
   }
   LOG("Pause time accumulation for video decoding suspension");
   mVideoDecodeSuspendedTime.Pause();
+  mOwner->DispatchAsyncTestingEvent(u"mozvideodecodesuspendedpaused"_ns);
 }
 
 void TelemetryProbesReporter::OnShutdown() {
@@ -115,6 +119,7 @@ void TelemetryProbesReporter::StartInvisibleVideoTimeAcculator() {
   }
   LOG("Start time accumulation for invisible video");
   mInvisibleVideoPlayTime.Start();
+  mOwner->DispatchAsyncTestingEvent(u"mozinvisibleplaytimestarted"_ns);
 }
 
 void TelemetryProbesReporter::PauseInvisibleVideoTimeAcculator() {
@@ -125,6 +130,7 @@ void TelemetryProbesReporter::PauseInvisibleVideoTimeAcculator() {
   OnDecodeResumed();
   LOG("Pause time accumulation for invisible video");
   mInvisibleVideoPlayTime.Pause();
+  mOwner->DispatchAsyncTestingEvent(u"mozinvisibleplaytimepaused"_ns);
 }
 
 bool TelemetryProbesReporter::HasOwnerHadValidVideo() const {
@@ -226,6 +232,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
       videoDecodeSuspendPercentage, key.get());
 
   ReportResultForVideoFrameStatistics(totalPlayTimeS, key);
+  mOwner->DispatchAsyncTestingEvent(u"mozreportedtelemetry"_ns);
 }
 
 void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
