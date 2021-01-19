@@ -2064,7 +2064,17 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     const sourceUrl = sourceActor.url;
     if (this._onLoadBreakpointURLs.has(sourceUrl)) {
+      // Immediately set a breakpoint on first line
+      // (note that this is only used by `./mach xpcshell-test --jsdebugger`)
       this.setBreakpoint({ sourceUrl, line: 1 }, {});
+      // But also query asynchronously the first really breakable line
+      // as the first may not be valid and won't break.
+      (async () => {
+        const [firstLine] = await sourceActor.getBreakableLines();
+        if (firstLine != 1) {
+          this.setBreakpoint({ sourceUrl, line: firstLine }, {});
+        }
+      })();
     }
 
     const bpActors = this.breakpointActorMap
