@@ -6,3 +6,9 @@
 partial interface ElementInternals {
   [SameObject, PutForwards=value] readonly attribute DOMTokenList states;
 };
+
+[Exposed=Window]
+interface CustomStateSet {
+  setlike<DOMString>;
+  undefined add(DOMString value);
+};
