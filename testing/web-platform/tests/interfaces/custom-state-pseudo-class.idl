@@ -12,4 +12,3 @@ interface CustomStateSet {
   setlike<DOMString>;
   undefined add(DOMString value);
 };
-
