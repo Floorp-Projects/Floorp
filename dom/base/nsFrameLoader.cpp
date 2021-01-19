@@ -2519,10 +2519,6 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     return false;
   }
 
-  if (mPendingBrowsingContext->IsTop()) {
-    mPendingBrowsingContext->InitSessionHistory();
-  }
-
   // <iframe mozbrowser> gets to skip these checks.
   // iframes for JS plugins also get to skip these checks. We control the URL
   // that gets loaded, but the load is triggered from the document containing
