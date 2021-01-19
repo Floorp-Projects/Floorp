@@ -21,9 +21,7 @@
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#ifdef MOZ_NEW_CERT_STORAGE
-#  include "nsIFileStreams.h"
-#endif
+#include "nsIFileStreams.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsISerialEventTarget.h"

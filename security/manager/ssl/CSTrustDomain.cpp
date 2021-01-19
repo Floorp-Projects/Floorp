@@ -4,18 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_NEW_CERT_STORAGE
-#  include "cert_storage/src/cert_storage.h"
-#endif
 #include "CSTrustDomain.h"
+#include "NSSCertDBTrustDomain.h"
+#include "cert_storage/src/cert_storage.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozpkix/pkixnss.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsNSSComponent.h"
-#include "NSSCertDBTrustDomain.h"
 #include "nsServiceManagerUtils.h"
-#include "mozpkix/pkixnss.h"
 
 using namespace mozilla::pkix;
 
@@ -26,14 +24,7 @@ static LazyLogModule gTrustDomainPRLog("CSTrustDomain");
 #define CSTrust_LOG(args) MOZ_LOG(gTrustDomainPRLog, LogLevel::Debug, args)
 
 CSTrustDomain::CSTrustDomain(nsTArray<nsTArray<uint8_t>>& certList)
-    : mCertList(certList),
-#ifdef MOZ_NEW_CERT_STORAGE
-      mCertBlocklist(do_GetService(NS_CERT_STORAGE_CID)) {
-}
-#else
-      mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID)) {
-}
-#endif
+    : mCertList(certList), mCertBlocklist(do_GetService(NS_CERT_STORAGE_CID)) {}
 
 Result CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                                    const CertPolicyId& policy,
@@ -44,7 +35,6 @@ Result CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
-#ifdef MOZ_NEW_CERT_STORAGE
   nsTArray<uint8_t> issuerBytes;
   nsTArray<uint8_t> serialBytes;
   nsTArray<uint8_t> subjectBytes;
@@ -53,38 +43,18 @@ Result CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   Result result =
       BuildRevocationCheckArrays(candidateCertDER, endEntityOrCA, issuerBytes,
                                  serialBytes, subjectBytes, pubKeyBytes);
-#else
-  nsAutoCString encIssuer;
-  nsAutoCString encSerial;
-  nsAutoCString encSubject;
-  nsAutoCString encPubKey;
-
-  Result result =
-      BuildRevocationCheckStrings(candidateCertDER, endEntityOrCA, encIssuer,
-                                  encSerial, encSubject, encPubKey);
-#endif
   if (result != Success) {
     return result;
   }
 
-#ifdef MOZ_NEW_CERT_STORAGE
   int16_t revocationState;
   nsresult nsrv = mCertBlocklist->GetRevocationState(
       issuerBytes, serialBytes, subjectBytes, pubKeyBytes, &revocationState);
-#else
-  bool isCertRevoked;
-  nsresult nsrv = mCertBlocklist->IsCertRevoked(
-      encIssuer, encSerial, encSubject, encPubKey, &isCertRevoked);
-#endif
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-#ifdef MOZ_NEW_CERT_STORAGE
   if (revocationState == nsICertStorage::STATE_ENFORCE) {
-#else
-  if (isCertRevoked) {
-#endif
     CSTrust_LOG(("CSTrustDomain: certificate is revoked\n"));
     return Result::ERROR_REVOKED_CERTIFICATE;
   }
