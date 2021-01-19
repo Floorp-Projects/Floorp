@@ -58,11 +58,11 @@ var Readerable = {
   ],
 
   shouldCheckUri(uri, isBaseUri = false) {
-    if (!["http", "https"].includes(uri.scheme)) {
+    if (!["http", "https", "file"].includes(uri.scheme)) {
       return false;
     }
 
-    if (!isBaseUri) {
+    if (!isBaseUri && uri.scheme.startsWith("http")) {
       // Sadly, some high-profile pages have false positives, so bail early for those:
       let { host } = uri;
       if (this._blockedHosts.some(blockedHost => host.endsWith(blockedHost))) {
