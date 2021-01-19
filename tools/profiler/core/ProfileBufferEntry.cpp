@@ -1584,8 +1584,7 @@ void ProfileBuffer::StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
   });
 }
 
-bool ProfileBuffer::DuplicateLastSample(int aThreadId,
-                                        const TimeStamp& aProcessStartTime,
+bool ProfileBuffer::DuplicateLastSample(int aThreadId, double aSampleTimeMs,
                                         Maybe<uint64_t>& aLastSample,
                                         const RunningTimes& aRunningTimes) {
   if (!aLastSample) {
@@ -1632,17 +1631,12 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
           return true;
         case ProfileBufferEntry::Kind::Time:
           // Copy with new time
-          AddEntry(tempBuffer,
-                   ProfileBufferEntry::Time(
-                       (TimeStamp::NowUnfuzzed() - aProcessStartTime)
-                           .ToMilliseconds()));
+          AddEntry(tempBuffer, ProfileBufferEntry::Time(aSampleTimeMs));
           break;
         case ProfileBufferEntry::Kind::TimeBeforeCompactStack: {
           // Copy with new time, followed by a compact stack.
           AddEntry(tempBuffer,
-                   ProfileBufferEntry::TimeBeforeCompactStack(
-                       (TimeStamp::NowUnfuzzed() - aProcessStartTime)
-                           .ToMilliseconds()));
+                   ProfileBufferEntry::TimeBeforeCompactStack(aSampleTimeMs));
 
           // Add running times if they have data.
           if (!aRunningTimes.IsEmpty()) {

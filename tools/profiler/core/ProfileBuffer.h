@@ -86,8 +86,7 @@ class ProfileBuffer final {
   // |aThreadId| and clone it, patching in the current time as appropriate.
   // Mutate |aLastSample| to point to the newly inserted sample.
   // Returns whether duplication was successful.
-  bool DuplicateLastSample(int aThreadId,
-                           const mozilla::TimeStamp& aProcessStartTime,
+  bool DuplicateLastSample(int aThreadId, double aSampleTimeMs,
                            mozilla::Maybe<uint64_t>& aLastSample,
                            const RunningTimes& aRunningTimes);
 
@@ -119,7 +118,7 @@ class ProfileBuffer final {
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  void CollectOverheadStats(mozilla::TimeDuration aSamplingTime,
+  void CollectOverheadStats(double aSamplingTimeMs,
                             mozilla::TimeDuration aLocking,
                             mozilla::TimeDuration aCleaning,
                             mozilla::TimeDuration aCounters,
