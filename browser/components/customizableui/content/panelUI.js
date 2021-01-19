@@ -54,6 +54,10 @@ const PanelUI = {
   init() {
     this._initElements();
 
+    if (gProton) {
+      this.multiView.setAttribute("mainViewId", "appMenu-protonMainView");
+    }
+
     this.menuButton.addEventListener("mousedown", this);
     this.menuButton.addEventListener("keypress", this);
 
@@ -979,7 +983,10 @@ const PanelUI = {
 
   get mainView() {
     if (!this._mainView) {
-      this._mainView = PanelMultiView.getViewNode(document, "appMenu-mainView");
+      this._mainView = PanelMultiView.getViewNode(
+        document,
+        gProton ? "appMenu-protonMainView" : "appMenu-mainView"
+      );
     }
     return this._mainView;
   },
@@ -1122,18 +1129,20 @@ const PanelUI = {
   _addedShortcuts: false,
   _formatPrintButtonShortcuts() {
     let printButton = this.mainView.querySelector("#appMenu-print-button");
-    if (
-      !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
-      AppConstants.platform !== "macosx"
-    ) {
-      printButton.removeAttribute("shortcut");
-    } else if (!printButton.hasAttribute("shortcut")) {
-      printButton.setAttribute(
-        "shortcut",
-        ShortcutUtils.prettifyShortcut(
-          document.getElementById(printButton.getAttribute("key"))
-        )
-      );
+    if (printButton) {
+      if (
+        !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
+        AppConstants.platform !== "macosx"
+      ) {
+        printButton.removeAttribute("shortcut");
+      } else if (!printButton.hasAttribute("shortcut")) {
+        printButton.setAttribute(
+          "shortcut",
+          ShortcutUtils.prettifyShortcut(
+            document.getElementById(printButton.getAttribute("key"))
+          )
+        );
+      }
     }
   },
   _ensureShortcutsShown(view = this.mainView) {

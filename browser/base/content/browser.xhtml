@@ -948,6 +948,35 @@
 #endif
       </vbox>
     </panelview>
+
+    <!-- This is a placeholder app menu which should be replaced with the "real"
+         Proton app menu before the Proton pref starts getting enabled. -->
+    <panelview id="appMenu-protonMainView" class="PanelUI-subView"
+               descriptionheightworkaround="true">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-new-window-button2"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&newNavigatorCmd.label;"
+                       key="key_newNavigator"
+                       command="cmd_newNavigator"/>
+        <toolbarbutton id="appMenu-library-button2"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&places.library.title;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-libraryView', this)"/>
+        <toolbarseparator/>
+        <toolbarbutton id="appMenu-quit-button2"
+                       class="subviewbutton subviewbutton-iconic"
+#ifdef XP_WIN
+                       data-l10n-id="menu-quit-button-win"
+#else
+                       data-l10n-id="menu-quit-button"
+#endif
+                       key="key_quitApplication"
+                       command="cmd_quitApplication"/>
+      </vbox>
+    </panelview>
+
     <panelview id="PanelUI-history" flex="1">
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenuViewHistorySidebar"
