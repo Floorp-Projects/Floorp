@@ -167,6 +167,8 @@ void CanonicalBrowsingContext::ReplacedBy(
   aNewContext->mWebProgress = std::move(mWebProgress);
   aNewContext->mFields.SetWithoutSyncing<IDX_BrowserId>(GetBrowserId());
   aNewContext->mFields.SetWithoutSyncing<IDX_HistoryID>(GetHistoryID());
+  aNewContext->mFields.SetWithoutSyncing<IDX_ExplicitActive>(
+      GetExplicitActive());
 
   if (mSessionHistory) {
     mSessionHistory->SetBrowsingContext(aNewContext);
