@@ -858,10 +858,6 @@ XDRResult XDRParserAtomEntry(XDRState<mode>* xdr,
                              frontend::ParserAtomEntry** atomp);
 
 template <XDRMode mode>
-XDRResult XDRCompilationInput(XDRState<mode>* xdr,
-                              frontend::CompilationInput& input);
-
-template <XDRMode mode>
 XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
                                     frontend::BaseCompilationStencil& stencil);
 

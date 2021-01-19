@@ -1097,8 +1097,8 @@ class ScriptSource {
  public:
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult
-  XDR(XDRState<mode>* xdr, const mozilla::Maybe<JS::CompileOptions>& options,
-      MutableHandle<ScriptSourceHolder> ss);
+  XDR(XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
+      MutableHandle<ScriptSourceHolder> holder);
 
   void trace(JSTracer* trc);
 };
