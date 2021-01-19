@@ -1011,17 +1011,34 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
                                        guint aInfo, guint32 aTime) {
   MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::TargetDataReceived"));
   TargetResetData();
+
   mTargetDragDataReceived = true;
   gint len = gtk_selection_data_get_length(aSelectionData);
   const guchar* data = gtk_selection_data_get_data(aSelectionData);
+
+  GdkAtom target = gtk_selection_data_get_target(aSelectionData);
+  char* name = gdk_atom_name(target);
+  nsCString flavor(name);
+  g_free(name);
+
   if (len > 0 && data) {
     mTargetDragDataLen = len;
     mTargetDragData = g_malloc(mTargetDragDataLen);
     memcpy(mTargetDragData, data, mTargetDragDataLen);
+
+    nsTArray<uint8_t> copy;
+    if (!copy.SetLength(len, fallible)) {
+      return;
+    }
+    memcpy(copy.Elements(), data, len);
+
+    mCachedData.Put(flavor, std::move(copy));
   } else {
     MOZ_LOG(sDragLm, LogLevel::Debug,
             ("Failed to get data.  selection data len was %d\n",
              mTargetDragDataLen));
+
+    mCachedData.Put(flavor, nsTArray<uint8_t>());
   }
 }
 
@@ -1083,6 +1100,29 @@ void nsDragService::GetTargetDragData(GdkAtom aFlavor) {
   TargetResetData();
 
   if (mTargetDragContext) {
+    char* name = gdk_atom_name(aFlavor);
+    nsCString flavor(name);
+    g_free(name);
+
+    // We keep a copy of the requested data with the same life-time
+    // as mTargetDragContext.
+    // Especially with multiple items the same data is requested
+    // very often.
+    if (nsTArray<uint8_t>* cached = mCachedData.GetValue(flavor)) {
+      mTargetDragDataLen = cached->Length();
+      MOZ_LOG(sDragLm, LogLevel::Debug,
+              ("Using cached data for %s, length is %d", flavor.get(),
+               mTargetDragDataLen));
+
+      if (mTargetDragDataLen) {
+        mTargetDragData = g_malloc(mTargetDragDataLen);
+        memcpy(mTargetDragData, cached->Elements(), mTargetDragDataLen);
+      }
+
+      mTargetDragDataReceived = true;
+      return;
+    }
+
     gtk_drag_get_data(mTargetWidget, mTargetDragContext, aFlavor, mTargetTime);
 
     MOZ_LOG(sDragLm, LogLevel::Debug, ("about to start inner iteration."));
@@ -1907,6 +1947,8 @@ gboolean nsDragService::RunScheduledTask() {
 #endif
   mTargetTime = mPendingTime;
 
+  mCachedData.Clear();
+
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
   // (as at 27 December 2010) indicates that a "drop" event should only be
   // fired (at the current target element) if the current drag operation is
@@ -1979,6 +2021,8 @@ gboolean nsDragService::RunScheduledTask() {
 #ifdef MOZ_WAYLAND
   mTargetWaylandDragContext = nullptr;
 #endif
+
+  mCachedData.Clear();
 
   // If we got another drag signal while running the sheduled task, that
   // must have happened while running a nested event loop.  Leave the task
