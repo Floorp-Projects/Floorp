@@ -1673,7 +1673,7 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     }
 
     // We should consider any bfcached page or inactive document as non-playing.
-    if (!mOwner->IsActive()) {
+    if (!mOwner->OwnerDoc()->IsActive()) {
       return false;
     }
 
@@ -2149,10 +2149,6 @@ void HTMLMediaElement::SetVisible(bool aVisible) {
 
 bool HTMLMediaElement::IsVideoDecodingSuspended() const {
   return mDecoder && mDecoder->IsVideoDecodingSuspended();
-}
-
-bool HTMLMediaElement::IsVisible() const {
-  return mVisibilityState == Visibility::ApproximatelyVisible;
 }
 
 already_AddRefed<layers::Image> HTMLMediaElement::GetCurrentImage() {
@@ -4937,7 +4933,7 @@ void HTMLMediaElement::UnbindFromTree(bool aNullParent) {
 
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
 
-  MOZ_ASSERT(IsHidden());
+  MOZ_ASSERT(IsActuallyInvisible());
   NotifyDecoderActivityChanges();
 
   // https://html.spec.whatwg.org/#playing-the-media-resource:remove-an-element-from-a-document
@@ -6218,13 +6214,31 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
   DispatchAsyncEvent(u"playing"_ns);
 }
 
-bool HTMLMediaElement::IsActive() const {
-  Document* ownerDoc = OwnerDoc();
-  return ownerDoc->IsActive() && ownerDoc->IsVisible();
+bool HTMLMediaElement::IsActuallyInvisible() const {
+  // That means an element is not connected. It probably hasn't connected to a
+  // document tree, or connects to a disconnected DOM tree.
+  if (!IsInComposedDoc()) {
+    return true;
+  }
+
+  // An element is not in user's view port, which means it's either existing in
+  // somewhere in the page where user hasn't seen yet, or is being set
+  // `display:none`.
+  if (!IsInViewPort()) {
+    return true;
+  }
+
+  // Element being used in picture-in-picture mode would be always visible.
+  if (IsBeingUsedInPictureInPictureMode()) {
+    return false;
+  }
+
+  // That check is the page is in the background.
+  return OwnerDoc()->Hidden();
 }
 
-bool HTMLMediaElement::IsHidden() const {
-  return !IsInComposedDoc() || OwnerDoc()->Hidden();
+bool HTMLMediaElement::IsInViewPort() const {
+  return mVisibilityState == Visibility::ApproximatelyVisible;
 }
 
 VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer() {
@@ -6343,7 +6357,7 @@ void HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName) {
 
   if ((aName.EqualsLiteral("play") || aName.EqualsLiteral("playing"))) {
     mPlayTime.Start();
-    if (IsHidden()) {
+    if (IsActuallyInvisible()) {
       HiddenVideoStart();
     }
   } else if (aName.EqualsLiteral("waiting")) {
@@ -6477,8 +6491,9 @@ void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize) {
 }
 
 void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
-  LOG(LogLevel::Debug, ("%p SuspendOrResumeElement(suspend=%d) hidden=%d", this,
-                        aSuspendElement, OwnerDoc()->Hidden()));
+  LOG(LogLevel::Debug, ("%p SuspendOrResumeElement(suspend=%d) docHidden=%d",
+                        this, aSuspendElement, OwnerDoc()->Hidden()));
+
   if (aSuspendElement == mSuspendedByInactiveDocOrDocshell) {
     return;
   }
@@ -6544,7 +6559,7 @@ bool HTMLMediaElement::ShouldBeSuspendedByInactiveDocShell() const {
 }
 
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
-  bool visible = !IsHidden();
+  bool visible = !IsActuallyInvisible();
   if (visible) {
     // Visible -> Just pause hidden play time (no-op if already paused).
     HiddenVideoStop();
@@ -6560,7 +6575,8 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
   // We would suspend media when the document is inactive, or its docshell has
   // been set to hidden and explicitly wants to suspend media. In those cases,
   // the media would be not visible and we don't want them to continue playing.
-  bool shouldSuspend = !IsActive() || ShouldBeSuspendedByInactiveDocShell();
+  bool shouldSuspend =
+      !OwnerDoc()->IsActive() || ShouldBeSuspendedByInactiveDocShell();
   SuspendOrResumeElement(shouldSuspend);
 
   // If the owning document has become inactive we should shutdown the CDM.
