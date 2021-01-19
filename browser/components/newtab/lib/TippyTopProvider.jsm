@@ -48,10 +48,8 @@ this.TippyTopProvider = class TippyTopProvider {
           credentials: "omit",
         })
       ).json()) {
-        // The tippy top manifest can have a url property (string) or a
-        // urls property (array of strings)
-        for (const url of site.url ? [site.url] : site.urls || []) {
-          this._sitesByDomain.set(getDomain(url), site);
+        for (const domain of site.domains) {
+          this._sitesByDomain.set(domain, site);
         }
       }
       this.initialized = true;

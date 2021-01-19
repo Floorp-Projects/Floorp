@@ -14,13 +14,13 @@ describe("TippyTopProvider", () => {
       json: () =>
         Promise.resolve([
           {
-            url: "https://www.facebook.com/",
+            domains: ["facebook.com"],
             image_url: "images/facebook-com.png",
             favicon_url: "images/facebook-com.png",
             background_color: "#3b5998",
           },
           {
-            urls: ["https://www.gmail.com/", "https://mail.google.com"],
+            domains: ["gmail.com", "mail.google.com"],
             image_url: "images/gmail-com.png",
             favicon_url: "images/gmail-com.png",
             background_color: "#000000",
