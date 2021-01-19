@@ -48,7 +48,6 @@ function getTestExpectationFromApiResult(result) {
     typeIsTheme: result.addon.type === "statictheme",
     addonName: result.addon.name,
     authorName: result.addon.authors[0].name,
-    editorialHead: result.heading_text,
     editorialBody: result.description_text,
     dailyUsers: result.addon.average_daily_users,
     rating: result.addon.ratings.average,
@@ -384,7 +383,6 @@ add_task(async function discopane_with_real_api_data() {
         installButton.matches("[data-l10n-id='install-extension-button'"),
         "Has extension install button"
       );
-      checkContent(".disco-description-intro", expectations.editorialHead);
       checkContent(".disco-description-main", expectations.editorialBody);
 
       let ratingElem = card.querySelector("five-star-rating");
