@@ -33,8 +33,20 @@ static WStringResult MaybePrefixRegistryValueName(
   return registryValueName;
 }
 
-MaybeStringResult RegistryGetValueString(IsPrefixed isPrefixed,
-                                         const wchar_t* registryValueName) {
+// Creates a sub key of AGENT_REGKEY_NAME by appending the passed subKey. If
+// subKey is null, nothing is appended.
+static std::wstring MakeKeyName(const wchar_t* subKey) {
+  std::wstring keyName = AGENT_REGKEY_NAME;
+  if (subKey) {
+    keyName += L"\\";
+    keyName += subKey;
+  }
+  return keyName;
+}
+
+MaybeStringResult RegistryGetValueString(
+    IsPrefixed isPrefixed, const wchar_t* registryValueName,
+    const wchar_t* subKey /* = nullptr */) {
   // Get the full registry value name
   WStringResult registryValueNameResult =
       MaybePrefixRegistryValueName(isPrefixed, registryValueName);
@@ -43,10 +55,12 @@ MaybeStringResult RegistryGetValueString(IsPrefixed isPrefixed,
   }
   std::wstring valueName = registryValueNameResult.unwrap();
 
+  std::wstring keyName = MakeKeyName(subKey);
+
   // Get the string size
   DWORD wideDataSize = 0;
   LSTATUS ls =
-      RegGetValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME, valueName.c_str(),
+      RegGetValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
                    RRF_RT_REG_SZ, nullptr, nullptr, &wideDataSize);
   if (ls == ERROR_FILE_NOT_FOUND) {
     return mozilla::Maybe<std::string>(mozilla::Nothing());
@@ -63,7 +77,7 @@ MaybeStringResult RegistryGetValueString(IsPrefixed isPrefixed,
   // Read the data from the registry into a wide string
   mozilla::UniquePtr<wchar_t[]> wideData =
       mozilla::MakeUnique<wchar_t[]>(charCount);
-  ls = RegGetValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME, valueName.c_str(),
+  ls = RegGetValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
                     RRF_RT_REG_SZ, nullptr, wideData.get(), &wideDataSize);
   if (ls != ERROR_SUCCESS) {
     HRESULT hr = HRESULT_FROM_WIN32(ls);
@@ -92,9 +106,10 @@ MaybeStringResult RegistryGetValueString(IsPrefixed isPrefixed,
   return mozilla::Some(std::string(narrowOldValue.get()));
 }
 
-mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueString(
-    IsPrefixed isPrefixed, const wchar_t* registryValueName,
-    const char* newValue) {
+VoidResult RegistrySetValueString(IsPrefixed isPrefixed,
+                                  const wchar_t* registryValueName,
+                                  const char* newValue,
+                                  const wchar_t* subKey /* = nullptr */) {
   // Get the full registry value name
   WStringResult registryValueNameResult =
       MaybePrefixRegistryValueName(isPrefixed, registryValueName);
@@ -102,6 +117,8 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueString(
     return mozilla::Err(registryValueNameResult.unwrapErr());
   }
   std::wstring valueName = registryValueNameResult.unwrap();
+
+  std::wstring keyName = MakeKeyName(subKey);
 
   // Convert the value from a narrow string to a wide string
   int wideLen = MultiByteToWideChar(CP_UTF8, 0, newValue, -1, nullptr, 0);
@@ -122,7 +139,7 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueString(
 
   // Store the value
   LSTATUS ls =
-      RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME, valueName.c_str(),
+      RegSetKeyValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
                       REG_SZ, wideValue.get(), wideLen * sizeof(wchar_t));
   if (ls != ERROR_SUCCESS) {
     HRESULT hr = HRESULT_FROM_WIN32(ls);
@@ -134,7 +151,8 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueString(
 }
 
 MaybeBoolResult RegistryGetValueBool(IsPrefixed isPrefixed,
-                                     const wchar_t* registryValueName) {
+                                     const wchar_t* registryValueName,
+                                     const wchar_t* subKey /* = nullptr */) {
   // Get the full registry value name
   WStringResult registryValueNameResult =
       MaybePrefixRegistryValueName(isPrefixed, registryValueName);
@@ -143,11 +161,13 @@ MaybeBoolResult RegistryGetValueBool(IsPrefixed isPrefixed,
   }
   std::wstring valueName = registryValueNameResult.unwrap();
 
+  std::wstring keyName = MakeKeyName(subKey);
+
   // Read the integer value from the registry
   DWORD value;
   DWORD valueSize = sizeof(DWORD);
   LSTATUS ls =
-      RegGetValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME, valueName.c_str(),
+      RegGetValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
                    RRF_RT_REG_DWORD, nullptr, &value, &valueSize);
   if (ls == ERROR_FILE_NOT_FOUND) {
     return mozilla::Maybe<bool>(mozilla::Nothing());
@@ -161,8 +181,9 @@ MaybeBoolResult RegistryGetValueBool(IsPrefixed isPrefixed,
   return mozilla::Some(value != 0);
 }
 
-mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueBool(
-    IsPrefixed isPrefixed, const wchar_t* registryValueName, bool newValue) {
+VoidResult RegistrySetValueBool(IsPrefixed isPrefixed,
+                                const wchar_t* registryValueName, bool newValue,
+                                const wchar_t* subKey /* = nullptr */) {
   // Get the full registry value name
   WStringResult registryValueNameResult =
       MaybePrefixRegistryValueName(isPrefixed, registryValueName);
@@ -171,10 +192,12 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueBool(
   }
   std::wstring valueName = registryValueNameResult.unwrap();
 
+  std::wstring keyName = MakeKeyName(subKey);
+
   // Write the value to the registry
   DWORD value = newValue ? 1 : 0;
   LSTATUS ls =
-      RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME, valueName.c_str(),
+      RegSetKeyValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
                       REG_DWORD, &value, sizeof(DWORD));
   if (ls != ERROR_SUCCESS) {
     HRESULT hr = HRESULT_FROM_WIN32(ls);
@@ -186,7 +209,8 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueBool(
 }
 
 MaybeQwordResult RegistryGetValueQword(IsPrefixed isPrefixed,
-                                       const wchar_t* registryValueName) {
+                                       const wchar_t* registryValueName,
+                                       const wchar_t* subKey /* = nullptr */) {
   // Get the full registry value name
   WStringResult registryValueNameResult =
       MaybePrefixRegistryValueName(isPrefixed, registryValueName);
@@ -195,11 +219,13 @@ MaybeQwordResult RegistryGetValueQword(IsPrefixed isPrefixed,
   }
   std::wstring valueName = registryValueNameResult.unwrap();
 
+  std::wstring keyName = MakeKeyName(subKey);
+
   // Read the integer value from the registry
   ULONGLONG value;
   DWORD valueSize = sizeof(ULONGLONG);
   LSTATUS ls =
-      RegGetValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME, valueName.c_str(),
+      RegGetValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
                    RRF_RT_REG_QWORD, nullptr, &value, &valueSize);
   if (ls == ERROR_FILE_NOT_FOUND) {
     return mozilla::Maybe<ULONGLONG>(mozilla::Nothing());
@@ -213,9 +239,10 @@ MaybeQwordResult RegistryGetValueQword(IsPrefixed isPrefixed,
   return mozilla::Some(value);
 }
 
-mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueQword(
-    IsPrefixed isPrefixed, const wchar_t* registryValueName,
-    ULONGLONG newValue) {
+VoidResult RegistrySetValueQword(IsPrefixed isPrefixed,
+                                 const wchar_t* registryValueName,
+                                 ULONGLONG newValue,
+                                 const wchar_t* subKey /* = nullptr */) {
   // Get the full registry value name
   WStringResult registryValueNameResult =
       MaybePrefixRegistryValueName(isPrefixed, registryValueName);
@@ -224,9 +251,11 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueQword(
   }
   std::wstring valueName = registryValueNameResult.unwrap();
 
+  std::wstring keyName = MakeKeyName(subKey);
+
   // Write the value to the registry
   LSTATUS ls =
-      RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME, valueName.c_str(),
+      RegSetKeyValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
                       REG_QWORD, &newValue, sizeof(ULONGLONG));
   if (ls != ERROR_SUCCESS) {
     HRESULT hr = HRESULT_FROM_WIN32(ls);
@@ -237,8 +266,9 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueQword(
   return mozilla::Ok();
 }
 
-mozilla::WindowsErrorResult<mozilla::Ok> RegistryDeleteValue(
-    IsPrefixed isPrefixed, const wchar_t* registryValueName) {
+MaybeDwordResult RegistryGetValueDword(IsPrefixed isPrefixed,
+                                       const wchar_t* registryValueName,
+                                       const wchar_t* subKey /* = nullptr */) {
   // Get the full registry value name
   WStringResult registryValueNameResult =
       MaybePrefixRegistryValueName(isPrefixed, registryValueName);
@@ -247,9 +277,69 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistryDeleteValue(
   }
   std::wstring valueName = registryValueNameResult.unwrap();
 
-  LSTATUS ls = RegDeleteKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                                  valueName.c_str());
-  if (ls == ERROR_SUCCESS) {
+  std::wstring keyName = MakeKeyName(subKey);
+
+  // Read the integer value from the registry
+  uint32_t value;
+  DWORD valueSize = sizeof(uint32_t);
+  LSTATUS ls =
+      RegGetValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
+                   RRF_RT_DWORD, nullptr, &value, &valueSize);
+  if (ls == ERROR_FILE_NOT_FOUND) {
+    return mozilla::Maybe<uint32_t>(mozilla::Nothing());
+  }
+  if (ls != ERROR_SUCCESS) {
+    HRESULT hr = HRESULT_FROM_WIN32(ls);
+    LOG_ERROR(hr);
+    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
+  }
+
+  return mozilla::Some(value);
+}
+
+VoidResult RegistrySetValueDword(IsPrefixed isPrefixed,
+                                 const wchar_t* registryValueName,
+                                 uint32_t newValue,
+                                 const wchar_t* subKey /* = nullptr */) {
+  // Get the full registry value name
+  WStringResult registryValueNameResult =
+      MaybePrefixRegistryValueName(isPrefixed, registryValueName);
+  if (registryValueNameResult.isErr()) {
+    return mozilla::Err(registryValueNameResult.unwrapErr());
+  }
+  std::wstring valueName = registryValueNameResult.unwrap();
+
+  std::wstring keyName = MakeKeyName(subKey);
+
+  // Write the value to the registry
+  LSTATUS ls =
+      RegSetKeyValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
+                      REG_DWORD, &newValue, sizeof(uint32_t));
+  if (ls != ERROR_SUCCESS) {
+    HRESULT hr = HRESULT_FROM_WIN32(ls);
+    LOG_ERROR(hr);
+    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
+  }
+
+  return mozilla::Ok();
+}
+
+VoidResult RegistryDeleteValue(IsPrefixed isPrefixed,
+                               const wchar_t* registryValueName,
+                               const wchar_t* subKey /* = nullptr */) {
+  // Get the full registry value name
+  WStringResult registryValueNameResult =
+      MaybePrefixRegistryValueName(isPrefixed, registryValueName);
+  if (registryValueNameResult.isErr()) {
+    return mozilla::Err(registryValueNameResult.unwrapErr());
+  }
+  std::wstring valueName = registryValueNameResult.unwrap();
+
+  std::wstring keyName = MakeKeyName(subKey);
+
+  LSTATUS ls =
+      RegDeleteKeyValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str());
+  if (ls != ERROR_SUCCESS) {
     HRESULT hr = HRESULT_FROM_WIN32(ls);
     LOG_ERROR(hr);
     return mozilla::Err(mozilla::WindowsError::FromHResult(hr));

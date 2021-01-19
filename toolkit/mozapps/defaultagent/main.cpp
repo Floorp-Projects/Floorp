@@ -108,7 +108,8 @@ static void RemoveAllRegistryEntries() {
 
   // If no other installs are using this key, remove it now.
   if (!keyStillInUse) {
-    RegDeleteKeyW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME);
+    // Use RegDeleteTreeW to remove the cache as well, which is in subkey.
+    RegDeleteTreeW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME);
   }
 }
 
