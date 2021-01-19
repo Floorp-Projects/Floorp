@@ -691,7 +691,8 @@ class XDRIncrementalEncoderBase : public XDREncoder {
   // Switch to streaming into the header buffer.
   void switchToHeaderBuf() override { buf = &headerBuf_; }
 
-  virtual XDRResult linearize(JS::TranscodeBuffer& buffer) {
+  virtual XDRResult linearize(JS::TranscodeBuffer& buffer,
+                              js::ScriptSource* ss) {
     MOZ_CRASH("cannot linearize.");
   }
 
@@ -799,7 +800,8 @@ class XDRIncrementalEncoder : public XDRIncrementalEncoderBase {
 
   // Append the content collected during the incremental encoding into the
   // buffer given as argument.
-  XDRResult linearize(JS::TranscodeBuffer& buffer) override;
+  XDRResult linearize(JS::TranscodeBuffer& buffer,
+                      js::ScriptSource* ss) override;
 
   void trace(JSTracer* trc) override;
 };
@@ -839,7 +841,8 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
 
   bool isForStencil() const override { return true; }
 
-  XDRResult linearize(JS::TranscodeBuffer& buffer) override;
+  XDRResult linearize(JS::TranscodeBuffer& buffer,
+                      js::ScriptSource* ss) override;
 
   XDRResult codeStencils(frontend::CompilationStencilSet& stencilSet);
 };

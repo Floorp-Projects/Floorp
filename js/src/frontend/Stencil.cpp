@@ -889,8 +889,8 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
     return false;
   }
 
-  // Lineareize the endcoder, return empty buffer on failure.
-  res = encoder.linearize(buf);
+  // Linearize the encoder, return empty buffer on failure.
+  res = encoder.linearize(buf, input.source());
   if (res.isErr()) {
     MOZ_ASSERT(cx->isThrowingOutOfMemory());
     buf.clear();
