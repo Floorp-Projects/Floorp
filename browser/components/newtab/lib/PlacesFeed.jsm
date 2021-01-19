@@ -73,8 +73,6 @@ class HistoryObserver extends Observer {
 
   onEndUpdateBatch() {}
 
-  onManyFrecenciesChanged() {}
-
   onDeleteVisits() {}
 }
 
