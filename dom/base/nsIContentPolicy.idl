@@ -94,17 +94,9 @@ interface nsIContentPolicy : nsISupports
      */
     TYPE_SUBDOCUMENT = 7,
 
-    /**
-     * Indicates a timed refresh.
-     *
-     * shouldLoad will never get this, because it does not represent content
-     * to be loaded (the actual load triggered by the refresh will go through
-     * shouldLoad as expected).
-     *
-     * shouldProcess will get this for, e.g., META Refresh elements and HTTP
-     * Refresh headers.
+    /*
+     * XXX: nsContentPolicyType = 8 used to inicate a timed refresh request.
      */
-    TYPE_REFRESH = 8,
 
     /*
      * XXX: nsContentPolicyType = 9 used to inicate an XBL binding request.
@@ -119,7 +111,6 @@ interface nsIContentPolicy : nsISupports
      * Indicates an XMLHttpRequest. Also used for document.load and for EventSource.
      */
     TYPE_XMLHTTPREQUEST = 11,
-    TYPE_DATAREQUEST    = TYPE_XMLHTTPREQUEST, // alias
 
     /**
      * Indicates a request by a plugin.
@@ -263,7 +254,7 @@ interface nsIContentPolicy : nsISupports
     /**
      * Indicates an internal constant for EventSource.
      *
-     * This will be mapped to TYPE_DATAREQUEST.
+     * This will be mapped to TYPE_XMLHTTPREQUEST.
      */
     TYPE_INTERNAL_EVENTSOURCE = 34,
 
@@ -535,7 +526,7 @@ interface nsIContentPolicy : nsISupports
    * @param aMimeType         the MIME type of the requested resource (e.g.,
    *                          image/png), as reported by the networking library,
    *                          if available (may be empty if inappropriate for
-   *                          the type, e.g., TYPE_REFRESH).
+   *                          the type).
    *
    * @return ACCEPT or REJECT_*
    *
@@ -563,10 +554,8 @@ enum class ExtContentPolicyType : uint8_t {
   TYPE_OBJECT = nsIContentPolicy::TYPE_OBJECT,
   TYPE_DOCUMENT = nsIContentPolicy::TYPE_DOCUMENT,
   TYPE_SUBDOCUMENT = nsIContentPolicy::TYPE_SUBDOCUMENT,
-  TYPE_REFRESH = nsIContentPolicy::TYPE_REFRESH,
   TYPE_PING = nsIContentPolicy::TYPE_PING,
   TYPE_XMLHTTPREQUEST = nsIContentPolicy::TYPE_XMLHTTPREQUEST,
-  TYPE_DATAREQUEST    = nsIContentPolicy::TYPE_DATAREQUEST,
   TYPE_OBJECT_SUBREQUEST = nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
   TYPE_DTD = nsIContentPolicy::TYPE_DTD,
   TYPE_FONT = nsIContentPolicy::TYPE_FONT,
