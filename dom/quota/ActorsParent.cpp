@@ -3673,9 +3673,9 @@ void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
     DirectoryLockTable& directoryLockTable =
         GetDirectoryLockTable(aLock.GetPersistenceType());
 
-    nsTArray<DirectoryLockImpl*>* array;
+    nsTArray<NotNull<DirectoryLockImpl*>>* array;
     if (!directoryLockTable.Get(aLock.Origin(), &array)) {
-      array = new nsTArray<DirectoryLockImpl*>();
+      array = new nsTArray<NotNull<DirectoryLockImpl*>>();
       directoryLockTable.Put(aLock.Origin(), array);
 
       if (!IsShuttingDown()) {
@@ -3683,7 +3683,11 @@ void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
                                aLock.GroupAndOrigin());
       }
     }
-    array->AppendElement(&aLock);
+
+    // XXX It seems that the contents of the array are never actually used, we
+    // just use that like an inefficient use counter. Can't we just change
+    // DirectoryLockTable to a nsDataHashtable<nsCStringHashKey, uint32_t>?
+    array->AppendElement(WrapNotNullUnchecked(&aLock));
   }
 
   aLock.SetRegistered(true);
@@ -3705,7 +3709,7 @@ void QuotaManager::UnregisterDirectoryLock(DirectoryLockImpl& aLock) {
     DirectoryLockTable& directoryLockTable =
         GetDirectoryLockTable(aLock.GetPersistenceType());
 
-    nsTArray<DirectoryLockImpl*>* array;
+    nsTArray<NotNull<DirectoryLockImpl*>>* array;
     MOZ_ALWAYS_TRUE(directoryLockTable.Get(aLock.Origin(), &array));
 
     MOZ_ALWAYS_TRUE(array->RemoveElement(&aLock));
