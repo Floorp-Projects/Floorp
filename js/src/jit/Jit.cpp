@@ -144,11 +144,6 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
   JSScript* script = state.script();
 
   uint8_t* code = script->jitCodeRaw();
-
-#ifdef JS_CACHEIR_SPEW
-  cx->spewer().enableSpewing();
-#endif
-
   do {
     // Make sure we can enter Baseline Interpreter code. Note that the prologue
     // has warm-up checks to tier up if needed.
@@ -198,10 +193,6 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
 
     return EnterJitStatus::NotEntered;
   } while (false);
-
-#ifdef JS_CACHEIR_SPEW
-  cx->spewer().disableSpewing();
-#endif
 
   return EnterJit(cx, state, code);
 }
