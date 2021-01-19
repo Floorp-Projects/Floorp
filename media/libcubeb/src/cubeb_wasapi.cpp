@@ -779,12 +779,6 @@ hns_to_frames(cubeb_stream * stm, REFERENCE_TIME hns)
 }
 
 REFERENCE_TIME
-frames_to_hns(cubeb_stream * stm, uint32_t frames)
-{
-  return std::ceil(frames * 10000000.0 / get_rate(stm));
-}
-
-REFERENCE_TIME
 frames_to_hns(uint32_t rate, uint32_t frames)
 {
   return std::ceil(frames * 10000000.0 / rate);
@@ -1834,7 +1828,8 @@ initialize_iaudioclient2(com_ptr<IAudioClient> & audio_client)
   return CUBEB_OK;
 }
 
-static bool
+// Not static to suppress a warning.
+/* static */ bool
 initialize_iaudioclient3(com_ptr<IAudioClient> & audio_client,
                          cubeb_stream * stm,
                          const com_heap_ptr<WAVEFORMATEX> & mix_format,
@@ -2185,7 +2180,7 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
 
 void wasapi_find_matching_output_device(cubeb_stream * stm) {
   HRESULT hr;
-  cubeb_device_info * input_device;
+  cubeb_device_info * input_device = nullptr;
   cubeb_device_collection collection;
 
   // Only try to match to an output device if the input device is a bluetooth
@@ -2207,6 +2202,9 @@ void wasapi_find_matching_output_device(cubeb_stream * stm) {
   }
 
   int rv = wasapi_enumerate_devices(stm->context, (cubeb_device_type)(CUBEB_DEVICE_TYPE_INPUT|CUBEB_DEVICE_TYPE_OUTPUT), &collection);
+  if (rv != CUBEB_OK) {
+    return;
+  }
 
   // Find the input device, and then find the output device with the same group
   // id and the same rate.
@@ -2220,11 +2218,13 @@ void wasapi_find_matching_output_device(cubeb_stream * stm) {
 
   for (uint32_t i = 0; i < collection.count; i++) {
     cubeb_device_info dev = collection.device[i];
-    if (dev.type == CUBEB_DEVICE_TYPE_OUTPUT &&
-        dev.group_id && !strcmp(dev.group_id, input_device->group_id) &&
+    if (dev.type == CUBEB_DEVICE_TYPE_OUTPUT && dev.group_id && input_device &&
+        !strcmp(dev.group_id, input_device->group_id) &&
         dev.default_rate == input_device->default_rate) {
-      LOG("Found matching device for %s: %s", input_device->friendly_name, dev.friendly_name);
-      stm->output_device_id = utf8_to_wstr(reinterpret_cast<char const *>(dev.devid));
+      LOG("Found matching device for %s: %s", input_device->friendly_name,
+          dev.friendly_name);
+      stm->output_device_id =
+          utf8_to_wstr(reinterpret_cast<char const *>(dev.devid));
     }
   }
 
