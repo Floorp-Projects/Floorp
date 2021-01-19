@@ -112,7 +112,6 @@ private fun createEngineSession(
     val engineSessionState = tab.engineState.engineSessionState
     val skipLoading = if (engineSessionState != null) {
         engineSession.restoreState(engineSessionState)
-        true
     } else {
         false
     }
