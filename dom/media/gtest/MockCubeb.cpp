@@ -97,12 +97,20 @@ uint32_t MockCubebStream::InputChannels() const {
   return mAudioGenerator.mChannels;
 }
 
+uint32_t MockCubebStream::OutputChannels() const {
+  return mOutputParams.channels;
+}
+
 uint32_t MockCubebStream::InputSampleRate() const {
   return mAudioGenerator.mSampleRate;
 }
 
 uint32_t MockCubebStream::InputFrequency() const {
   return mAudioGenerator.mFrequency;
+}
+
+nsTArray<AudioDataValue>&& MockCubebStream::TakeRecordedOutput() {
+  return std::move(mRecordedOutput);
 }
 
 void MockCubebStream::SetDriftFactor(float aDriftFactor) {
@@ -115,6 +123,10 @@ void MockCubebStream::Thaw() {
   MonitorAutoLock l(mFrozenStartMonitor);
   mFrozenStart = false;
   mFrozenStartMonitor.Notify();
+}
+
+void MockCubebStream::SetOutputRecordingEnabled(bool aEnabled) {
+  mOutputRecordingEnabled = aEnabled;
 }
 
 MediaEventSource<uint32_t>& MockCubebStream::FramesProcessedEvent() {
@@ -151,6 +163,9 @@ void MockCubebStream::Process10Ms() {
       mDataCallback(stream, mUserPtr, mHasInput ? mInputBuffer : nullptr,
                     mHasOutput ? mOutputBuffer : nullptr, nrFrames);
 
+  if (mOutputRecordingEnabled && mHasOutput) {
+    mRecordedOutput.AppendElements(mOutputBuffer, outframes * OutputChannels());
+  }
   mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
                                        NUM_OF_CHANNELS);
 
