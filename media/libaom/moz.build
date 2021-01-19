@@ -62,10 +62,6 @@ elif CONFIG['CPU_ARCH'] == 'arm':
         LOCAL_INCLUDES += [
             '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
         ]
-    if CONFIG['CC_TYPE'] == 'clang':
-        ASFLAGS += [
-            '-no-integrated-as',
-        ]
 else:
     # Generic C-only configuration
     EXPORTS.aom += files['GENERIC_EXPORTS']
