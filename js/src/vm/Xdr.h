@@ -830,7 +830,7 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   // A set of functions that is passed to codeFunctionStencil.
   // Used to avoid encoding delazification for same function twice.
   // NOTE: This is not a set of all encoded functions.
-  using FunctionKey = uint64_t;
+  using FunctionKey = uint32_t;
   HashSet<FunctionKey> encodedFunctions_;
 
  public:
