@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">K\'o k\'ayewal toq nitikirisäx ri ruxaq k\'amaya\'l</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Titojtob\'ëx chik</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Titzolin</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Man xtikïr ta xutz\'aqatisaj ri k\'utunïk</string>
@@ -81,7 +75,7 @@
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Ri okik\'amaya\'l man nitikïr ta chik nusamajib\'ej ri tzolin rutzij ruxaq k\'amaya\'l.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_title">Man ütz ta tajin niq\'axan ri ruxaq k\'amaya\'l</string>
+    <string name="mozac_browser_errorpages_redirect_loop_title">Man ütz ta niq\'axan ri ruxaq k\'amaya\'l</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Ri okik\'amaya\'l xtane\' nutojtob\'ej nuköl ri ch\'akulal xk\'utüx. Ri ruxaq k\'amaya\'l nuq\'axan chik ri taqowuj, rik\'in jun rub\'eyal ri man xtik\'is ta rutz\'aqatisaxik.</p>
