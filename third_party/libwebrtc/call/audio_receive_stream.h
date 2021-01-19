@@ -90,6 +90,9 @@ class AudioReceiveStream {
     int32_t total_interruption_duration_ms = 0;
     // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-estimatedplayouttimestamp
     absl::optional<int64_t> estimated_playout_ntp_timestamp_ms;
+    uint32_t rtcp_sender_packets_sent = 0;
+    uint32_t rtcp_sender_octets_sent = 0;
+    int64_t rtcp_sender_ntp_timestamp_ms = 0;
   };
 
   struct Config {

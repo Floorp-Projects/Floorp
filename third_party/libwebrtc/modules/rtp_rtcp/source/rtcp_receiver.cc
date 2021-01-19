@@ -381,11 +381,11 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
 
 void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
                                         uint32_t* octet_count,
-                                        NtpTime* ntp_timestamp) const {
+                                        int64_t* ntp_timestamp_ms) const {
   MutexLock lock(&rtcp_receiver_lock_);
   *packet_count = remote_sender_packet_count_;
   *octet_count = remote_sender_octet_count_;
-  *ntp_timestamp = remote_sender_ntp_time_;
+  *ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
 }
 
 // We can get multiple receive reports when we receive the report from a CE.
