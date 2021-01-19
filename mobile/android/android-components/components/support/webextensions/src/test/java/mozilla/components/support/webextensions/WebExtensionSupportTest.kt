@@ -39,7 +39,7 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import mozilla.components.support.webextensions.WebExtensionSupport.toState
-import mozilla.components.support.webextensions.facts.WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED
+import mozilla.components.support.webextensions.facts.WebExtensionFacts.Items.WEB_EXTENSION_INSTALLED
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -114,12 +114,9 @@ class WebExtensionSupportTest {
             val interactionFact = facts[0]
             assertEquals(FactsAction.INTERACTION, interactionFact.action)
             assertEquals(Component.SUPPORT_WEBEXTENSIONS, interactionFact.component)
-            assertEquals(WEB_EXTENSIONS_INITIALIZED, interactionFact.item)
-            assertEquals(2, interactionFact.metadata?.size)
+            assertEquals(WEB_EXTENSION_INSTALLED, interactionFact.item)
+            assertEquals(1, interactionFact.metadata?.size)
             assertTrue(interactionFact.metadata?.containsKey("installed")!!)
-            assertTrue(interactionFact.metadata?.containsKey("enabled")!!)
-            assertEquals(listOf(ext1.id, ext2.id), interactionFact.metadata?.get("installed"))
-            assertEquals(listOf(ext1.id), interactionFact.metadata?.get("enabled"))
         }
         assertEquals(ext1, WebExtensionSupport.installedExtensions[ext1.id])
         assertEquals(ext2, WebExtensionSupport.installedExtensions[ext2.id])
