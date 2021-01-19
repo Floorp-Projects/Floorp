@@ -2492,3 +2492,16 @@ option(
 )
 
 set_define("MOZ_USE_NATIVE_POPUP_WINDOWS", True, when="MOZ_USE_NATIVE_POPUP_WINDOWS")
+
+
+# Crash reporter options
+# ==============================================================
+@depends(target)
+def oxidized_breakpad(target):
+    if target.kernel == "Linux" and target.os != "Android":
+        return target.cpu in ("x86", "x86_64")
+    return False
+
+
+set_config("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)
+set_define("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)

@@ -88,7 +88,7 @@ extern crate remote;
 
 extern crate gecko_logger;
 
-#[cfg(target_os = "linux")]
+#[cfg(feature = "oxidized_breakpad")]
 extern crate rust_minidump_writer_linux;
 
 extern crate log;
