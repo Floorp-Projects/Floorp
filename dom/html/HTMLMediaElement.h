@@ -247,9 +247,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // suspended the channel.
   void NotifySuspendedByCache(bool aSuspendedByCache) final;
 
-  bool IsActive() const;
+  // Return true if the media element is actually invisible to users.
+  bool IsActuallyInvisible() const;
 
-  bool IsHidden() const;
+  // Return true if the element is in the view port.
+  bool IsInViewPort() const;
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
@@ -617,9 +619,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // For use by mochitests.
   bool IsVideoDecodingSuspended() const;
-
-  // For use by mochitests only.
-  bool IsVisible() const;
 
   // Synchronously, return the next video frame and mark the element unable to
   // participate in decode suspending.

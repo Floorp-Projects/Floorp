@@ -226,7 +226,7 @@ partial interface HTMLMediaElement {
   boolean hasSuspendTaint();
 
   [ChromeOnly]
-  readonly attribute boolean isVisible;
+  readonly attribute boolean isInViewPort;
 
   [ChromeOnly]
   readonly attribute boolean isVideoDecodingSuspended;
