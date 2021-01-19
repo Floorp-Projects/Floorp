@@ -30,7 +30,7 @@ addAccessibleTask(
         </li>
       </ul>
     </li>
-    <li role="treeitem" aria-expanded="false">
+    <li id="vegetables" role="treeitem" aria-expanded="false">
       <span>
         Vegetables
       </span>
@@ -139,6 +139,32 @@ addAccessibleTask(
       outRows[3].getAttributeValue("AXDisclosureLevel"),
       1,
       "Row is level one"
+    );
+
+    let evt = waitForMacEvent("AXRowExpanded", "vegetables");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("vegetables")
+        .setAttribute("aria-expanded", "true");
+    });
+    await evt;
+    is(
+      outRows[2].getAttributeValue("AXDisclosing"),
+      1,
+      "Row is disclosing after being expanded"
+    );
+
+    evt = waitForMacEvent("AXRowCollapsed", "vegetables");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("vegetables")
+        .setAttribute("aria-expanded", "false");
+    });
+    await evt;
+    is(
+      outRows[2].getAttributeValue("AXDisclosing"),
+      0,
+      "Row is not disclosing after being collapsed again"
     );
   }
 );
