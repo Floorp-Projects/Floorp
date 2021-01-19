@@ -340,7 +340,7 @@ def bootstrap_search_path(*path_parts, **kwargs):
 
         path = os.path.join(toolchains_base_dir, *path_parts)
         # Only bootstrap toolchains that have been bootstrapped at least once.
-        if bootstrap and os.path.exists(path):
+        if bootstrap and tasks and os.path.exists(path):
             try:
                 try_bootstrap()
             except Exception as e:
