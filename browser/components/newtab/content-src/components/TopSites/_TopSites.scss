@@ -694,12 +694,15 @@ $letter-fallback-color: $white;
       }
 
       .title {
-        width: $top-sites-size-nte;
+        color: var(--newtab-background-primary-text-color);
+        padding-top: 8px;
 
         .icon {
           margin-inline-end: 2px;
+          fill: var(--newtab-background-primary-text-color);
         }
-      }
+    }
+
 
       .default-icon,
       .search-topsite {
