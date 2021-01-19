@@ -16,6 +16,7 @@
 #include "MediaResource.h"
 #include "MediaShutdownManager.h"
 #include "MediaTrackGraph.h"
+#include "TelemetryProbesReporter.h"
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
 #include "mozilla/AbstractThread.h"
@@ -314,7 +315,9 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
           new BackgroundVideoDecodingPermissionObserver(this)),
       mIsBackgroundVideoDecodingAllowed(false),
       mTelemetryReported(false),
-      mContainerType(aInit.mContainerType) {
+      mContainerType(aInit.mContainerType),
+      mTelemetryProbesReporter(
+          new TelemetryProbesReporter(aInit.mReporterOwner)) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mAbstractMainThread);
   MediaMemoryTracker::AddMediaDecoder(this);
@@ -423,10 +426,12 @@ void MediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent) {
       break;
     case MediaPlaybackEvent::EnterVideoSuspend:
       GetOwner()->DispatchAsyncEvent(u"mozentervideosuspend"_ns);
+      mTelemetryProbesReporter->OnDecodeSuspended();
       mIsVideoDecodingSuspended = true;
       break;
     case MediaPlaybackEvent::ExitVideoSuspend:
       GetOwner()->DispatchAsyncEvent(u"mozexitvideosuspend"_ns);
+      mTelemetryProbesReporter->OnDecodeResumed();
       mIsVideoDecodingSuspended = false;
       break;
     case MediaPlaybackEvent::StartVideoSuspendTimer:
@@ -871,6 +876,25 @@ void MediaDecoder::ChangeState(PlayState aState) {
     DDLOG(DDLogCategory::Property, "play_state", ToPlayStateStr(aState));
   }
   mPlayState = aState;
+  UpdateTelemetryHelperBasedOnPlayState(aState);
+}
+
+TelemetryProbesReporter::Visibility MediaDecoder::OwnerVisibility() const {
+  return GetOwner()->IsActuallyInvisible() || mForcedHidden
+             ? TelemetryProbesReporter::Visibility::eInvisible
+             : TelemetryProbesReporter::Visibility::eVisible;
+}
+
+void MediaDecoder::UpdateTelemetryHelperBasedOnPlayState(
+    PlayState aState) const {
+  if (aState == PlayState::PLAY_STATE_PLAYING) {
+    mTelemetryProbesReporter->OnPlay(OwnerVisibility());
+  } else if (aState == PlayState::PLAY_STATE_PAUSED ||
+             aState == PlayState::PLAY_STATE_ENDED) {
+    mTelemetryProbesReporter->OnPause(OwnerVisibility());
+  } else if (aState == PLAY_STATE_SHUTDOWN) {
+    mTelemetryProbesReporter->OnShutdown();
+  }
 }
 
 bool MediaDecoder::IsLoopingBack(double aPrevPos, double aCurPos) const {
@@ -962,12 +986,14 @@ void MediaDecoder::SetElementVisibility(bool aIsOwnerInvisible,
   MOZ_ASSERT(NS_IsMainThread());
   mIsOwnerInvisible = aIsOwnerInvisible;
   mIsOwnerConnected = aIsOwnerConnected;
+  mTelemetryProbesReporter->OnVisibilityChanged(OwnerVisibility());
   UpdateVideoDecodeMode();
 }
 
 void MediaDecoder::SetForcedHidden(bool aForcedHidden) {
   MOZ_ASSERT(NS_IsMainThread());
   mForcedHidden = aForcedHidden;
+  mTelemetryProbesReporter->OnVisibilityChanged(OwnerVisibility());
   UpdateVideoDecodeMode();
 }
 
