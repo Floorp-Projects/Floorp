@@ -63,8 +63,7 @@ add_task(async function() {
   // Should be matching instances
   ok(certA.equals(certB));
 
-  // Check a few expected attributes
-  ok(certA.isSelfSigned);
+  // Check an expected attribute
   equal(certA.certType, Ci.nsIX509Cert.USER_CERT);
 
   // New nickname should give a different cert
