@@ -17,6 +17,7 @@
 #  include "MediaResource.h"
 #  include "MediaStatistics.h"
 #  include "SeekTarget.h"
+#  include "TelemetryProbesReporter.h"
 #  include "TimeUnits.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/CDMProxy.h"
@@ -52,6 +53,7 @@ struct SharedDummyTrack;
 
 struct MOZ_STACK_CLASS MediaDecoderInit {
   MediaDecoderOwner* const mOwner;
+  TelemetryProbesReporterOwner* const mReporterOwner;
   const double mVolume;
   const bool mPreservesPitch;
   const double mPlaybackRate;
@@ -60,11 +62,13 @@ struct MOZ_STACK_CLASS MediaDecoderInit {
   const bool mLooping;
   const MediaContainerType mContainerType;
 
-  MediaDecoderInit(MediaDecoderOwner* aOwner, double aVolume,
+  MediaDecoderInit(MediaDecoderOwner* aOwner,
+                   TelemetryProbesReporterOwner* aReporterOwner, double aVolume,
                    bool aPreservesPitch, double aPlaybackRate,
                    bool aMinimizePreroll, bool aHasSuspendTaint, bool aLooping,
                    const MediaContainerType& aContainerType)
       : mOwner(aOwner),
+        mReporterOwner(aReporterOwner),
         mVolume(aVolume),
         mPreservesPitch(aPreservesPitch),
         mPlaybackRate(aPlaybackRate),
@@ -709,6 +713,10 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   }
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
 
+  void UpdateTelemetryHelperBasedOnPlayState(PlayState aState) const;
+
+  TelemetryProbesReporter::Visibility OwnerVisibility() const;
+
  private:
   // Notify owner when the audible state changed
   void NotifyAudibleStateChanged();
@@ -716,6 +724,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   bool mTelemetryReported;
   const MediaContainerType mContainerType;
   bool mCanPlayThrough = false;
+
+  UniquePtr<TelemetryProbesReporter> mTelemetryProbesReporter;
 };
 
 typedef MozPromise<mozilla::dom::MediaMemoryInfo, nsresult, true>
