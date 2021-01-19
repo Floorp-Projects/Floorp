@@ -126,7 +126,8 @@ class QuotaManager final : public BackgroundThreadObject {
   friend class QuotaObject;
 
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
-  typedef nsClassHashtable<nsCStringHashKey, nsTArray<DirectoryLockImpl*>>
+  typedef nsClassHashtable<nsCStringHashKey,
+                           nsTArray<NotNull<DirectoryLockImpl*>>>
       DirectoryLockTable;
 
   class Observer;
