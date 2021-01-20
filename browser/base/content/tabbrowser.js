@@ -1876,10 +1876,11 @@
 
       aBrowser.droppedLinkHandler = oldDroppedLinkHandler;
 
-      // Switching a browser's remoteness will create a new frameLoader.
-      // As frameLoaders start out with an active docShell we have to
-      // deactivate it if this is not the selected tab's browser or the
-      // browser window is minimized.
+      // This shouldn't really be necessary (it should always set the same
+      // value as activeness is correctly preserved across remoteness changes).
+      // However, this has the side effect of sending MozLayerTreeReady /
+      // MozLayerTreeCleared events for remote frames, which the tab switcher
+      // depends on.
       aBrowser.docShellIsActive = this.shouldActivateDocShell(aBrowser);
 
       // Create a new tab progress listener for the new browser we just injected,
@@ -5695,10 +5696,11 @@
 
           browser.droppedLinkHandler = oldDroppedLinkHandler;
 
-          // Switching a browser's remoteness will create a new frameLoader.
-          // As frameLoaders start out with an active docShell we have to
-          // deactivate it if this is not the selected tab's browser or the
-          // browser window is minimized.
+          // This shouldn't really be necessary (it should always set the same
+          // value as activeness is correctly preserved across remoteness changes).
+          // However, this has the side effect of sending MozLayerTreeReady /
+          // MozLayerTreeCleared events for remote frames, which the tab switcher
+          // depends on.
           browser.docShellIsActive = this.shouldActivateDocShell(browser);
 
           // Create a new tab progress listener for the new browser we just
