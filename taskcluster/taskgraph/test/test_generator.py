@@ -52,7 +52,7 @@ class FakeKind(Kind):
 
 
 class WithFakeKind(TaskGraphGenerator):
-    def _load_kinds(self, graph_config):
+    def _load_kinds(self, graph_config, target_kind=None):
         for kind_name, cfg in self.parameters["_kinds"]:
             config = {
                 "transforms": [],
