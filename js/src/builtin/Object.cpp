@@ -495,59 +495,48 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
   return buf.finishString();
 }
 
-static bool GetBuiltinTagSlow(JSContext* cx, HandleObject obj,
-                              MutableHandleString builtinTag) {
+static JSString* GetBuiltinTagSlow(JSContext* cx, HandleObject obj) {
   // Step 4.
   bool isArray;
   if (!IsArray(cx, obj, &isArray)) {
-    return false;
+    return nullptr;
   }
 
   // Step 5.
   if (isArray) {
-    builtinTag.set(cx->names().objectArray);
-    return true;
+    return cx->names().objectArray;
   }
 
   // Steps 6-14.
   ESClass cls;
   if (!JS::GetBuiltinClass(cx, obj, &cls)) {
-    return false;
+    return nullptr;
   }
 
   switch (cls) {
     case ESClass::String:
-      builtinTag.set(cx->names().objectString);
-      return true;
+      return cx->names().objectString;
     case ESClass::Arguments:
-      builtinTag.set(cx->names().objectArguments);
-      return true;
+      return cx->names().objectArguments;
     case ESClass::Error:
-      builtinTag.set(cx->names().objectError);
-      return true;
+      return cx->names().objectError;
     case ESClass::Boolean:
-      builtinTag.set(cx->names().objectBoolean);
-      return true;
+      return cx->names().objectBoolean;
     case ESClass::Number:
-      builtinTag.set(cx->names().objectNumber);
-      return true;
+      return cx->names().objectNumber;
     case ESClass::Date:
-      builtinTag.set(cx->names().objectDate);
-      return true;
+      return cx->names().objectDate;
     case ESClass::RegExp:
-      builtinTag.set(cx->names().objectRegExp);
-      return true;
+      return cx->names().objectRegExp;
     default:
       if (obj->isCallable()) {
         // Non-standard: Prevent <object> from showing up as Function.
-        RootedObject unwrapped(cx, CheckedUnwrapDynamic(obj, cx));
+        JSObject* unwrapped = CheckedUnwrapDynamic(obj, cx);
         if (!unwrapped || !unwrapped->getClass()->isDOMClass()) {
-          builtinTag.set(cx->names().objectFunction);
-          return true;
+          return cx->names().objectFunction;
         }
       }
-      builtinTag.set(cx->names().objectObject);
-      return true;
+      return cx->names().objectObject;
   }
 }
 
@@ -680,22 +669,14 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
     obj = &args.thisv().toObject();
   }
 
+  // When |obj| is a non-proxy object, compute |builtinTag| only when needed.
   RootedString builtinTag(cx);
   const JSClass* clasp = obj->getClass();
   if (MOZ_UNLIKELY(clasp->isProxy())) {
-    if (!GetBuiltinTagSlow(cx, obj, &builtinTag)) {
+    builtinTag = GetBuiltinTagSlow(cx, obj);
+    if (!builtinTag) {
       return false;
     }
-  } else {
-    builtinTag = GetBuiltinTagFast(obj, clasp, cx);
-#ifdef DEBUG
-    // Assert this fast path is correct and matches BuiltinTagSlow.
-    RootedString builtinTagSlow(cx);
-    if (!GetBuiltinTagSlow(cx, obj, &builtinTagSlow)) {
-      return false;
-    }
-    MOZ_ASSERT(builtinTagSlow == builtinTag);
-#endif
   }
 
   // Step 15.
@@ -707,6 +688,18 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 16.
   if (!tag.isString()) {
+    if (!builtinTag) {
+      builtinTag = GetBuiltinTagFast(obj, clasp, cx);
+  #ifdef DEBUG
+      // Assert this fast path is correct and matches BuiltinTagSlow.
+      JSString* builtinTagSlow = GetBuiltinTagSlow(cx, obj);
+      if (!builtinTagSlow) {
+        return false;
+      }
+      MOZ_ASSERT(builtinTagSlow == builtinTag);
+  #endif
+    }
+
     args.rval().setString(builtinTag);
     return true;
   }
