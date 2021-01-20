@@ -188,7 +188,7 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   static bool IsDarkBackground(nsIFrame* aFrame);
   // custom scrollbar
   typedef nscolor (*AutoColorGetter)(mozilla::ComputedStyle*);
-  bool IsWidgetScrollbarPart(mozilla::StyleAppearance aAppearance);
+  static bool IsWidgetScrollbarPart(mozilla::StyleAppearance aAppearance);
 
  private:
   uint32_t mAnimatedContentTimeout;

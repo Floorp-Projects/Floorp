@@ -656,6 +656,7 @@ bool nsNativeTheme::IsDarkBackground(nsIFrame* aFrame) {
   return false;
 }
 
+/*static*/
 bool nsNativeTheme::IsWidgetScrollbarPart(StyleAppearance aAppearance) {
   switch (aAppearance) {
     case StyleAppearance::ScrollbarVertical:
