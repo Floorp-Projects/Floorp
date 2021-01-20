@@ -565,6 +565,15 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
+  createUndesiredEvent(action) {
+    return Object.assign(
+      this.createPing(au.getPortIdOfSender(action)),
+      { value: 0 }, // Default value
+      action.data,
+      { action: "activity_stream_undesired_event" }
+    );
+  }
+
   createSessionEndEvent(session) {
     return Object.assign(this.createPing(), {
       session_id: session.session_id,
@@ -824,14 +833,8 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
-  /**
-   * This function is used by ActivityStreamStorage to report errors
-   * trying to access IndexedDB.
-   */
-  SendASRouterUndesiredEvent(data) {
-    this.handleASRouterUserEvent({
-      data: { ...data, action: "asrouter_undesired_event" },
-    });
+  handleUndesiredEvent(action) {
+    this.sendEvent(this.createUndesiredEvent(action));
   }
 
   async sendPageTakeoverData() {
@@ -931,6 +934,9 @@ this.TelemetryFeed = class TelemetryFeed {
           au.getPortIdOfSender(action),
           action.data
         );
+        break;
+      case at.TELEMETRY_UNDESIRED_EVENT:
+        this.handleUndesiredEvent(action);
         break;
       case at.TELEMETRY_USER_EVENT:
         this.handleUserEvent(action);
