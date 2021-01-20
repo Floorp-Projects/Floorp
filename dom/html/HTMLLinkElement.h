@@ -49,37 +49,35 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   // nsINode
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIContent
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
-  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify) override;
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
-  virtual bool IsLink(nsIURI** aURI) const override;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent = true) override;
+  nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                         const nsAttrValueOrString* aValue,
+                         bool aNotify) override;
+  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
+  bool IsLink(nsIURI** aURI) const override;
+  already_AddRefed<nsIURI> GetHrefURI() const override;
 
   // Element
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-  virtual void GetLinkTarget(nsAString& aTarget) override;
-  virtual EventStates IntrinsicState() const override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
+  void GetLinkTarget(nsAString& aTarget) override;
+  EventStates IntrinsicState() const override;
 
   void CreateAndDispatchEvent(Document* aDoc, const nsAString& aEventName);
 
-  virtual void OnDNSPrefetchDeferred() override;
-  virtual void OnDNSPrefetchRequested() override;
-  virtual bool HasDeferredDNSPrefetchRequest() override;
+  void OnDNSPrefetchDeferred() override;
+  void OnDNSPrefetchRequested() override;
+  bool HasDeferredDNSPrefetchRequest() override;
 
   // WebIDL
   bool Disabled() const;
