@@ -1432,10 +1432,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchNeg32(Condition cond, Register reg,
                           Label* label) PER_SHARED_ARCH;
 
-  inline void branchAddPtr(Condition cond, Register src, Register dest,
+  template <typename T>
+  inline void branchAddPtr(Condition cond, T src, Register dest,
                            Label* label) PER_SHARED_ARCH;
 
-  inline void branchSubPtr(Condition cond, Register src, Register dest,
+  template <typename T>
+  inline void branchSubPtr(Condition cond, T src, Register dest,
                            Label* label) PER_SHARED_ARCH;
 
   inline void branchMulPtr(Condition cond, Register src, Register dest,
