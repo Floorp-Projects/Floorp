@@ -3875,8 +3875,8 @@ void MacroAssembler::atomicIsLockFreeJS(Register value, Register output) {
 // ========================================================================
 // Spectre Mitigations.
 
-void MacroAssembler::spectreMaskIndex(Register index, Register length,
-                                      Register output) {
+void MacroAssembler::spectreMaskIndex32(Register index, Register length,
+                                        Register output) {
   MOZ_ASSERT(JitOptions.spectreIndexMasking);
   MOZ_ASSERT(length != output);
   MOZ_ASSERT(index != output);
@@ -3885,8 +3885,8 @@ void MacroAssembler::spectreMaskIndex(Register index, Register length,
   cmp32Move32(Assembler::Below, index, length, index, output);
 }
 
-void MacroAssembler::spectreMaskIndex(Register index, const Address& length,
-                                      Register output) {
+void MacroAssembler::spectreMaskIndex32(Register index, const Address& length,
+                                        Register output) {
   MOZ_ASSERT(JitOptions.spectreIndexMasking);
   MOZ_ASSERT(index != length.base);
   MOZ_ASSERT(length.base != output);
