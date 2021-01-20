@@ -14,7 +14,7 @@ permalink: /contributing/release-checklist
   - Milestone should be 100% complete. Incomplete issues should have been moved in planning meeting.
 
 ## Release
-
+- Create a branch with the format `releases/[major_version].0`, for example, `releases/49.0`.
 - Create a new tag/release on GitHub.
   - Tag: v2.0 (_v_ prefix!)
   - Release 2.0
