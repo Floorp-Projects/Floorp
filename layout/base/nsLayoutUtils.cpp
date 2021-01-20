@@ -8797,7 +8797,7 @@ void nsLayoutUtils::AppendFrameTextContent(nsIFrame* aFrame,
 }
 
 /* static */
-nsRect nsLayoutUtils::GetSelectionBoundingRect(Selection* aSel) {
+nsRect nsLayoutUtils::GetSelectionBoundingRect(const Selection* aSel) {
   nsRect res;
   // Bounding client rect may be empty after calling GetBoundingClientRect
   // when range is collapsed. So we get caret's rect when range is

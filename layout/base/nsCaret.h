@@ -170,7 +170,7 @@ class nsCaret final : public nsISelectionListener {
    * This rect does not include any extra decorations for bidi.
    * @param aRect must be non-null
    */
-  static nsIFrame* GetGeometry(mozilla::dom::Selection* aSelection,
+  static nsIFrame* GetGeometry(const mozilla::dom::Selection* aSelection,
                                nsRect* aRect);
   static nsIFrame* GetCaretFrameForNodeOffset(
       nsFrameSelection* aFrameSelection, nsIContent* aContentNode,
@@ -186,7 +186,7 @@ class nsCaret final : public nsISelectionListener {
   // @param aUnadjustedFrame return the original frame that the selection is
   // targeting, without any adjustment for painting.
   // @return the frame of the focus node.
-  static nsIFrame* GetFrameAndOffset(mozilla::dom::Selection* aSelection,
+  static nsIFrame* GetFrameAndOffset(const mozilla::dom::Selection* aSelection,
                                      nsINode* aOverrideNode,
                                      int32_t aOverrideOffset,
                                      int32_t* aFrameOffset,

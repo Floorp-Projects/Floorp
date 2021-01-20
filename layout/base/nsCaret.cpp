@@ -354,7 +354,7 @@ nsRect nsCaret::GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
   return rect;
 }
 
-nsIFrame* nsCaret::GetFrameAndOffset(Selection* aSelection,
+nsIFrame* nsCaret::GetFrameAndOffset(const Selection* aSelection,
                                      nsINode* aOverrideNode,
                                      int32_t aOverrideOffset,
                                      int32_t* aFrameOffset,
@@ -390,7 +390,7 @@ nsIFrame* nsCaret::GetFrameAndOffset(Selection* aSelection,
 }
 
 /* static */
-nsIFrame* nsCaret::GetGeometry(Selection* aSelection, nsRect* aRect) {
+nsIFrame* nsCaret::GetGeometry(const Selection* aSelection, nsRect* aRect) {
   int32_t frameOffset;
   nsIFrame* frame = GetFrameAndOffset(aSelection, nullptr, 0, &frameOffset);
   if (frame) {
