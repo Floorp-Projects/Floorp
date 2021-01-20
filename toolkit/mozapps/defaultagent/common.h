@@ -15,4 +15,7 @@ ULONGLONG GetCurrentTimestamp();
 // to get the current time rather than using a passed value.
 ULONGLONG SecondsPassedSince(ULONGLONG initialTime, ULONGLONG currentTime = 0);
 
+using FilePathResult = mozilla::WindowsErrorResult<std::wstring>;
+FilePathResult GenerateUUIDStr();
+
 #endif  // __DEFAULT_BROWSER_AGENT_COMMON_H__
