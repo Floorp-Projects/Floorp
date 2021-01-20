@@ -9,6 +9,7 @@
 
 const DEFAULT_ENGINE_NAME = "Test";
 const SUGGESTIONS_ENGINE_NAME = "searchSuggestionEngine.xml";
+const MANY_SUGGESTIONS_ENGINE_NAME = "searchSuggestionEngineMany.xml";
 const MAX_HISTORICAL_SEARCH_SUGGESTIONS = UrlbarPrefs.get(
   "maxHistoricalSearchSuggestions"
 );
@@ -399,6 +400,9 @@ add_task(async function nonEmptySearch_nonMatching() {
 });
 
 add_task(async function nonEmptySearch_withHistory() {
+  let manySuggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + MANY_SUGGESTIONS_ENGINE_NAME
+  );
   // URLs with the same host as the search engine.
   let query = "ciao";
   await PlacesTestUtils.addVisits([
@@ -409,14 +413,29 @@ add_task(async function nonEmptySearch_withHistory() {
     `http://example.com/mochi.test/${query}`,
   ]);
 
+  function makeSuggestionResult(suffix) {
+    return {
+      heuristic: false,
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      searchParams: {
+        query,
+        suggestion: `${query}${suffix}`,
+        engine: manySuggestionsEngine.name,
+      },
+    };
+  }
+
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: query,
     });
-
-    await UrlbarTestUtils.enterSearchMode(window);
+    await UrlbarTestUtils.enterSearchMode(window, {
+      engineName: manySuggestionsEngine.name,
+    });
     Assert.equal(gURLBar.value, query, "Urlbar value should be set.");
+
     await checkResults([
       {
         heuristic: true,
@@ -424,29 +443,64 @@ add_task(async function nonEmptySearch_withHistory() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          engine: suggestionsEngine.name,
+          engine: manySuggestionsEngine.name,
         },
+      },
+      makeSuggestionResult("foo"),
+      makeSuggestionResult("bar"),
+      makeSuggestionResult("1"),
+      makeSuggestionResult("2"),
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/${query}1`,
       },
       {
         heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/${query}`,
+      },
+      makeSuggestionResult("3"),
+      makeSuggestionResult("4"),
+      makeSuggestionResult("5"),
+    ]);
+
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+
+    info("Test again with history before suggestions");
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.matchBuckets", "general:5,suggestion:Infinity"]],
+    });
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: query,
+    });
+    await UrlbarTestUtils.enterSearchMode(window, {
+      engineName: manySuggestionsEngine.name,
+    });
+    Assert.equal(gURLBar.value, query, "Urlbar value should be set.");
+
+    await checkResults([
+      {
+        heuristic: true,
         type: UrlbarUtils.RESULT_TYPE.SEARCH,
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          suggestion: `${query}foo`,
-          engine: suggestionsEngine.name,
+          engine: manySuggestionsEngine.name,
         },
       },
-      {
-        heuristic: false,
-        type: UrlbarUtils.RESULT_TYPE.SEARCH,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        searchParams: {
-          query,
-          suggestion: `${query}bar`,
-          engine: suggestionsEngine.name,
-        },
-      },
+      makeSuggestionResult("foo"),
+      makeSuggestionResult("bar"),
+      makeSuggestionResult("1"),
+      makeSuggestionResult("2"),
+      makeSuggestionResult("3"),
+      makeSuggestionResult("4"),
+      makeSuggestionResult("5"),
       {
         heuristic: false,
         type: UrlbarUtils.RESULT_TYPE.URL,
@@ -463,6 +517,7 @@ add_task(async function nonEmptySearch_withHistory() {
 
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
     await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
   });
 
   await PlacesUtils.history.clear();
