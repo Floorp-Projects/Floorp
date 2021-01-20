@@ -313,22 +313,25 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
 
         consumeFrom(store) {
-            val shouldShowAwesomebar =
-                !firstUpdate &&
-                it.query.isNotBlank() ||
-                it.showSearchShortcuts
-
-            awesome_bar?.visibility = if (shouldShowAwesomebar) View.VISIBLE else View.INVISIBLE
+            /*
+            * firstUpdate is used to make sure we keep the awesomebar hidden on the first run
+            *  of the searchFragmentDialog. We only turn it false after the user has changed the
+            *  query as consumeFrom may run several times on fragment start due to state updates.
+            * */
+            if (it.url != it.query) firstUpdate = false
+            awesome_bar?.visibility = if (shouldShowAwesomebar(it)) View.VISIBLE else View.INVISIBLE
             updateSearchSuggestionsHintVisibility(it)
             updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
             updateToolbarContentDescription(it)
             updateSearchShortcutsIcon(it)
             toolbarView.update(it)
             awesomeBarView.update(it)
-            firstUpdate = false
             addVoiceSearchButton(it)
         }
     }
+
+    private fun shouldShowAwesomebar(searchFragmentState: SearchFragmentState) =
+        !firstUpdate && searchFragmentState.query.isNotBlank() || searchFragmentState.showSearchShortcuts
 
     private fun updateAccessibilityTraversalOrder() {
         val searchWrapperId = search_wrapper.id
