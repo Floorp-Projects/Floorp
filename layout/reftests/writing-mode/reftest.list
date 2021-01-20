@@ -73,7 +73,7 @@ fuzzy-if(Android,0-1,0-18) == ua-style-sheet-checkbox-radio-1.html ua-style-shee
 skip-if(Android) fuzzy-if(skiaContent&&!Android,0-2,0-6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
 
 # Android uses different margins for buttons compared to the ref.
-skip-if(Android) == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
+skip-if(Android) == ua-style-sheet-input-color-1.html chrome://reftest/content/writing-mode/ua-style-sheet-input-color-1-ref.html
 fuzzy-if(gtkWidget,0-1,0-15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
 
 == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html

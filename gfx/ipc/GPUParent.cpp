@@ -61,6 +61,7 @@
 #  include <dwrite.h>
 #  include <process.h>
 
+#  include "gfxWindowsPlatform.h"
 #  include "mozilla/WindowsVersion.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/widget/WinCompositorWindowThread.h"
@@ -137,6 +138,7 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   gfxPlatform::InitMoz2DLogging();
   mlg::InitializeMemoryReporters();
 #if defined(XP_WIN)
+  gfxWindowsPlatform::InitMemoryReportersForGPUProcess();
   DeviceManagerDx::Init();
 #endif
 

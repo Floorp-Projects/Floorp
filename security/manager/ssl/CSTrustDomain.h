@@ -9,13 +9,8 @@
 
 #include "mozpkix/pkixtypes.h"
 #include "nsCOMPtr.h"
+#include "nsICertStorage.h"
 #include "nsTArray.h"
-
-#ifdef MOZ_NEW_CERT_STORAGE
-#  include "nsICertStorage.h"
-#else
-#  include "nsICertBlocklist.h"
-#endif
 
 namespace mozilla {
 namespace psm {
@@ -76,11 +71,7 @@ class CSTrustDomain final : public mozilla::pkix::TrustDomain {
 
  private:
   nsTArray<nsTArray<uint8_t>>& mCertList;  // non-owning!
-#ifdef MOZ_NEW_CERT_STORAGE
   nsCOMPtr<nsICertStorage> mCertBlocklist;
-#else
-  nsCOMPtr<nsICertBlocklist> mCertBlocklist;
-#endif
 };
 
 }  // namespace psm

@@ -144,16 +144,6 @@ var ModuleManager = {
     );
   },
 
-  remoteTypeFor(aURI, currentType) {
-    return E10SUtils.getRemoteTypeForURI(
-      aURI,
-      /* multiProcess */ true,
-      /* useRemoteSubframes */ false,
-      currentType,
-      this.browser.currentURI
-    );
-  },
-
   // Ensures that session history has been flushed before changing remoteness
   async prepareToChangeRemoteness() {
     // Session state like history is maintained at the process level so we need

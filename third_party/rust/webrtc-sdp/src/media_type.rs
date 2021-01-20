@@ -17,6 +17,7 @@ use {SdpBandwidth, SdpConnection, SdpLine, SdpType};
  */
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpMediaLine {
     pub media: SdpMediaValue,
     pub port: u32,
@@ -95,6 +96,7 @@ impl fmt::Display for SdpProtocolValue {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub enum SdpFormatList {
     Integers(Vec<u32>),
     Strings(Vec<String>),
@@ -121,6 +123,7 @@ impl fmt::Display for SdpFormatList {
  */
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "enhanced_debug", derive(Debug))]
 pub struct SdpMedia {
     media: SdpMediaLine,
     connection: Option<SdpConnection>,
@@ -223,13 +226,15 @@ impl SdpMedia {
         }
 
         self.attribute.retain({
-            |x| match *x {
-                SdpAttribute::Rtpmap(_)
-                | SdpAttribute::Fmtp(_)
-                | SdpAttribute::Rtcpfb(_)
-                | SdpAttribute::Sctpmap(_)
-                | SdpAttribute::SctpPort(_) => false,
-                _ => true,
+            |x| {
+                !matches!(
+                    *x,
+                    SdpAttribute::Rtpmap(_)
+                        | SdpAttribute::Fmtp(_)
+                        | SdpAttribute::Rtcpfb(_)
+                        | SdpAttribute::Sctpmap(_)
+                        | SdpAttribute::SctpPort(_)
+                )
             }
         });
     }
@@ -255,14 +260,8 @@ impl SdpMedia {
         &self.connection
     }
 
-    pub fn set_connection(&mut self, c: SdpConnection) -> Result<(), SdpParserInternalError> {
-        if self.connection.is_some() {
-            return Err(SdpParserInternalError::Generic(
-                "connection type already exists at this media level".to_string(),
-            ));
-        }
-        self.connection = Some(c);
-        Ok(())
+    pub fn set_connection(&mut self, c: SdpConnection) {
+        self.connection = Some(c)
     }
 
     pub fn add_datachannel(
@@ -386,7 +385,7 @@ pub fn parse_media(value: &str) -> Result<SdpType, SdpParserInternalError> {
                     8  |  // PCMA
                     9  |  // G722
                     13 |  // Comfort Noise
-                    96 ..= 127 => (),  // dynamic range
+                    35 ..= 63 | 96 ..= 127 => (),  // dynamic range
                     _ => return Err(SdpParserInternalError::Generic(
                           "format number in media line is out of range".to_string()))
                 };
@@ -433,12 +432,14 @@ pub fn parse_media_vector(lines: &mut Vec<SdpLine>) -> Result<Vec<SdpMedia>, Sdp
         let _line_number = line.line_number;
         match line.sdp_type {
             SdpType::Connection(c) => {
-                sdp_media
-                    .set_connection(c)
-                    .map_err(|e: SdpParserInternalError| SdpParserError::Sequence {
-                        message: format!("{}", e),
+                if sdp_media.connection.is_some() {
+                    return Err(SdpParserError::Sequence {
+                        message: "connection type already exists at this media level".to_string(),
                         line_number: _line_number,
-                    })?
+                    });
+                }
+
+                sdp_media.set_connection(c);
             }
             SdpType::Bandwidth(b) => sdp_media.add_bandwidth(b),
             SdpType::Attribute(a) => {

@@ -87,6 +87,8 @@ class WebRenderTextureHost : public TextureHost {
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
 
+  bool SupportsExternalCompositing() override;
+
   bool NeedsYFlip() const override;
 
   void SetAcquireFence(mozilla::ipc::FileDescriptor&& aFenceFd) override;

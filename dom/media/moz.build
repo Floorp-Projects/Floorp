@@ -47,6 +47,7 @@ DIRS += [
     "ogg",
     "platforms",
     "systemservices",
+    "utils",
     "wave",
     "webaudio",
     "webm",
@@ -83,9 +84,12 @@ MOCHITEST_MANIFESTS += [
     "webrtc/tests/mochitests/identity/mochitest.ini",
 ]
 
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.ini"]
+
 BROWSER_CHROME_MANIFESTS += [
     "mediacontrol/tests/browser/browser.ini",
     "mediasession/test/browser.ini",
+    "test/browser/browser.ini",
 ]
 
 if CONFIG["MOZ_WEBRTC"]:

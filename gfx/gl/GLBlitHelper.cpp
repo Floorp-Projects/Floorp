@@ -982,6 +982,10 @@ bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
 bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
                              const gfx::IntSize& destSize,
                              const OriginPos destOrigin) const {
+  if (!iosurf) {
+    gfxCriticalError() << "Null MacIOSurface for GLBlitHelper::BlitImage";
+    return false;
+  }
   if (mGL->GetContextType() != GLContextType::CGL) {
     MOZ_ASSERT(false);
     return false;

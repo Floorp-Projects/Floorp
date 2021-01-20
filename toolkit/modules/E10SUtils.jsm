@@ -50,6 +50,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.tabs.remote.useCrossOriginOpenerPolicy",
   false
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "useOriginAttributesInRemoteType",
+  "browser.tabs.remote.useOriginAttributesInRemoteType",
+  false
+);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "serializationHelper",
@@ -137,7 +143,8 @@ function validatedWebRemoteType(
   aCurrentUri,
   aResultPrincipal,
   aRemoteSubframes,
-  aIsWorker = false
+  aIsWorker = false,
+  aOriginAttributes = {}
 ) {
   // To load into the Privileged Mozilla Content Process you must be https,
   // and be an exact match or a subdomain of an allowlisted domain.
@@ -207,10 +214,20 @@ function validatedWebRemoteType(
   // If we're within a fission window, extract site information from the URI in
   // question, and use it to generate an isolated origin.
   if (aRemoteSubframes) {
-    // To be consistent with remote types when using a principal vs. a URI,
-    // always clear OAs.
-    // FIXME: This should be accurate.
     let originAttributes = {};
+    if (useOriginAttributesInRemoteType) {
+      // Only use specific properties of OriginAttributes in our remoteType
+      let {
+        userContextId,
+        privateBrowsingId,
+        geckoViewSessionContextId,
+      } = aOriginAttributes;
+      originAttributes = {
+        userContextId,
+        privateBrowsingId,
+        geckoViewSessionContextId,
+      };
+    }
 
     // Get a principal to use for isolation.
     let targetPrincipal;
@@ -330,7 +347,8 @@ var E10SUtils = {
   canLoadURIInRemoteType(
     aURL,
     aRemoteSubframes,
-    aRemoteType = DEFAULT_REMOTE_TYPE
+    aRemoteType = DEFAULT_REMOTE_TYPE,
+    aOriginAttributes = {}
   ) {
     // aRemoteType cannot be undefined, as that would cause it to default to
     // `DEFAULT_REMOTE_TYPE`. This means any falsy remote types are
@@ -338,7 +356,14 @@ var E10SUtils = {
 
     return (
       aRemoteType ==
-      this.getRemoteTypeForURI(aURL, true, aRemoteSubframes, aRemoteType)
+      this.getRemoteTypeForURI(
+        aURL,
+        true,
+        aRemoteSubframes,
+        aRemoteType,
+        null,
+        aOriginAttributes
+      )
     );
   },
 
@@ -347,7 +372,8 @@ var E10SUtils = {
     aMultiProcess,
     aRemoteSubframes,
     aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
-    aCurrentUri
+    aCurrentUri,
+    aOriginAttributes = {}
   ) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
@@ -374,7 +400,11 @@ var E10SUtils = {
       aMultiProcess,
       aRemoteSubframes,
       aPreferredRemoteType,
-      aCurrentUri
+      aCurrentUri,
+      null, //aResultPrincipal
+      false, //aIsSubframe
+      false, // aIsWorker
+      aOriginAttributes
     );
   },
 
@@ -386,7 +416,8 @@ var E10SUtils = {
     aCurrentUri = null,
     aResultPrincipal = null,
     aIsSubframe = false,
-    aIsWorker = false
+    aIsWorker = false,
+    aOriginAttributes = {}
   ) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
@@ -480,6 +511,13 @@ var E10SUtils = {
 
         return NOT_REMOTE;
 
+      case "imap":
+      case "mailbox":
+      case "news":
+      case "nntp":
+      case "snews":
+        return NOT_REMOTE;
+
       default:
         // WebExtensions may set up protocol handlers for protocol names
         // beginning with ext+.  These may redirect to http(s) pages or to
@@ -528,7 +566,10 @@ var E10SUtils = {
             aRemoteSubframes,
             aPreferredRemoteType,
             aCurrentUri,
-            aResultPrincipal
+            aResultPrincipal,
+            false, // aIsSubframe
+            false, // aIsWorker
+            aOriginAttributes
           );
         }
 
@@ -543,7 +584,8 @@ var E10SUtils = {
           aCurrentUri,
           aResultPrincipal,
           aRemoteSubframes,
-          aIsWorker
+          aIsWorker,
+          aOriginAttributes
         );
         log.debug(`  validatedWebRemoteType() returning: ${remoteType}`);
         return remoteType;
@@ -612,7 +654,9 @@ var E10SUtils = {
       aPreferredRemoteType,
       currentURI,
       aPrincipal,
-      aIsSubframe
+      aIsSubframe,
+      false, //aIsWorker
+      aPrincipal.originAttributes
     );
   },
 
@@ -690,7 +734,8 @@ var E10SUtils = {
         null,
         aPrincipal,
         false, // aIsSubFrame
-        true // aIsWorker
+        true, // aIsWorker
+        aPrincipal.originAttributes
       );
     }
 
@@ -932,6 +977,38 @@ var E10SUtils = {
    */
   isWebRemoteType(aRemoteType) {
     return aRemoteType.startsWith(WEB_REMOTE_TYPE);
+  },
+
+  /**
+   * Assemble or predict originAttributes from available arguments.
+   */
+  predictOriginAttributes({
+    window,
+    browser,
+    userContextId,
+    geckoViewSessionContextId,
+    privateBrowsingId,
+  }) {
+    if (browser) {
+      if (browser.browsingContext) {
+        return browser.browsingContext.originAttributes;
+      }
+      if (!window) {
+        window = browser.contentDocument?.defaultView;
+      }
+      if (!userContextId) {
+        userContextId = browser.getAttribute("usercontextid") || 0;
+      }
+      if (!geckoViewSessionContextId) {
+        geckoViewSessionContextId =
+          browser.getAttribute("geckoViewSessionContextId") || "";
+      }
+    }
+
+    if (window && !privateBrowsingId) {
+      privateBrowsingId = window.browsingContext.usePrivateBrowsing ? 1 : 0;
+    }
+    return { privateBrowsingId, userContextId, geckoViewSessionContextId };
   },
 };
 
