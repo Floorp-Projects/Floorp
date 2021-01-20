@@ -2732,7 +2732,7 @@ class nsLayoutUtils {
    *
    * @param aSel      Selection to check
    */
-  static nsRect GetSelectionBoundingRect(mozilla::dom::Selection* aSel);
+  static nsRect GetSelectionBoundingRect(const mozilla::dom::Selection* aSel);
 
   /**
    * Calculate the bounding rect of |aContent|, relative to the origin
