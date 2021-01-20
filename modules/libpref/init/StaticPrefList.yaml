@@ -469,6 +469,11 @@
     type: RelaxedAtomicBool
     value: true
     mirror: always
+    
+-   name: apz.gtk.touchpad_pinch.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 - name: apz.keyboard.enabled
