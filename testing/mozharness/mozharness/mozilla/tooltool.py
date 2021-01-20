@@ -22,28 +22,8 @@ _external_tools_path = os.path.normpath(
 class TooltoolMixin(object):
     """Mixin class for handling tooltool manifests.
     To use a tooltool server other than the Mozilla server, set
-    TOOLTOOL_HOST in the environment.  To specify a different authentication
-    file than that used in releng automation,override
-    config['tooltool_authentication_file']; set it to None to not pass
-    any authentication information (OK for public files)
+    TOOLTOOL_HOST in the environment.
     """
-
-    def _get_auth_file(self):
-        # set the default authentication file based on platform; this
-        # corresponds to where puppet puts the token
-        if "tooltool_authentication_file" in self.config:
-            fn = self.config["tooltool_authentication_file"]
-        elif self._is_windows():
-            fn = r"c:\builds\relengapi.tok"
-        else:
-            fn = "/builds/relengapi.tok"
-
-        # if the file doesn't exist, don't pass it to tooltool (it will just
-        # fail).  In taskcluster, this will work OK as the relengapi-proxy will
-        # take care of auth.  Everywhere else, we'll get auth failures if
-        # necessary.
-        if os.path.exists(fn):
-            return fn
 
     def tooltool_fetch(self, manifest, output_dir=None, privileged=False, cache=None):
         """docstring for tooltool_fetch"""
@@ -68,11 +48,6 @@ class TooltoolMixin(object):
                 "-u",
                 os.path.join(_external_tools_path, "tooltool.py"),
             ]
-
-        # handle authentication file, if given
-        auth_file = self._get_auth_file()
-        if auth_file and os.path.exists(auth_file):
-            cmd.extend(["--authentication-file", auth_file])
 
         if self.topsrcdir:
             cmd.extend(["--tooltool-manifest", manifest])

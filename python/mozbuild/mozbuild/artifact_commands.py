@@ -241,11 +241,6 @@ class PackageFrontend(MachCommandBase):
         help="Explicit tooltool manifest to process",
     )
     @CommandArgument(
-        "--authentication-file",
-        metavar="FILE",
-        help="Use the RelengAPI token found in the given file to authenticate",
-    )
-    @CommandArgument(
         "--no-unpack", action="store_true", help="Do not unpack any downloaded file"
     )
     @CommandArgument(
@@ -275,7 +270,6 @@ class PackageFrontend(MachCommandBase):
         skip_cache=False,
         from_build=(),
         tooltool_manifest=None,
-        authentication_file=None,
         no_unpack=False,
         retry=0,
         bootstrap=False,
