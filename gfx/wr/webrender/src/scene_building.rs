@@ -2250,62 +2250,63 @@ impl<'a> SceneBuilder<'a> {
                     // Gaussian blur with a standard deviation equal to half the blur radius."
                     let std_deviation = pending_shadow.shadow.blur_radius * 0.5;
 
-                    // If the shadow has no blur, any elements will get directly rendered
-                    // into the parent picture surface, instead of allocating and drawing
-                    // into an intermediate surface. In this case, we will need to apply
-                    // the local clip rect to primitives.
-                    let is_passthrough = pending_shadow.shadow.blur_radius == 0.0;
-
-                    // shadows always rasterize in local space.
-                    // TODO(gw): expose API for clients to specify a raster scale
-                    let raster_space = if is_passthrough {
-                        self.sc_stack.last().map_or(RasterSpace::Screen, |sc| sc.requested_raster_space)
-                    } else {
-                        RasterSpace::Local(1.0)
-                    };
-
                     // Add any primitives that come after this shadow in the item
                     // list to this shadow.
                     let mut prim_list = PrimitiveList::empty();
+                    let blur_filter = Filter::Blur(std_deviation, std_deviation);
+                    let blur_is_noop = blur_filter.is_noop();
 
                     for item in &items {
-                        match item {
+                        let (instance, info, spatial_node_index) = match item {
                             ShadowItem::Image(ref pending_image) => {
-                                self.add_shadow_prim(
+                                self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_image,
-                                    &mut prim_list,
                                 )
                             }
                             ShadowItem::LineDecoration(ref pending_line_dec) => {
-                                self.add_shadow_prim(
+                                self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_line_dec,
-                                    &mut prim_list,
                                 )
                             }
                             ShadowItem::NormalBorder(ref pending_border) => {
-                                self.add_shadow_prim(
+                                self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_border,
-                                    &mut prim_list,
                                 )
                             }
                             ShadowItem::Primitive(ref pending_primitive) => {
-                                self.add_shadow_prim(
+                                self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_primitive,
-                                    &mut prim_list,
                                 )
                             }
                             ShadowItem::TextRun(ref pending_text_run) => {
-                                self.add_shadow_prim(
+                                self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_text_run,
-                                    &mut prim_list,
                                 )
                             }
-                            _ => {}
+                            _ => {
+                                continue;
+                            }
+                        };
+
+                        if blur_is_noop {
+                            self.add_primitive_to_draw_list(
+                                instance,
+                                info.rect,
+                                spatial_node_index,
+                                info.flags,
+                            );
+                        } else {
+                            prim_list.add_prim(
+                                instance,
+                                info.rect,
+                                spatial_node_index,
+                                info.flags,
+                            );
                         }
                     }
 
@@ -2317,11 +2318,8 @@ impl<'a> SceneBuilder<'a> {
                         // detect this and mark the picture to be drawn directly into the
                         // parent picture, which avoids an intermediate surface and blur.
                         let blur_filter = Filter::Blur(std_deviation, std_deviation);
-                        let composite_mode = if blur_filter.is_noop() {
-                            None
-                        } else {
-                            Some(PictureCompositeMode::Filter(blur_filter))
-                        };
+                        assert!(!blur_filter.is_noop());
+                        let composite_mode = Some(PictureCompositeMode::Filter(blur_filter));
                         let composite_mode_key = composite_mode.clone().into();
 
                         // Pass through configuration information about whether WR should
@@ -2336,9 +2334,9 @@ impl<'a> SceneBuilder<'a> {
                             .init(PicturePrimitive::new_image(
                                 composite_mode,
                                 Picture3DContext::Out,
-                                is_passthrough,
+                                false,
                                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                                raster_space,
+                                RasterSpace::Local(1.0),
                                 prim_list,
                                 pending_shadow.spatial_node_index,
                                 options,
@@ -2405,12 +2403,11 @@ impl<'a> SceneBuilder<'a> {
         self.pending_shadow_items = items;
     }
 
-    fn add_shadow_prim<P>(
+    fn create_shadow_prim<P>(
         &mut self,
         pending_shadow: &PendingShadow,
         pending_primitive: &PendingPrimitive<P>,
-        prim_list: &mut PrimitiveList,
-    )
+    ) -> (PrimitiveInstance, LayoutPrimitiveInfo, SpatialNodeIndex)
     where
         P: InternablePrimitive + CreateShadow,
         Interners: AsMut<Interner<P>>,
@@ -2438,13 +2435,7 @@ impl<'a> SceneBuilder<'a> {
             pending_primitive.prim.create_shadow(&pending_shadow.shadow),
         );
 
-        // Add the new primitive to the shadow picture.
-        prim_list.add_prim(
-            shadow_prim_instance,
-            info.rect,
-            pending_primitive.spatial_node_index,
-            info.flags,
-        );
+        (shadow_prim_instance, info, pending_primitive.spatial_node_index)
     }
 
     fn add_shadow_prim_to_draw_list<P>(
