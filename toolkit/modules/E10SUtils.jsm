@@ -511,6 +511,13 @@ var E10SUtils = {
 
         return NOT_REMOTE;
 
+      case "imap":
+      case "mailbox":
+      case "news":
+      case "nntp":
+      case "snews":
+        return NOT_REMOTE;
+
       default:
         // WebExtensions may set up protocol handlers for protocol names
         // beginning with ext+.  These may redirect to http(s) pages or to
