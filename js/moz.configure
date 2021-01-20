@@ -455,41 +455,6 @@ option(
 set_define("JS_MASM_VERBOSE", depends_if("--enable-masm-verbose")(lambda _: True))
 set_config("JS_MASM_VERBOSE", depends_if("--enable-masm-verbose")(lambda _: True))
 
-# Architecture feature flags
-# =======================================================
-
-# Apple silicon does not seem to have any way to query the OS for the JSCVT
-# flag stored in the ID_AA64ISAR1_EL1 system register. In the mean time, we
-# hard code the value of the JSCVT flag which guards the implementation of
-# FJCVTZS instruction as part of ARMv8.3-JSConv.
-@depends(target)
-def is_apple_silicon(target):
-    return target.os == "OSX" and target.kernel == "Darwin" and target.cpu == "aarch64"
-
-
-option(
-    "--enable-arm64-fjcvtzs",
-    default=is_apple_silicon,
-    help="Whether the target is known to have Aarch64 FJCVTZS instruction.",
-)
-
-# The "ARM Architecture Reference Manual" for ARMv8 defines the JSCVT flag as
-# being a 4 bit integer (D12.2.52) and it can be manipulated using >= operator
-# (D12.1.4).
-#
-# The FJCVTZS instruction is implemented if ID_AA64ISAR1_EL1.JSCVT >= 1.
-@depends("--enable-arm64-fjcvtzs", target, simulator)
-def aarch64_jscvt(fjcvtzs, target, simulator):
-    if target.cpu == "aarch64" and fjcvtzs:
-        return 1
-
-    if simulator and simulator.arm64 and fjcvtzs:
-        return 1
-
-    return 0
-
-
-set_define("MOZ_AARCH64_JSCVT", aarch64_jscvt)
 
 # CTypes
 # =======================================================
