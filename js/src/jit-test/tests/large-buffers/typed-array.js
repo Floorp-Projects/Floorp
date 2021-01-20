@@ -119,3 +119,19 @@ function testArraySliceSparse() {
     assertEq(r[r.length - 1], 1);
 }
 testArraySliceSparse();
+
+function testArrayIterator() {
+    for (var i = 0; i < 20; i++) {
+        ta[i] = i;
+    }
+    var sum = 0;
+    var i = 0;
+    for (var x of ta) {
+        if (i++ > 20) {
+            break;
+        }
+        sum += x;
+    }
+    assertEq(sum, 190);
+}
+testArrayIterator();
