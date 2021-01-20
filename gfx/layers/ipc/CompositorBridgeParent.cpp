@@ -1914,7 +1914,10 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
 
   bool useCompositorWnd = false;
 #ifdef XP_WIN
-  useCompositorWnd = !!mWidget->AsWindows()->GetCompositorHwnd();
+  // Headless mode uses HeadlessWidget.
+  if (mWidget->AsWindows()) {
+    useCompositorWnd = !!mWidget->AsWindows()->GetCompositorHwnd();
+  }
 #endif
   mAsyncImageManager =
       new AsyncImagePipelineManager(api->Clone(), useCompositorWnd);
