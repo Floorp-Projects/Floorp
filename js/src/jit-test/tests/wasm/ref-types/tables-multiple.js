@@ -416,7 +416,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f
        (table.copy 0 (i32.const 0) (i32.const 0) (i32.const 2))))`), // target without source
                    SyntaxError,
-                   /expected an identifier/);
+                   /expected keyword `table`/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
