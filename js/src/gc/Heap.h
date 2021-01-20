@@ -12,6 +12,7 @@
 #include "ds/BitArray.h"
 #include "gc/AllocKind.h"
 #include "gc/GCEnum.h"
+#include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "util/Poison.h"
 
@@ -27,10 +28,10 @@ class Arena;
 class ArenaCellSet;
 class ArenaList;
 class GCRuntime;
+class MarkingValidator;
 class SortedArenaList;
 class StoreBuffer;
 class TenuredCell;
-struct Chunk;
 
 // Cells are aligned to CellAlignShift, so the largest tagged null pointer is:
 const uintptr_t LargestTaggedNullCellPointer = (1 << CellAlignShift) - 1;
@@ -274,7 +275,7 @@ class alignas(ArenaSize) Arena {
 
   inline void checkAddress() const;
 
-  inline Chunk* chunk() const;
+  inline TenuredChunk* chunk() const;
 
   bool allocated() const {
     MOZ_ASSERT(IsAllocKind(AllocKind(allocKind)));
@@ -589,30 +590,34 @@ inline MarkBitmapWord* MarkBitmap::arenaBits(Arena* arena) {
 }
 
 /*
- * Chunks contain arenas and associated data structures (mark bitmap, delayed
- * marking state).
+ * A chunk in the tenured heap. TenuredChunks contain arenas and associated data
+ * structures (mark bitmap, delayed marking state).
  */
-struct Chunk : public TenuredChunkBase {
+class TenuredChunk : public TenuredChunkBase {
   Arena arenas[ArenasPerChunk];
 
-  static Chunk* fromAddress(uintptr_t addr) {
+  friend class GCRuntime;
+  friend class MarkingValidator;
+
+ public:
+  static TenuredChunk* fromAddress(uintptr_t addr) {
     addr &= ~ChunkMask;
-    return reinterpret_cast<Chunk*>(addr);
+    return reinterpret_cast<TenuredChunk*>(addr);
   }
 
   static bool withinValidRange(uintptr_t addr) {
     uintptr_t offset = addr & ChunkMask;
-    if (Chunk::fromAddress(addr)->isNurseryChunk()) {
+    if (TenuredChunk::fromAddress(addr)->isNurseryChunk()) {
       return offset >= sizeof(ChunkHeader) && offset < ChunkSize;
     }
-    return offset >= offsetof(Chunk, arenas) && offset < ChunkSize;
+    return offset >= offsetof(TenuredChunk, arenas) && offset < ChunkSize;
   }
 
   static size_t arenaIndex(uintptr_t addr) {
-    MOZ_ASSERT(!Chunk::fromAddress(addr)->isNurseryChunk());
+    MOZ_ASSERT(!TenuredChunk::fromAddress(addr)->isNurseryChunk());
     MOZ_ASSERT(withinValidRange(addr));
     uintptr_t offset = addr & ChunkMask;
-    return (offset - offsetof(Chunk, arenas)) >> ArenaShift;
+    return (offset - offsetof(TenuredChunk, arenas)) >> ArenaShift;
   }
 
   uintptr_t address() const {
@@ -640,8 +645,11 @@ struct Chunk : public TenuredChunkBase {
   // system call for each arena but is only used during OOM.
   void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
 
-  static Chunk* allocate(GCRuntime* gc);
+  static TenuredChunk* allocate(GCRuntime* gc);
   void init(GCRuntime* gc);
+
+  /* Unlink and return the freeArenasHead. */
+  Arena* fetchNextFreeArena(GCRuntime* gc);
 
  private:
   /* Search for a decommitted arena to allocate. */
@@ -653,20 +661,18 @@ struct Chunk : public TenuredChunkBase {
 
   void updateChunkListAfterAlloc(GCRuntime* gc, const AutoLockGC& lock);
   void updateChunkListAfterFree(GCRuntime* gc, const AutoLockGC& lock);
-
- public:
-  /* Unlink and return the freeArenasHead. */
-  Arena* fetchNextFreeArena(GCRuntime* gc);
 };
 
 inline void Arena::checkAddress() const {
   mozilla::DebugOnly<uintptr_t> addr = uintptr_t(this);
   MOZ_ASSERT(addr);
   MOZ_ASSERT(!(addr & ArenaMask));
-  MOZ_ASSERT(Chunk::withinValidRange(addr));
+  MOZ_ASSERT(TenuredChunk::withinValidRange(addr));
 }
 
-inline Chunk* Arena::chunk() const { return Chunk::fromAddress(address()); }
+inline TenuredChunk* Arena::chunk() const {
+  return TenuredChunk::fromAddress(address());
+}
 
 inline bool InFreeList(Arena* arena, void* thing) {
   uintptr_t addr = reinterpret_cast<uintptr_t>(thing);

@@ -12,12 +12,14 @@
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testGCChunkPool) {
+  using namespace js::gc;
+
   const int N = 10;
-  js::gc::ChunkPool pool;
+  ChunkPool pool;
 
   // Create.
   for (int i = 0; i < N; ++i) {
-    js::gc::Chunk* chunk = js::gc::Chunk::allocate(&cx->runtime()->gc);
+    TenuredChunk* chunk = TenuredChunk::allocate(&cx->runtime()->gc);
     CHECK(chunk);
     pool.push(chunk);
   }
@@ -25,7 +27,7 @@ BEGIN_TEST(testGCChunkPool) {
 
   // Iterate.
   uint32_t i = 0;
-  for (js::gc::ChunkPool::Iter iter(pool); !iter.done(); iter.next(), ++i) {
+  for (ChunkPool::Iter iter(pool); !iter.done(); iter.next(), ++i) {
     CHECK(iter.get());
   }
   CHECK(i == pool.count());
@@ -33,9 +35,9 @@ BEGIN_TEST(testGCChunkPool) {
 
   // Push/Pop.
   for (int i = 0; i < N; ++i) {
-    js::gc::Chunk* chunkA = pool.pop();
-    js::gc::Chunk* chunkB = pool.pop();
-    js::gc::Chunk* chunkC = pool.pop();
+    TenuredChunk* chunkA = pool.pop();
+    TenuredChunk* chunkB = pool.pop();
+    TenuredChunk* chunkC = pool.pop();
     pool.push(chunkA);
     pool.push(chunkB);
     pool.push(chunkC);
@@ -43,10 +45,9 @@ BEGIN_TEST(testGCChunkPool) {
   MOZ_ASSERT(pool.verify());
 
   // Remove.
-  js::gc::Chunk* chunk = nullptr;
+  TenuredChunk* chunk = nullptr;
   int offset = N / 2;
-  for (js::gc::ChunkPool::Iter iter(pool); !iter.done();
-       iter.next(), --offset) {
+  for (ChunkPool::Iter iter(pool); !iter.done(); iter.next(), --offset) {
     if (offset == 0) {
       chunk = pool.remove(iter.get());
       break;
@@ -59,11 +60,11 @@ BEGIN_TEST(testGCChunkPool) {
 
   // Destruct.
   js::AutoLockGC lock(cx->runtime());
-  for (js::gc::ChunkPool::Iter iter(pool); !iter.done();) {
-    js::gc::Chunk* chunk = iter.get();
+  for (ChunkPool::Iter iter(pool); !iter.done();) {
+    TenuredChunk* chunk = iter.get();
     iter.next();
     pool.remove(chunk);
-    js::gc::UnmapPages(chunk, js::gc::ChunkSize);
+    UnmapPages(chunk, ChunkSize);
   }
 
   return true;

@@ -51,7 +51,6 @@ namespace gc {
 
 class Arena;
 enum class AllocKind : uint8_t;
-struct Chunk;
 class StoreBuffer;
 class TenuredCell;
 
@@ -220,7 +219,7 @@ struct Cell {
 
  protected:
   uintptr_t address() const;
-  inline Chunk* chunk() const;
+  inline TenuredChunk* chunk() const;
 
  private:
   // Cells are destroyed by the GC. Do not delete them directly.
@@ -342,15 +341,15 @@ inline JSRuntime* Cell::runtimeFromAnyThread() const {
 inline uintptr_t Cell::address() const {
   uintptr_t addr = uintptr_t(this);
   MOZ_ASSERT(addr % CellAlignBytes == 0);
-  MOZ_ASSERT(Chunk::withinValidRange(addr));
+  MOZ_ASSERT(TenuredChunk::withinValidRange(addr));
   return addr;
 }
 
-Chunk* Cell::chunk() const {
+TenuredChunk* Cell::chunk() const {
   uintptr_t addr = uintptr_t(this);
   MOZ_ASSERT(addr % CellAlignBytes == 0);
   addr &= ~ChunkMask;
-  return reinterpret_cast<Chunk*>(addr);
+  return reinterpret_cast<TenuredChunk*>(addr);
 }
 
 inline StoreBuffer* Cell::storeBuffer() const {
