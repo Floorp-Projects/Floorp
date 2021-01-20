@@ -208,7 +208,7 @@ function verifyLayersRendering(ctx) {
 }
 
 function testCompositor(test, win, ctx) {
-  if (win.windowUtils.layerManagerType == "WebRender") {
+  if (win.windowUtils.layerManagerType.startsWith("WebRender")) {
     // When layer manger type is WebRender, drawWindow() is skipped, since
     // drawWindow() could take long time and
     // advanced layer is disabled from fallback candidate.
