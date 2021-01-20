@@ -644,12 +644,16 @@ function _execute_test() {
   if (cleanupStartTime) {
     ChromeUtils.addProfilerMarker(
       "xpcshell-test",
-      cleanupStartTime,
+      { category: "Test", startTime: cleanupStartTime },
       "Cleanup functions"
     );
   }
 
-  ChromeUtils.addProfilerMarker("xpcshell-test", startTime, _TEST_NAME);
+  ChromeUtils.addProfilerMarker(
+    "xpcshell-test",
+    { category: "Test", startTime },
+    _TEST_NAME
+  );
   _Services.obs.notifyObservers(null, "test-complete");
 
   // Restore idle service to avoid leaks.
@@ -709,9 +713,9 @@ function _load_files(aFiles) {
       let startTime = Cu.now();
       load(element);
       ChromeUtils.addProfilerMarker(
-        "xpcshell-test",
-        startTime,
-        "load " + element.replace(/.*\/_?tests\/xpcshell\//, "")
+        "load_file",
+        { category: "Test", startTime },
+        element.replace(/.*\/_?tests\/xpcshell\//, "")
       );
     } catch (e) {
       let extra = {
@@ -737,7 +741,7 @@ function _wrap_with_quotes_if_necessary(val) {
  * Prints a message to the output log.
  */
 function info(msg, data) {
-  ChromeUtils.addProfilerMarker("xpcshell-test", undefined, "INFO " + msg);
+  ChromeUtils.addProfilerMarker("INFO", { category: "Test" }, msg);
   msg = _wrap_with_quotes_if_necessary(msg);
   data = data ? data : null;
   _testLogger.info(msg, data);
@@ -1621,9 +1625,9 @@ function run_next_test() {
           result => {
             _gTaskRunning = false;
             ChromeUtils.addProfilerMarker(
-              "xpcshell-test",
-              startTime,
-              _gRunningTest.name || "task"
+              "task",
+              { category: "Test", startTime },
+              _gRunningTest.name || undefined
             );
             if (_isGenerator(result)) {
               Assert.ok(false, "Task returned a generator");
@@ -1633,9 +1637,9 @@ function run_next_test() {
           ex => {
             _gTaskRunning = false;
             ChromeUtils.addProfilerMarker(
-              "xpcshell-test",
-              startTime,
-              _gRunningTest.name || "task"
+              "task",
+              { category: "Test", startTime },
+              _gRunningTest.name || undefined
             );
             try {
               do_report_unexpected_exception(ex);
@@ -1655,7 +1659,7 @@ function run_next_test() {
         } finally {
           ChromeUtils.addProfilerMarker(
             "xpcshell-test",
-            startTime,
+            { category: "Test", startTime },
             _gRunningTest.name || undefined
           );
         }
@@ -1707,7 +1711,7 @@ try {
     _TelemetryController.testRegisterJsProbes().finally(() => {
       ChromeUtils.addProfilerMarker(
         "xpcshell-test",
-        startTime,
+        { category: "Test", startTime },
         "TelemetryController.testRegisterJsProbes"
       );
       complete = true;

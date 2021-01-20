@@ -721,7 +721,11 @@ class SpecialPowersParent extends JSWindowActorParent {
    **/
   // eslint-disable-next-line complexity
   receiveMessage(aMessage) {
-    ChromeUtils.addProfilerMarker("SpecialPowers", undefined, aMessage.name);
+    ChromeUtils.addProfilerMarker(
+      "SpecialPowers",
+      { category: "Test" },
+      aMessage.name
+    );
 
     // We explicitly return values in the below code so that this function
     // doesn't trigger a flurry of warnings about "does not always return
