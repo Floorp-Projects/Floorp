@@ -4,7 +4,7 @@
 
 toolkit.jar:
    content/global/commonDialog.js             (content/commonDialog.js)
-*  content/global/commonDialog.xhtml          (content/commonDialog.xhtml)
+   content/global/commonDialog.xhtml          (content/commonDialog.xhtml)
    content/global/commonDialog.css            (content/commonDialog.css)
    content/global/selectDialog.js             (content/selectDialog.js)
    content/global/selectDialog.xhtml          (content/selectDialog.xhtml)

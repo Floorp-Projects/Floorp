@@ -58,14 +58,7 @@
           <xul:image id="infoIcon"/>
         </div>
         <div id="infoContainer">
-          <!-- Only shown on OS X, since it has no dialog title -->
-          <xul:description id="infoTitle"
-#ifndef XP_MACOSX
-            hidden="true"
-#else
-            style="margin-bottom: 1em"
-#endif
-          />
+          <xul:description id="infoTitle" style="margin-bottom: 1em;"/>
           <xul:description id="infoBody" context="contentAreaContextMenu" noinitialfocus="true"/>
         </div>
       </div>
