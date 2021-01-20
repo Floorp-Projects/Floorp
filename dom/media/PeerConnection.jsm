@@ -880,9 +880,6 @@ class RTCPeerConnection {
     } else {
       options = optionsOrOnSucc;
     }
-    if (this._localUfragsToReplace.size > 0) {
-      options.iceRestart = true;
-    }
     // This entry-point handles both new and legacy call sig. Decipher which one
     if (onSuccess) {
       return this._legacy(onSuccess, onErr, () => this._createOffer(options));
@@ -951,6 +948,9 @@ class RTCPeerConnection {
           `Cannot create offer in ${this.signalingState}`,
           "InvalidStateError"
         );
+    }
+    if (this._localUfragsToReplace.size > 0) {
+      options.iceRestart = true;
     }
     let haveAssertion;
     if (this._localIdp.enabled) {
