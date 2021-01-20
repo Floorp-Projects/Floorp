@@ -5373,7 +5373,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( export "as-i8x16_splat-operand" ) ( param v128 ) ( result v128 ) ( i8x16.splat ( i8x16.extract_lane_s 0 ( local.get 0 ) ) ) ) ( func ( export "as-i16x8_splat-operand" ) ( param v128 ) ( result v128 ) ( i16x8.splat ( i16x8.extract_lane_u 0 ( local.get 0 ) ) ) ) ( func ( export "as-i32x4_splat-operand" ) ( param v128 ) ( result v128 ) ( i32x4.splat ( i32x4.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-f32x4_splat-operand" ) ( param v128 ) ( result v128 ) ( f32x4.splat ( f32x4.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-i64x2_splat-operand" ) ( param v128 ) ( result v128 ) ( i64x2.splat ( i64x2.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-f64x2_splat-operand" ) ( param v128 ) ( result v128 ) ( f64x2.splat ( f64x2.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-i8x16_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i8x16.add ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.replace_lane 15 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i16x8_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i16x8.add ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i16x8.replace_lane 7 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i32x4_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i32x4.add ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i32x4.replace_lane 3 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i64x2_add-operands" ) ( param v128 i64 v128 i64 ) ( result v128 ) ( i64x2.add ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i64x2.replace_lane 1 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "swizzle-as-i8x16_add-operands" ) ( param v128 v128 v128 v128 ) ( result v128 ) ( i8x16.add ( i8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ( i8x16.swizzle ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "shuffle-as-i8x16_sub-operands" ) ( param v128 v128 v128 v128 ) ( result v128 ) ( i8x16.sub ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.shuffle 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i8x16_any_true-operand" ) ( param v128 i32 ) ( result i32 ) ( i8x16.any_true ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i16x8_any_true-operand" ) ( param v128 i32 ) ( result i32 ) ( i16x8.any_true ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i32x4_any_true-operand1" ) ( param v128 i32 ) ( result i32 ) ( i32x4.any_true ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i32x4_any_true-operand2" ) ( param v128 i64 ) ( result i32 ) ( i32x4.any_true ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "swizzle-as-i8x16_all_true-operands" ) ( param v128 v128 ) ( result i32 ) ( i8x16.all_true ( i8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "shuffle-as-i8x16_any_true-operands" ) ( param v128 v128 ) ( result i32 ) ( i8x16.any_true ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ) ) )
+( module ( func ( export "as-i8x16_splat-operand" ) ( param v128 ) ( result v128 ) ( i8x16.splat ( i8x16.extract_lane_s 0 ( local.get 0 ) ) ) ) ( func ( export "as-i16x8_splat-operand" ) ( param v128 ) ( result v128 ) ( i16x8.splat ( i16x8.extract_lane_u 0 ( local.get 0 ) ) ) ) ( func ( export "as-i32x4_splat-operand" ) ( param v128 ) ( result v128 ) ( i32x4.splat ( i32x4.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-f32x4_splat-operand" ) ( param v128 ) ( result v128 ) ( f32x4.splat ( f32x4.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-i64x2_splat-operand" ) ( param v128 ) ( result v128 ) ( i64x2.splat ( i64x2.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-f64x2_splat-operand" ) ( param v128 ) ( result v128 ) ( f64x2.splat ( f64x2.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-i8x16_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i8x16.add ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.replace_lane 15 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i16x8_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i16x8.add ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i16x8.replace_lane 7 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i32x4_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i32x4.add ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i32x4.replace_lane 3 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i64x2_add-operands" ) ( param v128 i64 v128 i64 ) ( result v128 ) ( i64x2.add ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i64x2.replace_lane 1 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "swizzle-as-i8x16_add-operands" ) ( param v128 v128 v128 v128 ) ( result v128 ) ( i8x16.add ( i8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ( i8x16.swizzle ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "shuffle-as-i8x16_sub-operands" ) ( param v128 v128 v128 v128 ) ( result v128 ) ( i8x16.sub ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.shuffle 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-v128_any_true-operand" ) ( param v128 i32 ) ( result i32 ) ( v128.any_true ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-v128_any_true-operand1" ) ( param v128 i32 ) ( result i32 ) ( v128.any_true ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-v128_any_true-operand2" ) ( param v128 i64 ) ( result i32 ) ( v128.any_true ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "swizzle-as-i8x16_all_true-operands" ) ( param v128 v128 ) ( result i32 ) ( i8x16.all_true ( i8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "shuffle-as-v128_any_true-operands" ) ( param v128 v128 ) ( result i32 ) ( v128.any_true ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -5582,7 +5582,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "as-i8x16_any_true-operand" (func $f (param v128 i32) (result i32)))
+  (import "" "as-v128_any_true-operand" (func $f (param v128 i32) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -5599,7 +5599,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "as-i16x8_any_true-operand" (func $f (param v128 i32) (result i32)))
+  (import "" "as-v128_any_true-operand" (func $f (param v128 i32) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -5616,7 +5616,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "as-i32x4_any_true-operand1" (func $f (param v128 i32) (result i32)))
+  (import "" "as-v128_any_true-operand1" (func $f (param v128 i32) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -5633,7 +5633,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "as-i32x4_any_true-operand2" (func $f (param v128 i64) (result i32)))
+  (import "" "as-v128_any_true-operand2" (func $f (param v128 i64) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -5684,7 +5684,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "shuffle-as-i8x16_any_true-operands" (func $f (param v128 v128) (result i32)))
+  (import "" "shuffle-as-v128_any_true-operands" (func $f (param v128 v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)

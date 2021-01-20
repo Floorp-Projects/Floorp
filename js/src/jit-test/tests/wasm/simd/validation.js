@@ -205,11 +205,9 @@ for (let op of [
 // v128 -> i32
 
 for (let op of [
-    'i8x16.any_true',
+    'v128.any_true',
     'i8x16.all_true',
-    'i16x8.any_true',
     'i16x8.all_true',
-    'i32x4.any_true',
     'i32x4.all_true',
     'i8x16.bitmask',
     'i16x8.bitmask',

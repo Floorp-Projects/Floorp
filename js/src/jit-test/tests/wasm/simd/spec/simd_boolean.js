@@ -1,10 +1,10 @@
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( export "i8x16.any_true" ) ( param $0 v128 ) ( result i32 ) ( i8x16.any_true ( local.get $0 ) ) ) ( func ( export "i8x16.all_true" ) ( param $0 v128 ) ( result i32 ) ( i8x16.all_true ( local.get $0 ) ) ) ( func ( export "i16x8.any_true" ) ( param $0 v128 ) ( result i32 ) ( i16x8.any_true ( local.get $0 ) ) ) ( func ( export "i16x8.all_true" ) ( param $0 v128 ) ( result i32 ) ( i16x8.all_true ( local.get $0 ) ) ) ( func ( export "i32x4.any_true" ) ( param $0 v128 ) ( result i32 ) ( i32x4.any_true ( local.get $0 ) ) ) ( func ( export "i32x4.all_true" ) ( param $0 v128 ) ( result i32 ) ( i32x4.all_true ( local.get $0 ) ) ) )
+( module ( func ( export "v128.any_true" ) ( param $0 v128 ) ( result i32 ) ( v128.any_true ( local.get $0 ) ) ) ( func ( export "i8x16.all_true" ) ( param $0 v128 ) ( result i32 ) ( i8x16.all_true ( local.get $0 ) ) ) ( func ( export "i16x8.all_true" ) ( param $0 v128 ) ( result i32 ) ( i16x8.all_true ( local.get $0 ) ) ) ( func ( export "i32x4.all_true" ) ( param $0 v128 ) ( result i32 ) ( i32x4.all_true ( local.get $0 ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -21,7 +21,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -38,7 +38,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -55,7 +55,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -72,7 +72,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -89,7 +89,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -106,7 +106,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -123,7 +123,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -140,7 +140,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -310,7 +310,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -327,7 +327,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -344,7 +344,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -361,7 +361,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -378,7 +378,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -395,7 +395,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -412,7 +412,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -429,7 +429,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -446,7 +446,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -463,7 +463,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -480,7 +480,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -684,7 +684,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -701,7 +701,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -718,7 +718,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -735,7 +735,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -752,7 +752,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -769,7 +769,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -786,7 +786,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -803,7 +803,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -820,7 +820,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -837,7 +837,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -854,7 +854,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.any_true" (func $f (param v128) (result i32)))
+  (import "" "v128.any_true" (func $f (param v128) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -1056,7 +1056,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( export "i8x16_any_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i8x16.any_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i16x8_any_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i16x8.any_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i32x4_any_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i32x4.any_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i8x16_all_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i8x16.all_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i16x8_all_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i16x8.all_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i32x4_all_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i32x4.all_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i8x16_any_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i8x16.any_true ( local.get 0 ) ) ) ) ( func ( export "i16x8_any_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i16x8.any_true ( local.get 0 ) ) ) ) ( func ( export "i32x4_any_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i32x4.any_true ( local.get 0 ) ) ) ) ( func ( export "i8x16_all_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i8x16.all_true ( local.get 0 ) ) ) ) ( func ( export "i16x8_all_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i16x8.all_true ( local.get 0 ) ) ) ) ( func ( export "i32x4_all_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i32x4.all_true ( local.get 0 ) ) ) ) ( func ( export "i8x16_any_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i8x16.any_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i16x8_any_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i16x8.any_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i32x4_any_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i32x4.any_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i8x16_all_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i8x16.all_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i16x8_all_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i16x8.all_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i32x4_all_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i32x4.all_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i8x16_any_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i8x16.any_true ( local.get $0 ) ) ( i8x16.any_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i16x8.any_true ( local.get $0 ) ) ( i16x8.any_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i32x4.any_true ( local.get $0 ) ) ( i32x4.any_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i8x16.any_true ( local.get $0 ) ) ( i8x16.any_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i16x8.any_true ( local.get $0 ) ) ( i16x8.any_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i32x4.any_true ( local.get $0 ) ) ( i32x4.any_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i8x16.any_true ( local.get $0 ) ) ( i8x16.any_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i16x8.any_true ( local.get $0 ) ) ( i16x8.any_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i32x4.any_true ( local.get $0 ) ) ( i32x4.any_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i8x16.all_true ( local.get $0 ) ) ( i8x16.all_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i16x8.all_true ( local.get $0 ) ) ( i16x8.all_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i32x4.all_true ( local.get $0 ) ) ( i32x4.all_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i8x16.all_true ( local.get $0 ) ) ( i8x16.all_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i16x8.all_true ( local.get $0 ) ) ( i16x8.all_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i32x4.all_true ( local.get $0 ) ) ( i32x4.all_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i8x16.all_true ( local.get $0 ) ) ( i8x16.all_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i16x8.all_true ( local.get $0 ) ) ( i16x8.all_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i32x4.all_true ( local.get $0 ) ) ( i32x4.all_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i8x16.any_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i16x8.any_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i32x4.any_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.any_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.any_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.any_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.any_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.any_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.any_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.any_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.any_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.any_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i8x16.any_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i16x8.any_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i32x4.any_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i8x16.all_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i16x8.all_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i32x4.all_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.all_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.all_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.all_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.all_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.all_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.all_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.all_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.all_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.all_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i8x16.all_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i16x8.all_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i32x4.all_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) )
+( module ( memory 1 ) ( func ( export "i8x16_any_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( v128.any_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i16x8_any_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( v128.any_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i32x4_any_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( v128.any_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i8x16_all_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i8x16.all_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i16x8_all_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i16x8.all_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i32x4_all_true_as_if_cond" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i32x4.all_true ( local.get 0 ) ) ( then ( i32.const 1 ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "i8x16_any_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( v128.any_true ( local.get 0 ) ) ) ) ( func ( export "i16x8_any_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( v128.any_true ( local.get 0 ) ) ) ) ( func ( export "i32x4_any_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( v128.any_true ( local.get 0 ) ) ) ) ( func ( export "i8x16_all_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i8x16.all_true ( local.get 0 ) ) ) ) ( func ( export "i16x8_all_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i16x8.all_true ( local.get 0 ) ) ) ) ( func ( export "i32x4_all_true_as_select_cond" ) ( param v128 ) ( result i32 ) ( select ( i32.const 1 ) ( i32.const 0 ) ( i32x4.all_true ( local.get 0 ) ) ) ) ( func ( export "i8x16_any_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( v128.any_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i16x8_any_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( v128.any_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i32x4_any_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( v128.any_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i8x16_all_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i8x16.all_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i16x8_all_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i16x8.all_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i32x4_all_true_as_br_if_cond" ) ( param $0 v128 ) ( result i32 ) ( local $1 i32 ) ( local.set $1 ( i32.const 2 ) ) ( block ( local.set $1 ( i32.const 1 ) ) ( br_if 0 ( i32x4.all_true ( local.get $0 ) ) ) ( local.set $1 ( i32.const 0 ) ) ) ( local.get $1 ) ) ( func ( export "i8x16_any_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( v128.any_true ( local.get $0 ) ) ( v128.any_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i8x16.all_true ( local.get $0 ) ) ( i8x16.all_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i16x8.all_true ( local.get $0 ) ) ( i16x8.all_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_as_i32.and_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.and ( i32x4.all_true ( local.get $0 ) ) ( i32x4.all_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i8x16.all_true ( local.get $0 ) ) ( i8x16.all_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i16x8.all_true ( local.get $0 ) ) ( i16x8.all_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_as_i32.or_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.or ( i32x4.all_true ( local.get $0 ) ) ( i32x4.all_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i8x16.all_true ( local.get $0 ) ) ( i8x16.all_true ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i16x8.all_true ( local.get $0 ) ) ( i16x8.all_true ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_as_i32.xor_operand" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32.xor ( i32x4.all_true ( local.get $0 ) ) ( i32x4.all_true ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( v128.any_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( v128.any_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( v128.any_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( v128.any_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_any_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( v128.any_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i16x8_any_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( v128.any_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i32x4_any_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( v128.any_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i8x16.all_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i16x8.all_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.not" ) ( param $0 v128 ) ( result i32 ) ( i32x4.all_true ( v128.not ( local.get $0 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.all_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.all_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.and" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.all_true ( v128.and ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.all_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.all_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.or" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.all_true ( v128.or ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i8x16.all_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i16x8.all_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.xor" ) ( param $0 v128 ) ( param $1 v128 ) ( result i32 ) ( i32x4.all_true ( v128.xor ( local.get $0 ) ( local.get $1 ) ) ) ) ( func ( export "i8x16_all_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i8x16.all_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i16x8_all_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i16x8.all_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) ( func ( export "i32x4_all_true_with_v128.bitselect" ) ( param $0 v128 ) ( param $1 v128 ) ( param $2 v128 ) ( result i32 ) ( i32x4.all_true ( v128.bitselect ( local.get $0 ) ( local.get $1 ) ( local.get $2 ) ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -4121,7 +4121,7 @@ assertEq(run.exports.run(), 1)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result i32 ) ( i8x16.any_true ( i32.const 0 ) ) ) )
+( module ( func ( result i32 ) ( v128.any_true ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4139,7 +4139,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result i32 ) ( i16x8.any_true ( i32.const 0 ) ) ) )
+( module ( func ( result i32 ) ( v128.any_true ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4157,7 +4157,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result i32 ) ( i32x4.any_true ( i32.const 0 ) ) ) )
+( module ( func ( result i32 ) ( v128.any_true ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4207,7 +4207,7 @@ assertEq(saved instanceof SyntaxError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.any_true-arg-empty ( result v128 ) ( i8x16.any_true ) ) )
+( module ( func $v128.any_true-arg-empty ( result v128 ) ( v128.any_true ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4225,7 +4225,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i16x8.any_true-arg-empty ( result v128 ) ( i16x8.any_true ) ) )
+( module ( func $v128.any_true-arg-empty ( result v128 ) ( v128.any_true ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4243,7 +4243,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i32x4.any_true-arg-empty ( result v128 ) ( i32x4.any_true ) ) )
+( module ( func $v128.any_true-arg-empty ( result v128 ) ( v128.any_true ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }

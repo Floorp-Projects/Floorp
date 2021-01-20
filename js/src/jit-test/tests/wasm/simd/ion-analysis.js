@@ -749,7 +749,8 @@ for ( let [ty128, ty] of [['i8x16', 'i32'], ['i16x8', 'i32'], ['i32x4', 'i32'],
 
 for ( let [ty128, suffix] of [['i8x16', '_s'], ['i8x16', '_u'], ['i16x8','_s'], ['i16x8','_u'], ['i32x4', '']] ) {
     for ( let op of ['any_true', 'all_true', 'bitmask', `extract_lane${suffix} 0`] ) {
-        wasmCompile(`(module (func (result i32) (${ty128}.${op} (v128.const i64x2 0 0))))`);
+        let operation = op == 'any_true' ? 'v128.any_true' : `${ty128}.${op}`;
+        wasmCompile(`(module (func (result i32) (${operation} (v128.const i64x2 0 0))))`);
         assertEq(wasmSimdAnalysis(), "simd128-to-scalar -> constant folded");
     }
 }
@@ -770,13 +771,13 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
 
     for ( let op of ['any_true', 'all_true', 'bitmask'] ) {
         let folded = op != 'bitmask' || size == 2;
-
+        let operation = op == 'any_true' ? 'v128.any_true' : `${ty128}.${op}`;
         let positive =
             wasmCompile(
                 `(module
                    (memory (export "mem") 1 1)
                    (func $f (param v128) (result i32)
-                       (if (result i32) (${ty128}.${op} (local.get 0))
+                       (if (result i32) (${operation} (local.get 0))
                            (i32.const 42)
                            (i32.const 37)))
                    (func (export "run") (result i32)
@@ -788,7 +789,7 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
                 `(module
                    (memory (export "mem") 1 1)
                    (func $f (param v128) (result i32)
-                       (if (result i32) (i32.eqz (${ty128}.${op} (local.get 0)))
+                       (if (result i32) (i32.eqz (${operation} (local.get 0)))
                            (i32.const 42)
                            (i32.const 37)))
                    (func (export "run") (result i32)
