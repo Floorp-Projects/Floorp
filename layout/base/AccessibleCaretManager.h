@@ -49,7 +49,7 @@ class Selection;
 class AccessibleCaretManager {
  public:
   explicit AccessibleCaretManager(PresShell* aPresShell);
-  virtual ~AccessibleCaretManager();
+  virtual ~AccessibleCaretManager() = default;
 
   // Called by AccessibleCaretEventHub to inform us that PresShell is destroyed.
   void Terminate();
@@ -329,6 +329,8 @@ class AccessibleCaretManager {
 
   class LayoutFlusher final {
    public:
+    ~LayoutFlusher();
+
     // This method could kill the shell, so callers to methods that call
     // MaybeFlush should ensure the event hub that owns us is still alive.
     //
@@ -338,13 +340,14 @@ class AccessibleCaretManager {
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT Terminated
     MaybeFlush(const AccessibleCaretManager& aAccessibleCaretManager);
 
-    // Whether we're flushing layout, used for sanity-checking.
-    bool mFlushing = false;
-
     // Set to false to disallow flushing layout in some callbacks such as
     // OnReflow(), OnScrollStart(), OnScrollStart(), or
     // OnScrollPositionChanged().
     bool mAllowFlushing = true;
+
+  private:
+    // Whether we're flushing layout, used for sanity-checking.
+    bool mFlushing = false;
   };
 
   LayoutFlusher mLayoutFlusher;

@@ -86,9 +86,9 @@ AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell)
   mSecondCaret = MakeUnique<AccessibleCaret>(mPresShell);
 }
 
-AccessibleCaretManager::~AccessibleCaretManager() {
-  MOZ_RELEASE_ASSERT(!mLayoutFlusher.mFlushing,
-                     "Going away in mLayoutFlusher.MaybeFlush? Bad!");
+AccessibleCaretManager::LayoutFlusher::~LayoutFlusher() {
+  MOZ_RELEASE_ASSERT(!mFlushing,
+                     "Going away in MaybeFlush? Bad!");
 }
 
 void AccessibleCaretManager::Terminate() {
