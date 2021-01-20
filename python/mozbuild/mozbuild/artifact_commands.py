@@ -257,12 +257,6 @@ class PackageFrontend(MachCommandBase):
         metavar="FILE",
         help="Store a manifest about the downloaded taskcluster artifacts",
     )
-    @CommandArgument(
-        "files",
-        nargs="*",
-        help="A list of files to download, in the form path@task-id, in "
-        "addition to the files listed in the tooltool manifest.",
-    )
     def artifact_toolchain(
         self,
         verbose=False,
@@ -274,7 +268,6 @@ class PackageFrontend(MachCommandBase):
         retry=0,
         bootstrap=False,
         artifact_manifest=None,
-        files=(),
     ):
         """Download, cache and install pre-built toolchains."""
         from mozbuild.artifacts import ArtifactCache
@@ -480,21 +473,6 @@ class PackageFrontend(MachCommandBase):
                 record = ArtifactRecord(task_id, artifact_name)
                 records[record.filename] = record
 
-        # Handle the list of files of the form path@task-id on the command
-        # line. Each of those give a path to an artifact to download.
-        for f in files:
-            if "@" not in f:
-                self.log(
-                    logging.ERROR,
-                    "artifact",
-                    {},
-                    "Expected a list of files of the form path@task-id",
-                )
-                return 1
-            name, task_id = f.rsplit("@", 1)
-            record = ArtifactRecord(task_id, name)
-            records[record.filename] = record
-
         for record in six.itervalues(records):
             self.log(
                 logging.INFO,
@@ -594,8 +572,6 @@ class PackageFrontend(MachCommandBase):
 
         if not downloaded:
             self.log(logging.ERROR, "artifact", {}, "Nothing to download")
-            if files:
-                return 1
 
         if artifacts:
             ensureParentDir(artifact_manifest)
