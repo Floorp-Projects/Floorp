@@ -1910,6 +1910,9 @@ fn is_vector(ty: &Type) -> bool {
         TypeKind::Vec2
         | TypeKind::Vec3
         | TypeKind::Vec4
+        | TypeKind::BVec2
+        | TypeKind::BVec3
+        | TypeKind::BVec4
         | TypeKind::IVec2
         | TypeKind::IVec3
         | TypeKind::IVec4 => ty.array_sizes == None,
