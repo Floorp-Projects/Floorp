@@ -801,6 +801,52 @@ void MacroAssembler::spectreBoundsCheck32(Register index, const Address& length,
   }
 }
 
+void MacroAssembler::spectreBoundsCheckPtr(Register index, Register length,
+                                           Register maybeScratch,
+                                           Label* failure) {
+  MOZ_ASSERT(length != maybeScratch);
+  MOZ_ASSERT(index != maybeScratch);
+
+  ScratchRegisterScope scratch(*this);
+  MOZ_ASSERT(index != scratch);
+  MOZ_ASSERT(length != scratch);
+
+  if (JitOptions.spectreIndexMasking) {
+    movePtr(ImmWord(0), scratch);
+  }
+
+  cmpPtr(index, length);
+  j(Assembler::AboveOrEqual, failure);
+
+  if (JitOptions.spectreIndexMasking) {
+    cmovCCq(Assembler::AboveOrEqual, scratch, index);
+  }
+}
+
+void MacroAssembler::spectreBoundsCheckPtr(Register index,
+                                           const Address& length,
+                                           Register maybeScratch,
+                                           Label* failure) {
+  MOZ_ASSERT(index != length.base);
+  MOZ_ASSERT(length.base != maybeScratch);
+  MOZ_ASSERT(index != maybeScratch);
+
+  ScratchRegisterScope scratch(*this);
+  MOZ_ASSERT(index != scratch);
+  MOZ_ASSERT(length.base != scratch);
+
+  if (JitOptions.spectreIndexMasking) {
+    movePtr(ImmWord(0), scratch);
+  }
+
+  cmpPtr(index, Operand(length));
+  j(Assembler::AboveOrEqual, failure);
+
+  if (JitOptions.spectreIndexMasking) {
+    cmovCCq(Assembler::AboveOrEqual, scratch, index);
+  }
+}
+
 // ========================================================================
 // SIMD.
 //

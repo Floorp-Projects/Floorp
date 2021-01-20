@@ -2086,6 +2086,19 @@ void MacroAssembler::spectreBoundsCheck32(Register index, const Address& length,
   }
 }
 
+void MacroAssembler::spectreBoundsCheckPtr(Register index, Register length,
+                                           Register maybeScratch,
+                                           Label* failure) {
+  spectreBoundsCheck32(index, length, maybeScratch, failure);
+}
+
+void MacroAssembler::spectreBoundsCheckPtr(Register index,
+                                           const Address& length,
+                                           Register maybeScratch,
+                                           Label* failure) {
+  spectreBoundsCheck32(index, length, maybeScratch, failure);
+}
+
 // ========================================================================
 // Memory access primitives.
 void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,

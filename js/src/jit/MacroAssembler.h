@@ -1904,6 +1904,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                    Register maybeScratch, Label* failure)
       DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
+  inline void spectreBoundsCheckPtr(Register index, Register length,
+                                    Register maybeScratch, Label* failure)
+      DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+  inline void spectreBoundsCheckPtr(Register index, const Address& length,
+                                    Register maybeScratch, Label* failure)
+      DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
   // ========================================================================
   // Canonicalization primitives.
   inline void canonicalizeDouble(FloatRegister reg);
