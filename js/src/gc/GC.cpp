@@ -600,7 +600,7 @@ static bool FinalizeArenas(JSFreeOp* fop, Arena** src, SortedArenaList& dest,
   }
 }
 
-Chunk* ChunkPool::pop() {
+TenuredChunk* ChunkPool::pop() {
   MOZ_ASSERT(bool(head_) == bool(count_));
   if (!count_) {
     return nullptr;
@@ -608,7 +608,7 @@ Chunk* ChunkPool::pop() {
   return remove(head_);
 }
 
-void ChunkPool::push(Chunk* chunk) {
+void ChunkPool::push(TenuredChunk* chunk) {
   MOZ_ASSERT(!chunk->info.next);
   MOZ_ASSERT(!chunk->info.prev);
 
@@ -620,7 +620,7 @@ void ChunkPool::push(Chunk* chunk) {
   ++count_;
 }
 
-Chunk* ChunkPool::remove(Chunk* chunk) {
+TenuredChunk* ChunkPool::remove(TenuredChunk* chunk) {
   MOZ_ASSERT(count_ > 0);
   MOZ_ASSERT(contains(chunk));
 
@@ -648,8 +648,8 @@ void ChunkPool::sort() {
     head_ = mergeSort(head(), count());
 
     // Fixup prev pointers.
-    Chunk* prev = nullptr;
-    for (Chunk* cur = head_; cur; cur = cur->info.next) {
+    TenuredChunk* prev = nullptr;
+    for (TenuredChunk* cur = head_; cur; cur = cur->info.next) {
       cur->info.prev = prev;
       prev = cur;
     }
@@ -659,7 +659,7 @@ void ChunkPool::sort() {
   MOZ_ASSERT(isSorted());
 }
 
-Chunk* ChunkPool::mergeSort(Chunk* list, size_t count) {
+TenuredChunk* ChunkPool::mergeSort(TenuredChunk* list, size_t count) {
   MOZ_ASSERT(bool(list) == bool(count));
 
   if (count < 2) {
@@ -669,10 +669,10 @@ Chunk* ChunkPool::mergeSort(Chunk* list, size_t count) {
   size_t half = count / 2;
 
   // Split;
-  Chunk* front = list;
-  Chunk* back;
+  TenuredChunk* front = list;
+  TenuredChunk* back;
   {
-    Chunk* cur = list;
+    TenuredChunk* cur = list;
     for (size_t i = 0; i < half - 1; i++) {
       MOZ_ASSERT(cur);
       cur = cur->info.next;
@@ -686,7 +686,7 @@ Chunk* ChunkPool::mergeSort(Chunk* list, size_t count) {
 
   // Merge
   list = nullptr;
-  Chunk** cur = &list;
+  TenuredChunk** cur = &list;
   while (front || back) {
     if (!front) {
       *cur = back;
@@ -715,7 +715,7 @@ Chunk* ChunkPool::mergeSort(Chunk* list, size_t count) {
 
 bool ChunkPool::isSorted() const {
   uint32_t last = 1;
-  for (Chunk* cursor = head_; cursor; cursor = cursor->info.next) {
+  for (TenuredChunk* cursor = head_; cursor; cursor = cursor->info.next) {
     if (cursor->info.numArenasFree < last) {
       return false;
     }
@@ -725,9 +725,9 @@ bool ChunkPool::isSorted() const {
 }
 
 #ifdef DEBUG
-bool ChunkPool::contains(Chunk* chunk) const {
+bool ChunkPool::contains(TenuredChunk* chunk) const {
   verify();
-  for (Chunk* cursor = head_; cursor; cursor = cursor->info.next) {
+  for (TenuredChunk* cursor = head_; cursor; cursor = cursor->info.next) {
     if (cursor == chunk) {
       return true;
     }
@@ -738,7 +738,8 @@ bool ChunkPool::contains(Chunk* chunk) const {
 bool ChunkPool::verify() const {
   MOZ_ASSERT(bool(head_) == bool(count_));
   uint32_t count = 0;
-  for (Chunk* cursor = head_; cursor; cursor = cursor->info.next, ++count) {
+  for (TenuredChunk* cursor = head_; cursor;
+       cursor = cursor->info.next, ++count) {
     MOZ_ASSERT_IF(cursor->info.prev, cursor->info.prev->info.next == cursor);
     MOZ_ASSERT_IF(cursor->info.next, cursor->info.next->info.prev == cursor);
   }
@@ -763,7 +764,7 @@ ChunkPool GCRuntime::expireEmptyChunkPool(const AutoLockGC& lock) {
 
   ChunkPool expired;
   while (tooManyEmptyChunks(lock)) {
-    Chunk* chunk = emptyChunks(lock).pop();
+    TenuredChunk* chunk = emptyChunks(lock).pop();
     prepareToFreeChunk(chunk->info);
     expired.push(chunk);
   }
@@ -777,7 +778,7 @@ ChunkPool GCRuntime::expireEmptyChunkPool(const AutoLockGC& lock) {
 
 static void FreeChunkPool(ChunkPool& pool) {
   for (ChunkPool::Iter iter(pool); !iter.done();) {
-    Chunk* chunk = iter.get();
+    TenuredChunk* chunk = iter.get();
     iter.next();
     pool.remove(chunk);
     MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
@@ -805,7 +806,7 @@ inline void GCRuntime::prepareToFreeChunk(TenuredChunkInfo& info) {
 
 inline void GCRuntime::updateOnArenaFree() { ++numArenasFreeCommitted; }
 
-void Chunk::addArenaToFreeList(GCRuntime* gc, Arena* arena) {
+void TenuredChunk::addArenaToFreeList(GCRuntime* gc, Arena* arena) {
   MOZ_ASSERT(!arena->allocated());
   arena->next = info.freeArenasHead;
   info.freeArenasHead = arena;
@@ -814,23 +815,24 @@ void Chunk::addArenaToFreeList(GCRuntime* gc, Arena* arena) {
   gc->updateOnArenaFree();
 }
 
-void Chunk::addArenaToDecommittedList(const Arena* arena) {
+void TenuredChunk::addArenaToDecommittedList(const Arena* arena) {
   ++info.numArenasFree;
-  decommittedArenas[Chunk::arenaIndex(arena->address())] = true;
+  decommittedArenas[TenuredChunk::arenaIndex(arena->address())] = true;
 }
 
-void Chunk::recycleArena(Arena* arena, SortedArenaList& dest,
-                         size_t thingsPerArena) {
+void TenuredChunk::recycleArena(Arena* arena, SortedArenaList& dest,
+                                size_t thingsPerArena) {
   arena->setAsFullyUnused();
   dest.insertAt(arena, thingsPerArena);
 }
 
-void Chunk::releaseArena(GCRuntime* gc, Arena* arena, const AutoLockGC& lock) {
+void TenuredChunk::releaseArena(GCRuntime* gc, Arena* arena,
+                                const AutoLockGC& lock) {
   addArenaToFreeList(gc, arena);
   updateChunkListAfterFree(gc, lock);
 }
 
-bool Chunk::decommitOneFreeArena(GCRuntime* gc, AutoLockGC& lock) {
+bool TenuredChunk::decommitOneFreeArena(GCRuntime* gc, AutoLockGC& lock) {
   MOZ_ASSERT(info.numArenasFreeCommitted > 0);
   Arena* arena = fetchNextFreeArena(gc);
   updateChunkListAfterAlloc(gc, lock);
@@ -851,7 +853,7 @@ bool Chunk::decommitOneFreeArena(GCRuntime* gc, AutoLockGC& lock) {
   return ok;
 }
 
-void Chunk::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
+void TenuredChunk::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
   for (size_t i = 0; i < ArenasPerChunk; ++i) {
     if (decommittedArenas[i] || arenas[i].allocated()) {
       continue;
@@ -864,14 +866,16 @@ void Chunk::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
   }
 }
 
-void Chunk::updateChunkListAfterAlloc(GCRuntime* gc, const AutoLockGC& lock) {
+void TenuredChunk::updateChunkListAfterAlloc(GCRuntime* gc,
+                                             const AutoLockGC& lock) {
   if (MOZ_UNLIKELY(!hasAvailableArenas())) {
     gc->availableChunks(lock).remove(this);
     gc->fullChunks(lock).push(this);
   }
 }
 
-void Chunk::updateChunkListAfterFree(GCRuntime* gc, const AutoLockGC& lock) {
+void TenuredChunk::updateChunkListAfterFree(GCRuntime* gc,
+                                            const AutoLockGC& lock) {
   if (info.numArenasFree == 1) {
     gc->fullChunks(lock).remove(this);
     gc->availableChunks(lock).push(this);
@@ -3327,7 +3331,7 @@ void GCRuntime::decommitFreeArenas(const bool& cancel, AutoLockGC& lock) {
   // it is dangerous to iterate the available list directly, as the active
   // thread could modify it concurrently. Instead, we build and pass an
   // explicit Vector containing the Chunks we want to visit.
-  Vector<Chunk*, 0, SystemAllocPolicy> chunksToDecommit;
+  Vector<TenuredChunk*, 0, SystemAllocPolicy> chunksToDecommit;
   for (ChunkPool::Iter chunk(availableChunks(lock)); !chunk.done();
        chunk.next()) {
     if (chunk->info.numArenasFreeCommitted != 0 &&
@@ -3337,7 +3341,7 @@ void GCRuntime::decommitFreeArenas(const bool& cancel, AutoLockGC& lock) {
     }
   }
 
-  for (Chunk* chunk : chunksToDecommit) {
+  for (TenuredChunk* chunk : chunksToDecommit) {
     // The arena list is not doubly-linked, so we have to work in the free
     // list order and not in the natural order.
 
