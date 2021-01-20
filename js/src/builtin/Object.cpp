@@ -509,7 +509,7 @@ static bool GetBuiltinTagSlow(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  // Steps 6-13.
+  // Steps 6-14.
   ESClass cls;
   if (!JS::GetBuiltinClass(cx, obj, &cls)) {
     return false;
@@ -546,7 +546,7 @@ static bool GetBuiltinTagSlow(JSContext* cx, HandleObject obj,
           return true;
         }
       }
-      builtinTag.set(nullptr);
+      builtinTag.set(cx->names().objectObject);
       return true;
   }
 }
@@ -559,8 +559,7 @@ static MOZ_ALWAYS_INLINE JSString* GetBuiltinTagFast(JSObject* obj,
 
   // Optimize the non-proxy case to bypass GetBuiltinClass.
   if (clasp == &PlainObject::class_) {
-    // This is not handled by GetBuiltinTagSlow, but this case is by far
-    // the most common so we optimize it here.
+    // This case is by far the most common so we handle it first.
     return cx->names().objectObject;
   }
 
@@ -605,7 +604,7 @@ static MOZ_ALWAYS_INLINE JSString* GetBuiltinTagFast(JSObject* obj,
     return cx->names().objectFunction;
   }
 
-  return nullptr;
+  return cx->names().objectObject;
 }
 
 // For primitive values we try to avoid allocating the object if we can
@@ -690,24 +689,13 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   } else {
     builtinTag = GetBuiltinTagFast(obj, clasp, cx);
 #ifdef DEBUG
-    // Assert this fast path is correct and matches BuiltinTagSlow. The
-    // only exception is the PlainObject case: we special-case it here
-    // because it's so common, but BuiltinTagSlow doesn't handle this.
+    // Assert this fast path is correct and matches BuiltinTagSlow.
     RootedString builtinTagSlow(cx);
     if (!GetBuiltinTagSlow(cx, obj, &builtinTagSlow)) {
       return false;
     }
-    if (clasp == &PlainObject::class_) {
-      MOZ_ASSERT(!builtinTagSlow);
-    } else {
-      MOZ_ASSERT(builtinTagSlow == builtinTag);
-    }
+    MOZ_ASSERT(builtinTagSlow == builtinTag);
 #endif
-  }
-
-  // Step 14.
-  if (!builtinTag) {
-    builtinTag = cx->names().objectObject;
   }
 
   // Step 15.
@@ -740,14 +728,7 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
 
 JSString* js::ObjectClassToString(JSContext* cx, JSObject* obj) {
   AutoUnsafeCallWithABI unsafe;
-
-  const JSClass* clasp = obj->getClass();
-
-  if (JSString* tag = GetBuiltinTagFast(obj, clasp, cx)) {
-    return tag;
-  }
-
-  return cx->names().objectObject;
+  return GetBuiltinTagFast(obj, obj->getClass(), cx);
 }
 
 static bool obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp) {
