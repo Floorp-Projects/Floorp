@@ -738,7 +738,7 @@ Arena* Chunk::fetchNextDecommittedArena() {
   unsigned offset = findDecommittedArenaOffset();
   info.lastDecommittedArenaOffset = offset + 1;
   --info.numArenasFree;
-  decommittedArenas.unset(offset);
+  decommittedArenas[offset] = false;
 
   Arena* arena = &arenas[offset];
   MarkPagesInUseSoft(arena, ArenaSize);
@@ -756,12 +756,12 @@ Arena* Chunk::fetchNextDecommittedArena() {
 uint32_t Chunk::findDecommittedArenaOffset() {
   /* Note: lastFreeArenaOffset can be past the end of the list. */
   for (unsigned i = info.lastDecommittedArenaOffset; i < ArenasPerChunk; i++) {
-    if (decommittedArenas.get(i)) {
+    if (decommittedArenas[i]) {
       return i;
     }
   }
   for (unsigned i = 0; i < info.lastDecommittedArenaOffset; i++) {
-    if (decommittedArenas.get(i)) {
+    if (decommittedArenas[i]) {
       return i;
     }
   }
@@ -881,7 +881,7 @@ void Chunk::init(GCRuntime* gc) {
 }
 
 void Chunk::decommitAllArenas() {
-  decommittedArenas.clear(true);
+  decommittedArenas.SetAll();
   MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
 
   info.freeArenasHead = nullptr;

@@ -7,6 +7,7 @@
 #ifndef gc_Heap_h
 #define gc_Heap_h
 
+#include "mozilla/BitSet.h"
 #include "mozilla/DebugOnly.h"
 
 #include "ds/BitArray.h"
@@ -732,7 +733,7 @@ static_assert(ArenaBitmapBytes * ArenasPerChunk == sizeof(ChunkBitmap),
 static_assert(js::gc::ChunkMarkBitmapBits == ArenaBitmapBits * ArenasPerChunk,
               "Ensure that the mark bitmap has the right number of bits.");
 
-using PerArenaBitmap = BitArray<ArenasPerChunk>;
+using PerArenaBitmap = mozilla::BitSet<ArenasPerChunk, uint32_t>;
 
 const size_t ChunkPadSize = ChunkSize - (sizeof(Arena) * ArenasPerChunk) -
                             sizeof(ChunkBitmap) - sizeof(PerArenaBitmap) -
