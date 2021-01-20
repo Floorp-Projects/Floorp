@@ -359,10 +359,7 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
   // by the spec at https://fetch.spec.whatwg.org/#concept-request-destination.
   // Note that while the HTML spec for the "Link" element and its "as" attribute
   // (https://html.spec.whatwg.org/#attr-link-as) reuse fetch's definition of
-  // destination, and the Link class has an internal Link::AsDestination enum
-  // type, the latter is only a support type to map the string values via
-  // Link::ParseAsValue and Link::AsValueToContentPolicy to our canonical
-  // nsContentPolicyType.
+  // destination.
   static RequestDestination MapContentPolicyTypeToRequestDestination(
       nsContentPolicyType aContentPolicyType);
 
