@@ -89,6 +89,7 @@ UNIFIED_SOURCES += [
     "nsWinGesture.cpp",
     "RemoteBackbuffer.cpp",
     "ScreenHelperWin.cpp",
+    "ScrollbarUtil.cpp",
     "SystemStatusBar.cpp",
     "TaskbarPreview.cpp",
     "TaskbarPreviewButton.cpp",
