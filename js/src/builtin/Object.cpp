@@ -738,21 +738,16 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-JSString* js::ObjectClassToString(JSContext* cx, HandleObject obj) {
+JSString* js::ObjectClassToString(JSContext* cx, JSObject* obj) {
+  AutoUnsafeCallWithABI unsafe;
+
   const JSClass* clasp = obj->getClass();
 
   if (JSString* tag = GetBuiltinTagFast(obj, clasp, cx)) {
     return tag;
   }
 
-  const char* className = clasp->name;
-  StringBuffer sb(cx);
-  if (!sb.append("[object ") || !sb.append(className, strlen(className)) ||
-      !sb.append(']')) {
-    return nullptr;
-  }
-
-  return sb.finishAtom();
+  return cx->names().objectObject;
 }
 
 static bool obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp) {
