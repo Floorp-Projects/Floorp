@@ -21,6 +21,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
@@ -51,7 +52,12 @@ XPCOMUtils.defineLazyGetter(this, "isContentProcess", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "isContentScriptProcess", () => {
-  return isContentProcess || !WebExtensionPolicy.useRemoteWebExtensions;
+  return (
+    isContentProcess ||
+    !WebExtensionPolicy.useRemoteWebExtensions ||
+    // Thunderbird still loads some content in the parent process.
+    AppConstants.MOZ_APP_NAME == "thunderbird"
+  );
 });
 
 var extensions = new DefaultWeakMap(policy => {

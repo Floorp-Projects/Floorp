@@ -1,3 +1,23 @@
+.outer-wrapper.newtab-experience {
+  .collapsible-section {
+    &[data-section-id='topsites'] {
+      .section-top-bar {
+        display: none;
+      }
+    }
+
+    .click-target-container {
+      .click-target {
+        span {
+          cursor: default;
+          font-weight: 600;
+          font-size: 17px;
+        }
+      }
+    }
+  }
+}
+
 .collapsible-section {
   padding: $section-vertical-padding $section-horizontal-padding;
   transition-delay: 100ms;
@@ -36,16 +56,7 @@
 
       .click-target {
         white-space: nowrap;
-
-        &.click-pointer {
-          cursor: pointer;
-        }
-
-        &.new-header span {
-          cursor: default;
-          font-weight: 700;
-          font-size: 17px;
-        }
+        cursor: pointer;
       }
     }
 

@@ -7,6 +7,7 @@
 #include "NSSCertDBTrustDomain.h"
 
 #include <stdint.h>
+#include <utility>
 
 #include "ExtendedValidation.h"
 #include "MultiLogCTVerifier.h"
@@ -14,12 +15,8 @@
 #include "OCSPVerificationTrustDomain.h"
 #include "PublicKeyPinningService.h"
 #include "cert.h"
+#include "cert_storage/src/cert_storage.h"
 #include "certdb.h"
-#ifdef MOZ_NEW_CERT_STORAGE
-#  include "cert_storage/src/cert_storage.h"
-#endif
-#include <utility>
-
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
@@ -42,8 +39,8 @@
 #include "nss.h"
 #include "pk11pub.h"
 #include "prerror.h"
-#include "secerr.h"
 #include "secder.h"
+#include "secerr.h"
 
 #ifdef MOZ_WIDGET_COCOA
 #  include "nsCocoaFeatures.h"
@@ -105,16 +102,11 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mPinningTelemetryInfo(pinningTelemetryInfo),
       mCRLiteLookupResult(crliteLookupResult),
       mHostname(hostname),
-#ifdef MOZ_NEW_CERT_STORAGE
       mCertStorage(do_GetService(NS_CERT_STORAGE_CID)),
-#else
-      mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID)),
-#endif
       mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED),
       mSCTListFromCertificate(),
       mSCTListFromOCSPStapling(),
-      mBuiltInRootsModule(SECMOD_FindModule(kRootModuleName)) {
-}
+      mBuiltInRootsModule(SECMOD_FindModule(kRootModuleName)) {}
 
 static Result FindRootsWithSubject(UniqueSECMODModule& rootsModule,
                                    SECItem subject,
@@ -234,7 +226,6 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
   Vector<Input> geckoRootCandidates;
   Vector<Input> geckoIntermediateCandidates;
 
-#ifdef MOZ_NEW_CERT_STORAGE
   if (!mCertStorage) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
@@ -259,7 +250,6 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
       return Result::FATAL_ERROR_NO_MEMORY;
     }
   }
-#endif
 
   // We might not have this module if e.g. we're on a Linux distribution that
   // does something unexpected.
@@ -401,18 +391,13 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                                           Input candidateCertDER,
                                           /*out*/ TrustLevel& trustLevel) {
   // Check the certificate against the OneCRL cert blocklist
-#ifdef MOZ_NEW_CERT_STORAGE
   if (!mCertStorage) {
-#else
-  if (!mCertBlocklist) {
-#endif
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
   // The certificate blocklist currently only applies to TLS server
   // certificates.
   if (mCertDBTrustType == trustSSL) {
-#ifdef MOZ_NEW_CERT_STORAGE
     int16_t revocationState;
 
     nsTArray<uint8_t> issuerBytes;
@@ -423,39 +408,17 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     Result result =
         BuildRevocationCheckArrays(candidateCertDER, endEntityOrCA, issuerBytes,
                                    serialBytes, subjectBytes, pubKeyBytes);
-#else
-    bool isCertRevoked;
-
-    nsAutoCString encIssuer;
-    nsAutoCString encSerial;
-    nsAutoCString encSubject;
-    nsAutoCString encPubKey;
-
-    Result result =
-        BuildRevocationCheckStrings(candidateCertDER, endEntityOrCA, encIssuer,
-                                    encSerial, encSubject, encPubKey);
-#endif
-
     if (result != Success) {
       return result;
     }
 
-#ifdef MOZ_NEW_CERT_STORAGE
     nsresult nsrv = mCertStorage->GetRevocationState(
         issuerBytes, serialBytes, subjectBytes, pubKeyBytes, &revocationState);
-#else
-    nsresult nsrv = mCertBlocklist->IsCertRevoked(
-        encIssuer, encSerial, encSubject, encPubKey, &isCertRevoked);
-#endif
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
 
-#ifdef MOZ_NEW_CERT_STORAGE
     if (revocationState == nsICertStorage::STATE_ENFORCE) {
-#else
-    if (isCertRevoked) {
-#endif
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain: certificate is in blocklist"));
       return Result::ERROR_REVOKED_CERTIFICATE;
@@ -654,7 +617,6 @@ Result NSSCertDBTrustDomain::CheckRevocation(
     }
   }
 
-#ifdef MOZ_NEW_CERT_STORAGE
   if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
       mCRLiteMode != CRLiteMode::Disabled && earliestSCTTimestamp.isSome()) {
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
@@ -802,12 +764,6 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       return Success;
     }
   }
-#else
-  // "use" these fields to stop the compiler from complaining when
-  // MOZ_NEW_CERT_STORAGE is disabled.
-  Unused << mCRLiteMode;
-  Unused << mCRLiteLookupResult;
-#endif
 
   // Bug 991815: The BR allow OCSP for intermediates to be up to one year old.
   // Since this affects EV there is no reason why DV should be more strict
@@ -922,11 +878,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
 
   // If we have a fresh OneCRL Blocklist we can skip OCSP for CA certs
   bool blocklistIsFresh;
-#ifdef MOZ_NEW_CERT_STORAGE
   nsresult nsrv = mCertStorage->IsBlocklistFresh(&blocklistIsFresh);
-#else
-  nsresult nsrv = mCertBlocklist->IsBlocklistFresh(&blocklistIsFresh);
-#endif
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
@@ -1726,7 +1678,6 @@ nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
   return NS_ERROR_FAILURE;
 }
 
-#ifdef MOZ_NEW_CERT_STORAGE
 Result BuildRevocationCheckArrays(Input certDER, EndEntityOrCA endEntityOrCA,
                                   /*out*/ nsTArray<uint8_t>& issuerBytes,
                                   /*out*/ nsTArray<uint8_t>& serialBytes,
@@ -1752,56 +1703,7 @@ Result BuildRevocationCheckArrays(Input certDER, EndEntityOrCA endEntityOrCA,
 
   return Success;
 }
-#else
-Result BuildRevocationCheckStrings(Input certDER, EndEntityOrCA endEntityOrCA,
-                                   /*out*/ nsCString& encIssuer,
-                                   /*out*/ nsCString& encSerial,
-                                   /*out*/ nsCString& encSubject,
-                                   /*out*/ nsCString& encPubKey) {
-  // Convert issuer, serial, subject and pubKey data to Base64 encoded DER
-  BackCert cert(certDER, endEntityOrCA, nullptr);
-  Result result = cert.Init();
-  if (result != Success) {
-    return result;
-  }
-  Input issuer(cert.GetIssuer());
-  nsDependentCSubstring issuerString(
-      reinterpret_cast<const char*>(issuer.UnsafeGetData()),
-      issuer.GetLength());
-  Input serial(cert.GetSerialNumber());
-  nsDependentCSubstring serialString(
-      reinterpret_cast<const char*>(serial.UnsafeGetData()),
-      serial.GetLength());
-  Input subject(cert.GetSubject());
-  nsDependentCSubstring subjectString(
-      reinterpret_cast<const char*>(subject.UnsafeGetData()),
-      subject.GetLength());
-  Input pubKey(cert.GetSubjectPublicKeyInfo());
-  nsDependentCSubstring pubKeyString(
-      reinterpret_cast<const char*>(pubKey.UnsafeGetData()),
-      pubKey.GetLength());
 
-  nsresult rv = Base64Encode(issuerString, encIssuer);
-  if (NS_FAILED(rv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  rv = Base64Encode(serialString, encSerial);
-  if (NS_FAILED(rv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  rv = Base64Encode(subjectString, encSubject);
-  if (NS_FAILED(rv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  rv = Base64Encode(pubKeyString, encPubKey);
-  if (NS_FAILED(rv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  return Success;
-}
-#endif
-
-#ifdef MOZ_NEW_CERT_STORAGE
 bool CertIsInCertStorage(CERTCertificate* cert, nsICertStorage* certStorage) {
   MOZ_ASSERT(cert);
   MOZ_ASSERT(certStorage);
@@ -1826,7 +1728,6 @@ bool CertIsInCertStorage(CERTCertificate* cert, nsICertStorage* certStorage) {
   }
   return false;
 }
-#endif
 
 /**
  * Given a list of certificates representing a verified certificate path from an
@@ -1900,10 +1801,8 @@ void SaveIntermediateCerts(const UniqueCERTCertList& certList) {
           if (!slot) {
             return;
           }
-#ifdef MOZ_NEW_CERT_STORAGE
           nsCOMPtr<nsICertStorage> certStorage(
               do_GetService(NS_CERT_STORAGE_CID));
-#endif
           size_t numCertsImported = 0;
           for (CERTCertListNode* node = CERT_LIST_HEAD(intermediates);
                !CERT_LIST_END(node, intermediates);
@@ -1912,11 +1811,9 @@ void SaveIntermediateCerts(const UniqueCERTCertList& certList) {
               return;
             }
 
-#ifdef MOZ_NEW_CERT_STORAGE
             if (CertIsInCertStorage(node->cert, certStorage)) {
               continue;
             }
-#endif
             // This is a best-effort attempt at avoiding unknown issuer errors
             // in the future, so ignore failures here.
             nsAutoCString nickname;

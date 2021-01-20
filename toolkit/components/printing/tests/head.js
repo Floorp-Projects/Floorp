@@ -430,6 +430,7 @@ class PrintHelper {
       MockFilePicker.init(window);
       registerCleanupFunction(() => MockFilePicker.cleanup());
     }
+    MockFilePicker.returnValue = MockFilePicker.returnOK;
     let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
     file.append(filename);
     registerCleanupFunction(() => {

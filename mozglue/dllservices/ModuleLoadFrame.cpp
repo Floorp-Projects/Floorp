@@ -38,6 +38,13 @@ void ModuleLoadFrame::StaticInit(
     // the launcher process blocklist.
     gFallbackLoaderAPI.SetObserver(aNewObserver);
     sLoaderAPI = &gFallbackLoaderAPI;
+
+    if (aOutWinLauncherFunctions) {
+      aOutWinLauncherFunctions->mHandleLauncherError =
+          [](const mozilla::LauncherError&, const char*) {};
+      // We intentionally leave mInitDllBlocklistOOP null to make sure calling
+      // mInitDllBlocklistOOP in non-Firefox hits MOZ_RELEASE_ASSERT.
+    }
     return;
   }
 

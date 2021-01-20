@@ -1254,6 +1254,9 @@ main {
   .topics ul li:last-child::after {
     content: none; }
 
+.outer-wrapper.newtab-experience .search-wrapper {
+  padding-bottom: 38px; }
+
 .search-wrapper {
   padding: 34px 0 64px; }
   .only-search .search-wrapper {
@@ -1366,6 +1369,8 @@ main {
 @media (max-height: 700px) {
   .search-wrapper {
     padding: 0 0 30px; }
+  .outer-wrapper.newtab-experience .search-wrapper {
+    padding-bottom: 38px; }
   .non-collapsible-section + .below-search-snippet-wrapper {
     margin-top: -14px; }
   .below-search-snippet-wrapper {
@@ -2045,6 +2050,14 @@ main {
   .compact-cards .hide-for-narrow {
     display: none; } }
 
+.outer-wrapper.newtab-experience .collapsible-section[data-section-id='topsites'] .section-top-bar {
+  display: none; }
+
+.outer-wrapper.newtab-experience .collapsible-section .click-target-container .click-target span {
+  cursor: default;
+  font-weight: 600;
+  font-size: 17px; }
+
 .collapsible-section {
   padding: 10px 25px;
   transition-delay: 100ms;
@@ -2071,13 +2084,8 @@ main {
             .collapsible-section .section-title .click-target-container .learn-more-link-wrapper .learn-more-link {
               margin-inline-start: 0; } }
       .collapsible-section .section-title .click-target-container .click-target {
-        white-space: nowrap; }
-        .collapsible-section .section-title .click-target-container .click-target.click-pointer {
-          cursor: pointer; }
-        .collapsible-section .section-title .click-target-container .click-target.new-header span {
-          cursor: default;
-          font-weight: 700;
-          font-size: 17px; }
+        white-space: nowrap;
+        cursor: pointer; }
     .collapsible-section .section-title .collapsible-arrow {
       margin-inline-start: 8px;
       margin-top: -1px; }

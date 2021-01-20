@@ -508,3 +508,7 @@ function httpURL(filename, host = "https://example.com/") {
   );
   return root + filename;
 }
+
+function loadTestSubscript(filePath) {
+  Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
+}

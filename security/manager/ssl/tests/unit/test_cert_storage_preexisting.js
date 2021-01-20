@@ -11,54 +11,49 @@
 // directory.)
 
 /* eslint-disable no-unused-vars */
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function() {
-    let dbDirectory = do_get_profile();
-    dbDirectory.append("security_state");
-    let dbFile = do_get_file("test_cert_storage_preexisting/data.safe.bin");
-    dbFile.copyTo(dbDirectory, "data.safe.bin");
+add_task(async function() {
+  let dbDirectory = do_get_profile();
+  dbDirectory.append("security_state");
+  let dbFile = do_get_file("test_cert_storage_preexisting/data.safe.bin");
+  dbFile.copyTo(dbDirectory, "data.safe.bin");
 
-    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
-      Ci.nsICertStorage
+  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+    Ci.nsICertStorage
+  );
+  let hasPriorRevocationData = await new Promise(resolve => {
+    certStorage.hasPriorData(
+      Ci.nsICertStorage.DATA_TYPE_REVOCATION,
+      (rv, hasPriorData) => {
+        Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
+        resolve(hasPriorData);
+      }
     );
-    let hasPriorRevocationData = await new Promise(resolve => {
-      certStorage.hasPriorData(
-        Ci.nsICertStorage.DATA_TYPE_REVOCATION,
-        (rv, hasPriorData) => {
-          Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
-          resolve(hasPriorData);
-        }
-      );
-    });
-    Assert.equal(
-      hasPriorRevocationData,
-      true,
-      "should have prior revocation data"
+  });
+  Assert.equal(
+    hasPriorRevocationData,
+    true,
+    "should have prior revocation data"
+  );
+
+  let hasPriorCertData = await new Promise(resolve => {
+    certStorage.hasPriorData(
+      Ci.nsICertStorage.DATA_TYPE_CERTIFICATE,
+      (rv, hasPriorData) => {
+        Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
+        resolve(hasPriorData);
+      }
     );
+  });
+  Assert.equal(hasPriorCertData, true, "should have prior cert data");
 
-    let hasPriorCertData = await new Promise(resolve => {
-      certStorage.hasPriorData(
-        Ci.nsICertStorage.DATA_TYPE_CERTIFICATE,
-        (rv, hasPriorData) => {
-          Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
-          resolve(hasPriorData);
-        }
-      );
-    });
-    Assert.equal(hasPriorCertData, true, "should have prior cert data");
-
-    let hasPriorCRLiteData = await new Promise(resolve => {
-      certStorage.hasPriorData(
-        Ci.nsICertStorage.DATA_TYPE_CRLITE,
-        (rv, hasPriorData) => {
-          Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
-          resolve(hasPriorData);
-        }
-      );
-    });
-    Assert.equal(hasPriorCRLiteData, true, "should have prior cert data");
-  }
-);
+  let hasPriorCRLiteData = await new Promise(resolve => {
+    certStorage.hasPriorData(
+      Ci.nsICertStorage.DATA_TYPE_CRLITE,
+      (rv, hasPriorData) => {
+        Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
+        resolve(hasPriorData);
+      }
+    );
+  });
+  Assert.equal(hasPriorCRLiteData, true, "should have prior cert data");
+});

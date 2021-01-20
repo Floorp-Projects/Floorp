@@ -634,15 +634,18 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
       // embedder OuterDocAccessible.
       RefPtr<IDispatch> docAcc;
       aChildDoc->GetCOMInterface((void**)getter_AddRefs(docAcc));
-      RefPtr<IDispatch> docWrapped(
-          mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(docAcc)));
-      IDispatchHolder::COMPtrType docPtr(
-          mscom::ToProxyUniquePtr(std::move(docWrapped)));
-      IDispatchHolder docHolder(std::move(docPtr));
-      if (bridge->SendSetEmbeddedDocAccessibleCOMProxy(docHolder)) {
+      MOZ_ASSERT(docAcc);
+      if (docAcc) {
+        RefPtr<IDispatch> docWrapped(
+            mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(docAcc)));
+        IDispatchHolder::COMPtrType docPtr(
+            mscom::ToProxyUniquePtr(std::move(docWrapped)));
+        IDispatchHolder docHolder(std::move(docPtr));
+        if (bridge->SendSetEmbeddedDocAccessibleCOMProxy(docHolder)) {
 #  if defined(MOZ_SANDBOX)
-        aChildDoc->mDocProxyStream = docHolder.GetPreservedStream();
+          aChildDoc->mDocProxyStream = docHolder.GetPreservedStream();
 #  endif  // defined(MOZ_SANDBOX)
+        }
       }
       // Send a COM proxy for the embedder OuterDocAccessible to the embedded
       // document process. This will be returned as the parent of the
@@ -668,15 +671,19 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
       MOZ_ASSERT(topDoc && topDoc->IsTopLevel());
       RefPtr<IAccessible> topDocAcc;
       topDoc->GetCOMInterface((void**)getter_AddRefs(topDocAcc));
-      RefPtr<IAccessible> topDocWrapped(
-          mscom::PassthruProxy::Wrap<IAccessible>(WrapNotNull(topDocAcc)));
-      IAccessibleHolder::COMPtrType topDocPtr(
-          mscom::ToProxyUniquePtr(std::move(topDocWrapped)));
-      IAccessibleHolder topDocHolder(std::move(topDocPtr));
-      if (aChildDoc->SendTopLevelDocCOMProxy(topDocHolder)) {
+      MOZ_ASSERT(topDocAcc);
+      if (topDocAcc) {
+        RefPtr<IAccessible> topDocWrapped(
+            mscom::PassthruProxy::Wrap<IAccessible>(WrapNotNull(topDocAcc)));
+        IAccessibleHolder::COMPtrType topDocPtr(
+            mscom::ToProxyUniquePtr(std::move(topDocWrapped)));
+        IAccessibleHolder topDocHolder(std::move(topDocPtr));
+        if (aChildDoc->SendTopLevelDocCOMProxy(topDocHolder)) {
 #  if defined(MOZ_SANDBOX)
-        aChildDoc->mTopLevelDocProxyStream = topDocHolder.GetPreservedStream();
+          aChildDoc->mTopLevelDocProxyStream =
+              topDocHolder.GetPreservedStream();
 #  endif  // defined(MOZ_SANDBOX)
+        }
       }
 #endif  // defined(XP_WIN)
       // We need to fire a reorder event on the outer doc accessible.

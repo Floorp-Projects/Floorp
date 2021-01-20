@@ -6,9 +6,6 @@
 
 #include "nsNSSModule.h"
 
-#ifndef MOZ_NEW_CERT_STORAGE
-#  include "CertBlocklist.h"
-#endif
 #include "ContentSignatureVerifier.h"
 #include "NSSErrorsService.h"
 #include "OSKeyStore.h"
@@ -127,10 +124,6 @@ IMPL(nsKeyObjectFactory, nullptr, ProcessRestriction::AnyProcess)
 IMPL(ContentSignatureVerifier, nullptr)
 IMPL(nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess)
 IMPL(TransportSecurityInfo, nullptr, ProcessRestriction::AnyProcess)
-#ifndef MOZ_NEW_CERT_STORAGE
-IMPL(CertBlocklist, &CertBlocklist::Init, ProcessRestriction::ParentProcessOnly,
-     ThreadRestriction::MainThreadOnly)
-#endif
 IMPL(OSKeyStore, nullptr, ProcessRestriction::ParentProcessOnly,
      ThreadRestriction::MainThreadOnly)
 IMPL(OSReauthenticator, nullptr, ProcessRestriction::ParentProcessOnly,

@@ -210,6 +210,8 @@ class gfxWindowsPlatform final : public gfxPlatform {
   static void RecordContentDeviceFailure(
       mozilla::gfx::TelemetryDeviceCode aDevice);
 
+  static void InitMemoryReportersForGPUProcess();
+
  protected:
   bool AccelerateLayersByDefault() override { return true; }
   void GetAcceleratedCompositorBackends(

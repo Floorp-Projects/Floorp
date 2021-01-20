@@ -681,12 +681,14 @@ function StartCurrentTest()
 
 // A simplified version of the function with the same name in tabbrowser.js.
 function updateBrowserRemotenessByURL(aBrowser, aURL) {
+  var oa = E10SUtils.predictOriginAttributes({ browser: aBrowser });
   let remoteType = E10SUtils.getRemoteTypeForURI(
     aURL,
     aBrowser.ownerGlobal.docShell.nsILoadContext.useRemoteTabs,
     aBrowser.ownerGlobal.docShell.nsILoadContext.useRemoteSubframes,
     aBrowser.remoteType,
-    aBrowser.currentURI
+    aBrowser.currentURI,
+    oa
   );
   // Things get confused if we switch to not-remote
   // for chrome:// URIs, so lets not for now.

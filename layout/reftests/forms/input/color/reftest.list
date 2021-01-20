@@ -1,8 +1,8 @@
-== input-color-1.html input-color-1-ref.html
+== input-color-1.html chrome://reftest/content/forms/input/color/input-color-1-ref.html
 
-fuzzy-if(!nativeThemePref,0-1,0-2) == margin-padding-1.html margin-padding-1-ref.html
+fuzzy-if(!nativeThemePref,0-1,0-2) == margin-padding-1.html chrome://reftest/content/forms/input/color/margin-padding-1-ref.html
 == block-invalidate-1.html block-invalidate-1-ref.html
 == block-invalidate-2.html block-invalidate-2-ref.html
-fuzzy-if(skiaContent,0-8,0-80) fuzzy-if(gtkWidget,0-8,0-113) == transformations-1.html transformations-1-ref.html # Bug 1600790 for gtkWidget
-== custom-style-1.html custom-style-1-ref.html
-== custom-style-2.html custom-style-2-ref.html
+fuzzy-if(skiaContent,0-8,0-80) fuzzy-if(gtkWidget,0-8,0-113) == transformations-1.html chrome://reftest/content/forms/input/color/transformations-1-ref.html # Bug 1600790 for gtkWidget
+== custom-style-1.html chrome://reftest/content/forms/input/color/custom-style-1-ref.html
+== custom-style-2.html chrome://reftest/content/forms/input/color/custom-style-2-ref.html

@@ -11,66 +11,61 @@
 // directory.)
 
 /* eslint-disable no-unused-vars */
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function() {
-    Services.prefs.setIntPref(
-      "security.pki.crlite_mode",
-      CRLiteModeEnforcePrefValue
-    );
+add_task(async function() {
+  Services.prefs.setIntPref(
+    "security.pki.crlite_mode",
+    CRLiteModeEnforcePrefValue
+  );
 
-    let dbDirectory = do_get_profile();
-    dbDirectory.append("security_state");
-    let dbFile = do_get_file(
-      "test_cert_storage_preexisting_crlite/data.safe.bin"
-    );
-    dbFile.copyTo(dbDirectory, "data.safe.bin");
-    let crliteFile = do_get_file(
-      "test_cert_storage_preexisting_crlite/crlite.filter"
-    );
-    crliteFile.copyTo(dbDirectory, "crlite.filter");
+  let dbDirectory = do_get_profile();
+  dbDirectory.append("security_state");
+  let dbFile = do_get_file(
+    "test_cert_storage_preexisting_crlite/data.safe.bin"
+  );
+  dbFile.copyTo(dbDirectory, "data.safe.bin");
+  let crliteFile = do_get_file(
+    "test_cert_storage_preexisting_crlite/crlite.filter"
+  );
+  crliteFile.copyTo(dbDirectory, "crlite.filter");
 
-    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
-      Ci.nsICertStorage
-    );
+  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+    Ci.nsICertStorage
+  );
 
-    let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
-    let validCertIssuer = constructCertFromFile(
-      "test_cert_storage_direct/valid-cert-issuer.pem"
-    );
-    let validCert = constructCertFromFile(
-      "test_cert_storage_direct/valid-cert.pem"
-    );
-    await checkCertErrorGenericAtTime(
-      certdb,
-      validCert,
-      PRErrorCodeSuccess,
-      certificateUsageSSLServer,
-      new Date("2019-10-28T00:00:00Z").getTime() / 1000,
-      false,
-      "skynew.jp",
-      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
-    );
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  let validCertIssuer = constructCertFromFile(
+    "test_cert_storage_direct/valid-cert-issuer.pem"
+  );
+  let validCert = constructCertFromFile(
+    "test_cert_storage_direct/valid-cert.pem"
+  );
+  await checkCertErrorGenericAtTime(
+    certdb,
+    validCert,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer,
+    new Date("2019-10-28T00:00:00Z").getTime() / 1000,
+    false,
+    "skynew.jp",
+    Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+  );
 
-    let revokedCertIssuer = constructCertFromFile(
-      "test_cert_storage_direct/revoked-cert-issuer.pem"
-    );
-    let revokedCert = constructCertFromFile(
-      "test_cert_storage_direct/revoked-cert.pem"
-    );
-    await checkCertErrorGenericAtTime(
-      certdb,
-      revokedCert,
-      SEC_ERROR_REVOKED_CERTIFICATE,
-      certificateUsageSSLServer,
-      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
-      false,
-      "schunk-group.com",
-      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
-    );
-  }
-);
+  let revokedCertIssuer = constructCertFromFile(
+    "test_cert_storage_direct/revoked-cert-issuer.pem"
+  );
+  let revokedCert = constructCertFromFile(
+    "test_cert_storage_direct/revoked-cert.pem"
+  );
+  await checkCertErrorGenericAtTime(
+    certdb,
+    revokedCert,
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    certificateUsageSSLServer,
+    new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+    false,
+    "schunk-group.com",
+    Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+  );
+});

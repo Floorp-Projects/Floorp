@@ -256,11 +256,7 @@ export class _CollapsibleSection extends React.PureComponent {
             <span className="click-target-container">
               {/* Click-targets that toggle a collapsible section should have an aria-expanded attribute; see bug 1553234 */}
               <span
-                className={`click-target ${
-                  isNewNewtabExperienceEnabled
-                    ? " new-header"
-                    : " click-pointer"
-                }`}
+                className="click-target"
                 role="button"
                 tabIndex="0"
                 onKeyPress={this.onKeyPress}

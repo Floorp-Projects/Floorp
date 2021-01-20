@@ -1652,26 +1652,6 @@ var SessionStoreInternal = {
           this.resetEpoch(target);
         }
         break;
-      case "BrowserChangedProcess":
-        let newEpoch =
-          1 +
-          Math.max(
-            this.getCurrentEpoch(target),
-            this.getCurrentEpoch(aEvent.otherBrowser)
-          );
-        this.setCurrentEpoch(target, newEpoch);
-        target.messageManager.sendAsyncMessage(
-          "SessionStore:becomeActiveProcess",
-          {
-            epoch: newEpoch,
-          }
-        );
-
-        let listener = this._browserSHistoryListener.get(target.permanentKey);
-        if (listener) {
-          listener.notifySHistoryChanges(-1);
-        }
-        break;
       default:
         throw new Error(`unhandled event ${aEvent.type}?`);
     }
@@ -1752,7 +1732,6 @@ var SessionStoreInternal = {
 
     // Keep track of a browser's latest frameLoader.
     aWindow.gBrowser.addEventListener("XULFrameLoaderCreated", this);
-    aWindow.gBrowser.addEventListener("BrowserChangedProcess", this);
   },
 
   /**
@@ -2053,7 +2032,6 @@ var SessionStoreInternal = {
     }, this);
 
     aWindow.gBrowser.removeEventListener("XULFrameLoaderCreated", this);
-    aWindow.gBrowser.removeEventListener("BrowserChangedProcess", this);
 
     let winData = this._windows[aWindow.__SSi];
 

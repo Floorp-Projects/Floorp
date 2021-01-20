@@ -217,28 +217,30 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
 
 template <typename SizeOrMaxSize>
 inline nscoord SizeComputationInput::ComputeISizeValue(
-    nscoord aContainingBlockISize, nscoord aContentEdgeToBoxSizing,
-    nscoord aBoxSizingToMarginEdge, const SizeOrMaxSize& aSize) const {
-  return mFrame->ComputeISizeValue(mRenderingContext, aContainingBlockISize,
-                                   aContentEdgeToBoxSizing,
-                                   aBoxSizingToMarginEdge, aSize);
+    const WritingMode aWM, const LogicalSize& aContainingBlockSize,
+    const LogicalSize& aContentEdgeToBoxSizing, nscoord aBoxSizingToMarginEdge,
+    const SizeOrMaxSize& aSize) const {
+  return mFrame
+      ->ComputeISizeValue(mRenderingContext, aWM, aContainingBlockSize,
+                          aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
+                          aSize)
+      .mISize;
 }
 
 template <typename SizeOrMaxSize>
 nscoord SizeComputationInput::ComputeISizeValue(
-    nscoord aContainingBlockISize, StyleBoxSizing aBoxSizing,
+    const LogicalSize& aContainingBlockSize, StyleBoxSizing aBoxSizing,
     const SizeOrMaxSize& aSize) const {
   WritingMode wm = GetWritingMode();
   const auto borderPadding = ComputedLogicalBorderPadding(wm);
-  nscoord inside = 0;
+  LogicalSize inside = aBoxSizing == StyleBoxSizing::Border
+                           ? borderPadding.Size(wm)
+                           : LogicalSize(wm);
   nscoord outside =
       borderPadding.IStartEnd(wm) + ComputedLogicalMargin(wm).IStartEnd(wm);
-  if (aBoxSizing == StyleBoxSizing::Border) {
-    inside = borderPadding.IStartEnd(wm);
-  }
-  outside -= inside;
+  outside -= inside.ISize(wm);
 
-  return ComputeISizeValue(aContainingBlockISize, inside, outside, aSize);
+  return ComputeISizeValue(wm, aContainingBlockSize, inside, outside, aSize);
 }
 
 nscoord SizeComputationInput::ComputeBSizeValue(
@@ -1158,16 +1160,16 @@ void ReflowInput::CalculateHypotheticalPosition(
     // border/padding/margin that the element would have had if it had
     // been in the flow. Note that we ignore any 'auto' and 'inherit'
     // values
-    nscoord insideBoxSizing, outsideBoxSizing;
+    nscoord insideBoxISizing, outsideBoxISizing;
     CalculateBorderPaddingMargin(eLogicalAxisInline, blockContentSize.ISize(wm),
-                                 &insideBoxSizing, &outsideBoxSizing);
+                                 &insideBoxISizing, &outsideBoxISizing);
 
     if (mFlags.mIsReplaced && isAutoISize) {
       // It's a replaced element with an 'auto' inline size so the box
       // inline size is its intrinsic size plus any border/padding/margin
       if (intrinsicSize) {
         boxISize = LogicalSize(wm, *intrinsicSize).ISize(wm) +
-                   outsideBoxSizing + insideBoxSizing;
+                   outsideBoxISizing + insideBoxISizing;
         knowBoxISize = true;
       }
 
@@ -1180,9 +1182,15 @@ void ReflowInput::CalculateHypotheticalPosition(
       // We need to compute it. It's important we do this, because if it's
       // percentage based this computed value may be different from the computed
       // value calculated using the absolute containing block width
-      boxISize = ComputeISizeValue(blockContentSize.ISize(wm), insideBoxSizing,
-                                   outsideBoxSizing, styleISize) +
-                 insideBoxSizing + outsideBoxSizing;
+      nscoord insideBoxBSizing, dummy;
+      CalculateBorderPaddingMargin(eLogicalAxisBlock,
+                                   blockContentSize.BSize(wm),
+                                   &insideBoxBSizing, &dummy);
+      boxISize =
+          ComputeISizeValue(wm, blockContentSize,
+                            LogicalSize(wm, insideBoxISizing, insideBoxBSizing),
+                            outsideBoxISizing, styleISize) +
+          insideBoxISizing + outsideBoxISizing;
       knowBoxISize = true;
     }
   }
@@ -2242,8 +2250,8 @@ void ReflowInput::InitConstraints(
         NS_ASSERTION(ComputedISize() >= 0, "Bogus computed isize");
 
       } else {
-        ComputedISize() = ComputeISizeValue(
-            cbSize.ISize(wm), mStylePosition->mBoxSizing, inlineSize);
+        ComputedISize() =
+            ComputeISizeValue(cbSize, mStylePosition->mBoxSizing, inlineSize);
       }
 
       // Calculate the computed block size
@@ -2864,16 +2872,16 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
   if (minISize.IsAuto()) {
     ComputedMinISize() = 0;
   } else {
-    ComputedMinISize() = ComputeISizeValue(
-        aCBSize.ISize(wm), mStylePosition->mBoxSizing, minISize);
+    ComputedMinISize() =
+        ComputeISizeValue(aCBSize, mStylePosition->mBoxSizing, minISize);
   }
 
   if (maxISize.IsNone()) {
     // Specified value of 'none'
     ComputedMaxISize() = NS_UNCONSTRAINEDSIZE;  // no limit
   } else {
-    ComputedMaxISize() = ComputeISizeValue(
-        aCBSize.ISize(wm), mStylePosition->mBoxSizing, maxISize);
+    ComputedMaxISize() =
+        ComputeISizeValue(aCBSize, mStylePosition->mBoxSizing, maxISize);
   }
 
   // If the computed value of 'min-width' is greater than the value of

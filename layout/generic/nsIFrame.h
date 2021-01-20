@@ -4389,6 +4389,11 @@ class nsIFrame : public nsQueryFrame {
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
+  Maybe<nscoord> ComputeInlineSizeFromAspectRatio(
+      mozilla::WritingMode aWM, const mozilla::LogicalSize& aCBSize,
+      const mozilla::LogicalSize& aContentEdgeToBoxSizing,
+      mozilla::ComputeSizeFlags aFlags) const;
+
  public:
   /**
    * @return true if this text frame ends with a newline character.  It
@@ -4728,35 +4733,41 @@ class nsIFrame : public nsQueryFrame {
    * Helper function - computes the content-box inline size for aSize, which is
    * a more complex version to resolve a StyleExtremumLength.
    */
-  nscoord ComputeISizeValue(gfxContext* aRenderingContext,
-                            nscoord aContainingBlockISize,
-                            nscoord aContentEdgeToBoxSizing,
-                            nscoord aBoxSizingToMarginEdge,
-                            StyleExtremumLength aSize,
-                            mozilla::ComputeSizeFlags aFlags);
+  struct ISizeComputationResult {
+    nscoord mISize = 0;
+    AspectRatioUsage mAspectRatioUsage = AspectRatioUsage::None;
+  };
+  ISizeComputationResult ComputeISizeValue(
+      gfxContext* aRenderingContext, const mozilla::WritingMode aWM,
+      const mozilla::LogicalSize& aContainingBlockSize,
+      const mozilla::LogicalSize& aContentEdgeToBoxSizing,
+      nscoord aBoxSizingToMarginEdge, StyleExtremumLength aSize,
+      mozilla::ComputeSizeFlags aFlags);
 
   /**
    * Helper function - computes the content-box inline size for aSize, which is
    * a simpler version to resolve a LengthPercentage.
    */
-  nscoord ComputeISizeValue(nscoord aContainingBlockISize,
-                            nscoord aContentEdgeToBoxSizing,
+  nscoord ComputeISizeValue(const mozilla::WritingMode aWM,
+                            const mozilla::LogicalSize& aContainingBlockSize,
+                            const mozilla::LogicalSize& aContentEdgeToBoxSizing,
                             const LengthPercentage& aSize);
 
   template <typename SizeOrMaxSize>
-  nscoord ComputeISizeValue(gfxContext* aRenderingContext,
-                            nscoord aContainingBlockISize,
-                            nscoord aContentEdgeToBoxSizing,
-                            nscoord aBoxSizingToMarginEdge,
-                            const SizeOrMaxSize& aSize,
-                            mozilla::ComputeSizeFlags aFlags = {}) {
+  ISizeComputationResult ComputeISizeValue(
+      gfxContext* aRenderingContext, const mozilla::WritingMode aWM,
+      const mozilla::LogicalSize& aContainingBlockSize,
+      const mozilla::LogicalSize& aContentEdgeToBoxSizing,
+      nscoord aBoxSizingToMarginEdge, const SizeOrMaxSize& aSize,
+      mozilla::ComputeSizeFlags aFlags = {}) {
     MOZ_ASSERT(aSize.IsExtremumLength() || aSize.IsLengthPercentage(),
                "This doesn't handle auto / none");
     if (aSize.IsLengthPercentage()) {
-      return ComputeISizeValue(aContainingBlockISize, aContentEdgeToBoxSizing,
-                               aSize.AsLengthPercentage());
+      return {ComputeISizeValue(aWM, aContainingBlockSize,
+                                aContentEdgeToBoxSizing,
+                                aSize.AsLengthPercentage())};
     }
-    return ComputeISizeValue(aRenderingContext, aContainingBlockISize,
+    return ComputeISizeValue(aRenderingContext, aWM, aContainingBlockSize,
                              aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
                              aSize.AsExtremumLength(), aFlags);
   }

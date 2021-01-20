@@ -37,9 +37,6 @@ add_task(async function test_default_jexl_filter_is_used() {
 });
 
 add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
   async function test_revocations_are_updated_on_sync_with_cert_storage() {
     const certList = Cc["@mozilla.org/security/certstorage;1"].getService(
       Ci.nsICertStorage
@@ -74,39 +71,5 @@ add_task(
     });
 
     Assert.ok(await has_revocations());
-  }
-);
-
-add_task(
-  {
-    skip_if: () => AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_revocations_are_updated_on_sync() {
-    const profile = do_get_profile();
-    const revocations = profile.clone();
-    revocations.append("revocations.txt");
-    const before = revocations.exists() ? revocations.lastModifiedTime : null;
-
-    await OneCRLBlocklistClient.emit("sync", {
-      data: {
-        current: [
-          {
-            issuerName: "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
-            serialNumber: "a0X7/7DlTaedpgrIJg25iBPOkIM=",
-          },
-        ],
-        deleted: [],
-        updated: [],
-        created: [
-          {
-            issuerName: "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
-            serialNumber: "a0X7/7DlTaedpgrIJg25iBPOkIM=",
-          },
-        ],
-      },
-    });
-
-    const after = revocations.lastModifiedTime;
-    Assert.notEqual(before, after, "revocation file was modified.");
   }
 );

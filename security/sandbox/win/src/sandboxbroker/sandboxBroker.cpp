@@ -313,7 +313,16 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
           last_error, last_warning);
   }
 
-  if (XRE_GetChildProcBinPathType(aProcessType) == BinPathType::Self) {
+#ifdef MOZ_THUNDERBIRD
+  // In Thunderbird, mInitDllBlocklistOOP is null, so InitDllBlocklistOOP would
+  // hit MOZ_RELEASE_ASSERT.
+  constexpr bool isThunderbird = true;
+#else
+  constexpr bool isThunderbird = false;
+#endif
+
+  if (!isThunderbird &&
+      XRE_GetChildProcBinPathType(aProcessType) == BinPathType::Self) {
     RefPtr<DllServices> dllSvc(DllServices::Get());
     LauncherVoidResultWithLineInfo blocklistInitOk =
         dllSvc->InitDllBlocklistOOP(aPath, targetInfo.hProcess,

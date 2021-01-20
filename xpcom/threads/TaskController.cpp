@@ -209,10 +209,6 @@ void TaskController::RunPoolThread() {
 
   MutexAutoLock lock(mGraphMutex);
   while (true) {
-    if (mShuttingDown) {
-      IOInterposer::UnregisterCurrentThread();
-      return;
-    }
     bool ranTask = false;
 
     if (!mThreadableTasks.empty()) {
@@ -297,6 +293,12 @@ void TaskController::RunPoolThread() {
     }
 
     if (!ranTask) {
+      if (mShuttingDown) {
+        IOInterposer::UnregisterCurrentThread();
+        MOZ_ASSERT(mThreadableTasks.empty());
+        return;
+      }
+
       AUTO_PROFILER_LABEL("TaskController::RunPoolThread", IDLE);
       mThreadPoolCV.Wait();
     }
@@ -833,10 +835,10 @@ void TaskController::MaybeInterruptTask(Task* aTask) {
     return;
   }
 
-  EnsureMainThreadTasksScheduled();
-
   if (aTask->IsMainThreadOnly()) {
     mMayHaveMainThreadTask = true;
+
+    EnsureMainThreadTasksScheduled();
 
     if (mCurrentTasksMT.empty()) {
       return;
@@ -855,6 +857,7 @@ void TaskController::MaybeInterruptTask(Task* aTask) {
     Task* lowestPriorityTask = nullptr;
     for (PoolThread& thread : mPoolThreads) {
       if (!thread.mCurrentTask) {
+        mThreadPoolCV.Notify();
         // There's a free thread, no need to interrupt anything.
         return;
       }

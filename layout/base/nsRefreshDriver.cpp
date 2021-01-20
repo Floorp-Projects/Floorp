@@ -1228,12 +1228,13 @@ TimeStamp nsRefreshDriver::MostRecentRefresh(bool aEnsureTimerStarted) const {
 void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
                                          FlushType aFlushType,
                                          const char* aObserverDescription) {
-  MOZ_RELEASE_ASSERT(mPresContext);
   ObserverArray& array = ArrayFor(aFlushType);
   Maybe<uint64_t> innerWindowID;
 #ifdef MOZ_GECKO_PROFILER
-  innerWindowID =
-      profiler_get_inner_window_id_from_docshell(mPresContext->GetDocShell());
+  if (mPresContext) {
+    innerWindowID =
+        profiler_get_inner_window_id_from_docshell(mPresContext->GetDocShell());
+  }
 #endif
   array.AppendElement(ObserverData{aObserver, aObserverDescription,
                                    TimeStamp::Now(), innerWindowID,

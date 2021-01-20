@@ -150,441 +150,406 @@ async function locallyDownloaded() {
   });
 }
 
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_preload_empty() {
-    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+add_task(async function test_preload_empty() {
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
 
-    let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
 
-    // load the first root and end entity, ignore the initial intermediate
-    addCertFromFile(certDB, "test_intermediate_preloads/ca.pem", "CTu,,");
+  // load the first root and end entity, ignore the initial intermediate
+  addCertFromFile(certDB, "test_intermediate_preloads/ca.pem", "CTu,,");
 
-    let ee_cert = constructCertFromFile(
-      "test_intermediate_preloads/default-ee.pem"
-    );
-    notEqual(ee_cert, null, "EE cert should have successfully loaded");
+  let ee_cert = constructCertFromFile(
+    "test_intermediate_preloads/default-ee.pem"
+  );
+  notEqual(ee_cert, null, "EE cert should have successfully loaded");
 
-    equal(
-      await syncAndDownload([]),
-      "success",
-      "Preloading update should have run"
-    );
+  equal(
+    await syncAndDownload([]),
+    "success",
+    "Preloading update should have run"
+  );
 
-    equal(
-      (await locallyDownloaded()).length,
-      0,
-      "There should have been no downloads"
-    );
+  equal(
+    (await locallyDownloaded()).length,
+    0,
+    "There should have been no downloads"
+  );
 
-    // check that ee cert 1 is unknown
-    await checkCertErrorGeneric(
-      certDB,
-      ee_cert,
-      SEC_ERROR_UNKNOWN_ISSUER,
-      certificateUsageSSLServer
-    );
+  // check that ee cert 1 is unknown
+  await checkCertErrorGeneric(
+    certDB,
+    ee_cert,
+    SEC_ERROR_UNKNOWN_ISSUER,
+    certificateUsageSSLServer
+  );
+});
+
+add_task(async function test_preload_disabled() {
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, false);
+
+  equal(
+    await syncAndDownload(["int.pem"]),
+    "disabled",
+    "Preloading update should not have run"
+  );
+
+  equal(
+    (await locallyDownloaded()).length,
+    0,
+    "There should have been no downloads"
+  );
+});
+
+add_task(async function test_preload_invalid_hash() {
+  // Enable the collection (during test) for all products so even products
+  // that don't collect the data will be able to run the test without failure.
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  const invalidHash =
+    "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d";
+
+  clearTelemetry();
+
+  const result = await syncAndDownload(["int.pem"], {
+    hashFunc: () => invalidHash,
+  });
+  equal(result, "success", "Preloading update should have run");
+
+  let errors_histogram = Services.telemetry
+    .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+    .snapshot();
+
+  equal(
+    countTelemetryReports(errors_histogram),
+    1,
+    "There should be one error report"
+  );
+  equal(
+    errors_histogram.values[7],
+    1,
+    "There should be one invalid hash error"
+  );
+
+  equal(
+    (await locallyDownloaded()).length,
+    0,
+    "There should be no local entry"
+  );
+
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+
+  // load the first root and end entity, ignore the initial intermediate
+  addCertFromFile(certDB, "test_intermediate_preloads/ca.pem", "CTu,,");
+
+  let ee_cert = constructCertFromFile(
+    "test_intermediate_preloads/default-ee.pem"
+  );
+  notEqual(ee_cert, null, "EE cert should have successfully loaded");
+
+  // We should still have a missing intermediate.
+  await checkCertErrorGeneric(
+    certDB,
+    ee_cert,
+    SEC_ERROR_UNKNOWN_ISSUER,
+    certificateUsageSSLServer
+  );
+});
+
+add_task(async function test_preload_invalid_length() {
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+
+  clearTelemetry();
+
+  const result = await syncAndDownload(["int.pem"], {
+    lengthFunc: () => 42,
+  });
+  equal(result, "success", "Preloading update should have run");
+
+  let errors_histogram = Services.telemetry
+    .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+    .snapshot();
+
+  equal(
+    countTelemetryReports(errors_histogram),
+    1,
+    "There should be only one error report"
+  );
+  equal(
+    errors_histogram.values[7],
+    1,
+    "There should be one invalid content hash error"
+  );
+
+  equal(
+    (await locallyDownloaded()).length,
+    0,
+    "There should be no local entry"
+  );
+
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+
+  // load the first root and end entity, ignore the initial intermediate
+  addCertFromFile(certDB, "test_intermediate_preloads/ca.pem", "CTu,,");
+
+  let ee_cert = constructCertFromFile(
+    "test_intermediate_preloads/default-ee.pem"
+  );
+  notEqual(ee_cert, null, "EE cert should have successfully loaded");
+
+  // We should still have a missing intermediate.
+  await checkCertErrorGeneric(
+    certDB,
+    ee_cert,
+    SEC_ERROR_UNKNOWN_ISSUER,
+    certificateUsageSSLServer
+  );
+});
+
+add_task(async function test_preload_basic() {
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
+
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+
+  // load the first root and end entity, ignore the initial intermediate
+  addCertFromFile(certDB, "test_intermediate_preloads/ca.pem", "CTu,,");
+
+  let ee_cert = constructCertFromFile(
+    "test_intermediate_preloads/default-ee.pem"
+  );
+  notEqual(ee_cert, null, "EE cert should have successfully loaded");
+
+  // load the second end entity, ignore both intermediate and root
+  let ee_cert_2 = constructCertFromFile("test_intermediate_preloads/ee2.pem");
+  notEqual(ee_cert_2, null, "EE cert 2 should have successfully loaded");
+
+  // check that the missing intermediate causes an unknown issuer error, as
+  // expected, in both cases
+  await checkCertErrorGeneric(
+    certDB,
+    ee_cert,
+    SEC_ERROR_UNKNOWN_ISSUER,
+    certificateUsageSSLServer
+  );
+  await checkCertErrorGeneric(
+    certDB,
+    ee_cert_2,
+    SEC_ERROR_UNKNOWN_ISSUER,
+    certificateUsageSSLServer
+  );
+
+  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+    Ci.nsICertStorage
+  );
+  let intermediateBytes = readFile(
+    do_get_file("test_intermediate_preloads/int.pem")
+  );
+  let intermediateDERBytes = atob(pemToBase64(intermediateBytes));
+  let intermediateCert = new X509.Certificate();
+  intermediateCert.parse(stringToArray(intermediateDERBytes));
+  let crliteStateBefore = certStorage.getCRLiteState(
+    intermediateCert.tbsCertificate.subject._der._bytes,
+    intermediateCert.tbsCertificate.subjectPublicKeyInfo._der._bytes
+  );
+  equal(
+    crliteStateBefore,
+    Ci.nsICertStorage.STATE_UNSET,
+    "crlite state should be unset before"
+  );
+
+  const result = await syncAndDownload(["int.pem", "int2.pem"]);
+  equal(result, "success", "Preloading update should have run");
+
+  equal(
+    (await locallyDownloaded()).length,
+    2,
+    "There should have been 2 downloads"
+  );
+
+  // check that ee cert 1 verifies now the update has happened and there is
+  // an intermediate
+
+  // First verify by connecting to a server that uses that end-entity
+  // certificate but doesn't send the intermediate.
+  await asyncStartTLSTestServer(
+    "BadCertAndPinningServer",
+    "test_intermediate_preloads"
+  );
+  // This ensures the test server doesn't include the intermediate in the
+  // handshake.
+  let certDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+  certDir.append("test_intermediate_preloads");
+  Assert.ok(certDir.exists(), "test_intermediate_preloads should exist");
+  let args = ["-D", "-n", "int"];
+  // If the certdb is cached from a previous run, the intermediate will have
+  // already been deleted, so this may "fail".
+  run_certutil_on_directory(certDir.path, args, false);
+  let certsCachedPromise = TestUtils.topicObserved(
+    "psm:intermediate-certs-cached"
+  );
+  await asyncConnectTo("ee.example.com", PRErrorCodeSuccess);
+  let subjectAndData = await certsCachedPromise;
+  Assert.equal(subjectAndData.length, 2, "expecting [subject, data]");
+  // Since the intermediate is preloaded, we don't save it to the profile's
+  // certdb.
+  Assert.equal(subjectAndData[1], "0", `expecting "0" certs imported`);
+
+  await checkCertErrorGeneric(
+    certDB,
+    ee_cert,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer
+  );
+
+  let localDB = await IntermediatePreloadsClient.client.db;
+  let data = await localDB.list();
+  ok(data.length > 0, "should have some entries");
+  // simulate a sync (syncAndDownload doesn't actually... sync.)
+  await IntermediatePreloadsClient.client.emit("sync", {
+    data: {
+      current: data,
+      created: data,
+      deleted: [],
+      updated: [],
+    },
+  });
+
+  let crliteStateAfter = certStorage.getCRLiteState(
+    intermediateCert.tbsCertificate.subject._der._bytes,
+    intermediateCert.tbsCertificate.subjectPublicKeyInfo._der._bytes
+  );
+  equal(
+    crliteStateAfter,
+    Ci.nsICertStorage.STATE_ENFORCE,
+    "crlite state should be set after"
+  );
+
+  // check that ee cert 2 does not verify - since we don't know the issuer of
+  // this certificate
+  await checkCertErrorGeneric(
+    certDB,
+    ee_cert_2,
+    SEC_ERROR_UNKNOWN_ISSUER,
+    certificateUsageSSLServer
+  );
+});
+
+add_task(async function test_preload_200() {
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
+
+  const files = [];
+  for (let i = 0; i < 200; i++) {
+    files.push(["int.pem", "int2.pem"][i % 2]);
   }
-);
 
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_preload_disabled() {
-    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, false);
+  clearTelemetry();
 
-    equal(
-      await syncAndDownload(["int.pem"]),
-      "disabled",
-      "Preloading update should not have run"
-    );
+  let result = await syncAndDownload(files);
+  equal(result, "success", "Preloading update should have run");
 
-    equal(
-      (await locallyDownloaded()).length,
-      0,
-      "There should have been no downloads"
-    );
-  }
-);
+  equal(
+    (await locallyDownloaded()).length,
+    100,
+    "There should have been only 100 downloaded"
+  );
 
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_preload_invalid_hash() {
-    // Enable the collection (during test) for all products so even products
-    // that don't collect the data will be able to run the test without failure.
-    Services.prefs.setBoolPref(
-      "toolkit.telemetry.testing.overrideProductsCheck",
-      true
-    );
+  const scalars = TelemetryTestUtils.getProcessScalars("parent");
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    "security.intermediate_preloading_num_preloaded",
+    100,
+    "Should have preloaded 100 certs"
+  );
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    "security.intermediate_preloading_num_pending",
+    100,
+    "Should report 100 pending"
+  );
 
-    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
-    const invalidHash =
-      "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d";
+  let time_histogram = Services.telemetry
+    .getHistogramById("INTERMEDIATE_PRELOADING_UPDATE_TIME_MS")
+    .snapshot();
+  let errors_histogram = Services.telemetry
+    .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+    .snapshot();
+  equal(countTelemetryReports(time_histogram), 1, "Should report time once");
+  equal(
+    countTelemetryReports(errors_histogram),
+    0,
+    "There should be no error reports"
+  );
 
-    clearTelemetry();
+  // Re-run
+  result = await syncAndDownload([], { clear: false });
+  equal(result, "success", "Preloading update should have run");
 
-    const result = await syncAndDownload(["int.pem"], {
-      hashFunc: () => invalidHash,
-    });
-    equal(result, "success", "Preloading update should have run");
+  equal(
+    (await locallyDownloaded()).length,
+    200,
+    "There should have been 200 downloaded"
+  );
+});
 
-    let errors_histogram = Services.telemetry
-      .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
-      .snapshot();
+add_task(async function test_delete() {
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
 
-    equal(
-      countTelemetryReports(errors_histogram),
-      1,
-      "There should be one error report"
-    );
-    equal(
-      errors_histogram.values[7],
-      1,
-      "There should be one invalid hash error"
-    );
+  let syncResult = await syncAndDownload(["int.pem", "int2.pem"]);
+  equal(syncResult, "success", "Preloading update should have run");
 
-    equal(
-      (await locallyDownloaded()).length,
-      0,
-      "There should be no local entry"
-    );
+  equal(
+    (await locallyDownloaded()).length,
+    2,
+    "There should have been 2 downloads"
+  );
 
-    let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
-
-    // load the first root and end entity, ignore the initial intermediate
-    addCertFromFile(certDB, "test_intermediate_preloads/ca.pem", "CTu,,");
-
-    let ee_cert = constructCertFromFile(
-      "test_intermediate_preloads/default-ee.pem"
-    );
-    notEqual(ee_cert, null, "EE cert should have successfully loaded");
-
-    // We should still have a missing intermediate.
-    await checkCertErrorGeneric(
-      certDB,
-      ee_cert,
-      SEC_ERROR_UNKNOWN_ISSUER,
-      certificateUsageSSLServer
-    );
-  }
-);
-
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_preload_invalid_length() {
-    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
-
-    clearTelemetry();
-
-    const result = await syncAndDownload(["int.pem"], {
-      lengthFunc: () => 42,
-    });
-    equal(result, "success", "Preloading update should have run");
-
-    let errors_histogram = Services.telemetry
-      .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
-      .snapshot();
-
-    equal(
-      countTelemetryReports(errors_histogram),
-      1,
-      "There should be only one error report"
-    );
-    equal(
-      errors_histogram.values[7],
-      1,
-      "There should be one invalid content hash error"
-    );
-
-    equal(
-      (await locallyDownloaded()).length,
-      0,
-      "There should be no local entry"
-    );
-
-    let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
-
-    // load the first root and end entity, ignore the initial intermediate
-    addCertFromFile(certDB, "test_intermediate_preloads/ca.pem", "CTu,,");
-
-    let ee_cert = constructCertFromFile(
-      "test_intermediate_preloads/default-ee.pem"
-    );
-    notEqual(ee_cert, null, "EE cert should have successfully loaded");
-
-    // We should still have a missing intermediate.
-    await checkCertErrorGeneric(
-      certDB,
-      ee_cert,
-      SEC_ERROR_UNKNOWN_ISSUER,
-      certificateUsageSSLServer
-    );
-  }
-);
-
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_preload_basic() {
-    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
-    Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
-
-    let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
-
-    // load the first root and end entity, ignore the initial intermediate
-    addCertFromFile(certDB, "test_intermediate_preloads/ca.pem", "CTu,,");
-
-    let ee_cert = constructCertFromFile(
-      "test_intermediate_preloads/default-ee.pem"
-    );
-    notEqual(ee_cert, null, "EE cert should have successfully loaded");
-
-    // load the second end entity, ignore both intermediate and root
-    let ee_cert_2 = constructCertFromFile("test_intermediate_preloads/ee2.pem");
-    notEqual(ee_cert_2, null, "EE cert 2 should have successfully loaded");
-
-    // check that the missing intermediate causes an unknown issuer error, as
-    // expected, in both cases
-    await checkCertErrorGeneric(
-      certDB,
-      ee_cert,
-      SEC_ERROR_UNKNOWN_ISSUER,
-      certificateUsageSSLServer
-    );
-    await checkCertErrorGeneric(
-      certDB,
-      ee_cert_2,
-      SEC_ERROR_UNKNOWN_ISSUER,
-      certificateUsageSSLServer
-    );
-
-    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
-      Ci.nsICertStorage
-    );
-    let intermediateBytes = readFile(
-      do_get_file("test_intermediate_preloads/int.pem")
-    );
-    let intermediateDERBytes = atob(pemToBase64(intermediateBytes));
-    let intermediateCert = new X509.Certificate();
-    intermediateCert.parse(stringToArray(intermediateDERBytes));
-    let crliteStateBefore = certStorage.getCRLiteState(
-      intermediateCert.tbsCertificate.subject._der._bytes,
-      intermediateCert.tbsCertificate.subjectPublicKeyInfo._der._bytes
-    );
-    equal(
-      crliteStateBefore,
-      Ci.nsICertStorage.STATE_UNSET,
-      "crlite state should be unset before"
-    );
-
-    const result = await syncAndDownload(["int.pem", "int2.pem"]);
-    equal(result, "success", "Preloading update should have run");
-
-    equal(
-      (await locallyDownloaded()).length,
-      2,
-      "There should have been 2 downloads"
-    );
-
-    // check that ee cert 1 verifies now the update has happened and there is
-    // an intermediate
-
-    // First verify by connecting to a server that uses that end-entity
-    // certificate but doesn't send the intermediate.
-    await asyncStartTLSTestServer(
-      "BadCertAndPinningServer",
-      "test_intermediate_preloads"
-    );
-    // This ensures the test server doesn't include the intermediate in the
-    // handshake.
-    let certDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
-    certDir.append("test_intermediate_preloads");
-    Assert.ok(certDir.exists(), "test_intermediate_preloads should exist");
-    let args = ["-D", "-n", "int"];
-    // If the certdb is cached from a previous run, the intermediate will have
-    // already been deleted, so this may "fail".
-    run_certutil_on_directory(certDir.path, args, false);
-    let certsCachedPromise = TestUtils.topicObserved(
-      "psm:intermediate-certs-cached"
-    );
-    await asyncConnectTo("ee.example.com", PRErrorCodeSuccess);
-    let subjectAndData = await certsCachedPromise;
-    Assert.equal(subjectAndData.length, 2, "expecting [subject, data]");
-    // Since the intermediate is preloaded, we don't save it to the profile's
-    // certdb.
-    Assert.equal(subjectAndData[1], "0", `expecting "0" certs imported`);
-
-    await checkCertErrorGeneric(
-      certDB,
-      ee_cert,
-      PRErrorCodeSuccess,
-      certificateUsageSSLServer
-    );
-
-    let localDB = await IntermediatePreloadsClient.client.db;
-    let data = await localDB.list();
-    ok(data.length > 0, "should have some entries");
-    // simulate a sync (syncAndDownload doesn't actually... sync.)
-    await IntermediatePreloadsClient.client.emit("sync", {
-      data: {
-        current: data,
-        created: data,
-        deleted: [],
-        updated: [],
-      },
-    });
-
-    let crliteStateAfter = certStorage.getCRLiteState(
-      intermediateCert.tbsCertificate.subject._der._bytes,
-      intermediateCert.tbsCertificate.subjectPublicKeyInfo._der._bytes
-    );
-    equal(
-      crliteStateAfter,
-      Ci.nsICertStorage.STATE_ENFORCE,
-      "crlite state should be set after"
-    );
-
-    // check that ee cert 2 does not verify - since we don't know the issuer of
-    // this certificate
-    await checkCertErrorGeneric(
-      certDB,
-      ee_cert_2,
-      SEC_ERROR_UNKNOWN_ISSUER,
-      certificateUsageSSLServer
-    );
-  }
-);
-
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_preload_200() {
-    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
-    Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
-
-    const files = [];
-    for (let i = 0; i < 200; i++) {
-      files.push(["int.pem", "int2.pem"][i % 2]);
-    }
-
-    clearTelemetry();
-
-    let result = await syncAndDownload(files);
-    equal(result, "success", "Preloading update should have run");
-
-    equal(
-      (await locallyDownloaded()).length,
-      100,
-      "There should have been only 100 downloaded"
-    );
-
-    const scalars = TelemetryTestUtils.getProcessScalars("parent");
-    TelemetryTestUtils.assertScalar(
-      scalars,
-      "security.intermediate_preloading_num_preloaded",
-      100,
-      "Should have preloaded 100 certs"
-    );
-    TelemetryTestUtils.assertScalar(
-      scalars,
-      "security.intermediate_preloading_num_pending",
-      100,
-      "Should report 100 pending"
-    );
-
-    let time_histogram = Services.telemetry
-      .getHistogramById("INTERMEDIATE_PRELOADING_UPDATE_TIME_MS")
-      .snapshot();
-    let errors_histogram = Services.telemetry
-      .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
-      .snapshot();
-    equal(countTelemetryReports(time_histogram), 1, "Should report time once");
-    equal(
-      countTelemetryReports(errors_histogram),
-      0,
-      "There should be no error reports"
-    );
-
-    // Re-run
-    result = await syncAndDownload([], { clear: false });
-    equal(result, "success", "Preloading update should have run");
-
-    equal(
-      (await locallyDownloaded()).length,
-      200,
-      "There should have been 200 downloaded"
-    );
-  }
-);
-
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_delete() {
-    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
-    Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
-
-    let syncResult = await syncAndDownload(["int.pem", "int2.pem"]);
-    equal(syncResult, "success", "Preloading update should have run");
-
-    equal(
-      (await locallyDownloaded()).length,
-      2,
-      "There should have been 2 downloads"
-    );
-
-    let localDB = await IntermediatePreloadsClient.client.db;
-    let data = await localDB.list();
-    ok(data.length > 0, "should have some entries");
-    let subject = data[0].subjectDN;
-    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
-      Ci.nsICertStorage
-    );
-    let resultsBefore = certStorage.findCertsBySubject(
-      stringToArray(atob(subject))
-    );
-    equal(
-      resultsBefore.length,
-      1,
-      "should find the intermediate in cert storage before"
-    );
-    // simulate a sync where we deleted the entry
-    await IntermediatePreloadsClient.client.emit("sync", {
-      data: {
-        current: [],
-        created: [],
-        deleted: [data[0]],
-        updated: [],
-      },
-    });
-    let resultsAfter = certStorage.findCertsBySubject(
-      stringToArray(atob(subject))
-    );
-    equal(
-      resultsAfter.length,
-      0,
-      "shouldn't find intermediate in cert storage now"
-    );
-  }
-);
+  let localDB = await IntermediatePreloadsClient.client.db;
+  let data = await localDB.list();
+  ok(data.length > 0, "should have some entries");
+  let subject = data[0].subjectDN;
+  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
+    Ci.nsICertStorage
+  );
+  let resultsBefore = certStorage.findCertsBySubject(
+    stringToArray(atob(subject))
+  );
+  equal(
+    resultsBefore.length,
+    1,
+    "should find the intermediate in cert storage before"
+  );
+  // simulate a sync where we deleted the entry
+  await IntermediatePreloadsClient.client.emit("sync", {
+    data: {
+      current: [],
+      created: [],
+      deleted: [data[0]],
+      updated: [],
+    },
+  });
+  let resultsAfter = certStorage.findCertsBySubject(
+    stringToArray(atob(subject))
+  );
+  equal(
+    resultsAfter.length,
+    0,
+    "shouldn't find intermediate in cert storage now"
+  );
+});
 
 function findCertByCommonName(certDB, commonName) {
   for (let cert of certDB.getCerts()) {
@@ -595,60 +560,55 @@ function findCertByCommonName(certDB, commonName) {
   return null;
 }
 
-add_task(
-  {
-    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
-  },
-  async function test_healer() {
-    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
-    Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
+add_task(async function test_healer() {
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
 
-    let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
-    // Add an intermediate as if it had previously been cached.
-    addCertFromFile(certDB, "test_intermediate_preloads/int.pem", ",,");
-    // Add an intermediate with non-default trust settings as if it had been added by the user.
-    addCertFromFile(certDB, "test_intermediate_preloads/int2.pem", "CTu,,");
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  // Add an intermediate as if it had previously been cached.
+  addCertFromFile(certDB, "test_intermediate_preloads/int.pem", ",,");
+  // Add an intermediate with non-default trust settings as if it had been added by the user.
+  addCertFromFile(certDB, "test_intermediate_preloads/int2.pem", "CTu,,");
 
-    let syncResult = await syncAndDownload(["int.pem", "int2.pem"]);
-    equal(syncResult, "success", "Preloading update should have run");
+  let syncResult = await syncAndDownload(["int.pem", "int2.pem"]);
+  equal(syncResult, "success", "Preloading update should have run");
 
-    equal(
-      (await locallyDownloaded()).length,
-      2,
-      "There should have been 2 downloads"
-    );
+  equal(
+    (await locallyDownloaded()).length,
+    2,
+    "There should have been 2 downloads"
+  );
 
-    let healerRanPromise = TestUtils.topicObserved(
-      "psm:intermediate-preloading-healer-ran"
-    );
-    Services.prefs.setIntPref(
-      "security.intermediate_preloading_healer.timer_interval_ms",
-      500
-    );
-    Services.prefs.setBoolPref(
-      "security.intermediate_preloading_healer.enabled",
-      true
-    );
-    await healerRanPromise;
-    Services.prefs.setBoolPref(
-      "security.intermediate_preloading_healer.enabled",
-      false
-    );
+  let healerRanPromise = TestUtils.topicObserved(
+    "psm:intermediate-preloading-healer-ran"
+  );
+  Services.prefs.setIntPref(
+    "security.intermediate_preloading_healer.timer_interval_ms",
+    500
+  );
+  Services.prefs.setBoolPref(
+    "security.intermediate_preloading_healer.enabled",
+    true
+  );
+  await healerRanPromise;
+  Services.prefs.setBoolPref(
+    "security.intermediate_preloading_healer.enabled",
+    false
+  );
 
-    let intermediate = findCertByCommonName(
-      certDB,
-      "intermediate-preloading-intermediate"
-    );
-    equal(intermediate, null, "should not find intermediate in NSS");
-    let intermediate2 = findCertByCommonName(
-      certDB,
-      "intermediate-preloading-intermediate2"
-    );
-    notEqual(intermediate2, null, "should find second intermediate in NSS");
-  }
-);
+  let intermediate = findCertByCommonName(
+    certDB,
+    "intermediate-preloading-intermediate"
+  );
+  equal(intermediate, null, "should not find intermediate in NSS");
+  let intermediate2 = findCertByCommonName(
+    certDB,
+    "intermediate-preloading-intermediate2"
+  );
+  notEqual(intermediate2, null, "should find second intermediate in NSS");
+});
 
 function run_test() {
   server = new HttpServer();

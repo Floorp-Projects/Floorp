@@ -23,6 +23,16 @@ const CONTROLS_FADE_TIMEOUT_MS = 3000;
 const RESIZE_DEBOUNCE_RATE_MS = 500;
 
 /**
+Quadrants!
+* 2 | 1
+* 3 | 4
+*/
+const TOP_RIGHT_QUADRANT = 1;
+const TOP_LEFT_QUADRANT = 2;
+const BOTTOM_LEFT_QUADRANT = 3;
+const BOTTOM_RIGHT_QUADRANT = 4;
+
+/**
  * Public function to be called from PictureInPicture.jsm. This is the main
  * entrypoint for initializing the player window.
  *
@@ -70,7 +80,7 @@ let Player = {
     "contextmenu",
     "dblclick",
     "keydown",
-    "mouseout",
+    "mouseup",
     "MozDOMFullscreen:Entered",
     "MozDOMFullscreen:Exited",
     "resize",
@@ -96,6 +106,13 @@ let Player = {
    * after CONTROLS_FADE_TIMEOUT_MS milliseconds.
    */
   showingTimeout: null,
+
+  /**
+   * Used to determine old window location when mouseup-ed for corner
+   * snapping drag vector calculation
+   */
+  oldMouseUpWindowX: window.screenX,
+  oldMouseUpWindowY: window.screenY,
 
   /**
    * Initializes the player browser, and sets up the initial state.
@@ -162,6 +179,16 @@ let Player = {
       });
     }, RESIZE_DEBOUNCE_RATE_MS);
 
+    this.lastScreenX = window.screenX;
+    this.lastScreenY = window.screenY;
+
+    this.recordEvent("create", {
+      width: window.outerWidth.toString(),
+      height: window.outerHeight.toString(),
+      screenX: window.screenX.toString(),
+      screenY: window.screenY.toString(),
+    });
+
     this.computeAndSetMinimumSize(window.outerWidth, window.outerHeight);
 
     // alwaysontop windows are not focused by default, so we have to do it
@@ -169,17 +196,6 @@ let Player = {
     // window is visible before it can focus.
     window.requestAnimationFrame(() => {
       window.focus();
-      // wait until the video is focused before recording the telemetry becuase
-      // the window will sometimes give the wrong X and Y before being focused
-      this.recordEvent("create", {
-        width: window.outerWidth.toString(),
-        height: window.outerHeight.toString(),
-        screenX: window.screenX.toString(),
-        screenY: window.screenY.toString(),
-      });
-
-      this.lastScreenX = window.screenX;
-      this.lastScreenY = window.screenY;
     });
   },
 
@@ -231,8 +247,8 @@ let Player = {
         break;
       }
 
-      case "mouseout": {
-        this.onMouseOut(event);
+      case "mouseup": {
+        this.onMouseUp(event);
         break;
       }
 
@@ -344,7 +360,92 @@ let Player = {
     });
   },
 
-  onMouseOut(event) {
+  /**
+   * PiP Corner Snapping Helper Function
+   * Determines the quadrant the PiP window is currently in.
+   */
+  determineCurrentQuadrant() {
+    // Determine center coordinates of window.
+    let windowCenterX = window.screenX + window.innerWidth / 2;
+    let windowCenterY = window.screenY + window.innerHeight / 2;
+    let quadrant = null;
+    let halfWidth = window.screen.availLeft + window.screen.availWidth / 2;
+    let halfHeight = window.screen.availTop + window.screen.availHeight / 2;
+
+    let leftHalf = windowCenterX < halfWidth;
+    let rightHalf = windowCenterX > halfWidth;
+    let topHalf = windowCenterY < halfHeight;
+    let bottomHalf = windowCenterY > halfHeight;
+
+    if (leftHalf && topHalf) {
+      quadrant = TOP_LEFT_QUADRANT;
+    } else if (rightHalf && topHalf) {
+      quadrant = TOP_RIGHT_QUADRANT;
+    } else if (leftHalf && bottomHalf) {
+      quadrant = BOTTOM_LEFT_QUADRANT;
+    } else if (rightHalf && bottomHalf) {
+      quadrant = BOTTOM_RIGHT_QUADRANT;
+    }
+    return quadrant;
+  },
+
+  /**
+   * Helper function to actually move/snap the PiP window.
+   * Moves the PiP window to the top right.
+   */
+  moveToTopRight() {
+    window.moveTo(
+      window.screen.availLeft + window.screen.availWidth - window.innerWidth,
+      window.screen.availTop
+    );
+  },
+
+  /**
+   * Moves the PiP window to the top left.
+   */
+  moveToTopLeft() {
+    window.moveTo(window.screen.availLeft, window.screen.availTop);
+  },
+
+  /**
+   * Moves the PiP window to the bottom right.
+   */
+  moveToBottomRight() {
+    window.moveTo(
+      window.screen.availLeft + window.screen.availWidth - window.innerWidth,
+      window.screen.availTop + window.screen.availHeight - window.innerHeight
+    );
+  },
+
+  /**
+   * Moves the PiP window to the bottom left.
+   */
+  moveToBottomLeft() {
+    window.moveTo(
+      window.screen.availLeft,
+      window.screen.availTop + window.screen.availHeight - window.innerHeight
+    );
+  },
+
+  determineDirectionDragged() {
+    // Determine change in window location.
+    let deltaX = this.oldMouseUpWindowX - window.screenX;
+    let deltaY = this.oldMouseUpWindowY - window.screenY;
+    let dragDirection = "";
+
+    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < 0) {
+      dragDirection = "draggedRight";
+    } else if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
+      dragDirection = "draggedLeft";
+    } else if (Math.abs(deltaX) < Math.abs(deltaY) && deltaY < 0) {
+      dragDirection = "draggedDown";
+    } else if (Math.abs(deltaX) < Math.abs(deltaY) && deltaY > 0) {
+      dragDirection = "draggedUp";
+    }
+    return dragDirection;
+  },
+
+  onMouseUp(event) {
     if (
       window.screenX != this.lastScreenX ||
       window.screenY != this.lastScreenY
@@ -354,9 +455,85 @@ let Player = {
         screenY: window.screenY.toString(),
       });
     }
-
     this.lastScreenX = window.screenX;
     this.lastScreenY = window.screenY;
+
+    // Corner snapping changes start here.
+    // Check if metakey pressed and macOS
+    let quadrant = this.determineCurrentQuadrant();
+    let dragAction = this.determineDirectionDragged();
+
+    if (event.metaKey && AppConstants.platform == "macosx" && dragAction) {
+      // Moving logic based on current quadrant and direction of drag.
+      switch (quadrant) {
+        case TOP_RIGHT_QUADRANT:
+          switch (dragAction) {
+            case "draggedRight":
+              this.moveToTopRight();
+              break;
+            case "draggedLeft":
+              this.moveToTopLeft();
+              break;
+            case "draggedDown":
+              this.moveToBottomRight();
+              break;
+            case "draggedUp":
+              this.moveToTopRight();
+              break;
+          }
+          break;
+        case TOP_LEFT_QUADRANT:
+          switch (dragAction) {
+            case "draggedRight":
+              this.moveToTopRight();
+              break;
+            case "draggedLeft":
+              this.moveToTopLeft();
+              break;
+            case "draggedDown":
+              this.moveToBottomLeft();
+              break;
+            case "draggedUp":
+              this.moveToTopLeft();
+              break;
+          }
+          break;
+        case BOTTOM_LEFT_QUADRANT:
+          switch (dragAction) {
+            case "draggedRight":
+              this.moveToBottomRight();
+              break;
+            case "draggedLeft":
+              this.moveToBottomLeft();
+              break;
+            case "draggedDown":
+              this.moveToBottomLeft();
+              break;
+            case "draggedUp":
+              this.moveToTopLeft();
+              break;
+          }
+          break;
+        case BOTTOM_RIGHT_QUADRANT:
+          switch (dragAction) {
+            case "draggedRight":
+              this.moveToBottomRight();
+              break;
+            case "draggedLeft":
+              this.moveToBottomLeft();
+              break;
+            case "draggedDown":
+              this.moveToBottomRight();
+              break;
+            case "draggedUp":
+              this.moveToTopRight();
+              break;
+          }
+          break;
+      } // Switch close.
+    } // Metakey close.
+    this.oldMouseUpWindowX = window.screenX;
+    this.oldMouseUpWindowY = window.screenY;
   },
 
   onResize(event) {
