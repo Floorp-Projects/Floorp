@@ -51,7 +51,7 @@ class TextPromptDialogFragmentTest {
         val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
         val inputLabel = dialog.findViewById<TextView>(id.input_label)
         val inputValue = dialog.findViewById<TextView>(id.input_value)
-        val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)
+        val checkBox = dialog.findViewById<CheckBox>(id.mozac_feature_prompts_no_more_dialogs_check_box)
 
         assertEquals(fragment.sessionId, "sessionId")
         assertEquals(fragment.title, "title")
@@ -85,7 +85,7 @@ class TextPromptDialogFragmentTest {
 
         dialog.show()
 
-        val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)
+        val checkBox = dialog.findViewById<CheckBox>(id.mozac_feature_prompts_no_more_dialogs_check_box)
 
         assertFalse(checkBox.isVisible)
     }
@@ -124,7 +124,7 @@ class TextPromptDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)
+        val checkBox = dialog.findViewById<CheckBox>(id.mozac_feature_prompts_no_more_dialogs_check_box)
 
         checkBox.isChecked = true
 

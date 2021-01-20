@@ -33,7 +33,7 @@
                 android:inputType="text"/>
 
         <CheckBox
-                android:id="@+id/no_more_dialogs_check_box"
+                android:id="@id/mozac_feature_prompts_no_more_dialogs_check_box"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/mozac_feature_prompts_no_more_dialogs"

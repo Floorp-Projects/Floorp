@@ -4,47 +4,25 @@
 
 package mozilla.components.feature.prompts.dialog
 
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.widget.CheckBox
 import androidx.appcompat.app.AlertDialog
-import mozilla.components.feature.prompts.R
-
-private const val KEY_MANY_ALERTS = "KEY_MANY_ALERTS"
-private const val KEY_USER_CHECK_BOX = "KEY_USER_CHECK_BOX"
 
 /**
  * [android.support.v4.app.DialogFragment] implementation to display web Alerts with native dialogs.
  */
-internal class AlertDialogFragment : PromptDialogFragment() {
-
-    /**
-     * Tells if a checkbox should be shown for preventing this [sessionId] from showing more dialogs.
-     */
-    internal val hasShownManyDialogs: Boolean by lazy { safeArguments.getBoolean(KEY_MANY_ALERTS) }
-
-    /**
-     * Stores the user's decision from the checkbox
-     * for preventing this [sessionId] from showing more dialogs.
-     */
-    private var userSelectionNoMoreDialogs: Boolean
-        get() = safeArguments.getBoolean(KEY_USER_CHECK_BOX)
-        set(value) {
-            safeArguments.putBoolean(KEY_USER_CHECK_BOX, value)
-        }
+internal class AlertDialogFragment : AbstractPromptTextDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+
         val builder = AlertDialog.Builder(requireContext())
             .setTitle(title)
             .setCancelable(true)
-            .setMessage(message)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 onPositiveClickAction()
             }
-        return (if (hasShownManyDialogs) addCheckbox(builder) else builder)
+        return setCustomMessageView(builder)
             .create()
     }
 
@@ -59,19 +37,6 @@ internal class AlertDialogFragment : PromptDialogFragment() {
         } else {
             feature?.onConfirm(sessionId, userSelectionNoMoreDialogs)
         }
-    }
-
-    @SuppressLint("InflateParams")
-    private fun addCheckbox(builder: AlertDialog.Builder): AlertDialog.Builder {
-        val inflater = LayoutInflater.from(requireContext())
-        val view = inflater.inflate(R.layout.mozac_feature_many_dialogs_checkbox_dialogs, null)
-        val checkBox = view.findViewById<CheckBox>(R.id.no_more_dialogs_check_box)
-        checkBox.setOnCheckedChangeListener { _, isChecked ->
-            userSelectionNoMoreDialogs = isChecked
-        }
-        builder.setView(view)
-
-        return builder
     }
 
     companion object {

@@ -8,14 +8,16 @@ import android.content.DialogInterface.BUTTON_POSITIVE
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.prompts.PromptFeature
+import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.test.mock
 import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,8 +50,8 @@ class AlertDialogFragmentTest {
         dialog.show()
 
         val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
-        val messageTextView = dialog.findViewById<TextView>(android.R.id.message)
-        val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)
+        val messageTextView = dialog.findViewById<TextView>(R.id.message)
+        val checkBox = dialog.findViewById<CheckBox>(id.mozac_feature_prompts_no_more_dialogs_check_box)
 
         assertEquals(fragment.sessionId, "sessionId")
         assertEquals(fragment.message, "message")
@@ -57,8 +59,8 @@ class AlertDialogFragmentTest {
 
         assertEquals(titleTextView.text, "title")
         assertEquals(fragment.title, "title")
-        assertEquals(messageTextView.text, "message")
-        assertNotNull(checkBox)
+        assertEquals(messageTextView.text.toString(), "message")
+        assertTrue(checkBox.isVisible)
     }
 
     @Test
@@ -73,9 +75,9 @@ class AlertDialogFragmentTest {
 
         dialog.show()
 
-        val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)
+        val checkBox = dialog.findViewById<CheckBox>(id.mozac_feature_prompts_no_more_dialogs_check_box)
 
-        assertNull(checkBox)
+        assertFalse(checkBox.isVisible)
     }
 
     @Test
@@ -113,7 +115,7 @@ class AlertDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)
+        val checkBox = dialog.findViewById<CheckBox>(id.mozac_feature_prompts_no_more_dialogs_check_box)
 
         checkBox.isChecked = true
 
