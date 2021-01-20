@@ -10,8 +10,8 @@ const EXPORTED_SYMBOLS = ["ASRouterDefaultConfig"];
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { TelemetryFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/TelemetryFeed.jsm"
+const { ASRouterTelemetry } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouterTelemetry.jsm"
 );
 const { ASRouterParentProcessMessageHandler } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterParentProcessMessageHandler.jsm"
@@ -29,12 +29,9 @@ const { ActivityStreamStorage } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStreamStorage.jsm"
 );
 
-const createStorage = async telemetryFeed => {
+const createStorage = async () => {
   const dbStore = new ActivityStreamStorage({
-    storeNames: ["sectionPrefs", "snippets"],
-    telemetry: {
-      handleUndesiredEvent: e => telemetryFeed.SendASRouterUndesiredEvent(e),
-    },
+    storeNames: ["snippets"],
   });
   // Accessing the db causes the object stores to be created / migrated.
   // This needs to happen before other instances try to access the db, which
@@ -49,17 +46,17 @@ const createStorage = async telemetryFeed => {
 
 const ASRouterDefaultConfig = () => {
   const router = ASRouter;
-  const telemetry = new TelemetryFeed();
+  const telemetry = new ASRouterTelemetry();
   const messageHandler = new ASRouterParentProcessMessageHandler({
     router,
     preferences: ASRouterPreferences,
     specialMessageActions: SpecialMessageActions,
     queryCache: QueryCache,
-    sendTelemetry: telemetry.onAction.bind(telemetry),
+    sendTelemetry: telemetry.sendTelemetry,
   });
   return {
     router,
     messageHandler,
-    createStorage: createStorage.bind(null, telemetry),
+    createStorage,
   };
 };
