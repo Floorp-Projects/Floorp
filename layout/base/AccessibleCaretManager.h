@@ -231,14 +231,6 @@ class AccessibleCaretManager {
 
   enum class Terminated : bool { No, Yes };
 
-  // This method could kill the shell, so callers to methods that call
-  // MaybeFlushLayout should ensure the event hub that owns us is still alive.
-  //
-  // See the mRefCnt assertions in AccessibleCaretEventHub.
-  //
-  // @return IsTerminated().
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Terminated MaybeFlushLayout();
-
   static dom::Element* GetEditingHostForFrame(const nsIFrame* aFrame);
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
@@ -335,12 +327,27 @@ class AccessibleCaretManager {
   // Set to true in OnScrollStart() and set to false in OnScrollEnd().
   bool mIsScrollStarted = false;
 
-  // Whether we're flushing layout, used for sanity-checking.
-  bool mFlushingLayout = false;
+  class LayoutFlusher final {
+   public:
+    // This method could kill the shell, so callers to methods that call
+    // MaybeFlush should ensure the event hub that owns us is still alive.
+    //
+    // See the mRefCnt assertions in AccessibleCaretEventHub.
+    //
+    // @return aAccessibleCaretManager.IsTerminated().
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT Terminated
+    MaybeFlush(const AccessibleCaretManager& aAccessibleCaretManager);
 
-  // Set to false to disallow flushing layout in some callbacks such as
-  // OnReflow(), OnScrollStart(), OnScrollStart(), or OnScrollPositionChanged().
-  bool mAllowFlushingLayout = true;
+    // Whether we're flushing layout, used for sanity-checking.
+    bool mFlushing = false;
+
+    // Set to false to disallow flushing layout in some callbacks such as
+    // OnReflow(), OnScrollStart(), OnScrollStart(), or
+    // OnScrollPositionChanged().
+    bool mAllowFlushing = true;
+  };
+
+  LayoutFlusher mLayoutFlusher;
 
   // Set to True if one of the caret's position is changed in last update.
   bool mIsCaretPositionChanged = false;
