@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
@@ -72,17 +71,13 @@ class SampleApplication : Application() {
                 components.store,
                 onNewTabOverride = {
                     _, engineSession, url ->
-                        val session = Session(url)
-                        components.sessionManager.add(session, true, engineSession)
-                        session.id
+                        components.tabsUseCases.addTab(url, selectTab = true, engineSession = engineSession)
                 },
                 onCloseTabOverride = {
                     _, sessionId -> components.tabsUseCases.removeTab(sessionId)
                 },
                 onSelectTabOverride = {
-                    _, sessionId ->
-                        val selected = components.sessionManager.findSessionById(sessionId)
-                        selected?.let { components.tabsUseCases.selectTab(it) }
+                    _, sessionId -> components.tabsUseCases.selectTab(sessionId)
                 },
                 onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest,
                 onExtensionsLoaded = { extensions ->
