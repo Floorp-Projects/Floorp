@@ -803,7 +803,7 @@ Tester.prototype = {
       name = name.slice(name.lastIndexOf("/") + 1);
       ChromeUtils.addProfilerMarker(
         "browser-test",
-        this.lastStartTimestamp,
+        { category: "Test", startTime: this.lastStartTimestamp },
         name
       );
       let time = Date.now() - this.lastStartTime;
@@ -1118,9 +1118,9 @@ Tester.prototype = {
             }
             PromiseTestUtils.assertNoUncaughtRejections();
             ChromeUtils.addProfilerMarker(
-              "browser-test",
-              startTimestamp,
-              task.name.replace(/^bound /, "") || "task"
+              "task",
+              { category: "Test", startTime: startTimestamp },
+              task.name.replace(/^bound /, "") || undefined
             );
             this.SimpleTest.info("Leaving test " + task.name);
           }
