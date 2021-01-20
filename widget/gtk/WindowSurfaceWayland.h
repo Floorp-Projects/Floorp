@@ -106,22 +106,16 @@ class WindowBackBuffer {
 
 class WindowImageSurface {
  public:
-  static void Draw(gfx::SourceSurface* aSurface, gfx::DrawTarget* aDest,
-                   const LayoutDeviceIntRegion& aRegion);
-
-  void Draw(gfx::DrawTarget* aDest,
-            LayoutDeviceIntRegion& aWaylandBufferDamage);
-
-  WindowImageSurface(gfxImageSurface* aImageSurface,
+  void DrawToTarget(gfx::DrawTarget* aDest,
+                    LayoutDeviceIntRegion& aWaylandBufferDamage);
+  WindowImageSurface(gfx::DataSourceSurface* aImageSurface,
                      const LayoutDeviceIntRegion& aUpdateRegion);
-
   bool OverlapsSurface(class WindowImageSurface& aBottomSurface);
 
   const LayoutDeviceIntRegion* GetUpdateRegion() { return &mUpdateRegion; };
 
  private:
-  RefPtr<gfx::SourceSurface> mSurface;
-  RefPtr<gfxImageSurface> mImageSurface;
+  RefPtr<gfx::DataSourceSurface> mImageSurface;
   const LayoutDeviceIntRegion mUpdateRegion;
 };
 
@@ -232,7 +226,7 @@ class WindowSurfaceWayland : public WindowSurface {
   // holds all cached drawings.
   // mDelayedImageCommits can be drawn by FrameCallbackHandler()
   // or when WaylandBuffer is detached.
-  RefPtr<gfxImageSurface> mImageSurface;
+  RefPtr<gfx::DataSourceSurface> mImageSurface;
   AutoTArray<WindowImageSurface, 30> mDelayedImageCommits;
 
   int64_t mLastCommitTime;
