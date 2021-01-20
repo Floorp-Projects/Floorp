@@ -40,11 +40,6 @@ class nsNSSCertificate final : public nsIX509Cert,
   static nsNSSCertificate* Create(CERTCertificate* cert = nullptr);
   static nsNSSCertificate* ConstructFromDER(char* certDER, int derLen);
 
-  // This is a separate static method so nsNSSComponent can use it during NSS
-  // initialization. Other code should probably not use it.
-  static nsresult GetDbKey(const mozilla::UniqueCERTCertificate& cert,
-                           nsACString& aDbKey);
-
   // Split a certificate chain into the root, intermediates (if any), and end
   // entity. This method does so blindly, assuming that the current list object
   // is ordered [end entity, intermediates..., root]. If that isn't true, this
