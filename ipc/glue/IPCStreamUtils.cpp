@@ -551,7 +551,7 @@ Maybe<IPCStream>& AutoIPCStream::TakeOptionalValue() {
 void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
                                              IProtocol* aActor,
                                              nsIInputStream* aParam) {
-  auto autoStream = MakeRefPtr<HoldIPCStream>();
+  auto autoStream = MakeRefPtr<HoldIPCStream>(/* aDelayedStart */ true);
 
   bool ok = false;
   bool found = false;
