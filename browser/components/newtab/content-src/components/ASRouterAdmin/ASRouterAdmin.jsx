@@ -527,6 +527,7 @@ export class ASRouterAdminInner extends React.PureComponent {
         experiment: "ua-onboarding",
         variation: "chrome",
         ua: "Google Chrome 123",
+        dltoken: "00000000-0000-0000-0000-000000000000",
       },
     };
   }
@@ -1561,6 +1562,21 @@ export class ASRouterAdminInner extends React.PureComponent {
                 name="ua"
                 placeholder="Google Chrome 123"
                 value={this.state.attributionParameters.ua}
+                onChange={this.onChangeAttributionParameters}
+              />{" "}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <b> Download Token </b>
+            </td>
+            <td>
+              {" "}
+              <input
+                type="text"
+                name="dltoken"
+                placeholder="00000000-0000-0000-0000-000000000000"
+                value={this.state.attributionParameters.dltoken}
                 onChange={this.onChangeAttributionParameters}
               />{" "}
             </td>
