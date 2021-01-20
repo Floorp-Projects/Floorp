@@ -907,12 +907,14 @@ impl TextureCache {
 
         // Texture cache eviction is done at the start of the frame. This ensures that
         // we won't evict items that have been requested on this frame.
+        // It also frees up space in the cache for items allocated later in the frame
+        // potentially reducing texture allocations and fragmentation.
         self.evict_items_from_cache_if_required();
+        self.expire_old_picture_cache_tiles();
     }
 
     pub fn end_frame(&mut self, profile: &mut TransactionProfile) {
         debug_assert!(self.now.is_valid());
-        self.expire_old_picture_cache_tiles();
         self.picture_textures.gc(
             &mut self.pending_updates,
         );
@@ -1229,19 +1231,11 @@ impl TextureCache {
                     &self.picture_cache_handles[i]
                 );
 
-                // Texture cache entries can be evicted at the start of
-                // a frame, or at any time during the frame when a cache
-                // allocation is occurring. This means that entries tagged
-                // with eager eviction may get evicted before they have a
-                // chance to be requested on the current frame. Instead,
-                // advance the frame id of the entry by one before
-                // comparison. This ensures that an eager entry will
-                // not be evicted until it is not used for at least
-                // one complete frame.
-                let mut entry_frame_id = entry.last_access.frame_id();
-                entry_frame_id.advance();
-
-                entry_frame_id < self.now.frame_id()
+                // This function is called at the beginning of the frame,
+                // so we don't yet know which picture cache tiles will be
+                // requested this frame. Therefore only evict picture cache
+                // tiles which weren't requested in the *previous* frame.
+                entry.last_access.frame_id() < self.now.frame_id() - 1
             };
 
             if evict {
