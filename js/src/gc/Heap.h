@@ -487,31 +487,31 @@ inline void FreeSpan::checkRange(uintptr_t first, uintptr_t last,
 
 // Mark bitmap API:
 
-MOZ_ALWAYS_INLINE bool ChunkBitmap::markBit(const TenuredCell* cell,
-                                            ColorBit colorBit) {
+MOZ_ALWAYS_INLINE bool MarkBitmap::markBit(const TenuredCell* cell,
+                                           ColorBit colorBit) {
   MarkBitmapWord* word;
   uintptr_t mask;
   getMarkWordAndMask(cell, colorBit, &word, &mask);
   return *word & mask;
 }
 
-MOZ_ALWAYS_INLINE bool ChunkBitmap::isMarkedAny(const TenuredCell* cell) {
+MOZ_ALWAYS_INLINE bool MarkBitmap::isMarkedAny(const TenuredCell* cell) {
   return markBit(cell, ColorBit::BlackBit) ||
          markBit(cell, ColorBit::GrayOrBlackBit);
 }
 
-MOZ_ALWAYS_INLINE bool ChunkBitmap::isMarkedBlack(const TenuredCell* cell) {
+MOZ_ALWAYS_INLINE bool MarkBitmap::isMarkedBlack(const TenuredCell* cell) {
   return markBit(cell, ColorBit::BlackBit);
 }
 
-MOZ_ALWAYS_INLINE bool ChunkBitmap::isMarkedGray(const TenuredCell* cell) {
+MOZ_ALWAYS_INLINE bool MarkBitmap::isMarkedGray(const TenuredCell* cell) {
   return !markBit(cell, ColorBit::BlackBit) &&
          markBit(cell, ColorBit::GrayOrBlackBit);
 }
 
 // The return value indicates if the cell went from unmarked to marked.
-MOZ_ALWAYS_INLINE bool ChunkBitmap::markIfUnmarked(const TenuredCell* cell,
-                                                   MarkColor color) {
+MOZ_ALWAYS_INLINE bool MarkBitmap::markIfUnmarked(const TenuredCell* cell,
+                                                  MarkColor color) {
   MarkBitmapWord* word;
   uintptr_t mask;
   getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
@@ -534,20 +534,20 @@ MOZ_ALWAYS_INLINE bool ChunkBitmap::markIfUnmarked(const TenuredCell* cell,
   return true;
 }
 
-MOZ_ALWAYS_INLINE void ChunkBitmap::markBlack(const TenuredCell* cell) {
+MOZ_ALWAYS_INLINE void MarkBitmap::markBlack(const TenuredCell* cell) {
   MarkBitmapWord* word;
   uintptr_t mask;
   getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
   *word |= mask;
 }
 
-MOZ_ALWAYS_INLINE void ChunkBitmap::copyMarkBit(TenuredCell* dst,
-                                                const TenuredCell* src,
-                                                ColorBit colorBit) {
-  ChunkBase* srcChunk = detail::GetCellChunkBase(src);
+MOZ_ALWAYS_INLINE void MarkBitmap::copyMarkBit(TenuredCell* dst,
+                                               const TenuredCell* src,
+                                               ColorBit colorBit) {
+  TenuredChunkBase* srcChunk = detail::GetCellChunkBase(src);
   MarkBitmapWord* srcWord;
   uintptr_t srcMask;
-  srcChunk->bitmap.getMarkWordAndMask(src, colorBit, &srcWord, &srcMask);
+  srcChunk->markBits.getMarkWordAndMask(src, colorBit, &srcWord, &srcMask);
 
   MarkBitmapWord* dstWord;
   uintptr_t dstMask;
@@ -559,7 +559,7 @@ MOZ_ALWAYS_INLINE void ChunkBitmap::copyMarkBit(TenuredCell* dst,
   }
 }
 
-MOZ_ALWAYS_INLINE void ChunkBitmap::unmark(const TenuredCell* cell) {
+MOZ_ALWAYS_INLINE void MarkBitmap::unmark(const TenuredCell* cell) {
   MarkBitmapWord* word;
   uintptr_t mask;
   getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
@@ -568,13 +568,13 @@ MOZ_ALWAYS_INLINE void ChunkBitmap::unmark(const TenuredCell* cell) {
   *word &= ~mask;
 }
 
-inline void ChunkBitmap::clear() {
-  for (size_t i = 0; i < ChunkBitmap::WordCount; i++) {
+inline void MarkBitmap::clear() {
+  for (size_t i = 0; i < MarkBitmap::WordCount; i++) {
     bitmap[i] = 0;
   }
 }
 
-inline MarkBitmapWord* ChunkBitmap::arenaBits(Arena* arena) {
+inline MarkBitmapWord* MarkBitmap::arenaBits(Arena* arena) {
   static_assert(
       ArenaBitmapBits == ArenaBitmapWords * JS_BITS_PER_WORD,
       "We assume that the part of the bitmap corresponding to the arena "
@@ -592,7 +592,7 @@ inline MarkBitmapWord* ChunkBitmap::arenaBits(Arena* arena) {
  * Chunks contain arenas and associated data structures (mark bitmap, delayed
  * marking state).
  */
-struct Chunk : public ChunkBase {
+struct Chunk : public TenuredChunkBase {
   Arena arenas[ArenasPerChunk];
 
   static Chunk* fromAddress(uintptr_t addr) {

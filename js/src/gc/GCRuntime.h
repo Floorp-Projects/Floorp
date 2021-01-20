@@ -503,7 +503,7 @@ class GCRuntime {
     marker.setGCMode(mode);
   }
 
-  inline void updateOnFreeArenaAlloc(const ChunkInfo& info);
+  inline void updateOnFreeArenaAlloc(const TenuredChunkInfo& info);
   inline void updateOnArenaFree();
 
   ChunkPool& fullChunks(const AutoLockGC& lock) { return fullChunks_.ref(); }
@@ -641,7 +641,7 @@ class GCRuntime {
   bool tooManyEmptyChunks(const AutoLockGC& lock);
   ChunkPool expireEmptyChunkPool(const AutoLockGC& lock);
   void freeEmptyChunks(const AutoLockGC& lock);
-  void prepareToFreeChunk(ChunkInfo& info);
+  void prepareToFreeChunk(TenuredChunkInfo& info);
 
   friend class BackgroundAllocTask;
   bool wantBackgroundAllocation(const AutoLockGC& lock) const;
