@@ -679,30 +679,6 @@ These pings record user interaction with the save to Pocket button.
 }
 ```
 
-## Undesired event pings
-
-These pings record the undesired events happen in the addon for further investigation.
-
-### Addon initialization failure
-
-This reports when the addon fails to initialize
-
-```js
-{
-  "action": "activity_stream_undesired_event",
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "addon_version": "20180710100040",
-  "locale": "en-US",
-  "experiments": {
-    "experiment_1": {"branch": "control"},
-    "experiment_2": {"branch": "treatment"}
-  },
-  "user_prefs": 7,
-  "event": "ADDON_INIT_FAILED",
-  "value": -1
-}
-```
-
 ## Activity Stream Router pings
 
 These pings record the impression and user interactions within Activity Stream Router.

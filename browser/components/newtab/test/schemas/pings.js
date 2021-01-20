@@ -157,15 +157,6 @@ export const UserEventAction = Joi.object().keys({
     .required(),
 });
 
-export const UndesiredPing = Joi.object().keys(
-  Object.assign({}, baseKeys, {
-    source: Joi.string().required(),
-    event: Joi.string().required(),
-    action: Joi.valid("activity_stream_undesired_event").required(),
-    value: Joi.number().required(),
-  })
-);
-
 export const TileSchema = Joi.object().keys({
   id: Joi.number()
     .integer()
