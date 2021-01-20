@@ -42,11 +42,32 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::net;
 
+class NoOpDNSListener final : public nsIDNSListener {
+  // This class exists to give a safe callback no-op DNSListener
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIDNSLISTENER
+
+  NoOpDNSListener() = default;
+
+ private:
+  ~NoOpDNSListener() = default;
+};
+
+
+NS_IMPL_ISUPPORTS(NoOpDNSListener, nsIDNSListener)
+
+NS_IMETHODIMP
+NoOpDNSListener::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
+                                  nsresult status) {
+  return NS_OK;
+}
+
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static bool sInitialized = false;
 static nsIDNSService* sDNSService = nullptr;
 static nsHTMLDNSPrefetch::nsDeferrals* sPrefetches = nullptr;
-static nsHTMLDNSPrefetch::nsListener* sDNSListener = nullptr;
+static NoOpDNSListener* sDNSListener = nullptr;
 
 nsresult nsHTMLDNSPrefetch::Initialize() {
   if (sInitialized) {
@@ -57,7 +78,7 @@ nsresult nsHTMLDNSPrefetch::Initialize() {
   sPrefetches = new nsHTMLDNSPrefetch::nsDeferrals();
   NS_ADDREF(sPrefetches);
 
-  sDNSListener = new nsHTMLDNSPrefetch::nsListener();
+  sDNSListener = new NoOpDNSListener();
   NS_ADDREF(sDNSListener);
 
   sPrefetches->Activate();
@@ -274,23 +295,9 @@ void nsHTMLDNSPrefetch::LinkDestroyed(Link* aLink) {
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS(nsHTMLDNSPrefetch::nsListener, nsIDNSListener)
-
-NS_IMETHODIMP
-nsHTMLDNSPrefetch::nsListener::OnLookupComplete(nsICancelable* request,
-                                                nsIDNSRecord* rec,
-                                                nsresult status) {
-  return NS_OK;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 nsHTMLDNSPrefetch::nsDeferrals::nsDeferrals()
     : mHead(0), mTail(0), mActiveLoaderCount(0), mTimerArmed(false) {
   mTimer = NS_NewTimer();
-  ;
 }
 
 nsHTMLDNSPrefetch::nsDeferrals::~nsDeferrals() {
