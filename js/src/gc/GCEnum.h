@@ -18,10 +18,6 @@
 namespace js {
 namespace gc {
 
-// Mark colors. Order is important here: the greater value the 'more marked' a
-// cell is.
-enum class MarkColor : uint8_t { Gray = 1, Black = 2 };
-
 // The phases of an incremental GC.
 #define GCSTATES(D) \
   D(NotActive)      \

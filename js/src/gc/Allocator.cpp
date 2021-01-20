@@ -788,7 +788,7 @@ Chunk* GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock) {
 }
 
 void GCRuntime::recycleChunk(Chunk* chunk, const AutoLockGC& lock) {
-  AlwaysPoison(&chunk->trailer, JS_FREED_CHUNK_PATTERN, sizeof(ChunkTrailer),
+  AlwaysPoison(&chunk->header, JS_FREED_CHUNK_PATTERN, sizeof(ChunkHeader),
                MemCheckKind::MakeNoAccess);
   emptyChunks(lock).push(chunk);
 }
@@ -861,6 +861,9 @@ void Chunk::init(GCRuntime* gc) {
   Poison(this, JS_FRESH_TENURED_PATTERN, ChunkSize,
          MemCheckKind::MakeUndefined);
 
+  new (&header) ChunkHeader(gc->rt);
+  info.init();
+
   /*
    * We clear the bitmap to guard against JS::GCThingIsMarkedGray being called
    * on uninitialized data, which would happen before the first GC cycle.
@@ -872,10 +875,6 @@ void Chunk::init(GCRuntime* gc) {
    * not have to recycle the pages, we still get the benefit of poisoning.
    */
   decommitAllArenas();
-
-  /* Initialize the chunk info. */
-  info.init();
-  new (&trailer) ChunkTrailer(gc->rt);
 
   /* The rest of info fields are initialized in pickChunk. */
 }

@@ -1652,28 +1652,34 @@ bool ObjectIsConstructor(JSObject* obj) {
 
 void MarkValueFromJit(JSRuntime* rt, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
+  MOZ_ASSERT(vp->isGCThing());
+  MOZ_ASSERT(!vp->toGCThing()->isMarkedBlack());
   TraceManuallyBarrieredEdge(&rt->gc.marker, vp, "write barrier");
 }
 
 void MarkStringFromJit(JSRuntime* rt, JSString** stringp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(*stringp);
+  MOZ_ASSERT(!(*stringp)->isMarkedBlack());
   TraceManuallyBarrieredEdge(&rt->gc.marker, stringp, "write barrier");
 }
 
 void MarkObjectFromJit(JSRuntime* rt, JSObject** objp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(*objp);
+  MOZ_ASSERT(!(*objp)->isMarkedBlack());
   TraceManuallyBarrieredEdge(&rt->gc.marker, objp, "write barrier");
 }
 
 void MarkShapeFromJit(JSRuntime* rt, Shape** shapep) {
   AutoUnsafeCallWithABI unsafe;
+  MOZ_ASSERT(!(*shapep)->isMarkedBlack());
   TraceManuallyBarrieredEdge(&rt->gc.marker, shapep, "write barrier");
 }
 
 void MarkObjectGroupFromJit(JSRuntime* rt, ObjectGroup** groupp) {
   AutoUnsafeCallWithABI unsafe;
+  MOZ_ASSERT(!(*groupp)->isMarkedBlack());
   TraceManuallyBarrieredEdge(&rt->gc.marker, groupp, "write barrier");
 }
 

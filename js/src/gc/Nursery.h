@@ -366,7 +366,7 @@ class Nursery {
   size_t capacity() const { return capacity_; }
   size_t committed() const { return spaceToEnd(allocatedChunkCount()); }
 
-  // Used and free space both include chunk trailers for that part of the
+  // Used and free space both include chunk headers for that part of the
   // nursery.
   //
   // usedSpace() + freeSpace() == capacity()
@@ -434,7 +434,7 @@ class Nursery {
 
   // The amount of space in the mapped nursery available to allocations.
   static const size_t NurseryChunkUsableSize =
-      gc::ChunkSize - gc::ChunkTrailerSize;
+      gc::ChunkSize - sizeof(gc::ChunkHeader);
 
   void joinDecommitTask() { decommitTask.join(); }
 
@@ -476,8 +476,7 @@ class Nursery {
 
   // The current nursery capacity measured in bytes. It may grow up to this
   // value without a collection, allocating chunks on demand. This limit may be
-  // changed by maybeResizeNursery() each collection. It does not include chunk
-  // trailers.
+  // changed by maybeResizeNursery() each collection. It includes chunk headers.
   size_t capacity_;
 
   mozilla::TimeDuration timeInChunkAlloc_;
@@ -659,7 +658,7 @@ class Nursery {
 
   // extent is advisory, it will be ignored in sub-chunk and generational zeal
   // modes. It will be clamped to Min(NurseryChunkUsableSize, capacity_).
-  void poisonAndInitCurrentChunk(size_t extent = NurseryChunkUsableSize);
+  void poisonAndInitCurrentChunk(size_t extent = gc::ChunkSize);
 
   void setCurrentEnd();
   void setStartPosition();
