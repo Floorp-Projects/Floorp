@@ -713,7 +713,7 @@ Arena* Chunk::allocateArena(GCRuntime* gc, Zone* zone, AllocKind thingKind,
   return arena;
 }
 
-inline void GCRuntime::updateOnFreeArenaAlloc(const ChunkInfo& info) {
+inline void GCRuntime::updateOnFreeArenaAlloc(const TenuredChunkInfo& info) {
   MOZ_ASSERT(info.numArenasFreeCommitted <= numArenasFreeCommitted);
   --numArenasFreeCommitted;
 }
@@ -868,7 +868,7 @@ void Chunk::init(GCRuntime* gc) {
    * We clear the bitmap to guard against JS::GCThingIsMarkedGray being called
    * on uninitialized data, which would happen before the first GC cycle.
    */
-  bitmap.clear();
+  markBits.clear();
 
   /*
    * Decommit the arenas. We do this after poisoning so that if the OS does

@@ -93,7 +93,7 @@ class alignas(CellAlignBytes) ChunkHeader {
 };
 
 // Information about tenured heap chunks.
-struct ChunkInfo {
+struct TenuredChunkInfo {
   void init() { next = prev = nullptr; }
 
  private:
@@ -143,11 +143,11 @@ struct ChunkInfo {
 const size_t BitsPerArenaWithHeaders =
     (ArenaSize + ArenaBitmapBytes) * CHAR_BIT + 1;
 const size_t ChunkBitsAvailable =
-    (ChunkSize - sizeof(ChunkHeader) - sizeof(ChunkInfo)) * CHAR_BIT;
+    (ChunkSize - sizeof(ChunkHeader) - sizeof(TenuredChunkInfo)) * CHAR_BIT;
 const size_t ArenasPerChunk = ChunkBitsAvailable / BitsPerArenaWithHeaders;
 
 const size_t CalculatedChunkSizeRequired =
-    sizeof(ChunkHeader) + sizeof(ChunkInfo) +
+    sizeof(ChunkHeader) + sizeof(TenuredChunkInfo) +
     RoundUp(ArenasPerChunk * ArenaBitmapBytes, sizeof(uintptr_t)) +
     RoundUp(ArenasPerChunk, sizeof(uint32_t) * CHAR_BIT) / CHAR_BIT +
     ArenasPerChunk * ArenaSize;
@@ -191,7 +191,7 @@ enum class ColorBit : uint32_t { BlackBit = 0, GrayOrBlackBit = 1 };
 enum class MarkColor : uint8_t { Gray = 1, Black = 2 };
 
 // Mark bitmap for a tenured heap chunk.
-struct ChunkBitmap {
+struct MarkBitmap {
   static constexpr size_t WordCount = ArenaBitmapWords * ArenasPerChunk;
   MarkBitmapWord bitmap[WordCount];
 
@@ -212,19 +212,19 @@ struct ChunkBitmap {
   inline MarkBitmapWord* arenaBits(Arena* arena);
 };
 
-static_assert(ArenaBitmapBytes * ArenasPerChunk == sizeof(ChunkBitmap),
-              "Ensure our ChunkBitmap actually covers all arenas.");
+static_assert(ArenaBitmapBytes * ArenasPerChunk == sizeof(MarkBitmap),
+              "Ensure our MarkBitmap actually covers all arenas.");
 
 // Decommit bitmap for a heap chunk.
-using PerArenaBitmap = mozilla::BitSet<ArenasPerChunk, uint32_t>;
+using DecommitBitmap = mozilla::BitSet<ArenasPerChunk, uint32_t>;
 
-// Base class containing data members for a heap chunk.
-class ChunkBase {
+// Base class containing data members for a tenured heap chunk.
+class TenuredChunkBase {
  public:
   ChunkHeader header;
-  ChunkInfo info;
-  ChunkBitmap bitmap;
-  PerArenaBitmap decommittedArenas;
+  TenuredChunkInfo info;
+  MarkBitmap markBits;
+  DecommitBitmap decommittedArenas;
 };
 
 /*
@@ -238,17 +238,17 @@ const size_t MaxArenaCellIndex = ArenaSize / CellAlignBytes;
 const size_t MarkBitmapWordBits = sizeof(MarkBitmapWord) * CHAR_BIT;
 
 constexpr size_t FirstArenaAdjustmentBits =
-    RoundUp(sizeof(gc::ChunkBase), ArenaSize) / gc::CellBytesPerMarkBit;
+    RoundUp(sizeof(gc::TenuredChunkBase), ArenaSize) / gc::CellBytesPerMarkBit;
 
 static_assert((FirstArenaAdjustmentBits % MarkBitmapWordBits) == 0);
 constexpr size_t FirstArenaAdjustmentWords =
     FirstArenaAdjustmentBits / MarkBitmapWordBits;
 
 const size_t ChunkRuntimeOffset =
-    offsetof(ChunkBase, header) + offsetof(ChunkHeader, runtime);
+    offsetof(TenuredChunkBase, header) + offsetof(ChunkHeader, runtime);
 const size_t ChunkStoreBufferOffset =
-    offsetof(ChunkBase, header) + offsetof(ChunkHeader, storeBuffer);
-const size_t ChunkMarkBitmapOffset = offsetof(ChunkBase, bitmap);
+    offsetof(TenuredChunkBase, header) + offsetof(ChunkHeader, storeBuffer);
+const size_t ChunkMarkBitmapOffset = offsetof(TenuredChunkBase, markBits);
 
 // Hardcoded offsets into Arena class.
 const size_t ArenaZoneOffset = sizeof(size_t);
@@ -489,10 +489,10 @@ namespace js {
 namespace gc {
 
 /* static */
-MOZ_ALWAYS_INLINE void ChunkBitmap::getMarkWordAndMask(const TenuredCell* cell,
-                                                       ColorBit colorBit,
-                                                       MarkBitmapWord** wordp,
-                                                       uintptr_t* maskp) {
+MOZ_ALWAYS_INLINE void MarkBitmap::getMarkWordAndMask(const TenuredCell* cell,
+                                                      ColorBit colorBit,
+                                                      MarkBitmapWord** wordp,
+                                                      uintptr_t* maskp) {
   // Note: the JIT pre-barrier trampolines inline this code. Update
   // MacroAssembler::emitPreBarrierFastPath code too when making changes here!
 
@@ -513,9 +513,10 @@ static MOZ_ALWAYS_INLINE ChunkHeader* GetCellChunkHeader(const Cell* cell) {
   return reinterpret_cast<ChunkHeader*>(uintptr_t(cell) & ~ChunkMask);
 }
 
-static MOZ_ALWAYS_INLINE ChunkBase* GetCellChunkBase(const TenuredCell* cell) {
+static MOZ_ALWAYS_INLINE TenuredChunkBase* GetCellChunkBase(
+    const TenuredCell* cell) {
   MOZ_ASSERT(cell);
-  return reinterpret_cast<ChunkBase*>(uintptr_t(cell) & ~ChunkMask);
+  return reinterpret_cast<TenuredChunkBase*>(uintptr_t(cell) & ~ChunkMask);
 }
 
 static MOZ_ALWAYS_INLINE JS::Zone* GetTenuredGCThingZone(const uintptr_t addr) {
@@ -531,17 +532,17 @@ static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedGray(const TenuredCell* cell) {
 
   MarkBitmapWord* grayWord;
   uintptr_t grayMask;
-  ChunkBase* chunk = GetCellChunkBase(cell);
-  chunk->bitmap.getMarkWordAndMask(cell, js::gc::ColorBit::GrayOrBlackBit,
-                                   &grayWord, &grayMask);
+  TenuredChunkBase* chunk = GetCellChunkBase(cell);
+  chunk->markBits.getMarkWordAndMask(cell, js::gc::ColorBit::GrayOrBlackBit,
+                                     &grayWord, &grayMask);
   if (!(*grayWord & grayMask)) {
     return false;
   }
 
   MarkBitmapWord* blackWord;
   uintptr_t blackMask;
-  chunk->bitmap.getMarkWordAndMask(cell, js::gc::ColorBit::BlackBit, &blackWord,
-                                   &blackMask);
+  chunk->markBits.getMarkWordAndMask(cell, js::gc::ColorBit::BlackBit,
+                                     &blackWord, &blackMask);
   return !(*blackWord & blackMask);
 }
 
