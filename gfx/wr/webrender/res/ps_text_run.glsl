@@ -5,7 +5,7 @@
 #include shared,prim_shared
 
 flat varying vec4 v_color;
-flat varying vec3 v_mask_swizzle;
+flat varying vec2 v_mask_swizzle;
 // Normalized bounds of the source image in the texture.
 flat varying vec4 v_uv_bounds;
 
@@ -226,30 +226,27 @@ void main() {
 
     switch (color_mode) {
         case COLOR_MODE_ALPHA:
-            v_mask_swizzle = vec3(0.0, 1.0, 1.0);
-            v_color = text.color;
-            break;
         case COLOR_MODE_BITMAP:
-            v_mask_swizzle = vec3(0.0, 1.0, 0.0);
+            v_mask_swizzle = vec2(0.0, 1.0);
             v_color = text.color;
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
-            v_mask_swizzle = vec3(1.0, 0.0, 0.0);
+            v_mask_swizzle = vec2(1.0, 0.0);
             v_color = text.color;
             break;
         case COLOR_MODE_SUBPX_CONST_COLOR:
         case COLOR_MODE_SUBPX_BG_PASS0:
         case COLOR_MODE_COLOR_BITMAP:
-            v_mask_swizzle = vec3(1.0, 0.0, 0.0);
+            v_mask_swizzle = vec2(1.0, 0.0);
             v_color = vec4(text.color.a);
             break;
         case COLOR_MODE_SUBPX_BG_PASS1:
-            v_mask_swizzle = vec3(-1.0, 1.0, 0.0);
+            v_mask_swizzle = vec2(-1.0, 1.0);
             v_color = vec4(text.color.a) * text.bg_color;
             break;
         default:
-            v_mask_swizzle = vec3(0.0, 0.0, 0.0);
+            v_mask_swizzle = vec2(0.0);
             v_color = vec4(1.0);
     }
 
@@ -270,7 +267,6 @@ Fragment text_fs(void) {
 
     vec2 tc = clamp(v_uv, v_uv_bounds.xy, v_uv_bounds.zw);
     vec4 mask = texture(sColor0, tc);
-    mask = v_mask_swizzle.z != 0.0 ? vec4(mask.r) : mask;
     mask.rgb = mask.rgb * v_mask_swizzle.x + mask.aaa * v_mask_swizzle.y;
 
     #ifdef WR_FEATURE_GLYPH_TRANSFORM
