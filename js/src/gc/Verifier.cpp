@@ -213,7 +213,7 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   {
     AutoLockGC lock(this);
     for (auto chunk = allNonEmptyChunks(lock); !chunk.done(); chunk.next()) {
-      chunk->bitmap.clear();
+      chunk->markBits.clear();
     }
   }
 
@@ -475,7 +475,7 @@ class js::gc::MarkingValidator {
   bool initialized;
 
   using BitmapMap =
-      HashMap<Chunk*, UniquePtr<ChunkBitmap>, GCChunkHasher, SystemAllocPolicy>;
+      HashMap<Chunk*, UniquePtr<MarkBitmap>, GCChunkHasher, SystemAllocPolicy>;
   BitmapMap map;
 };
 
@@ -506,8 +506,8 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     AutoLockGC lock(gc);
     for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
          chunk.next()) {
-      ChunkBitmap* bitmap = &chunk->bitmap;
-      auto entry = MakeUnique<ChunkBitmap>();
+      MarkBitmap* bitmap = &chunk->markBits;
+      auto entry = MakeUnique<MarkBitmap>();
       if (!entry) {
         return;
       }
@@ -583,7 +583,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
       AutoLockGC lock(gc);
       for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
            chunk.next()) {
-        chunk->bitmap.clear();
+        chunk->markBits.clear();
       }
     }
   }
@@ -628,11 +628,11 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     AutoLockGC lock(gc);
     for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
          chunk.next()) {
-      ChunkBitmap* bitmap = &chunk->bitmap;
+      MarkBitmap* bitmap = &chunk->markBits;
       auto ptr = map.lookup(chunk);
       MOZ_RELEASE_ASSERT(ptr, "Chunk not found in map");
-      ChunkBitmap* entry = ptr->value().get();
-      for (size_t i = 0; i < ChunkBitmap::WordCount; i++) {
+      MarkBitmap* entry = ptr->value().get();
+      for (size_t i = 0; i < MarkBitmap::WordCount; i++) {
         uintptr_t v = entry->bitmap[i];
         entry->bitmap[i] = uintptr_t(bitmap->bitmap[i]);
         bitmap->bitmap[i] = v;
@@ -683,8 +683,8 @@ void js::gc::MarkingValidator::validate() {
       continue; /* Allocated after we did the non-incremental mark. */
     }
 
-    ChunkBitmap* bitmap = ptr->value().get();
-    ChunkBitmap* incBitmap = &chunk->bitmap;
+    MarkBitmap* bitmap = ptr->value().get();
+    MarkBitmap* incBitmap = &chunk->markBits;
 
     for (size_t i = 0; i < ArenasPerChunk; i++) {
       if (chunk->decommittedArenas[i]) {

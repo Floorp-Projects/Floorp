@@ -407,7 +407,7 @@ static constexpr FinalizePhase BackgroundFinalizePhases[] = {
       AllocKind::OBJECT_GROUP}}};
 
 void Arena::unmarkAll() {
-  MarkBitmapWord* arenaBits = chunk()->bitmap.arenaBits(this);
+  MarkBitmapWord* arenaBits = chunk()->markBits.arenaBits(this);
   for (size_t i = 0; i < ArenaBitmapWords; i++) {
     arenaBits[i] = 0;
   }
@@ -790,7 +790,7 @@ void GCRuntime::freeEmptyChunks(const AutoLockGC& lock) {
   FreeChunkPool(emptyChunks(lock));
 }
 
-inline void GCRuntime::prepareToFreeChunk(ChunkInfo& info) {
+inline void GCRuntime::prepareToFreeChunk(TenuredChunkInfo& info) {
   MOZ_ASSERT(numArenasFreeCommitted >= info.numArenasFreeCommitted);
   numArenasFreeCommitted -= info.numArenasFreeCommitted;
   stats().count(gcstats::COUNT_DESTROY_CHUNK);

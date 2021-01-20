@@ -403,32 +403,32 @@ inline JS::TraceKind Cell::getTraceKind() const {
 
 bool TenuredCell::isMarkedAny() const {
   MOZ_ASSERT(arena()->allocated());
-  return chunk()->bitmap.isMarkedAny(this);
+  return chunk()->markBits.isMarkedAny(this);
 }
 
 bool TenuredCell::isMarkedBlack() const {
   MOZ_ASSERT(arena()->allocated());
-  return chunk()->bitmap.isMarkedBlack(this);
+  return chunk()->markBits.isMarkedBlack(this);
 }
 
 bool TenuredCell::isMarkedGray() const {
   MOZ_ASSERT(arena()->allocated());
-  return chunk()->bitmap.isMarkedGray(this);
+  return chunk()->markBits.isMarkedGray(this);
 }
 
 bool TenuredCell::markIfUnmarked(MarkColor color /* = Black */) const {
-  return chunk()->bitmap.markIfUnmarked(this, color);
+  return chunk()->markBits.markIfUnmarked(this, color);
 }
 
-void TenuredCell::markBlack() const { chunk()->bitmap.markBlack(this); }
+void TenuredCell::markBlack() const { chunk()->markBits.markBlack(this); }
 
 void TenuredCell::copyMarkBitsFrom(const TenuredCell* src) {
-  ChunkBitmap& bitmap = chunk()->bitmap;
-  bitmap.copyMarkBit(this, src, ColorBit::BlackBit);
-  bitmap.copyMarkBit(this, src, ColorBit::GrayOrBlackBit);
+  MarkBitmap& markBits = chunk()->markBits;
+  markBits.copyMarkBit(this, src, ColorBit::BlackBit);
+  markBits.copyMarkBit(this, src, ColorBit::GrayOrBlackBit);
 }
 
-void TenuredCell::unmark() { chunk()->bitmap.unmark(this); }
+void TenuredCell::unmark() { chunk()->markBits.unmark(this); }
 
 inline Arena* TenuredCell::arena() const {
   MOZ_ASSERT(isTenured());

@@ -4106,9 +4106,9 @@ uintptr_t* GetMarkWordAddress(Cell* cell) {
 
   MarkBitmapWord* wordp;
   uintptr_t mask;
-  ChunkBase* chunk = gc::detail::GetCellChunkBase(&cell->asTenured());
-  chunk->bitmap.getMarkWordAndMask(&cell->asTenured(), ColorBit::BlackBit,
-                                   &wordp, &mask);
+  TenuredChunkBase* chunk = gc::detail::GetCellChunkBase(&cell->asTenured());
+  chunk->markBits.getMarkWordAndMask(&cell->asTenured(), ColorBit::BlackBit,
+                                     &wordp, &mask);
   return reinterpret_cast<uintptr_t*>(wordp);
 }
 
@@ -4122,8 +4122,8 @@ uintptr_t GetMarkMask(Cell* cell, uint32_t colorBit) {
   ColorBit bit = colorBit == 0 ? ColorBit::BlackBit : ColorBit::GrayOrBlackBit;
   MarkBitmapWord* wordp;
   uintptr_t mask;
-  ChunkBase* chunk = gc::detail::GetCellChunkBase(&cell->asTenured());
-  chunk->bitmap.getMarkWordAndMask(&cell->asTenured(), bit, &wordp, &mask);
+  TenuredChunkBase* chunk = gc::detail::GetCellChunkBase(&cell->asTenured());
+  chunk->markBits.getMarkWordAndMask(&cell->asTenured(), bit, &wordp, &mask);
   return mask;
 }
 
