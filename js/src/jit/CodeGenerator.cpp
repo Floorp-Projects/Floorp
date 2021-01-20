@@ -13602,6 +13602,8 @@ void CodeGenerator::visitObjectClassToString(LObjectClassToString* lir) {
   masm.passABIArg(temp);
   masm.passABIArg(obj);
   masm.callWithABI<Fn, js::ObjectClassToString>();
+
+  bailoutCmpPtr(Assembler::Equal, ReturnReg, ImmWord(0), lir->snapshot());
 }
 
 void CodeGenerator::visitWasmParameter(LWasmParameter* lir) {}

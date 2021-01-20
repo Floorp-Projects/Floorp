@@ -1273,6 +1273,13 @@
     input: NumberId
     fun: UnaryMathFunctionImm
 
+- name: ObjectToStringResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    obj: ObjId
+
 - name: ReflectGetPrototypeOfResult
   shared: false
   transpile: true

@@ -721,6 +721,11 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
 
 JSString* js::ObjectClassToString(JSContext* cx, JSObject* obj) {
   AutoUnsafeCallWithABI unsafe;
+
+  if (MaybeHasInterestingSymbolProperty(cx, obj,
+                                        cx->wellKnownSymbols().toStringTag)) {
+    return nullptr;
+  }
   return GetBuiltinTagFast(obj, obj->getClass(), cx);
 }
 

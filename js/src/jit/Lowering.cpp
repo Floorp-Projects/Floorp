@@ -4421,6 +4421,7 @@ void LIRGenerator::visitObjectClassToString(MObjectClassToString* ins) {
   MOZ_ASSERT(ins->type() == MIRType::String);
   auto* lir = new (alloc()) LObjectClassToString(
       useRegisterAtStart(ins->object()), tempFixed(CallTempReg0));
+  assignSnapshot(lir, ins->bailoutKind());
   defineReturn(lir, ins);
 }
 

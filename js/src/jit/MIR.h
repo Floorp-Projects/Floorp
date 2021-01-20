@@ -11200,6 +11200,7 @@ class MObjectClassToString : public MUnaryInstruction,
                              public SingleObjectPolicy::Data {
   explicit MObjectClassToString(MDefinition* obj)
       : MUnaryInstruction(classOpcode, obj) {
+    setGuard();
     setMovable();
     setResultType(MIRType::String);
   }
@@ -11209,10 +11210,17 @@ class MObjectClassToString : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  AliasSet getAliasSet() const override {
+    // Tests @@toStringTag is neither present on this object nor on any object
+    // of the prototype chain.
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                          AliasSet::DynamicSlot);
+  }
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
+
+  bool possiblyCalls() const override { return true; }
 };
 
 class MCheckReturn : public MBinaryInstruction, public BoxInputsPolicy::Data {
