@@ -89,8 +89,8 @@ class AccessibleCaretManagerTester : public ::testing::Test {
 
     bool UpdateCaretsForOverlappingTilt() override { return true; }
 
-    void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
-                                   nsIFrame* aEndFrame) override {
+    void UpdateCaretsForAlwaysTilt(const nsIFrame* aStartFrame,
+                                   const nsIFrame* aEndFrame) override {
       if (mFirstCaret->IsVisuallyVisible()) {
         mFirstCaret->SetAppearance(Appearance::Left);
       }

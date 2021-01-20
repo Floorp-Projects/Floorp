@@ -428,8 +428,8 @@ bool AccessibleCaretManager::UpdateCaretsForOverlappingTilt() {
   return true;
 }
 
-void AccessibleCaretManager::UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
-                                                       nsIFrame* aEndFrame) {
+void AccessibleCaretManager::UpdateCaretsForAlwaysTilt(
+    const nsIFrame* aStartFrame, const nsIFrame* aEndFrame) {
   // When a short LTR word in RTL environment is selected, the two carets
   // tilted inward might be overlapped. Make them tilt outward.
   if (UpdateCaretsForOverlappingTilt()) {

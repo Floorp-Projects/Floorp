@@ -284,8 +284,8 @@ class AccessibleCaretManager {
   virtual bool UpdateCaretsForOverlappingTilt();
 
   // Make the two carets always tilt.
-  virtual void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
-                                         nsIFrame* aEndFrame);
+  virtual void UpdateCaretsForAlwaysTilt(const nsIFrame* aStartFrame,
+                                         const nsIFrame* aEndFrame);
 
   // Check whether AccessibleCaret is displayable in cursor mode or not.
   // @param aOutFrame returns frame of the cursor if it's displayable.
