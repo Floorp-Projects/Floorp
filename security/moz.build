@@ -81,8 +81,6 @@ gyp_vars["nss_dist_dir"] = "$PRODUCT_DIR/dist"
 # This forces it to put them in dist/include/nss.
 gyp_vars["nss_public_dist_dir"] = "$PRODUCT_DIR/dist"
 gyp_vars["nss_dist_obj_dir"] = "$PRODUCT_DIR/dist/bin"
-# We need specific features and tests on mozilla-central.
-gyp_vars["mozilla_central"] = 1
 # We don't currently build NSS tests.
 gyp_vars["disable_tests"] = 1
 gyp_vars["disable_dbm"] = 1
@@ -155,7 +153,6 @@ GYP_DIRS["nss"].no_unified = True
 # Python scripts that can be used in moz.build GENERATED_FILES.
 GYP_DIRS["nss"].action_overrides = {
     "generate_certdata_c": "generate_certdata.py",
-    "generate_certdata_testlib_c": "generate_certdata_testlib.py",
     "generate_mapfile": "generate_mapfile.py",
 }
 
