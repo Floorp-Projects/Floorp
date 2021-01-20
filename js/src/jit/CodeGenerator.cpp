@@ -10334,9 +10334,9 @@ void CodeGenerator::visitSpectreMaskIndex(LSpectreMaskIndex* lir) {
   Register output = ToRegister(lir->output());
 
   if (length->isRegister()) {
-    masm.spectreMaskIndex(index, ToRegister(length), output);
+    masm.spectreMaskIndex32(index, ToRegister(length), output);
   } else {
-    masm.spectreMaskIndex(index, ToAddress(length), output);
+    masm.spectreMaskIndex32(index, ToAddress(length), output);
   }
 }
 
