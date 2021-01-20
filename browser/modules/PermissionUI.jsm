@@ -727,6 +727,7 @@ GeolocationPermissionPrompt.prototype = {
       options.checkbox.label = gBrowserBundle.GetStringFromName(
         "geolocation.remember"
       );
+      options.checkbox.checked = true;
     }
 
     return options;
