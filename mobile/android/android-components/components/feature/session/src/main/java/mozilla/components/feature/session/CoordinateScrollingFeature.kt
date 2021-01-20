@@ -10,10 +10,17 @@ import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature implementation for connecting an [EngineView] with any View that you want to coordinate scrolling
@@ -21,23 +28,31 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  *
  * A use case could be collapsing a toolbar every time that the user scrolls.
  */
-@Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/7482
 class CoordinateScrollingFeature(
-    sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val engineView: EngineView,
     private val view: View,
     private val scrollFlags: Int = DEFAULT_SCROLL_FLAGS
-) : mozilla.components.browser.session.SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
+) : LifecycleAwareFeature {
+    private var scope: CoroutineScope? = null
 
     /**
      * Start feature: Starts adding scrolling behavior for the indicated view.
      */
     override fun start() {
-        observeSelected()
+        scope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.selectedTab }
+                .map { tab -> tab.content.loading }
+                .ifChanged()
+                .collect { onLoadingStateChanged() }
+        }
     }
 
-    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+    override fun stop() {
+        scope?.cancel()
+    }
 
+    private fun onLoadingStateChanged() {
         val params = view.layoutParams as AppBarLayout.LayoutParams
 
         if (engineView.canScrollVerticallyDown()) {
