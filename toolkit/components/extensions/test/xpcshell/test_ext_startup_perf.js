@@ -25,7 +25,11 @@ if (!Services.prefs.getBoolPref("extensions.webextensions.remote")) {
 }
 
 if (AppConstants.MOZ_APP_NAME == "thunderbird") {
-  STARTUP_MODULES.push("resource://gre/modules/ExtensionContent.jsm");
+  STARTUP_MODULES.push(
+    "resource://gre/modules/ExtensionChild.jsm",
+    "resource://gre/modules/ExtensionContent.jsm",
+    "resource://gre/modules/ExtensionPageChild.jsm"
+  );
 }
 
 AddonTestUtils.init(this);
