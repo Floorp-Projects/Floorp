@@ -377,6 +377,7 @@ class nsWindow final : public nsBaseWidget {
   virtual nsresult SetNonClientMargins(
       LayoutDeviceIntMargin& aMargins) override;
   void SetDrawsInTitlebar(bool aState) override;
+  bool GetTitlebarRect(mozilla::gfx::Rect& aRect);
   virtual void UpdateWindowDraggingRegion(
       const LayoutDeviceIntRegion& aRegion) override;
 

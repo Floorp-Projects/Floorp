@@ -140,6 +140,15 @@ void GtkCompositorWidget::ClearBeforePaint(
     }
     aTarget->Flush();
   }
+
+  // Clear background of titlebar area to render titlebar
+  // transparent corners correctly.
+  gfx::Rect rect;
+  if (mWidget->GetTitlebarRect(rect)) {
+    aTarget->FillRect(rect, ColorPattern(DeviceColor(0, 0, 0, 0)),
+                      DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+    aTarget->Flush();
+  }
 }
 
 }  // namespace widget

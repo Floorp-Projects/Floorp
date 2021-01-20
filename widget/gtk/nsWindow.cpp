@@ -5791,6 +5791,15 @@ nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
   return NS_OK;
 }
 
+bool nsWindow::GetTitlebarRect(mozilla::gfx::Rect& aRect) {
+  if (!mGdkWindow || !mDrawInTitlebar) {
+    return false;
+  }
+
+  aRect = gfx::Rect(0, 0, mBounds.width, TITLEBAR_SHAPE_MASK_HEIGHT);
+  return true;
+}
+
 void nsWindow::UpdateTitlebarTransparencyBitmap() {
   NS_ASSERTION(mTransparencyBitmapForTitlebar,
                "Transparency bitmap is already used to draw window shape");
