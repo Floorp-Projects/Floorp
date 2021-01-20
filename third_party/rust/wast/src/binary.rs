@@ -39,7 +39,6 @@ fn encode_fields(
             ModuleField::Memory(i) => memories.push(i),
             ModuleField::Global(i) => globals.push(i),
             ModuleField::Export(i) => exports.push(i),
-            ModuleField::ExportAll(..) => panic!("should not be present for encoding"),
             ModuleField::Start(i) => start.push(i),
             ModuleField::Elem(i) => elem.push(i),
             ModuleField::Data(i) => data.push(i),
@@ -82,13 +81,13 @@ fn encode_fields(
         while let Some(field) = items.next() {
             macro_rules! list {
                 ($code:expr, $name:ident) => {
-                    list!($code, $name, $name, |f| f)
+                    list!($code, $name, $name)
                 };
-                ($code:expr, $field:ident, $custom:ident, |$f:ident| $e:expr) => {
-                    if let ModuleField::$field($f) = field {
-                        let mut list = vec![$e];
-                        while let Some(ModuleField::$field($f)) = items.peek() {
-                            list.push($e);
+                ($code:expr, $field:ident, $custom:ident) => {
+                    if let ModuleField::$field(f) = field {
+                        let mut list = vec![f];
+                        while let Some(ModuleField::$field(f)) = items.peek() {
+                            list.push(f);
                             items.next();
                         }
                         e.section_list($code, $custom, &list);
@@ -97,11 +96,7 @@ fn encode_fields(
             }
             list!(1, Type);
             list!(2, Import);
-            list!(14, NestedModule, Module, |m| match &m.kind {
-                NestedModuleKind::Inline { ty, .. } =>
-                    ty.as_ref().expect("type should be filled in"),
-                _ => panic!("only inline modules should be present now"),
-            });
+            list!(14, NestedModule, Module);
             list!(15, Instance);
             list!(16, Alias);
         }
@@ -123,7 +118,6 @@ fn encode_fields(
     if contains_bulk_memory(&funcs) {
         e.section(12, &data.len());
     }
-    e.section_list(17, ModuleCode, &modules);
     e.section_list(10, Code, &funcs);
     e.section_list(11, Data, &data);
 
@@ -281,7 +275,6 @@ impl Encode for ModuleType<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         self.imports.encode(e);
         self.exports.encode(e);
-        assert!(self.instance_exports.is_empty());
     }
 }
 
@@ -502,6 +495,24 @@ impl Encode for Index<'_> {
     }
 }
 
+impl<T> Encode for IndexOrRef<'_, T> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.0.encode(e);
+    }
+}
+
+impl<T> Encode for ItemRef<'_, T> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        match self {
+            ItemRef::Outer { .. } => panic!("should be expanded previously"),
+            ItemRef::Item { idx, exports, .. } => {
+                assert!(exports.is_empty());
+                idx.encode(e);
+            }
+        }
+    }
+}
+
 impl<'a> Encode for TableType<'a> {
     fn encode(&self, e: &mut Vec<u8>) {
         self.elem.encode(e);
@@ -597,45 +608,24 @@ impl Encode for Global<'_> {
 impl Encode for Export<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         self.name.encode(e);
-        self.kind.encode(e);
+        if let ItemRef::Item { kind, .. } = &self.index {
+            kind.encode(e);
+        }
+        self.index.encode(e);
     }
 }
 
-impl Encode for ExportKind<'_> {
+impl Encode for ExportKind {
     fn encode(&self, e: &mut Vec<u8>) {
         match self {
-            ExportKind::Func(f) => {
-                e.push(0x00);
-                f.encode(e);
-            }
-            ExportKind::Table(f) => {
-                e.push(0x01);
-                f.encode(e);
-            }
-            ExportKind::Memory(f) => {
-                e.push(0x02);
-                f.encode(e);
-            }
-            ExportKind::Global(f) => {
-                e.push(0x03);
-                f.encode(e);
-            }
-            ExportKind::Event(f) => {
-                e.push(0x04);
-                f.encode(e);
-            }
-            ExportKind::Module(f) => {
-                e.push(0x05);
-                f.encode(e);
-            }
-            ExportKind::Instance(f) => {
-                e.push(0x06);
-                f.encode(e);
-            }
-            ExportKind::Type(f) => {
-                e.push(0x07);
-                f.encode(e);
-            }
+            ExportKind::Func => e.push(0x00),
+            ExportKind::Table => e.push(0x01),
+            ExportKind::Memory => e.push(0x02),
+            ExportKind::Global => e.push(0x03),
+            ExportKind::Event => e.push(0x04),
+            ExportKind::Module => e.push(0x05),
+            ExportKind::Instance => e.push(0x06),
+            ExportKind::Type => e.push(0x07),
         }
     }
 }
@@ -665,7 +655,11 @@ impl Encode for Elem<'_> {
         match (&self.kind, &to_encode) {
             (
                 ElemKind::Active {
-                    table: Index::Num(0, _),
+                    table:
+                        ItemRef::Item {
+                            idx: Index::Num(0, _),
+                            ..
+                        },
                     offset,
                 },
                 ElemPayload::Indices(_),
@@ -685,7 +679,11 @@ impl Encode for Elem<'_> {
             }
             (
                 ElemKind::Active {
-                    table: Index::Num(0, _),
+                    table:
+                        ItemRef::Item {
+                            idx: Index::Num(0, _),
+                            ..
+                        },
                     offset,
                 },
                 ElemPayload::Exprs {
@@ -722,7 +720,9 @@ impl Encode for Elem<'_> {
 
         to_encode.encode(e);
 
-        fn extract_indices<'a>(indices: &[Option<Index<'a>>]) -> Option<Vec<Index<'a>>> {
+        fn extract_indices<'a>(
+            indices: &[Option<ItemRef<'a, kw::func>>],
+        ) -> Option<Vec<ItemRef<'a, kw::func>>> {
             indices.iter().cloned().collect()
         }
     }
@@ -737,7 +737,7 @@ impl Encode for ElemPayload<'_> {
                 for idx in exprs {
                     match idx {
                         Some(idx) => {
-                            Instruction::RefFunc(*idx).encode(e);
+                            Instruction::RefFunc(IndexOrRef(idx.clone())).encode(e);
                         }
                         None => {
                             Instruction::RefNull(ty.heap).encode(e);
@@ -755,7 +755,11 @@ impl Encode for Data<'_> {
         match &self.kind {
             DataKind::Passive => e.push(0x01),
             DataKind::Active { memory, offset } => {
-                if let Index::Num(0, _) = memory {
+                if let ItemRef::Item {
+                    idx: Index::Num(0, _),
+                    ..
+                } = memory
+                {
                     e.push(0x00);
                 } else {
                     e.push(0x02);
@@ -816,7 +820,11 @@ impl Encode for Expression<'_> {
 impl Encode for BlockType<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         // block types using an index are encoded as an sleb, not a uleb
-        if let Some(Index::Num(n, _)) = &self.ty.index {
+        if let Some(ItemRef::Item {
+            idx: Index::Num(n, _),
+            ..
+        }) = &self.ty.index
+        {
             return i64::from(*n).encode(e);
         }
         let ty = self
@@ -855,18 +863,27 @@ impl Encode for LaneArg {
 
 impl Encode for MemArg<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
-        match self.memory {
-            Index::Num(0, _) => {
+        match &self.memory {
+            ItemRef::Item {
+                idx: Index::Num(0, _),
+                ..
+            } => {
                 self.align.trailing_zeros().encode(e);
                 self.offset.encode(e);
             }
-            Index::Num(n, _) => {
+            n => {
                 (self.align.trailing_zeros() | (1 << 6)).encode(e);
                 self.offset.encode(e);
                 n.encode(e);
             }
-            Index::Id(i) => panic!("unresolved index in emission {:?}", i),
         }
+    }
+}
+
+impl Encode for LoadOrStoreLane<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.memarg.encode(e);
+        self.lane.encode(e);
     }
 }
 
@@ -1009,7 +1026,11 @@ fn find_names<'a>(
             ModuleField::Alias(Alias {
                 id,
                 name,
-                kind: ExportKind::Func(_),
+                kind:
+                    AliasKind::InstanceExport {
+                        kind: ExportKind::Func,
+                        ..
+                    },
                 ..
             }) => {
                 if let Some(name) = get_name(id, name) {
@@ -1173,25 +1194,49 @@ impl Encode for NestedModule<'_> {
 impl Encode for Instance<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         assert!(self.exports.names.is_empty());
-        let (module, items) = match &self.kind {
-            InstanceKind::Inline { module, items } => (module, items),
+        let (module, args) = match &self.kind {
+            InstanceKind::Inline { module, args } => (module, args),
             _ => panic!("should only have inline instances in emission"),
         };
         e.push(0x00);
         module.encode(e);
-        items.encode(e);
+        args.encode(e);
+    }
+}
+
+impl Encode for InstanceArg<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.name.encode(e);
+        if let ItemRef::Item { kind, .. } = &self.index {
+            kind.encode(e);
+        }
+        self.index.encode(e);
     }
 }
 
 impl Encode for Alias<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
-        match self.instance {
-            Some(instance) => {
+        match &self.kind {
+            AliasKind::InstanceExport {
+                instance,
+                export,
+                kind,
+            } => {
                 e.push(0x00);
                 instance.encode(e);
+                kind.encode(e);
+                export.encode(e);
             }
-            None => e.push(0x01),
+            AliasKind::Outer {
+                module,
+                index,
+                kind,
+            } => {
+                e.push(0x01);
+                module.encode(e);
+                kind.encode(e);
+                index.encode(e);
+            }
         }
-        self.kind.encode(e);
     }
 }

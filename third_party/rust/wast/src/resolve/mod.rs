@@ -1,10 +1,11 @@
 use crate::ast::*;
 use crate::Error;
 
+mod aliases;
 mod deinline_import_export;
-mod expand;
 mod gensym;
 mod names;
+mod types;
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
 pub enum Ns {
@@ -19,67 +20,16 @@ pub enum Ns {
 }
 
 impl Ns {
-    fn from_item(item: &ItemSig<'_>) -> Ns {
-        match item.kind {
-            ItemKind::Func(_) => Ns::Func,
-            ItemKind::Table(_) => Ns::Table,
-            ItemKind::Memory(_) => Ns::Memory,
-            ItemKind::Global(_) => Ns::Global,
-            ItemKind::Instance(_) => Ns::Instance,
-            ItemKind::Module(_) => Ns::Module,
-            ItemKind::Event(_) => Ns::Event,
-        }
-    }
-
-    fn from_export<'a>(kind: &ExportKind<'a>) -> (Index<'a>, Ns) {
-        match *kind {
-            ExportKind::Func(f) => (f, Ns::Func),
-            ExportKind::Table(f) => (f, Ns::Table),
-            ExportKind::Global(f) => (f, Ns::Global),
-            ExportKind::Memory(f) => (f, Ns::Memory),
-            ExportKind::Instance(f) => (f, Ns::Instance),
-            ExportKind::Module(f) => (f, Ns::Module),
-            ExportKind::Event(f) => (f, Ns::Event),
-            ExportKind::Type(f) => (f, Ns::Type),
-        }
-    }
-
-    fn from_export_mut<'a, 'b>(kind: &'b mut ExportKind<'a>) -> (&'b mut Index<'a>, Ns) {
+    fn from_export(kind: &ExportKind) -> Ns {
         match kind {
-            ExportKind::Func(f) => (f, Ns::Func),
-            ExportKind::Table(f) => (f, Ns::Table),
-            ExportKind::Global(f) => (f, Ns::Global),
-            ExportKind::Memory(f) => (f, Ns::Memory),
-            ExportKind::Instance(f) => (f, Ns::Instance),
-            ExportKind::Module(f) => (f, Ns::Module),
-            ExportKind::Event(f) => (f, Ns::Event),
-            ExportKind::Type(f) => (f, Ns::Type),
-        }
-    }
-
-    fn to_export_kind<'a>(&self, index: Index<'a>) -> ExportKind<'a> {
-        match self {
-            Ns::Func => ExportKind::Func(index),
-            Ns::Table => ExportKind::Table(index),
-            Ns::Global => ExportKind::Global(index),
-            Ns::Memory => ExportKind::Memory(index),
-            Ns::Module => ExportKind::Module(index),
-            Ns::Instance => ExportKind::Instance(index),
-            Ns::Event => ExportKind::Event(index),
-            Ns::Type => ExportKind::Type(index),
-        }
-    }
-
-    fn desc(&self) -> &'static str {
-        match self {
-            Ns::Func => "func",
-            Ns::Table => "table",
-            Ns::Global => "global",
-            Ns::Memory => "memory",
-            Ns::Module => "module",
-            Ns::Instance => "instance",
-            Ns::Event => "event",
-            Ns::Type => "type",
+            ExportKind::Func => Ns::Func,
+            ExportKind::Table => Ns::Table,
+            ExportKind::Global => Ns::Global,
+            ExportKind::Memory => Ns::Memory,
+            ExportKind::Instance => Ns::Instance,
+            ExportKind::Module => Ns::Module,
+            ExportKind::Event => Ns::Event,
+            ExportKind::Type => Ns::Type,
         }
     }
 }
@@ -101,6 +51,8 @@ pub fn resolve<'a>(module: &mut Module<'a>) -> Result<Names<'a>, Error> {
     // field.
     deinline_import_export::run(fields);
 
+    aliases::run(fields);
+
     // With a canonical form of imports make sure that imports are all listed
     // first.
     for i in 1..fields.len() {
@@ -118,14 +70,13 @@ pub fn resolve<'a>(module: &mut Module<'a>) -> Result<Names<'a>, Error> {
         return Err(Error::new(span, format!("import after {}", name)));
     }
 
-    // Next inject any `alias` declarations and expand `(export $foo)`
-    // annotations. These are all part of the module-linking proposal and we try
-    // to resolve their injection here to keep index spaces stable for later.
-    expand::run(fields)?;
+    // Expand all `TypeUse` annotations so all necessary `type` nodes are
+    // present in the AST.
+    types::expand(fields);
 
     // Perform name resolution over all `Index` items to resolve them all to
     // indices instead of symbolic names.
-    let resolver = names::resolve(fields)?;
+    let resolver = names::resolve(module.id, fields)?;
     Ok(Names { resolver })
 }
 
@@ -146,7 +97,7 @@ impl<'a> Names<'a> {
     /// looked up in the function namespace and converted to a `Num`. If the
     /// `Id` is not defined then an error will be returned.
     pub fn resolve_func(&self, idx: &mut Index<'a>) -> Result<(), Error> {
-        self.resolver.module().resolve(idx, Ns::Func)?;
+        self.resolver.resolve(idx, Ns::Func)?;
         Ok(())
     }
 
@@ -156,7 +107,7 @@ impl<'a> Names<'a> {
     /// looked up in the memory namespace and converted to a `Num`. If the
     /// `Id` is not defined then an error will be returned.
     pub fn resolve_memory(&self, idx: &mut Index<'a>) -> Result<(), Error> {
-        self.resolver.module().resolve(idx, Ns::Memory)?;
+        self.resolver.resolve(idx, Ns::Memory)?;
         Ok(())
     }
 
@@ -166,7 +117,7 @@ impl<'a> Names<'a> {
     /// looked up in the table namespace and converted to a `Num`. If the
     /// `Id` is not defined then an error will be returned.
     pub fn resolve_table(&self, idx: &mut Index<'a>) -> Result<(), Error> {
-        self.resolver.module().resolve(idx, Ns::Table)?;
+        self.resolver.resolve(idx, Ns::Table)?;
         Ok(())
     }
 
@@ -176,7 +127,7 @@ impl<'a> Names<'a> {
     /// looked up in the global namespace and converted to a `Num`. If the
     /// `Id` is not defined then an error will be returned.
     pub fn resolve_global(&self, idx: &mut Index<'a>) -> Result<(), Error> {
-        self.resolver.module().resolve(idx, Ns::Global)?;
+        self.resolver.resolve(idx, Ns::Global)?;
         Ok(())
     }
 }
