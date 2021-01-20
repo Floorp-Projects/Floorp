@@ -60,7 +60,7 @@ class AccessibleCaretManagerTester : public ::testing::Test {
   class MockAccessibleCaretManager : public AccessibleCaretManager {
    public:
     using CaretMode = AccessibleCaretManager::CaretMode;
-    using AccessibleCaretManager::HideCarets;
+    using AccessibleCaretManager::HideCaretsAndDispatchCaretStateChangedEvent;
     using AccessibleCaretManager::UpdateCarets;
 
     MockAccessibleCaretManager() : AccessibleCaretManager(nullptr) {
@@ -650,7 +650,7 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   check.Call("updatecarets");
 
-  mManager.HideCarets();
+  mManager.HideCaretsAndDispatchCaretStateChangedEvent();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
   check.Call("hidecarets");
 

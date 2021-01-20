@@ -165,9 +165,10 @@ class AccessibleCaretManager {
   void UpdateCarets(
       const UpdateCaretsHintSet& aHints = UpdateCaretsHint::Default);
 
-  // Force hiding all carets regardless of the current selection status.
+  // Force hiding all carets regardless of the current selection status, and
+  // dispatch CaretStateChangedEvent if one of the carets is logically-visible.
   MOZ_CAN_RUN_SCRIPT
-  void HideCarets();
+  void HideCaretsAndDispatchCaretStateChangedEvent();
 
   MOZ_CAN_RUN_SCRIPT
   void UpdateCaretsForCursorMode(const UpdateCaretsHintSet& aHints);
