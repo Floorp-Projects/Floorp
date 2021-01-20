@@ -570,12 +570,14 @@ void MacroAssembler::branchNeg32(Condition cond, Register reg, Label* label) {
   branch32(Assembler::Equal, reg, Imm32(INT32_MIN), label);
 }
 
-void MacroAssembler::branchAddPtr(Condition cond, Register src, Register dest,
+template <typename T>
+void MacroAssembler::branchAddPtr(Condition cond, T src, Register dest,
                                   Label* label) {
   MOZ_CRASH("NYI");
 }
 
-void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
+template <typename T>
+void MacroAssembler::branchSubPtr(Condition cond, T src, Register dest,
                                   Label* label) {
   MOZ_CRASH("NYI");
 }
