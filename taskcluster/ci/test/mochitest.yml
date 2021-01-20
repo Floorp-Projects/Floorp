@@ -114,7 +114,7 @@ mochitest-browser-chrome:
     loopback-video: true
     variants:
         by-test-platform:
-            linux.*64-.*/opt: ['fission', 'a11y-checks']
+            linux.*64(-shippable)?/opt: ['fission', 'a11y-checks']
             default: ['fission']
     fission-run-on-projects:
         by-test-platform:
@@ -213,7 +213,7 @@ mochitest-devtools-chrome:
     loopback-video: true
     variants:
         by-test-platform:
-            linux.*64-.*/opt: ['fission', 'a11y-checks']
+            linux.*64(-shippable)?/opt: ['fission', 'a11y-checks']
             default: ['fission']
     fission-run-on-projects:
         by-test-platform:

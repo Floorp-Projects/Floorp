@@ -260,6 +260,15 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                     "help": "Run tests in a cross origin iframe.",
                 },
             ],
+            [
+                ["--enable-a11y-checks"],
+                {
+                    "action": "store_true",
+                    "default": False,
+                    "dest": "a11y_checks",
+                    "help": "Run tests with accessibility checks disabled.",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -584,6 +593,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
             if c["extra_prefs"]:
                 base_cmd.extend(["--setpref={}".format(p) for p in c["extra_prefs"]])
+
+            if c["a11y_checks"]:
+                base_cmd.append("--enable-a11y-checks")
 
             # set pluginsPath
             abs_res_plugins_dir = os.path.join(abs_res_dir, "plugins")
