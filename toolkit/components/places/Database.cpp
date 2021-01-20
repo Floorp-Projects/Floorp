@@ -1511,6 +1511,8 @@ nsresult Database::InitFunctions() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = NoteSyncChangeFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = InvalidateDaysOfHistoryFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

@@ -3052,8 +3052,6 @@ var updateFrecency = async function(db, urls) {
   // Trigger frecency updates for all affected origins.
   await db.executeCached(`DELETE FROM moz_updateoriginsupdate_temp`);
 
-  const observers = PlacesUtils.history.getObservers();
-  notify(observers, "onManyFrecenciesChanged");
   PlacesObservers.notifyListeners([new PlacesRanking()]);
 };
 
