@@ -487,25 +487,12 @@ var PictureInPicture = {
     // then save the location and size for opening the new window
     let isPlayerWindow =
       windowOrPlayer == this.getWeakPipPlayer(actorReference);
-    if (
-      isPlayerWindow &&
-      windowOrPlayer.windowState != windowOrPlayer.STATE_FULLSCREEN
-    ) {
+    if (isPlayerWindow) {
       this.savePosition(windowOrPlayer);
     }
 
-    let sizeLocation;
-
-    // The size and location of the PiP window is stored before the PiP enters
-    // fullscreen and we will use that information to calculate where it will
-    // be placed after it exits fullscreen
-    if (windowOrPlayer.windowState == windowOrPlayer.STATE_FULLSCREEN) {
-      sizeLocation = windowOrPlayer.getDeferredResize();
-    } else {
-      sizeLocation = this.loadPosition();
-    }
-
-    let { top, left, width, height } = sizeLocation;
+    // The last PiP location and size
+    let { top, left, width, height } = this.loadPosition();
 
     // Check that previous location and size were loaded
     if (!isNaN(top) && !isNaN(left) && !isNaN(width) && !isNaN(height)) {
@@ -665,8 +652,8 @@ var PictureInPicture = {
       videoData,
       actorRef
     );
-
-    win.resizeToVideo(left, top, width, height);
+    win.resizeTo(width, height);
+    win.moveTo(left, top);
   },
 
   openToggleContextMenu(window, data) {
