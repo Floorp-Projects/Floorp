@@ -76,16 +76,14 @@ add_task(async function test_remove_many() {
     }
   }
 
-  let onManyFrecenciesChanged = false;
+  let onPageRankingChanged = false;
   let observer = {
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
     onVisits(aVisits) {
       Assert.ok(false, "Unexpected call to onVisits " + aVisits.length);
     },
-    onManyFrecenciesChanged() {
-      onManyFrecenciesChanged = true;
-    },
+    onManyFrecenciesChanged() {},
     onDeleteURI(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);
@@ -125,12 +123,16 @@ add_task(async function test_remove_many() {
           Assert.ok(false, "Unexpected history-cleared event happens");
           break;
         }
+        case "pages-rank-changed": {
+          onPageRankingChanged = true;
+          break;
+        }
       }
     }
   };
 
   PlacesObservers.addListener(
-    ["page-title-changed", "history-cleared"],
+    ["page-title-changed", "history-cleared", "pages-rank-changed"],
     placesEventListener
   );
 
@@ -150,7 +152,7 @@ add_task(async function test_remove_many() {
 
   PlacesUtils.history.removeObserver(observer);
   PlacesObservers.removeListener(
-    ["page-title-changed", "history-cleared"],
+    ["page-title-changed", "history-cleared", "pages-rank-changed"],
     placesEventListener
   );
 
@@ -179,10 +181,10 @@ add_task(async function test_remove_many() {
   }
 
   Assert.equal(
-    onManyFrecenciesChanged,
+    onPageRankingChanged,
     pages.some(p => p.onDeleteVisitsCalled) ||
       pages.some(p => p.onDeleteURICalled),
-    "onManyFrecenciesChanged was called if onDeleteVisitsCalled or onDeleteURICalled was called"
+    "page-rank-changed was fired if onDeleteVisitsCalled or onDeleteURICalled was called"
   );
 
   Assert.notEqual(

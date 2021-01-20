@@ -1183,5 +1183,29 @@ NoteSyncChangeFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//// Invalidate days of history Function
+
+/* static */
+nsresult InvalidateDaysOfHistoryFunction::create(
+    mozIStorageConnection* aDBConn) {
+  RefPtr<InvalidateDaysOfHistoryFunction> function =
+      new InvalidateDaysOfHistoryFunction();
+  nsresult rv =
+      aDBConn->CreateFunction("invalidate_days_of_history"_ns, 0, function);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(InvalidateDaysOfHistoryFunction, mozIStorageFunction)
+
+NS_IMETHODIMP
+InvalidateDaysOfHistoryFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                                nsIVariant** _result) {
+  nsNavHistory::InvalidateDaysOfHistory();
+  return NS_OK;
+}
+
 }  // namespace places
 }  // namespace mozilla

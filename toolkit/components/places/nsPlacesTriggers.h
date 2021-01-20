@@ -28,6 +28,7 @@
         "CREATE TEMP TRIGGER moz_historyvisits_afterinsert_v2_trigger "      \
         "AFTER INSERT ON moz_historyvisits FOR EACH ROW "                    \
         "BEGIN "                                                             \
+        "SELECT invalidate_days_of_history();"                               \
         "SELECT store_last_inserted_id('moz_historyvisits', NEW.id); "       \
         "UPDATE moz_places SET "                                             \
         "visit_count = visit_count + (SELECT NEW.visit_type NOT IN "         \
@@ -42,6 +43,7 @@
         "CREATE TEMP TRIGGER moz_historyvisits_afterdelete_v2_trigger " \
         "AFTER DELETE ON moz_historyvisits FOR EACH ROW "               \
         "BEGIN "                                                        \
+        "SELECT invalidate_days_of_history();"                          \
         "UPDATE moz_places SET "                                        \
         "visit_count = visit_count - (SELECT OLD.visit_type NOT IN "    \
         "(" EXCLUDED_VISIT_TYPES                                        \

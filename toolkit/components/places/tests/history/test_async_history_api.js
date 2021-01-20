@@ -1146,18 +1146,15 @@ add_task(async function test_omit_frecency_notifications() {
       visits: [new VisitInfo(TRANSITION_TYPED)],
     },
   ];
-  let promiseFrecenciesChanged = new Promise(resolve => {
-    let frecencyObserverCheck = {
-      onManyFrecenciesChanged() {
-        ok(true, "Should fire many frecencies changed notification instead.");
-        PlacesUtils.history.removeObserver(frecencyObserverCheck);
-        resolve();
-      },
-    };
-    PlacesUtils.history.addObserver(frecencyObserverCheck);
-  });
+
+  const promiseRankingChanged = PlacesTestUtils.waitForNotification(
+    "pages-rank-changed",
+    () => true,
+    "places"
+  );
+
   await promiseUpdatePlaces(places);
-  await promiseFrecenciesChanged;
+  await promiseRankingChanged;
 });
 
 add_task(async function test_ignore_errors() {

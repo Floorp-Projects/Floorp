@@ -607,7 +607,12 @@ var PlacesProvider = {
       this.handlePlacesEvents.bind(this)
     );
     PlacesObservers.addListener(
-      ["page-visited", "page-title-changed", "history-cleared"],
+      [
+        "page-visited",
+        "page-title-changed",
+        "history-cleared",
+        "pages-rank-changed",
+      ],
       this._placesObserver
     );
   },
@@ -740,6 +745,10 @@ var PlacesProvider = {
           this.onClearHistory();
           break;
         }
+        case "pages-rank-changed": {
+          this.onManyFrecenciesChanged();
+          break;
+        }
       }
     }
   },
@@ -755,10 +764,7 @@ var PlacesProvider = {
     this._callObservers("onClearHistory");
   },
 
-  /**
-   * Called by the history service.
-   */
-  onManyFrecenciesChanged: function PlacesProvider_onManyFrecenciesChanged() {
+  onManyFrecenciesChanged() {
     this._callObservers("onManyLinksChanged");
   },
 

@@ -20,7 +20,7 @@
 #include "PlaceInfo.h"
 #include "VisitInfo.h"
 #include "nsPlacesMacros.h"
-#include "NotifyManyFrecenciesChanged.h"
+#include "NotifyRankingChanged.h"
 
 #include "mozilla/storage.h"
 #include "mozilla/dom/Link.h"
@@ -798,7 +798,7 @@ class InsertVisitedURIs final : public Runnable {
     nsresult rv = InnerRun();
 
     if (mSuccessfulUpdatedCount > 0) {
-      NS_DispatchToMainThread(new NotifyManyFrecenciesChanged());
+      NS_DispatchToMainThread(new NotifyRankingChanged());
     }
     if (!!mCallback) {
       NS_DispatchToMainThread(
