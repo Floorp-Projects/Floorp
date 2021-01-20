@@ -18,7 +18,8 @@ use crate::prim_store::{
     PrimitiveStore, InternablePrimitive,
 };
 use crate::resource_cache::{ImageRequest, ResourceCache};
-use crate::storage;
+
+use super::storage;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
