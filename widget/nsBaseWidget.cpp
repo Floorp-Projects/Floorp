@@ -1101,7 +1101,24 @@ void nsBaseWidget::DispatchPanGestureInput(PanGestureInput& aInput) {
     ProcessUntransformedAPZEvent(&event, result);
   } else {
     WidgetWheelEvent event = aInput.ToWidgetEvent(this);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+  }
+}
 
+void nsBaseWidget::DispatchPinchGestureInput(PinchGestureInput& aInput) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mAPZC) {
+    MOZ_ASSERT(APZThreadUtils::IsControllerThread());
+    APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(aInput);
+
+    if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
+      return;
+    }
+    WidgetWheelEvent event = aInput.ToWidgetEvent(this);
+    ProcessUntransformedAPZEvent(&event, result);
+  } else {
+    WidgetWheelEvent event = aInput.ToWidgetEvent(this);
     nsEventStatus status;
     DispatchEvent(&event, status);
   }
