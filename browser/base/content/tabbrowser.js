@@ -1871,6 +1871,12 @@
 
       aBrowser.droppedLinkHandler = oldDroppedLinkHandler;
 
+      // Switching a browser's remoteness will create a new frameLoader.
+      // As frameLoaders start out with an active docShell we have to
+      // deactivate it if this is not the selected tab's browser or the
+      // browser window is minimized.
+      aBrowser.docShellIsActive = this.shouldActivateDocShell(aBrowser);
+
       // Create a new tab progress listener for the new browser we just injected,
       // since tab progress listeners have logic for handling the initial about:blank
       // load
