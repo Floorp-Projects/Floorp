@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
@@ -63,7 +62,6 @@ interface TabTrayController {
  *
  * @param activity [Activity] the current activity.
  * @param profiler [Profiler] used for profiling.
- * @param sessionManager [HomeActivity] used for retrieving a list of sessions.
  * @param browserStore [BrowserStore] holds the global [BrowserState].
  * @param browsingModeManager [HomeActivity] used for registering browsing mode.
  * @param tabCollectionStorage [TabCollectionStorage] storage for saving collections.
@@ -87,7 +85,6 @@ interface TabTrayController {
 class DefaultTabTrayController(
     private val activity: HomeActivity,
     private val profiler: Profiler?,
-    private val sessionManager: SessionManager,
     private val browserStore: BrowserStore,
     private val browsingModeManager: BrowsingModeManager,
     private val tabCollectionStorage: TabCollectionStorage,
