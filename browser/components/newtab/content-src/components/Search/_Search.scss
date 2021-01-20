@@ -1,4 +1,5 @@
 $search-height: 48px;
+$search-height-new: 52px;
 $search-icon-size: 24px;
 $search-icon-padding: 12px;
 $search-icon-width: 2 * $search-icon-padding + $search-icon-size -2;
@@ -8,6 +9,38 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 .outer-wrapper.newtab-experience {
   .search-wrapper {
     padding-bottom: 38px;
+
+    input {
+      box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
+      border: 0;
+      border-radius: 8px;
+      color: var(--newtab-search-text-color);
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border: 1px solid var(--newtab-focus-border);
+      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+    }
+
+    .search-inner-wrapper {
+      min-height: $search-height-new;
+    }
+  }
+
+  .search-handoff-button {
+    box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
+    border: 0;
+    border-radius: 8px;
+    color: var(--newtab-search-text-color);
+    font-weight: 500;
+    font-size: 15px;
+
+    .fake-focus & {
+      border: 1px solid var(--newtab-focus-border);
+      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+    }
   }
 }
 
@@ -113,15 +146,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     &:dir(rtl) {
       background-position-x: right $search-icon-padding;
     }
-
-    &.search-bar-new {
-      box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
-      border: solid 1px var(--newtab-search-new-border-color);
-      border-radius: 8px;
-      color: var(--newtab-search-text-color);
-      font-weight: 500;
-      font-size: 15px;
-    }
   }
 
   &:hover input {
@@ -132,11 +156,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   input:focus {
     border: $input-border-active;
     box-shadow: var(--newtab-textbox-focus-boxshadow);
-
-    &.search-bar-new {
-      border: 1px solid var(--newtab-focus-border);
-      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
-    }
   }
 
   .search-button {
@@ -177,12 +196,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     padding: 0 0 30px;
   }
 
-  .outer-wrapper.newtab-experience {
-    .search-wrapper {
-      padding-bottom: 38px;
-    }
-  }
-
   .non-collapsible-section + .below-search-snippet-wrapper {
     // In shorter windows, search doesn't have such a large padding.
     margin-top: -14px;
@@ -207,20 +220,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   opacity: 1;
   transition: opacity 500ms;
   width: 100%;
-
-  &.search-handoff-button-new {
-    box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
-    border: solid 1px var(--newtab-search-new-border-color);
-    border-radius: 8px;
-    color: var(--newtab-search-text-color);
-    font-weight: 500;
-    font-size: 15px;
-
-    .fake-focus & {
-      border: 1px solid var(--newtab-focus-border);
-      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
-    }
-  }
 
   &:dir(rtl) {
     background-position-x: right $search-icon-padding;
