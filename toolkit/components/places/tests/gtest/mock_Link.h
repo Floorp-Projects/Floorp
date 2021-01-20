@@ -13,6 +13,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Link.h"
+#include "nsIContent.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 class mock_Link : public mozilla::dom::Link {

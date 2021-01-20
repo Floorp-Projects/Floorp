@@ -11,8 +11,10 @@
 #ifndef mozilla_dom_Link_h__
 #define mozilla_dom_Link_h__
 
-#include "mozilla/MemoryReporting.h"
-#include "nsIContent.h"  // for nsLinkState
+#include "nsWrapperCache.h" // For nsWrapperCache::FlagsType
+#include "nsCOMPtr.h"
+
+class nsIURI;
 
 namespace mozilla {
 
@@ -21,6 +23,7 @@ class SizeOfState;
 
 namespace dom {
 
+class Document;
 class Element;
 
 #define MOZILLA_DOM_LINK_IMPLEMENTATION_IID          \
@@ -57,7 +60,6 @@ class Link : public nsISupports {
    * @return the URI this link is for, if available.
    */
   nsIURI* GetURI() const;
-  virtual nsIURI* GetURIExternal() const { return GetURI(); }
 
   /**
    * Helper methods for modifying and obtaining parts of the URI of the Link.
@@ -181,27 +183,6 @@ class Link : public nsISupports {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)
-
-enum ASDestination : uint8_t {
-  DESTINATION_INVALID,
-  DESTINATION_AUDIO,
-  DESTINATION_DOCUMENT,
-  DESTINATION_EMBED,
-  DESTINATION_FONT,
-  DESTINATION_IMAGE,
-  DESTINATION_MANIFEST,
-  DESTINATION_OBJECT,
-  DESTINATION_REPORT,
-  DESTINATION_SCRIPT,
-  DESTINATION_SERVICEWORKER,
-  DESTINATION_SHAREDWORKER,
-  DESTINATION_STYLE,
-  DESTINATION_TRACK,
-  DESTINATION_VIDEO,
-  DESTINATION_WORKER,
-  DESTINATION_XSLT,
-  DESTINATION_FETCH
-};
 
 }  // namespace dom
 }  // namespace mozilla
