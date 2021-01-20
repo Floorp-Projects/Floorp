@@ -323,3 +323,4 @@ menu-help-not-deceptive =
     .accesskey = D
 menu-help-check-for-update =
     .label = Check for Updates…
+    .accesskey = C
