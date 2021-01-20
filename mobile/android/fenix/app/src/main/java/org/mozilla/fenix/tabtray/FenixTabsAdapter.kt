@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.checkbox_item.view.*
 import kotlinx.android.synthetic.main.tab_tray_item.view.*
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.TabsAdapter
 import mozilla.components.concept.base.images.ImageLoader
@@ -108,7 +109,7 @@ class FenixTabsAdapter(
             showCheckedIfSelected(tab, holder.itemView)
 
             val tabIsPrivate =
-                context.components.core.sessionManager.findSessionById(tab.id)?.private == true
+                context.components.core.store.state.findTab(tab.id)?.content?.private == true
             if (!tabIsPrivate) {
                 holder.itemView.setOnLongClickListener {
                     if (mode is TabTrayDialogFragmentState.Mode.Normal) {
