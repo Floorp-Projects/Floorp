@@ -54,7 +54,7 @@ let AVAILABLE_PIP_OVERRIDES;
     },
 
     youtube: {
-      "https://*.youtube.com/*": { visibilityThreshold: 0.7 },
+      "https://*.youtube.com/*": { visibilityThreshold: 0.9 },
     },
   };
 }
