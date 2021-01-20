@@ -414,7 +414,10 @@ const featureDescriptions = [
   {
     name: "CPU Utilization",
     value: "cpu",
-    title: "CPU utilization by threads, processes, and other system functions.",
+    title:
+      "CPU utilization by threads. To view graphs, in about:config set " +
+      "devtools.performance.recording.ui-base-url to " +
+      "https://deploy-preview-3098--perf-html.netlify.app",
     experimental: true,
   },
 ];
