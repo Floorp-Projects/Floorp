@@ -87,7 +87,8 @@ AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell)
 }
 
 AccessibleCaretManager::~AccessibleCaretManager() {
-  MOZ_RELEASE_ASSERT(!mFlushingLayout, "Going away in MaybeFlushLayout? Bad!");
+  MOZ_RELEASE_ASSERT(!mLayoutFlusher.mFlushing,
+                     "Going away in mLayoutFlusher.MaybeFlush? Bad!");
 }
 
 void AccessibleCaretManager::Terminate() {
@@ -182,7 +183,7 @@ void AccessibleCaretManager::HideCaretsAndDispatchCaretStateChangedEvent() {
 }
 
 void AccessibleCaretManager::UpdateCarets(const UpdateCaretsHintSet& aHint) {
-  if (MaybeFlushLayout() == Terminated::Yes) {
+  if (mLayoutFlusher.MaybeFlush(*this) == Terminated::Yes) {
     return;
   }
 
@@ -345,7 +346,7 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
 
   if (mIsCaretPositionChanged) {
     // Flush layout to make the carets intersection correct.
-    if (MaybeFlushLayout() == Terminated::Yes) {
+    if (mLayoutFlusher.MaybeFlush(*this) == Terminated::Yes) {
       return;
     }
   }
@@ -672,8 +673,8 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
 void AccessibleCaretManager::OnScrollStart() {
   AC_LOG("%s", __FUNCTION__);
 
-  AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
-  mAllowFlushingLayout = false;
+  AutoRestore<bool> saveAllowFlushingLayout(mLayoutFlusher.mAllowFlushing);
+  mLayoutFlusher.mAllowFlushing = false;
 
   Maybe<PresShell::AutoAssertNoFlush> assert;
   if (mPresShell) {
@@ -690,8 +691,8 @@ void AccessibleCaretManager::OnScrollStart() {
 }
 
 void AccessibleCaretManager::OnScrollEnd() {
-  AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
-  mAllowFlushingLayout = false;
+  AutoRestore<bool> saveAllowFlushingLayout(mLayoutFlusher.mAllowFlushing);
+  mLayoutFlusher.mAllowFlushing = false;
 
   Maybe<PresShell::AutoAssertNoFlush> assert;
   if (mPresShell) {
@@ -721,8 +722,8 @@ void AccessibleCaretManager::OnScrollEnd() {
 }
 
 void AccessibleCaretManager::OnScrollPositionChanged() {
-  AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
-  mAllowFlushingLayout = false;
+  AutoRestore<bool> saveAllowFlushingLayout(mLayoutFlusher.mAllowFlushing);
+  mLayoutFlusher.mAllowFlushing = false;
 
   Maybe<PresShell::AutoAssertNoFlush> assert;
   if (mPresShell) {
@@ -745,8 +746,8 @@ void AccessibleCaretManager::OnScrollPositionChanged() {
 }
 
 void AccessibleCaretManager::OnReflow() {
-  AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
-  mAllowFlushingLayout = false;
+  AutoRestore<bool> saveAllowFlushingLayout(mLayoutFlusher.mAllowFlushing);
+  mLayoutFlusher.mAllowFlushing = false;
 
   Maybe<PresShell::AutoAssertNoFlush> assert;
   if (mPresShell) {
@@ -827,7 +828,7 @@ nsAutoString AccessibleCaretManager::StringifiedSelection() const {
   nsAutoString str;
   RefPtr<Selection> selection = GetSelection();
   if (selection) {
-    selection->Stringify(str, mAllowFlushingLayout
+    selection->Stringify(str, mLayoutFlusher.mAllowFlushing
                                   ? Selection::FlushFrames::Yes
                                   : Selection::FlushFrames::No);
   }
@@ -1024,17 +1025,18 @@ void AccessibleCaretManager::ClearMaintainedSelection() const {
   }
 }
 
-auto AccessibleCaretManager::MaybeFlushLayout() -> Terminated {
-  if (mPresShell && mAllowFlushingLayout) {
-    AutoRestore<bool> flushing(mFlushingLayout);
-    mFlushingLayout = true;
+auto AccessibleCaretManager::LayoutFlusher::MaybeFlush(
+    const AccessibleCaretManager& aAccessibleCaretManager) -> Terminated {
+  if (aAccessibleCaretManager.mPresShell && mAllowFlushing) {
+    AutoRestore<bool> flushing(mFlushing);
+    mFlushing = true;
 
-    if (Document* doc = mPresShell->GetDocument()) {
+    if (Document* doc = aAccessibleCaretManager.mPresShell->GetDocument()) {
       doc->FlushPendingNotifications(FlushType::Layout);
     }
   }
 
-  return IsTerminated();
+  return aAccessibleCaretManager.IsTerminated();
 }
 
 nsIFrame* AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
@@ -1403,7 +1405,7 @@ void AccessibleCaretManager::StopSelectionAutoScrollTimer() const {
 
 void AccessibleCaretManager::DispatchCaretStateChangedEvent(
     CaretChangedReason aReason) {
-  if (MaybeFlushLayout() == Terminated::Yes) {
+  if (mLayoutFlusher.MaybeFlush(*this) == Terminated::Yes) {
     return;
   }
 
