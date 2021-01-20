@@ -14,6 +14,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/SeekableStreamWrapper.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -415,7 +416,18 @@ bool nsMIMEInputStream::Deserialize(
       return false;
     }
 
-    mStream = stream;
+    // nsMIMEInputStream requires that the underlying data stream be seekable,
+    // as is checked in `SetData`. Ensure that the stream we deserialized is
+    // seekable before using it.
+    nsCOMPtr<nsIInputStream> seekable;
+    nsresult rv = mozilla::SeekableStreamWrapper::MaybeWrap(
+        stream.forget(), getter_AddRefs(seekable));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to ensure wrapped input stream is seekable");
+      return false;
+    }
+
+    MOZ_ALWAYS_SUCCEEDS(SetData(seekable));
   }
 
   return true;
