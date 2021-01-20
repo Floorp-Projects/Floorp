@@ -1406,7 +1406,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
     return;
   }
 
-  Selection* sel = GetSelection();
+  const Selection* sel = GetSelection();
   if (!sel) {
     return;
   }
