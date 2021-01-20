@@ -665,18 +665,16 @@ void WindowSurfaceWayland::UnlockWaylandBuffer() {
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockImageSurface(
     const gfx::IntSize& aLockSize) {
-  if (!mImageSurface || mImageSurface->CairoStatus() ||
-      !(aLockSize <= mImageSurface->GetSize())) {
-    mImageSurface = new gfxImageSurface(
-        aLockSize,
-        SurfaceFormatToImageFormat(WindowBackBuffer::GetSurfaceFormat()));
-    if (mImageSurface->CairoStatus()) {
-      return nullptr;
-    }
+  if (!mImageSurface || !(aLockSize <= mImageSurface->GetSize())) {
+    mImageSurface = gfx::Factory::CreateDataSourceSurface(
+        aLockSize, WindowBackBuffer::GetSurfaceFormat());
   }
-
+  gfx::DataSourceSurface::MappedSurface map = {nullptr, 0};
+  if (!mImageSurface->Map(gfx::DataSourceSurface::READ_WRITE, &map)) {
+    return nullptr;
+  }
   return gfxPlatform::CreateDrawTargetForData(
-      mImageSurface->Data(), mImageSurface->GetSize(), mImageSurface->Stride(),
+      map.mData, mImageSurface->GetSize(), map.mStride,
       WindowBackBuffer::GetSurfaceFormat());
 }
 
@@ -777,13 +775,9 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   LOGWAYLAND(("   mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
   LOGWAYLAND(("   windowRedraw = %d\n", windowRedraw));
 
-#if MOZ_LOGGING
   if (!(mLockedScreenRect == lockedScreenRect)) {
     LOGWAYLAND(("   screen size changed\n"));
-  }
-#endif
 
-  if (!(mLockedScreenRect == lockedScreenRect)) {
     // Screen (window) size changed and we still have some painting pending
     // for the last window size. That can happen when window is resized.
     // We can't commit them any more as they're for former window size, so
@@ -854,48 +848,36 @@ bool WindowImageSurface::OverlapsSurface(
   return mUpdateRegion.Contains(aBottomSurface.mUpdateRegion);
 }
 
-void WindowImageSurface::Draw(gfx::SourceSurface* aSurface,
-                              gfx::DrawTarget* aDest,
-                              const LayoutDeviceIntRegion& aRegion) {
+void WindowImageSurface::DrawToTarget(
+    gfx::DrawTarget* aDest, LayoutDeviceIntRegion& aWaylandBufferDamage) {
 #ifdef MOZ_LOGGING
-  gfx::IntRect bounds = aRegion.GetBounds().ToUnknownRect();
-  LOGWAYLAND(("WindowImageSurface::Draw\n"));
-  LOGWAYLAND(("    rects num %d\n", aRegion.GetNumRects()));
+  gfx::IntRect bounds = mUpdateRegion.GetBounds().ToUnknownRect();
+  LOGWAYLAND(("WindowImageSurface::DrawToTarget\n"));
+  LOGWAYLAND(("    rects num %d\n", mUpdateRegion.GetNumRects()));
   LOGWAYLAND(("    bounds [ %d, %d] -> [%d x %d]\n", bounds.x, bounds.y,
               bounds.width, bounds.height));
 #endif
-
-  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-    mozilla::LayoutDeviceIntRect r = iter.Get();
-    gfx::Rect rect(r.ToUnknownRect());
-    LOGWAYLAND(("    draw rect [%f,%f] -> [%f x %f]\n", rect.x, rect.y,
-                rect.width, rect.height));
-    aDest->DrawSurface(aSurface, rect, rect);
+  for (auto iter = mUpdateRegion.RectIter(); !iter.Done(); iter.Next()) {
+    gfx::IntRect r(iter.Get().ToUnknownRect());
+    LOGWAYLAND(
+        ("    draw rect [%d,%d] -> [%d x %d]\n", r.x, r.y, r.width, r.height));
+    aDest->CopySurface(mImageSurface, r, IntPoint(r.x, r.y));
   }
-}
-
-void WindowImageSurface::Draw(gfx::DrawTarget* aDest,
-                              LayoutDeviceIntRegion& aWaylandBufferDamage) {
-  Draw(mSurface.get(), aDest, mUpdateRegion);
   aWaylandBufferDamage.OrWith(mUpdateRegion);
 }
 
 WindowImageSurface::WindowImageSurface(
-    gfxImageSurface* aImageSurface, const LayoutDeviceIntRegion& aUpdateRegion)
-    : mImageSurface(aImageSurface), mUpdateRegion(aUpdateRegion) {
-  mSurface = gfx::Factory::CreateSourceSurfaceForCairoSurface(
-      mImageSurface->CairoSurface(), mImageSurface->GetSize(),
-      mImageSurface->Format());
-}
+    gfx::DataSourceSurface* aImageSurface,
+    const LayoutDeviceIntRegion& aUpdateRegion)
+    : mImageSurface(aImageSurface), mUpdateRegion(aUpdateRegion) {}
 
 void WindowSurfaceWayland::DrawDelayedImageCommits(
     gfx::DrawTarget* aDrawTarget, LayoutDeviceIntRegion& aWaylandBufferDamage) {
   unsigned int imagesNum = mDelayedImageCommits.Length();
   LOGWAYLAND(("WindowSurfaceWayland::DrawDelayedImageCommits [%p] len %d\n",
               (void*)this, imagesNum));
-
   for (unsigned int i = 0; i < imagesNum; i++) {
-    mDelayedImageCommits[i].Draw(aDrawTarget, aWaylandBufferDamage);
+    mDelayedImageCommits[i].DrawToTarget(aDrawTarget, aWaylandBufferDamage);
   }
   mDelayedImageCommits.Clear();
 }
@@ -910,6 +892,7 @@ void WindowSurfaceWayland::CacheImageSurface(
               bounds.width, bounds.height));
 #endif
 
+  mImageSurface->Unmap();
   WindowImageSurface surf = WindowImageSurface(mImageSurface, aRegion);
 
   if (mDelayedImageCommits.Length()) {
@@ -923,6 +906,8 @@ void WindowSurfaceWayland::CacheImageSurface(
                     size.width, size.height));
       }
 #endif
+    } else {
+      mDelayedImageCommits.AppendElement(lastSurf);
     }
   }
 
