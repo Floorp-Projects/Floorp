@@ -29,7 +29,7 @@ function setupEvents(dependencies: Dependencies): void {
  * @param {String} sourceActor
  *                 Actor ID of the source to be waiting for.
  */
-async function ensureSourceActor(sourceActor: string) {
+async function waitForSourceActorToBeRegisteredInStore(sourceActor: string) {
   const sourceActorId = stringToSourceActorId(sourceActor);
   if (!hasSourceActor(store.getState(), sourceActorId)) {
     await new Promise(resolve => {
@@ -50,4 +50,4 @@ async function ensureSourceActor(sourceActor: string) {
   }
 }
 
-export { setupEvents, ensureSourceActor };
+export { setupEvents, waitForSourceActorToBeRegisteredInStore };
