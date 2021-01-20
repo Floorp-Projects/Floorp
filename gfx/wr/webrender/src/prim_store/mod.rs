@@ -29,7 +29,6 @@ use crate::scene::SceneProperties;
 use std::{hash, ops, u32, usize};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
-use crate::storage;
 use crate::util::Recycler;
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::visibility::PrimitiveVisibility;
@@ -42,6 +41,8 @@ pub mod line_dec;
 pub mod picture;
 pub mod text_run;
 pub mod interned;
+
+mod storage;
 
 use backdrop::BackdropDataHandle;
 use borders::{ImageBorderDataHandle, NormalBorderDataHandle};
