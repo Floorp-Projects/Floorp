@@ -12,12 +12,11 @@ import json
 import os
 import tempfile
 import zipfile
-import fnmatch
 
 import mozfile
 
 from logger.logger import RaptorLogger
-from mozgeckoprofiler import ProfileSymbolicator, save_gecko_profile
+from mozgeckoprofiler import ProfileSymbolicator
 
 here = os.path.dirname(os.path.realpath(__file__))
 LOG = RaptorLogger(component="raptor-gecko-profile")
@@ -27,12 +26,13 @@ class GeckoProfile(object):
     """
     Handle Gecko profiling.
 
-    This allow to collect Gecko profiling data and to zip results in one file.
+    This allows us to collect Gecko profiling data and to zip results into one file.
     """
 
     def __init__(self, upload_dir, raptor_config, test_config):
         self.upload_dir = upload_dir
-        self.raptor_config, self.test_config = raptor_config, test_config
+        self.raptor_config = raptor_config
+        self.test_config = test_config
         self.cleanup = True
 
         # Create a temporary directory into which the tests can put
@@ -40,23 +40,16 @@ class GeckoProfile(object):
         # zip file later on, which is put into the MOZ_UPLOAD_DIR.
         self.gecko_profile_dir = tempfile.mkdtemp()
 
-        # each test INI can specify gecko_profile_interval and entries
-        gecko_profile_interval = test_config.get("gecko_profile_interval", 1)
-        gecko_profile_entries = test_config.get("gecko_profile_entries", 1000000)
+        # Each test INI can specify gecko_profile_interval and entries but they
+        # can be overrided by user input.
+        gecko_profile_interval = raptor_config.get(
+            "gecko_profile_interval", None
+        ) or test_config.get("gecko_profile_interval", 1)
+        gecko_profile_entries = raptor_config.get(
+            "gecko_profile_entries", None
+        ) or test_config.get("gecko_profile_entries", 1000000)
 
-        # if gecko_profile_interval was provided on the ./mach command line,
-        # it should override what was specified in the test INI
-        cmd_line_interval = raptor_config.get("gecko_profile_interval", None)
-        if cmd_line_interval is not None:
-            gecko_profile_interval = cmd_line_interval
-
-        # if gecko_profile_entries was provided on the ./mach command line,
-        # it should override what was specified in the test INI
-        cmd_line_entries = raptor_config.get("gecko_profile_entries", None)
-        if cmd_line_entries is not None:
-            gecko_profile_entries = cmd_line_entries
-
-        # we need symbols_path; if it wasn't passed in on cmdline, set it
+        # We need symbols_path; if it wasn't passed in on cmdline, set it
         # use objdir/dist/crashreporter-symbols for symbolsPath if none provided
         if (
             not self.raptor_config["symbols_path"]
@@ -94,44 +87,114 @@ class GeckoProfile(object):
             )
         )
 
-    def _save_gecko_profile(self, symbolicator, missing_symbols_zip, profile_path):
-        LOG.info("Symbolicating profile at %s" % profile_path)
+    def _open_gecko_profile(self, profile_path):
+        """Open a gecko profile and return the contents."""
+        if profile_path.endswith(".gz"):
+            with gzip.open(profile_path, "r") as profile_file:
+                profile = json.load(profile_file)
+        else:
+            with open(profile_path, "r") as profile_file:
+                profile = json.load(profile_file)
+        return profile
+
+    def _symbolicate_profile(self, profile, missing_symbols_zip, symbolicator):
         try:
-            if profile_path.endswith(".gz"):
-                with gzip.open(profile_path, "r") as profile_file:
-                    profile = json.load(profile_file)
-            else:
-                with open(profile_path, "r") as profile_file:
-                    profile = json.load(profile_file)
             symbolicator.dump_and_integrate_missing_symbols(
                 profile, missing_symbols_zip
             )
             symbolicator.symbolicate_profile(profile)
-            save_gecko_profile(profile, profile_path)
+            return profile
         except MemoryError:
-            LOG.critical(
-                "Ran out of memory while trying"
-                " to symbolicate profile {0}".format(profile_path)
-            )
+            LOG.critical("Ran out of memory while trying to symbolicate profile")
+            raise
         except Exception:
-            LOG.critical(
-                "Encountered an exception during profile"
-                " symbolication {0}".format(profile_path)
-            )
+            LOG.critical("Encountered an exception during profile symbolication")
+            raise
 
     def collect_profiles(self):
         """Returns all profiles files."""
+
+        def __get_test_type():
+            """Returns the type of test that was run.
+
+            For benchmark/scenario tests, we return those specific types,
+            but for pageloads we return cold or warm depending on the --cold
+            flag.
+            """
+            if self.test_config.get("type", "pageload") not in (
+                "benchmark",
+                "scenario",
+            ):
+                return "cold" if self.raptor_config.get("cold", False) else "warm"
+            else:
+                return self.test_config.get("type", "benchmark")
+
         res = []
         if self.raptor_config.get("browsertime"):
             topdir = self.raptor_config.get("browsertime_result_dir")
-            for root, dirnames, filenames in os.walk(topdir):
-                for filename in fnmatch.filter(filenames, "geckoProfile*.json*"):
-                    res.append(os.path.join(root, filename))
+
+            # Get the browsertime.json file along with the cold/warm splits
+            # if they exist from a chimera test
+            results = {"main": None, "cold": None, "warm": None}
+            for filename in os.listdir(topdir):
+                if filename == "browsertime.json":
+                    results["main"] = os.path.join(topdir, filename)
+                elif filename == "cold-browsertime.json":
+                    results["cold"] = os.path.join(topdir, filename)
+                elif filename == "warm-browsertime.json":
+                    results["warm"] = os.path.join(topdir, filename)
+                if all(results.values()):
+                    break
+
+            if not any(results.values()):
+                raise Exception(
+                    "Could not find any browsertime result JSONs in the artifacts"
+                )
+
+            profile_locations = []
+            if self.raptor_config.get("chimera", False):
+                if results["warm"] is None or results["cold"] is None:
+                    raise Exception(
+                        "The test ran in chimera mode but we found no cold "
+                        "and warm browsertime JSONs. Cannot symbolicate profiles."
+                    )
+                profile_locations.extend(
+                    [("cold", results["cold"]), ("warm", results["warm"])]
+                )
+            else:
+                # When we don't run in chimera mode, it means that we
+                # either ran a benchmark, scenario test, or separate
+                # warm/cold pageload tests
+                profile_locations.append(
+                    (
+                        __get_test_type(),
+                        results["main"],
+                    )
+                )
+
+            for testtype, results_json in profile_locations:
+                with open(results_json) as f:
+                    data = json.load(f)
+                for entry in data:
+                    for rel_profile_path in entry["files"]["geckoProfiles"]:
+                        res.append(
+                            {
+                                "path": os.path.join(topdir, rel_profile_path),
+                                "type": testtype,
+                            }
+                        )
         else:
-            # Collect all individual profiles that the test
-            # has put into self.gecko_profile_dir.
+            # Raptor-webext stores its profiles in the self.gecko_profile_dir
+            # directory
             for profile in os.listdir(self.gecko_profile_dir):
-                res.append(os.path.join(self.gecko_profile_dir, profile))
+                res.append(
+                    {
+                        "path": os.path.join(self.gecko_profile_dir, profile),
+                        "type": __get_test_type(),
+                    }
+                )
+
+        LOG.info("Found %s profiles: %s" % (len(res), str(res)))
         return res
 
     def symbolicate(self):
@@ -193,39 +256,56 @@ class GeckoProfile(object):
             mode = zipfile.ZIP_STORED
 
         with zipfile.ZipFile(self.profile_arcname, "a", mode) as arc:
-            for profile_filename in profiles:
-                testname = profile_filename
-                if testname.endswith(".profile"):
-                    testname = testname[0:-8]
-                profile_path = os.path.join(self.gecko_profile_dir, profile_filename)
-                self._save_gecko_profile(
-                    symbolicator, missing_symbols_zip, profile_path
+            for profile_info in profiles:
+                profile_path = profile_info["path"]
+
+                LOG.info("Opening profile at %s" % profile_path)
+                profile = self._open_gecko_profile(profile_path)
+
+                LOG.info("Symbolicating profile from %s" % profile_path)
+                symbolicated_profile = self._symbolicate_profile(
+                    profile, missing_symbols_zip, symbolicator
                 )
 
-                # Our zip will contain one directory per test,
-                # and each directory will contain one or more
-                # *.profile files - one for each pagecycle
-                path_in_zip = os.path.join(
-                    "profile_{0}".format(self.test_config["name"]),
-                    testname + ".profile",
-                )
-                LOG.info(
-                    "Adding profile {0} to archive {1}".format(
-                        path_in_zip, self.profile_arcname
-                    )
-                )
                 try:
-                    arc.write(profile_path, path_in_zip)
+                    # Write the profiles into a set of folders formatted as:
+                    # <TEST-NAME>-<TEST_TYPE>. The file names have a count prefixed
+                    # to them to prevent any naming conflicts. The count is the
+                    # number of files already in the folder.
+                    folder_name = "%s-%s" % (
+                        self.test_config["name"],
+                        profile_info["type"],
+                    )
+                    profile_name = "-".join(
+                        [
+                            str(
+                                len([f for f in arc.namelist() if folder_name in f]) + 1
+                            ),
+                            os.path.split(profile_path)[-1],
+                        ]
+                    )
+                    path_in_zip = os.path.join(folder_name, profile_name)
+
+                    LOG.info(
+                        "Adding profile %s to archive %s as %s"
+                        % (profile_path, self.profile_arcname, path_in_zip)
+                    )
+                    arc.writestr(
+                        path_in_zip,
+                        json.dumps(symbolicated_profile, ensure_ascii=False).encode(
+                            "utf-8"
+                        ),
+                    )
                 except Exception:
                     LOG.exception(
-                        "Failed to copy profile {0} as {1} to"
-                        " archive {2}".format(
-                            profile_path, path_in_zip, self.profile_arcname
-                        )
+                        "Failed to add symbolicated profile %s to archive %s"
+                        % (profile_path, self.profile_arcname)
                     )
-            # save the latest gecko profile archive to an env var, so later on
-            # it can be viewed automatically via the view-gecko-profile tool
-            os.environ["RAPTOR_LATEST_GECKO_PROFILE_ARCHIVE"] = self.profile_arcname
+                    raise
+
+        # save the latest gecko profile archive to an env var, so later on
+        # it can be viewed automatically via the view-gecko-profile tool
+        os.environ["RAPTOR_LATEST_GECKO_PROFILE_ARCHIVE"] = self.profile_arcname
 
     def clean(self):
         """

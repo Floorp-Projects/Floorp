@@ -9,6 +9,7 @@ from __future__ import absolute_import
 import six
 import json
 import os
+import shutil
 
 from abc import ABCMeta, abstractmethod
 from logger.logger import RaptorLogger
@@ -298,12 +299,20 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         super(BrowsertimeResultsHandler, self).__init__(**config)
         self._root_results_dir = root_results_dir
         self.browsertime_visualmetrics = False
+        if not os.path.exists(self._root_results_dir):
+            os.mkdir(self._root_results_dir)
 
     def result_dir(self):
         return self._root_results_dir
 
     def result_dir_for_test(self, test):
         return os.path.join(self._root_results_dir, test["name"])
+
+    def remove_result_dir_for_test(self, test):
+        test_result_dir = self.result_dir_for_test(test)
+        if os.path.exists(test_result_dir):
+            shutil.rmtree(test_result_dir)
+        return test_result_dir
 
     def add(self, new_result_json):
         # not using control server with bt

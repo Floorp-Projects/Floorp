@@ -82,7 +82,7 @@ class OSXSymbolDumper:
             if actual_breakpad_id != expected_breakpad_id:
                 return None
 
-            with open(output_filename, "w") as f:
+            with open(output_filename, "wb") as f:
                 f.write(stdout)
             return output_filename
 
@@ -116,7 +116,7 @@ class LinuxSymbolDumper:
         if proc.returncode != 0:
             return
 
-        with open(output_filename, "w") as f:
+        with open(output_filename, "wb") as f:
             f.write(stdout)
 
             # Append nm -D output to the file. On Linux, most system libraries

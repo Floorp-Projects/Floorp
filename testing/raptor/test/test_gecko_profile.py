@@ -22,7 +22,7 @@ from gecko_profile import GeckoProfile
 def test_browsertime_profiling():
     result_dir = tempfile.mkdtemp()
     # untar geckoProfile.tar
-    with tarfile.open(os.path.join(here, "geckoProfile.tar")) as f:
+    with tarfile.open(os.path.join(here, "geckoProfileTest.tar")) as f:
         f.extractall(path=result_dir)
 
     # Makes sure we can run the profile process against a browsertime-generated
@@ -32,7 +32,7 @@ def test_browsertime_profiling():
     raptor_config = {
         "symbols_path": symbols_path,
         "browsertime": True,
-        "browsertime_result_dir": result_dir,
+        "browsertime_result_dir": os.path.join(result_dir, "amazon"),
     }
     test_config = {"name": "tp6"}
     try:
@@ -41,6 +41,9 @@ def test_browsertime_profiling():
         profile.clean()
         arcname = os.environ["RAPTOR_LATEST_GECKO_PROFILE_ARCHIVE"]
         assert os.stat(arcname).st_size > 1000000, "We got a 1mb+ zip"
+    except Exception:
+        assert False, "Symbolication failed!"
+        raise
     finally:
         shutil.rmtree(upload_dir)
         shutil.rmtree(symbols_path)
