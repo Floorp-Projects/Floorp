@@ -4,7 +4,6 @@ The Activity Stream system add-on sends various types of pings to the backend (H
 - a `health` ping that reports whether or not a user has a custom about:home or about:newtab page
 - a `session` ping that describes the ending of an Activity Stream session (a new tab is closed or refreshed), and
 - an `event` ping that records specific data about individual user interactions while interacting with Activity Stream
-- an `undesired` ping that records data about bad app states and missing data
 - an `impression_stats` ping that records data about Pocket impressions and user interactions
 
 Schema definitions/validations that can be used for tests can be found in `system-addon/test/schemas/pings.js`.
@@ -77,27 +76,6 @@ Schema definitions/validations that can be used for tests can be found in `syste
 }
 ```
 
-## Example Activity Stream `undesired event` Log
-
-```js
-{
-  "action": "activity_stream_undesired_event",
-  "addon_version": "20180710100040",
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "event": "MISSING_IMAGE",
-  "locale": "en-US",
-  "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"]
-  "source": "HIGHLIGHTS",
-  "value": 0,
-  "user_prefs": 7,
-
-  // These fields are generated on the server
-  "ip": "10.192.171.13",
-  "ua": "python-requests/2.9.1",
-  "receive_at": 1457396660000,
-  "date": "2016-03-07"
-}
-```
 ## Example Activity Stream `impression_stats` Logs
 
 ```js
