@@ -121,7 +121,7 @@ class AccessibleCaretManager {
   void SetLastInputSource(uint16_t aInputSource);
 
   // Returns True indicating that we should disable APZ to avoid jumpy carets.
-  bool ShouldDisableApz() const { return mShouldDisableApz; }
+  bool ShouldDisableApz() const;
 
  protected:
   // This enum representing the number of AccessibleCarets on the screen.
@@ -344,8 +344,19 @@ class AccessibleCaretManager {
   // Set to True if one of the caret's position is changed in last update.
   bool mIsCaretPositionChanged = false;
 
-  // Set to true if we should disable APZ.
-  bool mShouldDisableApz = false;
+  class DesiredAsyncPanZoomState final {
+   public:
+    void Update(const AccessibleCaretManager& aAccessibleCaretManager);
+
+    enum class Value : bool { Disabled, Enabled };
+
+    Value Get() const { return mValue; }
+
+   private:
+    Value mValue = Value::Enabled;
+  };
+
+  DesiredAsyncPanZoomState mDesiredAyncPanZoomState;
 
   static const int32_t kAutoScrollTimerDelay = 30;
 
