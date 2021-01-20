@@ -133,18 +133,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       context.heuristicResult?.type == UrlbarUtils.RESULT_TYPE.SEARCH
         ? UrlbarPrefs.get("matchBucketsSearch")
         : UrlbarPrefs.get("matchBuckets");
-    // In search mode for an engine, we always want to show search suggestions
-    // before general results.
-    if (context.searchMode?.engineName) {
-      let suggestionsIndex = buckets.findIndex(b => b[0] == "suggestion");
-      let generalIndex = buckets.findIndex(b => b[0] == "general");
-      if (generalIndex < suggestionsIndex) {
-        // Copy the array, otherwise we'd end up modifying the cached pref.
-        buckets = buckets.slice();
-        buckets[generalIndex] = "suggestion";
-        buckets[suggestionsIndex] = "general";
-      }
-    }
     logger.debug(`Buckets: ${buckets}`);
 
     // Do the second pass to fill each bucket.  We'll build a list where each
@@ -153,6 +141,24 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     for (let [group, maxResultCount] of buckets) {
       let results = this._addResults(group, maxResultCount, state);
       resultsByBucketIndex.push(results);
+    }
+
+    // In search mode for an engine, search suggestions should always appear
+    // before general results. Transplanting them allows us to keep history
+    // results up to the limit set in matchBuckets, while filling the space
+    // above them with suggestions.
+    if (context.searchMode?.engineName) {
+      let suggestionsIndex = resultsByBucketIndex.findIndex(
+        results =>
+          results[0] &&
+          !results[0].heuristic &&
+          results[0].type == UrlbarUtils.RESULT_TYPE.SEARCH
+      );
+      if (suggestionsIndex > 1) {
+        logger.debug(`Transplanting suggestions before general results.`);
+        let removed = resultsByBucketIndex.splice(suggestionsIndex, 1);
+        resultsByBucketIndex.splice(1, 0, ...removed);
+      }
     }
 
     // Build the sorted results list by concatenating each bucket's results.
