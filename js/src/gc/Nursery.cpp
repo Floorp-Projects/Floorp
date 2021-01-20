@@ -65,7 +65,7 @@ namespace js {
 struct NurseryChunk {
   gc::ChunkHeader header;
   char data[Nursery::NurseryChunkUsableSize];
-  static NurseryChunk* fromChunk(gc::Chunk* chunk);
+  static NurseryChunk* fromChunk(gc::TenuredChunk* chunk);
   void poisonAndInit(JSRuntime* rt, size_t size = ChunkSize);
   void poisonRange(size_t from, size_t size, uint8_t value,
                    MemCheckKind checkKind);
@@ -124,7 +124,7 @@ inline bool js::NurseryChunk::markPagesInUseHard(size_t to) {
 }
 
 // static
-inline js::NurseryChunk* js::NurseryChunk::fromChunk(Chunk* chunk) {
+inline js::NurseryChunk* js::NurseryChunk::fromChunk(TenuredChunk* chunk) {
   return reinterpret_cast<NurseryChunk*>(chunk);
 }
 
@@ -164,7 +164,7 @@ void js::NurseryDecommitTask::run(AutoLockHelperThreadState& lock) {
   while (!chunksToDecommit().empty()) {
     NurseryChunk* nurseryChunk = chunksToDecommit().popCopy();
     AutoUnlockHelperThreadState unlock(lock);
-    auto* tenuredChunk = reinterpret_cast<Chunk*>(nurseryChunk);
+    auto* tenuredChunk = reinterpret_cast<TenuredChunk*>(nurseryChunk);
     tenuredChunk->init(gc);
     AutoLockGC lock(gc);
     gc->recycleChunk(tenuredChunk, lock);
@@ -1480,7 +1480,7 @@ bool js::Nursery::allocateNextChunk(const unsigned chunkno,
     return false;
   }
 
-  Chunk* newChunk;
+  TenuredChunk* newChunk;
   newChunk = gc->getOrAllocChunk(lock);
   if (!newChunk) {
     chunks_.shrinkTo(priorCount);

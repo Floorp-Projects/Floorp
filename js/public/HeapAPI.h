@@ -40,7 +40,7 @@ namespace gc {
 
 class Arena;
 struct Cell;
-struct Chunk;
+class TenuredChunk;
 class StoreBuffer;
 class TenuredCell;
 
@@ -98,8 +98,8 @@ struct TenuredChunkInfo {
 
  private:
   friend class ChunkPool;
-  Chunk* next;
-  Chunk* prev;
+  TenuredChunk* next;
+  TenuredChunk* prev;
 
  public:
   /* Free arenas are linked together with arena.next. */

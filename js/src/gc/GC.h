@@ -32,7 +32,7 @@ class Nursery;
 namespace gc {
 
 class Arena;
-struct Chunk;
+class TenuredChunk;
 struct Cell;
 
 /*
@@ -71,7 +71,7 @@ extern unsigned NotifyGCPreSwap(JSObject* a, JSObject* b);
 
 extern void NotifyGCPostSwap(JSObject* a, JSObject* b, unsigned preResult);
 
-using IterateChunkCallback = void (*)(JSRuntime*, void*, gc::Chunk*,
+using IterateChunkCallback = void (*)(JSRuntime*, void*, gc::TenuredChunk*,
                                       const JS::AutoRequireNoGC&);
 using IterateZoneCallback = void (*)(JSRuntime*, void*, JS::Zone*,
                                      const JS::AutoRequireNoGC&);
