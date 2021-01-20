@@ -19,6 +19,7 @@
 
 #include "builtin/DataViewObject.h"
 #include "builtin/MapObject.h"
+#include "builtin/Object.h"
 #include "gc/Allocator.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/IonCacheIRCompiler.h"
@@ -7029,6 +7030,40 @@ bool CacheIRCompiler::emitBooleanToString(BooleanOperandId inputId,
   masm.bind(&true_);
   masm.movePtr(ImmGCPtr(names.true_), result);
   masm.bind(&done);
+
+  return true;
+}
+
+bool CacheIRCompiler::emitObjectToStringResult(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
+                               liveVolatileFloatRegs());
+  volatileRegs.takeUnchecked(output.valueReg());
+  volatileRegs.takeUnchecked(scratch);
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = JSString* (*)(JSContext*, JSObject*);
+  masm.setupUnalignedABICall(scratch);
+  masm.loadJSContext(scratch);
+  masm.passABIArg(scratch);
+  masm.passABIArg(obj);
+  masm.callWithABI<Fn, js::ObjectClassToString>();
+  masm.storeCallPointerResult(scratch);
+
+  masm.PopRegsInMask(volatileRegs);
+
+  masm.branchPtr(Assembler::Equal, scratch, ImmPtr(0), failure->label());
+  masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
 
   return true;
 }

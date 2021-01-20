@@ -1730,6 +1730,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachAssertRecoveredOnBailout(HandleFunction callee);
   AttachDecision tryAttachObjectIs(HandleFunction callee);
   AttachDecision tryAttachObjectIsPrototypeOf(HandleFunction callee);
+  AttachDecision tryAttachObjectToString(HandleFunction callee);
   AttachDecision tryAttachBigIntAsIntN(HandleFunction callee);
   AttachDecision tryAttachBigIntAsUintN(HandleFunction callee);
 
