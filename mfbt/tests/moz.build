@@ -19,6 +19,7 @@ CppUnitTests(
         "TestAtomicBitfields",
         "TestAtomics",
         "TestBinarySearch",
+        "TestBitSet",
         "TestBloomFilter",
         "TestBufferList",
         "TestCasting",

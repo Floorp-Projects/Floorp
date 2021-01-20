@@ -8,6 +8,7 @@
 #define mozilla_BitSet_h
 
 #include "mozilla/Array.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/Span.h"
 
 namespace mozilla {
@@ -21,9 +22,12 @@ namespace mozilla {
  */
 template <size_t N, typename Word = size_t>
 class BitSet {
+  static_assert(std::is_unsigned_v<Word>,
+                "The Word type must be an unsigned integral type");
+
  private:
   static constexpr size_t kBitsPerWord = 8 * sizeof(Word);
-  static constexpr size_t kNumWords = N == 0 ? 0 : (N - 1) / kBitsPerWord + 1;
+  static constexpr size_t kNumWords = (N + kBitsPerWord - 1) / kBitsPerWord;
 
   // The zeroth bit in the bitset is the least significant bit of mStorage[0].
   Array<Word, kNumWords> mStorage;
@@ -48,7 +52,7 @@ class BitSet {
     size_t mPos;
   };
 
-  BitSet() { PodArrayZero(mStorage); }
+  BitSet() { ResetAll(); }
 
   BitSet(const BitSet& aOther) { *this = aOther; }
 
@@ -58,8 +62,10 @@ class BitSet {
   }
 
   explicit BitSet(Span<Word, kNumWords> aStorage) {
-    PodCopy(mStorage.begin(), aStorage.begin(), kNumWords);
+    PodCopy(mStorage.begin(), aStorage.Elements(), kNumWords);
   }
+
+  constexpr size_t Size() const { return N; }
 
   constexpr bool Test(size_t aPos) const {
     MOZ_ASSERT(aPos < N);
@@ -84,6 +90,19 @@ class BitSet {
       mStorage[i] |= aOther.mStorage[i];
     }
     return *this;
+  }
+
+  // Set all bits to false.
+  void ResetAll() { PodArrayZero(mStorage); }
+
+  // Set all bits to true.
+  void SetAll() {
+    memset(mStorage.begin(), 0xff, kNumWords * sizeof(Word));
+    constexpr size_t paddingBits = (kNumWords * kBitsPerWord) - N;
+    constexpr Word paddingMask = Word(-1) >> paddingBits;
+    if constexpr (paddingBits != 0) {
+      mStorage[kNumWords - 1] &= paddingMask;
+    }
   }
 
   Span<Word> Storage() { return mStorage; }
