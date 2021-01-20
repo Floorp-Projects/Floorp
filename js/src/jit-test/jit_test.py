@@ -476,7 +476,8 @@ def main(argv):
 
     if options.repeat:
 
-        def repeat_copy(job_list, repeat):
+        def repeat_copy(job_list_generator, repeat):
+            job_list = list(job_list_generator)
             for i in range(repeat):
                 for test in job_list:
                     if i == 0:
