@@ -106,7 +106,7 @@ export class ComponentPerfTimer extends React.Component {
   }
 
   /**
-   * Creates `TELEMETRY_UNDESIRED_EVENT` with timestamp in ms
+   * Creates `SAVE_SESSION_PERF_DATA` with timestamp in ms
    * of how much longer the data took to be ready for display than it would
    * have been the ideal case.
    * https://github.com/mozilla/ping-centre/issues/98
