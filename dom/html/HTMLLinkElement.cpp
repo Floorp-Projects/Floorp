@@ -638,7 +638,7 @@ void HTMLLinkElement::
 
   if (linkTypes & eDNS_PREFETCH) {
     if (nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
-      nsHTMLDNSPrefetch::PrefetchLow(this);
+      nsHTMLDNSPrefetch::Prefetch(this, nsHTMLDNSPrefetch::Priority::Low);
     }
   }
 }

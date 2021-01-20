@@ -803,8 +803,9 @@ void nsContentSink::PrefetchDNS(const nsAString& aHref) {
     OriginAttributes oa;
     StoragePrincipalHelper::GetOriginAttributesForNetworkState(mDocument, oa);
 
-    nsHTMLDNSPrefetch::PrefetchLow(hostname, isHttps, oa,
-                                   mDocument->GetChannel()->GetTRRMode());
+    nsHTMLDNSPrefetch::Prefetch(hostname, isHttps, oa,
+                                mDocument->GetChannel()->GetTRRMode(),
+                                nsHTMLDNSPrefetch::Priority::Low);
   }
 }
 
