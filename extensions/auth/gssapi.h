@@ -94,7 +94,7 @@
 
 EXTERN_C_BEGIN
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && !defined(__aarch64__)
 #  pragma pack(push, 2)
 #endif
 
@@ -783,7 +783,7 @@ OM_uint32 GSS_CALLCONV GSS_FUNC(gss_unseal)(
     int*          /* qop_state */
 );
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && !defined(__aarch64__)
 #  pragma pack(pop)
 #endif
 
