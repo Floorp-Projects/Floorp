@@ -131,9 +131,6 @@ class Repackage(BaseScript):
                     os.path.join(dirs["abs_src_dir"], manifest_src),
                 ]
             )
-            auth_file = self._get_tooltool_auth_file()
-            if auth_file:
-                cmd.extend(["--authentication-file", auth_file])
         cache = config.get("tooltool_cache")
         if cache:
             cmd.extend(["--cache-dir", cache])
@@ -141,23 +138,6 @@ class Repackage(BaseScript):
             cmd.extend(toolchains.split())
         self.info(str(cmd))
         self.run_command(cmd, cwd=dirs["abs_src_dir"], halt_on_failure=True)
-
-    def _get_tooltool_auth_file(self):
-        # set the default authentication file based on platform; this
-        # corresponds to where puppet puts the token
-        if "tooltool_authentication_file" in self.config:
-            fn = self.config["tooltool_authentication_file"]
-        elif self._is_windows():
-            fn = r"c:\builds\relengapi.tok"
-        else:
-            fn = "/builds/relengapi.tok"
-
-        # if the file doesn't exist, don't pass it to tooltool (it will just
-        # fail).  In taskcluster, this will work OK as the relengapi-proxy will
-        # take care of auth.  Everywhere else, we'll get auth failures if
-        # necessary.
-        if os.path.exists(fn):
-            return fn
 
     def _get_mozconfig(self):
         """assign mozconfig."""
