@@ -550,6 +550,9 @@ class MacroAssemblerNone : public Assembler {
   void convertDoubleToInt32(FloatRegister, Register, Label*, bool v = true) {
     MOZ_CRASH();
   }
+  void convertDoubleToPtr(FloatRegister, Register, Label*, bool v = true) {
+    MOZ_CRASH();
+  }
   void convertBoolToInt32(Register, Register) { MOZ_CRASH(); }
 
   void convertDoubleToFloat32(FloatRegister, FloatRegister) { MOZ_CRASH(); }

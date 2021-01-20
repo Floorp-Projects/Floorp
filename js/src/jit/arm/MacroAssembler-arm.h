@@ -102,6 +102,10 @@ class MacroAssemblerARM : public Assembler {
                               Condition c = Always);
   void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
                             bool negativeZeroCheck = true);
+  void convertDoubleToPtr(FloatRegister src, Register dest, Label* fail,
+                          bool negativeZeroCheck = true) {
+    convertDoubleToInt32(src, dest, fail, negativeZeroCheck);
+  }
   void convertFloat32ToInt32(FloatRegister src, Register dest, Label* fail,
                              bool negativeZeroCheck = true);
 
