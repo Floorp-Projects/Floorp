@@ -229,13 +229,22 @@ nsNSSCertificate::GetKeyUsages(nsAString& text) {
 
 NS_IMETHODIMP
 nsNSSCertificate::GetDbKey(nsACString& aDbKey) {
-  return GetDbKey(mCert, aDbKey);
-}
+  static_assert(sizeof(uint64_t) == 8, "type size consistency check");
+  static_assert(sizeof(uint32_t) == 4, "type size consistency check");
 
-nsresult nsNSSCertificate::GetDbKey(const UniqueCERTCertificate& cert,
-                                    nsACString& aDbKey) {
-  static_assert(sizeof(uint64_t) == 8, "type size sanity check");
-  static_assert(sizeof(uint32_t) == 4, "type size sanity check");
+  pkix::Input certInput;
+  pkix::Result result = certInput.Init(mCert->derCert.data, mCert->derCert.len);
+  if (result != pkix::Result::Success) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  // NB: since we're not building a trust path, the endEntityOrCA parameter is
+  // irrelevant.
+  pkix::BackCert cert(certInput, pkix::EndEntityOrCA::MustBeEndEntity, nullptr);
+  result = cert.Init();
+  if (result != pkix::Result::Success) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // The format of the key is the base64 encoding of the following:
   // 4 bytes: {0, 0, 0, 0} (this was intended to be the module ID, but it was
   //                        never implemented)
@@ -248,16 +257,18 @@ nsresult nsNSSCertificate::GetDbKey(const UniqueCERTCertificate& cert,
   nsAutoCString buf;
   const char leadingZeroes[] = {0, 0, 0, 0, 0, 0, 0, 0};
   buf.Append(leadingZeroes, sizeof(leadingZeroes));
-  uint32_t serialNumberLen = htonl(cert->serialNumber.len);
+  uint32_t serialNumberLen = htonl(cert.GetSerialNumber().GetLength());
   buf.Append(BitwiseCast<const char*, const uint32_t*>(&serialNumberLen),
              sizeof(uint32_t));
-  uint32_t issuerLen = htonl(cert->derIssuer.len);
+  uint32_t issuerLen = htonl(cert.GetIssuer().GetLength());
   buf.Append(BitwiseCast<const char*, const uint32_t*>(&issuerLen),
              sizeof(uint32_t));
-  buf.Append(BitwiseCast<char*, unsigned char*>(cert->serialNumber.data),
-             cert->serialNumber.len);
-  buf.Append(BitwiseCast<char*, unsigned char*>(cert->derIssuer.data),
-             cert->derIssuer.len);
+  buf.Append(BitwiseCast<const char*, const unsigned char*>(
+                 cert.GetSerialNumber().UnsafeGetData()),
+             cert.GetSerialNumber().GetLength());
+  buf.Append(BitwiseCast<const char*, const unsigned char*>(
+                 cert.GetIssuer().UnsafeGetData()),
+             cert.GetIssuer().GetLength());
 
   return Base64Encode(buf, aDbKey);
 }
