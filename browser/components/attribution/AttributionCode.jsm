@@ -50,6 +50,7 @@ const ATTR_CODE_KEYS = [
   "experiment",
   "variation",
   "ua",
+  "dltoken",
 ];
 
 let gCachedAttrData = null;
