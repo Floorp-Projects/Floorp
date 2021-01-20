@@ -38,10 +38,17 @@ class RemoteLazyInputStreamParent final : public PRemoteLazyInputStreamParent {
   // The size of the inputStream must be passed as argument in order to avoid
   // the use of nsIInputStream::Available() which could open a fileDescriptor in
   // case the stream is a nsFileStream.
-  template <typename M>
   static already_AddRefed<RemoteLazyInputStreamParent> Create(
       nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
-      nsresult* aRv, M* aManager);
+      nsresult* aRv, mozilla::dom::ContentParent* aManager);
+
+  static already_AddRefed<RemoteLazyInputStreamParent> Create(
+      nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
+      nsresult* aRv, mozilla::ipc::PBackgroundParent* aManager);
+
+  static already_AddRefed<RemoteLazyInputStreamParent> Create(
+      nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
+      nsresult* aRv, mozilla::net::SocketProcessParent* aManager);
 
   static already_AddRefed<RemoteLazyInputStreamParent> Create(
       const nsID& aID, uint64_t aSize,
@@ -70,6 +77,11 @@ class RemoteLazyInputStreamParent final : public PRemoteLazyInputStreamParent {
   bool HasValidStream() const;
 
  private:
+  template <typename M>
+  static already_AddRefed<RemoteLazyInputStreamParent> CreateCommon(
+      nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
+      nsresult* aRv, M* aManager);
+
   RemoteLazyInputStreamParent(const nsID& aID, uint64_t aSize,
                               mozilla::dom::ContentParent* aManager);
 
