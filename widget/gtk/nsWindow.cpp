@@ -1248,9 +1248,11 @@ void nsWindow::Move(double aX, double aY) {
   }
 }
 
-bool nsWindow::IsWaylandPopup() {
-  return !mIsX11Display && mIsTopLevel && mWindowType == eWindowType_popup;
+bool nsWindow::IsPopup() {
+  return mIsTopLevel && mWindowType == eWindowType_popup;
 }
+
+bool nsWindow::IsWaylandPopup() { return !mIsX11Display && IsPopup(); }
 
 void nsWindow::HideWaylandTooltips() {
   while (gVisibleWaylandPopupWindows) {
