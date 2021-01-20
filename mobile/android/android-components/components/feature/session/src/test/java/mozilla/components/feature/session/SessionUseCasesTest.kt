@@ -167,8 +167,14 @@ class SessionUseCasesTest {
         useCases.goToHistoryIndex(session = null, index = 0)
         verify(store, never()).dispatch(EngineAction.GoToHistoryIndexAction(selectedSessionId, 0))
 
+        useCases.goToHistoryIndex(sessionId = null, index = 0)
+        verify(store, never()).dispatch(EngineAction.GoToHistoryIndexAction(selectedSessionId, 0))
+
         useCases.goToHistoryIndex(session = selectedSession, index = 0)
         verify(store).dispatch(EngineAction.GoToHistoryIndexAction(selectedSessionId, 0))
+
+        useCases.goToHistoryIndex(sessionId = "test", index = 0)
+        verify(store).dispatch(EngineAction.GoToHistoryIndexAction("test", 0))
 
         useCases.goToHistoryIndex(index = 0)
         verify(store, times(2)).dispatch(EngineAction.GoToHistoryIndexAction(selectedSessionId, 0))
