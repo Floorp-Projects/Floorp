@@ -530,6 +530,8 @@ bitflags! {
         const ALPHA_PASS = 1 << 0;
         const ANTIALIASING = 1 << 1;
         const REPETITION = 1 << 2;
+        /// Indicates a primitive in this batch may use a clip mask.
+        const CLIP_MASK = 1 << 3;
     }
 }
 
@@ -791,6 +793,7 @@ impl BatchBuilder {
     fn add_split_composite_instance_to_batches(
         &mut self,
         batch_key: BatchKey,
+        features: BatchFeatures,
         bounding_rect: &PictureRect,
         z_id: ZBufferId,
         prim_header_index: PrimitiveHeaderIndex,
@@ -803,7 +806,7 @@ impl BatchBuilder {
 
                 batcher.push_single_instance(
                     batch_key,
-                    BatchFeatures::empty(),
+                    features,
                     bounding_rect,
                     z_id,
                     PrimitiveInstanceData::from(SplitCompositeInstance {
@@ -1003,6 +1006,11 @@ impl BatchBuilder {
 
         if transform_kind != TransformedRectKind::AxisAligned {
             batch_features |= BatchFeatures::ANTIALIASING;
+        }
+
+        // Check if the primitive might require a clip mask.
+        if prim_info.clip_task_index != ClipTaskIndex::INVALID {
+            batch_features |= BatchFeatures::CLIP_MASK;
         }
 
         if !bounding_rect.is_empty() {
@@ -1350,7 +1358,7 @@ impl BatchBuilder {
                                 let render_task_address = batcher.render_task_address;
                                 let batch = batcher.alpha_batch_list.set_params_and_get_batch(
                                     key,
-                                    BatchFeatures::empty(),
+                                    batch_features,
                                     &tight_bounding_rect,
                                     z_id,
                                 );
@@ -1538,6 +1546,7 @@ impl BatchBuilder {
 
                             self.add_split_composite_instance_to_batches(
                                 key,
+                                BatchFeatures::CLIP_MASK,
                                 &child_prim_info.clip_chain.pic_clip_rect,
                                 z_id,
                                 prim_header_index,
@@ -2749,6 +2758,7 @@ impl BatchBuilder {
                         &prim_data.stops_handle,
                         BrushBatchKind::LinearGradient,
                         specified_blend_mode,
+                        batch_features,
                         bounding_rect,
                         clip_task_address,
                         gpu_cache,
@@ -2836,6 +2846,7 @@ impl BatchBuilder {
                         &prim_data.stops_handle,
                         BrushBatchKind::RadialGradient,
                         specified_blend_mode,
+                        batch_features,
                         bounding_rect,
                         clip_task_address,
                         gpu_cache,
@@ -2923,6 +2934,7 @@ impl BatchBuilder {
                         &prim_data.stops_handle,
                         BrushBatchKind::ConicGradient,
                         specified_blend_mode,
+                        batch_features,
                         bounding_rect,
                         clip_task_address,
                         gpu_cache,
@@ -3175,6 +3187,7 @@ impl BatchBuilder {
         stops_handle: &GpuCacheHandle,
         kind: BrushBatchKind,
         blend_mode: BlendMode,
+        features: BatchFeatures,
         bounding_rect: &PictureRect,
         clip_task_address: RenderTaskAddress,
         gpu_cache: &GpuCache,
@@ -3203,7 +3216,7 @@ impl BatchBuilder {
 
             self.add_brush_instance_to_batches(
                 key,
-                BatchFeatures::empty(),
+                features,
                 bounding_rect,
                 z_id,
                 INVALID_SEGMENT_INDEX,

@@ -388,7 +388,7 @@ impl BrushShader {
         })
     }
 
-    fn get(&mut self, blend_mode: BlendMode, debug_flags: DebugFlags)
+    fn get(&mut self, blend_mode: BlendMode, features: BatchFeatures, debug_flags: DebugFlags)
            -> &mut LazilyCompiledShader {
         match blend_mode {
             _ if debug_flags.contains(DebugFlags::SHOW_OVERDRAW) => &mut self.debug_overdraw,
@@ -397,7 +397,13 @@ impl BrushShader {
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
             BlendMode::SubpixelConstantTextColor(..) |
-            BlendMode::SubpixelWithBgColor => &mut self.alpha,
+            BlendMode::SubpixelWithBgColor => {
+                if features.contains(BatchFeatures::ALPHA_PASS) {
+                    &mut self.alpha
+                } else {
+                    &mut self.opaque
+                }
+            }
             BlendMode::Advanced(_) => {
                 self.advanced_blend
                     .as_mut()
@@ -1049,7 +1055,12 @@ impl Shaders {
             .expect("bug: unsupported scale shader requested")
     }
 
-    pub fn get(&mut self, key: &BatchKey, features: BatchFeatures, debug_flags: DebugFlags) -> &mut LazilyCompiledShader {
+    pub fn get(&
+        mut self,
+        key: &BatchKey,
+        mut features: BatchFeatures,
+        debug_flags: DebugFlags,
+    ) -> &mut LazilyCompiledShader {
         match key.kind {
             BatchKind::SplitComposite => {
                 &mut self.ps_split_composite
@@ -1079,12 +1090,39 @@ impl Shaders {
                         &mut self.brush_mix_blend
                     }
                     BrushBatchKind::ConicGradient => {
+                        // Gradient brushes can optimistically use the opaque shader even
+                        // with a blend mode if they don't require any features.
+                        if !features.intersects(
+                            BatchFeatures::ANTIALIASING
+                                | BatchFeatures::REPETITION
+                                | BatchFeatures::CLIP_MASK,
+                        ) {
+                            features.remove(BatchFeatures::ALPHA_PASS);
+                        }
                         &mut self.brush_conic_gradient
                     }
                     BrushBatchKind::RadialGradient => {
+                        // Gradient brushes can optimistically use the opaque shader even
+                        // with a blend mode if they don't require any features.
+                        if !features.intersects(
+                            BatchFeatures::ANTIALIASING
+                                | BatchFeatures::REPETITION
+                                | BatchFeatures::CLIP_MASK,
+                        ) {
+                            features.remove(BatchFeatures::ALPHA_PASS);
+                        }
                         &mut self.brush_radial_gradient
                     }
                     BrushBatchKind::LinearGradient => {
+                        // Gradient brushes can optimistically use the opaque shader even
+                        // with a blend mode if they don't require any features.
+                        if !features.intersects(
+                            BatchFeatures::ANTIALIASING
+                                | BatchFeatures::REPETITION
+                                | BatchFeatures::CLIP_MASK,
+                        ) {
+                            features.remove(BatchFeatures::ALPHA_PASS);
+                        }
                         &mut self.brush_linear_gradient
                     }
                     BrushBatchKind::YuvImage(image_buffer_kind, ..) => {
@@ -1102,7 +1140,7 @@ impl Shaders {
                         }
                     }
                 };
-                brush_shader.get(key.blend_mode, debug_flags)
+                brush_shader.get(key.blend_mode, features, debug_flags)
             }
             BatchKind::TextRun(glyph_format) => {
                 let text_shader = match key.blend_mode {
