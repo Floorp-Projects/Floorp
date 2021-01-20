@@ -456,11 +456,10 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         env = self.query_bootstrap_env()
         config = self.config
         dirs = self.query_abs_dirs()
-        toolchains = os.environ.get("MOZ_TOOLCHAINS")
         manifest_src = os.environ.get("TOOLTOOL_MANIFEST")
         if not manifest_src:
             manifest_src = config.get("tooltool_manifest_src")
-        if not manifest_src and not toolchains:
+        if not manifest_src:
             return
         python = sys.executable
 
@@ -486,8 +485,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         cache = config["bootstrap_env"].get("TOOLTOOL_CACHE")
         if cache:
             cmd.extend(["--cache-dir", cache])
-        if toolchains:
-            cmd.extend(toolchains.split())
         self.info(str(cmd))
         self.run_command(cmd, cwd=dirs["abs_src_dir"], halt_on_failure=True, env=env)
 
