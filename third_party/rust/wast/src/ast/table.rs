@@ -108,7 +108,7 @@ pub enum ElemKind<'a> {
     /// An active segment associated with a table.
     Active {
         /// The table this `elem` is initializing.
-        table: ast::Index<'a>,
+        table: ast::ItemRef<'a, kw::table>,
         /// The offset within `table` that we'll initialize at.
         offset: ast::Expression<'a>,
     },
@@ -118,7 +118,7 @@ pub enum ElemKind<'a> {
 #[derive(Debug, Clone)]
 pub enum ElemPayload<'a> {
     /// This element segment has a contiguous list of function indices
-    Indices(Vec<ast::Index<'a>>),
+    Indices(Vec<ast::ItemRef<'a, kw::func>>),
 
     /// This element segment has a list of optional function indices,
     /// represented as expressions using `ref.func` and `ref.null`.
@@ -127,7 +127,7 @@ pub enum ElemPayload<'a> {
         ty: ast::RefType<'a>,
         /// The expressions, currently optional function indices, in this
         /// segment.
-        exprs: Vec<Option<ast::Index<'a>>>,
+        exprs: Vec<Option<ast::ItemRef<'a, kw::func>>>,
     },
 }
 
@@ -136,16 +136,17 @@ impl<'a> Parse<'a> for Elem<'a> {
         let span = parser.parse::<kw::elem>()?.0;
         let id = parser.parse()?;
 
-        let kind = if parser.peek::<u32>() || (parser.peek::<ast::LParen>() && !parser.peek::<ast::RefType>()) {
-            let table = if parser.peek2::<kw::table>() {
-                Some(parser.parens(|p| {
-                    p.parse::<kw::table>()?;
-                    p.parse()
-                })?)
-            } else if parser.peek::<u32>() {
-                Some(parser.parse()?)
+        let kind = if parser.peek::<u32>()
+            || (parser.peek::<ast::LParen>() && !parser.peek::<ast::RefType>())
+        {
+            let table = if let Some(index) = parser.parse::<Option<ast::IndexOrRef<_>>>()? {
+                index.0
             } else {
-                None
+                ast::ItemRef::Item {
+                    kind: kw::table(parser.prev_span()),
+                    idx: ast::Index::Num(0, span),
+                    exports: Vec::new(),
+                }
             };
             let offset = parser.parens(|parser| {
                 if parser.peek::<kw::offset>() {
@@ -153,10 +154,7 @@ impl<'a> Parse<'a> for Elem<'a> {
                 }
                 parser.parse()
             })?;
-            ElemKind::Active {
-                table: table.unwrap_or(ast::Index::Num(0, span)),
-                offset,
-            }
+            ElemKind::Active { table, offset }
         } else if parser.peek::<kw::declare>() {
             parser.parse::<kw::declare>()?;
             ElemKind::Declared
@@ -189,10 +187,10 @@ impl<'a> ElemPayload<'a> {
             Some(ty) => ty,
         };
         if let ast::HeapType::Func = ty.heap {
-            if parser.peek::<ast::Index>() {
+            if parser.peek::<ast::IndexOrRef<kw::func>>() {
                 let mut elems = Vec::new();
                 while !parser.is_empty() {
-                    elems.push(parser.parse()?);
+                    elems.push(parser.parse::<ast::IndexOrRef<_>>()?.0);
                 }
                 return Ok(ElemPayload::Indices(elems));
             }
@@ -218,7 +216,7 @@ impl<'a> ElemPayload<'a> {
 fn parse_ref_func<'a>(
     parser: Parser<'a>,
     ty: ast::RefType<'a>,
-) -> Result<Option<ast::Index<'a>>> {
+) -> Result<Option<ast::ItemRef<'a, kw::func>>> {
     let mut l = parser.lookahead1();
     if l.peek::<kw::ref_null>() {
         parser.parse::<kw::ref_null>()?;
@@ -229,7 +227,7 @@ fn parse_ref_func<'a>(
         Ok(None)
     } else if l.peek::<kw::ref_func>() {
         parser.parse::<kw::ref_func>()?;
-        Ok(Some(parser.parse()?))
+        Ok(Some(parser.parse::<ast::IndexOrRef<_>>()?.0))
     } else {
         Err(l.error())
     }

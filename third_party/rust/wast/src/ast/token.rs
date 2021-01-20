@@ -1,4 +1,4 @@
-use crate::ast::annotation;
+use crate::ast::{annotation, kw};
 use crate::lexer::FloatVal;
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
 use std::fmt;
@@ -106,7 +106,11 @@ impl<'a> Parse<'a> for Id<'a> {
 
 impl fmt::Debug for Id<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.name.fmt(f)
+        if self.gen != 0 {
+            f.debug_struct("Id").field("gen", &self.gen).finish()
+        } else {
+            self.name.fmt(f)
+        }
     }
 }
 
@@ -179,6 +183,12 @@ impl Peek for Index<'_> {
     }
 }
 
+impl<'a> From<Id<'a>> for Index<'a> {
+    fn from(id: Id<'a>) -> Index<'a> {
+        Index::Id(id)
+    }
+}
+
 impl PartialEq for Index<'_> {
     fn eq(&self, other: &Index<'_>) -> bool {
         match (self, other) {
@@ -203,6 +213,106 @@ impl Hash for Index<'_> {
                 a.hash(hasher);
             }
         }
+    }
+}
+
+/// Parses `(func $foo)`
+///
+/// Optionally includes export strings for module-linking sugar syntax for alias
+/// injection.
+#[derive(Clone, Debug)]
+#[allow(missing_docs)]
+pub enum ItemRef<'a, K> {
+    Outer {
+        kind: K,
+        module: Index<'a>,
+        idx: Index<'a>,
+    },
+    Item {
+        kind: K,
+        idx: Index<'a>,
+        exports: Vec<&'a str>,
+    },
+}
+
+impl<'a, K> ItemRef<'a, K> {
+    /// Unwraps the underlying `Index` for `ItemRef::Item`.
+    ///
+    /// Panics if this is `ItemRef::Outer` or if exports haven't been expanded
+    /// yet.
+    pub fn unwrap_index(&self) -> &Index<'a> {
+        match self {
+            ItemRef::Item { idx, exports, .. } => {
+                debug_assert!(exports.len() == 0);
+                idx
+            }
+            ItemRef::Outer { .. } => panic!("unwrap_index called on Parent"),
+        }
+    }
+}
+
+impl<'a, K: Parse<'a>> Parse<'a> for ItemRef<'a, K> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.parens(|parser| {
+            let kind = parser.parse::<K>()?;
+            if parser.peek::<kw::outer>() {
+                parser.parse::<kw::outer>()?;
+                let module = parser.parse()?;
+                let idx = parser.parse()?;
+                Ok(ItemRef::Outer { kind, module, idx })
+            } else {
+                let idx = parser.parse()?;
+                let mut exports = Vec::new();
+                while !parser.is_empty() {
+                    exports.push(parser.parse()?);
+                }
+                Ok(ItemRef::Item { kind, idx, exports })
+            }
+        })
+    }
+}
+
+impl<'a, K: Peek> Peek for ItemRef<'a, K> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        match cursor.lparen() {
+            Some(remaining) => K::peek(remaining),
+            None => false,
+        }
+    }
+
+    fn display() -> &'static str {
+        "an item reference"
+    }
+}
+
+/// Convenience structure to parse `$f` or `(item $f)`.
+#[derive(Clone, Debug)]
+pub struct IndexOrRef<'a, K>(pub ItemRef<'a, K>);
+
+impl<'a, K> Parse<'a> for IndexOrRef<'a, K>
+where
+    K: Parse<'a> + Default,
+{
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        if parser.peek::<Index<'_>>() {
+            Ok(IndexOrRef(ItemRef::Item {
+                kind: K::default(),
+                idx: parser.parse()?,
+                exports: Vec::new(),
+            }))
+        } else {
+            Ok(IndexOrRef(parser.parse()?))
+        }
+    }
+}
+
+impl<'a, K: Peek> Peek for IndexOrRef<'a, K> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Index::peek(cursor) || ItemRef::<K>::peek(cursor)
+    }
+
+    fn display() -> &'static str {
+        "an item reference"
     }
 }
 
