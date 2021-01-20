@@ -6,6 +6,16 @@
 #include "nsNativeBasicThemeWin.h"
 
 #include "LookAndFeel.h"
+#include "ScrollbarUtil.h"
+
+nsITheme::Transparency nsNativeBasicThemeWin::GetWidgetTransparency(
+    nsIFrame* aFrame, StyleAppearance aAppearance) {
+  if (auto transparency =
+          ScrollbarUtil::GetScrollbarPartTransparency(aFrame, aAppearance)) {
+    return *transparency;
+  }
+  return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
+}
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicThemeWin::ComputeCheckboxColors(
     const EventStates& aState, StyleAppearance aAppearance) {
@@ -207,6 +217,76 @@ std::array<sRGBColor, 3> nsNativeBasicThemeWin::ComputeFocusRectColors() {
               LookAndFeel::GetColor(LookAndFeel::ColorID::Buttontext)),
           sRGBColor::FromABGR(
               LookAndFeel::GetColor(LookAndFeel::ColorID::TextBackground))};
+}
+
+std::pair<sRGBColor, sRGBColor> nsNativeBasicThemeWin::ComputeScrollbarColors(
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, bool aIsRoot) {
+  if (!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
+    nscolor trackColor = ScrollbarUtil::GetScrollbarTrackColor(aFrame);
+    sRGBColor color = sRGBColor::FromABGR(trackColor);
+    return std::make_pair(color, color);
+  }
+
+  sRGBColor color = sRGBColor::FromABGR(
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextBackground));
+  return std::make_pair(color, color);
+}
+
+sRGBColor nsNativeBasicThemeWin::ComputeScrollbarThumbColor(
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState) {
+  if (!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
+    return gfx::sRGBColor::FromABGR(
+        ScrollbarUtil::GetScrollbarThumbColor(aFrame, aElementState));
+  }
+
+  bool isActive = aElementState.HasState(NS_EVENT_STATE_ACTIVE);
+  bool isHovered = aElementState.HasState(NS_EVENT_STATE_HOVER);
+  const nsStyleUI* ui = aStyle.StyleUI();
+  nscolor color;
+
+  if (ui->mScrollbarColor.IsColors()) {
+    color = ui->mScrollbarColor.AsColors().thumb.CalcColor(aStyle);
+  } else if (isActive || isHovered) {
+    color = LookAndFeel::GetColor(LookAndFeel::ColorID::Highlight);
+  } else {
+    color = LookAndFeel::GetColor(LookAndFeel::ColorID::TextForeground);
+  }
+
+  return gfx::sRGBColor::FromABGR(color);
+}
+
+std::array<sRGBColor, 3> nsNativeBasicThemeWin::ComputeScrollbarButtonColors(
+    nsIFrame* aFrame, StyleAppearance aAppearance, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState) {
+  if (!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
+    nscolor trackColor = ScrollbarUtil::GetScrollbarTrackColor(aFrame);
+    nscolor buttonColor =
+        ScrollbarUtil::GetScrollbarButtonColor(trackColor, aElementState);
+    nscolor arrowColor = ScrollbarUtil::GetScrollbarArrowColor(buttonColor);
+    return {sRGBColor::FromABGR(buttonColor), sRGBColor::FromABGR(arrowColor),
+            sRGBColor::FromABGR(buttonColor)};
+  }
+
+  bool isActive = aElementState.HasState(NS_EVENT_STATE_ACTIVE);
+  bool isHovered = aElementState.HasState(NS_EVENT_STATE_HOVER);
+
+  sRGBColor buttonColor;
+  sRGBColor arrowColor;
+  if (isActive || isHovered) {
+    buttonColor = sRGBColor::FromABGR(
+        LookAndFeel::GetColor(LookAndFeel::ColorID::Highlight));
+    arrowColor = sRGBColor::FromABGR(
+        LookAndFeel::GetColor(LookAndFeel::ColorID::Buttonface));
+  } else {
+    buttonColor = sRGBColor::FromABGR(
+        LookAndFeel::GetColor(LookAndFeel::ColorID::TextBackground));
+    arrowColor = sRGBColor::FromABGR(
+        LookAndFeel::GetColor(LookAndFeel::ColorID::TextForeground));
+  }
+
+  return {buttonColor, arrowColor, buttonColor};
 }
 
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {

@@ -33,6 +33,7 @@
 #include "nsWindow.h"
 #include "nsComboboxControlFrame.h"
 #include "prinrval.h"
+#include "ScrollbarUtil.h"
 #include "WinUtils.h"
 
 #include "gfxPlatform.h"
@@ -1470,38 +1471,6 @@ static inline double GetThemeDpiScaleFactor(nsIFrame* aFrame) {
   return 1.0;
 }
 
-static bool IsScrollbarWidthThin(ComputedStyle* aStyle) {
-  auto scrollbarWidth = aStyle->StyleUIReset()->mScrollbarWidth;
-  return scrollbarWidth == StyleScrollbarWidth::Thin;
-}
-
-static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
-  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-  return IsScrollbarWidthThin(style);
-}
-
-// Returns the style for custom scrollbar if the scrollbar part frame should
-// use the custom drawing path, nullptr otherwise.
-//
-// Optionally the caller can pass a pointer to aForDarkBg for whether custom
-// scrollbar may be drawn due to dark background.
-static ComputedStyle* GetCustomScrollbarStyle(nsIFrame* aFrame,
-                                              bool* aDarkScrollbar = nullptr) {
-  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-  if (style->StyleUI()->HasCustomScrollbars()) {
-    return style;
-  }
-  bool useDarkScrollbar = !StaticPrefs::widget_disable_dark_scrollbar() &&
-                          nsNativeTheme::IsDarkBackground(aFrame);
-  if (useDarkScrollbar || IsScrollbarWidthThin(style)) {
-    if (aDarkScrollbar) {
-      *aDarkScrollbar = useDarkScrollbar;
-    }
-    return style;
-  }
-  return nullptr;
-}
-
 NS_IMETHODIMP
 nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
@@ -2589,40 +2558,12 @@ nsITheme::ThemeGeometryType nsNativeThemeWin::ThemeGeometryTypeForWidget(
 
 nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
-  if (IsWidgetScrollbarPart(aAppearance)) {
-    if (ComputedStyle* style = GetCustomScrollbarStyle(aFrame)) {
-      auto* ui = style->StyleUI();
-      if (ui->mScrollbarColor.IsAuto() ||
-          ui->mScrollbarColor.AsColors().track.MaybeTransparent()) {
-        return eTransparent;
-      }
-      // MayDrawCustomScrollbarPart doesn't draw the track background for
-      // widgets on it, and these widgets are thinner than the track,
-      // so we need to return transparent for them.
-      switch (aAppearance) {
-        case StyleAppearance::ScrollbarthumbHorizontal:
-        case StyleAppearance::ScrollbarthumbVertical:
-        case StyleAppearance::ScrollbarbuttonUp:
-        case StyleAppearance::ScrollbarbuttonDown:
-        case StyleAppearance::ScrollbarbuttonLeft:
-        case StyleAppearance::ScrollbarbuttonRight:
-          return eTransparent;
-        default:
-          break;
-      }
-    }
+  if (auto transparency =
+          ScrollbarUtil::GetScrollbarPartTransparency(aFrame, aAppearance)) {
+    return *transparency;
   }
 
   switch (aAppearance) {
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::Scrollcorner:
-    case StyleAppearance::Statusbar:
-      // Knowing that scrollbars and statusbars are opaque improves
-      // performance, because we create layers for them. This better be
-      // true across all Windows themes! If it's not true, we should
-      // paint an opaque background for them to make it true!
-      return eOpaque;
     case StyleAppearance::MozWinGlass:
     case StyleAppearance::MozWinBorderlessGlass:
     case StyleAppearance::ProgressBar:
@@ -2850,7 +2791,7 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
       // For scrollbar-width:thin, we don't display the buttons.
-      if (!IsScrollbarWidthThin(aFrame)) {
+      if (!ScrollbarUtil::IsScrollbarWidthThin(aFrame)) {
         (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
         (*aResult).height = ::GetSystemMetrics(SM_CYVSCROLL);
       }
@@ -2859,7 +2800,7 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight:
       // For scrollbar-width:thin, we don't display the buttons.
-      if (!IsScrollbarWidthThin(aFrame)) {
+      if (!ScrollbarUtil::IsScrollbarWidthThin(aFrame)) {
         (*aResult).width = ::GetSystemMetrics(SM_CXHSCROLL);
         (*aResult).height = ::GetSystemMetrics(SM_CYHSCROLL);
       }
@@ -2932,7 +2873,7 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       }
       // If scrollbar-width is thin, divide the thickness by two to make
       // it look more compact.
-      if (IsScrollbarWidthThin(aFrame)) {
+      if (ScrollbarUtil::IsScrollbarWidthThin(aFrame)) {
         aResult->width >>= 1;
       }
       *aIsOverridable = false;
@@ -2947,7 +2888,7 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       }
       // If scrollbar-width is thin, divide the thickness by two to make
       // it look more compact.
-      if (IsScrollbarWidthThin(aFrame)) {
+      if (ScrollbarUtil::IsScrollbarWidthThin(aFrame)) {
         aResult->height >>= 1;
       }
       *aIsOverridable = false;
@@ -3931,109 +3872,13 @@ uint32_t nsNativeThemeWin::GetWidgetNativeDrawingFlags(
   }
 }
 
-static nscolor GetScrollbarButtonColor(nscolor aTrackColor,
-                                       EventStates aStates) {
-  // See numbers in GetScrollbarArrowColor.
-  // This function is written based on ratios between values listed there.
-
-  bool isActive = aStates.HasState(NS_EVENT_STATE_ACTIVE);
-  bool isHover = aStates.HasState(NS_EVENT_STATE_HOVER);
-  if (!isActive && !isHover) {
-    return aTrackColor;
-  }
-  float luminance = RelativeLuminanceUtils::Compute(aTrackColor);
-  if (isActive) {
-    if (luminance >= 0.18f) {
-      luminance *= 0.134f;
-    } else {
-      luminance /= 0.134f;
-      luminance = std::min(luminance, 1.0f);
-    }
-  } else {
-    if (luminance >= 0.18f) {
-      luminance *= 0.805f;
-    } else {
-      luminance /= 0.805f;
-    }
-  }
-  return RelativeLuminanceUtils::Adjust(aTrackColor, luminance);
-}
-
-static nscolor GetScrollbarArrowColor(nscolor aButtonColor) {
-  // In Windows 10 scrollbar, there are several gray colors used:
-  //
-  // State  | Background (lum) | Arrow   | Contrast
-  // -------+------------------+---------+---------
-  // Normal | Gray 240 (87.1%) | Gray 96 |     5.5
-  // Hover  | Gray 218 (70.1%) | Black   |    15.0
-  // Active | Gray 96  (11.7%) | White   |     6.3
-  //
-  // Contrast value is computed based on the definition in
-  // https://www.w3.org/TR/WCAG20/#contrast-ratiodef
-  //
-  // This function is written based on these values.
-
-  float luminance = RelativeLuminanceUtils::Compute(aButtonColor);
-  // Color with luminance larger than 0.72 has contrast ratio over 4.6
-  // to color with luminance of gray 96, so this value is chosen for
-  // this range. It is the luminance of gray 221.
-  if (luminance >= 0.72) {
-    // ComputeRelativeLuminanceFromComponents(96). That function cannot
-    // be constexpr because of std::pow.
-    const float GRAY96_LUMINANCE = 0.117f;
-    return RelativeLuminanceUtils::Adjust(aButtonColor, GRAY96_LUMINANCE);
-  }
-  // The contrast ratio of a color to black equals that to white when its
-  // luminance is around 0.18, with a contrast ratio ~4.6 to both sides,
-  // thus the value below. It's the lumanince of gray 118.
-  if (luminance >= 0.18) {
-    return NS_RGBA(0, 0, 0, NS_GET_A(aButtonColor));
-  }
-  return NS_RGBA(255, 255, 255, NS_GET_A(aButtonColor));
-}
-
-static nscolor AdjustScrollbarFaceColor(nscolor aFaceColor,
-                                        EventStates aStates) {
-  // In Windows 10, scrollbar thumb has the following colors:
-  //
-  // State  | Color    | Luminance
-  // -------+----------+----------
-  // Normal | Gray 205 |     61.0%
-  // Hover  | Gray 166 |     38.1%
-  // Active | Gray 96  |     11.7%
-  //
-  // This function is written based on the ratios between the values.
-
-  bool isActive = aStates.HasState(NS_EVENT_STATE_ACTIVE);
-  bool isHover = aStates.HasState(NS_EVENT_STATE_HOVER);
-  if (!isActive && !isHover) {
-    return aFaceColor;
-  }
-  float luminance = RelativeLuminanceUtils::Compute(aFaceColor);
-  if (isActive) {
-    if (luminance >= 0.18f) {
-      luminance *= 0.192f;
-    } else {
-      luminance /= 0.192f;
-    }
-  } else {
-    if (luminance >= 0.18f) {
-      luminance *= 0.625f;
-    } else {
-      luminance /= 0.625f;
-    }
-  }
-  return RelativeLuminanceUtils::Adjust(aFaceColor, luminance);
-}
-
 // This tries to draw a Windows 10 style scrollbar with given colors.
 bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
                                                   nsIFrame* aFrame,
                                                   StyleAppearance aAppearance,
                                                   const nsRect& aRect,
                                                   const nsRect& aClipRect) {
-  bool darkScrollbar = false;
-  ComputedStyle* style = GetCustomScrollbarStyle(aFrame, &darkScrollbar);
+  ComputedStyle* style = ScrollbarUtil::GetCustomScrollbarStyle(aFrame);
   if (!style) {
     return false;
   }
@@ -4048,12 +3893,8 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
   gfxRect clipRect = ThebesRect(NSRectToSnappedRect(aClipRect, p2a, *dt));
   ctx->Clip(clipRect);
 
-  const nsStyleUI* ui = style->StyleUI();
-  auto* customColors =
-      ui->mScrollbarColor.IsAuto() ? nullptr : &ui->mScrollbarColor.AsColors();
-  nscolor trackColor = customColors ? customColors->track.CalcColor(*style)
-                                    : (darkScrollbar ? NS_RGBA(20, 20, 25, 77)
-                                                     : NS_RGB(240, 240, 240));
+  nscolor trackColor = ScrollbarUtil::GetScrollbarTrackColor(aFrame);
+
   switch (aAppearance) {
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical:
@@ -4088,11 +3929,8 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
   switch (aAppearance) {
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal: {
-      nscolor faceColor = customColors
-                              ? customColors->thumb.CalcColor(*style)
-                              : (darkScrollbar ? NS_RGBA(249, 249, 250, 102)
-                                               : NS_RGB(205, 205, 205));
-      faceColor = AdjustScrollbarFaceColor(faceColor, eventStates);
+      nscolor faceColor =
+          ScrollbarUtil::GetScrollbarThumbColor(aFrame, eventStates);
       ctx->SetColor(sRGBColor::FromABGR(faceColor));
       ctx->Rectangle(bgRect);
       ctx->Fill();
@@ -4102,7 +3940,8 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight: {
-      nscolor buttonColor = GetScrollbarButtonColor(trackColor, eventStates);
+      nscolor buttonColor =
+          ScrollbarUtil::GetScrollbarButtonColor(trackColor, eventStates);
       ctx->SetColor(sRGBColor::FromABGR(buttonColor));
       ctx->Rectangle(bgRect);
       ctx->Fill();
@@ -4147,7 +3986,7 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
       ctx->LineTo(gfxPoint(5.0, 12.0));
       ctx->ClosePath();
       // And paint the arrow.
-      nscolor arrowColor = GetScrollbarArrowColor(buttonColor);
+      nscolor arrowColor = ScrollbarUtil::GetScrollbarArrowColor(buttonColor);
       ctx->SetColor(sRGBColor::FromABGR(arrowColor));
       ctx->Fill();
       break;
