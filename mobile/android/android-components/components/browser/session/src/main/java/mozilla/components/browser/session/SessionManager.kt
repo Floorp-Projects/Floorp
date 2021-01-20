@@ -6,6 +6,7 @@
 
 package mozilla.components.browser.session
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toCustomTabSessionState
 import mozilla.components.browser.session.ext.toTabSessionState
@@ -41,18 +42,6 @@ class SessionManager(
         get() = delegate.size
 
     /**
-     * Produces a [Snapshot.Item] of a single [Session], suitable for restoring via [SessionManager.restore].
-     */
-    fun createSessionSnapshot(session: Session): Snapshot.Item {
-        val tab = store?.state?.findTab(session.id)
-
-        return Snapshot.Item(
-            session,
-            tab?.engineState?.engineSessionState,
-            tab?.readerState)
-    }
-
-    /**
      * Gets the currently selected session if there is one.
      *
      * Only one session can be selected at a given time.
@@ -86,6 +75,19 @@ class SessionManager(
      */
     val all: List<Session>
         get() = delegate.all
+
+    /**
+     * Produces a [Snapshot.Item] of a single [Session], suitable for restoring via [SessionManager.restore].
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createSessionSnapshot(session: Session): Snapshot.Item {
+        val tab = store?.state?.findTab(session.id)
+
+        return Snapshot.Item(
+            session,
+            tab?.engineState?.engineSessionState,
+            tab?.readerState)
+    }
 
     /**
      * Adds the provided session.
@@ -201,7 +203,8 @@ class SessionManager(
      * @param updateSelection Whether the selected session should be updated from the restored snapshot.
      */
     @Suppress("ComplexMethod")
-    fun restore(snapshot: Snapshot, updateSelection: Boolean = true) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun restore(snapshot: Snapshot, updateSelection: Boolean = true) {
         // Add store to each Session so that it can dispatch actions whenever it changes.
         snapshot.sessions.forEach { it.session.store = store }
 
@@ -343,7 +346,8 @@ class SessionManager(
         const val NO_SELECTION = -1
     }
 
-    data class Snapshot(
+    // Marked as internal: Should not be used by any code outside of Android Components anymore.
+    internal data class Snapshot(
         val sessions: List<Item>,
         val selectedSessionIndex: Int
     ) {

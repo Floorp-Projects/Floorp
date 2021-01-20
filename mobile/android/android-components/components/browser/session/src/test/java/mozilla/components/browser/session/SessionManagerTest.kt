@@ -250,42 +250,6 @@ class SessionManagerTest {
     }
 
     @Test
-    fun `Restore single session snapshot without updating selection`() {
-        val session: Session
-
-        val manager = SessionManager(mock()).apply {
-            session = Session("https://getpocket.com")
-
-            add(Session("https://www.mozilla.org"))
-            add(session)
-            add(Session("https://www.firefox.com"))
-            add(Session("https://www.wikipedia.org", contextId = "1"))
-        }
-
-        val item = manager.createSessionSnapshot(session)
-
-        manager.remove(session)
-
-        val observer: SessionManager.Observer = mock()
-        manager.register(observer)
-
-        manager.restore(SessionManager.Snapshot.singleItem(item), updateSelection = false)
-
-        assertEquals(4, manager.size)
-        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
-        assertEquals("https://getpocket.com", manager.sessions[0].url)
-        assertEquals("https://www.mozilla.org", manager.sessions[1].url)
-        assertEquals("https://www.firefox.com", manager.sessions[2].url)
-        assertEquals("https://www.wikipedia.org", manager.sessions[3].url)
-        assertNull(manager.sessions[0].contextId)
-        assertNull(manager.sessions[1].contextId)
-        assertNull(manager.sessions[2].contextId)
-        assertEquals("1", manager.sessions[3].contextId)
-
-        verify(observer).onSessionsRestored()
-    }
-
-    @Test
     fun `Restore list of RecoverableTab`() {
         val sessionManager = SessionManager(mock())
 

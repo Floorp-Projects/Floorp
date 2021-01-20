@@ -168,7 +168,7 @@ class LegacySessionManager(
      * @param snapshot A [SessionManager.Snapshot] which may be produced by [createSnapshot].
      * @param updateSelection Whether the selected session should be updated from the restored snapshot.
      */
-    fun restore(snapshot: SessionManager.Snapshot, updateSelection: Boolean = true) = synchronized(values) {
+    internal fun restore(snapshot: SessionManager.Snapshot, updateSelection: Boolean = true) = synchronized(values) {
         if (snapshot.sessions.isEmpty()) {
             return
         }
