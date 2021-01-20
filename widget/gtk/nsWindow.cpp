@@ -25,6 +25,7 @@
 #include "mozilla/XREAppData.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WheelEventBinding.h"
+#include "InputData.h"
 #include "nsAppRunner.h"
 #include <algorithm>
 
@@ -159,6 +160,9 @@ using mozilla::gl::GLContextGLX;
 #define MAX_RECTS_IN_REGION 100
 
 const gint kEvents =
+#if GTK_CHECK_VERSION(3, 18, 0)
+    GDK_TOUCHPAD_GESTURE_MASK |
+#endif
     GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK | GDK_VISIBILITY_NOTIFY_MASK |
     GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_BUTTON_PRESS_MASK |
     GDK_BUTTON_RELEASE_MASK | GDK_SMOOTH_SCROLL_MASK | GDK_TOUCH_MASK |
@@ -216,6 +220,7 @@ static gboolean key_release_event_cb(GtkWidget* widget, GdkEventKey* event);
 static gboolean property_notify_event_cb(GtkWidget* widget,
                                          GdkEventProperty* event);
 static gboolean scroll_event_cb(GtkWidget* widget, GdkEventScroll* event);
+
 static void hierarchy_changed_cb(GtkWidget* widget,
                                  GtkWidget* previous_toplevel);
 static gboolean window_state_event_cb(GtkWidget* widget,
@@ -231,6 +236,10 @@ static void widget_composited_changed_cb(GtkWidget* widget, gpointer user_data);
 static void scale_changed_cb(GtkWidget* widget, GParamSpec* aPSpec,
                              gpointer aPointer);
 static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent);
+#if GTK_CHECK_VERSION(3, 18, 0)
+static gboolean generic_event_cb(GtkWidget* widget, GdkEvent* aEvent);
+#endif
+
 static nsWindow* GetFirstNSWindowForGDKWindow(GdkWindow* aGdkWindow);
 
 #ifdef __cplusplus
@@ -4138,6 +4147,61 @@ bool nsWindow::IsHandlingTouchSequence(GdkEventSequence* aSequence) {
   return mHandleTouchEvent && mTouches.Contains(aSequence);
 }
 
+#if GTK_CHECK_VERSION(3, 18, 0)
+gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
+  if (StaticPrefs::apz_gtk_touchpad_pinch_enabled()) {
+    PinchGestureInput::PinchGestureType pinchGestureType =
+        PinchGestureInput::PINCHGESTURE_SCALE;
+    ScreenCoord CurrentSpan;
+    ScreenCoord PreviousSpan;
+
+    switch (aEvent->phase) {
+      case GDK_TOUCHPAD_GESTURE_PHASE_BEGIN:
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
+        CurrentSpan = aEvent->scale;
+
+        // Assign PreviousSpan --> 0.999 to make mDeltaY field of the
+        // WidgetWheelEvent that this PinchGestureInput event will be converted
+        // to not equal Zero as our discussion because we observed that the
+        // scale of the PHASE_BEGIN event is 1.
+        PreviousSpan = 0.999;
+        mLastPinchEventSpan = aEvent->scale;
+        break;
+
+      case GDK_TOUCHPAD_GESTURE_PHASE_UPDATE:
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+        if (aEvent->scale == mLastPinchEventSpan) {
+          return FALSE;
+        }
+        CurrentSpan = aEvent->scale;
+        PreviousSpan = mLastPinchEventSpan;
+        mLastPinchEventSpan = aEvent->scale;
+        break;
+
+      case GDK_TOUCHPAD_GESTURE_PHASE_END:
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
+        CurrentSpan = aEvent->scale;
+        PreviousSpan = mLastPinchEventSpan;
+        break;
+
+      default:
+        return FALSE;
+    }
+
+    LayoutDeviceIntPoint touchpadPoint = GetRefPoint(this, aEvent);
+    PinchGestureInput event(
+        pinchGestureType, PinchGestureInput::TRACKPAD, aEvent->time,
+        GetEventTimeStamp(aEvent->time), ExternalPoint(0, 0),
+        ScreenPoint(touchpadPoint.x, touchpadPoint.y), CurrentSpan,
+        PreviousSpan, KeymapWrapper::ComputeKeyModifiers(aEvent->state));
+
+    DispatchPinchGestureInput(event);
+  }
+
+  return TRUE;
+}
+#endif
+
 gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
   if (!mHandleTouchEvent) {
     // If a popup window was spawned (e.g. as the result of a long-press)
@@ -4853,6 +4917,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                      G_CALLBACK(button_release_event_cb), nullptr);
     g_signal_connect(eventWidget, "scroll-event", G_CALLBACK(scroll_event_cb),
                      nullptr);
+#if GTK_CHECK_VERSION(3, 18, 0)
+    g_signal_connect(eventWidget, "event", G_CALLBACK(generic_event_cb),
+                     nullptr);
+#endif
     g_signal_connect(eventWidget, "touch-event", G_CALLBACK(touch_event_cb),
                      nullptr);
   }
@@ -6976,6 +7044,22 @@ static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent) {
   return window->OnTouchEvent(aEvent);
 }
 
+#if GTK_CHECK_VERSION(3, 18, 0)
+// This function called generic because there is no signal specific to touchpad
+// pinch events.
+static gboolean generic_event_cb(GtkWidget* widget, GdkEvent* aEvent) {
+  if (aEvent->type != GDK_TOUCHPAD_PINCH) {
+    return FALSE;
+  }
+  nsWindow* window =
+      GetFirstNSWindowForGDKWindow(aEvent->touchpad_pinch.window);
+  if (!window) {
+    return FALSE;
+  }
+  return window->OnTouchpadPinchEvent(&aEvent->touchpad_pinch);
+}
+
+#endif
 //////////////////////////////////////////////////////////////////////
 // These are all of our drag and drop operations
 
