@@ -614,8 +614,6 @@ pub struct ModuleType<'a> {
     pub imports: Vec<ast::Import<'a>>,
     /// The exports that this module type is expected to have.
     pub exports: Vec<ExportType<'a>>,
-    /// Instances within this module which are entirely exported.
-    pub instance_exports: Vec<(ast::Span, ast::Id<'a>)>,
 }
 
 impl<'a> Parse<'a> for ModuleType<'a> {
@@ -625,23 +623,13 @@ impl<'a> Parse<'a> for ModuleType<'a> {
             imports.push(parser.parens(|p| p.parse())?);
         }
         let mut exports = Vec::new();
-        let mut instance_exports = Vec::new();
         while parser.peek2::<kw::export>() {
             parser.parens(|p| {
-                if p.peek2::<ast::Index>() {
-                    let span = p.parse::<kw::export>()?.0;
-                    instance_exports.push((span, p.parse()?));
-                } else {
-                    exports.push(p.parse()?);
-                }
+                exports.push(p.parse()?);
                 Ok(())
             })?;
         }
-        Ok(ModuleType {
-            imports,
-            exports,
-            instance_exports,
-        })
+        Ok(ModuleType { imports, exports })
     }
 }
 
@@ -776,7 +764,7 @@ impl<'a> Parse<'a> for Type<'a> {
 #[derive(Clone, Debug)]
 pub struct TypeUse<'a, T> {
     /// The type that we're referencing, if it was present.
-    pub index: Option<ast::Index<'a>>,
+    pub index: Option<ast::ItemRef<'a, kw::r#type>>,
     /// The inline type, if present.
     pub inline: Option<T>,
 }
@@ -784,9 +772,13 @@ pub struct TypeUse<'a, T> {
 impl<'a, T> TypeUse<'a, T> {
     /// Constructs a new instance of `TypeUse` without an inline definition but
     /// with an index specified.
-    pub fn new_with_index(index: ast::Index<'a>) -> TypeUse<'a, T> {
+    pub fn new_with_index(idx: ast::Index<'a>) -> TypeUse<'a, T> {
         TypeUse {
-            index: Some(index),
+            index: Some(ast::ItemRef::Item {
+                idx,
+                kind: kw::r#type::default(),
+                exports: Vec::new(),
+            }),
             inline: None,
         }
     }
@@ -795,10 +787,7 @@ impl<'a, T> TypeUse<'a, T> {
 impl<'a, T: Peek + Parse<'a>> Parse<'a> for TypeUse<'a, T> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let index = if parser.peek2::<kw::r#type>() {
-            Some(parser.parens(|parser| {
-                parser.parse::<kw::r#type>()?;
-                Ok(parser.parse()?)
-            })?)
+            Some(parser.parse()?)
         } else {
             None
         };

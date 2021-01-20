@@ -9,64 +9,92 @@ pub struct Export<'a> {
     /// The name of this export from the module.
     pub name: &'a str,
     /// What's being exported from the module.
-    pub kind: ExportKind<'a>,
+    pub index: ast::ItemRef<'a, ExportKind>,
 }
 
 /// Different kinds of elements that can be exported from a WebAssembly module,
 /// contained in an [`Export`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 #[allow(missing_docs)]
-pub enum ExportKind<'a> {
-    Func(ast::Index<'a>),
-    Table(ast::Index<'a>),
-    Memory(ast::Index<'a>),
-    Global(ast::Index<'a>),
-    Event(ast::Index<'a>),
-    Module(ast::Index<'a>),
-    Instance(ast::Index<'a>),
-    Type(ast::Index<'a>),
+pub enum ExportKind {
+    Func,
+    Table,
+    Memory,
+    Global,
+    Event,
+    Module,
+    Instance,
+    Type,
 }
 
 impl<'a> Parse<'a> for Export<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        let span = parser.parse::<kw::export>()?.0;
-        let name = parser.parse()?;
-        let kind = parser.parens(|p| p.parse())?;
-        Ok(Export { span, name, kind })
+        Ok(Export {
+            span: parser.parse::<kw::export>()?.0,
+            name: parser.parse()?,
+            index: parser.parse()?,
+        })
     }
 }
 
-impl<'a> Parse<'a> for ExportKind<'a> {
+impl<'a> Parse<'a> for ExportKind {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
         if l.peek::<kw::func>() {
             parser.parse::<kw::func>()?;
-            Ok(ExportKind::Func(parser.parse()?))
+            Ok(ExportKind::Func)
         } else if l.peek::<kw::table>() {
             parser.parse::<kw::table>()?;
-            Ok(ExportKind::Table(parser.parse()?))
+            Ok(ExportKind::Table)
         } else if l.peek::<kw::memory>() {
             parser.parse::<kw::memory>()?;
-            Ok(ExportKind::Memory(parser.parse()?))
+            Ok(ExportKind::Memory)
         } else if l.peek::<kw::global>() {
             parser.parse::<kw::global>()?;
-            Ok(ExportKind::Global(parser.parse()?))
+            Ok(ExportKind::Global)
         } else if l.peek::<kw::event>() {
             parser.parse::<kw::event>()?;
-            Ok(ExportKind::Event(parser.parse()?))
+            Ok(ExportKind::Event)
         } else if l.peek::<kw::module>() {
             parser.parse::<kw::module>()?;
-            Ok(ExportKind::Module(parser.parse()?))
+            Ok(ExportKind::Module)
         } else if l.peek::<kw::instance>() {
             parser.parse::<kw::instance>()?;
-            Ok(ExportKind::Instance(parser.parse()?))
+            Ok(ExportKind::Instance)
         } else if l.peek::<kw::r#type>() {
             parser.parse::<kw::r#type>()?;
-            Ok(ExportKind::Type(parser.parse()?))
+            Ok(ExportKind::Type)
         } else {
             Err(l.error())
         }
     }
+}
+
+macro_rules! kw_conversions {
+    ($($kw:ident => $kind:ident)*) => ($(
+        impl From<kw::$kw> for ExportKind {
+            fn from(_: kw::$kw) -> ExportKind {
+                ExportKind::$kind
+            }
+        }
+
+        impl Default for kw::$kw {
+            fn default() -> kw::$kw {
+                kw::$kw(ast::Span::from_offset(0))
+            }
+        }
+    )*);
+}
+
+kw_conversions! {
+    instance => Instance
+    module => Module
+    func => Func
+    table => Table
+    global => Global
+    event => Event
+    memory => Memory
+    r#type => Type
 }
 
 /// A listing of inline `(export "foo")` statements on a WebAssembly item in

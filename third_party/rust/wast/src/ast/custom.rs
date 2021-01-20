@@ -46,7 +46,6 @@ pub enum CustomPlaceAnchor {
     Export,
     Start,
     Elem,
-    ModuleCode,
     Code,
     Data,
     Event,
@@ -155,10 +154,6 @@ impl<'a> Parse<'a> for CustomPlaceAnchor {
         if parser.peek::<kw::module>() {
             parser.parse::<kw::module>()?;
             return Ok(CustomPlaceAnchor::Module);
-        }
-        if parser.peek::<kw::modulecode>() {
-            parser.parse::<kw::modulecode>()?;
-            return Ok(CustomPlaceAnchor::ModuleCode);
         }
         if parser.peek::<kw::alias>() {
             parser.parse::<kw::alias>()?;
