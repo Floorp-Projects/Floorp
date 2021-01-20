@@ -276,10 +276,10 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                             const LayoutDeviceRect& aRect,
                             const EventStates& aState, DPIRatio aDpiRatio);
   void PaintCheckMark(DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
-                      const EventStates& aState, DPIRatio aDpiRatio);
+                      const EventStates& aState);
   void PaintIndeterminateMark(DrawTarget* aDrawTarget,
                               const LayoutDeviceRect& aRect,
-                              const EventStates& aState, DPIRatio aDpiRatio);
+                              const EventStates& aState);
   void PaintStrokedEllipse(DrawTarget* aDrawTarget,
                            const LayoutDeviceRect& aRect,
                            const sRGBColor& aBackgroundColor,
@@ -301,13 +301,11 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   void PaintMenulist(DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
                      const EventStates& aState, DPIRatio aDpiRatio);
   void PaintArrow(DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
-                  const int32_t aArrowPolygonX[],
-                  const int32_t aArrowPolygonY[], const int32_t aArrowNumPoints,
-                  const int32_t aArrowSize, const sRGBColor aFillColor,
-                  DPIRatio aDpiRatio);
+                  const float aArrowPolygonX[], const float aArrowPolygonY[],
+                  const int32_t aArrowNumPoints, const sRGBColor aFillColor);
   void PaintMenulistArrowButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                 const LayoutDeviceRect& aRect,
-                                const EventStates& aState, DPIRatio aDpiRatio);
+                                const EventStates& aState);
   void PaintSpinnerButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                           const LayoutDeviceRect& aRect,
                           const EventStates& aState,

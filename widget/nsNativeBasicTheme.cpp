@@ -21,6 +21,12 @@ using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeBasicTheme, nsNativeTheme, nsITheme)
 
+static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
+  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+  auto scrollbarWidth = style->StyleUIReset()->mScrollbarWidth;
+  return scrollbarWidth == StyleScrollbarWidth::Thin;
+}
+
 /* static */
 auto nsNativeBasicTheme::GetDPIRatio(nsIFrame* aFrame) -> DPIRatio {
   return DPIRatio(float(AppUnitsPerCSSPixel()) /
@@ -491,24 +497,21 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
   }
 }
 
-// Returns the right scale to cover aRect in the smaller dimension, accounting
-// for aDpiRatio.
-static float ScaleToWidgetRect(const LayoutDeviceRect& aRect,
-                               nsNativeBasicTheme::DPIRatio aDpiRatio) {
+// Returns the right scale to cover aRect in the smaller dimension.
+static float ScaleToWidgetRect(const LayoutDeviceRect& aRect) {
   return std::min(aRect.width, aRect.height) / kMinimumWidgetSize;
 }
 
 void nsNativeBasicTheme::PaintCheckMark(DrawTarget* aDrawTarget,
                                         const LayoutDeviceRect& aRect,
-                                        const EventStates& aState,
-                                        DPIRatio aDpiRatio) {
+                                        const EventStates& aState) {
   // Points come from the coordinates on a 14X14 unit box centered at 0,0
   const float checkPolygonX[] = {-4.5f, -1.5f, -0.5f, 5.0f, 4.75f,
                                  3.5f,  -0.5f, -1.5f, -3.5f};
   const float checkPolygonY[] = {0.5f,  4.0f, 4.0f,  -2.5f, -4.0f,
                                  -4.0f, 1.0f, 1.25f, -1.0f};
   const int32_t checkNumPoints = sizeof(checkPolygonX) / sizeof(float);
-  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
+  const float scale = ScaleToWidgetRect(aRect);
   auto center = aRect.Center().ToUnknownPoint();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
@@ -526,10 +529,9 @@ void nsNativeBasicTheme::PaintCheckMark(DrawTarget* aDrawTarget,
 
 void nsNativeBasicTheme::PaintIndeterminateMark(DrawTarget* aDrawTarget,
                                                 const LayoutDeviceRect& aRect,
-                                                const EventStates& aState,
-                                                DPIRatio aDpiRatio) {
+                                                const EventStates& aState) {
   const CSSCoord borderWidth = 2.0f;
-  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
+  const float scale = ScaleToWidgetRect(aRect);
 
   Rect rect = aRect.ToUnknownRect();
   rect.y += (rect.height / 2) - (borderWidth * scale / 2);
@@ -628,7 +630,7 @@ void nsNativeBasicTheme::PaintRadioCheckmark(DrawTarget* aDrawTarget,
                                              const EventStates& aState,
                                              DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 2.0f;
-  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
+  const float scale = ScaleToWidgetRect(aRect);
   auto [backgroundColor, checkColor] = ComputeRadioCheckmarkColors(aState);
 
   LayoutDeviceRect rect(aRect);
@@ -687,55 +689,41 @@ void nsNativeBasicTheme::PaintMenulist(DrawTarget* aDrawTarget,
   }
 }
 
-void nsNativeBasicTheme::PaintArrow(
-    DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
-    const int32_t aArrowPolygonX[], const int32_t aArrowPolygonY[],
-    const int32_t aArrowNumPoints, const int32_t aArrowSize,
-    const sRGBColor aFillColor, DPIRatio aDpiRatio) {
-  nscoord paintScale = std::min(aRect.width, aRect.height) / aArrowSize;
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  auto center = aRect.Center().ToUnknownPoint();
-  Point p = center + Point(aArrowPolygonX[0] * paintScale,
-                           aArrowPolygonY[0] * paintScale);
+void nsNativeBasicTheme::PaintArrow(DrawTarget* aDrawTarget,
+                                    const LayoutDeviceRect& aRect,
+                                    const float aArrowPolygonX[],
+                                    const float aArrowPolygonY[],
+                                    const int32_t aArrowNumPoints,
+                                    const sRGBColor aFillColor) {
+  const float scale = ScaleToWidgetRect(aRect);
 
+  auto center = aRect.Center().ToUnknownPoint();
+
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
+  Point p =
+      center + Point(aArrowPolygonX[0] * scale, aArrowPolygonY[0] * scale);
   builder->MoveTo(p);
-  for (int32_t polyIndex = 1; polyIndex < aArrowNumPoints; polyIndex++) {
-    p = center + Point(aArrowPolygonX[polyIndex] * paintScale,
-                       aArrowPolygonY[polyIndex] * paintScale);
+  for (int32_t i = 1; i < aArrowNumPoints; i++) {
+    p = center + Point(aArrowPolygonX[i] * scale, aArrowPolygonY[i] * scale);
     builder->LineTo(p);
   }
   RefPtr<Path> path = builder->Finish();
 
-  aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(aFillColor)),
-                      StrokeOptions(CSSCoord(2.0f) * aDpiRatio));
+  aDrawTarget->Fill(path, ColorPattern(ToDeviceColor(aFillColor)));
 }
 
 void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
                                                   DrawTarget* aDrawTarget,
                                                   const LayoutDeviceRect& aRect,
-                                                  const EventStates& aState,
-                                                  DPIRatio aDpiRatio) {
+                                                  const EventStates& aState) {
   const float arrowPolygonX[] = {-3.5f, -0.5f, 0.5f,  3.5f,  3.5f,
-                                 3.0f,  0.5f,  -0.5f, -3.0f, -3.5};
+                                 3.0f,  0.5f,  -0.5f, -3.0f, -3.5f};
   const float arrowPolygonY[] = {-0.5f, 2.5f, 2.5f, -0.5f, -2.0f,
                                  -2.0f, 1.0f, 1.0f, -2.0f, -2.0f};
-
   const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
-  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
-
-  auto center = aRect.Center().ToUnknownPoint();
-
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  Point p = center + Point(arrowPolygonX[0] * scale, arrowPolygonY[0] * scale);
-  builder->MoveTo(p);
-  for (int32_t i = 1; i < arrowNumPoints; i++) {
-    p = center + Point(arrowPolygonX[i] * scale, arrowPolygonY[i] * scale);
-    builder->LineTo(p);
-  }
-  RefPtr<Path> path = builder->Finish();
-
   sRGBColor arrowColor = ComputeMenulistArrowButtonColor(aState);
-  aDrawTarget->Fill(path, ColorPattern(ToDeviceColor(arrowColor)));
+  PaintArrow(aDrawTarget, aRect, arrowPolygonX, arrowPolygonY, arrowNumPoints,
+             arrowColor);
 }
 
 void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
@@ -766,12 +754,12 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
                       StrokeOptions(kSpinnerBorderWidth * aDpiRatio));
 
   const float arrowPolygonX[] = {-3.5f, -0.5f, 0.5f,  3.5f,  3.5f,
-                                 3.0f,  0.5f,  -0.5f, -3.0f, -3.5};
+                                 3.0f,  0.5f,  -0.5f, -3.0f, -3.5f};
   float arrowPolygonY[] = {-3.5f, -0.5f, -0.5f, -3.5f, -5.0f,
                            -5.0f, -2.0f, -2.0f, -5.0f, -5.0f};
 
   const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
-  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
+  const float scale = ScaleToWidgetRect(aRect);
 
   if (aAppearance == StyleAppearance::SpinnerUpbutton) {
     for (int32_t i = 0; i < arrowNumPoints; i++) {
@@ -1104,11 +1092,10 @@ void nsNativeBasicTheme::PaintScrollbarButton(
                         ColorPattern(ToDeviceColor(buttonColor)));
 
   // Start with Up arrow.
-  int32_t arrowPolygonX[] = {3, 0, -3};
-  int32_t arrowPolygonY[] = {2, -1, 2};
-  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(int32_t);
-  const int32_t arrowSize = 14;
+  float arrowPolygonX[] = {-3.0f, 0.0f, 3.0f, 3.0f, 0.0f, -3.0f};
+  float arrowPolygonY[] = {0.4f, -3.1f, 0.4f, 2.7f, -0.8f, 2.7f};
 
+  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
   switch (aAppearance) {
     case StyleAppearance::ScrollbarbuttonUp:
       break;
@@ -1135,7 +1122,7 @@ void nsNativeBasicTheme::PaintScrollbarButton(
       return;
   }
   PaintArrow(aDrawTarget, aRect, arrowPolygonX, arrowPolygonY, arrowNumPoints,
-             arrowSize, arrowColor, aDpiRatio);
+             arrowColor);
 
   // FIXME(heycam): We should probably derive the border color when custom
   // scrollbar colors are in use too.  But for now, just skip painting it,
@@ -1206,9 +1193,9 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       auto rect = FixAspectRatio(devPxRect);
       PaintCheckboxControl(dt, rect, eventState, dpiRatio);
       if (GetIndeterminate(aFrame)) {
-        PaintIndeterminateMark(dt, rect, eventState, dpiRatio);
+        PaintIndeterminateMark(dt, rect, eventState);
       } else if (IsChecked(aFrame)) {
-        PaintCheckMark(dt, rect, eventState, dpiRatio);
+        PaintCheckMark(dt, rect, eventState);
       }
       break;
     }
@@ -1225,7 +1212,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       PaintMenulist(dt, devPxRect, eventState, dpiRatio);
       break;
     case StyleAppearance::MozMenulistArrowButton:
-      PaintMenulistArrowButton(aFrame, dt, devPxRect, eventState, dpiRatio);
+      PaintMenulistArrowButton(aFrame, dt, devPxRect, eventState);
       break;
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
@@ -1286,9 +1273,12 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight:
-      PaintScrollbarButton(dt, aAppearance, devPxRect, aFrame,
-                           *nsLayoutUtils::StyleForScrollbar(aFrame),
-                           eventState, docState, dpiRatio);
+      // For scrollbar-width:thin, we don't display the buttons.
+      if (!IsScrollbarWidthThin(aFrame)) {
+        PaintScrollbarButton(dt, aAppearance, devPxRect, aFrame,
+                             *nsLayoutUtils::StyleForScrollbar(aFrame),
+                             eventState, docState, dpiRatio);
+      }
       break;
     case StyleAppearance::Button:
       PaintButton(aFrame, dt, devPxRect, eventState, dpiRatio);
@@ -1479,19 +1469,24 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::SpinnerDownbutton:
       aResult->width = (kMinimumSpinnerButtonWidth * dpiRatio).Rounded();
       break;
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight:
+      // For scrollbar-width:thin, we don't display the buttons.
+      if (IsScrollbarWidthThin(aFrame)) {
+        aResult->SizeTo(0, 0);
+        break;
+      }
+      [[fallthrough]];
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal:
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbartrackHorizontal:
     case StyleAppearance::ScrollbartrackVertical:
     case StyleAppearance::Scrollcorner: {
-      ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-      if (style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
+      if (IsScrollbarWidthThin(aFrame)) {
         aResult->SizeTo((kMinimumThinScrollbarSize * dpiRatio).Rounded(),
                         (kMinimumThinScrollbarSize * dpiRatio).Rounded());
       } else {
