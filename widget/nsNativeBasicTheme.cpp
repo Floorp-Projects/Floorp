@@ -1332,6 +1332,11 @@ LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
       LayoutDeviceIntCoord w = (kButtonBorderWidth * dpiRatio).Rounded();
       return LayoutDeviceIntMargin(w, w, w, w);
     }
+    case StyleAppearance::Checkbox:
+    case StyleAppearance::Radio: {
+      LayoutDeviceIntCoord w = (kCheckboxRadioBorderWidth * dpiRatio).Rounded();
+      return LayoutDeviceIntMargin(w, w, w, w);
+    }
     default:
       return LayoutDeviceIntMargin();
   }

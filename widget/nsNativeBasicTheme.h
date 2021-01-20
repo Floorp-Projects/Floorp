@@ -117,6 +117,10 @@ static const CSSCoord kRangeHeight = 6.0f;
 static const CSSCoord kProgressbarHeight = 6.0f;
 static const CSSCoord kMeterHeight = 12.0f;
 
+// nsCheckboxRadioFrame takes the bottom of the content box as the baseline.
+// This border-width makes its baseline 2px under the bottom, which is nice.
+static const CSSCoord kCheckboxRadioBorderWidth = 2.0f;
+
 }  // namespace widget
 }  // namespace mozilla
 
