@@ -30,17 +30,6 @@
             <label class="tab-text tab-label" role="presentation"/>
           </hbox>
           <image class="tab-icon-sound" role="presentation"/>
-          <vbox class="tab-label-container proton"
-                onoverflow="this.setAttribute('textoverflow', 'true');"
-                onunderflow="this.removeAttribute('textoverflow');"
-                flex="1">
-            <label class="tab-text tab-label" role="presentation"/>
-            <hbox class="tab-icon-sound">
-              <image class="tab-icon-sound-image" role="presentation"/>
-              <label class="tab-icon-sound-playing-label" data-l10n-id="browser-tab-audio-playing" role="presentation"/>
-              <label class="tab-icon-sound-muted-label" data-l10n-id="browser-tab-audio-muted" role="presentation"/>
-            </hbox>
-          </vbox>
           <image class="tab-close-button close-icon" role="presentation"/>
         </hbox>
       </stack>
@@ -100,15 +89,9 @@
           "pictureinpicture,crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked",
         ".tab-label-container":
           "pinned,selected=visuallyselected,labeldirection",
-        ".tab-label-container.proton":
-          "pinned,selected=visuallyselected,labeldirection",
         ".tab-label":
           "text=label,accesskey,fadein,pinned,selected=visuallyselected,attention",
-        ".tab-label-container.proton .tab-label":
-          "text=label,accesskey,fadein,pinned,selected=visuallyselected,attention",
         ".tab-icon-sound":
-          "soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked,pictureinpicture",
-        ".tab-label-container.proton .tab-icon-sound":
           "soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked,pictureinpicture",
         ".tab-close-button": "fadein,pinned,selected=visuallyselected",
       };
@@ -248,7 +231,9 @@
 
     get _overPlayingIcon() {
       let iconVisible =
-        this.soundPlaying || this.muted || this.activeMediaBlocked;
+        this.hasAttribute("soundplaying") ||
+        this.hasAttribute("muted") ||
+        this.hasAttribute("activemedia-blocked");
 
       let soundPlayingIcon = this.soundPlayingIcon;
       let overlayIcon = this.overlayIcon;
@@ -259,9 +244,7 @@
     }
 
     get soundPlayingIcon() {
-      return gProtonTabs
-        ? this.querySelector(".tab-label-container.proton > .tab-icon-sound")
-        : this.querySelector(".tab-icon-sound");
+      return this.querySelector(".tab-icon-sound");
     }
 
     get overlayIcon() {
@@ -286,12 +269,6 @@
 
     get closeButton() {
       return this.querySelector(".tab-close-button");
-    }
-
-    _isEventForTabSoundIcon(event) {
-      return gProtonTabs
-        ? event.target.closest(".tab-icon-sound")
-        : event.target.classList.contains("tab-icon-sound");
     }
 
     updateLastAccessed(aDate) {
@@ -339,7 +316,7 @@
         this.style.MozUserFocus = "ignore";
       } else if (
         event.target.classList.contains("tab-close-button") ||
-        this._isEventForTabSoundIcon(event) ||
+        event.target.classList.contains("tab-icon-sound") ||
         event.target.classList.contains("tab-icon-overlay")
       ) {
         eventMaySelectTab = false;
@@ -405,7 +382,7 @@
       if (
         gBrowser.multiSelectedTabsCount > 0 &&
         !event.target.classList.contains("tab-close-button") &&
-        !this._isEventForTabSoundIcon(event) &&
+        !event.target.classList.contains("tab-icon-sound") &&
         !event.target.classList.contains("tab-icon-overlay")
       ) {
         // Tabs were previously multi-selected and user clicks on a tab
@@ -414,14 +391,19 @@
       }
 
       if (
-        this._isEventForTabSoundIcon(event) ||
+        event.target.classList.contains("tab-icon-sound") ||
         (event.target.classList.contains("tab-icon-overlay") &&
-          (this.soundPlaying || this.muted || this.activeMediaBlocked))
+          (event.target.hasAttribute("soundplaying") ||
+            event.target.hasAttribute("muted") ||
+            event.target.hasAttribute("activemedia-blocked")))
       ) {
         if (this.multiselected) {
           gBrowser.toggleMuteAudioOnMultiSelectedTabs(this);
         } else {
-          if (this._isEventForTabSoundIcon(event) && this.pictureinpicture) {
+          if (
+            event.target.classList.contains("tab-icon-sound") &&
+            this.pictureinpicture
+          ) {
             // When Picture-in-Picture is open, we repurpose '.tab-icon-sound' as
             // an inert Picture-in-Picture indicator, and expose the '.tab-icon-overlay'
             // as the mechanism for muting the tab, so we don't need to handle clicks on
@@ -464,7 +446,7 @@
         this._selectedOnFirstMouseDown &&
         this.selected &&
         !(
-          this._isEventForTabSoundIcon(event) ||
+          event.target.classList.contains("tab-icon-sound") ||
           event.target.classList.contains("tab-icon-overlay")
         )
       ) {
@@ -604,7 +586,7 @@
         "TAB_AUDIO_INDICATOR_USED"
       );
 
-      if (this.activeMediaBlocked) {
+      if (this.hasAttribute("activemedia-blocked")) {
         this.removeAttribute("activemedia-blocked");
         modifiedAttrs.push("activemedia-blocked");
 
