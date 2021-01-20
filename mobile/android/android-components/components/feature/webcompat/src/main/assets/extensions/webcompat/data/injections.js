@@ -448,6 +448,20 @@ const AVAILABLE_INJECTIONS = [
       allFrames: true,
     },
   },
+  {
+    id: "bug1682238",
+    platform: "desktop",
+    domain: "gamearter.com",
+    bug: "1682238",
+    contentScripts: {
+      matches: ["*://*.gamearter.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1682238-gamearter.com-ua-change.js",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;

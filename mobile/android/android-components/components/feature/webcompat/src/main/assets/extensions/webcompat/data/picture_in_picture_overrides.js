@@ -52,5 +52,9 @@ let AVAILABLE_PIP_OVERRIDES;
     udemy: {
       "https://*.udemy.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
+
+    youtube: {
+      "https://*.youtube.com/*": { visibilityThreshold: 0.9 },
+    },
   };
 }
