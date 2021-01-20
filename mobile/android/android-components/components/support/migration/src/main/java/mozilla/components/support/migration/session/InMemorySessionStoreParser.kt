@@ -4,28 +4,29 @@
 
 package mozilla.components.support.migration.session
 
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.RecoverableBrowserState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.support.migration.Result
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.util.UUID
 
 /**
  * Session store parser reading the whole JSON file into memory and then parsing it.
  */
 internal object InMemorySessionStoreParser {
     @Throws(IOException::class, JSONException::class)
-    internal fun parse(file: File): Result.Success<SessionManager.Snapshot> {
+    internal fun parse(file: File): Result.Success<RecoverableBrowserState> {
         val json = file.readText()
 
         var selection = -1
-        val sessions = mutableListOf<Session>()
+        val sessions = mutableListOf<RecoverableTab>()
 
         val windows = JSONObject(json).getJSONArray("windows")
         if (windows.length() == 0) {
-            return Result.Success(SessionManager.Snapshot.empty())
+            return Result.Success(RecoverableBrowserState(emptyList(), null))
         }
 
         val window = windows.getJSONObject(0)
@@ -53,11 +54,12 @@ internal object InMemorySessionStoreParser {
             val selected = selectedTab == i + 1
 
             sessions.add(
-                Session(
-                    initialUrl = url
-                ).also {
-                    it.title = title
-                })
+                RecoverableTab(
+                    id = UUID.randomUUID().toString(),
+                    url = url,
+                    title = title
+                )
+            )
 
             if (selected) {
                 selection = sessions.size - 1
@@ -65,9 +67,10 @@ internal object InMemorySessionStoreParser {
         }
 
         return Result.Success(
-            SessionManager.Snapshot(
-                sessions.map { SessionManager.Snapshot.Item(it) },
-                selection
-            ))
+            RecoverableBrowserState(
+                sessions,
+                sessions.getOrNull(selection)?.id
+            )
+        )
     }
 }

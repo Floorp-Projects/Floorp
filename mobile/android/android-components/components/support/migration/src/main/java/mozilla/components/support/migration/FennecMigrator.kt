@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
@@ -29,6 +29,7 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.FennecMigrator.Builder
 import mozilla.components.support.migration.GleanMetrics.MigrationAddons
@@ -226,7 +227,7 @@ class FennecMigrator private constructor(
     private val historyStorage: Lazy<PlacesHistoryStorage>?,
     private val bookmarksStorage: Lazy<PlacesBookmarksStorage>?,
     private val loginsStorage: Lazy<SyncableLoginsStorage>?,
-    private val sessionManager: SessionManager?,
+    private val tabsUseCases: TabsUseCases?,
     private val searchEngineManager: SearchEngineManager?,
     private val accountManager: Lazy<FxaAccountManager>?,
     private val fxaExpectChinaServers: Boolean,
@@ -250,7 +251,7 @@ class FennecMigrator private constructor(
         private var bookmarksStorage: Lazy<PlacesBookmarksStorage>? = null
         private var loginsStorage: Lazy<SyncableLoginsStorage>? = null
         private var loginsStorageKey: String? = null
-        private var sessionManager: SessionManager? = null
+        private var tabsUseCases: TabsUseCases? = null
         private var searchEngineManager: SearchEngineManager? = null
         private var accountManager: Lazy<FxaAccountManager>? = null
         private var fxaExpectChinaServers: Boolean = false
@@ -353,11 +354,11 @@ class FennecMigrator private constructor(
         /**
          * Enable open tabs migration.
          *
-         * @param sessionManager An instance of [SessionManager] used for restoring migrated [SessionManager.Snapshot].
+         * @param tabsUseCases Use case instance for restoring migrated browser state.
          * @param version Version of the migration; defaults to the current version.
          */
-        fun migrateOpenTabs(sessionManager: SessionManager, version: Int = Migration.OpenTabs.currentVersion): Builder {
-            this.sessionManager = sessionManager
+        fun migrateOpenTabs(tabsUseCases: TabsUseCases, version: Int = Migration.OpenTabs.currentVersion): Builder {
+            this.tabsUseCases = tabsUseCases
             migrations.add(VersionedMigration(Migration.OpenTabs, version))
             return this
         }
@@ -447,7 +448,7 @@ class FennecMigrator private constructor(
                 historyStorage,
                 bookmarksStorage,
                 loginsStorage,
-                sessionManager,
+                tabsUseCases,
                 searchEngineManager,
                 accountManager,
                 fxaExpectChinaServers,
@@ -766,6 +767,50 @@ class FennecMigrator private constructor(
         }
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught")
+    private suspend fun migrateOpenTabs(): Result<RecoverableBrowserState> {
+        if (profile == null) {
+            crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
+            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_MISSING_PROFILE.code)
+            return Result.Failure(IllegalStateException("Missing Profile path"))
+        }
+
+        logger.debug("Migrating session...")
+        val result = try {
+            FennecSessionMigration.migrate(File(profile.path), crashReporter)
+        } catch (e: Exception) {
+            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_MIGRATE_EXCEPTION.code)
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateOpenTabsException(e)
+            )
+            return Result.Failure(e)
+        }
+
+        return try {
+            if (result is Result.Success<RecoverableBrowserState>) {
+                logger.debug("Loading migrated session snapshot...")
+                MigrationOpenTabs.detected.add(result.value.tabs.size)
+                withContext(Dispatchers.Main) {
+                    tabsUseCases!!.restore(result.value)
+                    // Note that this is assuming that sessionManager starts off empty before the
+                    // migration.
+                    MigrationOpenTabs.migrated.add(result.value.tabs.size)
+                    MigrationOpenTabs.successReason.add(SuccessReasonTelemetryCodes.OPEN_TABS_MIGRATED.code)
+                }
+                result
+            } else {
+                MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_NO_SNAPSHOT.code)
+                result
+            }
+        } catch (e: Exception) {
+            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_RESTORE_EXCEPTION.code)
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateOpenTabsException(e)
+            )
+            Result.Failure(e)
+        }
+    }
+
     @Suppress("ComplexMethod", "TooGenericExceptionCaught", "LongMethod", "ReturnCount")
     private suspend fun migrateLogins(): Result<LoginsMigrationResult> {
         if (profile == null) {
@@ -848,50 +893,6 @@ class FennecMigrator private constructor(
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateLoginsException(e))
             MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_UNEXPECTED_EXCEPTION.code)
-            Result.Failure(e)
-        }
-    }
-
-    @SuppressWarnings("TooGenericExceptionCaught")
-    private suspend fun migrateOpenTabs(): Result<SessionManager.Snapshot> {
-        if (profile == null) {
-            crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
-            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_MISSING_PROFILE.code)
-            return Result.Failure(IllegalStateException("Missing Profile path"))
-        }
-
-        logger.debug("Migrating session...")
-        val result = try {
-            FennecSessionMigration.migrate(File(profile.path), crashReporter)
-        } catch (e: Exception) {
-            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_MIGRATE_EXCEPTION.code)
-            crashReporter.submitCaughtException(
-                FennecMigratorException.MigrateOpenTabsException(e)
-            )
-            return Result.Failure(e)
-        }
-
-        return try {
-            if (result is Result.Success<SessionManager.Snapshot>) {
-                logger.debug("Loading migrated session snapshot...")
-                MigrationOpenTabs.detected.add(result.value.sessions.size)
-                withContext(Dispatchers.Main) {
-                    sessionManager!!.restore(result.value)
-                    // Note that this is assuming that sessionManager starts off empty before the
-                    // migration.
-                    MigrationOpenTabs.migrated.add(sessionManager.all.size)
-                    MigrationOpenTabs.successReason.add(SuccessReasonTelemetryCodes.OPEN_TABS_MIGRATED.code)
-                }
-                result
-            } else {
-                MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_NO_SNAPSHOT.code)
-                result
-            }
-        } catch (e: Exception) {
-            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_RESTORE_EXCEPTION.code)
-            crashReporter.submitCaughtException(
-                FennecMigratorException.MigrateOpenTabsException(e)
-            )
             Result.Failure(e)
         }
     }

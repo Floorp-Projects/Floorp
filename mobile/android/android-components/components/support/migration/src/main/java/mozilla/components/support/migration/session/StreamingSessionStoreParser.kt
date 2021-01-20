@@ -6,11 +6,12 @@ package mozilla.components.support.migration.session
 
 import android.util.JsonReader
 import android.util.JsonToken
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.RecoverableBrowserState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.support.migration.Result
 import java.io.File
 import java.io.IOException
+import java.util.UUID
 
 /**
  * Session store parser reading the session store as a stream, reducing memory impact.
@@ -20,8 +21,8 @@ import java.io.IOException
  */
 internal object StreamingSessionStoreParser {
     @Throws(IOException::class, IllegalStateException::class)
-    internal fun parse(file: File): Result.Success<SessionManager.Snapshot> {
-        var snapshot: SessionManager.Snapshot? = null
+    internal fun parse(file: File): Result.Success<RecoverableBrowserState> {
+        var state: RecoverableBrowserState? = null
 
         file.inputStream().bufferedReader().use {
             val reader = JsonReader(it)
@@ -32,7 +33,7 @@ internal object StreamingSessionStoreParser {
             while (reader.hasNext()) {
                 val name = reader.nextName()
                 if (name == "windows") {
-                    snapshot = parseWindows(reader)
+                    state = parseWindows(reader)
                 } else {
                     reader.skipValue()
                 }
@@ -42,11 +43,7 @@ internal object StreamingSessionStoreParser {
         }
 
         return Result.Success(
-            if (snapshot != null) {
-                snapshot!!
-            } else {
-                SessionManager.Snapshot.empty()
-            }
+            state ?: RecoverableBrowserState(emptyList(), null)
         )
     }
 
@@ -58,8 +55,8 @@ internal object StreamingSessionStoreParser {
      *   "windows" [..]
      * }
      */
-    private fun parseWindows(reader: JsonReader): SessionManager.Snapshot {
-        var sessions = listOf<Session>()
+    private fun parseWindows(reader: JsonReader): RecoverableBrowserState {
+        var sessions = listOf<RecoverableTab>()
         var selection = -1
 
         reader.beginArray()
@@ -76,9 +73,9 @@ internal object StreamingSessionStoreParser {
         }
         reader.endArray()
 
-        return SessionManager.Snapshot(
-            sessions.map { SessionManager.Snapshot.Item(it) },
-            selection
+        return RecoverableBrowserState(
+            sessions,
+            sessions.getOrNull(selection)?.id
         )
     }
 
@@ -91,8 +88,8 @@ internal object StreamingSessionStoreParser {
      *   [..]             // Ignoring all other properties
      * }
      */
-    private fun parseWindow(reader: JsonReader): Pair<List<Session>, Int> {
-        var tabs: List<Session> = emptyList()
+    private fun parseWindow(reader: JsonReader): Pair<List<RecoverableTab>, Int> {
+        var tabs: List<RecoverableTab> = emptyList()
         var selection = -1
 
         while (reader.hasNext()) {
@@ -119,8 +116,8 @@ internal object StreamingSessionStoreParser {
      *   ... // Delegates to [parseTab]
      * ]
      */
-    private fun parseTabs(reader: JsonReader): List<Session> {
-        val tabs = mutableListOf<Session>()
+    private fun parseTabs(reader: JsonReader): List<RecoverableTab> {
+        val tabs = mutableListOf<RecoverableTab>()
 
         reader.beginArray()
 
@@ -146,8 +143,8 @@ internal object StreamingSessionStoreParser {
      *   ..              // Ignoring all other properties
      * }
      */
-    private fun parseTab(reader: JsonReader): Session? {
-        var entries: List<Session> = emptyList()
+    private fun parseTab(reader: JsonReader): RecoverableTab? {
+        var entries: List<RecoverableTab> = emptyList()
         var index = -1
 
         while (reader.hasNext()) {
@@ -179,8 +176,8 @@ internal object StreamingSessionStoreParser {
      *   ... // Delegates to [parseEntry]
      * ]
      */
-    private fun parseEntries(reader: JsonReader): List<Session> {
-        val entries = mutableListOf<Session>()
+    private fun parseEntries(reader: JsonReader): List<RecoverableTab> {
+        val entries = mutableListOf<RecoverableTab>()
 
         reader.beginArray()
 
@@ -204,7 +201,7 @@ internal object StreamingSessionStoreParser {
      *   [..]            // Ignoring all other properties
      * }
      */
-    private fun parseEntry(reader: JsonReader): Session? {
+    private fun parseEntry(reader: JsonReader): RecoverableTab? {
         var parsedUrl: String? = null
         var parsedTitle: String? = null
 
@@ -223,9 +220,11 @@ internal object StreamingSessionStoreParser {
         }
 
         return parsedUrl?.let { url ->
-            Session(url).apply {
+            RecoverableTab(
+                id = UUID.randomUUID().toString(),
+                url = url,
                 title = parsedTitle?.ifEmpty { url } ?: url
-            }
+            )
         }
     }
 }

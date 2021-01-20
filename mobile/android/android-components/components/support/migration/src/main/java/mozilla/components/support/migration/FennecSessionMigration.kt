@@ -5,7 +5,7 @@
 package mozilla.components.support.migration
 
 import android.net.Uri
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.session.StreamingSessionStoreParser
@@ -27,7 +27,7 @@ internal object FennecSessionMigration {
     fun migrate(
         profilePath: File,
         crashReporter: CrashReporting
-    ): Result<SessionManager.Snapshot> {
+    ): Result<RecoverableBrowserState> {
         val sessionFiles = findSessionFiles(profilePath)
         if (sessionFiles.isEmpty()) {
             return Result.Failure(FileNotFoundException("No session store found"))
@@ -76,18 +76,18 @@ internal object FennecSessionMigration {
 }
 
 @Suppress("TooGenericExceptionCaught")
-private fun Result.Success<SessionManager.Snapshot>.filter(
+private fun Result.Success<RecoverableBrowserState>.filter(
     logger: Logger,
     crashReporter: CrashReporting
-): Result.Success<SessionManager.Snapshot> {
-    var selectedIndex = value.selectedSessionIndex
+): Result.Success<RecoverableBrowserState> {
+    var selectedIndex = value.selectedTabId?.let { id -> value.tabs.indexOfFirst { tab -> tab.id == id } } ?: -1
 
-    logger.debug("Filtering migrated sessions (size=${value.sessions.size}, index=$selectedIndex)")
+    logger.debug("Filtering migrated sessions (size=${value.tabs.size}, index=$selectedIndex)")
 
-    val sessions = value.sessions.mapIndexedNotNull { index, item ->
+    val tabs = value.tabs.mapIndexedNotNull { index, item ->
         when {
             // We filter out about:home tabs since Fenix does not handle those URLs.
-            item.session.url == ABOUT_HOME -> {
+            item.url == ABOUT_HOME -> {
                 logger.debug("- Filtering about:home URL")
                 if (index < selectedIndex) {
                     selectedIndex--
@@ -97,14 +97,13 @@ private fun Result.Success<SessionManager.Snapshot>.filter(
 
             // We rewrite about:reader URLs to their actual URLs. Fenix does not handle about:reader
             // URLs, but it can load the original URL.
-            item.session.url.startsWith(ABOUT_READER) -> {
+            item.url.startsWith(ABOUT_READER) -> {
                 try {
-                    val url = Uri.decode(item.session.url.substring(ABOUT_READER.length))
+                    val url = Uri.decode(item.url.substring(ABOUT_READER.length))
 
-                    logger.debug("- Rewriting about:reader URL (${item.session.url}): $url")
+                    logger.debug("- Rewriting about:reader URL (${item.url}): $url")
 
-                    item.session.url = url
-                    item
+                    item.copy(url = url)
                 } catch (e: Exception) {
                     crashReporter.submitCaughtException(e)
                     null
@@ -115,13 +114,18 @@ private fun Result.Success<SessionManager.Snapshot>.filter(
         }
     }
 
-    if (sessions.isEmpty()) {
+    if (tabs.isEmpty()) {
         selectedIndex = -1
     }
 
-    logger.debug("Migrated sessions filtered (size=${sessions.size}, index=$selectedIndex)")
+    logger.debug("Migrated sessions filtered (size=${tabs.size}, index=$selectedIndex)")
 
-    return Result.Success(SessionManager.Snapshot(sessions, selectedIndex))
+    return Result.Success(
+        RecoverableBrowserState(
+            tabs,
+            tabs.getOrNull(selectedIndex)?.id
+        )
+    )
 }
 
 private const val ABOUT_HOME = "about:home"

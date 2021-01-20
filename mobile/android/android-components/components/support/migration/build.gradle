@@ -49,7 +49,8 @@ dependencies {
     implementation project(':concept-engine')
 
     implementation project(':browser-search')
-    implementation project(':browser-session')
+    implementation project(':browser-session-storage')
+    implementation project(':browser-state')
     implementation project(':browser-storage-sync')
 
     implementation project(':service-firefox-accounts')
@@ -65,10 +66,12 @@ dependencies {
     implementation project(':feature-addons')
     implementation project(':feature-intent')
     implementation project(':feature-top-sites')
+    implementation project(':feature-tabs')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
+    testImplementation project(":browser-session")
     testImplementation project(':support-test')
 
     testImplementation Dependencies.androidx_test_core

@@ -38,10 +38,12 @@ import mozilla.components.service.fxa.manager.MigrationResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.eq
 import org.json.JSONObject
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import java.lang.IllegalArgumentException
@@ -220,6 +222,8 @@ class FennecMigratorTest {
 
         // Can add another migration type, and it will be the only one to run.
         val sessionManager: SessionManager = mock()
+        val tabsUseCases = TabsUseCases(store = mock(), sessionManager = sessionManager)
+
         val expandedMigrator = FennecMigrator.Builder(testContext, mock())
             .setCoroutineContext(this.coroutineContext)
             .setProfile(FennecProfile(
@@ -231,7 +235,7 @@ class FennecMigratorTest {
             ))
             .migrateHistory(lazy { historyStore })
             .migrateBookmarks(lazy { bookmarksStore }, topSiteStorage)
-            .migrateOpenTabs(sessionManager)
+            .migrateOpenTabs(tabsUseCases)
             .build()
 
         with(expandedMigrator.migrateAsync(mock()).await()) {
@@ -243,7 +247,7 @@ class FennecMigratorTest {
                 assertEquals(1, this.version)
             }
 
-            verify(sessionManager, times(1)).restore(mozilla.components.support.test.any(), anyBoolean())
+            verify(sessionManager, times(1)).restore(mozilla.components.support.test.any(), anyString())
         }
 
         // Running this migrator again does nothing.

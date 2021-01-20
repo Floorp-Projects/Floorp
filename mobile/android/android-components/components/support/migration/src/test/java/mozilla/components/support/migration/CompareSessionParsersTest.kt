@@ -4,7 +4,7 @@
 
 package mozilla.components.support.migration
 
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.support.migration.session.InMemorySessionStoreParser
 import mozilla.components.support.migration.session.StreamingSessionStoreParser
 import org.json.JSONException
@@ -40,18 +40,18 @@ class CompareSessionParsersTest(
             return
         }
 
-        assertEquals(snapshot1.sessions.size, snapshot2.sessions.size)
-        assertEquals(snapshot1.selectedSessionIndex, snapshot2.selectedSessionIndex)
+        assertEquals(snapshot1.tabs.size, snapshot2.tabs.size)
+        assertEquals(snapshot1.selectedTabIndex(), snapshot2.selectedTabIndex())
 
-        snapshot1.sessions.forEachIndexed { index, item1 ->
-            val item2 = snapshot2.sessions[index]
+        snapshot1.tabs.forEachIndexed { index, item1 ->
+            val item2 = snapshot2.tabs[index]
 
-            assertEquals(item1.session.url, item2.session.url)
-            assertEquals(item1.session.title, item2.session.title)
+            assertEquals(item1.url, item2.url)
+            assertEquals(item1.title, item2.title)
         }
     }
 
-    private fun tryInMemoryParser(file: File): SessionManager.Snapshot? {
+    private fun tryInMemoryParser(file: File): RecoverableBrowserState? {
         return try {
             InMemorySessionStoreParser.parse(file).value
         } catch (e: JSONException) {
@@ -61,7 +61,7 @@ class CompareSessionParsersTest(
         }
     }
 
-    private fun tryStreamingParser(file: File): SessionManager.Snapshot? {
+    private fun tryStreamingParser(file: File): RecoverableBrowserState? {
         return try {
             StreamingSessionStoreParser.parse(file).value
         } catch (e: JSONException) {
@@ -91,4 +91,9 @@ class CompareSessionParsersTest(
                 .getResource("sessions").file
                 .let { File(it) }
     }
+}
+
+private fun RecoverableBrowserState.selectedTabIndex(): Int {
+    val tab = tabs.firstOrNull { tab -> tab.id == selectedTabId } ?: return -1
+    return tabs.indexOf(tab)
 }
