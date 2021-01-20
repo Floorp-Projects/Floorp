@@ -137,7 +137,6 @@ for (const type of [
   "SUBMIT_SIGNIN",
   "SYSTEM_TICK",
   "TELEMETRY_IMPRESSION_STATS",
-  "TELEMETRY_UNDESIRED_EVENT",
   "TELEMETRY_USER_EVENT",
   "TOP_SITES_CANCEL_EDIT",
   "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL",
@@ -303,21 +302,6 @@ function ASRouterUserEvent(data) {
 }
 
 /**
- * UndesiredEvent - A telemetry ping indicating an undesired state.
- *
- * @param  {object} data Fields to include in the ping (value, etc.)
- * @param  {int} importContext (For testing) Override the import context for testing.
- * @return {object} An action. For UI code, a AlsoToMain action.
- */
-function UndesiredEvent(data, importContext = globalImportContext) {
-  const action = {
-    type: actionTypes.TELEMETRY_UNDESIRED_EVENT,
-    data,
-  };
-  return importContext === UI_CODE ? AlsoToMain(action) : action;
-}
-
-/**
  * ImpressionStats - A telemetry ping indicating an impression stats.
  *
  * @param  {object} data Fields to include in the ping
@@ -389,7 +373,6 @@ this.actionCreators = {
   BroadcastToContent,
   UserEvent,
   ASRouterUserEvent,
-  UndesiredEvent,
   ImpressionStats,
   AlsoToOneContent,
   OnlyToOneContent,
