@@ -113,7 +113,9 @@ add_task(async function testTempPermissionSubframes() {
 
     Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
       state: SitePermissions.BLOCK,
-      scope: SitePermissions.SCOPE_TEMPORARY,
+      scope: SitePermissions.SCOPE_PERSISTENT,
     });
+
+    SitePermissions.removeFromPrincipal(principal, id, browser);
   });
 });
