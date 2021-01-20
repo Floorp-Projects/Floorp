@@ -1,3 +1,9 @@
+.outer-wrapper.newtab-experience {
+  .ds-navigation {
+    color: var(--newtab-background-primary-text-color);
+  }
+}
+
 .ds-navigation {
   @include dark-theme-only {
     color: $grey-30;
