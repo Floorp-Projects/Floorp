@@ -74,7 +74,12 @@ def before_iterations(kw):
     tasks = []
     for revision in revisions:
         try:
-            commitdate = fenix_repo.commit(revision).committed_date
+            commit = fenix_repo.commit(revision)
+            if "remotes/origin" not in str(commit.name_rev):
+                print("Commit %s is a release-branch commit, it won't be tested.")
+                continue
+
+            commitdate = commit.committed_date
         except ValueError:
             print("Commit %s is not from the Fenix master branch" % revision)
             continue
