@@ -228,13 +228,15 @@ class AccessibleCaretManager {
 
   void ClearMaintainedSelection() const;
 
+  enum class Terminated : bool { No, Yes };
+
   // This method could kill the shell, so callers to methods that call
-  // FlushLayout should ensure the event hub that owns us is still alive.
+  // MaybeFlushLayout should ensure the event hub that owns us is still alive.
   //
   // See the mRefCnt assertions in AccessibleCaretEventHub.
   //
-  // Returns whether mPresShell we're holding is still valid.
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT bool FlushLayout();
+  // @return IsTerminated().
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Terminated MaybeFlushLayout();
 
   dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;
@@ -264,8 +266,10 @@ class AccessibleCaretManager {
   // ---------------------------------------------------------------------------
   // The following functions are made virtual for stubbing or mocking in gtest.
   //
-  // @return true if Terminate() had been called.
-  virtual bool IsTerminated() const { return !mPresShell; }
+  // @return Yes if Terminate() had been called.
+  virtual Terminated IsTerminated() const {
+    return mPresShell ? Terminated::No : Terminated::Yes;
+  }
 
   // Get caret mode based on current selection.
   virtual CaretMode GetCaretMode() const;

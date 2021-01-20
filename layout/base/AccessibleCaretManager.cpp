@@ -87,7 +87,7 @@ AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell)
 }
 
 AccessibleCaretManager::~AccessibleCaretManager() {
-  MOZ_RELEASE_ASSERT(!mFlushingLayout, "Going away in FlushLayout? Bad!");
+  MOZ_RELEASE_ASSERT(!mFlushingLayout, "Going away in MaybeFlushLayout? Bad!");
 }
 
 void AccessibleCaretManager::Terminate() {
@@ -182,7 +182,7 @@ void AccessibleCaretManager::HideCarets() {
 }
 
 void AccessibleCaretManager::UpdateCarets(const UpdateCaretsHintSet& aHint) {
-  if (!FlushLayout()) {
+  if (MaybeFlushLayout() == Terminated::Yes) {
     return;
   }
 
@@ -345,7 +345,7 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
 
   if (mIsCaretPositionChanged) {
     // Flush layout to make the carets intersection correct.
-    if (!FlushLayout()) {
+    if (MaybeFlushLayout() == Terminated::Yes) {
       return;
     }
   }
@@ -969,7 +969,7 @@ void AccessibleCaretManager::ExtendPhoneNumberSelection(
     // Extend the selection by one char.
     selection->Modify(u"extend"_ns, aDirection, u"character"_ns,
                       IgnoreErrors());
-    if (IsTerminated()) {
+    if (IsTerminated() == Terminated::Yes) {
       return;
     }
 
@@ -1011,7 +1011,7 @@ void AccessibleCaretManager::ClearMaintainedSelection() const {
   }
 }
 
-bool AccessibleCaretManager::FlushLayout() {
+auto AccessibleCaretManager::MaybeFlushLayout() -> Terminated {
   if (mPresShell && mAllowFlushingLayout) {
     AutoRestore<bool> flushing(mFlushingLayout);
     mFlushingLayout = true;
@@ -1021,7 +1021,7 @@ bool AccessibleCaretManager::FlushLayout() {
     }
   }
 
-  return !IsTerminated();
+  return IsTerminated();
 }
 
 nsIFrame* AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
@@ -1390,7 +1390,7 @@ void AccessibleCaretManager::StopSelectionAutoScrollTimer() const {
 
 void AccessibleCaretManager::DispatchCaretStateChangedEvent(
     CaretChangedReason aReason) {
-  if (!FlushLayout()) {
+  if (MaybeFlushLayout() == Terminated::Yes) {
     return;
   }
 
