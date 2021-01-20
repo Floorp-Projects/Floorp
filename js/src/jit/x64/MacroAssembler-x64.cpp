@@ -611,6 +611,22 @@ void MacroAssembler::subFromStackPtr(Imm32 imm32) {
   }
 }
 
+void MacroAssemblerX64::convertDoubleToPtr(FloatRegister src, Register dest,
+                                           Label* fail,
+                                           bool negativeZeroCheck) {
+  // Check for -0.0
+  if (negativeZeroCheck) {
+    branchNegativeZero(src, dest, fail);
+  }
+
+  ScratchDoubleScope scratch(asMasm());
+  vcvttsd2sq(src, dest);
+  asMasm().convertInt64ToDouble(Register64(dest), scratch);
+  vucomisd(scratch, src);
+  j(Assembler::Parity, fail);
+  j(Assembler::NotEqual, fail);
+}
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // ABI function calls.
