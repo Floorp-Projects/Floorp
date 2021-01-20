@@ -869,6 +869,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     return value.typeReg();
   }
 
+  void convertDoubleToPtr(FloatRegister src, Register dest, Label* fail,
+                          bool negativeZeroCheck = true) {
+    convertDoubleToInt32(src, dest, fail, negativeZeroCheck);
+  }
+
   void boolValueToDouble(const ValueOperand& operand, FloatRegister dest) {
     convertInt32ToDouble(operand.payloadReg(), dest);
   }
