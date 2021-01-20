@@ -20,6 +20,13 @@
 namespace mozilla {
 namespace gl {
 
+#define NOTE_IF_FALSE(expr)                          \
+  do {                                               \
+    if (!(expr)) {                                   \
+      gfxCriticalNote << "NOTE_IF_FALSE: " << #expr; \
+    }                                                \
+  } while (false)
+
 static EGLStreamKHR StreamFromD3DTexture(EglDisplay* const egl,
                                          ID3D11Texture2D* const texD3D,
                                          const EGLAttrib* const postAttribs) {
@@ -34,11 +41,11 @@ static EGLStreamKHR StreamFromD3DTexture(EglDisplay* const egl,
   MOZ_ASSERT(stream);
   if (!stream) return 0;
   bool ok = true;
-  MOZ_ALWAYS_TRUE(ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
-                      stream, nullptr)));
-  MOZ_ALWAYS_TRUE(
+  NOTE_IF_FALSE(ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
+                    stream, nullptr)));
+  NOTE_IF_FALSE(
       ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(stream, nullptr)));
-  MOZ_ALWAYS_TRUE(
+  NOTE_IF_FALSE(
       ok &= bool(egl->fStreamPostD3DTextureANGLE(stream, texD3D, postAttribs)));
   if (ok) return stream;
 
@@ -102,7 +109,7 @@ class BindAnglePlanes final {
 
     if (mSuccess) {
       for (uint8_t i = 0; i < mNumPlanes; i++) {
-        MOZ_ALWAYS_TRUE(egl->fStreamConsumerAcquireKHR(mStreams[i]));
+        NOTE_IF_FALSE(egl->fStreamConsumerAcquireKHR(mStreams[i]));
 
         auto& mutex = mMutexList[i];
         texD3DList[i]->QueryInterface(IID_IDXGIKeyedMutex,
@@ -125,7 +132,7 @@ class BindAnglePlanes final {
 
     if (mSuccess) {
       for (uint8_t i = 0; i < mNumPlanes; i++) {
-        MOZ_ALWAYS_TRUE(egl->fStreamConsumerReleaseKHR(mStreams[i]));
+        NOTE_IF_FALSE(egl->fStreamConsumerReleaseKHR(mStreams[i]));
         if (mMutexList[i]) {
           mMutexList[i]->ReleaseSync(0);
         }
@@ -152,8 +159,8 @@ ID3D11Device* GLBlitHelper::GetD3D11() const {
   const auto& gle = GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
   EGLDeviceEXT deviceEGL = 0;
-  MOZ_ALWAYS_TRUE(egl->fQueryDisplayAttribEXT(LOCAL_EGL_DEVICE_EXT,
-                                              (EGLAttrib*)&deviceEGL));
+  NOTE_IF_FALSE(egl->fQueryDisplayAttribEXT(LOCAL_EGL_DEVICE_EXT,
+                                            (EGLAttrib*)&deviceEGL));
   if (!egl->mLib->fQueryDeviceAttribEXT(
           deviceEGL, LOCAL_EGL_D3D11_DEVICE_ANGLE,
           (EGLAttrib*)(ID3D11Device**)getter_AddRefs(mD3D11))) {
