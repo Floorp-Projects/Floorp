@@ -2986,6 +2986,16 @@ bool WarpCacheIRTranspiler::emitMathTruncNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitObjectToStringResult(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MObjectClassToString::New(alloc(), obj);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitReflectGetPrototypeOfResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
