@@ -632,7 +632,8 @@ class tp5n(PageloaderTest):
     """
 
     resolution = 20
-    tpmanifest = "${talos}/tests/tp5n/tp5n.manifest"
+    multidomain = True
+    tpmanifest = "${talos}/fis/tp5n/tp5n.manifest"
     tpcycles = 1
     tppagecycles = 1
     cycles = 1
@@ -690,7 +691,8 @@ class tp5o(PageloaderTest):
     tpmozafterpaint = True
     tptimeout = 5000
     mainthread = False
-    tpmanifest = "${talos}/tests/tp5n/tp5o.manifest"
+    multidomain = True
+    tpmanifest = "${talos}/fis/tp5n/tp5o.manifest"
     win_counters = ["% Processor Time"]
     w7_counters = ["% Processor Time"]
     linux_counters = ["XRes"]
