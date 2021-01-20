@@ -40,3 +40,52 @@ whatsnew-panel-header = What’s New
 whatsnew-panel-footer-checkbox =
   .label = Notify about new features
   .accesskey = f
+
+## Help panel
+
+appmenu-about =
+    .label = About { -brand-shorter-name }
+    .accesskey = A
+appmenu-help-product =
+    .label = { -brand-shorter-name } Help
+    .accesskey = H
+appmenu-help-show-tour =
+    .label = { -brand-shorter-name } Tour
+    .accesskey = o
+appmenu-help-import-from-another-browser =
+    .label = Import From Another Browser…
+    .accesskey = I
+appmenu-help-keyboard-shortcuts =
+    .label = Keyboard Shortcuts
+    .accesskey = K
+appmenu-help-troubleshooting-info =
+    .label = Troubleshooting Information
+    .accesskey = T
+appmenu-help-feedback-page =
+    .label = Submit Feedback…
+    .accesskey = S
+
+## appmenu-help-safe-mode-without-addons and appmenu-help-safe-mode-without-addons
+## are mutually exclusive, so it's possible to use the same accesskey for both.
+
+appmenu-help-safe-mode-without-addons =
+    .label = Restart With Add-ons Disabled…
+    .accesskey = R
+appmenu-help-safe-mode-with-addons =
+    .label = Restart With Add-ons Enabled
+    .accesskey = R
+
+## appmenu-help-report-deceptive-site and appmenu-help-not-deceptive
+## are mutually exclusive, so it's possible to use the same accesskey for both.
+
+appmenu-help-report-deceptive-site =
+    .label = Report Deceptive Site…
+    .accesskey = D
+appmenu-help-not-deceptive =
+    .label = This Isn’t a Deceptive Site…
+    .accesskey = D
+
+##
+
+appmenu-help-check-for-update =
+    .label = Check for Updates…

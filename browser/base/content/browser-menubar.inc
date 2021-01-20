@@ -459,9 +459,12 @@
 #endif
                    data-l10n-id="menu-help">
               <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
+<!-- Note: Items under here are cloned to the AppMenu Help submenu. The cloned items
+     have their strings defined by appmenu-data-l10n-id. -->
 #ifdef MOZ_UPDATER
                 <menuitem id="checkForUpdates"
                           data-l10n-id="menu-help-check-for-update"
+                          appmenu-data-l10n-id="appmenu-help-check-for-update"
                           class="menuitem-iconic"
                           oncommand="openAboutDialog();"/>
 #endif
@@ -469,36 +472,52 @@
                           oncommand="openHelpLink('firefox-help')"
                           onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-help-product"
+                          appmenu-data-l10n-id="appmenu-help-product"
 #ifdef XP_MACOSX
                           key="key_openHelpMac"/>
 #else
                           />
 #endif
                 <menuitem id="menu_openTour"
-                          oncommand="openTourPage();" data-l10n-id="menu-help-show-tour"/>
+                          oncommand="openTourPage();"
+                          data-l10n-id="menu-help-show-tour"
+                          appmenu-data-l10n-id="appmenu-help-show-tour"/>
                 <menuitem id="help_importFromAnotherBrowser"
-                          command="cmd_help_importFromAnotherBrowser" data-l10n-id="menu-help-import-from-another-browser"/>
+                          command="cmd_help_importFromAnotherBrowser"
+                          data-l10n-id="menu-help-import-from-another-browser"
+                          appmenu-data-l10n-id="appmenu-help-import-from-another-browser"/>
                 <menuitem id="menu_keyboardShortcuts"
                           oncommand="openHelpLink('keyboard-shortcuts')"
-                          onclick="checkForMiddleClick(this, event);" data-l10n-id="menu-help-keyboard-shortcuts"/>
+                          onclick="checkForMiddleClick(this, event);"
+                          data-l10n-id="menu-help-keyboard-shortcuts"
+                          appmenu-data-l10n-id="appmenu-help-keyboard-shortcuts"/>
                 <menuitem id="troubleShooting"
                           oncommand="openTroubleshootingPage()"
-                          onclick="checkForMiddleClick(this, event);" data-l10n-id="menu-help-troubleshooting-info"/>
+                          onclick="checkForMiddleClick(this, event);"
+                          data-l10n-id="menu-help-troubleshooting-info"
+                          appmenu-data-l10n-id="appmenu-help-troubleshooting-info"/>
                 <menuitem id="feedbackPage"
                           oncommand="openFeedbackPage()"
-                          onclick="checkForMiddleClick(this, event);" data-l10n-id="menu-help-feedback-page"/>
+                          onclick="checkForMiddleClick(this, event);"
+                          data-l10n-id="menu-help-feedback-page"
+                          appmenu-data-l10n-id="appmenu-help-feedback-page"/>
                 <menuitem id="helpSafeMode"
-                          oncommand="safeModeRestart();" data-l10n-id="menu-help-safe-mode-without-addons"/>
+                          oncommand="safeModeRestart();"
+                          data-l10n-id="menu-help-safe-mode-without-addons"
+                          appmenu-data-l10n-id="appmenu-help-safe-mode-without-addons"/>
                 <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
                           disabled="true"
                           oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
                           onclick="checkForMiddleClick(this, event);"
-                          hidden="true" data-l10n-id="menu-help-report-deceptive-site"/>
+                          hidden="true"
+                          data-l10n-id="menu-help-report-deceptive-site"
+                          appmenu-data-l10n-id="appmenu-help-report-deceptive-site"/>
                 <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
                           disabled="true"
                           oncommand="ReportFalseDeceptiveSite();"
                           onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-help-not-deceptive"
+                          appmenu-data-l10n-id="appmenu-help-not-deceptive"
                           hidden="true"/>
                 <menuseparator id="helpPolicySeparator"
                           hidden="true"/>
@@ -508,7 +527,9 @@
                           onclick="checkForMiddleClick(this, event);"/>
                 <menuseparator id="aboutSeparator"/>
                 <menuitem id="aboutName"
-                          oncommand="openAboutDialog();" data-l10n-id="menu-about"/>
+                          oncommand="openAboutDialog();"
+                          data-l10n-id="menu-about"
+                          appmenu-data-l10n-id="appmenu-about"/>
               </menupopup>
           </menu>
         </menubar>
