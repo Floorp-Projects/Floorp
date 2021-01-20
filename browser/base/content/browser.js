@@ -561,6 +561,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
+/* Temporary pref while we settle some questions around new tab design.
+   This will eventually be removed and browser.proton.enabled will be used instead. */
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gProtonTabs",
+  "browser.proton.tabs.enabled",
+  false,
+  (pref, oldValue, newValue) => {
+    document.documentElement.toggleAttribute("proton", newValue);
+  }
+);
+
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js",

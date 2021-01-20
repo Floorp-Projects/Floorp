@@ -85,6 +85,12 @@
              titlebar text change for inactive windows. */
           opacity: .6;
         }
+
+        @supports -moz-bool-pref("browser.proton.tabs.enabled") {
+        :root[tabsintitlebar] .tab-icon-sound:-moz-window-inactive {
+          opacity: .6;
+        }
+        } /*** END proton ***/
       }
 
       @media (-moz-windows-default-theme: 0) {

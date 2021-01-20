@@ -91,6 +91,12 @@ toolbar[brighttext] {
   margin: 0 0 var(--tabs-navbar-shadow-size) !important;
 }
 
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+#TabsToolbar .toolbarbutton-1 {
+  margin-block: var(--proton-tab-block-margin) !important;
+}
+} /*** END proton ***/
+
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
   appearance: none;
@@ -138,6 +144,14 @@ toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
   border-radius: var(--toolbarbutton-border-radius);
 }
 
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-text,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
+  border-radius: var(--proton-tab-radius);
+}
+} /*** END proton ***/
+
 toolbar .toolbarbutton-1 > .toolbarbutton-icon {
   /* horizontal padding + actual icon width */
   width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
@@ -150,6 +164,16 @@ toolbar .toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
   padding-block: calc(var(--toolbarbutton-inner-padding) + (16px - 12px) / 2);
   width: calc(2 * 2px + 12px);
 }
+
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
+  min-height: var(--tab-min-height);
+  /* Increase the vertical padding to account for the taller button
+    and not stretch the icon. */
+  padding-block: calc((var(--tab-min-height) - 16px) / 2);
+}
+} /*** END proton ***/
 
 toolbar .toolbarbutton-1 > .toolbarbutton-text {
   padding-top: var(--toolbarbutton-vertical-text-padding);
