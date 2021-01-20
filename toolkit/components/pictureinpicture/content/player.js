@@ -71,6 +71,29 @@ function setIsMutedState(isMuted) {
 }
 
 /**
+ * Function to resize and reposition the PiP player window
+ * @param left (int)
+ *   X coordinate
+ * @param top (int)
+ *   Y coordinate
+ * @param width (int)
+ *   width
+ * @param height (int)
+ *   height
+ */
+function resizeToVideo(left, top, width, height) {
+  Player.resizeToVideo(left, top, width, height);
+}
+
+/**
+ * Need the size and location of the PiP window before it was fullscreened
+ * to calculate the new position of the PiP window when it exits fullscreen
+ */
+function getDeferredResize() {
+  return Player.deferredResize;
+}
+
+/**
  * The Player object handles initializing the player, holds state, and handles
  * events for updating state.
  */
@@ -100,6 +123,12 @@ let Player = {
   lastScreenX: -1,
   lastScreenY: -1,
   id: -1,
+
+  /**
+   * Used to store size and location of the PiP window when entering/exiting
+   * fullscren
+   */
+  deferredResize: null,
 
   /**
    * When set to a non-null value, a timer is scheduled to hide the controls
@@ -271,6 +300,14 @@ let Player = {
             Services.obs.notifyObservers(window, "fullscreen-painted");
           }
         });
+        // Need to check that we are exiting fullscreen because
+        // MozDOMFullscreen:Entered has an intentional fall-through and we only
+        // want to resize after we exit fullscreen
+        if (this.deferredResize && event.type == "MozDOMFullscreen:Exited") {
+          let { left, top, width, height } = this.deferredResize;
+          this.resizeToVideo(left, top, width, height);
+          this.deferredResize = null;
+        }
         break;
       }
 
@@ -306,9 +343,40 @@ let Player = {
       if (document.fullscreenElement == document.body) {
         document.exitFullscreen();
       } else {
+        // Store the size and location so we know where to put the PiP window after
+        // it exits fullscreen
+        this.deferredResize = {
+          left: window.screenX,
+          top: window.screenY,
+          width: window.innerWidth,
+          height: window.innerHeight,
+        };
         document.body.requestFullscreen();
       }
       event.preventDefault();
+    }
+  },
+
+  /**
+   * Will take in the new size and location for the PiP window and will move
+   * and resize if not fullscreened. If fullscreened, store for when fullscreen
+   * is exited
+   * @param left (int)
+   *    new left position for PiP window
+   * @param top (int)
+   *    new top position for PiP window
+   * @param width (int)
+   *    new width for PiP window
+   * @param height (int)
+   *    new height for PiP window
+   */
+  resizeToVideo(left, top, width, height) {
+    if (document.fullscreenElement == document.body) {
+      // store because we can't resize and move the PiP while fullscreened
+      this.deferredResize = { left, top, width, height };
+    } else {
+      window.resizeTo(width, height);
+      window.moveTo(left, top);
     }
   },
 
