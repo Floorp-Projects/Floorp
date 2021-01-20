@@ -2659,11 +2659,33 @@ void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
     debugf("mismatched format for read pixels: %x vs %x\n", t.internal_format,
            internal_format_for_data(format, type));
     assert(false);
+    return;
   }
   // Only support readback conversions that are reversible
   assert(!format_requires_conversion(format, t.internal_format) ||
          bytes_for_internal_format(format) == t.bpp());
-  convert_copy(format, t.internal_format, (uint8_t*)data, width * t.bpp(),
+  uint8_t* dest = (uint8_t*)data;
+  size_t destStride = width * t.bpp();
+  if (y < 0) {
+    dest += -y * destStride;
+    height += y;
+    y = 0;
+  }
+  if (y + height > t.height) {
+    height = t.height - y;
+  }
+  if (x < 0) {
+    dest += -x * t.bpp();
+    width += x;
+    x = 0;
+  }
+  if (x + width > t.width) {
+    width = t.width - x;
+  }
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+  convert_copy(format, t.internal_format, dest, destStride,
                (const uint8_t*)t.sample_ptr(x, y, fb->layer), t.stride(), width,
                height);
 }
