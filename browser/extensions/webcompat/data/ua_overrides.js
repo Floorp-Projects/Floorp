@@ -102,28 +102,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1610010 - criticalcareontario.ca - UA override for criticalcareontario.ca
-     * WebCompat issue #40267 - https://webcompat.com/issues/40267
-     *
-     * criticalcareontario.ca enters a reload loop based on UA detection
-     * Spoofing as Chrome prevents the site from doing a constant page refresh
-     */
-    id: "bug1610010",
-    platform: "all",
-    domain: "criticalcareontario.ca",
-    bug: "1610010",
-    config: {
-      matches: ["https://www.criticalcareontario.ca/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36"
-        );
-      },
-    },
-  },
-  {
-    /*
      * Bug 1610026 - www.mobilesuica.com - UA override for www.mobilesuica.com
      * WebCompat issue #4608 - https://webcompat.com/issues/4608
      *
@@ -514,25 +492,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1628462 - UA override for app.pixton.com
-     * Webcompat issue #43438 - https://webcompat.com/issues/43438
-     *
-     * app.pixton.com is showing unsupported message for both Firefox
-     * desktop and mobile. Spoofing as Chrome allows to access the site
-     */
-    id: "bug1628462",
-    platform: "all",
-    domain: "app.pixton.com",
-    bug: "1628462",
-    config: {
-      matches: ["https://*.pixton.com/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1628455 - UA override for autotrader.ca
      * Webcompat issue #50961 - https://webcompat.com/issues/50961
      *
@@ -641,25 +600,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1664174 - UA override for indiatimes.com
-     * Webcompat issue #57961 - https://webcompat.com/issues/57961
-     *
-     * This site returns desktop site based on server side UA detection.
-     * Spoofing as Chrome allows to get mobile experience
-     */
-    id: "bug1664174",
-    platform: "android",
-    domain: "indiatimes.com",
-    bug: "1664174",
-    config: {
-      matches: ["*://*.indiatimes.com/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1666754 - Mobile UA override for lffl.org
      * Bug 1665720 - lffl.org article page takes 2x as much time to load on Moto G
      *
@@ -674,24 +614,6 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://*.lffl.org/*"],
       uaTransformer: () => {
         return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1673937 - Add UA override for goal.com
-     *
-     * This site needs to have Chrome into its UA string to be able
-     * to serve the right experience on both desktop and mobile.
-     */
-    id: "bug1673937",
-    platform: "all",
-    domain: "goal.com",
-    bug: "1673937",
-    config: {
-      matches: ["*://goal.com/*"],
-      uaTransformer: originalUA => {
-        return originalUA + " Chrome/86.0.4240.110";
       },
     },
   },
