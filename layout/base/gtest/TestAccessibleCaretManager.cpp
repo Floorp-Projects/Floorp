@@ -99,7 +99,7 @@ class AccessibleCaretManagerTester : public ::testing::Test {
       }
     }
 
-    bool IsTerminated() const override { return false; }
+    Terminated IsTerminated() const override { return Terminated::No; }
     bool IsScrollStarted() const { return mIsScrollStarted; }
 
     MOCK_CONST_METHOD0(GetCaretMode, CaretMode());
