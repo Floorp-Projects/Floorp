@@ -187,6 +187,11 @@ module.exports = [
     description: "Measure page reload time when all panels are in background",
   },
   {
+    name: "toolbox.screenshot",
+    path: "toolbox/screenshot.js",
+    description: "Measure the time to take a fullpage screenshot",
+  },
+  {
     name: "server.protocoljs",
     path: "server/protocol.js",
     description: "Measure RDP/protocol.js performance",
