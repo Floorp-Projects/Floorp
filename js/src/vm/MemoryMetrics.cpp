@@ -618,8 +618,10 @@ static bool CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats,
   // Finish any ongoing incremental GC that may change the data we're gathering
   // and ensure that we don't do anything that could start another one.
   gc::FinishGC(cx);
-  gc::WaitForBackgroundTasks(cx);
   JS::AutoAssertNoGC nogc(cx);
+
+  // Wait for any background tasks to finish.
+  WaitForAllHelperThreads();
 
   if (!rtStats->realmStatsVector.reserve(rt->numRealms)) {
     return false;
