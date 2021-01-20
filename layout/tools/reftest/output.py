@@ -182,6 +182,9 @@ class OutputHandler(object):
 
         return [data]
 
+    def write(self, data):
+        return self.__call__(data)
+
     def verbatim(self, line):
         if self.stack_fixer_function:
             line = self.stack_fixer_function(line)
