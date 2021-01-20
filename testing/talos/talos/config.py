@@ -5,6 +5,7 @@ from __future__ import absolute_import, print_function
 
 import copy
 import os
+import re
 import sys
 
 from mozlog.commandline import setup_logging
@@ -207,7 +208,13 @@ def get_global_overrides(config):
     return global_overrides
 
 
-def build_manifest(config, manifestName):
+def get_test_host(manifest_line):
+    match = re.match(r"^http://localhost/page_load_test/tp5n/([^/]+)/", manifest_line)
+    host = match.group(1)
+    return host + "-talos"
+
+
+def build_manifest(config, is_multidomain, manifestName):
     # read manifest lines
     with open(manifestName, "r") as fHandle:
         manifestLines = fHandle.readlines()
@@ -215,7 +222,8 @@ def build_manifest(config, manifestName):
     # write modified manifest lines
     with open(manifestName + ".develop", "w") as newHandle:
         for line in manifestLines:
-            newline = line.replace("localhost", config["webserver"])
+            new_host = get_test_host(line) if is_multidomain else config["webserver"]
+            newline = line.replace("localhost", new_host)
             newline = newline.replace("page_load_test", "tests")
             newHandle.write(newline)
 
@@ -258,7 +266,10 @@ def get_test(config, global_overrides, counters, test_instance):
     # fix up tpmanifest
     tpmanifest = getattr(test_instance, "tpmanifest", None)
     if tpmanifest:
-        test_instance.tpmanifest = build_manifest(config, utils.interpolate(tpmanifest))
+        is_multidomain = getattr(test_instance, "multidomain", False)
+        test_instance.tpmanifest = build_manifest(
+            config, is_multidomain, utils.interpolate(tpmanifest)
+        )
 
     # add any counters
     if counters:
