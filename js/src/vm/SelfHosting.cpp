@@ -1279,8 +1279,7 @@ static bool intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx,
     return false;
   }
 
-  uint32_t typedArrayLength = obj->length().deprecatedGetUint32();
-  args.rval().setInt32(mozilla::AssertedCast<int32_t>(typedArrayLength));
+  args.rval().set(obj->lengthValue());
   return true;
 }
 

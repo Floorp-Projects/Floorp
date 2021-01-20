@@ -1722,6 +1722,12 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
+  // For now only optimize when the result fits in an int32.
+  auto* tarr = &obj->as<TypedArrayObject>();
+  if (tarr->length().get() > INT32_MAX) {
+    return AttachDecision::NoAction;
+  }
+
   if (mode_ != ICState::Mode::Specialized) {
     return AttachDecision::NoAction;
   }
@@ -7732,6 +7738,12 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
   }
 
   MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
+
+  // For now only optimize when the result fits in an int32.
+  auto* tarr = &args_[0].toObject().as<TypedArrayObject>();
+  if (tarr->length().get() > INT32_MAX) {
+    return AttachDecision::NoAction;
+  }
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
