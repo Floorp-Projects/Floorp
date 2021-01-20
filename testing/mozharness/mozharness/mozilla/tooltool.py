@@ -60,15 +60,6 @@ class TooltoolMixin(object):
         if cache:
             cmd.extend(["--cache-dir" if self.topsrcdir else "-c", cache])
 
-        toolchains = os.environ.get("MOZ_TOOLCHAINS")
-        if toolchains:
-            if not self.topsrcdir:
-                raise Exception(
-                    "MOZ_TOOLCHAINS is not supported for tasks without "
-                    "a source checkout."
-                )
-            cmd.extend(toolchains.split())
-
         timeout = self.config.get("tooltool_timeout", 10 * 60)
 
         self.retry(

@@ -11,12 +11,6 @@ fi
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/builds/worker/tooltool-cache}
 export TOOLTOOL_CACHE
 
-if [ -n "$MOZ_TOOLCHAINS" ]; then
-    echo This script should not be used for toolchain downloads anymore
-    echo Use fetches
-    exit 1
-fi
-
 if [ -z "$TOOLTOOL_MANIFEST" ]; then
     echo This script should not be used when there is no tooltool manifest set
     exit 1

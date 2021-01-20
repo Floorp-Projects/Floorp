@@ -45,7 +45,7 @@ esac
 # manifests.
 BROWSER_PLATFORM=$PLATFORM_OS$BITS
 
-(cd $TOOLTOOL_CHECKOUT && ${GECKO_PATH}/mach artifact toolchain${TOOLTOOL_MANIFEST:+ -v --tooltool-manifest $GECKO_PATH/$TOOLTOOL_MANIFEST}${TOOLTOOL_CACHE:+ --cache-dir $TOOLTOOL_CACHE}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}})
+(cd $TOOLTOOL_CHECKOUT && ${GECKO_PATH}/mach artifact toolchain${TOOLTOOL_MANIFEST:+ -v --tooltool-manifest $GECKO_PATH/$TOOLTOOL_MANIFEST}${TOOLTOOL_CACHE:+ --cache-dir $TOOLTOOL_CACHE})
 
 ) || exit 1 # end of set -e scope
 
