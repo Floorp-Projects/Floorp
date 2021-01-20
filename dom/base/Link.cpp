@@ -66,7 +66,7 @@ bool Link::ElementHasHref() const {
 void Link::TryDNSPrefetch() {
   MOZ_ASSERT(mElement->IsInComposedDoc());
   if (ElementHasHref() && nsHTMLDNSPrefetch::IsAllowed(mElement->OwnerDoc())) {
-    nsHTMLDNSPrefetch::PrefetchLow(this);
+    nsHTMLDNSPrefetch::Prefetch(this, nsHTMLDNSPrefetch::Priority::Low);
   }
 }
 
@@ -80,7 +80,8 @@ void Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
     mElement->UnsetFlags(aRequestedFlag);
     // Possible that hostname could have changed since binding, but since this
     // covers common cases, most DNS prefetch requests will be canceled
-    nsHTMLDNSPrefetch::CancelPrefetchLow(this, NS_ERROR_ABORT);
+    nsHTMLDNSPrefetch::CancelPrefetch(this, nsHTMLDNSPrefetch::Priority::Low,
+                                      NS_ERROR_ABORT);
   }
 }
 
