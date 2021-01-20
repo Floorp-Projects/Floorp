@@ -1850,6 +1850,36 @@ void MacroAssembler::spectreBoundsCheck32(Register index, const Address& length,
   }
 }
 
+void MacroAssembler::spectreBoundsCheckPtr(Register index, Register length,
+                                           Register maybeScratch,
+                                           Label* failure) {
+  MOZ_ASSERT(length != maybeScratch);
+  MOZ_ASSERT(index != maybeScratch);
+
+  branchPtr(Assembler::BelowOrEqual, length, index, failure);
+
+  if (JitOptions.spectreIndexMasking) {
+    Csel(ARMRegister(index, 64), ARMRegister(index, 64), vixl::xzr,
+         Assembler::Above);
+  }
+}
+
+void MacroAssembler::spectreBoundsCheckPtr(Register index,
+                                           const Address& length,
+                                           Register maybeScratch,
+                                           Label* failure) {
+  MOZ_ASSERT(index != length.base);
+  MOZ_ASSERT(length.base != maybeScratch);
+  MOZ_ASSERT(index != maybeScratch);
+
+  branchPtr(Assembler::BelowOrEqual, length, index, failure);
+
+  if (JitOptions.spectreIndexMasking) {
+    Csel(ARMRegister(index, 64), ARMRegister(index, 64), vixl::xzr,
+         Assembler::Above);
+  }
+}
+
 // ========================================================================
 // Memory access primitives.
 void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,

@@ -1066,6 +1066,19 @@ void MacroAssembler::spectreBoundsCheck32(Register index, const Address& length,
   spectreBoundsCheck32(index, Operand(length), maybeScratch, failure);
 }
 
+void MacroAssembler::spectreBoundsCheckPtr(Register index, Register length,
+                                           Register maybeScratch,
+                                           Label* failure) {
+  spectreBoundsCheck32(index, length, maybeScratch, failure);
+}
+
+void MacroAssembler::spectreBoundsCheckPtr(Register index,
+                                           const Address& length,
+                                           Register maybeScratch,
+                                           Label* failure) {
+  spectreBoundsCheck32(index, length, maybeScratch, failure);
+}
+
 // ========================================================================
 // SIMD
 
