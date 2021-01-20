@@ -5,7 +5,6 @@
 package org.mozilla.fenix.tabhistory
 
 import androidx.navigation.NavController
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.SessionUseCases
 
 interface TabHistoryController {
@@ -15,15 +14,16 @@ interface TabHistoryController {
 class DefaultTabHistoryController(
     private val navController: NavController,
     private val goToHistoryIndexUseCase: SessionUseCases.GoToHistoryIndexUseCase,
-    private val customTabId: String? = null,
-    private val sessionManager: SessionManager
+    private val customTabId: String? = null
 ) : TabHistoryController {
 
     override fun handleGoToHistoryItem(item: TabHistoryItem) {
         navController.navigateUp()
-        goToHistoryIndexUseCase.invoke(
-            item.index,
-            session = customTabId?.let { sessionManager.findSessionById(customTabId) }
-                ?: sessionManager.selectedSession)
+
+        if (customTabId != null) {
+            goToHistoryIndexUseCase.invoke(item.index, customTabId)
+        } else {
+            goToHistoryIndexUseCase.invoke(item.index)
+        }
     }
 }
