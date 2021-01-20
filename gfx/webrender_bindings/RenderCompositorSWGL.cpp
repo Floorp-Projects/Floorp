@@ -61,6 +61,7 @@ bool RenderCompositorSWGL::AllocateMappedBuffer() {
   if (!mDT) {
     return false;
   }
+  mWidget->ClearBeforePaint(mDT, mRegion);
   // Attempt to lock the underlying buffer directly from the draw target.
   // Verify that the size at least matches what the widget claims and that
   // the format is BGRA8 as SWGL requires.

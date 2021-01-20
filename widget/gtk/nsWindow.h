@@ -298,6 +298,7 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* GetGtkWidget() { return mShell; }
   nsIFrame* GetFrame();
   bool IsDestroyed() { return mIsDestroyed; }
+  bool IsPopup();
   bool IsWaylandPopup();
   bool IsPIPWindow() { return mIsPIPWindow; };
 
