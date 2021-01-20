@@ -40,6 +40,12 @@ class ResourceWatcher {
     this._cache = [];
     this._listenerCount = new Map();
 
+    // WeakMap used to avoid starting a legacy listener twice for the same
+    // target + resource-type pair. Legacy listener creation can be subject to
+    // race conditions.
+    // Maps a target front to an array of resource types.
+    this._existingLegacyListeners = new WeakMap();
+
     this._notifyWatchers = this._notifyWatchers.bind(this);
     this._throttledNotifyWatchers = throttle(this._notifyWatchers, 100);
   }
@@ -331,7 +337,10 @@ class ResourceWatcher {
    * See _onTargetAvailable for arguments, they are the same.
    */
   _onTargetDestroyed({ targetFront }) {
-    //TODO: Is there a point in doing anything?
+    // Clear the map of legacy listeners for this target.
+    this._existingLegacyListeners.set(targetFront, []);
+
+    //TODO: Is there a point in doing anything else?
     //
     // We could remove the available/destroyed event, but as the target is destroyed
     // its listeners will be destroyed anyway.
@@ -716,6 +725,20 @@ class ResourceWatcher {
     if (!(resourceType in LegacyListeners)) {
       throw new Error(`Missing legacy listener for ${resourceType}`);
     }
+
+    const legacyListeners =
+      this._existingLegacyListeners.get(targetFront) || [];
+    if (legacyListeners.includes(resourceType)) {
+      console.error(
+        `Already started legacy listener for ${resourceType} on ${targetFront.actorID}`
+      );
+      return Promise.resolve();
+    }
+    this._existingLegacyListeners.set(
+      targetFront,
+      legacyListeners.concat(resourceType)
+    );
+
     return LegacyListeners[resourceType]({
       targetList: this.targetList,
       targetFront,
@@ -793,6 +816,15 @@ class ResourceWatcher {
     // We are aware of one case where that might be useful.
     // When a panel is disabled via the options panel, after it has been opened.
     // Would that justify doing this? Is there another usecase?
+
+    // XXX: This is most likely only needed to avoid growing the Map infinitely.
+    // Unless in the "disabled panel" use case mentioned in the comment above,
+    // we should not see the same target actorID again.
+    const listeners = this._existingLegacyListeners.get(targetFront);
+    if (listeners && listeners.includes(resourceType)) {
+      const remainingListeners = listeners.filter(l => l !== resourceType);
+      this._existingLegacyListeners.set(targetFront, remainingListeners);
+    }
   }
 }
 
