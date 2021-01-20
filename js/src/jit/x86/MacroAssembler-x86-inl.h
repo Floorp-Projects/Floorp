@@ -97,6 +97,10 @@ void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
   }
 }
 
+void MacroAssembler::move32SignExtendToPtr(Register src, Register dest) {
+  movl(src, dest);
+}
+
 void MacroAssembler::move32ZeroExtendToPtr(Register src, Register dest) {
   movl(src, dest);
 }
