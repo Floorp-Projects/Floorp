@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.jsm";
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import { actionTypes as at } from "common/Actions.jsm";
 import { ASRouterUtils } from "./asrouter-utils";
 import { generateBundles } from "./rich-text-strings";
 import { ImpressionsWrapper } from "./components/ImpressionsWrapper/ImpressionsWrapper";
@@ -46,7 +46,7 @@ export class ASRouterUISurface extends React.PureComponent {
 
   async fetchFlowParams(params = {}) {
     let result = {};
-    const { fxaEndpoint, dispatch } = this.props;
+    const { fxaEndpoint } = this.props;
     if (!fxaEndpoint) {
       const err =
         "Tried to fetch flow params before fxaEndpoint pref was ready";
@@ -65,24 +65,9 @@ export class ASRouterUISurface extends React.PureComponent {
         result = { deviceId, flowId, flowBeginTime };
       } else {
         console.error("Non-200 response", response); // eslint-disable-line no-console
-        dispatch(
-          ac.OnlyToMain({
-            type: at.TELEMETRY_UNDESIRED_EVENT,
-            data: {
-              event: "FXA_METRICS_FETCH_ERROR",
-              value: response.status,
-            },
-          })
-        );
       }
     } catch (error) {
       console.error(error); // eslint-disable-line no-console
-      dispatch(
-        ac.OnlyToMain({
-          type: at.TELEMETRY_UNDESIRED_EVENT,
-          data: { event: "FXA_METRICS_ERROR" },
-        })
-      );
     }
     return result;
   }

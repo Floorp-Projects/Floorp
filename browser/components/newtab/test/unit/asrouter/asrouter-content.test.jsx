@@ -4,7 +4,6 @@ import { GlobalOverrider } from "test/unit/utils";
 import { FAKE_LOCAL_MESSAGES } from "./constants";
 import React from "react";
 import { mount } from "enzyme";
-import { actionCreators as ac } from "common/Actions.jsm";
 
 let [FAKE_MESSAGE] = FAKE_LOCAL_MESSAGES;
 const FAKE_NEWSLETTER_SNIPPET = FAKE_LOCAL_MESSAGES.find(
@@ -458,48 +457,6 @@ describe("ASRouterUISurface", () => {
 
       const result = await wrapper.instance().fetchFlowParams();
       assert.deepEqual(result, flowInfo);
-    });
-    it("should return {} and dispatch a TELEMETRY_UNDESIRED_EVENT on a non-200 response", async () => {
-      globals.fetch
-        .withArgs("https://accounts.firefox.com/metrics-flow")
-        .resolves({
-          ok: false,
-          status: 400,
-          statusText: "Client error",
-          url: "https://accounts.firefox.com/metrics-flow",
-        });
-
-      const result = await wrapper.instance().fetchFlowParams();
-      assert.deepEqual(result, {});
-      assert.calledWith(
-        dispatchStub,
-        ac.OnlyToMain({
-          type: "TELEMETRY_UNDESIRED_EVENT",
-          data: {
-            event: "FXA_METRICS_FETCH_ERROR",
-            value: 400,
-          },
-        })
-      );
-    });
-    it("should return {} and dispatch a TELEMETRY_UNDESIRED_EVENT on a parsing erorr", async () => {
-      globals.fetch
-        .withArgs("https://accounts.firefox.com/metrics-flow")
-        .resolves({
-          ok: false,
-          status: 200,
-          // No json to parse, throws an error
-        });
-
-      const result = await wrapper.instance().fetchFlowParams();
-      assert.deepEqual(result, {});
-      assert.calledWith(
-        dispatchStub,
-        ac.OnlyToMain({
-          type: "TELEMETRY_UNDESIRED_EVENT",
-          data: { event: "FXA_METRICS_ERROR" },
-        })
-      );
     });
 
     describe(".onUserAction", () => {

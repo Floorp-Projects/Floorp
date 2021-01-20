@@ -191,22 +191,6 @@ describe("ActionCreators", () => {
       assert.isTrue(au.isSendToMain(action), "isSendToMain");
     });
   });
-  describe("UndesiredEvent", () => {
-    it("should include the given data", () => {
-      const data = { action: "foo" };
-      assert.equal(ac.UndesiredEvent(data).data, data);
-    });
-    it("should wrap with AlsoToMain if in UI code", () => {
-      assert.isTrue(
-        au.isSendToMain(ac.UndesiredEvent({ action: "foo" })),
-        "isSendToMain"
-      );
-    });
-    it("should not wrap with AlsoToMain if not in UI code", () => {
-      const action = ac.UndesiredEvent({ action: "foo" }, BACKGROUND_PROCESS);
-      assert.isFalse(au.isSendToMain(action), "isSendToMain");
-    });
-  });
   describe("ImpressionStats", () => {
     it("should include the right data", () => {
       const data = { action: "foo" };

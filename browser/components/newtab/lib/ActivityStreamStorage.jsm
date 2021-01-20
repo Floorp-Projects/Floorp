@@ -92,9 +92,7 @@ this.ActivityStreamStorage = class ActivityStreamStorage {
       return db;
     } catch (e) {
       if (this.telemetry) {
-        this.telemetry.handleUndesiredEvent({
-          data: { event: "INDEXEDDB_OPEN_FAILED" },
-        });
+        this.telemetry.handleUndesiredEvent({ event: "INDEXEDDB_OPEN_FAILED" });
       }
       await IndexedDB.deleteDatabase(this.dbName);
       return this._openDatabase();
@@ -107,9 +105,7 @@ this.ActivityStreamStorage = class ActivityStreamStorage {
       result = await request();
     } catch (e) {
       if (this.telemetry) {
-        this.telemetry.handleUndesiredEvent({
-          data: { event: "TRANSACTION_FAILED" },
-        });
+        this.telemetry.handleUndesiredEvent({ event: "TRANSACTION_FAILED" });
       }
       throw e;
     }
