@@ -239,7 +239,7 @@ class AccessibleCaretManager {
   // @return IsTerminated().
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Terminated MaybeFlushLayout();
 
-  dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
+  static dom::Element* GetEditingHostForFrame(const nsIFrame* aFrame);
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
 
