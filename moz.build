@@ -29,7 +29,7 @@ with Files("docs/**"):
     BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
     SCHEDULES.exclusive = ["docs"]
 
-with Files("mach"):
+with Files("mach*"):
     BUG_COMPONENT = ("Firefox Build System", "Mach Core")
 
 with Files("*moz*"):
