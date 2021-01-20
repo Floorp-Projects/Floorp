@@ -170,8 +170,13 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   }
   // XXX To really implement 'max-inline-size' well, we'd need to store
   // it separately on the columns.
+  const LogicalSize zeroSize(aWM);
   if (maxISize.ConvertsToLength() || maxISize.IsExtremumLength()) {
-    nscoord c = aFrame->ComputeISizeValue(aRenderingContext, 0, 0, 0, maxISize);
+    nscoord c =
+        aFrame
+            ->ComputeISizeValue(aRenderingContext, aWM, zeroSize, zeroSize, 0,
+                                maxISize, {ComputeSizeFlag::SkipAspectRatio})
+            .mISize;
     minCoord = std::min(c, minCoord);
     prefCoord = std::min(c, prefCoord);
   } else if (maxISize.ConvertsToPercentage()) {
@@ -193,7 +198,11 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
     }
   }
   if (minISize.ConvertsToLength() || minISize.IsExtremumLength()) {
-    nscoord c = aFrame->ComputeISizeValue(aRenderingContext, 0, 0, 0, minISize);
+    nscoord c =
+        aFrame
+            ->ComputeISizeValue(aRenderingContext, aWM, zeroSize, zeroSize, 0,
+                                minISize, {ComputeSizeFlag::SkipAspectRatio})
+            .mISize;
     minCoord = std::max(c, minCoord);
     prefCoord = std::max(c, prefCoord);
   } else if (minISize.ConvertsToPercentage()) {

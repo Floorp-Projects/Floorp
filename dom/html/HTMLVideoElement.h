@@ -128,9 +128,6 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   bool MozHasAudio() const;
 
-  // Gives access to the decoder's frame statistics, if present.
-  FrameStatistics* GetFrameStatistics();
-
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
   bool MozOrientationLockEnabled() const {

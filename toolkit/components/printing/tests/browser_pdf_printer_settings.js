@@ -95,3 +95,22 @@ add_task(async function testPDFCancel() {
     helper.assertDialogClosed();
   });
 });
+
+add_task(async function testPDFFile() {
+  await PrintHelper.withTestPage(async helper => {
+    await helper.startPrint();
+
+    helper.mockFilePicker("pdfFile.pdf");
+    let filePath = PathUtils.join(
+      Services.dirsvc.get("TmpD", Ci.nsIFile).path,
+      "pdfFile.pdf"
+    );
+
+    await helper.withClosingFn(() => {
+      EventUtils.sendKey("return", helper.win);
+    });
+
+    is(await IOUtils.exists(filePath), true, "Saved pdf file exists");
+    ok(await IOUtils.read(filePath), "Saved pdf file is not empty");
+  });
+});

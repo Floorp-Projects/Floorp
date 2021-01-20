@@ -380,17 +380,28 @@ effective as possible. Depending on the fuzzer and its scope a fuzz blocker
 in one area (or component) can impede performance in other areas and in
 some cases block the fuzzer all together. Some examples are:
 
+- Frequent crashes - These can block code paths and waste compute
+  resources due to the need to relaunch the fuzzing target and handle
+  the results (regardless of whether it is ignored or reported). This can also
+  include assertions that are mostly benign in many cases are but easily
+  triggered by fuzzers.
+
 - Frequent hangs / timeouts - This includes any issue that slows down
   or blocks execution of the fuzzer or the target.
 
-- Frequent crashes - These can block code paths and waste compute
-  resources due to the need to relaunch the fuzzing target and handle
-  the results (regardless of whether it is ignored or reported)
+- Hard to bucket - This includes crashes such as stack overflows or any issue
+  that crashes in an inconsistent location. This also includes issues that
+  corrupt logs/debugger output or provide a broken/invalid crash report.
 
-- Hard to bucket - These can be crashes such as stack overflows or
-  any issue that crashes in an inconsistent location. This also includes
-  issues that corrupt logs/debugger output or provide a broken/invalid
-  crash report.
+- Broken builds - This is fairly straightforward, without up-to-date builds
+  fuzzers are unable to run or verify fixes. 
+
+- Missing instrumentation - In some cases tools such as ASan are used as
+  defect oracles and are required by the fuzzing tools to allow for proper
+  automation. In other cases incomplete instrumentation can give a false sense
+  of stability or make investigating issues much more time consuming. Although
+  this is not necessarily blocking the fuzzers it should be prioritized
+  appropriately.
 
 Since these types of crashes harm the overall fuzzing progress, it is important
 for them to be addressed in a timely manner. Even if the bug itself might seem

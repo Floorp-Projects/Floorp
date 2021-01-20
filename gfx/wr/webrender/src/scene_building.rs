@@ -1575,6 +1575,15 @@ impl<'a> SceneBuilder<'a> {
             blit_reason |= BlitReason::ISOLATE;
         }
 
+        // If backface visibility is explicitly set, force this stacking
+        // context to be an off-screen surface. If part of a 3d context
+        // (common case) it will already be an off-screen surface. If
+        // the backface-vis is used while outside a 3d rendering context,
+        // this is an edge case.
+        if !prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
+            blit_reason |= BlitReason::ISOLATE;
+        }
+
         // If this stacking context has any complex clips, we need to draw it
         // to an off-screen surface.
         if let Some(clip_id) = clip_id {
@@ -1589,7 +1598,6 @@ impl<'a> SceneBuilder<'a> {
             &composite_ops,
             prim_flags,
             blit_reason,
-            requested_raster_space,
             self.sc_stack.last(),
         );
 
@@ -3399,7 +3407,6 @@ impl FlattenedStackingContext {
         composite_ops: &CompositeOps,
         prim_flags: PrimitiveFlags,
         blit_reason: BlitReason,
-        requested_raster_space: RasterSpace,
         parent: Option<&FlattenedStackingContext>,
     ) -> bool {
         // If this is a backdrop or blend container, it's needed
@@ -3427,25 +3434,6 @@ impl FlattenedStackingContext {
         if composite_ops.mix_blend_mode.is_some() {
             if let Some(parent) = parent {
                 if !parent.prim_list.is_empty() {
-                    return false;
-                }
-            }
-        }
-
-        // If backface visibility is explicitly set.
-        if !prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
-            return false;
-        }
-
-        // If rasterization space is different
-        match parent {
-            Some(parent) => {
-                if requested_raster_space != parent.requested_raster_space {
-                    return false;
-                }
-            }
-            None => {
-                if requested_raster_space != RasterSpace::Screen {
                     return false;
                 }
             }

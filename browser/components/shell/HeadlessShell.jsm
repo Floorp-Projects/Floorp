@@ -47,9 +47,19 @@ function loadContentWindow(browser, url) {
 
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
   return new Promise((resolve, reject) => {
+    let oa = E10SUtils.predictOriginAttributes({
+      browser,
+    });
     let loadURIOptions = {
       triggeringPrincipal: principal,
-      remoteType: E10SUtils.getRemoteTypeForURI(url, true, false),
+      remoteType: E10SUtils.getRemoteTypeForURI(
+        url,
+        true,
+        false,
+        E10SUtils.DEFAULT_REMOTE_TYPE,
+        null,
+        oa
+      ),
     };
     browser.loadURI(uri.spec, loadURIOptions);
     let { webProgress } = browser;

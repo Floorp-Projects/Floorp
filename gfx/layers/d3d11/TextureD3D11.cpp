@@ -1060,11 +1060,6 @@ void DXGITextureHostD3D11::PushDisplayItems(
     return;
   }
 
-  bool supportsExternalCompositing = false;
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    supportsExternalCompositing = true;
-  }
-
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -1074,31 +1069,39 @@ void DXGITextureHostD3D11::PushDisplayItems(
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
-                         preferCompositorSurface, supportsExternalCompositing);
+                         preferCompositorSurface,
+                         SupportsExternalCompositing());
       break;
     }
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
-      // XXX Add P010 and P016 support.
-      if (GetFormat() == gfx::SurfaceFormat::NV12 &&
-          gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()) {
-        supportsExternalCompositing = true;
-      }
       aBuilder.PushNV12Image(
           aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
           GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
                                                   : wr::ColorDepth::Color16,
           wr::ToWrYuvColorSpace(mYUVColorSpace),
           wr::ToWrColorRange(mColorRange), aFilter, preferCompositorSurface,
-          supportsExternalCompositing);
+          SupportsExternalCompositing());
       break;
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     }
   }
+}
+
+bool DXGITextureHostD3D11::SupportsExternalCompositing() {
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    return true;
+  }
+  // XXX Add P010 and P016 support.
+  if (GetFormat() == gfx::SurfaceFormat::NV12 &&
+      gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()) {
+    return true;
+  }
+  return false;
 }
 
 DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
@@ -1309,11 +1312,6 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     return;
   }
 
-  bool supportsExternalCompositing = false;
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    supportsExternalCompositing = true;
-  }
-
   MOZ_ASSERT(aImageKeys.length() == 3);
 
   aBuilder.PushYCbCrPlanarImage(
@@ -1321,7 +1319,14 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
       wr::ToWrColorDepth(mColorDepth), wr::ToWrYuvColorSpace(mYUVColorSpace),
       wr::ToWrColorRange(mColorRange), aFilter,
       aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE),
-      supportsExternalCompositing);
+      SupportsExternalCompositing());
+}
+
+bool DXGIYCbCrTextureHostD3D11::SupportsExternalCompositing() {
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    return true;
+  }
+  return false;
 }
 
 bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(

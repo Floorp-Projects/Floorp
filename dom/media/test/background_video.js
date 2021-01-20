@@ -91,13 +91,13 @@ function loadAndWaitUntilLoadedmetadata(video, url, preloadType = "metadata") {
  */
 function waitUntilVisible(video) {
   let videoChrome = SpecialPowers.wrap(video);
-  if (videoChrome.isVisible) {
+  if (videoChrome.isInViewPort) {
     return Promise.resolve();
   }
 
   return new Promise(resolve => {
     videoChrome.addEventListener("visibilitychanged", () => {
-      if (videoChrome.isVisible) {
+      if (videoChrome.isInViewPort) {
         ok(true, `${video.token} is visible.`);
         videoChrome.removeEventListener("visibilitychanged", this);
         resolve();

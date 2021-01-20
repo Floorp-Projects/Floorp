@@ -364,6 +364,8 @@ class DXGITextureHostD3D11 : public TextureHost {
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
 
+  bool SupportsExternalCompositing() override;
+
  protected:
   bool LockInternal();
   void UnlockInternal();
@@ -432,6 +434,8 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
+
+  bool SupportsExternalCompositing() override;
 
  private:
   bool EnsureTextureSource();

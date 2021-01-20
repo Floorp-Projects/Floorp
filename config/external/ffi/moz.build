@@ -119,8 +119,6 @@ else:
 
     else:
         ffi_srcs = ("ffi.c", "sysv.S")
-        if CONFIG["FFI_TARGET"] == "ARM" and CONFIG["CC_TYPE"] == "clang":
-            ASFLAGS += ["-no-integrated-as"]
 
     if CONFIG["FFI_TARGET"] in ("X86_WIN32", "X86_DARWIN") and CONFIG["CC_TYPE"] in (
         "gcc",

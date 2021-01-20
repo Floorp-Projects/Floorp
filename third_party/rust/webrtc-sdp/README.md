@@ -10,7 +10,7 @@ A SDP parser written in Rust specifically aimed to handle WebRTC SDP offers and 
 
 ## Dependecies
 
-* Rust >= 1.36.0
+* Rust >= 1.45.0
 * log module
 * serde module
 * serde-derive module
@@ -20,7 +20,7 @@ Cargo installs the missing modules automatically when building webrtc-sdp for th
 ## The webrtc-sdp API
 
 The main function is:
-```
+```rust
 fn parse_sdp(sdp: &str, fail_on_warning: bool) -> Result<SdpSession, SdpParserError>
 ```
 The `sdp` parameter is the string which will get parsed. The `fail_on_warning` parameter determines how to treat warnings encountered during parsing. Any problems encountered during are stored until the whole string has been parsed. Any problem during parsing falls into two catgeories:

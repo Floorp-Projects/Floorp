@@ -1673,7 +1673,7 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     }
 
     // We should consider any bfcached page or inactive document as non-playing.
-    if (!mOwner->IsActive()) {
+    if (!mOwner->OwnerDoc()->IsActive()) {
       return false;
     }
 
@@ -2151,8 +2151,16 @@ bool HTMLMediaElement::IsVideoDecodingSuspended() const {
   return mDecoder && mDecoder->IsVideoDecodingSuspended();
 }
 
-bool HTMLMediaElement::IsVisible() const {
-  return mVisibilityState == Visibility::ApproximatelyVisible;
+double HTMLMediaElement::TotalPlayTime() const {
+  return mDecoder ? mDecoder->GetTotalPlayTimeInSeconds() : -1.0;
+}
+
+double HTMLMediaElement::InvisiblePlayTime() const {
+  return mDecoder ? mDecoder->GetInvisibleVideoPlayTimeInSeconds() : -1.0;
+}
+
+double HTMLMediaElement::VideoDecodeSuspendedTime() const {
+  return mDecoder ? mDecoder->GetVideoDecodeSuspendedTimeInSeconds() : -1.0;
 }
 
 already_AddRefed<layers::Image> HTMLMediaElement::GetCurrentImage() {
@@ -2339,7 +2347,6 @@ void HTMLMediaElement::AbortExistingLoads() {
 
   mEventDeliveryPaused = false;
   mPendingEvents.Clear();
-  mCurrentLoadPlayTime.Reset();
 
   AssertReadyStateIsNothing();
 }
@@ -3013,7 +3020,7 @@ MediaResult HTMLMediaElement::LoadResource() {
 
   if (mMediaSource) {
     MediaDecoderInit decoderInit(
-        this, mMuted ? 0.0 : mVolume, mPreservesPitch,
+        this, this, mMuted ? 0.0 : mVolume, mPreservesPitch,
         ClampPlaybackRate(mPlaybackRate),
         mPreloadAction == HTMLMediaElement::PRELOAD_METADATA, mHasSuspendTaint,
         HasAttr(kNameSpaceID_None, nsGkAtoms::loop),
@@ -4240,10 +4247,6 @@ HTMLMediaElement::~HTMLMediaElement() {
   if (mProgressTimer) {
     StopProgress();
   }
-  if (mVideoDecodeSuspendTimer) {
-    mVideoDecodeSuspendTimer->Cancel();
-    mVideoDecodeSuspendTimer = nullptr;
-  }
   if (mSrcStream) {
     EndSrcMediaStreamPlayback();
   }
@@ -4748,187 +4751,6 @@ nsresult HTMLMediaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-/* static */
-void HTMLMediaElement::VideoDecodeSuspendTimerCallback(nsITimer* aTimer,
-                                                       void* aClosure) {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto element = static_cast<HTMLMediaElement*>(aClosure);
-  element->mVideoDecodeSuspendTime.Start();
-  element->mVideoDecodeSuspendTimer = nullptr;
-}
-
-void HTMLMediaElement::HiddenVideoStart() {
-  MOZ_ASSERT(NS_IsMainThread());
-  mHiddenPlayTime.Start();
-  if (mVideoDecodeSuspendTimer) {
-    // Already started, just keep it running.
-    return;
-  }
-  NS_NewTimerWithFuncCallback(
-      getter_AddRefs(mVideoDecodeSuspendTimer), VideoDecodeSuspendTimerCallback,
-      this, StaticPrefs::media_suspend_bkgnd_video_delay_ms(),
-      nsITimer::TYPE_ONE_SHOT,
-      "HTMLMediaElement::VideoDecodeSuspendTimerCallback",
-      mMainThreadEventTarget);
-}
-
-void HTMLMediaElement::HiddenVideoStop() {
-  MOZ_ASSERT(NS_IsMainThread());
-  mHiddenPlayTime.Pause();
-  mVideoDecodeSuspendTime.Pause();
-  if (!mVideoDecodeSuspendTimer) {
-    return;
-  }
-  mVideoDecodeSuspendTimer->Cancel();
-  mVideoDecodeSuspendTimer = nullptr;
-}
-
-void HTMLMediaElement::ReportTelemetry() {
-  FrameStatisticsData data;
-
-  if (HTMLVideoElement* vid = HTMLVideoElement::FromNodeOrNull(this)) {
-    FrameStatistics* stats = vid->GetFrameStatistics();
-    if (stats) {
-      data = stats->GetFrameStatisticsData();
-      uint64_t parsedFrames = stats->GetParsedFrames();
-      if (parsedFrames) {
-        uint64_t droppedFrames = stats->GetDroppedFrames();
-        MOZ_ASSERT(droppedFrames <= parsedFrames);
-        // Dropped frames <= total frames, so 'percentage' cannot be higher than
-        // 100 and therefore can fit in a uint32_t (that Telemetry takes).
-        uint32_t percentage = 100 * droppedFrames / parsedFrames;
-        LOG(LogLevel::Debug,
-            ("Reporting telemetry DROPPED_FRAMES_IN_VIDEO_PLAYBACK"));
-        Telemetry::Accumulate(Telemetry::VIDEO_DROPPED_FRAMES_PROPORTION,
-                              percentage);
-      }
-    }
-  }
-
-  if (mHadNonEmptyVideo) {
-    // We have a valid video.
-    double playTime = mPlayTime.Total();
-    double hiddenPlayTime = mHiddenPlayTime.Total();
-    double videoDecodeSuspendTime = mVideoDecodeSuspendTime.Total();
-
-    Telemetry::Accumulate(Telemetry::VIDEO_PLAY_TIME_MS,
-                          SECONDS_TO_MS(playTime));
-    LOG(LogLevel::Debug, ("%p VIDEO_PLAY_TIME_MS = %f", this, playTime));
-
-    Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_MS,
-                          SECONDS_TO_MS(hiddenPlayTime));
-    LOG(LogLevel::Debug,
-        ("%p VIDEO_HIDDEN_PLAY_TIME_MS = %f", this, hiddenPlayTime));
-
-    if (this->IsEncrypted()) {
-      Telemetry::Accumulate(Telemetry::VIDEO_ENCRYPTED_PLAY_TIME_MS,
-                            SECONDS_TO_MS(playTime));
-      LOG(LogLevel::Debug,
-          ("%p VIDEO_ENCRYPTED_PLAY_TIME_MS = %f", this, playTime));
-    }
-
-    if (mMediaKeys) {
-      nsAutoString keySystem;
-      mMediaKeys->GetKeySystem(keySystem);
-      if (IsClearkeyKeySystem(keySystem)) {
-        Telemetry::Accumulate(Telemetry::VIDEO_CLEARKEY_PLAY_TIME_MS,
-                              SECONDS_TO_MS(playTime));
-        LOG(LogLevel::Debug,
-            ("%p VIDEO_CLEARKEY_PLAY_TIME_MS = %f", this, playTime));
-      } else if (IsWidevineKeySystem(keySystem)) {
-        Telemetry::Accumulate(Telemetry::VIDEO_WIDEVINE_PLAY_TIME_MS,
-                              SECONDS_TO_MS(playTime));
-        LOG(LogLevel::Debug,
-            ("%p VIDEO_WIDEVINE_PLAY_TIME_MS = %f", this, playTime));
-      }
-    }
-
-    if (playTime > 0.0) {
-      // We have actually played something -> Report some valid-video telemetry.
-
-      // Keyed by audio+video or video alone, and by a resolution range.
-      nsCString key(mMediaInfo.HasAudio() ? "AV," : "V,");
-      static const struct {
-        int32_t mH;
-        const char* mRes;
-      } sResolutions[] = {{240, "0<h<=240"},     {480, "240<h<=480"},
-                          {576, "480<h<=576"},   {720, "576<h<=720"},
-                          {1080, "720<h<=1080"}, {2160, "1080<h<=2160"}};
-      const char* resolution = "h>2160";
-      int32_t height = mMediaInfo.mVideo.mImage.height;
-      for (const auto& res : sResolutions) {
-        if (height <= res.mH) {
-          resolution = res.mRes;
-          break;
-        }
-      }
-      key.AppendASCII(resolution);
-
-      uint32_t hiddenPercentage =
-          uint32_t(hiddenPlayTime / playTime * 100.0 + 0.5);
-      Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE, key,
-                            hiddenPercentage);
-      // Also accumulate all percentages in an "All" key.
-      Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE,
-                            "All"_ns, hiddenPercentage);
-      LOG(LogLevel::Debug,
-          ("%p VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE = %u, keys: '%s' and 'All'",
-           this, hiddenPercentage, key.get()));
-
-      uint32_t videoDecodeSuspendPercentage =
-          uint32_t(videoDecodeSuspendTime / playTime * 100.0 + 0.5);
-      Telemetry::Accumulate(Telemetry::VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE,
-                            key, videoDecodeSuspendPercentage);
-      Telemetry::Accumulate(Telemetry::VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE,
-                            "All"_ns, videoDecodeSuspendPercentage);
-      LOG(LogLevel::Debug,
-          ("%p VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE = %u, keys: '%s' and "
-           "'All'",
-           this, videoDecodeSuspendPercentage, key.get()));
-
-      if (data.mInterKeyframeCount != 0) {
-        uint32_t average_ms = uint32_t(std::min<uint64_t>(
-            double(data.mInterKeyframeSum_us) /
-                    double(data.mInterKeyframeCount) / 1000.0 +
-                0.5,
-            UINT32_MAX));
-        Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_AVERAGE_MS, key,
-                              average_ms);
-        Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_AVERAGE_MS,
-                              "All"_ns, average_ms);
-        LOG(LogLevel::Debug,
-            ("%p VIDEO_INTER_KEYFRAME_AVERAGE_MS = %u, keys: '%s' and 'All'",
-             this, average_ms, key.get()));
-
-        uint32_t max_ms = uint32_t(std::min<uint64_t>(
-            (data.mInterKeyFrameMax_us + 500) / 1000, UINT32_MAX));
-        Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS, key,
-                              max_ms);
-        Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS, "All"_ns,
-                              max_ms);
-        LOG(LogLevel::Debug,
-            ("%p VIDEO_INTER_KEYFRAME_MAX_MS = %u, keys: '%s' and 'All'", this,
-             max_ms, key.get()));
-      } else {
-        // Here, we have played *some* of the video, but didn't get more than 1
-        // keyframe. Report '0' if we have played for longer than the video-
-        // decode-suspend delay (showing recovery would be difficult).
-        uint32_t suspendDelay_ms =
-            StaticPrefs::media_suspend_bkgnd_video_delay_ms();
-        if (uint32_t(playTime * 1000.0) > suspendDelay_ms) {
-          Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS, key, 0);
-          Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS,
-                                "All"_ns, 0);
-          LOG(LogLevel::Debug,
-              ("%p VIDEO_INTER_KEYFRAME_MAX_MS = 0 (only 1 keyframe), keys: "
-               "'%s' and 'All'",
-               this, key.get()));
-        }
-      }
-    }
-  }
-}
-
 void HTMLMediaElement::UnbindFromTree(bool aNullParent) {
   mVisibilityState = Visibility::Untracked;
 
@@ -4938,7 +4760,7 @@ void HTMLMediaElement::UnbindFromTree(bool aNullParent) {
 
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
 
-  MOZ_ASSERT(IsHidden());
+  MOZ_ASSERT(IsActuallyInvisible());
   NotifyDecoderActivityChanges();
 
   // https://html.spec.whatwg.org/#playing-the-media-resource:remove-an-element-from-a-document
@@ -5036,7 +4858,7 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(
   AssertReadyStateIsNothing();
 
   MediaDecoderInit decoderInit(
-      this, mMuted ? 0.0 : mVolume, mPreservesPitch,
+      this, this, mMuted ? 0.0 : mVolume, mPreservesPitch,
       ClampPlaybackRate(mPlaybackRate),
       mPreloadAction == HTMLMediaElement::PRELOAD_METADATA, mHasSuspendTaint,
       HasAttr(kNameSpaceID_None, nsGkAtoms::loop), aOriginal->ContainerType());
@@ -5113,7 +4935,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(
   }
 
   MediaDecoderInit decoderInit(
-      this, mMuted ? 0.0 : mVolume, mPreservesPitch,
+      this, this, mMuted ? 0.0 : mVolume, mPreservesPitch,
       ClampPlaybackRate(mPlaybackRate),
       mPreloadAction == HTMLMediaElement::PRELOAD_METADATA, mHasSuspendTaint,
       HasAttr(kNameSpaceID_None, nsGkAtoms::loop), *containerType);
@@ -6219,13 +6041,31 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
   DispatchAsyncEvent(u"playing"_ns);
 }
 
-bool HTMLMediaElement::IsActive() const {
-  Document* ownerDoc = OwnerDoc();
-  return ownerDoc->IsActive() && ownerDoc->IsVisible();
+bool HTMLMediaElement::IsActuallyInvisible() const {
+  // That means an element is not connected. It probably hasn't connected to a
+  // document tree, or connects to a disconnected DOM tree.
+  if (!IsInComposedDoc()) {
+    return true;
+  }
+
+  // An element is not in user's view port, which means it's either existing in
+  // somewhere in the page where user hasn't seen yet, or is being set
+  // `display:none`.
+  if (!IsInViewPort()) {
+    return true;
+  }
+
+  // Element being used in picture-in-picture mode would be always visible.
+  if (IsBeingUsedInPictureInPictureMode()) {
+    return false;
+  }
+
+  // That check is the page is in the background.
+  return OwnerDoc()->Hidden();
 }
 
-bool HTMLMediaElement::IsHidden() const {
-  return !IsInComposedDoc() || OwnerDoc()->Hidden();
+bool HTMLMediaElement::IsInViewPort() const {
+  return mVisibilityState == Visibility::ApproximatelyVisible;
 }
 
 VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer() {
@@ -6341,22 +6181,6 @@ void HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName) {
   }
 
   mMainThreadEventTarget->Dispatch(event.forget());
-
-  if ((aName.EqualsLiteral("play") || aName.EqualsLiteral("playing"))) {
-    mPlayTime.Start();
-    mCurrentLoadPlayTime.Start();
-    if (IsHidden()) {
-      HiddenVideoStart();
-    }
-  } else if (aName.EqualsLiteral("waiting")) {
-    mPlayTime.Pause();
-    mCurrentLoadPlayTime.Pause();
-    HiddenVideoStop();
-  } else if (aName.EqualsLiteral("pause")) {
-    mPlayTime.Pause();
-    mCurrentLoadPlayTime.Pause();
-    HiddenVideoStop();
-  }
 }
 
 nsresult HTMLMediaElement::DispatchPendingMediaEvents() {
@@ -6481,8 +6305,9 @@ void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize) {
 }
 
 void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
-  LOG(LogLevel::Debug, ("%p SuspendOrResumeElement(suspend=%d) hidden=%d", this,
-                        aSuspendElement, OwnerDoc()->Hidden()));
+  LOG(LogLevel::Debug, ("%p SuspendOrResumeElement(suspend=%d) docHidden=%d",
+                        this, aSuspendElement, OwnerDoc()->Hidden()));
+
   if (aSuspendElement == mSuspendedByInactiveDocOrDocshell) {
     return;
   }
@@ -6492,9 +6317,6 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
   UpdateAudioChannelPlayingState();
 
   if (aSuspendElement) {
-    mCurrentLoadPlayTime.Pause();
-    ReportTelemetry();
-
     if (mDecoder) {
       mDecoder->Pause();
       mDecoder->Suspend();
@@ -6505,9 +6327,6 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
     ClearResumeDelayedMediaPlaybackAgentIfNeeded();
     mMediaControlKeyListener->StopIfNeeded();
   } else {
-    if (!mPaused) {
-      mCurrentLoadPlayTime.Start();
-    }
     if (mDecoder) {
       mDecoder->Resume();
       if (!mPaused && !mDecoder->IsEnded()) {
@@ -6552,15 +6371,6 @@ bool HTMLMediaElement::ShouldBeSuspendedByInactiveDocShell() const {
 }
 
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
-  bool visible = !IsHidden();
-  if (visible) {
-    // Visible -> Just pause hidden play time (no-op if already paused).
-    HiddenVideoStop();
-  } else if (mPlayTime.IsStarted()) {
-    // Not visible, play time is running -> Start hidden play time if needed.
-    HiddenVideoStart();
-  }
-
   if (mDecoder && !IsBeingDestroyed()) {
     NotifyDecoderActivityChanges();
   }
@@ -6568,7 +6378,8 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
   // We would suspend media when the document is inactive, or its docshell has
   // been set to hidden and explicitly wants to suspend media. In those cases,
   // the media would be not visible and we don't want them to continue playing.
-  bool shouldSuspend = !IsActive() || ShouldBeSuspendedByInactiveDocShell();
+  bool shouldSuspend =
+      !OwnerDoc()->IsActive() || ShouldBeSuspendedByInactiveDocShell();
   SuspendOrResumeElement(shouldSuspend);
 
   // If the owning document has become inactive we should shutdown the CDM.
@@ -6919,27 +6730,6 @@ void HTMLMediaElement::OnVisibilityChange(Visibility aNewVisibility) {
   if (!mDecoder) {
     return;
   }
-
-  switch (aNewVisibility) {
-    case Visibility::Untracked: {
-      MOZ_ASSERT_UNREACHABLE("Shouldn't notify for untracked visibility");
-      return;
-    }
-    case Visibility::ApproximatelyNonVisible: {
-      if (mPlayTime.IsStarted()) {
-        // Not visible, play time is running -> Start hidden play time if
-        // needed.
-        HiddenVideoStart();
-      }
-      break;
-    }
-    case Visibility::ApproximatelyVisible: {
-      // Visible -> Just pause hidden play time (no-op if already paused).
-      HiddenVideoStop();
-      break;
-    }
-  }
-
   NotifyDecoderActivityChanges();
 }
 
@@ -7339,9 +7129,19 @@ void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
     mAudioChannelWrapper->AudioCaptureTrackChangeIfNeeded();
   }
   UpdateWakeLock();
-  if (mMediaInfo.HasVideo() && mMediaInfo.mVideo.mImage.height > 0) {
-    mHadNonEmptyVideo = true;
+}
+
+MediaInfo HTMLMediaElement::GetMediaInfo() const { return mMediaInfo; }
+
+FrameStatistics* HTMLMediaElement::GetFrameStatistics() const {
+  return mDecoder ? &(mDecoder->GetFrameStatistics()) : nullptr;
+}
+
+void HTMLMediaElement::DispatchAsyncTestingEvent(const nsAString& aName) {
+  if (!StaticPrefs::media_testing_only_events()) {
+    return;
   }
+  DispatchAsyncEvent(aName);
 }
 
 void HTMLMediaElement::AudioCaptureTrackChange(bool aCapture) {
@@ -7498,7 +7298,7 @@ void HTMLMediaElement::GetEMEInfo(dom::EMEDebugInfo& aInfo) {
 
 void HTMLMediaElement::NotifyDecoderActivityChanges() const {
   if (mDecoder) {
-    mDecoder->NotifyOwnerActivityChanged(!IsHidden(), mVisibilityState,
+    mDecoder->NotifyOwnerActivityChanged(IsActuallyInvisible(),
                                          IsInComposedDoc());
   }
 }
@@ -7517,6 +7317,15 @@ bool HTMLMediaElement::IsAudible() const {
   }
 
   return mIsAudioTrackAudible;
+}
+
+Maybe<nsAutoString> HTMLMediaElement::GetKeySystem() const {
+  if (!mMediaKeys) {
+    return Nothing();
+  }
+  nsAutoString keySystem;
+  mMediaKeys->GetKeySystem(keySystem);
+  return Some(keySystem);
 }
 
 void HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo) {

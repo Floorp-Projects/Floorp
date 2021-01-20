@@ -9,18 +9,20 @@
 #include "CryptoTask.h"
 #include "EnterpriseRoots.h"
 #include "ExtendedValidation.h"
+#include "GeckoProfiler.h"
 #include "NSSCertDBTrustDomain.h"
+#include "SSLTokensCache.h"
 #include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
 #include "cert.h"
+#include "cert_storage/src/cert_storage.h"
 #include "certdb.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AppShutdown.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
-#include "mozilla/net/SocketProcessParent.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/PublicSSL.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
@@ -30,6 +32,8 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
+#include "mozilla/net/SocketProcessParent.h"
+#include "mozpkix/pkixnss.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsClientAuthRemember.h"
@@ -38,8 +42,8 @@
 #include "nsICertOverrideService.h"
 #include "nsIFile.h"
 #include "nsILocalFileWin.h"
-#include "nsIObserverService.h"
 #include "nsIOService.h"
+#include "nsIObserverService.h"
 #include "nsIPrompt.h"
 #include "nsIProperties.h"
 #include "nsISerialEventTarget.h"
@@ -60,19 +64,12 @@
 #include "nss.h"
 #include "p12plcy.h"
 #include "pk11pub.h"
-#include "mozpkix/pkixnss.h"
+#include "prmem.h"
 #include "secerr.h"
 #include "secmod.h"
 #include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
-#include "SSLTokensCache.h"
-#include "prmem.h"
-#include "GeckoProfiler.h"
-
-#ifdef MOZ_NEW_CERT_STORAGE
-#  include "cert_storage/src/cert_storage.h"
-#endif
 
 #if defined(XP_LINUX) && !defined(ANDROID)
 #  include <linux/magic.h>
@@ -1926,10 +1923,7 @@ nsresult nsNSSComponent::InitializeNSS() {
       do_GetService(NS_CLIENTAUTHREMEMBERSERVICE_CONTRACTID));
   nsCOMPtr<nsISiteSecurityService> siteSecurityService(
       do_GetService(NS_SSSERVICE_CONTRACTID));
-
-#ifdef MOZ_NEW_CERT_STORAGE
   nsCOMPtr<nsICertStorage> certStorage(do_GetService(NS_CERT_STORAGE_CID));
-#endif
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS Initialization done\n"));
 
@@ -2029,7 +2023,6 @@ void nsNSSComponent::ShutdownNSS() {
   // be any XPCOM objects holding NSS resources).
 }
 
-#ifdef MOZ_NEW_CERT_STORAGE
 // The aim of the intermediate preloading healer is to remove intermediates
 // that were previously cached by PSM in the NSS certdb that are now preloaded
 // in cert_storage. When cached by PSM, these certificates will have no
@@ -2177,7 +2170,6 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
       }));
   Unused << NS_DispatchToMainThread(runnable.forget());
 }
-#endif  // MOZ_NEW_CERT_STORAGE
 
 nsresult nsNSSComponent::Init() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -2216,7 +2208,6 @@ nsresult nsNSSComponent::Init() {
 }
 
 nsresult nsNSSComponent::MaybeEnableIntermediatePreloadingHealer() {
-#ifdef MOZ_NEW_CERT_STORAGE
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("nsNSSComponent::MaybeEnableIntermediatePreloadingHealer"));
   MOZ_ASSERT(NS_IsMainThread());
@@ -2257,8 +2248,6 @@ nsresult nsNSSComponent::MaybeEnableIntermediatePreloadingHealer() {
             ("NS_NewTimerWithFuncCallback failed"));
     return rv;
   }
-
-#endif  // MOZ_NEW_CERT_STORAGE
   return NS_OK;
 }
 

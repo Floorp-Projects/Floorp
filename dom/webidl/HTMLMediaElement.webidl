@@ -226,10 +226,19 @@ partial interface HTMLMediaElement {
   boolean hasSuspendTaint();
 
   [ChromeOnly]
-  readonly attribute boolean isVisible;
+  readonly attribute boolean isInViewPort;
 
   [ChromeOnly]
   readonly attribute boolean isVideoDecodingSuspended;
+
+  [ChromeOnly]
+  readonly attribute double totalPlayTime;
+
+  [ChromeOnly]
+  readonly attribute double invisiblePlayTime;
+
+  [ChromeOnly]
+  readonly attribute double videoDecodeSuspendedTime;
 };
 
 /* Audio Output Devices API */
