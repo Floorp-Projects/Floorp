@@ -57,14 +57,14 @@ class BrowserRobot {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
-        mDevice.waitNotNull(
-                Until.findObject(By.res("$packageName:id/mozac_browser_toolbar_url_view")),
-                waitingTime
-        )
-
         runWithIdleRes(sessionLoadedIdlingResource) {
-            onView(withId(R.id.mozac_browser_toolbar_url_view))
-                .check(matches(withText(containsString(url.replace("http://", "")))))
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .resourceId("$packageName:id/mozac_browser_toolbar_url_view")
+                        .textContains(url.replace("http://", ""))
+                ).waitForExists(waitingTime)
+            )
         }
     }
 
@@ -297,6 +297,8 @@ class BrowserRobot {
     fun createBookmark(url: Uri) {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(url) {
+            // needs to wait for the right url to load before saving a bookmark
+            verifyUrl(url.toString())
         }.openThreeDotMenu {
             clickAddBookmarkButton()
         }

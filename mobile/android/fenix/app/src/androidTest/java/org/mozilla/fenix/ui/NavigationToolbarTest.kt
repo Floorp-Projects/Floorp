@@ -58,9 +58,9 @@ class NavigationToolbarTest {
             mDevice.waitForIdle()
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(nextWebPage.url) {
-            mDevice.waitForIdle()
             verifyUrl(nextWebPage.url.toString())
-            mDevice.pressBack()
+        }.openThreeDotMenu {
+        }.goBack {
             mDevice.waitForIdle()
             verifyUrl(defaultWebPage.url.toString())
         }
