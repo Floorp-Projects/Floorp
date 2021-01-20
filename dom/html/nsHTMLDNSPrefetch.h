@@ -8,7 +8,6 @@
 #define nsHTMLDNSPrefetch_h___
 
 #include "nsCOMPtr.h"
-#include "nsIDNSListener.h"
 #include "nsIObserver.h"
 #include "nsIRequest.h"
 #include "nsIWebProgressListener.h"
@@ -84,18 +83,6 @@ class nsHTMLDNSPrefetch {
       uint32_t flags, nsresult aReason);
 
  public:
-  class nsListener final : public nsIDNSListener {
-    // This class exists to give a safe callback no-op DNSListener
-   public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIDNSLISTENER
-
-    nsListener() = default;
-
-   private:
-    ~nsListener() = default;
-  };
-
   class nsDeferrals final : public nsIWebProgressListener,
                             public nsSupportsWeakReference,
                             public nsIObserver {
