@@ -1318,6 +1318,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Adds(scratch32, scratch32, Operand(imm.value));
     Str(scratch32, toMemOperand(dest));
   }
+  void adds64(Imm32 imm, Register dest) {
+    Adds(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+  }
   void adds64(Register src, Register dest) {
     Adds(ARMRegister(dest, 64), ARMRegister(dest, 64),
          Operand(ARMRegister(src, 64)));
@@ -1329,6 +1332,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void subs32(Register src, Register dest) {
     Subs(ARMRegister(dest, 32), ARMRegister(dest, 32),
          Operand(ARMRegister(src, 32)));
+  }
+  void subs64(Imm32 imm, Register dest) {
+    Subs(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
   }
   void subs64(Register src, Register dest) {
     Subs(ARMRegister(dest, 64), ARMRegister(dest, 64),
