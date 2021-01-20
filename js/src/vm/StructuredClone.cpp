@@ -2228,6 +2228,16 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
       return false;
     }
   }
+
+  // Ensure invalid 64-bit values won't be truncated below.
+  if (nelems > ArrayBufferObject::maxBufferByteLength() ||
+      byteOffset > ArrayBufferObject::maxBufferByteLength()) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "invalid typed array length or offset");
+    return false;
+  }
+
   if (!v.isObject() || !v.toObject().is<ArrayBufferObjectMaybeShared>()) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
@@ -2237,10 +2247,6 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
 
   RootedObject buffer(context(), &v.toObject());
   RootedObject obj(context(), nullptr);
-
-  // The length must be valid because we checked the ArrayBuffer length already.
-  uint64_t byteLength = nelems * Scalar::byteSize(Scalar::Type(arrayType));
-  MOZ_RELEASE_ASSERT(byteLength <= TypedArrayObject::maxByteLength());
 
   switch (arrayType) {
     case Scalar::Int8:
@@ -2317,6 +2323,15 @@ bool JSStructuredCloneReader::readDataView(uint64_t byteLength,
   // Read byteOffset.
   uint64_t byteOffset;
   if (!in.read(&byteOffset)) {
+    return false;
+  }
+
+  // Ensure invalid 64-bit values won't be truncated below.
+  if (byteLength > ArrayBufferObject::maxBufferByteLength() ||
+      byteOffset > ArrayBufferObject::maxBufferByteLength()) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "invalid DataView length or offset");
     return false;
   }
 
