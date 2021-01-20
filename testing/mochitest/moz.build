@@ -83,7 +83,6 @@ MOCHITEST_CHROME_MANIFESTS += [
 BROWSER_CHROME_MANIFESTS += ["baselinecoverage/browser_chrome/browser.ini"]
 
 TEST_HARNESS_FILES.testing.mochitest += [
-    "/build/mobile/remoteautomation.py",
     "/build/pgo/server-locations.txt",
     "/build/valgrind/cross-architecture.sup",
     "/build/valgrind/i386-pc-linux-gnu.sup",

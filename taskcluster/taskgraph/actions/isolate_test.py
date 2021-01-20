@@ -45,7 +45,7 @@ def get_failures(task_id):
         re.compile(r"leakcheck"),
         re.compile(r"mozrunner-startup"),
         re.compile(r"pid: "),
-        re.compile(r"remoteautomation.py"),
+        re.compile(r"RemoteProcessMonitor"),
         re.compile(r"unknown test url"),
     ]
     re_extract_tests = [

@@ -159,6 +159,7 @@ from __future__ import absolute_import
 from .adb import ADBError, ADBProcessError, ADBTimeoutError
 from .adb import ADBProcess, ADBCommand, ADBHost, ADBDevice, ADBDeviceFactory
 from .adb_android import ADBAndroid
+from .remote_process_monitor import RemoteProcessMonitor
 
 __all__ = [
     "ADBError",
@@ -170,4 +171,5 @@ __all__ = [
     "ADBDevice",
     "ADBAndroid",
     "ADBDeviceFactory",
+    "RemoteProcessMonitor",
 ]

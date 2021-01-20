@@ -3,19 +3,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+import datetime
 import os
 import posixpath
+import shutil
 import sys
+import tempfile
 import traceback
 import uuid
 
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(__file__))))
 
-from remoteautomation import RemoteAutomation, fennecLogcatFilters
 from runtests import MochitestDesktop, MessageLogger
 from mochitest_options import MochitestArgumentParser, build_obj
-from mozdevice import ADBDeviceFactory, ADBTimeoutError
+from mozdevice import ADBDeviceFactory, ADBTimeoutError, RemoteProcessMonitor
 from mozscreenshot import dump_screen, dump_device_screen
+import mozcrash
 import mozinfo
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -64,18 +67,8 @@ class MochiRemote(MochitestDesktop):
         self.remoteProfile = posixpath.join(options.remoteTestRoot, "profile")
         self.device.rm(self.remoteProfile, force=True, recursive=True)
 
-        self.counts = dict()
         self.message_logger = MessageLogger(logger=None)
         self.message_logger.logger = self.log
-        process_args = {"messageLogger": self.message_logger, "counts": self.counts}
-        self.automation = RemoteAutomation(
-            self.device,
-            options.remoteappname,
-            self.remoteProfile,
-            self.remoteLogFile,
-            processArgs=process_args,
-        )
-        self.environment = self.automation.environment
 
         # Check that Firefox is installed
         expected = options.app.split("/")[-1]
@@ -102,10 +95,10 @@ class MochiRemote(MochitestDesktop):
         self.device.rm(self.remoteChromeTestDir, force=True, recursive=True)
         self.device.mkdir(self.remoteChromeTestDir, parents=True)
 
-        procName = options.app.split("/")[-1]
-        self.device.stop_application(procName)
-        if self.device.process_exist(procName):
-            self.log.warning("unable to kill %s before running tests!" % procName)
+        self.appName = options.remoteappname
+        self.device.stop_application(self.appName)
+        if self.device.process_exist(self.appName):
+            self.log.warning("unable to kill %s before running tests!" % self.appName)
 
         # Add Android version (SDK level) to mozinfo so that manifest entries
         # can be conditional on android_version.
@@ -193,7 +186,7 @@ class MochiRemote(MochitestDesktop):
             sys.exit(1)
 
         xpcshell_path = os.path.join(options.utilityPath, xpcshell)
-        if RemoteAutomation.elf_arm(xpcshell_path):
+        if RemoteProcessMonitor.elf_arm(xpcshell_path):
             self.log.error(
                 "xpcshell at %s is an ARM binary; please use "
                 "the --utility-path argument to specify the path "
@@ -278,7 +271,7 @@ class MochiRemote(MochitestDesktop):
     def printDeviceInfo(self, printLogcat=False):
         try:
             if printLogcat:
-                logcat = self.device.get_logcat(filter_out_regexps=fennecLogcatFilters)
+                logcat = self.device.get_logcat()
                 for l in logcat:
                     ul = l.decode("utf-8", errors="replace")
                     sl = ul.encode("iso8859-1", errors="replace")
@@ -302,6 +295,38 @@ class MochiRemote(MochitestDesktop):
         # TODO: bug 1149374
         return None
 
+    def environment(self, env=None, crashreporter=True, **kwargs):
+        # Since running remote, do not mimic the local env: do not copy os.environ
+        if env is None:
+            env = {}
+
+        if crashreporter:
+            env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
+            env["MOZ_CRASHREPORTER"] = "1"
+            env["MOZ_CRASHREPORTER_SHUTDOWN"] = "1"
+        else:
+            env["MOZ_CRASHREPORTER_DISABLE"] = "1"
+
+        # Crash on non-local network connections by default.
+        # MOZ_DISABLE_NONLOCAL_CONNECTIONS can be set to "0" to temporarily
+        # enable non-local connections for the purposes of local testing.
+        # Don't override the user's choice here.  See bug 1049688.
+        env.setdefault("MOZ_DISABLE_NONLOCAL_CONNECTIONS", "1")
+
+        # Send an env var noting that we are in automation. Passing any
+        # value except the empty string will declare the value to exist.
+        #
+        # This may be used to disabled network connections during testing, e.g.
+        # Switchboard & telemetry uploads.
+        env.setdefault("MOZ_IN_AUTOMATION", "1")
+
+        # Set WebRTC logging in case it is not set yet.
+        env.setdefault("R_LOG_LEVEL", "6")
+        env.setdefault("R_LOG_DESTINATION", "stderr")
+        env.setdefault("R_LOG_VERBOSE", "1")
+
+        return env
+
     def buildBrowserEnv(self, options, debugger=False):
         browserEnv = MochitestDesktop.buildBrowserEnv(self, options, debugger=debugger)
         # remove desktop environment not used on device
@@ -320,23 +345,93 @@ class MochiRemote(MochitestDesktop):
         browserEnv["MOZ_UPLOAD_DIR"] = self.remoteMozLog
         return browserEnv
 
-    def runApp(self, *args, **kwargs):
-        """front-end automation's `runApp` functionality until FennecRunner is written"""
+    def runApp(
+        self,
+        testUrl,
+        env,
+        app,
+        profile,
+        extraArgs,
+        utilityPath,
+        debuggerInfo=None,
+        valgrindPath=None,
+        valgrindArgs=None,
+        valgrindSuppFiles=None,
+        symbolsPath=None,
+        timeout=-1,
+        detectShutdownLeaks=False,
+        screenshotOnFail=False,
+        bisectChunk=None,
+        marionette_args=None,
+        e10s=True,
+    ):
+        """
+        Run the app, log the duration it took to execute, return the status code.
+        Kill the app if it outputs nothing for |timeout| seconds.
+        """
 
-        # remoteautomation `runApp` takes the profile path,
-        # whereas runtest.py's `runApp` takes a mozprofile object.
-        if "profileDir" not in kwargs and "profile" in kwargs:
-            kwargs["profileDir"] = kwargs.pop("profile").profile
+        if timeout == -1:
+            timeout = self.DEFAULT_TIMEOUT
 
-        # remove args not supported by automation
-        kwargs.pop("marionette_args", None)
+        rpm = RemoteProcessMonitor(
+            self.appName,
+            self.device,
+            self.log,
+            self.message_logger,
+            self.remoteLogFile,
+            self.remoteProfile,
+        )
+        startTime = datetime.datetime.now()
+        status = 0
+        profileDirectory = self.remoteProfile + "/"
+        extraArgs.extend(("-no-remote", "-profile", profileDirectory))
 
-        ret, _ = self.automation.runApp(*args, **kwargs)
-        self.countpass += self.counts["pass"]
-        self.countfail += self.counts["fail"]
-        self.counttodo += self.counts["todo"]
+        pid = rpm.launch(
+            app,
+            debuggerInfo,
+            testUrl,
+            extraArgs,
+            env=self.environment(env=env, crashreporter=not debuggerInfo),
+            e10s=e10s,
+        )
+        self.log.info("runtestsremote.py | Application pid: %d" % pid)
+        if not rpm.wait(timeout):
+            status = 1
+        self.log.info(
+            "runtestsremote.py | Application ran for: %s"
+            % str(datetime.datetime.now() - startTime)
+        )
+        crashed = self.check_for_crashes(symbolsPath, rpm.last_test_seen)
+        if crashed:
+            status = 1
 
-        return ret, None
+        self.countpass += rpm.counts["pass"]
+        self.countfail += rpm.counts["fail"]
+        self.counttodo += rpm.counts["todo"]
+
+        return status, rpm.last_test_seen
+
+    def check_for_crashes(self, symbols_path, last_test_seen):
+        """
+        Pull any minidumps from remote profile and log any associated crashes.
+        """
+        try:
+            dump_dir = tempfile.mkdtemp()
+            remote_crash_dir = posixpath.join(self.remoteProfile, "minidumps")
+            if not self.device.is_dir(remote_crash_dir):
+                return False
+            self.device.pull(remote_crash_dir, dump_dir)
+            crashed = mozcrash.log_crashes(
+                self.log, dump_dir, symbols_path, test=last_test_seen
+            )
+        finally:
+            try:
+                shutil.rmtree(dump_dir)
+            except Exception as e:
+                self.log.warning(
+                    "unable to remove directory %s: %s" % (dump_dir, str(e))
+                )
+        return crashed
 
 
 def run_test_harness(parser, options):
@@ -348,10 +443,6 @@ def run_test_harness(parser, options):
         )
 
     options.runByManifest = True
-    # roboextender is used by mochitest-chrome tests like test_java_addons.html,
-    # but not by any plain mochitests
-    if options.flavor != "chrome":
-        options.extensionsToExclude.append("roboextender@mozilla.org")
 
     mochitest = MochiRemote(options)
 

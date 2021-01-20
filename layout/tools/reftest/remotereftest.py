@@ -4,8 +4,10 @@
 
 from __future__ import absolute_import, print_function
 
+import datetime
 import os
 import posixpath
+import shutil
 import signal
 import subprocess
 import sys
@@ -16,8 +18,8 @@ from contextlib import closing
 
 from six.moves.urllib_request import urlopen
 
-from mozdevice import ADBDeviceFactory, ADBTimeoutError
-from remoteautomation import RemoteAutomation, fennecLogcatFilters
+from mozdevice import ADBDeviceFactory, ADBTimeoutError, RemoteProcessMonitor
+import mozcrash
 
 from output import OutputHandler
 from runreftest import RefTest, ReftestResolver, build_obj
@@ -123,7 +125,7 @@ class ReftestServer:
 
         if not os.access(xpcshell, os.F_OK):
             raise Exception("xpcshell not found at %s" % xpcshell)
-        if RemoteAutomation.elf_arm(xpcshell):
+        if RemoteProcessMonitor.elf_arm(xpcshell):
             raise Exception(
                 "xpcshell at %s is an ARM binary; please use "
                 "the --utility-path argument to specify the path "
@@ -221,19 +223,7 @@ class RemoteReftest(RefTest):
         self.outputHandler = OutputHandler(
             self.log, options.utilityPath, options.symbolsPath
         )
-        # RemoteAutomation.py's 'messageLogger' is also used by mochitest. Mimic a mochitest
-        # MessageLogger object to re-use this code path.
-        self.outputHandler.write = self.outputHandler.__call__
-        args = {"messageLogger": self.outputHandler}
-        self.automation = RemoteAutomation(
-            self.device,
-            appName=options.app,
-            remoteProfile=self.remoteProfile,
-            remoteLog=options.remoteLogFile,
-            processArgs=args,
-        )
 
-        self.environment = self.automation.environment
         self.SERVER_STARTUP_TIMEOUT = 90
 
         self.remoteCache = os.path.join(options.remoteTestRoot, "cache/")
@@ -379,7 +369,7 @@ class RemoteReftest(RefTest):
     def printDeviceInfo(self, printLogcat=False):
         try:
             if printLogcat:
-                logcat = self.device.get_logcat(filter_out_regexps=fennecLogcatFilters)
+                logcat = self.device.get_logcat()
                 for l in logcat:
                     ul = l.decode("utf-8", errors="replace")
                     sl = ul.encode("iso8859-1", errors="replace")
@@ -399,8 +389,37 @@ class RemoteReftest(RefTest):
         except Exception as e:
             print("WARNING: Error getting device information: %s" % str(e))
 
-    def environment(self, **kwargs):
-        return self.automation.environment(**kwargs)
+    def environment(self, env=None, crashreporter=True, **kwargs):
+        # Since running remote, do not mimic the local env: do not copy os.environ
+        if env is None:
+            env = {}
+
+        if crashreporter:
+            env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
+            env["MOZ_CRASHREPORTER"] = "1"
+            env["MOZ_CRASHREPORTER_SHUTDOWN"] = "1"
+        else:
+            env["MOZ_CRASHREPORTER_DISABLE"] = "1"
+
+        # Crash on non-local network connections by default.
+        # MOZ_DISABLE_NONLOCAL_CONNECTIONS can be set to "0" to temporarily
+        # enable non-local connections for the purposes of local testing.
+        # Don't override the user's choice here.  See bug 1049688.
+        env.setdefault("MOZ_DISABLE_NONLOCAL_CONNECTIONS", "1")
+
+        # Send an env var noting that we are in automation. Passing any
+        # value except the empty string will declare the value to exist.
+        #
+        # This may be used to disabled network connections during testing, e.g.
+        # Switchboard & telemetry uploads.
+        env.setdefault("MOZ_IN_AUTOMATION", "1")
+
+        # Set WebRTC logging in case it is not set yet.
+        env.setdefault("R_LOG_LEVEL", "6")
+        env.setdefault("R_LOG_DESTINATION", "stderr")
+        env.setdefault("R_LOG_VERBOSE", "1")
+
+        return env
 
     def buildBrowserEnv(self, options, profileDir):
         browserEnv = RefTest.buildBrowserEnv(self, options, profileDir)
@@ -435,22 +454,63 @@ class RemoteReftest(RefTest):
 
         self.log.info("Running with e10s: {}".format(options.e10s))
         self.log.info("Running with fission: {}".format(options.fission))
-        status, self.lastTestSeen = self.automation.runApp(
-            None,
-            env,
+
+        rpm = RemoteProcessMonitor(
             binary,
-            profile.profile,
+            self.device,
+            self.log,
+            self.outputHandler,
+            options.remoteLogFile,
+            self.remoteProfile,
+        )
+        startTime = datetime.datetime.now()
+        status = 0
+        profileDirectory = self.remoteProfile + "/"
+        cmdargs.extend(("-no-remote", "-profile", profileDirectory))
+
+        pid = rpm.launch(
+            binary,
+            debuggerInfo,
+            None,
             cmdargs,
-            utilityPath=options.utilityPath,
-            xrePath=options.xrePath,
-            debuggerInfo=debuggerInfo,
-            symbolsPath=symbolsPath,
-            timeout=timeout,
+            env=env,
             e10s=options.e10s,
         )
+        self.log.info("remotereftest.py | Application pid: %d" % pid)
+        if not rpm.wait(timeout):
+            status = 1
+        self.log.info(
+            "remotereftest.py | Application ran for: %s"
+            % str(datetime.datetime.now() - startTime)
+        )
+        crashed = self.check_for_crashes(symbolsPath, rpm.last_test_seen)
+        if crashed:
+            status = 1
 
         self.cleanup(profile.profile)
         return status
+
+    def check_for_crashes(self, symbols_path, last_test_seen):
+        """
+        Pull any minidumps from remote profile and log any associated crashes.
+        """
+        try:
+            dump_dir = tempfile.mkdtemp()
+            remote_crash_dir = posixpath.join(self.remoteProfile, "minidumps")
+            if not self.device.is_dir(remote_crash_dir):
+                return False
+            self.device.pull(remote_crash_dir, dump_dir)
+            crashed = mozcrash.log_crashes(
+                self.log, dump_dir, symbols_path, test=last_test_seen
+            )
+        finally:
+            try:
+                shutil.rmtree(dump_dir)
+            except Exception as e:
+                self.log.warning(
+                    "unable to remove directory %s: %s" % (dump_dir, str(e))
+                )
+        return crashed
 
     def cleanup(self, profileDir):
         self.device.rm(self.remoteTestRoot, force=True, recursive=True)
