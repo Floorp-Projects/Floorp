@@ -9436,7 +9436,7 @@
 
 - name: privacy.window.name.update.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # By default, the network state isolation is not active when there is a proxy
