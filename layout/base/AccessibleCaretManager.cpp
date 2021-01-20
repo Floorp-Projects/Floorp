@@ -834,8 +834,9 @@ nsAutoString AccessibleCaretManager::StringifiedSelection() const {
   return str;
 }
 
+// static
 Element* AccessibleCaretManager::GetEditingHostForFrame(
-    nsIFrame* aFrame) const {
+    const nsIFrame* aFrame) {
   if (!aFrame) {
     return nullptr;
   }
