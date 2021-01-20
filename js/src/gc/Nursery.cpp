@@ -63,8 +63,8 @@ struct alignas(gc::CellAlignBytes) js::Nursery::Canary {
 
 namespace js {
 struct NurseryChunk {
+  gc::ChunkHeader header;
   char data[Nursery::NurseryChunkUsableSize];
-  gc::ChunkTrailer trailer;
   static NurseryChunk* fromChunk(gc::Chunk* chunk);
   void poisonAndInit(JSRuntime* rt, size_t size = ChunkSize);
   void poisonRange(size_t from, size_t size, uint8_t value,
@@ -77,7 +77,7 @@ struct NurseryChunk {
   MOZ_MUST_USE bool markPagesInUseHard(size_t to);
 
   uintptr_t start() const { return uintptr_t(&data); }
-  uintptr_t end() const { return uintptr_t(&trailer); }
+  uintptr_t end() const { return uintptr_t(this) + ChunkSize; }
   gc::Chunk* toChunk(GCRuntime* gc);
 };
 static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
@@ -86,15 +86,15 @@ static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
 }  // namespace js
 
 inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t size) {
+  MOZ_ASSERT(size >= sizeof(header));
+  MOZ_ASSERT(size <= ChunkSize);
   poisonRange(0, size, JS_FRESH_NURSERY_PATTERN, MemCheckKind::MakeUndefined);
-  MOZ_MAKE_MEM_UNDEFINED(&trailer, sizeof(trailer));
-  new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
+  new (&header) gc::ChunkHeader(rt, &rt->gc.storeBuffer());
 }
 
 inline void js::NurseryChunk::poisonRange(size_t from, size_t size,
                                           uint8_t value,
                                           MemCheckKind checkKind) {
-  MOZ_ASSERT(from <= js::Nursery::NurseryChunkUsableSize);
   MOZ_ASSERT(from + size <= ChunkSize);
 
   auto* start = reinterpret_cast<uint8_t*>(this) + from;
@@ -107,18 +107,21 @@ inline void js::NurseryChunk::poisonRange(size_t from, size_t size,
 
 inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
   MOZ_ASSERT(extent <= ChunkSize);
-  poisonRange(0, extent, JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
+  poisonRange(sizeof(header), extent - sizeof(header), JS_SWEPT_NURSERY_PATTERN,
+              MemCheckKind::MakeNoAccess);
 }
 
 inline void js::NurseryChunk::markPagesUnusedHard(size_t from) {
-  MOZ_ASSERT(from < ChunkSize - ArenaSize);
-  MarkPagesUnusedHard(reinterpret_cast<void*>(start() + from),
-                      ChunkSize - ArenaSize - from);
+  MOZ_ASSERT(from >= sizeof(ChunkHeader));  // Don't touch the header.
+  MOZ_ASSERT(from <= ChunkSize);
+  uintptr_t start = uintptr_t(this) + from;
+  MarkPagesUnusedHard(reinterpret_cast<void*>(start), ChunkSize - from);
 }
 
 inline bool js::NurseryChunk::markPagesInUseHard(size_t to) {
-  MOZ_ASSERT(to <= ChunkSize - ArenaSize);
-  return MarkPagesInUseHard(reinterpret_cast<void*>(start()), to);
+  MOZ_ASSERT(to >= sizeof(ChunkHeader));
+  MOZ_ASSERT(to <= ChunkSize);
+  return MarkPagesInUseHard(this, to);
 }
 
 // static
@@ -399,7 +402,7 @@ void js::Nursery::enterZealMode() {
 
       // It'd be simpler to poison the whole chunk, but we can't do that
       // because the nursery might be partially used.
-      chunk(0).poisonRange(capacity_, NurseryChunkUsableSize - capacity_,
+      chunk(0).poisonRange(capacity_, ChunkSize - capacity_,
                            JS_FRESH_NURSERY_PATTERN,
                            MemCheckKind::MakeUndefined);
     }
@@ -1480,7 +1483,6 @@ void js::Nursery::poisonAndInitCurrentChunk(size_t extent) {
     chunk(currentChunk_).poisonAndInit(runtime());
   } else {
     extent = std::min(capacity_, extent);
-    MOZ_ASSERT(extent <= NurseryChunkUsableSize);
     chunk(currentChunk_).poisonAndInit(runtime(), extent);
   }
 }
@@ -1488,8 +1490,8 @@ void js::Nursery::poisonAndInitCurrentChunk(size_t extent) {
 MOZ_ALWAYS_INLINE void js::Nursery::setCurrentEnd() {
   MOZ_ASSERT_IF(isSubChunkMode(),
                 currentChunk_ == 0 && currentEnd_ <= chunk(0).end());
-  currentEnd_ = chunk(currentChunk_).start() +
-                std::min({capacity_, NurseryChunkUsableSize});
+  currentEnd_ =
+      uintptr_t(&chunk(currentChunk_)) + std::min(capacity_, ChunkSize);
   if (canAllocateStrings_) {
     currentStringEnd_ = currentEnd_;
   }
@@ -1653,8 +1655,8 @@ void js::Nursery::clearRecentGrowthData() {
 
 /* static */
 size_t js::Nursery::roundSize(size_t size) {
-  static_assert(SubChunkStep > gc::ChunkTrailerSize,
-                "Don't allow the nursery to overwrite the trailer when using "
+  static_assert(SubChunkStep > sizeof(gc::ChunkHeader),
+                "Don't allow the nursery to overwrite the header when using "
                 "less than a chunk");
 
   size_t step = size >= ChunkSize ? ChunkSize : SubChunkStep;
@@ -1677,20 +1679,16 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
     MOZ_ASSERT(currentChunk_ == 0);
 
     // The remainder of the chunk may have been decommitted.
-    if (!chunk(0).markPagesInUseHard(
-            std::min(newCapacity, ChunkSize - ArenaSize))) {
+    if (!chunk(0).markPagesInUseHard(std::min(newCapacity, ChunkSize))) {
       // The OS won't give us the memory we need, we can't grow.
       return;
     }
 
     // The capacity has changed and since we were in sub-chunk mode we need to
-    // update the poison values / asan infomation for the now-valid region of
+    // update the poison values / asan information for the now-valid region of
     // this chunk.
-    size_t poisonSize =
-        std::min({newCapacity, NurseryChunkUsableSize}) - capacity();
-    // Don't poison the trailer.
-    MOZ_ASSERT(capacity() + poisonSize <= NurseryChunkUsableSize);
-    chunk(0).poisonRange(capacity(), poisonSize, JS_FRESH_NURSERY_PATTERN,
+    size_t size = std::min(newCapacity, ChunkSize) - capacity();
+    chunk(0).poisonRange(capacity(), size, JS_FRESH_NURSERY_PATTERN,
                          MemCheckKind::MakeUndefined);
   }
 
@@ -1710,7 +1708,7 @@ void js::Nursery::freeChunksFrom(const unsigned firstFreeChunk) {
     // Part of the first chunk may be hard-decommitted, un-decommit it so that
     // the GC's normal chunk-handling doesn't segfault.
     MOZ_ASSERT(currentChunk_ == 0);
-    if (!chunk(0).markPagesInUseHard(ChunkSize - ArenaSize)) {
+    if (!chunk(0).markPagesInUseHard(ChunkSize)) {
       // Free the chunk if we can't allocate its pages.
       UnmapPages(static_cast<void*>(&chunk(0)), ChunkSize);
       firstChunkToDecommit = 1;
@@ -1757,10 +1755,9 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 
   if (isSubChunkMode()) {
     MOZ_ASSERT(currentChunk_ == 0);
-    chunk(0).poisonRange(
-        newCapacity,
-        std::min({oldCapacity, NurseryChunkUsableSize}) - newCapacity,
-        JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
+    size_t size = std::min(oldCapacity, ChunkSize) - newCapacity;
+    chunk(0).poisonRange(newCapacity, size, JS_SWEPT_NURSERY_PATTERN,
+                         MemCheckKind::MakeNoAccess);
 
     AutoLockHelperThreadState lock;
     decommitTask.queueRange(capacity_, chunk(0), lock);

@@ -1355,7 +1355,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
   // Given a pointer to a GC Cell, retrieve the StoreBuffer pointer from its
-  // chunk trailer, or nullptr if it is in the tenured heap.
+  // chunk header, or nullptr if it is in the tenured heap.
   void loadStoreBuffer(Register ptr, Register buffer) PER_ARCH;
 
   void branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp,
