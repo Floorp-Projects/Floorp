@@ -155,9 +155,6 @@ export class _Search extends React.PureComponent {
               maxLength="256"
               ref={this.onInputMount}
               type="search"
-              className={`${
-                isNewNewtabExperienceEnabled ? " search-bar-new" : ""
-              }`}
             />
             <button
               id="searchSubmit"
@@ -170,9 +167,7 @@ export class _Search extends React.PureComponent {
         {this.props.handoffEnabled && (
           <div className="search-inner-wrapper">
             <button
-              className={`search-handoff-button ${
-                isNewNewtabExperienceEnabled ? " search-handoff-button-new" : ""
-              }`}
+              className="search-handoff-button"
               data-l10n-id={
                 isNewNewtabExperienceEnabled
                   ? "newtab-search-box-input"

@@ -102,8 +102,7 @@ body {
   --customize-menu-line-color: #716F87;
   --newtab-search-first-shadow: rgba(9, 32, 77, 0.12);
   --newtab-search-second-shadow: rgba(29, 17, 51, 0.12);
-  --newtab-search-text-color: #585165;
-  --newtab-search-new-border-color: #E1E0E6; }
+  --newtab-search-text-color: #585165; }
   body[lwt-newtab-brighttext] {
     --newtab-background-color: #2A2A2E;
     --newtab-border-primary-color: rgba(249, 249, 250, 0.8);
@@ -179,8 +178,7 @@ body {
     --customize-menu-line-color: #B9B7CC;
     --newtab-search-first-shadow: rgba(21, 20, 26, 0.5);
     --newtab-search-second-shadow: rgba(21, 20, 26, 0.75);
-    --newtab-search-text-color: #B1B1BD;
-    --newtab-search-new-border-color: #38383D; }
+    --newtab-search-text-color: #B1B1BD; }
 
 .icon {
   background-position: center center;
@@ -1253,6 +1251,29 @@ main {
 
 .outer-wrapper.newtab-experience .search-wrapper {
   padding-bottom: 38px; }
+  .outer-wrapper.newtab-experience .search-wrapper input {
+    box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
+    border: 0;
+    border-radius: 8px;
+    color: var(--newtab-search-text-color);
+    font-weight: 500;
+    font-size: 15px; }
+  .outer-wrapper.newtab-experience .search-wrapper input:focus {
+    border: 1px solid var(--newtab-focus-border);
+    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
+  .outer-wrapper.newtab-experience .search-wrapper .search-inner-wrapper {
+    min-height: 52px; }
+
+.outer-wrapper.newtab-experience .search-handoff-button {
+  box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
+  border: 0;
+  border-radius: 8px;
+  color: var(--newtab-search-text-color);
+  font-weight: 500;
+  font-size: 15px; }
+  .fake-focus .outer-wrapper.newtab-experience .search-handoff-button {
+    border: 1px solid var(--newtab-focus-border);
+    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
 
 .search-wrapper {
   padding: 34px 0 64px; }
@@ -1324,23 +1345,12 @@ main {
     width: 100%; }
     .search-wrapper input:dir(rtl) {
       background-position-x: right 12px; }
-    .search-wrapper input.search-bar-new {
-      box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
-      border: solid 1px var(--newtab-search-new-border-color);
-      border-radius: 8px;
-      color: var(--newtab-search-text-color);
-      font-weight: 500;
-      font-size: 15px; }
   .search-wrapper:hover input {
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.25); }
   .search-wrapper .search-inner-wrapper:active input,
   .search-wrapper input:focus {
     border: 1px solid var(--newtab-textbox-focus-color);
     box-shadow: var(--newtab-textbox-focus-boxshadow); }
-    .search-wrapper .search-inner-wrapper:active input.search-bar-new,
-    .search-wrapper input:focus.search-bar-new {
-      border: 1px solid var(--newtab-focus-border);
-      box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
   .search-wrapper .search-button {
     background: url("chrome://browser/skin/forward.svg") no-repeat center center;
     background-size: 16px 16px;
@@ -1366,8 +1376,6 @@ main {
 @media (max-height: 700px) {
   .search-wrapper {
     padding: 0 0 30px; }
-  .outer-wrapper.newtab-experience .search-wrapper {
-    padding-bottom: 38px; }
   .non-collapsible-section + .below-search-snippet-wrapper {
     margin-top: -14px; }
   .below-search-snippet-wrapper {
@@ -1387,16 +1395,6 @@ main {
   opacity: 1;
   transition: opacity 500ms;
   width: 100%; }
-  .search-handoff-button.search-handoff-button-new {
-    box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
-    border: solid 1px var(--newtab-search-new-border-color);
-    border-radius: 8px;
-    color: var(--newtab-search-text-color);
-    font-weight: 500;
-    font-size: 15px; }
-    .fake-focus .search-handoff-button.search-handoff-button-new {
-      border: 1px solid var(--newtab-focus-border);
-      box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
   .search-handoff-button:dir(rtl) {
     background-position-x: right 12px; }
   .search-handoff-button:hover {
