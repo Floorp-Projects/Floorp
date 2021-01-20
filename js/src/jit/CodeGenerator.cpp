@@ -13593,10 +13593,15 @@ void CodeGenerator::visitGuardToClass(LGuardToClass* ins) {
 }
 
 void CodeGenerator::visitObjectClassToString(LObjectClassToString* lir) {
-  pushArg(ToRegister(lir->object()));
+  Register obj = ToRegister(lir->object());
+  Register temp = ToRegister(lir->temp());
 
-  using Fn = JSString* (*)(JSContext*, HandleObject);
-  callVM<Fn, js::ObjectClassToString>(lir);
+  using Fn = JSString* (*)(JSContext*, JSObject*);
+  masm.setupUnalignedABICall(temp);
+  masm.loadJSContext(temp);
+  masm.passABIArg(temp);
+  masm.passABIArg(obj);
+  masm.callWithABI<Fn, js::ObjectClassToString>();
 }
 
 void CodeGenerator::visitWasmParameter(LWasmParameter* lir) {}

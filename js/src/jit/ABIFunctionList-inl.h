@@ -16,6 +16,7 @@
 #include "builtin/Array.h"      // js::ArrayShiftMoveElements
 #include "builtin/MapObject.h"  // js::MapIteratorObject::next,
                                 // js::SetIteratorObject::next
+#include "builtin/Object.h"     // js::ObjectClassToString
 #include "builtin/RegExp.h"     // js::RegExpPrototypeOptimizableRaw,
                                 // js::RegExpInstanceOptimizableRaw
 
@@ -153,6 +154,7 @@ namespace jit {
   _(js::NativeObject::growSlotsPure)                                  \
   _(js::NumberMod)                                                    \
   _(js::NumberToStringPure)                                           \
+  _(js::ObjectClassToString)                                          \
   _(js::powi)                                                         \
   _(js::ProxyGetProperty)                                             \
   _(js::RegExpInstanceOptimizableRaw)                                 \

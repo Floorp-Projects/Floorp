@@ -38,7 +38,7 @@ MOZ_MUST_USE bool obj_toString(JSContext* cx, unsigned argc, JS::Value* vp);
 
 MOZ_MUST_USE bool obj_setProto(JSContext* cx, unsigned argc, JS::Value* vp);
 
-JSString* ObjectClassToString(JSContext* cx, HandleObject obj);
+JSString* ObjectClassToString(JSContext* cx, JSObject* obj);
 
 MOZ_MUST_USE bool GetOwnPropertyKeys(JSContext* cx, HandleObject obj,
                                      unsigned flags,

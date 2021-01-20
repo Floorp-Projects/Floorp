@@ -6585,15 +6585,17 @@ class LGuardToClass : public LInstructionHelper<1, 1, 1> {
   MGuardToClass* mir() const { return mir_->toGuardToClass(); }
 };
 
-class LObjectClassToString : public LCallInstructionHelper<1, 1, 0> {
+class LObjectClassToString : public LCallInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(ObjectClassToString);
 
-  explicit LObjectClassToString(const LAllocation& lhs)
+  LObjectClassToString(const LAllocation& lhs, const LDefinition& temp)
       : LCallInstructionHelper(classOpcode) {
     setOperand(0, lhs);
+    setTemp(0, temp);
   }
   const LAllocation* object() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
   MObjectClassToString* mir() const { return mir_->toObjectClassToString(); }
 };
 

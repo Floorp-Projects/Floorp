@@ -192,7 +192,6 @@ namespace jit {
     js::NewTypedArrayWithTemplateAndLength)                                    \
   _(NormalSuspend, js::jit::NormalSuspend)                                     \
   _(NumberToString, js::NumberToString<CanGC>)                                 \
-  _(ObjectClassToString, js::ObjectClassToString)                              \
   _(ObjectCreateWithTemplate, js::ObjectCreateWithTemplate)                    \
   _(ObjectWithProtoOperation, js::ObjectWithProtoOperation)                    \
   _(OnDebuggerStatement, js::jit::OnDebuggerStatement)                         \
