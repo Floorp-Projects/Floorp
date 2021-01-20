@@ -1,0 +1,40 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, you can obtain one at https://mozilla.org/MPL/2.0/.
+
+Library("DefaultAgentTest")
+
+# Normally, we only include the test code in gtest sources because they get
+# linked against libxul. But the code we are testing is not part of libxul, so
+# if we want it to be available to us to test, we have to include it here.
+UNIFIED_SOURCES += [
+    "../../Cache.cpp",
+    "../../common.cpp",
+    "../../EventLog.cpp",
+    "../../Registry.cpp",
+    "CacheTest.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/toolkit/mozapps/defaultagent",
+]
+
+OS_LIBS += [
+    "advapi32",
+    "kernel32",
+    "rpcrt4",
+]
+
+DEFINES["UNICODE"] = True
+DEFINES["_UNICODE"] = True
+
+for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+
+# We need STL headers that aren't allowed when wrapping is on (at least
+# <filesystem>, and possibly others).
+DisableStlWrapping()
+
+FINAL_LIBRARY = "xul-gtest"

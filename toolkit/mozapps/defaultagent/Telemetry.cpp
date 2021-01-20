@@ -46,7 +46,6 @@
 #endif  // !defined(RRF_SUBKEY_WOW6464KEY)
 
 using TelemetryFieldResult = mozilla::WindowsErrorResult<std::string>;
-using FilePathResult = mozilla::WindowsErrorResult<std::wstring>;
 using BoolResult = mozilla::WindowsErrorResult<bool>;
 
 // This function was copied from the implementation of
@@ -112,27 +111,6 @@ static TelemetryFieldResult GetOSLocale() {
                       bufLen, nullptr, nullptr);
 
   return std::string(narrowLocaleName.get());
-}
-
-static FilePathResult GenerateUUIDStr() {
-  UUID uuid;
-  RPC_STATUS status = UuidCreate(&uuid);
-  if (status != RPC_S_OK) {
-    HRESULT hr = MAKE_HRESULT(1, FACILITY_RPC, status);
-    LOG_ERROR(hr);
-    return FilePathResult(mozilla::WindowsError::FromHResult(hr));
-  }
-
-  // 39 == length of a UUID string including braces and NUL.
-  wchar_t guidBuf[39] = {};
-  if (StringFromGUID2(uuid, guidBuf, 39) != 39) {
-    LOG_ERROR(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER));
-    return FilePathResult(
-        mozilla::WindowsError::FromWin32Error(ERROR_INSUFFICIENT_BUFFER));
-  }
-
-  // Remove the curly braces.
-  return std::wstring(guidBuf + 1, guidBuf + 37);
 }
 
 static FilePathResult GetPingFilePath(std::wstring& uuid) {
