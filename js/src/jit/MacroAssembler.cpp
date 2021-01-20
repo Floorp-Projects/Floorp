@@ -3801,26 +3801,32 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
   andPtr(Imm32(gc::ChunkMask), temp1);
   rshiftPtr(Imm32(3), temp1);
 
-  static const size_t nbits = sizeof(uintptr_t) * CHAR_BIT;
-  static_assert(nbits == JS_BITS_PER_WORD, "Calculation below relies on this");
+  static_assert(gc::MarkBitmapWordBits == JS_BITS_PER_WORD,
+                "Calculation below relies on this");
 
   // Load the bitmap word in temp2.
   //
-  // word = chunk.bitmap[bit / nbits];
+  // word = chunk.bitmap[bit / MarkBitmapWordBits];
+
+  // Fold the adjustment for the fact that arenas don't start at the beginning
+  // of the chunk into the offset to the chunk bitmap.
+  const size_t firstArenaAdjustment = gc::FirstArenaAdjustmentBits / CHAR_BIT;
+  const intptr_t offset =
+      intptr_t(gc::ChunkMarkBitmapOffset) - intptr_t(firstArenaAdjustment);
+
   movePtr(temp1, temp3);
 #if JS_BITS_PER_WORD == 64
   rshiftPtr(Imm32(6), temp1);
-  loadPtr(BaseIndex(temp2, temp1, TimesEight, gc::ChunkMarkBitmapOffset),
-          temp2);
+  loadPtr(BaseIndex(temp2, temp1, TimesEight, offset), temp2);
 #else
   rshiftPtr(Imm32(5), temp1);
-  loadPtr(BaseIndex(temp2, temp1, TimesFour, gc::ChunkMarkBitmapOffset), temp2);
+  loadPtr(BaseIndex(temp2, temp1, TimesFour, offset), temp2);
 #endif
 
   // Load the mask in temp1.
   //
-  // mask = uintptr_t(1) << (bit % nbits);
-  andPtr(Imm32(nbits - 1), temp3);
+  // mask = uintptr_t(1) << (bit % MarkBitmapWordBits);
+  andPtr(Imm32(gc::MarkBitmapWordBits - 1), temp3);
   move32(Imm32(1), temp1);
 #ifdef JS_CODEGEN_X64
   MOZ_ASSERT(temp3 == rcx);

@@ -3143,8 +3143,11 @@ void js::TenuringTracer::traceBigInt(JS::BigInt* bi) {
 }
 
 #ifdef DEBUG
+static inline uintptr_t OffsetFromChunkStart(void* p) {
+  return uintptr_t(p) & gc::ChunkMask;
+}
 static inline ptrdiff_t OffsetToChunkEnd(void* p) {
-  return ChunkLocationOffset - (uintptr_t(p) & gc::ChunkMask);
+  return ChunkSize - (uintptr_t(p) & gc::ChunkMask);
 }
 #endif
 
@@ -3213,6 +3216,7 @@ JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   tenuredCells++;
 
   // Copy the Cell contents.
+  MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkHeader));
   MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
   js_memcpy(dst, src, srcSize);
 
@@ -3260,6 +3264,7 @@ inline JSObject* js::TenuringTracer::movePlainObjectToTenured(
   tenuredCells++;
 
   // Copy the Cell contents.
+  MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkHeader));
   MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
   js_memcpy(dst, src, srcSize);
 
@@ -4101,8 +4106,8 @@ uintptr_t* GetMarkWordAddress(Cell* cell) {
 
   MarkBitmapWord* wordp;
   uintptr_t mask;
-  js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), ColorBit::BlackBit,
-                                            &wordp, &mask);
+  ChunkBitmap::GetMarkWordAndMask(&cell->asTenured(), ColorBit::BlackBit,
+                                  &wordp, &mask);
   return reinterpret_cast<uintptr_t*>(wordp);
 }
 
@@ -4116,8 +4121,7 @@ uintptr_t GetMarkMask(Cell* cell, uint32_t colorBit) {
   ColorBit bit = colorBit == 0 ? ColorBit::BlackBit : ColorBit::GrayOrBlackBit;
   MarkBitmapWord* wordp;
   uintptr_t mask;
-  js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), bit, &wordp,
-                                            &mask);
+  ChunkBitmap::GetMarkWordAndMask(&cell->asTenured(), bit, &wordp, &mask);
   return mask;
 }
 

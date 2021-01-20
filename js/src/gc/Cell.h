@@ -330,13 +330,13 @@ MOZ_ALWAYS_INLINE bool Cell::isMarkedAtLeast(gc::MarkColor color) const {
 }
 
 inline JSRuntime* Cell::runtimeFromMainThread() const {
-  JSRuntime* rt = chunk()->trailer.runtime;
+  JSRuntime* rt = chunk()->header.runtime;
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   return rt;
 }
 
 inline JSRuntime* Cell::runtimeFromAnyThread() const {
-  return chunk()->trailer.runtime;
+  return chunk()->header.runtime;
 }
 
 inline uintptr_t Cell::address() const {
@@ -354,7 +354,7 @@ Chunk* Cell::chunk() const {
 }
 
 inline StoreBuffer* Cell::storeBuffer() const {
-  return chunk()->trailer.storeBuffer;
+  return chunk()->header.storeBuffer;
 }
 
 JS::Zone* Cell::zone() const {
