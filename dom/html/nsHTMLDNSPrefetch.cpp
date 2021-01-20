@@ -10,6 +10,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "nsURLHelper.h"
 
@@ -110,24 +111,26 @@ static uint32_t GetDNSFlagsFromLink(Link* aElement) {
   return nsIDNSService::GetFlagsFromTRRMode(mode);
 }
 
-nsresult nsHTMLDNSPrefetch::Prefetch(Link* aElement, uint32_t flags) {
-  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService())
+uint32_t nsHTMLDNSPrefetch::PriorityToDNSServiceFlags(Priority aPriority) {
+  switch (aPriority) {
+    case Priority::Low:
+      return uint32_t(nsIDNSService::RESOLVE_PRIORITY_LOW);
+    case Priority::Medium:
+      return uint32_t(nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
+    case Priority::High:
+      return 0u;
+  }
+  MOZ_ASSERT_UNREACHABLE("Unknown priority");
+  return 0u;
+}
+
+nsresult nsHTMLDNSPrefetch::Prefetch(Link* aElement, Priority aPriority) {
+  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService()) {
     return NS_ERROR_NOT_AVAILABLE;
-
-  flags |= GetDNSFlagsFromLink(aElement);
-  return sPrefetches->Add(flags, aElement);
-}
-
-nsresult nsHTMLDNSPrefetch::PrefetchLow(Link* aElement) {
-  return Prefetch(aElement, nsIDNSService::RESOLVE_PRIORITY_LOW);
-}
-
-nsresult nsHTMLDNSPrefetch::PrefetchMedium(Link* aElement) {
-  return Prefetch(aElement, nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
-}
-
-nsresult nsHTMLDNSPrefetch::PrefetchHigh(Link* aElement) {
-  return Prefetch(aElement, 0);
+  }
+  return sPrefetches->Add(
+      GetDNSFlagsFromLink(aElement) | PriorityToDNSServiceFlags(aPriority),
+      aElement);
 }
 
 nsresult nsHTMLDNSPrefetch::Prefetch(
@@ -173,36 +176,23 @@ nsresult nsHTMLDNSPrefetch::Prefetch(
   return NS_OK;
 }
 
-nsresult nsHTMLDNSPrefetch::PrefetchLow(
+nsresult nsHTMLDNSPrefetch::Prefetch(
     const nsAString& hostname, bool isHttps,
     const OriginAttributes& aPartitionedPrincipalOriginAttributes,
-    nsIRequest::TRRMode aMode) {
+    nsIRequest::TRRMode aMode, Priority aPriority) {
   return Prefetch(hostname, isHttps, aPartitionedPrincipalOriginAttributes,
                   nsIDNSService::GetFlagsFromTRRMode(aMode) |
-                      nsIDNSService::RESOLVE_PRIORITY_LOW);
+                      PriorityToDNSServiceFlags(aPriority));
 }
 
-nsresult nsHTMLDNSPrefetch::PrefetchMedium(
-    const nsAString& hostname, bool isHttps,
-    const OriginAttributes& aPartitionedPrincipalOriginAttributes,
-    nsIRequest::TRRMode aMode) {
-  return Prefetch(hostname, isHttps, aPartitionedPrincipalOriginAttributes,
-                  nsIDNSService::GetFlagsFromTRRMode(aMode) |
-                      nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
-}
-
-nsresult nsHTMLDNSPrefetch::PrefetchHigh(
-    const nsAString& hostname, bool isHttps,
-    const OriginAttributes& aPartitionedPrincipalOriginAttributes,
-    nsIRequest::TRRMode aMode) {
-  return Prefetch(hostname, isHttps, aPartitionedPrincipalOriginAttributes,
-                  nsIDNSService::GetFlagsFromTRRMode(aMode));
-}
-
-nsresult nsHTMLDNSPrefetch::CancelPrefetch(Link* aElement, uint32_t flags,
+nsresult nsHTMLDNSPrefetch::CancelPrefetch(Link* aElement, Priority aPriority,
                                            nsresult aReason) {
-  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService())
+  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  uint32_t flags =
+      GetDNSFlagsFromLink(aElement) | PriorityToDNSServiceFlags(aPriority);
 
   nsAutoString hostname;
   aElement->GetHostname(hostname);
@@ -265,22 +255,14 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(
   return rv;
 }
 
-nsresult nsHTMLDNSPrefetch::CancelPrefetchLow(Link* aElement,
-                                              nsresult aReason) {
-  return CancelPrefetch(
-      aElement,
-      GetDNSFlagsFromLink(aElement) | nsIDNSService::RESOLVE_PRIORITY_LOW,
-      aReason);
-}
-
-nsresult nsHTMLDNSPrefetch::CancelPrefetchLow(
+nsresult nsHTMLDNSPrefetch::CancelPrefetch(
     const nsAString& hostname, bool isHttps,
     const OriginAttributes& aPartitionedPrincipalOriginAttributes,
-    nsIRequest::TRRMode aTRRMode, nsresult aReason) {
+    nsIRequest::TRRMode aTRRMode, Priority aPriority, nsresult aReason) {
   return CancelPrefetch(hostname, isHttps,
                         aPartitionedPrincipalOriginAttributes,
                         nsIDNSService::GetFlagsFromTRRMode(aTRRMode) |
-                            nsIDNSService::RESOLVE_PRIORITY_LOW,
+                            PriorityToDNSServiceFlags(aPriority),
                         aReason);
 }
 
