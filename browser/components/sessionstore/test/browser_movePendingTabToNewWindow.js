@@ -92,9 +92,7 @@ add_task(async function test_movePendingTabToNewWindow() {
     newWindowTabs[1].hasAttribute("pending"),
     "Second tab in new window should still be pending"
   );
-  newWindow.gBrowser.clearMultiSelectedTabs({
-    isLastMultiSelectChange: true,
-  });
+  newWindow.gBrowser.clearMultiSelectedTabs();
   ok(
     newWindowTabs.every(t => !t.multiselected),
     "No multiselection should be present"
