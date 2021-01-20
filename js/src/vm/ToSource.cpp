@@ -70,29 +70,27 @@ static JSString* SymbolToSource(JSContext* cx, JS::Symbol* symbol) {
     return desc;
   }
 
-  JSStringBuilder buf(cx);
   if (code == SymbolCode::PrivateNameSymbol) {
     MOZ_ASSERT(desc);
-    if (!buf.append('#') || !buf.append(desc)) {
-      return nullptr;
-    }
-  } else {
-    MOZ_ASSERT(code == SymbolCode::InSymbolRegistry ||
-               code == SymbolCode::UniqueSymbol);
+    return desc;
+  }
 
-    if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(")
-                                             : !buf.append("Symbol(")) {
+  MOZ_ASSERT(code == SymbolCode::InSymbolRegistry ||
+             code == SymbolCode::UniqueSymbol);
+
+  JSStringBuilder buf(cx);
+  if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(")
+                                           : !buf.append("Symbol(")) {
+    return nullptr;
+  }
+  if (desc) {
+    UniqueChars quoted = QuoteString(cx, desc, '"');
+    if (!quoted || !buf.append(quoted.get(), strlen(quoted.get()))) {
       return nullptr;
     }
-    if (desc) {
-      UniqueChars quoted = QuoteString(cx, desc, '"');
-      if (!quoted || !buf.append(quoted.get(), strlen(quoted.get()))) {
-        return nullptr;
-      }
-    }
-    if (!buf.append(')')) {
-      return nullptr;
-    }
+  }
+  if (!buf.append(')')) {
+    return nullptr;
   }
   return buf.finishString();
 }
