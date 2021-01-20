@@ -816,7 +816,7 @@ void Chunk::addArenaToFreeList(GCRuntime* gc, Arena* arena) {
 
 void Chunk::addArenaToDecommittedList(const Arena* arena) {
   ++info.numArenasFree;
-  decommittedArenas.set(Chunk::arenaIndex(arena->address()));
+  decommittedArenas[Chunk::arenaIndex(arena->address())] = true;
 }
 
 void Chunk::recycleArena(Arena* arena, SortedArenaList& dest,
@@ -853,13 +853,13 @@ bool Chunk::decommitOneFreeArena(GCRuntime* gc, AutoLockGC& lock) {
 
 void Chunk::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
   for (size_t i = 0; i < ArenasPerChunk; ++i) {
-    if (decommittedArenas.get(i) || arenas[i].allocated()) {
+    if (decommittedArenas[i] || arenas[i].allocated()) {
       continue;
     }
 
     if (MarkPagesUnusedSoft(&arenas[i], ArenaSize)) {
       info.numArenasFreeCommitted--;
-      decommittedArenas.set(i);
+      decommittedArenas[i] = true;
     }
   }
 }
