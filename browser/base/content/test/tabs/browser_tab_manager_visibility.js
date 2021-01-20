@@ -10,8 +10,12 @@ const DUMMY_PAGE_PATH = "/browser/base/content/test/tabs/dummy_page.html";
 
 add_task(async function tab_manager_visibility_preference_on() {
   Services.prefs.setBoolPref("browser.tabs.tabmanager.enabled", true);
+  // we flush the xul cache and open a new window to ensure CSS @supports -moz-bool-pref(...) {} rules
+  // are correctly applied to the browser chrome
+  Services.obs.notifyObservers(null, "chrome-flush-caches");
+  await TestUtils.waitForTick();
 
-  let newWindow = await BrowserTestUtils.openNewWindowWithFlushedXULCacheForMozSupports();
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser: newWindow.gBrowser,
@@ -32,8 +36,10 @@ add_task(async function tab_manager_visibility_preference_on() {
 
 add_task(async function tab_manager_visibility_preference_off() {
   Services.prefs.setBoolPref("browser.tabs.tabmanager.enabled", false);
+  Services.obs.notifyObservers(null, "chrome-flush-caches");
+  await TestUtils.waitForTick();
 
-  let newWindow = await BrowserTestUtils.openNewWindowWithFlushedXULCacheForMozSupports();
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser: newWindow.gBrowser,
