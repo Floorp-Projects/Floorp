@@ -69,6 +69,9 @@ DEFINES["IMPL_MFBT"] = True
 DEFINES["UNICODE"] = True
 DEFINES["_UNICODE"] = True
 
+# If defines are added to this list that are required by the Cache or its
+# dependencies (Registry, EventLog, common), tests/gtest/moz.build will need to
+# be updated as well.
 for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
@@ -91,6 +94,9 @@ defaultagentini.inputs = [
     "defaultagent_append.ini",
 ]
 FINAL_TARGET_FILES += ["!defaultagent.ini"]
+
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["tests/gtest"]
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Installer")
