@@ -2054,7 +2054,8 @@ main {
 .outer-wrapper.newtab-experience .collapsible-section .click-target-container .click-target span {
   cursor: default;
   font-weight: 600;
-  font-size: 17px; }
+  font-size: 17px;
+  color: var(--newtab-background-primary-text-color); }
 
 .collapsible-section {
   padding: 10px 25px;
@@ -3026,6 +3027,9 @@ main {
     color: #45A1FF; }
   .ds-list-item:active .ds-list-item-title {
     color: #003EAA; }
+
+.outer-wrapper.newtab-experience .ds-navigation {
+  color: var(--newtab-background-primary-text-color); }
 
 .ds-navigation {
   color: #737373;
