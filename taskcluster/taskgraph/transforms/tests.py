@@ -178,6 +178,15 @@ TEST_VARIANTS = {
     "a11y-checks": {
         "description": "{description} with accessibility checks enabled",
         "suffix": "a11y-checks",
+        "replace": {
+            "run-on-projects": {
+                "by-test-platform": {
+                    "linux.*64(-shippable)?/opt": ["trunk"],
+                    "default": [],
+                },
+            },
+            "tier": 2,
+        },
         "merge": {
             "mozharness": {
                 "extra-options": [
@@ -185,7 +194,6 @@ TEST_VARIANTS = {
                 ],
             },
         },
-        "tier": 2,
     },
     "geckoview-e10s-single": {
         "description": "{description} with single-process e10s",
