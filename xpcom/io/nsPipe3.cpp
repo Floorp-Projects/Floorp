@@ -188,6 +188,13 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
   // A version of Status() that doesn't acquire the monitor.
   nsresult Status(const ReentrantMonitorAutoEnter& ev) const;
 
+  // The status of this input stream, ignoring the status of the underlying
+  // monitor. If this status is errored, the input stream has either already
+  // been removed from the pipe, or will be removed from the pipe shortly.
+  nsresult InputStatus(const ReentrantMonitorAutoEnter&) const {
+    return mInputStatus;
+  }
+
  private:
   virtual ~nsPipeInputStream();
 
@@ -967,7 +974,10 @@ nsresult nsPipe::CloneInputStream(nsPipeInputStream* aOriginal,
                                   nsIInputStream** aCloneOut) {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   RefPtr<nsPipeInputStream> ref = new nsPipeInputStream(*aOriginal);
-  mInputList.AppendElement(ref);
+  // don't add clones of closed pipes to mInputList.
+  if (NS_SUCCEEDED(ref->InputStatus(mon))) {
+    mInputList.AppendElement(ref);
+  }
   nsCOMPtr<nsIAsyncInputStream> upcast = std::move(ref);
   upcast.forget(aCloneOut);
   return NS_OK;
