@@ -2982,6 +2982,8 @@ Toolbox.prototype = {
    * Fired when user just started navigating away to another web page.
    */
   async _onWillNavigate() {
+    // Clearing the error count as soon as we navigate
+    this.setErrorCount(0);
     this.updateToolboxButtons();
     const toolId = this.currentToolId;
     // For now, only inspector, webconsole and netmonitor fire "reloaded" event

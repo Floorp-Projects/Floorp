@@ -101,6 +101,24 @@ add_task(async function() {
     () => webconsoleDoc.querySelectorAll(".message.error").length === 0
   );
 
+  info("Check that the error count is capped at 99");
+  expectedErrorCount = 100;
+  ContentTask.spawn(tab.linkedBrowser, expectedErrorCount, function(count) {
+    for (let i = 0; i < count; i++) {
+      content.console.error(i);
+    }
+  });
+
+  // Wait until all the messages are displayed in the console
+  await waitFor(
+    () =>
+      webconsoleDoc.querySelectorAll(".message.error").length ===
+      expectedErrorCount
+  );
+
+  await waitFor(() => getErrorIconCount(toolbox) === "99+");
+  ok(true, "The message count doesn't go higher than 99");
+
   info(
     "Reload the page and check that the error icon has the expected content"
   );
@@ -159,48 +177,6 @@ add_task(async function() {
     true,
     "The error is displayed again, with the correct error count, after enabling it from the settings panel"
   );
-  await toolbox.selectTool("webconsole");
-
-  info(
-    "Navigate to an error-less page and check that the error icon is hidden"
-  );
-  await navigateTo(`data:text/html;charset=utf8,No errors`);
-  await waitFor(() => !getErrorIcon(toolbox));
-  ok(
-    true,
-    "The error icon was hidden when navigating to a new page without errors"
-  );
-
-  info("Check that the error count is capped at 99");
-  expectedErrorCount = 100;
-  ContentTask.spawn(tab.linkedBrowser, expectedErrorCount, function(count) {
-    for (let i = 0; i < count; i++) {
-      content.console.error(i);
-    }
-  });
-
-  // Wait until all the messages are displayed in the console
-  await waitFor(
-    () =>
-      webconsoleDoc.querySelectorAll(".message.error").length ===
-      expectedErrorCount
-  );
-
-  await waitFor(() => getErrorIcon(toolbox)?.textContent === "99+");
-  ok(true, "The message count doesn't go higher than 99");
 
   toolbox.destroy();
 });
-
-function getErrorIcon(toolbox) {
-  return toolbox.doc.querySelector(".toolbox-error");
-}
-
-function getErrorIconCount(toolbox) {
-  const number = getErrorIcon(toolbox)?.textContent;
-  try {
-    return parseInt(number, 10);
-  } catch (e) {
-    return number;
-  }
-}
