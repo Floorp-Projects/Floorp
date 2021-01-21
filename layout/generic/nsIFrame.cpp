@@ -6132,31 +6132,10 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // flex container's main axis.
   LogicalAxis flexMainAxis =
       eLogicalAxisInline;  // (init to make valgrind happy)
-
-  // The holder of the imposed main size pointer. This is used for adjusting the
-  // main size of the flex item after we resolve its flexible length.
-  Maybe<StyleSize> imposedMainSizeStyleCoord;
-
   if (isFlexItem) {
     flexMainAxis = nsFlexContainerFrame::IsItemInlineAxisMainAxis(this)
                        ? eLogicalAxisInline
                        : eLogicalAxisBlock;
-
-    // If FlexItemMainSizeOverride frame-property is set, then that means the
-    // flex container is imposing a main-size on this flex item for it to use
-    // as its size in the container's main axis.
-    bool didImposeMainSize;
-    nscoord imposedMainSize =
-        GetProperty(nsIFrame::FlexItemMainSizeOverride(), &didImposeMainSize);
-    if (didImposeMainSize) {
-      imposedMainSizeStyleCoord = Some(StyleSize::LengthPercentage(
-          LengthPercentage::FromAppUnits(imposedMainSize)));
-      if (flexMainAxis == eLogicalAxisInline) {
-        inlineStyleCoord = imposedMainSizeStyleCoord.ptr();
-      } else {
-        blockStyleCoord = imposedMainSizeStyleCoord.ptr();
-      }
-    }
   }
 
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
