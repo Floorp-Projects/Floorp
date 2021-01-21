@@ -1353,53 +1353,7 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     default:
       break;
   }
-
-  // Respect author padding.
-  //
-  // TODO(emilio): Consider just unconditionally returning false, so that the
-  // default size of all elements matches other platforms and the UA stylesheet.
-  if (aFrame->PresContext()->HasAuthorSpecifiedRules(
-          aFrame, NS_AUTHOR_SPECIFIED_PADDING)) {
-    return false;
-  }
-
-  DPIRatio dpiRatio = GetDPIRatio(aFrame);
-  switch (aAppearance) {
-    case StyleAppearance::Listbox:
-    case StyleAppearance::Menulist:
-      aResult->SizeTo(0, 0, 0, 0);
-      return true;
-    case StyleAppearance::NumberInput:
-      *aResult = (CSSMargin(1.0f, 0, 1.0f, 4.0f) * dpiRatio).Rounded();
-      if (IsFrameRTL(aFrame)) {
-        std::swap(aResult->left, aResult->right);
-      }
-      return true;
-    case StyleAppearance::Textarea:
-    case StyleAppearance::MozMenulistArrowButton:
-    case StyleAppearance::Menuitemtext:
-    case StyleAppearance::Menuitem:
-    case StyleAppearance::MenulistText:
-    case StyleAppearance::MenulistButton:
-      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
-      return true;
-    case StyleAppearance::Button:
-      if (IsColorPickerButton(aFrame)) {
-        *aResult = (CSSMargin(4.0f, 4.0f, 4.0f, 4.0f) * dpiRatio).Rounded();
-        return true;
-      }
-      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
-      return true;
-    case StyleAppearance::Textfield:
-      if (IsDateTimeTextField(aFrame)) {
-        *aResult = (CSSMargin(2.0f, 3.0f, 0.0f, 3.0f) * dpiRatio).Rounded();
-        return true;
-      }
-      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
-      return true;
-    default:
-      return false;
-  }
+  return false;
 }
 
 bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
