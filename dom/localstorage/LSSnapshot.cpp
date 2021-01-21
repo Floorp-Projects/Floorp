@@ -72,7 +72,7 @@ void SnapshotWriteOptimizer::Enumerate(nsTArray<LSWriteInfo>& aWriteInfos) {
   // an arbitrary order, which means write infos need to be sorted before being
   // processed.
 
-  nsTArray<WriteInfo*> writeInfos;
+  nsTArray<NotNull<WriteInfo*>> writeInfos;
   GetSortedWriteInfos(writeInfos);
 
   for (WriteInfo* writeInfo : writeInfos) {
