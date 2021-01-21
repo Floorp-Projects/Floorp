@@ -14,7 +14,6 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.manifest.getOrNull
@@ -52,113 +51,109 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
     private val hideToolbarFeature = ViewBoundFeatureWrapper<WebAppHideToolbarFeature>()
 
     @Suppress("LongMethod", "ComplexMethod")
-    override fun initializeUI(view: View): Session? {
-        return super.initializeUI(view)?.also {
-            val activity = requireActivity()
-            val components = activity.components
+    override fun initializeUI(view: View, tab: SessionState) {
+        super.initializeUI(view, tab)
 
-            val manifest = args.webAppManifest?.let { json ->
-                WebAppManifestParser().parse(json).getOrNull()
-            }
+        val customTabSessionId = customTabSessionId ?: return
+        val activity = requireActivity()
+        val components = activity.components
+        val manifest = args.webAppManifest?.let { json -> WebAppManifestParser().parse(json).getOrNull() }
 
-            customTabSessionId?.let { customTabSessionId ->
-                customTabsIntegration.set(
-                    feature = CustomTabsIntegration(
-                        sessionManager = requireComponents.core.sessionManager,
-                        store = requireComponents.core.store,
-                        useCases = requireComponents.useCases.customTabsUseCases,
-                        toolbar = toolbar,
-                        sessionId = customTabSessionId,
-                        activity = activity,
-                        onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) },
-                        isPrivate = it.private,
-                        shouldReverseItems = !activity.settings().shouldUseBottomToolbar
-                    ),
-                    owner = this,
-                    view = view
-                )
+        customTabsIntegration.set(
+            feature = CustomTabsIntegration(
+                sessionManager = requireComponents.core.sessionManager,
+                store = requireComponents.core.store,
+                useCases = requireComponents.useCases.customTabsUseCases,
+                toolbar = toolbar,
+                sessionId = customTabSessionId,
+                activity = activity,
+                onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) },
+                isPrivate = tab.content.private,
+                shouldReverseItems = !activity.settings().shouldUseBottomToolbar
+            ),
+            owner = this,
+            view = view
+        )
 
-                windowFeature.set(
-                    feature = CustomTabWindowFeature(
-                        activity,
-                        components.core.store,
-                        customTabSessionId
-                    ) { uri ->
-                        val intent =
-                            Intent.parseUri("${BuildConfig.DEEP_LINK_SCHEME}://open?url=$uri", 0)
-                        if (intent.action == Intent.ACTION_VIEW) {
-                            intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                            intent.component = null
-                            intent.selector = null
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                        activity.startActivity(intent)
-                    },
-                    owner = this,
-                    view = view
-                )
-
-                hideToolbarFeature.set(
-                    feature = WebAppHideToolbarFeature(
-                        store = requireComponents.core.store,
-                        customTabsStore = requireComponents.core.customTabsStore,
-                        tabId = customTabSessionId,
-                        manifest = manifest
-                    ) { toolbarVisible ->
-                        browserToolbarView.view.isVisible = toolbarVisible
-                        webAppToolbarShouldBeVisible = toolbarVisible
-                        if (!toolbarVisible) {
-                            engineView.setDynamicToolbarMaxHeight(0)
-                            val browserEngine =
-                                swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
-                            browserEngine.bottomMargin = 0
-                        }
-                    },
-                    owner = this,
-                    view = toolbar
-                )
-
-                if (manifest != null) {
-                    activity.lifecycle.addObservers(
-                        WebAppActivityFeature(
-                            activity,
-                            components.core.icons,
-                            manifest
-                        ),
-                        ManifestUpdateFeature(
-                            activity.applicationContext,
-                            requireComponents.core.store,
-                            requireComponents.core.webAppShortcutManager,
-                            requireComponents.core.webAppManifestStorage,
-                            customTabSessionId,
-                            manifest
-                        )
-                    )
-                    viewLifecycleOwner.lifecycle.addObserver(
-                        WebAppSiteControlsFeature(
-                            activity.applicationContext,
-                            requireComponents.core.store,
-                            requireComponents.useCases.sessionUseCases.reload,
-                            customTabSessionId,
-                            manifest,
-                            WebAppSiteControlsBuilder(
-                                requireComponents.core.sessionManager,
-                                requireComponents.useCases.sessionUseCases.reload,
-                                customTabSessionId,
-                                manifest
-                            )
-                        )
-                    )
-                } else {
-                    viewLifecycleOwner.lifecycle.addObserver(
-                        PoweredByNotification(
-                            activity.applicationContext,
-                            requireComponents.core.store,
-                            customTabSessionId
-                        )
-                    )
+        windowFeature.set(
+            feature = CustomTabWindowFeature(
+                activity,
+                components.core.store,
+                customTabSessionId
+            ) { uri ->
+                val intent =
+                    Intent.parseUri("${BuildConfig.DEEP_LINK_SCHEME}://open?url=$uri", 0)
+                if (intent.action == Intent.ACTION_VIEW) {
+                    intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                    intent.component = null
+                    intent.selector = null
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-            }
+                activity.startActivity(intent)
+            },
+            owner = this,
+            view = view
+        )
+
+        hideToolbarFeature.set(
+            feature = WebAppHideToolbarFeature(
+                store = requireComponents.core.store,
+                customTabsStore = requireComponents.core.customTabsStore,
+                tabId = customTabSessionId,
+                manifest = manifest
+            ) { toolbarVisible ->
+                browserToolbarView.view.isVisible = toolbarVisible
+                webAppToolbarShouldBeVisible = toolbarVisible
+                if (!toolbarVisible) {
+                    engineView.setDynamicToolbarMaxHeight(0)
+                    val browserEngine =
+                        swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
+                    browserEngine.bottomMargin = 0
+                }
+            },
+            owner = this,
+            view = toolbar
+        )
+
+        if (manifest != null) {
+            activity.lifecycle.addObservers(
+                WebAppActivityFeature(
+                    activity,
+                    components.core.icons,
+                    manifest
+                ),
+                ManifestUpdateFeature(
+                    activity.applicationContext,
+                    requireComponents.core.store,
+                    requireComponents.core.webAppShortcutManager,
+                    requireComponents.core.webAppManifestStorage,
+                    customTabSessionId,
+                    manifest
+                )
+            )
+            viewLifecycleOwner.lifecycle.addObserver(
+                WebAppSiteControlsFeature(
+                    activity.applicationContext,
+                    requireComponents.core.store,
+                    requireComponents.useCases.sessionUseCases.reload,
+                    customTabSessionId,
+                    manifest,
+                    WebAppSiteControlsBuilder(
+                        requireComponents.core.sessionManager,
+                        requireComponents.useCases.sessionUseCases.reload,
+                        customTabSessionId,
+                        manifest
+                    )
+                )
+            )
+        } else {
+            viewLifecycleOwner.lifecycle.addObserver(
+                PoweredByNotification(
+                    activity.applicationContext,
+                    requireComponents.core.store,
+                    customTabSessionId
+                )
+            )
         }
     }
 
@@ -197,14 +192,14 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
         nav(R.id.externalAppBrowserFragment, directions)
     }
 
-    override fun navToTrackingProtectionPanel(session: Session) {
-        requireComponents.useCases.trackingProtectionUseCases.containsException(session.id) { contains ->
-            val isEnabled = session.trackerBlockingEnabled && !contains
+    override fun navToTrackingProtectionPanel(tab: SessionState) {
+        requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
+            val isEnabled = tab.trackingProtection.enabled && !contains
             val directions =
                 ExternalAppBrowserFragmentDirections
                     .actionGlobalTrackingProtectionPanelDialogFragment(
-                        sessionId = session.id,
-                        url = session.url,
+                        sessionId = tab.id,
+                        url = tab.content.url,
                         trackingProtectionEnabled = isEnabled,
                         gravity = getAppropriateLayoutGravity()
                     )

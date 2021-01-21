@@ -15,7 +15,6 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.SessionState
@@ -56,107 +55,107 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
 
     @Suppress("LongMethod")
-    override fun initializeUI(view: View): Session? {
+    override fun initializeUI(view: View, tab: SessionState) {
+        super.initializeUI(view, tab)
+
         val context = requireContext()
         val components = context.components
 
-        return super.initializeUI(view)?.also {
-            if (context.settings().isSwipeToolbarToSwitchTabsEnabled) {
-                gestureLayout.addGestureListener(
-                    ToolbarGestureHandler(
-                        activity = requireActivity(),
-                        contentLayout = browserLayout,
-                        tabPreview = tabPreview,
-                        toolbarLayout = browserToolbarView.view,
-                        store = components.core.store,
-                        sessionManager = components.core.sessionManager
-                    )
-                )
-            }
-
-            val readerModeAction =
-                BrowserToolbar.ToggleButton(
-                    image = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode)!!,
-                    imageSelected =
-                        AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode_selected)!!,
-                    contentDescription = requireContext().getString(R.string.browser_menu_read),
-                    contentDescriptionSelected = requireContext().getString(R.string.browser_menu_read_close),
-                    visible = {
-                        readerModeAvailable
-                    },
-                    selected = getSessionById()?.let {
-                            activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
-                        } ?: false,
-                    listener = browserInteractor::onReaderModePressed
-                )
-
-            browserToolbarView.view.addPageAction(readerModeAction)
-
-            thumbnailsFeature.set(
-                feature = BrowserThumbnails(context, view.engineView, components.core.store),
-                owner = this,
-                view = view
-            )
-
-            readerViewFeature.set(
-                feature = components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-                    ReaderViewFeature(
-                        context,
-                        components.core.engine,
-                        components.core.store,
-                        view.readerViewControlsBar
-                    ) { available, active ->
-                        if (available) {
-                            components.analytics.metrics.track(Event.ReaderModeAvailable)
-                        }
-
-                        readerModeAvailable = available
-                        readerModeAction.setSelected(active)
-                        safeInvalidateBrowserToolbarView()
-                    }
-                },
-                owner = this,
-                view = view
-            )
-
-            windowFeature.set(
-                feature = WindowFeature(
+        if (context.settings().isSwipeToolbarToSwitchTabsEnabled) {
+            gestureLayout.addGestureListener(
+                ToolbarGestureHandler(
+                    activity = requireActivity(),
+                    contentLayout = browserLayout,
+                    tabPreview = tabPreview,
+                    toolbarLayout = browserToolbarView.view,
                     store = components.core.store,
-                    tabsUseCases = components.useCases.tabsUseCases
+                    sessionManager = components.core.sessionManager
+                )
+            )
+        }
+
+        val readerModeAction =
+            BrowserToolbar.ToggleButton(
+                image = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode)!!,
+                imageSelected =
+                    AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode_selected)!!,
+                contentDescription = requireContext().getString(R.string.browser_menu_read),
+                contentDescriptionSelected = requireContext().getString(R.string.browser_menu_read_close),
+                visible = {
+                    readerModeAvailable
+                },
+                selected = getSessionById()?.let {
+                        activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
+                    } ?: false,
+                listener = browserInteractor::onReaderModePressed
+            )
+
+        browserToolbarView.view.addPageAction(readerModeAction)
+
+        thumbnailsFeature.set(
+            feature = BrowserThumbnails(context, view.engineView, components.core.store),
+            owner = this,
+            view = view
+        )
+
+        readerViewFeature.set(
+            feature = components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+                ReaderViewFeature(
+                    context,
+                    components.core.engine,
+                    components.core.store,
+                    view.readerViewControlsBar
+                ) { available, active ->
+                    if (available) {
+                        components.analytics.metrics.track(Event.ReaderModeAvailable)
+                    }
+
+                    readerModeAvailable = available
+                    readerModeAction.setSelected(active)
+                    safeInvalidateBrowserToolbarView()
+                }
+            },
+            owner = this,
+            view = view
+        )
+
+        windowFeature.set(
+            feature = WindowFeature(
+                store = components.core.store,
+                tabsUseCases = components.useCases.tabsUseCases
+            ),
+            owner = this,
+            view = view
+        )
+
+        if (context.settings().shouldShowOpenInAppCfr) {
+            openInAppOnboardingObserver.set(
+                feature = OpenInAppOnboardingObserver(
+                    context = context,
+                    store = context.components.core.store,
+                    lifecycleOwner = this,
+                    navController = findNavController(),
+                    settings = context.settings(),
+                    appLinksUseCases = context.components.useCases.appLinksUseCases,
+                    container = browserLayout as ViewGroup
                 ),
                 owner = this,
                 view = view
             )
-
-            if (context.settings().shouldShowOpenInAppCfr) {
-                openInAppOnboardingObserver.set(
-                    feature = OpenInAppOnboardingObserver(
-                        context = context,
-                        store = context.components.core.store,
-                        lifecycleOwner = this,
-                        navController = findNavController(),
-                        settings = context.settings(),
-                        appLinksUseCases = context.components.useCases.appLinksUseCases,
-                        container = browserLayout as ViewGroup
-                    ),
-                    owner = this,
-                    view = view
-                )
-            }
-            if (context.settings().shouldShowTrackingProtectionCfr) {
-                trackingProtectionOverlayObserver.set(
-                    feature = TrackingProtectionOverlay(
-                        context = context,
-                        store = context.components.core.store,
-                        lifecycleOwner = viewLifecycleOwner,
-                        settings = context.settings(),
-                        metrics = context.components.analytics.metrics,
-                        getToolbar = { browserToolbarView.view }
-                    ),
-                    owner = this,
-                    view = view
-                )
-            }
+        }
+        if (context.settings().shouldShowTrackingProtectionCfr) {
+            trackingProtectionOverlayObserver.set(
+                feature = TrackingProtectionOverlay(
+                    context = context,
+                    store = context.components.core.store,
+                    lifecycleOwner = viewLifecycleOwner,
+                    settings = context.settings(),
+                    metrics = context.components.analytics.metrics,
+                    getToolbar = { browserToolbarView.view }
+                ),
+                owner = this,
+                view = view
+            )
         }
     }
 
@@ -219,15 +218,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         nav(R.id.browserFragment, directions)
     }
 
-    override fun navToTrackingProtectionPanel(session: Session) {
+    override fun navToTrackingProtectionPanel(tab: SessionState) {
         val navController = findNavController()
 
-        requireComponents.useCases.trackingProtectionUseCases.containsException(session.id) { contains ->
-            val isEnabled = session.trackerBlockingEnabled && !contains
+        requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
+            val isEnabled = tab.trackingProtection.enabled && !contains
             val directions =
                 BrowserFragmentDirections.actionBrowserFragmentToTrackingProtectionPanelDialogFragment(
-                    sessionId = session.id,
-                    url = session.url,
+                    sessionId = tab.id,
+                    url = tab.content.url,
                     trackingProtectionEnabled = isEnabled,
                     gravity = getAppropriateLayoutGravity()
                 )

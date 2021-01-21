@@ -9,7 +9,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import kotlinx.android.synthetic.main.activity_home.*
-import mozilla.components.browser.session.runWithSession
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
@@ -102,12 +101,9 @@ open class ExternalAppBrowserActivity : HomeActivity() {
             // When this activity finishes, the process is staying around and the session still
             // exists then remove it now to free all its resources. Once this activity is finished
             // then there's no way to get back to it other than relaunching it.
-            components.core.sessionManager.runWithSession(getExternalTabId()) { session ->
-                // If the custom tag config has been removed we are opening this in normal browsing
-                if (session.customTabConfig != null) {
-                    remove(session)
-                }
-                true
+            val tabId = getExternalTabId()
+            if (tabId != null) {
+                components.useCases.customTabsUseCases.remove(tabId)
             }
         }
     }
