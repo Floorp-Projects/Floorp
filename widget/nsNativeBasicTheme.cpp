@@ -86,26 +86,6 @@ LayoutDeviceRect nsNativeBasicTheme::FixAspectRatio(
   return rect;
 }
 
-/* static */
-void nsNativeBasicTheme::GetFocusStrokeRect(DrawTarget* aDrawTarget,
-                                            LayoutDeviceRect& aFocusRect,
-                                            LayoutDeviceCoord aOffset,
-                                            const LayoutDeviceCoord aRadius,
-                                            LayoutDeviceCoord aFocusWidth,
-                                            RefPtr<Path>& aOutRect) {
-  RectCornerRadii radii(aRadius, aRadius, aRadius, aRadius);
-  aFocusRect.y -= aOffset;
-  aFocusRect.x -= aOffset;
-  aFocusRect.width += 2.0f * aOffset;
-  aFocusRect.height += 2.0f * aOffset;
-  // Deflate the rect by half the border width, so that the middle of the
-  // stroke fills exactly the area we want to fill and not more.
-  LayoutDeviceRect focusRect(aFocusRect);
-  focusRect.Deflate(aFocusWidth * 0.5f);
-  aOutRect =
-      MakePathForRoundedRect(*aDrawTarget, focusRect.ToUnknownRect(), radii);
-}
-
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
     const EventStates& aState, StyleAppearance aAppearance) {
   MOZ_ASSERT(aAppearance == StyleAppearance::Checkbox ||
@@ -414,6 +394,21 @@ std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeScrollbarButtonColors(
   return {buttonColor, arrowColor, sScrollbarBorderColor};
 }
 
+static already_AddRefed<Path> GetFocusStrokePath(
+    DrawTarget* aDrawTarget, LayoutDeviceRect& aFocusRect,
+    LayoutDeviceCoord aOffset, const LayoutDeviceCoord aRadius,
+    LayoutDeviceCoord aFocusWidth) {
+  RectCornerRadii radii(aRadius, aRadius, aRadius, aRadius);
+  aFocusRect.Inflate(aOffset);
+
+  LayoutDeviceRect focusRect(aFocusRect);
+  // Deflate the rect by half the border width, so that the middle of the stroke
+  // fills exactly the area we want to fill and not more.
+  focusRect.Deflate(aFocusWidth * 0.5f);
+
+  return MakePathForRoundedRect(*aDrawTarget, focusRect.ToUnknownRect(), radii);
+}
+
 void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
                                                const LayoutDeviceRect& aRect,
                                                DPIRatio aDpiRatio,
@@ -422,29 +417,39 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
   // NOTE(emilio): If the widths or offsets here change, make sure to tweak the
   // GetWidgetOverflow path for FocusOutline.
   auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors();
+
   LayoutDeviceRect focusRect(aRect);
-  RefPtr<Path> roundedRect;
+
+  // The focus rect is painted outside of the border area (aRect), see:
+  //
+  //   data:text/html,<div style="border: 1px solid; outline: 2px solid
+  //   red">Foobar</div>
+  //
+  // But some controls might provide a negative offset to cover the border, if
+  // necessary.
   LayoutDeviceCoord offset = aOffset * aDpiRatio;
-  LayoutDeviceCoord strokeRadius((aRadius * aDpiRatio) + offset);
-  LayoutDeviceCoord strokeWidth(CSSCoord(2.0f) * aDpiRatio);
-  GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
-                     roundedRect);
+  LayoutDeviceCoord strokeWidth = CSSCoord(2.0f) * aDpiRatio;
+  focusRect.Inflate(strokeWidth);
+
+  LayoutDeviceCoord strokeRadius = aRadius * aDpiRatio;
+  RefPtr<Path> roundedRect = GetFocusStrokePath(aDrawTarget, focusRect, offset,
+                                                strokeRadius, strokeWidth);
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(innerColor)),
                       StrokeOptions(strokeWidth));
 
   offset = CSSCoord(1.0f) * aDpiRatio;
   strokeRadius += offset;
   strokeWidth = CSSCoord(1.0f) * aDpiRatio;
-  GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
-                     roundedRect);
+  roundedRect = GetFocusStrokePath(aDrawTarget, focusRect, offset, strokeRadius,
+                                   strokeWidth);
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(middleColor)),
                       StrokeOptions(strokeWidth));
 
   offset = CSSCoord(2.0f) * aDpiRatio;
   strokeRadius += offset;
   strokeWidth = CSSCoord(2.0f) * aDpiRatio;
-  GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
-                     roundedRect);
+  roundedRect = GetFocusStrokePath(aDrawTarget, focusRect, offset, strokeRadius,
+                                   strokeWidth);
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(outerColor)),
                       StrokeOptions(strokeWidth));
 }
@@ -493,7 +498,7 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
                              borderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, 5.0f, 1.0f);
   }
 }
 
@@ -621,7 +626,7 @@ void nsNativeBasicTheme::PaintRadioControl(DrawTarget* aDrawTarget,
                       borderWidth, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, 2.0f, 3.0f);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, 5.0f, 1.0f);
   }
 }
 
@@ -634,10 +639,7 @@ void nsNativeBasicTheme::PaintRadioCheckmark(DrawTarget* aDrawTarget,
   auto [backgroundColor, checkColor] = ComputeRadioCheckmarkColors(aState);
 
   LayoutDeviceRect rect(aRect);
-  rect.y += borderWidth * scale;
-  rect.x += borderWidth * scale;
-  rect.height -= borderWidth * scale * 2;
-  rect.width -= borderWidth * scale * 2;
+  rect.Deflate(borderWidth * scale);
 
   PaintStrokedEllipse(aDrawTarget, rect, checkColor, backgroundColor,
                       borderWidth, aDpiRatio);
@@ -655,7 +657,8 @@ void nsNativeBasicTheme::PaintTextField(DrawTarget* aDrawTarget,
                              kTextFieldBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius,
+                          -kTextFieldBorderWidth);
   }
 }
 
@@ -670,7 +673,8 @@ void nsNativeBasicTheme::PaintListbox(DrawTarget* aDrawTarget,
                              kMenulistBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius,
+                          -kMenulistBorderWidth);
   }
 }
 
@@ -685,7 +689,8 @@ void nsNativeBasicTheme::PaintMenulist(DrawTarget* aDrawTarget,
                              kMenulistBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius,
+                          -kMenulistBorderWidth);
   }
 }
 
@@ -873,7 +878,7 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                       thumbBorderWidth, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 1.0f);
   }
 }
 
@@ -1013,7 +1018,8 @@ void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                              kButtonBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius,
+                          -kButtonBorderWidth);
   }
 }
 
@@ -1284,6 +1290,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       PaintButton(aFrame, dt, devPxRect, eventState, dpiRatio);
       break;
     case StyleAppearance::FocusOutline:
+      // TODO(emilio): Consider supporting outline-radius / outline-offset?
       PaintRoundedFocusRect(dt, devPxRect, dpiRatio, 0.0f, 0.0f);
       break;
     default:
@@ -1378,6 +1385,8 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist:
     case StyleAppearance::Button:
+      // 2px for each segment, plus 1px separation, but we paint 1px inside the
+      // border area so 4px overflow.
       overflow.SizeTo(4, 4, 4, 4);
       break;
     default:
