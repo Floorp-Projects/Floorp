@@ -945,22 +945,10 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                              mSampleRate, mInputChannelCount, alreadyBuffered);
   }
 
-  bool iterate = mBuffer.Available();
   IterationResult result =
-      iterate
-          ? Graph()->OneIteration(nextStateComputedTime, mIterationEnd, &mMixer)
-          : IterationResult::CreateStillProcessing();
-  if (iterate) {
-    // We totally filled the buffer (and mScratchBuffer isn't empty).
-    // We don't need to run an iteration and if we do so we may overflow.
-    mStateComputedTime = nextStateComputedTime;
-  } else {
-    LOG(LogLevel::Verbose,
-        ("%p: DataCallback buffer filled entirely from scratch "
-         "buffer, skipping iteration.",
-         Graph()));
-    result = IterationResult::CreateStillProcessing();
-  }
+      Graph()->OneIteration(nextStateComputedTime, mIterationEnd, &mMixer);
+
+  mStateComputedTime = nextStateComputedTime;
 
   MOZ_ASSERT(mBuffer.Available() == 0,
              "The graph should have filled the buffer");
@@ -1099,7 +1087,7 @@ void AudioCallbackDriver::MixerCallback(AudioDataValue* aMixedBuffer,
   MOZ_ASSERT(InIteration());
   uint32_t toWrite = mBuffer.Available();
 
-  if (!mBuffer.Available()) {
+  if (!mBuffer.Available() && aFrames > 0) {
     NS_WARNING("DataCallback buffer full, expect frame drops.");
   }
 
