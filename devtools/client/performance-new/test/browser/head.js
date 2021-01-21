@@ -350,7 +350,7 @@ async function checkTabLoadedProfile({
   info("Attempting to see if the selected tab can receive a profile.");
 
   return waitUntil(() => {
-    switch (gBrowser.selectedTab.textContent) {
+    switch (gBrowser.selectedTab.label) {
       case initialTitle:
         logPeriodically(`> Waiting for the profile to be received.`);
         return false;
@@ -393,7 +393,7 @@ async function waitForTabUrl({
   info(`Waiting for the selected tab to have the url "${expectedUrl}".`);
 
   return waitUntil(() => {
-    switch (gBrowser.selectedTab.textContent) {
+    switch (gBrowser.selectedTab.label) {
       case initialTitle:
       case successTitle:
         if (gBrowser.currentURI.spec === expectedUrl) {
@@ -426,7 +426,7 @@ async function waitForTabTitle(title) {
   info(`Waiting for the selected tab to have the title "${title}".`);
 
   return waitUntil(() => {
-    if (gBrowser.selectedTab.textContent === title) {
+    if (gBrowser.selectedTab.label === title) {
       ok(true, `The selected tab has the title ${title}`);
       return true;
     }
