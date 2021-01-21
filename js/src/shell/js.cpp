@@ -188,7 +188,6 @@ using JS::CompileOptions;
 using js::shell::RCFile;
 
 using mozilla::ArrayEqual;
-using mozilla::ArrayLength;
 using mozilla::AsVariant;
 using mozilla::Atomic;
 using mozilla::MakeScopeExit;

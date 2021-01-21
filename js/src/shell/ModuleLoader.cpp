@@ -6,7 +6,6 @@
 
 #include "shell/ModuleLoader.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TextUtils.h"
 
@@ -18,6 +17,7 @@
 #include "shell/jsshell.h"
 #include "shell/OSObject.h"
 #include "shell/StringUtils.h"
+#include "util/Text.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/StringType.h"
@@ -35,7 +35,7 @@ static JSString* ExtractJavaScriptURLSource(JSContext* cx,
                                             HandleLinearString path) {
   MOZ_ASSERT(IsJavaScriptURL(path));
 
-  const size_t schemeLength = mozilla::ArrayLength(JavaScriptScheme) - 1;
+  const size_t schemeLength = js_strlen(JavaScriptScheme);
   return SubString(cx, path, schemeLength);
 }
 

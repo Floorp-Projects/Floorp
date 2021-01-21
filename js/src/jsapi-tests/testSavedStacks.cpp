@@ -4,8 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
-#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "jsfriendapi.h"
 
@@ -15,6 +14,7 @@
 #include "js/SavedFrameAPI.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
+#include "util/Text.h"
 #include "vm/ArrayObject.h"
 #include "vm/Realm.h"
 #include "vm/SavedStacks.h"
@@ -318,7 +318,7 @@ BEGIN_TEST(test_GetPendingExceptionStack) {
   opts.setFileAndLine("filename.js", 1U);
 
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
-  CHECK(srcBuf.init(cx, sourceText, mozilla::ArrayLength(sourceText) - 1,
+  CHECK(srcBuf.init(cx, sourceText, js_strlen(sourceText),
                     JS::SourceOwnership::Borrowed));
 
   JS::RootedValue val(cx);

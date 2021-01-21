@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
-#include "mozilla/Maybe.h"       // mozilla::Maybe
+#include "mozilla/Maybe.h"  // mozilla::Maybe
 #include "mozilla/Utf8.h"  // mozilla::IsTrailingUnit, mozilla::Utf8Unit, mozilla::DecodeOneUtf8CodePoint
 
 #include <inttypes.h>  // UINT8_MAX
@@ -16,7 +15,6 @@
 #include "vm/JSAtom.h"          // js::AtomizeChars, js::AtomizeUTF8Chars
 #include "vm/StringType.h"      // JSAtom
 
-using mozilla::ArrayLength;
 using mozilla::DecodeOneUtf8CodePoint;
 using mozilla::IsAscii;
 using mozilla::IsTrailingUnit;

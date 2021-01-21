@@ -6,7 +6,6 @@
 
 #include "shell/jsrtfuzzing/jsrtfuzzing.h"
 
-#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
 #include "mozilla/Assertions.h"  // MOZ_CRASH
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
@@ -25,6 +24,7 @@
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "js/Value.h"       // JS::Value
 #include "shell/jsshell.h"  // js::shell::{reportWarnings,PrintStackTrace,sArg{c,v}}
+#include "util/Text.h"
 #include "vm/Interpreter.h"
 #include "vm/TypedArrayObject.h"
 
@@ -120,8 +120,7 @@ int js::shell::FuzzJSRuntimeFuzz(const uint8_t* buf, size_t size) {
   static const char data[] = "JSFuzzIterate();";
 
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
-  if (!srcBuf.init(gCx, data, mozilla::ArrayLength(data) - 1,
-                   JS::SourceOwnership::Borrowed)) {
+  if (!srcBuf.init(gCx, data, js_strlen(data), JS::SourceOwnership::Borrowed)) {
     return 1;
   }
 
