@@ -2730,14 +2730,14 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
       }
     }
 
-    uint32_t directions =
+    layers::ScrollDirections directions =
         scrollableFrame->GetAvailableScrollingDirectionsForUserInputEvents();
-    if ((!(directions & nsIScrollableFrame::VERTICAL) &&
-         !(directions & nsIScrollableFrame::HORIZONTAL)) ||
+    if ((!(directions.contains(layers::ScrollDirection::eVertical)) &&
+         !(directions.contains(layers::ScrollDirection::eHorizontal))) ||
         (checkIfScrollableY && !checkIfScrollableX &&
-         !(directions & nsIScrollableFrame::VERTICAL)) ||
+         !(directions.contains(layers::ScrollDirection::eVertical))) ||
         (checkIfScrollableX && !checkIfScrollableY &&
-         !(directions & nsIScrollableFrame::HORIZONTAL))) {
+         !(directions.contains(layers::ScrollDirection::eHorizontal)))) {
       continue;
     }
 
@@ -3053,17 +3053,18 @@ void EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
           displayPanFeedback = false;
         }
       } else {  // Not a XUL box
-        uint32_t scrollbarVisibility =
+        layers::ScrollDirections scrollbarVisibility =
             scrollableFrame->GetScrollbarVisibility();
 
         // Check if we have visible scrollbars
-        if (scrollbarVisibility & nsIScrollableFrame::VERTICAL) {
+        if (scrollbarVisibility.contains(layers::ScrollDirection::eVertical)) {
           panDirection = WidgetGestureNotifyEvent::ePanVertical;
           displayPanFeedback = true;
           break;
         }
 
-        if (scrollbarVisibility & nsIScrollableFrame::HORIZONTAL) {
+        if (scrollbarVisibility.contains(
+                layers::ScrollDirection::eHorizontal)) {
           panDirection = WidgetGestureNotifyEvent::ePanHorizontal;
           displayPanFeedback = true;
         }
