@@ -119,7 +119,7 @@ description > .text-link:focus {
 
 #icons > .icon {
   -moz-context-properties: fill;
-  margin: 8px 5px;
+  margin: 5px;
   width: 16px;
   height: 16px;
 }
