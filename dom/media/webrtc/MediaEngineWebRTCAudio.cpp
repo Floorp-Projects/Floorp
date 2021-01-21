@@ -1165,32 +1165,11 @@ void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
   mPendingData.Push(aBuffer, aFrames, aRate, aChannels);
 }
 
-#define ResetProcessingIfNeeded(_processing)                         \
-  do {                                                               \
-    bool enabled = mAudioProcessing->_processing()->is_enabled();    \
-                                                                     \
-    if (enabled) {                                                   \
-      int rv = mAudioProcessing->_processing()->Enable(!enabled);    \
-      if (rv) {                                                      \
-        NS_WARNING("Could not reset the status of the " #_processing \
-                   " on device change.");                            \
-        return;                                                      \
-      }                                                              \
-      rv = mAudioProcessing->_processing()->Enable(enabled);         \
-      if (rv) {                                                      \
-        NS_WARNING("Could not reset the status of the " #_processing \
-                   " on device change.");                            \
-        return;                                                      \
-      }                                                              \
-    }                                                                \
-  } while (0)
-
 void AudioInputProcessing::DeviceChanged(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph->OnGraphThread());
+
   // Reset some processing
-  ResetProcessingIfNeeded(gain_control);
-  ResetProcessingIfNeeded(echo_cancellation);
-  ResetProcessingIfNeeded(noise_suppression);
+  mAudioProcessing->Initialize();
 }
 
 void AudioInputProcessing::End() {
