@@ -204,7 +204,8 @@ nsresult nsProgressFrame::AttributeChanged(int32_t aNameSpaceID,
 LogicalSize nsProgressFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
+    ComputeSizeFlags aFlags) {
   const WritingMode wm = GetWritingMode();
   LogicalSize autoSize(wm);
   autoSize.BSize(wm) = autoSize.ISize(wm) =

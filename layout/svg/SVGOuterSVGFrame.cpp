@@ -291,7 +291,7 @@ nsIFrame::SizeComputationResult SVGOuterSVGFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWritingMode,
     const LogicalSize& aCBSize, nscoord aAvailableISize,
     const LogicalSize& aMargin, const LogicalSize& aBorderPadding,
-    ComputeSizeFlags aFlags) {
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   if (IsRootOfImage() || mIsInObjectOrEmbed) {
     // The embedding element has sized itself using the CSS replaced element
     // sizing rules, using our intrinsic dimensions as necessary. The SVG spec
@@ -353,7 +353,7 @@ nsIFrame::SizeComputationResult SVGOuterSVGFrame::ComputeSize(
 
   return {ComputeSizeWithIntrinsicDimensions(
               aRenderingContext, aWritingMode, intrinsicSize, GetAspectRatio(),
-              cbSize, aMargin, aBorderPadding, aFlags),
+              cbSize, aMargin, aBorderPadding, aSizeOverrides, aFlags),
           AspectRatioUsage::None};
 }
 
