@@ -470,7 +470,7 @@ def is_apple_silicon(target):
 option(
     "--enable-arm64-fjcvtzs",
     default=is_apple_silicon,
-    help="Whether the target is known to have Aarch64 FJCVTZS instruction.",
+    help="{Enable|Disable} static use of FJCVTZS instruction on Aarch64 targets.",
 )
 
 # The "ARM Architecture Reference Manual" for ARMv8 defines the JSCVT flag as
