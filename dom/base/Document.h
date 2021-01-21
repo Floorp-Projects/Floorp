@@ -1252,6 +1252,11 @@ class Document : public nsINode,
   Element* FindContentForSubDocument(Document* aDocument) const;
 
   /**
+   * Get the content node for which this document is a sub document.
+   */
+  Element* GetEmbedderElement() const;
+
+  /**
    * Return the doctype for this document.
    */
   DocumentType* GetDoctype() const;
