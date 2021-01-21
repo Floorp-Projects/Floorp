@@ -98,7 +98,6 @@ struct ChunkInfo {
 
  private:
   friend class ChunkPool;
-  friend class js::NurseryDecommitTask;
   Chunk* next;
   Chunk* prev;
 

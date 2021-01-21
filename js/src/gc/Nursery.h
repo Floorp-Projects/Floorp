@@ -80,27 +80,29 @@ class MacroAssembler;
 
 class NurseryDecommitTask : public GCParallelTask {
  public:
-  explicit NurseryDecommitTask(gc::GCRuntime* gc) : GCParallelTask(gc) {}
+  explicit NurseryDecommitTask(gc::GCRuntime* gc);
+  bool reserveSpaceForBytes(size_t nbytes);
+
+  bool isEmpty(const AutoLockHelperThreadState& lock) const;
 
   void queueChunk(NurseryChunk* chunk, const AutoLockHelperThreadState& lock);
-
-  // queueRange can also update the current to-decommit range of the
-  // current chunk.
   void queueRange(size_t newCapacity, NurseryChunk& chunk,
                   const AutoLockHelperThreadState& lock);
 
-  void run(AutoLockHelperThreadState& lock) override;
-  void decommitChunk(gc::Chunk* chunk);
-  void decommitRange(AutoLockHelperThreadState& lock);
-
  private:
-  // Use the next pointers in Chunk::info to form a singly-linked list.
-  MainThreadOrGCTaskData<gc::Chunk*> queue;
+  using NurseryChunkVector = Vector<NurseryChunk*, 0, SystemAllocPolicy>;
+
+  void run(AutoLockHelperThreadState& lock) override;
+
+  NurseryChunkVector& chunksToDecommit() { return chunksToDecommit_.ref(); }
+  const NurseryChunkVector& chunksToDecommit() const {
+    return chunksToDecommit_.ref();
+  }
+
+  MainThreadOrGCTaskData<NurseryChunkVector> chunksToDecommit_;
 
   MainThreadOrGCTaskData<NurseryChunk*> partialChunk;
   MainThreadOrGCTaskData<size_t> partialCapacity;
-
-  gc::Chunk* popChunk(const AutoLockHelperThreadState& lock);
 };
 
 class TenuringTracer final : public GenericTracer {
