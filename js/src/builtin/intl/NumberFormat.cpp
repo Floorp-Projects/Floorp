@@ -8,7 +8,6 @@
 
 #include "builtin/intl/NumberFormat.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
@@ -346,16 +345,11 @@ static const MeasureUnit& FindSimpleMeasureUnit(const char* name) {
 }
 
 static constexpr size_t MaxUnitLength() {
-  // Enable by default when libstdc++ 7 is the minimal version expected
-#if _GLIBCXX_RELEASE >= 7
   size_t length = 0;
   for (const auto& unit : simpleMeasureUnits) {
     length = std::max(length, std::char_traits<char>::length(unit.name));
   }
   return length * 2 + std::char_traits<char>::length("-per-");
-#else
-  return mozilla::ArrayLength("mile-scandinavian-per-mile-scandinavian") - 1;
-#endif
 }
 
 bool js::intl::NumberFormatterSkeleton::unit(JSLinearString* unit) {
