@@ -266,7 +266,7 @@ void nsHtml5Tokenizer::emitStrBuf() {
 
 void nsHtml5Tokenizer::appendStrBuf(char16_t* buffer, int32_t offset,
                                     int32_t length) {
-  int32_t newLen = strBufLen + length;
+  int32_t newLen = nsHtml5Portability::checkedAdd(strBufLen, length);
   MOZ_ASSERT(newLen <= strBuf.length, "Previous buffer length insufficient.");
   if (MOZ_UNLIKELY(strBuf.length < newLen)) {
     if (MOZ_UNLIKELY(!EnsureBufferSpace(length))) {
