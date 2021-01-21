@@ -5505,8 +5505,8 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     zone->arenas.queueForForegroundSweep(fop, ForegroundObjectFinalizePhase);
     zone->arenas.queueForForegroundSweep(fop, ForegroundNonObjectFinalizePhase);
-    for (unsigned i = 0; i < ArrayLength(BackgroundFinalizePhases); ++i) {
-      zone->arenas.queueForBackgroundSweep(fop, BackgroundFinalizePhases[i]);
+    for (const auto& phase : BackgroundFinalizePhases) {
+      zone->arenas.queueForBackgroundSweep(fop, phase);
     }
 
     zone->arenas.queueForegroundThingsForSweep();
