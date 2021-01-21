@@ -2186,7 +2186,7 @@ nsresult LaunchChild(bool aBlankCommandLine) {
 
 #ifdef MOZ_JPROF
   // make sure JPROF doesn't think we're E10s
-  unsetenv("JPROF_SLAVE");
+  unsetenv("JPROF_ISCHILD");
 #endif
 
   if (aBlankCommandLine) {

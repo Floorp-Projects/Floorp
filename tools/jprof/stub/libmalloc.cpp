@@ -51,7 +51,7 @@ extern r_debug _r_debug;
 static int gLogFD = -1;
 static pthread_t main_thread;
 
-static bool gIsSlave = false;
+static bool gIsChild = false;
 static int gFilenamePID;
 
 static void startSignalCounter(unsigned long millisec);
@@ -152,7 +152,7 @@ static void DumpAddressMap() {
   }
 
   char filename[2048];
-  if (gIsSlave)
+  if (gIsChild)
     snprintf(filename, sizeof(filename), "%s-%d", M_MAPFILE, gFilenamePID);
   else
     snprintf(filename, sizeof(filename), "%s", M_MAPFILE);
@@ -558,7 +558,7 @@ NS_EXPORT_(void) setupProfilingStuff(void) {
      *               this does not affect the mapfile.
      *   JP_CIRCULAR -> use a circular buffer of size N, write/clear on SIGUSR1
      *
-     * JPROF_SLAVE is set if this is not the first process.
+     * JPROF_ISCHILD is set if this is not the first process.
      */
 
     circular = false;
@@ -633,12 +633,12 @@ NS_EXPORT_(void) setupProfilingStuff(void) {
       else
         f = M_LOGFILE;
 
-      char* is_slave = getenv("JPROF_SLAVE");
-      if (!is_slave) setenv("JPROF_SLAVE", "", 0);
-      gIsSlave = !!is_slave;
+      char* is_child = getenv("JPROF_ISCHILD");
+      if (!is_child) setenv("JPROF_ISCHILD", "", 0);
+      gIsChild = !!is_child;
 
       gFilenamePID = syscall(SYS_gettid);  // gettid();
-      if (is_slave)
+      if (is_child)
         snprintf(filename, sizeof(filename), "%s-%d", f, gFilenamePID);
       else
         snprintf(filename, sizeof(filename), "%s", f);
