@@ -9986,14 +9986,7 @@ PerHandlerParser<ParseHandler>::newName(const ParserName* name, TokenPos pos) {
 template <class ParseHandler>
 inline typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newPrivateName(const ParserName* name) {
-  return newPrivateName(name, pos());
-}
-
-template <class ParseHandler>
-inline typename ParseHandler::NameNodeType
-PerHandlerParser<ParseHandler>::newPrivateName(const ParserName* name,
-                                               TokenPos pos) {
-  return handler_.newPrivateName(name, pos);
+  return handler_.newPrivateName(name, pos());
 }
 
 template <class ParseHandler, typename Unit>
