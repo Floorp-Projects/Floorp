@@ -120,8 +120,6 @@ nsresult DateTimeFormat::FormatDateTime(
     }
   }
 
-  udat_close(dateTimeFormat);
-
   if (U_FAILURE(status)) {
     return NS_ERROR_FAILURE;
   }
