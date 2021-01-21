@@ -303,8 +303,6 @@ nsHttpHandler::nsHttpHandler()
       mEnforceH1Framing(FRAMECHECK_BARELY),
       mDefaultHpackBuffer(4096),
       mBug1563538(true),
-      mBug1563695(true),
-      mBug1556491(true),
       mHttp3Enabled(true),
       mQpackTableSize(4096),
       mHttp3MaxBlockedStreams(10),
@@ -1965,18 +1963,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetBool(HTTP_PREF("spdy.bug1563538"), &cVar);
     if (NS_SUCCEEDED(rv)) {
       mBug1563538 = cVar;
-    }
-  }
-  if (PREF_CHANGED(HTTP_PREF("spdy.bug1563695"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.bug1563695"), &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mBug1563695 = cVar;
-    }
-  }
-  if (PREF_CHANGED(HTTP_PREF("spdy.bug1556491"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.bug1556491"), &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mBug1556491 = cVar;
     }
   }
 
