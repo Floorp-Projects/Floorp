@@ -1148,12 +1148,6 @@ add_task(async function test_omit_frecency_notifications() {
   ];
   let promiseFrecenciesChanged = new Promise(resolve => {
     let frecencyObserverCheck = {
-      onFrecencyChanged() {
-        ok(
-          false,
-          "Should not fire frecencyChanged because we explicitly asked not to do so."
-        );
-      },
       onManyFrecenciesChanged() {
         ok(true, "Should fire many frecencies changed notification instead.");
         PlacesUtils.history.removeObserver(frecencyObserverCheck);
