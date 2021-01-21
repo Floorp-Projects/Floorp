@@ -419,4 +419,31 @@ class WebExecutorTest {
 
         stream.close()
     }
+
+    @Test
+    fun unsupportedUriScheme() {
+        val illegal = mapOf(
+            "" to "",
+            "a" to "a",
+            "ab" to "ab",
+            "abc" to "abc",
+            "htt" to "htt",
+            "123456789" to "123456789",
+            "1234567890" to "1234567890",
+            "12345678901" to "1234567890",
+            "file://test" to "file://tes",
+            "moz-extension://what" to "moz-extens"
+        )
+
+        for ((uri, truncated) in illegal) {
+            try {
+                fetch(WebRequest(uri))
+                throw IllegalStateException("fetch() should have thrown")
+            } catch (e: IllegalArgumentException) {
+                assertThat("Message should match",
+                        e.message,
+                        equalTo("Unsupported URI scheme: $truncated"))
+            }
+        }
+    }
 }
