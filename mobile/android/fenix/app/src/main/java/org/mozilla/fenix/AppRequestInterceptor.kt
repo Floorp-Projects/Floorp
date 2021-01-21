@@ -168,7 +168,7 @@ class AppRequestInterceptor(
     companion object {
         internal const val LOW_AND_MEDIUM_RISK_ERROR_PAGES = "low_and_medium_risk_error_pages.html"
         internal const val HIGH_RISK_ERROR_PAGES = "high_risk_error_pages.html"
-        internal const val AMO_BASE_URL = "https://addons.mozilla.org"
+        internal const val AMO_BASE_URL = BuildConfig.AMO_BASE_URL
         internal const val AMO_INSTALL_URL_REGEX = "$AMO_BASE_URL/android/downloads/file/([^\\s]+)/([^\\s]+\\.xpi)"
     }
 }

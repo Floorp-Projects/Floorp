@@ -37,7 +37,12 @@ android {
         testInstrumentationRunnerArguments clearPackageData: 'true'
         resValue "bool", "IS_DEBUG", "false"
         buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
-        buildConfigField "String", "AMO_COLLECTION", "\"7dfae8669acc4312a65e8ba5553036\""
+        // This should be the "public" base URL of AMO.
+        buildConfigField "String", "AMO_BASE_URL", "\"https://addons.mozilla.org\""
+        buildConfigField "String", "AMO_COLLECTION_NAME", "\"7dfae8669acc4312a65e8ba5553036\""
+        buildConfigField "String", "AMO_COLLECTION_USER", "\"mozilla\""
+        // This should be the base URL used to call the AMO API.
+        buildConfigField "String", "AMO_SERVER_URL", "\"https://services.addons.mozilla.org\""
         def deepLinkSchemeValue = "fenix-dev"
         buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
         manifestPlaceholders = [

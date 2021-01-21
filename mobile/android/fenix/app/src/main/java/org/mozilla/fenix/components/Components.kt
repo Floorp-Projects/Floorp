@@ -93,11 +93,15 @@ class Components(private val context: Context) {
             )
         }
         // Use build config otherwise
-        else if (!BuildConfig.AMO_COLLECTION.isNullOrEmpty()) {
+        else if (!BuildConfig.AMO_COLLECTION_USER.isNullOrEmpty() &&
+            !BuildConfig.AMO_COLLECTION_NAME.isNullOrEmpty()
+        ) {
             AddonCollectionProvider(
                 context,
                 core.client,
-                collectionName = BuildConfig.AMO_COLLECTION,
+                serverURL = BuildConfig.AMO_SERVER_URL,
+                collectionUser = BuildConfig.AMO_COLLECTION_USER,
+                collectionName = BuildConfig.AMO_COLLECTION_NAME,
                 maxCacheAgeInMinutes = DAY_IN_MINUTES
             )
         }
