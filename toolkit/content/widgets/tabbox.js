@@ -128,6 +128,10 @@
 
       switch (ShortcutUtils.getSystemActionForEvent(event)) {
         case ShortcutUtils.CYCLE_TABS:
+          Services.prefs.setBoolPref(
+            "browser.engagement.ctrlTab.has-used",
+            true
+          );
           if (this.tabs && this.handleCtrlTab) {
             this.tabs.advanceSelectedTab(event.shiftKey ? -1 : 1, true);
             event.preventDefault();

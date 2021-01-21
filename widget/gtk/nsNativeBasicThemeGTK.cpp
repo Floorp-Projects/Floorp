@@ -91,7 +91,7 @@ void nsNativeBasicThemeGTK::PaintScrollbarThumb(
     const EventStates& aElementState, const EventStates& aDocumentState,
     DPIRatio aDpiRatio) {
   sRGBColor thumbColor =
-      ComputeScrollbarthumbColor(aStyle, aElementState, aDocumentState);
+      ComputeScrollbarThumbColor(aFrame, aStyle, aElementState, aDocumentState);
   LayoutDeviceRect thumbRect(aRect);
   thumbRect.Deflate(floorf((aHorizontal ? aRect.height : aRect.width) / 4.0f));
   LayoutDeviceCoord radius =
@@ -106,7 +106,9 @@ void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget* aDrawTarget,
                                            const ComputedStyle& aStyle,
                                            const EventStates& aDocumentState,
                                            DPIRatio aDpiRatio, bool aIsRoot) {
-  sRGBColor trackColor = ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
+  auto [trackColor, borderColor] =
+      ComputeScrollbarColors(aFrame, aStyle, aDocumentState, aIsRoot);
+  Unused << borderColor;
   aDrawTarget->FillRect(aRect.ToUnknownRect(),
                         gfx::ColorPattern(ToDeviceColor(trackColor)));
 }
@@ -115,7 +117,9 @@ void nsNativeBasicThemeGTK::PaintScrollCorner(
     DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aDocumentState,
     DPIRatio aDpiRatio, bool aIsRoot) {
-  sRGBColor trackColor = ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
+  auto [trackColor, borderColor] =
+      ComputeScrollbarColors(aFrame, aStyle, aDocumentState, aIsRoot);
+  Unused << borderColor;
   aDrawTarget->FillRect(aRect.ToUnknownRect(),
                         gfx::ColorPattern(ToDeviceColor(trackColor)));
 }

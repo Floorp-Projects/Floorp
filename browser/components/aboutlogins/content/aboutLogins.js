@@ -138,6 +138,11 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       window.dispatchEvent(new CustomEvent("AboutLoginsRemaskPassword"));
       break;
     }
+    case "ImportPasswordsErrorDialog": {
+      let dialog = document.querySelector("import-error-dialog");
+      dialog.show(event.detail.value);
+      break;
+    }
   }
 });
 

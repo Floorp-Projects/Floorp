@@ -144,6 +144,8 @@ static const int32_t INPUT_RESULT_HANDLED =
     java::PanZoomController::INPUT_RESULT_HANDLED;
 static const int32_t INPUT_RESULT_HANDLED_CONTENT =
     java::PanZoomController::INPUT_RESULT_HANDLED_CONTENT;
+static const int32_t INPUT_RESULT_IGNORED =
+    java::PanZoomController::INPUT_RESULT_IGNORED;
 
 namespace {
 template <class Instance, class Impl>
@@ -390,13 +392,8 @@ class NPZCSupport final
         WheelDeltaAdjustmentStrategy::eNone);
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t ret =
-        (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
-            ? INPUT_RESULT_HANDLED
-            : INPUT_RESULT_HANDLED_CONTENT;
-
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-      return ret;
+      return INPUT_RESULT_IGNORED;
     }
 
     PostInputEvent([input, result](nsWindow* window) {
@@ -408,7 +405,9 @@ class NPZCSupport final
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return ret;
+        return (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
+                   ? INPUT_RESULT_HANDLED
+                   : INPUT_RESULT_HANDLED_CONTENT;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
         return INPUT_RESULT_UNHANDLED;
@@ -533,13 +532,8 @@ class NPZCSupport final
         nsWindow::GetEventTimeStamp(aTime), nsWindow::GetModifiers(aMetaState));
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t ret =
-        (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
-            ? INPUT_RESULT_HANDLED
-            : INPUT_RESULT_HANDLED_CONTENT;
-
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-      return ret;
+      return INPUT_RESULT_IGNORED;
     }
 
     PostInputEvent([input, result](nsWindow* window) {
@@ -551,7 +545,9 @@ class NPZCSupport final
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return ret;
+        return (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
+                   ? INPUT_RESULT_HANDLED
+                   : INPUT_RESULT_HANDLED_CONTENT;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
         return INPUT_RESULT_UNHANDLED;
@@ -797,10 +793,8 @@ class NPZCSupport final
         controller->InputBridge()->ReceiveInputEvent(aInput);
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       if (aReturnResult) {
-        aReturnResult->Complete(java::sdk::Integer::ValueOf(
-            (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
-                ? INPUT_RESULT_HANDLED
-                : INPUT_RESULT_HANDLED_CONTENT));
+        aReturnResult->Complete(
+            java::sdk::Integer::ValueOf(INPUT_RESULT_IGNORED));
       }
       return;
     }

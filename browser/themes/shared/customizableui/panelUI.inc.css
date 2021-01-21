@@ -138,6 +138,14 @@ panelview {
   padding: 0;
 }
 
+/* Prevent a scrollbar from appearing while the animation for transitioning from
+   one view to another runs, which would otherwise happen if the new view has
+   more height than the old one because that would mean that during the
+   animation the height of the multiview will be too short for the new view. */
+panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelview > .panel-subview-body {
+  overflow-y: hidden;
+}
+
 /* This section is to anchor all the drop down panels at the same height, shift the
   panel`s top margin according to its positioning and the uidensity of the window. */
 #downloadsPanel,

@@ -266,6 +266,13 @@ about-logins-import-file-picker-csv-filter-title =
       [macos] CSV Document
      *[other] CSV File
   }
+# A description for the .tsv file format that may be shown as the file type
+# filter by the operating system. TSV is short for 'tab separated values'.
+about-logins-import-file-picker-tsv-filter-title =
+  { PLATFORM() ->
+      [macos] TSV Document
+     *[other] TSV File
+  }
 
 ##
 ## Variables:
@@ -291,3 +298,17 @@ about-logins-import-dialog-items-error =
       *[other] <span>Errors:</span> <span data-l10n-name="count">{ $count }</span> <span data-l10n-name="meta">(not imported)</span>
   }
 about-logins-import-dialog-done = Done
+
+about-logins-import-dialog-error-title = Import Error
+about-logins-import-dialog-error-conflicting-values-title = Multiple Conflicting Values for One Login
+about-logins-import-dialog-error-conflicting-values-description = For example: multiple usernames, passwords, URLs, etc. for one login.
+about-logins-import-dialog-error-file-format-title = File Format Issue
+about-logins-import-dialog-error-file-format-description = Incorrect or missing column headers. Make sure the file includes columns for username, password and URL.
+about-logins-import-dialog-error-file-permission-title = Unable to Read File
+about-logins-import-dialog-error-file-permission-description = { -brand-short-name } does not have permission to read the file. Try changing the file permissions.
+about-logins-import-dialog-error-unable-to-read-title = Unable to Parse File
+about-logins-import-dialog-error-unable-to-read-description = Make sure you selected a CSV or TSV file.
+about-logins-import-dialog-error-no-logins-imported = No logins have been imported
+about-logins-import-dialog-error-learn-more = Learn more
+about-logins-import-dialog-error-try-again = Try Again…
+about-logins-import-dialog-error-cancel = Cancel

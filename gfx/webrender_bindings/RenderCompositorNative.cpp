@@ -579,12 +579,14 @@ bool RenderCompositorNativeSWGL::InitDefaultFramebuffer(
 
 void RenderCompositorNativeSWGL::CancelFrame() {
   if (mNativeLayerForEntireWindow && mLayerTarget) {
+    wr_swgl_init_default_framebuffer(mContext, 0, 0, 0, 0, 0, nullptr);
     UnmapNativeLayer();
   }
 }
 
 void RenderCompositorNativeSWGL::DoSwap() {
   if (mNativeLayerForEntireWindow && mLayerTarget) {
+    wr_swgl_init_default_framebuffer(mContext, 0, 0, 0, 0, 0, nullptr);
     UnmapNativeLayer();
   }
 }
