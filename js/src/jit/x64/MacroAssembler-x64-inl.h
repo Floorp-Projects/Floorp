@@ -724,6 +724,19 @@ void MacroAssembler::branchToComputedAddress(const BaseIndex& address) {
   jmp(Operand(address));
 }
 
+void MacroAssembler::cmpPtrMovePtr(Condition cond, Register lhs, Register rhs,
+                                   Register src, Register dest) {
+  cmpPtr(lhs, rhs);
+  cmovCCq(cond, src, dest);
+}
+
+void MacroAssembler::cmpPtrMovePtr(Condition cond, Register lhs,
+                                   const Address& rhs, Register src,
+                                   Register dest) {
+  cmpPtr(lhs, Operand(rhs));
+  cmovCCq(cond, src, dest);
+}
+
 void MacroAssembler::cmp32MovePtr(Condition cond, Register lhs, Imm32 rhs,
                                   Register src, Register dest) {
   cmp32(lhs, rhs);

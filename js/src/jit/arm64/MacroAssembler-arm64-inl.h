@@ -1746,9 +1746,20 @@ void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs,
                                  const Address& rhs, Register src,
                                  Register dest) {
-  cmp32(lhs, rhs);
-  Csel(ARMRegister(dest, 32), ARMRegister(src, 32), ARMRegister(dest, 32),
+  MOZ_CRASH("NYI");
+}
+
+void MacroAssembler::cmpPtrMovePtr(Condition cond, Register lhs, Register rhs,
+                                   Register src, Register dest) {
+  cmpPtr(lhs, rhs);
+  Csel(ARMRegister(dest, 64), ARMRegister(src, 64), ARMRegister(dest, 64),
        cond);
+}
+
+void MacroAssembler::cmpPtrMovePtr(Condition cond, Register lhs,
+                                   const Address& rhs, Register src,
+                                   Register dest) {
+  MOZ_CRASH("NYI");
 }
 
 void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
