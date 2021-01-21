@@ -98,7 +98,6 @@ class alignas(CellAlignBytes) ChunkHeader {
 
   // Whether this chunk is part of the nursery or the tenured heap.
   ChunkLocation location;
-  uint32_t : 32;  // padding
 
   // The store buffer for pointers from tenured things to things in this
   // chunk. Will be non-null if and only if this is a nursery chunk.
@@ -123,15 +122,6 @@ struct ChunkInfo {
  public:
   /* Free arenas are linked together with arena.next. */
   Arena* freeArenasHead;
-
-#if JS_BITS_PER_WORD == 32
-  /*
-   * Calculating sizes and offsets is simpler if sizeof(ChunkInfo) is
-   * architecture-independent.
-   * TODO: Remove this unnecessary padding.
-   */
-  char padding[24];
-#endif
 
   /*
    * Decommitted arenas are tracked by a bitmap in the chunk header. We use
@@ -186,13 +176,20 @@ const size_t CalculatedChunkPadSize = ChunkSize - CalculatedChunkSizeRequired;
 static_assert(CalculatedChunkPadSize * CHAR_BIT < BitsPerArenaWithHeaders,
               "Calculated ArenasPerChunk is too small");
 
+// Define a macro for the expected number of arenas so its value appears in the
+// error message if the assertion fails.
 #ifdef JS_GC_SMALL_CHUNK_SIZE
-static_assert(ArenasPerChunk == 62,
-              "Do not accidentally change our heap's density.");
+# if JS_BITS_PER_WORD == 32
+#  define EXPECTED_ARENA_COUNT 63
+# else
+#  define EXPECTED_ARENA_COUNT 62
+# endif
 #else
-static_assert(ArenasPerChunk == 252,
-              "Do not accidentally change our heap's density.");
+# define EXPECTED_ARENA_COUNT 252
 #endif
+static_assert(ArenasPerChunk == EXPECTED_ARENA_COUNT,
+              "Do not accidentally change our heap's density.");
+#undef EXPECTED_ARENA_COUNT
 
 // Mark bitmaps are atomic because they can be written by gray unmarking on the
 // main thread while read by sweeping on a background thread. The former does
