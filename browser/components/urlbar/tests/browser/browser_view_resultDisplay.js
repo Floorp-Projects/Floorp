@@ -17,21 +17,22 @@ add_task(async function setup() {
   });
 });
 
-async function testResult(input, expected) {
+async function testResult(input, expected, index = 1) {
   const ESCAPED_URL = encodeURI(input.url);
 
   await PlacesUtils.history.clear();
-  await PlacesTestUtils.addVisits({
-    uri: input.url,
-    title: input.title,
-  });
+  if (index > 0) {
+    await PlacesTestUtils.addVisits({
+      uri: input.url,
+      title: input.title,
+    });
+  }
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: input.query,
   });
-
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
   Assert.equal(result.url, ESCAPED_URL, "Should have the correct url to load");
   Assert.equal(
     result.displayed.url,
@@ -48,11 +49,13 @@ async function testResult(input, expected) {
     "none",
     "Should not have a type icon"
   );
-  Assert.equal(
-    result.image,
-    `page-icon:${ESCAPED_URL}`,
-    "Should have the correct favicon"
-  );
+  if (index > 0) {
+    Assert.equal(
+      result.image,
+      `page-icon:${ESCAPED_URL}`,
+      "Should have the correct favicon"
+    );
+  }
 
   assertDisplayedHighlights(
     "title",
@@ -330,5 +333,22 @@ add_task(async function test_case_insensitive_highlights_6() {
         ["fOo", true],
       ],
     }
+  );
+});
+
+add_task(async function test_no_highlight_fallback_heuristic_url() {
+  info("Test unvisited heuristic (fallback provider)");
+  await testResult(
+    {
+      query: "nonexisting.com",
+      title: "http://nonexisting.com/",
+      url: "http://nonexisting.com/",
+    },
+    {
+      displayedUrl: "", // URL heuristic only has title.
+      highlightedTitle: [["http://nonexisting.com/", false]],
+      highlightedUrl: [],
+    },
+    0 // Test the heuristic result.
   );
 });
