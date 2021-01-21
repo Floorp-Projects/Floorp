@@ -8,12 +8,12 @@
 
 #include "builtin/intl/DisplayNames.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
+#include <iterator>
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -283,8 +283,8 @@ static ULocaleDisplayNames* NewULocaleDisplayNames(
       UDISPCTX_NO_SUBSTITUTE,
   };
 
-  ULocaleDisplayNames* ldn = uldn_openForContext(
-      IcuLocale(locale), contexts, mozilla::ArrayLength(contexts), &status);
+  ULocaleDisplayNames* ldn = uldn_openForContext(IcuLocale(locale), contexts,
+                                                 std::size(contexts), &status);
   if (U_FAILURE(status)) {
     intl::ReportInternalError(cx);
     return nullptr;
@@ -770,7 +770,7 @@ static JSString* GetWeekdayDisplayName(JSContext* cx,
   if (!names) {
     return nullptr;
   }
-  MOZ_ASSERT(names->length() == mozilla::ArrayLength(indices));
+  MOZ_ASSERT(names->length() == std::size(indices));
 
   return names->get(weekday - 1).toString();
 }
@@ -821,7 +821,7 @@ static JSString* GetMonthDisplayName(
   if (!names) {
     return nullptr;
   }
-  MOZ_ASSERT(names->length() == mozilla::ArrayLength(indices));
+  MOZ_ASSERT(names->length() == std::size(indices));
 
   JSString* str = names->get(month - 1).toString();
   if (str->empty() && fallback == DisplayNamesFallback::Code) {
@@ -873,7 +873,7 @@ static JSString* GetQuarterDisplayName(JSContext* cx,
   if (!names) {
     return nullptr;
   }
-  MOZ_ASSERT(names->length() == mozilla::ArrayLength(indices));
+  MOZ_ASSERT(names->length() == std::size(indices));
 
   return names->get(quarter - 1).toString();
 }
@@ -901,7 +901,7 @@ static JSString* GetDayPeriodDisplayName(
   if (!names) {
     return nullptr;
   }
-  MOZ_ASSERT(names->length() == mozilla::ArrayLength(indices));
+  MOZ_ASSERT(names->length() == std::size(indices));
 
   return names->get(index).toString();
 }

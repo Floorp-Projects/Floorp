@@ -17,7 +17,6 @@
 
 #include "jsdate.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
@@ -25,6 +24,7 @@
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
+#include <iterator>
 #include <math.h>
 #include <string.h>
 
@@ -56,7 +56,6 @@
 
 using namespace js;
 
-using mozilla::ArrayLength;
 using mozilla::Atomic;
 using mozilla::BitwiseCast;
 using mozilla::IsAsciiAlpha;
@@ -1290,7 +1289,7 @@ static bool ParseDate(const CharT* s, size_t length, ClippedTime* result) {
         return len == 0;
       };
 
-      size_t k = ArrayLength(keywords);
+      size_t k = std::size(keywords);
       while (k-- > 0) {
         const CharsAndAction& keyword = keywords[k];
 
@@ -2818,7 +2817,7 @@ JSString* DateTimeHelper::timeZoneComment(JSContext* cx, double utcTime,
 
   char16_t* timeZoneStart = tzbuf + 2;
   constexpr size_t remainingSpace =
-      mozilla::ArrayLength(tzbuf) - 2 - 1;  // for the trailing ')'
+      std::size(tzbuf) - 2 - 1;  // for the trailing ')'
 
   int64_t utcMilliseconds = static_cast<int64_t>(utcTime);
   if (!DateTimeInfo::timeZoneDisplayName(timeZoneStart, remainingSpace,

@@ -19,6 +19,7 @@
 #ifdef __linux__
 #  include <dlfcn.h>
 #endif
+#include <iterator>
 #include <stdarg.h>
 #include <string.h>
 
@@ -1230,8 +1231,7 @@ JS_PUBLIC_API JSProtoKey JS_IdToProtoKey(JSContext* cx, HandleId id) {
     return JSProto_Null;
   }
 
-  static_assert(mozilla::ArrayLength(standard_class_names) ==
-                JSProto_LIMIT + 1);
+  static_assert(std::size(standard_class_names) == JSProto_LIMIT + 1);
   return static_cast<JSProtoKey>(stdnm - standard_class_names);
 }
 

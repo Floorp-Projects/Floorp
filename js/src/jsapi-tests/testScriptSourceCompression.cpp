@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
 #include "mozilla/Assertions.h"  // MOZ_RELEASE_ASSERT
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include <algorithm>  // std::all_of, std::equal, std::move, std::transform
+#include <iterator>   // std::size
 #include <memory>     // std::uninitialized_fill_n
 #include <stddef.h>   // size_t
 #include <stdint.h>   // uint32_t
@@ -37,7 +37,6 @@
 #include "vm/JSScript.h"  // JSScript, js::ScriptSource::MinimumCompressibleLength, js::SynchronouslyCompressSource
 #include "vm/Monitor.h"   // js::Monitor, js::AutoLockMonitor
 
-using mozilla::ArrayLength;
 using mozilla::Utf8Unit;
 
 struct JS_PUBLIC_API JSContext;
@@ -90,8 +89,7 @@ static JSFunction* EvaluateChars(JSContext* cx, Source<Unit> chars, size_t len,
   JS::Rooted<JS::Value> rval(cx);
   const char16_t name[] = {char16_t(functionName)};
   JS::SourceText<char16_t> srcbuf;
-  if (!srcbuf.init(cx, name, ArrayLength(name),
-                   JS::SourceOwnership::Borrowed)) {
+  if (!srcbuf.init(cx, name, std::size(name), JS::SourceOwnership::Borrowed)) {
     return nullptr;
   }
   if (!JS::Evaluate(cx, options, srcbuf, &rval)) {

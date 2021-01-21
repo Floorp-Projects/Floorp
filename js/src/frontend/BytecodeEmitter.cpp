@@ -10,7 +10,6 @@
 
 #include "frontend/BytecodeEmitter.h"
 
-#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
 #include "mozilla/Casting.h"     // mozilla::AssertedCast
 #include "mozilla/DebugOnly.h"   // mozilla::DebugOnly
 #include "mozilla/FloatingPoint.h"  // mozilla::NumberEqualsInt32, mozilla::NumberIsInt32
@@ -21,6 +20,7 @@
 #include "mozilla/Variant.h"        // mozilla::AsVariant
 
 #include <algorithm>
+#include <iterator>
 #include <string.h>
 
 #include "jstypes.h"  // JS_BIT
@@ -79,7 +79,6 @@
 using namespace js;
 using namespace js::frontend;
 
-using mozilla::ArrayLength;
 using mozilla::AssertedCast;
 using mozilla::AsVariant;
 using mozilla::DebugOnly;
@@ -8083,7 +8082,7 @@ static inline JSOp BinaryOpParseNodeKindToJSOp(ParseNodeKind pnk) {
   MOZ_ASSERT(pnk <= ParseNodeKind::BinOpLast);
   int parseNodeFirst = size_t(ParseNodeKind::BinOpFirst);
 #ifdef DEBUG
-  int jsopArraySize = ArrayLength(ParseNodeKindToJSOp);
+  int jsopArraySize = std::size(ParseNodeKindToJSOp);
   int parseNodeKindListSize =
       size_t(ParseNodeKind::BinOpLast) - parseNodeFirst + 1;
   MOZ_ASSERT(jsopArraySize == parseNodeKindListSize);

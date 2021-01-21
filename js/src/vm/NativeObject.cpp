@@ -6,13 +6,13 @@
 
 #include "vm/NativeObject-inl.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
 #include <algorithm>
+#include <iterator>
 
 #include "debugger/DebugAPI.h"
 #include "gc/Marking.h"
@@ -39,7 +39,6 @@
 using namespace js;
 
 using JS::AutoCheckCannotGC;
-using mozilla::ArrayLength;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
@@ -85,7 +84,7 @@ static constexpr EmptyObjectSlots emptyObjectSlotsHeaders[17] = {
     EmptyObjectSlots(12), EmptyObjectSlots(13), EmptyObjectSlots(14),
     EmptyObjectSlots(15), EmptyObjectSlots(16)};
 
-static_assert(ArrayLength(emptyObjectSlotsHeaders) ==
+static_assert(std::size(emptyObjectSlotsHeaders) ==
               NativeObject::MAX_FIXED_SLOTS + 1);
 
 HeapSlot* const js::emptyObjectSlotsForDictionaryObject[17] = {
@@ -99,7 +98,7 @@ HeapSlot* const js::emptyObjectSlotsForDictionaryObject[17] = {
     emptyObjectSlotsHeaders[14].slots(), emptyObjectSlotsHeaders[15].slots(),
     emptyObjectSlotsHeaders[16].slots()};
 
-static_assert(ArrayLength(emptyObjectSlotsForDictionaryObject) ==
+static_assert(std::size(emptyObjectSlotsForDictionaryObject) ==
               NativeObject::MAX_FIXED_SLOTS + 1);
 
 HeapSlot* const js::emptyObjectSlots = emptyObjectSlotsForDictionaryObject[0];
@@ -851,15 +850,15 @@ bool NativeObject::goodElementsAllocationAmount(JSContext* cx,
   //     print('0x' + (n * (1 << 20)).toString(16) + ', ');
   //     n = Math.ceil(n * 1.125);
   //   }
-  static const uint32_t BigBuckets[] = {
+  static constexpr uint32_t BigBuckets[] = {
       0x100000,  0x200000,  0x300000,  0x400000,  0x500000,  0x600000,
       0x700000,  0x800000,  0x900000,  0xb00000,  0xd00000,  0xf00000,
       0x1100000, 0x1400000, 0x1700000, 0x1a00000, 0x1e00000, 0x2200000,
       0x2700000, 0x2c00000, 0x3200000, 0x3900000, 0x4100000, 0x4a00000,
       0x5400000, 0x5f00000, 0x6b00000, 0x7900000, 0x8900000, 0x9b00000,
       0xaf00000, 0xc500000, 0xde00000, 0xfa00000};
-  MOZ_ASSERT(BigBuckets[ArrayLength(BigBuckets) - 1] <=
-             MAX_DENSE_ELEMENTS_ALLOCATION);
+  static_assert(BigBuckets[std::size(BigBuckets) - 1] <=
+                MAX_DENSE_ELEMENTS_ALLOCATION);
 
   // Pick the first bucket that'll fit |reqAllocated|.
   for (uint32_t b : BigBuckets) {

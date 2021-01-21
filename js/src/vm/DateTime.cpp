@@ -6,7 +6,6 @@
 
 #include "vm/DateTime.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
@@ -14,6 +13,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <iterator>
 #include <time.h>
 
 #if !defined(XP_WIN)
@@ -659,7 +659,7 @@ static icu::UnicodeString ReadTimeZoneLink(const char* tz) {
 
   char linkName[PathMax];
   constexpr size_t linkNameLen =
-      mozilla::ArrayLength(linkName) - 1;  // -1 to null-terminate.
+      std::size(linkName) - 1;  // -1 to null-terminate.
 
   // Return if the TZ value is too large.
   if (std::strlen(tz) > linkNameLen) {
@@ -670,7 +670,7 @@ static icu::UnicodeString ReadTimeZoneLink(const char* tz) {
 
   char linkTarget[PathMax];
   constexpr size_t linkTargetLen =
-      mozilla::ArrayLength(linkTarget) - 1;  // -1 to null-terminate.
+      std::size(linkTarget) - 1;  // -1 to null-terminate.
 
   uint32_t depth = 0;
 

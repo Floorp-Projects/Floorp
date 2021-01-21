@@ -9,6 +9,8 @@
 
 #include "vm/Caches.h"
 
+#include <iterator>
+
 #include "gc/Allocator.h"
 #include "gc/GCProbes.h"
 #include "vm/Probes.h"
@@ -42,7 +44,7 @@ inline void NewObjectCache::fillGlobal(EntryIndex entry, const JSClass* clasp,
 inline NativeObject* NewObjectCache::newObjectFromHit(JSContext* cx,
                                                       EntryIndex entryIndex,
                                                       gc::InitialHeap heap) {
-  MOZ_ASSERT(unsigned(entryIndex) < mozilla::ArrayLength(entries));
+  MOZ_ASSERT(unsigned(entryIndex) < std::size(entries));
   Entry* entry = &entries[entryIndex];
 
   NativeObject* templateObj =

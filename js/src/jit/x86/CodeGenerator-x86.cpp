@@ -6,9 +6,10 @@
 
 #include "jit/x86/CodeGenerator-x86.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+
+#include <iterator>
 
 #include "jsnum.h"
 
@@ -38,7 +39,7 @@ CodeGeneratorX86::CodeGeneratorX86(MIRGenerator* gen, LIRGraph* graph,
 static const uint32_t FrameSizes[] = {128, 256, 512, 1024};
 
 FrameSizeClass FrameSizeClass::FromDepth(uint32_t frameDepth) {
-  for (uint32_t i = 0; i < mozilla::ArrayLength(FrameSizes); i++) {
+  for (uint32_t i = 0; i < std::size(FrameSizes); i++) {
     if (frameDepth < FrameSizes[i]) {
       return FrameSizeClass(i);
     }
@@ -48,12 +49,12 @@ FrameSizeClass FrameSizeClass::FromDepth(uint32_t frameDepth) {
 }
 
 FrameSizeClass FrameSizeClass::ClassLimit() {
-  return FrameSizeClass(mozilla::ArrayLength(FrameSizes));
+  return FrameSizeClass(std::size(FrameSizes));
 }
 
 uint32_t FrameSizeClass::frameSize() const {
   MOZ_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
-  MOZ_ASSERT(class_ < mozilla::ArrayLength(FrameSizes));
+  MOZ_ASSERT(class_ < std::size(FrameSizes));
 
   return FrameSizes[class_];
 }
