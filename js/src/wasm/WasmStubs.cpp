@@ -18,9 +18,8 @@
 
 #include "wasm/WasmStubs.h"
 
-#include "mozilla/ArrayUtils.h"
-
 #include <algorithm>
+#include <iterator>
 
 #include "jit/ABIFunctions.h"
 #include "jit/JitFrames.h"
@@ -38,8 +37,6 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
-
-using mozilla::ArrayLength;
 
 typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 using ABIArgMIRTypeIter = jit::ABIArgIter<MIRTypeVector>;
@@ -2051,7 +2048,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                                       MIRType::Int32,     // argc
                                       MIRType::Pointer};  // argv
   MIRTypeVector invokeArgTypes;
-  MOZ_ALWAYS_TRUE(invokeArgTypes.append(typeArray, ArrayLength(typeArray)));
+  MOZ_ALWAYS_TRUE(invokeArgTypes.append(typeArray, std::size(typeArray)));
 
   // At the point of the call, the stack layout shall be (sp grows to the left):
   //  | stack args | padding | argv[] | padding | retaddr | caller stack args |

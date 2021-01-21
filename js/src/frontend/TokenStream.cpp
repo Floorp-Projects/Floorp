@@ -21,6 +21,7 @@
 #include "mozilla/Utf8.h"
 
 #include <algorithm>
+#include <iterator>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -49,7 +50,6 @@
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 
-using mozilla::ArrayLength;
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::AssertedCast;
 using mozilla::DecodeOneUtf8CodePoint;
@@ -1152,7 +1152,7 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::badStructurallyValidCodePoint(
       "FFFF");  // including '\0'
   char codePointCharsArray[MaxHexSize];
 
-  char* codePointStr = codePointCharsArray + ArrayLength(codePointCharsArray);
+  char* codePointStr = std::end(codePointCharsArray);
   *--codePointStr = '\0';
 
   // Note that by do-while looping here rather than while-looping, this

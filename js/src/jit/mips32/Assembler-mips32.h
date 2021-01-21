@@ -7,6 +7,8 @@
 #ifndef jit_mips32_Assembler_mips32_h
 #define jit_mips32_Assembler_mips32_h
 
+#include <iterator>
+
 #include "jit/mips-shared/Assembler-mips-shared.h"
 
 #include "jit/mips32/Architecture-mips32.h"
@@ -18,8 +20,7 @@ static constexpr Register CallTempReg4 = t4;
 static constexpr Register CallTempReg5 = t5;
 
 static constexpr Register CallTempNonArgRegs[] = {t0, t1, t2, t3, t4};
-static const uint32_t NumCallTempNonArgRegs =
-    mozilla::ArrayLength(CallTempNonArgRegs);
+static const uint32_t NumCallTempNonArgRegs = std::size(CallTempNonArgRegs);
 
 class ABIArgGenerator {
   unsigned usedArgSlots_;

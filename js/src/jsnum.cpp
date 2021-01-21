@@ -10,13 +10,13 @@
 
 #include "jsnum.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
+#include <iterator>
 #ifdef HAVE_LOCALECONV
 #  include <locale.h>
 #endif
@@ -52,7 +52,6 @@
 using namespace js;
 
 using mozilla::Abs;
-using mozilla::ArrayLength;
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::IsAsciiAlphanumeric;
 using mozilla::IsAsciiDigit;
@@ -809,7 +808,7 @@ JSLinearString* js::Int32ToString(JSContext* cx, int32_t si) {
   Latin1Char buffer[JSFatInlineString::MAX_LENGTH_LATIN1 + 1];
   size_t length;
   Latin1Char* start =
-      BackfillInt32InBuffer(si, buffer, ArrayLength(buffer), &length);
+      BackfillInt32InBuffer(si, buffer, std::size(buffer), &length);
 
   mozilla::Range<const Latin1Char> chars(start, length);
   JSInlineString* str =

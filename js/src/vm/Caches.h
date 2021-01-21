@@ -7,6 +7,7 @@
 #ifndef vm_Caches_h
 #define vm_Caches_h
 
+#include <iterator>
 #include <new>
 
 #include "frontend/SourceNotes.h"  // SrcNote
@@ -181,7 +182,7 @@ class NewObjectCache {
   EntryIndex makeIndex(const JSClass* clasp, gc::Cell* key,
                        gc::AllocKind kind) {
     uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + size_t(kind);
-    return hash % mozilla::ArrayLength(entries);
+    return hash % std::size(entries);
   }
 
   bool lookup(const JSClass* clasp, gc::Cell* key, gc::AllocKind kind,
@@ -196,7 +197,7 @@ class NewObjectCache {
 
   void fill(EntryIndex entry_, const JSClass* clasp, gc::Cell* key,
             gc::AllocKind kind, NativeObject* obj) {
-    MOZ_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
+    MOZ_ASSERT(unsigned(entry_) < std::size(entries));
     MOZ_ASSERT(entry_ == makeIndex(clasp, key, kind));
     Entry* entry = &entries[entry_];
 

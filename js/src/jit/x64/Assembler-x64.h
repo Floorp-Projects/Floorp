@@ -7,7 +7,7 @@
 #ifndef jit_x64_Assembler_x64_h
 #define jit_x64_Assembler_x64_h
 
-#include "mozilla/ArrayUtils.h"
+#include <iterator>
 
 #include "jit/JitCode.h"
 #include "jit/shared/Assembler-shared.h"
@@ -128,8 +128,7 @@ static constexpr uint32_t NumIntArgRegs = 4;
 static constexpr Register IntArgRegs[NumIntArgRegs] = {rcx, rdx, r8, r9};
 
 static constexpr Register CallTempNonArgRegs[] = {rax, rdi, rbx, rsi};
-static constexpr uint32_t NumCallTempNonArgRegs =
-    mozilla::ArrayLength(CallTempNonArgRegs);
+static constexpr uint32_t NumCallTempNonArgRegs = std::size(CallTempNonArgRegs);
 
 static constexpr FloatRegister FloatArgReg0 = xmm0;
 static constexpr FloatRegister FloatArgReg1 = xmm1;
@@ -150,8 +149,7 @@ static constexpr Register IntArgRegs[NumIntArgRegs] = {rdi, rsi, rdx,
                                                        rcx, r8,  r9};
 
 static constexpr Register CallTempNonArgRegs[] = {rax, rbx};
-static constexpr uint32_t NumCallTempNonArgRegs =
-    mozilla::ArrayLength(CallTempNonArgRegs);
+static constexpr uint32_t NumCallTempNonArgRegs = std::size(CallTempNonArgRegs);
 
 static constexpr FloatRegister FloatArgReg0 = xmm0;
 static constexpr FloatRegister FloatArgReg1 = xmm1;

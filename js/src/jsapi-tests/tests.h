@@ -7,10 +7,10 @@
 #ifndef jsapi_tests_tests_h
 #define jsapi_tests_tests_h
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Sprintf.h"
 
 #include <errno.h>
+#include <iterator>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -282,8 +282,7 @@ class JSAPITest {
   bool fail(const JSAPITestString& msg = JSAPITestString(),
             const char* filename = "-", int lineno = 0) {
     char location[256];
-    snprintf(location, mozilla::ArrayLength(location), "%s:%d:", filename,
-             lineno);
+    snprintf(location, std::size(location), "%s:%d:", filename, lineno);
 
     JSAPITestString message(location);
     message += msg;

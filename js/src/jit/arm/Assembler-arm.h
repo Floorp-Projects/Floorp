@@ -7,11 +7,11 @@
 #ifndef jit_arm_Assembler_arm_h
 #define jit_arm_Assembler_arm_h
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include <algorithm>
+#include <iterator>
 
 #include "jit/arm/Architecture-arm.h"
 #include "jit/arm/disasm/Disasm-arm.h"
@@ -80,8 +80,7 @@ static constexpr Register IntArgReg2 = r2;
 static constexpr Register IntArgReg3 = r3;
 static constexpr Register HeapReg = r10;
 static constexpr Register CallTempNonArgRegs[] = {r5, r6, r7, r8};
-static const uint32_t NumCallTempNonArgRegs =
-    mozilla::ArrayLength(CallTempNonArgRegs);
+static const uint32_t NumCallTempNonArgRegs = std::size(CallTempNonArgRegs);
 
 // These register assignments for the 64-bit atomic ops are frequently too
 // constraining, but we have no way of expressing looser constraints to the

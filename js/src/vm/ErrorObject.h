@@ -7,9 +7,9 @@
 #ifndef vm_ErrorObject_h_
 #define vm_ErrorObject_h_
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 
+#include <iterator>
 #include <stdint.h>
 
 #include "jspubtd.h"
@@ -64,8 +64,7 @@ class ErrorObject : public NativeObject {
   }
 
   static bool isErrorClass(const JSClass* clasp) {
-    return &classes[0] <= clasp &&
-           clasp < &classes[0] + mozilla::ArrayLength(classes);
+    return &classes[0] <= clasp && clasp < &classes[0] + std::size(classes);
   }
 
   // Create an error of the given type corresponding to the provided location

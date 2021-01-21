@@ -10,13 +10,13 @@
 
 #include "vm/JSFunction-inl.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Range.h"
 #include "mozilla/Utf8.h"
 
 #include <algorithm>
+#include <iterator>
 #include <string.h>
 
 #include "jsapi.h"
@@ -75,7 +75,6 @@
 
 using namespace js;
 
-using mozilla::ArrayLength;
 using mozilla::CheckedInt;
 using mozilla::Maybe;
 using mozilla::Some;
@@ -765,7 +764,7 @@ bool JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v,
 
 inline void JSFunction::trace(JSTracer* trc) {
   if (isExtended()) {
-    TraceRange(trc, ArrayLength(toExtended()->extendedSlots),
+    TraceRange(trc, std::size(toExtended()->extendedSlots),
                (GCPtrValue*)toExtended()->extendedSlots, "nativeReserved");
   }
 

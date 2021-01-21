@@ -7,6 +7,8 @@
 #ifndef jit_none_MacroAssembler_none_h
 #define jit_none_MacroAssembler_none_h
 
+#include <iterator>
+
 #include "jit/MoveResolver.h"
 #include "jit/shared/Assembler-shared.h"
 #include "wasm/WasmTypes.h"
@@ -48,8 +50,7 @@ static constexpr Register CallTempReg4{Registers::invalid_reg};
 static constexpr Register CallTempReg5{Registers::invalid_reg};
 static constexpr Register InvalidReg{Registers::invalid_reg};
 static constexpr Register CallTempNonArgRegs[] = {InvalidReg, InvalidReg};
-static const uint32_t NumCallTempNonArgRegs =
-    mozilla::ArrayLength(CallTempNonArgRegs);
+static const uint32_t NumCallTempNonArgRegs = std::size(CallTempNonArgRegs);
 
 static constexpr Register IntArgReg0{Registers::invalid_reg};
 static constexpr Register IntArgReg1{Registers::invalid_reg};

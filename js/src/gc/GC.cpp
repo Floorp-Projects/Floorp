@@ -193,7 +193,6 @@
 
 #include "gc/GC-inl.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MemoryReporting.h"
@@ -205,6 +204,7 @@
 
 #include <algorithm>
 #include <initializer_list>
+#include <iterator>
 #include <string.h>
 #include <utility>
 #ifndef XP_WIN
@@ -273,7 +273,6 @@
 using namespace js;
 using namespace js::gc;
 
-using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
@@ -309,8 +308,7 @@ static_assert(js::gc::JSClassAlignBytes >= MinFirstWordAlignment,
 static_assert(js::ScopeDataAlignBytes >= MinFirstWordAlignment,
               "CellFlagBitsReservedForGC should support scope data pointers");
 
-static_assert(mozilla::ArrayLength(slotsToThingKind) ==
-                  SLOTS_TO_THING_KIND_LIMIT,
+static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
 #define CHECK_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal,       \
@@ -448,11 +446,11 @@ void Arena::checkNoMarkedCells() {
 void Arena::staticAsserts() {
   static_assert(size_t(AllocKind::LIMIT) <= 255,
                 "All AllocKinds and AllocKind::LIMIT must fit in a uint8_t.");
-  static_assert(mozilla::ArrayLength(ThingSizes) == AllocKindCount,
+  static_assert(std::size(ThingSizes) == AllocKindCount,
                 "We haven't defined all thing sizes.");
-  static_assert(mozilla::ArrayLength(FirstThingOffsets) == AllocKindCount,
+  static_assert(std::size(FirstThingOffsets) == AllocKindCount,
                 "We haven't defined all offsets.");
-  static_assert(mozilla::ArrayLength(ThingsPerArena) == AllocKindCount,
+  static_assert(std::size(ThingsPerArena) == AllocKindCount,
                 "We haven't defined all counts.");
 }
 
@@ -1236,11 +1234,11 @@ const char* js::gc::AllocKindName(AllocKind kind) {
       FOR_EACH_ALLOCKIND(EXPAND_THING_NAME)
 #  undef EXPAND_THING_NAME
   };
-  static_assert(ArrayLength(names) == AllocKindCount,
+  static_assert(std::size(names) == AllocKindCount,
                 "names array should have an entry for every AllocKind");
 
   size_t i = size_t(kind);
-  MOZ_ASSERT(i < ArrayLength(names));
+  MOZ_ASSERT(i < std::size(names));
   return names[i];
 }
 
@@ -6149,7 +6147,7 @@ static UniquePtr<SweepAction> Sequence(UniquePtr<SweepAction> first,
                                        Rest... rest) {
   UniquePtr<SweepAction> actions[] = {std::move(first), std::move(rest)...};
   auto seq = MakeUnique<SweepActionSequence>();
-  if (!seq || !seq->init(actions, ArrayLength(actions))) {
+  if (!seq || !seq->init(actions, std::size(actions))) {
     return nullptr;
   }
 
