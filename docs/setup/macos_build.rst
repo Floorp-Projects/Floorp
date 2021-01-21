@@ -82,7 +82,7 @@ before and type:
 .. code-block:: shell
 
     # create a minimal build options file
-    echo "ac_add_options --with-macos-sdk=$HOME/SDK-archive/MacOSX10.11.sdk" >> mozconfig
+    echo "ac_add_options --with-macos-sdk=$HOME/SDK-archive/MacOSX10.12.sdk" >> mozconfig
 
     ./mach bootstrap
 
@@ -150,14 +150,14 @@ running ``xcode-select --install`` in your terminal.
 1.2 Get the local macOS SDK
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Firefox currently requires a local copy of macOS 10.11 SDK to build (all
+Firefox currently requires a local copy of macOS 10.12 SDK to build (all
 your other apps will still use your more recent version of this SDK,
 most probably matching your macOS version).
 
 There are various issues when building the Mozilla source code with
 other SDKs and that's why we recommend this specific version.
 
-To get the 10.11 SDK, first download Xcode 7.3.1 from the `More
+To get the 10.12 SDK, first download Xcode 8.2 from the `More
 Downloads for Apple
 Developers <https://developer.apple.com/download/more/>`__ page. Once
 downloaded, mount the .dmg file. Then in the Terminal run the following:
@@ -165,7 +165,7 @@ downloaded, mount the .dmg file. Then in the Terminal run the following:
 .. code-block:: shell
 
     mkdir -p $HOME/SDK-archive
-    cp -a /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk $HOME/SDK-archive/MacOSX10.11.sdk
+    cp -a /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk $HOME/SDK-archive/MacOSX10.12.sdk
 
 2. Install supplementary build tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -343,7 +343,7 @@ To get started quickly, create the file with the following contents:
     ac_add_options --enable-debug
 
     # Use the local copy of specific version of macOS SDK compatible with Mozilla source code
-    ac_add_options --with-macos-sdk=$HOME/SDK-archive/MacOSX10.11.sdk
+    ac_add_options --with-macos-sdk=$HOME/SDK-archive/MacOSX10.12.sdk
 
 Firefox no longer builds with gcc 4.8 or earlier, but the build system
 should automatically select clang if it is available in the PATH. If
@@ -396,7 +396,7 @@ more RAM and lots of fast disk space are always recommended.
 Software requirements
 ---------------------
 
--  **Operating System:** macOS 10.11 or later. It is advisable to
+-  **Operating System:** macOS 10.12 or later. It is advisable to
    upgrade to the latest “point” release by running Software Update,
    found in the Apple menu. You will need administrative privileges to
    set up your development environment
@@ -436,7 +436,7 @@ are intended to be added to your ``mozconfig`` file.
 
          ac_add_options --with-macos-sdk=/path/to/SDK
 
-   Official trunk builds use `MacOSX10.11.sdk`. Check
+   Official trunk builds use `MacOSX10.12.sdk`. Check
    `build/macosx/universal/mozconfig.common <https://searchfox.org/mozilla-central/source/build/macosx/cross-mozconfig.common>`__
    for the SDK version used for official builds of any particular source
    release.

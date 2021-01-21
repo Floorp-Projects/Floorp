@@ -11,7 +11,7 @@ Compiling Firefox for macOS requires a macOS SDK. The build system uses the SDK 
 default, and you can select a different SDK using the `mozconfig` option `--with-macos-sdk`:
 
 ```text
-ac_add_options --with-macos-sdk=/Users/username/SDKs/MacOSX10.11.sdk
+ac_add_options --with-macos-sdk=/Users/username/SDKs/MacOSX10.12.sdk
 ```
 
 ## Supported SDKs
@@ -19,13 +19,13 @@ ac_add_options --with-macos-sdk=/Users/username/SDKs/MacOSX10.11.sdk
 First off, Firefox runs on 10.9 and above. This is called the "minimum deployment target" and is
 independent of the SDK version.
 
-Our official Firefox builds compiled in CI (continuous integration) currently use the 10.11 SDK.
+Our official Firefox builds compiled in CI (continuous integration) currently use the 10.12 SDK.
 [Bug 1475652](https://bugzilla.mozilla.org/show_bug.cgi?id=1475652) tracks updating this SDK.
 
-For local builds, all SDKs from 10.11 to 10.15 are supported. Firefox should compile successfully
+For local builds, all SDKs from 10.12 to 10.15 are supported. Firefox should compile successfully
 with all of those SDKs, but minor differences in runtime behavior can occur.
 
-However, since only the 10.11 SDK is used in CI, compiling with different SDKs breaks from time to time.
+However, since only the 10.12 SDK is used in CI, compiling with different SDKs breaks from time to time.
 Such breakages should be [reported in Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?blocked=mach-busted&bug_type=defect&cc=:spohl,:mstange&component=General&form_name=enter_bug&keywords=regression&op_sys=macOS&product=Firefox%20Build%20System&rep_platform=All) and fixed quickly.
 
 Aside: Firefox seems to be a bit of a special snowflake with its ability to build with an arbitrary SDK.
