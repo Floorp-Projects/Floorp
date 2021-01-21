@@ -2468,8 +2468,7 @@ ArrayObject* DebugEnvironmentProxy::maybeSnapshot() const {
 void DebugEnvironmentProxy::initSnapshot(ArrayObject& o) {
   MOZ_ASSERT_IF(
       maybeSnapshot() != nullptr,
-      environment().is<CallObject>() &&
-          environment().as<CallObject>().callee().isGeneratorOrAsync());
+      CallObject::find(&environment())->callee().isGeneratorOrAsync());
   setReservedSlot(SNAPSHOT_SLOT, ObjectValue(o));
 }
 
