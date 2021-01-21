@@ -487,7 +487,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun updateSearchSuggestionsHintVisibility(state: SearchFragmentState) {
         view?.apply {
-            val showHint = state.showSearchSuggestionsHint && !state.showSearchShortcuts
+            val showHint = state.showSearchSuggestionsHint &&
+                    !state.showSearchShortcuts &&
+                    state.url != state.query
+
             findViewById<View>(R.id.search_suggestions_hint)?.isVisible = showHint
             search_suggestions_hint_divider?.isVisible = showHint
         }
