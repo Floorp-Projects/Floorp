@@ -286,6 +286,12 @@ class ProviderAutofill extends UrlbarProvider {
       return false;
     }
 
+    // Trying to autofill an extremely long string would be expensive, and
+    // not particularly useful since the filled part falls out of screen anyway.
+    if (queryContext.searchString.length > UrlbarUtils.MAX_TEXT_LENGTH) {
+      return false;
+    }
+
     // autoFill can only cope with history, bookmarks, and about: entries.
     if (
       !queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
