@@ -5433,8 +5433,32 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     const LogicalSize& aAvailableSize, const nsSize& aContainerSize,
     bool aHasLineClampEllipsis) {
   WritingMode outerWM = aReflowInput.GetWritingMode();
+
+  StyleSizeOverrides sizeOverrides;
+  // Override flex item's main size.
+  if (aItem.IsInlineAxisMainAxis()) {
+    sizeOverrides.mStyleISize.emplace(aItem.StyleMainSize());
+  } else {
+    sizeOverrides.mStyleBSize.emplace(aItem.StyleMainSize());
+  }
+  // Override flex item's cross size if it was stretched in the cross axis (in
+  // which case we're imposing a cross size).
+  if (aItem.IsStretched()) {
+    if (aItem.IsInlineAxisCrossAxis()) {
+      sizeOverrides.mStyleISize.emplace(aItem.StyleCrossSize());
+    } else {
+      sizeOverrides.mStyleBSize.emplace(aItem.StyleCrossSize());
+    }
+  }
+  if (sizeOverrides.mStyleBSize && aItem.HadMeasuringReflow()) {
+    // Because we are overriding the block-size, *and* we had an earlier
+    // "measuring" reflow, then this upcoming reflow needs to be treated as a
+    // resize. This sets relevant flags in ReflowInput::InitResizeFlags().
+    aItem.Frame()->SetHasBSizeChange(true);
+  }
+
   ReflowInput childReflowInput(PresContext(), aReflowInput, aItem.Frame(),
-                               aAvailableSize);
+                               aAvailableSize, Nothing(), {}, sizeOverrides);
   childReflowInput.mFlags.mInsideLineClamp = GetLineClampValue() != 0;
   // This is the final reflow of this flex item; if we previously had a
   // -webkit-line-clamp, and we missed our chance to clear the ellipsis
@@ -5443,47 +5467,10 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   childReflowInput.mFlags.mApplyLineClamp =
       !childReflowInput.mFlags.mInsideLineClamp && aHasLineClampEllipsis;
 
-  // Keep track of whether we've overriden the child's computed ISize
-  // and/or BSize, so we can set its resize flags accordingly.
-  bool didOverrideComputedISize = false;
-  bool didOverrideComputedBSize = false;
-
-  // Override computed main-size
-  if (aItem.IsInlineAxisMainAxis()) {
-    childReflowInput.SetComputedISize(aItem.MainSize());
-    didOverrideComputedISize = true;
-  } else {
-    childReflowInput.SetComputedBSize(aItem.MainSize());
-    childReflowInput.mFlags.mBSizeIsSetByAspectRatio = false;
-    didOverrideComputedBSize = true;
-    if (aItem.TreatBSizeAsIndefinite()) {
-      childReflowInput.mFlags.mTreatBSizeAsIndefinite = true;
-    }
+  if (aItem.TreatBSizeAsIndefinite() && aItem.IsBlockAxisMainAxis()) {
+    childReflowInput.mFlags.mTreatBSizeAsIndefinite = true;
   }
 
-  // Override reflow input's computed cross-size if either:
-  // - the item was stretched (in which case we're imposing a cross size)
-  // ...or...
-  // - the item it has an aspect ratio (in which case the cross-size that's
-  // currently in the reflow input is based on arithmetic involving a stale
-  // main-size value that we just stomped on above). (Note that we could handle
-  // this case using an AutoFlexItemMainSizeOverride, as we do elsewhere; but
-  // given that we *already know* the correct cross size to use here, it's
-  // cheaper to just directly set it instead of setting a frame property.)
-  if (aItem.IsStretched() || aItem.HasAspectRatio()) {
-    if (aItem.IsInlineAxisCrossAxis()) {
-      childReflowInput.SetComputedISize(aItem.CrossSize());
-      didOverrideComputedISize = true;
-    } else {
-      // Note that in the above cases we don't need to worry about the BSize
-      // needing to be treated as indefinite, because this is for cases where
-      // the block size would always be considered definite (or where its
-      // definiteness would be irrelevant).
-      childReflowInput.SetComputedBSize(aItem.CrossSize());
-      childReflowInput.mFlags.mBSizeIsSetByAspectRatio = false;
-      didOverrideComputedBSize = true;
-    }
-  }
   if (aItem.IsStretched() && aItem.IsBlockAxisCrossAxis()) {
     // This item is stretched (in the cross axis), and that axis is its block
     // axis.  That stretching effectively gives it a relative BSize.
@@ -5497,22 +5484,6 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
 
-  // If we're overriding the computed width or height, *and* we had an
-  // earlier "measuring" reflow, then this upcoming reflow needs to be
-  // treated as a resize.
-  if (aItem.HadMeasuringReflow()) {
-    if (didOverrideComputedISize) {
-      // (This is somewhat redundant, since ReflowInput::InitResizeFlags()
-      // already calls SetIResize() whenever our computed ISize has changed
-      // since the previous reflow. Still, it's nice for symmetry, and it might
-      // be necessary for some edge cases.)
-      childReflowInput.SetIResize(true);
-    }
-    if (didOverrideComputedBSize) {
-      childReflowInput.SetBResize(true);
-      childReflowInput.mFlags.mIsBResizeForPercentages = true;
-    }
-  }
   // NOTE: Be very careful about doing anything else with childReflowInput
   // after this point, because some of its methods (e.g. SetComputedWidth)
   // internally call InitResizeFlags and stomp on mVResize & mHResize.
