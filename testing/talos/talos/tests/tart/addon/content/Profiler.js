@@ -94,7 +94,7 @@ var Profiler;
         _profiler.StartProfiler(
           profiler_entries,
           profiler_interval,
-          ["js", "leaf", "stackwalk", "threads"],
+          ["js", "leaf", "stackwalk", "threads", "cpu"],
           profiler_threadsArray
         );
         _profiler.PauseSampling();
