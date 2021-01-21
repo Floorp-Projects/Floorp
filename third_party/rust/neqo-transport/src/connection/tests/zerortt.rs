@@ -4,12 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::Connection;
-use super::{
-    connect, default_client, default_server, exchange_ticket, CountingConnectionIdGenerator,
-};
+use super::super::{Connection, FixedConnectionIdManager};
+use super::{connect, default_client, default_server, exchange_ticket};
 use crate::events::ConnectionEvent;
-use crate::{ConnectionParameters, Error, StreamType};
+use crate::frame::StreamType;
+use crate::{ConnectionParameters, Error};
 
 use neqo_common::event::Provider;
 use neqo_crypto::{AllowZeroRtt, AntiReplay};
@@ -63,13 +62,8 @@ fn zero_rtt_send_recv() {
 
     let server_hs = server.process(client_hs.dgram(), now());
     assert!(server_hs.as_dgram_ref().is_some()); // ServerHello, etc...
-
-    let all_frames = server.stats().frame_tx.all;
-    let ack_frames = server.stats().frame_tx.ack;
     let server_process_0rtt = server.process(client_0rtt.dgram(), now());
-    assert!(server_process_0rtt.as_dgram_ref().is_some());
-    assert_eq!(server.stats().frame_tx.all, all_frames + 1);
-    assert_eq!(server.stats().frame_tx.ack, ack_frames + 1);
+    assert!(server_process_0rtt.as_dgram_ref().is_none());
 
     let server_stream_id = server
         .events()
@@ -138,8 +132,8 @@ fn zero_rtt_send_reject() {
     let mut server = Connection::new_server(
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
-        Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        ConnectionParameters::default(),
+        Rc::new(RefCell::new(FixedConnectionIdManager::new(10))),
+        &ConnectionParameters::default(),
     )
     .unwrap();
     // Using a freshly initialized anti-replay context
@@ -189,10 +183,11 @@ fn zero_rtt_send_reject() {
     let stream_id_after_reject = client.stream_create(StreamType::UniDi).unwrap();
     assert_eq!(stream_id, stream_id_after_reject);
     client.stream_send(stream_id_after_reject, MESSAGE).unwrap();
-    let client_after_reject = client.process(None, now()).dgram();
-    assert!(client_after_reject.is_some());
+    let client_after_reject = client.process(None, now());
+    assert!(client_after_reject.as_dgram_ref().is_some());
 
     // The server should receive new stream
-    server.process_input(client_after_reject.unwrap(), now());
+    let server_out = server.process(client_after_reject.dgram(), now());
+    assert!(server_out.as_dgram_ref().is_none()); // suppress the ack
     assert!(server.events().any(recvd_stream_evt));
 }
