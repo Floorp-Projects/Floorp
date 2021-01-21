@@ -10,8 +10,8 @@ use neqo_common::{qtrace, Decoder};
 
 use crate::cid::MAX_CONNECTION_ID_LEN;
 use crate::packet::PacketType;
-use crate::stream_id::{StreamId, StreamIndex};
-use crate::{AppError, ConnectionError, Error, Res, TransportError, ERROR_APPLICATION_CLOSE};
+use crate::stream_id::{StreamId, StreamIndex, StreamType};
+use crate::{AppError, ConnectionError, Error, Res, TransportError};
 
 use std::convert::TryFrom;
 use std::ops::RangeInclusive;
@@ -37,49 +37,17 @@ const FRAME_TYPE_DATA_BLOCKED: FrameType = 0x14;
 const FRAME_TYPE_STREAM_DATA_BLOCKED: FrameType = 0x15;
 const FRAME_TYPE_STREAMS_BLOCKED_BIDI: FrameType = 0x16;
 const FRAME_TYPE_STREAMS_BLOCKED_UNIDI: FrameType = 0x17;
-const FRAME_TYPE_NEW_CONNECTION_ID: FrameType = 0x18;
-const FRAME_TYPE_RETIRE_CONNECTION_ID: FrameType = 0x19;
-const FRAME_TYPE_PATH_CHALLENGE: FrameType = 0x1a;
-const FRAME_TYPE_PATH_RESPONSE: FrameType = 0x1b;
+pub const FRAME_TYPE_NEW_CONNECTION_ID: FrameType = 0x18;
+pub const FRAME_TYPE_RETIRE_CONNECTION_ID: FrameType = 0x19;
+pub const FRAME_TYPE_PATH_CHALLENGE: FrameType = 0x1a;
+pub const FRAME_TYPE_PATH_RESPONSE: FrameType = 0x1b;
 pub const FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT: FrameType = 0x1c;
 pub const FRAME_TYPE_CONNECTION_CLOSE_APPLICATION: FrameType = 0x1d;
-const FRAME_TYPE_HANDSHAKE_DONE: FrameType = 0x1e;
+pub const FRAME_TYPE_HANDSHAKE_DONE: FrameType = 0x1e;
 
 const STREAM_FRAME_BIT_FIN: u64 = 0x01;
 const STREAM_FRAME_BIT_LEN: u64 = 0x02;
 const STREAM_FRAME_BIT_OFF: u64 = 0x04;
-
-/// `FRAME_APPLICATION_CLOSE` is the default CONNECTION_CLOSE frame that
-/// is sent when an application error code needs to be sent in an
-/// Initial or Handshake packet.
-const FRAME_APPLICATION_CLOSE: &Frame = &Frame::ConnectionClose {
-    error_code: CloseError::Transport(ERROR_APPLICATION_CLOSE),
-    frame_type: 0,
-    reason_phrase: Vec::new(),
-};
-
-#[derive(PartialEq, Debug, Copy, Clone, PartialOrd, Eq, Ord, Hash)]
-/// Bi-Directional or Uni-Directional.
-pub enum StreamType {
-    BiDi,
-    UniDi,
-}
-
-impl StreamType {
-    fn frame_type_bit(self) -> u64 {
-        match self {
-            Self::BiDi => 0,
-            Self::UniDi => 1,
-        }
-    }
-    fn from_type_bit(bit: u64) -> Self {
-        if (bit & 0x01) == 0 {
-            Self::BiDi
-        } else {
-            Self::UniDi
-        }
-    }
-}
 
 #[derive(PartialEq, Eq, Debug, PartialOrd, Ord, Clone, Copy)]
 pub enum CloseError {
@@ -206,6 +174,21 @@ pub enum Frame<'a> {
 }
 
 impl<'a> Frame<'a> {
+    fn get_stream_type_bit(stream_type: StreamType) -> u64 {
+        match stream_type {
+            StreamType::BiDi => 0,
+            StreamType::UniDi => 1,
+        }
+    }
+
+    fn stream_type_from_bit(bit: u64) -> StreamType {
+        if (bit & 0x01) == 0 {
+            StreamType::BiDi
+        } else {
+            StreamType::UniDi
+        }
+    }
+
     pub fn get_type(&self) -> FrameType {
         match self {
             Self::Padding => FRAME_TYPE_PADDING,
@@ -221,12 +204,12 @@ impl<'a> Frame<'a> {
             Self::MaxData { .. } => FRAME_TYPE_MAX_DATA,
             Self::MaxStreamData { .. } => FRAME_TYPE_MAX_STREAM_DATA,
             Self::MaxStreams { stream_type, .. } => {
-                FRAME_TYPE_MAX_STREAMS_BIDI + stream_type.frame_type_bit()
+                FRAME_TYPE_MAX_STREAMS_BIDI + Self::get_stream_type_bit(*stream_type)
             }
             Self::DataBlocked { .. } => FRAME_TYPE_DATA_BLOCKED,
             Self::StreamDataBlocked { .. } => FRAME_TYPE_STREAM_DATA_BLOCKED,
             Self::StreamsBlocked { stream_type, .. } => {
-                FRAME_TYPE_STREAMS_BLOCKED_BIDI + stream_type.frame_type_bit()
+                FRAME_TYPE_STREAMS_BLOCKED_BIDI + Self::get_stream_type_bit(*stream_type)
             }
             Self::NewConnectionId { .. } => FRAME_TYPE_NEW_CONNECTION_ID,
             Self::RetireConnectionId { .. } => FRAME_TYPE_RETIRE_CONNECTION_ID,
@@ -253,21 +236,20 @@ impl<'a> Frame<'a> {
         t
     }
 
-    /// Convert a CONNECTION_CLOSE into a nicer CONNECTION_CLOSE.
-    pub fn sanitize_close(&self) -> &Self {
-        if let Self::ConnectionClose { error_code, .. } = &self {
-            if let CloseError::Application(_) = error_code {
-                FRAME_APPLICATION_CLOSE
-            } else {
-                self
-            }
-        } else {
-            panic!("Attempted to sanitize a non-close frame");
-        }
-    }
-
+    /// If the frame causes a recipient to generate an ACK within its
+    /// advertised maximum acknowledgement delay.
     pub fn ack_eliciting(&self) -> bool {
         !matches!(self, Self::Ack { .. } | Self::Padding | Self::ConnectionClose { .. })
+    }
+
+    /// If the frame can be sent in a path probe
+    /// without initiating migration to that path.
+    pub fn path_probing(&self) -> bool {
+        matches!(self,
+            Self::Padding
+            | Self::NewConnectionId { .. }
+            | Self::PathChallenge { .. }
+            | Self::PathResponse { .. })
     }
 
     /// Converts AckRanges as encoded in a ACK frame (see -transport
@@ -460,7 +442,7 @@ impl<'a> Frame<'a> {
                     return Err(Error::StreamLimitError);
                 }
                 Ok(Self::MaxStreams {
-                    stream_type: StreamType::from_type_bit(t),
+                    stream_type: Self::stream_type_from_bit(t),
                     maximum_streams: StreamIndex::new(m),
                 })
             }
@@ -473,7 +455,7 @@ impl<'a> Frame<'a> {
             }),
             FRAME_TYPE_STREAMS_BLOCKED_BIDI | FRAME_TYPE_STREAMS_BLOCKED_UNIDI => {
                 Ok(Self::StreamsBlocked {
-                    stream_type: StreamType::from_type_bit(t),
+                    stream_type: Self::stream_type_from_bit(t),
                     stream_limit: StreamIndex::new(dv(dec)?),
                 })
             }

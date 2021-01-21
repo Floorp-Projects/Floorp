@@ -11,8 +11,7 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 
 use crate::connection::State;
-use crate::frame::StreamType;
-use crate::stream_id::StreamId;
+use crate::stream_id::{StreamId, StreamType};
 use crate::AppError;
 use neqo_common::event::Provider as EventProvider;
 use neqo_crypto::ResumptionToken;
