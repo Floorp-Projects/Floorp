@@ -319,7 +319,10 @@ public class GeckoSession {
 
                     ProgressDelegate progressDelegate = getProgressDelegate();
                     if (progressDelegate != null) {
-                        progressDelegate.onSessionStateChange(GeckoSession.this, new SessionState(mStateCache));
+                        final SessionState state = new SessionState(mStateCache);
+                        if (!state.isEmpty()) {
+                            progressDelegate.onSessionStateChange(GeckoSession.this, state);
+                        }
                     }
 
                     if (update.getBundle("historychange") != null) {
@@ -632,7 +635,10 @@ public class GeckoSession {
                     if (update != null) {
                         if (getHistoryDelegate() == null) {
                             mStateCache.updateSessionState(update);
-                            delegate.onSessionStateChange(GeckoSession.this, new SessionState(mStateCache));
+                            final SessionState state = new SessionState(mStateCache);
+                            if (!state.isEmpty()) {
+                                delegate.onSessionStateChange(GeckoSession.this, state);
+                            }
                         }
                     }
                 }
