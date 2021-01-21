@@ -2050,6 +2050,15 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       InvalidateAfterBailout(cx, outerScript, "eager range analysis failure");
       break;
 
+    case BailoutKind::UnboxFolding:
+      // An unbox that was hoisted to fold with a load bailed out.
+      // To avoid bailout loops, we set a flag to avoid folding
+      // loads with unboxes next time we recompile.
+      MOZ_ASSERT(!outerScript->hadUnboxFoldingBailout());
+      outerScript->setHadUnboxFoldingBailout();
+      InvalidateAfterBailout(cx, outerScript, "unbox folding failure");
+      break;
+
     case BailoutKind::TooManyArguments:
       // A funapply or spread call had more than JIT_ARGS_LENGTH_MAX arguments.
       // We will invalidate and disable recompilation if this happens too often.

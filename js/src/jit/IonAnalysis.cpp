@@ -4166,30 +4166,26 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
 
       MIRType type = unbox->type();
       MUnbox::Mode mode = unbox->mode();
-      BailoutKind bailoutKind = unbox->bailoutKind();
 
       MInstruction* replacement;
       switch (load->op()) {
         case MDefinition::Opcode::LoadFixedSlot: {
           auto* loadIns = load->toLoadFixedSlot();
           replacement = MLoadFixedSlotAndUnbox::New(
-              graph.alloc(), loadIns->object(), loadIns->slot(), mode, type,
-              bailoutKind);
+              graph.alloc(), loadIns->object(), loadIns->slot(), mode, type);
           break;
         }
         case MDefinition::Opcode::LoadDynamicSlot: {
           auto* loadIns = load->toLoadDynamicSlot();
           replacement = MLoadDynamicSlotAndUnbox::New(
-              graph.alloc(), loadIns->slots(), loadIns->slot(), mode, type,
-              bailoutKind);
+              graph.alloc(), loadIns->slots(), loadIns->slot(), mode, type);
           break;
         }
         case MDefinition::Opcode::LoadElement: {
           auto* loadIns = load->toLoadElement();
           MOZ_ASSERT_IF(loadIns->needsHoleCheck(), unbox->fallible());
           replacement = MLoadElementAndUnbox::New(
-              graph.alloc(), loadIns->elements(), loadIns->index(), mode, type,
-              bailoutKind);
+              graph.alloc(), loadIns->elements(), loadIns->index(), mode, type);
           break;
         }
         default:

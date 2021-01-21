@@ -6180,8 +6180,7 @@ class MPhi final : public MDefinition,
         isIterator_(false),
         canProduceFloat32_(false),
         canConsumeFloat32_(false),
-        usageAnalysis_(PhiUsage::Unknown)
-  {
+        usageAnalysis_(PhiUsage::Unknown) {
     setResultType(resultType);
   }
 
@@ -7593,14 +7592,14 @@ class MLoadElementAndUnbox : public MBinaryInstruction,
   MUnbox::Mode mode_;
 
   MLoadElementAndUnbox(MDefinition* elements, MDefinition* index,
-                       MUnbox::Mode mode, MIRType type, BailoutKind kind)
+                       MUnbox::Mode mode, MIRType type)
       : MBinaryInstruction(classOpcode, elements, index), mode_(mode) {
     setResultType(type);
     setMovable();
     if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
-    setBailoutKind(kind);
+    setBailoutKind(BailoutKind::UnboxFolding);
   }
 
  public:
@@ -8299,14 +8298,14 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
   MUnbox::Mode mode_;
 
   MLoadFixedSlotAndUnbox(MDefinition* obj, size_t slot, MUnbox::Mode mode,
-                         MIRType type, BailoutKind kind)
+                         MIRType type)
       : MUnaryInstruction(classOpcode, obj), slot_(slot), mode_(mode) {
     setResultType(type);
     setMovable();
     if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
-    setBailoutKind(kind);
+    setBailoutKind(BailoutKind::UnboxFolding);
   }
 
  public:
@@ -8343,14 +8342,14 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
   MUnbox::Mode mode_;
 
   MLoadDynamicSlotAndUnbox(MDefinition* slots, size_t slot, MUnbox::Mode mode,
-                           MIRType type, BailoutKind kind)
+                           MIRType type)
       : MUnaryInstruction(classOpcode, slots), slot_(slot), mode_(mode) {
     setResultType(type);
     setMovable();
     if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
-    setBailoutKind(kind);
+    setBailoutKind(BailoutKind::UnboxFolding);
   }
 
  public:
