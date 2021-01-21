@@ -1503,6 +1503,7 @@ package org.mozilla.geckoview {
     method public void setScrollFactor(float);
     field public static final int INPUT_RESULT_HANDLED = 1;
     field public static final int INPUT_RESULT_HANDLED_CONTENT = 2;
+    field public static final int INPUT_RESULT_IGNORED = 3;
     field public static final int INPUT_RESULT_UNHANDLED = 0;
     field public static final int SCROLL_BEHAVIOR_AUTO = 1;
     field public static final int SCROLL_BEHAVIOR_SMOOTH = 0;
