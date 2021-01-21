@@ -52,17 +52,19 @@ void LSWriteOptimizerBase::Truncate(int64_t aDelta) {
 }
 
 void LSWriteOptimizerBase::GetSortedWriteInfos(
-    nsTArray<WriteInfo*>& aWriteInfos) {
+    nsTArray<NotNull<WriteInfo*>>& aWriteInfos) {
   AssertIsOnOwningThread();
 
   if (mTruncateInfo) {
-    aWriteInfos.InsertElementSorted(mTruncateInfo.get(), WriteInfoComparator());
+    aWriteInfos.InsertElementSorted(WrapNotNullUnchecked(mTruncateInfo.get()),
+                                    WriteInfoComparator());
   }
 
   for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
     WriteInfo* writeInfo = iter.UserData();
 
-    aWriteInfos.InsertElementSorted(writeInfo, WriteInfoComparator());
+    aWriteInfos.InsertElementSorted(WrapNotNull(writeInfo),
+                                    WriteInfoComparator());
   }
 }
 

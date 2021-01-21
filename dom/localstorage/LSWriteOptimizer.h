@@ -88,7 +88,7 @@ class LSWriteOptimizerBase {
    * This method can be used by derived classes to get a sorted list of write
    * infos. Write infos are sorted by the serial number.
    */
-  void GetSortedWriteInfos(nsTArray<WriteInfo*>& aWriteInfos);
+  void GetSortedWriteInfos(nsTArray<NotNull<WriteInfo*>>& aWriteInfos);
 };
 
 /**
