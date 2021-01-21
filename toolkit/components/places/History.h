@@ -72,8 +72,14 @@ class History final : public BaseHistory,
    *
    * @param aVisitData
    *        The visit data to use to populate a new row in moz_places.
+   * @param aShouldNotifyFrecencyChanged
+   *        Whether to dispatch OnFrecencyChanged notifications.
+   *        Defaults to true. Set to false if you (the caller) are
+   *        doing many inserts and will dispatch your own
+   *        OnManyFrecenciesChanged notification.
    */
-  nsresult InsertPlace(VisitData& aVisitData);
+  nsresult InsertPlace(VisitData& aVisitData,
+                       bool aShouldNotifyFrecencyChanged = true);
 
   /**
    * Updates an entry in moz_places with the data in aVisitData.

@@ -862,6 +862,54 @@ FixupURLFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Frecency Changed Notification Function
+
+/* static */
+nsresult FrecencyNotificationFunction::create(mozIStorageConnection* aDBConn) {
+  RefPtr<FrecencyNotificationFunction> function =
+      new FrecencyNotificationFunction();
+  nsresult rv = aDBConn->CreateFunction("notify_frecency"_ns, 5, function);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(FrecencyNotificationFunction, mozIStorageFunction)
+
+NS_IMETHODIMP
+FrecencyNotificationFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                             nsIVariant** _result) {
+  uint32_t numArgs;
+  nsresult rv = aArgs->GetNumEntries(&numArgs);
+  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(numArgs == 5);
+
+  int32_t newFrecency = aArgs->AsInt32(0);
+
+  nsAutoCString spec;
+  rv = aArgs->GetUTF8String(1, spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString guid;
+  rv = aArgs->GetUTF8String(2, guid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hidden = static_cast<bool>(aArgs->AsInt32(3));
+  PRTime lastVisitDate = static_cast<PRTime>(aArgs->AsInt64(4));
+
+  const nsNavHistory* navHistory = nsNavHistory::GetConstHistoryService();
+  NS_ENSURE_STATE(navHistory);
+  navHistory->DispatchFrecencyChangedNotification(spec, newFrecency, guid,
+                                                  hidden, lastVisitDate);
+
+  RefPtr<nsVariant> result = new nsVariant();
+  rv = result->SetAsInt32(newFrecency);
+  NS_ENSURE_SUCCESS(rv, rv);
+  result.forget(_result);
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //// Store Last Inserted Id Function
 
 /* static */
@@ -1180,30 +1228,6 @@ NoteSyncChangeFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
                                        nsIVariant** _result) {
   nsNavBookmarks::NoteSyncChange();
   *_result = nullptr;
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// Invalidate days of history Function
-
-/* static */
-nsresult InvalidateDaysOfHistoryFunction::create(
-    mozIStorageConnection* aDBConn) {
-  RefPtr<InvalidateDaysOfHistoryFunction> function =
-      new InvalidateDaysOfHistoryFunction();
-  nsresult rv =
-      aDBConn->CreateFunction("invalidate_days_of_history"_ns, 0, function);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(InvalidateDaysOfHistoryFunction, mozIStorageFunction)
-
-NS_IMETHODIMP
-InvalidateDaysOfHistoryFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
-                                                nsIVariant** _result) {
-  nsNavHistory::InvalidateDaysOfHistory();
   return NS_OK;
 }
 

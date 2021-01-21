@@ -11,7 +11,7 @@ add_task(
     // two birds with one stone and expect two notifications.  Trigger the path by
     // adding a download.
     let url = Services.io.newURI("http://example.com/a");
-    let promise = onRankingChanged();
+    let promises = [onFrecencyChanged(url), onFrecencyChanged(url)];
     await PlacesUtils.history.insert({
       url,
       visits: [
@@ -20,14 +20,14 @@ add_task(
         },
       ],
     });
-    await promise;
+    await Promise.all(promises);
   }
 );
 
 // nsNavHistory::UpdateFrecency
 add_task(async function test_nsNavHistory_UpdateFrecency() {
   let url = Services.io.newURI("http://example.com/b");
-  let promise = onRankingChanged();
+  let promise = onFrecencyChanged(url);
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url,
@@ -47,14 +47,14 @@ add_task(async function test_invalidateFrecencies() {
     url,
     title: "test",
   });
-  let promise = onRankingChanged();
+  let promise = onFrecencyChanged(url);
   await PlacesUtils.history.removeByFilter({ host: url.host });
   await promise;
 });
 
 // History.jsm clear()
 add_task(async function test_clear() {
-  await Promise.all([onRankingChanged(), PlacesUtils.history.clear()]);
+  await Promise.all([onManyFrecenciesChanged(), PlacesUtils.history.clear()]);
 });
 
 // nsNavHistory::FixAndDecayFrecency
@@ -64,13 +64,30 @@ add_task(async function test_nsNavHistory_FixAndDecayFrecency() {
   PlacesUtils.history
     .QueryInterface(Ci.nsIObserver)
     .observe(null, "idle-daily", "");
-  await Promise.all([onRankingChanged()]);
+  await Promise.all([onManyFrecenciesChanged()]);
 });
 
-function onRankingChanged() {
-  return PlacesTestUtils.waitForNotification(
-    "pages-rank-changed",
-    () => true,
-    "places"
-  );
+function onFrecencyChanged(expectedURI) {
+  return new Promise(resolve => {
+    let obs = new NavHistoryObserver();
+    obs.onFrecencyChanged = (uri, newFrecency, guid, hidden, visitDate) => {
+      PlacesUtils.history.removeObserver(obs);
+      Assert.ok(!!uri);
+      Assert.ok(uri.equals(expectedURI));
+      resolve();
+    };
+    PlacesUtils.history.addObserver(obs);
+  });
+}
+
+function onManyFrecenciesChanged() {
+  return new Promise(resolve => {
+    let obs = new NavHistoryObserver();
+    obs.onManyFrecenciesChanged = () => {
+      PlacesUtils.history.removeObserver(obs);
+      Assert.ok(true);
+      resolve();
+    };
+    PlacesUtils.history.addObserver(obs);
+  });
 }
