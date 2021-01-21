@@ -580,6 +580,37 @@ interface nsINavHistoryObserver : nsISupports
   void onEndUpdateBatch();
 
   /**
+   * Called when an individual page's frecency has changed.
+   *
+   * This is not called for pages whose frecencies change as the result of some
+   * large operation where some large or unknown number of frecencies change at
+   * once.  Use onManyFrecenciesChanged to detect such changes.
+   *
+   * @param aURI
+   *        The page's URI.
+   * @param aNewFrecency
+   *        The page's new frecency.
+   * @param aGUID
+   *        The page's GUID.
+   * @param aHidden
+   *        True if the page is marked as hidden.
+   * @param aVisitDate
+   *        The page's last visit date.
+   */
+  void onFrecencyChanged(in nsIURI aURI,
+                         in long aNewFrecency,
+                         in ACString aGUID,
+                         in boolean aHidden,
+                         in PRTime aVisitDate);
+
+  /**
+   * Called when the frecencies of many pages have changed at once.
+   *
+   * onFrecencyChanged is not called for each of those pages.
+   */
+  void onManyFrecenciesChanged();
+
+  /**
    * Removed by the user.
    */
   const unsigned short REASON_DELETED = 0;

@@ -45,6 +45,25 @@ add_task(async function test_remove_single() {
       observer = {
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},
+        onFrecencyChanged(aURI) {
+          try {
+            Assert.ok(!shouldRemove, "Observing onFrecencyChanged");
+            Assert.equal(
+              aURI.spec,
+              uri.spec,
+              "Observing effect on the right uri"
+            );
+          } finally {
+            resolve();
+          }
+        },
+        onManyFrecenciesChanged() {
+          try {
+            Assert.ok(!shouldRemove, "Observing onManyFrecenciesChanged");
+          } finally {
+            resolve();
+          }
+        },
         onDeleteURI(aURI) {
           try {
             Assert.ok(shouldRemove, "Observing onDeleteURI");
@@ -79,21 +98,13 @@ add_task(async function test_remove_single() {
               reject("Unexpected history-cleared event happens");
               break;
             }
-            case "pages-rank-changed": {
-              try {
-                Assert.ok(!shouldRemove, "Observing pages-rank-changed event");
-              } finally {
-                resolve();
-              }
-              break;
-            }
           }
         }
       };
     });
     PlacesUtils.history.addObserver(observer);
     PlacesObservers.addListener(
-      ["page-title-changed", "history-cleared", "pages-rank-changed"],
+      ["page-title-changed", "history-cleared"],
       placesEventListener
     );
 
@@ -121,7 +132,7 @@ add_task(async function test_remove_single() {
     await promiseObserved;
     PlacesUtils.history.removeObserver(observer);
     PlacesObservers.removeListener(
-      ["page-title-changed", "history-cleared", "pages-rank-changed"],
+      ["page-title-changed", "history-cleared"],
       placesEventListener
     );
 

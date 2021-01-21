@@ -46,7 +46,6 @@ class PlacesEvent : public nsWrapperCache {
   virtual const PlacesHistoryCleared* AsPlacesHistoryCleared() const {
     return nullptr;
   }
-  virtual const PlacesRanking* AsPlacesRanking() const { return nullptr; }
 
  protected:
   virtual ~PlacesEvent() = default;
