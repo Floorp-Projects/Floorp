@@ -37,8 +37,6 @@ interface nsIWorkerDebugger : nsISupports
   // nested workers) its top-level ancestral worker is associated with.
   readonly attribute mozIDOMWindow window;
 
-  readonly attribute Array<uint64_t> windowIDs;
-
   readonly attribute nsIPrincipal principal;
 
   readonly attribute unsigned long serviceWorkerID;
