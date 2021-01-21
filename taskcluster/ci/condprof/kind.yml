@@ -49,6 +49,7 @@ jobs:
         run:
             command: >-
                 python3.exe condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver.exe
                 --firefox ${MOZ_FETCHES_DIR}/firefox/firefox.exe
                 --scenario settled
@@ -79,6 +80,7 @@ jobs:
             command: >-
                 python3.7 virtualenv/virtualenv.py . &&
                 bin/python3.7 condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/firefox/firefox-bin
                 --scenario settled
@@ -111,6 +113,7 @@ jobs:
             command: >-
                 python3 -m venv . &&
                 bin/python3 condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/target.dmg
                 --scenario settled
@@ -144,6 +147,7 @@ jobs:
                 adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
                 --firefox org.mozilla.geckoview_example
@@ -178,6 +182,7 @@ jobs:
                 rm -rf target.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
                 --firefox org.mozilla.fenix
@@ -211,6 +216,7 @@ jobs:
                 adb install -r target.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
                 --firefox org.mozilla.firefox
@@ -245,6 +251,7 @@ jobs:
                 rm -rf target.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
                 --firefox org.mozilla.fenix
@@ -279,6 +286,7 @@ jobs:
                 adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
                 --firefox org.mozilla.geckoview_example
@@ -313,6 +321,7 @@ jobs:
                 rm -rf target.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
+                --force-new
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
                 --firefox org.mozilla.firefox
