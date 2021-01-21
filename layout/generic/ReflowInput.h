@@ -648,13 +648,6 @@ struct ReflowInput : public SizeComputationInput {
                 mozilla::Nothing());
 
   /**
-   * Find the content isize of our containing block for the given writing mode,
-   * which need not be the same as the reflow input's mode.
-   */
-  nscoord GetContainingBlockContentISize(
-      mozilla::WritingMode aWritingMode) const;
-
-  /**
    * Calculate the used line-height property. The return value will be >= 0.
    */
   nscoord CalcLineHeight() const;
