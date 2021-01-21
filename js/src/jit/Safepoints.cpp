@@ -38,18 +38,21 @@ void SafepointWriter::writeOsiCallPointOffset(uint32_t osiCallPointOffset) {
   stream_.writeUnsigned(osiCallPointOffset);
 }
 
-static void WriteRegisterMask(CompactBufferWriter& stream, uint32_t bits) {
+static void WriteRegisterMask(CompactBufferWriter& stream,
+                              PackedRegisterMask bits) {
   if (sizeof(PackedRegisterMask) == 1) {
     stream.writeByte(bits);
   } else {
+    MOZ_ASSERT(sizeof(PackedRegisterMask) <= 4);
     stream.writeUnsigned(bits);
   }
 }
 
-static int32_t ReadRegisterMask(CompactBufferReader& stream) {
+static PackedRegisterMask ReadRegisterMask(CompactBufferReader& stream) {
   if (sizeof(PackedRegisterMask) == 1) {
     return stream.readByte();
   }
+  MOZ_ASSERT(sizeof(PackedRegisterMask) <= 4);
   return stream.readUnsigned();
 }
 
