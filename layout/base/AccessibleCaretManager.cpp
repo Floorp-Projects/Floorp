@@ -201,7 +201,7 @@ void AccessibleCaretManager::UpdateCarets(const UpdateCaretsHintSet& aHint) {
       break;
   }
 
-  mDesiredAyncPanZoomState.Update(*this);
+  mDesiredAsyncPanZoomState.Update(*this);
 }
 
 bool AccessibleCaretManager::IsCaretDisplayableInCursorMode(
@@ -510,7 +510,7 @@ nsresult AccessibleCaretManager::ReleaseCaret() {
 
   mActiveCaret = nullptr;
   SetSelectionDragState(false);
-  mDesiredAyncPanZoomState.Update(*this);
+  mDesiredAsyncPanZoomState.Update(*this);
   DispatchCaretStateChangedEvent(CaretChangedReason::Releasecaret);
   return NS_OK;
 }
@@ -782,7 +782,7 @@ void AccessibleCaretManager::SetLastInputSource(uint16_t aInputSource) {
 }
 
 bool AccessibleCaretManager::ShouldDisableApz() const {
-  return mDesiredAyncPanZoomState.Get() ==
+  return mDesiredAsyncPanZoomState.Get() ==
          DesiredAsyncPanZoomState::Value::Disabled;
 }
 
