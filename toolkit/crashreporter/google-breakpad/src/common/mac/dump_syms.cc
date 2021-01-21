@@ -345,9 +345,8 @@ class DumpSymbols::DumperLineToModule:
   }
 
   void ReadProgram(const uint8_t *program, uint64 length,
-                   Module *module, vector<Module::Line> *lines,
-		   FileMap *files) {
-    DwarfLineToModule handler(module, compilation_dir_, lines, files);
+                   Module *module, vector<Module::Line> *lines) {
+    DwarfLineToModule handler(module, compilation_dir_, lines);
     dwarf2reader::LineInfo parser(program, length, byte_reader_, &handler);
     parser.Start();
   }
