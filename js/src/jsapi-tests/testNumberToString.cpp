@@ -5,7 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"     // mozilla::ArrayLength
 #include "mozilla/FloatingPoint.h"  // mozilla::{PositiveInfinity,UnspecifiedNaN}
 
 #include <stddef.h>  // size_t
@@ -13,9 +12,9 @@
 
 #include "js/Conversions.h"  // JS::NumberToString, JS::MaximumNumberToStringLength
 #include "jsapi-tests/tests.h"  // BEGIN_TEST, CHECK_EQUAL, END_TEST
+#include "util/Text.h"          // js_strlen
 
-// Need to account for string literals including the \0 at the end.
-#define REST(x) x, (mozilla::ArrayLength(x) - 1), __LINE__
+#define REST(x) x, (js_strlen(x)), __LINE__
 
 static const struct NumberToStringTest {
   double number;

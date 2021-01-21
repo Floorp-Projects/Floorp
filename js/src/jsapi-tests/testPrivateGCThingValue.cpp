@@ -5,8 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
-#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "jsapi.h"
 
@@ -14,6 +13,7 @@
 #include "js/HeapAPI.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
+#include "util/Text.h"
 
 class TestTracer final : public JS::CallbackTracer {
   void onChild(const JS::GCCellPtr& thing) override {
@@ -47,8 +47,7 @@ BEGIN_TEST(testPrivateGCThingValue) {
   options.setFileAndLine(__FILE__, __LINE__);
 
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
-  CHECK(srcBuf.init(cx, code, mozilla::ArrayLength(code) - 1,
-                    JS::SourceOwnership::Borrowed));
+  CHECK(srcBuf.init(cx, code, js_strlen(code), JS::SourceOwnership::Borrowed));
 
   JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   CHECK(script);

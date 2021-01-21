@@ -640,8 +640,7 @@ static icu::UnicodeString ReadTimeZoneLink(const char* tz) {
   // The resolved link name can have different paths depending on the OS.
   // Follow ICU and only search for "/zoneinfo/"; see $ICU/common/putil.cpp.
   static constexpr char ZoneInfoPath[] = "/zoneinfo/";
-  constexpr size_t ZoneInfoPathLength =
-      mozilla::ArrayLength(ZoneInfoPath) - 1;  // exclude NUL
+  constexpr size_t ZoneInfoPathLength = js_strlen(ZoneInfoPath);
 
   // Stop following symlinks after a fixed depth, because some common time
   // zones are stored in files whose name doesn't match an Olson time zone

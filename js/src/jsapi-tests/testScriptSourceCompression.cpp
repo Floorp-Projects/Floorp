@@ -30,6 +30,7 @@
 #include "js/Utility.h"    // JS::FreePolicy
 #include "js/Value.h"      // JS::NullValue, JS::ObjectValue, JS::Value
 #include "jsapi-tests/tests.h"
+#include "util/Text.h"             // js_strlen
 #include "vm/Compression.h"        // js::Compressor::CHUNK_SIZE
 #include "vm/HelperThreadState.h"  // js::RunPendingSourceCompressions
 #include "vm/JSFunction.h"         // JSFunction::getOrCreateScript
@@ -113,14 +114,14 @@ static void CompressSourceSync(JS::Handle<JSFunction*> fun, JSContext* cx) {
 }
 
 static constexpr char FunctionStart[] = "function @() {";
-constexpr size_t FunctionStartLength = ArrayLength(FunctionStart) - 1;
+constexpr size_t FunctionStartLength = js_strlen(FunctionStart);
 constexpr size_t FunctionNameOffset = 9;
 
 static_assert(FunctionStart[FunctionNameOffset] == '@',
               "offset must correctly point at the function name location");
 
 static constexpr char FunctionEnd[] = "return 42; }";
-constexpr size_t FunctionEndLength = ArrayLength(FunctionEnd) - 1;
+constexpr size_t FunctionEndLength = js_strlen(FunctionEnd);
 
 template <typename Unit>
 static void WriteFunctionOfSizeAtOffset(Source<Unit>& source,

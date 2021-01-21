@@ -5,17 +5,16 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "jsapi-tests/tests.h"
+#include "util/Text.h"
 #include "vm/JSAtom.h"
 #include "vm/StringType.h"
-
-using mozilla::ArrayLength;
 
 BEGIN_TEST(testAtomizedIsNotPinned) {
   /* Try to pick a string that won't be interned by other tests in this runtime.
    */
   static const char someChars[] = "blah blah blah? blah blah blah";
   JS::Rooted<JSAtom*> atom(cx,
-                           js::Atomize(cx, someChars, ArrayLength(someChars)));
+                           js::Atomize(cx, someChars, js_strlen(someChars)));
   CHECK(!JS_StringHasBeenPinned(cx, atom));
   CHECK(JS_AtomizeAndPinJSString(cx, atom));
   CHECK(JS_StringHasBeenPinned(cx, atom));
