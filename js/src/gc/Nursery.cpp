@@ -696,11 +696,9 @@ void js::Nursery::freeBuffer(void* buffer, size_t nbytes) {
 }
 
 void Nursery::setIndirectForwardingPointer(void* oldData, void* newData) {
-  MOZ_ASSERT(isInside(oldData));
-
-  // Bug 1196210: If a zero-capacity header lands in the last 2 words of a
-  // jemalloc chunk abutting the start of a nursery chunk, the (invalid)
-  // newData pointer will appear to be "inside" the nursery.
+  // If a zero-capacity elements header lands right at the end of a chunk then
+  // elements data will appear to be in the next chunk.
+  MOZ_ASSERT(isInside(oldData) || (uintptr_t(oldData) & ChunkMask) == 0);
   MOZ_ASSERT(!isInside(newData) || (uintptr_t(newData) & ChunkMask) == 0);
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
