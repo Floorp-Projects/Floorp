@@ -97,6 +97,10 @@ description > .text-link:focus {
   padding: 0;
 }
 
+#submit-feedback {
+  padding-inline-start: 10px;
+}
+
 .bottom-link,
 .bottom-link:focus {
   text-align: center;
