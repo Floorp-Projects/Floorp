@@ -79,7 +79,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
   RefPtr<Observer> mObserver;
 
   // Weak refs, IDBMutableFile strongly owns this IDBDatabase object.
-  nsTArray<IDBMutableFile*> mLiveMutableFiles;
+  nsTArray<NotNull<IDBMutableFile*>> mLiveMutableFiles;
 
   const bool mFileHandleDisabled;
   bool mClosed;
@@ -169,9 +169,9 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
   bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
-  void NoteLiveMutableFile(IDBMutableFile* aMutableFile);
+  void NoteLiveMutableFile(IDBMutableFile& aMutableFile);
 
-  void NoteFinishedMutableFile(IDBMutableFile* aMutableFile);
+  void NoteFinishedMutableFile(IDBMutableFile& aMutableFile);
 
   [[nodiscard]] RefPtr<DOMStringList> ObjectStoreNames() const;
 

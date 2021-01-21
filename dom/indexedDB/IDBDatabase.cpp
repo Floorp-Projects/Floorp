@@ -931,24 +931,22 @@ void IDBDatabase::ExpireFileActors(bool aExpireAll) {
   }
 }
 
-void IDBDatabase::NoteLiveMutableFile(IDBMutableFile* aMutableFile) {
+void IDBDatabase::NoteLiveMutableFile(IDBMutableFile& aMutableFile) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aMutableFile);
-  aMutableFile->AssertIsOnOwningThread();
-  MOZ_ASSERT(!mLiveMutableFiles.Contains(aMutableFile));
+  aMutableFile.AssertIsOnOwningThread();
+  MOZ_ASSERT(!mLiveMutableFiles.Contains(&aMutableFile));
 
-  mLiveMutableFiles.AppendElement(aMutableFile);
+  mLiveMutableFiles.AppendElement(WrapNotNullUnchecked(&aMutableFile));
 }
 
-void IDBDatabase::NoteFinishedMutableFile(IDBMutableFile* aMutableFile) {
+void IDBDatabase::NoteFinishedMutableFile(IDBMutableFile& aMutableFile) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aMutableFile);
-  aMutableFile->AssertIsOnOwningThread();
+  aMutableFile.AssertIsOnOwningThread();
 
   // It's ok if this is called after we cleared the array, so don't assert that
   // aMutableFile is in the list.
 
-  mLiveMutableFiles.RemoveElement(aMutableFile);
+  mLiveMutableFiles.RemoveElement(&aMutableFile);
 }
 
 void IDBDatabase::InvalidateMutableFiles() {
