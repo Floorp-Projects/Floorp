@@ -516,6 +516,7 @@ var E10SUtils = {
       case "news":
       case "nntp":
       case "snews":
+        // Protocols used by Thunderbird to display email messages.
         return NOT_REMOTE;
 
       default:
