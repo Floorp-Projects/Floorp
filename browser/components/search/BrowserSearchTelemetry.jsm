@@ -38,14 +38,14 @@ class BrowserSearchTelemetryHandler {
    * Determines if we should record a search for this browser instance.
    * Private Browsing mode is normally skipped.
    *
-   * @param {tabbrowser} tabbrowser
+   * @param {browser} browser
    *   The browser where the search was loaded.
    * @returns {boolean}
    *   True if the search should be recorded, false otherwise.
    */
-  shouldRecordSearchCount(tabbrowser) {
+  shouldRecordSearchCount(browser) {
     return (
-      !PrivateBrowsingUtils.isWindowPrivate(tabbrowser.ownerGlobal) ||
+      !PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal) ||
       !Services.prefs.getBoolPref("browser.engagement.search_counts.pbm", false)
     );
   }
@@ -163,8 +163,8 @@ class BrowserSearchTelemetryHandler {
    * Telemetry records only search counts per engine and action origin, but
    * nothing pertaining to the search contents themselves.
    *
-   * @param {tabbrowser} tabbrowser
-   *        The tabbrowser where the search was loaded.
+   * @param {browser} browser
+   *        The browser where the search was loaded.
    * @param {nsISearchEngine} engine
    *        The engine handling the search.
    * @param {string} source
@@ -181,9 +181,9 @@ class BrowserSearchTelemetryHandler {
    *        The search engine alias used in the search, if any.
    * @throws if source is not in the known sources list.
    */
-  recordSearch(tabbrowser, engine, source, details = {}) {
+  recordSearch(browser, engine, source, details = {}) {
     try {
-      if (!this.shouldRecordSearchCount(tabbrowser)) {
+      if (!this.shouldRecordSearchCount(browser)) {
         return;
       }
       if (!KNOWN_SEARCH_SOURCES.includes(source)) {
