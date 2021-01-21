@@ -539,23 +539,23 @@ static void StoreRegisterResult(MacroAssembler& masm, const FuncExport& fe,
 #if defined(JS_CODEGEN_ARM)
 // The ARM system ABI also includes d15 & s31 in the non volatile float
 // registers. Also exclude lr (a.k.a. r14) as we preserve it manually.
-static const LiveRegisterSet NonVolatileRegs =
-    LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask &
-                                       ~(uint32_t(1) << Registers::lr)),
-                    FloatRegisterSet(FloatRegisters::NonVolatileMask |
-                                     (1ULL << FloatRegisters::d15) |
-                                     (1ULL << FloatRegisters::s31)));
+static const LiveRegisterSet NonVolatileRegs = LiveRegisterSet(
+    GeneralRegisterSet(Registers::NonVolatileMask &
+                       ~(Registers::SetType(1) << Registers::lr)),
+    FloatRegisterSet(FloatRegisters::NonVolatileMask |
+                     (FloatRegisters::SetType(1) << FloatRegisters::d15) |
+                     (FloatRegisters::SetType(1) << FloatRegisters::s31)));
 #elif defined(JS_CODEGEN_ARM64)
 // Exclude the Link Register (x30) because it is preserved manually.
 //
 // Include x16 (scratch) to make a 16-byte aligned amount of integer registers.
 // Include d31 (scratch) to make a 16-byte aligned amount of floating registers.
-static const LiveRegisterSet NonVolatileRegs =
-    LiveRegisterSet(GeneralRegisterSet((Registers::NonVolatileMask &
-                                        ~(uint32_t(1) << Registers::lr)) |
-                                       (uint32_t(1) << Registers::x16)),
-                    FloatRegisterSet(FloatRegisters::NonVolatileMask |
-                                     FloatRegisters::NonAllocatableMask));
+static const LiveRegisterSet NonVolatileRegs = LiveRegisterSet(
+    GeneralRegisterSet((Registers::NonVolatileMask &
+                        ~(Registers::SetType(1) << Registers::lr)) |
+                       (Registers::SetType(1) << Registers::x16)),
+    FloatRegisterSet(FloatRegisters::NonVolatileMask |
+                     FloatRegisters::NonAllocatableMask));
 #else
 static const LiveRegisterSet NonVolatileRegs =
     LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
@@ -2643,8 +2643,9 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
 
 #if defined(JS_CODEGEN_ARM)
 static const LiveRegisterSet RegsToPreserve(
-    GeneralRegisterSet(Registers::AllMask & ~((uint32_t(1) << Registers::sp) |
-                                              (uint32_t(1) << Registers::pc))),
+    GeneralRegisterSet(Registers::AllMask &
+                       ~((Registers::SetType(1) << Registers::sp) |
+                         (Registers::SetType(1) << Registers::pc))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
 #  ifdef ENABLE_WASM_SIMD
 #    error "high lanes of SIMD registers need to be saved too."
@@ -2652,10 +2653,10 @@ static const LiveRegisterSet RegsToPreserve(
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask &
-                       ~((uint32_t(1) << Registers::k0) |
-                         (uint32_t(1) << Registers::k1) |
-                         (uint32_t(1) << Registers::sp) |
-                         (uint32_t(1) << Registers::zero))),
+                       ~((Registers::SetType(1) << Registers::k0) |
+                         (Registers::SetType(1) << Registers::k1) |
+                         (Registers::SetType(1) << Registers::sp) |
+                         (Registers::SetType(1) << Registers::zero))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
 #  ifdef ENABLE_WASM_SIMD
 #    error "high lanes of SIMD registers need to be saved too."
@@ -2670,8 +2671,8 @@ static const LiveRegisterSet RegsToPreserve(
 // PushRegsInMask and lengty comment in Architecture-arm64.h.
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask &
-                       ~((uint32_t(1) << Registers::StackPointer) |
-                         (uint32_t(1) << Registers::lr))),
+                       ~((Registers::SetType(1) << Registers::StackPointer) |
+                         (Registers::SetType(1) << Registers::lr))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 // It's correct to use FloatRegisters::AllMask even when SIMD is not enabled;
@@ -2679,7 +2680,7 @@ static const LiveRegisterSet RegsToPreserve(
 // while the singles will be stripped as they are aliased by the larger doubles.
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask &
-                       ~(uint32_t(1) << Registers::StackPointer)),
+                       ~(Registers::SetType(1) << Registers::StackPointer)),
     FloatRegisterSet(FloatRegisters::AllMask));
 #else
 static const LiveRegisterSet RegsToPreserve(
