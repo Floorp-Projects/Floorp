@@ -8,6 +8,7 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/AccessibleHandler.h"
 #include "mozilla/a11y/Compatibility.h"
 #include "mozilla/a11y/Platform.h"
 #include "mozilla/Assertions.h"
@@ -373,6 +374,10 @@ IMPL_IUNKNOWN_QUERY_IFACE(IServiceProvider)
 if (!mAllowBlindAggregation) {
   return E_NOINTERFACE;
 }
+
+if (aIID == IID_IAccIdentity) {
+  return E_NOINTERFACE;
+}
 // If the client queries for an interface that LazyInstantiator does not
 // intrinsically support, then we must resolve the root accessible and pass
 // on the QueryInterface call to mRealRootUnk.
@@ -500,6 +505,12 @@ LazyInstantiator::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
 
 HRESULT
 LazyInstantiator::get_accParent(IDispatch** ppdispParent) {
+  if (!mWeakAccessible) {
+    // If we'd resolve the root right now this would be the codepath we'd end
+    // up in anyway. So we might as well return it here.
+    return ::AccessibleObjectFromWindow(mHwnd, OBJID_WINDOW, IID_IAccessible,
+                                        (void**)ppdispParent);
+  }
   RESOLVE_ROOT;
   return mWeakAccessible->get_accParent(ppdispParent);
 }
@@ -518,6 +529,12 @@ HRESULT
 LazyInstantiator::get_accChild(VARIANT varChild, IDispatch** ppdispChild) {
   if (!ppdispChild) {
     return E_INVALIDARG;
+  }
+
+  if (V_VT(&varChild) == VT_I4 && V_I4(&varChild) == CHILDID_SELF) {
+    RefPtr<IDispatch> disp(this);
+    disp.forget(ppdispChild);
+    return S_OK;
   }
 
   RESOLVE_ROOT;
@@ -558,6 +575,12 @@ HRESULT
 LazyInstantiator::get_accRole(VARIANT varChild, VARIANT* pvarRole) {
   if (!pvarRole) {
     return E_INVALIDARG;
+  }
+
+  if (V_VT(&varChild) == VT_I4 && V_I4(&varChild) == CHILDID_SELF) {
+    V_VT(pvarRole) = VT_I4;
+    V_I4(pvarRole) = ROLE_SYSTEM_APPLICATION;
+    return S_OK;
   }
 
   RESOLVE_ROOT;
@@ -684,6 +707,12 @@ LazyInstantiator::QueryService(REFGUID aServiceId, REFIID aServiceIid,
                                void** aOutInterface) {
   if (!aOutInterface) {
     return E_INVALIDARG;
+  }
+
+  for (const GUID& unsupportedService : kUnsupportedServices) {
+    if (aServiceId == unsupportedService) {
+      return E_NOINTERFACE;
+    }
   }
 
   *aOutInterface = nullptr;
