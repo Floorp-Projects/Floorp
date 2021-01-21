@@ -367,7 +367,7 @@ class AccessibleCaretManager {
     Value mValue = Value::Enabled;
   };
 
-  DesiredAsyncPanZoomState mDesiredAyncPanZoomState;
+  DesiredAsyncPanZoomState mDesiredAsyncPanZoomState;
 
   static const int32_t kAutoScrollTimerDelay = 30;
 
