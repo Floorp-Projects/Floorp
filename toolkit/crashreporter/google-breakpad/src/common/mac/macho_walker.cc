@@ -156,8 +156,6 @@ bool MachoWalker::FindHeader(cpu_type_t cpu_type,
     if (magic == MH_CIGAM || magic == MH_CIGAM_64)
       breakpad_swap_mach_header(&header);
 
-    header.cpusubtype &= ~CPU_SUBTYPE_MASK;
-
     if (cpu_type != header.cputype ||
         (cpu_subtype != CPU_SUBTYPE_MULTIPLE &&
          cpu_subtype != header.cpusubtype)) {
@@ -186,8 +184,6 @@ bool MachoWalker::FindHeader(cpu_type_t cpu_type,
 
       if (NXHostByteOrder() != NX_BigEndian)
         breakpad_swap_fat_arch(&arch, 1);
-
-      arch.cpusubtype &= ~CPU_SUBTYPE_MASK;
 
       if (arch.cputype == cpu_type &&
           (cpu_subtype == CPU_SUBTYPE_MULTIPLE ||
