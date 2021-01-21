@@ -19,7 +19,7 @@
 #include "DateTimeFormat.h"
 #include "History.h"
 #include "Helpers.h"
-#include "NotifyManyFrecenciesChanged.h"
+#include "NotifyRankingChanged.h"
 
 #include "nsTArray.h"
 #include "nsCollationCID.h"
@@ -231,10 +231,10 @@ class FixAndDecayFrecencyRunnable final : public Runnable {
       nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
       NS_ENSURE_STATE(navHistory);
 
-      navHistory->DecayFrecencyCompleted(mDecayReason);
+      navHistory->DecayFrecencyCompleted();
 
       if (mozIStorageStatementCallback::REASON_FINISHED == mDecayReason) {
-        ::NotifyManyFrecenciesChanged().Run();
+        NotifyRankingChanged().Run();
       }
 
       return NS_OK;
@@ -385,7 +385,6 @@ nsNavHistory::nsNavHistory()
       mNumVisitsForFrecency(10),
       mDecayFrecencyPendingCount(0),
       mTagsFolder(-1),
-      mDaysOfHistory(-1),
       mLastCachedStartOfDay(INT64_MAX),
       mLastCachedEndOfDay(0),
       mCanNotify(true)
@@ -600,18 +599,13 @@ void nsNavHistory::LoadPrefs() {
 }
 
 void nsNavHistory::UpdateDaysOfHistory(PRTime visitTime) {
-  if (mDaysOfHistory == 0) {
-    mDaysOfHistory = 1;
+  if (sDaysOfHistory == 0) {
+    sDaysOfHistory = 1;
   }
 
   if (visitTime > mLastCachedEndOfDay || visitTime < mLastCachedStartOfDay) {
-    mDaysOfHistory = -1;
+    InvalidateDaysOfHistory();
   }
-}
-
-void nsNavHistory::NotifyManyFrecenciesChanged() {
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
-                   OnManyFrecenciesChanged());
 }
 
 NS_IMETHODIMP
@@ -682,10 +676,17 @@ nsNavHistory::StoreLastInsertedId(const nsACString& aTable,
   }
 }
 
+Atomic<int32_t> nsNavHistory::sDaysOfHistory(-1);
+
+void  // static
+nsNavHistory::InvalidateDaysOfHistory() {
+  sDaysOfHistory = -1;
+}
+
 int32_t nsNavHistory::GetDaysOfHistory() {
   MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread");
 
-  if (mDaysOfHistory != -1) return mDaysOfHistory;
+  if (sDaysOfHistory != -1) return sDaysOfHistory;
 
   // SQLite doesn't have a CEIL() function, so we must do that later.
   // We should also take into account timers resolution, that may be as bad as
@@ -708,7 +709,7 @@ int32_t nsNavHistory::GetDaysOfHistory() {
     // at least 1 day of history.
     bool hasNoVisits;
     (void)stmt->GetIsNull(0, &hasNoVisits);
-    mDaysOfHistory =
+    sDaysOfHistory =
         hasNoVisits
             ? 0
             : std::max(1, static_cast<int32_t>(ceil(stmt->AsDouble(0))));
@@ -717,7 +718,7 @@ int32_t nsNavHistory::GetDaysOfHistory() {
     mLastCachedEndOfDay = stmt->AsInt64(1) - 1;  // Start of tomorrow - 1.
   }
 
-  return mDaysOfHistory;
+  return sDaysOfHistory;
 }
 
 PRTime nsNavHistory::GetNow() {
@@ -1940,7 +1941,7 @@ nsNavHistory::GetObservers(
 
   // Clear any cached value, cause it's very likely the consumer has made
   // changes to history and is now trying to notify them.
-  mDaysOfHistory = -1;
+  InvalidateDaysOfHistory();
 
   if (!mCanNotify) return NS_OK;
 
@@ -2190,12 +2191,9 @@ nsNavHistory::DecayFrecency() {
   return target->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
-void nsNavHistory::DecayFrecencyCompleted(uint16_t reason) {
+void nsNavHistory::DecayFrecencyCompleted() {
   MOZ_ASSERT(mDecayFrecencyPendingCount > 0);
   mDecayFrecencyPendingCount--;
-  if (mozIStorageStatementCallback::REASON_FINISHED == reason) {
-    NotifyManyFrecenciesChanged();
-  }
 }
 
 bool nsNavHistory::IsFrecencyDecaying() const {
@@ -3247,7 +3245,7 @@ nsresult nsNavHistory::UpdateFrecency(int64_t aPlaceId) {
           "SET frecency = CALCULATE_FRECENCY(:page_id) "
           "WHERE id = :page_id");
   NS_ENSURE_STATE(updateFrecencyStmt);
-  NS_DispatchToMainThread(new ::NotifyManyFrecenciesChanged());
+  NS_DispatchToMainThread(new NotifyRankingChanged());
   nsresult rv = updateFrecencyStmt->BindInt64ByName("page_id"_ns, aPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<mozIStorageAsyncStatement> updateHiddenStmt = mDB->GetAsyncStatement(
