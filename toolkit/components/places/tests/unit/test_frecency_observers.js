@@ -11,7 +11,7 @@ add_task(
     // two birds with one stone and expect two notifications.  Trigger the path by
     // adding a download.
     let url = Services.io.newURI("http://example.com/a");
-    let promise = onManyFrecenciesChanged();
+    let promise = onRankingChanged();
     await PlacesUtils.history.insert({
       url,
       visits: [
@@ -27,7 +27,7 @@ add_task(
 // nsNavHistory::UpdateFrecency
 add_task(async function test_nsNavHistory_UpdateFrecency() {
   let url = Services.io.newURI("http://example.com/b");
-  let promise = onManyFrecenciesChanged();
+  let promise = onRankingChanged();
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url,
@@ -47,14 +47,14 @@ add_task(async function test_invalidateFrecencies() {
     url,
     title: "test",
   });
-  let promise = onManyFrecenciesChanged();
+  let promise = onRankingChanged();
   await PlacesUtils.history.removeByFilter({ host: url.host });
   await promise;
 });
 
 // History.jsm clear()
 add_task(async function test_clear() {
-  await Promise.all([onManyFrecenciesChanged(), PlacesUtils.history.clear()]);
+  await Promise.all([onRankingChanged(), PlacesUtils.history.clear()]);
 });
 
 // nsNavHistory::FixAndDecayFrecency
@@ -64,17 +64,13 @@ add_task(async function test_nsNavHistory_FixAndDecayFrecency() {
   PlacesUtils.history
     .QueryInterface(Ci.nsIObserver)
     .observe(null, "idle-daily", "");
-  await Promise.all([onManyFrecenciesChanged()]);
+  await Promise.all([onRankingChanged()]);
 });
 
-function onManyFrecenciesChanged() {
-  return new Promise(resolve => {
-    let obs = new NavHistoryObserver();
-    obs.onManyFrecenciesChanged = () => {
-      PlacesUtils.history.removeObserver(obs);
-      Assert.ok(true);
-      resolve();
-    };
-    PlacesUtils.history.addObserver(obs);
-  });
+function onRankingChanged() {
+  return PlacesTestUtils.waitForNotification(
+    "pages-rank-changed",
+    () => true,
+    "places"
+  );
 }
