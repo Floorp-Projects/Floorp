@@ -227,18 +227,12 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     MInstruction* replace;
 
     switch (type) {
-      case MIRType::Double: {
-        MToFPInstruction::ConversionKind convert =
-            MToFPInstruction::NumbersOnly;
-        replace = MToDouble::New(alloc, in, convert);
+      case MIRType::Double:
+        replace = MToDouble::New(alloc, in, MToFPInstruction::NumbersOnly);
         break;
-      }
-      case MIRType::Float32: {
-        MToFPInstruction::ConversionKind convert =
-            MToFPInstruction::NumbersOnly;
-        replace = MToFloat32::New(alloc, in, convert);
+      case MIRType::Float32:
+        replace = MToFloat32::New(alloc, in, MToFPInstruction::NumbersOnly);
         break;
-      }
       case MIRType::Int32: {
         IntConversionInputKind convert = IntConversionInputKind::NumbersOnly;
         replace = MToNumberInt32::New(alloc, in, convert);
