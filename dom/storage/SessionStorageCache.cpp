@@ -22,60 +22,53 @@ void SSWriteOptimizer::Enumerate(nsTArray<SSWriteInfo>& aWriteInfos) {
   // an arbitrary order, which means write infos need to be sorted before being
   // processed.
 
-  nsTArray<WriteInfo*> writeInfos;
+  nsTArray<NotNull<WriteInfo*>> writeInfos;
   GetSortedWriteInfos(writeInfos);
 
-  for (WriteInfo* writeInfo : writeInfos) {
+  for (const auto& writeInfo : writeInfos) {
     switch (writeInfo->GetType()) {
       case WriteInfo::InsertItem: {
-        auto* insertItemInfo = static_cast<InsertItemInfo*>(writeInfo);
+        const auto& insertItemInfo =
+            static_cast<const InsertItemInfo&>(*writeInfo);
 
-        SSSetItemInfo setItemInfo;
-        setItemInfo.key() = insertItemInfo->GetKey();
-        setItemInfo.value() = insertItemInfo->GetValue();
-
-        aWriteInfos.AppendElement(std::move(setItemInfo));
+        aWriteInfos.AppendElement(
+            SSSetItemInfo{nsString{insertItemInfo.GetKey()},
+                          nsString{insertItemInfo.GetValue()}});
 
         break;
       }
 
       case WriteInfo::UpdateItem: {
-        auto* updateItemInfo = static_cast<UpdateItemInfo*>(writeInfo);
+        const auto& updateItemInfo =
+            static_cast<const UpdateItemInfo&>(*writeInfo);
 
-        if (updateItemInfo->UpdateWithMove()) {
+        if (updateItemInfo.UpdateWithMove()) {
           // See the comment in LSWriteOptimizer::InsertItem for more details
           // about the UpdateWithMove flag.
 
-          SSRemoveItemInfo removeItemInfo;
-          removeItemInfo.key() = updateItemInfo->GetKey();
-
-          aWriteInfos.AppendElement(std::move(removeItemInfo));
+          aWriteInfos.AppendElement(
+              SSRemoveItemInfo{nsString{updateItemInfo.GetKey()}});
         }
 
-        SSSetItemInfo setItemInfo;
-        setItemInfo.key() = updateItemInfo->GetKey();
-        setItemInfo.value() = updateItemInfo->GetValue();
-
-        aWriteInfos.AppendElement(std::move(setItemInfo));
+        aWriteInfos.AppendElement(
+            SSSetItemInfo{nsString{updateItemInfo.GetKey()},
+                          nsString{updateItemInfo.GetValue()}});
 
         break;
       }
 
       case WriteInfo::DeleteItem: {
-        auto* deleteItemInfo = static_cast<DeleteItemInfo*>(writeInfo);
+        const auto& deleteItemInfo =
+            static_cast<const DeleteItemInfo&>(*writeInfo);
 
-        SSRemoveItemInfo removeItemInfo;
-        removeItemInfo.key() = deleteItemInfo->GetKey();
-
-        aWriteInfos.AppendElement(std::move(removeItemInfo));
+        aWriteInfos.AppendElement(
+            SSRemoveItemInfo{nsString{deleteItemInfo.GetKey()}});
 
         break;
       }
 
       case WriteInfo::Truncate: {
-        SSClearInfo clearInfo;
-
-        aWriteInfos.AppendElement(std::move(clearInfo));
+        aWriteInfos.AppendElement(SSClearInfo{});
 
         break;
       }

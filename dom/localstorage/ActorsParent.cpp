@@ -3512,7 +3512,7 @@ void DatastoreWriteOptimizer::ApplyAndReset(
     }
   }
 
-  nsTArray<WriteInfo*> writeInfos;
+  nsTArray<NotNull<WriteInfo*>> writeInfos;
   GetSortedWriteInfos(writeInfos);
 
   for (WriteInfo* writeInfo : writeInfos) {
