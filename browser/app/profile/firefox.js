@@ -568,9 +568,9 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
 
 #ifdef NIGHTLY_BUILD
-pref("browser.tabs.tooltipsShowPid", true);
+pref("browser.tabs.tooltipsShowPidAndActiveness", true);
 #else
-pref("browser.tabs.tooltipsShowPid", false);
+pref("browser.tabs.tooltipsShowPidAndActiveness", false);
 #endif
 
 // allow_eval_* is enabled on Firefox Desktop only at this
