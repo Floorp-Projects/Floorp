@@ -1790,13 +1790,8 @@ impl ClipItemKind {
             ClipItemKind::RoundedRectangle { rect, ref radius, mode: ClipMode::Clip } => {
                 // TODO(gw): Consider caching this in the ClipNode
                 //           if it ever shows in profiles.
-                // TODO(gw): extract_inner_rect_safe is overly
-                //           conservative for this code!
-                let inner_clip_rect = extract_inner_rect_safe(&rect, radius);
-                if let Some(inner_clip_rect) = inner_clip_rect {
-                    if inner_clip_rect.contains_rect(prim_rect) {
-                        return ClipResult::Accept;
-                    }
+                if rounded_rectangle_contains_rect_quick(&rect, radius, &prim_rect) {
+                    return ClipResult::Accept;
                 }
 
                 match rect.intersection(prim_rect) {
@@ -1811,13 +1806,8 @@ impl ClipItemKind {
             ClipItemKind::RoundedRectangle { rect, ref radius, mode: ClipMode::ClipOut } => {
                 // TODO(gw): Consider caching this in the ClipNode
                 //           if it ever shows in profiles.
-                // TODO(gw): extract_inner_rect_safe is overly
-                //           conservative for this code!
-                let inner_clip_rect = extract_inner_rect_safe(&rect, radius);
-                if let Some(inner_clip_rect) = inner_clip_rect {
-                    if inner_clip_rect.contains_rect(prim_rect) {
-                        return ClipResult::Reject;
-                    }
+                if rounded_rectangle_contains_rect_quick(&rect, radius, &prim_rect) {
+                    return ClipResult::Reject;
                 }
 
                 match rect.intersection(prim_rect) {
@@ -1899,6 +1889,45 @@ pub fn rounded_rectangle_contains_point(
                              LayoutVector2D::new(radii.bottom_left.width, -radii.bottom_left.height);
     if bottom_left_center.x > point.x && bottom_left_center.y < point.y &&
        !Ellipse::new(radii.bottom_left).contains(*point - bottom_left_center.to_vector()) {
+        return false;
+    }
+
+    true
+}
+
+/// Return true if the rounded rectangle described by `container` and `radii`
+/// definitely contains `containee`. May return false negatives, but never false
+/// positives.
+fn rounded_rectangle_contains_rect_quick(
+    container: &LayoutRect,
+    radii: &BorderRadius,
+    containee: &LayoutRect,
+) -> bool {
+    if !container.contains_rect(containee) {
+        return false;
+    }
+
+    /// Return true if `point` falls within `corner`. This only covers the
+    /// upper-left case; we transform the other corners into that form.
+    fn foul(point: LayoutPoint, corner: LayoutPoint) -> bool {
+        point.x < corner.x && point.y < corner.y
+    }
+
+    /// Flip `pt` about the y axis (i.e. negate `x`).
+    fn flip_x(pt: LayoutPoint) -> LayoutPoint {
+        LayoutPoint { x: -pt.x, .. pt }
+    }
+
+    /// Flip `pt` about the x axis (i.e. negate `y`).
+    fn flip_y(pt: LayoutPoint) -> LayoutPoint {
+        LayoutPoint { y: -pt.y, .. pt }
+    }
+
+    if foul(containee.top_left(), container.top_left() + radii.top_left) ||
+        foul(flip_x(containee.top_right()), flip_x(container.top_right()) + radii.top_right) ||
+        foul(flip_y(containee.bottom_left()), flip_y(container.bottom_left()) + radii.bottom_left) ||
+        foul(-containee.bottom_right(), -container.bottom_right() + radii.bottom_right)
+    {
         return false;
     }
 
