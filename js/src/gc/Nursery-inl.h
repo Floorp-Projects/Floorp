@@ -81,13 +81,10 @@ inline void js::Nursery::setForwardingPointer(void* oldData, void* newData,
 
 inline void js::Nursery::setDirectForwardingPointer(void* oldData,
                                                     void* newData) {
-  MOZ_ASSERT(isInside(oldData));
-
-  // Bug 1196210: If a zero-capacity header lands in the last 2 words of a
-  // jemalloc chunk abutting the start of a nursery chunk, the (invalid)
-  // newData pointer will appear to be "inside" the nursery.
-  MOZ_ASSERT(!isInside(newData) ||
-             (uintptr_t(newData) & js::gc::ChunkMask) == 0);
+  // If a zero-capacity elements header lands right at the end of a chunk then
+  // elements data will appear to be in the next chunk.
+  MOZ_ASSERT(isInside(oldData) || (uintptr_t(oldData) & gc::ChunkMask) == 0);
+  MOZ_ASSERT(!isInside(newData) || (uintptr_t(newData) & gc::ChunkMask) == 0);
 
   new (oldData) BufferRelocationOverlay{newData};
 }
