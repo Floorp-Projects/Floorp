@@ -284,10 +284,10 @@ void MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
             mEnable(aEnable),
             mLevel(aLevel) {}
 
-          void Run() override {
+      void Run() override {
             TRACE("UpdateHPFSettings");
-            mInputProcessing->UpdateNSSettings(mEnable, mLevel);
-          }
+        mInputProcessing->UpdateNSSettings(mEnable, mLevel);
+      }
 
      protected:
       RefPtr<AudioInputProcessing> mInputProcessing;
@@ -365,14 +365,18 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
   }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, track = mTrack, prefs = aPrefs] {
-        that->mSettings->mEchoCancellation.Value() = prefs.mAecOn;
-        that->mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
-        that->mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
-        that->mSettings->mChannelCount.Value() = prefs.mChannels;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [this, that, track = mTrack, prefs = aPrefs] {
+        mSettings->mEchoCancellation.Value() = prefs.mAecOn;
+        mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
+        mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
+        mSettings->mChannelCount.Value() = prefs.mChannels;
 
         class Message : public ControlMessage {
+          const RefPtr<AudioInputProcessing> mInputProcessing;
+          const bool mPassThrough;
+          const uint32_t mRequestedInputChannelCount;
+
          public:
           Message(MediaTrack* aTrack, AudioInputProcessing* aInputProcessing,
                   bool aPassThrough, uint32_t aRequestedInputChannelCount)
@@ -393,22 +397,17 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
                   mTrack->GraphImpl(), mRequestedInputChannelCount);
             }
           }
-
-         protected:
-          RefPtr<AudioInputProcessing> mInputProcessing;
-          bool mPassThrough;
-          uint32_t mRequestedInputChannelCount;
         };
 
         // The high-pass filter is not taken into account when activating the
         // pass through, since it's not controllable from content.
         bool passThrough = !(prefs.mAecOn || prefs.mAgcOn || prefs.mNoiseOn);
+
         if (track->IsDestroyed()) {
           return;
         }
-
         track->GraphImpl()->AppendMessage(MakeUnique<Message>(
-            track, that->mInputProcessing, passThrough, prefs.mChannels));
+            track, mInputProcessing, passThrough, prefs.mChannels));
       }));
 }
 
@@ -428,13 +427,12 @@ nsresult MediaEngineWebRTCMicrophoneSource::Allocate(
     return rv;
   }
 
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, prefs = outputPrefs] {
-        that->mSettings->mEchoCancellation.Value() = prefs.mAecOn;
-        that->mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
-        that->mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
-        that->mSettings->mChannelCount.Value() = prefs.mChannels;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [settings = mSettings, prefs = outputPrefs] {
+        settings->mEchoCancellation.Value() = prefs.mAecOn;
+        settings->mAutoGainControl.Value() = prefs.mAgcOn;
+        settings->mNoiseSuppression.Value() = prefs.mNoiseOn;
+        settings->mChannelCount.Value() = prefs.mChannels;
       }));
 
   mCurrentPrefs = outputPrefs;
@@ -448,35 +446,29 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
   class EndTrackMessage : public ControlMessage {
+    const RefPtr<AudioInputProcessing> mInputProcessing;
+
    public:
-    EndTrackMessage(AudioInputTrack* aTrack,
-                    AudioInputProcessing* aAudioInputProcessing)
-        : ControlMessage(aTrack),
-          mInputProcessing(aAudioInputProcessing),
-          mInputTrack(aTrack) {}
+    explicit EndTrackMessage(AudioInputProcessing* aAudioInputProcessing)
+        : ControlMessage(nullptr), mInputProcessing(aAudioInputProcessing) {}
 
     void Run() override {
       TRACE("mInputProcessing::End");
       mInputProcessing->End();
     }
-
-   protected:
-    const RefPtr<AudioInputProcessing> mInputProcessing;
-    AudioInputTrack const* mInputTrack;
   };
 
   if (mTrack) {
-    RefPtr<AudioInputProcessing> inputProcessing = mInputProcessing;
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        __func__, [track = std::move(mTrack),
-                   audioInputProcessing = std::move(inputProcessing)] {
+        __func__,
+        [track = std::move(mTrack), inputProcessing = mInputProcessing] {
           if (track->IsDestroyed()) {
             // This track has already been destroyed on main thread by its
             // DOMMediaStream. No cleanup left to do.
             return;
           }
           track->GraphImpl()->AppendMessage(
-              MakeUnique<EndTrackMessage>(track, audioInputProcessing));
+              MakeUnique<EndTrackMessage>(inputProcessing));
         }));
   }
 
@@ -541,8 +533,8 @@ class StartStopMessage : public ControlMessage {
   }
 
  protected:
-  RefPtr<AudioInputProcessing> mInputProcessing;
-  StartStop mAction;
+  const RefPtr<AudioInputProcessing> mInputProcessing;
+  const StartStop mAction;
 };
 
 nsresult MediaEngineWebRTCMicrophoneSource::Start() {
@@ -567,16 +559,15 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, deviceID, track = mTrack] {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [inputProcessing = mInputProcessing, deviceID, track = mTrack] {
         if (track->IsDestroyed()) {
           return;
         }
 
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
-            that->mInputProcessing, StartStopMessage::Start));
-        track->OpenAudioInput(deviceID, that->mInputProcessing);
+            inputProcessing, StartStopMessage::Start));
+        track->OpenAudioInput(deviceID, inputProcessing);
       }));
 
   ApplySettings(mCurrentPrefs);
@@ -598,16 +589,16 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
     return NS_OK;
   }
 
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, track = mTrack] {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [inputProcessing = mInputProcessing, deviceInfo = mDeviceInfo,
+                 track = mTrack] {
         if (track->IsDestroyed()) {
           return;
         }
 
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
-            that->mInputProcessing, StartStopMessage::Stop));
-        MOZ_ASSERT(track->DeviceId().value() == that->mDeviceInfo->DeviceID());
+            inputProcessing, StartStopMessage::Stop));
+        MOZ_ASSERT(track->DeviceId().value() == deviceInfo->DeviceID());
         track->CloseAudioInput();
       }));
 
@@ -1224,8 +1215,8 @@ void AudioInputTrack::Destroy() {
 void AudioInputTrack::SetInputProcessing(
     RefPtr<AudioInputProcessing> aInputProcessing) {
   class Message : public ControlMessage {
-    RefPtr<AudioInputTrack> mTrack;
-    RefPtr<AudioInputProcessing> mProcessing;
+    const RefPtr<AudioInputTrack> mTrack;
+    const RefPtr<AudioInputProcessing> mProcessing;
 
    public:
     Message(RefPtr<AudioInputTrack> aTrack,
@@ -1342,6 +1333,8 @@ nsString MediaEngineWebRTCAudioCaptureSource::GetName() const {
 
 nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
   nsID uuid;
+  char uuidBuffer[NSID_LENGTH];
+  nsCString asciiString;
   ErrorResult rv;
 
   rv = nsContentUtils::GenerateUUIDInPlace(uuid);
@@ -1349,7 +1342,11 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
     return ""_ns;
   }
 
-  return NSID_TrimBracketsASCII(uuid);
+  uuid.ToProvidedString(uuidBuffer);
+  asciiString.AssignASCII(uuidBuffer);
+
+  // Remove {} and the null terminator
+  return nsCString(Substring(asciiString, 1, NSID_LENGTH - 3));
 }
 
 nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {
