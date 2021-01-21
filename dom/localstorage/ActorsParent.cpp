@@ -1579,7 +1579,7 @@ class Datastore final
                                    const LSValue& aOldValue,
                                    const LSValue& aNewValue);
 
-  void NoteChangedObserverArray(const nsTArray<Observer*>& aObservers);
+  void NoteChangedObserverArray(const nsTArray<NotNull<Observer*>>& aObservers);
 
   void Stringify(nsACString& aResult) const;
 
@@ -2776,7 +2776,7 @@ typedef nsRefPtrHashtable<nsUint64HashKey, Observer> PreparedObserverHashtable;
 
 StaticAutoPtr<PreparedObserverHashtable> gPreparedObsevers;
 
-typedef nsClassHashtable<nsCStringHashKey, nsTArray<Observer*>>
+typedef nsClassHashtable<nsCStringHashKey, nsTArray<NotNull<Observer*>>>
     ObserverHashtable;
 
 StaticAutoPtr<ObserverHashtable> gObservers;
@@ -3237,7 +3237,6 @@ bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
 
   RefPtr<Observer> observer;
   gPreparedObsevers->Remove(aObserverId, observer.StartAssignment());
-  MOZ_ASSERT(observer);
 
   if (!gPreparedObsevers->Count()) {
     gPreparedObsevers = nullptr;
@@ -3247,12 +3246,14 @@ bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
     gObservers = new ObserverHashtable();
   }
 
-  nsTArray<Observer*>* array;
-  if (!gObservers->Get(observer->Origin(), &array)) {
-    array = new nsTArray<Observer*>();
-    gObservers->Put(observer->Origin(), array);
+  const auto notNullObserver = WrapNotNull(observer.get());
+
+  nsTArray<NotNull<Observer*>>* array;
+  if (!gObservers->Get(notNullObserver->Origin(), &array)) {
+    array = new nsTArray<NotNull<Observer*>>();
+    gObservers->Put(notNullObserver->Origin(), array);
   }
-  array->AppendElement(observer);
+  array->AppendElement(notNullObserver);
 
   if (RefPtr<Datastore> datastore = GetDatastore(observer->Origin())) {
     datastore->NoteChangedObserverArray(*array);
@@ -5098,7 +5099,7 @@ bool Datastore::HasOtherProcessObservers(Database* aDatabase) {
     return false;
   }
 
-  nsTArray<Observer*>* array;
+  nsTArray<NotNull<Observer*>>* array;
   if (!gObservers->Get(mGroupAndOrigin.mOrigin, &array)) {
     return false;
   }
@@ -5128,7 +5129,7 @@ void Datastore::NotifyOtherProcessObservers(Database* aDatabase,
     return;
   }
 
-  nsTArray<Observer*>* array;
+  nsTArray<NotNull<Observer*>>* array;
   if (!gObservers->Get(mGroupAndOrigin.mOrigin, &array)) {
     return;
   }
@@ -5147,7 +5148,7 @@ void Datastore::NotifyOtherProcessObservers(Database* aDatabase,
 }
 
 void Datastore::NoteChangedObserverArray(
-    const nsTArray<Observer*>& aObservers) {
+    const nsTArray<NotNull<Observer*>>& aObservers) {
   AssertIsOnBackgroundThread();
 
   for (auto iter = mActiveDatabases.ConstIter(); !iter.Done(); iter.Next()) {
@@ -6142,7 +6143,7 @@ void Observer::ActorDestroy(ActorDestroyReason aWhy) {
 
   MOZ_ASSERT(gObservers);
 
-  nsTArray<Observer*>* array;
+  nsTArray<NotNull<Observer*>>* array;
   gObservers->Get(mOrigin, &array);
   MOZ_ASSERT(array);
 
