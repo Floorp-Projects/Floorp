@@ -12762,10 +12762,25 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
         nsresult rv;
         leafName.ToInteger64(&rv);
         if (NS_SUCCEEDED(rv)) {
-          IDB_TRY_INSPECT(const int64_t& fileSize,
-                          MOZ_TO_RESULT_INVOKE(file, GetFileSize));
+          IDB_TRY_INSPECT(
+              const auto& thisUsage,
+              MOZ_TO_RESULT_INVOKE(file, GetFileSize)
+                  .map([](const int64_t fileSize) {
+                    return FileUsageType(Some(uint64_t(fileSize)));
+                  })
+                  .orElse(
+                      [](const nsresult rv) -> Result<FileUsageType, nsresult> {
+                        if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
+                            rv == NS_ERROR_FILE_NOT_FOUND) {
+                          // If the file does no longer exist, treat it as
+                          // 0-sized.
+                          return FileUsageType{};
+                        }
 
-          usage += FileUsageType(Some(uint64_t(fileSize)));
+                        return Err(rv);
+                      }));
+
+          usage += thisUsage;
 
           return Ok{};
         }
