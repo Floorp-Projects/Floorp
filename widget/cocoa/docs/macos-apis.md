@@ -63,10 +63,10 @@ if CONFIG['OS_ARCH'] == 'Darwin':
 
 ## Using new APIs with old SDKs
 
-If you want to use an API that was introduced after 10.11, you now have one extra thing to worry about.
+If you want to use an API that was introduced after 10.12, you now have one extra thing to worry about.
 In addition to the runtime check [described in the previous section](#using-macos-apis), you also
 have to jump through extra hoops in order to allow the build to succeed with older SDKs, because
-[we need to support building Firefox with SDK versions all the way down to the 10.11 SDK](./sdks.html#supported-sdks).
+[we need to support building Firefox with SDK versions all the way down to the 10.12 SDK](./sdks.html#supported-sdks).
 
 In order to make the compiler accept your code, you will need to copy some amount of the API declaration
 into your own code. Copy it from the newest recent SDK you can get your hands on.
