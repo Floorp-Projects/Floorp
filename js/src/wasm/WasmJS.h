@@ -470,6 +470,15 @@ class WasmTableObject : public NativeObject {
                                  mozilla::Maybe<uint32_t> maximumLength,
                                  wasm::RefType tableType, HandleObject proto);
   wasm::Table& table() const;
+
+  // Perform the standard `ToWebAssemblyValue` coercion on `value` and fill the
+  // range [index, index + length) in the table. Callers are required to ensure
+  // the range is within bounds. Returns false if the coercion failed.
+  bool fillRange(JSContext* cx, uint32_t index, uint32_t length,
+                 HandleValue value) const;
+#ifdef DEBUG
+  void assertRangeNull(uint32_t index, uint32_t length) const;
+#endif
 };
 
 // The class of WebAssembly.Exception. This class is used to track exception
