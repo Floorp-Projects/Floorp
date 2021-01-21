@@ -720,7 +720,7 @@ void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
                                  3.0f,  0.5f,  -0.5f, -3.0f, -3.5f};
   const float arrowPolygonY[] = {-0.5f, 2.5f, 2.5f, -0.5f, -2.0f,
                                  -2.0f, 1.0f, 1.0f, -2.0f, -2.0f};
-  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
+  const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
   sRGBColor arrowColor = ComputeMenulistArrowButtonColor(aState);
   PaintArrow(aDrawTarget, aRect, arrowPolygonX, arrowPolygonY, arrowNumPoints,
              arrowColor);
@@ -758,7 +758,7 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
   float arrowPolygonY[] = {-3.5f, -0.5f, -0.5f, -3.5f, -5.0f,
                            -5.0f, -2.0f, -2.0f, -5.0f, -5.0f};
 
-  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
+  const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
   const float scale = ScaleToWidgetRect(aRect);
 
   if (aAppearance == StyleAppearance::SpinnerUpbutton) {
@@ -1095,7 +1095,7 @@ void nsNativeBasicTheme::PaintScrollbarButton(
   float arrowPolygonX[] = {-3.0f, 0.0f, 3.0f, 3.0f, 0.0f, -3.0f};
   float arrowPolygonY[] = {0.4f, -3.1f, 0.4f, 2.7f, -0.8f, 2.7f};
 
-  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
+  const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
   switch (aAppearance) {
     case StyleAppearance::ScrollbarbuttonUp:
       break;
