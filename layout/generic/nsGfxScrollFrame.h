@@ -338,11 +338,18 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsRect GetUnsnappedScrolledRectInternal(const nsRect& aScrolledOverflowArea,
                                           const nsSize& aScrollPortSize) const;
 
-  uint32_t GetAvailableScrollingDirectionsForUserInputEvents() const;
+  layers::ScrollDirections GetAvailableScrollingDirectionsForUserInputEvents()
+      const;
 
-  uint32_t GetScrollbarVisibility() const {
-    return (mHasVerticalScrollbar ? nsIScrollableFrame::VERTICAL : 0) |
-           (mHasHorizontalScrollbar ? nsIScrollableFrame::HORIZONTAL : 0);
+  layers::ScrollDirections GetScrollbarVisibility() const {
+    layers::ScrollDirections result;
+    if (mHasHorizontalScrollbar) {
+      result += layers::ScrollDirection::eHorizontal;
+    }
+    if (mHasVerticalScrollbar) {
+      result += layers::ScrollDirection::eVertical;
+    }
+    return result;
   }
   nsMargin GetActualScrollbarSizes(
       nsIScrollableFrame::ScrollbarSizesOptions aOptions =
@@ -901,10 +908,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
       const final {
     return mHelper.GetOverscrollBehaviorInfo();
   }
-  uint32_t GetAvailableScrollingDirectionsForUserInputEvents() const final {
+  mozilla::layers::ScrollDirections
+  GetAvailableScrollingDirectionsForUserInputEvents() const final {
     return mHelper.GetAvailableScrollingDirectionsForUserInputEvents();
   }
-  uint32_t GetScrollbarVisibility() const final {
+  mozilla::layers::ScrollDirections GetScrollbarVisibility() const final {
     return mHelper.GetScrollbarVisibility();
   }
   nsMargin GetActualScrollbarSizes(
@@ -1383,10 +1391,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
       const final {
     return mHelper.GetOverscrollBehaviorInfo();
   }
-  uint32_t GetAvailableScrollingDirectionsForUserInputEvents() const final {
+  mozilla::layers::ScrollDirections
+  GetAvailableScrollingDirectionsForUserInputEvents() const final {
     return mHelper.GetAvailableScrollingDirectionsForUserInputEvents();
   }
-  uint32_t GetScrollbarVisibility() const final {
+  mozilla::layers::ScrollDirections GetScrollbarVisibility() const final {
     return mHelper.GetScrollbarVisibility();
   }
   nsMargin GetActualScrollbarSizes(

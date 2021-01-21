@@ -71,13 +71,15 @@ bool WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
 
   nsPoint scrollPt = aScrollFrame->GetVisualViewportOffset();
   nsRect scrollRange = aScrollFrame->GetScrollRangeForUserInputEvents();
-  uint32_t directions =
+  layers::ScrollDirections directions =
       aScrollFrame->GetAvailableScrollingDirectionsForUserInputEvents();
 
-  return (aDirectionX && (directions & nsIScrollableFrame::HORIZONTAL) &&
+  return ((aDirectionX != 0.0) &&
+          (directions.contains(layers::ScrollDirection::eHorizontal)) &&
           CanScrollInRange(scrollRange.x, scrollPt.x, scrollRange.XMost(),
                            aDirectionX)) ||
-         (aDirectionY && (directions & nsIScrollableFrame::VERTICAL) &&
+         ((aDirectionY != 0.0) &&
+          (directions.contains(layers::ScrollDirection::eVertical)) &&
           CanScrollInRange(scrollRange.y, scrollPt.y, scrollRange.YMost(),
                            aDirectionY));
 }
@@ -721,13 +723,13 @@ void ESMAutoDirWheelDeltaAdjuster::OnAdjusted() {
 }
 
 bool ESMAutoDirWheelDeltaAdjuster::CanScrollAlongXAxis() const {
-  return mScrollTargetFrame->GetAvailableScrollingDirections() &
-         nsIScrollableFrame::HORIZONTAL;
+  return mScrollTargetFrame->GetAvailableScrollingDirections().contains(
+      layers::ScrollDirection::eHorizontal);
 }
 
 bool ESMAutoDirWheelDeltaAdjuster::CanScrollAlongYAxis() const {
-  return mScrollTargetFrame->GetAvailableScrollingDirections() &
-         nsIScrollableFrame::VERTICAL;
+  return mScrollTargetFrame->GetAvailableScrollingDirections().contains(
+      layers::ScrollDirection::eVertical);
 }
 
 bool ESMAutoDirWheelDeltaAdjuster::CanScrollUpwards() const {
