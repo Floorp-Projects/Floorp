@@ -2741,6 +2741,9 @@ class nsIFrame : public nsQueryFrame {
    * @param aBorderPadding  The sum of the frame's inline / block border-widths
    *                        and padding (including actual values resulting from
    *                        percentage padding values).
+   * @param aSizeOverride Optional override values for size properties, which
+   *                      this function will use internally instead of the
+   *                      actual property values.
    * @param aFlags   Flags to further customize behavior (definitions in
    *                 LayoutConstants.h).
    *
@@ -2767,6 +2770,7 @@ class nsIFrame : public nsQueryFrame {
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin,
       const mozilla::LogicalSize& aBorderPadding,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
       mozilla::ComputeSizeFlags aFlags);
 
  protected:
@@ -2780,15 +2784,21 @@ class nsIFrame : public nsQueryFrame {
    * should override only ComputeAutoSize, and frames that cannot do so need to
    * override ComputeSize to enforce their inline-size/block-size invariants.
    *
-   * Implementations may optimize by returning a garbage width if
-   * StylePosition()->ISize() is not 'auto', and likewise for BSize(), since in
-   * such cases the result is guaranteed to be unused.
+   * Implementations may optimize by returning a garbage inline-size if
+   * StylePosition()->ISize() is not 'auto' (or inline-size override in
+   * aSizeOverrides is not 'auto' if provided), and likewise for BSize(), since
+   * in such cases the result is guaranteed to be unused.
+   *
+   * Most of the frame are not expected to check the aSizeOverrides parameter
+   * apart from checking the inline size override for 'auto' if they want to
+   * optimize and return garbage inline-size.
    */
   virtual mozilla::LogicalSize ComputeAutoSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin,
       const mozilla::LogicalSize& aBorderPadding,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
       mozilla::ComputeSizeFlags aFlags);
 
   /**

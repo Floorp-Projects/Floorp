@@ -1597,7 +1597,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
             aItemReflowInput.mContainingBlockSize, availISize,
             aItemReflowInput.ComputedLogicalMargin(itemWM).Size(itemWM),
             aItemReflowInput.ComputedLogicalBorderPadding(itemWM).Size(itemWM),
-            {ComputeSizeFlag::UseAutoISize, ComputeSizeFlag::ShrinkWrap});
+            {}, {ComputeSizeFlag::UseAutoISize, ComputeSizeFlag::ShrinkWrap});
 
         contentSizeSuggestion = aAxisTracker.MainComponent(
             sizeInItemWM.mLogicalSize.ConvertTo(cbWM, itemWM));
