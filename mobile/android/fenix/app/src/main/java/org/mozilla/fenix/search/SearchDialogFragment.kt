@@ -471,8 +471,15 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 clear(pill_wrapper.id, BOTTOM)
                 connect(pill_wrapper.id, BOTTOM, toolbar.id, TOP)
 
+                clear(awesome_bar.id, TOP)
+                clear(awesome_bar.id, BOTTOM)
+                connect(awesome_bar.id, TOP, search_suggestions_hint.id, BOTTOM)
+                connect(awesome_bar.id, BOTTOM, pill_wrapper.id, TOP)
+
                 clear(search_suggestions_hint.id, TOP)
+                clear(search_suggestions_hint.id, BOTTOM)
                 connect(search_suggestions_hint.id, TOP, PARENT_ID, TOP)
+                connect(search_suggestions_hint.id, BOTTOM, search_hint_bottom_barrier.id, TOP)
 
                 clear(fill_link_from_clipboard.id, TOP)
                 connect(fill_link_from_clipboard.id, BOTTOM, pill_wrapper.id, TOP)
