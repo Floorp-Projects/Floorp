@@ -56,6 +56,6 @@ class WebAuthnFeature(
     }
 
     companion object {
-        const val ACTIVITY_REQUEST_CODE = 1337
+        const val ACTIVITY_REQUEST_CODE = 10
     }
 }
