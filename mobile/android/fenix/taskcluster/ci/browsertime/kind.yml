@@ -83,7 +83,6 @@ job-defaults:
             - '--cfg=mozharness/configs/raptor/android_hw_config.py'
             - '--app=fenix'
             - '--browsertime'
-            - '--cold'
             - '--no-conditioned-profile'
             - '--binary=org.mozilla.fenix'
             - '--activity=org.mozilla.fenix.IntentReceiverActivity'
@@ -101,168 +100,54 @@ job-defaults:
             - linux64-node
 
 jobs:
-    tp6m-1-cold:
-        test-name: amazon
-        treeherder:
-            symbol: 'Btime(tp6m-1-c)'
+    tp6m:
+        page-load-tests:
+            - amazon
+            - instagram
+            - [bing-search-restaurants, bing-s-r]
+            - [ebay-kleinanzeigen-search, ebay-k-s]
+            - wikipedia
+            - booking
+            - [cnn-ampstories, cnn-amp]
+            - bbc
+            - imdb
+            - [facebook-cristiano, fb-cris]
+            - youtube
+            - bing
+            - [ebay-kleinanzeigen, ebay-k]
+            - [google-maps, gmaps]
+            - reddit
+            - [stackoverflow, stacko]
+            - jianshu
+            - web-de
+            - cnn
+            - [google-search-restaurants, gsearch-r]
 
-    tp6m-2-cold:
-        test-name: google
+    tp6m-hv:
         web-render-only: False
-        treeherder:
-            symbol: 'Btime(tp6m-2-c)'
-
-    tp6m-3-cold:
-        test-name: instagram
-        treeherder:
-            symbol: 'Btime(tp6m-3-c)'
-
-    tp6m-4-cold:
-        test-name: bing-search-restaurants
-        treeherder:
-            symbol: 'Btime(tp6m-4-c)'
-
-    tp6m-5-cold:
-        test-name: ebay-kleinanzeigen-search
-        treeherder:
-            symbol: 'Btime(tp6m-5-c)'
-
-    tp6m-6-cold:
-        test-name: amazon-search
-        web-render-only: False
-        treeherder:
-            symbol: 'Btime(tp6m-6-c)'
-
-    tp6m-7-cold:
-        test-name: wikipedia
-        treeherder:
-            symbol: 'Btime(tp6m-7-c)'
-
-    tp6m-8-cold:
-        test-name: booking
-        treeherder:
-            symbol: 'Btime(tp6m-8-c)'
-
-    tp6m-9-cold:
-        test-name: cnn-ampstories
-        treeherder:
-            symbol: 'Btime(tp6m-9-c)'
-
-    tp6m-10-cold:
-        test-name: bbc
-        treeherder:
-            symbol: 'Btime(tp6m-10-c)'
-
-    tp6m-11-cold:
-        test-name: microsoft-support
-        web-render-only: False
-        treeherder:
-            symbol: 'Btime(tp6m-11-c)'
-
-    tp6m-12-cold:
-        test-name: imdb
-        treeherder:
-            symbol: 'Btime(tp6m-12-c)'
-
-    tp6m-13-cold:
-        test-name: espn
-        web-render-only: False
-        treeherder:
-            symbol: 'Btime(tp6m-13-c)'
-
-    tp6m-14-cold:
-        test-name: facebook-cristiano
-        treeherder:
-            symbol: 'Btime(tp6m-14-c)'
-
-    tp6m-15-cold:
-        test-name: facebook
-        web-render-only: False
-        treeherder:
-            symbol: 'Btime(tp6m-15-c)'
-
-    tp6m-16-cold:
-        test-name: youtube
-        treeherder:
-            symbol: 'Btime(tp6m-16-c)'
-
-    tp6m-17-cold:
-        test-name: bing
-        treeherder:
-            symbol: 'Btime(tp6m-17-c)'
-
-    tp6m-18-cold:
-        test-name: ebay-kleinanzeigen
-        treeherder:
-            symbol: 'Btime(tp6m-18-c)'
-
-    tp6m-19-cold:
-        test-name: google-maps
-        treeherder:
-            symbol: 'Btime(tp6m-19-c)'
-
-    tp6m-20-cold:
-        test-name: youtube-watch
-        web-render-only: False
-        treeherder:
-            symbol: 'Btime(tp6m-20-c)'
-
-    tp6m-21-cold:
-        test-name: reddit
-        treeherder:
-            symbol: 'Btime(tp6m-21-c)'
-
-    tp6m-22-cold:
-        test-name: stackoverflow
-        treeherder:
-            symbol: 'Btime(tp6m-22-c)'
-
-    tp6m-23-cold:
-        test-name: jianshu
-        treeherder:
-            symbol: 'Btime(tp6m-23-c)'
-
-    tp6m-24-cold:
-        test-name: allrecipes
-        web-render-only: False
-        treeherder:
-            symbol: 'Btime(tp6m-24-c)'
-
-    tp6m-25-cold:
-        test-name: web-de
-        treeherder:
-            symbol: 'Btime(tp6m-25-c)'
-
-    tp6m-27-cold:
-        test-name: cnn
-        treeherder:
-            symbol: 'Btime(tp6m-27-c)'
-
-    tp6m-28-cold:
-        test-name: google-search-restaurants
-        treeherder:
-            symbol: 'Btime(tp6m-28-c)'
+        page-load-tests:
+            - google
+            - [amazon-search, amazon-s]
+            - [microsoft-support, micros-sup]
+            - espn
+            - facebook
+            - [youtube-watch, youtube-w]
+            - allrecipes
 
     youtube-playback-av1-sfr:
         description: "Raptor YouTube Playback AV1 SFR on Fenix"
         test-name: youtube-playback-av1-sfr
         run-visual-metrics: False
         chimera: False
-        treeherder:
-            symbol: 'Btime(ytp-av1-sfr)'
 
     youtube-playback-h264-sfr:
         description: "Raptor YouTube Playback H264 SFR on Fenix"
         test-name: youtube-playback-h264-sfr
         run-visual-metrics: False
         chimera: False
-        treeherder:
-            symbol: Btime(ytp-h264-sfr)
 
     youtube-playback-vp9-sfr:
         description: "Raptor YouTube Playback VP9 SFR on Fenix"
         run-visual-metrics: False
         chimera: False
         test-name: youtube-playback-vp9-sfr
-        treeherder:
-            symbol: Btime(ytp-vp9-sfr)
