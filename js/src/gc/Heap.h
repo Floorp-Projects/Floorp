@@ -674,8 +674,6 @@ inline bool InFreeList(Arena* arena, void* thing) {
   return arena->inFreeList(addr);
 }
 
-static const int32_t ChunkLocationOffsetFromLastByte =
-    int32_t(gc::ChunkLocationOffset) - int32_t(gc::ChunkMask);
 static const int32_t ChunkStoreBufferOffsetFromLastByte =
     int32_t(gc::ChunkStoreBufferOffset) - int32_t(gc::ChunkMask);
 

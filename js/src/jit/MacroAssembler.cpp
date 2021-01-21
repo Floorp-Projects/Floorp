@@ -3763,13 +3763,13 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
   // If the GC thing is in the nursery, we don't need to barrier it.
   if (type == MIRType::Value || type == MIRType::Object ||
       type == MIRType::String) {
-    branch32(Assembler::Equal, Address(temp2, gc::ChunkLocationOffset),
-             Imm32(int32_t(gc::ChunkLocation::Nursery)), noBarrier);
+    branchPtr(Assembler::NotEqual, Address(temp2, gc::ChunkStoreBufferOffset),
+              ImmWord(0), noBarrier);
   } else {
 #ifdef DEBUG
     Label isTenured;
-    branch32(Assembler::NotEqual, Address(temp2, gc::ChunkLocationOffset),
-             Imm32(int32_t(gc::ChunkLocation::Nursery)), &isTenured);
+    branchPtr(Assembler::Equal, Address(temp2, gc::ChunkStoreBufferOffset),
+              ImmWord(0), &isTenured);
     assumeUnreachable("JIT pre-barrier: unexpected nursery pointer");
     bind(&isTenured);
 #endif

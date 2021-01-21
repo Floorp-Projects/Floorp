@@ -4590,8 +4590,8 @@ void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
 
   ma_lsr(Imm32(gc::ChunkShift), ptr, temp);
   ma_lsl(Imm32(gc::ChunkShift), temp, temp);
-  load32(Address(temp, gc::ChunkLocationOffset), temp);
-  branch32(cond, temp, Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
+  loadPtr(Address(temp, gc::ChunkStoreBufferOffset), temp);
+  branchPtr(InvertCondition(cond), temp, ImmWord(0), label);
 }
 
 void MacroAssembler::branchValueIsNurseryCell(Condition cond,
