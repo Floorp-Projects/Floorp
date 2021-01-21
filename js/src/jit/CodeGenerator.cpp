@@ -1031,12 +1031,16 @@ void CodeGenerator::visitOutOfLineZeroIfNaN(OutOfLineZeroIfNaN* ool) {
 }
 
 void CodeGenerator::visitValueToDouble(LValueToDouble* lir) {
-  MToDouble* mir = lir->mir();
   ValueOperand operand = ToValue(lir, LValueToDouble::Input);
   FloatRegister output = ToFloatRegister(lir->output());
 
+  // Set if we can handle other primitives beside strings, as long as they're
+  // guaranteed to never throw. This rules out symbols and BigInts, but allows
+  // booleans, undefined, and null.
+  bool hasNonStringPrimitives =
+      lir->mir()->conversion() == MToFPInstruction::NonStringPrimitives;
+
   Label isDouble, isInt32, isBool, isNull, isUndefined, done;
-  bool hasBoolean = false, hasNull = false, hasUndefined = false;
 
   {
     ScratchTagScope tag(masm, operand);
@@ -1045,31 +1049,28 @@ void CodeGenerator::visitValueToDouble(LValueToDouble* lir) {
     masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
     masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
 
-    if (mir->conversion() == MToFPInstruction::NonStringPrimitives) {
+    if (hasNonStringPrimitives) {
       masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
       masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
       masm.branchTestNull(Assembler::Equal, tag, &isNull);
-      hasBoolean = true;
-      hasUndefined = true;
-      hasNull = true;
     }
   }
 
   bailout(lir->snapshot());
 
-  if (hasNull) {
+  if (hasNonStringPrimitives) {
     masm.bind(&isNull);
     masm.loadConstantDouble(0.0, output);
     masm.jump(&done);
   }
 
-  if (hasUndefined) {
+  if (hasNonStringPrimitives) {
     masm.bind(&isUndefined);
     masm.loadConstantDouble(GenericNaN(), output);
     masm.jump(&done);
   }
 
-  if (hasBoolean) {
+  if (hasNonStringPrimitives) {
     masm.bind(&isBool);
     masm.boolValueToDouble(operand, output);
     masm.jump(&done);
@@ -1085,12 +1086,16 @@ void CodeGenerator::visitValueToDouble(LValueToDouble* lir) {
 }
 
 void CodeGenerator::visitValueToFloat32(LValueToFloat32* lir) {
-  MToFloat32* mir = lir->mir();
   ValueOperand operand = ToValue(lir, LValueToFloat32::Input);
   FloatRegister output = ToFloatRegister(lir->output());
 
+  // Set if we can handle other primitives beside strings, as long as they're
+  // guaranteed to never throw. This rules out symbols and BigInts, but allows
+  // booleans, undefined, and null.
+  bool hasNonStringPrimitives =
+      lir->mir()->conversion() == MToFPInstruction::NonStringPrimitives;
+
   Label isDouble, isInt32, isBool, isNull, isUndefined, done;
-  bool hasBoolean = false, hasNull = false, hasUndefined = false;
 
   {
     ScratchTagScope tag(masm, operand);
@@ -1099,31 +1104,28 @@ void CodeGenerator::visitValueToFloat32(LValueToFloat32* lir) {
     masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
     masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
 
-    if (mir->conversion() == MToFPInstruction::NonStringPrimitives) {
+    if (hasNonStringPrimitives) {
       masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
       masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
       masm.branchTestNull(Assembler::Equal, tag, &isNull);
-      hasBoolean = true;
-      hasUndefined = true;
-      hasNull = true;
     }
   }
 
   bailout(lir->snapshot());
 
-  if (hasNull) {
+  if (hasNonStringPrimitives) {
     masm.bind(&isNull);
     masm.loadConstantFloat32(0.0f, output);
     masm.jump(&done);
   }
 
-  if (hasUndefined) {
+  if (hasNonStringPrimitives) {
     masm.bind(&isUndefined);
     masm.loadConstantFloat32(float(GenericNaN()), output);
     masm.jump(&done);
   }
 
-  if (hasBoolean) {
+  if (hasNonStringPrimitives) {
     masm.bind(&isBool);
     masm.boolValueToFloat32(operand, output);
     masm.jump(&done);
