@@ -39,9 +39,11 @@
     .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]):-moz-lwtheme-darktext {
       background-color: rgba(0,0,0,.1) !important;
     }
+    @supports not -moz-bool-pref("browser.proton.enabled") {
     .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true], [multiselected]):-moz-lwtheme-darktext {
       background-color: rgba(0,0,0,.2) !important;
     }
+    } /*** END !proton ***/
   }
 }
 
