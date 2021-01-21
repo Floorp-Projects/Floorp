@@ -36,6 +36,8 @@
 #include "wasm/AsmJS.h"       // InstantiateAsmJS
 #include "wasm/WasmModule.h"  // wasm::Module
 
+#include "vm/JSFunction-inl.h"  // JSFunction::create
+
 using namespace js;
 using namespace js::frontend;
 
@@ -160,6 +162,55 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
   return true;
 }
 
+// Parser-generated functions with the same prototype will share the same shape
+// and group. By computing the correct values up front, we can save a lot of
+// time in the Object creation code. For simplicity, we focus only on plain
+// synchronous functions which are by far the most common.
+//
+// This bypasses the `NewObjectCache`, but callers are expected to retrieve a
+// valid group and shape from the appropriate de-duplication tables.
+//
+// NOTE: Keep this in sync with `js::NewFunctionWithProto`.
+static JSFunction* CreateFunctionFast(JSContext* cx, CompilationInput& input,
+                                      HandleObjectGroup group,
+                                      HandleShape shape,
+                                      const ScriptStencil& script,
+                                      const ScriptStencilExtra& scriptExtra) {
+  MOZ_ASSERT(
+      !scriptExtra.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsAsync));
+  MOZ_ASSERT(!scriptExtra.immutableFlags.hasFlag(
+      ImmutableScriptFlagsEnum::IsGenerator));
+  MOZ_ASSERT(!script.functionFlags.isAsmJSNative());
+
+  FunctionFlags flags = script.functionFlags;
+  gc::AllocKind allocKind = flags.isExtended()
+                                ? gc::AllocKind::FUNCTION_EXTENDED
+                                : gc::AllocKind::FUNCTION;
+
+  JSFunction* fun;
+  JS_TRY_VAR_OR_RETURN_NULL(
+      cx, fun,
+      JSFunction::create(cx, allocKind, gc::TenuredHeap, shape, group));
+
+  fun->setArgCount(scriptExtra.nargs);
+  fun->setFlags(flags);
+
+  fun->initScript(nullptr);
+  fun->initEnvironment(nullptr);
+
+  if (script.functionAtom) {
+    JSAtom* atom = input.atomCache.getExistingAtomAt(cx, script.functionAtom);
+    MOZ_ASSERT(atom);
+    fun->initAtom(atom);
+  }
+
+  if (flags.isExtended()) {
+    fun->initializeExtended();
+  }
+
+  return fun;
+}
+
 static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
                                   BaseCompilationStencil& stencil,
                                   const ScriptStencil& script,
@@ -271,24 +322,57 @@ static bool InstantiateModuleObject(JSContext* cx, CompilationInput& input,
 static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
                                  BaseCompilationStencil& stencil,
                                  CompilationGCOutput& gcOutput) {
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+
   if (!gcOutput.functions.resize(stencil.scriptData.size())) {
     ReportOutOfMemory(cx);
     return false;
   }
 
+  // Most JSFunctions will be have the same Shape / Group so we can compute it
+  // now to allow fast object creation. Generators / Async will use the slow
+  // path instead.
+  RootedObject proto(cx,
+                     GlobalObject::getOrCreatePrototype(cx, JSProto_Function));
+  if (!proto) {
+    return false;
+  }
+  RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(
+                                  cx, &JSFunction::class_, TaggedProto(proto)));
+  if (!group) {
+    return false;
+  }
+  RootedShape shape(
+      cx, EmptyShape::getInitialShape(cx, &JSFunction::class_,
+                                      TaggedProto(proto), /* nfixed = */ 0,
+                                      /* objectFlags = */ 0));
+  if (!shape) {
+    return false;
+  }
+
   for (auto item :
        CompilationStencil::functionScriptStencils(stencil, gcOutput)) {
-    auto& scriptStencil = item.script;
-    const auto* scriptExtra = item.scriptExtra;
+    const auto& scriptStencil = item.script;
+    const auto& scriptExtra = (*item.scriptExtra);
     auto index = item.index;
 
     MOZ_ASSERT(!item.function);
 
-    JSFunction* fun =
-        CreateFunction(cx, input, stencil, scriptStencil, *scriptExtra, index);
+    // Plain functions can use a fast path.
+    bool useFastPath =
+        !scriptExtra.immutableFlags.hasFlag(ImmutableFlags::IsAsync) &&
+        !scriptExtra.immutableFlags.hasFlag(ImmutableFlags::IsGenerator) &&
+        !scriptStencil.functionFlags.isAsmJSNative();
+
+    JSFunction* fun = useFastPath
+                          ? CreateFunctionFast(cx, input, group, shape,
+                                               scriptStencil, scriptExtra)
+                          : CreateFunction(cx, input, stencil, scriptStencil,
+                                           scriptExtra, index);
     if (!fun) {
       return false;
     }
+
     gcOutput.functions[index] = fun;
   }
 
