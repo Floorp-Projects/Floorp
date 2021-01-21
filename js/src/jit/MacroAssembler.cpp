@@ -3896,6 +3896,27 @@ void MacroAssembler::spectreMaskIndex32(Register index, const Address& length,
   cmp32Move32(Assembler::Below, index, length, index, output);
 }
 
+void MacroAssembler::spectreMaskIndexPtr(Register index, Register length,
+                                         Register output) {
+  MOZ_ASSERT(JitOptions.spectreIndexMasking);
+  MOZ_ASSERT(length != output);
+  MOZ_ASSERT(index != output);
+
+  movePtr(ImmWord(0), output);
+  cmpPtrMovePtr(Assembler::Below, index, length, index, output);
+}
+
+void MacroAssembler::spectreMaskIndexPtr(Register index, const Address& length,
+                                         Register output) {
+  MOZ_ASSERT(JitOptions.spectreIndexMasking);
+  MOZ_ASSERT(index != length.base);
+  MOZ_ASSERT(length.base != output);
+  MOZ_ASSERT(index != output);
+
+  movePtr(ImmWord(0), output);
+  cmpPtrMovePtr(Assembler::Below, index, length, index, output);
+}
+
 void MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length,
                                              Label* failure) {
   MOZ_ASSERT(mozilla::IsPowerOfTwo(length));
