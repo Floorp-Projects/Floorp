@@ -4262,19 +4262,6 @@ tabs:
     expires: "2021-08-01"
 
 contextual_menu:
-  long_press_tapped:
-    type: boolean
-    description: |
-      Text selection contextual menu option tapped.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/11580
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/16968
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-06-01"
   copy_tapped:
     type: event
     description: |

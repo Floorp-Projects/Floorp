@@ -701,9 +701,6 @@ private val Event.wrapper: EventWrapper<*>?
         Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
             { Tabs.settingOpened.record(it) }
         )
-        Event.ContextMenuLongPressTapped -> EventWrapper<NoExtraKeys>(
-            { ContextualMenu.longPressTapped.set(true) }
-        )
         Event.ContextMenuCopyTapped -> EventWrapper<NoExtraKeys>(
             { ContextualMenu.copyTapped.record(it) }
         )

@@ -195,7 +195,6 @@ sealed class Event {
 
     object RecentlyClosedTabsOpened : Event()
 
-    object ContextMenuLongPressTapped : Event()
     object ContextMenuCopyTapped : Event()
     object ContextMenuSearchTapped : Event()
     object ContextMenuSelectAllTapped : Event()
