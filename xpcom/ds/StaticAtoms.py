@@ -22,6 +22,7 @@ import sys
 # Please keep "START ATOMS" and "END ATOMS" comments as the parser uses them.
 #
 # It is not possible to conditionally define static atoms with #ifdef etc.
+# fmt: off
 STATIC_ATOMS = [
     # START ATOMS
     # --------------------------------------------------------------------------
@@ -86,17 +87,12 @@ STATIC_ATOMS = [
     Atom("allowpopupstoescapesandbox", "allow-popups-to-escape-sandbox"),
     Atom("allowpopups", "allow-popups"),
     Atom("allowpresentation", "allow-presentation"),
-    Atom(
-        "allowstorageaccessbyuseractivatetion",
-        "allow-storage-access-by-user-activation",
-    ),
+    Atom("allowstorageaccessbyuseractivatetion", "allow-storage-access-by-user-activation"),
     Atom("allowsameorigin", "allow-same-origin"),
     Atom("allowscripts", "allow-scripts"),
     Atom("allowscriptstoclose", "allowscriptstoclose"),
     Atom("allowtopnavigation", "allow-top-navigation"),
-    Atom(
-        "allowtopnavigationbyuseractivation", "allow-top-navigation-by-user-activation"
-    ),
+    Atom("allowtopnavigationbyuseractivation", "allow-top-navigation-by-user-activation"),
     Atom("allowuntrusted", "allowuntrusted"),
     Atom("alt", "alt"),
     Atom("alternate", "alternate"),
@@ -2107,43 +2103,21 @@ STATIC_ATOMS = [
     # Content property names
     Atom("afterPseudoProperty", "afterPseudoProperty"),  # nsXMLElement*
     Atom("animationsProperty", "AnimationsProperty"),  # FrameAnimations*
-    Atom(
-        "animationsOfBeforeProperty", "AnimationsOfBeforeProperty"
-    ),  # FrameAnimations*
+    Atom("animationsOfBeforeProperty", "AnimationsOfBeforeProperty"),  # FrameAnimations*
     Atom("animationsOfAfterProperty", "AnimationsOfAfterProperty"),  # FrameAnimations*
-    Atom(
-        "animationsOfMarkerProperty", "AnimationsOfMarkerProperty"
-    ),  # FrameAnimations*
+    Atom("animationsOfMarkerProperty", "AnimationsOfMarkerProperty"),  # FrameAnimations*
     Atom("animationEffectsProperty", "AnimationEffectsProperty"),  # EffectSet*
-    Atom(
-        "animationEffectsForBeforeProperty", "AnimationsEffectsForBeforeProperty"
-    ),  # EffectSet*
-    Atom(
-        "animationEffectsForAfterProperty", "AnimationsEffectsForAfterProperty"
-    ),  # EffectSet*
-    Atom(
-        "animationEffectsForMarkerProperty", "AnimationsEffectsForMarkerProperty"
-    ),  # EffectSet*
+    Atom("animationEffectsForBeforeProperty", "AnimationsEffectsForBeforeProperty"),  # EffectSet*
+    Atom("animationEffectsForAfterProperty", "AnimationsEffectsForAfterProperty"),  # EffectSet*
+    Atom("animationEffectsForMarkerProperty", "AnimationsEffectsForMarkerProperty"),  # EffectSet*
     Atom("beforePseudoProperty", "beforePseudoProperty"),  # nsXMLElement*
-    Atom(
-        "cssPseudoElementBeforeProperty", "CSSPseudoElementBeforeProperty"
-    ),  # CSSPseudoElement*
-    Atom(
-        "cssPseudoElementAfterProperty", "CSSPseudoElementAfterProperty"
-    ),  # CSSPseudoElement*
-    Atom(
-        "cssPseudoElementMarkerProperty", "CSSPseudoElementMarkerProperty"
-    ),  # CSSPseudoElement*
+    Atom("cssPseudoElementBeforeProperty", "CSSPseudoElementBeforeProperty"),  # CSSPseudoElement*
+    Atom("cssPseudoElementAfterProperty", "CSSPseudoElementAfterProperty"),  # CSSPseudoElement*
+    Atom("cssPseudoElementMarkerProperty", "CSSPseudoElementMarkerProperty"),  # CSSPseudoElement*
     Atom("transitionsProperty", "TransitionsProperty"),  # FrameTransitions*
-    Atom(
-        "transitionsOfBeforeProperty", "TransitionsOfBeforeProperty"
-    ),  # FrameTransitions*
-    Atom(
-        "transitionsOfAfterProperty", "TransitionsOfAfterProperty"
-    ),  # FrameTransitions*
-    Atom(
-        "transitionsOfMarkerProperty", "TransitionsOfMarkerProperty"
-    ),  # FrameTransitions*
+    Atom("transitionsOfBeforeProperty", "TransitionsOfBeforeProperty"),  # FrameTransitions*
+    Atom("transitionsOfAfterProperty", "TransitionsOfAfterProperty"),  # FrameTransitions*
+    Atom("transitionsOfMarkerProperty", "TransitionsOfMarkerProperty"),  # FrameTransitions*
     Atom("genConInitializerProperty", "QuoteNodeProperty"),
     Atom("labelMouseDownPtProperty", "LabelMouseDownPtProperty"),
     Atom("lockedStyleStates", "lockedStyleStates"),
@@ -2229,9 +2203,7 @@ STATIC_ATOMS = [
     Atom("_moz_scrollbar_end_forward", "-moz-scrollbar-end-forward"),
     Atom("_moz_scrollbar_thumb_proportional", "-moz-scrollbar-thumb-proportional"),
     Atom("_moz_overlay_scrollbars", "-moz-overlay-scrollbars"),
-    Atom(
-        "_moz_windows_accent_color_in_titlebar", "-moz-windows-accent-color-in-titlebar"
-    ),
+    Atom("_moz_windows_accent_color_in_titlebar", "-moz-windows-accent-color-in-titlebar"),
     Atom("_moz_windows_default_theme", "-moz-windows-default-theme"),
     Atom("_moz_mac_graphite_theme", "-moz-mac-graphite-theme"),
     Atom("_moz_mac_big_sur_theme", "-moz-mac-big-sur-theme"),
@@ -2245,9 +2217,7 @@ STATIC_ATOMS = [
     Atom("_moz_is_resource_document", "-moz-is-resource-document"),
     Atom("_moz_swipe_animation_enabled", "-moz-swipe-animation-enabled"),
     Atom("_moz_gtk_csd_available", "-moz-gtk-csd-available"),
-    Atom(
-        "_moz_gtk_csd_hide_titlebar_by_default", "-moz-gtk-csd-hide-titlebar-by-default"
-    ),
+    Atom("_moz_gtk_csd_hide_titlebar_by_default", "-moz-gtk-csd-hide-titlebar-by-default"),
     Atom("_moz_gtk_csd_transparent_background", "-moz-gtk-csd-transparent-background"),
     Atom("_moz_gtk_csd_minimize_button", "-moz-gtk-csd-minimize-button"),
     Atom("_moz_gtk_csd_maximize_button", "-moz-gtk-csd-maximize-button"),
@@ -2458,15 +2428,11 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_firstLine", ":first-line"),
     PseudoElementAtom("PseudoElement_selection", ":selection"),
     PseudoElementAtom("PseudoElement_mozFocusInner", ":-moz-focus-inner"),
-    PseudoElementAtom(
-        "PseudoElement_mozComplexControlWrapper", ":-moz-complex-control-wrapper"
-    ),
+    PseudoElementAtom("PseudoElement_mozComplexControlWrapper", ":-moz-complex-control-wrapper"),
     PseudoElementAtom("PseudoElement_mozNumberSpinBox", ":-moz-number-spin-box"),
     PseudoElementAtom("PseudoElement_mozNumberSpinUp", ":-moz-number-spin-up"),
     PseudoElementAtom("PseudoElement_mozNumberSpinDown", ":-moz-number-spin-down"),
-    PseudoElementAtom(
-        "PseudoElement_mozSearchClearButton", ":-moz-search-clear-button"
-    ),
+    PseudoElementAtom("PseudoElement_mozSearchClearButton", ":-moz-search-clear-button"),
     PseudoElementAtom("PseudoElement_mozProgressBar", ":-moz-progress-bar"),
     PseudoElementAtom("PseudoElement_mozRangeTrack", ":-moz-range-track"),
     PseudoElementAtom("PseudoElement_mozRangeProgress", ":-moz-range-progress"),
@@ -2474,46 +2440,30 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_mozMeterBar", ":-moz-meter-bar"),
     PseudoElementAtom("PseudoElement_placeholder", ":placeholder"),
     PseudoElementAtom("PseudoElement_mozColorSwatch", ":-moz-color-swatch"),
-    PseudoElementAtom(
-        "PseudoElement_mozTextControlEditingRoot", ":-moz-text-control-editing-root"
-    ),
-    PseudoElementAtom(
-        "PseudoElement_mozTextControlPreview", ":-moz-text-control-preview"
-    ),
+    PseudoElementAtom("PseudoElement_mozTextControlEditingRoot", ":-moz-text-control-editing-root"),
+    PseudoElementAtom("PseudoElement_mozTextControlPreview", ":-moz-text-control-preview"),
     PseudoElementAtom("PseudoElement_fileSelectorButton", ":file-selector-button"),
     # CSS anonymous boxes -- these must appear in the same order as
     # in nsCSSAnonBoxList.h
     NonInheritingAnonBoxAtom("AnonBox_oofPlaceholder", ":-moz-oof-placeholder"),
-    NonInheritingAnonBoxAtom(
-        "AnonBox_horizontalFramesetBorder", ":-moz-hframeset-border"
-    ),
-    NonInheritingAnonBoxAtom(
-        "AnonBox_verticalFramesetBorder", ":-moz-vframeset-border"
-    ),
+    NonInheritingAnonBoxAtom("AnonBox_horizontalFramesetBorder", ":-moz-hframeset-border"),
+    NonInheritingAnonBoxAtom("AnonBox_verticalFramesetBorder", ":-moz-vframeset-border"),
     NonInheritingAnonBoxAtom("AnonBox_framesetBlank", ":-moz-frameset-blank"),
     NonInheritingAnonBoxAtom("AnonBox_tableColGroup", ":-moz-table-column-group"),
     NonInheritingAnonBoxAtom("AnonBox_tableCol", ":-moz-table-column"),
     NonInheritingAnonBoxAtom("AnonBox_pageBreak", ":-moz-pagebreak"),
     NonInheritingAnonBoxAtom("AnonBox_columnSpanWrapper", ":-moz-column-span-wrapper"),
     InheritingAnonBoxAtom("AnonBox_mozText", ":-moz-text"),
-    InheritingAnonBoxAtom(
-        "AnonBox_firstLetterContinuation", ":-moz-first-letter-continuation"
-    ),
-    InheritingAnonBoxAtom(
-        "AnonBox_mozBlockInsideInlineWrapper", ":-moz-block-inside-inline-wrapper"
-    ),
-    InheritingAnonBoxAtom(
-        "AnonBox_mozMathMLAnonymousBlock", ":-moz-mathml-anonymous-block"
-    ),
+    InheritingAnonBoxAtom("AnonBox_firstLetterContinuation", ":-moz-first-letter-continuation"),
+    InheritingAnonBoxAtom("AnonBox_mozBlockInsideInlineWrapper", ":-moz-block-inside-inline-wrapper"),
+    InheritingAnonBoxAtom("AnonBox_mozMathMLAnonymousBlock", ":-moz-mathml-anonymous-block"),
     InheritingAnonBoxAtom("AnonBox_mozXULAnonymousBlock", ":-moz-xul-anonymous-block"),
     InheritingAnonBoxAtom("AnonBox_mozLineFrame", ":-moz-line-frame"),
     InheritingAnonBoxAtom("AnonBox_buttonContent", ":-moz-button-content"),
     InheritingAnonBoxAtom("AnonBox_cellContent", ":-moz-cell-content"),
     InheritingAnonBoxAtom("AnonBox_dropDownList", ":-moz-dropdown-list"),
     InheritingAnonBoxAtom("AnonBox_fieldsetContent", ":-moz-fieldset-content"),
-    InheritingAnonBoxAtom(
-        "AnonBox_mozDisplayComboboxControlFrame", ":-moz-display-comboboxcontrol-frame"
-    ),
+    InheritingAnonBoxAtom("AnonBox_mozDisplayComboboxControlFrame", ":-moz-display-comboboxcontrol-frame"),
     InheritingAnonBoxAtom("AnonBox_htmlCanvasContent", ":-moz-html-canvas-content"),
     InheritingAnonBoxAtom("AnonBox_inlineTable", ":-moz-inline-table"),
     InheritingAnonBoxAtom("AnonBox_table", ":-moz-table"),
@@ -2528,9 +2478,7 @@ STATIC_ATOMS = [
     InheritingAnonBoxAtom("AnonBox_printedSheet", ":-moz-printed-sheet"),
     InheritingAnonBoxAtom("AnonBox_scrolledContent", ":-moz-scrolled-content"),
     InheritingAnonBoxAtom("AnonBox_scrolledCanvas", ":-moz-scrolled-canvas"),
-    InheritingAnonBoxAtom(
-        "AnonBox_scrolledPageSequence", ":-moz-scrolled-page-sequence"
-    ),
+    InheritingAnonBoxAtom("AnonBox_scrolledPageSequence", ":-moz-scrolled-page-sequence"),
     InheritingAnonBoxAtom("AnonBox_columnSet", ":-moz-column-set"),
     InheritingAnonBoxAtom("AnonBox_columnContent", ":-moz-column-content"),
     InheritingAnonBoxAtom("AnonBox_viewport", ":-moz-viewport"),
@@ -2554,16 +2502,13 @@ STATIC_ATOMS = [
     InheritingAnonBoxAtom("AnonBox_mozTreeCellText", ":-moz-tree-cell-text"),
     InheritingAnonBoxAtom("AnonBox_mozTreeCheckbox", ":-moz-tree-checkbox"),
     InheritingAnonBoxAtom("AnonBox_mozTreeDropFeedback", ":-moz-tree-drop-feedback"),
-    InheritingAnonBoxAtom(
-        "AnonBox_mozSVGMarkerAnonChild", ":-moz-svg-marker-anon-child"
-    ),
-    InheritingAnonBoxAtom(
-        "AnonBox_mozSVGOuterSVGAnonChild", ":-moz-svg-outer-svg-anon-child"
-    ),
+    InheritingAnonBoxAtom("AnonBox_mozSVGMarkerAnonChild", ":-moz-svg-marker-anon-child"),
+    InheritingAnonBoxAtom("AnonBox_mozSVGOuterSVGAnonChild", ":-moz-svg-outer-svg-anon-child"),
     InheritingAnonBoxAtom("AnonBox_mozSVGForeignContent", ":-moz-svg-foreign-content"),
     InheritingAnonBoxAtom("AnonBox_mozSVGText", ":-moz-svg-text"),
     # END ATOMS
 ] + HTML_PARSER_ATOMS
+# fmt: on
 
 
 def verify():
