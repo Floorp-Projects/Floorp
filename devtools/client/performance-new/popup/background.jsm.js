@@ -83,6 +83,8 @@ const lazy = createLazyLoaders({
     ),
 });
 
+// TODO - Bug 1681539. The presets still need to be localized.
+
 /** @type {Presets} */
 const presets = {
   "web-developer": {

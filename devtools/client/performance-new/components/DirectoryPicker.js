@@ -12,16 +12,22 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  PureComponent,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const {
   div,
-  input,
+  button,
   select,
   option,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   withCommonPathPrefixRemoved,
 } = require("devtools/client/performance-new/utils");
+const Localized = createFactory(
+  require("devtools/client/shared/vendor/fluent-react").Localized
+);
 
 /**
  * A list of directories with add and remove buttons.
@@ -92,20 +98,22 @@ class DirectoryPicker extends PureComponent {
           className: "perf-settings-dir-list-button-group",
           key: "directory-picker-div",
         },
-        input({
-          type: "button",
-          className: `perf-photon-button perf-photon-button-default perf-button`,
-          value: "+",
-          title: "Add a directory",
-          onClick: this._handleAddButtonClick,
-        }),
-        input({
-          type: "button",
-          className: `perf-photon-button perf-photon-button-default perf-button`,
-          value: "-",
-          title: "Remove the selected directory from the list",
-          onClick: this._handleRemoveButtonClick,
-        })
+        button(
+          {
+            type: "button",
+            className: `perf-photon-button perf-photon-button-default perf-button`,
+            onClick: this._handleAddButtonClick,
+          },
+          Localized({ id: "perftools-button-add-directory" })
+        ),
+        button(
+          {
+            type: "button",
+            className: `perf-photon-button perf-photon-button-default perf-button`,
+            onClick: this._handleRemoveButtonClick,
+          },
+          Localized({ id: "perftools-button-remove-directory" })
+        )
       ),
     ];
   }

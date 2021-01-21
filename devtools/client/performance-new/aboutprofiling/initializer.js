@@ -57,6 +57,16 @@ const { receiveProfile } = require("devtools/client/performance-new/browser");
 
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const React = require("devtools/client/shared/vendor/react");
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const {
+  FluentL10n,
+} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
+const Provider = React.createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
+const LocalizationProvider = React.createFactory(
+  FluentReact.LocalizationProvider
+);
 const AboutProfiling = React.createFactory(
   require("devtools/client/performance-new/components/AboutProfiling")
 );
@@ -66,7 +76,6 @@ const ProfilerEventHandling = React.createFactory(
 const createStore = require("devtools/client/shared/redux/create-store");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const {
   ActorReadyGeckoProfilerInterface,
 } = require("devtools/shared/performance-new/gecko-profiler-interface");
@@ -82,6 +91,9 @@ const {
 async function gInit(perfFront, pageContext, openRemoteDevTools) {
   const store = createStore(reducers);
   const supportedFeatures = await perfFront.getSupportedFeatures();
+
+  const l10n = new FluentL10n();
+  await l10n.init(["devtools/client/perftools.ftl"]);
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
@@ -114,14 +126,16 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
   );
 
   ReactDOM.render(
-    React.createElement(
-      Provider,
+    Provider(
       { store },
-      React.createElement(
-        React.Fragment,
-        null,
-        ProfilerEventHandling(),
-        AboutProfiling()
+      LocalizationProvider(
+        { bundles: l10n.getBundles() },
+        React.createElement(
+          React.Fragment,
+          null,
+          ProfilerEventHandling(),
+          AboutProfiling()
+        )
       )
     ),
     document.querySelector("#root")

@@ -39,6 +39,16 @@
 
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const React = require("devtools/client/shared/vendor/react");
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const {
+  FluentL10n,
+} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
+const Provider = React.createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
+const LocalizationProvider = React.createFactory(
+  FluentReact.LocalizationProvider
+);
 const DevToolsPanel = React.createFactory(
   require("devtools/client/performance-new/components/DevToolsPanel")
 );
@@ -49,7 +59,6 @@ const createStore = require("devtools/client/shared/redux/create-store");
 const selectors = require("devtools/client/performance-new/store/selectors");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const {
   receiveProfile,
   createMultiModalGetSymbolTableFn,
@@ -97,6 +106,9 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
     panelWindow.gStore = anyStore;
   }
 
+  const l10n = new FluentL10n();
+  await l10n.init(["devtools/client/perftools.ftl"]);
+
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
   store.dispatch(
@@ -134,14 +146,16 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   );
 
   ReactDOM.render(
-    React.createElement(
-      Provider,
+    Provider(
       { store },
-      React.createElement(
-        React.Fragment,
-        null,
-        ProfilerEventHandling(),
-        DevToolsPanel()
+      LocalizationProvider(
+        { bundles: l10n.getBundles() },
+        React.createElement(
+          React.Fragment,
+          null,
+          ProfilerEventHandling(),
+          DevToolsPanel()
+        )
       )
     ),
     document.querySelector("#root")
