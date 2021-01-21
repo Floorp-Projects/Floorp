@@ -6829,12 +6829,20 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
       mDNSBlockingThenable = mDNSBlockingPromise.Ensure(__func__);
     }
 
+    // When LoadUseHTTPSSVC() is true, we should really "fetch" the HTTPS RR,
+    // not "prefetch", since DNS prefetch can be disabled by the pref.
     if (LoadUseHTTPSSVC() ||
         gHttpHandler->UseHTTPSRRForSpeculativeConnection()) {
+      OriginAttributes originAttributes;
+      StoragePrincipalHelper::GetOriginAttributesForHTTPSRR(this,
+                                                            originAttributes);
+
+      RefPtr<nsDNSPrefetch> resolver =
+          new nsDNSPrefetch(mURI, originAttributes, nsIRequest::GetTRRMode());
       nsWeakPtr weakPtrThis(
           do_GetWeakReference(static_cast<nsIHttpChannel*>(this)));
-      rv = mDNSPrefetch->FetchHTTPSSVC(
-          mCaps & NS_HTTP_REFRESH_DNS,
+      nsresult rv = resolver->FetchHTTPSSVC(
+          mCaps & NS_HTTP_REFRESH_DNS, !LoadUseHTTPSSVC(),
           [weakPtrThis](nsIDNSHTTPSSVCRecord* aRecord) {
             nsCOMPtr<nsIHttpChannel> channel = do_QueryReferent(weakPtrThis);
             RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(channel);
