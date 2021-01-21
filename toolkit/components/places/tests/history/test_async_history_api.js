@@ -31,7 +31,7 @@ function VisitInfo(aTransitionType, aVisitTime) {
   this.visitDate = aVisitTime || Date.now() * 1000;
 }
 
-function promiseUpdatePlaces(aPlaces, aOptions = {}) {
+function promiseUpdatePlaces(aPlaces, aOptions, aBatchFrecencyNotifications) {
   return new Promise((resolve, reject) => {
     asyncHistory.updatePlaces(
       aPlaces,
@@ -54,7 +54,8 @@ function promiseUpdatePlaces(aPlaces, aOptions = {}) {
           },
         },
         aOptions
-      )
+      ),
+      aBatchFrecencyNotifications
     );
   });
 }
@@ -1146,15 +1147,24 @@ add_task(async function test_omit_frecency_notifications() {
       visits: [new VisitInfo(TRANSITION_TYPED)],
     },
   ];
-
-  const promiseRankingChanged = PlacesTestUtils.waitForNotification(
-    "pages-rank-changed",
-    () => true,
-    "places"
-  );
-
-  await promiseUpdatePlaces(places);
-  await promiseRankingChanged;
+  let promiseFrecenciesChanged = new Promise(resolve => {
+    let frecencyObserverCheck = {
+      onFrecencyChanged() {
+        ok(
+          false,
+          "Should not fire frecencyChanged because we explicitly asked not to do so."
+        );
+      },
+      onManyFrecenciesChanged() {
+        ok(true, "Should fire many frecencies changed notification instead.");
+        PlacesUtils.history.removeObserver(frecencyObserverCheck);
+        resolve();
+      },
+    };
+    PlacesUtils.history.addObserver(frecencyObserverCheck);
+  });
+  await promiseUpdatePlaces(places, {}, true);
+  await promiseFrecenciesChanged;
 });
 
 add_task(async function test_ignore_errors() {
