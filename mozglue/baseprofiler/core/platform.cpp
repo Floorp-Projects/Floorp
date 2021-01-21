@@ -235,9 +235,11 @@ static uint32_t DefaultFeatures() {
 // Extra default features when MOZ_PROFILER_STARTUP is set (even if not
 // available).
 static uint32_t StartupExtraDefaultFeatures() {
+  // Enable CPUUtilization by default for startup profiles as it is useful to
+  // see when startup alternates between CPU intensive tasks and being blocked.
   // Enable mainthreadio by default for startup profiles as startup is heavy on
   // I/O operations, and main thread I/O is really important to see there.
-  return ProfilerFeature::MainThreadIO;
+  return ProfilerFeature::CPUUtilization | ProfilerFeature::MainThreadIO;
 }
 
 class MOZ_RAII PSAutoTryLock;
