@@ -13,5 +13,11 @@
   },
   "searchUrlGetParams": {
     "message": "field-keywords={searchTerms}&mode=blended&tag=mozillajapan-fx-22&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://completion.amazon.co.jp/search/complete"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&search-alias=aps&mkt=6"
   }
 }

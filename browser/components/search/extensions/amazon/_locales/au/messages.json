@@ -13,5 +13,11 @@
   },
   "searchUrlGetParams": {
     "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  },
+  "suggestUrl": {
+    "message": ""
+  },
+  "suggestUrlGetParams": {
+    "message": ""
   }
 }

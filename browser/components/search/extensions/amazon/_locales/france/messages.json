@@ -13,5 +13,11 @@
   },
   "searchUrlGetParams": {
     "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-fr-21&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://completion.amazon.fr/search/complete"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&search-alias=aps&mkt=5"
   }
 }

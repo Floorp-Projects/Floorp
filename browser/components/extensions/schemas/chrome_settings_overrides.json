@@ -57,7 +57,7 @@
                   "suggest_url": {
                     "type": "string",
                     "optional": true,
-                    "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d*)?(/|$)).*$",
+                    "pattern": "^$|^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d*)?(/|$)).*$",
                     "preprocess": "localize"
                   },
                   "instant_url": {
