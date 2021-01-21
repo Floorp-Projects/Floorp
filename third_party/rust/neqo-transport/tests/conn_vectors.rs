@@ -9,9 +9,9 @@
 
 use neqo_common::{Datagram, Encoder};
 use neqo_transport::{
-    Connection, ConnectionParameters, FixedConnectionIdManager, QuicVersion, State,
+    Connection, ConnectionParameters, QuicVersion, RandomConnectionIdGenerator, State,
 };
-use test_fixture::{self, loopback, now};
+use test_fixture::{self, addr, now};
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -173,8 +173,8 @@ fn make_server(quic_version: QuicVersion) -> Connection {
     Connection::new_server(
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
-        Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
-        &ConnectionParameters::default().quic_version(quic_version),
+        Rc::new(RefCell::new(RandomConnectionIdGenerator::new(5))),
+        ConnectionParameters::default().quic_version(quic_version),
     )
     .expect("create a default server")
 }
@@ -183,7 +183,7 @@ fn process_client_initial(quic_version: QuicVersion, packet: &str) {
     let mut server = make_server(quic_version);
 
     let pkt: Vec<u8> = Encoder::from_hex(packet).into();
-    let dgram = Datagram::new(loopback(), loopback(), pkt);
+    let dgram = Datagram::new(addr(), addr(), pkt);
     assert_eq!(*server.state(), State::Init);
     let out = server.process(Some(dgram), now());
     assert_eq!(*server.state(), State::Handshaking);

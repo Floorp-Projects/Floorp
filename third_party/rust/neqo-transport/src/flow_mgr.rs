@@ -13,14 +13,14 @@ use std::mem;
 use neqo_common::{qinfo, qwarn, Encoder};
 use smallvec::{smallvec, SmallVec};
 
-use crate::frame::{Frame, StreamType};
+use crate::frame::Frame;
 use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RecvStreams;
 use crate::send_stream::SendStreams;
 use crate::stats::FrameStats;
-use crate::stream_id::{StreamId, StreamIndex, StreamIndexes};
-use crate::AppError;
+use crate::stream_id::{StreamId, StreamIndex, StreamIndexes, StreamType};
+use crate::{AppError, Error, Res};
 
 type FlowFrame = Frame<'static>;
 pub type FlowControlRecoveryToken = FlowFrame;
@@ -74,11 +74,6 @@ impl FlowMgr {
         let frame = Frame::DataBlocked {
             data_limit: self.max_data,
         };
-        self.from_conn.insert(mem::discriminant(&frame), frame);
-    }
-
-    pub fn path_response(&mut self, data: [u8; 8]) {
-        let frame = Frame::PathResponse { data };
         self.from_conn.insert(mem::discriminant(&frame), frame);
     }
 
@@ -273,7 +268,6 @@ impl FlowMgr {
                     }
                 }
             }
-            Frame::PathResponse { .. } => qinfo!("Path Response lost, not re-sent"),
             _ => qwarn!("Unexpected Flow frame {:?} lost, not re-sent", token),
         }
     }
@@ -283,7 +277,7 @@ impl FlowMgr {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) {
+    ) -> Res<()> {
         while let Some(frame) = self.peek() {
             // All these frames are bags of varints, so we can just extract the
             // varints and use common code for writing.
@@ -339,19 +333,6 @@ impl FlowMgr {
                     smallvec![stream_id.as_u64(), *stream_data_limit]
                 }
 
-                // A special case, just write it out and move on..
-                Frame::PathResponse { data } => {
-                    stats.path_response += 1;
-                    if builder.remaining() >= Encoder::varint_len(frame.get_type()) + data.len() {
-                        builder.encode_varint(frame.get_type());
-                        builder.encode(data);
-                        tokens.push(RecoveryToken::Flow(self.next().unwrap()));
-                        continue;
-                    } else {
-                        return;
-                    }
-                }
-
                 _ => unreachable!("{:?}", frame),
             };
             debug_assert!(!values.spilled());
@@ -367,11 +348,15 @@ impl FlowMgr {
                 for v in values {
                     builder.encode_varint(v);
                 }
+                if builder.len() > builder.limit() {
+                    return Err(Error::InternalError(16));
+                }
                 tokens.push(RecoveryToken::Flow(self.next().unwrap()));
             } else {
-                return;
+                return Ok(());
             }
         }
+        Ok(())
     }
 }
 
