@@ -383,6 +383,22 @@ interface nsIApplicationUpdateService : nsISupports
    * Whether the Update Service is able to stage updates.
    */
   readonly attribute boolean canStageUpdates;
+
+  /**
+   * Indicates whether or not the enterprise policy that allows only manual
+   * updating is active. One of the features of this policy is not being
+   * notified of updates; you are intended to need to manually tell Firefox
+   * that you want to update each time that you want to do so.
+   *
+   * This policy has some implications for the way that update checks work. We
+   * don't want to do background update checks. Without being able to notify
+   * the user, there's not really anything to do if we find one. However, we
+   * will allow "automatic" update checks when loading the update interfaces
+   * in about:preferences, the About Dialog, etc. When those interfaces are
+   * open, we do have a way of telling the user about an update without
+   * bothering them with a doorhanger.
+   */
+  readonly attribute boolean manualUpdateOnly;
 };
 
 /**

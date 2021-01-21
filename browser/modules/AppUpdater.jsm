@@ -233,7 +233,7 @@ class AppUpdater {
             this.promiseAutoUpdateSetting = UpdateUtils.getAppUpdateAutoEnabled();
           }
           this.promiseAutoUpdateSetting.then(updateAuto => {
-            if (updateAuto) {
+            if (updateAuto && !this.aus.manualUpdateOnly) {
               // automatically download and install
               this.startDownload();
             } else {

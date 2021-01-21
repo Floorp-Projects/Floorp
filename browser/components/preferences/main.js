@@ -47,6 +47,10 @@ ChromeUtils.defineModuleGetter(
 );
 
 XPCOMUtils.defineLazyServiceGetters(this, {
+  gApplicationUpdateService: [
+    "@mozilla.org/updates/update-service;1",
+    "nsIApplicationUpdateService",
+  ],
   gHandlerService: [
     "@mozilla.org/uriloader/handler-service;1",
     "nsIHandlerService",
@@ -654,7 +658,11 @@ var gMainPane = {
 
       let updateDisabled =
         Services.policies && !Services.policies.isAllowed("appUpdate");
-      if (updateDisabled || UpdateUtils.appUpdateAutoSettingIsLocked()) {
+      if (
+        updateDisabled ||
+        UpdateUtils.appUpdateAutoSettingIsLocked() ||
+        gApplicationUpdateService.manualUpdateOnly
+      ) {
         document.getElementById("updateAllowDescription").hidden = true;
         document.getElementById("updateSettingsContainer").hidden = true;
         if (updateDisabled && AppConstants.MOZ_MAINTENANCE_SERVICE) {
