@@ -1247,11 +1247,6 @@ class Document : public nsINode,
   Document* GetSubDocumentFor(nsIContent* aContent) const;
 
   /**
-   * Find the content node for which aDocument is a sub document.
-   */
-  Element* FindContentForSubDocument(Document* aDocument) const;
-
-  /**
    * Get the content node for which this document is a sub document.
    */
   Element* GetEmbedderElement() const;
