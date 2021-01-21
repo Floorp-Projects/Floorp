@@ -664,6 +664,8 @@ var ProcessHangMonitor = {
     if (this._shuttingDown) {
       this.stopHang(report, "shutdown-in-progress", {
         lastReportFromChild: now,
+        waitCount: 0,
+        deselectCount: 0,
       });
       return;
     }
