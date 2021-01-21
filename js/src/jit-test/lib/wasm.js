@@ -377,9 +377,6 @@ function fuzzingSafe() {
 
 // Common instantiations of wasm values for dynamic type check testing
 
-let WasmFuncrefValues = [
-    wasmEvalText(`(module (func (export "")))`).exports[''],
-];
 let WasmNonNullEqrefValues = [];
 let WasmEqrefValues = [];
 if (wasmGcEnabled()) {
@@ -404,8 +401,7 @@ let WasmNonEqrefValues = [
     new Number(42),
     new Boolean(true),
     Symbol("status"),
-    () => 1337,
-    ...WasmFuncrefValues,
+    () => 1337
 ];
 let WasmNonNullExternrefValues = [
     ...WasmNonEqrefValues,
