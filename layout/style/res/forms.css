@@ -125,6 +125,12 @@ textarea {
   overflow-clip-box: content-box;
 }
 
+@media (-moz-non-native-content-theme) {
+  input, textarea {
+    padding-inline: 2px;
+  }
+}
+
 /* A few properties that we don't want to inherit by default: */
 input, textarea, select, button, ::file-selector-button {
   text-align: initial;
@@ -548,6 +554,18 @@ input:is([type=reset], [type=button], [type=submit]) {
 input[type=color] {
   inline-size: 64px;
   block-size: 23px;
+}
+
+@media (-moz-non-native-content-theme) {
+  button,
+  ::file-selector-button,
+  input:is([type=reset], [type=button], [type=submit]) {
+    padding-inline: 4px;
+  }
+
+  input[type=color] {
+    padding: 4px;
+  }
 }
 
 button,
@@ -997,6 +1015,12 @@ input[type=number] > div > div > div:hover {
   background-color: lightblue;
 }
 
+@media (-moz-non-native-content-theme) {
+  input[type=number] {
+    padding-inline-end: 0;
+  }
+}
+
 input[type=search]::-moz-search-clear-button {
   display: block;
   cursor: default;
@@ -1019,6 +1043,14 @@ input:is([type=date], [type=time]) {
 
 input:is([type=date], [type=time]):is(:disabled, :read-only) {
   color: GrayText;
+}
+
+@media (-moz-non-native-content-theme) {
+  /* TODO(emilio): This is an odd special-case... */
+  input:is([type=date], [type=time]) {
+    padding-inline: 3px;
+    padding-block: 2px 0;
+  }
 }
 
 input:autofill, input:-moz-autofill-preview {
