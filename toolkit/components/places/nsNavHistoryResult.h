@@ -64,6 +64,10 @@ class nsTrimInt64HashKey : public PLDHashEntryHdr {
 // and nsINavHistoryObserver (some methods, such as BeginUpdateBatch overlap)
 #define NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE(...)                    \
   NS_DECL_NSINAVBOOKMARKOBSERVER                                       \
+  NS_IMETHOD OnFrecencyChanged(nsIURI* aURI, int32_t aNewFrecency,     \
+                               const nsACString& aGUID, bool aHidden,  \
+                               PRTime aLastVisitDate) __VA_ARGS__;     \
+  NS_IMETHOD OnManyFrecenciesChanged() __VA_ARGS__;                    \
   NS_IMETHOD OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,        \
                          uint16_t aReason) __VA_ARGS__;                \
   NS_IMETHOD OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,        \
