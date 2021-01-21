@@ -13,5 +13,11 @@
   },
   "searchUrlGetParams": {
     "message": "tag=admpdesktopuk-21&ref=pd_sl_a0D7C4FF8CC4AA12{moz:date}&k={searchTerms}"
+  },
+  "suggestUrl": {
+    "message": "https://completion.amazon.co.uk/search/complete"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&search-alias=aps&mkt=3"
   }
 }

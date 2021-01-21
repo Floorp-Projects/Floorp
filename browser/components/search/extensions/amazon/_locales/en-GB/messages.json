@@ -13,5 +13,11 @@
   },
   "searchUrlGetParams": {
     "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-uk-21&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://completion.amazon.co.uk/search/complete"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&search-alias=aps&mkt=3"
   }
 }

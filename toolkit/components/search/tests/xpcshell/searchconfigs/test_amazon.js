@@ -204,7 +204,8 @@ const test = new SearchConfigTest({
           },
         },
       ],
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.ca/search/complete",
+      suggestUrlCode: "mkt=7",
     },
     {
       domain: "amazon.fr",
@@ -254,7 +255,8 @@ const test = new SearchConfigTest({
       ],
       excluded: [{ regions: ["ca"] }],
       searchUrlCode: "tag=firefox-fr-21",
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.fr/search/complete",
+      suggestUrlCode: "mkt=5",
     },
     {
       domain: "amazon.co.uk",
@@ -319,7 +321,8 @@ const test = new SearchConfigTest({
       ],
       excluded: [{ regions: ["au"] }],
       searchUrlCode: "tag=firefox-uk-21",
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.co.uk/search/complete",
+      suggestUrlCode: "mkt=3",
     },
     {
       domain: "amazon.com",
@@ -389,7 +392,8 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlCode: "tag=mozillajapan-fx-22",
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.co.jp/search/complete",
+      suggestUrlCode: "mkt=6",
     },
     {
       domain: "amazon.de",
@@ -403,7 +407,8 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlCode: "tag=firefox-de-21",
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.de/search/complete",
+      suggestUrlCode: "mkt=4",
     },
     {
       domain: "amazon.in",
@@ -416,7 +421,8 @@ const test = new SearchConfigTest({
           },
         },
       ],
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.in/search/complete",
+      suggestUrlCode: "mkt=44571",
     },
     {
       domain: "amazon.it",
@@ -430,7 +436,8 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlCode: "tag=firefoxit-21",
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.it/search/complete",
+      suggestUrlCode: "mkt=35691",
     },
   ],
 });
