@@ -664,13 +664,10 @@ class Descriptor(DescriptorProvider):
         def ensureValidCanOOMExtendedAttribute(attr):
             ensureValidBoolExtendedAttribute(attr, "CanOOM")
 
-        def ensureValidNeedsSubjectPrincipalExtendedAttribute(attr):
-            ensureValidBoolExtendedAttribute(attr, "NeedsSubjectPrincipal")
-
-        def maybeAppendInfallibleToAttrs(attrs, throws):
+        def maybeAppendNeedsErrorResultToAttrs(attrs, throws):
             ensureValidThrowsExtendedAttribute(throws)
-            if throws is None:
-                attrs.append("infallible")
+            if throws is not None:
+                attrs.append("needsErrorResult")
 
         def maybeAppendCanOOMToAttrs(attrs, canOOM):
             ensureValidCanOOMExtendedAttribute(canOOM)
@@ -710,7 +707,7 @@ class Descriptor(DescriptorProvider):
                     throws = True
                 elif methodReturnsJSObject(member):
                     canOOM = True
-            maybeAppendInfallibleToAttrs(attrs, throws)
+            maybeAppendNeedsErrorResultToAttrs(attrs, throws)
             maybeAppendCanOOMToAttrs(attrs, canOOM)
             maybeAppendNeedsSubjectPrincipalToAttrs(attrs, needsSubjectPrincipal)
             return attrs
@@ -720,7 +717,7 @@ class Descriptor(DescriptorProvider):
         if throws is None:
             throwsAttr = "GetterThrows" if getter else "SetterThrows"
             throws = member.getExtendedAttribute(throwsAttr)
-        maybeAppendInfallibleToAttrs(attrs, throws)
+        maybeAppendNeedsErrorResultToAttrs(attrs, throws)
         if canOOM is None:
             canOOMAttr = "GetterCanOOM" if getter else "SetterCanOOM"
             canOOM = member.getExtendedAttribute(canOOMAttr)
