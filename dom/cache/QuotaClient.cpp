@@ -25,7 +25,9 @@ using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::CloneFileAndAppend;
 using mozilla::dom::quota::DatabaseUsageType;
+using mozilla::dom::quota::GetDirEntryKind;
 using mozilla::dom::quota::GroupAndOrigin;
+using mozilla::dom::quota::nsIFileKind;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
@@ -59,15 +61,18 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
       aMorgueDir, aCanceled,
       [aInitializing](
           const nsCOMPtr<nsIFile>& bodyDir) -> Result<UsageInfo, nsresult> {
-        CACHE_TRY_INSPECT(const bool& isDir,
-                          MOZ_TO_RESULT_INVOKE(bodyDir, IsDirectory));
+        CACHE_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*bodyDir));
 
-        if (!isDir) {
-          const DebugOnly<nsresult> result =
-              RemoveNsIFile(QuotaInfo{}, *bodyDir, /* aTrackQuota */ false);
-          // Try to remove the unexpected files, and keep moving on even if it
-          // fails because it might be created by virus or the operation system
-          MOZ_ASSERT(NS_SUCCEEDED(result));
+        if (dirEntryKind != nsIFileKind::ExistsAsDirectory) {
+          if (dirEntryKind == nsIFileKind::ExistsAsFile) {
+            const DebugOnly<nsresult> result =
+                RemoveNsIFile(QuotaInfo{}, *bodyDir, /* aTrackQuota */ false);
+            // Try to remove the unexpected files, and keep moving on even if it
+            // fails because it might be created by virus or the operation
+            // system
+            MOZ_ASSERT(NS_SUCCEEDED(result));
+          }
+
           return UsageInfo{};
         }
 
