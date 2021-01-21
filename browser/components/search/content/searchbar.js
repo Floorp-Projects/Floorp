@@ -422,7 +422,7 @@
       this.telemetrySelectedIndex = -1;
 
       BrowserSearchTelemetry.recordSearch(
-        gBrowser,
+        gBrowser.selectedBrowser,
         engine,
         "searchbar",
         details

@@ -4311,9 +4311,12 @@ const BrowserSearch = {
       csp
     );
     if (engine) {
-      BrowserSearchTelemetry.recordSearch(gBrowser, engine, "contextmenu", {
-        url,
-      });
+      BrowserSearchTelemetry.recordSearch(
+        gBrowser.selectedBrowser,
+        engine,
+        "contextmenu",
+        { url }
+      );
     }
   },
 
@@ -4330,7 +4333,12 @@ const BrowserSearch = {
       csp
     );
     if (engine) {
-      BrowserSearchTelemetry.recordSearch(gBrowser, engine, "system", { url });
+      BrowserSearchTelemetry.recordSearch(
+        gBrowser.selectedBrowser,
+        engine,
+        "system",
+        { url }
+      );
     }
   },
 
@@ -4350,12 +4358,10 @@ const BrowserSearch = {
     );
 
     BrowserSearchTelemetry.recordSearch(
-      gBrowser,
+      gBrowser.selectedBrowser,
       result.engine,
       "webextension",
-      {
-        url: result.url,
-      }
+      { url: result.url }
     );
   },
 
