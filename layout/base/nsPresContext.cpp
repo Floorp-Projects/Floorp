@@ -680,8 +680,7 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
       // XXX the document can change in AttachPresShell, does this work?
       dom::BrowsingContext* browsingContext = mDocument->GetBrowsingContext();
       if (browsingContext && !browsingContext->IsTop()) {
-        Element* containingElement =
-            parent->FindContentForSubDocument(mDocument);
+        Element* containingElement = mDocument->GetEmbedderElement();
         if (!containingElement->IsXULElement() ||
             !containingElement->HasAttr(kNameSpaceID_None,
                                         nsGkAtoms::forceOwnRefreshDriver)) {
