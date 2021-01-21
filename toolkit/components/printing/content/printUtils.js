@@ -235,8 +235,7 @@ var PrintUtils = {
         "PrintingSelection"
       );
       hasSelection = await sourceActor.sendQuery(
-        "PrintingSelection:HasSelection",
-        {}
+        "PrintingSelection:HasSelection"
       );
     }
 
