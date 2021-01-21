@@ -116,12 +116,11 @@ nscoord nsLeafBoxFrame::GetIntrinsicISize() {
 LogicalSize nsLeafBoxFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   // Important: NOT calling our direct superclass here!
   return nsIFrame::ComputeAutoSize(aRenderingContext, aWM, aCBSize,
                                    aAvailableISize, aMargin, aBorderPadding,
-                                   aSizeOverrides, aFlags);
+                                   aFlags);
 }
 
 void nsLeafBoxFrame::Reflow(nsPresContext* aPresContext,

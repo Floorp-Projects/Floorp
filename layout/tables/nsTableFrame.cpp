@@ -1523,11 +1523,10 @@ nsTableFrame::IntrinsicISizeOffsets(nscoord aPercentageBasis) {
 nsIFrame::SizeComputationResult nsTableFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
-  auto result = nsContainerFrame::ComputeSize(
-      aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin, aBorderPadding,
-      aSizeOverrides, aFlags);
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
+  auto result = nsContainerFrame::ComputeSize(aRenderingContext, aWM, aCBSize,
+                                              aAvailableISize, aMargin,
+                                              aBorderPadding, aFlags);
 
   // XXX The code below doesn't make sense if the caller's writing mode
   // is orthogonal to this frame's. Not sure yet what should happen then;
@@ -1581,8 +1580,7 @@ nscoord nsTableFrame::TableShrinkISizeToFit(gfxContext* aRenderingContext,
 LogicalSize nsTableFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   // Tables always shrink-wrap.
   nscoord cbBased =
       aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);

@@ -560,32 +560,29 @@ nscoord nsTextControlFrame::GetMinISize(gfxContext* aRenderingContext) {
 LogicalSize nsTextControlFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   LogicalSize autoSize = CalcIntrinsicSize(aRenderingContext, aWM, inflation);
 
   // Note: nsContainerFrame::ComputeAutoSize only computes the inline-size (and
   // only for 'auto'), the block-size it returns is always NS_UNCONSTRAINEDSIZE.
-  const auto& styleISize = aSizeOverrides.mStyleISize
-                               ? *aSizeOverrides.mStyleISize
-                               : StylePosition()->ISize(aWM);
-  if (styleISize.IsAuto()) {
+  const auto& iSizeCoord = StylePosition()->ISize(aWM);
+  if (iSizeCoord.IsAuto()) {
     if (aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize)) {
       // CalcIntrinsicSize isn't aware of grid-item margin-box clamping, so we
       // fall back to nsContainerFrame's ComputeAutoSize to handle that.
       // XXX maybe a font-inflation issue here? (per the assertion below).
       autoSize.ISize(aWM) =
-          nsContainerFrame::ComputeAutoSize(
-              aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin,
-              aBorderPadding, aSizeOverrides, aFlags)
+          nsContainerFrame::ComputeAutoSize(aRenderingContext, aWM, aCBSize,
+                                            aAvailableISize, aMargin,
+                                            aBorderPadding, aFlags)
               .ISize(aWM);
     }
 #ifdef DEBUG
     else {
       LogicalSize ancestorAutoSize = nsContainerFrame::ComputeAutoSize(
           aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin,
-          aBorderPadding, aSizeOverrides, aFlags);
+          aBorderPadding, aFlags);
       // Disabled when there's inflation; see comment in GetXULPrefSize.
       MOZ_ASSERT(inflation != 1.0f ||
                      ancestorAutoSize.ISize(aWM) == autoSize.ISize(aWM),

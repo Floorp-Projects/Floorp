@@ -58,7 +58,6 @@ class nsProgressFrame final : public nsContainerFrame,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin,
       const mozilla::LogicalSize& aBorderPadding,
-      const mozilla::StyleSizeOverrides& aSizeOverrides,
       mozilla::ComputeSizeFlags aFlags) override;
 
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;

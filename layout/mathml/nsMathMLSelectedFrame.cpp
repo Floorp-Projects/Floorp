@@ -80,8 +80,7 @@ void nsMathMLSelectedFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 nsIFrame::SizeComputationResult nsMathMLSelectedFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     // Delegate size computation to the child frame.
@@ -95,8 +94,7 @@ nsIFrame::SizeComputationResult nsMathMLSelectedFrame::ComputeSize(
     const auto bpSize = offsetState.ComputedLogicalBorderPadding(aWM).Size(aWM);
     auto size = childFrame->ComputeSize(
         aRenderingContext, aWM, cbSize, availableISize,
-        offsetState.ComputedLogicalMargin(aWM).Size(aWM), bpSize,
-        aSizeOverrides, aFlags);
+        offsetState.ComputedLogicalMargin(aWM).Size(aWM), bpSize, aFlags);
     return {size.mLogicalSize + bpSize, size.mAspectRatioUsage};
   }
   return {LogicalSize(aWM), AspectRatioUsage::None};
