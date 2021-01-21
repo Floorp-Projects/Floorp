@@ -24,6 +24,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowProxyHolder.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -410,6 +411,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
                            mozilla::dom::ContentParent* aContentParent);
 
   void MaybeNotifyCrashed(mozilla::dom::BrowsingContext* aBrowsingContext,
+                          mozilla::dom::ContentParentId aChildID,
                           mozilla::ipc::MessageChannel* aChannel);
 
   void FireErrorEvent();
