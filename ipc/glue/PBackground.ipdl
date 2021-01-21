@@ -74,7 +74,7 @@ using mozilla::dom::cache::Namespace
 namespace mozilla {
 namespace ipc {
 
-sync protocol PBackground
+sync refcounted protocol PBackground
 {
   manages PBackgroundDataBridge;
   manages PBackgroundIDBFactory;
