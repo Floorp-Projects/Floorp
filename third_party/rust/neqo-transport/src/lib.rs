@@ -28,22 +28,22 @@ mod send_stream;
 mod sender;
 pub mod server;
 mod stats;
-pub mod stream_id;
+mod stream_id;
 pub mod tparams;
 mod tracking;
 
 pub use self::cc::CongestionControlAlgorithm;
-pub use self::cid::{
-    ConnectionId, ConnectionIdDecoder, ConnectionIdGenerator, ConnectionIdRef,
-    EmptyConnectionIdGenerator, RandomConnectionIdGenerator,
+pub use self::cid::{ConnectionId, ConnectionIdManager};
+pub use self::connection::{
+    params::ConnectionParameters, Connection, FixedConnectionIdManager, Output, State,
+    ZeroRttState, LOCAL_STREAM_LIMIT_BIDI, LOCAL_STREAM_LIMIT_UNI,
 };
-pub use self::connection::{params::ConnectionParameters, Connection, Output, State, ZeroRttState};
 pub use self::events::{ConnectionEvent, ConnectionEvents};
-pub use self::frame::CloseError;
+pub use self::frame::{CloseError, StreamType};
 pub use self::packet::QuicVersion;
 pub use self::sender::PacketSender;
 pub use self::stats::Stats;
-pub use self::stream_id::{StreamId, StreamType};
+pub use self::stream_id::StreamId;
 
 pub use self::recv_stream::RECV_BUFFER_SIZE;
 pub use self::send_stream::SEND_BUFFER_SIZE;
@@ -56,9 +56,7 @@ const ERROR_AEAD_LIMIT_REACHED: TransportError = 15;
 #[allow(clippy::pub_enum_variant_names)]
 pub enum Error {
     NoError,
-    // Each time tihe error is return a different parameter is supply.
-    // This will be use to distinguish each occurance of this error.
-    InternalError(u16),
+    InternalError,
     ConnectionRefused,
     FlowControlError,
     StreamLimitError,
@@ -73,10 +71,8 @@ pub enum Error {
     QlogError,
     CryptoAlert(u8),
 
-    // All internal errors from here.  Please keep these sorted.
+    // All internal errors from here.
     AckedUnsentPacket,
-    ConnectionIdLimitExceeded,
-    ConnectionIdsExhausted,
     ConnectionState,
     DecodingFrame,
     DecryptError,
@@ -98,7 +94,6 @@ pub enum Error {
     /// An attempt to update keys can be blocked if
     /// a packet sent with the current keys hasn't been acknowledged.
     KeyUpdateBlocked,
-    NoAvailablePath,
     NoMoreData,
     NotConnected,
     PacketNumberOverlap,
@@ -107,7 +102,6 @@ pub enum Error {
     StatelessReset,
     TooMuchData,
     UnexpectedMessage,
-    UnknownConnectionId,
     UnknownFrameType,
     VersionNegotiation,
     WrongRole,
@@ -131,7 +125,6 @@ impl Error {
             Self::InvalidToken => 11,
             Self::KeysExhausted => ERROR_AEAD_LIMIT_REACHED,
             Self::ApplicationError => ERROR_APPLICATION_CLOSE,
-            Self::NoAvailablePath => 16,
             Self::CryptoAlert(a) => 0x100 + u64::from(*a),
             // All the rest are internal errors.
             _ => 1,

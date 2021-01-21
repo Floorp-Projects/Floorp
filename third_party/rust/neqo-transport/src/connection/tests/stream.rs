@@ -6,15 +6,16 @@
 
 use super::super::State;
 use super::{
-    connect, connect_force_idle, default_client, default_server, maybe_authenticate,
-    send_something, DEFAULT_STREAM_DATA,
+    connect, default_client, default_server, maybe_authenticate, send_something,
+    DEFAULT_STREAM_DATA,
 };
 use crate::events::ConnectionEvent;
+use crate::frame::StreamType;
 use crate::recv_stream::RECV_BUFFER_SIZE;
 use crate::send_stream::SEND_BUFFER_SIZE;
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::MAX_UNACKED_PKTS;
-use crate::{Error, StreamId, StreamType};
+use crate::{Error, StreamId};
 
 use neqo_common::{event::Provider, qdebug};
 use std::convert::TryFrom;
@@ -48,13 +49,52 @@ fn stream_create() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)]
 // tests stream send/recv after connection is established.
 fn transfer() {
     let mut client = default_client();
     let mut server = default_server();
-    connect_force_idle(&mut client, &mut server);
 
-    qdebug!("---- client sends");
+    qdebug!("---- client");
+    let out = client.process(None, now());
+    assert!(out.as_dgram_ref().is_some());
+    qdebug!("Output={:0x?}", out.as_dgram_ref());
+    // -->> Initial[0]: CRYPTO[CH]
+
+    qdebug!("---- server");
+    let out = server.process(out.dgram(), now());
+    assert!(out.as_dgram_ref().is_some());
+    qdebug!("Output={:0x?}", out.as_dgram_ref());
+    // <<-- Initial[0]: CRYPTO[SH] ACK[0]
+    // <<-- Handshake[0]: CRYPTO[EE, CERT, CV, FIN]
+
+    qdebug!("---- client");
+    let out = client.process(out.dgram(), now());
+    assert!(out.as_dgram_ref().is_some());
+    qdebug!("Output={:0x?}", out.as_dgram_ref());
+    // -->> Initial[1]: ACK[0]
+
+    let out = server.process(out.dgram(), now());
+    assert!(out.as_dgram_ref().is_none());
+
+    assert!(maybe_authenticate(&mut client));
+
+    qdebug!("---- client");
+    let out = client.process(out.dgram(), now());
+    assert!(out.as_dgram_ref().is_some());
+    assert_eq!(*client.state(), State::Connected);
+    qdebug!("Output={:0x?}", out.as_dgram_ref());
+    // -->> Handshake[0]: CRYPTO[FIN], ACK[0]
+
+    qdebug!("---- server");
+    let out = server.process(out.dgram(), now());
+    assert!(out.as_dgram_ref().is_some());
+    assert_eq!(*server.state(), State::Confirmed);
+    qdebug!("Output={:0x?}", out.as_dgram_ref());
+    // ACK and HANDSHAKE_DONE
+    // -->> nothing
+
+    qdebug!("---- client");
     // Send
     let client_stream_id = client.stream_create(StreamType::UniDi).unwrap();
     client.stream_send(client_stream_id, &[6; 100]).unwrap();
@@ -68,15 +108,15 @@ fn transfer() {
     client.stream_send(client_stream_id2, &[7; 50]).unwrap_err();
     // Sending this much takes a few datagrams.
     let mut datagrams = vec![];
-    let mut out = client.process_output(now());
+    let mut out = client.process(out.dgram(), now());
     while let Some(d) = out.dgram() {
         datagrams.push(d);
-        out = client.process_output(now());
+        out = client.process(None, now());
     }
     assert_eq!(datagrams.len(), 4);
     assert_eq!(*client.state(), State::Confirmed);
 
-    qdebug!("---- server receives");
+    qdebug!("---- server");
     for (d_num, d) in datagrams.into_iter().enumerate() {
         let out = server.process(Some(d), now());
         assert_eq!(
@@ -127,7 +167,7 @@ fn report_fin_when_stream_closed_wo_data() {
     let out = client.process(None, now());
     let _ = server.process(out.dgram(), now());
 
-    server.stream_close_send(stream_id).unwrap();
+    assert_eq!(Ok(()), server.stream_close_send(stream_id));
     let out = server.process(None, now());
     let _ = client.process(out.dgram(), now());
     let stream_readable = |e| matches!(e, ConnectionEvent::RecvStreamReadable {..});
@@ -249,6 +289,8 @@ fn do_not_accept_data_after_stop_sending() {
 #[test]
 // Server sends stop_sending, the client simultaneous sends reset.
 fn simultaneous_stop_sending_and_reset() {
+    // Note that the two servers in this test will get different anti-replay filters.
+    // That's OK because we aren't testing anti-replay.
     let mut client = default_client();
     let mut server = default_server();
     connect(&mut client, &mut server);
@@ -257,32 +299,30 @@ fn simultaneous_stop_sending_and_reset() {
     let stream_id = client.stream_create(StreamType::BiDi).unwrap();
     client.stream_send(stream_id, &[0x00]).unwrap();
     let out = client.process(None, now());
-    let ack = server.process(out.dgram(), now()).dgram();
+    let _ = server.process(out.dgram(), now());
 
-    let stream_readable =
-        |e| matches!(e, ConnectionEvent::RecvStreamReadable { stream_id: id } if id == stream_id);
+    let stream_readable = |e| matches!(e, ConnectionEvent::RecvStreamReadable {..});
     assert!(server.events().any(stream_readable));
 
     // The client resets the stream. The packet with reset should arrive after the server
     // has already requested stop_sending.
-    client.stream_reset_send(stream_id, 0).unwrap();
-    let out_reset_frame = client.process(ack, now()).dgram();
-
-    // Send something out of order to force the server to generate an
-    // acknowledgment at the next opportunity.
-    let force_ack = send_something(&mut client, now());
-    server.process_input(force_ack, now());
-
+    client
+        .stream_reset_send(stream_id, Error::NoError.code())
+        .unwrap();
+    let out_reset_frame = client.process(None, now());
     // Call stop sending.
-    server.stream_stop_sending(stream_id, 0).unwrap();
+    assert_eq!(
+        Ok(()),
+        server.stream_stop_sending(stream_id, Error::NoError.code())
+    );
+
     // Receive the second data frame. The frame should be ignored and
     // DataReadable events shouldn't be posted.
-    let ack = server.process(out_reset_frame, now()).dgram();
-    assert!(ack.is_some());
+    let out = server.process(out_reset_frame.dgram(), now());
     assert!(!server.events().any(stream_readable));
 
     // The client gets the STOP_SENDING frame.
-    client.process_input(ack.unwrap(), now());
+    let _ = client.process(out.dgram(), now());
     assert_eq!(
         Err(Error::InvalidStreamId),
         client.stream_send(stream_id, &[0x00])

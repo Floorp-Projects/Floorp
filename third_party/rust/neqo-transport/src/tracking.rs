@@ -20,7 +20,6 @@ use neqo_crypto::{Epoch, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL};
 use crate::packet::{PacketBuilder, PacketNumber, PacketType};
 use crate::recovery::RecoveryToken;
 use crate::stats::FrameStats;
-use crate::{Error, Res};
 
 use smallvec::{smallvec, SmallVec};
 
@@ -413,8 +412,7 @@ impl RecvdPackets {
     }
 
     /// Add the packet to the tracked set.
-    /// Return true if the packet was the largest received so far.
-    pub fn set_received(&mut self, now: Instant, pn: PacketNumber, ack_eliciting: bool) -> bool {
+    pub fn set_received(&mut self, now: Instant, pn: PacketNumber, ack_eliciting: bool) {
         let next_in_order_pn = self.ranges.front().map_or(0, |pr| pr.largest + 1);
         qdebug!(
             [self],
@@ -427,12 +425,9 @@ impl RecvdPackets {
         self.trim_ranges();
 
         // The new addition was the largest, so update the time we use for calculating ACK delay.
-        let largest = if pn >= next_in_order_pn {
+        if pn >= next_in_order_pn {
             self.largest_pn_time = Some(now);
-            true
-        } else {
-            false
-        };
+        }
 
         if ack_eliciting {
             self.pkts_since_last_ack += 1;
@@ -456,7 +451,6 @@ impl RecvdPackets {
             }
             qdebug!([self], "Set ACK timer to {:?}", self.ack_time);
         }
-        largest
     }
 
     /// Check if the packet is a duplicate.
@@ -637,15 +631,9 @@ impl AckTracker {
         now: Instant,
         builder: &mut PacketBuilder,
         stats: &mut FrameStats,
-    ) -> Res<Option<RecoveryToken>> {
-        let res = self
-            .get_mut(pn_space)
-            .and_then(|space| space.write_frame(now, builder, stats));
-
-        if builder.len() > builder.limit() {
-            return Err(Error::InternalError(24));
-        }
-        Ok(res)
+    ) -> Option<RecoveryToken> {
+        self.get_mut(pn_space)
+            .and_then(|space| space.write_frame(now, builder, stats))
     }
 }
 
@@ -855,14 +843,12 @@ mod tests {
             .set_received(*NOW, 0, true);
         // The reference time for `ack_time` has to be in the past or we filter out the timer.
         assert!(tracker.ack_time(*NOW - Duration::from_millis(1)).is_some());
-        let token = tracker
-            .write_frame(
-                PNSpace::Initial,
-                *NOW,
-                &mut builder,
-                &mut FrameStats::default(),
-            )
-            .unwrap();
+        let token = tracker.write_frame(
+            PNSpace::Initial,
+            *NOW,
+            &mut builder,
+            &mut FrameStats::default(),
+        );
         assert!(token.is_some());
 
         // Mark another packet as received so we have cause to send another ACK in that space.
@@ -884,7 +870,6 @@ mod tests {
                 &mut builder,
                 &mut FrameStats::default()
             )
-            .unwrap()
             .is_none());
         if let RecoveryToken::Ack(tok) = token.unwrap() {
             tracker.acked(&tok); // Should be a noop.
@@ -905,14 +890,12 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         builder.set_limit(10);
 
-        let token = tracker
-            .write_frame(
-                PNSpace::Initial,
-                *NOW,
-                &mut builder,
-                &mut FrameStats::default(),
-            )
-            .unwrap();
+        let token = tracker.write_frame(
+            PNSpace::Initial,
+            *NOW,
+            &mut builder,
+            &mut FrameStats::default(),
+        );
         assert!(token.is_none());
         assert_eq!(builder.len(), 1); // Only the short packet header has been added.
     }
@@ -933,14 +916,12 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         builder.set_limit(32);
 
-        let token = tracker
-            .write_frame(
-                PNSpace::Initial,
-                *NOW,
-                &mut builder,
-                &mut FrameStats::default(),
-            )
-            .unwrap();
+        let token = tracker.write_frame(
+            PNSpace::Initial,
+            *NOW,
+            &mut builder,
+            &mut FrameStats::default(),
+        );
         assert!(token.is_some());
 
         let mut dec = builder.as_decoder();
