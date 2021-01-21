@@ -3109,12 +3109,16 @@ UpdateService.prototype = {
   _checkForBackgroundUpdates: function AUS__checkForBackgroundUpdates(
     isNotify
   ) {
-    if (this.disabledByPolicy) {
+    if (this.disabledByPolicy || this.manualUpdateOnly) {
       // Return immediately if we are disabled by policy. Otherwise, just the
       // telemetry we try to collect below can potentially trigger a restart
       // prompt if the update directory isn't writable. And we shouldn't be
       // telling the user about update failures if update is disabled.
       // See Bug 1599590.
+      // Note that we exit unconditionally here if we are only doing manual
+      // update checks, because manual update checking uses a completely
+      // different code path (AppUpdater.jsm creates its own nsIUpdateChecker),
+      // bypassing this function completely.
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
       return false;
     }
@@ -3471,7 +3475,7 @@ UpdateService.prototype = {
     }
 
     if (this.disabledByPolicy) {
-      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_PREF_DISABLED);
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
       LOG(
         "UpdateService:_selectAndInstallUpdate - not prompting because " +
           "update is disabled"
@@ -3575,6 +3579,15 @@ UpdateService.prototype = {
     return (
       (Services.policies && !Services.policies.isAllowed("appUpdate")) ||
       this.disabledForTesting
+    );
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get manualUpdateOnly() {
+    return (
+      Services.policies && !Services.policies.isAllowed("autoAppUpdateChecking")
     );
   },
 
