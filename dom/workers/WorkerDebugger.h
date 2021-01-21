@@ -13,7 +13,6 @@
 
 class mozIDOMWindow;
 class nsIPrincipal;
-class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -57,8 +56,6 @@ class WorkerDebugger : public nsIWorkerDebugger {
   void ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
                                          uint32_t aLineno,
                                          const nsAString& aMessage);
-
-  nsCOMPtr<nsPIDOMWindowInner> DedicatedWorkerWindow();
 };
 
 }  // namespace dom
