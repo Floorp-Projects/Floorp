@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1684310</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    function test() {
+      /*
+       * This test is for nsIWebNavigation.gotoIndex.
+       *
+       * The test
+       * - opens a new window
+       * - loads a page there
+       * - loads another page
+       * - navigates to some fragments in the page
+       * - goes back to one of the fragments
+       * - tries to go back to the initial page.
+      */
+      window.open("file_docshell_gotoindex.html");
+    }
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+</body>
+</html>
