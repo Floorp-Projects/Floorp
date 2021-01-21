@@ -45,6 +45,7 @@ xpcshell:
     treeherder-symbol: X(X)
     run-on-projects:
         by-test-platform:
+            .*-tsan/opt: ['trunk']
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             default: built-projects
     chunks:

@@ -14,7 +14,10 @@ job-defaults:
         by-test-platform:
             linux.*64/debug: ['fission']
             default: ['fission']
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            .*-tsan/opt: ['trunk']
+            default: built-projects
     fission-run-on-projects:
         by-test-platform:
             linux.*64-qr/debug: ['trunk']
@@ -298,6 +301,7 @@ mochitest-chrome-gpu:
     e10s: true
     run-on-projects:
         by-test-platform:
+            .*-tsan/opt: ['trunk']
             android.*/.*: []
             default: built-projects
     mozharness:
@@ -326,6 +330,7 @@ mochitest-media:
             default: 5400
     run-on-projects:
         by-test-platform:
+            .*-tsan/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
             android-hw-.*-api-16(-qr)?/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
             android-hw-.*-api-16-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
@@ -429,6 +434,7 @@ mochitest-webgl1-core:
             default: 1800
     run-on-projects:
         by-test-platform:
+            .*-tsan/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable/opt: ['mozilla-central']
             default: built-projects
@@ -460,6 +466,7 @@ mochitest-webgl1-ext:
     max-run-time: 2700
     run-on-projects:
         by-test-platform:
+            .*-tsan/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable/opt: ['mozilla-central']
             default: built-projects
@@ -492,6 +499,7 @@ mochitest-webgl2-core:
     max-run-time: 1800
     run-on-projects:
         by-test-platform:
+            .*-tsan/opt: ['trunk']
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable/opt: ['mozilla-central']
             default: built-projects
