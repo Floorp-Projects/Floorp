@@ -3,9 +3,9 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/SourceText.h"
+#include "util/Text.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Utf8.h"
 
 FRAGMENT(jsbytecode, simple) {
@@ -20,8 +20,8 @@ FRAGMENT(jsbytecode, simple) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   JS::Rooted<JS::Value> rval(cx);
 
-  bool ok = srcBuf.init(cx, chars, mozilla::ArrayLength(chars) - 1,
-                        JS::SourceOwnership::Borrowed);
+  bool ok =
+      srcBuf.init(cx, chars, js_strlen(chars), JS::SourceOwnership::Borrowed);
 
   JSScript* script = JS::Compile(cx, opts, srcBuf);
   jsbytecode* code = script->code();

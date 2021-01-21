@@ -32,8 +32,9 @@
 
 class JSLinearString;
 
-static MOZ_ALWAYS_INLINE size_t js_strlen(const char16_t* s) {
-  return std::char_traits<char16_t>::length(s);
+template <typename CharT>
+static constexpr MOZ_ALWAYS_INLINE size_t js_strlen(const CharT* s) {
+  return std::char_traits<CharT>::length(s);
 }
 
 template <typename CharT>

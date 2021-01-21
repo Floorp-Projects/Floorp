@@ -45,6 +45,7 @@
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/BooleanObject.h"
@@ -1341,7 +1342,7 @@ JSLinearString* JSFunction::getBoundFunctionName(JSContext* cx,
 
   static constexpr char boundWithSpaceChars[] = "bound ";
   static constexpr size_t boundWithSpaceCharsLength =
-      ArrayLength(boundWithSpaceChars) - 1;  // No trailing '\0'.
+      js_strlen(boundWithSpaceChars);
   MOZ_ASSERT(
       StringEqualsAscii(cx->names().boundWithSpace, boundWithSpaceChars));
 

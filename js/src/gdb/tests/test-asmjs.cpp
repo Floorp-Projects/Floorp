@@ -5,8 +5,8 @@
 #include "js/RootingAPI.h"
 #include "js/SourceText.h"
 #include "js/Value.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Utf8.h"
+#include "util/Text.h"
 
 #include <string.h>
 
@@ -34,9 +34,9 @@ FRAGMENT(asmjs, segfault) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   JS::Rooted<JS::Value> rval(cx);
 
-  bool ok = srcBuf.init(cx, chars, mozilla::ArrayLength(chars) - 1,
-                        JS::SourceOwnership::Borrowed) &&
-            JS::Evaluate(cx, opts, srcBuf, &rval);
+  bool ok =
+      srcBuf.init(cx, chars, js_strlen(chars), JS::SourceOwnership::Borrowed) &&
+      JS::Evaluate(cx, opts, srcBuf, &rval);
 
   breakpoint();
 

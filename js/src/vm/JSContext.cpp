@@ -10,7 +10,6 @@
 
 #include "vm/JSContext-inl.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
@@ -50,6 +49,7 @@
 #include "util/DifferentialTesting.h"
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"
+#include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/BytecodeUtil.h"  // JSDVG_IGNORE_STACK
 #include "vm/ErrorObject.h"
@@ -376,7 +376,7 @@ static void PrintErrorLine(FILE* file, const char* prefix,
     } else {
       static const char unavailableStr[] = "<context unavailable>";
       utf8buf = unavailableStr;
-      n = mozilla::ArrayLength(unavailableStr) - 1;
+      n = js_strlen(unavailableStr);
     }
 
     fputs(":\n", file);
