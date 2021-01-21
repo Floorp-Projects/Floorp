@@ -22,12 +22,25 @@
 
 package nu.validator.htmlparser.impl;
 
+import org.xml.sax.SAXException;
+
 import nu.validator.htmlparser.annotation.Literal;
 import nu.validator.htmlparser.annotation.Local;
 import nu.validator.htmlparser.annotation.NoLength;
 import nu.validator.htmlparser.common.Interner;
 
 public final class Portability {
+
+    public static int checkedAdd(int a, int b) throws SAXException {
+        // This can't be translated code, because in C++ signed integer overflow is UB, so the below code would be wrong.
+        assert a >= 0;
+        assert b >= 0;
+        int sum = a + b;
+        if (sum < a || sum < b) {
+            throw new SAXException("Integer overflow");
+        }
+        return sum;
+    }
 
     // Allocating methods
 
