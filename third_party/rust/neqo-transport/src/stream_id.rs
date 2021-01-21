@@ -10,15 +10,10 @@ use std::ops::AddAssign;
 
 use neqo_common::Role;
 
-#[derive(PartialEq, Debug, Copy, Clone, PartialOrd, Eq, Ord, Hash)]
+use crate::connection::{LOCAL_STREAM_LIMIT_BIDI, LOCAL_STREAM_LIMIT_UNI};
+use crate::frame::StreamType;
 
-/// The type of stream, either Bi-Directional or Uni-Directional.
-pub enum StreamType {
-    BiDi,
-    UniDi,
-}
-
-pub(crate) struct StreamIndexes {
+pub struct StreamIndexes {
     pub local_max_stream_uni: StreamIndex,
     pub local_max_stream_bidi: StreamIndex,
     pub local_next_stream_uni: StreamIndex,
@@ -30,10 +25,10 @@ pub(crate) struct StreamIndexes {
 }
 
 impl StreamIndexes {
-    pub fn new(local_max_stream_bidi: StreamIndex, local_max_stream_uni: StreamIndex) -> Self {
+    pub fn new() -> Self {
         Self {
-            local_max_stream_bidi,
-            local_max_stream_uni,
+            local_max_stream_bidi: StreamIndex::new(LOCAL_STREAM_LIMIT_BIDI),
+            local_max_stream_uni: StreamIndex::new(LOCAL_STREAM_LIMIT_UNI),
             local_next_stream_uni: StreamIndex::new(0),
             local_next_stream_bidi: StreamIndex::new(0),
             remote_max_stream_bidi: StreamIndex::new(0),
@@ -131,7 +126,7 @@ impl ::std::fmt::Display for StreamId {
 pub struct StreamIndex(u64);
 
 impl StreamIndex {
-    pub const fn new(val: u64) -> Self {
+    pub fn new(val: u64) -> Self {
         Self(val)
     }
 
