@@ -29,7 +29,7 @@ using mozilla::ipc::PrincipalInfoToPrincipal;
 
 // static
 already_AddRefed<PrincipalVerifier> PrincipalVerifier::CreateAndDispatch(
-    Listener* aListener, PBackgroundParent* aActor,
+    Listener& aListener, PBackgroundParent* aActor,
     const PrincipalInfo& aPrincipalInfo) {
   // We must get the ContentParent actor from the PBackgroundParent.  This
   // only works on the PBackground thread.
@@ -43,20 +43,18 @@ already_AddRefed<PrincipalVerifier> PrincipalVerifier::CreateAndDispatch(
   return verifier.forget();
 }
 
-void PrincipalVerifier::AddListener(Listener* aListener) {
+void PrincipalVerifier::AddListener(Listener& aListener) {
   AssertIsOnBackgroundThread();
-  MOZ_DIAGNOSTIC_ASSERT(aListener);
-  MOZ_ASSERT(!mListenerList.Contains(aListener));
-  mListenerList.AppendElement(aListener);
+  MOZ_ASSERT(!mListenerList.Contains(&aListener));
+  mListenerList.AppendElement(WrapNotNullUnchecked(&aListener));
 }
 
-void PrincipalVerifier::RemoveListener(Listener* aListener) {
+void PrincipalVerifier::RemoveListener(Listener& aListener) {
   AssertIsOnBackgroundThread();
-  MOZ_DIAGNOSTIC_ASSERT(aListener);
-  MOZ_ALWAYS_TRUE(mListenerList.RemoveElement(aListener));
+  MOZ_ALWAYS_TRUE(mListenerList.RemoveElement(&aListener));
 }
 
-PrincipalVerifier::PrincipalVerifier(Listener* aListener,
+PrincipalVerifier::PrincipalVerifier(Listener& aListener,
                                      PBackgroundParent* aActor,
                                      const PrincipalInfo& aPrincipalInfo)
     : Runnable("dom::cache::PrincipalVerifier"),
@@ -66,9 +64,8 @@ PrincipalVerifier::PrincipalVerifier(Listener* aListener,
       mResult(NS_OK) {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(mInitiatingEventTarget);
-  MOZ_DIAGNOSTIC_ASSERT(aListener);
 
-  mListenerList.AppendElement(aListener);
+  AddListener(aListener);
 }
 
 PrincipalVerifier::~PrincipalVerifier() {
@@ -162,7 +159,7 @@ void PrincipalVerifier::VerifyOnMainThread() {
 void PrincipalVerifier::CompleteOnInitiatingThread() {
   AssertIsOnBackgroundThread();
 
-  for (auto* listener : mListenerList.ForwardRange()) {
+  for (const auto& listener : mListenerList.ForwardRange()) {
     listener->OnPrincipalVerified(mResult, mManagerId);
   }
 

@@ -42,7 +42,7 @@ CacheStorageParent::CacheStorageParent(PBackgroundParent* aManagingActor,
   MOZ_DIAGNOSTIC_ASSERT(aManagingActor);
 
   // Start the async principal verification process immediately.
-  mVerifier = PrincipalVerifier::CreateAndDispatch(this, aManagingActor,
+  mVerifier = PrincipalVerifier::CreateAndDispatch(*this, aManagingActor,
                                                    aPrincipalInfo);
   MOZ_DIAGNOSTIC_ASSERT(mVerifier);
 }
@@ -54,7 +54,7 @@ CacheStorageParent::~CacheStorageParent() {
 
 void CacheStorageParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mVerifier) {
-    mVerifier->RemoveListener(this);
+    mVerifier->RemoveListener(*this);
     mVerifier = nullptr;
   }
 }
@@ -117,7 +117,7 @@ void CacheStorageParent::OnPrincipalVerified(
   }
 
   mManagerId = aManagerId.clonePtr();
-  mVerifier->RemoveListener(this);
+  mVerifier->RemoveListener(*this);
   mVerifier = nullptr;
 }
 
