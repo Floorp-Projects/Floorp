@@ -344,8 +344,19 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   }
 
   nsContentUtils::GenerateUUIDInPlace(fields.mHistoryID);
-  fields.mExplicitActive =
-      parentBC ? ExplicitActiveStatus::None : ExplicitActiveStatus::Active;
+  fields.mExplicitActive = [&] {
+    if (parentBC) {
+      // Non-root browsing-contexts inherit their status from its parent.
+      return ExplicitActiveStatus::None;
+    }
+    if (aType == Type::Content) {
+      // Content gets managed by the chrome front-end / embedder element and
+      // starts as inactive.
+      return ExplicitActiveStatus::Inactive;
+    }
+    // Chrome starts as active.
+    return ExplicitActiveStatus::Active;
+  }();
 
   fields.mFullZoom = parentBC ? parentBC->FullZoom() : 1.0f;
   fields.mTextZoom = parentBC ? parentBC->TextZoom() : 1.0f;
@@ -633,8 +644,12 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
     if (XRE_IsParentProcess() && IsTopContent()) {
       nsAutoString messageManagerGroup;
       if (aEmbedder->IsXULElement()) {
-        aEmbedder->GetAttr(kNameSpaceID_None, nsGkAtoms::messagemanagergroup,
-                           messageManagerGroup);
+        aEmbedder->GetAttr(nsGkAtoms::messagemanagergroup, messageManagerGroup);
+        if (!aEmbedder->AttrValueIs(kNameSpaceID_None,
+                                    nsGkAtoms::initiallyactive,
+                                    nsGkAtoms::_false, eIgnoreCase)) {
+          txn.SetExplicitActive(ExplicitActiveStatus::Active);
+        }
       }
       txn.SetMessageManagerGroup(messageManagerGroup);
 
