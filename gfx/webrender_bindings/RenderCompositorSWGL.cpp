@@ -151,6 +151,9 @@ void RenderCompositorSWGL::CommitMappedBuffer(bool aDirty) {
   if (!mDT) {
     return;
   }
+  // Clear out the old framebuffer in case something tries to access it after
+  // the frame.
+  wr_swgl_init_default_framebuffer(mContext, 0, 0, 0, 0, 0, nullptr);
   // If we have a draw target at this point, mapping must have succeeded.
   MOZ_ASSERT(mMappedData != nullptr);
   if (mSurface) {
