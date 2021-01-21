@@ -44,7 +44,7 @@ class MediaEngineWebRTC : public MediaEngine {
   typedef MediaEngine Super;
 
  public:
-  explicit MediaEngineWebRTC(MediaEnginePrefs& aPrefs);
+  MediaEngineWebRTC();
 
   // Enable periodic fake "devicechange" event. Must always be called from the
   // same thread, and must be disabled before shutdown.
@@ -75,8 +75,6 @@ class MediaEngineWebRTC : public MediaEngine {
 
   static void FakeDeviceChangeEventTimerTick(nsITimer* aTimer, void* aClosure);
 
-  const bool mDelayAgnostic;
-  const bool mExtendedFilter;
   // This also is set in the ctor and then never changed, but we can't make it
   // const because we pass it to a function that takes bool* in the ctor.
   bool mHasTabVideoSource;
