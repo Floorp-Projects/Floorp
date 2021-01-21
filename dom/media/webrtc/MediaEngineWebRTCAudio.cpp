@@ -647,14 +647,21 @@ bool AudioInputProcessing::PassThrough(MediaTrackGraphImpl* aGraph) const {
 void AudioInputProcessing::SetPassThrough(MediaTrackGraphImpl* aGraph,
                                           bool aPassThrough) {
   MOZ_ASSERT(aGraph->OnGraphThread());
-  if (!mSkipProcessing && aPassThrough && mPacketizerInput) {
-    MOZ_ASSERT(mPacketizerInput->PacketsAvailable() == 0);
-    LOG_FRAME(
-        "AudioInputProcessing %p Appending %u frames of null data for data "
-        "discarded in the packetizer",
-        this, mPacketizerInput->FramesAvailable());
-    mSegment.AppendNullData(mPacketizerInput->FramesAvailable());
-    mPacketizerInput->Clear();
+
+  if (!mSkipProcessing && aPassThrough) {
+    // Reset AudioProcessing so that if we resume processing in the future it
+    // doesn't depend on old state.
+    mAudioProcessing->Initialize();
+
+    if (mPacketizerInput) {
+      MOZ_ASSERT(mPacketizerInput->PacketsAvailable() == 0);
+      LOG_FRAME(
+          "AudioInputProcessing %p Appending %u frames of null data for data "
+          "discarded in the packetizer",
+          this, mPacketizerInput->FramesAvailable());
+      mSegment.AppendNullData(mPacketizerInput->FramesAvailable());
+      mPacketizerInput->Clear();
+    }
   }
   mSkipProcessing = aPassThrough;
 }
