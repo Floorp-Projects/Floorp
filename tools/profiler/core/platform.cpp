@@ -276,10 +276,11 @@ static uint32_t DefaultFeatures() {
 // Extra default features when MOZ_PROFILER_STARTUP is set (even if not
 // available).
 static uint32_t StartupExtraDefaultFeatures() {
+  // Enable CPUUtilization by default for startup profiles as it is useful to
+  // see when startup alternates between CPU intensive tasks and being blocked.
   // Enable file I/Os by default for startup profiles as startup is heavy on
   // I/O operations.
-  return ProfilerFeature::MainThreadIO | ProfilerFeature::FileIO |
-         ProfilerFeature::FileIOAll;
+  return ProfilerFeature::CPUUtilization | ProfilerFeature::FileIOAll;
 }
 
 // The class is a thin shell around mozglue PlatformMutex. It does not preserve

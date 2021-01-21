@@ -30,6 +30,14 @@
         "resource:///modules/UrlbarProviderOpenTabs.jsm"
       );
 
+      if (AppConstants.MOZ_CRASHREPORTER) {
+        ChromeUtils.defineModuleGetter(
+          this,
+          "TabCrashHandler",
+          "resource:///modules/ContentCrashHandlers.jsm"
+        );
+      }
+
       Services.obs.addObserver(this, "contextual-identity-updated");
 
       Services.els.addSystemEventListener(document, "keydown", this, false);
@@ -5487,11 +5495,16 @@
       );
 
       let onTabCrashed = event => {
-        if (!event.isTrusted || !event.isTopFrame) {
+        if (!event.isTrusted) {
           return;
         }
 
         let browser = event.originalTarget;
+
+        if (!event.isTopFrame) {
+          TabCrashHandler.onSubFrameCrash(browser, event.childID);
+          return;
+        }
 
         // Preloaded browsers do not actually have any tabs. If one crashes,
         // it should be released and removed.

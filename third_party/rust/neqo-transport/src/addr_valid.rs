@@ -16,7 +16,7 @@ use crate::cid::ConnectionId;
 use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
 use crate::stats::FrameStats;
-use crate::Res;
+use crate::{Error, Res};
 
 use smallvec::SmallVec;
 use std::convert::TryFrom;
@@ -355,10 +355,11 @@ impl NewTokenState {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) {
+    ) -> Res<()> {
         if let Self::Server(ref mut sender) = self {
-            sender.write_frames(builder, tokens, stats);
+            sender.write_frames(builder, tokens, stats)?;
         }
+        Ok(())
     }
 
     /// If this a server, buffer a NEW_TOKEN for sending.
@@ -429,18 +430,22 @@ impl NewTokenSender {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) {
+    ) -> Res<()> {
         for t in self.tokens.iter_mut() {
             if t.needs_sending && t.len() <= builder.remaining() {
                 t.needs_sending = false;
 
                 builder.encode_varint(crate::frame::FRAME_TYPE_NEW_TOKEN);
                 builder.encode_vvec(&t.token);
+                if builder.len() > builder.limit() {
+                    return Err(Error::InternalError(7));
+                }
 
                 tokens.push(RecoveryToken::NewToken(t.seqno));
                 stats.new_token += 1;
             }
         }
+        Ok(())
     }
 
     pub fn lost(&mut self, seqno: usize) {

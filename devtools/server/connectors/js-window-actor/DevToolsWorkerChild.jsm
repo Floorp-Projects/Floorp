@@ -128,6 +128,11 @@ class DevToolsWorkerChild extends JSWindowActorChild {
           watcherActorID,
           parentConnectionPrefix: connectionPrefix,
           watchedData,
+          // When navigating, this code is triggered _before_ the workers living on the page
+          // we navigate from are terminated, which would create worker targets for them again.
+          // Since at this point the new document can't have any workers yet, we are going to
+          // ignore existing targets (i.e. the workers that belong to the previous document).
+          ignoreExistingTargets: true,
         });
       }
     }
@@ -204,10 +209,15 @@ class DevToolsWorkerChild extends JSWindowActorChild {
    * @param {Object} options.watchedData: Data (targets, resources, …) the watcher wants
    *        to be notified about. See WatcherRegistry.getWatchedData to see the full list
    *        of properties.
+   * @param {Boolean} options.ignoreExistingTargets: Set to true to not loop on existing
+   *        workers. This is useful when this function is called at the very early stage
+   *        of the life of a document, since workers of the previous document are still
+   *        alive, and there's no way to filter them out.
    */
   async _watchWorkerTargets({
     watcherActorID,
     parentConnectionPrefix,
+    ignoreExistingTargets,
     watchedData,
   }) {
     if (this._connections.has(watcherActorID)) {
@@ -244,18 +254,20 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       watchedData,
     });
 
-    await Promise.all(
-      Array.from(wdm.getWorkerDebuggerEnumerator())
-        .filter(dbg => this._shouldHandleWorker(dbg))
-        .map(dbg =>
-          this._createWorkerTargetActor({
-            dbg,
-            connection,
-            forwardingPrefix,
-            watcherActorID,
-          })
-        )
-    );
+    if (ignoreExistingTargets !== true) {
+      await Promise.all(
+        Array.from(wdm.getWorkerDebuggerEnumerator())
+          .filter(dbg => this._shouldHandleWorker(dbg))
+          .map(dbg =>
+            this._createWorkerTargetActor({
+              dbg,
+              connection,
+              forwardingPrefix,
+              watcherActorID,
+            })
+          )
+      );
+    }
   }
 
   _createConnection(forwardingPrefix) {
@@ -290,7 +302,8 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     return (
       DevToolsUtils.isWorkerDebuggerAlive(dbg) &&
       dbg.type === Ci.nsIWorkerDebugger.TYPE_DEDICATED &&
-      dbg.windowIDs.includes(this.manager.innerWindowId)
+      dbg.window?.windowGlobalChild?.innerWindowId ===
+        this.manager.innerWindowId
     );
   }
 
