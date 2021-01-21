@@ -121,6 +121,31 @@ class RecentlyClosedTabsStorageTest {
     }
 
     @Test
+    fun testAllowAddingSameTabTwice() = runBlockingTest {
+        // Test tab
+        val closedTab = RecoverableTab(
+            id = "first-tab",
+            title = "Mozilla",
+            url = "https://mozilla.org",
+            lastAccess = System.currentTimeMillis()
+        )
+
+        storage.addTabsToCollectionWithMax(listOf(closedTab), 2)
+        dispatcher.advanceUntilIdle()
+
+        val updatedTab = closedTab.copy(title = "updated")
+        storage.addTabsToCollectionWithMax(listOf(updatedTab), 2)
+        dispatcher.advanceUntilIdle()
+
+        val tabs = storage.getTabs().first()
+
+        Assert.assertEquals(1, tabs.size)
+        Assert.assertEquals(updatedTab.url, tabs[0].url)
+        Assert.assertEquals(updatedTab.title, tabs[0].title)
+        Assert.assertEquals(updatedTab.lastAccess, tabs[0].lastAccess)
+    }
+
+    @Test
     fun testRemovingAllTabs() = runBlockingTest {
         // Test tab
         val closedTab = RecoverableTab(
