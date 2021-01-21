@@ -91,25 +91,24 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo()
       const = 0;
 
-  enum { HORIZONTAL = 0x01, VERTICAL = 0x02 };
   /**
    * Return the scrollbars which are visible. It's OK to call this during reflow
    * of the scrolled contents, in which case it will reflect the current
    * assumptions about scrollbar visibility.
    */
-  virtual uint32_t GetScrollbarVisibility() const = 0;
+  virtual mozilla::layers::ScrollDirections GetScrollbarVisibility() const = 0;
   /**
    * Returns the directions in which scrolling is allowed (if the scroll range
    * is at least one device pixel in that direction).
    */
-  uint32_t GetAvailableScrollingDirections() const;
+  mozilla::layers::ScrollDirections GetAvailableScrollingDirections() const;
   /**
    * Returns the directions in which scrolling is allowed when taking into
    * account the visual viewport size and overflow hidden. (An (apz) zoomed in
    * overflow hidden scrollframe is actually user scrollable.)
    */
-  virtual uint32_t GetAvailableScrollingDirectionsForUserInputEvents()
-      const = 0;
+  virtual mozilla::layers::ScrollDirections
+  GetAvailableScrollingDirectionsForUserInputEvents() const = 0;
   /**
    * Return the actual sizes of all possible scrollbars. Returns 0 for scrollbar
    * positions that don't have a scrollbar or where the scrollbar is not
