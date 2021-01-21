@@ -29,6 +29,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.lib.state.ext.consumeFlow
+import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -46,7 +47,7 @@ import org.mozilla.samples.browser.integration.FindInPageIntegration
  * UI code specific to the app or to custom tabs can be found in the subclasses.
  */
 @SuppressWarnings("LargeClass")
-abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
+abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, ActivityResultHandler {
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val toolbarFeature = ViewBoundFeatureWrapper<ToolbarFeature>()
     private val contextMenuIntegration = ViewBoundFeatureWrapper<ContextMenuIntegration>()
@@ -59,6 +60,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
 
     protected val sessionId: String?
         get() = arguments?.getString(SESSION_ID_KEY)
+
+    private val activityResultHandler: List<ViewBoundFeatureWrapper<*>> = listOf(
+        promptFeature
+    )
 
     @CallSuper
     @Suppress("LongMethod")
@@ -238,8 +243,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
     }
 
     @CallSuper
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        promptFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
+    override fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean {
+        return activityResultHandler.any { it.onActivityResult(requestCode, data, resultCode) }
     }
 
     companion object {

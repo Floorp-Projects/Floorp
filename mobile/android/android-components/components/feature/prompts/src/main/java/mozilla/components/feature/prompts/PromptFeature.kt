@@ -302,9 +302,9 @@ class PromptFeature private constructor(
      * other apps like file chooser requests.
      *
      * @param requestCode The code of the app that requested the intent.
-     * @param intent The result of the request.
+     * @param data The result of the request.
      */
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+    override fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean {
         return filePicker.onActivityResult(requestCode, resultCode, data)
     }
 

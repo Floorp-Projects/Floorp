@@ -613,7 +613,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest))
             .joinBlocking()
 
-        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
+        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, intent, RESULT_OK)
         store.waitUntilIdle()
         assertTrue(onSingleFileSelectionWasCalled)
         assertNull(tab()?.content?.promptRequest)
@@ -647,7 +647,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest))
             .joinBlocking()
 
-        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
+        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, intent, RESULT_OK)
         store.waitUntilIdle()
         assertTrue(onMultipleFileSelectionWasCalled)
         assertNull(tab()?.content?.promptRequest)
@@ -669,7 +669,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest))
             .joinBlocking()
 
-        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
+        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, intent, RESULT_CANCELED)
         store.waitUntilIdle()
         assertTrue(onDismissWasCalled)
         assertNull(tab()?.content?.promptRequest)

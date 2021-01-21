@@ -59,7 +59,7 @@ class ViewBoundFeatureWrapperTest {
     @Test
     fun `Calling onActivityResult on an empty wrapper returns false`() {
         val wrapper = ViewBoundFeatureWrapper<MockFeature>()
-        assertFalse(wrapper.onActivityResult(0, RESULT_OK, mock()))
+        assertFalse(wrapper.onActivityResult(0, mock(), RESULT_OK))
     }
 
     @Test
@@ -72,14 +72,14 @@ class ViewBoundFeatureWrapperTest {
             view = mock()
         )
 
-        assertTrue(wrapper.onActivityResult(1, RESULT_OK, null))
+        assertTrue(wrapper.onActivityResult(1, null, RESULT_OK))
         assertTrue(feature.onActivityResultHandled)
 
         assertFalse(ViewBoundFeatureWrapper(
             feature = MockFeatureWithActivityResultHandler(onActivityResult = false),
             owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
             view = mock()
-        ).onActivityResult(0, RESULT_OK, mock()))
+        ).onActivityResult(0, mock(), RESULT_OK))
     }
 
     @Test
@@ -425,7 +425,7 @@ private class MockFeatureWithActivityResultHandler(
     var onActivityResultHandled = false
         private set
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+    override fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean {
         onActivityResultHandled = true
         return onActivityResult
     }

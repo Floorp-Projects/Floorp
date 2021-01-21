@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **support-base**
+  * ⚠️ **This is a breaking change**: Update the signature of `ActivityResultHandler.onActivityResult` to avoid conflict with internal Android APIs.
+
 # 71.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)

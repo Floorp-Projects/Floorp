@@ -18,5 +18,5 @@ interface ActivityResultHandler {
      *
      * @return true if the result was consumed and no other component needs to be notified.
      */
-    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean
+    fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean
 }

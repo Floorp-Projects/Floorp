@@ -162,7 +162,7 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
      * the [LifecycleAwareFeature] was cleared already.
      */
     @Synchronized
-    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+    fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean {
         val feature = feature ?: return false
 
         if (feature !is ActivityResultHandler) {
@@ -171,7 +171,7 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
             )
         }
 
-        return feature.onActivityResult(requestCode, resultCode, data)
+        return feature.onActivityResult(requestCode, data, resultCode)
     }
 
     @Synchronized
