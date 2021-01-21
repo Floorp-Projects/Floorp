@@ -5,7 +5,6 @@ exclude =
     devtools/shared,
     dom/base,
     dom/bindings,
-    dom/encoding,
     gfx/tests,
     ipc/ipdl/ipdl,
     layout/base/tests/marionette,
