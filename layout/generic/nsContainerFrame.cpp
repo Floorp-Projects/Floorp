@@ -2388,12 +2388,12 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
     ComputeSizeFlags aFlags) {
   const nsStylePosition* stylePos = StylePosition();
-  const auto* inlineStyleCoord = aSizeOverrides.mStyleISize
-                                     ? aSizeOverrides.mStyleISize.ptr()
-                                     : &stylePos->ISize(aWM);
-  const auto* blockStyleCoord = aSizeOverrides.mStyleBSize
-                                    ? aSizeOverrides.mStyleBSize.ptr()
-                                    : &stylePos->BSize(aWM);
+  const auto& styleISize = aSizeOverrides.mStyleISize
+                               ? *aSizeOverrides.mStyleISize
+                               : stylePos->ISize(aWM);
+  const auto& styleBSize = aSizeOverrides.mStyleBSize
+                               ? *aSizeOverrides.mStyleBSize
+                               : stylePos->BSize(aWM);
   auto* parentFrame = GetParent();
   const bool isGridItem = IsGridItem();
   const bool isFlexItem =
@@ -2419,10 +2419,10 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // a * (b / c) because of its reduced accuracy relative to a * b / c
   // or (a * b) / c (which are equivalent).
 
-  const bool isAutoISize = inlineStyleCoord->IsAuto() ||
-                           aFlags.contains(ComputeSizeFlag::UseAutoISize);
+  const bool isAutoISize =
+      styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize);
   const bool isAutoBSize =
-      nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM)) ||
+      nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM)) ||
       aFlags.contains(ComputeSizeFlag::UseAutoBSize);
 
   const auto boxSizingAdjust = stylePos->mBoxSizing == StyleBoxSizing::Border
@@ -2463,10 +2463,9 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   nscoord intrinsicBSize = std::max(0, bsizeCoord.valueOr(0));
 
   if (!isAutoISize) {
-    iSize =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags)
-            .mISize;
+    iSize = ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
+                              boxSizingToMarginEdgeISize, styleISize, aFlags)
+                .mISize;
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisBlock
                                                   : eLogicalAxisInline)) {
@@ -2527,9 +2526,9 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   }
 
   if (!isAutoBSize) {
-    bSize = nsLayoutUtils::ComputeBSizeValue(
-        aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-        blockStyleCoord->AsLengthPercentage());
+    bSize = nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
+                                             boxSizingAdjust.BSize(aWM),
+                                             styleBSize.AsLengthPercentage());
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisInline
                                                   : eLogicalAxisBlock)) {
