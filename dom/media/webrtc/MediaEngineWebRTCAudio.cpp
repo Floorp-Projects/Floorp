@@ -807,11 +807,6 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
   // come in, since we round graph iteration durations up to the nearest block.
   buffering += WEBAUDIO_BLOCK_SIZE;
 
-  // If we're supposed to be packetizing but there's no packetizer yet,
-  // there must not have been any live frames appended yet.
-  MOZ_ASSERT_IF(!PassThrough(aGraph) && !mPacketizerInput,
-                mSegment.GetDuration() == 0);
-
   if (!PassThrough(aGraph) && mPacketizerInput) {
     // Processing is active and is processed in chunks of 10ms through the
     // input packetizer. We allow for 10ms of silence on the track to
