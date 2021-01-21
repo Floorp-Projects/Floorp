@@ -2039,8 +2039,8 @@ void MacroAssembler::branchValueIsNurseryCellImpl(Condition cond,
 
   unboxGCThingForGCBarrier(value, scratch2);
   orPtr(Imm32(gc::ChunkMask), scratch2);
-  load32(Address(scratch2, gc::ChunkLocationOffsetFromLastByte), scratch2);
-  branch32(cond, scratch2, Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
+  loadPtr(Address(scratch2, gc::ChunkStoreBufferOffsetFromLastByte), scratch2);
+  branchPtr(InvertCondition(cond), scratch2, ImmWord(0), label);
 
   bind(&done);
 }
