@@ -39,17 +39,17 @@ class PrincipalVerifier final : public Runnable {
   };
 
   static already_AddRefed<PrincipalVerifier> CreateAndDispatch(
-      Listener* aListener, mozilla::ipc::PBackgroundParent* aActor,
+      Listener& aListener, mozilla::ipc::PBackgroundParent* aActor,
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
-  void AddListener(Listener* aListener);
+  void AddListener(Listener& aListener);
 
   // The Listener must call RemoveListener() when OnPrincipalVerified() is
   // called or when the Listener is destroyed.
-  void RemoveListener(Listener* aListener);
+  void RemoveListener(Listener& aListener);
 
  private:
-  PrincipalVerifier(Listener* aListener,
+  PrincipalVerifier(Listener& aListener,
                     mozilla::ipc::PBackgroundParent* aActor,
                     const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
   virtual ~PrincipalVerifier();
@@ -60,7 +60,7 @@ class PrincipalVerifier final : public Runnable {
   void DispatchToInitiatingThread(nsresult aRv);
 
   // Weak reference cleared by RemoveListener()
-  nsTObserverArray<Listener*> mListenerList;
+  nsTObserverArray<NotNull<Listener*>> mListenerList;
 
   // set in originating thread at construction, but must be accessed and
   // released on main thread
