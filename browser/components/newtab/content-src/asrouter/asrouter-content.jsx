@@ -75,9 +75,11 @@ export class ASRouterUISurface extends React.PureComponent {
   sendUserActionTelemetry(extraProps = {}) {
     const { message } = this.state;
     const eventType = `${message.provider}_user_event`;
+    const source = extraProps.id;
+    delete extraProps.id;
     ASRouterUtils.sendTelemetry({
+      source,
       message_id: message.id,
-      source: extraProps.id,
       action: eventType,
       ...extraProps,
     });
