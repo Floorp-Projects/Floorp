@@ -45,13 +45,13 @@ IDBMutableFile::IDBMutableFile(IDBDatabase* aDatabase,
   aDatabase->AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
 
-  mDatabase->NoteLiveMutableFile(this);
+  mDatabase->NoteLiveMutableFile(*this);
 }
 
 IDBMutableFile::~IDBMutableFile() {
   AssertIsOnOwningThread();
 
-  mDatabase->NoteFinishedMutableFile(this);
+  mDatabase->NoteFinishedMutableFile(*this);
 
   if (mBackgroundActor) {
     mBackgroundActor->SendDeleteMeInternal();
