@@ -21,6 +21,7 @@
 #include "mozilla/Vector.h"
 
 #include <algorithm>    // std::{all_of,copy_n,enable_if,is_const,move}
+#include <iterator>     // std::size
 #include <type_traits>  // std::is_same, std::is_unsigned
 
 #include "jsfriendapi.h"
@@ -2108,17 +2109,16 @@ bool JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array) {
   // Append TwoByte strings.
   static const char16_t twoByteChars[] =
       u"\u1234abc\0def\u5678ghijklmasdfa\0xyz0123456789";
-  if (!FillWithRepresentatives(cx, array, &index, twoByteChars,
-                               mozilla::ArrayLength(twoByteChars) - 1,
-                               JSFatInlineString::MAX_LENGTH_TWO_BYTE,
-                               CheckTwoByte)) {
+  if (!FillWithRepresentatives(
+          cx, array, &index, twoByteChars, std::size(twoByteChars) - 1,
+          JSFatInlineString::MAX_LENGTH_TWO_BYTE, CheckTwoByte)) {
     return false;
   }
 
   // Append Latin1 strings.
   static const Latin1Char latin1Chars[] = "abc\0defghijklmasdfa\0xyz0123456789";
   if (!FillWithRepresentatives(
-          cx, array, &index, latin1Chars, mozilla::ArrayLength(latin1Chars) - 1,
+          cx, array, &index, latin1Chars, std::size(latin1Chars) - 1,
           JSFatInlineString::MAX_LENGTH_LATIN1, CheckLatin1)) {
     return false;
   }
@@ -2131,16 +2131,15 @@ bool JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array) {
   gc::AutoSuppressNurseryCellAlloc suppress(cx);
 
   // Append TwoByte strings.
-  if (!FillWithRepresentatives(cx, array, &index, twoByteChars,
-                               mozilla::ArrayLength(twoByteChars) - 1,
-                               JSFatInlineString::MAX_LENGTH_TWO_BYTE,
-                               CheckTwoByte)) {
+  if (!FillWithRepresentatives(
+          cx, array, &index, twoByteChars, std::size(twoByteChars) - 1,
+          JSFatInlineString::MAX_LENGTH_TWO_BYTE, CheckTwoByte)) {
     return false;
   }
 
   // Append Latin1 strings.
   if (!FillWithRepresentatives(
-          cx, array, &index, latin1Chars, mozilla::ArrayLength(latin1Chars) - 1,
+          cx, array, &index, latin1Chars, std::size(latin1Chars) - 1,
           JSFatInlineString::MAX_LENGTH_LATIN1, CheckLatin1)) {
     return false;
   }

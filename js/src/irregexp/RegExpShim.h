@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iterator>
 
 #include "irregexp/RegExpTypes.h"
 #include "irregexp/util/FlagsShim.h"
@@ -97,7 +98,7 @@ static constexpr inline T Max(T t1, T t2) {
 #  define V8PRIuPTRDIFF "tu"
 #endif
 
-#define arraysize mozilla::ArrayLength
+#define arraysize std::size
 
 // Explicitly declare the assignment operator as deleted.
 #define DISALLOW_ASSIGN(TypeName) TypeName& operator=(const TypeName&) = delete

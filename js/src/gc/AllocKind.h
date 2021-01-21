@@ -11,10 +11,10 @@
 #ifndef gc_AllocKind_h
 #define gc_AllocKind_h
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EnumeratedRange.h"
 
+#include <iterator>
 #include <stdint.h>
 
 #include "js/TraceKind.h"
@@ -178,7 +178,7 @@ static inline JS::TraceKind MapAllocToTraceKind(AllocKind kind) {
 #undef EXPAND_ELEMENT
   };
 
-  static_assert(mozilla::ArrayLength(map) == AllocKindCount,
+  static_assert(std::size(map) == AllocKindCount,
                 "AllocKind-to-TraceKind mapping must be in sync");
   return map[size_t(kind)];
 }
@@ -192,7 +192,7 @@ static inline bool IsNurseryAllocable(AllocKind kind) {
 #undef DEFINE_NURSERY_ALLOCABLE
   };
 
-  static_assert(mozilla::ArrayLength(map) == AllocKindCount,
+  static_assert(std::size(map) == AllocKindCount,
                 "IsNurseryAllocable sanity check");
   return map[size_t(kind)];
 }
@@ -206,7 +206,7 @@ static inline bool IsBackgroundFinalized(AllocKind kind) {
 #undef DEFINE_BACKGROUND_FINALIZED
   };
 
-  static_assert(mozilla::ArrayLength(map) == AllocKindCount,
+  static_assert(std::size(map) == AllocKindCount,
                 "IsBackgroundFinalized sanity check");
   return map[size_t(kind)];
 }
@@ -224,7 +224,7 @@ static inline bool IsCompactingKind(AllocKind kind) {
 #undef DEFINE_COMPACTING_KIND
   };
 
-  static_assert(mozilla::ArrayLength(map) == AllocKindCount,
+  static_assert(std::size(map) == AllocKindCount,
                 "IsCompactingKind sanity check");
   return map[size_t(kind)];
 }
