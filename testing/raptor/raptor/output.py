@@ -1521,9 +1521,7 @@ class BrowsertimeOutput(PerftestOutput):
                     "subtests": {},
                 },
             )
-            # Setting shouldAlert to False whenever self.app is either chrome, chrome-m, chromium
-            if self.app in ("chrome", "chrome-m", "chromium"):
-                suite["shouldAlert"] = False
+
             # Check if the test has set optional properties
             if "alert_change_type" in test and "alertChangeType" not in suite:
                 suite["alertChangeType"] = test["alert_change_type"]
@@ -1546,8 +1544,6 @@ class BrowsertimeOutput(PerftestOutput):
                                     % measurement_name
                                 )
                                 subtest["shouldAlert"] = True
-                                if self.app in ("chrome", "chrome-m", "chromium"):
-                                    subtest["shouldAlert"] = False
                         subtest["replicates"] = []
                         suite["subtests"][measurement_name] = subtest
                     else:
