@@ -45,14 +45,14 @@ IDBCursor::IDBCursor(BackgroundCursorChildBase* const aBackgroundActor)
   aBackgroundActor->AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
-  mTransaction->RegisterCursor(this);
+  mTransaction->RegisterCursor(*this);
 }
 
 template <IDBCursor::Type CursorType>
 IDBTypedCursor<CursorType>::~IDBTypedCursor() {
   AssertIsOnOwningThread();
 
-  mTransaction->UnregisterCursor(this);
+  mTransaction->UnregisterCursor(*this);
 
   DropJSObjects();
 

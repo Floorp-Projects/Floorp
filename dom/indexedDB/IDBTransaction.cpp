@@ -834,21 +834,21 @@ int64_t IDBTransaction::NextIndexId() {
 void IDBTransaction::InvalidateCursorCaches() {
   AssertIsOnOwningThread();
 
-  for (auto* const cursor : mCursors) {
+  for (const auto& cursor : mCursors) {
     cursor->InvalidateCachedResponses();
   }
 }
 
-void IDBTransaction::RegisterCursor(IDBCursor* const aCursor) {
+void IDBTransaction::RegisterCursor(IDBCursor& aCursor) {
   AssertIsOnOwningThread();
 
-  mCursors.AppendElement(aCursor);
+  mCursors.AppendElement(WrapNotNullUnchecked(&aCursor));
 }
 
-void IDBTransaction::UnregisterCursor(IDBCursor* const aCursor) {
+void IDBTransaction::UnregisterCursor(IDBCursor& aCursor) {
   AssertIsOnOwningThread();
 
-  DebugOnly<bool> removed = mCursors.RemoveElement(aCursor);
+  DebugOnly<bool> removed = mCursors.RemoveElement(&aCursor);
   MOZ_ASSERT(removed);
 }
 
