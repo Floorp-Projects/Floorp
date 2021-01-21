@@ -1975,9 +1975,10 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mAgcOn = false;
   mPrefs.mHPFOn = false;
   mPrefs.mNoiseOn = false;
-  mPrefs.mExtendedFilter = true;
-  mPrefs.mDelayAgnostic = true;
+  mPrefs.mTransientOn = false;
+  mPrefs.mResidualEchoOn = false;
   mPrefs.mFakeDeviceChangeEventOn = false;
+  mPrefs.mAgc2Forced = false;
 #ifdef MOZ_WEBRTC
   mPrefs.mAgc =
       webrtc::AudioProcessing::Config::GainController1::Mode::kAdaptiveDigital;
@@ -1998,13 +1999,14 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
     }
   }
   LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
-      "agc: %s, hpf: %s, noise: %s, agc level: %d, noise level: "
-      "%d, extended aec %s, delay_agnostic %s, channels %d",
+      "agc: %s, hpf: %s, noise: %s, agc level: %d, agc version: %s, noise "
+      "level: %d, transient: %s, residual echo: %s, channels %d",
       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
       mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
       mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAgc,
-      mPrefs.mNoise, mPrefs.mExtendedFilter ? "on" : "off",
-      mPrefs.mDelayAgnostic ? "on" : "off", mPrefs.mChannels);
+      mPrefs.mAgc2Forced ? "2" : "1", mPrefs.mNoise,
+      mPrefs.mTransientOn ? "on" : "off", mPrefs.mResidualEchoOn ? "on" : "off",
+      mPrefs.mChannels);
 }
 
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIMemoryReporter,
@@ -3242,7 +3244,7 @@ MediaEngine* MediaManager::GetBackend() {
     MOZ_RELEASE_ASSERT(
         !sHasShutdown);  // we should never create a new backend in shutdown
 #if defined(MOZ_WEBRTC)
-    mBackend = new MediaEngineWebRTC(mPrefs);
+    mBackend = new MediaEngineWebRTC();
 #else
     mBackend = new MediaEngineDefault();
 #endif
@@ -3423,12 +3425,14 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPrefBool(aBranch, "media.getusermedia.hpf_enabled", aData, &mPrefs.mHPFOn);
   GetPrefBool(aBranch, "media.getusermedia.noise_enabled", aData,
               &mPrefs.mNoiseOn);
+  GetPrefBool(aBranch, "media.getusermedia.transient_enabled", aData,
+              &mPrefs.mTransientOn);
+  GetPrefBool(aBranch, "media.getusermedia.residual_echo_enabled", aData,
+              &mPrefs.mResidualEchoOn);
+  GetPrefBool(aBranch, "media.getusermedia.agc2_forced", aData,
+              &mPrefs.mAgc2Forced);
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
-  GetPrefBool(aBranch, "media.getusermedia.aec_extended_filter", aData,
-              &mPrefs.mExtendedFilter);
-  GetPrefBool(aBranch, "media.getusermedia.aec_aec_delay_agnostic", aData,
-              &mPrefs.mDelayAgnostic);
   GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
   bool oldFakeDeviceChangeEventOn = mPrefs.mFakeDeviceChangeEventOn;
   GetPrefBool(aBranch, "media.ondevicechange.fakeDeviceChangeEvent.enabled",
