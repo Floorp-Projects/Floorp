@@ -2258,15 +2258,6 @@ nsresult nsNavHistoryQueryResultNode::OnTitleChanged(
 }
 
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnFrecencyChanged(nsIURI* aURI,
-                                               int32_t aNewFrecency,
-                                               const nsACString& aGUID,
-                                               bool aHidden,
-                                               PRTime aLastVisitDate) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnManyFrecenciesChanged() { return NS_OK; }
 
 /**
@@ -4221,13 +4212,6 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
       }
     }
   }
-}
-
-NS_IMETHODIMP
-nsNavHistoryResult::OnFrecencyChanged(nsIURI* aURI, int32_t aNewFrecency,
-                                      const nsACString& aGUID, bool aHidden,
-                                      PRTime aLastVisitDate) {
-  return NS_OK;
 }
 
 NS_IMETHODIMP
