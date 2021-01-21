@@ -1,10 +1,14 @@
 import {
   ContextMenu,
   ContextMenuItem,
+  _ContextMenuItem,
 } from "content-src/components/ContextMenu/ContextMenu";
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 import { mount, shallow } from "enzyme";
 import React from "react";
+import { INITIAL_STATE, reducers } from "common/Reducers.jsm";
+import { Provider } from "react-redux";
+import { combineReducers, createStore } from "redux";
 
 const DEFAULT_PROPS = {
   onUpdate: () => {},
@@ -27,6 +31,17 @@ const FakeMenu = props => {
 };
 
 describe("<ContextMenuButton>", () => {
+  function mountWithProps(options) {
+    const store = createStore(combineReducers(reducers), INITIAL_STATE);
+    return mount(
+      <Provider store={store}>
+        <ContextMenuButton>
+          <ContextMenu options={options} />
+        </ContextMenuButton>
+      </Provider>
+    );
+  }
+
   let sandbox;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
@@ -65,36 +80,38 @@ describe("<ContextMenuButton>", () => {
     assert.calledOnce(onClick);
   });
   it("should have a default keyboardAccess prop of false", () => {
-    const wrapper = mount(
-      <ContextMenuButton>
-        <ContextMenu options={DEFAULT_MENU_OPTIONS} />
-      </ContextMenuButton>
-    );
-    wrapper.setState({ showContextMenu: true });
+    const wrapper = mountWithProps(DEFAULT_MENU_OPTIONS);
+    wrapper.find(ContextMenuButton).setState({ showContextMenu: true });
     assert.equal(wrapper.find(ContextMenu).prop("keyboardAccess"), false);
   });
   it("should pass the keyboardAccess prop down to ContextMenu", () => {
-    const wrapper = mount(
-      <ContextMenuButton>
-        <ContextMenu options={DEFAULT_MENU_OPTIONS} />
-      </ContextMenuButton>
-    );
-    wrapper.setState({ showContextMenu: true, contextMenuKeyboard: true });
+    const wrapper = mountWithProps(DEFAULT_MENU_OPTIONS);
+    wrapper
+      .find(ContextMenuButton)
+      .setState({ showContextMenu: true, contextMenuKeyboard: true });
     assert.equal(wrapper.find(ContextMenu).prop("keyboardAccess"), true);
   });
   it("should call focusFirst when keyboardAccess is true", () => {
-    const wrapper = mount(
-      <ContextMenuButton>
-        <ContextMenu options={[{ label: "item1", first: true }]} />
-      </ContextMenuButton>
-    );
-    const focusFirst = sandbox.spy(ContextMenuItem.prototype, "focusFirst");
-    wrapper.setState({ showContextMenu: true, contextMenuKeyboard: true });
+    const options = [{ label: "item1", first: true }];
+    const wrapper = mountWithProps(options);
+    const focusFirst = sandbox.spy(_ContextMenuItem.prototype, "focusFirst");
+    wrapper
+      .find(ContextMenuButton)
+      .setState({ showContextMenu: true, contextMenuKeyboard: true });
     assert.calledOnce(focusFirst);
   });
 });
 
 describe("<ContextMenu>", () => {
+  function mountWithProps(props) {
+    const store = createStore(combineReducers(reducers), INITIAL_STATE);
+    return mount(
+      <Provider store={store}>
+        <ContextMenu {...props} />
+      </Provider>
+    );
+  }
+
   it("should render all the options provided", () => {
     const options = [
       { label: "item1" },
@@ -121,13 +138,17 @@ describe("<ContextMenu>", () => {
     assert.lengthOf(wrapper.find(ContextMenuItem), 1);
   });
   it("should add an icon to items that need icons", () => {
-    const options = [{ label: "item1", icon: "icon1" }, { type: "separator" }];
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    const props = Object.assign({}, DEFAULT_PROPS, {
+      options: [{ label: "item1", icon: "icon1" }, { type: "separator" }],
+    });
+    const wrapper = mountWithProps(props);
     assert.lengthOf(wrapper.find(".icon-icon1"), 1);
   });
   it("should be tabbable", () => {
-    const options = [{ label: "item1", icon: "icon1" }, { type: "separator" }];
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    const props = {
+      options: [{ label: "item1", icon: "icon1" }, { type: "separator" }],
+    };
+    const wrapper = mountWithProps(props);
     assert.equal(
       wrapper.find(".context-menu-item").props().role,
       "presentation"
@@ -136,20 +157,20 @@ describe("<ContextMenu>", () => {
   it("should call onUpdate with false when an option is clicked", () => {
     const onUpdate = sinon.spy();
     const onClick = sinon.spy();
-    const wrapper = mount(
-      <ContextMenu
-        {...DEFAULT_PROPS}
-        onUpdate={onUpdate}
-        options={[{ label: "item1", onClick }]}
-      />
-    );
+    const props = Object.assign({}, DEFAULT_PROPS, {
+      onUpdate,
+      options: [{ label: "item1", onClick }],
+    });
+    const wrapper = mountWithProps(props);
     wrapper.find(".context-menu-item button").simulate("click");
     assert.calledOnce(onUpdate);
     assert.calledOnce(onClick);
   });
   it("should not have disabled className by default", () => {
-    const options = [{ label: "item1", icon: "icon1" }, { type: "separator" }];
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    const props = Object.assign({}, DEFAULT_PROPS, {
+      options: [{ label: "item1", icon: "icon1" }, { type: "separator" }],
+    });
+    const wrapper = mountWithProps(props);
     assert.lengthOf(wrapper.find(".context-menu-item a.disabled"), 0);
   });
   it("should add disabled className to any disabled options", () => {
@@ -157,30 +178,34 @@ describe("<ContextMenu>", () => {
       { label: "item1", icon: "icon1", disabled: true },
       { type: "separator" },
     ];
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    const props = Object.assign({}, DEFAULT_PROPS, { options });
+    const wrapper = mountWithProps(props);
     assert.lengthOf(wrapper.find(".context-menu-item button.disabled"), 1);
   });
   it("should have the context-menu-item class", () => {
     const options = [{ label: "item1", icon: "icon1" }];
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    const props = Object.assign({}, DEFAULT_PROPS, { options });
+    const wrapper = mountWithProps(props);
     assert.lengthOf(wrapper.find(".context-menu-item"), 1);
   });
   it("should call onClick when onKeyDown is called with Enter", () => {
     const onClick = sinon.spy();
-    const wrapper = mount(
-      <ContextMenu {...DEFAULT_PROPS} options={[{ label: "item1", onClick }]} />
-    );
+    const props = Object.assign({}, DEFAULT_PROPS, {
+      options: [{ label: "item1", onClick }],
+    });
+    const wrapper = mountWithProps(props);
     wrapper
       .find(".context-menu-item button")
       .simulate("keydown", { key: "Enter" });
     assert.calledOnce(onClick);
   });
   it("should call focusSibling when onKeyDown is called with ArrowUp", () => {
-    const wrapper = mount(
-      <ContextMenu {...DEFAULT_PROPS} options={[{ label: "item1" }]} />
-    );
+    const props = Object.assign({}, DEFAULT_PROPS, {
+      options: [{ label: "item1" }],
+    });
+    const wrapper = mountWithProps(props);
     const focusSibling = sinon.stub(
-      wrapper.find(ContextMenuItem).instance(),
+      wrapper.find(_ContextMenuItem).instance(),
       "focusSibling"
     );
     wrapper
@@ -189,11 +214,12 @@ describe("<ContextMenu>", () => {
     assert.calledOnce(focusSibling);
   });
   it("should call focusSibling when onKeyDown is called with ArrowDown", () => {
-    const wrapper = mount(
-      <ContextMenu {...DEFAULT_PROPS} options={[{ label: "item1" }]} />
-    );
+    const props = Object.assign({}, DEFAULT_PROPS, {
+      options: [{ label: "item1" }],
+    });
+    const wrapper = mountWithProps(props);
     const focusSibling = sinon.stub(
-      wrapper.find(ContextMenuItem).instance(),
+      wrapper.find(_ContextMenuItem).instance(),
       "focusSibling"
     );
     wrapper

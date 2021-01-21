@@ -2,64 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.overlay {
-  position: fixed;
-  z-index: 1;
-  inset: 0;
-  /* TODO: this color is used in the about:preferences overlay, but
-           why isn't it declared as a variable? */
-  background-color: rgba(0,0,0,0.5);
-  display: flex;
-}
-
-.container {
-  z-index: 2;
-  position: relative;
-  display: grid;
-  grid-template-columns: 30px auto 170px;
-  grid-template-rows: 30px auto 20px 35px;
-  grid-gap: 5px;
-  align-items: center;
-  width: 580px;
-  height: 290px;
-  padding: 50px 50px 20px;
-  margin: auto;
-  background-color: var(--in-content-page-background);
-  color: var(--in-content-page-color);
-  box-shadow: var(--shadow-30);
-  /* show a border in high contrast mode */
-  outline: 1px solid transparent;
-}
-
-.title {
-  font-size: 2.2em;
-  font-weight: 300;
-  user-select: none;
-  margin: 0;
-}
-
-.buttons {
-  padding: 16px 32px;
-  text-align: center;
-  display: flex;
-  justify-content: space-between;
-}
-
-.buttons.macosx > .confirm-button {
-  order: 1;
-}
-
-.buttons > button {
-  min-width: 140px;
-}
-
-.import-icon {
-  width: 30px;
-  height: 30px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
 .import-summary {
   display: grid;
   grid-template-columns: max-content max-content max-content;
@@ -68,31 +10,6 @@
 .import-summary > * > span {
   margin-block: 0 2px;
   margin-inline: 0 10px;
-}
-
-.import-done-button {
-  width: 170px;
-  height: 30px;
-  grid-column-start: 3;
-  grid-row-start: 4;
-  margin-inline-start: 0;
-}
-
-.content {
-  grid-column-start: 2;
-  align-self: baseline;
-  padding-top: 30px;
-}
-
-.dialog-body {
-  padding-block: 40px 16px;
-  padding-inline: 45px 32px;
-}
-
-.import-separator {
-  grid-column: 1 / 4;
-  grid-row-start: 3;
-  border-top: 1px solid var(--in-content-border-color);
 }
 
 .import-items-row {
@@ -109,7 +26,6 @@
 .result-meta {
   font-style: italic;
 }
-
 .import-items-errors .result-meta {
   color: var(--dialog-warning-text-color);
 }

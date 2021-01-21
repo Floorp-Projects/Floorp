@@ -104,3 +104,94 @@ add_task(async function test_open_import_from_csv() {
     }
   );
 });
+
+add_task(async function test_open_import_from_csv_with_invalid_file() {
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:logins" },
+    async function(browser) {
+      MockFilePicker.init(window);
+      MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+      let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
+        "invalid csv file",
+      ]);
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "menu-button",
+        {},
+        browser
+      );
+
+      await SpecialPowers.spawn(browser, [], async () => {
+        let menuButton = content.document.querySelector("menu-button");
+        return ContentTaskUtils.waitForCondition(function waitForMenu() {
+          return !menuButton.shadowRoot.querySelector(".menu").hidden;
+        }, "waiting for menu to open");
+      });
+
+      function getImportMenuItem() {
+        let menuButton = window.document.querySelector("menu-button");
+        let importButton = menuButton.shadowRoot.querySelector(
+          ".menuitem-import-file"
+        );
+        // Force the menu item to be visible for the test.
+        importButton.hidden = false;
+        return importButton;
+      }
+
+      EXPECTED_ERROR_MESSAGE = "Couldn't parse origin for";
+      Services.telemetry.clearEvents();
+
+      let filePicker = waitForOpenFilePicker(csvFile);
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        getImportMenuItem,
+        {},
+        browser
+      );
+
+      // First event is for opening about:logins
+      await LoginTestUtils.telemetry.waitForEventCount(
+        1,
+        "content",
+        "pwmgr",
+        "mgmt_menu_item_used"
+      );
+      TelemetryTestUtils.assertEvents(
+        [["pwmgr", "mgmt_menu_item_used", "import_from_csv"]],
+        { category: "pwmgr", method: "mgmt_menu_item_used" },
+        { process: "content", clear: false }
+      );
+
+      info("waiting for Import file picker to get opened");
+      await filePicker;
+      ok(true, "Import file picker opened");
+      info("Waiting for the import error dialog");
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+        const dialog = Cu.waiveXrays(
+          content.document.querySelector("import-error-dialog")
+        );
+        info("Dialog hidden=" + dialog.hidden);
+        info(
+          "Generic dialog error title " +
+            dialog._genericDialog
+              .querySelector(".error-title")
+              .getAttribute("data-l10n-id")
+        );
+        is(dialog.hidden, false, "Dialog should not be hidden");
+        is(
+          dialog._genericDialog
+            .querySelector(".error-title")
+            .getAttribute("data-l10n-id"),
+          "about-logins-import-dialog-error-file-format-title",
+          "Dialog error title should be correct"
+        );
+        is(
+          dialog._genericDialog
+            .querySelector(".error-description")
+            .getAttribute("data-l10n-id"),
+          "about-logins-import-dialog-error-file-format-description",
+          "Dialog error description should be correct"
+        );
+      });
+    }
+  );
+});

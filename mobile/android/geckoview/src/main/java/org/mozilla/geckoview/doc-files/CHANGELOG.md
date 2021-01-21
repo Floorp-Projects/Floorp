@@ -27,10 +27,13 @@ exclude: true
   [`GeckoSession#load`][83.7]. See docs for [`Loader`][83.8].
   ([bug 1667471]({{bugzilla}}1667471))
 - Added [`GeckoResult#map`][86.3] to synchronously map a GeckoResult value.
+- Added [`PanZoomController#INPUT_RESULT_IGNORED`][86.4].
+  ([bug 1687430]({{bugzilla}}1687430))
 
 [86.1]: {{javadoc_uri}}/WebExtension.DownloadDelegate.html
 [86.2]: {{javadoc_uri}}/WebRequest.Builder#body-java.lang.String-
 [86.3]: {{javadoc_uri}}/GeckoResult.html#map-org.mozilla.geckoview.GeckoResult.OnValueMapper-
+[86.4]: {{javadoc_uri}}/PanZoomController.html#INPUT_RESULT_IGNORED
 
 ## v85
 - Added [`WebExtension.BrowsingDataDelegate`][85.1] that can be used to
@@ -874,4 +877,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 1d0d8ee64cc661c7356dc9ec8811629634e3bfc1
+[api-version]: 437ce82f72ccd40f18d7b7e6f5c0f7e1f6645c02

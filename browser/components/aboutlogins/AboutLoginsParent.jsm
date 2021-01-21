@@ -401,7 +401,8 @@ class AboutLoginsParent extends JSWindowActorParent {
         let [
           title,
           okButtonLabel,
-          filterTitle,
+          csvFilterTitle,
+          tsvFilterTitle,
         ] = await AboutLoginsL10n.formatValues([
           {
             id: "about-logins-import-file-picker-title",
@@ -412,23 +413,45 @@ class AboutLoginsParent extends JSWindowActorParent {
           {
             id: "about-logins-import-file-picker-csv-filter-title",
           },
+          {
+            id: "about-logins-import-file-picker-tsv-filter-title",
+          },
         ]);
         let { result, path } = await this.openFilePickerDialog(
           title,
           okButtonLabel,
-          filterTitle,
-          "*.csv",
+          [
+            {
+              title: csvFilterTitle,
+              extensionPattern: "*.csv",
+            },
+            {
+              title: tsvFilterTitle,
+              extensionPattern: "*.tsv",
+            },
+          ],
           ownerGlobal
         );
 
         if (result != Ci.nsIFilePicker.returnCancel) {
-          let summary = await LoginCSVImport.importFromCSV(path);
-          this.sendAsyncMessage("AboutLogins:ImportPasswordsDialog", summary);
-          Services.telemetry.recordEvent(
-            "pwmgr",
-            "mgmt_menu_item_used",
-            "import_csv_complete"
-          );
+          let summary;
+          try {
+            summary = await LoginCSVImport.importFromCSV(path);
+          } catch (e) {
+            Cu.reportError(e);
+            this.sendAsyncMessage(
+              "AboutLogins:ImportPasswordsErrorDialog",
+              e.errorType
+            );
+          }
+          if (summary) {
+            this.sendAsyncMessage("AboutLogins:ImportPasswordsDialog", summary);
+            Services.telemetry.recordEvent(
+              "pwmgr",
+              "mgmt_menu_item_used",
+              "import_csv_complete"
+            );
+          }
         }
         break;
       }
@@ -454,17 +477,13 @@ class AboutLoginsParent extends JSWindowActorParent {
     this.sendAsyncMessage("AboutLogins:ShowLoginItemError", messageObject);
   }
 
-  async openFilePickerDialog(
-    title,
-    okButtonLabel,
-    filterTitle,
-    filterExtension,
-    ownerGlobal
-  ) {
+  async openFilePickerDialog(title, okButtonLabel, appendFilters, ownerGlobal) {
     return new Promise(resolve => {
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
       fp.init(ownerGlobal, title, Ci.nsIFilePicker.modeOpen);
-      fp.appendFilter(filterTitle, filterExtension);
+      for (const appendFilter of appendFilters) {
+        fp.appendFilter(appendFilter.title, appendFilter.extensionPattern);
+      }
       fp.appendFilters(Ci.nsIFilePicker.filterAll);
       fp.okButtonLabel = okButtonLabel;
       fp.open(async result => {

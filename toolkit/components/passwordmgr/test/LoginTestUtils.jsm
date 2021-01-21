@@ -596,10 +596,12 @@ LoginTestUtils.file = {
    *
    * @param {string[]} csvLines
    *        The lines that make up the CSV file.
+   * @param {string} extension
+   *        Optional parameter. Either 'csv' or 'tsv'. Default is 'csv'.
    * @returns {window.File} The File to the CSV file that was created.
    */
-  async setupCsvFileWithLines(csvLines) {
-    let tmpFile = FileTestUtils.getTempFile("firefox_logins.csv");
+  async setupCsvFileWithLines(csvLines, extension = "csv") {
+    let tmpFile = FileTestUtils.getTempFile(`firefox_logins.${extension}`);
     await OS.File.writeAtomic(
       tmpFile.path,
       new TextEncoder().encode(csvLines.join("\r\n"))
