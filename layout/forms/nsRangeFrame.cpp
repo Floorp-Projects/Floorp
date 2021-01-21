@@ -610,8 +610,7 @@ static mozilla::Length OneEm(nsRangeFrame* aFrame) {
 LogicalSize nsRangeFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   bool isInlineOriented = IsInlineOriented();
   auto em = OneEm(this);
 

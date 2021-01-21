@@ -977,8 +977,7 @@ void nsContainerFrame::DoInlineIntrinsicISize(gfxContext* aRenderingContext,
 LogicalSize nsContainerFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const mozilla::LogicalSize& aBorderPadding,
-    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
   nscoord availBased =
       aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);
@@ -986,10 +985,16 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
   if (aFlags.contains(ComputeSizeFlag::ShrinkWrap) ||
       IsFrameOfType(eReplaced)) {
     // Only bother computing our 'auto' ISize if the result will be used.
-    const auto& styleISize = aSizeOverrides.mStyleISize
-                                 ? *aSizeOverrides.mStyleISize
-                                 : StylePosition()->ISize(aWM);
-    if (styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize)) {
+    // It'll be used under two scenarios:
+    // - If our ISize property is itself 'auto'.
+    // - If we're using flex-basis in place of our ISize property (i.e. we're a
+    // flex item with our inline axis being the main axis), AND we have
+    // flex-basis:content.
+    const nsStylePosition* pos = StylePosition();
+    if (pos->ISize(aWM).IsAuto() ||
+        aFlags.contains(ComputeSizeFlag::UseAutoISize) ||
+        (pos->mFlexBasis.IsContent() && IsFlexItem() &&
+         nsFlexContainerFrame::IsItemInlineAxisMainAxis(this))) {
       result.ISize(aWM) =
           ShrinkWidthToFit(aRenderingContext, availBased, aFlags);
     }
@@ -2385,15 +2390,10 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     gfxContext* aRenderingContext, WritingMode aWM,
     const IntrinsicSize& aIntrinsicSize, const AspectRatio& aAspectRatio,
     const LogicalSize& aCBSize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   const nsStylePosition* stylePos = StylePosition();
-  const auto& styleISize = aSizeOverrides.mStyleISize
-                               ? *aSizeOverrides.mStyleISize
-                               : stylePos->ISize(aWM);
-  const auto& styleBSize = aSizeOverrides.mStyleBSize
-                               ? *aSizeOverrides.mStyleBSize
-                               : stylePos->BSize(aWM);
+  const auto* inlineStyleCoord = &stylePos->ISize(aWM);
+  const auto* blockStyleCoord = &stylePos->BSize(aWM);
   auto* parentFrame = GetParent();
   const bool isGridItem = IsGridItem();
   const bool isFlexItem =
@@ -2404,11 +2404,72 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // flex container's main axis.
   LogicalAxis flexMainAxis =
       eLogicalAxisInline;  // (init to make valgrind happy)
+  Maybe<StyleSize> imposedMainSizeStyleCoord;
 
+  // If this is a flex item, and we're measuring its cross size after flexing
+  // to resolve its main size, then we need to use the resolved main size
+  // that the container provides to us *instead of* the main-size coordinate
+  // from our style struct. (Otherwise, we'll be using an irrelevant value in
+  // the aspect-ratio calculations below.)
   if (isFlexItem) {
     flexMainAxis = nsFlexContainerFrame::IsItemInlineAxisMainAxis(this)
                        ? eLogicalAxisInline
                        : eLogicalAxisBlock;
+
+    // If FlexItemMainSizeOverride frame-property is set, then that means the
+    // flex container is imposing a main-size on this flex item for it to use
+    // as its size in the container's main axis.
+    bool didImposeMainSize;
+    nscoord imposedMainSize =
+        GetProperty(nsIFrame::FlexItemMainSizeOverride(), &didImposeMainSize);
+    if (didImposeMainSize) {
+      imposedMainSizeStyleCoord = Some(StyleSize::LengthPercentage(
+          LengthPercentage::FromAppUnits(imposedMainSize)));
+      if (flexMainAxis == eLogicalAxisInline) {
+        inlineStyleCoord = imposedMainSizeStyleCoord.ptr();
+      } else {
+        blockStyleCoord = imposedMainSizeStyleCoord.ptr();
+      }
+
+    } else {
+      // Flex items use their "flex-basis" property in place of their main-size
+      // property (e.g. "width") for sizing purposes, *unless* they have
+      // "flex-basis:auto", in which case they use their main-size property
+      // after all.
+      // NOTE: The logic here should match the similar chunk for updating
+      // mainAxisCoord in nsIFrame::ComputeSize() (aside from using a different
+      // dummy value in the IsUsedFlexBasisContent() case).
+      const auto* flexBasis = &stylePos->mFlexBasis;
+      auto& mainAxisCoord =
+          (flexMainAxis == eLogicalAxisInline ? inlineStyleCoord
+                                              : blockStyleCoord);
+
+      if (nsFlexContainerFrame::IsUsedFlexBasisContent(*flexBasis,
+                                                       *mainAxisCoord)) {
+        // If we get here, we're resolving the flex base size for a flex item,
+        // and we fall into the flexbox spec section 9.2 step 3, substep C (if
+        // we have a definite cross size) or E (if not). And specifically:
+        //
+        // * If we have a definite cross size, we're supposed to resolve our
+        //   main-size based on that and our intrinsic ratio.
+        // * Otherwise, we're supposed to produce our max-content size.
+        //
+        // Conveniently, we can handle both of those scenarios (regardless of
+        // which substep we fall into) by using the 'auto' keyword for our
+        // main-axis coordinate here. (This makes sense, because the spec is
+        // effectively trying to produce the 'auto' sizing behavior).
+        static const StyleSize autoSize(StyleSize::Auto());
+        mainAxisCoord = &autoSize;
+      } else if (flexBasis->IsSize() && !flexBasis->IsAuto()) {
+        // For all other non-'auto' flex-basis values, we just swap in the
+        // flex-basis itself for the main-size property.
+        mainAxisCoord = &flexBasis->AsSize();
+      } else {
+        MOZ_ASSERT(flexBasis->IsAuto());
+        // else: flex-basis is 'auto', which is deferring to some explicit
+        // value in mainAxisCoord. So we proceed w/o touching mainAxisCoord.
+      }
+    }
   }
 
   // Handle intrinsic sizes and their interaction with
@@ -2419,10 +2480,10 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // a * (b / c) because of its reduced accuracy relative to a * b / c
   // or (a * b) / c (which are equivalent).
 
-  const bool isAutoISize =
-      styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize);
+  const bool isAutoISize = inlineStyleCoord->IsAuto() ||
+                           aFlags.contains(ComputeSizeFlag::UseAutoISize);
   const bool isAutoBSize =
-      nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM)) ||
+      nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM)) ||
       aFlags.contains(ComputeSizeFlag::UseAutoBSize);
 
   const auto boxSizingAdjust = stylePos->mBoxSizing == StyleBoxSizing::Border
@@ -2463,9 +2524,10 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   nscoord intrinsicBSize = std::max(0, bsizeCoord.valueOr(0));
 
   if (!isAutoISize) {
-    iSize = ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                              boxSizingToMarginEdgeISize, styleISize, aFlags)
-                .mISize;
+    iSize =
+        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
+                          boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags)
+            .mISize;
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisBlock
                                                   : eLogicalAxisInline)) {
@@ -2526,9 +2588,9 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   }
 
   if (!isAutoBSize) {
-    bSize = nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
-                                             boxSizingAdjust.BSize(aWM),
-                                             styleBSize.AsLengthPercentage());
+    bSize = nsLayoutUtils::ComputeBSizeValue(
+        aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
+        blockStyleCoord->AsLengthPercentage());
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisInline
                                                   : eLogicalAxisBlock)) {
