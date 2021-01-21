@@ -269,19 +269,46 @@ WorkerDebugger::GetWindow(mozIDOMWindow** aResult) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  nsCOMPtr<nsPIDOMWindowInner> window = DedicatedWorkerWindow();
+  window.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WorkerDebugger::GetWindowIDs(nsTArray<uint64_t>& aResult) {
+  AssertIsOnMainThread();
+
+  if (!mWorkerPrivate) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mWorkerPrivate->IsDedicatedWorker()) {
+    if (const auto window = DedicatedWorkerWindow()) {
+      aResult.AppendElement(window->WindowID());
+    }
+  } else if (mWorkerPrivate->IsSharedWorker()) {
+    const RemoteWorkerChild* const controller =
+        mWorkerPrivate->GetRemoteWorkerController();
+    MOZ_ASSERT(controller);
+    aResult = controller->WindowIDs().Clone();
+  }
+
+  return NS_OK;
+}
+
+nsCOMPtr<nsPIDOMWindowInner> WorkerDebugger::DedicatedWorkerWindow() {
+  MOZ_ASSERT(mWorkerPrivate);
+
   WorkerPrivate* worker = mWorkerPrivate;
   while (worker->GetParent()) {
     worker = worker->GetParent();
   }
 
   if (!worker->IsDedicatedWorker()) {
-    *aResult = nullptr;
-    return NS_OK;
+    return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = worker->GetWindow();
-  window.forget(aResult);
-  return NS_OK;
+  return worker->GetWindow();
 }
 
 NS_IMETHODIMP
