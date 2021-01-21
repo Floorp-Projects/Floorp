@@ -8,7 +8,11 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["LoginCSVImport"];
+const EXPORTED_SYMBOLS = [
+  "LoginCSVImport",
+  "ImportFailedException",
+  "ImportFailedErrorType",
+];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -45,6 +49,20 @@ const FIELD_TO_CSV_COLUMNS = {
   timeLastUsed: ["timelastused"],
   timePasswordChanged: ["timepasswordchanged"],
 };
+
+const ImportFailedErrorType = Object.freeze({
+  CONFLICTING_VALUES_ERROR: "CONFLICTING_VALUES_ERROR",
+  FILE_FORMAT_ERROR: "FILE_FORMAT_ERROR",
+  FILE_PERMISSIONS_ERROR: "FILE_PERMISSIONS_ERROR",
+  UNABLE_TO_READ_ERROR: "UNABLE_TO_READ_ERROR",
+});
+
+class ImportFailedException extends Error {
+  constructor(errorType, message) {
+    super(message != null ? message : errorType);
+    this.errorType = errorType;
+  }
+}
 
 /**
  * Provides an object that has a method to import login-related data CSV files
@@ -121,13 +139,36 @@ class LoginCSVImport {
     );
     let responsivenessMonitor = new ResponsivenessMonitor();
     let csvColumnToFieldMap = LoginCSVImport._getCSVColumnToFieldMap();
-    let csvString = await OS.File.read(filePath, { encoding: "utf-8" });
-    let parsedLines = d3.csv.parse(csvString);
-    let fieldsInFile = new Set(
-      Object.keys(parsedLines[0] || {}).map(col => {
-        return csvColumnToFieldMap.get(col.toLowerCase());
-      })
-    );
+    let csvString;
+    try {
+      csvString = await OS.File.read(filePath, { encoding: "utf-8" });
+    } catch (ex) {
+      Cu.reportError(ex);
+      throw new ImportFailedException(
+        ImportFailedErrorType.FILE_PERMISSIONS_ERROR
+      );
+    }
+    let parsedLines;
+    if (filePath.endsWith(".csv")) {
+      parsedLines = d3.csv.parse(csvString);
+    } else if (filePath.endsWith(".tsv")) {
+      parsedLines = d3.tsv.parse(csvString);
+    }
+
+    let fieldsInFile = new Set();
+    if (parsedLines && parsedLines[0]) {
+      for (const columnName in parsedLines[0]) {
+        const fieldName = csvColumnToFieldMap.get(
+          columnName.toLocaleLowerCase()
+        );
+        if (fieldName) {
+          fieldsInFile.add(fieldName);
+        }
+      }
+    }
+    if (fieldsInFile.size === 0) {
+      throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
+    }
     if (
       parsedLines[0] &&
       (!fieldsInFile.has("origin") ||
@@ -141,9 +182,23 @@ class LoginCSVImport {
         "FX_MIGRATION_LOGINS_IMPORT_MS",
         LoginCSVImport.MIGRATION_HISTOGRAM_KEY
       );
-      throw new Error(
-        "CSV file must contain origin, username, and password columns"
-      );
+      throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
+    }
+
+    const uniqueLoginIdentifiers = new Set();
+    for (const csvObject of parsedLines) {
+      // TODO: handle duplicates without guid column. Bug 1687852
+
+      if (csvObject.guid) {
+        if (uniqueLoginIdentifiers.has(csvObject.guid)) {
+          throw new ImportFailedException(
+            ImportFailedErrorType.CONFLICTING_VALUES_ERROR,
+            csvObject.guid
+          );
+        } else {
+          uniqueLoginIdentifiers.add(csvObject.guid);
+        }
+      }
     }
 
     let loginsToImport = parsedLines.map(csvObject => {
@@ -159,7 +214,7 @@ class LoginCSVImport {
     try {
       Services.telemetry
         .getKeyedHistogramById("FX_MIGRATION_LOGINS_QUANTITY")
-        .add(LoginCSVImport.MIGRATION_HISTOGRAM_KEY, parsedLines.length);
+        .add(LoginCSVImport.MIGRATION_HISTOGRAM_KEY, summary.length);
       let accumulatedDelay = responsivenessMonitor.finish();
       Services.telemetry
         .getKeyedHistogramById("FX_MIGRATION_LOGINS_JANK_MS")
