@@ -777,8 +777,9 @@ void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
 
   movePtr(ptr, scratch);
   orPtr(Imm32(gc::ChunkMask), scratch);
-  branch32(cond, Address(scratch, gc::ChunkLocationOffsetFromLastByte),
-           Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
+  branchPtr(InvertCondition(cond),
+            Address(scratch, gc::ChunkStoreBufferOffsetFromLastByte),
+            ImmWord(0), label);
 }
 
 template <typename T>
@@ -794,8 +795,9 @@ void MacroAssembler::branchValueIsNurseryCellImpl(Condition cond,
 
   unboxGCThingForGCBarrier(value, temp);
   orPtr(Imm32(gc::ChunkMask), temp);
-  branch32(cond, Address(temp, gc::ChunkLocationOffsetFromLastByte),
-           Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
+  branchPtr(InvertCondition(cond),
+            Address(temp, gc::ChunkStoreBufferOffsetFromLastByte), ImmWord(0),
+            label);
 
   bind(&done);
 }

@@ -826,8 +826,9 @@ void MacroAssembler::branchPtrInNurseryChunkImpl(Condition cond, Register ptr,
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
   orPtr(Imm32(gc::ChunkMask), ptr);
-  branch32(cond, Address(ptr, gc::ChunkLocationOffsetFromLastByte),
-           Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
+  branchPtr(InvertCondition(cond),
+            Address(ptr, gc::ChunkStoreBufferOffsetFromLastByte), ImmWord(0),
+            label);
 }
 
 void MacroAssembler::branchValueIsNurseryCell(Condition cond,

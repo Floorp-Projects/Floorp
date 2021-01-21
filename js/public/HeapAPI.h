@@ -72,32 +72,15 @@ const size_t ArenaBitmapBits = ArenaSize / CellBytesPerMarkBit;
 const size_t ArenaBitmapBytes = HowMany(ArenaBitmapBits, 8);
 const size_t ArenaBitmapWords = HowMany(ArenaBitmapBits, JS_BITS_PER_WORD);
 
-/*
- * The "location" field in the Chunk trailer is a enum indicating various roles
- * of the chunk.
- */
-enum class ChunkLocation : uint32_t {
-  Invalid = 0,
-  Nursery = 1,
-  TenuredHeap = 2
-};
-
 // A GC chunk, either nursery or tenured heap memory. This structure is
 // locatable from any GC pointer by aligning to the chunk size.
 class alignas(CellAlignBytes) ChunkHeader {
  public:
   // Construct a Nursery ChunkHeader.
-  ChunkHeader(JSRuntime* rt, StoreBuffer* sb)
-      : location(ChunkLocation::Nursery), storeBuffer(sb), runtime(rt) {}
+  ChunkHeader(JSRuntime* rt, StoreBuffer* sb) : storeBuffer(sb), runtime(rt) {}
 
   // Construct a Tenured heap ChunkHeader.
-  explicit ChunkHeader(JSRuntime* rt)
-      : location(ChunkLocation::TenuredHeap),
-        storeBuffer(nullptr),
-        runtime(rt) {}
-
-  // Whether this chunk is part of the nursery or the tenured heap.
-  ChunkLocation location;
+  explicit ChunkHeader(JSRuntime* rt) : storeBuffer(nullptr), runtime(rt) {}
 
   // The store buffer for pointers from tenured things to things in this
   // chunk. Will be non-null if and only if this is a nursery chunk.
@@ -179,11 +162,7 @@ static_assert(CalculatedChunkPadSize * CHAR_BIT < BitsPerArenaWithHeaders,
 // Define a macro for the expected number of arenas so its value appears in the
 // error message if the assertion fails.
 #ifdef JS_GC_SMALL_CHUNK_SIZE
-# if JS_BITS_PER_WORD == 32
 #  define EXPECTED_ARENA_COUNT 63
-# else
-#  define EXPECTED_ARENA_COUNT 62
-# endif
 #else
 # define EXPECTED_ARENA_COUNT 252
 #endif
@@ -268,8 +247,6 @@ constexpr size_t FirstArenaAdjustmentWords =
 
 const size_t ChunkRuntimeOffset =
     offsetof(ChunkBase, header) + offsetof(ChunkHeader, runtime);
-const size_t ChunkLocationOffset =
-    offsetof(ChunkBase, header) + offsetof(ChunkHeader, location);
 const size_t ChunkStoreBufferOffset =
     offsetof(ChunkBase, header) + offsetof(ChunkHeader, storeBuffer);
 const size_t ChunkMarkBitmapOffset = offsetof(ChunkBase, bitmap);
@@ -585,10 +562,6 @@ extern JS_PUBLIC_API void AssertCellIsNotGray(const Cell* cell);
 extern JS_PUBLIC_API bool ObjectIsMarkedBlack(const JSObject* obj);
 #endif
 
-MOZ_ALWAYS_INLINE ChunkLocation GetCellLocation(const Cell* cell) {
-  return GetCellChunkHeader(cell)->location;
-}
-
 MOZ_ALWAYS_INLINE bool CellHasStoreBuffer(const Cell* cell) {
   return GetCellChunkHeader(cell)->storeBuffer;
 }
@@ -599,15 +572,12 @@ MOZ_ALWAYS_INLINE bool IsInsideNursery(const Cell* cell) {
   if (!cell) {
     return false;
   }
-  auto location = detail::GetCellLocation(cell);
-  MOZ_ASSERT(location == ChunkLocation::Nursery ||
-             location == ChunkLocation::TenuredHeap);
-  return location == ChunkLocation::Nursery;
+  return detail::CellHasStoreBuffer(cell);
 }
 
 MOZ_ALWAYS_INLINE bool IsInsideNursery(const TenuredCell* cell) {
-  MOZ_ASSERT_IF(cell, detail::GetCellLocation(reinterpret_cast<const Cell*>(
-                          cell)) == ChunkLocation::TenuredHeap);
+  MOZ_ASSERT_IF(
+      cell, !detail::CellHasStoreBuffer(reinterpret_cast<const Cell*>(cell)));
   return false;
 }
 
@@ -628,15 +598,13 @@ MOZ_ALWAYS_INLINE bool IsCellPointerValid(const void* ptr) {
   if (addr < ChunkSize || addr % CellAlignBytes != 0) {
     return false;
   }
+
   auto* cell = reinterpret_cast<const Cell*>(ptr);
-  auto location = detail::GetCellLocation(cell);
-  if (location == ChunkLocation::TenuredHeap) {
-    return !!detail::GetTenuredGCThingZone(addr);
+  if (!IsInsideNursery(cell)) {
+    return detail::GetTenuredGCThingZone(addr) != nullptr;
   }
-  if (location == ChunkLocation::Nursery) {
-    return detail::CellHasStoreBuffer(cell);
-  }
-  return false;
+
+  return true;
 }
 
 MOZ_ALWAYS_INLINE bool IsCellPointerValidOrNull(const void* cell) {
