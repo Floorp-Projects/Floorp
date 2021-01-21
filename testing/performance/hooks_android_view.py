@@ -75,8 +75,16 @@ def before_iterations(kw):
     for revision in revisions:
         try:
             commit = fenix_repo.commit(revision)
-            if "remotes/origin" not in str(commit.name_rev):
-                print("Commit %s is a release-branch commit, it won't be tested.")
+            name_rev = str(commit.name_rev)
+            if (
+                "remotes/origin" not in name_rev
+                or "release" in name_rev
+                or "tag" in name_rev
+            ):
+                print(
+                    "Commit %s is a release-branch commit, it won't be tested."
+                    % revision
+                )
                 continue
 
             commitdate = commit.committed_date
