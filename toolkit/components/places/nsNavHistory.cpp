@@ -601,40 +601,9 @@ void nsNavHistory::UpdateDaysOfHistory(PRTime visitTime) {
   }
 }
 
-void nsNavHistory::NotifyFrecencyChanged(const nsACString& aSpec,
-                                         int32_t aNewFrecency,
-                                         const nsACString& aGUID, bool aHidden,
-                                         PRTime aLastVisitDate) {
-  MOZ_ASSERT(!aGUID.IsEmpty());
-
-  nsCOMPtr<nsIURI> uri;
-  Unused << NS_NewURI(getter_AddRefs(uri), aSpec);
-  // We cannot assert since some automated tests are checking this path.
-  NS_WARNING_ASSERTION(uri,
-                       "Invalid URI in nsNavHistory::NotifyFrecencyChanged");
-  // Notify a frecency change only if we have a valid uri, otherwise
-  // the observer couldn't gather any useful data from the notification.
-  if (!uri) {
-    return;
-  }
-  NOTIFY_OBSERVERS(
-      mCanNotify, mObservers, nsINavHistoryObserver,
-      OnFrecencyChanged(uri, aNewFrecency, aGUID, aHidden, aLastVisitDate));
-}
-
 void nsNavHistory::NotifyManyFrecenciesChanged() {
   NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
                    OnManyFrecenciesChanged());
-}
-
-void nsNavHistory::DispatchFrecencyChangedNotification(
-    const nsACString& aSpec, int32_t aNewFrecency, const nsACString& aGUID,
-    bool aHidden, PRTime aLastVisitDate) const {
-  Unused << NS_DispatchToMainThread(
-      NewRunnableMethod<nsCString, int32_t, nsCString, bool, PRTime>(
-          "nsNavHistory::NotifyFrecencyChanged",
-          const_cast<nsNavHistory*>(this), &nsNavHistory::NotifyFrecencyChanged,
-          aSpec, aNewFrecency, aGUID, aHidden, aLastVisitDate));
 }
 
 NS_IMETHODIMP
@@ -3267,11 +3236,10 @@ nsresult nsNavHistory::UpdateFrecency(int64_t aPlaceId) {
   nsCOMPtr<mozIStorageAsyncStatement> updateFrecencyStmt =
       mDB->GetAsyncStatement(
           "UPDATE moz_places "
-          "SET frecency = NOTIFY_FRECENCY("
-          "CALCULATE_FRECENCY(:page_id), url, guid, hidden, last_visit_date"
-          ") "
+          "SET frecency = CALCULATE_FRECENCY(:page_id) "
           "WHERE id = :page_id");
   NS_ENSURE_STATE(updateFrecencyStmt);
+  NS_DispatchToMainThread(new ::NotifyManyFrecenciesChanged());
   nsresult rv = updateFrecencyStmt->BindInt64ByName("page_id"_ns, aPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<mozIStorageAsyncStatement> updateHiddenStmt = mDB->GetAsyncStatement(
