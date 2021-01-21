@@ -8691,7 +8691,8 @@ class CGCallGenerator(CGThing):
     needsCallerType is a boolean indicating whether the call should receive
     a PrincipalType for the caller.
 
-    isFallible is a boolean indicating whether the call should be fallible.
+    needsErrorResult is a boolean indicating whether the call should be
+    fallible and thus needs ErrorResult parameter.
 
     resultVar: If the returnType is not void, then the result of the call is
     stored in a C++ variable named by resultVar. The caller is responsible for
@@ -8703,7 +8704,7 @@ class CGCallGenerator(CGThing):
 
     def __init__(
         self,
-        isFallible,
+        needsErrorResult,
         needsCallerType,
         isChromeOnly,
         arguments,
@@ -8867,7 +8868,7 @@ class CGCallGenerator(CGThing):
                 args.append(CGGeneric(callerTypeGetterForDescriptor(descriptor)))
 
         canOOM = "canOOM" in extendedAttributes
-        if isFallible:
+        if needsErrorResult:
             args.append(CGGeneric("rv"))
         elif canOOM:
             args.append(CGGeneric("OOMReporter::From(rv)"))
@@ -8920,7 +8921,7 @@ class CGCallGenerator(CGThing):
         call = CGWrapper(call, post=";\n")
         self.cgRoot.append(call)
 
-        if isFallible or canOOM:
+        if needsErrorResult or canOOM:
             self.cgRoot.prepend(CGGeneric("FastErrorResult rv;\n"))
             self.cgRoot.append(
                 CGGeneric(
@@ -9478,7 +9479,7 @@ class CGPerSignatureCall(CGThing):
             context = '"%s"' % context
             cgThings.append(
                 CGCallGenerator(
-                    self.isFallible(),
+                    self.needsErrorResult(),
                     needsCallerType(idlNode),
                     isChromeOnly(idlNode),
                     self.getArguments(),
@@ -9538,8 +9539,8 @@ class CGPerSignatureCall(CGThing):
     def getArguments(self):
         return [(a, "arg" + str(i)) for i, a in enumerate(self.arguments)]
 
-    def isFallible(self):
-        return "infallible" not in self.extendedAttributes
+    def needsErrorResult(self):
+        return "needsErrorResult" in self.extendedAttributes
 
     def wrap_return_value(self):
         wrapCode = ""
@@ -11084,7 +11085,8 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 # We'll use a JSObject. It might make more sense to use remoteType's
                 # RemoteProxy, but it's not easy to construct a type for that from here.
                 remoteType = BuiltinTypes[IDLBuiltinType.Types.object]
-                extendedAttributes.remove("infallible")
+                if "needsErrorResult" not in extendedAttributes:
+                    extendedAttributes.append("needsErrorResult")
             prototypeID, _ = PrototypeIDAndDepth(self.descriptor)
             prefix = (
                 fill(
@@ -11198,7 +11200,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         nativeName = MakeNativeName(descriptor.binaryNameFor(name))
         _, resultOutParam, _, _, _ = getRetvalDeclarationForType(attr.type, descriptor)
         extendedAttrs = descriptor.getExtendedAttributes(attr, getter=True)
-        canFail = "infallible" not in extendedAttrs or "canOOM" in extendedAttrs
+        canFail = "needsErrorResult" in extendedAttrs or "canOOM" in extendedAttrs
         if resultOutParam or attr.type.nullable() or canFail:
             nativeName = "Get" + nativeName
         return nativeName
@@ -11645,7 +11647,7 @@ class CGMemberJITInfo(CGThing):
             extendedAttrs = self.descriptor.getExtendedAttributes(
                 self.member, getter=True
             )
-            getterinfal = "infallible" in extendedAttrs
+            getterinfal = "needsErrorResult" not in extendedAttrs
 
             # At this point getterinfal is true if our getter either can't throw
             # at all, or can only throw OOM.  In both cases, it's safe to move,
@@ -11751,7 +11753,7 @@ class CGMemberJITInfo(CGThing):
                 # reliably throw would be effectful anyway and the jit doesn't
                 # move effectful things.
                 extendedAttrs = self.descriptor.getExtendedAttributes(self.member)
-                hasInfallibleImpl = "infallible" in extendedAttrs
+                hasInfallibleImpl = "needsErrorResult" not in extendedAttrs
                 # At this point hasInfallibleImpl is true if our method either
                 # can't throw at all, or can only throw OOM.  In both cases, it
                 # may be safe to move, or dead-code-eliminate, the method,
@@ -18683,7 +18685,7 @@ class CGNativeMember(ClassMethod):
         if needsCallerType(self.member):
             args.append(Argument("CallerType", "aCallerType"))
         # And the ErrorResult or OOMReporter
-        if "infallible" not in self.extendedAttrs:
+        if "needsErrorResult" in self.extendedAttrs:
             # Use aRv so it won't conflict with local vars named "rv"
             args.append(Argument("ErrorResult&", "aRv"))
         elif "canOOM" in self.extendedAttrs:
@@ -19086,8 +19088,8 @@ class CGBindingImplClass(CGClass):
                         FakeMember(),
                         "Length",
                         (BuiltinTypes[IDLBuiltinType.Types.unsigned_long], []),
-                        {"infallible": True},
-                    )
+                        [],
+                    ),
                 )
         # And if we support named properties we need to be able to
         # enumerate the supported names.
@@ -19103,7 +19105,7 @@ class CGBindingImplClass(CGClass):
                         ),
                         [],
                     ),
-                    {"infallible": True},
+                    [],
                 )
             )
 
@@ -20408,7 +20410,7 @@ class CallbackMember(CGNativeMember):
             FakeMember(),
             name,
             (self.retvalType, args),
-            extendedAttrs={},
+            extendedAttrs=["needsErrorResult"],
             passJSBitsAsNeeded=passJSBitsAsNeeded,
             visibility=visibility,
             spiderMonkeyInterfacesAreStructs=spiderMonkeyInterfacesAreStructs,
@@ -22426,7 +22428,7 @@ class CGEventGetter(CGNativeMember):
         self.body = self.getMethodBody()
 
     def getArgs(self, returnType, argList):
-        if "infallible" not in self.extendedAttrs:
+        if "needsErrorResult" in self.extendedAttrs:
             raise TypeError("Event code generator does not support [Throws]!")
         if "canOOM" in self.extendedAttrs:
             raise TypeError("Event code generator does not support [CanOOM]!")
