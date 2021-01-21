@@ -3864,6 +3864,7 @@ void EventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext) {
     SetContentState(nullptr, NS_EVENT_STATE_HOVER);
   }
   mPointersEnterLeaveHelper.Clear();
+  PointerEventHandler::NotifyDestroyPresContext(aPresContext);
 }
 
 void EventStateManager::SetPresContext(nsPresContext* aPresContext) {

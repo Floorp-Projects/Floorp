@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1686037
+-->
+<head>
+<title>Bug 1686037</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+#target {
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+iframe {
+  width: 400px;
+  height: 300px;
+  border: 1px solid blue;
+}
+</style>
+</head>
+<body>
+<a target="_blank"href="https://bugzilla.mozilla.org/show_bug.cgi?id=1686037">Mozilla Bug 1686037</a>
+<div id="target"></div>
+<iframe srcdoc="<div style='width: 100px; height: 100px; background-color: blue;'></div>"></iframe>
+
+<pre id="test">
+<script type="text/javascript">
+/**
+ * Test for Bug 1686037
+ */
+function waitForEvent(aTarget, aEventName, aCallback = null) {
+  return new Promise((aResolve) => {
+    aTarget.addEventListener(aEventName, async (e) => {
+      ok(true, `got ${e.type} event on ${e.target}, pointerid: ${e.pointerId}`);
+      if (aCallback) {
+        await aCallback(e);
+      }
+      aResolve();
+    }, { once: true });
+  });
+}
+
+function waitForPointerDownAndSetPointerCapture(aTarget) {
+  return waitForEvent(aTarget, "pointerdown", async (event) => {
+    return new Promise((aResolve) => {
+      aTarget.addEventListener("gotpointercapture", (e) => {
+        ok(true, `got ${e.type} event on ${e.target}, pointerid: ${e.pointerId}`);
+        aResolve();
+      }, { once: true });
+
+      aTarget.setPointerCapture(event.pointerId);
+    });
+  });
+}
+
+add_task(async function test_remove_iframe_after_pointer_capture() {
+  await SimpleTest.promiseFocus();
+
+  let iframe = document.querySelector("iframe");
+  let iframeWin = iframe.contentWindow;
+  let targetInIframe = iframe.contentDocument.querySelector("div");
+  let promise = Promise.all([
+    waitForPointerDownAndSetPointerCapture(targetInIframe),
+    waitForEvent(targetInIframe, "pointermove")
+  ]);
+  synthesizeTouch(targetInIframe, 10, 10, { type: "touchstart", id: 10 }, iframeWin);
+  synthesizeTouch(targetInIframe, 10, 10, { type: "touchmove", id: 10 }, iframeWin);
+  await promise;
+
+  // Intentionally not synthesize touchend event to not trigger implicit releasing
+  // pointer capture. And iframe removal should trigger pointer capture clean up.
+  iframe.remove();
+});
+</script>
+</pre>
+</body>
+</html>
