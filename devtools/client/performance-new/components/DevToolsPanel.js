@@ -46,9 +46,7 @@ const OnboardingMessage = createFactory(
 const selectors = require("devtools/client/performance-new/store/selectors");
 
 /**
- * This is the top level component for the DevTools panel and the profiler popup, but
- * not the about:profiling page. Eventually the profiler popup will use a different
- * implementation. See Bug 1597371 for more information about the migration plan.
+ * This is the top level component for the DevTools panel.
  *
  * @extends {React.PureComponent<Props>}
  */

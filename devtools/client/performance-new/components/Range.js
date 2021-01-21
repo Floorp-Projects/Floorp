@@ -10,7 +10,7 @@
 /**
  * @typedef {Object} Props
  * @property {number} value
- * @property {string} label
+ * @property {React.ReactNode} label
  * @property {string} id
  * @property {ScaleFunctions} scale
  * @property {(value: number) => unknown} onChange

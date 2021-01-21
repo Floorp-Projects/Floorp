@@ -9,12 +9,18 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  PureComponent,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const {
   div,
   button,
   p,
 } = require("devtools/client/shared/vendor/react-dom-factories");
+const Localized = createFactory(
+  require("devtools/client/shared/vendor/fluent-react").Localized
+);
 
 /**
  * This component provides a helpful description for what is going on in the component
@@ -42,32 +48,19 @@ class Description extends PureComponent {
     openDocLink(target.value, {});
   }
 
-  /**
-   * Implement links as buttons to avoid any risk of loading the link in the
-   * the panel.
-   * @param {string} href
-   * @param {string} text
-   */
-  renderLink(href, text) {
-    return button(
-      {
-        className: "perf-external-link",
-        value: href,
-        onClick: this.handleLinkClick,
-      },
-      text
-    );
-  }
-
   render() {
     return div(
       { className: "perf-description" },
-      p(
-        null,
-        "Recordings launch ",
-        this.renderLink("https://profiler.firefox.com", "profiler.firefox.com"),
-        " in a new tab. All data is stored locally, but you can choose to upload it",
-        " for sharing."
+      Localized(
+        {
+          id: "perftools-description-intro",
+          a: button({
+            className: "perf-external-link",
+            onClick: this.handleLinkClick,
+            value: "https://profiler.firefox.com",
+          }),
+        },
+        p({})
       )
     );
   }
