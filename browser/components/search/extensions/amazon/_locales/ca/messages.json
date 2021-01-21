@@ -13,5 +13,11 @@
   },
   "searchUrlGetParams": {
     "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  },
+  "suggestUrl": {
+    "message": "https://completion.amazon.ca/search/complete"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&search-alias=aps&mkt=7"
   }
 }
