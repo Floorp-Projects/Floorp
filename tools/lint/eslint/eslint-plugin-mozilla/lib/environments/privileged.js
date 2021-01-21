@@ -431,6 +431,7 @@ module.exports = {
     PlacesEvent: false,
     PlacesHistoryCleared: false,
     PlacesObservers: false,
+    PlacesRanking: false,
     PlacesVisit: false,
     PlacesVisitTitle: false,
     PlacesWeakCallbackWrapper: false,
