@@ -167,6 +167,8 @@ add_task(async function test_export_escapes_values() {
 
 add_task(async function test_export_multiple_rows() {
   let logins = await LoginTestUtils.testData.loginList();
+  // Note, because we're stubbing this method and avoiding the actual login manager logic,
+  // login de-duplication does not occur
   Services.logins.getAllLoginsAsync.returns(logins);
 
   let actualRows = await exportAsCSVInTmpFile();

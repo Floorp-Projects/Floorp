@@ -16,7 +16,7 @@ const BUTTONS_TO_TEST = {
  * Tests that preferences are set when users interact with the
  * buttons in BUTTONS_TO_TEST.
  */
-add_task(async function test_usage_prefs_set() {
+add_task(async function test_usage_button_prefs_set() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.download.autohideButton", false]],
   });
@@ -35,20 +35,47 @@ add_task(async function test_usage_prefs_set() {
     set: PREFS_TO_FALSE,
   });
 
-  for (let buttonID in BUTTONS_TO_TEST) {
-    let pref = BUTTONS_TO_TEST[buttonID];
-    Assert.ok(
-      !Services.prefs.getBoolPref(pref),
-      `${pref} should start at false.`
-    );
+  // We open a new tab to ensure the test passes verify on Windows
+  await BrowserTestUtils.withNewTab("about:blank", () => {
+    for (let buttonID in BUTTONS_TO_TEST) {
+      let pref = BUTTONS_TO_TEST[buttonID];
+      Assert.ok(
+        !Services.prefs.getBoolPref(pref),
+        `${pref} should start at false.`
+      );
 
-    info(`Clicking on ${buttonID}`);
-    let element = document.getElementById(buttonID);
-    EventUtils.synthesizeMouseAtCenter(element, {}, window);
+      info(`Clicking on ${buttonID}`);
+      let element = document.getElementById(buttonID);
+      EventUtils.synthesizeMouseAtCenter(element, {}, window);
 
-    Assert.ok(
-      Services.prefs.getBoolPref(pref),
-      `${pref} should now be true after interacting.`
-    );
-  }
+      Assert.ok(
+        Services.prefs.getBoolPref(pref),
+        `${pref} should now be true after interacting.`
+      );
+    }
+  });
+});
+
+/**
+ * Tests that browser.engagement.ctrlTab.has-used is set when
+ * user presses ctrl-tab.
+ */
+add_task(async function test_usage_ctrltab_pref_set() {
+  let ctrlTabUsed = "browser.engagement.ctrlTab.has-used";
+
+  await SpecialPowers.pushPrefEnv({
+    set: [[ctrlTabUsed, false]],
+  });
+
+  Assert.ok(
+    !Services.prefs.getBoolPref(ctrlTabUsed),
+    `${ctrlTabUsed} should start at false.`
+  );
+
+  EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true });
+
+  Assert.ok(
+    Services.prefs.getBoolPref(ctrlTabUsed),
+    `${ctrlTabUsed} should now be true after interacting.`
+  );
 });

@@ -294,7 +294,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     }
   }
 
-  waitAndSetupWindow(aSessionId, aOpenWindowInfo) {
+  waitAndSetupWindow(aSessionId, aOpenWindowInfo, aName) {
     if (!aSessionId) {
       return Promise.resolve(null);
     }
@@ -308,6 +308,11 @@ class GeckoViewNavigation extends GeckoViewModule {
           ) {
             // This value will be read by nsFrameLoader while it is being initialized.
             aSubject.browser.openWindowInfo = aOpenWindowInfo;
+
+            // Gecko will use this attribute to set the name of the opened window.
+            if (aName) {
+              aSubject.browser.setAttribute("name", aName);
+            }
 
             if (
               !aOpenWindowInfo.isRemote &&
@@ -328,7 +333,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     });
   }
 
-  handleNewSession(aUri, aOpenWindowInfo, aWhere, aFlags) {
+  handleNewSession(aUri, aOpenWindowInfo, aWhere, aFlags, aName) {
     debug`handleNewSession: uri=${aUri && aUri.spec}
                              where=${aWhere} flags=${aFlags}`;
 
@@ -345,7 +350,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     this.eventDispatcher
       .sendRequestForResult(message)
       .then(sessionId => {
-        return this.waitAndSetupWindow(sessionId, aOpenWindowInfo);
+        return this.waitAndSetupWindow(sessionId, aOpenWindowInfo, aName);
       })
       .then(
         window => {
@@ -430,7 +435,8 @@ class GeckoViewNavigation extends GeckoViewModule {
       aUri,
       aParams.openWindowInfo,
       aWhere,
-      aFlags
+      aFlags,
+      aName
     );
     if (!browser) {
       Components.returnCode = Cr.NS_ERROR_ABORT;
@@ -440,26 +446,27 @@ class GeckoViewNavigation extends GeckoViewModule {
     return browser;
   }
 
-  handleOpenUri(
-    aUri,
-    aOpenWindowInfo,
-    aWhere,
-    aFlags,
-    aTriggeringPrincipal,
-    aCsp,
-    aReferrerInfo
-  ) {
-    debug`handleOpenUri: uri=${aUri && aUri.spec}
-                          where=${aWhere} flags=${aFlags}`;
+  handleOpenUri({
+    uri,
+    openWindowInfo,
+    where,
+    flags,
+    triggeringPrincipal,
+    csp,
+    referrerInfo = null,
+    name = null,
+  }) {
+    debug`handleOpenUri: uri=${uri && uri.spec}
+                          where=${where} flags=${flags}`;
 
     if (
       LoadURIDelegate.load(
         this.window,
         this.eventDispatcher,
-        aUri,
-        aWhere,
-        aFlags,
-        aTriggeringPrincipal
+        uri,
+        where,
+        flags,
+        triggeringPrincipal
       )
     ) {
       return null;
@@ -468,16 +475,10 @@ class GeckoViewNavigation extends GeckoViewModule {
     let browser = this.browser;
 
     if (
-      aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
-      aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB
+      where === Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
+      where === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB
     ) {
-      browser = this.handleNewSession(
-        aUri,
-        aOpenWindowInfo,
-        aWhere,
-        aFlags,
-        aTriggeringPrincipal
-      );
+      browser = this.handleNewSession(uri, openWindowInfo, where, flags, name);
     }
 
     if (!browser) {
@@ -486,39 +487,39 @@ class GeckoViewNavigation extends GeckoViewModule {
     }
 
     // 3) We have a new session and a browser element, load the requested URI.
-    browser.loadURI(aUri.spec, {
-      triggeringPrincipal: aTriggeringPrincipal,
-      csp: aCsp,
-      referrerInfo: aReferrerInfo,
+    browser.loadURI(uri.spec, {
+      triggeringPrincipal,
+      csp,
+      referrerInfo,
     });
     return browser;
   }
 
   // nsIBrowserDOMWindow.
   openURI(aUri, aOpenWindowInfo, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
-    const browser = this.handleOpenUri(
-      aUri,
-      aOpenWindowInfo,
-      aWhere,
-      aFlags,
-      aTriggeringPrincipal,
-      aCsp,
-      null
-    );
+    const browser = this.handleOpenUri({
+      uri: aUri,
+      openWindowInfo: aOpenWindowInfo,
+      where: aWhere,
+      flags: aFlags,
+      triggeringPrincipal: aTriggeringPrincipal,
+      csp: aCsp,
+    });
     return browser && browser.browsingContext;
   }
 
   // nsIBrowserDOMWindow.
-  openURIInFrame(aUri, aParams, aWhere, aFlags, aNextRemoteTabId, aName) {
-    const browser = this.handleOpenUri(
-      aUri,
-      aParams.openWindowInfo,
-      aWhere,
-      aFlags,
-      aParams.triggeringPrincipal,
-      aParams.csp,
-      aParams.referrerInfo
-    );
+  openURIInFrame(aUri, aParams, aWhere, aFlags, aName) {
+    const browser = this.handleOpenUri({
+      uri: aUri,
+      openWindowInfo: aParams.openWindowInfo,
+      where: aWhere,
+      flags: aFlags,
+      triggeringPrincipal: aParams.triggeringPrincipal,
+      csp: aParams.csp,
+      referrerInfo: aParams.referrerInfo,
+      name: aName,
+    });
     return browser;
   }
 

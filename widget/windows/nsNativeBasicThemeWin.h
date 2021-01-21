@@ -13,6 +13,9 @@ class nsNativeBasicThemeWin : public nsNativeBasicTheme {
  public:
   nsNativeBasicThemeWin() = default;
 
+  Transparency GetWidgetTransparency(nsIFrame* aFrame,
+                                     StyleAppearance aAppearance) override;
+
  protected:
   virtual ~nsNativeBasicThemeWin() = default;
 
@@ -39,6 +42,17 @@ class nsNativeBasicThemeWin : public nsNativeBasicTheme {
   std::pair<sRGBColor, sRGBColor> ComputeMeterTrackColors() override;
   sRGBColor ComputeMenulistArrowButtonColor(const EventStates& aState) override;
   std::array<sRGBColor, 3> ComputeFocusRectColors() override;
+  std::pair<sRGBColor, sRGBColor> ComputeScrollbarColors(
+      nsIFrame* aFrame, const ComputedStyle& aStyle,
+      const EventStates& aDocumentState, bool aIsRoot) override;
+  sRGBColor ComputeScrollbarThumbColor(
+      nsIFrame* aFrame, const ComputedStyle& aStyle,
+      const EventStates& aElementState,
+      const EventStates& aDocumentState) override;
+  std::array<sRGBColor, 3> ComputeScrollbarButtonColors(
+      nsIFrame* aFrame, StyleAppearance aAppearance,
+      const ComputedStyle& aStyle, const EventStates& aElementState,
+      const EventStates& aDocumentState) override;
 };
 
 #endif
