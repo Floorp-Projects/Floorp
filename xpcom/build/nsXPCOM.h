@@ -10,6 +10,7 @@
 #include "nscore.h"
 #include "nsXPCOMCID.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Atomics.h"
 
 #ifdef __cplusplus
 #  define DECL_CLASS(c) class c
@@ -31,7 +32,8 @@ DECL_CLASS(nsIDebug2);
 
 #ifdef __cplusplus
 extern bool gXPCOMShuttingDown;
-extern bool gXPCOMThreadsShutDown;
+extern mozilla::Atomic<bool, mozilla::SequentiallyConsistent>
+    gXPCOMThreadsShutDown;
 extern bool gXPCOMMainThreadEventsAreDoomed;
 #endif
 

@@ -148,7 +148,8 @@ nsresult nsLocalFileConstructor(nsISupports* aOuter, const nsIID& aIID,
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
-bool gXPCOMThreadsShutDown = false;
+mozilla::Atomic<bool, mozilla::SequentiallyConsistent> gXPCOMThreadsShutDown(
+    false);
 bool gXPCOMMainThreadEventsAreDoomed = false;
 char16_t* gGREBinPath = nullptr;
 
