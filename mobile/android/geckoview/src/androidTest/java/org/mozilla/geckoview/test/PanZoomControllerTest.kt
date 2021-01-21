@@ -12,6 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.junit.Assume.assumeTrue
 import org.mozilla.geckoview.PanZoomController
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.util.Callbacks
@@ -450,12 +451,12 @@ class PanZoomControllerTest : BaseSessionTest() {
         }
     }
 
-    private fun fling() {
+    private fun fling(): GeckoResult<Int> {
         val downTime = SystemClock.uptimeMillis();
         val down = MotionEvent.obtain(
                 downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, 50f, 90f, 0)
 
-        mainSession.panZoomController.onTouchEventForResult(down)
+        val result = mainSession.panZoomController.onTouchEventForResult(down)
         var move = MotionEvent.obtain(
                 downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, 50f, 70f, 0)
         mainSession.panZoomController.onTouchEvent(move)
@@ -466,6 +467,7 @@ class PanZoomControllerTest : BaseSessionTest() {
         val up = MotionEvent.obtain(
                 downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, 50f, 10f, 0)
         mainSession.panZoomController.onTouchEvent(up)
+        return result
     }
 
     @WithDisplay(width = 100, height = 100)
@@ -475,5 +477,22 @@ class PanZoomControllerTest : BaseSessionTest() {
 
         fling()
         fling()
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun inputResultForFastFling() {
+        // Bug 1687842.
+        assumeTrue(false)
+
+        setupDocument(TOUCHSTART_HTML_PATH)
+
+        var value = sessionRule.waitForResult(fling())
+        assertThat("The initial input result should be HANDLED",
+                   value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
+        // Trigger the next fling during the initial scrolling.
+        value = sessionRule.waitForResult(fling())
+        assertThat("The input result should be IGNORED during the fast fling",
+                   value, equalTo(PanZoomController.INPUT_RESULT_IGNORED))
     }
 }

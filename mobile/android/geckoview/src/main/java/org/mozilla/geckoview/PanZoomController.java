@@ -59,7 +59,7 @@ public class PanZoomController {
     public static final int SCROLL_BEHAVIOR_AUTO = 1;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({INPUT_RESULT_UNHANDLED, INPUT_RESULT_HANDLED, INPUT_RESULT_HANDLED_CONTENT})
+    @IntDef({INPUT_RESULT_UNHANDLED, INPUT_RESULT_HANDLED, INPUT_RESULT_HANDLED_CONTENT, INPUT_RESULT_IGNORED})
     /* package */ @interface InputResult {}
 
     /**
@@ -83,6 +83,13 @@ public class PanZoomController {
      */
     @WrapForJNI
     public static final int INPUT_RESULT_HANDLED_CONTENT = 2;
+
+    /**
+     * Specifies that an input event was consumed by a PanZoomController internally and
+     * browsers should do nothing in response to the event.
+     */
+    @WrapForJNI
+    public static final int INPUT_RESULT_IGNORED = 3;
 
     private SynthesizedEventState mPointerState;
 
