@@ -703,7 +703,7 @@ private fun assertExistingTopSitesList() =
 
 private fun assertExistingTopSitesTabs(title: String) =
     onView(allOf(withId(R.id.top_sites_list)))
-        .check(matches(hasItem(hasDescendant(withText(title)))))
+        .check(matches(hasDescendant(withText(title))))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertNotExistingTopSitesList(title: String) =

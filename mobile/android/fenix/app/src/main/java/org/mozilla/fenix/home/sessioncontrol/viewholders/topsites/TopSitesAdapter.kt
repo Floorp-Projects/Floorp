@@ -8,13 +8,14 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import kotlinx.android.synthetic.main.top_site_item.view.*
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.perf.StartupTimeline
 
 class TopSitesAdapter(
     private val interactor: TopSiteInteractor
-) : ListAdapter<TopSite, TopSiteItemViewHolder>(DiffCallback) {
+) : ListAdapter<TopSite, TopSiteItemViewHolder>(TopSitesDiffCallback) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopSiteItemViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(TopSiteItemViewHolder.LAYOUT_ID, parent, false)
@@ -26,11 +27,39 @@ class TopSitesAdapter(
         holder.bind(getItem(position))
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<TopSite>() {
-        override fun areItemsTheSame(oldItem: TopSite, newItem: TopSite) =
-            oldItem.id == newItem.id || oldItem.title == newItem.title || oldItem.url == newItem.url
+    override fun onBindViewHolder(
+        holder: TopSiteItemViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.isNullOrEmpty()) {
+            onBindViewHolder(holder, position)
+        } else {
+            when (payloads[0]) {
+                is TopSite -> {
+                    holder.bind((payloads[0] as TopSite))
+                }
+                is TopSitePayload -> {
+                    holder.itemView.top_site_title.text = (payloads[0] as TopSitePayload).newTitle
+                }
+            }
+        }
+    }
+
+    data class TopSitePayload(
+        val newTitle: String?
+    )
+
+    internal object TopSitesDiffCallback : DiffUtil.ItemCallback<TopSite>() {
+        override fun areItemsTheSame(oldItem: TopSite, newItem: TopSite) = oldItem.id == newItem.id
 
         override fun areContentsTheSame(oldItem: TopSite, newItem: TopSite) =
-            oldItem.id == newItem.id || oldItem.title == newItem.title || oldItem.url == newItem.url
+            oldItem.id == newItem.id && oldItem.title == newItem.title && oldItem.url == newItem.url
+
+        override fun getChangePayload(oldItem: TopSite, newItem: TopSite): Any? {
+            return if (oldItem.id == newItem.id && oldItem.url == newItem.url && oldItem.title != newItem.title) {
+                TopSitePayload(newItem.title)
+            } else null
+        }
     }
 }

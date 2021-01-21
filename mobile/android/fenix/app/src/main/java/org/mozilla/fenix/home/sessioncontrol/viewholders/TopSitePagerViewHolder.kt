@@ -13,6 +13,7 @@ import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.home.sessioncontrol.AdapterItem
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSitesPagerAdapter
 
@@ -28,7 +29,11 @@ class TopSitePagerViewHolder(
     private val topSitesPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             if (currentPage != position) {
-                pageIndicator.context.components.analytics.metrics.track(Event.TopSiteSwipeCarousel(position))
+                pageIndicator.context.components.analytics.metrics.track(
+                    Event.TopSiteSwipeCarousel(
+                        position
+                    )
+                )
             }
 
             pageIndicator.setSelection(position)
@@ -40,6 +45,12 @@ class TopSitePagerViewHolder(
         view.top_sites_pager.apply {
             adapter = topSitesPagerAdapter
             registerOnPageChangeCallback(topSitesPageChangeCallback)
+        }
+    }
+
+    fun update(payload: AdapterItem.TopSitePagerPayload) {
+        for (item in payload.changed) {
+            topSitesPagerAdapter.notifyItemChanged(currentPage, payload)
         }
     }
 

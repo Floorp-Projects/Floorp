@@ -43,7 +43,12 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
         ButtonTipViewHolder.LAYOUT_ID
     )
 
-    data class TopSitePager(val topSites: List<TopSite>) : AdapterItem(TopSitePagerViewHolder.LAYOUT_ID) {
+    data class TopSitePagerPayload(
+        val changed: Set<Pair<Int, TopSite>>
+    )
+
+    data class TopSitePager(val topSites: List<TopSite>) :
+        AdapterItem(TopSitePagerViewHolder.LAYOUT_ID) {
         override fun sameAs(other: AdapterItem): Boolean {
             val newTopSites = (other as? TopSitePager) ?: return false
             return newTopSites.topSites.size == this.topSites.size
@@ -55,6 +60,19 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
             val newSitesSequence = newTopSites.topSites.asSequence()
             val oldTopSites = this.topSites.asSequence()
             return newSitesSequence.zip(oldTopSites).all { (new, old) -> new == old }
+        }
+
+        override fun getChangePayload(newItem: AdapterItem): Any? {
+            val newTopSites = (newItem as? TopSitePager) ?: return null
+            val oldTopSites = (this as? TopSitePager) ?: return null
+
+            val changed = mutableSetOf<Pair<Int, TopSite>>()
+            for ((index, item) in newTopSites.topSites.withIndex()) {
+                if (oldTopSites.topSites.getOrNull(index) != item) {
+                    changed.add(Pair(index, item))
+                }
+            }
+            return if (changed.isNotEmpty()) TopSitePagerPayload(changed) else null
         }
     }
 
@@ -194,6 +212,25 @@ class SessionControlAdapter(
     }
 
     override fun getItemViewType(position: Int) = getItem(position).viewType
+
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.isNullOrEmpty()) {
+            onBindViewHolder(holder, position)
+        } else {
+            when (holder) {
+                is TopSitePagerViewHolder -> {
+                    if (payloads[0] is AdapterItem.TopSitePagerPayload) {
+                        val payload = payloads[0] as AdapterItem.TopSitePagerPayload
+                        holder.update(payload)
+                    }
+                }
+            }
+        }
+    }
 
     @SuppressWarnings("ComplexMethod")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
