@@ -971,17 +971,6 @@ nsIFormControlFrame* nsGenericHTMLElement::GetFormControlFrame(
   return nullptr;
 }
 
-nsPresContext* nsGenericHTMLElement::GetPresContext(PresContextFor aFor) {
-  // Get the document
-  Document* doc =
-      (aFor == eForComposedDoc) ? GetComposedDoc() : GetUncomposedDoc();
-  if (doc) {
-    return doc->GetPresContext();
-  }
-
-  return nullptr;
-}
-
 static const nsAttrValue::EnumTable kDivAlignTable[] = {
     {"left", StyleTextAlign::MozLeft},
     {"right", StyleTextAlign::MozRight},
