@@ -847,7 +847,6 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   INDEXED_DB: "indexed-db",
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
   SOURCE: "source",
-  BREAKPOINT: "breakpoint",
 };
 module.exports = { ResourceWatcher, TYPES: ResourceWatcher.TYPES };
 
@@ -906,8 +905,6 @@ const LegacyListeners = {
     .NETWORK_EVENT_STACKTRACE]: require("devtools/shared/resources/legacy-listeners/network-event-stacktraces"),
   [ResourceWatcher.TYPES
     .SOURCE]: require("devtools/shared/resources/legacy-listeners/source"),
-  [ResourceWatcher.TYPES
-    .BREAKPOINT]: require("devtools/shared/resources/legacy-listeners/breakpoint"),
 };
 
 // Optional transformers for each type of resource.
