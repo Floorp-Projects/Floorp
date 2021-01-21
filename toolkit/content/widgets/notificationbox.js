@@ -98,6 +98,9 @@
      *            Label of the <button> element.
      *          accessKey:
      *            Access key character for the <button> element.
+     *          "l10n-id"
+     *            Localization id for the <button>, to be used instead of
+     *            specifying a separate label and access key.
      *          callback:
      *            When the button is used, this is called with the arguments:
      *             1. The <notification> element.
@@ -112,7 +115,11 @@
      *            button creation.
      *        }
      * @param aEventCallback
-     *        This may be called with the "removed" or "dismissed" parameter.
+     *        This may be called with the "removed", "dismissed" or "disconnected"
+     *        parameter:
+     *          removed - notification has been removed
+     *          dismissed - user dismissed notification
+     *          disconnected - notification removed in any way
      * @param aNotificationIs
      *        Defines a Custom Element name to use as the "is" value on creation.
      *        This allows subclassing the created element.
@@ -391,6 +398,12 @@
         ["spacer", "spacer"],
       ]) {
         this[propertyName] = this.querySelector(selector);
+      }
+    }
+
+    disconnectedCallback() {
+      if (this.eventCallback) {
+        this.eventCallback("disconnected");
       }
     }
 

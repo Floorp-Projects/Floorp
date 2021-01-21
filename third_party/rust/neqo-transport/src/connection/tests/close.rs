@@ -11,7 +11,7 @@ use crate::{AppError, ConnectionError, Error, ERROR_APPLICATION_CLOSE};
 
 use neqo_common::Datagram;
 use std::time::Duration;
-use test_fixture::{self, loopback, now};
+use test_fixture::{self, addr, now};
 
 fn assert_draining(c: &Connection, expected: &Error) {
     assert!(c.state().closed());
@@ -201,6 +201,6 @@ fn stateless_reset_client() {
         .unwrap();
     connect_force_idle(&mut client, &mut server);
 
-    client.process_input(Datagram::new(loopback(), loopback(), vec![77; 21]), now());
+    client.process_input(Datagram::new(addr(), addr(), vec![77; 21]), now());
     assert_draining(&client, &Error::StatelessReset);
 }

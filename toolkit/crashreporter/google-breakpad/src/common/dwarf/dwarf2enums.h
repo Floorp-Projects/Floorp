@@ -152,12 +152,7 @@ enum DwarfForm {
   DW_FORM_ref_sig8 = 0x20,
   // Extensions for Fission.  See http://gcc.gnu.org/wiki/DebugFission.
   DW_FORM_GNU_addr_index = 0x1f01,
-  DW_FORM_GNU_str_index = 0x1f02,
-
-  // Extensions introduced for the dwz compression tool. See
-  // https://fedoraproject.org/wiki/Features/DwarfCompressor
-  DW_FORM_GNU_ref_alt = 0x1f20,
-  DW_FORM_GNU_strp_alt = 0x1f21,
+  DW_FORM_GNU_str_index = 0x1f02
 };
 
 // Attribute names and codes

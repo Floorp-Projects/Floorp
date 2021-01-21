@@ -96,6 +96,10 @@ bool Gecko_MediaFeatures_IsResourceDocument(const Document* aDocument) {
   return aDocument->IsResourceDoc();
 }
 
+bool Gecko_MediaFeatures_ShouldAvoidNativeTheme(const Document* aDocument) {
+  return aDocument->ShouldAvoidNativeTheme();
+}
+
 static nsDeviceContext* GetDeviceContextFor(const Document* aDocument) {
   nsPresContext* pc = aDocument->GetPresContext();
   if (!pc) {

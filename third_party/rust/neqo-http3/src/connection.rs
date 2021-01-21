@@ -17,7 +17,7 @@ use neqo_common::{qdebug, qerror, qinfo, qtrace, qwarn};
 use neqo_qpack::decoder::{QPackDecoder, QPACK_UNI_STREAM_TYPE_DECODER};
 use neqo_qpack::encoder::{QPackEncoder, QPACK_UNI_STREAM_TYPE_ENCODER};
 use neqo_qpack::QpackSettings;
-use neqo_transport::{AppError, CloseError, Connection, State, StreamType};
+use neqo_transport::{AppError, Connection, ConnectionError, State, StreamType};
 use std::collections::{BTreeSet, HashMap};
 use std::fmt::Debug;
 use std::mem;
@@ -47,8 +47,8 @@ pub enum Http3State {
     ZeroRtt,
     Connected,
     GoingAway(u64),
-    Closing(CloseError),
-    Closed(CloseError),
+    Closing(ConnectionError),
+    Closed(ConnectionError),
 }
 
 impl Http3State {
@@ -401,7 +401,7 @@ impl Http3Connection {
                 if matches!(self.state, Http3State::Closing(_)| Http3State::Closed(_)) {
                     Ok(false)
                 } else {
-                    self.state = Http3State::Closing(error.clone().into());
+                    self.state = Http3State::Closing(error.clone());
                     Ok(true)
                 }
             }
@@ -409,7 +409,7 @@ impl Http3Connection {
                 if matches!(self.state, Http3State::Closed(_)) {
                     Ok(false)
                 } else {
-                    self.state = Http3State::Closed(error.clone().into());
+                    self.state = Http3State::Closed(error.clone());
                     Ok(true)
                 }
             }
@@ -434,7 +434,7 @@ impl Http3Connection {
             Ok(())
         } else {
             debug_assert!(false, "Zero rtt rejected in the wrong state.");
-            Err(Error::HttpInternal)
+            Err(Error::HttpInternal(3))
         }
     }
 
@@ -512,7 +512,7 @@ impl Http3Connection {
     /// This is called when an application closes the connection.
     pub fn close(&mut self, error: AppError) {
         qinfo!([self], "Close connection error {:?}.", error);
-        self.state = Http3State::Closing(CloseError::Application(error));
+        self.state = Http3State::Closing(ConnectionError::Application(error));
         if (!self.send_streams.is_empty() || !self.recv_streams.is_empty()) && (error == 0) {
             qwarn!("close(0) called when streams still active");
         }

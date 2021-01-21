@@ -20,8 +20,9 @@ use neqo_common::{
 use neqo_crypto::{agent::CertificateInfo, AuthenticationStatus, ResumptionToken, SecretAgentInfo};
 use neqo_qpack::{QpackSettings, Stats as QpackStats};
 use neqo_transport::{
-    AppError, Connection, ConnectionEvent, ConnectionId, ConnectionIdManager, ConnectionParameters,
-    Output, QuicVersion, Stats as TransportStats, StreamId, StreamType, ZeroRttState,
+    AppError, Connection, ConnectionEvent, ConnectionId, ConnectionIdGenerator,
+    ConnectionParameters, Output, QuicVersion, Stats as TransportStats, StreamId, StreamType,
+    ZeroRttState,
 };
 use std::cell::RefCell;
 use std::fmt::Display;
@@ -91,10 +92,10 @@ impl Http3Client {
     /// the socket can't be created or configured.
     pub fn new(
         server_name: &str,
-        cid_manager: Rc<RefCell<dyn ConnectionIdManager>>,
+        cid_manager: Rc<RefCell<dyn ConnectionIdGenerator>>,
         local_addr: SocketAddr,
         remote_addr: SocketAddr,
-        conn_params: &ConnectionParameters,
+        conn_params: ConnectionParameters,
         http3_parameters: &Http3Parameters,
     ) -> Res<Self> {
         Ok(Self::new_with_conn(
@@ -742,20 +743,20 @@ mod tests {
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_transport::tparams::{self, TransportParameter};
     use neqo_transport::{
-        CloseError, ConnectionEvent, ConnectionParameters, FixedConnectionIdManager, Output, State,
-        RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
+        ConnectionError, ConnectionEvent, ConnectionParameters, Output, State, RECV_BUFFER_SIZE,
+        SEND_BUFFER_SIZE,
     };
     use std::convert::TryFrom;
     use std::time::Duration;
     use test_fixture::{
-        anti_replay, default_server_h3, fixture_init, loopback, now, DEFAULT_ALPN_H3, DEFAULT_KEYS,
-        DEFAULT_SERVER_NAME,
+        addr, anti_replay, default_server_h3, fixture_init, now, CountingConnectionIdGenerator,
+        DEFAULT_ALPN_H3, DEFAULT_KEYS, DEFAULT_SERVER_NAME,
     };
 
     fn assert_closed(client: &Http3Client, expected: &Error) {
         match client.state() {
             Http3State::Closing(err) | Http3State::Closed(err) => {
-                assert_eq!(err, CloseError::Application(expected.code()))
+                assert_eq!(err, ConnectionError::Application(expected.code()))
             }
             _ => panic!("Wrong state {:?}", client.state()),
         };
@@ -770,10 +771,10 @@ mod tests {
         fixture_init();
         Http3Client::new(
             DEFAULT_SERVER_NAME,
-            Rc::new(RefCell::new(FixedConnectionIdManager::new(3))),
-            loopback(),
-            loopback(),
-            &ConnectionParameters::default(),
+            Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
+            addr(),
+            addr(),
+            ConnectionParameters::default(),
             &Http3Parameters {
                 qpack_settings: QpackSettings {
                     max_table_size_encoder: max_table_size,
@@ -3553,8 +3554,8 @@ mod tests {
         let mut server = Connection::new_server(
             test_fixture::DEFAULT_KEYS,
             test_fixture::DEFAULT_ALPN_H3,
-            Rc::new(RefCell::new(FixedConnectionIdManager::new(10))),
-            &ConnectionParameters::default(),
+            Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
+            ConnectionParameters::default(),
         )
         .unwrap();
         // Using a freshly initialized anti-replay context
@@ -3704,7 +3705,7 @@ mod tests {
                 HSetting::new(HSettingType::BlockedStreams, 100),
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
-            &Http3State::Closing(CloseError::Application(265)),
+            &Http3State::Closing(ConnectionError::Application(265)),
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -3722,7 +3723,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxTableCapacity, 100),
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
-            &Http3State::Closing(CloseError::Application(265)),
+            &Http3State::Closing(ConnectionError::Application(265)),
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -3759,7 +3760,7 @@ mod tests {
                 HSetting::new(HSettingType::BlockedStreams, 100),
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
-            &Http3State::Closing(CloseError::Application(514)),
+            &Http3State::Closing(ConnectionError::Application(514)),
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -3778,7 +3779,7 @@ mod tests {
                 HSetting::new(HSettingType::BlockedStreams, 100),
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
-            &Http3State::Closing(CloseError::Application(265)),
+            &Http3State::Closing(ConnectionError::Application(265)),
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -3816,7 +3817,7 @@ mod tests {
                 HSetting::new(HSettingType::BlockedStreams, 50),
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
-            &Http3State::Closing(CloseError::Application(265)),
+            &Http3State::Closing(ConnectionError::Application(265)),
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -3854,7 +3855,7 @@ mod tests {
                 HSetting::new(HSettingType::BlockedStreams, 100),
                 HSetting::new(HSettingType::MaxHeaderListSize, 5000),
             ],
-            &Http3State::Closing(CloseError::Application(265)),
+            &Http3State::Closing(ConnectionError::Application(265)),
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -3911,7 +3912,7 @@ mod tests {
                 HSetting::new(HSettingType::BlockedStreams, 100),
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
-            &Http3State::Closing(CloseError::Application(265)),
+            &Http3State::Closing(ConnectionError::Application(265)),
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -6115,7 +6116,7 @@ mod tests {
             DEFAULT_KEYS,
             DEFAULT_ALPN_H3,
             anti_replay(),
-            Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
+            Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
             QpackSettings {
                 max_table_size_encoder: MAX_TABLE_SIZE,
                 max_table_size_decoder: MAX_TABLE_SIZE,

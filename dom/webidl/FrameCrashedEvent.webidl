@@ -20,10 +20,18 @@ interface FrameCrashedEvent : Event
    * True if the top-most frame crashed.
    */
   readonly attribute boolean isTopFrame;
+
+  /**
+   * Internal process identifier of the frame that crashed. This will be
+   * 0 if this identifier is not known, for example a process that failed
+   * to start.
+   */
+  readonly attribute unsigned long long childID;
 };
 
 dictionary FrameCrashedEventInit : EventInit
 {
   unsigned long long browsingContextId = 0;
   boolean isTopFrame = true;
+  unsigned long long childID = 0;
 };

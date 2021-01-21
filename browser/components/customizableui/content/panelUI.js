@@ -584,7 +584,7 @@ const PanelUI = {
     ) {
       this.libraryRecentHighlights.previousElementSibling.setAttribute(
         "data-l10n-id",
-        "library-recent-activity-label"
+        "library-recent-activity-title"
       );
     } else {
       this.libraryRecentHighlights.previousElementSibling.removeAttribute(
