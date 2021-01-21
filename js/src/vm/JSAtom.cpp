@@ -39,7 +39,6 @@
 using namespace js;
 
 using mozilla::ArrayEnd;
-using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::RangedPtr;
@@ -290,13 +289,13 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
 
   ImmutablePropertyNamePtr* names =
       reinterpret_cast<ImmutablePropertyNamePtr*>(commonNames.ref());
-  for (size_t i = 0; i < ArrayLength(cachedNames); i++, names++) {
-    JSAtom* atom =
-        Atomize(cx, cachedNames[i].str, cachedNames[i].length, PinAtom);
+  for (const auto& cachedName : cachedNames) {
+    JSAtom* atom = Atomize(cx, cachedName.str, cachedName.length, PinAtom);
     if (!atom) {
       return false;
     }
     names->init(atom->asPropertyName());
+    names++;
   }
   MOZ_ASSERT(uintptr_t(names) == uintptr_t(commonNames + 1));
 

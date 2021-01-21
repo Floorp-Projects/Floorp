@@ -43,7 +43,6 @@ using JS::AutoStableStringChars;
 using JS::CompileOptions;
 using JS::RegExpFlag;
 using JS::RegExpFlags;
-using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
 
@@ -851,8 +850,7 @@ RegExpRunStatus RegExpShared::executeAtom(MutableHandleRegExpShared re,
 size_t RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   size_t n = 0;
 
-  for (size_t i = 0; i < ArrayLength(compilationArray); i++) {
-    const RegExpCompilation& compilation = compilationArray[i];
+  for (const auto& compilation : compilationArray) {
     if (compilation.byteCode) {
       n += mallocSizeOf(compilation.byteCode);
     }

@@ -13,8 +13,6 @@
 
 #include "vm/StringType-inl.h"
 
-using mozilla::ArrayLength;
-
 static const struct TestPair {
   uint32_t num;
   const char* expected;
@@ -48,8 +46,8 @@ static const struct TestPair {
 };
 
 BEGIN_TEST(testIndexToString) {
-  for (size_t i = 0, sz = ArrayLength(tests); i < sz; i++) {
-    uint32_t u = tests[i].num;
+  for (const auto& test : tests) {
+    uint32_t u = test.num;
     JSString* str = js::IndexToString(cx, u);
     CHECK(str);
 
@@ -58,7 +56,7 @@ BEGIN_TEST(testIndexToString) {
     }
 
     bool match = false;
-    CHECK(JS_StringEqualsAscii(cx, str, tests[i].expected, &match));
+    CHECK(JS_StringEqualsAscii(cx, str, test.expected, &match));
     CHECK(match);
   }
 
@@ -67,8 +65,8 @@ BEGIN_TEST(testIndexToString) {
 END_TEST(testIndexToString)
 
 BEGIN_TEST(testStringIsIndex) {
-  for (size_t i = 0, sz = ArrayLength(tests); i < sz; i++) {
-    uint32_t u = tests[i].num;
+  for (const auto& test : tests) {
+    uint32_t u = test.num;
     JSLinearString* str = js::IndexToString(cx, u);
     CHECK(str);
 
