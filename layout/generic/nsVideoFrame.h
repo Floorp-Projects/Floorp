@@ -57,13 +57,13 @@ class nsVideoFrame final : public nsContainerFrame,
   nsSize GetVideoIntrinsicSize() const;
   mozilla::IntrinsicSize GetIntrinsicSize() override;
   mozilla::AspectRatio GetIntrinsicRatio() const override;
-  SizeComputationResult ComputeSize(gfxContext* aRenderingContext,
-                                    mozilla::WritingMode aWM,
-                                    const mozilla::LogicalSize& aCBSize,
-                                    nscoord aAvailableISize,
-                                    const mozilla::LogicalSize& aMargin,
-                                    const mozilla::LogicalSize& aBorderPadding,
-                                    mozilla::ComputeSizeFlags aFlags) override;
+  SizeComputationResult ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
+      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
+      const mozilla::LogicalSize& aMargin,
+      const mozilla::LogicalSize& aBorderPadding,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
+      mozilla::ComputeSizeFlags aFlags) override;
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
   void DestroyFrom(nsIFrame* aDestructRoot,
