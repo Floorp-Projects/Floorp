@@ -2539,9 +2539,11 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
       message
     } = this.state;
     const eventType = `${message.provider}_user_event`;
+    const source = extraProps.id;
+    delete extraProps.id;
     _asrouter_utils__WEBPACK_IMPORTED_MODULE_2__["ASRouterUtils"].sendTelemetry({
+      source,
       message_id: message.id,
-      source: extraProps.id,
       action: eventType,
       ...extraProps
     });
