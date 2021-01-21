@@ -3054,6 +3054,7 @@ var updateFrecency = async function(db, urls) {
 
   const observers = PlacesUtils.history.getObservers();
   notify(observers, "onManyFrecenciesChanged");
+  PlacesObservers.notifyListeners([new PlacesRanking()]);
 };
 
 /**
