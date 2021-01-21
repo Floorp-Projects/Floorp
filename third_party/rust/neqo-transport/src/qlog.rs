@@ -7,7 +7,7 @@
 // Functions that handle capturing QLOG traces.
 
 use std::convert::TryFrom;
-use std::ops::{Deref, RangeInclusive};
+use std::ops::RangeInclusive;
 use std::string::String;
 use std::time::Duration;
 
@@ -16,10 +16,9 @@ use qlog::{self, event::Event, PacketHeader, QuicFrame};
 use neqo_common::{hex, qinfo, qlog::NeqoQlog, Decoder};
 
 use crate::connection::State;
-use crate::frame::{CloseError, Frame};
+use crate::frame::{self, Frame};
 use crate::packet::{DecryptedPacket, PacketNumber, PacketType, PublicPacket};
-use crate::path::PathRef;
-use crate::stream_id::StreamType as NeqoStreamType;
+use crate::path::Path;
 use crate::tparams::{self, TransportParametersHandler};
 use crate::tracking::SentPacket;
 use crate::QuicVersion;
@@ -84,31 +83,30 @@ pub fn connection_tparams_set(qlog: &mut NeqoQlog, tph: &TransportParametersHand
     })
 }
 
-pub fn server_connection_started(qlog: &mut NeqoQlog, path: &PathRef) {
+pub fn server_connection_started(qlog: &mut NeqoQlog, path: &Path) {
     connection_started(qlog, path)
 }
 
-pub fn client_connection_started(qlog: &mut NeqoQlog, path: &PathRef) {
+pub fn client_connection_started(qlog: &mut NeqoQlog, path: &Path) {
     connection_started(qlog, path)
 }
 
-fn connection_started(qlog: &mut NeqoQlog, path: &PathRef) {
+fn connection_started(qlog: &mut NeqoQlog, path: &Path) {
     qlog.add_event(|| {
-        let p = path.deref().borrow();
         Some(Event::connection_started(
-            if p.local_address().ip().is_ipv4() {
+            if path.local_address().ip().is_ipv4() {
                 "ipv4".into()
             } else {
                 "ipv6".into()
             },
-            format!("{}", p.local_address().ip()),
-            format!("{}", p.remote_address().ip()),
+            format!("{}", path.local_address().ip()),
+            format!("{}", path.remote_address().ip()),
             Some("QUIC".into()),
-            p.local_address().port().into(),
-            p.remote_address().port().into(),
+            path.local_address().port().into(),
+            path.remote_address().port().into(),
             Some(format!("{:x}", QuicVersion::default().as_u32())),
-            Some(format!("{}", p.local_cid())),
-            Some(format!("{}", p.remote_cid())),
+            Some(format!("{}", path.local_cid())),
+            Some(format!("{}", path.remote_cid())),
         ))
     })
 }
@@ -373,8 +371,8 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
             maximum_streams,
         } => QuicFrame::max_streams(
             match stream_type {
-                NeqoStreamType::BiDi => qlog::StreamType::Bidirectional,
-                NeqoStreamType::UniDi => qlog::StreamType::Unidirectional,
+                frame::StreamType::BiDi => qlog::StreamType::Bidirectional,
+                frame::StreamType::UniDi => qlog::StreamType::Unidirectional,
             },
             maximum_streams.as_u64().to_string(),
         ),
@@ -391,8 +389,8 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
             stream_limit,
         } => QuicFrame::streams_blocked(
             match stream_type {
-                NeqoStreamType::BiDi => qlog::StreamType::Bidirectional,
-                NeqoStreamType::UniDi => qlog::StreamType::Unidirectional,
+                frame::StreamType::BiDi => qlog::StreamType::Bidirectional,
+                frame::StreamType::UniDi => qlog::StreamType::Unidirectional,
             },
             stream_limit.as_u64().to_string(),
         ),
@@ -419,8 +417,8 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
             reason_phrase,
         } => QuicFrame::connection_close(
             match error_code {
-                CloseError::Transport(_) => qlog::ErrorSpace::TransportError,
-                CloseError::Application(_) => qlog::ErrorSpace::ApplicationError,
+                frame::CloseError::Transport(_) => qlog::ErrorSpace::TransportError,
+                frame::CloseError::Application(_) => qlog::ErrorSpace::ApplicationError,
             },
             error_code.code(),
             0,

@@ -169,7 +169,7 @@ impl Http3ServerHandler {
                 }
                 ConnectionEvent::AuthenticationNeeded
                 | ConnectionEvent::ZeroRttRejected
-                | ConnectionEvent::ResumptionToken(..) => return Err(Error::HttpInternal(4)),
+                | ConnectionEvent::ResumptionToken(..) => return Err(Error::HttpInternal),
                 ConnectionEvent::SendStreamWritable { .. }
                 | ConnectionEvent::SendStreamComplete { .. }
                 | ConnectionEvent::SendStreamCreatable { .. } => {}

@@ -3392,8 +3392,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.4.20"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.20#be938c6156e727428668379e7c038206183a6696"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "chrono",
  "env_logger 0.8.2",
@@ -3404,8 +3404,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.4.20"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.20#be938c6156e727428668379e7c038206183a6696"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "bindgen",
  "log",
@@ -3417,8 +3417,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.4.20"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.20#be938c6156e727428668379e7c038206183a6696"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "log",
  "neqo-common",
@@ -3431,8 +3431,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.4.20"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.20#be938c6156e727428668379e7c038206183a6696"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "lazy_static",
  "log",
@@ -3445,8 +3445,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.4.20"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.20#be938c6156e727428668379e7c038206183a6696"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "indexmap",
  "lazy_static",

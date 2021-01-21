@@ -16,9 +16,7 @@ use neqo_common::{qtrace, Datagram};
 use neqo_crypto::{AntiReplay, Cipher};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::{ActiveConnectionRef, Server, ValidateAddress};
-use neqo_transport::{
-    tparams::PreferredAddress, ConnectionIdGenerator, ConnectionParameters, Output,
-};
+use neqo_transport::{ConnectionIdManager, ConnectionParameters, Output};
 use std::cell::RefCell;
 use std::cell::RefMut;
 use std::collections::HashMap;
@@ -52,7 +50,7 @@ impl Http3Server {
         certs: &[impl AsRef<str>],
         protocols: &[impl AsRef<str>],
         anti_replay: AntiReplay,
-        cid_manager: Rc<RefCell<dyn ConnectionIdGenerator>>,
+        cid_manager: Rc<RefCell<dyn ConnectionIdManager>>,
         qpack_settings: QpackSettings,
     ) -> Res<Self> {
         Ok(Self {
@@ -81,10 +79,6 @@ impl Http3Server {
 
     pub fn set_ciphers(&mut self, ciphers: impl AsRef<[Cipher]>) {
         self.server.set_ciphers(ciphers);
-    }
-
-    pub fn set_preferred_address(&mut self, spa: PreferredAddress) {
-        self.server.set_preferred_address(spa);
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
@@ -238,12 +232,12 @@ mod tests {
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_qpack::QpackSettings;
     use neqo_transport::{
-        Connection, ConnectionError, ConnectionEvent, State, StreamType, ZeroRttState,
+        CloseError, Connection, ConnectionEvent, FixedConnectionIdManager, State, StreamType,
+        ZeroRttState,
     };
     use std::ops::{Deref, DerefMut};
     use test_fixture::{
-        anti_replay, default_client, fixture_init, now, CountingConnectionIdGenerator,
-        DEFAULT_ALPN, DEFAULT_KEYS,
+        anti_replay, default_client, fixture_init, now, DEFAULT_ALPN, DEFAULT_KEYS,
     };
 
     const DEFAULT_SETTINGS: QpackSettings = QpackSettings {
@@ -259,7 +253,7 @@ mod tests {
             DEFAULT_KEYS,
             DEFAULT_ALPN,
             anti_replay(),
-            Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
+            Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
             settings,
         )
         .expect("create a server")
@@ -271,7 +265,7 @@ mod tests {
     }
 
     fn assert_closed(hconn: &mut Http3Server, expected: &Error) {
-        let err = ConnectionError::Application(expected.code());
+        let err = CloseError::Application(expected.code());
         let closed = |e| {
             matches!(e,
             Http3ServerEvent::StateChange{ state: Http3State::Closing(e), .. }
