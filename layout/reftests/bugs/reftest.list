@@ -2110,3 +2110,4 @@ fuzzy(0-2,0-21184) == 1626259-2.html 1626259-2-ref.html
 fuzzy(0-2,0-96600) == 1648282-1a.html 1648282-1-ref.html
 fuzzy(0-2,0-96600) == 1648282-1b.html 1648282-1-ref.html
 != 1672137-1.html 1672137-1-notref.html
+== 1686729-1.html 1686729-1-ref.html
