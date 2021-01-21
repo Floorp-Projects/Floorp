@@ -15,13 +15,16 @@ use std::fmt::{Debug, Display};
 use std::time::{Duration, Instant};
 
 mod classic_cc;
+mod cubic;
 mod new_reno;
 
 pub use classic_cc::ClassicCongestionControl;
-pub use classic_cc::{CWND_INITIAL_PKTS, CWND_MIN};
+pub use classic_cc::{CWND_INITIAL, CWND_INITIAL_PKTS, CWND_MIN};
+pub use cubic::Cubic;
 pub use new_reno::NewReno;
 
 pub const MAX_DATAGRAM_SIZE: usize = PATH_MTU_V6;
+pub const MAX_DATAGRAM_SIZE_F64: f64 = 1337.0;
 
 pub trait CongestionControl: Display + Debug {
     fn set_qlog(&mut self, qlog: NeqoQlog);
@@ -32,7 +35,7 @@ pub trait CongestionControl: Display + Debug {
 
     fn cwnd_avail(&self) -> usize;
 
-    fn on_packets_acked(&mut self, acked_pkts: &[SentPacket]);
+    fn on_packets_acked(&mut self, acked_pkts: &[SentPacket], min_rtt: Duration, now: Instant);
 
     fn on_packets_lost(
         &mut self,
@@ -49,7 +52,11 @@ pub trait CongestionControl: Display + Debug {
     fn on_packet_sent(&mut self, pkt: &SentPacket);
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum CongestionControlAlgorithm {
     NewReno,
+    Cubic,
 }
+
+#[cfg(test)]
+mod tests;

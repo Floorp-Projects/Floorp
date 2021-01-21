@@ -137,8 +137,8 @@
 
         if (result.info) {
           if (result.msg) {
-            ChromeUtils.addProfilerMarker("browser-test", undefined,
-                                          "TEST-INFO " + result.msg);
+            ChromeUtils.addProfilerMarker("TEST-INFO", {category: "Test"},
+                                          result.msg);
             this.dumper.structuredLogger.info(result.msg);
           }
           return;
@@ -149,18 +149,18 @@
                                                 result.status,
                                                 result.expected,
                                                 result.msg);
-        let markerText = "TEST-";
+        let markerName = "TEST-";
         if (result.pass) {
-          markerText += result.todo ? "KNOWN-FAIL" : "PASS";
+          markerName += result.todo ? "KNOWN-FAIL" : "PASS";
         }
         else {
-          markerText += "UNEXPECTED-" + result.status;
+          markerName += "UNEXPECTED-" + result.status;
         }
-        markerText += " " + result.name;
+        let markerText = result.name;
         if (result.msg) {
           markerText += " - " + result.msg;
         }
-        ChromeUtils.addProfilerMarker("browser-test", undefined, markerText);
+        ChromeUtils.addProfilerMarker(markerName, {category: "Test"}, markerText);
       },
 
       setDuration: function setDuration(duration) {

@@ -715,7 +715,7 @@ TestRunner.testFinished = function(tests) {
 
       SpecialPowers.addProfilerMarker(
         "TestRunner",
-        TestRunner._currentTestStartTimestamp,
+        { category: "Test", startTime: TestRunner._currentTestStartTimestamp },
         TestRunner.currentTestURL
       );
       var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;

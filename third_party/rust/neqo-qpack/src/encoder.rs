@@ -305,7 +305,7 @@ impl QPackEncoder {
                     false,
                     "can_evict_to should have checked and make sure this operation is possible"
                 );
-                return Err(Error::InternalError);
+                return Err(Error::InternalError(1));
             }
             self.max_entries = cap / 32;
             self.next_capacity = None;
@@ -520,7 +520,7 @@ fn map_stream_send_atomic_error(err: &TransportError) -> Error {
         }
         _ => {
             debug_assert!(false, "Unexpected error");
-            Error::InternalError
+            Error::InternalError(2)
         }
     }
 }

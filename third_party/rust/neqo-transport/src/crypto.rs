@@ -148,7 +148,7 @@ impl Crypto {
                 self.tls.read_secret(TLS_EPOCH_ZERO_RTT),
             ),
         };
-        let secret = secret.ok_or(Error::InternalError)?;
+        let secret = secret.ok_or(Error::InternalError(1))?;
         self.states.set_0rtt_keys(dir, &secret, cipher.unwrap());
         Ok(true)
     }
@@ -177,12 +177,12 @@ impl Crypto {
         let read_secret = self
             .tls
             .read_secret(TLS_EPOCH_HANDSHAKE)
-            .ok_or(Error::InternalError)?;
+            .ok_or(Error::InternalError(2))?;
         let cipher = match self.tls.info() {
             None => self.tls.preinfo()?.cipher_suite(),
             Some(info) => Some(info.cipher_suite()),
         }
-        .ok_or(Error::InternalError)?;
+        .ok_or(Error::InternalError(3))?;
         self.states
             .set_handshake_keys(&write_secret, &read_secret, cipher);
         qdebug!([self], "Handshake keys installed");
@@ -206,7 +206,7 @@ impl Crypto {
         let read_secret = self
             .tls
             .read_secret(TLS_EPOCH_APPLICATION_DATA)
-            .ok_or(Error::InternalError)?;
+            .ok_or(Error::InternalError(4))?;
         self.states
             .set_application_read_key(read_secret, expire_0rtt)?;
         qdebug!([self], "application read keys installed");
@@ -1241,14 +1241,14 @@ impl CryptoStreams {
         &mut self,
         space: PNSpace,
         builder: &mut PacketBuilder,
-    ) -> Option<RecoveryToken> {
+    ) -> Res<Option<RecoveryToken>> {
         let cs = self.get_mut(space).unwrap();
         if let Some((offset, data)) = cs.tx.next_bytes() {
             let mut header_len = 1 + Encoder::varint_len(offset) + 1;
 
             // Don't bother if there isn't room for the header and some data.
             if builder.remaining() < header_len + 1 {
-                return None;
+                return Ok(None);
             }
             // Calculate length of data based on the minimum of:
             // - available data
@@ -1261,16 +1261,20 @@ impl CryptoStreams {
             builder.encode_varint(crate::frame::FRAME_TYPE_CRYPTO);
             builder.encode_varint(offset);
             builder.encode_vvec(&data[..length]);
+            if builder.len() > builder.limit() {
+                return Err(Error::InternalError(15));
+            }
+
             cs.tx.mark_as_sent(offset, length);
 
             qdebug!("CRYPTO for {} offset={}, len={}", space, offset, length);
-            Some(RecoveryToken::Crypto(CryptoRecoveryToken {
+            Ok(Some(RecoveryToken::Crypto(CryptoRecoveryToken {
                 space,
                 offset,
                 length,
-            }))
+            })))
         } else {
-            None
+            Ok(None)
         }
     }
 }
