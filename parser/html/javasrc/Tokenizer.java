@@ -1054,8 +1054,8 @@ public class Tokenizer implements Locator, Locator2 {
         // ]NOCPP]
     }
 
-    private void appendStrBuf(@NoLength char[] buffer, int offset, int length) {
-        int newLen = strBufLen + length;
+    private void appendStrBuf(@NoLength char[] buffer, int offset, int length) throws SAXException {
+        int newLen = Portability.checkedAdd(strBufLen, length);
         // CPPONLY: assert newLen <= strBuf.length: "Previous buffer length insufficient.";
         // CPPONLY: if (strBuf.length < newLen) {
         // CPPONLY:     if (!EnsureBufferSpace(length)) {
@@ -1069,7 +1069,7 @@ public class Tokenizer implements Locator, Locator2 {
     /**
      * Append the contents of the char reference buffer to the main one.
      */
-    @Inline private void appendCharRefBufToStrBuf() {
+    @Inline private void appendCharRefBufToStrBuf() throws SAXException {
         appendStrBuf(charRefBuf, 0, charRefBufLen);
         charRefBufLen = 0;
     }
