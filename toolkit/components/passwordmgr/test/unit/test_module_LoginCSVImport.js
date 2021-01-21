@@ -8,9 +8,11 @@
 
 "use strict";
 
-const { LoginCSVImport } = ChromeUtils.import(
-  "resource://gre/modules/LoginCSVImport.jsm"
-);
+const {
+  LoginCSVImport,
+  ImportFailedException,
+  ImportFailedErrorType,
+} = ChromeUtils.import("resource://gre/modules/LoginCSVImport.jsm");
 const { LoginExport } = ChromeUtils.import(
   "resource://gre/modules/LoginExport.jsm"
 );
@@ -30,16 +32,21 @@ Services.prefs.setBoolPref(
  *
  * @param {string[]} csvLines
  *        The lines that make up the CSV file.
+ * @param {string} extension
+ *        Optional parameter. Either 'csv' or 'tsv'. Default is 'csv'.
  * @returns {string} The path to the CSV file that was created.
  */
-async function setupCsv(csvLines) {
+async function setupCsv(csvLines, extension) {
   // Cleanup state.
   TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_QUANTITY");
   TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_IMPORT_MS");
   TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_JANK_MS");
   Services.logins.removeAllUserFacingLogins();
 
-  let tmpFile = await LoginTestUtils.file.setupCsvFileWithLines(csvLines);
+  let tmpFile = await LoginTestUtils.file.setupCsvFileWithLines(
+    csvLines,
+    extension
+  );
   return tmpFile.path;
 }
 
@@ -64,18 +71,57 @@ function checkLoginNewlyCreated(login) {
 }
 
 /**
- * Ensure that an import fails if there is no username column. We don't want
+ * Ensure that an import works with TSV.
  */
 add_task(async function test_import_tsv() {
-  let csvFilePath = await setupCsv([
-    "url\tusernameTypo\tpassword\thttpRealm\tformActionOrigin\tguid\ttimeCreated\ttimeLastUsed\ttimePasswordChanged",
-    "https://example.com\tjoe@example.com\tqwerty\tMy realm\t\t{5ec0d12f-e194-4279-ae1b-d7d281bb46f0}\t1589617814635\t1589710449871\t1589617846802",
-  ]);
+  let tsvFilePath = await setupCsv(
+    [
+      "url\tusername\tpassword\thttpRealm\tformActionOrigin\tguid\ttimeCreated\ttimeLastUsed\ttimePasswordChanged",
+      `https://example.com:8080\tjoe@example.com\tqwerty\tMy realm\t""\t{5ec0d12f-e194-4279-ae1b-d7d281bb46f0}\t1589617814635\t1589710449871\t1589617846802`,
+    ],
+    "tsv"
+  );
+
+  await LoginCSVImport.importFromCSV(tsvFilePath);
+
+  LoginTestUtils.checkLogins(
+    [
+      TestData.authLogin({
+        formActionOrigin: null,
+        guid: "{5ec0d12f-e194-4279-ae1b-d7d281bb46f0}",
+        httpRealm: "My realm",
+        origin: "https://example.com:8080",
+        password: "qwerty",
+        passwordField: "",
+        timeCreated: 1589617814635,
+        timeLastUsed: 1589710449871,
+        timePasswordChanged: 1589617846802,
+        timesUsed: 1,
+        username: "joe@example.com",
+        usernameField: "",
+      }),
+    ],
+    "Check that a new login was added with the correct fields",
+    (a, e) => a.equals(e) && checkMetaInfo(a, e)
+  );
+});
+
+/**
+ * Ensure that an import fails if there is no username column in a TSV file.
+ */
+add_task(async function test_import_tsv_with_missing_columns() {
+  let csvFilePath = await setupCsv(
+    [
+      "url\tusernameTypo\tpassword\thttpRealm\tformActionOrigin\tguid\ttimeCreated\ttimeLastUsed\ttimePasswordChanged",
+      "https://example.com\tkramer@example.com\tqwerty\tMy realm\t\t{5ec0d12f-e194-4279-ae1b-d7d281bb46f7}\t1589617814635\t1589710449871\t1589617846802",
+    ],
+    "tsv"
+  );
 
   await Assert.rejects(
     LoginCSVImport.importFromCSV(csvFilePath),
-    /must contain origin, username, and password columns/,
-    "Ensure non-CSV throws"
+    /FILE_FORMAT_ERROR/,
+    "Ensure missing username throws"
   );
 
   LoginTestUtils.checkLogins(
@@ -96,7 +142,7 @@ add_task(async function test_import_lacking_username_column() {
 
   await Assert.rejects(
     LoginCSVImport.importFromCSV(csvFilePath),
-    /must contain origin, username, and password columns/,
+    /FILE_FORMAT_ERROR/,
     "Ensure missing username throws"
   );
 
@@ -134,23 +180,6 @@ add_task(async function test_import_with_duplicate_columns() {
       }),
     ],
     "Check that no login was added with duplicate columns of differing values"
-  );
-});
-
-/**
- * Ensure that an import doesn't throw with only a header row.
- */
-add_task(async function test_import_only_header_row() {
-  let csvFilePath = await setupCsv([
-    "url,usernameTypo,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
-  ]);
-
-  // Shouldn't throw
-  await LoginCSVImport.importFromCSV(csvFilePath);
-
-  LoginTestUtils.checkLogins(
-    [],
-    "Check that no login was added without non-header rows."
   );
 });
 
@@ -546,7 +575,7 @@ add_task(async function test_import_summary_contains_logins_with_errors() {
   let csvFilePath = await setupCsv([
     "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
     "https://invalid.password.example.com,jane@example.com,,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0002},1589617814635,1589710449871,1589617846802",
-    ",jane@example.com,invalid_origin,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0002},1589617814635,1589710449871,1589617846802",
+    ",jane@example.com,invalid_origin,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0005},1589617814635,1589710449871,1589617846802",
   ]);
   let [invalidPassword, invalidOrigin] = await LoginCSVImport.importFromCSV(
     csvFilePath
@@ -561,5 +590,95 @@ add_task(async function test_import_summary_contains_logins_with_errors() {
     invalidOrigin.result,
     "error_invalid_origin",
     `Check that the invalid origin error is reported`
+  );
+});
+
+/**
+ * Imports login with wrong file format will have correct errorType.
+ */
+add_task(async function test_import_summary_with_bad_format() {
+  let csvFilePath = await setupCsv(["password", "123qwe!@#QWE"]);
+
+  await Assert.rejects(
+    LoginCSVImport.importFromCSV(csvFilePath),
+    /FILE_FORMAT_ERROR/,
+    "Check that the errorType is file format error"
+  );
+
+  LoginTestUtils.checkLogins(
+    [],
+    "Check that no login was added with bad format"
+  );
+});
+
+/**
+ * Imports login with wrong file type will have correct errorType.
+ */
+add_task(async function test_import_summary_with_non_csv_file() {
+  let csvFilePath = await setupCsv([
+    "<body>this is totally not a csv file</body>",
+  ]);
+
+  await Assert.rejects(
+    LoginCSVImport.importFromCSV(csvFilePath),
+    /FILE_FORMAT_ERROR/,
+    "Check that the errorType is file format error"
+  );
+
+  LoginTestUtils.checkLogins(
+    [],
+    "Check that no login was added with file of different format"
+  );
+});
+
+/**
+ * Imports login with wrong file type will have correct errorType.
+ */
+add_task(async function test_import_summary_with_url_user_multiple_values() {
+  let csvFilePath = await setupCsv([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://example.com,jane@example.com,password1,My realm",
+    "https://example.com,jane@example.com,password2,My realm",
+  ]);
+
+  let errorType;
+  try {
+    await LoginCSVImport.importFromCSV(csvFilePath);
+  } catch (e) {
+    if (e instanceof ImportFailedException) {
+      errorType = e.errorType;
+    }
+  }
+
+  equal(
+    errorType,
+    ImportFailedErrorType.CONFLICTING_VALUES_ERROR,
+    `Check that the errorType is file format error in case of duplicate entries`
+  );
+}).skip(); // TODO: Bug 1687852, resolve duplicates when importing
+
+/**
+ * Imports login with wrong file type will have correct errorType.
+ */
+add_task(async function test_import_summary_with_multiple_guid_values() {
+  let csvFilePath = await setupCsv([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://example1.com,jane1@example.com,password1,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0004},1589617814635,1589710449871,1589617846802",
+    "https://example2.com,jane2@example.com,password2,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0004},1589617814635,1589710449871,1589617846802",
+  ]);
+
+  let errorType;
+  try {
+    await LoginCSVImport.importFromCSV(csvFilePath);
+  } catch (e) {
+    if (e instanceof ImportFailedException) {
+      errorType = e.errorType;
+    }
+  }
+
+  equal(
+    errorType,
+    ImportFailedErrorType.CONFLICTING_VALUES_ERROR,
+    `Check that the errorType is file format error in case of duplicate entries`
   );
 });

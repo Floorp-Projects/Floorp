@@ -1,0 +1,74 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.overlay {
+  position: fixed;
+  z-index: 1;
+  inset: 0;
+  /* TODO: this color is used in the about:preferences overlay, but
+           why isn't it declared as a variable? */
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+}
+
+.container {
+  z-index: 2;
+  position: relative;
+  display: grid;
+  grid-template-columns: 37px auto;
+  grid-template-rows: 32px auto 50px;
+  grid-gap: 5px;
+  align-items: center;
+  width: 580px;
+  height: 290px;
+  padding: 50px 50px 20px;
+  margin: auto;
+  background-color: var(--in-content-page-background);
+  color: var(--in-content-page-color);
+  box-shadow: var(--shadow-30);
+  /* show a border in high contrast mode */
+  outline: 1px solid transparent;
+}
+
+::slotted([slot="dialog-icon"]) {
+  width: 32px;
+  height: 32px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+::slotted([slot="dialog-title"]) {
+  font-size: 2.2em;
+  font-weight: 300;
+  user-select: none;
+  margin: 0;
+}
+
+::slotted([slot="content"]) {
+  grid-column-start: 2;
+  align-self: baseline;
+  padding-top: 10px;
+}
+
+::slotted([slot="buttons"]) {
+  grid-column: 1 / 4;
+  grid-row-start: 3;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--in-content-border-color);
+  padding-top: 12px;
+  gap: 10px;
+}
+
+button {
+  min-width: 140px;
+  width: 170px;
+  height: 30px;
+  margin: 0;
+}
+
+.dialog-body {
+  padding-block: 40px 16px;
+  padding-inline: 45px 32px;
+}
