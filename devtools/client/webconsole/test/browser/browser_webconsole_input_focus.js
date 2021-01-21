@@ -44,7 +44,14 @@ add_task(async function() {
 
   info("Focus after clicking in the output area");
   await waitForBlurredInput(hud);
+  AccessibilityUtils.setEnv({
+    actionCountRule: false,
+    focusableRule: false,
+    interactiveRule: false,
+    labelRule: false,
+  });
   await EventUtils.sendMouseEvent({ type: "click" }, msg);
+  AccessibilityUtils.resetEnv();
   ok(isInputFocused(hud), "input node is focused, second time");
 
   is(
@@ -57,7 +64,14 @@ add_task(async function() {
   await waitForBlurredInput(hud);
   const selection = hud.iframeWindow.getSelection();
   selection.selectAllChildren(msg.querySelector(".message-body"));
+  AccessibilityUtils.setEnv({
+    actionCountRule: false,
+    focusableRule: false,
+    interactiveRule: false,
+    labelRule: false,
+  });
   await EventUtils.sendMouseEvent({ type: "click" }, msg);
+  AccessibilityUtils.resetEnv();
   ok(!isInputFocused(hud), "input node not focused after text is selected");
 });
 
