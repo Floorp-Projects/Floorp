@@ -1816,7 +1816,7 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
     mSpdySession = nullptr;
   }
 
-  if (!mTransaction && mTLSFilter && gHttpHandler->Bug1556491()) {
+  if (!mTransaction && mTLSFilter) {
     // In case of a race when the transaction is being closed before the tunnel
     // is established we need to carry closing status on the proxied
     // transaction.
