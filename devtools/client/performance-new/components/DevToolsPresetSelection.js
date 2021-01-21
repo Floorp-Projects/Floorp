@@ -32,7 +32,10 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  PureComponent,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const {
   div,
   select,
@@ -48,6 +51,9 @@ const selectors = require("devtools/client/performance-new/store/selectors");
 const {
   featureDescriptions,
 } = require("devtools/client/performance-new/utils");
+const Localized = createFactory(
+  require("devtools/client/shared/vendor/fluent-react").Localized
+);
 
 /**
  * This component displays the preset selection for the DevTools panel. It should be
@@ -88,8 +94,10 @@ class DevToolsPresetSelection extends PureComponent {
     let presetDescription;
     const currentPreset = presets[presetName];
     if (currentPreset) {
+      // Display the current preset's description.
       presetDescription = currentPreset.description;
     } else {
+      // Build up a display of the details of the custom preset.
       const { interval, threads, features } = this.props;
       presetDescription = div(
         null,
@@ -97,12 +105,23 @@ class DevToolsPresetSelection extends PureComponent {
           { className: "perf-presets-custom" },
           li(
             null,
-            span({ className: "perf-presets-custom-bold" }, "Interval: "),
-            `${interval} ms`
+            Localized(
+              { id: "perftools-devtools-interval-label" },
+              span({ className: "perftools-presets-custom-bold" })
+            ),
+            " ",
+            Localized({
+              id: "perftools-range-interval-milliseconds",
+              $interval: interval,
+            })
           ),
           li(
             null,
-            span({ className: "perf-presets-custom-bold" }, "Threads: "),
+            Localized(
+              { id: "perftools-devtools-threads-label" },
+              span({ className: "perf-presets-custom-bold" })
+            ),
+            " ",
             threads.join(", ")
           ),
           features.map(feature => {
@@ -120,14 +139,17 @@ class DevToolsPresetSelection extends PureComponent {
         ),
         button(
           { className: "perf-external-link", onClick: openAboutProfiling },
-          "Edit Settings…"
+          Localized({ id: "perftools-button-edit-settings" })
         )
       );
     }
 
     return div(
       { className: "perf-presets" },
-      div({ className: "perf-presets-settings" }, "Settings"),
+      div(
+        { className: "perf-presets-settings" },
+        Localized({ id: "perftools-devtools-settings-label" })
+      ),
       div(
         { className: "perf-presets-details" },
         div(
