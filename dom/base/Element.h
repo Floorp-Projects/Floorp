@@ -1640,6 +1640,13 @@ class Element : public FragmentOrElement {
   already_AddRefed<nsIBrowser> AsBrowser();
   already_AddRefed<nsIAutoCompletePopup> AsAutoCompletePopup();
 
+  /**
+   * Get the presentation context for this content node.
+   * @return the presentation context
+   */
+  enum PresContextFor { eForComposedDoc, eForUncomposedDoc };
+  nsPresContext* GetPresContext(PresContextFor aFor);
+
  protected:
   /*
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
