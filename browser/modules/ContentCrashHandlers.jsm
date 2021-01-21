@@ -37,6 +37,11 @@ const MAX_UNSEEN_CRASHED_CHILD_IDS = 20;
 // Time after which we will begin scanning for unsubmitted crash reports
 const CHECK_FOR_UNSUBMITTED_CRASH_REPORTS_DELAY_MS = 60 * 10000; // 10 minutes
 
+const TABCRASHED_ICON_URI = "chrome://browser/skin/tab-crashed.svg";
+
+const SUBFRAMECRASH_LEARNMORE_URI =
+  "https://support.mozilla.org/kb/firefox-crashes-troubleshoot-prevent-and-get-help";
+
 /**
  * BrowserWeakMap is exactly like a WeakMap, but expects <xul:browser>
  * objects only.
@@ -72,6 +77,7 @@ var TabCrashHandler = {
   _crashedTabCount: 0,
   childMap: new Map(),
   browserMap: new BrowserWeakMap(),
+  notificationsMap: new Map(),
   unseenCrashedChildIDs: [],
   crashedBrowserQueues: new Map(),
   restartRequiredBrowsers: new WeakSet(),
@@ -276,6 +282,103 @@ var TabCrashHandler = {
     });
 
     SessionStore.reviveCrashedTab(tab);
+  },
+
+  /**
+   * Called to indicate that a subframe within a browser has crashed. A notification
+   * bar will be shown.
+   *
+   * @param browser (<xul:browser>)
+   *        The browser containing the frame that just crashed.
+   * @param childId
+   *        The id of the process that just crashed.
+   */
+  async onSubFrameCrash(browser, childID) {
+    let gBrowser = browser.getTabBrowser();
+    let notificationBox = gBrowser.getNotificationBox(browser);
+
+    const value = "subframe-crashed";
+    let notification = notificationBox.getNotificationWithValue(value);
+    if (notification) {
+      // Don't show multiple notifications for a browser.
+      return;
+    }
+
+    let closeAllNotifications = () => {
+      // Close all other notifications on other tabs that might
+      // be open for the same crashed process.
+      let existingItem = this.notificationsMap.get(childID);
+      if (existingItem) {
+        for (let notif of existingItem.slice()) {
+          notif.close();
+        }
+      }
+    };
+
+    let doc = browser.ownerDocument;
+    let messageFragment = doc.createDocumentFragment();
+    let message = doc.createElement("span");
+    message.setAttribute("data-l10n-id", "crashed-subframe-message");
+    messageFragment.appendChild(message);
+
+    let buttons = [
+      {
+        "l10n-id": "crashed-subframe-learnmore",
+        popup: null,
+        callback: async () => {
+          doc.defaultView.openTrustedLinkIn(SUBFRAMECRASH_LEARNMORE_URI, "tab");
+        },
+      },
+      {
+        "l10n-id": "crashed-subframe-submit",
+        popup: null,
+        callback: async () => {
+          let dumpID = this.childMap.get(childID);
+          if (dumpID) {
+            UnsubmittedCrashHandler.submitReports([dumpID]);
+          }
+          closeAllNotifications();
+        },
+      },
+    ];
+
+    notification = notificationBox.appendNotification(
+      messageFragment,
+      value,
+      TABCRASHED_ICON_URI,
+      notificationBox.PRIORITY_INFO_MEDIUM,
+      buttons,
+      eventName => {
+        if (eventName == "disconnected") {
+          let existingItem = this.notificationsMap.get(childID);
+          if (existingItem) {
+            let idx = existingItem.indexOf(notification);
+            if (idx >= 0) {
+              existingItem.splice(idx, 1);
+            }
+
+            if (!existingItem.length) {
+              this.notificationsMap.delete(childID);
+            }
+          }
+        } else if (eventName == "dismissed") {
+          let dumpID = this.childMap.get(childID);
+          if (dumpID) {
+            CrashSubmit.ignore(dumpID);
+            this.childMap.delete(childID);
+          }
+
+          closeAllNotifications();
+        }
+      }
+    );
+
+    let existingItem = this.notificationsMap.get(childID);
+    if (existingItem) {
+      existingItem.push(notification);
+    } else {
+      this.notificationsMap.set(childID, [notification]);
+    }
   },
 
   /**
@@ -940,7 +1043,7 @@ var UnsubmittedCrashHandler = {
     return chromeWin.gNotificationBox.appendNotification(
       message,
       notificationID,
-      "chrome://browser/skin/tab-crashed.svg",
+      TABCRASHED_ICON_URI,
       chromeWin.gNotificationBox.PRIORITY_INFO_HIGH,
       buttons,
       eventCallback
