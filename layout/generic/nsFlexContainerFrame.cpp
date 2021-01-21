@@ -1287,12 +1287,61 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
     FlexLine& aLine, nsIFrame* aChildFrame,
     const ReflowInput& aParentReflowInput,
     const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis) {
+  const auto flexWM = aAxisTracker.GetWritingMode();
+  const auto childWM = aChildFrame->GetWritingMode();
+  const auto* stylePos = aChildFrame->StylePosition();
+
+  // Construct a StyleSizeOverrides for this flex item so that its ReflowInput
+  // below will use and resolve its flex base size rather than its corresponding
+  // preferred main size property (only for modern CSS flexbox).
+  StyleSizeOverrides sizeOverrides;
+  if (!IsLegacyBox(this)) {
+    Maybe<StyleSize> styleFlexBaseSize;
+
+    // When resolving flex base size, flex items use their 'flex-basis' property
+    // in place of their preferred main size (e.g. 'width') for sizing purposes,
+    // *unless* they have 'flex-basis:auto' in which case they use their
+    // preferred main size after all.
+    const auto& flexBasis = stylePos->mFlexBasis;
+    const auto& styleMainSize = stylePos->Size(aAxisTracker.MainAxis(), flexWM);
+    if (IsUsedFlexBasisContent(flexBasis, styleMainSize)) {
+      // If we get here, we're resolving the flex base size for a flex item, and
+      // we fall into the flexbox spec section 9.2 step 3, substep C (if we have
+      // a definite cross size) or E (if not).
+      if (aChildFrame->GetAspectRatio()) {
+        // FIXME: This is a workaround. Once bug 1670151 is fixed, aspect-ratio
+        // will be considered when resolving flex item's flex base size with the
+        // value 'max-content'.
+        styleFlexBaseSize.emplace(StyleSize::Auto());
+      } else {
+        styleFlexBaseSize.emplace(
+            StyleSize::ExtremumLength(StyleExtremumLength::MaxContent));
+      }
+    } else if (flexBasis.IsSize() && !flexBasis.IsAuto()) {
+      // For all other non-'auto' flex-basis values, we just swap in the
+      // flex-basis itself for the preferred main-size property.
+      styleFlexBaseSize.emplace(flexBasis.AsSize());
+    } else {
+      // else: flex-basis is 'auto', which is deferring to some explicit value
+      // in the preferred main size, so we proceed without emplacing
+      // styleFlexBaseSize.
+      MOZ_ASSERT(flexBasis.IsAuto());
+    }
+
+    // Provide the size override for the preferred main size property.
+    if (aAxisTracker.IsInlineAxisMainAxis(childWM)) {
+      sizeOverrides.mStyleISize = std::move(styleFlexBaseSize);
+    } else {
+      sizeOverrides.mStyleBSize = std::move(styleFlexBaseSize);
+    }
+  }
+
   // Create temporary reflow input just for sizing -- to get hypothetical
   // main-size and the computed values of min / max main-size property.
   // (This reflow input will _not_ be used for reflow.)
-  ReflowInput childRI(
-      PresContext(), aParentReflowInput, aChildFrame,
-      aParentReflowInput.ComputedSize(aChildFrame->GetWritingMode()));
+  ReflowInput childRI(PresContext(), aParentReflowInput, aChildFrame,
+                      aParentReflowInput.ComputedSize(childWM), Nothing(), {},
+                      sizeOverrides);
   childRI.mFlags.mInsideLineClamp = GetLineClampValue() != 0;
 
   // FLEX GROW & SHRINK WEIGHTS
@@ -1306,13 +1355,9 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
       flexGrow = flexShrink = aChildFrame->StyleXUL()->mBoxFlex;
     }
   } else {
-    const nsStylePosition* stylePos = aChildFrame->StylePosition();
     flexGrow = stylePos->mFlexGrow;
     flexShrink = stylePos->mFlexShrink;
   }
-
-  const auto childWM = childRI.GetWritingMode();
-  const auto flexWM = aAxisTracker.GetWritingMode();
 
   // MAIN SIZES (flex base size, min/max size)
   // -----------------------------------------
