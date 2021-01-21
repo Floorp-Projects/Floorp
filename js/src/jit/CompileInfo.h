@@ -90,6 +90,7 @@ class CompileInfo {
         hadSpeculativePhiBailout_(script->hadSpeculativePhiBailout()),
         hadLICMInvalidation_(script->hadLICMInvalidation()),
         hadBoundsCheckBailout_(script->failedBoundsCheck()),
+        hadUnboxFoldingBailout_(script->hadUnboxFoldingBailout()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
         isDerivedClassConstructor_(script->isDerivedClassConstructor()),
         inlineScriptTree_(inlineScriptTree) {
@@ -153,6 +154,7 @@ class CompileInfo {
         hadSpeculativePhiBailout_(false),
         hadLICMInvalidation_(false),
         hadBoundsCheckBailout_(false),
+        hadUnboxFoldingBailout_(false),
         mayReadFrameArgsDirectly_(false),
         inlineScriptTree_(nullptr),
         needsBodyEnvironmentObject_(false),
@@ -383,6 +385,7 @@ class CompileInfo {
   bool hadSpeculativePhiBailout() const { return hadSpeculativePhiBailout_; }
   bool hadLICMInvalidation() const { return hadLICMInvalidation_; }
   bool hadBoundsCheckBailout() const { return hadBoundsCheckBailout_; }
+  bool hadUnboxFoldingBailout() const { return hadUnboxFoldingBailout_; }
   bool mayReadFrameArgsDirectly() const { return mayReadFrameArgsDirectly_; }
 
   bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
@@ -410,6 +413,7 @@ class CompileInfo {
   bool hadSpeculativePhiBailout_;
   bool hadLICMInvalidation_;
   bool hadBoundsCheckBailout_;
+  bool hadUnboxFoldingBailout_;
 
   bool mayReadFrameArgsDirectly_;
 
