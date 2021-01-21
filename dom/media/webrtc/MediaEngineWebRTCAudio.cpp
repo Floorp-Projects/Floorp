@@ -886,6 +886,10 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(aGraph->OnGraphThread());
   MOZ_ASSERT(mEnabled);
 
+  if (PassThrough(aGraph)) {
+    return;
+  }
+
   if (!mPacketizerOutput || mPacketizerOutput->mPacketSize != aRate / 100u ||
       mPacketizerOutput->mChannels != aChannels) {
     // It's ok to drop the audio still in the packetizer here: if this changes,
