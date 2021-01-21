@@ -67,6 +67,7 @@ function startTest() {
     div1.style.display = "none";
   });
 
+  info("Tests for mouseup");
   synthesizeMouseAtCenter(div1, {type: "mousedown"}, iframe.contentWindow);
   synthesizeMouseAtCenter(div2, {type: "mousemove"}, iframe.contentWindow);
   synthesizeMouseAtCenter(div2, {type: "mouseup"}, iframe.contentWindow);
@@ -105,6 +106,7 @@ function startTest() {
     }, { once: true });
   });
 
+  info("Tests for touchend");
   div1.style.display = "block";
   synthesizeMouseAtCenter(div1, {type: "mousemove"}, iframe.contentWindow);
   synthesizeTouch(div1, 5, 5, { type: "touchstart" }, iframe.contentWindow);
@@ -112,6 +114,48 @@ function startTest() {
   synthesizeTouch(div2, 5, 5, { type: "touchend" }, iframe.contentWindow);
 
   ok(divEvents.length == 0, " expect " + divEvents);
+
+  divEvents = [
+    "pointerdown",
+    "gotpointercapture",
+    "pointermove",
+    "pointercancel",
+    "lostpointercapture",
+    "touchstart",
+    "touchmove",
+    "touchcancel",
+  ];
+
+  documentEvents = [
+    "pointerdown",
+    "pointermove",
+    "pointercancel",
+    "touchstart",
+    "touchmove",
+    "touchcancel",
+  ];
+  divEvents.forEach((event) => {
+    div1.addEventListener(event, (e) => {
+      ok(divEvents.includes(e.type), " don't expect " + e.type);
+      divEvents = divEvents.filter(item => item !== e.type);
+    }, { once: true });
+  });
+
+  documentEvents.forEach((event) => {
+    iframe.contentDocument.addEventListener(event, (e) => {
+      is(e.target, div1, e.type + " should be dispatched to div1");
+    }, { once: true });
+  });
+
+  info("Tests for touchcancel");
+  div1.style.display = "block";
+  synthesizeMouseAtCenter(div1, {type: "mousemove"}, iframe.contentWindow);
+  synthesizeTouch(div1, 5, 5, { type: "touchstart" }, iframe.contentWindow);
+  synthesizeTouch(div2, 5, 5, { type: "touchmove" }, iframe.contentWindow);
+  synthesizeTouch(div2, 5, 5, { type: "touchcancel" }, iframe.contentWindow);
+
+  ok(divEvents.length == 0, " expect " + divEvents);
+
   SimpleTest.finish();
 }
 
