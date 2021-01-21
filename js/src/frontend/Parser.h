@@ -521,7 +521,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   inline NameNodeType newName(const ParserName* name, TokenPos pos);
 
   inline NameNodeType newPrivateName(const ParserName* name);
-  inline NameNodeType newPrivateName(const ParserName* name, TokenPos pos);
 
   NameNodeType newInternalDotName(const ParserName* name);
   NameNodeType newThisName();
