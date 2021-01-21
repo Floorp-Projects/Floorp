@@ -6081,14 +6081,13 @@ static MinMaxSize ComputeTransferredMinMaxInlineSize(
 nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   MOZ_ASSERT(!GetIntrinsicRatio(),
              "Please override this method and call "
              "nsContainerFrame::ComputeSizeWithIntrinsicDimensions instead.");
   LogicalSize result =
       ComputeAutoSize(aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin,
-                      aBorderPadding, aSizeOverrides, aFlags);
+                      aBorderPadding, aFlags);
   const nsStylePosition* stylePos = StylePosition();
   const nsStyleDisplay* disp = StyleDisplay();
   auto aspectRatioUsage = AspectRatioUsage::None;
@@ -6100,12 +6099,8 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
                                        aBorderPadding.ISize(aWM) -
                                        boxSizingAdjust.ISize(aWM);
 
-  const auto& styleISize = aSizeOverrides.mStyleISize
-                               ? *aSizeOverrides.mStyleISize
-                               : stylePos->ISize(aWM);
-  const auto& styleBSize = aSizeOverrides.mStyleBSize
-                               ? *aSizeOverrides.mStyleBSize
-                               : stylePos->BSize(aWM);
+  const auto* inlineStyleCoord = &stylePos->ISize(aWM);
+  const auto* blockStyleCoord = &stylePos->BSize(aWM);
 
   auto parentFrame = GetParent();
   auto alignCB = parentFrame;
@@ -6132,27 +6127,85 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // flex container's main axis.
   LogicalAxis flexMainAxis =
       eLogicalAxisInline;  // (init to make valgrind happy)
+
+  // The holder of the imposed main size pointer. This is used for adjusting the
+  // main size of the flex item after we resolve its flexible length.
+  Maybe<StyleSize> imposedMainSizeStyleCoord;
+
   if (isFlexItem) {
+    // Flex items use their "flex-basis" property in place of their main-size
+    // property for sizing purposes, *unless* they have "flex-basis:auto", in
+    // which case they use their main-size property after all.
     flexMainAxis = nsFlexContainerFrame::IsItemInlineAxisMainAxis(this)
                        ? eLogicalAxisInline
                        : eLogicalAxisBlock;
+
+    // NOTE: The logic here should match the similar chunk for updating
+    // mainAxisCoord in nsContainerFrame::ComputeSizeWithIntrinsicDimensions()
+    // (aside from using a different dummy value in the IsUsedFlexBasisContent()
+    // case).
+    const auto* flexBasis = &stylePos->mFlexBasis;
+    auto& mainAxisCoord =
+        (flexMainAxis == eLogicalAxisInline ? inlineStyleCoord
+                                            : blockStyleCoord);
+
+    // If FlexItemMainSizeOverride frame-property is set, then that means the
+    // flex container is imposing a main-size on this flex item for it to use
+    // as its size in the container's main axis.
+    bool didImposeMainSize;
+    nscoord imposedMainSize =
+        GetProperty(nsIFrame::FlexItemMainSizeOverride(), &didImposeMainSize);
+    if (didImposeMainSize) {
+      imposedMainSizeStyleCoord = Some(StyleSize::LengthPercentage(
+          LengthPercentage::FromAppUnits(imposedMainSize)));
+      if (flexMainAxis == eLogicalAxisInline) {
+        inlineStyleCoord = imposedMainSizeStyleCoord.ptr();
+      } else {
+        blockStyleCoord = imposedMainSizeStyleCoord.ptr();
+      }
+    } else {
+      // NOTE: If we're a table-wrapper frame, we skip this clause and just
+      // stick with 'main-size:auto' behavior (which -- unlike 'content' i.e.
+      // 'max-content' -- will give us the ability to honor percent sizes on our
+      // table-box child when resolving the flex base size). The flexbox spec
+      // doesn't call for this special case, but webcompat &
+      // regression-avoidance seems to require it, for the time being... Tables
+      // sure are special.
+      if (nsFlexContainerFrame::IsUsedFlexBasisContent(*flexBasis,
+                                                       *mainAxisCoord) &&
+          MOZ_LIKELY(!IsTableWrapperFrame())) {
+        static const StyleSize maxContStyleCoord(
+            StyleSize::ExtremumLength(StyleExtremumLength::MaxContent));
+        mainAxisCoord = &maxContStyleCoord;
+        // (Note: if our main axis is the block axis, then this 'max-content'
+        // value will be treated like 'auto', via the IsAutoBSize() call below.)
+      } else if (flexBasis->IsSize() && !flexBasis->IsAuto()) {
+        // For all other non-'auto' flex-basis values, we just swap in the
+        // flex-basis itself for the main-size property.
+        mainAxisCoord = &flexBasis->AsSize();
+      } else {
+        // else: flex-basis is 'auto', or 'content' in a table wrapper frame
+        // which we ignore. So we proceed w/o touching mainAxisCoord.
+      }
+    }
   }
 
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
-  const bool isAutoISize =
-      styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize);
+  const bool isAutoISize = inlineStyleCoord->IsAuto() ||
+                           aFlags.contains(ComputeSizeFlag::UseAutoISize);
   // Compute inline-axis size
   if (!isAutoISize) {
-    auto iSizeResult =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, styleISize, aFlags);
+    auto iSizeResult = ComputeISizeValue(
+        aRenderingContext, aWM, aCBSize, boxSizingAdjust,
+        boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags);
     result.ISize(aWM) = iSizeResult.mISize;
     aspectRatioUsage = iSizeResult.mAspectRatioUsage;
   } else if (stylePos->mAspectRatio.HasFiniteRatio() &&
-             !nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM))) {
+             !nsLayoutUtils::IsAutoBSize(*blockStyleCoord,
+                                         aCBSize.BSize(aWM))) {
     auto bSize = nsLayoutUtils::ComputeBSizeValue(
         aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-        styleBSize.AsLengthPercentage());
+        blockStyleCoord->AsLengthPercentage());
     result.ISize(aWM) =
         stylePos->mAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
             LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
@@ -6191,7 +6244,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // aspect ratio is called the ratio-dependent axis, and the resulting size
   // is definite if its input sizes are also definite.
   const bool isDefiniteISize =
-      styleISize.IsLengthPercentage() ||
+      inlineStyleCoord->IsLengthPercentage() ||
       aspectRatioUsage == AspectRatioUsage::ToComputeISize;
   const bool isFlexItemInlineAxisMainAxis =
       isFlexItem && flexMainAxis == eLogicalAxisInline;
@@ -6244,7 +6297,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     // This implements "Implied Minimum Size of Grid Items".
     // https://drafts.csswg.org/css-grid/#min-size-auto
     minISize = std::min(maxISize, GetMinISize(aRenderingContext));
-    if (styleISize.IsLengthPercentage()) {
+    if (inlineStyleCoord->IsLengthPercentage()) {
       minISize = std::min(minISize, result.ISize(aWM));
     } else if (aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize)) {
       // "if the grid item spans only grid tracks that have a fixed max track
@@ -6282,10 +6335,10 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // flag -- then, we'll just stick with the bsize that we already calculated
   // in the initial ComputeAutoSize() call.)
   if (!aFlags.contains(ComputeSizeFlag::UseAutoBSize)) {
-    if (!nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM))) {
+    if (!nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM))) {
       result.BSize(aWM) = nsLayoutUtils::ComputeBSizeValue(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-          styleBSize.AsLengthPercentage());
+          blockStyleCoord->AsLengthPercentage());
     } else if (stylePos->mAspectRatio.HasFiniteRatio() &&
                result.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
       result.BSize(aWM) =
@@ -6294,7 +6347,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
               boxSizingAdjust);
       MOZ_ASSERT(aspectRatioUsage == AspectRatioUsage::None);
       aspectRatioUsage = AspectRatioUsage::ToComputeBSize;
-    } else if (MOZ_UNLIKELY(isGridItem) && styleBSize.IsAuto() &&
+    } else if (MOZ_UNLIKELY(isGridItem) && blockStyleCoord->IsAuto() &&
                !IsTrueOverflowContainer() &&
                !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisInline
                                                 : eLogicalAxisBlock)) {
@@ -6387,16 +6440,13 @@ LogicalSize nsIFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM,
     const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
     const mozilla::LogicalSize& aMargin,
-    const mozilla::LogicalSize& aBorderPadding,
-    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
+    const mozilla::LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   // Use basic shrink-wrapping as a default implementation.
   LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
 
   // don't bother setting it if the result won't be used
-  const auto& styleISize = aSizeOverrides.mStyleISize
-                               ? *aSizeOverrides.mStyleISize
-                               : StylePosition()->ISize(aWM);
-  if (styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize)) {
+  if (StylePosition()->ISize(aWM).IsAuto() ||
+      aFlags.contains(ComputeSizeFlag::UseAutoISize)) {
     nscoord availBased =
         aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);
     result.ISize(aWM) = ShrinkWidthToFit(aRenderingContext, availBased, aFlags);
@@ -10647,7 +10697,7 @@ void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
             ComputeSize(
                 aRenderingContext, wm, logicalSize, logicalSize.ISize(wm),
                 reflowInput.ComputedLogicalMargin(wm).Size(wm),
-                reflowInput.ComputedLogicalBorderPadding(wm).Size(wm), {}, {})
+                reflowInput.ComputedLogicalBorderPadding(wm).Size(wm), {})
                 .mLogicalSize.Height(wm));
       }
     }
