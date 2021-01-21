@@ -3228,7 +3228,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   // Add special cases here.
   if (!mCurrentTarget && aEvent->mMessage != eMouseUp &&
       aEvent->mMessage != eMouseDown && aEvent->mMessage != eDragEnter &&
-      aEvent->mMessage != eDragOver) {
+      aEvent->mMessage != eDragOver && aEvent->mMessage != ePointerUp &&
+      aEvent->mMessage != ePointerCancel) {
     return NS_OK;
   }
 
