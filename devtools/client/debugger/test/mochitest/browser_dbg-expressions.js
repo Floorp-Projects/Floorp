@@ -33,23 +33,13 @@ add_task(async function() {
   // can expand an expression
   await toggleExpressionNode(dbg, 2);
 
-  is(findAllElements(dbg, "expressionNodes").length, 35);
-  is(dbg.selectors.getExpressions(dbg.store.getState()).length, 2);
-
   await deleteExpression(dbg, "foo");
   await deleteExpression(dbg, "location");
   is(findAllElements(dbg, "expressionNodes").length, 0);
-  is(dbg.selectors.getExpressions(dbg.store.getState()).length, 0);
 
   // Test expanding properties when the debuggee is active
-  // Wait for full evaluation of the expressions in order to avoid having
-  // mixed up code between the location being removed and the one being re-added
-  const evaluated = waitForDispatch(dbg, "EVALUATE_EXPRESSIONS");
   await resume(dbg);
-  await evaluated;
-
   await addExpression(dbg, "location");
-  is(dbg.selectors.getExpressions(dbg.store.getState()).length, 1);
 
   is(findAllElements(dbg, "expressionNodes").length, 1);
 
