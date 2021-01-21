@@ -289,10 +289,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsTimerImpl::Shutdown\n"
          "race:nsTimerImpl::CancelImpl\n"
 
-         // Bug 1645696
-         "race:nsHttpHandler::PrefsChanged\n"
-         "race:nsHttpConnection::Activate\n"
-
          // Bug 1682951
          "race:storage::Connection::Release\n"
 
