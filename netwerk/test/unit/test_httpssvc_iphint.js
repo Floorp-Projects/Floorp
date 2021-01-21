@@ -236,6 +236,7 @@ function makeChan(url) {
   let chan = NetUtil.newChannel({
     uri: url,
     loadUsingSystemPrincipal: true,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   }).QueryInterface(Ci.nsIHttpChannel);
   return chan;
 }
@@ -285,8 +286,13 @@ add_task(async function testConnectionWithIPHint() {
   );
 
   // The connection should be succeeded since the IP hint is 127.0.0.1.
-  let chan = makeChan(`https://test.iphint.com:8080/`);
+  let chan = makeChan(`http://test.iphint.com:8080/`);
+  // Note that the partitionKey stored in DNS cache would be
+  // "%28https%2Ciphint.com%29". The http request to test.iphint.com will be
+  // upgraded to https and the ip hint address will be used by the https
+  // request in the end.
   let [req] = await channelOpenPromise(chan);
+  req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(

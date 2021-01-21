@@ -31,6 +31,9 @@ class nsDNSPrefetch final : public nsIDNSListener {
   nsDNSPrefetch(nsIURI* aURI, mozilla::OriginAttributes& aOriginAttributes,
                 nsIRequest::TRRMode aTRRMode, nsIDNSListener* aListener,
                 bool storeTiming);
+  // For fetching HTTPS RR.
+  nsDNSPrefetch(nsIURI* aURI, mozilla::OriginAttributes& aOriginAttributes,
+                nsIRequest::TRRMode aTRRMode);
   bool TimingsValid() const {
     return !mStartTimestamp.IsNull() && !mEndTimestamp.IsNull();
   }
@@ -47,11 +50,11 @@ class nsDNSPrefetch final : public nsIDNSListener {
   nsresult PrefetchLow(bool refreshDNS = false);
 
   nsresult FetchHTTPSSVC(
-      bool aRefreshDNS, std::function<void(nsIDNSHTTPSSVCRecord*)>&& aCallback);
+      bool aRefreshDNS, bool aPrefetch,
+      std::function<void(nsIDNSHTTPSSVCRecord*)>&& aCallback);
 
  private:
   nsCString mHostname;
-  bool mIsHttps;
   mozilla::OriginAttributes mOriginAttributes;
   bool mStoreTiming;
   nsIRequest::TRRMode mTRRMode;

@@ -328,10 +328,14 @@ void StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
   aAttributes.SetPartitionKey(aFirstPartyURI);
 }
 
-// static
-bool StoragePrincipalHelper::GetOriginAttributesForHSTS(
-    nsIChannel* aChannel, OriginAttributes& aAttributes) {
-  if (!GetOriginAttributesForNetworkState(aChannel, aAttributes)) {
+enum SupportedScheme { HTTP, HTTPS };
+
+static bool GetOriginAttributesWithScheme(nsIChannel* aChannel,
+                                          OriginAttributes& aAttributes,
+                                          SupportedScheme aScheme) {
+  const nsString targetScheme = aScheme == HTTP ? u"http"_ns : u"https"_ns;
+  if (!StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+          aChannel, aAttributes)) {
     return false;
   }
 
@@ -358,16 +362,29 @@ bool StoragePrincipalHelper::GetOriginAttributesForHSTS(
   nsAutoString scheme;
   scheme.Assign(Substring(start, iter));
 
-  if (!scheme.EqualsLiteral("https")) {
+  if (scheme.Equals(targetScheme)) {
     return true;
   }
 
   nsAutoString key;
-  key.AssignLiteral("(http");
+  key += u"("_ns;
+  key += targetScheme;
   key.Append(Substring(iter, end));
   aAttributes.SetPartitionKey(key);
 
   return true;
+}
+
+// static
+bool StoragePrincipalHelper::GetOriginAttributesForHSTS(
+    nsIChannel* aChannel, OriginAttributes& aAttributes) {
+  return GetOriginAttributesWithScheme(aChannel, aAttributes, HTTP);
+}
+
+// static
+bool StoragePrincipalHelper::GetOriginAttributesForHTTPSRR(
+    nsIChannel* aChannel, OriginAttributes& aAttributes) {
+  return GetOriginAttributesWithScheme(aChannel, aAttributes, HTTPS);
 }
 
 }  // namespace mozilla
