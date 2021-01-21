@@ -217,9 +217,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsSocketTransport::OnMsgInputClosed\n"
          "race:nsSocketTransport::OpenOutputStream\n"
 
-         // Bug 1607138
-         "race:gXPCOMThreadsShutDown\n"
-
          // Bug 1615017
          "race:CacheFileMetadata::SetHash\n"
          "race:CacheFileMetadata::OnDataWritten\n"
