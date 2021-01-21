@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import android.view.View
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
@@ -63,6 +64,7 @@ class SmokeTest {
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+
     @get:Rule
     var mGrantPermissions = GrantPermissionRule.grant(
         android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -1097,6 +1099,22 @@ class SmokeTest {
             clickAddPrivateBrowsingShortcutButton()
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut("Private Firefox Preview") {
+        }
+    }
+
+    @Test
+    fun mainMenuInstallPWATest() {
+        val pwaPage = "https://rpappalax.github.io/testapp/"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(pwaPage.toUri()) {
+            verifyNotificationDotOnMainMenu()
+        }.openThreeDotMenu {
+        }.clickInstall {
+            clickAddAutomaticallyButton()
+        }.openHomeScreenShortcut("yay app") {
+            mDevice.waitForIdle()
+            verifyNavURLBarHidden()
         }
     }
 }

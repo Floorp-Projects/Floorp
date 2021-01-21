@@ -347,6 +347,13 @@ class ThreeDotMenuMainRobot {
             return AddToHomeScreenRobot.Transition()
         }
 
+        fun clickInstall(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
+            installPWAButton().click()
+
+            AddToHomeScreenRobot().interact()
+            return AddToHomeScreenRobot.Transition()
+        }
+
         fun selectExistingCollection(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(Until.findObject(By.text(title)), waitingTime)
             onView(withText(title)).click()
@@ -535,6 +542,8 @@ private fun assertAddToMobileHome() {
             )
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
+private fun installPWAButton() = onView(allOf(withId(R.id.highlight_text), withText("Install")))
 
 private fun desktopSiteButton() =
     onView(allOf(withText(R.string.browser_menu_desktop_site)))

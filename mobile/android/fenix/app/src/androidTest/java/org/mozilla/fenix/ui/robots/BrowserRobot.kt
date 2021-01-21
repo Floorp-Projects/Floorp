@@ -152,6 +152,8 @@ class BrowserRobot {
 
     fun verifyNavURLBar() = assertNavURLBar()
 
+    fun verifyNavURLBarHidden() = assertNavURLBarHidden()
+
     fun verifySecureConnectionLockIcon() = assertSecureConnectionLockIcon()
 
     fun verifyEnhancedTrackingProtectionSwitch() = assertEnhancedTrackingProtectionSwitch()
@@ -189,6 +191,13 @@ class BrowserRobot {
         mDevice.waitNotNull(Until.findObject(text("Save image")), waitingTime)
         mDevice.waitNotNull(
             Until.findObject(text("Copy image location")), waitingTime
+        )
+    }
+
+    fun verifyNotificationDotOnMainMenu() {
+        assertTrue(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/notification_dot"))
+                .waitForExists(waitingTime)
         )
     }
 
@@ -471,10 +480,13 @@ fun dismissTrackingOnboarding() {
     dismissOnboardingButton().click()
 }
 
-fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
+fun navURLBar() = onView(withId(R.id.toolbar))
 
 private fun assertNavURLBar() = navURLBar()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertNavURLBarHidden() = navURLBar()
+    .check(matches(not(isDisplayed())))
 
 fun enhancedTrackingProtectionIndicator() =
     onView(withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
