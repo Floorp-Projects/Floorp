@@ -12,17 +12,19 @@ class PrintingSelectionChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "PrintingSelection:HasSelection":
-        return this.hasSelection(this.document.ownerGlobal);
+        return this.hasSelection();
     }
 
     return undefined;
   }
 
-  hasSelection(global) {
-    const { content } = global;
+  hasSelection() {
+    let focusedWindow = Services.focus.focusedWindow;
+    if (focusedWindow) {
+      let selection = focusedWindow.getSelection();
+      return selection.type == "Range";
+    }
 
-    let focusedWindow = Services.focus.focusedWindow || content;
-    let selection = focusedWindow.getSelection();
-    return selection.type == "Range";
+    return false;
   }
 }
