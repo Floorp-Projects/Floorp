@@ -1964,8 +1964,7 @@ void LIRGenerator::visitToDouble(MToDouble* convert) {
     }
 
     case MIRType::Null:
-      MOZ_ASSERT(conversion != MToFPInstruction::NumbersOnly &&
-                 conversion != MToFPInstruction::NonNullNonStringPrimitives);
+      MOZ_ASSERT(conversion != MToFPInstruction::NumbersOnly);
       lowerConstantDouble(0, convert);
       break;
 
@@ -2017,8 +2016,7 @@ void LIRGenerator::visitToFloat32(MToFloat32* convert) {
     }
 
     case MIRType::Null:
-      MOZ_ASSERT(conversion != MToFPInstruction::NumbersOnly &&
-                 conversion != MToFPInstruction::NonNullNonStringPrimitives);
+      MOZ_ASSERT(conversion != MToFPInstruction::NumbersOnly);
       lowerConstantFloat32(0, convert);
       break;
 
