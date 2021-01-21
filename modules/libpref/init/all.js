@@ -513,17 +513,18 @@ pref("media.peerconnection.dtls.version.min", 771);
 #endif
 
   // These values (aec, agc, and noise) are from:
-  // media/webrtc/trunk/webrtc/modules/audio_processing/include/audio_processing.h
+  // third_party/libwebrtc/modules/audio_processing/include/audio_processing.h
   pref("media.getusermedia.aec_enabled", true);
-  pref("media.getusermedia.noise_enabled", true);
-  pref("media.getusermedia.use_aec_mobile", false);
   pref("media.getusermedia.aec", 1); // kModerateSuppression
-  pref("media.getusermedia.aec_extended_filter", true);
+  pref("media.getusermedia.use_aec_mobile", false);
+  pref("media.getusermedia.residual_echo_enabled", true);
+  pref("media.getusermedia.noise_enabled", true);
   pref("media.getusermedia.noise", 1); // kModerate
   pref("media.getusermedia.agc_enabled", true);
   pref("media.getusermedia.agc", 1); // kAdaptiveDigital
+  pref("media.getusermedia.agc2_forced", false);
   pref("media.getusermedia.hpf_enabled", true);
-  pref("media.getusermedia.aecm_output_routing", 3); // kSpeakerphone
+  pref("media.getusermedia.transient_enabled", false);
 #endif // MOZ_WEBRTC
 
 #if !defined(ANDROID)
