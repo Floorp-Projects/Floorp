@@ -6,20 +6,22 @@
 
 use super::super::{Connection, Output};
 use super::{
-    assert_full_cwnd, connect_rtt_idle, cwnd_packets, default_client, default_server, fill_cwnd,
-    send_something, AT_LEAST_PTO, DEFAULT_RTT, FORCE_IDLE_CLIENT_1RTT_PACKETS, POST_HANDSHAKE_CWND,
+    assert_full_cwnd, connect_force_idle, connect_rtt_idle, cwnd_packets, default_client,
+    default_server, fill_cwnd, send_something, AT_LEAST_PTO, DEFAULT_RTT, POST_HANDSHAKE_CWND,
 };
 use crate::cc::{CWND_MIN, MAX_DATAGRAM_SIZE};
+use crate::frame::StreamType;
 use crate::packet::PacketNumber;
 use crate::recovery::{ACK_ONLY_SIZE_LIMIT, PACKET_THRESHOLD};
 use crate::sender::PACING_BURST_SIZE;
 use crate::stats::MAX_PTO_COUNTS;
-use crate::stream_id::StreamType;
+use crate::tparams::{self, TransportParameter};
 use crate::tracking::MAX_UNACKED_PKTS;
 
 use neqo_common::{qdebug, qinfo, qtrace, Datagram};
 use std::convert::TryFrom;
 use std::time::{Duration, Instant};
+use test_fixture::{self, now};
 
 fn induce_persistent_congestion(
     client: &mut Connection,
@@ -109,11 +111,18 @@ where
 fn cc_slow_start() {
     let mut client = default_client();
     let mut server = default_server();
+
+    server
+        .set_local_tparam(
+            tparams::INITIAL_MAX_DATA,
+            TransportParameter::Integer(65536),
+        )
+        .unwrap();
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Try to send a lot of data
-    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
-    let (c_tx_dgrams, _) = fill_cwnd(&mut client, stream_id, now);
+    assert_eq!(client.stream_create(StreamType::UniDi).unwrap(), 2);
+    let (c_tx_dgrams, _) = fill_cwnd(&mut client, 2, now);
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
     assert!(client.loss_recovery.cwnd_avail() < ACK_ONLY_SIZE_LIMIT);
 }
@@ -132,10 +141,9 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
     let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
     // Predict the packet number of the last packet sent.
-    // We have already sent packets in `connect_rtt_idle`,
-    // so include a fudge factor.
-    let flight1_largest =
-        PacketNumber::try_from(c_tx_dgrams.len() + FORCE_IDLE_CLIENT_1RTT_PACKETS).unwrap();
+    // We have already sent one packet in `connect_force_idle` (an ACK),
+    // so this will be equal to the number of packets in this flight.
+    let flight1_largest = PacketNumber::try_from(c_tx_dgrams.len()).unwrap();
 
     // Server: Receive and generate ack
     now += DEFAULT_RTT / 2;
@@ -186,13 +194,13 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
 fn cc_cong_avoidance_recovery_period_unchanged() {
     let mut client = default_client();
     let mut server = default_server();
-    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+    connect_force_idle(&mut client, &mut server);
 
     // Create stream 0
     assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
 
     // Buffer up lot of data and generate packets
-    let (mut c_tx_dgrams, now) = fill_cwnd(&mut client, 0, now);
+    let (mut c_tx_dgrams, now) = fill_cwnd(&mut client, 0, now());
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
 
     // Drop 0th packet. When acked, this should put client into CARP.
@@ -228,31 +236,31 @@ fn cc_cong_avoidance_recovery_period_unchanged() {
 fn single_packet_on_recovery() {
     let mut client = default_client();
     let mut server = default_server();
-    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+    connect_force_idle(&mut client, &mut server);
 
     // Drop a few packets, up to the reordering threshold.
     for _ in 0..PACKET_THRESHOLD {
-        let _dropped = send_something(&mut client, now);
+        let _dropped = send_something(&mut client, now());
     }
-    let delivered = send_something(&mut client, now);
+    let delivered = send_something(&mut client, now());
 
     // Now fill the congestion window.
     assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
-    let (_, now) = fill_cwnd(&mut client, 0, now);
+    let _ = fill_cwnd(&mut client, 0, now());
     assert!(client.loss_recovery.cwnd_avail() < ACK_ONLY_SIZE_LIMIT);
 
     // Acknowledge just one packet and cause one packet to be declared lost.
     // The length is the amount of credit the client should have.
-    let ack = server.process(Some(delivered), now).dgram();
+    let ack = server.process(Some(delivered), now()).dgram();
     assert!(ack.is_some());
 
     // The client should see the loss and enter recovery.
     // As there are many outstanding packets, there should be no available cwnd.
-    client.process_input(ack.unwrap(), now);
+    client.process_input(ack.unwrap(), now());
     assert_eq!(client.loss_recovery.cwnd_avail(), 0);
 
     // The client should send one packet, ignoring the cwnd.
-    let dgram = client.process_output(now).dgram();
+    let dgram = client.process_output(now()).dgram();
     assert!(dgram.is_some());
 }
 
@@ -367,13 +375,13 @@ fn cc_slow_start_to_persistent_congestion_no_acks() {
 fn cc_slow_start_to_persistent_congestion_some_acks() {
     let mut client = default_client();
     let mut server = default_server();
-    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+    connect_force_idle(&mut client, &mut server);
 
     // Create stream 0
     assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
 
     // Buffer up lot of data and generate packets
-    let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
+    let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now());
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
 
     // Server: Receive and generate ack
@@ -398,13 +406,13 @@ fn cc_slow_start_to_persistent_congestion_some_acks() {
 fn cc_persistent_congestion_to_slow_start() {
     let mut client = default_client();
     let mut server = default_server();
-    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+    connect_force_idle(&mut client, &mut server);
 
     // Create stream 0
     assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
 
     // Buffer up lot of data and generate packets
-    let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
+    let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now());
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
 
     // Server: Receive and generate ack
@@ -442,13 +450,13 @@ fn cc_persistent_congestion_to_slow_start() {
 fn ack_are_not_cc() {
     let mut client = default_client();
     let mut server = default_server();
-    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+    connect_force_idle(&mut client, &mut server);
 
     // Create a stream
     assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
 
     // Buffer up lot of data and generate packets, so that cc window is filled.
-    let (c_tx_dgrams, now) = fill_cwnd(&mut client, 0, now);
+    let (c_tx_dgrams, now) = fill_cwnd(&mut client, 0, now());
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
 
     // The server hasn't received any of these packets yet, the server
@@ -477,10 +485,11 @@ fn ack_are_not_cc() {
 
 #[test]
 fn pace() {
+    const RTT: Duration = Duration::from_millis(1000);
     const DATA: &[u8] = &[0xcc; 4_096];
     let mut client = default_client();
     let mut server = default_server();
-    let mut now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+    let mut now = connect_rtt_idle(&mut client, &mut server, RTT);
 
     // Now fill up the pipe and watch it trickle out.
     let stream = client.stream_create(StreamType::BiDi).unwrap();
@@ -492,32 +501,24 @@ fn pace() {
     }
     let mut count = 0;
     // We should get a burst at first.
-    // The first packet is not subject to pacing as there are no bytes in flight.
-    // After that we allow the burst to continue up to a number of packets (2).
-    for _ in 0..=PACING_BURST_SIZE {
+    for _ in 0..PACING_BURST_SIZE {
         let dgram = client.process_output(now).dgram();
         assert!(dgram.is_some());
         count += 1;
     }
     let gap = client.process_output(now).callback();
     assert_ne!(gap, Duration::new(0, 0));
-    for _ in (1 + PACING_BURST_SIZE)..cwnd_packets(POST_HANDSHAKE_CWND) {
-        match client.process_output(now) {
-            Output::Callback(t) => assert_eq!(t, gap),
-            Output::Datagram(_) => {
-                // The last packet might not be paced.
-                count += 1;
-                break;
-            }
-            Output::None => panic!(),
-        }
+    // The last one will not be paced.
+    for _ in PACING_BURST_SIZE..cwnd_packets(POST_HANDSHAKE_CWND) - 1 {
+        assert_eq!(client.process_output(now).callback(), gap);
         now += gap;
         let dgram = client.process_output(now).dgram();
         assert!(dgram.is_some());
         count += 1;
     }
     let dgram = client.process_output(now).dgram();
-    assert!(dgram.is_none());
+    assert!(dgram.is_some());
+    count += 1;
     assert_eq!(count, cwnd_packets(POST_HANDSHAKE_CWND));
     let fin = client.process_output(now).callback();
     assert_ne!(fin, Duration::new(0, 0));

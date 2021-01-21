@@ -4,33 +4,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::stream_id::{StreamIndex, StreamType};
-use crate::tparams::PreferredAddress;
-use crate::{CongestionControlAlgorithm, QuicVersion};
-
-const LOCAL_STREAM_LIMIT_BIDI: StreamIndex = StreamIndex::new(16);
-const LOCAL_STREAM_LIMIT_UNI: StreamIndex = StreamIndex::new(16);
-
-/// What to do with preferred addresses.
-#[derive(Debug, Clone)]
-pub enum PreferredAddressConfig {
-    /// Disabled, whether for client or server.
-    Disabled,
-    /// Enabled at a client, disabled at a server.
-    Default,
-    /// Enabled at both client and server.
-    Address(PreferredAddress),
-}
+use crate::frame::StreamType;
+use crate::{
+    CongestionControlAlgorithm, QuicVersion, LOCAL_STREAM_LIMIT_BIDI, LOCAL_STREAM_LIMIT_UNI,
+};
 
 /// ConnectionParameters use for setting intitial value for QUIC parameters.
 /// This collect like initial limits, protocol version and congestion control.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ConnectionParameters {
     quic_version: QuicVersion,
     cc_algorithm: CongestionControlAlgorithm,
-    max_streams_bidi: StreamIndex,
-    max_streams_uni: StreamIndex,
-    preferred_address: PreferredAddressConfig,
+    max_streams_bidi: u64,
+    max_streams_uni: u64,
 }
 
 impl Default for ConnectionParameters {
@@ -40,7 +26,6 @@ impl Default for ConnectionParameters {
             cc_algorithm: CongestionControlAlgorithm::NewReno,
             max_streams_bidi: LOCAL_STREAM_LIMIT_BIDI,
             max_streams_uni: LOCAL_STREAM_LIMIT_UNI,
-            preferred_address: PreferredAddressConfig::Default,
         }
     }
 }
@@ -64,15 +49,15 @@ impl ConnectionParameters {
         self
     }
 
-    pub fn get_max_streams(&self, stream_type: StreamType) -> StreamIndex {
+    pub fn get_max_streams(&self, stream_type: StreamType) -> u64 {
         match stream_type {
             StreamType::BiDi => self.max_streams_bidi,
             StreamType::UniDi => self.max_streams_uni,
         }
     }
 
-    pub fn max_streams(mut self, stream_type: StreamType, v: StreamIndex) -> Self {
-        assert!(v.as_u64() <= (1 << 60), "max_streams is too large");
+    pub fn max_streams(mut self, stream_type: StreamType, v: u64) -> Self {
+        assert!(v <= (1 << 60), "max_streams's parameter too big");
         match stream_type {
             StreamType::BiDi => {
                 self.max_streams_bidi = v;
@@ -82,21 +67,5 @@ impl ConnectionParameters {
             }
         }
         self
-    }
-
-    /// Set a preferred address (which only has an effect for a server).
-    pub fn preferred_address(mut self, preferred: PreferredAddress) -> Self {
-        self.preferred_address = PreferredAddressConfig::Address(preferred);
-        self
-    }
-
-    /// Disable the use of preferred addresses.
-    pub fn disable_preferred_address(mut self) -> Self {
-        self.preferred_address = PreferredAddressConfig::Disabled;
-        self
-    }
-
-    pub fn get_preferred_address(&self) -> &PreferredAddressConfig {
-        &self.preferred_address
     }
 }
