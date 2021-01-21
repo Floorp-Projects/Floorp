@@ -676,9 +676,6 @@ bool ToDoublePolicy::staticAdjustInputs(TempAllocator& alloc,
       if (conversion == MToFPInstruction::NonStringPrimitives) {
         return true;
       }
-      if (conversion == MToFPInstruction::NonNullNonStringPrimitives) {
-        return true;
-      }
       break;
     case MIRType::Object:
     case MIRType::String:

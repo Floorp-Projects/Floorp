@@ -1048,12 +1048,10 @@ void CodeGenerator::visitValueToDouble(LValueToDouble* lir) {
     if (mir->conversion() != MToFPInstruction::NumbersOnly) {
       masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
       masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
+      masm.branchTestNull(Assembler::Equal, tag, &isNull);
       hasBoolean = true;
       hasUndefined = true;
-      if (mir->conversion() != MToFPInstruction::NonNullNonStringPrimitives) {
-        masm.branchTestNull(Assembler::Equal, tag, &isNull);
-        hasNull = true;
-      }
+      hasNull = true;
     }
   }
 
@@ -1104,12 +1102,10 @@ void CodeGenerator::visitValueToFloat32(LValueToFloat32* lir) {
     if (mir->conversion() != MToFPInstruction::NumbersOnly) {
       masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
       masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
+      masm.branchTestNull(Assembler::Equal, tag, &isNull);
       hasBoolean = true;
       hasUndefined = true;
-      if (mir->conversion() != MToFPInstruction::NonNullNonStringPrimitives) {
-        masm.branchTestNull(Assembler::Equal, tag, &isNull);
-        hasNull = true;
-      }
+      hasNull = true;
     }
   }
 
