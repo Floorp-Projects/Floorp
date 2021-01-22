@@ -3216,7 +3216,7 @@ JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   tenuredCells++;
 
   // Copy the Cell contents.
-  MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkHeader));
+  MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkBase));
   MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
   js_memcpy(dst, src, srcSize);
 
@@ -3264,7 +3264,7 @@ inline JSObject* js::TenuringTracer::movePlainObjectToTenured(
   tenuredCells++;
 
   // Copy the Cell contents.
-  MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkHeader));
+  MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkBase));
   MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
   js_memcpy(dst, src, srcSize);
 

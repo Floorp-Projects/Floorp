@@ -436,7 +436,7 @@ class Nursery {
 
   // The amount of space in the mapped nursery available to allocations.
   static const size_t NurseryChunkUsableSize =
-      gc::ChunkSize - sizeof(gc::ChunkHeader);
+      gc::ChunkSize - sizeof(gc::ChunkBase);
 
   void joinDecommitTask() { decommitTask.join(); }
 

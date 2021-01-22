@@ -790,7 +790,7 @@ TenuredChunk* GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock) {
 }
 
 void GCRuntime::recycleChunk(TenuredChunk* chunk, const AutoLockGC& lock) {
-  AlwaysPoison(&chunk->header, JS_FREED_CHUNK_PATTERN, sizeof(ChunkHeader),
+  AlwaysPoison(chunk, JS_FREED_CHUNK_PATTERN, sizeof(ChunkBase),
                MemCheckKind::MakeNoAccess);
   emptyChunks(lock).push(chunk);
 }
@@ -844,13 +844,13 @@ void BackgroundAllocTask::run(AutoLockHelperThreadState& lock) {
 
 /* static */
 TenuredChunk* TenuredChunk::allocate(GCRuntime* gc) {
-  auto* chunk =
-      static_cast<TenuredChunk*>(MapAlignedPages(ChunkSize, ChunkSize));
+  void* chunk = MapAlignedPages(ChunkSize, ChunkSize);
   if (!chunk) {
     return nullptr;
   }
+
   gc->stats().count(gcstats::COUNT_NEW_CHUNK);
-  return chunk;
+  return static_cast<TenuredChunk*>(chunk);
 }
 
 void TenuredChunk::init(GCRuntime* gc) {
@@ -864,14 +864,7 @@ void TenuredChunk::init(GCRuntime* gc) {
   Poison(this, JS_FRESH_TENURED_PATTERN, ChunkSize,
          MemCheckKind::MakeUndefined);
 
-  new (&header) ChunkHeader(gc->rt);
-  info.init();
-
-  /*
-   * We clear the bitmap to guard against JS::GCThingIsMarkedGray being called
-   * on uninitialized data, which would happen before the first GC cycle.
-   */
-  markBits.clear();
+  new (this) TenuredChunk(gc->rt);
 
   /*
    * Decommit the arenas. We do this after poisoning so that if the OS does
