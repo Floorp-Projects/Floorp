@@ -392,6 +392,8 @@ extern JS_PUBLIC_API RealmBehaviors& RealmBehaviorsRef(Realm* realm);
 
 extern JS_PUBLIC_API RealmBehaviors& RealmBehaviorsRef(JSContext* cx);
 
+extern JS_PUBLIC_API void SetRealmNonLive(Realm* realm);
+
 }  // namespace JS
 
 #endif  // js_RealmOptions_h

@@ -498,6 +498,8 @@ class JS::Realm : public JS::shadow::Realm {
   JS::RealmBehaviors& behaviors() { return behaviors_; }
   const JS::RealmBehaviors& behaviors() const { return behaviors_; }
 
+  void setNonLive() { behaviors_.setNonLive(); }
+
   /* Whether to preserve JIT code on non-shrinking GCs. */
   bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 
