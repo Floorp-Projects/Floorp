@@ -27,17 +27,7 @@ const REQUEST_STUB = {
 };
 
 add_task(async function() {
-  info("Test network stacktraces events legacy listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
-  await testNetworkEventStackTraceResources(REQUEST_STUB);
-
-  // These tests would be enabled when the server-side work for stacktraces is done. See Bug 1644191
-  // info("Test network stacktrace events server listener");
-  // await pushPref("devtools.testing.enableServerWatcherSupport", true);
-  // await testNetworkEventStackTraceResources(REQUEST_STUB);
-});
-
-async function testNetworkEventStackTraceResources(requestStub) {
+  info("Test network stacktraces events");
   const tab = await addTab(TEST_URI);
   const { client, resourceWatcher, targetList } = await initResourceWatcher(
     tab
@@ -58,12 +48,12 @@ async function testNetworkEventStackTraceResources(requestStub) {
 
         is(
           resource.stacktraceAvailable,
-          requestStub.expected.stacktraceAvailable,
+          REQUEST_STUB.expected.stacktraceAvailable,
           "The stacktrace is available"
         );
         is(
           JSON.stringify(resource.lastFrame),
-          JSON.stringify(requestStub.expected.lastFrame),
+          JSON.stringify(REQUEST_STUB.expected.lastFrame),
           "The last frame of the stacktrace is available"
         );
 
@@ -95,7 +85,7 @@ async function testNetworkEventStackTraceResources(requestStub) {
     }
   );
 
-  await triggerNetworkRequests(tab.linkedBrowser, [requestStub.code]);
+  await triggerNetworkRequests(tab.linkedBrowser, [REQUEST_STUB.code]);
 
   resourceWatcher.unwatchResources(
     [
@@ -111,4 +101,4 @@ async function testNetworkEventStackTraceResources(requestStub) {
   await targetList.destroy();
   await client.close();
   BrowserTestUtils.removeTab(tab);
-}
+});
