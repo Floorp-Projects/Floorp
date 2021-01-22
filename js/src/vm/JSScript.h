@@ -9,7 +9,6 @@
 #ifndef vm_JSScript_h
 #define vm_JSScript_h
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"

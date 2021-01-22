@@ -20,7 +20,6 @@
 #define wasm_types_h
 
 #include "mozilla/Alignment.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/EnumeratedArray.h"
@@ -91,7 +90,6 @@ using RootedWasmExceptionObject = Rooted<WasmExceptionObject*>;
 
 namespace wasm {
 
-using mozilla::ArrayEqual;
 using mozilla::Atomic;
 using mozilla::DebugOnly;
 using mozilla::EnumeratedArray;

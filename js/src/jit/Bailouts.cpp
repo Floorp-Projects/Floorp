@@ -6,6 +6,7 @@
 
 #include "jit/Bailouts.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/ScopeExit.h"
 
 #include "jit/BaselineJIT.h"

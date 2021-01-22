@@ -10,7 +10,6 @@
 
 #include "vm/JSObject-inl.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"

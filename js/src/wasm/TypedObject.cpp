@@ -6,6 +6,7 @@
 
 #include "wasm/TypedObject-inl.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 

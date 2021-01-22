@@ -8,6 +8,7 @@
 #ifndef gc_Nursery_h
 #define gc_Nursery_h
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"

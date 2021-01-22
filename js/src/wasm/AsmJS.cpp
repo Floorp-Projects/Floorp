@@ -18,7 +18,6 @@
 
 #include "wasm/AsmJS.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compression.h"
 #include "mozilla/MathAlgorithms.h"
@@ -80,7 +79,6 @@ using JS::GenericNaN;
 using JS::SourceOwnership;
 using JS::SourceText;
 using mozilla::Abs;
-using mozilla::ArrayEqual;
 using mozilla::AsVariant;
 using mozilla::CeilingLog2;
 using mozilla::HashGeneric;

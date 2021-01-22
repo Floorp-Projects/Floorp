@@ -10,6 +10,7 @@
 
 #include "vm/JSScript-inl.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
