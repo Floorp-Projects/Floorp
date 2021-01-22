@@ -1062,7 +1062,7 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    fun `WHEN a download is from a private session the request must be private`() = runBlocking {
+    fun `WHEN a download is from a private session the client must include the correct CookiePolicy`() = runBlocking {
         val response = Response(
             "https://example.com/file.txt",
             200,
@@ -1076,14 +1076,15 @@ class AbstractFetchDownloadServiceTest {
 
         service.performDownload(downloadJob)
         verify(client).fetch(providedRequest.capture())
-        assertTrue(providedRequest.value.private)
+
+        assertEquals(Request.CookiePolicy.OMIT, providedRequest.value.cookiePolicy)
 
         downloadJob.state = download.copy(private = false)
         service.performDownload(downloadJob)
 
         verify(client, times(2)).fetch(providedRequest.capture())
 
-        assertFalse(providedRequest.value.private)
+        assertEquals(Request.CookiePolicy.INCLUDE, providedRequest.value.cookiePolicy)
     }
 
     @Test

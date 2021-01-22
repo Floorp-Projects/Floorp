@@ -223,19 +223,6 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
     }
 
     @Test
-    fun performPrivateRequest() {
-        mockResponse(200)
-
-        val request = mock<Request>()
-        whenever(request.url).thenReturn("https://mozilla.org")
-        whenever(request.method).thenReturn(Request.Method.GET)
-        whenever(request.private).thenReturn(true)
-        createNewClient().fetch(request)
-
-        verify(geckoWebExecutor)!!.fetch(any(), eq(GeckoWebExecutor.FETCH_FLAGS_PRIVATE))
-    }
-
-    @Test
     override fun get200WithContentTypeCharset() {
         val request = mock<Request>()
         whenever(request.url).thenReturn("https://mozilla.org")
