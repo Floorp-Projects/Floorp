@@ -2,6 +2,10 @@
 
 // Source string has balanced parentheses even when the source code was discarded.
 
-setDiscardSource(true);
+function test() {
 eval("var f = function() { return 0; };");
 assertEq(f.toSource(), "(function() {\n    [native code]\n})");
+}
+
+var g = newGlobal({ discardSource: true });
+g.evaluate(test.toString() + "test()");
