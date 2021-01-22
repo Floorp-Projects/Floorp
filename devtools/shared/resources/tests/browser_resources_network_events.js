@@ -13,15 +13,9 @@ const EXAMPLE_DOMAIN = "https://example.com/";
 const TEST_URI = `${URL_ROOT_SSL}network_document.html`;
 
 add_task(async function() {
-  info("Test network events legacy listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
+  info("Test network events");
   await testNetworkEventResourcesWithExistingResources();
   await testNetworkEventResourcesWithoutExistingResources();
-
-  // info("Test network events server listener");
-  // await pushPref("devtools.testing.enableServerWatcherSupport", true);
-  // await testNetworkEventResourcesWithExistingResources();
-  // await testNetworkEventResourcesWithoutExistingResources();
 });
 
 async function testNetworkEventResourcesWithExistingResources() {
