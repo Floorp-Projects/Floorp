@@ -441,6 +441,31 @@ class tags(InstanceFilter):
                 yield test
 
 
+class failures(InstanceFilter):
+    """
+    [test_foobar.html]
+    fail-if =
+      keyword # <comment>
+
+    :param keywords: A keyword to filter tests on
+    """
+
+    def __init__(self, keyword):
+        InstanceFilter.__init__(self, keyword)
+        self.keyword = keyword
+
+    def __call__(self, tests, values):
+        for test in tests:
+            for key in ["skip-if", "fail-if"]:
+                if key not in test:
+                    continue
+
+                matched = [self.keyword in e for e in test[key].splitlines() if e]
+                if any(matched):
+                    test["expected"] = "fail"
+                    yield test
+
+
 class pathprefix(InstanceFilter):
     """
     Removes tests that don't start with any of the given test paths.
