@@ -542,14 +542,15 @@ describe("ToolbarPanelHub", () => {
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
-      const buttonEl = createdCustomElements.find(
-        el => el.tagName === "button"
+      const messageEl = createdCustomElements.find(
+        el =>
+          el.tagName === "div" && el.classList.includes("whatsNew-message-body")
       );
       const anchorEl = createdCustomElements.find(el => el.tagName === "a");
 
       assert.notCalled(global.SpecialMessageActions.handleAction);
 
-      buttonEl.doCommand();
+      messageEl.doCommand();
       anchorEl.doCommand();
 
       assert.calledTwice(global.SpecialMessageActions.handleAction);
