@@ -59,6 +59,7 @@ web-platform-tests:
     chunks:
         by-test-platform:
             android.*: 16
+            linux.*64-tsan/opt: 26
             linux.*64-asan/opt: 22
             linux.*64-ccov.*/opt: 20
             linux.*/debug: 16
@@ -70,6 +71,7 @@ web-platform-tests:
     max-run-time:
         by-test-platform:
             .*-ccov.*/.*: 10800
+            linux.*64-tsan/opt: 14400
             linux.*64-asan/opt: 14400
             linux.*64(-qr)?/debug: 10800
             macosx.*/debug: 10800
@@ -124,6 +126,7 @@ web-platform-tests-reftest:
     chunks:
         by-test-platform:
             .*-ccov.*/.*: 8
+            linux.*64-tsan/opt: 8
             linux1804-64(-qr|-asan)/.*: 6
             linux1804-64(-shippable|-devedition)?/opt: 3
             macosx10.*-64/debug: 6
