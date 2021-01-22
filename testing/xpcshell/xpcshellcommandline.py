@@ -299,6 +299,13 @@ def add_common_arguments(parser):
         dest="self_test",
         help="Run self tests",
     )
+    parser.add_argument(
+        "--run-failures",
+        action="store",
+        default="",
+        dest="runFailures",
+        help="Run failures matching keyword",
+    )
 
 
 def add_remote_arguments(parser):
