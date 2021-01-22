@@ -724,6 +724,10 @@ class Nursery {
                                            ObjectElements* newHeader,
                                            uint32_t capacity);
 
+#ifdef DEBUG
+  bool checkForwardingPointerLocation(void* ptr, bool expectedInside);
+#endif
+
   // Updates pointers to nursery objects that have been tenured and discards
   // pointers to objects that have been freed.
   void sweep(JSTracer* trc);
