@@ -70,20 +70,102 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   mSelection = [selection.CreateAXTextMarkerRange() retain];
 }
 
+- (void)setCaretOffset:(mozilla::a11y::AccessibleOrProxy)container
+                    at:(int32_t)offset {
+  GeckoTextMarker caretMarker(container, offset);
+
+  mPrevCaret = mCaret;
+  mCaret = [caretMarker.CreateAXTextMarker() retain];
+}
+
+// This returns an info object to pass with AX SelectedTextChanged events.
+// It uses the current and previous caret position to make decisions
+// regarding which attributes to add to the info object.
+- (NSDictionary*)selectionChangeInfo {
+  GeckoTextMarkerRange selectedGeckoRange =
+      GeckoTextMarkerRange(mGeckoDocAccessible, mSelection);
+
+  // This is the base info object, includes the selected marker range and
+  // the change type depending on the collapsed state of the selection.
+  NSMutableDictionary* info = [@{
+    @"AXSelectedTextMarkerRange" : selectedGeckoRange.IsValid() ? mSelection
+                                                                : [NSNull null],
+    @"AXTextStateChangeType" :
+                selectedGeckoRange.mStart == selectedGeckoRange.mEnd
+        ? @(AXTextStateChangeTypeSelectionMove)
+        : @(AXTextStateChangeTypeSelectionExtend)
+  } mutableCopy];
+
+  GeckoTextMarker caretMarker(mGeckoDocAccessible, mCaret);
+  GeckoTextMarker prevCaretMarker(mGeckoDocAccessible, mPrevCaret);
+  if (!caretMarker.IsValid()) {
+    // If the current caret is invalid, stop here and return base info.
+    return info;
+  }
+
+  mozAccessible* caretEditable =
+      [GetNativeFromGeckoAccessible(caretMarker.mContainer)
+          moxEditableAncestor];
+
+  if (!caretEditable) {
+    // If we are not in an editable, VO expects AXTextStateSync to be present
+    // and true.
+    info[@"AXTextStateSync"] = @YES;
+  }
+
+  if (!prevCaretMarker.IsValid() || caretMarker == prevCaretMarker) {
+    // If we have no stored previous marker, stop here.
+    return info;
+  }
+
+  mozAccessible* prevCaretEditable =
+      [GetNativeFromGeckoAccessible(prevCaretMarker.mContainer)
+          moxEditableAncestor];
+
+  if (prevCaretEditable != caretEditable) {
+    // If the caret goes in or out of an editable, consider the
+    // move direction "discontiguous".
+    info[@"AXTextSelectionDirection"] =
+        @(AXTextSelectionDirectionDiscontiguous);
+    if ([[caretEditable moxFocused] boolValue]) {
+      // If the caret is in a new focused editable, VO expects this attribute to
+      // be present and to be true.
+      info[@"AXTextSelectionChangedFocus"] = @YES;
+    }
+
+    return info;
+  }
+
+  bool isForward = prevCaretMarker < caretMarker;
+  uint32_t deltaLength =
+      GeckoTextMarkerRange(isForward ? prevCaretMarker : caretMarker,
+                           isForward ? caretMarker : prevCaretMarker)
+          .Length();
+
+  // Determine selection direction with marker comparison.
+  // If the delta between the two markers is more than one, consider it
+  // a word. Not accurate, but good enough for VO.
+  [info addEntriesFromDictionary:@{
+    @"AXTextSelectionDirection" : isForward
+        ? @(AXTextSelectionDirectionNext)
+        : @(AXTextSelectionDirectionPrevious),
+    @"AXTextSelectionGranularity" : deltaLength == 1
+        ? @(AXTextSelectionGranularityCharacter)
+        : @(AXTextSelectionGranularityWord)
+  }];
+
+  return info;
+}
+
 - (void)invalidateSelection {
   [mSelection release];
+  [mCaret release];
+  [mPrevCaret release];
   mSelection = nil;
 }
 
 - (mozilla::a11y::GeckoTextMarkerRange)selection {
   return mozilla::a11y::GeckoTextMarkerRange(mGeckoDocAccessible, mSelection);
-}
-
-- (BOOL)selectionIsCollapsed {
-  GeckoTextMarkerRange range(mGeckoDocAccessible, mSelection);
-
-  return range.mStart.mContainer == range.mEnd.mContainer &&
-         range.mStart.mOffset == range.mEnd.mOffset;
 }
 
 - (id)moxStartTextMarker {
