@@ -58,6 +58,7 @@ const PREFS_BEFORE_SECTIONS = [
                   )
                     ? "home-prefs-shortcuts-by-option-sponsored"
                     : "home-prefs-topsites-by-option-sponsored",
+                eventSource: "SPONSORED_TOP_SITES",
               },
             ]
           : [];
@@ -66,6 +67,7 @@ const PREFS_BEFORE_SECTIONS = [
     icon: "topsites",
     maxRows: 4,
     rowsPref: "topSitesRows",
+    eventSource: "TOP_SITES",
   },
 ];
 
@@ -86,6 +88,7 @@ const PREFS_AFTER_SECTIONS = [
           : "home-prefs-snippets-description",
     },
     icon: "info",
+    eventSource: "SNIPPETS",
   },
 ];
 
