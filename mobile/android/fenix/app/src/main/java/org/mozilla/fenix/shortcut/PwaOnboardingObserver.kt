@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.shortcut
 
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
@@ -47,9 +48,7 @@ class PwaOnboardingObserver(
                 if (webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
                     settings.incrementVisitedInstallableCount()
                     if (settings.shouldShowPwaCfr) {
-                        val directions =
-                            BrowserFragmentDirections.actionBrowserFragmentToPwaOnboardingDialogFragment()
-                        navController.nav(R.id.browserFragment, directions)
+                        navigateToPwaOnboarding()
                         settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
                         settings.userKnowsAboutPwas = true
                     }
@@ -60,5 +59,13 @@ class PwaOnboardingObserver(
 
     fun stop() {
         scope?.cancel()
+    }
+
+    @VisibleForTesting
+    internal fun navigateToPwaOnboarding() {
+        navController.nav(
+            R.id.browserFragment,
+            BrowserFragmentDirections.actionBrowserFragmentToPwaOnboardingDialogFragment()
+        )
     }
 }
