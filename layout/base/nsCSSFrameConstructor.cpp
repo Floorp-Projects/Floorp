@@ -2565,7 +2565,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
     isScrollable = presContext->HasPaginatedScrolling();
   } else if (isXUL) {
     isScrollable = false;
-  } else if (aDocElement->OwnerDoc()->AllowXULXBL() &&
+  } else if (nsContentUtils::IsInChromeDocshell(aDocElement->OwnerDoc()) &&
              aDocElement->AsElement()->AttrValueIs(
                  kNameSpaceID_None, nsGkAtoms::scrolling, nsGkAtoms::_false,
                  eCaseMatters)) {
