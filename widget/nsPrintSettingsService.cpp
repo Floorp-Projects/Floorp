@@ -86,12 +86,6 @@ nsresult nsPrintSettingsService::Init() { return NS_OK; }
 NS_IMETHODIMP
 nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
                                              PrintData* data) {
-  nsCOMPtr<nsIPrintSession> session;
-  nsresult rv = aSettings->GetPrintSession(getter_AddRefs(session));
-  if (NS_SUCCEEDED(rv) && session) {
-    data->remotePrintJobChild() = session->GetRemotePrintJob();
-  }
-
   aSettings->GetPageRanges(data->pageRanges());
 
   aSettings->GetEdgeTop(&data->edgeTop());
