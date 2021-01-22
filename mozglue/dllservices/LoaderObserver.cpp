@@ -74,10 +74,7 @@ void LoaderObserver::OnEndDllLoad(void* aContext, NTSTATUS aNtStatus,
             loadContext->mDynamicStringStorage.get()));
   }
 
-  // We want to record a denied DLL load regardless of |aNtStatus| because
-  // |aNtStatus| is set to access-denied when DLL load was blocked.
-  if ((!NT_SUCCESS(aNtStatus) && !aModuleLoadInfo.WasDenied()) ||
-      !aModuleLoadInfo.WasMapped()) {
+  if (!NT_SUCCESS(aNtStatus) || !aModuleLoadInfo.WasMapped()) {
     return;
   }
 
