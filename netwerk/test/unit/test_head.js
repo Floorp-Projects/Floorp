@@ -82,7 +82,8 @@ function setup_test() {
   uri = NetUtil.newURI("http://foo2.invalid:90/bar");
   channel.referrerInfo = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, uri);
   setOK = channel.getRequestHeader("Referer");
-  Assert.equal(setOK, "http://foo2.invalid:90/bar");
+  // No triggering URI inloadInfo, assume load is cross-origin.
+  Assert.equal(setOK, "http://foo2.invalid:90/");
 
   // ChannelListener defined in head_channels.js
   channel.asyncOpen(new ChannelListener(checkRequestResponse, channel));
@@ -118,7 +119,7 @@ function serverHandler(metadata, response) {
   setOK = metadata.getHeader("MergeWithEmpty");
   Assert.equal(setOK, "foo");
   setOK = metadata.getHeader("Referer");
-  Assert.equal(setOK, "http://foo2.invalid:90/bar");
+  Assert.equal(setOK, "http://foo2.invalid:90/");
 
   response.setHeader("Content-Type", "text/plain", false);
   response.setStatusLine("1.1", 200, "OK");
