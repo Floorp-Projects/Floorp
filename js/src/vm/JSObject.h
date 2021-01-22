@@ -65,7 +65,7 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  * The members common to all objects are as follows:
  *
  * - The |group_| member stores the group of the object, which contains its
- *   prototype object, its class and the possible types of its properties.
+ *   prototype object, its class, and its realm.
  *
  * - The |shape_| member stores the current 'shape' of the object, which
  *   describes the current layout and set of property keys of the object. The
