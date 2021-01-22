@@ -145,17 +145,12 @@ struct ObjectGroupRealm::NewEntry {
     Lookup(const JSClass* clasp, TaggedProto proto, TypeDescr* associated)
         : clasp(clasp), proto(proto), associated(associated) {
       MOZ_ASSERT(clasp);
-      MOZ_ASSERT_IF(associated && associated->is<JSFunction>(),
-                    clasp == &PlainObject::class_);
     }
 
     explicit Lookup(const NewEntry& entry)
         : clasp(entry.group.unbarrieredGet()->clasp()),
           proto(entry.group.unbarrieredGet()->proto()),
-          associated(entry.associated) {
-      MOZ_ASSERT_IF(associated && associated->is<JSFunction>(),
-                    clasp == &PlainObject::class_);
-    }
+          associated(entry.associated) {}
   };
 
   bool needsSweep() {
