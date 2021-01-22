@@ -363,7 +363,9 @@ class DefaultSessionControlController(
 
     override fun handleSelectTopSite(url: String, type: TopSite.Type) {
         dismissSearchDialogIfDisplayed()
+
         metrics.track(Event.TopSiteOpenInNewTab)
+
         when (type) {
             TopSite.Type.DEFAULT -> metrics.track(Event.TopSiteOpenDefault)
             TopSite.Type.FRECENT -> metrics.track(Event.TopSiteOpenFrecent)
@@ -373,12 +375,30 @@ class DefaultSessionControlController(
         if (url == SupportUtils.POCKET_TRENDING_URL) {
             metrics.track(Event.PocketTopSiteClicked)
         }
+
         addTabUseCase.invoke(
-            url = url,
+            url = appendSearchAttributionToUrlIfNeeded(url),
             selectTab = true,
             startLoading = true
         )
         activity.openToBrowser(BrowserDirection.FromHome)
+    }
+
+    /**
+     * Append a search attribution query to any provided search engine URL based on the
+     * user's current region.
+     */
+    private fun appendSearchAttributionToUrlIfNeeded(url: String): String {
+        if (url == SupportUtils.GOOGLE_URL) {
+            store.state.search.region?.let { region ->
+                return when (region.current) {
+                    "US" -> SupportUtils.GOOGLE_US_URL
+                    else -> SupportUtils.GOOGLE_XX_URL
+                }
+            }
+        }
+
+        return url
     }
 
     private fun dismissSearchDialogIfDisplayed() {

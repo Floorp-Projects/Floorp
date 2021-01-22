@@ -14,6 +14,8 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.SearchAction
+import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
@@ -25,6 +27,7 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Before
@@ -89,11 +92,13 @@ class DefaultSessionControlControllerTest {
 
     @Before
     fun setup() {
-        store = BrowserStore(BrowserState(
-            search = SearchState(
-                regionSearchEngines = listOf(searchEngine)
+        store = BrowserStore(
+            BrowserState(
+                search = SearchState(
+                    regionSearchEngines = listOf(searchEngine)
+                )
             )
-        ))
+        )
 
         every { fragmentStore.state } returns HomeFragmentState(
             collections = emptyList(),
@@ -350,6 +355,120 @@ class DefaultSessionControlControllerTest {
         verify {
             tabsUseCases.addTab.invoke(
                 topSiteUrl,
+                selectTab = true,
+                startLoading = true
+            )
+        }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun handleSelectGoogleDefaultTopSiteUS() {
+        val topSiteUrl = SupportUtils.GOOGLE_URL
+
+        store.dispatch(SearchAction.SetRegionAction(RegionState("US", "US"))).joinBlocking()
+
+        controller.handleSelectTopSite(topSiteUrl, TopSite.Type.DEFAULT)
+        verify { metrics.track(Event.TopSiteOpenInNewTab) }
+        verify { metrics.track(Event.TopSiteOpenDefault) }
+        verify {
+            tabsUseCases.addTab.invoke(
+                url = SupportUtils.GOOGLE_US_URL,
+                selectTab = true,
+                startLoading = true
+            )
+        }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun handleSelectGoogleDefaultTopSiteXX() {
+        val topSiteUrl = SupportUtils.GOOGLE_URL
+
+        store.dispatch(SearchAction.SetRegionAction(RegionState("DE", "FR"))).joinBlocking()
+
+        controller.handleSelectTopSite(topSiteUrl, TopSite.Type.DEFAULT)
+        verify { metrics.track(Event.TopSiteOpenInNewTab) }
+        verify { metrics.track(Event.TopSiteOpenDefault) }
+        verify {
+            tabsUseCases.addTab.invoke(
+                SupportUtils.GOOGLE_XX_URL,
+                selectTab = true,
+                startLoading = true
+            )
+        }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun handleSelectGooglePinnedTopSiteUS() {
+        val topSiteUrl = SupportUtils.GOOGLE_URL
+
+        store.dispatch(SearchAction.SetRegionAction(RegionState("US", "US"))).joinBlocking()
+
+        controller.handleSelectTopSite(topSiteUrl, TopSite.Type.PINNED)
+        verify { metrics.track(Event.TopSiteOpenInNewTab) }
+        verify { metrics.track(Event.TopSiteOpenPinned) }
+        verify {
+            tabsUseCases.addTab.invoke(
+                SupportUtils.GOOGLE_US_URL,
+                selectTab = true,
+                startLoading = true
+            )
+        }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun handleSelectGooglePinnedTopSiteXX() {
+        val topSiteUrl = SupportUtils.GOOGLE_URL
+
+        store.dispatch(SearchAction.SetRegionAction(RegionState("DE", "FR"))).joinBlocking()
+
+        controller.handleSelectTopSite(topSiteUrl, TopSite.Type.PINNED)
+        verify { metrics.track(Event.TopSiteOpenInNewTab) }
+        verify { metrics.track(Event.TopSiteOpenPinned) }
+        verify {
+            tabsUseCases.addTab.invoke(
+                SupportUtils.GOOGLE_XX_URL,
+                selectTab = true,
+                startLoading = true
+            )
+        }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun handleSelectGoogleFrecentTopSiteUS() {
+        val topSiteUrl = SupportUtils.GOOGLE_URL
+
+        store.dispatch(SearchAction.SetRegionAction(RegionState("US", "US"))).joinBlocking()
+
+        controller.handleSelectTopSite(topSiteUrl, TopSite.Type.FRECENT)
+        verify { metrics.track(Event.TopSiteOpenInNewTab) }
+        verify { metrics.track(Event.TopSiteOpenFrecent) }
+        verify {
+            tabsUseCases.addTab.invoke(
+                SupportUtils.GOOGLE_US_URL,
+                selectTab = true,
+                startLoading = true
+            )
+        }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun handleSelectGoogleFrecentTopSiteXX() {
+        val topSiteUrl = SupportUtils.GOOGLE_URL
+
+        store.dispatch(SearchAction.SetRegionAction(RegionState("DE", "FR"))).joinBlocking()
+
+        controller.handleSelectTopSite(topSiteUrl, TopSite.Type.FRECENT)
+        verify { metrics.track(Event.TopSiteOpenInNewTab) }
+        verify { metrics.track(Event.TopSiteOpenFrecent) }
+        verify {
+            tabsUseCases.addTab.invoke(
+                SupportUtils.GOOGLE_XX_URL,
                 selectTab = true,
                 startLoading = true
             )
