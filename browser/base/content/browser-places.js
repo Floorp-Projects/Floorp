@@ -1140,28 +1140,43 @@ var PlacesMenuDNDHandler = {
  * toolbar. It also has helper functions for the managed bookmarks button.
  */
 var PlacesToolbarHelper = {
+  /**
+   * If init is called and _canShowPromise is null, this method
+   * is overwritten and won't run.
+   * If we get called and nobody has tried to call `init` yet,
+   * just create a resolved promise for _canShowPromise.
+   */
+  _readyToShowCallback() {
+    this._canShowPromise = Promise.resolve();
+  },
+  _readyToShow: false,
+  _canShowPromise: null,
+
   get _viewElt() {
     return document.getElementById("PlacesToolbar");
   },
 
   /**
-   * Initialize. This will check whether we've finished startup and can
-   * show toolbars.
+   * Initialize. This will await _canShowPromise - which is either created
+   * as a resolved promise if the idle task calling startShowingToolbar is
+   * called first, or created here and resolved once startShowingToolbar is
+   * called.
    */
-  async init() {
-    let telemetryKey = await PlacesUIUtils.canLoadToolbarContentPromise;
-    let didCreate = this._realInit();
-    this._measureToolbarPaintDelay(telemetryKey, didCreate);
+  init() {
+    if (!this._readyToShow) {
+      this._canShowPromise = new Promise(resolve => {
+        this._readyToShowCallback = resolve;
+      });
+      this._canShowPromise.then(() => this._realInit());
+    } else {
+      this._realInit();
+    }
   },
 
-  /**
-   * @return whether we actually initialized the places view (and
-   * aren't collapsed).
-   */
   _realInit() {
     let viewElt = this._viewElt;
-    if (!viewElt || viewElt._placesView || window.closed) {
-      return false;
+    if (!viewElt || viewElt._placesView) {
+      return;
     }
 
     // CustomizableUI.addListener is idempotent, so we can safely
@@ -1186,7 +1201,7 @@ var PlacesToolbarHelper = {
       this._isCustomizing ||
       getComputedStyle(toolbar, "").display == "none"
     ) {
-      return false;
+      return;
     }
 
     if (
@@ -1198,52 +1213,11 @@ var PlacesToolbarHelper = {
     }
 
     new PlacesToolbar(`place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);
-    return true;
   },
 
-  // Only measure once per window:
-  _shouldMeasure: true,
-  _measureToolbarPaintDelay(telemetryKey, didCreate) {
-    if (!this._shouldMeasure) {
-      return;
-    }
-    this._shouldMeasure = false;
-    // If we create and show the toolbar later, we don't want to measure how
-    // long it took, so it's important this check happens after setting
-    // _shouldMeasure.
-    if (!didCreate) {
-      return;
-    }
-
-    let recordDelay = time => {
-      let entries = window.performance.getEntriesByType("paint");
-      let timeEntry = entries.find(e => e.name == "first-contentful-paint");
-      let histogram = Services.telemetry.getKeyedHistogramById(
-        "PLACES_BOOKMARKS_TOOLBAR_RENDER_DELAY_MS"
-      );
-      if (timeEntry) {
-        let delay = time - timeEntry.startTime - timeEntry.duration;
-        histogram.add(telemetryKey, Math.round(delay));
-      } else {
-        // If there is no base time, we haven't painted yet, so we rendered
-        // before paint:
-        histogram.add(telemetryKey, 0);
-      }
-    };
-    if (!window.windowUtils.isMozAfterPaintPending) {
-      recordDelay(performance.now());
-      return;
-    }
-    let removeListeners = () => {
-      window.removeEventListener("unload", removeListeners);
-      window.removeEventListener("MozAfterPaint", paintHandler);
-    };
-    let paintHandler = ev => {
-      removeListeners();
-      recordDelay(ev.paintTimeStamp);
-    };
-    window.addEventListener("MozAfterPaint", paintHandler);
-    window.addEventListener("unload", removeListeners);
+  startShowingToolbar() {
+    this._readyToShow = true;
+    this._readyToShowCallback();
   },
 
   handleEvent(event) {
@@ -1265,6 +1239,7 @@ var PlacesToolbarHelper = {
       window.removeEventListener("toolbarvisibilitychange", this);
     }
     CustomizableUI.removeListener(this);
+    this._readyToShowCallback = () => {};
   },
 
   customizeStart: function PTH_customizeStart() {

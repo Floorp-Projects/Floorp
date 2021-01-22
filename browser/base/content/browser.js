@@ -2295,6 +2295,10 @@ var gBrowserInit = {
     }
 
     scheduleIdleTask(() => {
+      PlacesToolbarHelper.startShowingToolbar();
+    });
+
+    scheduleIdleTask(() => {
       // Initialize the Sync UI
       gSync.init();
     });
