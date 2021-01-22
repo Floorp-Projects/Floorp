@@ -753,8 +753,6 @@ class NativeObject : public JSObject {
 
   static MOZ_MUST_USE bool reshapeForShadowedProp(JSContext* cx,
                                                   HandleNativeObject obj);
-  static MOZ_MUST_USE bool reshapeForProtoMutation(JSContext* cx,
-                                                   HandleNativeObject obj);
   static bool clearFlag(JSContext* cx, HandleNativeObject obj,
                         BaseShape::Flag flag);
 
@@ -898,13 +896,6 @@ class NativeObject : public JSObject {
   }
   bool contains(JSContext* cx, Shape* shape) {
     return lookup(cx, shape->propid()) == shape;
-  }
-
-  bool containsShapeOrElement(JSContext* cx, jsid id) {
-    if (JSID_IS_INT(id) && containsDenseElement(JSID_TO_INT(id))) {
-      return true;
-    }
-    return contains(cx, id);
   }
 
   /* Contextless; can be called from other pure code. */
@@ -1248,11 +1239,6 @@ class NativeObject : public JSObject {
                                            uint32_t* goodAmount);
   bool growElements(JSContext* cx, uint32_t newcap);
   void shrinkElements(JSContext* cx, uint32_t cap);
-  void setDynamicElements(ObjectElements* header) {
-    MOZ_ASSERT(!hasDynamicElements());
-    elements_ = header->elements();
-    MOZ_ASSERT(hasDynamicElements());
-  }
 
  private:
   // Run a post write barrier that encompasses multiple contiguous elements in a
