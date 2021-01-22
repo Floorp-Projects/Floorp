@@ -498,13 +498,7 @@ function createBrowser() {
   browser.setAttribute("flex", "1");
   browser.setAttribute("maychangeremoteness", "true");
 
-  const pointerEventsEnabled = Services.prefs.getBoolPref(
-    "dom.w3c_pointer_events.multiprocess.android.enabled",
-    false
-  );
-  if (pointerEventsEnabled) {
-    Services.prefs.setBoolPref("dom.w3c_pointer_events.enabled", true);
-  }
+  Services.prefs.setBoolPref("dom.w3c_pointer_events.enabled", true);
   browser.setAttribute("remote", "true");
   browser.setAttribute("remoteType", E10SUtils.DEFAULT_REMOTE_TYPE);
 
