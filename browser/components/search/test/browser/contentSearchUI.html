@@ -5,16 +5,18 @@
 <html>
 <head>
 <meta charset="utf-8">
-<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js">
-</script>
 <script type="application/javascript"
         src="chrome://browser/content/contentSearchUI.js">
 </script>
 <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css"/>
+<meta http-equiv="Content-Security-Policy" content="default-src data: chrome:; object-src 'none'"/>
 </head>
 <body>
 
-<div id="container" style="position: relative;"><input type="text" value=""/></div>
+<div id="container"><input type="text" value=""/></div>
+
+<script src="chrome://mochitests/content/browser/browser/components/search/test/browser/contentSearchUI.js">
+</script>
 
 </body>
 </html>
