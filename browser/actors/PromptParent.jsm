@@ -279,6 +279,7 @@ class PromptParent extends JSWindowActorParent {
       }
 
       args.promptAborted = false;
+      args.openedWithTabDialog = true;
 
       let bag = PromptUtils.objectToPropBag(args);
 

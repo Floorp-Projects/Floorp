@@ -5,28 +5,34 @@
 // Defined in dialog.xml.
 /* globals centerWindowOnScreen:false, moveToAlertPosition:false */
 
-var gArgs, listBox;
+var propBag, listBox, args;
 
 function dialogOnLoad() {
-  gArgs = window.arguments[0]
+  propBag = window.arguments[0]
     .QueryInterface(Ci.nsIWritablePropertyBag2)
     .QueryInterface(Ci.nsIWritablePropertyBag);
 
-  let promptType = gArgs.getProperty("promptType");
+  // Convert to a JS object
+  let args = {};
+  for (let prop of propBag.enumerator) {
+    args[prop.name] = prop.value;
+  }
+
+  let promptType = propBag.getProperty("promptType");
   if (promptType != "select") {
     Cu.reportError("selectDialog opened for unknown type: " + promptType);
     window.close();
   }
 
   // Default to canceled.
-  gArgs.setProperty("ok", false);
+  propBag.setProperty("ok", false);
 
-  document.title = gArgs.getProperty("title");
+  document.title = propBag.getProperty("title");
 
-  let text = gArgs.getProperty("text");
+  let text = propBag.getProperty("text");
   document.getElementById("info.txt").setAttribute("value", text);
 
-  let items = gArgs.getProperty("list");
+  let items = propBag.getProperty("list");
   listBox = document.getElementById("list");
 
   for (let i = 0; i < items.length; i++) {
@@ -50,15 +56,17 @@ function dialogOnLoad() {
 
   // play sound
   try {
-    Cc["@mozilla.org/sound;1"]
-      .createInstance(Ci.nsISound)
-      .playEventSound(Ci.nsISound.EVENT_SELECT_DIALOG_OPEN);
+    if (!args.openedWithTabDialog) {
+      Cc["@mozilla.org/sound;1"]
+        .createInstance(Ci.nsISound)
+        .playEventSound(Ci.nsISound.EVENT_SELECT_DIALOG_OPEN);
+    }
   } catch (e) {}
 }
 
 function dialogOK() {
-  gArgs.setProperty("selected", listBox.selectedIndex);
-  gArgs.setProperty("ok", true);
+  propBag.setProperty("selected", listBox.selectedIndex);
+  propBag.setProperty("ok", true);
 }
 
 function dialogDoubleClick() {
