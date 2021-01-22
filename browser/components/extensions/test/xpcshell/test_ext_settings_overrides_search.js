@@ -349,6 +349,118 @@ add_task(async function test_extension_no_query_params() {
   ok(!engine, "Engine should not exist");
 });
 
+add_task(async function test_extension_empty_suggestUrl() {
+  let ext1 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      default_locale: "en",
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: kSearchEngineURL,
+          search_url_post_params: "foo=bar&bar=foo",
+          suggest_url: "__MSG_suggestUrl__",
+          suggest_url_get_params: "__MSG_suggestUrlGetParams__",
+        },
+      },
+    },
+    useAddonManager: "temporary",
+    files: {
+      "_locales/en/messages.json": {
+        suggestUrl: {
+          message: "",
+        },
+        suggestUrlGetParams: {
+          message: "",
+        },
+      },
+    },
+  });
+
+  await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
+
+  let engine = Services.search.getEngineByName("MozSearch");
+  ok(engine, "Engine should exist.");
+
+  let url = engine.wrappedJSObject._getURLOfType("text/html");
+  equal(url.method, "POST", "Search URLs method is POST");
+
+  let expectedURL = kSearchEngineURL.replace("{searchTerms}", kSearchTerm);
+  let submission = engine.getSubmission(kSearchTerm);
+  equal(submission.uri.spec, expectedURL, "Search URLs should match");
+  // postData is a nsIMIMEInputStream which contains a nsIStringInputStream.
+  equal(
+    submission.postData.data.data,
+    "foo=bar&bar=foo",
+    "Search postData should match"
+  );
+
+  let submissionSuggest = engine.getSubmission(
+    kSearchTerm,
+    URLTYPE_SUGGEST_JSON
+  );
+  ok(!submissionSuggest, "There should be no suggest URL.");
+
+  await ext1.unload();
+});
+
+add_task(async function test_extension_empty_suggestUrl_with_params() {
+  let ext1 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      default_locale: "en",
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: kSearchEngineURL,
+          search_url_post_params: "foo=bar&bar=foo",
+          suggest_url: "__MSG_suggestUrl__",
+          suggest_url_get_params: "__MSG_suggestUrlGetParams__",
+        },
+      },
+    },
+    useAddonManager: "temporary",
+    files: {
+      "_locales/en/messages.json": {
+        suggestUrl: {
+          message: "",
+        },
+        suggestUrlGetParams: {
+          message: "abc",
+        },
+      },
+    },
+  });
+
+  await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
+
+  let engine = Services.search.getEngineByName("MozSearch");
+  ok(engine, "Engine should exist.");
+
+  let url = engine.wrappedJSObject._getURLOfType("text/html");
+  equal(url.method, "POST", "Search URLs method is POST");
+
+  let expectedURL = kSearchEngineURL.replace("{searchTerms}", kSearchTerm);
+  let submission = engine.getSubmission(kSearchTerm);
+  equal(submission.uri.spec, expectedURL, "Search URLs should match");
+  // postData is a nsIMIMEInputStream which contains a nsIStringInputStream.
+  equal(
+    submission.postData.data.data,
+    "foo=bar&bar=foo",
+    "Search postData should match"
+  );
+
+  let submissionSuggest = engine.getSubmission(
+    kSearchTerm,
+    URLTYPE_SUGGEST_JSON
+  );
+  ok(!submissionSuggest, "There should be no suggest URL.");
+
+  await ext1.unload();
+});
+
 async function checkBadUrl(searchProviderKey, urlValue) {
   let normalized = await ExtensionTestUtils.normalizeManifest({
     chrome_settings_overrides: {

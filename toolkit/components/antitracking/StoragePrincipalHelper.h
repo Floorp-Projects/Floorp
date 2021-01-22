@@ -275,6 +275,14 @@ class StoragePrincipalHelper final {
   // For HSTS we want to force 'HTTP' in the partition key.
   static bool GetOriginAttributesForHSTS(nsIChannel* aChannel,
                                          OriginAttributes& aAttributes);
+
+  // Like the function above, this function forces `HTTPS` in the partition key.
+  // The OA created by this function is mainly used in DNS cache. The spec
+  // specifies that the presence of HTTPS RR for an origin also indicates that
+  // all HTTP resources are available over HTTPS, so we use this function to
+  // ensure that all HTTPS RRs in DNS cache are accessed by HTTPS requests only.
+  static bool GetOriginAttributesForHTTPSRR(nsIChannel* aChannel,
+                                            OriginAttributes& aAttributes);
 };
 
 }  // namespace mozilla
