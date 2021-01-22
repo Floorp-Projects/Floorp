@@ -142,20 +142,20 @@ class ObjectGroupRealm {
   // This cache is purged on GC.
   class DefaultNewGroupCache {
     ObjectGroup* group_;
-    JSObject* associated_;
+    TypeDescr* associated_;
 
    public:
     DefaultNewGroupCache() : associated_(nullptr) { purge(); }
 
     void purge() { group_ = nullptr; }
-    void put(ObjectGroup* group, JSObject* associated) {
+    void put(ObjectGroup* group, TypeDescr* associated) {
       group_ = group;
       associated_ = associated;
     }
 
     MOZ_ALWAYS_INLINE ObjectGroup* lookup(const JSClass* clasp,
                                           TaggedProto proto,
-                                          JSObject* associated);
+                                          TypeDescr* associated);
   } defaultNewGroupCache = {};
 
   // END OF PROPERTIES

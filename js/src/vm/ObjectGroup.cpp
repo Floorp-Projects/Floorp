@@ -132,17 +132,17 @@ struct ObjectGroupRealm::NewEntry {
 
   // Note: This pointer is only used for equality and does not need a read
   // barrier.
-  JSObject* associated;
+  TypeDescr* associated;
 
-  NewEntry(ObjectGroup* group, JSObject* associated)
+  NewEntry(ObjectGroup* group, TypeDescr* associated)
       : group(group), associated(associated) {}
 
   struct Lookup {
     const JSClass* clasp;
     TaggedProto proto;
-    JSObject* associated;
+    TypeDescr* associated;
 
-    Lookup(const JSClass* clasp, TaggedProto proto, JSObject* associated)
+    Lookup(const JSClass* clasp, TaggedProto proto, TypeDescr* associated)
         : clasp(clasp), proto(proto), associated(associated) {
       MOZ_ASSERT(clasp);
       MOZ_ASSERT_IF(associated && associated->is<JSFunction>(),
@@ -228,7 +228,7 @@ class ObjectGroupRealm::NewTable
 }
 
 MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
-    const JSClass* clasp, TaggedProto proto, JSObject* associated) {
+    const JSClass* clasp, TaggedProto proto, TypeDescr* associated) {
   if (group_ && associated_ == associated && group_->proto() == proto &&
       group_->clasp() == clasp) {
     return group_;
