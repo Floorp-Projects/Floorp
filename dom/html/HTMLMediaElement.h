@@ -150,6 +150,17 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   void ReportCanPlayTelemetry();
 
+  // `eMandatory`: `timeupdate` occurs according to the spec requirement.
+  // Eg.
+  // https://html.spec.whatwg.org/multipage/media.html#seeking:event-media-timeupdate
+  // `ePeriodic` : `timeupdate` occurs regularly and should follow the rule
+  // of not dispatching that event within 250 ms. Eg.
+  // https://html.spec.whatwg.org/multipage/media.html#offsets-into-the-media-resource:event-media-timeupdate
+  enum class TimeupdateType : bool {
+    eMandatory = false,
+    ePeriodic = true,
+  };
+
   /**
    * This is used when the browser is constructing a video element to play
    * a channel that we've already started loading. The src attribute and
@@ -437,7 +448,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * last 250ms, as required by the spec when the current time is periodically
    * increasing during playback.
    */
-  void FireTimeUpdate(bool aPeriodic) final;
+  void FireTimeUpdate(TimeupdateType aType);
+
+  void MaybeQueueTimeupdateEvent() final {
+    FireTimeUpdate(TimeupdateType::ePeriodic);
+  }
 
   // WebIDL
 
