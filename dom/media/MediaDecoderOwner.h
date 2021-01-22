@@ -35,13 +35,9 @@ class MediaDecoderOwner {
   // Triggers a recomputation of readyState.
   virtual void UpdateReadyState() = 0;
 
-  /**
-   * Fires a timeupdate event. If aPeriodic is true, the event will only
-   * be fired if we've not fired a timeupdate event (for any reason) in the
-   * last 250ms, as required by the spec when the current time is periodically
-   * increasing during playback.
-   */
-  virtual void FireTimeUpdate(bool aPeriodic) = 0;
+  // Called by the decoder object to notify owner might need to dispatch the
+  // `timeupdate` event due to current time changes.
+  virtual void MaybeQueueTimeupdateEvent() = 0;
 
   // Return true if decoding should be paused
   virtual bool GetPaused() = 0;
