@@ -2057,6 +2057,9 @@ main {
   font-size: 17px;
   color: var(--newtab-background-primary-text-color); }
 
+.outer-wrapper:not(.newtab-experience) .collapsible-section .section-title span {
+  vertical-align: middle; }
+
 .collapsible-section {
   padding: 10px 25px;
   transition-delay: 100ms;
@@ -2070,7 +2073,8 @@ main {
     .collapsible-section .section-title span {
       color: var(--newtab-section-header-text-color);
       display: inline-block;
-      fill: var(--newtab-section-header-text-color);
+      fill: var(--newtab-section-header-text-color); }
+    .collapsible-section .section-title.grey-title {
       vertical-align: middle; }
     .collapsible-section .section-title .click-target-container {
       vertical-align: top; }

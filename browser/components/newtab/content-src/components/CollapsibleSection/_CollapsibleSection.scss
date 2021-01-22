@@ -19,6 +19,16 @@
   }
 }
 
+.outer-wrapper:not(.newtab-experience) {
+  .collapsible-section {
+    .section-title {
+      span {
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
 .collapsible-section {
   padding: $section-vertical-padding $section-horizontal-padding;
   transition-delay: 100ms;
@@ -35,6 +45,9 @@
       color: var(--newtab-section-header-text-color);
       display: inline-block;
       fill: var(--newtab-section-header-text-color);
+    }
+
+    &.grey-title {
       vertical-align: middle;
     }
 
