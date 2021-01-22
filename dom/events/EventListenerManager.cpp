@@ -401,6 +401,18 @@ void EventListenerManager::AddEventListenerInternal(
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
       window->SetHasBeforeInputEventListenersForTelemetry();
     }
+  } else if (aTypeAtom == nsGkAtoms::onoverflow) {
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      if (Document* doc = window->GetExtantDoc()) {
+        doc->SetUseCounter(eUseCounter_custom_onoverflow);
+      }
+    }
+  } else if (aTypeAtom == nsGkAtoms::onunderflow) {
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      if (Document* doc = window->GetExtantDoc()) {
+        doc->SetUseCounter(eUseCounter_custom_onunderflow);
+      }
+    }
   }
 
   if (IsApzAwareListener(listener)) {
