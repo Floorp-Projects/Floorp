@@ -41,7 +41,16 @@ nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
       mTRRMode(aTRRMode),
       mListener(do_GetWeakReference(aListener)) {
   aURI->GetAsciiHost(mHostname);
-  mIsHttps = aURI->SchemeIs("https");
+}
+
+nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
+                             mozilla::OriginAttributes& aOriginAttributes,
+                             nsIRequest::TRRMode aTRRMode)
+    : mOriginAttributes(aOriginAttributes),
+      mStoreTiming(false),
+      mTRRMode(aTRRMode),
+      mListener(nullptr) {
+  aURI->GetAsciiHost(mHostname);
 }
 
 nsresult nsDNSPrefetch::Prefetch(uint32_t flags) {
@@ -114,16 +123,19 @@ HTTPSRRListener::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
 };  // namespace
 
 nsresult nsDNSPrefetch::FetchHTTPSSVC(
-    bool aRefreshDNS, std::function<void(nsIDNSHTTPSSVCRecord*)>&& aCallback) {
+    bool aRefreshDNS, bool aPrefetch,
+    std::function<void(nsIDNSHTTPSSVCRecord*)>&& aCallback) {
   if (!sDNSService) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentEventTarget();
-  uint32_t flags = nsIDNSService::GetFlagsFromTRRMode(mTRRMode) |
-                   nsIDNSService::RESOLVE_SPECULATE;
+  uint32_t flags = nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
   if (aRefreshDNS) {
     flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
+  }
+  if (aPrefetch) {
+    flags |= nsIDNSService::RESOLVE_SPECULATE;
   }
 
   nsCOMPtr<nsICancelable> tmpOutstanding;

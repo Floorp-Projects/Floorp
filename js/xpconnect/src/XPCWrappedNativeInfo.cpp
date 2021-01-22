@@ -345,10 +345,11 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
         nullptr == (str = JS_AtomizeAndPinString(cx, bytes))) {
       failed = true;
     }
-    interfaceName = PropertyKey::fromPinnedString(str);
   }
 
   if (!failed) {
+    interfaceName = PropertyKey::fromPinnedString(str);
+
     // Use placement new to create an object with the right amount of space
     // to hold the members array
     int size = sizeof(XPCNativeInterface);

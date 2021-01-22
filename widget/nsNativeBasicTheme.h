@@ -217,13 +217,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
     DrawTarget& mDt;
   };
 
-  static void GetFocusStrokeRect(DrawTarget* aDrawTarget,
-                                 LayoutDeviceRect& aFocusRect,
-                                 LayoutDeviceCoord aOffset,
-                                 const LayoutDeviceCoord aRadius,
-                                 LayoutDeviceCoord aFocusWidth,
-                                 RefPtr<Path>& aOutRect);
-
   virtual std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(
       const EventStates& aState, StyleAppearance aAppearance);
   virtual sRGBColor ComputeCheckmarkColor(const EventStates& aState);

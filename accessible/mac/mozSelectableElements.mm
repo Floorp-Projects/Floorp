@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "mozSelectableElements.h"
+#import "MOXWebAreaAccessible.h"
 #import "MacUtils.h"
 #include "Accessible-inl.h"
 #include "nsCocoaUtils.h"
@@ -18,7 +19,16 @@ using namespace mozilla::a11y;
  * Return the mozAccessibles that are selectable.
  */
 - (NSArray*)selectableChildren {
-  return [[self moxUnignoredChildren]
+  NSArray* toFilter;
+  if ([self isKindOfClass:[mozMenuAccessible class]]) {
+    // If we are a menu, our children are only selectable if they are visible
+    // so we filter this array instead of our unignored children list, which may
+    // contain invisible items.
+    toFilter = [static_cast<mozMenuAccessible*>(self) moxVisibleChildren];
+  } else {
+    toFilter = [self moxUnignoredChildren];
+  }
+  return [toFilter
       filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(
                                                    mozAccessible* child,
                                                    NSDictionary* bindings) {
@@ -38,14 +48,13 @@ using namespace mozilla::a11y;
  * Return the mozAccessibles that are actually selected.
  */
 - (NSArray*)moxSelectedChildren {
-  return [[self moxUnignoredChildren]
+  return [[self selectableChildren]
       filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(
                                                    mozAccessible* child,
                                                    NSDictionary* bindings) {
         // Return mozSelectableChildAccessibles that have are selected (truthy
         // value).
-        return [child isKindOfClass:[mozSelectableChildAccessible class]] &&
-               [[(mozSelectableChildAccessible*)child moxSelected] boolValue];
+        return [[(mozSelectableChildAccessible*)child moxSelected] boolValue];
       }]];
 }
 
@@ -154,25 +163,43 @@ using namespace mozilla::a11y;
   return @"";
 }
 
-- (NSArray*)moxChildren {
-  // We differ from Webkit and Apple-native menus here; they expose
-  // all children regardless of whether or not the menu is open.
-  // In testing, VoiceOver doesn't seem to actually care what happens
-  // here as long as AXVisibleChildren is exposed correctly, so
-  // we expose children only when the menu is open to avoid
-  // changing ignoreWithParent/ignoreChild and/or isAccessibilityElement
-  if (mIsOpened) {
-    return [super moxChildren];
+- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent {
+  // This helps us generate the correct moxChildren array for
+  // a sub menu -- that returned array should contain all
+  // menu items, regardless of if they are visible or not.
+  // Because moxChildren does ignore filtering, and because
+  // our base ignore method filters out invisible accessibles,
+  // we override this method.
+  if ([parent isKindOfClass:[MOXWebAreaAccessible class]] ||
+      [parent isKindOfClass:[MOXRootGroup class]]) {
+    // We are a top level menu. Check our visibility the normal way
+    return [super moxIgnoreWithParent:parent];
   }
-  return nil;
+
+  if ([parent isKindOfClass:[mozMenuItemAccessible class]] &&
+      [parent geckoAccessible].Role() == roles::PARENT_MENUITEM) {
+    // We are a submenu. If our parent menu item is in an open menu
+    // we should not be ignored
+    id grandparent = [parent moxParent];
+    if ([grandparent isKindOfClass:[mozMenuAccessible class]]) {
+      mozMenuAccessible* parentMenu =
+          static_cast<mozMenuAccessible*>(grandparent);
+      return ![parentMenu isOpened];
+    }
+  }
+
+  // Otherwise, we call into our superclass's ignore method
+  // to handle menus that are not submenus
+  return [super moxIgnoreWithParent:parent];
 }
 
 - (NSArray*)moxVisibleChildren {
   // VO expects us to expose two lists of children on menus: all children
-  // (done above in moxChildren), and children which are visible (here).
-  // In our code, these are essentially the same list, since at the time of
-  // wiritng we filter for visibility in isAccessibilityElement before
-  // passing anything to VO.
+  // (done in moxUnignoredChildren), and children which are visible (here).
+  // We implement ignoreWithParent for both menus and menu items
+  // to ensure moxUnignoredChildren returns a complete list of children
+  // regardless of visibility, see comments in those methods for additional
+  // info.
   return [[self moxChildren]
       filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(
                                                    mozAccessible* child,
@@ -188,8 +215,7 @@ using namespace mozilla::a11y;
 
 - (id)moxTitleUIElement {
   id parent = [self moxUnignoredParent];
-  if ([parent isKindOfClass:[mozAccessible class]] &&
-      [parent geckoAccessible].Role() == roles::PARENT_MENUITEM) {
+  if (parent && [parent isKindOfClass:[mozAccessible class]]) {
     return parent;
   }
 
@@ -197,13 +223,13 @@ using namespace mozilla::a11y;
 }
 
 - (void)moxPostNotification:(NSString*)notification {
-  [super moxPostNotification:notification];
-
   if ([notification isEqualToString:@"AXMenuOpened"]) {
     mIsOpened = YES;
   } else if ([notification isEqualToString:@"AXMenuClosed"]) {
     mIsOpened = NO;
   }
+
+  [super moxPostNotification:notification];
 }
 
 - (void)expire {
@@ -216,12 +242,46 @@ using namespace mozilla::a11y;
   [super expire];
 }
 
+- (BOOL)isOpened {
+  return mIsOpened;
+}
+
 @end
 
 @implementation mozMenuItemAccessible
 
 - (NSString*)moxLabel {
   return @"";
+}
+
+- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent {
+  // This helps us generate the correct moxChildren array for
+  // a mozMenuAccessible; the returned array should contain all
+  // menu items, regardless of if they are visible or not.
+  // Because moxChildren does ignore filtering, and because
+  // our base ignore method filters out invisible accessibles,
+  // we override this method.
+  mozAccessible* directGrandparent =
+      GetNativeFromGeckoAccessible([parent geckoAccessible].Parent());
+  if ([directGrandparent isKindOfClass:[MOXWebAreaAccessible class]]) {
+    return [parent moxIgnoreWithParent:directGrandparent];
+  }
+
+  id grandparent = [parent moxParent];
+  if ([grandparent isKindOfClass:[mozMenuItemAccessible class]]) {
+    mozMenuItemAccessible* acc =
+        static_cast<mozMenuItemAccessible*>(grandparent);
+    if ([acc geckoAccessible].Role() == roles::PARENT_MENUITEM) {
+      mozMenuAccessible* parentMenu = static_cast<mozMenuAccessible*>(parent);
+      // if we are a menu item in a submenu, display only when
+      // parent menu item is open
+      return ![parentMenu isOpened];
+    }
+  }
+
+  // Otherwise, we call into our superclass's method to handle
+  // menuitems that are not within submenus
+  return [super moxIgnoreWithParent:parent];
 }
 
 - (NSString*)moxMenuItemMarkChar {
