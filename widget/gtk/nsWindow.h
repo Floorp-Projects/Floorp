@@ -81,6 +81,11 @@ void WindowDragLeaveHandler(GtkWidget* aWidget);
 
 class gfxPattern;
 class nsIFrame;
+#if !GTK_CHECK_VERSION(3, 18, 0)
+struct _GdkEventTouchpadPinch;
+typedef struct _GdkEventTouchpadPinch GdkEventTouchpadPinch;
+
+#endif
 
 namespace mozilla {
 class TimeStamp;
@@ -219,9 +224,7 @@ class nsWindow final : public nsBaseWidget {
                                guint aTime, gpointer aData);
   gboolean OnPropertyNotifyEvent(GtkWidget* aWidget, GdkEventProperty* aEvent);
   gboolean OnTouchEvent(GdkEventTouch* aEvent);
-#if GTK_CHECK_VERSION(3, 18, 0)
   gboolean OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent);
-#endif
 
   void UpdateTopLevelOpaqueRegion();
 
