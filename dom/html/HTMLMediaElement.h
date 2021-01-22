@@ -1531,9 +1531,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // UpdatePreloadAction().
   PreloadAction mPreloadAction = PRELOAD_UNDEFINED;
 
-  // Time that the last timeupdate event was fired. Read/Write from the
+  // Time that the last timeupdate event was queued. Read/Write from the
   // main thread only.
-  TimeStamp mTimeUpdateTime;
+  TimeStamp mQueueTimeUpdateRunnerTime;
 
   // Time that the last progress event was fired. Read/Write from the
   // main thread only.
@@ -1545,7 +1545,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Read/Write from the main thread only.
   TimeStamp mDataTime;
 
-  // Media 'currentTime' value when the last timeupdate event occurred.
+  // Media 'currentTime' value when the last timeupdate event was queued.
   // Read/Write from the main thread only.
   double mLastCurrentTime = 0.0;
 
@@ -1891,6 +1891,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Return true if the media element is being used in picture in picture mode.
   bool IsBeingUsedInPictureInPictureMode() const;
+
+  // Return true if we should queue a 'timeupdate' event runner to main thread.
+  bool ShouldQueueTimeupdateAsyncTask(TimeupdateType aType) const;
 };
 
 // Check if the context is chrome or has the debugger or tabs permission
