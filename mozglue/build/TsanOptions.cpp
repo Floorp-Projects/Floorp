@@ -102,6 +102,8 @@ extern "C" const char* __tsan_default_suppressions() {
          "deadlock:third_party/rust/rkv/src/env.rs\n"
          // Bug 1680655 - permanent
          "deadlock:EncryptedClientHelloServer\n"
+         // Bug 1682861 - permanent
+         "deadlock:nsDOMWindowUtils::CompareCanvases\n"
 
 
 
