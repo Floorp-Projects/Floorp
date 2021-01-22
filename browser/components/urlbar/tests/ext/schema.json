@@ -14,6 +14,27 @@
             "additionalProperties": true
           }
         }
+      },
+      {
+        "id": "Query",
+        "type": "object",
+        "description": "A UrlbarQueryContext describing the parameters of a Urlbar query.",
+        "properties": {
+          "allowAutofill": {
+            "type": "boolean"
+          },
+          "isPrivate": {
+            "type": "boolean"
+          },
+          "maxResults": {
+            "type": "number"
+          },
+          "searchString": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "required": ["allowAutofill", "isPrivate", "maxResults", "searchString"]
       }
     ],
     "properties": {
@@ -107,6 +128,23 @@
         "async": true,
         "description": "Sets urlbar.value to the empty string and the pageproxystate to invalid.",
         "parameters": []
+      },
+      {
+        "name": "suggestionsEnabled",
+        "type": "function",
+        "async": true,
+        "description": "Determine whether suggestions should be shown or not.",
+        "parameters": [
+          {
+            "name": "queryContext",
+            "$ref": "Query",
+            "description": "The UrlbarQueryContext for the active query."
+          }
+        ],
+        "returns": {
+          "type": "boolean",
+          "description": "True if suggestions are enabled in the current context."
+        }
       }
     ]
   }
