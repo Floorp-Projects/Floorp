@@ -187,8 +187,7 @@ static const wchar_t* sCssToDevPixelScalingRegSuffix = L"|CssToDevPixelScaling";
 static const wchar_t* sSearchbarRegSuffix = L"|SearchbarCSSSpan";
 static const wchar_t* sSpringsCSSRegSuffix = L"|SpringsCSSSpan";
 static const wchar_t* sThemeRegSuffix = L"|Theme";
-static const wchar_t* sMenubarShownRegSuffix = L"|MenubarShown";
-static const wchar_t* sRTLEnabledRegSuffix = L"|RTLEnabled";
+static const wchar_t* sFlagsRegSuffix = L"|Flags";
 
 struct LoadedCoTaskMemFreeDeleter {
   void operator()(void* ptr) {
@@ -695,8 +694,8 @@ bool RasterizeAnimatedRect(const ColorRect& colorRect,
 void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
                     CSSPixelSpan searchbarCSSSpan,
                     Vector<CSSPixelSpan>& springs,
-                    const ThemeColors& currentTheme, const bool& menubarShown,
-                    const bool& rtlEnabled) {
+                    const ThemeColors& currentTheme,
+                    const EnumSet<SkeletonUIFlag, uint32_t>& flags) {
   // NOTE: we opt here to paint a pixel buffer for the application chrome by
   // hand, without using native UI library methods. Why do we do this?
   //
@@ -721,6 +720,11 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   sAnimationColor = currentTheme.animationColor;
   sToolbarForegroundColor = currentTheme.toolbarForegroundColor;
 
+  bool menubarShown = flags.contains(SkeletonUIFlag::MenubarShown);
+  bool bookmarksToolbarShown =
+      flags.contains(SkeletonUIFlag::BookmarksToolbarShown);
+  bool rtlEnabled = flags.contains(SkeletonUIFlag::RtlEnabled);
+
   int chromeHorMargin = CSSToDevPixels(2, sCSSToDevPixelScaling);
   int verticalOffset = sMaximized ? sNonClientVerticalMargins : 0;
   int horizontalOffset =
@@ -733,13 +737,18 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   int tabBarHeight = CSSToDevPixels(33, sCSSToDevPixelScaling) + verticalOffset;
   // found in tabs.inc.css, ".titlebar-spacer"
   int titlebarSpacerWidth = horizontalOffset;
-  if (!sMaximized && menubarShown == false) {
+  if (!sMaximized && !menubarShown) {
     titlebarSpacerWidth += CSSToDevPixels(40, sCSSToDevPixelScaling);
   }
   // found in tabs.inc.css, ".tab-line"
   int tabLineHeight = CSSToDevPixels(2, sCSSToDevPixelScaling) + verticalOffset;
   int selectedTabWidth = CSSToDevPixels(224, sCSSToDevPixelScaling);
   int toolbarHeight = CSSToDevPixels(39, sCSSToDevPixelScaling);
+  // found in browser.css, "#PersonalToolbar"
+  int bookmarkToolbarHeight = CSSToDevPixels(28, sCSSToDevPixelScaling);
+  if (bookmarksToolbarShown) {
+    toolbarHeight += bookmarkToolbarHeight;
+  }
   // found in urlbar-searchbar.inc.css, "#urlbar[breakout]"
   int urlbarTopOffset = CSSToDevPixels(5, sCSSToDevPixelScaling);
   int urlbarHeight = CSSToDevPixels(30, sCSSToDevPixelScaling);
@@ -1804,29 +1813,16 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   }
   sMaximized = maximized != 0;
 
-  uint32_t menubarShownInt;
+  EnumSet<SkeletonUIFlag, uint32_t> flags;
+  uint32_t flagsUint;
   result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sMenubarShownRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&menubarShownInt),
-      &dataLen);
+      regKey, nullptr, GetRegValueName(binPath.get(), sFlagsRegSuffix).c_str(),
+      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&flagsUint), &dataLen);
   if (result != ERROR_SUCCESS) {
-    printf_stderr("Error reading menubarShown %lu\n", GetLastError());
+    printf_stderr("Error reading flags %lu\n", GetLastError());
     return;
   }
-  bool menubarShown = menubarShownInt != 0;
-
-  uint32_t rtlEnabledInt;
-  result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sRTLEnabledRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&rtlEnabledInt),
-      &dataLen);
-  if (result != ERROR_SUCCESS) {
-    printf_stderr("Error reading rtlEnabled %lu\n", GetLastError());
-    return;
-  }
-  bool rtlEnabled = rtlEnabledInt != 0;
+  flags.deserialize(flagsUint);
 
   dataLen = sizeof(double);
   result = ::RegGetValueW(
@@ -1977,7 +1973,7 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
   DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbar, searchbar, springs,
-                 currentTheme, menubarShown, rtlEnabled);
+                 currentTheme, flags);
   if (sAnimatedRects) {
     sPreXULSKeletonUIAnimationThread = ::CreateThread(
         nullptr, 256 * 1024, AnimateSkeletonUI, nullptr, 0, nullptr);
@@ -2075,22 +2071,23 @@ void PersistPreXULSkeletonUIValues(const SkeletonUISettings& settings) {
     printf_stderr("Failed persisting maximized to Windows registry\n");
   }
 
-  DWORD menubarShownDword = settings.menubarShown ? 1 : 0;
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sMenubarShownRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<const BYTE*>(&menubarShownDword),
-      sizeof(menubarShownDword));
-  if (result != ERROR_SUCCESS) {
-    printf_stderr("Failed persisting menubarShown to Windows registry\n");
+  EnumSet<SkeletonUIFlag, uint32_t> flags;
+  if (settings.menubarShown) {
+    flags += SkeletonUIFlag::MenubarShown;
   }
-
-  DWORD rtlEnabledDword = settings.rtlEnabled ? 1 : 0;
+  if (settings.bookmarksToolbarShown) {
+    flags += SkeletonUIFlag::BookmarksToolbarShown;
+  }
+  if (settings.rtlEnabled) {
+    flags += SkeletonUIFlag::RtlEnabled;
+  }
+  uint32_t flagsUint = flags.serialize();
   result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sRTLEnabledRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<const BYTE*>(&rtlEnabledDword),
-      sizeof(rtlEnabledDword));
+      regKey, GetRegValueName(binPath.get(), sFlagsRegSuffix).c_str(), 0,
+      REG_DWORD, reinterpret_cast<const BYTE*>(&flagsUint), sizeof(flagsUint));
   if (result != ERROR_SUCCESS) {
-    printf_stderr("Failed persisting rtlEnabled to Windows registry\n");
+    printf_stderr("Failed persisting flags to Windows registry\n");
+    return;
   }
 
   result = ::RegSetValueExW(
