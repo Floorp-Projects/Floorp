@@ -81,10 +81,8 @@ inline void js::Nursery::setForwardingPointer(void* oldData, void* newData,
 
 inline void js::Nursery::setDirectForwardingPointer(void* oldData,
                                                     void* newData) {
-  // If a zero-capacity elements header lands right at the end of a chunk then
-  // elements data will appear to be in the next chunk.
-  MOZ_ASSERT(isInside(oldData) || (uintptr_t(oldData) & gc::ChunkMask) == 0);
-  MOZ_ASSERT(!isInside(newData) || (uintptr_t(newData) & gc::ChunkMask) == 0);
+  MOZ_ASSERT(isInside(oldData));
+  MOZ_ASSERT(!isInside(newData));
 
   new (oldData) BufferRelocationOverlay{newData};
 }
