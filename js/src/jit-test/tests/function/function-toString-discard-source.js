@@ -1,10 +1,7 @@
-// |reftest| skip-if(!this.hasOwnProperty("setDiscardSource")) -- uses the setDiscardSource testing function
-
 // The Function.prototype.toString() representation of sourceless functions
 // must match the NativeFunction syntax.
 
-setDiscardSource(true);
-
+function test() {
 // Greatly (!) simplified patterns for the PropertyName production.
 var propertyName = [
     // PropertyName :: LiteralPropertyName :: IdentifierName
@@ -25,6 +22,9 @@ var nativeCode = RegExp([
     "^", "function", ("(?:" + propertyName + ")?"), "\\(", "\\)", "\\{", "\\[native code\\]", "\\}", "$"
 ].join("\\s*"));
 
+function reportMatch(pattern, str) {
+  assertEq(pattern.test(str), true);
+}
 
 // Function declarations.
 
@@ -207,3 +207,7 @@ function asm() {
 
 reportMatch(nativeCode, asm.toString());
 reportMatch(nativeCode, asm().f.toString());
+}
+
+var g = newGlobal({ discardSource: true });
+g.evaluate(test.toString() + "test()");
