@@ -54,10 +54,6 @@ const PanelUI = {
   init() {
     this._initElements();
 
-    if (gProton) {
-      this.multiView.setAttribute("mainViewId", "appMenu-protonMainView");
-    }
-
     this.menuButton.addEventListener("mousedown", this);
     this.menuButton.addEventListener("keypress", this);
 
@@ -109,6 +105,17 @@ const PanelUI = {
         }
       }
     );
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "protonAppMenuEnabled",
+      "browser.proton.appmenu.enabled",
+      false
+    );
+
+    if (this.protonAppMenuEnabled) {
+      this.multiView.setAttribute("mainViewId", "appMenu-protonMainView");
+    }
 
     window.addEventListener("activate", this);
     CustomizableUI.addListener(this);
@@ -991,7 +998,9 @@ const PanelUI = {
     if (!this._mainView) {
       this._mainView = PanelMultiView.getViewNode(
         document,
-        gProton ? "appMenu-protonMainView" : "appMenu-mainView"
+        this.protonAppMenuEnabled
+          ? "appMenu-protonMainView"
+          : "appMenu-mainView"
       );
     }
     return this._mainView;
