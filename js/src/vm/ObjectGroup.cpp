@@ -79,7 +79,7 @@ void ObjectGroup::setProtoUnchecked(TaggedProto proto) {
 }
 
 /////////////////////////////////////////////////////////////////////
-// JSObject
+// GlobalObject
 /////////////////////////////////////////////////////////////////////
 
 bool GlobalObject::shouldSplicePrototype() {
@@ -119,13 +119,10 @@ bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
 /////////////////////////////////////////////////////////////////////
 
 /*
- * Entries for the per-realm set of groups which are the default
- * types to use for some prototype. An optional associated object is used which
- * allows multiple groups to be created with the same prototype. The
- * associated object may be a function (for types constructed with 'new') or a
- * type descriptor (for typed objects). These entries are also used for the set
- * of lazy groups in the realm, which use a null associated object
- * (though there are only a few of these per realm).
+ * Entries for the per-realm set of groups based on prototype and class. An
+ * optional associated object is used which allows multiple groups to be
+ * created with the same prototype. The associated object is a type descriptor
+ * (for typed objects).
  */
 struct ObjectGroupRealm::NewEntry {
   WeakHeapPtrObjectGroup group;
