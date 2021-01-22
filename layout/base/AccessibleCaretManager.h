@@ -50,6 +50,7 @@ class Selection;
 //
 class AccessibleCaretManager {
  public:
+  // @param aPresShell may be nullptr for testing.
   explicit AccessibleCaretManager(PresShell* aPresShell);
   virtual ~AccessibleCaretManager() = default;
 
@@ -160,6 +161,15 @@ class AccessibleCaretManager {
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const UpdateCaretsHint& aResult);
 
+  enum class Terminated : bool { No, Yes };
+
+  // This method could kill the shell, so callers to methods that call
+  // MaybeFlushLayout should ensure the event hub that owns us is still alive.
+  //
+  // See the mRefCnt assertions in AccessibleCaretEventHub.
+  //
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual Terminated MaybeFlushLayout();
+
   // Update carets based on current selection status. This function will flush
   // layout, so caller must ensure the PresShell is still valid after calling
   // this method.
@@ -230,8 +240,6 @@ class AccessibleCaretManager {
   void StopSelectionAutoScrollTimer() const;
 
   void ClearMaintainedSelection() const;
-
-  enum class Terminated : bool { No, Yes };
 
   static dom::Element* GetEditingHostForFrame(const nsIFrame* aFrame);
   dom::Selection* GetSelection() const;
@@ -333,14 +341,7 @@ class AccessibleCaretManager {
    public:
     ~LayoutFlusher();
 
-    // This method could kill the shell, so callers to methods that call
-    // MaybeFlush should ensure the event hub that owns us is still alive.
-    //
-    // See the mRefCnt assertions in AccessibleCaretEventHub.
-    //
-    // @return aAccessibleCaretManager.IsTerminated().
-    [[nodiscard]] MOZ_CAN_RUN_SCRIPT Terminated
-    MaybeFlush(const AccessibleCaretManager& aAccessibleCaretManager);
+    MOZ_CAN_RUN_SCRIPT void MaybeFlush(const PresShell& aPresShell);
 
     // Set to false to disallow flushing layout in some callbacks such as
     // OnReflow(), OnScrollStart(), OnScrollStart(), or
