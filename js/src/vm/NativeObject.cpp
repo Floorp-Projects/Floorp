@@ -1271,12 +1271,6 @@ bool NativeObject::reshapeForShadowedProp(JSContext* cx,
   return generateOwnShape(cx, obj);
 }
 
-/* static */
-bool NativeObject::reshapeForProtoMutation(JSContext* cx,
-                                           HandleNativeObject obj) {
-  return generateOwnShape(cx, obj);
-}
-
 enum class IsAddOrChange { Add, AddOrChange };
 
 template <IsAddOrChange AddOrChange>
