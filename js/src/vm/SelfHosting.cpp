@@ -6,7 +6,6 @@
 
 #include "vm/SelfHosting.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"

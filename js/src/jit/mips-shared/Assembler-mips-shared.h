@@ -7,7 +7,6 @@
 #ifndef jit_mips_shared_Assembler_mips_shared_h
 #define jit_mips_shared_Assembler_mips_shared_h
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"

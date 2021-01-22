@@ -11,7 +11,6 @@
 #ifndef gc_GCInternals_h
 #define gc_GCInternals_h
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Maybe.h"
 
 #include "gc/GC.h"
