@@ -241,6 +241,9 @@ add_task(async function testOverflowingBookmarksItemsContextMenu() {
 
   let bookmarksToolbarItems = document.getElementById(kBookmarksItems);
   await gCustomizeMode.addToToolbar(bookmarksToolbarItems);
+  await TestUtils.waitForCondition(
+    () => document.getElementById("PlacesToolbar")._placesView
+  );
   await checkPlacesContextMenu(bookmarksToolbarItems);
 
   await overflowEverything();
@@ -251,6 +254,9 @@ add_task(async function testOverflowingBookmarksItemsContextMenu() {
   await stopOverflowing();
 
   await gCustomizeMode.addToToolbar(bookmarksToolbarItems);
+  await TestUtils.waitForCondition(
+    () => document.getElementById("PlacesToolbar")._placesView
+  );
   await checkPlacesContextMenu(bookmarksToolbarItems);
 });
 
