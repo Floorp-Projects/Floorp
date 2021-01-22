@@ -1385,7 +1385,18 @@ EnvironmentCache.prototype = {
     this._log.trace("observe - aTopic: " + aTopic + ", aData: " + aData);
     switch (aTopic) {
       case SEARCH_ENGINE_MODIFIED_TOPIC:
-        if (aData != "engine-default" && aData != "engine-default-private") {
+        if (
+          aData != "engine-default" &&
+          aData != "engine-default-private" &&
+          aData != "engine-changed"
+        ) {
+          return;
+        }
+        if (
+          aData == "engine-changed" &&
+          aSubject.QueryInterface(Ci.nsISearchEngine) &&
+          Services.search.defaultEngine != aSubject
+        ) {
           return;
         }
         // Record the new default search choice and send the change notification.
