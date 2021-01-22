@@ -1022,28 +1022,6 @@ JSString* fun_toStringHelper(JSContext* cx, HandleObject obj, bool isToSource) {
   return FunctionToString(cx, obj.as<JSFunction>(), isToSource);
 }
 
-bool js::FunctionHasDefaultHasInstance(JSFunction* fun,
-                                       const WellKnownSymbols& symbols) {
-  jsid id = SYMBOL_TO_JSID(symbols.hasInstance);
-  Shape* shape = fun->lookupPure(id);
-  if (shape) {
-    if (!shape->isDataProperty()) {
-      return false;
-    }
-    const Value hasInstance = fun->as<NativeObject>().getSlot(shape->slot());
-    return IsNativeFunction(hasInstance, fun_symbolHasInstance);
-  }
-
-#ifdef DEBUG
-  // The proto must be Function.__proto__. It has an immutable @@hasInstance
-  // property. (Callers should check this first.)
-  Value funProto = fun->global().getPrototype(JSProto_Function);
-  MOZ_ASSERT(fun->staticPrototype() == &funProto.toObject());
-#endif
-
-  return true;
-}
-
 bool js::fun_toString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(IsFunctionObject(args.calleev()));
