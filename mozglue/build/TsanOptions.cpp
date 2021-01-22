@@ -298,6 +298,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:EventSourceImpl::OnStopRequest\n"
          "race:UpdateDontKeepAlive\n"
 
+         // Bug 1683357
+         "race:image::ImageSurfaceCache::SuggestedSizeInternal\n"
+         "race:image::RasterImage::SetMetadata\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
