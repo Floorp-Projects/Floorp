@@ -350,10 +350,6 @@ struct ReflowInput : public SizeComputationInput {
                       : ht + ComputedPhysicalBorderPadding().TopBottom());
   }
 
-  bool ComputedBSizeIsSetByAspectRatio() const {
-    return mFlags.mBSizeIsSetByAspectRatio;
-  }
-
   // Our saved containing block dimensions.
   LogicalSize mContainingBlockSize{mWritingMode};
 
@@ -508,12 +504,12 @@ struct ReflowInput : public SizeComputationInput {
     // context.
     bool mMovedBlockFragments : 1;
 
-    // If the block-size is replacd by aspect-ratio and inline size (i.e.
-    // block axis is the ratio-dependent axis). We set this flag, so we could
-    // apply Automatic content-based minimum sizes after we know the content
-    // size of child fraems.
+    // Is the block-size computed by aspect-ratio and inline size (i.e. block
+    // axis is the ratio-dependent axis)? We set this flag so that we can check
+    // whether to apply automatic content-based minimum sizes once we know the
+    // children's block-size (after reflowing them).
     // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
-    bool mBSizeIsSetByAspectRatio : 1;
+    bool mIsBSizeSetByAspectRatio : 1;
   };
   Flags mFlags;
   mozilla::ComputeSizeFlags mComputeSizeFlags;
