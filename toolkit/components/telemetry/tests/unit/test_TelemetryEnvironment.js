@@ -39,6 +39,8 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
 
+SearchTestUtils.init(this);
+
 async function installXPIFromURL(url) {
   let install = await AddonManager.getInstallForURL(url);
   return install.install();
@@ -2142,6 +2144,62 @@ add_task(async function test_defaultSearchEngine() {
 
 add_task(async function test_defaultPrivateSearchEngine() {
   await checkDefaultSearch(true, true);
+});
+
+add_task(async function test_defaultSearchEngine_paramsChanged() {
+  let extension = await SearchTestUtils.installSearchExtension({
+    name: "TestEngine",
+    search_url: "https://www.google.com/fake1",
+  });
+
+  let promise = new Promise(resolve => {
+    TelemetryEnvironment.registerChangeListener(
+      "testWatch_SearchDefault",
+      resolve
+    );
+  });
+  let engine = Services.search.getEngineByName("TestEngine");
+  await Services.search.setDefault(engine);
+  await promise;
+
+  let data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+  Assert.deepEqual(data.settings.defaultSearchEngineData, {
+    name: "TestEngine",
+    loadPath: "[other]addEngineWithDetails:example@tests.mozilla.org",
+    origin: "verified",
+    submissionURL: "https://www.google.com/fake1?q=",
+  });
+
+  promise = new Promise(resolve => {
+    TelemetryEnvironment.registerChangeListener(
+      "testWatch_SearchDefault",
+      resolve
+    );
+  });
+
+  engine.wrappedJSObject._updateFromManifest(
+    extension.id,
+    extension.baseURI,
+    SearchTestUtils.createEngineManifest({
+      name: "TestEngine",
+      version: "1.2",
+      search_url: "https://www.google.com/fake2",
+    })
+  );
+
+  await promise;
+
+  data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+  Assert.deepEqual(data.settings.defaultSearchEngineData, {
+    name: "TestEngine",
+    loadPath: "[other]addEngineWithDetails:example@tests.mozilla.org",
+    origin: "verified",
+    submissionURL: "https://www.google.com/fake2?q=",
+  });
+
+  await extension.unload();
 });
 
 add_task(
