@@ -1260,7 +1260,7 @@ MediaDecoderStateMachine* MediaDecoder::GetStateMachine() const {
 void MediaDecoder::FireTimeUpdate() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  GetOwner()->FireTimeUpdate(true);
+  GetOwner()->MaybeQueueTimeupdateEvent();
 }
 
 bool MediaDecoder::CanPlayThrough() {
