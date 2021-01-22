@@ -9,41 +9,47 @@ function hasGname(f, v, hasIt = true) {
     // Do a try-catch that prints the full stack, so we can tell
     // _which_ part of this test failed.
     try {
-	var b = bytecode(f);
-	if (b != "unavailable") {
-	    assertEq(b.includes(`GetGName "${v}"`), hasIt);
-	    assertEq(b.includes(`GetName "${v}"`), !hasIt);
-	}
+        var b = bytecode(f);
+        if (b != "unavailable") {
+            assertEq(b.includes(`GetGName "${v}"`), hasIt);
+            assertEq(b.includes(`GetName "${v}"`), !hasIt);
+        }
     } catch (e) {
-	print(e.stack);
-	throw e;
+        print(e.stack);
+        throw e;
     }
 }
 
 var x = "outer";
 
-setLazyParsingDisabled(true);
+var nonLazyGlobal = newGlobal({ disableLazyParsing: true });
+nonLazyGlobal.eval(bytecode.toString());
+nonLazyGlobal.eval(hasGname.toString());
+nonLazyGlobal.x = x;
+
+nonLazyGlobal.evaluate(`
 {
     let x = "inner";
     eval("function g() { assertEq(x, 'inner');} g()");
     eval("function g2() { (function nest() { assertEq(x, 'inner'); })(); } g2()");
 }
-eval(`
+eval(\`
      function g3() {
-	 assertEq(x, 'outer');
+         assertEq(x, 'outer');
      }
      g3();
      hasGname(g3, 'x');
-     `);
-eval(`
+     \`);
+eval(\`
      function g4() {
-	 function nest() { assertEq(x, 'outer'); }
-	 nest();
-	 return nest;
+         function nest() { assertEq(x, 'outer'); }
+         nest();
+         return nest;
      }
      hasGname(g4(), 'x');
-     `);
-setLazyParsingDisabled(false);
+     \`);
+`);
+
 
 {
     let x = "inner";
@@ -54,27 +60,27 @@ setLazyParsingDisabled(false);
 // GNAME optimizations should work through lazy parsing.
 eval(`
      function h3() {
-	 assertEq(x, 'outer');
+         assertEq(x, 'outer');
      }
      h3();
      hasGname(h3, 'x', true);
      `);
 eval(`
      function h4() {
-	 function nest() { assertEq(x, 'outer'); }
-	 nest();
-	 return nest;
+         function nest() { assertEq(x, 'outer'); }
+         nest();
+         return nest;
      }
      hasGname(h4(), 'x', true);
      `);
 
-setLazyParsingDisabled(true);
+nonLazyGlobal.evaluate(`
 with ({}) {
     let x = "inner";
     eval("function i() { assertEq(x, 'inner');} i()");
     eval("function i2() { (function nest() { assertEq(x, 'inner'); })(); } i2()");
 }
-setLazyParsingDisabled(false);
+`);
 
 with ({}) {
     let x = "inner";
@@ -82,13 +88,13 @@ with ({}) {
     eval("function j2() { (function nest() { assertEq(x, 'inner'); })(); } j2()");
 }
 
-setLazyParsingDisabled(true);
+nonLazyGlobal.evaluate(`
 (function () {
     var x = "inner";
     eval("function k() { assertEq(x, 'inner');} k()");
     eval("function k2() { (function nest() { assertEq(x, 'inner'); })(); } k2()");
 })();
-setLazyParsingDisabled(false);
+`);
 
 (function () {
     let x = "inner";
@@ -112,22 +118,21 @@ eval(`
      (function() { assertEq(y2, 6); })()
      `);
 
-setLazyParsingDisabled(true);
+nonLazyGlobal.evaluate(`
 
 var y3 = 5;
-eval(`
+eval(\`
      'use strict';
      var y3 = 6;
      assertEq(y3, 6);
      (function() { assertEq(y3, 6); })()
-     `);
+     \`);
 assertEq(y3, 5);
 
-eval(`
+eval(\`
      'use strict';
      var y4 = 6;
      assertEq(y4, 6);
      (function() { assertEq(y4, 6); })()
-     `);
-
-setLazyParsingDisabled(false);
+     \`);
+`);

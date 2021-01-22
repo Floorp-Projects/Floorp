@@ -5,8 +5,7 @@
 
 // Check byte counts produced by takeCensus.
 
-const g = newGlobal({newCompartment: true});
-g.eval("setLazyParsingDisabled(true)");
+const g = newGlobal({newCompartment: true, disableLazyParsing: true });
 g.eval("setJitCompilerOption('ion.warmup.trigger', 1000)");
 
 const dbg = new Debugger(g);
