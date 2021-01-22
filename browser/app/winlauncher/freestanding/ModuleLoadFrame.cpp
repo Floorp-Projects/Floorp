@@ -24,12 +24,13 @@ ModuleLoadFrame::ModuleLoadFrame(PCUNICODE_STRING aRequestedDllName)
 }
 
 ModuleLoadFrame::ModuleLoadFrame(nt::AllocatedUnicodeString&& aSectionName,
-                                 const void* aMapBaseAddr, NTSTATUS aNtStatus)
+                                 const void* aMapBaseAddr, NTSTATUS aNtStatus,
+                                 ModuleLoadInfo::Status aLoadStatus)
     : mPrev(sTopFrame.get()),
       mContext(nullptr),
       mLSPSubstitutionRequired(false),
       mLoadNtStatus(aNtStatus),
-      mLoadInfo(std::move(aSectionName), aMapBaseAddr) {
+      mLoadInfo(std::move(aSectionName), aMapBaseAddr, aLoadStatus) {
   sTopFrame.set(this);
 
   gLoaderPrivateAPI.NotifyBeginDllLoad(&mContext, mLoadInfo.mSectionName);
@@ -69,7 +70,7 @@ void ModuleLoadFrame::SetLSPSubstitutionRequired(PCUNICODE_STRING aLeafName) {
 /* static */
 void ModuleLoadFrame::NotifySectionMap(
     nt::AllocatedUnicodeString&& aSectionName, const void* aMapBaseAddr,
-    NTSTATUS aMapNtStatus) {
+    NTSTATUS aMapNtStatus, ModuleLoadInfo::Status aLoadStatus) {
   ModuleLoadFrame* topFrame = sTopFrame.get();
   if (!topFrame) {
     // The only time that this data is useful is during initial mapping of
@@ -77,12 +78,14 @@ void ModuleLoadFrame::NotifySectionMap(
     // IsDefaultObserver will return false, indicating that we are beyond
     // initial process startup.
     if (gLoaderPrivateAPI.IsDefaultObserver()) {
-      OnBareSectionMap(std::move(aSectionName), aMapBaseAddr, aMapNtStatus);
+      OnBareSectionMap(std::move(aSectionName), aMapBaseAddr, aMapNtStatus,
+                       aLoadStatus);
     }
     return;
   }
 
-  topFrame->OnSectionMap(std::move(aSectionName), aMapBaseAddr, aMapNtStatus);
+  topFrame->OnSectionMap(std::move(aSectionName), aMapBaseAddr, aMapNtStatus,
+                         aLoadStatus);
 }
 
 /* static */
@@ -90,24 +93,28 @@ bool ModuleLoadFrame::ExistsTopFrame() { return !!sTopFrame.get(); }
 
 void ModuleLoadFrame::OnSectionMap(nt::AllocatedUnicodeString&& aSectionName,
                                    const void* aMapBaseAddr,
-                                   NTSTATUS aMapNtStatus) {
+                                   NTSTATUS aMapNtStatus,
+                                   ModuleLoadInfo::Status aLoadStatus) {
   if (mLoadInfo.mBaseAddr) {
     // If mBaseAddr is not null then |this| has already seen a module load. This
     // means that we are witnessing a bare section map.
-    OnBareSectionMap(std::move(aSectionName), aMapBaseAddr, aMapNtStatus);
+    OnBareSectionMap(std::move(aSectionName), aMapBaseAddr, aMapNtStatus,
+                     aLoadStatus);
     return;
   }
 
   mLoadInfo.mSectionName = std::move(aSectionName);
   mLoadInfo.mBaseAddr = aMapBaseAddr;
+  mLoadInfo.mStatus = aLoadStatus;
 }
 
 /* static */
 void ModuleLoadFrame::OnBareSectionMap(
     nt::AllocatedUnicodeString&& aSectionName, const void* aMapBaseAddr,
-    NTSTATUS aMapNtStatus) {
+    NTSTATUS aMapNtStatus, ModuleLoadInfo::Status aLoadStatus) {
   // We call the special constructor variant that is used for bare mappings.
-  ModuleLoadFrame frame(std::move(aSectionName), aMapBaseAddr, aMapNtStatus);
+  ModuleLoadFrame frame(std::move(aSectionName), aMapBaseAddr, aMapNtStatus,
+                        aLoadStatus);
 }
 
 NTSTATUS ModuleLoadFrame::SetLoadStatus(NTSTATUS aNtStatus,
