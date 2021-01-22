@@ -2413,6 +2413,14 @@ BrowserGlue.prototype = {
         },
       },
 
+      {
+        task: () => {
+          // We postponed loading bookmarks toolbar content until startup
+          // has finished, so we can start loading it now:
+          PlacesUIUtils.unblockToolbars();
+        },
+      },
+
       // Begin listening for incoming push messages.
       {
         task: () => {
