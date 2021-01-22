@@ -894,6 +894,15 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     return;
   }
 
+  if (aAttribute == nsGkAtoms::aria_multiline) {
+    bool isOn = elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true,
+                                 eCaseMatters);
+    RefPtr<AccEvent> event =
+        new AccStateChangeEvent(aAccessible, states::MULTI_LINE, isOn);
+    FireDelayedEvent(event);
+    return;
+  }
+
   if (aAttribute == nsGkAtoms::id) {
     RelocateARIAOwnedIfNeeded(elm);
     ARIAActiveDescendantIDMaybeMoved(elm);
