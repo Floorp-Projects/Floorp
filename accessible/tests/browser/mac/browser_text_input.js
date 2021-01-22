@@ -57,43 +57,67 @@ function testValueChangedEventData(
   is(str, expectedWordAtLeft);
 }
 
-function matchWebArea(expectedId, expectedStateChangeType) {
+// Return true if the first given object a subset of the second
+function isSubset(subset, superset) {
+  if (typeof subset != "object" || typeof superset != "object") {
+    return superset == subset;
+  }
+
+  for (let [prop, val] of Object.entries(subset)) {
+    if (!isSubset(val, superset[prop])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function matchWebArea(expectedId, expectedInfo) {
   return (iface, data) => {
+    if (!data) {
+      return false;
+    }
+
+    let textChangeElemID = data.AXTextChangeElement.getAttributeValue(
+      "AXDOMIdentifier"
+    );
+
     return (
       iface.getAttributeValue("AXRole") == "AXWebArea" &&
-      !!data &&
-      data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier") ==
-        expectedId &&
-      data.AXTextStateChangeType == expectedStateChangeType
+      textChangeElemID == expectedId &&
+      isSubset(expectedInfo, data)
     );
   };
 }
 
-function matchInput(expectedId, expectedStateChangeType) {
-  return (iface, data) =>
-    iface.getAttributeValue("AXDOMIdentifier") == expectedId &&
-    !!data &&
-    data.AXTextStateChangeType == expectedStateChangeType;
+function matchInput(expectedId, expectedInfo) {
+  return (iface, data) => {
+    if (!data) {
+      return false;
+    }
+
+    return (
+      iface.getAttributeValue("AXDOMIdentifier") == expectedId &&
+      isSubset(expectedInfo, data)
+    );
+  };
 }
 
 async function synthKeyAndTestSelectionChanged(
   synthKey,
   synthEvent,
   expectedId,
-  expectedSelectionString
+  expectedSelectionString,
+  expectedSelectionInfo
 ) {
-  // If the expected string is empty, it is a caret move/collapse
-  let expectedStateChangeType = expectedSelectionString
-    ? AXTextStateChangeTypeSelectionExtend
-    : AXTextStateChangeTypeSelectionMove;
   let selectionChangedEvents = Promise.all([
     waitForMacEventWithInfo(
       "AXSelectedTextChanged",
-      matchWebArea(expectedId, expectedStateChangeType)
+      matchWebArea(expectedId, expectedSelectionInfo)
     ),
     waitForMacEventWithInfo(
       "AXSelectedTextChanged",
-      matchInput(expectedId, expectedStateChangeType)
+      matchInput(expectedId, expectedSelectionInfo)
     ),
   ]);
 
@@ -141,16 +165,42 @@ async function synthKeyAndTestValueChanged(
   expectedWordAtLeft
 ) {
   let valueChangedEvents = Promise.all([
-    waitForMacEventWithInfo(
+    waitForMacEvent(
       "AXSelectedTextChanged",
-      matchWebArea(expectedTextSelectionId, AXTextStateChangeTypeSelectionMove)
+      matchWebArea(expectedTextSelectionId, {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+      })
+    ),
+    waitForMacEvent(
+      "AXSelectedTextChanged",
+      matchInput(expectedTextSelectionId, {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+      })
     ),
     waitForMacEventWithInfo(
-      "AXSelectedTextChanged",
-      matchInput(expectedTextSelectionId, AXTextStateChangeTypeSelectionMove)
+      "AXValueChanged",
+      matchWebArea(expectedId, {
+        AXTextStateChangeType: AXTextStateChangeTypeEdit,
+        AXTextChangeValues: [
+          {
+            AXTextChangeValue: expectedChangeValue,
+            AXTextEditType: expectedEditType,
+          },
+        ],
+      })
     ),
-    waitForMacEventWithInfo("AXValueChanged", matchWebArea(expectedId, 1)),
-    waitForMacEventWithInfo("AXValueChanged", matchInput(expectedId, 1)),
+    waitForMacEventWithInfo(
+      "AXValueChanged",
+      matchInput(expectedId, {
+        AXTextStateChangeType: AXTextStateChangeTypeEdit,
+        AXTextChangeValues: [
+          {
+            AXTextChangeValue: expectedChangeValue,
+            AXTextEditType: expectedEditType,
+          },
+        ],
+      })
+    ),
   ]);
 
   EventUtils.synthesizeKey(synthKey, synthEvent);
@@ -186,11 +236,15 @@ async function focusIntoInputAndType(accDoc, inputId, innerContainerId) {
     ),
     waitForMacEventWithInfo(
       "AXSelectedTextChanged",
-      matchWebArea(selectionId, AXTextStateChangeTypeSelectionMove)
+      matchWebArea(selectionId, {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+      })
     ),
     waitForMacEventWithInfo(
       "AXSelectedTextChanged",
-      matchInput(selectionId, AXTextStateChangeTypeSelectionMove)
+      matchInput(selectionId, {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+      })
     ),
   ]);
   input.setAttributeValue("AXFocused", true);
@@ -242,32 +296,74 @@ async function focusIntoInputAndType(accDoc, inputId, innerContainerId) {
   await testTextDelete("d", "worl");
   await testTextDelete("l", "wor");
 
-  await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, selectionId, "");
   await synthKeyAndTestSelectionChanged(
     "KEY_ArrowLeft",
-    { shiftKey: true },
+    null,
     selectionId,
-    "o"
+    "",
+    {
+      AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+      AXTextSelectionDirection: AXTextSelectionDirectionPrevious,
+      AXTextSelectionGranularity: AXTextSelectionGranularityCharacter,
+    }
   );
   await synthKeyAndTestSelectionChanged(
     "KEY_ArrowLeft",
     { shiftKey: true },
     selectionId,
-    "wo"
+    "o",
+    {
+      AXTextStateChangeType: AXTextStateChangeTypeSelectionExtend,
+      AXTextSelectionDirection: AXTextSelectionDirectionPrevious,
+      AXTextSelectionGranularity: AXTextSelectionGranularityCharacter,
+    }
   );
-  await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, selectionId, "");
+  await synthKeyAndTestSelectionChanged(
+    "KEY_ArrowLeft",
+    { shiftKey: true },
+    selectionId,
+    "wo",
+    {
+      AXTextStateChangeType: AXTextStateChangeTypeSelectionExtend,
+      AXTextSelectionDirection: AXTextSelectionDirectionPrevious,
+      AXTextSelectionGranularity: AXTextSelectionGranularityCharacter,
+    }
+  );
+  await synthKeyAndTestSelectionChanged(
+    "KEY_ArrowLeft",
+    null,
+    selectionId,
+    "",
+    { AXTextStateChangeType: AXTextStateChangeTypeSelectionMove }
+  );
   await synthKeyAndTestSelectionChanged(
     "KEY_Home",
     { shiftKey: true },
     selectionId,
-    "hello "
+    "hello ",
+    {
+      AXTextStateChangeType: AXTextStateChangeTypeSelectionExtend,
+      AXTextSelectionDirection: AXTextSelectionDirectionPrevious,
+      AXTextSelectionGranularity: AXTextSelectionGranularityWord,
+    }
   );
-  await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, selectionId, "");
+  await synthKeyAndTestSelectionChanged(
+    "KEY_ArrowLeft",
+    null,
+    selectionId,
+    "",
+    { AXTextStateChangeType: AXTextStateChangeTypeSelectionMove }
+  );
   await synthKeyAndTestSelectionChanged(
     "KEY_ArrowRight",
     { shiftKey: true, altKey: true },
     selectionId,
-    "hello"
+    "hello",
+    {
+      AXTextStateChangeType: AXTextStateChangeTypeSelectionExtend,
+      AXTextSelectionDirection: AXTextSelectionDirectionNext,
+      AXTextSelectionGranularity: AXTextSelectionGranularityWord,
+    }
   );
 }
 
