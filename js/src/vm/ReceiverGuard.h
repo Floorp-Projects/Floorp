@@ -33,24 +33,15 @@ namespace js {
 //
 // In all cases, a ReceiverGuard has *either* a shape or a group active, and
 // never both.
-class HeapReceiverGuard;
 
 class ReceiverGuard {
   ObjectGroup* group_;
   Shape* shape_;
 
-  void MOZ_ALWAYS_INLINE assertInvariants() {
-    // Only one of group_ or shape_ may be active at a time.
-    MOZ_ASSERT_IF(group_ || shape_, !!group_ != !!shape_);
-  }
-
  public:
   ReceiverGuard() : group_(nullptr), shape_(nullptr) {}
 
-  inline MOZ_IMPLICIT ReceiverGuard(const HeapReceiverGuard& guard);
-
   explicit MOZ_ALWAYS_INLINE ReceiverGuard(JSObject* obj);
-  MOZ_ALWAYS_INLINE ReceiverGuard(ObjectGroup* group, Shape* shape);
 
   bool operator==(const ReceiverGuard& other) const {
     return group_ == other.group_ && shape_ == other.shape_;
@@ -62,16 +53,6 @@ class ReceiverGuard {
 
   uintptr_t hash() const {
     return (uintptr_t(group_) >> 3) ^ (uintptr_t(shape_) >> 3);
-  }
-
-  void setShape(Shape* shape) {
-    shape_ = shape;
-    assertInvariants();
-  }
-
-  void setGroup(ObjectGroup* group) {
-    group_ = group;
-    assertInvariants();
   }
 
   Shape* getShape() const { return shape_; }
@@ -95,11 +76,6 @@ class HeapReceiverGuard {
 
   void trace(JSTracer* trc);
 };
-
-inline ReceiverGuard::ReceiverGuard(const HeapReceiverGuard& guard)
-    : group_(guard.group_), shape_(guard.shape_) {
-  assertInvariants();
-}
 
 }  // namespace js
 
