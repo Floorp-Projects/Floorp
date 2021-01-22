@@ -114,6 +114,7 @@ export class BaseContent extends React.PureComponent {
     this.openPreferences = this.openPreferences.bind(this);
     this.openCustomizationMenu = this.openCustomizationMenu.bind(this);
     this.closeCustomizationMenu = this.closeCustomizationMenu.bind(this);
+    this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
     this.state = { fixedSearch: false, customizeMenuVisible: false };
@@ -121,10 +122,12 @@ export class BaseContent extends React.PureComponent {
 
   componentDidMount() {
     global.addEventListener("scroll", this.onWindowScroll);
+    global.addEventListener("keydown", this.handleOnKeyDown);
   }
 
   componentWillUnmount() {
     global.removeEventListener("scroll", this.onWindowScroll);
+    global.removeEventListener("keydown", this.handleOnKeyDown);
   }
 
   onWindowScroll() {
@@ -151,7 +154,15 @@ export class BaseContent extends React.PureComponent {
   }
 
   closeCustomizationMenu() {
-    this.setState({ customizeMenuVisible: false });
+    if (this.state.customizeMenuVisible) {
+      this.setState({ customizeMenuVisible: false });
+    }
+  }
+
+  handleOnKeyDown(e) {
+    if (e.key === "Escape") {
+      this.closeCustomizationMenu();
+    }
   }
 
   setPref(pref, value) {
@@ -242,7 +253,8 @@ export class BaseContent extends React.PureComponent {
         ) : (
           <PrefsButton onClick={this.openPreferences} icon={prefsButtonIcon} />
         )}
-        <div className={outerClassName}>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
+        <div className={outerClassName} onClick={this.closeCustomizationMenu}>
           <main>
             {prefs.showSearch && (
               <div className="non-collapsible-section">
