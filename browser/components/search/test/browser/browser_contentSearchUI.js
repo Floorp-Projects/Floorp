@@ -14,12 +14,26 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://gre/modules/SearchSuggestionController.jsm",
 });
 
+const pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;
+BrowserTestUtils.registerAboutPage(
+  registerCleanupFunction,
+  "test-about-content-search-ui",
+  pageURL,
+  Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
+    Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD |
+    Ci.nsIAboutModule.ALLOW_SCRIPT |
+    Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS
+);
+
 requestLongerTimeout(2);
 
 function waitForSuggestions() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
     ContentTaskUtils.waitForCondition(
-      () => content.gController.input.getAttribute("aria-expanded") == "true",
+      () =>
+        Cu.waiveXrays(content).gController.input.getAttribute(
+          "aria-expanded"
+        ) == "true",
       "Waiting for suggestions",
       200 // Increased interval to support long textruns.
     )
@@ -37,11 +51,12 @@ async function waitForSearch() {
         return true;
       }
       return false;
-    }
+    },
+    true
   );
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     let eventDetail = content._eventDetail;
-    delete content.document._eventDetail;
+    delete content._eventDetail;
     return eventDetail;
   });
 }
@@ -57,18 +72,19 @@ async function waitForSearchSettings() {
         return true;
       }
       return false;
-    }
+    },
+    true
   );
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     let eventDetail = content._eventDetail;
-    delete content.document._eventDetail;
+    delete content._eventDetail;
     return eventDetail;
   });
 }
 
 function getCurrentState() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    let controller = content.gController;
+    let controller = Cu.waiveXrays(content).gController;
     let state = {
       selectedIndex: controller.selectedIndex,
       selectedButtonIndex: controller.selectedButtonIndex,
@@ -102,10 +118,10 @@ async function msg(type, data = null) {
       // no text entered, this won't have any effect, so also escape to ensure the
       // suggestions table is closed.
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-        content.gController.input.focus();
-        content.synthesizeKey("a", { accelKey: true });
-        content.synthesizeKey("KEY_Delete");
-        content.synthesizeKey("KEY_Escape");
+        Cu.waiveXrays(content).gController.input.focus();
+        EventUtils.synthesizeKey("a", { accelKey: true }, content);
+        EventUtils.synthesizeKey("KEY_Delete", {}, content);
+        EventUtils.synthesizeKey("KEY_Escape", {}, content);
       });
       break;
 
@@ -126,8 +142,15 @@ async function msg(type, data = null) {
         gBrowser.selectedBrowser,
         [data.value],
         text => {
-          content.gController.input.value = text.substring(0, text.length - 1);
-          content.synthesizeKey(text.substring(text.length - 1), {});
+          Cu.waiveXrays(content).gController.input.value = text.substring(
+            0,
+            text.length - 1
+          );
+          EventUtils.synthesizeKey(
+            text.substring(text.length - 1),
+            {},
+            content
+          );
         }
       );
       if (data?.waitForSuggestions) {
@@ -149,7 +172,7 @@ async function msg(type, data = null) {
             clauses: [
               {
                 length: data.length,
-                attr: content.COMPOSITION_ATTR_RAW_CLAUSE,
+                attr: Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE,
               },
             ],
           },
@@ -187,7 +210,7 @@ async function msg(type, data = null) {
         gBrowser.selectedBrowser,
         [type, event, index],
         (eventType, eventArgs, itemIndex) => {
-          let controller = content.gController;
+          let controller = Cu.waiveXrays(content).gController;
           return new Promise(resolve => {
             let row;
             if (itemIndex == -1) {
@@ -201,7 +224,7 @@ async function msg(type, data = null) {
               row = allElts[itemIndex];
             }
             row.addEventListener(eventType, () => resolve(), { once: true });
-            content.synthesizeMouseAtCenter(row, eventArgs);
+            EventUtils.synthesizeMouseAtCenter(row, eventArgs, content);
           });
         }
       );
@@ -220,7 +243,7 @@ async function msg(type, data = null) {
  */
 function focusContentSearchBar() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.gController.input.focus();
+    Cu.waiveXrays(content).input.focus();
   });
 }
 
@@ -287,7 +310,7 @@ add_task(async function blur() {
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.gController.input.blur();
+    Cu.waiveXrays(content).gController.input.blur();
   });
   state = await getCurrentState();
   checkState(state, "x", [], -1);
@@ -500,13 +523,12 @@ add_task(async function cycleOneOffs() {
   await msg("key", { key: "x", waitForSuggestions: true });
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    let btn =
-      content.gController._oneOffButtons[
-        content.gController._oneOffButtons.length - 1
-      ];
+    let btn = Cu.waiveXrays(content).gController._oneOffButtons[
+      Cu.waiveXrays(content).gController._oneOffButtons.length - 1
+    ];
     let newBtn = btn.cloneNode(true);
     btn.parentNode.appendChild(newBtn);
-    content.gController._oneOffButtons.push(newBtn);
+    Cu.waiveXrays(content).gController._oneOffButtons.push(newBtn);
   });
 
   let state = await msg("key", "VK_DOWN");
@@ -552,7 +574,9 @@ add_task(async function cycleOneOffs() {
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.gController._oneOffButtons.pop().remove();
+    Cu.waiveXrays(content)
+      .gController._oneOffButtons.pop()
+      .remove();
   });
   await msg("reset");
 });
@@ -614,7 +638,7 @@ add_task(async function formHistory() {
 
   await FormHistoryTestUtils.clear("searchbar-history");
   let entry = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    return content.gController.addInputValueToFormHistory();
+    return Cu.waiveXrays(content).gController.addInputValueToFormHistory();
   });
   await observePromise;
   Assert.greater(
@@ -693,7 +717,7 @@ add_task(async function formHistory_limit() {
 
   await FormHistoryTestUtils.clear("searchbar-history");
   let entry = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    return content.gController.addInputValueToFormHistory();
+    return Cu.waiveXrays(content).gController.addInputValueToFormHistory();
   });
   // There's nothing we can wait for, since addition should not be happening.
   /* eslint-disable mozilla/no-arbitrary-setTimeout */
@@ -1053,39 +1077,8 @@ var gMsgMan;
 async function promiseTab() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
-  let pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;
 
   let loadedPromise = BrowserTestUtils.firstBrowserLoaded(window);
-  openTrustedLinkIn(pageURL, "current");
+  openTrustedLinkIn("about:test-about-content-search-ui", "current");
   await loadedPromise;
-
-  await SpecialPowers.spawn(
-    window.gBrowser.selectedBrowser,
-    [TEST_ENGINE1_NAME],
-    engineNameChild => {
-      Services.search.defaultEngine = Services.search.getEngineByName(
-        engineNameChild
-      );
-      let input = content.document.querySelector("input");
-      content.gController = new content.ContentSearchUIController(
-        input,
-        input.parentNode,
-        "test",
-        "test"
-      );
-      return new Promise(resolve => {
-        content.addEventListener("ContentSearchService", function listener(
-          aEvent
-        ) {
-          if (
-            aEvent.detail.type == "State" &&
-            content.gController.defaultEngine.name == engineNameChild
-          ) {
-            content.removeEventListener("ContentSearchService", listener);
-            resolve();
-          }
-        });
-      });
-    }
-  );
 }
