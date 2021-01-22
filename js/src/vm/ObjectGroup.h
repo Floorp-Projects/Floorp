@@ -28,10 +28,6 @@ class TypeDescr;
 class ObjectGroupRealm;
 class PlainObject;
 
-namespace gc {
-void MergeRealms(JS::Realm* source, JS::Realm* target);
-}  // namespace gc
-
 /*
  * The NewObjectKind allows an allocation site to specify the type properties
  * and lifetime requirements that must be fixed at allocation time.
@@ -84,8 +80,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
  public:
   inline ObjectGroup(const JSClass* clasp, TaggedProto proto, JS::Realm* realm,
                      TypeDescr* descr);
-
-  bool hasDynamicPrototype() const { return proto_.isDynamic(); }
 
   const GCPtr<TaggedProto>& proto() const { return proto_; }
 
@@ -172,7 +166,6 @@ class ObjectGroupRealm {
   ObjectGroupRealm(ObjectGroupRealm&) = delete;
   void operator=(ObjectGroupRealm&) = delete;
 
-  static ObjectGroupRealm& get(const ObjectGroup* group);
   static ObjectGroupRealm& getForNewObject(JSContext* cx);
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,

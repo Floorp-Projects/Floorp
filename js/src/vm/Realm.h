@@ -315,10 +315,8 @@ class JS::Realm : public JS::shadow::Realm {
   friend js::ObjectRealm& js::ObjectRealm::get(const JSObject*);
 
   // Object group tables and other state in the realm. This is private to
-  // enforce use of ObjectGroupRealm::get(group)/getForNewObject(cx).
+  // enforce use of ObjectGroupRealm::getForNewObject(cx).
   js::ObjectGroupRealm objectGroups_;
-  friend js::ObjectGroupRealm& js::ObjectGroupRealm::get(
-      const js::ObjectGroup* group);
   friend js::ObjectGroupRealm& js::ObjectGroupRealm::getForNewObject(
       JSContext* cx);
 
