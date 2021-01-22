@@ -970,10 +970,10 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       lock(mutexid::GCLock),
       allocTask(this, emptyChunks_.ref()),
       unmarkTask(this),
+      markTask(this),
       sweepTask(this),
       freeTask(this),
       decommitTask(this),
-      sweepMarkTask(this),
       nursery_(this),
       storeBuffer_(rt, nursery()) {
   setGCMode(JSGC_MODE_GLOBAL);
@@ -4697,7 +4697,7 @@ void GCRuntime::getNextSweepGroup() {
   }
 
   if (abortSweepAfterCurrentGroup) {
-    joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
+    joinTask(markTask, gcstats::PhaseKind::SWEEP_MARK);
 
     // Abort collection of subsequent sweep groups.
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
@@ -5534,9 +5534,9 @@ bool GCRuntime::shouldYieldForZeal(ZealMode mode) {
 
 IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
                                                      SliceBudget& budget) {
-  // This is to prevent a race between sweepMarkTask checking the zone state and
+  // This is to prevent a race between markTask checking the zone state and
   // us changing it below.
-  if (joinSweepMarkTask() == NotFinished) {
+  if (joinBackgroundMarkTask() == NotFinished) {
     return NotFinished;
   }
 
@@ -5592,7 +5592,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
 
 IncrementalProgress GCRuntime::markDuringSweeping(JSFreeOp* fop,
                                                   SliceBudget& budget) {
-  MOZ_ASSERT(sweepMarkTask.isIdle());
+  MOZ_ASSERT(markTask.isIdle());
 
   if (marker.isDrained()) {
     return Finished;
@@ -5600,9 +5600,9 @@ IncrementalProgress GCRuntime::markDuringSweeping(JSFreeOp* fop,
 
   if (markOnBackgroundThreadDuringSweeping) {
     AutoLockHelperThreadState lock;
-    MOZ_ASSERT(sweepMarkTask.isIdle(lock));
-    sweepMarkTask.setBudget(budget);
-    sweepMarkTask.startOrRunIfIdle(lock);
+    MOZ_ASSERT(markTask.isIdle(lock));
+    markTask.setBudget(budget);
+    markTask.startOrRunIfIdle(lock);
     return Finished;  // This means don't yield to the mutator here.
   }
 
@@ -5679,7 +5679,7 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
   return true;
 }
 
-void js::gc::SweepMarkTask::run(AutoLockHelperThreadState& lock) {
+void js::gc::BackgroundMarkTask::run(AutoLockHelperThreadState& lock) {
   AutoUnlockHelperThreadState unlock(lock);
 
   // Time reporting is handled separately for parallel tasks.
@@ -5687,13 +5687,13 @@ void js::gc::SweepMarkTask::run(AutoLockHelperThreadState& lock) {
       gc->markUntilBudgetExhausted(this->budget, GCMarker::DontReportMarkTime);
 }
 
-IncrementalProgress GCRuntime::joinSweepMarkTask() {
+IncrementalProgress GCRuntime::joinBackgroundMarkTask() {
   AutoLockHelperThreadState lock;
-  if (sweepMarkTask.isIdle(lock)) {
+  if (markTask.isIdle(lock)) {
     return Finished;
   }
 
-  joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK, lock);
+  joinTask(markTask, gcstats::PhaseKind::SWEEP_MARK, lock);
 
   IncrementalProgress result = sweepMarkResult;
   sweepMarkResult = Finished;
@@ -6245,7 +6245,7 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
 
   SweepAction::Args args{this, &fop, budget};
   IncrementalProgress sweepProgress = sweepActions->run(args);
-  IncrementalProgress markProgress = joinSweepMarkTask();
+  IncrementalProgress markProgress = joinBackgroundMarkTask();
 
   if (sweepProgress == Finished && markProgress == Finished) {
     return Finished;
@@ -7833,7 +7833,7 @@ void GCRuntime::waitForBackgroundTasks() {
   MOZ_ASSERT(!isIncrementalGCInProgress());
   MOZ_ASSERT(sweepTask.isIdle());
   MOZ_ASSERT(decommitTask.isIdle());
-  MOZ_ASSERT(sweepMarkTask.isIdle());
+  MOZ_ASSERT(markTask.isIdle());
 
   allocTask.join();
   freeTask.join();
