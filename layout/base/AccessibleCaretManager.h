@@ -42,6 +42,8 @@ class Selection;
 // None the public methods in AccessibleCaretManager will flush layout or style
 // prior to performing its task. The caller must ensure the layout is up to
 // date.
+// TODO: it's unclear, whether that's true. `OnSelectionChanged` calls
+// `UpdateCarets`, which may flush layout.
 //
 // Please see the wiki page for more information.
 // https://wiki.mozilla.org/AccessibleCaret
