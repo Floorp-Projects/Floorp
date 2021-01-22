@@ -4,7 +4,8 @@
 
 #include shared,prim_shared
 
-varying vec3 vUv;
+varying vec2 vUv;
+flat varying float vUvLayer;
 flat varying vec4 vUvRect;
 
 #ifdef WR_VERTEX_SHADER
@@ -24,13 +25,13 @@ void main(void) {
     vec2 texture_size = vec2(textureSize(sColor0, 0));
 #endif
 
-    vUv.z = float(aScaleSourceLayer);
+    vUvLayer = float(aScaleSourceLayer);
 
     vUvRect = vec4(src_rect.p0 + vec2(0.5),
                    src_rect.p0 + src_rect.size - vec2(0.5)) / texture_size.xyxy;
 
     vec2 pos = aScaleTargetRect.xy + aScaleTargetRect.zw * aPosition.xy;
-    vUv.xy = (src_rect.p0 + src_rect.size * aPosition.xy) / texture_size;
+    vUv = (src_rect.p0 + src_rect.size * aPosition.xy) / texture_size;
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }
@@ -40,8 +41,27 @@ void main(void) {
 #ifdef WR_FRAGMENT_SHADER
 
 void main(void) {
-    vec2 st = clamp(vUv.xy, vUvRect.xy, vUvRect.zw);
-    oFragColor = TEX_SAMPLE(sColor0, vec3(st, vUv.z));
+    vec2 st = clamp(vUv, vUvRect.xy, vUvRect.zw);
+    oFragColor = TEX_SAMPLE(sColor0, vec3(st, vUvLayer));
 }
+
+#ifdef SWGL
+void swgl_drawSpanRGBA8() {
+    if (!swgl_isTextureRGBA8(sColor0)) {
+        return;
+    }
+
+    int layer = swgl_textureLayerOffset(sColor0, vUvLayer);
+    vec2 uv = swgl_linearQuantize(sColor0, vUv);
+    vec2 min_uv = swgl_linearQuantize(sColor0, vUvRect.xy);
+    vec2 max_uv = swgl_linearQuantize(sColor0, vUvRect.zw);
+    vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(vUv));
+
+    while (swgl_SpanLength > 0) {
+        swgl_commitTextureLinearRGBA8(sColor0, clamp(uv, min_uv, max_uv), layer);
+        uv += step_uv;
+    }
+}
+#endif
 
 #endif
