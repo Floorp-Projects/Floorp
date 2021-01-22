@@ -114,7 +114,7 @@ add_task(async function SetDefaultEngine() {
   });
 });
 
-// ContentSearch.jsm doesn't support setting the private engine at this time
+// ContentSearchChild doesn't support setting the private engine at this time
 // as it doesn't need to, so we just test updating the default here.
 add_task(async function setDefaultEnginePrivate() {
   const engine = await Services.search.getEngineByName("FooChromeIcon");

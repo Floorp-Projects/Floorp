@@ -27,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
   CharsetMenu: "resource://gre/modules/CharsetMenu.jsm",
   Color: "resource://gre/modules/Color.jsm",
-  ContentSearch: "resource:///modules/ContentSearch.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
