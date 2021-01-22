@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ADLINK_CHECK_TIMEOUT_MS: "resource:///actors/SearchSERPTelemetryChild.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.jsm",
@@ -140,4 +141,93 @@ async function typeInSearchField(browser, text, fieldName) {
     searchInput.focus();
     searchInput.value = contentText;
   });
+}
+
+XPCOMUtils.defineLazyGetter(this, "searchCounts", () => {
+  return Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+});
+
+XPCOMUtils.defineLazyGetter(this, "SEARCH_AD_CLICK_SCALARS", () => {
+  const sources = [
+    ...BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES.values(),
+    "unknown",
+  ];
+  return [
+    "browser.search.with_ads",
+    "browser.search.ad_clicks",
+    ...sources.map(v => `browser.search.withads.${v}`),
+    ...sources.map(v => `browser.search.adclicks.${v}`),
+  ];
+});
+
+// Ad links are processed after a small delay. We need to allow tests to wait
+// for that before checking telemetry, otherwise the received values may be
+// too small in some cases.
+function promiseWaitForAdLinkCheck() {
+  return new Promise(resolve =>
+    /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+    setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS)
+  );
+}
+
+async function assertSearchSourcesTelemetry(
+  expectedHistograms,
+  expectedScalars
+) {
+  let histSnapshot = {};
+  let scalars = {};
+
+  await TestUtils.waitForCondition(() => {
+    histSnapshot = searchCounts.snapshot();
+    return (
+      Object.getOwnPropertyNames(histSnapshot).length ==
+      Object.getOwnPropertyNames(expectedHistograms).length
+    );
+  }, "should have the correct number of histograms");
+
+  if (Object.entries(expectedScalars).length) {
+    await TestUtils.waitForCondition(() => {
+      scalars =
+        Services.telemetry.getSnapshotForKeyedScalars("main", false).parent ||
+        {};
+      return Object.getOwnPropertyNames(expectedScalars).every(
+        scalar => scalar in scalars
+      );
+    }, "should have the expected keyed scalars");
+  }
+
+  Assert.equal(
+    Object.getOwnPropertyNames(histSnapshot).length,
+    Object.getOwnPropertyNames(expectedHistograms).length,
+    "Should only have one key"
+  );
+
+  for (let [key, value] of Object.entries(expectedHistograms)) {
+    Assert.ok(
+      key in histSnapshot,
+      `Histogram should have the expected key: ${key}`
+    );
+    Assert.equal(
+      histSnapshot[key].sum,
+      value,
+      `Should have counted the correct number of visits for ${key}`
+    );
+  }
+
+  for (let [name, value] of Object.entries(expectedScalars)) {
+    Assert.ok(name in scalars, `Scalar ${name} should have been added.`);
+    Assert.deepEqual(
+      scalars[name],
+      value,
+      `Should have counted the correct number of visits for ${name}`
+    );
+  }
+
+  for (let name of SEARCH_AD_CLICK_SCALARS) {
+    Assert.equal(
+      name in scalars,
+      name in expectedScalars,
+      `Should have matched ${name} in scalars and expectedScalars`
+    );
+  }
 }

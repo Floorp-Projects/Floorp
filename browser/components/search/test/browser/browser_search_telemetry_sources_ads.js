@@ -7,11 +7,11 @@
 
 "use strict";
 
+const { BrowserSearchTelemetry } = ChromeUtils.import(
+  "resource:///modules/BrowserSearchTelemetry.jsm"
+);
 const { SearchSERPTelemetry } = ChromeUtils.import(
   "resource:///modules/SearchSERPTelemetry.jsm"
-);
-const { ADLINK_CHECK_TIMEOUT_MS } = ChromeUtils.import(
-  "resource:///actors/SearchSERPTelemetryChild.jsm"
 );
 
 const TEST_PROVIDER_INFO = [
@@ -26,11 +26,6 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-const SEARCH_AD_CLICK_SCALARS = [
-  "browser.search.with_ads",
-  "browser.search.ad_clicks",
-];
-
 function getPageUrl(useExample = false, useAdPage = false) {
   let server = useExample ? "example.com" : "mochi.test:8888";
   let page = useAdPage ? "searchTelemetryAd.html" : "searchTelemetry.html";
@@ -43,67 +38,6 @@ function getSERPUrl(page, organic = false) {
 
 function getSERPFollowOnUrl(page) {
   return page + "?s=test&abc=ff&a=foo";
-}
-
-const searchCounts = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
-
-async function assertTelemetry(expectedHistograms, expectedScalars) {
-  let histSnapshot = {};
-  let scalars = {};
-
-  await TestUtils.waitForCondition(() => {
-    histSnapshot = searchCounts.snapshot();
-    return (
-      Object.getOwnPropertyNames(histSnapshot).length ==
-      Object.getOwnPropertyNames(expectedHistograms).length
-    );
-  }, "should have the correct number of histograms");
-
-  if (Object.entries(expectedScalars).length) {
-    await TestUtils.waitForCondition(() => {
-      scalars =
-        Services.telemetry.getSnapshotForKeyedScalars("main", false).parent ||
-        {};
-      return Object.getOwnPropertyNames(expectedScalars).every(
-        scalar => scalar in scalars
-      );
-    }, "should have the expected keyed scalars");
-  }
-
-  Assert.equal(
-    Object.getOwnPropertyNames(histSnapshot).length,
-    Object.getOwnPropertyNames(expectedHistograms).length,
-    "Should only have one key"
-  );
-
-  for (let [key, value] of Object.entries(expectedHistograms)) {
-    Assert.ok(
-      key in histSnapshot,
-      `Histogram should have the expected key: ${key}`
-    );
-    Assert.equal(
-      histSnapshot[key].sum,
-      value,
-      `Should have counted the correct number of visits for ${key}`
-    );
-  }
-
-  for (let [name, value] of Object.entries(expectedScalars)) {
-    Assert.ok(name in scalars, `Scalar ${name} should have been added.`);
-    Assert.deepEqual(
-      scalars[name],
-      value,
-      `Should have counted the correct number of visits for ${name}`
-    );
-  }
-
-  for (let name of SEARCH_AD_CLICK_SCALARS) {
-    Assert.equal(
-      name in scalars,
-      name in expectedScalars,
-      `Should have matched ${name} in scalars and expectedScalars`
-    );
-  }
 }
 
 // sharedData messages are only passed to the child on idle. Therefore
@@ -140,7 +74,10 @@ add_task(async function test_simple_search_page_visit() {
       url: getSERPUrl(getPageUrl()),
     },
     async () => {
-      await assertTelemetry({ "example.in-content:sap:ff": 1 }, {});
+      await assertSearchSourcesTelemetry(
+        { "example.in-content:sap:ff": 1 },
+        {}
+      );
     }
   );
 });
@@ -180,7 +117,7 @@ add_task(async function test_follow_on_visit() {
       url: getSERPFollowOnUrl(getPageUrl()),
     },
     async () => {
-      await assertTelemetry(
+      await assertSearchSourcesTelemetry(
         {
           "example.in-content:sap:ff": 1,
           "example.in-content:sap-follow-on:ff": 1,
@@ -199,10 +136,11 @@ add_task(async function test_track_ad() {
     getSERPUrl(getPageUrl(false, true))
   );
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { "example.in-content:sap:ff": 1 },
     {
       "browser.search.with_ads": { "example:sap": 1 },
+      "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
 
@@ -218,10 +156,11 @@ add_task(async function test_track_ad_organic() {
     getSERPUrl(getPageUrl(false, true), true)
   );
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { "example.in-content:organic:none": 1 },
     {
       "browser.search.with_ads": { "example:organic": 1 },
+      "browser.search.withads.unknown": { "example:organic": 1 },
     }
   );
 
@@ -242,10 +181,11 @@ add_task(async function test_track_ad_new_window() {
     url
   );
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { "example.in-content:sap:ff": 1 },
     {
       "browser.search.with_ads": { "example:sap": 1 },
+      "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
 
@@ -272,10 +212,11 @@ add_task(async function test_track_ad_pages_without_ads() {
     )
   );
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { "example.in-content:sap:ff": 2 },
     {
       "browser.search.with_ads": { "example:sap": 1 },
+      "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
 
@@ -289,7 +230,8 @@ async function track_ad_click(testOrganic) {
   searchCounts.clear();
   Services.telemetry.clearScalars();
 
-  let expectedScalarKey = `example:${testOrganic ? "organic" : "sap"}`;
+  let expectedScalarKeyOld = `example:${testOrganic ? "organic" : "sap"}`;
+  let expectedScalarKey = `example:${testOrganic ? "organic" : "tagged"}`;
   let expectedHistogramKey = `example.in-content:${
     testOrganic ? "organic:none" : "sap:ff"
   }`;
@@ -299,10 +241,13 @@ async function track_ad_click(testOrganic) {
     getSERPUrl(getPageUrl(false, true), testOrganic)
   );
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { [expectedHistogramKey]: 1 },
     {
-      "browser.search.with_ads": { [expectedScalarKey]: 1 },
+      "browser.search.with_ads": { [expectedScalarKeyOld]: 1 },
+      "browser.search.withads.unknown": {
+        [expectedScalarKey.replace("sap", "tagged")]: 1,
+      },
     }
   );
 
@@ -311,14 +256,15 @@ async function track_ad_click(testOrganic) {
     content.document.getElementById("ad1").click();
   });
   await pageLoadPromise;
-  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
-  await new Promise(resolve => setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS));
+  await promiseWaitForAdLinkCheck();
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { [expectedHistogramKey]: 1 },
     {
-      "browser.search.with_ads": { [expectedScalarKey]: 1 },
-      "browser.search.ad_clicks": { [expectedScalarKey]: 1 },
+      "browser.search.with_ads": { [expectedScalarKeyOld]: 1 },
+      "browser.search.withads.unknown": { [expectedScalarKey]: 1 },
+      "browser.search.ad_clicks": { [expectedScalarKeyOld]: 1 },
+      "browser.search.adclicks.unknown": { [expectedScalarKey]: 1 },
     }
   );
 
@@ -326,15 +272,16 @@ async function track_ad_click(testOrganic) {
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   gBrowser.goBack();
   await pageLoadPromise;
-  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
-  await new Promise(resolve => setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS));
+  await promiseWaitForAdLinkCheck();
 
   // We've gone back, so we register an extra display & if it is with ads or not.
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { [expectedHistogramKey]: 2 },
     {
-      "browser.search.with_ads": { [expectedScalarKey]: 2 },
-      "browser.search.ad_clicks": { [expectedScalarKey]: 1 },
+      "browser.search.with_ads": { [expectedScalarKeyOld]: 2 },
+      "browser.search.withads.unknown": { [expectedScalarKey]: 2 },
+      "browser.search.ad_clicks": { [expectedScalarKeyOld]: 1 },
+      "browser.search.adclicks.unknown": { [expectedScalarKey]: 1 },
     }
   );
 
@@ -343,14 +290,15 @@ async function track_ad_click(testOrganic) {
     content.document.getElementById("ad1").click();
   });
   await pageLoadPromise;
-  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
-  await new Promise(resolve => setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS));
+  await promiseWaitForAdLinkCheck();
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { [expectedHistogramKey]: 2 },
     {
-      "browser.search.with_ads": { [expectedScalarKey]: 2 },
-      "browser.search.ad_clicks": { [expectedScalarKey]: 2 },
+      "browser.search.with_ads": { [expectedScalarKeyOld]: 2 },
+      "browser.search.withads.unknown": { [expectedScalarKey]: 2 },
+      "browser.search.ad_clicks": { [expectedScalarKeyOld]: 2 },
+      "browser.search.adclicks.unknown": { [expectedScalarKey]: 2 },
     }
   );
 
@@ -371,10 +319,11 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
   const url = getSERPUrl(getPageUrl(false, true));
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { "example.in-content:sap:ff": 1 },
     {
       "browser.search.with_ads": { "example:sap": 1 },
+      "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
 
@@ -391,11 +340,13 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
   });
   await pageLoadPromise;
 
-  await assertTelemetry(
+  await assertSearchSourcesTelemetry(
     { "example.in-content:sap:ff": 1 },
     {
       "browser.search.with_ads": { "example:sap": 1 },
+      "browser.search.withads.unknown": { "example:tagged": 1 },
       "browser.search.ad_clicks": { "example:sap": 1 },
+      "browser.search.adclicks.unknown": { "example:tagged": 1 },
     }
   );
 
