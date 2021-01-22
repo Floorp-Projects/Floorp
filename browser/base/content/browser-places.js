@@ -1140,42 +1140,22 @@ var PlacesMenuDNDHandler = {
  * toolbar. It also has helper functions for the managed bookmarks button.
  */
 var PlacesToolbarHelper = {
-  /**
-   * If init is called and _canShowPromise is null, this method
-   * is overwritten and won't run.
-   * If we get called and nobody has tried to call `init` yet,
-   * just create a resolved promise for _canShowPromise.
-   */
-  _readyToShowCallback() {
-    this._canShowPromise = Promise.resolve();
-  },
-  _readyToShow: false,
-  _canShowPromise: null,
-
   get _viewElt() {
     return document.getElementById("PlacesToolbar");
   },
 
   /**
-   * Initialize. This will await _canShowPromise - which is either created
-   * as a resolved promise if the idle task calling startShowingToolbar is
-   * called first, or created here and resolved once startShowingToolbar is
-   * called.
+   * Initialize. This will check whether we've finished startup and can
+   * show toolbars.
    */
-  init() {
-    if (!this._readyToShow) {
-      this._canShowPromise = new Promise(resolve => {
-        this._readyToShowCallback = resolve;
-      });
-      this._canShowPromise.then(() => this._realInit());
-    } else {
-      this._realInit();
-    }
+  async init() {
+    await PlacesUIUtils.canLoadToolbarContentPromise;
+    this._realInit();
   },
 
   _realInit() {
     let viewElt = this._viewElt;
-    if (!viewElt || viewElt._placesView) {
+    if (!viewElt || viewElt._placesView || window.closed) {
       return;
     }
 
@@ -1215,11 +1195,6 @@ var PlacesToolbarHelper = {
     new PlacesToolbar(`place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);
   },
 
-  startShowingToolbar() {
-    this._readyToShow = true;
-    this._readyToShowCallback();
-  },
-
   handleEvent(event) {
     switch (event.type) {
       case "toolbarvisibilitychange":
@@ -1239,7 +1214,6 @@ var PlacesToolbarHelper = {
       window.removeEventListener("toolbarvisibilitychange", this);
     }
     CustomizableUI.removeListener(this);
-    this._readyToShowCallback = () => {};
   },
 
   customizeStart: function PTH_customizeStart() {
