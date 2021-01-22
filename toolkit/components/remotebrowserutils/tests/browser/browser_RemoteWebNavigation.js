@@ -38,8 +38,26 @@ add_task(async function test_referrer() {
     dummy1,
     dummy2,
   ]) {
+    function getExpectedReferrer(referrer) {
+      let defaultPolicy = Services.prefs.getIntPref(
+        "network.http.referer.defaultPolicy"
+      );
+      ok(
+        [2, 3].indexOf(defaultPolicy) > -1,
+        "default referrer policy should be either strict-origin-when-cross-origin(2) or no-referrer-when-downgrade(3)"
+      );
+      if (defaultPolicy == 2) {
+        return referrer.match(/https?:\/\/[^\/]+\/?/i)[0];
+      }
+      return referrer;
+    }
+
     is(content.location.href, dummy1, "Should have loaded the right URL");
-    is(content.document.referrer, dummy2, "Should have the right referrer");
+    is(
+      content.document.referrer,
+      getExpectedReferrer(dummy2),
+      "Should have the right referrer"
+    );
   });
 
   gBrowser.removeCurrentTab();
