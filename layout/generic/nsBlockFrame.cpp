@@ -1891,10 +1891,10 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
         ComputeFinalBSize(aReflowInput, aState.mReflowStatus, contentBSize,
                           borderPadding, aState.mConsumedBSize);
 
-    // If content size is larger than the effective computed block size,
-    // we extend the block size to contain all the content.
+    // If the content block-size is larger than the effective computed
+    // block-size, we extend the block-size to contain all the content.
     // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
-    if (aReflowInput.ComputedBSizeIsSetByAspectRatio() &&
+    if (aReflowInput.mFlags.mIsBSizeSetByAspectRatio &&
         ShouldApplyAutomaticMinimumOnBlockAxis(wm, aReflowInput.mStyleDisplay,
                                                aReflowInput.mStylePosition)) {
       // Note: finalSize.BSize(wm) includes border + padding, so we have to

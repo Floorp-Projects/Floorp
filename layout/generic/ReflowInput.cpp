@@ -1464,10 +1464,10 @@ LogicalSize ReflowInput::CalculateAbsoluteSizeWithResolvedAutoBlockSize(
           LogicalAxis::eLogicalAxisInline, wm, aAutoBSize, boxSizingAdjust);
   resultSize.ISize(wm) = ApplyMinMaxISize(transferredISize);
 
-  MOZ_ASSERT(mFlags.mBSizeIsSetByAspectRatio,
+  MOZ_ASSERT(mFlags.mIsBSizeSetByAspectRatio,
              "This flag should have been set because nsIFrame::ComputeSize() "
              "returns AspectRatioUsage::ToComputeBSize unintentionally");
-  mFlags.mBSizeIsSetByAspectRatio = false;
+  mFlags.mIsBSizeSetByAspectRatio = false;
 
   return resultSize;
 }
@@ -1642,7 +1642,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   LogicalSize& computedSize = sizeResult.mLogicalSize;
   computedSize = computedSize.ConvertTo(cbwm, wm);
 
-  mFlags.mBSizeIsSetByAspectRatio = sizeResult.mAspectRatioUsage ==
+  mFlags.mIsBSizeSetByAspectRatio = sizeResult.mAspectRatioUsage ==
                                     nsIFrame::AspectRatioUsage::ToComputeBSize;
 
   // XXX Now that we have ComputeSize, can we condense many of the
@@ -2368,7 +2368,7 @@ void ReflowInput::InitConstraints(
           ComputedBSize() == NS_UNCONSTRAINEDSIZE || ComputedBSize() >= 0,
           "Bogus block-size");
 
-      mFlags.mBSizeIsSetByAspectRatio =
+      mFlags.mIsBSizeSetByAspectRatio =
           size.mAspectRatioUsage == nsIFrame::AspectRatioUsage::ToComputeBSize;
 
       // Exclude inline tables, side captions, outside ::markers, flex and grid
