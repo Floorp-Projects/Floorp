@@ -249,11 +249,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1652530
          "mutex:XErrorTrap\n"
 
-         // Bug 1671572
-         "race:IdentifyTextureHost\n"
-         "race:GetCompositorBackendType\n"
-         "race:SupportsTextureDirectMapping\n"
-
          // Bug 1671601
          "race:CamerasParent::ActorDestroy\n"
          "race:CamerasParent::DispatchToVideoCaptureThread\n"
