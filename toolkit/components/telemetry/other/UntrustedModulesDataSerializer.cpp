@@ -297,6 +297,13 @@ bool UntrustedModulesDataSerializer::SerializeEvent(
     return false;
   }
 
+  JS::RootedValue jsLoadStatus(aCx);
+  jsLoadStatus.setNumber(aEvent.mLoadStatus);
+  if (!JS_DefineProperty(aCx, obj, "loadStatus", jsLoadStatus,
+                         JSPROP_ENUMERATE)) {
+    return false;
+  }
+
   aElement.setObject(*obj);
 
   return true;

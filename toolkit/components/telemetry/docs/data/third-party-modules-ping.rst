@@ -59,7 +59,9 @@ were loaded into Firefox processes.
                 // Index of the element in the modules array that contains details about the module that was loaded during this event.
                 "moduleIndex": <int>,
                 // True if the module is included in the executable's Import Directory Table.
-                "isDependent": <bool>
+                "isDependent": <bool>,
+                // The status of DLL load. This corresponds to enum ModuleLoadInfo::Status.
+                "loadStatus": <int>
               },
               ... Additional events (maximum 50)
             ],
