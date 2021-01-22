@@ -60,8 +60,6 @@ class RegExpStatics {
 
  public:
   /* Mutators. */
-  inline void updateLazily(JSContext* cx, JSLinearString* input,
-                           RegExpShared* shared, size_t lastIndex);
   inline bool updateFromMatchPairs(JSContext* cx, JSLinearString* input,
                                    VectorMatchPairs& newPairs);
 
@@ -233,20 +231,6 @@ inline bool RegExpStatics::createRightContext(JSContext* cx,
     return true;
   }
   return createDependent(cx, matches[0].limit, matchesInput->length(), out);
-}
-
-inline void RegExpStatics::updateLazily(JSContext* cx, JSLinearString* input,
-                                        RegExpShared* shared,
-                                        size_t lastIndex) {
-  MOZ_ASSERT(input && shared);
-
-  BarrieredSetPair<JSString, JSLinearString>(cx->zone(), pendingInput, input,
-                                             matchesInput, input);
-
-  lazySource = shared->getSource();
-  lazyFlags = shared->flags;
-  lazyIndex = lastIndex;
-  pendingLazyEvaluation = 1;
 }
 
 inline bool RegExpStatics::updateFromMatchPairs(JSContext* cx,
