@@ -898,53 +898,6 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
   return shape;
 }
 
-Shape* js::ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
-                               gc::AllocKind allocKind) {
-  // Compute the number of fixed slots with the new allocation kind.
-  size_t nfixed = gc::GetGCKindSlots(allocKind, shape->getObjectClass());
-
-  // Get all the ids in the shape, in order.
-  js::RootedIdVector ids(cx);
-  {
-    for (unsigned i = 0; i < shape->slotSpan(); i++) {
-      if (!ids.append(JSID_VOID)) {
-        return nullptr;
-      }
-    }
-    Shape* nshape = shape;
-    while (!nshape->isEmptyShape()) {
-      ids[nshape->slot()].set(nshape->propid());
-      nshape = nshape->previous();
-    }
-  }
-
-  // Construct the new shape, without updating type information.
-  RootedId id(cx);
-  RootedShape newShape(
-      cx, EmptyShape::getInitialShape(cx, shape->getObjectClass(), proto,
-                                      nfixed, shape->getObjectFlags()));
-  if (!newShape) {
-    return nullptr;
-  }
-
-  for (unsigned i = 0; i < ids.length(); i++) {
-    id = ids[i];
-
-    UnownedBaseShape* nbase = GetBaseShapeForNewShape(cx, newShape, id);
-    if (!nbase) {
-      return nullptr;
-    }
-
-    Rooted<StackShape> child(cx, StackShape(nbase, id, i, JSPROP_ENUMERATE));
-    newShape = cx->zone()->propertyTree().getChild(cx, newShape, child);
-    if (!newShape) {
-      return nullptr;
-    }
-  }
-
-  return newShape;
-}
-
 /*
  * Assert some invariants that should hold when changing properties. It's the
  * responsibility of the callers to ensure these hold.

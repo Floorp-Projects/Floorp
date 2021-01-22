@@ -1809,9 +1809,6 @@ MOZ_ALWAYS_INLINE bool ShapeIC::search(jsid id, Shape** foundShape) {
   return false;
 }
 
-Shape* ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
-                           gc::AllocKind allocKind);
-
 }  // namespace js
 
 // JS::ubi::Nodes can point to Shapes and BaseShapes; they're js::gc::Cell
