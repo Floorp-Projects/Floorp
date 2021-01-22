@@ -4999,7 +4999,7 @@ void nsFlexContainerFrame::DoFlexLayout(
             childReflowInput.SetComputedISize(item.MainSize());
           } else {
             childReflowInput.SetComputedBSize(item.MainSize());
-            childReflowInput.mFlags.mBSizeIsSetByAspectRatio = false;
+            childReflowInput.mFlags.mIsBSizeSetByAspectRatio = false;
             if (item.TreatBSizeAsIndefinite()) {
               childReflowInput.mFlags.mTreatBSizeAsIndefinite = true;
             }
@@ -5438,7 +5438,7 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     didOverrideComputedISize = true;
   } else {
     childReflowInput.SetComputedBSize(aItem.MainSize());
-    childReflowInput.mFlags.mBSizeIsSetByAspectRatio = false;
+    childReflowInput.mFlags.mIsBSizeSetByAspectRatio = false;
     didOverrideComputedBSize = true;
     if (aItem.TreatBSizeAsIndefinite()) {
       childReflowInput.mFlags.mTreatBSizeAsIndefinite = true;
@@ -5464,7 +5464,7 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
       // the block size would always be considered definite (or where its
       // definiteness would be irrelevant).
       childReflowInput.SetComputedBSize(aItem.CrossSize());
-      childReflowInput.mFlags.mBSizeIsSetByAspectRatio = false;
+      childReflowInput.mFlags.mIsBSizeSetByAspectRatio = false;
       didOverrideComputedBSize = true;
     }
   }
