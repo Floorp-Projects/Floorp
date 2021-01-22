@@ -1830,11 +1830,11 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setCoopAndCoepEnabled(
   return *this;
 }
 
-JS::RealmBehaviors& JS::RealmBehaviorsRef(JS::Realm* realm) {
+const JS::RealmBehaviors& JS::RealmBehaviorsRef(JS::Realm* realm) {
   return realm->behaviors();
 }
 
-JS::RealmBehaviors& JS::RealmBehaviorsRef(JSContext* cx) {
+const JS::RealmBehaviors& JS::RealmBehaviorsRef(JSContext* cx) {
   return cx->realm()->behaviors();
 }
 
