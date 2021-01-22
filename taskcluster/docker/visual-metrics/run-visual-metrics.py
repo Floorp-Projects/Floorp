@@ -115,7 +115,7 @@ def run_command(log, cmd, job_count):
 
     if time.time() - start > MAX_TIME:
         log.error(
-            "[TEST-UNEXPECTED FAIL] Timed out waiting for response from command",
+            "TEST-UNEXPECTED-FAIL | Timed out waiting for response from command",
             cmd=cmd,
         )
         return 1, "Timed out"
@@ -136,7 +136,7 @@ def run_command(log, cmd, job_count):
         if level.strip() in ("[ERROR]", "[CRITICAL]"):
             if rc == 0:
                 rc = 1
-            log.error("[TEST-UNEXPECTED FAIL]" + newline)
+            log.error("TEST-UNEXPECTED-FAIL | " + newline)
         elif level == "[WARNING]":
             log.warning(newline)
         else:
@@ -429,7 +429,7 @@ def run_visual_metrics(job, visualmetrics_path, options):
                 failed_tests.append(metric)
         if failed_tests:
             log.error(
-                "[TEST-UNEXPECTED-FAIL] Some visual metrics have an erroneous value of 0."
+                "TEST-UNEXPECTED-FAIL | Some visual metrics have an erroneous value of 0."
             )
             log.info("Tests which failed: %s" % str(failed_tests))
             rc += 1
