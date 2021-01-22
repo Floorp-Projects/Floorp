@@ -500,6 +500,7 @@ bool WebRenderBridgeParent::UpdateResources(
         const auto& op = cmd.get_OpAddImage();
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
+          gfxCriticalNote << "TOpAddImage failed";
           return false;
         }
         aUpdates.AddImage(op.key(), op.descriptor(), bytes);
@@ -509,6 +510,7 @@ bool WebRenderBridgeParent::UpdateResources(
         const auto& op = cmd.get_OpUpdateImage();
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
+          gfxCriticalNote << "TOpUpdateImage failed";
           return false;
         }
         aUpdates.UpdateImageBuffer(op.key(), op.descriptor(), bytes);
@@ -518,6 +520,7 @@ bool WebRenderBridgeParent::UpdateResources(
         const auto& op = cmd.get_OpAddBlobImage();
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
+          gfxCriticalNote << "TOpAddBlobImage failed";
           return false;
         }
         aUpdates.AddBlobImage(op.key(), op.descriptor(), bytes,
@@ -528,6 +531,7 @@ bool WebRenderBridgeParent::UpdateResources(
         const auto& op = cmd.get_OpUpdateBlobImage();
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
+          gfxCriticalNote << "TOpUpdateBlobImage failed";
           return false;
         }
         aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes,
@@ -543,14 +547,13 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpAddPrivateExternalImage: {
         const auto& op = cmd.get_OpAddPrivateExternalImage();
-        if (!AddPrivateExternalImage(op.externalImageId(), op.key(),
-                                     op.descriptor(), aUpdates)) {
-          return false;
-        }
+        AddPrivateExternalImage(op.externalImageId(), op.key(), op.descriptor(),
+                                aUpdates);
         break;
       }
       case OpUpdateResource::TOpAddSharedExternalImage: {
         const auto& op = cmd.get_OpAddSharedExternalImage();
+        // gfxCriticalNote is called on error
         if (!AddSharedExternalImage(op.externalImageId(), op.key(), aUpdates)) {
           return false;
         }
@@ -560,6 +563,7 @@ bool WebRenderBridgeParent::UpdateResources(
         const auto& op = cmd.get_OpPushExternalImageForTexture();
         CompositableTextureHostRef texture;
         texture = TextureHost::AsTextureHost(op.textureParent());
+        // gfxCriticalNote is called on error
         if (!PushExternalImageForTexture(op.externalImageId(), op.key(),
                                          texture, op.isUpdate(), aUpdates)) {
           return false;
@@ -568,15 +572,13 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpUpdatePrivateExternalImage: {
         const auto& op = cmd.get_OpUpdatePrivateExternalImage();
-        if (!UpdatePrivateExternalImage(op.externalImageId(), op.key(),
-                                        op.descriptor(), op.dirtyRect(),
-                                        aUpdates)) {
-          return false;
-        }
+        UpdatePrivateExternalImage(op.externalImageId(), op.key(),
+                                   op.descriptor(), op.dirtyRect(), aUpdates);
         break;
       }
       case OpUpdateResource::TOpUpdateSharedExternalImage: {
         const auto& op = cmd.get_OpUpdateSharedExternalImage();
+        // gfxCriticalNote is called on error
         if (!UpdateSharedExternalImage(op.externalImageId(), op.key(),
                                        op.dirtyRect(), aUpdates,
                                        scheduleRelease)) {
@@ -586,6 +588,7 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpAddRawFont: {
         if (!ReadRawFont(cmd.get_OpAddRawFont(), reader, aUpdates)) {
+          gfxCriticalNote << "TOpAddRawFont failed";
           return false;
         }
         break;
@@ -594,6 +597,7 @@ bool WebRenderBridgeParent::UpdateResources(
         const auto& op = cmd.get_OpAddFontDescriptor();
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
+          gfxCriticalNote << "TOpAddFontDescriptor failed";
           return false;
         }
         aUpdates.AddFontDescriptor(op.key(), bytes, op.fontIndex());
@@ -603,6 +607,7 @@ bool WebRenderBridgeParent::UpdateResources(
         const auto& op = cmd.get_OpAddFontInstance();
         wr::Vec<uint8_t> variations;
         if (!reader.Read(op.variations(), variations)) {
+          gfxCriticalNote << "TOpAddFontInstance failed";
           return false;
         }
         aUpdates.AddFontInstance(op.instanceKey(), op.fontKey(), op.glyphSize(),
@@ -647,36 +652,32 @@ bool WebRenderBridgeParent::UpdateResources(
   return true;
 }
 
-bool WebRenderBridgeParent::AddPrivateExternalImage(
+void WebRenderBridgeParent::AddPrivateExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey, wr::ImageDescriptor aDesc,
     wr::TransactionBuilder& aResources) {
   Range<wr::ImageKey> keys(&aKey, 1);
   // Check if key is obsoleted.
   if (keys[0].mNamespace != mIdNamespace) {
-    return true;
+    return;
   }
 
   aResources.AddExternalImage(aKey, aDesc, aExtId,
                               wr::ExternalImageType::Buffer(), 0);
-
-  return true;
 }
 
-bool WebRenderBridgeParent::UpdatePrivateExternalImage(
+void WebRenderBridgeParent::UpdatePrivateExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey,
     const wr::ImageDescriptor& aDesc, const ImageIntRect& aDirtyRect,
     wr::TransactionBuilder& aResources) {
   Range<wr::ImageKey> keys(&aKey, 1);
   // Check if key is obsoleted.
   if (keys[0].mNamespace != mIdNamespace) {
-    return true;
+    return;
   }
 
   aResources.UpdateExternalImageWithDirtyRect(
       aKey, aDesc, aExtId, wr::ExternalImageType::Buffer(),
       wr::ToDeviceIntRect(aDirtyRect), 0);
-
-  return true;
 }
 
 bool WebRenderBridgeParent::AddSharedExternalImage(
