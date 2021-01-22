@@ -62,10 +62,14 @@ struct alignas(gc::CellAlignBytes) js::Nursery::Canary {
 #endif
 
 namespace js {
-struct NurseryChunk {
-  gc::ChunkHeader header;
+struct NurseryChunk : public ChunkBase {
   char data[Nursery::NurseryChunkUsableSize];
+
   static NurseryChunk* fromChunk(gc::TenuredChunk* chunk);
+
+  explicit NurseryChunk(JSRuntime* runtime)
+      : ChunkBase(runtime, &runtime->gc.storeBuffer()) {}
+
   void poisonAndInit(JSRuntime* rt, size_t size = ChunkSize);
   void poisonRange(size_t from, size_t size, uint8_t value,
                    MemCheckKind checkKind);
@@ -85,10 +89,10 @@ static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
 }  // namespace js
 
 inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t size) {
-  MOZ_ASSERT(size >= sizeof(header));
+  MOZ_ASSERT(size >= sizeof(ChunkBase));
   MOZ_ASSERT(size <= ChunkSize);
   poisonRange(0, size, JS_FRESH_NURSERY_PATTERN, MemCheckKind::MakeUndefined);
-  new (&header) gc::ChunkHeader(rt, &rt->gc.storeBuffer());
+  new (this) NurseryChunk(rt);
 }
 
 inline void js::NurseryChunk::poisonRange(size_t from, size_t size,
@@ -106,19 +110,19 @@ inline void js::NurseryChunk::poisonRange(size_t from, size_t size,
 
 inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
   MOZ_ASSERT(extent <= ChunkSize);
-  poisonRange(sizeof(header), extent - sizeof(header), JS_SWEPT_NURSERY_PATTERN,
-              MemCheckKind::MakeNoAccess);
+  poisonRange(sizeof(ChunkBase), extent - sizeof(ChunkBase),
+              JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
 }
 
 inline void js::NurseryChunk::markPagesUnusedHard(size_t from) {
-  MOZ_ASSERT(from >= sizeof(ChunkHeader));  // Don't touch the header.
+  MOZ_ASSERT(from >= sizeof(ChunkBase));  // Don't touch the header.
   MOZ_ASSERT(from <= ChunkSize);
   uintptr_t start = uintptr_t(this) + from;
   MarkPagesUnusedHard(reinterpret_cast<void*>(start), ChunkSize - from);
 }
 
 inline bool js::NurseryChunk::markPagesInUseHard(size_t to) {
-  MOZ_ASSERT(to >= sizeof(ChunkHeader));
+  MOZ_ASSERT(to >= sizeof(ChunkBase));
   MOZ_ASSERT(to <= ChunkSize);
   return MarkPagesInUseHard(this, to);
 }
@@ -1628,10 +1632,6 @@ void js::Nursery::clearRecentGrowthData() {
 
 /* static */
 size_t js::Nursery::roundSize(size_t size) {
-  static_assert(SubChunkStep > sizeof(gc::ChunkHeader),
-                "Don't allow the nursery to overwrite the header when using "
-                "less than a chunk");
-
   size_t step = size >= ChunkSize ? ChunkSize : SubChunkStep;
   size = Round(size, step);
 

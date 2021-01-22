@@ -608,7 +608,7 @@ class TenuredChunk : public TenuredChunkBase {
   static bool withinValidRange(uintptr_t addr) {
     uintptr_t offset = addr & ChunkMask;
     if (TenuredChunk::fromAddress(addr)->isNurseryChunk()) {
-      return offset >= sizeof(ChunkHeader) && offset < ChunkSize;
+      return offset >= sizeof(ChunkBase) && offset < ChunkSize;
     }
     return offset >= offsetof(TenuredChunk, arenas) && offset < ChunkSize;
   }
@@ -620,6 +620,8 @@ class TenuredChunk : public TenuredChunkBase {
     return (offset - offsetof(TenuredChunk, arenas)) >> ArenaShift;
   }
 
+  explicit TenuredChunk(JSRuntime* runtime) : TenuredChunkBase(runtime) {}
+
   uintptr_t address() const {
     uintptr_t addr = reinterpret_cast<uintptr_t>(this);
     MOZ_ASSERT(!(addr & ChunkMask));
@@ -630,7 +632,7 @@ class TenuredChunk : public TenuredChunkBase {
 
   bool hasAvailableArenas() const { return info.numArenasFree != 0; }
 
-  bool isNurseryChunk() const { return header.storeBuffer; }
+  bool isNurseryChunk() const { return storeBuffer; }
 
   Arena* allocateArena(GCRuntime* gc, JS::Zone* zone, AllocKind kind,
                        const AutoLockGC& lock);
