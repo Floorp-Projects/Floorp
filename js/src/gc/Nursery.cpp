@@ -667,11 +667,29 @@ void js::Nursery::freeBuffer(void* buffer, size_t nbytes) {
   }
 }
 
-void Nursery::setIndirectForwardingPointer(void* oldData, void* newData) {
+#ifdef DEBUG
+/* static */
+inline bool Nursery::checkForwardingPointerLocation(void* ptr,
+                                                    bool expectedInside) {
+  if (isInside(ptr) == expectedInside) {
+    return true;
+  }
+
   // If a zero-capacity elements header lands right at the end of a chunk then
-  // elements data will appear to be in the next chunk.
-  MOZ_ASSERT(isInside(oldData) || (uintptr_t(oldData) & ChunkMask) == 0);
-  MOZ_ASSERT(!isInside(newData) || (uintptr_t(newData) & ChunkMask) == 0);
+  // elements data will appear to be in the next chunk. If we have a pointer to
+  // the very start of a chunk, check the previous chunk.
+  if ((uintptr_t(ptr) & ChunkMask) == 0 &&
+      isInside(reinterpret_cast<uint8_t*>(ptr) - 1) == expectedInside) {
+    return true;
+  }
+
+  return false;
+}
+#endif
+
+void Nursery::setIndirectForwardingPointer(void* oldData, void* newData) {
+  MOZ_ASSERT(checkForwardingPointerLocation(oldData, true));
+  MOZ_ASSERT(checkForwardingPointerLocation(newData, false));
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 #ifdef DEBUG
