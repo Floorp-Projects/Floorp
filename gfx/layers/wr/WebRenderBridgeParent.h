@@ -330,10 +330,10 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
                        const nsTArray<RefCountedShmem>& aSmallShmems,
                        const nsTArray<ipc::Shmem>& aLargeShmems,
                        wr::TransactionBuilder& aUpdates);
-  bool AddPrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
+  void AddPrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                                wr::ImageDescriptor aDesc,
                                wr::TransactionBuilder& aResources);
-  bool UpdatePrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
+  void UpdatePrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                                   const wr::ImageDescriptor& aDesc,
                                   const ImageIntRect& aDirtyRect,
                                   wr::TransactionBuilder& aResources);
