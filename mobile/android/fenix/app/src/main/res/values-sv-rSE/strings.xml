@@ -1102,6 +1102,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Frigör lagringsutrymme</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Webbplatsbehörigheter</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Hämtningar</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Ta bort surfdata</string>
 
@@ -1228,9 +1230,7 @@
     <string name="onboarding_privacy_notice_header">Din integritet</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Vi har utformat %s för att ge dig kontroll över vad du delar
-        online och vad du delar med oss.
-    </string>
+    <string name="onboarding_privacy_notice_description2">Vi har utformat %s för att ge dig kontroll över vad du delar online och vad du delar med oss.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Läs vår sekretesspolicy</string>
 

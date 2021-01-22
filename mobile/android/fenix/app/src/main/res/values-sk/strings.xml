@@ -1097,6 +1097,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Uvolní priestor v zariadení</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Povolenia stránok</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Prevzaté súbory</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Odstrániť údaje o prehliadaní</string>
 
@@ -1217,11 +1219,6 @@
     <string name="onboarding_private_browsing_button">Otvoriť nastavenia</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vaše súkromie</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">%s vám dáva kontrolu nad tým, čo zdieľate
-        na internete a čo zdieľate s nami.
-    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Prečítajte si naše zásady ochrany súkromia</string>
 

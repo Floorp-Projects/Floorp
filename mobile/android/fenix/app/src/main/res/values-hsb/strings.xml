@@ -1090,6 +1090,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Wuswobodźa składowanski rum</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Sydłowe prawa</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Sćehnjenja</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Přehladowanske daty zhašeć</string>
 
@@ -1212,9 +1214,7 @@
     <string name="onboarding_privacy_notice_header">Waša priwatnosć</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Smy %s wuwili, zo bychmy wam kontrolu wo tym dali, što online
-        dźěliće a što z nami.
-    </string>
+    <string name="onboarding_privacy_notice_description2">Sym %s wuwili, zo bychmy wam kontrolu wo tym dali, što online dźěliće a što z nami.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Čitajće naš zdźělenku priwatnosće</string>
 
