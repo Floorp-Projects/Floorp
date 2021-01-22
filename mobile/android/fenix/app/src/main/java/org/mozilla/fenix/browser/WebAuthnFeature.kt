@@ -12,6 +12,7 @@ import mozilla.components.concept.engine.activity.ActivityDelegate
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.FeatureFlags
 
 /**
  * This implementation of the WebAuthnFeature is only for testing in a nightly signed build.
@@ -44,7 +45,7 @@ class WebAuthnFeature(
         engine.unregisterActivityDelegate()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+    override fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean {
         logger.info("Received activity result with code: $requestCode\ndata: $data")
         if (this.requestCode == requestCode) {
             logger.info("Invoking callback!")

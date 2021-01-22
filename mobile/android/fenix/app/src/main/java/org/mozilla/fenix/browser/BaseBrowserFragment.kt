@@ -1035,7 +1035,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         listOf(
             promptsFeature,
             webAuthnFeature
-        ).any { it.onActivityResult(requestCode, resultCode, data) }
+        ).any { it.onActivityResult(requestCode, data, resultCode) }
     }
 
     /**
