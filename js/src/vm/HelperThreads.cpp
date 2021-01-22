@@ -17,6 +17,7 @@
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/CompilationInfo.h"  // frontend::CompilationStencilSet, frontend::CompilationGCOutput
 #include "frontend/ParserAtom.h"  // frontend::ParserAtomsTable
+#include "gc/GC.h"                // gc::MergeRealms
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
 #include "js/ContextOptions.h"      // JS::ContextOptions
