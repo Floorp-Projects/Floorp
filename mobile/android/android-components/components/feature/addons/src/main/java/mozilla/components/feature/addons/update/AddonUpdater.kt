@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package mozilla.components.feature.addons.update
 
-import android.app.IntentService
 import android.app.Notification
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.IBinder
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationCompat
@@ -408,15 +409,14 @@ class DefaultAddonUpdater(
      * Handles notification actions related to addons that require additional permissions
      * to be updated.
      */
-    /** @suppress */
-    class NotificationHandlerService : IntentService("NotificationHandlerService") {
+    class NotificationHandlerService : Service() {
 
         private val logger = Logger("NotificationHandlerService")
 
         @VisibleForTesting
         internal var context: Context = this
 
-        public override fun onHandleIntent(intent: Intent?) {
+        internal fun onHandleIntent(intent: Intent?) {
             if (intent == null) return
 
             when (intent.action) {
@@ -445,6 +445,13 @@ class DefaultAddonUpdater(
             GlobalAddonDependencyProvider.requireAddonUpdater().update(addonId)
             removeNotification()
         }
+
+        override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+            onHandleIntent(intent)
+            return super.onStartCommand(intent, flags, startId)
+        }
+
+        override fun onBind(intent: Intent?): IBinder? = null
     }
 
     /**
