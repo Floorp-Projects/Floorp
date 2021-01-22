@@ -995,12 +995,9 @@ var SessionStoreInternal = {
   // We also need to save the SHistoryLister into this._browserSHistoryListener.
   addSHistoryListener(aBrowser) {
     function SHistoryListener(browser) {
-      browser.frameLoader.browsingContext.sessionHistory.addSHistoryListener(
-        this
-      );
+      browser.browsingContext.sessionHistory.addSHistoryListener(this);
 
       this.browser = browser;
-      this.frameLoader = browser.frameLoader;
       this._fromIdx = kNoIndex;
       this._sHistoryChanges = false;
       if (this.browser.currentURI && this.browser.ownerGlobal) {
@@ -1027,7 +1024,9 @@ var SessionStoreInternal = {
         }
 
         if (!this._sHistoryChanges) {
-          this.frameLoader.requestSHistoryUpdate(/*aImmediately*/ false);
+          this.browser.frameLoader.requestSHistoryUpdate(
+            /*aImmediately*/ false
+          );
           this._sHistoryChanges = true;
         }
         this._fromIdx = index;
@@ -1039,11 +1038,10 @@ var SessionStoreInternal = {
       },
 
       uninstall() {
-        if (this.frameLoader.browsingContext) {
-          let shistory = this.frameLoader.browsingContext.sessionHistory;
-          if (shistory) {
-            shistory.removeSHistoryListener(this);
-          }
+        if (this.browser.browsingContext?.sessionHistory) {
+          this.browser.browsingContext.sessionHistory.removeSHistoryListener(
+            this
+          );
         }
       },
 
@@ -1070,34 +1068,16 @@ var SessionStoreInternal = {
       },
     };
 
-    let spec = null;
-    if (aBrowser.currentURI) {
-      spec = aBrowser.currentURI.displaySpec;
+    // Don't bother registering another listener if we already have one for this
+    // browser. We would've already updated the listener's state in response to
+    // the history event that was triggered by the navigation.
+    if (this._browserSHistoryListener.has(aBrowser.permanentKey)) {
+      return;
     }
 
-    if (!aBrowser.frameLoader) {
-      debug(
-        "addSHistoryListener(), aBrowser.frameLoader doesn't exist" +
-          ",browser.currentURI.displaySpec=" +
-          spec
-      );
-      return;
-    }
-    if (!aBrowser.frameLoader.browsingContext) {
-      debug(
-        "addSHistoryListener(), aBrowser.fl.browsingContext doesn't exists" +
-          ",browser.currentURI.displaySpec=" +
-          spec
-      );
-      return;
-    }
-    if (!aBrowser.frameLoader.browsingContext.sessionHistory) {
-      debug(
-        "addSHistoryListener(), aBrowser.fl.bc.sessionHistory doesn't exists" +
-          ",browser.currentURI.displaySpec=" +
-          spec
-      );
-      return;
+    // XXX: When can this happen?
+    if (!aBrowser.browsingContext?.sessionHistory) {
+      throw new Error("no SessionHistory object");
     }
 
     let listener = new SHistoryListener(aBrowser);
