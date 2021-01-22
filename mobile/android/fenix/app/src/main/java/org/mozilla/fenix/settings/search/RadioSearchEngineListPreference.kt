@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.RadioGroup
-import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.navigation.Navigation
 import androidx.preference.Preference
@@ -63,13 +62,12 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun subscribeToSearchEngineUpdates(store: BrowserStore, view: View) =
-        view.toScope().launch {
-            store.flow()
-                .map { state -> state.search }
-                .ifChanged()
-                .collect { state -> refreshSearchEngineViews(view, state) }
-        }
+    private fun subscribeToSearchEngineUpdates(store: BrowserStore, view: View) = view.toScope().launch {
+        store.flow()
+            .map { state -> state.search }
+            .ifChanged()
+            .collect { state -> refreshSearchEngineViews(view, state) }
+    }
 
     private fun refreshSearchEngineViews(view: View, state: SearchState) {
         val searchEngineGroup = view.findViewById<RadioGroup>(R.id.search_engine_group)
@@ -120,8 +118,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
                         is SearchEngineMenu.Item.Edit -> editCustomSearchEngine(wrapper, engine)
                         is SearchEngineMenu.Item.Delete -> deleteSearchEngine(
                             context,
-                            engine,
-                            engine == context.components.core.store.state.search.selectedOrDefaultSearchEngine
+                            engine
                         )
                     }
                 }
@@ -152,50 +149,21 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
         Navigation.findNavController(view).navigate(directions)
     }
 
-    @VisibleForTesting
-    internal fun deleteSearchEngine(
+    private fun deleteSearchEngine(
         context: Context,
-        engine: SearchEngine,
-        isDefaultSearchEngine: Boolean
+        engine: SearchEngine
     ) {
         context.components.useCases.searchUseCases.removeSearchEngine(engine)
 
-        if (isDefaultSearchEngine) {
-            context.components.useCases.searchUseCases.selectSearchEngine(
-                context.components.core.store.state.search.searchEngines.first {
-                    it.id != engine.id
-                }
-            )
-        }
-        showUndoSnackbar(context, engine, isDefaultSearchEngine)
-    }
-
-    @VisibleForTesting
-    internal fun showUndoSnackbar(
-        context: Context,
-        engine: SearchEngine,
-        isDefaultSearchEngine: Boolean
-    ) {
         MainScope().allowUndo(
             view = context.getRootView()!!,
             message = context
                 .getString(R.string.search_delete_search_engine_success_message, engine.name),
             undoActionTitle = context.getString(R.string.snackbar_deleted_undo),
             onCancel = {
-                restoreSearchEngine(engine, isDefaultSearchEngine)
+                context.components.useCases.searchUseCases.addSearchEngine(engine)
             },
             operation = {}
         )
-    }
-
-    @VisibleForTesting
-    internal fun restoreSearchEngine(
-        engine: SearchEngine,
-        isDefaultSearchEngine: Boolean
-    ) {
-        context.components.useCases.searchUseCases.addSearchEngine(engine)
-        if (isDefaultSearchEngine) {
-            context.components.useCases.searchUseCases.selectSearchEngine(engine)
-        }
     }
 }
