@@ -6,7 +6,6 @@
 
 #include "builtin/intl/ListFormat.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/PodOperations.h"

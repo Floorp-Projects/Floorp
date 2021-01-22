@@ -6,7 +6,6 @@
 
 #include "gc/Statistics.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
