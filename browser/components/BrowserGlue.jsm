@@ -403,17 +403,18 @@ let JSWINDOWACTORS = {
     },
     child: {
       moduleURI: "resource:///actors/ContentSearchChild.jsm",
-      matches: [
-        "about:home",
-        "about:newtab",
-        "about:welcome",
-        "about:privatebrowsing",
-        "chrome://mochitests/content/*",
-      ],
       events: {
         ContentSearchClient: { capture: true, wantUntrusted: true },
       },
     },
+    matches: [
+      "about:home",
+      "about:welcome",
+      "about:newtab",
+      "about:privatebrowsing",
+      "about:test-about-content-search-ui",
+    ],
+    remoteTypes: ["privilegedabout"],
   },
 
   ContextMenu: {
