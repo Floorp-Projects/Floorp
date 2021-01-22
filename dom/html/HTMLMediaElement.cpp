@@ -6578,26 +6578,38 @@ void HTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel) {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
+bool HTMLMediaElement::ShouldQueueTimeupdateAsyncTask(
+    TimeupdateType aType) const {
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  // That means dispatching `timeupdate` is mandatorily required in the spec.
+  if (aType == TimeupdateType::eMandatory) {
+    return true;
+  }
+
+  // The timeupdate only occurs when the current playback position changes.
+  // https://html.spec.whatwg.org/multipage/media.html#event-media-timeupdate
+  if (mLastCurrentTime == CurrentTime()) {
+    return false;
+  }
+
+  // Number of milliseconds between timeupdate events as defined by spec.
+  if (!mQueueTimeUpdateRunnerTime.IsNull() &&
+      TimeStamp::Now() - mQueueTimeUpdateRunnerTime <
+          TimeDuration::FromMilliseconds(TIMEUPDATE_MS)) {
+    return false;
+  }
+  return true;
+}
+
 void HTMLMediaElement::FireTimeUpdate(TimeupdateType aType) {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-  TimeStamp now = TimeStamp::Now();
-  double time = CurrentTime();
-
-  // Fire a timeupdate event if this is not a periodic update (i.e. it's a
-  // timeupdate event mandated by the spec), or if it's a periodic update
-  // and TIMEUPDATE_MS has passed since the last timeupdate event fired and
-  // the time has changed.
-  if (aType == TimeupdateType::eMandatory ||
-      (mLastCurrentTime != time &&
-       (mTimeUpdateTime.IsNull() ||
-        now - mTimeUpdateTime >=
-            TimeDuration::FromMilliseconds(TIMEUPDATE_MS)))) {
+  if (ShouldQueueTimeupdateAsyncTask(aType)) {
     DispatchAsyncEvent(u"timeupdate"_ns);
-    mTimeUpdateTime = now;
-    mLastCurrentTime = time;
+    mQueueTimeUpdateRunnerTime = TimeStamp::Now();
+    mLastCurrentTime = CurrentTime();
   }
-  if (mFragmentEnd >= 0.0 && time >= mFragmentEnd) {
+  if (mFragmentEnd >= 0.0 && CurrentTime() >= mFragmentEnd) {
     Pause();
     mFragmentEnd = -1.0;
     mFragmentStart = -1.0;
