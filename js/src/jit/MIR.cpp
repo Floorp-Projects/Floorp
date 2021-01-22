@@ -1116,6 +1116,7 @@ bool MConstant::valueToBoolean(bool* res) const {
       *res = toString()->length() != 0;
       return true;
     case MIRType::Object:
+      // TODO(Warp): Lazy groups have been removed.
       // We have to call EmulatesUndefined but that reads obj->group->clasp
       // and so it's racy when the object has a lazy group. The main callers
       // of this (MTest, MNot) already know how to fold the object case, so

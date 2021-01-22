@@ -29,8 +29,8 @@ class ObjectGroupRealm;
 class PlainObject;
 
 /*
- * The NewObjectKind allows an allocation site to specify the type properties
- * and lifetime requirements that must be fixed at allocation time.
+ * The NewObjectKind allows an allocation site to specify the lifetime
+ * requirements that must be fixed at allocation time.
  */
 enum NewObjectKind {
   /* This is the default. Most objects are generic. */
