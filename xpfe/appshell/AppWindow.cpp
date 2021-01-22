@@ -1877,6 +1877,10 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
   }
   settings.searchbarSpan = searchbar;
 
+  Element* bookmarksToolbar = doc->GetElementById(u"PersonalToolbar"_ns);
+  bookmarksToolbar->GetAttribute(u"collapsed"_ns, attributeValue);
+  settings.bookmarksToolbarShown = attributeValue.EqualsLiteral("false");
+
   Element* menubar = doc->GetElementById(u"toolbar-menubar"_ns);
   menubar->GetAttribute(u"autohide"_ns, attributeValue);
   settings.menubarShown = attributeValue.EqualsLiteral("false");
