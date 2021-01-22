@@ -456,6 +456,17 @@ nsresult LookupHelper::ConstructHTTPSRRAnswer(LookupArgument* aArgument) {
                                nextRecord->mEchConfig.Value().mEchConfig);
             break;
           }
+          case SvcParamKeyODoHConfig: {
+            nextRecord->mODoHConfig.Construct();
+            nextRecord->mODoHConfig.Value().mType = type;
+            nsCOMPtr<nsISVCParamODoHConfig> ODoHConfigParam =
+                do_QueryInterface(value);
+            nsCString ODoHConfigStr;
+            Unused << ODoHConfigParam->GetODoHConfig(ODoHConfigStr);
+            CStringToHexString(ODoHConfigStr,
+                               nextRecord->mODoHConfig.Value().mODoHConfig);
+            break;
+          }
           default:
             break;
         }

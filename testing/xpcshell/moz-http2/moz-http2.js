@@ -843,6 +843,7 @@ function handleRequest(req, res) {
             { key: "echconfig", value: "123..." },
             { key: "ipv6hint", value: "::1" },
             { key: 30, value: "somelargestring" },
+            { key: "odohconfig", value: "456..." },
           ],
         },
       });
@@ -860,6 +861,7 @@ function handleRequest(req, res) {
             { key: "ipv4hint", value: ["1.2.3.4", "5.6.7.8"] },
             { key: "echconfig", value: "abc..." },
             { key: "ipv6hint", value: ["::1", "fe80::794f:6d2c:3d5e:7836"] },
+            { key: "odohconfig", value: "def..." },
           ],
         },
       });

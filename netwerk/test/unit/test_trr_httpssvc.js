@@ -131,7 +131,7 @@ add_task(async function testHTTPSSVC() {
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
   Assert.equal(answer[0].priority, 1);
   Assert.equal(answer[0].name, "h3pool");
-  Assert.equal(answer[0].values.length, 6);
+  Assert.equal(answer[0].values.length, 7);
   Assert.deepEqual(
     answer[0].values[0].QueryInterface(Ci.nsISVCParamAlpn).alpn,
     ["h2", "h3"],
@@ -163,9 +163,14 @@ add_task(async function testHTTPSSVC() {
     "::1",
     "got correct answer"
   );
+  Assert.equal(
+    answer[0].values[6].QueryInterface(Ci.nsISVCParamODoHConfig).ODoHConfig,
+    "456...",
+    "got correct answer"
+  );
   Assert.equal(answer[1].priority, 2);
   Assert.equal(answer[1].name, "test.httpssvc.com");
-  Assert.equal(answer[1].values.length, 4);
+  Assert.equal(answer[1].values.length, 5);
   Assert.deepEqual(
     answer[1].values[0].QueryInterface(Ci.nsISVCParamAlpn).alpn,
     ["h2"],
@@ -198,6 +203,11 @@ add_task(async function testHTTPSSVC() {
     answer[1].values[3].QueryInterface(Ci.nsISVCParamIPv6Hint).ipv6Hint[1]
       .address,
     "fe80::794f:6d2c:3d5e:7836",
+    "got correct answer"
+  );
+  Assert.equal(
+    answer[1].values[4].QueryInterface(Ci.nsISVCParamODoHConfig).ODoHConfig,
+    "def...",
     "got correct answer"
   );
   Assert.equal(answer[2].priority, 3);

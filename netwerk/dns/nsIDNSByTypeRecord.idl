@@ -87,6 +87,11 @@ interface nsISVCParamIPv6Hint : nsISupports {
   readonly attribute Array<nsINetAddr> ipv6Hint;
 };
 
+[scriptable, uuid(bdcef040-452e-11eb-b378-0242ac130002)]
+interface nsISVCParamODoHConfig : nsISupports {
+  readonly attribute ACString ODoHConfig;
+};
+
 [scriptable, builtinclass, uuid(a4da5645-2160-4439-bd11-540a2d26c989)]
 interface nsISVCBRecord : nsISupports {
   readonly attribute uint16_t priority;
@@ -94,6 +99,7 @@ interface nsISVCBRecord : nsISupports {
   [noscript, nostdcall, notxpcom] readonly attribute MaybePort port;
   [noscript, nostdcall, notxpcom] readonly attribute MaybeAlpnTuple alpn;
   readonly attribute ACString echConfig;
+  readonly attribute ACString ODoHConfig;
   readonly attribute bool hasIPHintAddress;
   readonly attribute Array<nsISVCParam> values;
 };
