@@ -92,6 +92,11 @@ static void printRange(nsRange* aDomRange);
 #  define DEBUG_OUT_RANGE(x)
 #endif  // PRINT_RANGE
 
+static constexpr nsLiteralCString kNoDocumentTypeNodeError =
+    "DocumentType nodes are not supported"_ns;
+static constexpr nsLiteralCString kNoRangeExistsError =
+    "No selection range exists"_ns;
+
 /******************************************************************************
  * Utility methods defined in nsISelectionController.idl
  ******************************************************************************/
@@ -2072,7 +2077,7 @@ void Selection::CollapseInternal(InLimiter aInLimiter,
   }
 
   if (aPoint.Container()->NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+    aRv.ThrowInvalidNodeTypeError(kNoDocumentTypeNodeError);
     return;
   }
 
@@ -2081,7 +2086,7 @@ void Selection::CollapseInternal(InLimiter aInLimiter,
   // computed yet, this just checks it with its mRef.  So, we can avoid
   // computing offset here.
   if (!aPoint.IsSetAndValid()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError("The offset is out of range.");
     return;
   }
 
@@ -2183,7 +2188,7 @@ void Selection::CollapseToStartJS(ErrorResult& aRv) {
 
 void Selection::CollapseToStart(ErrorResult& aRv) {
   if (RangeCount() == 0) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError(kNoRangeExistsError);
     return;
   }
 
@@ -2220,7 +2225,7 @@ void Selection::CollapseToEndJS(ErrorResult& aRv) {
 void Selection::CollapseToEnd(ErrorResult& aRv) {
   uint32_t cnt = RangeCount();
   if (cnt == 0) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError(kNoRangeExistsError);
     return;
   }
 
@@ -2257,7 +2262,7 @@ void Selection::GetType(nsAString& aOutType) const {
 nsRange* Selection::GetRangeAt(uint32_t aIndex, ErrorResult& aRv) {
   nsRange* range = GetRangeAt(aIndex);
   if (!range) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(nsPrintfCString("%u is out of range", aIndex));
     return nullptr;
   }
 
@@ -2370,7 +2375,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
 
   // First, find the range containing the old focus point:
   if (!mAnchorFocusRange) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError(kNoRangeExistsError);
     return;
   }
 
@@ -2652,7 +2657,7 @@ void Selection::SelectAllChildrenJS(nsINode& aNode, ErrorResult& aRv) {
 
 void Selection::SelectAllChildren(nsINode& aNode, ErrorResult& aRv) {
   if (aNode.NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+    aRv.ThrowInvalidNodeTypeError(kNoDocumentTypeNodeError);
     return;
   }
 
@@ -3252,7 +3257,8 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
 
   if (!aAlter.LowerCaseEqualsLiteral("move") &&
       !aAlter.LowerCaseEqualsLiteral("extend")) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.ThrowSyntaxError(
+        R"(The first argument must be one of: "move" or "extend")");
     return;
   }
 
@@ -3260,7 +3266,8 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
       !aDirection.LowerCaseEqualsLiteral("backward") &&
       !aDirection.LowerCaseEqualsLiteral("left") &&
       !aDirection.LowerCaseEqualsLiteral("right")) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.ThrowSyntaxError(
+        R"(The direction argument must be one of: "forward", "backward", "left", or "right")");
     return;
   }
 
@@ -3296,7 +3303,8 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
   } else {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.ThrowSyntaxError(
+        R"(The granularity argument must be one of: "character", "word", "line", or "lineboundary")");
     return;
   }
 
@@ -3360,9 +3368,14 @@ void Selection::SetBaseAndExtentJS(nsINode& aAnchorNode, uint32_t aAnchorOffset,
 void Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
                                  nsINode& aFocusNode, uint32_t aFocusOffset,
                                  ErrorResult& aRv) {
-  if ((aAnchorOffset > aAnchorNode.Length()) ||
-      (aFocusOffset > aFocusNode.Length())) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+  if (aAnchorOffset > aAnchorNode.Length()) {
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "The anchor offset value %u is out of range", aAnchorOffset));
+    return;
+  }
+  if (aFocusOffset > aFocusNode.Length()) {
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "The focus offset value %u is out of range", aFocusOffset));
     return;
   }
 
