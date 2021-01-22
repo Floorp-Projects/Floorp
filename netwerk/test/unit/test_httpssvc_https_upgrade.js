@@ -19,6 +19,7 @@ const certOverrideService = Cc[
 const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
   Ci.nsIThreadManager
 );
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const mainThread = threadManager.currentThread;
 
 const defaultOriginAttributes = {};
@@ -116,7 +117,9 @@ function makeChan(url) {
   return chan;
 }
 
-function channelOpenPromise(chan, flags) {
+// When observer is specified, the channel will be suspended when receiving
+// "http-on-modify-request".
+function channelOpenPromise(chan, flags, observer) {
   return new Promise(resolve => {
     function finish(req, buffer) {
       certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
@@ -127,6 +130,11 @@ function channelOpenPromise(chan, flags) {
     certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
       true
     );
+
+    if (observer) {
+      let topic = "http-on-modify-request";
+      Services.obs.addObserver(observer, topic);
+    }
     chan.asyncOpen(new ChannelListener(finish, null, flags));
   });
 }
@@ -193,39 +201,98 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 });
 
-// Test the case that we got an invalid DNS response.
+// Test the case that we got an invalid DNS response. In this case,
+// nsHttpChannel::OnHTTPSRRAvailable is called after
+// nsHttpChannel::MaybeUseHTTPSRRForUpgrade.
 add_task(async function testInvalidDNSResult() {
-  let dnsListener = new DNSListener();
+  dns.clearCache(true);
 
-  // Do DNS resolution before creating the channel, so the HTTPSSVC record will
-  // be resolved from the cache.
-  let request = dns.asyncResolve(
+  let httpserv = new HttpServer();
+  let content = "ok";
+  httpserv.registerPathHandler("/", function handler(metadata, response) {
+    response.setHeader("Content-Length", `${content.length}`);
+    response.bodyOutputStream.write(content, content.length);
+  });
+  httpserv.start(-1);
+  httpserv.identity.setPrimary(
+    "http",
     "foo.notexisted.com",
-    dns.RESOLVE_TYPE_HTTPSSVC,
-    0,
-    null, // resolverInfo
-    dnsListener,
-    mainThread,
-    defaultOriginAttributes
+    httpserv.identity.primaryPort
   );
 
-  let [inRequest, , inStatus] = await dnsListener;
-  Assert.equal(inRequest, request, "correct request was used");
-  Assert.equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST, "status error");
-
-  let chan = makeChan(`http://foo.notexisted.com:8888/server-timing`);
-  let [req] = await channelOpenPromise(
-    chan,
-    CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL
+  let chan = makeChan(
+    `http://foo.notexisted.com:${httpserv.identity.primaryPort}/`
   );
-  Assert.equal(req.status, Cr.NS_ERROR_CONNECTION_REFUSED);
+  let [, response] = await channelOpenPromise(chan);
+  Assert.equal(response, content);
+  await new Promise(resolve => httpserv.stop(resolve));
+});
+
+// The same test as above, but nsHttpChannel::MaybeUseHTTPSRRForUpgrade is
+// called after nsHttpChannel::OnHTTPSRRAvailable.
+add_task(async function testInvalidDNSResult1() {
+  dns.clearCache(true);
+
+  let httpserv = new HttpServer();
+  let content = "ok";
+  httpserv.registerPathHandler("/", function handler(metadata, response) {
+    response.setHeader("Content-Length", `${content.length}`);
+    response.bodyOutputStream.write(content, content.length);
+  });
+  httpserv.start(-1);
+  httpserv.identity.setPrimary(
+    "http",
+    "foo.notexisted.com",
+    httpserv.identity.primaryPort
+  );
+
+  let chan = makeChan(
+    `http://foo.notexisted.com:${httpserv.identity.primaryPort}/`
+  );
+
+  let topic = "http-on-modify-request";
+  let observer = {
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+    observe(aSubject, aTopic, aData) {
+      if (aTopic == topic) {
+        Services.obs.removeObserver(observer, topic);
+        let channel = aSubject.QueryInterface(Ci.nsIChannel);
+        channel.suspend();
+        let dnsListener = {
+          QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
+          onLookupComplete(inRequest, inRecord, inStatus) {
+            channel.resume();
+          },
+        };
+        dns.asyncResolve(
+          "foo.notexisted.com",
+          dns.RESOLVE_TYPE_HTTPSSVC,
+          0,
+          null, // resolverInfo
+          dnsListener,
+          mainThread,
+          defaultOriginAttributes
+        );
+      }
+    },
+  };
+
+  let [, response] = await channelOpenPromise(chan, 0, observer);
+  Assert.equal(response, content);
+  await new Promise(resolve => httpserv.stop(resolve));
 });
 
 add_task(async function testLiteralIP() {
-  let chan = makeChan(`http://127.0.0.1:8888/server-timing`);
-  let [req] = await channelOpenPromise(
-    chan,
-    CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL
-  );
-  Assert.equal(req.status, Cr.NS_ERROR_CONNECTION_REFUSED);
+  let httpserv = new HttpServer();
+  let content = "ok";
+  httpserv.registerPathHandler("/", function handler(metadata, response) {
+    response.setHeader("Content-Length", `${content.length}`);
+    response.bodyOutputStream.write(content, content.length);
+  });
+  httpserv.start(-1);
+
+  let chan = makeChan(`http://127.0.0.1:${httpserv.identity.primaryPort}/`);
+  let [, response] = await channelOpenPromise(chan);
+  Assert.equal(response, content);
+  await new Promise(resolve => httpserv.stop(resolve));
 });

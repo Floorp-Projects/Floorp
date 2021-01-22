@@ -621,11 +621,13 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
     return ContinueOnBeforeConnect(aShouldUpgrade, aStatus);
   }
 
-  if (mHTTPSSVCRecord) {
-    LOG(("nsHttpChannel::MaybeUseHTTPSRRForUpgrade [%p] already got HTTPS RR",
-         this));
+  if (mHTTPSSVCRecord.isSome()) {
+    LOG((
+        "nsHttpChannel::MaybeUseHTTPSRRForUpgrade [%p] mHTTPSSVCRecord is some",
+        this));
     StoreWaitHTTPSSVCRecord(false);
-    return ContinueOnBeforeConnect(true, aStatus);
+    bool hasHTTPSRR = (mHTTPSSVCRecord.ref() != nullptr);
+    return ContinueOnBeforeConnect(hasHTTPSRR, aStatus);
   }
 
   LOG(("nsHttpChannel::MaybeUseHTTPSRRForUpgrade [%p] wait for HTTPS RR",
@@ -689,29 +691,6 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   mConnectionInfo->SetTRRMode(nsIRequest::GetTRRMode());
   mConnectionInfo->SetIPv4Disabled(mCaps & NS_HTTP_DISABLE_IPV4);
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
-
-  if (mHTTPSSVCRecord) {
-    MOZ_ASSERT(mURI->SchemeIs("https"));
-
-    LOG((" Using connection info with HTTPSSVC record"));
-    nsCOMPtr<nsIDNSHTTPSSVCRecord> rec;
-    mHTTPSSVCRecord.swap(rec);
-
-    bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
-                        !(mCaps & NS_HTTP_BE_CONSERVATIVE) &&
-                        !LoadBeConservative();
-
-    nsCOMPtr<nsISVCBRecord> record;
-    if (NS_SUCCEEDED(rec->GetServiceModeRecord(mCaps & NS_HTTP_DISALLOW_SPDY,
-                                               !http3Allowed,
-                                               getter_AddRefs(record)))) {
-      MOZ_ASSERT(record);
-
-      RefPtr<nsHttpConnectionInfo> newConnInfo =
-          mConnectionInfo->CloneAndAdoptHTTPSSVCRecord(record);
-      mConnectionInfo = std::move(newConnInfo);
-    }
-  }
 
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
@@ -2843,9 +2822,12 @@ nsresult nsHttpChannel::ProxyFailover() {
   return AsyncDoReplaceWithProxy(pi);
 }
 
-void nsHttpChannel::SetHTTPSSVCRecord(nsIDNSHTTPSSVCRecord* aRecord) {
+void nsHttpChannel::SetHTTPSSVCRecord(
+    already_AddRefed<nsIDNSHTTPSSVCRecord>&& aRecord) {
   LOG(("nsHttpChannel::SetHTTPSSVCRecord [this=%p]\n", this));
-  mHTTPSSVCRecord = aRecord;
+  nsCOMPtr<nsIDNSHTTPSSVCRecord> record = aRecord;
+  MOZ_ASSERT(!mHTTPSSVCRecord);
+  mHTTPSSVCRecord.emplace(std::move(record));
 }
 
 void nsHttpChannel::HandleAsyncRedirectChannelToHttps() {
@@ -2933,10 +2915,9 @@ nsresult nsHttpChannel::StartRedirectChannelToURI(nsIURI* upgradedURI,
 
   if (mHTTPSSVCRecord) {
     RefPtr<nsHttpChannel> httpChan = do_QueryObject(newChannel);
-    if (httpChan) {
-      nsCOMPtr<nsIDNSHTTPSSVCRecord> rec;
-      mHTTPSSVCRecord.swap(rec);
-      httpChan->SetHTTPSSVCRecord(rec);
+    nsCOMPtr<nsIDNSHTTPSSVCRecord> rec = mHTTPSSVCRecord.ref();
+    if (httpChan && rec) {
+      httpChan->SetHTTPSSVCRecord(rec.forget());
     }
   }
 
@@ -6613,9 +6594,10 @@ nsresult nsHttpChannel::BeginConnect() {
                       !(mCaps & NS_HTTP_BE_CONSERVATIVE) &&
                       !LoadBeConservative() && LoadAllowHttp3();
 
-  // No need to lookup HTTPSSVC record if we already have one.
+  // No need to lookup HTTPSSVC record if mHTTPSSVCRecord already contains a
+  // value.
   StoreUseHTTPSSVC(StaticPrefs::network_dns_upgrade_with_https_rr() &&
-                   !mHTTPSSVCRecord);
+                   mHTTPSSVCRecord.isNothing());
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && LoadAllowAltSvc() &&  // per channel
@@ -6847,12 +6829,20 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
       mDNSBlockingThenable = mDNSBlockingPromise.Ensure(__func__);
     }
 
+    // When LoadUseHTTPSSVC() is true, we should really "fetch" the HTTPS RR,
+    // not "prefetch", since DNS prefetch can be disabled by the pref.
     if (LoadUseHTTPSSVC() ||
         gHttpHandler->UseHTTPSRRForSpeculativeConnection()) {
+      OriginAttributes originAttributes;
+      StoragePrincipalHelper::GetOriginAttributesForHTTPSRR(this,
+                                                            originAttributes);
+
+      RefPtr<nsDNSPrefetch> resolver =
+          new nsDNSPrefetch(mURI, originAttributes, nsIRequest::GetTRRMode());
       nsWeakPtr weakPtrThis(
           do_GetWeakReference(static_cast<nsIHttpChannel*>(this)));
-      rv = mDNSPrefetch->FetchHTTPSSVC(
-          mCaps & NS_HTTP_REFRESH_DNS,
+      nsresult rv = resolver->FetchHTTPSSVC(
+          mCaps & NS_HTTP_REFRESH_DNS, !LoadUseHTTPSSVC(),
           [weakPtrThis](nsIDNSHTTPSSVCRecord* aRecord) {
             nsCOMPtr<nsIHttpChannel> channel = do_QueryReferent(weakPtrThis);
             RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(channel);
@@ -9037,25 +9027,27 @@ void nsHttpChannel::OnHTTPSRRAvailable(nsIDNSHTTPSSVCRecord* aRecord) {
 
   LOG(("nsHttpChannel::OnHTTPSRRAvailable [this=%p, aRecord=%p]\n", this,
        aRecord));
-  // This record will be used in the new redirect channel.
+
   MOZ_ASSERT(!mHTTPSSVCRecord);
-  mHTTPSSVCRecord = aRecord;
+  nsCOMPtr<nsIDNSHTTPSSVCRecord> record = aRecord;
+  mHTTPSSVCRecord.emplace(std::move(record));
+  const nsCOMPtr<nsIDNSHTTPSSVCRecord>& httprr = mHTTPSSVCRecord.ref();
 
   if (LoadWaitHTTPSSVCRecord()) {
     MOZ_ASSERT(mURI->SchemeIs("http"));
 
     StoreWaitHTTPSSVCRecord(false);
-    nsresult rv = ContinueOnBeforeConnect(!!mHTTPSSVCRecord, mStatus);
+    nsresult rv = ContinueOnBeforeConnect(!!httprr, mStatus);
     if (NS_FAILED(rv)) {
       CloseCacheEntry(false);
       Unused << AsyncAbort(rv);
     }
   } else {
     // This channel is not canceled and the transaction is not created.
-    if (mHTTPSSVCRecord && NS_SUCCEEDED(mStatus) && !mTransaction &&
+    if (httprr && NS_SUCCEEDED(mStatus) && !mTransaction &&
         (mFirstResponseSource != RESPONSE_FROM_CACHE)) {
       bool hasIPAddress = false;
-      Unused << mHTTPSSVCRecord->GetHasIPAddresses(&hasIPAddress);
+      Unused << httprr->GetHasIPAddresses(&hasIPAddress);
       Telemetry::Accumulate(Telemetry::DNS_HTTPSSVC_RECORD_RECEIVING_STAGE,
                             hasIPAddress
                                 ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_0
