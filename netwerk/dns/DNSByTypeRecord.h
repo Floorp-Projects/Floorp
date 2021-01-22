@@ -199,6 +199,23 @@ struct IPDLParamTraits<mozilla::net::SvcParamIpv6Hint> {
 };
 
 template <>
+struct IPDLParamTraits<mozilla::net::SvcParamODoHConfig> {
+  typedef mozilla::net::SvcParamODoHConfig paramType;
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const paramType& aParam) {
+    WriteIPDLParam(aMsg, aActor, aParam.mValue);
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult) {
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mValue)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template <>
 struct IPDLParamTraits<mozilla::net::SvcFieldValue> {
   typedef mozilla::net::SvcFieldValue paramType;
   static void Write(IPC::Message* aMsg, IProtocol* aActor,

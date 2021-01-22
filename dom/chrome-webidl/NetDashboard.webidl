@@ -108,6 +108,10 @@ dictionary SVCParamEchConfig : SVCParam {
   DOMString echConfig = "";
 };
 
+dictionary SVCParamODoHConfig : SVCParam {
+  DOMString ODoHConfig = "";
+};
+
 dictionary HTTPSRecord {
   unsigned short priority = 0;
   DOMString targetName = "";
@@ -117,6 +121,7 @@ dictionary HTTPSRecord {
   SVCParamIPv4Hint ipv4Hint;
   SVCParamIPv6Hint ipv6Hint;
   SVCParamEchConfig echConfig;
+  SVCParamODoHConfig ODoHConfig;
 };
 
 [GenerateConversionToJS]

@@ -1295,6 +1295,7 @@ svcparam.keyToNumber = function(keyName) {
     case 'ipv4hint' : return 4
     case 'echconfig' : return 5
     case 'ipv6hint' : return 6
+    case 'odohconfig' : return 32769
     case 'key65535' : return 65535
   }
   if (!keyName.startsWith('key')) {
@@ -1313,6 +1314,7 @@ svcparam.numberToKeyName = function(number) {
     case 4 : return 'ipv4hint'
     case 5 : return 'echconfig'
     case 6 : return 'ipv6hint'
+    case 32769 : return 'odohconfig'
   }
 
   return `key${number}`;
@@ -1421,6 +1423,24 @@ svcparam.encode = function(param, buf, offset) {
       offset += 16;
       svcparam.encode.bytes += 16;
     }
+   } else if (key == 32769) { //odohconfig
+      if (svcparam.odohconfig) {
+        buf.writeUInt16BE(svcparam.odohconfig.length, offset);
+        offset += 2;
+        svcparam.encode.bytes += 2;
+        for (let i = 0; i < svcparam.odohconfig.length; i++) {
+          buf.writeUInt8(svcparam.odohconfig[i], offset);
+          offset++;
+        }
+        svcparam.encode.bytes += svcparam.odohconfig.length;
+      } else {
+        buf.writeUInt16BE(param.value.length, offset);
+        offset += 2;
+        svcparam.encode.bytes += 2;
+        buf.write(param.value, offset);
+        offset += param.value.length;
+        svcparam.encode.bytes += param.value.length;
+      }
   } else {
     // Unknown option
     buf.writeUInt16BE(0, offset); // 0 length since we don't know how to encode
@@ -1476,6 +1496,13 @@ svcparam.encodingLength = function (param) {
       return 4 + param.value.length
     }
     case 'ipv6hint' : return 4 + 16 * (Array.isArray(param.value) ? param.value.length : 1)
+    case 'odohconfig' : {
+      if (param.needBase64Decode) {
+        svcparam.odohconfig = Buffer.from(param.value, "base64");
+        return 4 + svcparam.odohconfig.length;
+      }
+      return 4 + param.value.length
+    }
     case 'key65535' : return 4
     default: return 4 // unknown option
   }

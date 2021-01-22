@@ -554,6 +554,9 @@ function displayHTTPSRRLookup(data) {
       let echConfig = record.echConfig
         ? `echConfig="${record.echConfig.echConfig}" `
         : "";
+      let ODoHConfig = record.ODoHConfig
+        ? `ODoHConfig="${record.ODoHConfig.ODoHConfig}" `
+        : "";
       let ipv4hint = "";
       let ipv6hint = "";
       if (record.ipv4Hint) {
@@ -577,7 +580,8 @@ function displayHTTPSRRLookup(data) {
 
       let str = `${record.priority} ${record.targetName} `;
       str += `(${alpn}${noDefaultAlpn}${port}`;
-      str += `${ipv4hint}${echConfig}${ipv6hint})`;
+      str += `${ipv4hint}${echConfig}${ipv6hint}`;
+      str += `${ODoHConfig})`;
       row.appendChild(col(str));
       new_cont.appendChild(row);
     }
