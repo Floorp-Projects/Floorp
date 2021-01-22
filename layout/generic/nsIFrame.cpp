@@ -6037,7 +6037,7 @@ struct MinMaxSize {
   }
 };
 static MinMaxSize ComputeTransferredMinMaxInlineSize(
-    WritingMode aWM, const StyleAspectRatio& aAspectRatio,
+    const WritingMode aWM, const AspectRatio& aAspectRatio,
     const MinMaxSize& aMinMaxBSize, const LogicalSize& aBoxSizingAdjustment) {
   // Note: the spec mentions that
   // 1. This transferred minimum is capped by any definite preferred or maximum
@@ -6058,17 +6058,15 @@ static MinMaxSize ComputeTransferredMinMaxInlineSize(
   MinMaxSize transferredISize;
 
   if (aMinMaxBSize.mMinSize > 0) {
-    transferredISize.mMinSize =
-        aAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
-            LogicalAxis::eLogicalAxisInline, aWM, aMinMaxBSize.mMinSize,
-            aBoxSizingAdjustment);
+    transferredISize.mMinSize = aAspectRatio.ComputeRatioDependentSize(
+        LogicalAxis::eLogicalAxisInline, aWM, aMinMaxBSize.mMinSize,
+        aBoxSizingAdjustment);
   }
 
   if (aMinMaxBSize.mMaxSize != NS_UNCONSTRAINEDSIZE) {
-    transferredISize.mMaxSize =
-        aAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
-            LogicalAxis::eLogicalAxisInline, aWM, aMinMaxBSize.mMaxSize,
-            aBoxSizingAdjustment);
+    transferredISize.mMaxSize = aAspectRatio.ComputeRatioDependentSize(
+        LogicalAxis::eLogicalAxisInline, aWM, aMinMaxBSize.mMaxSize,
+        aBoxSizingAdjustment);
   }
 
   // Minimum size wins over maximum size.
@@ -6190,6 +6188,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     }
   }
 
+  const auto aspectRatio = GetAspectRatio();
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
   const bool isAutoISize = inlineStyleCoord->IsAuto() ||
                            aFlags.contains(ComputeSizeFlag::UseAutoISize);
@@ -6200,15 +6199,13 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
         boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags);
     result.ISize(aWM) = iSizeResult.mISize;
     aspectRatioUsage = iSizeResult.mAspectRatioUsage;
-  } else if (stylePos->mAspectRatio.HasFiniteRatio() &&
-             !nsLayoutUtils::IsAutoBSize(*blockStyleCoord,
-                                         aCBSize.BSize(aWM))) {
+  } else if (aspectRatio && !nsLayoutUtils::IsAutoBSize(*blockStyleCoord,
+                                                        aCBSize.BSize(aWM))) {
     auto bSize = nsLayoutUtils::ComputeBSizeValue(
         aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
         blockStyleCoord->AsLengthPercentage());
-    result.ISize(aWM) =
-        stylePos->mAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
-            LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
+    result.ISize(aWM) = aspectRatio.ComputeRatioDependentSize(
+        LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
     aspectRatioUsage = AspectRatioUsage::ToComputeISize;
   } else if (MOZ_UNLIKELY(isGridItem) && !IsTrueOverflowContainer()) {
     // 'auto' inline-size for grid-level box - fill the CB for 'stretch' /
@@ -6254,8 +6251,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       nsLayoutUtils::IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM));
   const bool isAutoMaxBSize =
       nsLayoutUtils::IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM));
-  if (stylePos->mAspectRatio.HasFiniteRatio() && !isDefiniteISize &&
-      !isFlexItemInlineAxisMainAxis) {
+  if (aspectRatio && !isDefiniteISize && !isFlexItemInlineAxisMainAxis) {
     const MinMaxSize minMaxBSize{
         isAutoMinBSize ? 0
                        : nsLayoutUtils::ComputeBSizeValue(
@@ -6266,7 +6262,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
                              aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
                              maxBSizeCoord.AsLengthPercentage())};
     MinMaxSize transferredMinMaxISize = ComputeTransferredMinMaxInlineSize(
-        aWM, stylePos->mAspectRatio, minMaxBSize, boxSizingAdjust);
+        aWM, aspectRatio, minMaxBSize, boxSizingAdjust);
 
     result.ISize(aWM) =
         transferredMinMaxISize.ClampSizeToMinAndMax(result.ISize(aWM));
@@ -6339,12 +6335,10 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       result.BSize(aWM) = nsLayoutUtils::ComputeBSizeValue(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
           blockStyleCoord->AsLengthPercentage());
-    } else if (stylePos->mAspectRatio.HasFiniteRatio() &&
-               result.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
-      result.BSize(aWM) =
-          stylePos->mAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
-              LogicalAxis::eLogicalAxisBlock, aWM, result.ISize(aWM),
-              boxSizingAdjust);
+    } else if (aspectRatio && result.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
+      result.BSize(aWM) = aspectRatio.ComputeRatioDependentSize(
+          LogicalAxis::eLogicalAxisBlock, aWM, result.ISize(aWM),
+          boxSizingAdjust);
       MOZ_ASSERT(aspectRatioUsage == AspectRatioUsage::None);
       aspectRatioUsage = AspectRatioUsage::ToComputeBSize;
     } else if (MOZ_UNLIKELY(isGridItem) && blockStyleCoord->IsAuto() &&
