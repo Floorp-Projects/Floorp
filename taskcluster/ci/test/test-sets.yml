@@ -556,4 +556,5 @@ linux-tsan-tests:
     - mochitest-media
     - mochitest-plain
     - web-platform-tests
+    - web-platform-tests-reftest
     - xpcshell
