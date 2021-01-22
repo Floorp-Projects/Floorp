@@ -36,27 +36,6 @@ test_newtab({
       "Customize Menu should be visible on screen"
     );
 
-    // Test close button.
-    let closeButton = content.document.querySelector(".close-button");
-    closeButton.click();
-    await ContentTaskUtils.waitForCondition(
-      () =>
-        content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
-        ).transform !== defaultPos,
-      "Customize Menu should not be visible anymore"
-    );
-
-    // Reopen the customize menu
-    customizeButton.click();
-    await ContentTaskUtils.waitForCondition(
-      () =>
-        content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
-        ).transform === defaultPos,
-      "Customize Menu should be visible on screen now"
-    );
-
     // Test that clicking the shortcuts toggle will make the section appear on the newtab page.
     let shortcutsSwitch = content.document.querySelector(
       "#shortcuts-section .switch"
@@ -174,6 +153,91 @@ test_newtab({
     );
     Services.prefs.clearUserPref(
       "browser.newtabpage.activity-stream.feeds.snippets"
+    );
+  },
+});
+
+test_newtab({
+  async before({ pushPrefs }) {
+    await pushPrefs([
+      "browser.newtabpage.activity-stream.newNewtabExperience.enabled",
+      true,
+    ]);
+  },
+  test: async function test_open_close_customizeMenu() {
+    const EventUtils = ContentTaskUtils.getEventUtils(content);
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector(".personalize-button"),
+      "Wait for prefs button to load on the newtab page"
+    );
+
+    let customizeButton = content.document.querySelector(".personalize-button");
+    customizeButton.click();
+
+    let defaultPos = "matrix(1, 0, 0, 1, 0, 0)";
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform === defaultPos,
+      "Customize Menu should be visible on screen"
+    );
+
+    // Test close button.
+    let closeButton = content.document.querySelector(".close-button");
+    closeButton.click();
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform !== defaultPos,
+      "Customize Menu should not be visible anymore"
+    );
+
+    // Reopen the customize menu
+    customizeButton.click();
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform === defaultPos,
+      "Customize Menu should be visible on screen now"
+    );
+
+    // Test closing with esc key.
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, content);
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform !== defaultPos,
+      "Customize Menu should not be visible anymore"
+    );
+
+    // Reopen the customize menu
+    customizeButton.click();
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform === defaultPos,
+      "Customize Menu should be visible on screen now"
+    );
+
+    // Test closing with external click.
+    let outerWrapper = content.document.querySelector(".outer-wrapper");
+    outerWrapper.click();
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform !== defaultPos,
+      "Customize Menu should not be visible anymore"
+    );
+  },
+  async after() {
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
     );
   },
 });
