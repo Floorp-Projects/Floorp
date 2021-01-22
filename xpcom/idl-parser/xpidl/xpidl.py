@@ -935,7 +935,7 @@ class ConstMember(object):
     def __init__(self, type, name, value, location, doccomments):
         self.type = type
         self.name = name
-        self.value = value
+        self.valueFn = value
         self.location = location
         self.doccomments = doccomments
 
@@ -952,9 +952,11 @@ class ConstMember(object):
             )
 
         self.basetype = basetype
+        # Value is a lambda. Resolve it.
+        self.value = self.valueFn(self.iface)
 
     def getValue(self):
-        return self.value(self.iface)
+        return self.value
 
     def __str__(self):
         return "\tconst %s %s = %s\n" % (self.type, self.name, self.getValue())
@@ -971,7 +973,7 @@ class CEnumVariant(object):
 
     def __init__(self, name, value, location):
         self.name = name
-        self.value = value
+        self.valueFn = value
         self.location = location
 
     def getValue(self):
@@ -995,9 +997,6 @@ class CEnum(object):
         if self.width not in (8, 16, 32):
             raise IDLError("Width must be one of {8, 16, 32}", self.location)
 
-    def getValue(self):
-        return self.value(self.iface)
-
     def resolve(self, iface):
         self.iface = iface
         # Renaming enum to faux-namespace the enum type to the interface in JS
@@ -1017,8 +1016,8 @@ class CEnum(object):
             # collisions.
             self.iface.namemap.set(variant)
             # Value may be a lambda. If it is, resolve it.
-            if variant.value:
-                next_value = variant.value = variant.value(self.iface)
+            if variant.valueFn:
+                next_value = variant.value = variant.valueFn(self.iface)
             else:
                 variant.value = next_value
             next_value += 1
