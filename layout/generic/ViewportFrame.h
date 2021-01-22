@@ -15,7 +15,6 @@
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 
-class nsDisplayWrapList;
 class nsPresContext;
 
 namespace mozilla {
@@ -52,8 +51,9 @@ class ViewportFrame : public nsContainerFrame {
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  nsDisplayWrapList* BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
-                                                 bool* aIsOpaque = nullptr);
+  void BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
+                                   nsDisplayList* aList,
+                                   bool* aIsOpaque = nullptr);
 
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
