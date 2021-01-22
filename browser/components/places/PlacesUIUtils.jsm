@@ -1552,6 +1552,15 @@ var PlacesUIUtils = {
   },
 };
 
+/**
+ * Promise used by the toolbar view browser-places to determine whether we
+ * can start loading its content (which involves IO, and so is postponed
+ * during startup).
+ */
+PlacesUIUtils.canLoadToolbarContentPromise = new Promise(resolve => {
+  PlacesUIUtils.unblockToolbars = resolve;
+});
+
 // These are lazy getters to avoid importing PlacesUtils immediately.
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "PLACES_FLAVORS", () => {
   return [
