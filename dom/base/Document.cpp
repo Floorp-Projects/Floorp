@@ -3700,8 +3700,12 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 
 already_AddRefed<dom::FeaturePolicy> Document::GetParentFeaturePolicy() {
   BrowsingContext* browsingContext = GetBrowsingContext();
-  NS_ENSURE_TRUE(browsingContext, nullptr);
-  NS_ENSURE_TRUE(browsingContext->IsContentSubframe(), nullptr);
+  if (!browsingContext) {
+    return nullptr;
+  }
+  if (!browsingContext->IsContentSubframe()) {
+    return nullptr;
+  }
 
   HTMLIFrameElement* iframe =
       HTMLIFrameElement::FromNodeOrNull(browsingContext->GetEmbedderElement());
@@ -3714,10 +3718,14 @@ already_AddRefed<dom::FeaturePolicy> Document::GetParentFeaturePolicy() {
   }
 
   WindowContext* windowContext = browsingContext->GetCurrentWindowContext();
-  NS_ENSURE_TRUE(windowContext, nullptr);
+  if (!windowContext) {
+    return nullptr;
+  }
 
   WindowGlobalChild* child = windowContext->GetWindowGlobalChild();
-  NS_ENSURE_TRUE(child, nullptr);
+  if (!child) {
+    return nullptr;
+  }
 
   return do_AddRef(child->GetContainerFeaturePolicy());
 }
