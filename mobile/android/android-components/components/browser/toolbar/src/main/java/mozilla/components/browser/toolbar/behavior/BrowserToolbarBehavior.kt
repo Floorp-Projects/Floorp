@@ -4,13 +4,11 @@
 
 package mozilla.components.browser.toolbar.behavior
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.animation.DecelerateInterpolator
 import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
@@ -18,12 +16,16 @@ import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.android.view.findViewInHierarchy
-import kotlin.math.max
-import kotlin.math.min
-
-private const val SNAP_ANIMATION_DURATION = 150L
 
 private const val SMALL_ELEVATION_CHANGE = 0.01f
+
+/**
+ * Where the toolbar is placed on the screen.
+ */
+enum class ToolbarPosition {
+    TOP,
+    BOTTOM
+}
 
 /**
  * A [CoordinatorLayout.Behavior] implementation to be used when placing [BrowserToolbar] at the bottom of the screen.
@@ -37,9 +39,10 @@ private const val SMALL_ELEVATION_CHANGE = 0.01f
  * - Snap the [BrowserToolbar] to be hidden or visible when the user stops scrolling.
  */
 @Suppress("TooManyFunctions")
-class BrowserToolbarBottomBehavior(
+class BrowserToolbarBehavior(
     val context: Context?,
-    attrs: AttributeSet?
+    attrs: AttributeSet?,
+    private val toolbarPosition: ToolbarPosition
 ) : CoordinatorLayout.Behavior<BrowserToolbar>(context, attrs) {
     // This implementation is heavily based on this blog article:
     // https://android.jlelse.eu/scroll-your-bottom-navigation-view-away-with-10-lines-of-code-346f1ed40e9e
@@ -47,16 +50,8 @@ class BrowserToolbarBottomBehavior(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var shouldSnapAfterScroll: Boolean = false
 
-    private var lastSnapStartedWasUp = false
-
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var startedScroll = false
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal var snapAnimator: ValueAnimator = ValueAnimator().apply {
-        interpolator = DecelerateInterpolator()
-        duration = SNAP_ANIMATION_DURATION
-    }
 
     /**
      * Reference to [EngineView] used to check user's [android.view.MotionEvent]s.
@@ -86,6 +81,11 @@ class BrowserToolbarBottomBehavior(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var gesturesDetector: BrowserGestureDetector = createGestureDetector()
+
+    @VisibleForTesting
+    internal var yTranslator: BrowserToolbarYTranslator = createYTranslationStragy()
+
+    private fun createYTranslationStragy() = BrowserToolbarYTranslator(toolbarPosition)
 
     override fun onStartNestedScroll(
         coordinatorLayout: CoordinatorLayout,
@@ -125,7 +125,7 @@ class BrowserToolbarBottomBehavior(
     }
 
     override fun layoutDependsOn(parent: CoordinatorLayout, child: BrowserToolbar, dependency: View): Boolean {
-        if (dependency is Snackbar.SnackbarLayout) {
+        if (toolbarPosition == ToolbarPosition.BOTTOM && dependency is Snackbar.SnackbarLayout) {
             positionSnackbar(child, dependency)
         }
 
@@ -144,33 +144,10 @@ class BrowserToolbarBottomBehavior(
     }
 
     /**
-     * Used to expand the [BrowserToolbar] upwards
+     * Used to expand the [BrowserToolbar]
      */
-    fun forceExpand(view: View) {
-        animateSnap(view, SnapDirection.UP)
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun animateSnap(child: View, direction: SnapDirection) = with(snapAnimator) {
-        lastSnapStartedWasUp = direction == SnapDirection.UP
-        addUpdateListener { child.translationY = it.animatedValue as Float }
-        setFloatValues(child.translationY, if (direction == SnapDirection.UP) 0f else child.height.toFloat())
-        start()
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun snapToolbarVertically() {
-        if (snapAnimator.isStarted) {
-            snapAnimator.end()
-        } else {
-            browserToolbar?.apply {
-                translationY = if (translationY >= height / 2) {
-                    height.toFloat()
-                } else {
-                    0f
-                }
-            }
-        }
+    fun forceExpand(toolbar: BrowserToolbar) {
+        yTranslator.expandWithAnimation(toolbar)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -194,17 +171,13 @@ class BrowserToolbarBottomBehavior(
     internal fun tryToScrollVertically(distance: Float) {
         browserToolbar?.let { toolbar ->
             if (shouldScroll && startedScroll) {
-                toolbar.translationY =
-                    max(0f, min(toolbar.height.toFloat(), toolbar.translationY + distance))
+                yTranslator.translate(toolbar, distance)
             } else {
                 // Force expand the toolbar if the user scrolled up, it is not already expanded and
                 // an animation to expand it is not already in progress,
                 // otherwise the user could get stuck in a state where they cannot show the toolbar
-                val isAnimatingUp = snapAnimator.isStarted && lastSnapStartedWasUp
-                if (distance < 0 && toolbar.translationY != 0f && !isAnimatingUp) {
-                    snapAnimator.cancel()
-                    forceExpand(toolbar)
-                }
+                // See https://github.com/mozilla-mobile/android-components/issues/7101
+                yTranslator.forceExpandIfNotAlready(toolbar, distance)
             }
         }
     }
@@ -228,7 +201,7 @@ class BrowserToolbarBottomBehavior(
             onScaleBegin = {
                 // Scale shouldn't animate the toolbar but a small y translation is still possible
                 // because of a previous scroll. Try to be swift about such an in progress animation.
-                snapToolbarVertically()
+                yTranslator.snapImmediately(browserToolbar)
             }
         ))
 
@@ -237,13 +210,13 @@ class BrowserToolbarBottomBehavior(
         return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
             startedScroll = true
             shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
-            snapAnimator.cancel()
+            yTranslator.cancelInProgressTranslation()
             true
         } else if (engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_UNHANDLED) {
             // Force expand the toolbar if event is unhandled, otherwise user could get stuck in a
             // state where they cannot show the toolbar
-            snapAnimator.cancel()
-            forceExpand(toolbar)
+            yTranslator.cancelInProgressTranslation()
+            yTranslator.expandWithAnimation(toolbar)
             false
         } else {
             false
@@ -254,17 +227,7 @@ class BrowserToolbarBottomBehavior(
     internal fun stopNestedScroll(type: Int, toolbar: BrowserToolbar) {
         startedScroll = false
         if (shouldSnapAfterScroll || type == ViewCompat.TYPE_NON_TOUCH) {
-            if (toolbar.translationY >= (toolbar.height / 2f)) {
-                animateSnap(toolbar, SnapDirection.DOWN)
-            } else {
-                animateSnap(toolbar, SnapDirection.UP)
-            }
+            yTranslator.snapWithAnimation(toolbar)
         }
     }
-}
-
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-internal enum class SnapDirection {
-    UP,
-    DOWN
 }

@@ -12,6 +12,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-toolbar**
+  * ⚠️ **This is a breaking change**: `BrowserToolbarBottomBehavior` is renamed to `BrowserToolbarBehavior` as it is now a common behavior for toolbars be them placed at the bottom or at the top of the screen.
+
+* **feature-session**
+  * ⚠️ **This is a breaking change**: `EngineViewBottomBehavior` is renamed to `EngineViewBrowserToolbarBehavior` as it is now the glue between `EngineView` and `BrowserToolbar` irrespective of if the toolbar is placed at the bottom oir at the top of the `EngineView`.
+
 * **feature-downloads**:
   * 🌟 New `ShareDownloadFeature` will listen for `AddShareAction` and download, cache locally and then share internet resources.
   * ⚠️ **This is a breaking change**: This is a breaking change with clients expected to create and register a new instance of the this new feature otherwise the "Share image" from the browser contextual menu will do nothing.

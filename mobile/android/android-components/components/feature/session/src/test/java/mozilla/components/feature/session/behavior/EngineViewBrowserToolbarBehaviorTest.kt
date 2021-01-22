@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,24 +26,47 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
-class EngineViewBottomBehaviorTest {
+class EngineViewBrowserToolbarBehaviorTest {
 
     @Test
-    fun `EngineView clipping and toolbar offset are kept in sync`() {
-        val behavior = EngineViewBottomBehavior(mock(), null)
-
+    fun `EngineView clipping and bottom toolbar offset are kept in sync`() {
         val engineView: EngineView = spy(FakeEngineView(testContext))
         val toolbar: View = mock()
         doReturn(100).`when`(toolbar).height
-
         doReturn(42f).`when`(toolbar).translationY
-        behavior.onDependentViewChanged(mock(), engineView.asView(), toolbar)
+
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, engineView.asView(), toolbar.height, ToolbarPosition.BOTTOM
+        )
+
+        behavior.onDependentViewChanged(mock(), mock(), toolbar)
+
         verify(engineView).setVerticalClipping(-42)
+        assertEquals(0f, engineView.asView().translationY)
+    }
+
+    @Test
+    fun `EngineView clipping and top toolbar offset are kept in sync`() {
+        val engineView: EngineView = spy(FakeEngineView(testContext))
+        val toolbar: View = mock()
+        doReturn(100).`when`(toolbar).height
+        doReturn(42f).`when`(toolbar).translationY
+
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, engineView.asView(), toolbar.height, ToolbarPosition.TOP
+        )
+
+        behavior.onDependentViewChanged(mock(), mock(), toolbar)
+
+        verify(engineView).setVerticalClipping(42)
+        assertEquals(142f, engineView.asView().translationY)
     }
 
     @Test
     fun `Behavior does not depend on normal views`() {
-        val behavior = EngineViewBottomBehavior(mock(), null)
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, mock(), 0, ToolbarPosition.BOTTOM
+        )
 
         assertFalse(behavior.layoutDependsOn(mock(), mock(), TextView(testContext)))
         assertFalse(behavior.layoutDependsOn(mock(), mock(), EditText(testContext)))
@@ -51,7 +75,9 @@ class EngineViewBottomBehaviorTest {
 
     @Test
     fun `Behavior depends on BrowserToolbar`() {
-        val behavior = EngineViewBottomBehavior(mock(), null)
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(), null, mock(), 0, ToolbarPosition.BOTTOM
+        )
 
         assertTrue(behavior.layoutDependsOn(mock(), mock(), BrowserToolbar(testContext)))
     }
