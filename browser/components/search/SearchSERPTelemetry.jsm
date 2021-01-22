@@ -19,8 +19,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // The various histograms and scalars that we report to.
 const SEARCH_COUNTS_HISTOGRAM_KEY = "SEARCH_COUNTS";
-const SEARCH_WITH_ADS_SCALAR = "browser.search.with_ads";
-const SEARCH_AD_CLICKS_SCALAR = "browser.search.ad_clicks";
+const SEARCH_WITH_ADS_SCALAR_OLD = "browser.search.with_ads";
+const SEARCH_WITH_ADS_SCALAR_BASE = "browser.search.withads.";
+const SEARCH_AD_CLICKS_SCALAR_OLD = "browser.search.ad_clicks";
+const SEARCH_AD_CLICKS_SCALAR_BASE = "browser.search.adclicks.";
 const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
 const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
@@ -69,6 +71,10 @@ class TelemetryHandler {
   // information, but we want to know when we can clean up our associated
   // entry.
   _browserInfoByURL = new Map();
+
+  // _browserSourceMap is a map of the latest search source for a particular
+  // browser - one of the KNOWN_SEARCH_SOURCES in BrowserSearchTelemetry.
+  _browserSourceMap = new WeakMap();
 
   constructor() {
     this._contentHandler = new ContentHandler({
@@ -128,6 +134,19 @@ class TelemetryHandler {
     Services.wm.removeListener(this);
 
     this._initialized = false;
+  }
+
+  /**
+   * Records the search source for particular browsers, in case it needs
+   * to be associated with a SERP.
+   *
+   * @param {browser} browser
+   *   The browser where the search originated.
+   * @param {string} source
+   *    Where the search originated from.
+   */
+  recordBrowserSource(browser, source) {
+    this._browserSourceMap.set(browser, source);
   }
 
   /**
@@ -205,15 +224,23 @@ class TelemetryHandler {
 
     this._reportSerpPage(info, url);
 
+    let source = "unknown";
+    if (this._browserSourceMap.has(browser)) {
+      source = this._browserSourceMap.get(browser);
+      this._browserSourceMap.delete(browser);
+    }
+
     let item = this._browserInfoByURL.get(url);
     if (item) {
       item.browsers.add(browser);
       item.count++;
+      item.source = source;
     } else {
       this._browserInfoByURL.set(url, {
         browsers: new WeakSet([browser]),
         info,
         count: 1,
+        source,
       });
     }
   }
@@ -432,6 +459,10 @@ class TelemetryHandler {
     }
     // Default to organic to simplify things.
     // We override type in the sap cases.
+    // We have an oldType and type split, because the older telemetry uses "sap"
+    // and "sap-follow-on" versus "tagged-sap" and "tagged-follow-on".
+    // The latter is a more accurate description of what we're reporting.
+    let oldType = "organic";
     let type = "organic";
     let code;
     if (searchProviderInfo.codeParamName) {
@@ -444,9 +475,11 @@ class TelemetryHandler {
           searchProviderInfo.followOnParamNames &&
           searchProviderInfo.followOnParamNames.some(p => queries.has(p))
         ) {
-          type = "sap-follow-on";
+          oldType = "sap-follow-on";
+          type = "tagged-follow-on";
         } else {
-          type = "sap";
+          oldType = "sap";
+          type = "tagged";
         }
       } else if (searchProviderInfo.followOnCookies) {
         // Especially Bing requires lots of extra work related to cookies.
@@ -479,7 +512,8 @@ class TelemetryHandler {
               cookieParam == followOnCookie.codeParamName &&
               followOnCookie.codePrefixes.some(p => cookieValue.startsWith(p))
             ) {
-              type = "sap-follow-on";
+              oldType = "sap-follow-on";
+              type = "tagged-follow-on";
               code = cookieValue;
               break;
             }
@@ -487,7 +521,7 @@ class TelemetryHandler {
         }
       }
     }
-    return { provider: searchProviderInfo.telemetryId, type, code };
+    return { provider: searchProviderInfo.telemetryId, oldType, type, code };
   }
 
   /**
@@ -495,12 +529,12 @@ class TelemetryHandler {
    *
    * @param {object} info
    * @param {string} info.provider The name of the provider.
-   * @param {string} info.type The type of search.
+   * @param {string} info.oldType The type of search.
    * @param {string} [info.code] The code for the provider.
    * @param {string} url The url that was matched (for debug logging only).
    */
   _reportSerpPage(info, url) {
-    let payload = `${info.provider}.in-content:${info.type}:${info.code ||
+    let payload = `${info.provider}.in-content:${info.oldType}:${info.code ||
       "none"}`;
     let histogram = Services.telemetry.getKeyedHistogramById(
       SEARCH_COUNTS_HISTOGRAM_KEY
@@ -694,7 +728,7 @@ class ContentHandler {
     // be processed before we get all the info.
     Services.tm.dispatchToMainThread(() => {
       // We suspect that No Content (204) responses are used to transfer or
-      // update beacons. They lead to use double-counting ad-clicks, so let's
+      // update beacons. They used to lead to double-counting ad-clicks, so let's
       // ignore them.
       if (channel.statusCode == 204) {
         logConsole.debug("Ignoring activity from ambiguous responses");
@@ -714,18 +748,24 @@ class ContentHandler {
       }
 
       try {
+        logConsole.debug(
+          "Counting ad click in page for",
+          info.telemetryId,
+          item.source,
+          originURL,
+          URL
+        );
         Services.telemetry.keyedScalarAdd(
-          SEARCH_AD_CLICKS_SCALAR,
+          SEARCH_AD_CLICKS_SCALAR_OLD,
+          `${info.telemetryId}:${item.info.oldType}`,
+          1
+        );
+        Services.telemetry.keyedScalarAdd(
+          SEARCH_AD_CLICKS_SCALAR_BASE + item.source,
           `${info.telemetryId}:${item.info.type}`,
           1
         );
         channel._adClickRecorded = true;
-        logConsole.debug(
-          "Counting ad click in page for",
-          info.telemetryId,
-          originURL,
-          URL
-        );
       } catch (e) {
         Cu.reportError(e);
       }
@@ -751,9 +791,20 @@ class ContentHandler {
       return;
     }
 
-    logConsole.debug("Counting ads in page for", item.info.provider, info.url);
+    logConsole.debug(
+      "Counting ads in page for",
+      item.info.provider,
+      item.info.type,
+      item.source,
+      info.url
+    );
     Services.telemetry.keyedScalarAdd(
-      SEARCH_WITH_ADS_SCALAR,
+      SEARCH_WITH_ADS_SCALAR_OLD,
+      `${item.info.provider}:${item.info.oldType}`,
+      1
+    );
+    Services.telemetry.keyedScalarAdd(
+      SEARCH_WITH_ADS_SCALAR_BASE + item.source,
       `${item.info.provider}:${item.info.type}`,
       1
     );

@@ -376,7 +376,7 @@ browser.engagement.navigation.*
     - ``about_newtab``
     - ``contextmenu``
     - ``webextension``
-    - ``system``
+    - ``system`` Indicates a search from the command line.
 
   Recorded actions may be:
 
