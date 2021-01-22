@@ -64,7 +64,7 @@ function* test() {
   yield undefined;
   yield undefined;
 
-  bc.postMessage("pushState");
+  bc1.postMessage("pushState");
 
   waitForLoad(2);
   waitForShow(2);
@@ -72,15 +72,16 @@ function* test() {
   yield undefined;
 
   // Now go back 2.  The first page should be retrieved from bfcache.
-  bc.postMessage("go-2");
+  bc2.postMessage("go-2");
   waitForShow(1);
   yield undefined;
 
-  bc.postMessage("close");
+  bc1.postMessage("close");
 }
 
-var bc = new BroadcastChannel("bug646641");
-bc.onmessage = (msgEvent) => {
+var bc1 = new BroadcastChannel("bug646641_1");
+var bc2 = new BroadcastChannel("bug646641_2");
+bc1.onmessage = (msgEvent) => {
   var msg = msgEvent.data.message;
   var n = msgEvent.data.num;
   if (msg == "childLoad") {
@@ -107,10 +108,14 @@ bc.onmessage = (msgEvent) => {
       ok(false, "Got unexpected pageshow " + n);
     }
   } else if (msg == "closed") {
-    bc.close();
+    bc1.close();
+    bc2.close();
     SimpleTest.finish();
   }
 }
+
+bc2.onmessage = bc1.onmessage;
+
 var gGen = test();
 gGen.next();
 

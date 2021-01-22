@@ -1,7 +1,7 @@
 <html><body>
   Popup 2
   <script type="application/javascript">
-    var bc = new BroadcastChannel("bug646641");
+    var bc = new BroadcastChannel("bug646641_2");
     window.onload = () => {
       bc.postMessage({ message: "childLoad", num: 2 })
       requestAnimationFrame(() => bc.postMessage({message: "childPageshow", num: 2}));

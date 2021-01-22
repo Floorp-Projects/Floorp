@@ -363,6 +363,7 @@ void BroadcastChannel::DisconnectFromOwner() {
 
 void BroadcastChannel::MessageReceived(const MessageData& aData) {
   if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
+    RemoveDocFromBFCache();
     return;
   }
 
