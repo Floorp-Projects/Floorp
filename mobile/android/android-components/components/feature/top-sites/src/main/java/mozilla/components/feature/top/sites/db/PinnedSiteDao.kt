@@ -42,4 +42,7 @@ internal interface PinnedSiteDao {
     @WorkerThread
     @Query("SELECT * FROM top_sites")
     fun getPinnedSites(): List<PinnedSiteEntity>
+
+    @Query("SELECT COUNT(*) FROM top_sites")
+    fun getPinnedSitesCount(): Int
 }

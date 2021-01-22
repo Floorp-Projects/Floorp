@@ -355,4 +355,28 @@ class DefaultTopSitesStorageTest {
         assertEquals("mozilla.com", frecentSiteWithNoTitle.toTopSite().title)
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
     }
+
+    @Test
+    fun `get top site count returns pinned site storage count`() = runBlockingTest {
+        val defaultTopSites = listOf(
+            Pair("Mozilla", "https://mozilla.com"),
+            Pair("Firefox", "https://firefox.com")
+        )
+
+        val defaultTopSitesStorage = DefaultTopSitesStorage(
+            pinnedSitesStorage,
+            historyStorage,
+            defaultTopSites,
+            coroutineContext
+        )
+
+        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(0)
+        assertEquals(0, defaultTopSitesStorage.getTopSitesCount())
+
+        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(1)
+        assertEquals(1, defaultTopSitesStorage.getTopSitesCount())
+
+        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(10)
+        assertEquals(10, defaultTopSitesStorage.getTopSitesCount())
+    }
 }

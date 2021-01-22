@@ -100,4 +100,8 @@ class DefaultTopSitesStorage(
 
         return topSites
     }
+
+    override suspend fun getTopSitesCount(): Int {
+        return pinnedSitesStorage.getPinnedSitesCount()
+    }
 }

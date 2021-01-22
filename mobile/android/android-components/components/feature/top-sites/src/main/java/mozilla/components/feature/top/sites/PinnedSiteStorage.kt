@@ -87,4 +87,11 @@ class PinnedSiteStorage(context: Context) {
         pinnedSite.title = title
         pinnedSiteDao.updatePinnedSite(pinnedSite)
     }
+
+    /**
+     * Returns a count of pinned sites.
+     */
+    suspend fun getPinnedSitesCount(): Int = withContext(IO) {
+        pinnedSiteDao.getPinnedSitesCount()
+    }
 }

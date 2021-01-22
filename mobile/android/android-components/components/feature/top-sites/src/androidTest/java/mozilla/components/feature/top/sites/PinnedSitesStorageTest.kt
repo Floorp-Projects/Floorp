@@ -73,6 +73,7 @@ class PinnedSitesStorageTest {
         val topSites = storage.getPinnedSites()
 
         assertEquals(4, topSites.size)
+        assertEquals(4, storage.getPinnedSitesCount())
 
         assertEquals("Mozilla", topSites[0].title)
         assertEquals("https://www.mozilla.org", topSites[0].url)
@@ -96,6 +97,7 @@ class PinnedSitesStorageTest {
         val topSites = storage.getPinnedSites()
 
         assertEquals(2, topSites.size)
+        assertEquals(2, storage.getPinnedSitesCount())
 
         assertEquals("Mozilla", topSites[0].title)
         assertEquals("https://www.mozilla.org", topSites[0].url)
@@ -112,12 +114,14 @@ class PinnedSitesStorageTest {
 
         storage.getPinnedSites().let { topSites ->
             assertEquals(2, topSites.size)
+            assertEquals(2, storage.getPinnedSitesCount())
 
             storage.removePinnedSite(topSites[0])
         }
 
         storage.getPinnedSites().let { topSites ->
             assertEquals(1, topSites.size)
+            assertEquals(1, storage.getPinnedSitesCount())
 
             assertEquals("Firefox", topSites[0].title)
             assertEquals("https://www.firefox.com", topSites[0].url)
@@ -133,6 +137,7 @@ class PinnedSitesStorageTest {
 
         assertNotNull(topSites)
         assertEquals(2, topSites.size)
+        assertEquals(2, storage.getPinnedSitesCount())
 
         with(topSites[0]) {
             assertEquals("Mozilla", title)
@@ -153,6 +158,7 @@ class PinnedSitesStorageTest {
         var pinnedSites = storage.getPinnedSites()
 
         assertEquals(1, pinnedSites.size)
+        assertEquals(1, storage.getPinnedSitesCount())
         assertEquals("https://www.mozilla.org", pinnedSites[0].url)
         assertEquals("Mozilla", pinnedSites[0].title)
 
@@ -160,6 +166,7 @@ class PinnedSitesStorageTest {
 
         pinnedSites = storage.getPinnedSites()
         assertEquals(1, pinnedSites.size)
+        assertEquals(1, storage.getPinnedSitesCount())
         assertEquals("https://www.mozilla.org", pinnedSites[0].url)
         assertEquals("", pinnedSites[0].title)
 
@@ -167,6 +174,7 @@ class PinnedSitesStorageTest {
 
         pinnedSites = storage.getPinnedSites()
         assertEquals(1, pinnedSites.size)
+        assertEquals(1, storage.getPinnedSitesCount())
         assertEquals("https://www.mozilla.org", pinnedSites[0].url)
         assertEquals("Mozilla Firefox", pinnedSites[0].title)
     }
