@@ -23,8 +23,7 @@ we manage a garbage-collected memory heap. Elements of this heap have a base
 C++ type of `gc::Cell`_. Each round of garbage collection will free up any
 *Cell* that is not referenced by a *root* or another live *Cell* in turn.
 
-Any overview of the details of the Garbage Collector (GC) can be found by
-looking for the `[SMDOC] Garbage Collector`_ comment in the sources.
+See :doc:`GC overview<gc>` for more details.
 
 
 📦 JS::Value and JSObject
@@ -175,6 +174,7 @@ Other documentation
    :maxdepth: 1
 
    build
+   gc
    Debugger/index
    SavedFrame/index
 
@@ -183,7 +183,6 @@ Other documentation
 .. _JSObject: https://searchfox.org/mozilla-central/search?q=[SMDOC]+JSObject+layout
 .. _JS::Value: https://searchfox.org/mozilla-central/search?q=[SMDOC]+JS%3A%3AValue+type&path=js%2F
 .. _[SMDOC]: https://searchfox.org/mozilla-central/search?q=[SMDOC]&path=js%2F
-.. _[SMDOC] Garbage Collector: https://searchfox.org/mozilla-central/search?q=[SMDOC]+Garbage+Collector
 .. _[SMDOC] Shapes: https://searchfox.org/mozilla-central/search?q=[SMDOC]+Shapes
 .. _[SMDOC] Bytecode Definitions: https://searchfox.org/mozilla-central/search?q=[SMDOC]+Bytecode+Definitions&path=js%2F
 .. _[SMDOC] JIT Inline Caches: https://searchfox.org/mozilla-central/search?q=[SMDOC]+JIT+Inline+Caches
