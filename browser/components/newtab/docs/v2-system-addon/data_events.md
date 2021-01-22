@@ -448,12 +448,12 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 }
 ```
 
-#### Changing preferences from about:preferences#home
+#### Changing preferences from about:preferences#home or on the customize menu on the newtab page.
 
 ```js
 {
   "event": "PREF_CHANGED",
-  "source": "TOP_STORIES|POCKET_SPOCS|HIGHLIGHTS",
+  "source": "TOP_STORIES|POCKET_SPOCS|HIGHLIGHTS|SNIPPETS|TOP_SITES|SPONSORED_TOP_SITES",
   "value": "{\"status\":true|false,\"menu_source\":\"ABOUT_PREFERENCES|CUSTOMIZE_MENU\"}"
   "release_channel": "default",
   "experiments": {},
