@@ -40,6 +40,7 @@
 #![allow(unknown_lints)]
 #![allow(bare_trait_objects)]
 #![allow(ellipsis_inclusive_range_patterns)]
+#![allow(warnings)]
 
 use std::env;
 use std::ffi::OsString;
