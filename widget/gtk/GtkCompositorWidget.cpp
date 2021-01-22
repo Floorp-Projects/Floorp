@@ -133,21 +133,15 @@ void GtkCompositorWidget::ClearBeforePaint(
   // SW-WR paints with alpha blending (see Bug 1674473).
   if (mWidget->IsPopup()) {
     for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-      LayoutDeviceIntRect r = iter.Get();
-      aTarget->FillRect(gfx::Rect(r.x, r.y, r.width, r.height),
-                        ColorPattern(DeviceColor(0, 0, 0, 0)),
-                        DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+      aTarget->ClearRect(gfx::Rect(iter.Get().ToUnknownRect()));
     }
-    aTarget->Flush();
   }
 
   // Clear background of titlebar area to render titlebar
   // transparent corners correctly.
   gfx::Rect rect;
   if (mWidget->GetTitlebarRect(rect)) {
-    aTarget->FillRect(rect, ColorPattern(DeviceColor(0, 0, 0, 0)),
-                      DrawOptions(1.0f, CompositionOp::OP_SOURCE));
-    aTarget->Flush();
+    aTarget->ClearRect(rect);
   }
 }
 
