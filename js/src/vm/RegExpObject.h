@@ -41,10 +41,6 @@ struct MatchPair;
 class MatchPairs;
 class RegExpStatics;
 
-namespace frontend {
-class TokenStreamAnyChars;
-}
-
 extern RegExpObject* RegExpAlloc(JSContext* cx, NewObjectKind newKind,
                                  HandleObject proto = nullptr);
 
@@ -82,19 +78,8 @@ class RegExpObject : public NativeObject {
                                            JS::RegExpFlags flags,
                                            NewObjectKind newKind);
 
-  template <typename CharT>
-  static RegExpObject* create(JSContext* cx, const CharT* chars, size_t length,
-                              JS::RegExpFlags flags,
-                              frontend::TokenStreamAnyChars& ts,
-                              NewObjectKind kind);
-
   static RegExpObject* create(JSContext* cx, HandleAtom source,
                               JS::RegExpFlags flags, NewObjectKind newKind);
-
-  static RegExpObject* create(JSContext* cx, HandleAtom source,
-                              JS::RegExpFlags flags,
-                              frontend::TokenStreamAnyChars& ts,
-                              NewObjectKind newKind);
 
   /*
    * Compute the initial shape to associate with fresh RegExp objects,
