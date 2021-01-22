@@ -672,7 +672,7 @@ vec2 fract(vec2 v) { return vec2(fract(v.x), fract(v.y)); }
 // + abs(dFdx(p.x)).
 vec2 fwidth(vec2 p) {
   Float d = abs(SHUFFLE(p.x, p.y, 1, 1, 5, 5) - SHUFFLE(p.x, p.y, 0, 0, 4, 4));
-  return vec2(d.xyxy + d.zwzw);
+  return vec2(d + d.zwxy);
 }
 
 // See

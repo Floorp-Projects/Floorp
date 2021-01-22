@@ -83,7 +83,8 @@ void main(void) {
 
     write_clip(
         world_pos,
-        clip_area
+        clip_area,
+        dest_task
     );
 
     gl_Position = uTransform * final_pos;
@@ -128,7 +129,7 @@ void swgl_drawSpanRGBA8() {
 
     vec2 uv = vUv * perspective_divisor;
 
-    if (!needs_clip() && swgl_allowTextureNearest(sColor0, uv)) {
+    if (swgl_allowTextureNearest(sColor0, uv)) {
         swgl_commitTextureNearestRGBA8(sColor0, uv, vUvSampleBounds, 0);
         return;
     }
@@ -138,18 +139,9 @@ void swgl_drawSpanRGBA8() {
     vec2 max_uv = swgl_linearQuantize(sColor0, vUvSampleBounds.zw);
     vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(vUv)) * perspective_divisor;
 
-    if (needs_clip()) {
-        while (swgl_SpanLength > 0) {
-            float alpha = do_clip();
-            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);
-            uv += step_uv;
-            vClipMaskUv += swgl_interpStep(vClipMaskUv);
-        }
-    } else {
-        while (swgl_SpanLength > 0) {
-            swgl_commitTextureLinearRGBA8(sColor0, clamp(uv, min_uv, max_uv), 0);
-            uv += step_uv;
-        }
+    while (swgl_SpanLength > 0) {
+        swgl_commitTextureLinearRGBA8(sColor0, clamp(uv, min_uv, max_uv), 0);
+        uv += step_uv;
     }
 }
 #endif
