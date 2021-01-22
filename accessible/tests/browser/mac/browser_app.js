@@ -199,12 +199,14 @@ add_task(async () => {
         Assert.ok(Services.search.isInitialized);
       }
 
+      const hasContainers =
+        Services.prefs.getBoolPref("privacy.userContext.enabled") &&
+        ContextualIdentityService.getPublicIdentities().length;
+
       // synthesize a right click on the link to open the link context menu
       let menu = document.getElementById("contentAreaContextMenu");
-      await BrowserTestUtils.synthesizeMouse(
+      await BrowserTestUtils.synthesizeMouseAtCenter(
         "#exampleLink",
-        2,
-        2,
         { type: "contextmenu" },
         browser
       );
@@ -212,16 +214,19 @@ add_task(async () => {
 
       menu = await getMacAccessible(menu);
       let menuChildren = menu.getAttributeValue("AXChildren");
-      // menu contains 12 items and 3 splitters for 15 items total
+      // menu contains 14 items when containers disabled, 15 items otherwise
+      const expectedChildCount = hasContainers ? 15 : 14;
       is(
         menuChildren.length,
-        15,
-        "Context menu on link contains fifteen items"
+        expectedChildCount,
+        "Context menu on link contains 14 or 15 items depending on release"
       );
-
+      // items at indicies 4, 10, and 12 are the splitters when containers exist
+      // everything else should be a menu item, otherwise indicies of splitters are
+      // 3, 9, and 11
+      const splitterIndicies = hasContainers ? [4, 10, 12] : [3, 9, 11];
       for (let i = 0; i < menuChildren.length; i++) {
-        // items at indicies 4, 10, and 12 are the splitters, everything else should be a menu item
-        if (i == 4 || i == 10 || i == 12) {
+        if (splitterIndicies.includes(i)) {
           is(
             menuChildren[i].getAttributeValue("AXRole"),
             "AXSplitter",
@@ -236,53 +241,50 @@ add_task(async () => {
         }
       }
 
-      // submenus are at indicies 1 and 10
-      // first check they have no children when hidden
-      is(
-        menuChildren[1].getAttributeValue("AXVisibleChildren"),
-        null,
-        "Submenu 1 has no visible chldren when hidden"
-      );
-      is(
-        menuChildren[11].getAttributeValue("AXVisibleChildren"),
-        null,
-        "Submenu 2 has no visible chldren when hidden"
-      );
+      // check the containers sub menu in depth if it exists
+      if (hasContainers) {
+        is(
+          menuChildren[1].getAttributeValue("AXVisibleChildren"),
+          null,
+          "Submenu 1 has no visible chldren when hidden"
+        );
 
-      // focus the first submenu
-      EventUtils.synthesizeKey("KEY_ArrowDown");
-      EventUtils.synthesizeKey("KEY_ArrowDown");
-      EventUtils.synthesizeKey("KEY_ArrowRight");
-      await waitForMacEvent("AXMenuOpened");
+        // focus the first submenu
+        EventUtils.synthesizeKey("KEY_ArrowDown");
+        EventUtils.synthesizeKey("KEY_ArrowDown");
+        EventUtils.synthesizeKey("KEY_ArrowRight");
+        await waitForMacEvent("AXMenuOpened");
 
-      // after the submenu is opened, refetch it
-      menu = document.getElementById("contentAreaContextMenu");
-      menu = await getMacAccessible(menu);
-      menuChildren = menu.getAttributeValue("AXChildren");
+        // after the submenu is opened, refetch it
+        menu = document.getElementById("contentAreaContextMenu");
+        menu = await getMacAccessible(menu);
+        menuChildren = menu.getAttributeValue("AXChildren");
 
-      // verify submenu-menuitem's attributes
-      is(
-        menuChildren[1].getAttributeValue("AXChildren").length,
-        1,
-        "Submenu 1 has one child when open"
-      );
-      const subMenu = menuChildren[1].getAttributeValue("AXChildren")[0];
-      is(
-        subMenu.getAttributeValue("AXRole"),
-        "AXMenu",
-        "submenu has role of menu"
-      );
-      const subMenuChildren = subMenu.getAttributeValue("AXChildren");
-      is(subMenuChildren.length, 4, "sub menu has 4 children");
-      is(
-        subMenu.getAttributeValue("AXVisibleChildren").length,
-        4,
-        "submenu has 4 visible children"
-      );
+        // verify submenu-menuitem's attributes
+        is(
+          menuChildren[1].getAttributeValue("AXChildren").length,
+          1,
+          "Submenu 1 has one child when open"
+        );
+        const subMenu = menuChildren[1].getAttributeValue("AXChildren")[0];
+        is(
+          subMenu.getAttributeValue("AXRole"),
+          "AXMenu",
+          "submenu has role of menu"
+        );
+        const subMenuChildren = subMenu.getAttributeValue("AXChildren");
+        is(subMenuChildren.length, 4, "sub menu has 4 children");
+        is(
+          subMenu.getAttributeValue("AXVisibleChildren").length,
+          4,
+          "submenu has 4 visible children"
+        );
 
-      // close context menu
-      EventUtils.synthesizeKey("KEY_Escape");
-      await waitForMacEvent("AXMenuClosed");
+        // close context menu
+        EventUtils.synthesizeKey("KEY_Escape");
+        await waitForMacEvent("AXMenuClosed");
+      }
+
       EventUtils.synthesizeKey("KEY_Escape");
       await waitForMacEvent("AXMenuClosed");
     }
