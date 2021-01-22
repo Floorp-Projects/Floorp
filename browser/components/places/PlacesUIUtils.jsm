@@ -1342,6 +1342,12 @@ var PlacesUIUtils = {
     }
     let document = menupopup.ownerDocument;
     menupopup._view = this.getViewForNode(document.popupNode);
+    if (!menupopup._view) {
+      // This can happen if we try to invoke the context menu on
+      // an uninitialized places toolbar. Just bail out:
+      event.preventDefault();
+      return false;
+    }
     if (!this.openInTabClosesMenu) {
       document
         .getElementById("placesContext_open:newtab")
@@ -1551,6 +1557,15 @@ var PlacesUIUtils = {
     return this._defaultParentGuid;
   },
 };
+
+/**
+ * Promise used by the toolbar view browser-places to determine whether we
+ * can start loading its content (which involves IO, and so is postponed
+ * during startup).
+ */
+PlacesUIUtils.canLoadToolbarContentPromise = new Promise(resolve => {
+  PlacesUIUtils.unblockToolbars = resolve;
+});
 
 // These are lazy getters to avoid importing PlacesUtils immediately.
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "PLACES_FLAVORS", () => {
