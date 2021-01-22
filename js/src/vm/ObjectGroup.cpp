@@ -214,10 +214,6 @@ class ObjectGroupRealm::NewTable
   explicit NewTable(Zone* zone) : Base(zone) {}
 };
 
-/* static*/ ObjectGroupRealm& ObjectGroupRealm::get(const ObjectGroup* group) {
-  return group->realm()->objectGroups_;
-}
-
 /* static*/ ObjectGroupRealm& ObjectGroupRealm::getForNewObject(JSContext* cx) {
   return cx->realm()->objectGroups_;
 }
