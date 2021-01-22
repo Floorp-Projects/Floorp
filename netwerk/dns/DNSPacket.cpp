@@ -62,7 +62,7 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
         length -= 2;
         svcbIndex += 2;
 
-        if (mandatoryKey > SvcParamKeyLast) {
+        if (!IsValidSvcParamKey(mandatoryKey)) {
           LOG(("The mandatory field includes a key we don't support %u",
                mandatoryKey));
           return NS_ERROR_UNEXPECTED;
@@ -149,6 +149,11 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
         length -= 16;
         // no need to increase svcbIndex - we did it in the for above.
       }
+      break;
+    }
+    case SvcParamKeyODoHConfig: {
+      field.mValue = AsVariant(SvcParamODoHConfig{
+          .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
       break;
     }
     default: {
@@ -713,7 +718,7 @@ nsresult DNSPacket::Decode(
 
             // If this is an unknown key, we will simply ignore it.
             // We also don't need to record SvcParamKeyMandatory
-            if (key == SvcParamKeyMandatory || key > SvcParamKeyLast) {
+            if (key == SvcParamKeyMandatory || !IsValidSvcParamKey(key)) {
               continue;
             }
 
@@ -724,6 +729,9 @@ nsresult DNSPacket::Decode(
             if (value.mValue.is<SvcParamEchConfig>()) {
               parsed.mHasEchConfig = true;
               parsed.mEchConfig = value.mValue.as<SvcParamEchConfig>().mValue;
+            }
+            if (value.mValue.is<SvcParamODoHConfig>()) {
+              parsed.mODoHConfig = value.mValue.as<SvcParamODoHConfig>().mValue;
             }
             parsed.mSvcFieldValue.AppendElement(value);
           }

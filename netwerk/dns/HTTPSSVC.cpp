@@ -20,7 +20,8 @@ class SvcParam : public nsISVCParam,
                  public nsISVCParamPort,
                  public nsISVCParamIPv4Hint,
                  public nsISVCParamEchConfig,
-                 public nsISVCParamIPv6Hint {
+                 public nsISVCParamIPv6Hint,
+                 public nsISVCParamODoHConfig {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISVCPARAM
   NS_DECL_NSISVCPARAMALPN
@@ -29,6 +30,7 @@ class SvcParam : public nsISVCParam,
   NS_DECL_NSISVCPARAMIPV4HINT
   NS_DECL_NSISVCPARAMECHCONFIG
   NS_DECL_NSISVCPARAMIPV6HINT
+  NS_DECL_NSISVCPARAMODOHCONFIG
  public:
   explicit SvcParam(const SvcParamType& value) : mValue(value){};
 
@@ -52,6 +54,8 @@ NS_INTERFACE_MAP_BEGIN(SvcParam)
                                      mValue.is<SvcParamEchConfig>())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISVCParamIPv6Hint,
                                      mValue.is<SvcParamIpv6Hint>())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISVCParamODoHConfig,
+                                     mValue.is<SvcParamODoHConfig>())
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -63,7 +67,8 @@ SvcParam::GetType(uint16_t* aType) {
       [](SvcParamPort&) { return SvcParamKeyPort; },
       [](SvcParamIpv4Hint&) { return SvcParamKeyIpv4Hint; },
       [](SvcParamEchConfig&) { return SvcParamKeyEchConfig; },
-      [](SvcParamIpv6Hint&) { return SvcParamKeyIpv6Hint; });
+      [](SvcParamIpv6Hint&) { return SvcParamKeyIpv6Hint; },
+      [](SvcParamODoHConfig&) { return SvcParamKeyODoHConfig; });
   return NS_OK;
 }
 
@@ -129,6 +134,16 @@ SvcParam::GetIpv6Hint(nsTArray<RefPtr<nsINetAddr>>& aIpv6Hint) {
     RefPtr<nsINetAddr> hint = new nsNetAddr(&ip);
     aIpv6Hint.AppendElement(hint);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SvcParam::GetODoHConfig(nsACString& aODoHConfig) {
+  if (!mValue.is<SvcParamODoHConfig>()) {
+    MOZ_ASSERT(false, "Unexpected type for variant");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  aODoHConfig = mValue.as<SvcParamODoHConfig>().mValue;
   return NS_OK;
 }
 
@@ -218,6 +233,11 @@ Maybe<Tuple<nsCString, bool>> SVCBRecord::GetAlpn() { return mAlpn; }
 
 NS_IMETHODIMP SVCBRecord::GetEchConfig(nsACString& aEchConfig) {
   aEchConfig = mData.mEchConfig;
+  return NS_OK;
+}
+
+NS_IMETHODIMP SVCBRecord::GetODoHConfig(nsACString& aODoHConfig) {
+  aODoHConfig = mData.mODoHConfig;
   return NS_OK;
 }
 
