@@ -130,6 +130,17 @@ class ChunkPool {
   };
 };
 
+class BackgroundMarkTask : public GCParallelTask {
+ public:
+  explicit BackgroundMarkTask(GCRuntime* gc)
+      : GCParallelTask(gc), budget(SliceBudget::unlimited()) {}
+  void setBudget(const SliceBudget& budget) { this->budget = budget; }
+  void run(AutoLockHelperThreadState& lock) override;
+
+ private:
+  SliceBudget budget;
+};
+
 class BackgroundUnmarkTask : public GCParallelTask {
  public:
   explicit BackgroundUnmarkTask(GCRuntime* gc) : GCParallelTask(gc) {}
@@ -175,17 +186,6 @@ class BackgroundDecommitTask : public GCParallelTask {
   explicit BackgroundDecommitTask(GCRuntime* gc) : GCParallelTask(gc) {}
 
   void run(AutoLockHelperThreadState& lock) override;
-};
-
-class SweepMarkTask : public GCParallelTask {
- public:
-  explicit SweepMarkTask(GCRuntime* gc)
-      : GCParallelTask(gc), budget(SliceBudget::unlimited()) {}
-  void setBudget(const SliceBudget& budget) { this->budget = budget; }
-  void run(AutoLockHelperThreadState& lock) override;
-
- private:
-  SliceBudget budget;
 };
 
 template <typename F>
@@ -727,7 +727,7 @@ class GCRuntime {
   void maybeDoCycleCollection();
   void findDeadCompartments();
 
-  friend class SweepMarkTask;
+  friend class BackgroundMarkTask;
   IncrementalProgress markUntilBudgetExhausted(
       SliceBudget& sliceBudget,
       GCMarker::ShouldReportMarkTime reportTime = GCMarker::ReportMarkTime);
@@ -829,7 +829,7 @@ class GCRuntime {
   void finishCollection();
   void maybeStopStringPretenuring();
   void checkGCStateNotInUse();
-  IncrementalProgress joinSweepMarkTask();
+  IncrementalProgress joinBackgroundMarkTask();
 
 #ifdef JS_GC_ZEAL
   void computeNonIncrementalMarkingForValidation(AutoGCSession& session);
@@ -1202,10 +1202,10 @@ class GCRuntime {
 
   BackgroundAllocTask allocTask;
   BackgroundUnmarkTask unmarkTask;
+  BackgroundMarkTask markTask;
   BackgroundSweepTask sweepTask;
   BackgroundFreeTask freeTask;
   BackgroundDecommitTask decommitTask;
-  SweepMarkTask sweepMarkTask;
 
   /*
    * During incremental sweeping, this field temporarily holds the arenas of
