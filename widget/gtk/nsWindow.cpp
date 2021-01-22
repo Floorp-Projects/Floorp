@@ -1779,8 +1779,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   }
 #endif
 
-  if (isWidgetVisible &&
-      !g_signal_handler_find(
+  if (!g_signal_handler_find(
           gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
           FuncToGpointer(NativeMoveResizeWaylandPopupCallback), this)) {
     g_signal_connect(gdkWindow, "moved-to-rect",
