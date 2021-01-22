@@ -87,7 +87,7 @@
     /// This range represents a coefficient to go from one CSS pixel to half a device pixel.
     float compute_aa_range(vec2 position) {
         // The constant factor is chosen to compensate for the fact that length(fw) is equal
-        // to sqrt(2) times the device pixel ratio in the typical case. 0.5/sqrt(2) = 0.35355.
+        // to sqrt(2) times the device pixel ratio in the typical case. 1/sqrt(2) = 0.7071.
         //
         // This coefficient is chosen to ensure that any sample 0.5 pixels or more inside of
         // the shape has no anti-aliasing applied to it (since pixels are sampled at their center,
@@ -102,7 +102,13 @@
         // We may want to adjust this constant in specific scenarios (for example keep the principled
         // value for straight edges where we want pixel-perfect equivalence with non antialiased lines
         // when axis aligned, while selecting a larger and smoother aa range on curves).
-        return 0.35355 * length(fwidth(position));
+        #ifdef SWGL
+            // SWGL uses an approximation for fwidth() such that it returns equal x and y.
+            // Thus, 1/sqrt(2) * length((x,y)) = 1/sqrt(2) * sqrt(x*x + x*x) = x.
+            return fwidth(position).x;
+        #else
+            return 0.7071 * length(fwidth(position));
+        #endif
     }
 
     /// Return the blending coefficient for distance antialiasing.
@@ -123,12 +129,12 @@
     /// See the comments in `compute_aa_range()` for more information on the
     /// cutoff values of -0.5 and 0.5.
     float distance_aa(float aa_range, float signed_distance) {
-        float dist = 0.5 * signed_distance / aa_range;
-        if (dist <= -0.5 + EPSILON)
-            return 1.0;
-        if (dist >= 0.5 - EPSILON)
-            return 0.0;
-        return 0.5 + dist * (0.8431027 * dist * dist - 1.14453603);
+        float dist = signed_distance / aa_range;
+        bool inside = dist <= -0.5 + EPSILON;
+        bool outside = dist >= 0.5 - EPSILON;
+        return inside || outside
+            ? float(inside)
+            : 0.5 + dist * (0.8431027 * dist * dist - 1.14453603);
     }
 
     /// Component-wise selection.
