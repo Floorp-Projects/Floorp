@@ -91,6 +91,12 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy* parent,
   rv = printSettingsSvc->SerializeToPrintData(printSettings, &inSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIPrintSession> session;
+  rv = printSettings->GetPrintSession(getter_AddRefs(session));
+  if (NS_SUCCEEDED(rv) && session) {
+    inSettings.remotePrintJobChild() = session->GetRemotePrintJob();
+  }
+
   // Now, the waiting game. The parent process should be showing
   // the printing dialog soon. In the meantime, we need to spin a
   // nested event loop while we wait for the results of the dialog
