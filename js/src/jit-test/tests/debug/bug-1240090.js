@@ -1,9 +1,8 @@
 gczeal(2);
-g = newGlobal({newCompartment: true});
+g = newGlobal({newCompartment: true, disableLazyParsing: true});
 dbg = Debugger(g);
 dbg.onNewScript = function() { return function() { return this; } };
 schedulegc(10);
-g.eval("setLazyParsingDisabled(true)");
 g.evaluate("function one() {}");
 g.evaluate(`
            function target () {}

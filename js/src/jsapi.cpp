@@ -1830,13 +1830,15 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setCoopAndCoepEnabled(
   return *this;
 }
 
-JS::RealmBehaviors& JS::RealmBehaviorsRef(JS::Realm* realm) {
+const JS::RealmBehaviors& JS::RealmBehaviorsRef(JS::Realm* realm) {
   return realm->behaviors();
 }
 
-JS::RealmBehaviors& JS::RealmBehaviorsRef(JSContext* cx) {
+const JS::RealmBehaviors& JS::RealmBehaviorsRef(JSContext* cx) {
   return cx->realm()->behaviors();
 }
+
+void JS::SetRealmNonLive(Realm* realm) { realm->setNonLive(); }
 
 JS_PUBLIC_API JSObject* JS_NewGlobalObject(JSContext* cx, const JSClass* clasp,
                                            JSPrincipals* principals,

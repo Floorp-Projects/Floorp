@@ -8,6 +8,7 @@
 #define PreXULSkeletonUI_h_
 
 #include <windows.h>
+#include "mozilla/EnumSet.h"
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
 
@@ -43,10 +44,17 @@ struct SkeletonUISettings {
   Vector<CSSPixelSpan> springs;
   bool maximized;
   bool menubarShown;
+  bool bookmarksToolbarShown;
   bool rtlEnabled;
 };
 
 enum class ThemeMode : uint32_t { Invalid, Default, Dark, Light };
+
+enum class SkeletonUIFlag : uint8_t {
+  MenubarShown,
+  BookmarksToolbarShown,
+  RtlEnabled,
+};
 
 struct ThemeColors {
   uint32_t backgroundColor;

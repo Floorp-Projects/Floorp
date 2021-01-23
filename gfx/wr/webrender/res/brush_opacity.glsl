@@ -87,7 +87,7 @@ void swgl_drawSpanRGBA8() {
     vec2 uv = v_uv * perspective_divisor;
 
     #ifndef WR_FEATURE_ANTIALIASING
-    if (!needs_clip() && swgl_allowTextureNearest(sColor0, uv)) {
+    if (swgl_allowTextureNearest(sColor0, uv)) {
         swgl_commitTextureNearestColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_opacity, 0);
         return;
     }
@@ -98,27 +98,14 @@ void swgl_drawSpanRGBA8() {
     vec2 max_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.zw);
     vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(v_uv)) * perspective_divisor;
 
-    if (needs_clip()) {
-        while (swgl_SpanLength > 0) {
-            float alpha = v_opacity * do_clip();
-            #ifdef WR_FEATURE_ANTIALIASING
-                alpha *= init_transform_fs(v_local_pos);
-                v_local_pos += swgl_interpStep(v_local_pos);
-            #endif
-            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);
-            uv += step_uv;
-            vClipMaskUv += swgl_interpStep(vClipMaskUv);
-        }
-    } else {
-        while (swgl_SpanLength > 0) {
-            float alpha = v_opacity;
-            #ifdef WR_FEATURE_ANTIALIASING
-                alpha *= init_transform_fs(v_local_pos);
-                v_local_pos += swgl_interpStep(v_local_pos);
-            #endif
-            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);
-            uv += step_uv;
-        }
+    while (swgl_SpanLength > 0) {
+        float alpha = v_opacity;
+        #ifdef WR_FEATURE_ANTIALIASING
+            alpha *= init_transform_fs(v_local_pos);
+            v_local_pos += swgl_interpStep(v_local_pos);
+        #endif
+        swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);
+        uv += step_uv;
     }
 }
 #endif

@@ -21,11 +21,12 @@ vec2 clamp_rect(vec2 pt, RectWithSize rect) {
     return clamp(pt, rect.p0, rect.p0 + rect.size);
 }
 
+#ifndef SWGL
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
 // XY and W are homogeneous coordinates, Z is the layer index
 varying vec4 vClipMaskUv;
-
+#endif
 
 #ifdef WR_VERTEX_SHADER
 
@@ -217,7 +218,15 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     return vi;
 }
 
-void write_clip(vec4 world_pos, ClipArea area) {
+void write_clip(vec4 world_pos, ClipArea area, PictureTask task) {
+#ifdef SWGL
+    swgl_clipMask(
+        sClipMask,
+        (task.common_data.task_rect.p0 - task.content_origin) - (area.common_data.task_rect.p0 - area.screen_origin),
+        area.common_data.task_rect.p0,
+        area.common_data.task_rect.size
+    );
+#else
     vec2 uv = world_pos.xy * area.device_pixel_scale +
         world_pos.w * (area.common_data.task_rect.p0 - area.screen_origin);
     vClipMaskUvBounds = vec4(
@@ -225,6 +234,7 @@ void write_clip(vec4 world_pos, ClipArea area) {
         area.common_data.task_rect.p0 + area.common_data.task_rect.size
     );
     vClipMaskUv = vec4(uv, area.common_data.texture_layer_index, world_pos.w);
+#endif
 }
 
 // Read the exta image data containing the homogeneous screen space coordinates
@@ -247,11 +257,12 @@ struct Fragment {
 #endif
 };
 
-bool needs_clip() {
-    return vClipMaskUvBounds.xy != vClipMaskUvBounds.zw;
-}
-
 float do_clip() {
+#ifdef SWGL
+    // SWGL relies on builtin clip-mask support to do this more efficiently,
+    // so no clipping is required here.
+    return 1.0;
+#else
     // check for the dummy bounds, which are given to the opaque objects
     if (vClipMaskUvBounds.xy == vClipMaskUvBounds.zw) {
         return 1.0;
@@ -267,6 +278,7 @@ float do_clip() {
     }
     // finally, the slow path - fetch the mask value from an image
     return texelFetch(sClipMask, ivec2(mask_uv), 0).r;
+#endif
 }
 
 #ifdef WR_FEATURE_DITHERING

@@ -15,6 +15,8 @@
 @interface MOXTextMarkerDelegate : NSObject <MOXTextMarkerSupport> {
   mozilla::a11y::AccessibleOrProxy mGeckoDocAccessible;
   id mSelection;
+  id mCaret;
+  id mPrevCaret;
 }
 
 + (id)getOrCreateForDoc:(mozilla::a11y::AccessibleOrProxy)aDoc;
@@ -30,11 +32,14 @@
                       to:(mozilla::a11y::AccessibleOrProxy)endContainer
                       at:(int32_t)endOffset;
 
+- (void)setCaretOffset:(mozilla::a11y::AccessibleOrProxy)container
+                    at:(int32_t)offset;
+
+- (NSDictionary*)selectionChangeInfo;
+
 - (void)invalidateSelection;
 
 - (mozilla::a11y::GeckoTextMarkerRange)selection;
-
-- (BOOL)selectionIsCollapsed;
 
 // override
 - (id)moxStartTextMarker;
@@ -107,3 +112,47 @@
 - (void)moxSetSelectedTextMarkerRange:(id)textMarkerRange;
 
 @end
+
+namespace mozilla {
+namespace a11y {
+
+enum AXTextEditType {
+  AXTextEditTypeUnknown,
+  AXTextEditTypeDelete,
+  AXTextEditTypeInsert,
+  AXTextEditTypeTyping,
+  AXTextEditTypeDictation,
+  AXTextEditTypeCut,
+  AXTextEditTypePaste,
+  AXTextEditTypeAttributesChange
+};
+
+enum AXTextStateChangeType {
+  AXTextStateChangeTypeUnknown,
+  AXTextStateChangeTypeEdit,
+  AXTextStateChangeTypeSelectionMove,
+  AXTextStateChangeTypeSelectionExtend
+};
+
+enum AXTextSelectionDirection {
+  AXTextSelectionDirectionUnknown,
+  AXTextSelectionDirectionBeginning,
+  AXTextSelectionDirectionEnd,
+  AXTextSelectionDirectionPrevious,
+  AXTextSelectionDirectionNext,
+  AXTextSelectionDirectionDiscontiguous
+};
+
+enum AXTextSelectionGranularity {
+  AXTextSelectionGranularityUnknown,
+  AXTextSelectionGranularityCharacter,
+  AXTextSelectionGranularityWord,
+  AXTextSelectionGranularityLine,
+  AXTextSelectionGranularitySentence,
+  AXTextSelectionGranularityParagraph,
+  AXTextSelectionGranularityPage,
+  AXTextSelectionGranularityDocument,
+  AXTextSelectionGranularityAll
+};
+}
+}

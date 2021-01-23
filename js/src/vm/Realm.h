@@ -495,8 +495,13 @@ class JS::Realm : public JS::shadow::Realm {
   const JS::RealmCreationOptions& creationOptions() const {
     return creationOptions_;
   }
-  JS::RealmBehaviors& behaviors() { return behaviors_; }
+
+  // NOTE: Do not provide accessor for mutable reference.
+  // Modifying RealmBehaviors after creating a realm can result in
+  // inconsistency.
   const JS::RealmBehaviors& behaviors() const { return behaviors_; }
+
+  void setNonLive() { behaviors_.setNonLive(); }
 
   /* Whether to preserve JIT code on non-shrinking GCs. */
   bool preserveJitCode() { return creationOptions_.preserveJitCode(); }

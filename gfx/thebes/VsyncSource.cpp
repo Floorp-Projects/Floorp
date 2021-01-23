@@ -75,7 +75,8 @@ VsyncSource::GetRefreshTimerVsyncDispatcher() {
 
 VsyncSource::Display::Display()
     : mDispatcherLock("display dispatcher lock"),
-      mRefreshTimerNeedsVsync(false) {
+      mRefreshTimerNeedsVsync(false),
+      mHasGenericObservers(false) {
   MOZ_ASSERT(NS_IsMainThread());
   mRefreshTimerVsyncDispatcher = new RefreshTimerVsyncDispatcher(this);
 }
@@ -105,6 +106,7 @@ void VsyncSource::Display::NotifyVsync(const TimeStamp& aVsyncTimestamp,
   // hasn't been processed yet, then don't send another one. Otherwise we might
   // end up flooding the main thread.
   bool dispatchToMainThread =
+      mHasGenericObservers &&
       (mLastVsyncIdSentToMainThread == mLastMainThreadProcessedVsyncId);
 
   mVsyncId = mVsyncId.Next();
@@ -250,6 +252,7 @@ void VsyncSource::Display::UpdateVsyncStatus() {
     MutexAutoLock lock(mDispatcherLock);
     enableVsync = !mEnabledCompositorVsyncDispatchers.IsEmpty() ||
                   mRefreshTimerNeedsVsync || !mGenericObservers.IsEmpty();
+    mHasGenericObservers = !mGenericObservers.IsEmpty();
   }
 
   if (enableVsync) {

@@ -828,6 +828,9 @@ bool CompilationStencilSet::instantiateStencilsAfterPreparation(
     return false;
   }
 
+  CompilationAtomCache::AtomCacheVector reusableAtomCache;
+  input.atomCache.releaseBuffer(reusableAtomCache);
+
   for (size_t i = 0; i < delazifications.length(); i++) {
     auto& delazification = delazifications[i];
     auto index = delazificationIndices[i];
@@ -847,7 +850,7 @@ bool CompilationStencilSet::instantiateStencilsAfterPreparation(
         cx, CompilationInput(input.options));
     delazificationInput.get().initFromLazy(lazy);
 
-    delazificationInput.get().atomCache.stealBuffer(delazificationAtomCache);
+    delazificationInput.get().atomCache.stealBuffer(reusableAtomCache);
 
     if (!CompilationStencil::prepareGCOutputForInstantiate(
             cx, delazification, gcOutputForDelazification)) {
@@ -863,8 +866,10 @@ bool CompilationStencilSet::instantiateStencilsAfterPreparation(
     gcOutputForDelazification.functions.clear();
     gcOutputForDelazification.scopes.clear();
 
-    delazificationInput.get().atomCache.returnBuffer(delazificationAtomCache);
+    delazificationInput.get().atomCache.releaseBuffer(reusableAtomCache);
   }
+
+  input.atomCache.stealBuffer(reusableAtomCache);
 
   return true;
 }
@@ -934,8 +939,7 @@ bool CompilationStencilSet::prepareForInstantiate(
     }
   }
 
-  if (!delazificationAtomCache.resize(maxParserAtomDataLength)) {
-    ReportOutOfMemory(cx);
+  if (!input.atomCache.extendIfNecessary(cx, maxParserAtomDataLength)) {
     return false;
   }
   if (!gcOutput.functions.reserve(maxScriptDataLength)) {
@@ -2101,13 +2105,26 @@ bool CompilationAtomCache::allocate(JSContext* cx, size_t length) {
   return true;
 }
 
+bool CompilationAtomCache::extendIfNecessary(JSContext* cx, size_t length) {
+  if (length <= atoms_.length()) {
+    return true;
+  }
+
+  if (!atoms_.resize(length)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
+}
+
 void CompilationAtomCache::stealBuffer(AtomCacheVector& atoms) {
   atoms_ = std::move(atoms);
   // Destroy elements, without unreserving.
   atoms_.clear();
 }
 
-void CompilationAtomCache::returnBuffer(AtomCacheVector& atoms) {
+void CompilationAtomCache::releaseBuffer(AtomCacheVector& atoms) {
   atoms = std::move(atoms_);
 }
 

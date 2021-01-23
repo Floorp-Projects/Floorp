@@ -81,7 +81,8 @@ GeckoTextMarker::GeckoTextMarker(AccessibleOrProxy aDoc,
                                  AXTextMarkerRef aTextMarker) {
   MOZ_ASSERT(!aDoc.IsNull());
   OpaqueGeckoTextMarker opaqueMarker;
-  if (AXTextMarkerGetLength(aTextMarker) == sizeof(OpaqueGeckoTextMarker)) {
+  if (aTextMarker &&
+      AXTextMarkerGetLength(aTextMarker) == sizeof(OpaqueGeckoTextMarker)) {
     memcpy(&opaqueMarker, AXTextMarkerGetBytePtr(aTextMarker),
            sizeof(OpaqueGeckoTextMarker));
     if (DocumentExists(aDoc, opaqueMarker.mDoc)) {

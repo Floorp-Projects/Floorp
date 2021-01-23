@@ -6574,6 +6574,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       behaviors.setDisableLazyParsing(v.toBoolean());
     }
 
+    if (!JS_GetProperty(cx, opts, "discardSource", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      behaviors.setDiscardSource(v.toBoolean());
+    }
+
     if (!JS_GetProperty(cx, opts, "useWindowProxy", &v)) {
       return false;
     }
@@ -9039,6 +9046,8 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      invisibleToDebugger: If true, the global will be invisible to the\n"
 "         debugger (default false)\n"
 "      disableLazyParsing: If true, don't create lazy scripts for functions\n"
+"         (default false).\n"
+"      discardSource: If true, discard source after compiling a script\n"
 "         (default false).\n"
 "      useWindowProxy: the global will be created with a WindowProxy attached. In this\n"
 "          case, the WindowProxy will be returned.\n"

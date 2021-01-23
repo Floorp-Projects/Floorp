@@ -99,6 +99,7 @@ class VsyncSource {
     VsyncId mVsyncId;
     VsyncId mLastVsyncIdSentToMainThread;     // hold mDispatcherLock to touch
     VsyncId mLastMainThreadProcessedVsyncId;  // hold mDispatcherLock to touch
+    bool mHasGenericObservers;                // hold mDispatcherLock to touch
   };
 
   void EnableCompositorVsyncDispatcher(
