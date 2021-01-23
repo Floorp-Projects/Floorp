@@ -14894,10 +14894,9 @@ void Document::UpdateVisibilityState(DispatchVisibilityChange aDispatchEvent) {
                                            CanBubble::eYes, Cancelable::eNo);
     }
     EnumerateActivityObservers(NotifyActivityChanged);
-  }
-
-  if (mVisibilityState == dom::VisibilityState::Visible) {
-    MaybeActiveMediaComponents();
+    if (mVisibilityState == dom::VisibilityState::Visible) {
+      MaybeActiveMediaComponents();
+    }
   }
 }
 
