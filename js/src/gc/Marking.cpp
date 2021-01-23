@@ -2120,35 +2120,20 @@ MarkStack::~MarkStack() {
   MOZ_ASSERT(iteratorCount_ == 0);
 }
 
-bool MarkStack::init(JSGCMode gcMode, StackType which) {
+bool MarkStack::init(StackType which, bool incrementalGCEnabled) {
   MOZ_ASSERT(isEmpty());
-
-  return setCapacityForMode(gcMode, which);
+  return setStackCapacity(which, incrementalGCEnabled);
 }
 
-void MarkStack::setGCMode(JSGCMode gcMode) {
-  // Ignore failure to resize the stack and keep using the existing stack.
-  mozilla::Unused << setCapacityForMode(gcMode, MainStack);
-}
-
-bool MarkStack::setCapacityForMode(JSGCMode mode, StackType which) {
+bool MarkStack::setStackCapacity(StackType which, bool incrementalGCEnabled) {
   size_t capacity;
 
   if (which == AuxiliaryStack) {
     capacity = SMALL_MARK_STACK_BASE_CAPACITY;
+  } else if (incrementalGCEnabled) {
+    capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
   } else {
-    switch (mode) {
-      case JSGC_MODE_GLOBAL:
-      case JSGC_MODE_ZONE:
-        capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-        break;
-      case JSGC_MODE_INCREMENTAL:
-      case JSGC_MODE_ZONE_INCREMENTAL:
-        capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-        break;
-      default:
-        MOZ_CRASH("bad gc mode");
-    }
+    capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
   }
 
   if (capacity > maxCapacity_) {
@@ -2352,9 +2337,10 @@ GCMarker::GCMarker(JSRuntime* rt)
   setMarkColorUnchecked(MarkColor::Black);
 }
 
-bool GCMarker::init(JSGCMode gcMode) {
-  return stack.init(gcMode, gc::MarkStack::MainStack) &&
-         auxStack.init(gcMode, gc::MarkStack::AuxiliaryStack);
+bool GCMarker::init() {
+  bool incrementalGCEnabled = runtime()->gc.isIncrementalGCEnabled();
+  return stack.init(gc::MarkStack::MainStack, incrementalGCEnabled) &&
+         auxStack.init(gc::MarkStack::AuxiliaryStack, incrementalGCEnabled);
 }
 
 void GCMarker::start() {
