@@ -1,0 +1,780 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs permissions test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const URL1 =
+  "http://www.example.com/tests/toolkit/components/extensions/test/mochitest/file_tabs_permission_page1.html";
+const URL2 =
+  "http://example.net/tests/toolkit/components/extensions/test/mochitest/file_tabs_permission_page2.html";
+
+const helperExtensionDef = {
+  manifest: {
+    applications: {
+      gecko: {
+        id: "helper@tests.mozilla.org",
+      },
+    },
+    permissions: ["webNavigation", "<all_urls>"],
+  },
+
+  useAddonManager: "permanent",
+
+  async background() {
+    browser.test.onMessage.addListener(async message => {
+      switch (message.subject) {
+        case "createTab": {
+          const tabLoaded = new Promise(resolve => {
+            browser.webNavigation.onCompleted.addListener(function listener(
+              details
+            ) {
+              if (details.url === message.data.url) {
+                browser.webNavigation.onCompleted.removeListener(listener);
+                resolve();
+              }
+            });
+          });
+
+          const tab = await browser.tabs.create({ url: message.data.url });
+          await tabLoaded;
+          browser.test.sendMessage("tabCreated", tab.id);
+          break;
+        }
+
+        case "changeTabURL": {
+          const tabLoaded = new Promise(resolve => {
+            browser.webNavigation.onCompleted.addListener(function listener(
+              details
+            ) {
+              if (details.url === message.data.url) {
+                browser.webNavigation.onCompleted.removeListener(listener);
+                resolve();
+              }
+            });
+          });
+
+          await browser.tabs.update(message.data.tabId, {
+            url: message.data.url,
+          });
+          await tabLoaded;
+          browser.test.sendMessage("tabURLChanged", message.data.tabId);
+          break;
+        }
+
+        case "changeTabHashAndTitle": {
+          const tabChanged = new Promise(resolve => {
+            let hasURLChangeInfo = false,
+              hasTitleChangeInfo = false;
+            browser.tabs.onUpdated.addListener(function listener(
+              tabId,
+              changeInfo,
+              tab
+            ) {
+              if (changeInfo.url?.endsWith(message.data.urlHash)) {
+                hasURLChangeInfo = true;
+              }
+              if (changeInfo.title === message.data.title) {
+                hasTitleChangeInfo = true;
+              }
+              if (hasURLChangeInfo && hasTitleChangeInfo) {
+                browser.tabs.onUpdated.removeListener(listener);
+                resolve();
+              }
+            });
+          });
+
+          await browser.tabs.executeScript(message.data.tabId, {
+            code: `
+              document.location.hash = ${JSON.stringify(message.data.urlHash)};
+              document.title = ${JSON.stringify(message.data.title)};
+            `,
+          });
+          await tabChanged;
+          browser.test.sendMessage("tabHashAndTitleChanged");
+          break;
+        }
+
+        case "removeTab": {
+          await browser.tabs.remove(message.data.tabId);
+          browser.test.sendMessage("tabRemoved");
+          break;
+        }
+
+        default:
+          browser.test.fail(`Received unexpected message: ${message}`);
+      }
+    });
+  },
+};
+
+/*
+ * Test tabs.query function
+ * Check if the correct tabs are queried by url or title based on the granted permissions
+ */
+async function test_query(testCases, permissions) {
+  const helperExtension = ExtensionTestUtils.loadExtension(helperExtensionDef);
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "permissions@tests.mozilla.org",
+        },
+      },
+      permissions,
+    },
+
+    useAddonManager: "permanent",
+
+    async background() {
+      // wait for start message
+      const [testCases, tabIdFromURL1, tabIdFromURL2] = await new Promise(
+        resolve => {
+          browser.test.onMessage.addListener(message => resolve(message));
+        }
+      );
+
+      for (const testCase of testCases) {
+        const query = testCase.query;
+        const matchingTabs = testCase.matchingTabs;
+
+        let tabQuery = await browser.tabs.query(query);
+        // ignore other tabs in the window
+        tabQuery = tabQuery.filter(tab => {
+          return tab.id === tabIdFromURL1 || tab.id === tabIdFromURL2;
+        });
+
+        browser.test.assertEq(matchingTabs, tabQuery.length, `Tabs queried`);
+      }
+      // send end message
+      browser.test.notifyPass("tabs.query");
+    },
+  });
+
+  await helperExtension.startup();
+  await extension.startup();
+
+  helperExtension.sendMessage({
+    subject: "createTab",
+    data: { url: URL1 },
+  });
+  const tabIdFromURL1 = await helperExtension.awaitMessage("tabCreated");
+
+  helperExtension.sendMessage({
+    subject: "createTab",
+    data: { url: URL2 },
+  });
+  const tabIdFromURL2 = await helperExtension.awaitMessage("tabCreated");
+
+  if (permissions.includes("activeTab")) {
+    extension.grantActiveTab(tabIdFromURL2);
+  }
+
+  extension.sendMessage([testCases, tabIdFromURL1, tabIdFromURL2]);
+  await extension.awaitFinish("tabs.query");
+
+  helperExtension.sendMessage({
+    subject: "removeTab",
+    data: { tabId: tabIdFromURL1 },
+  });
+  await helperExtension.awaitMessage("tabRemoved");
+
+  helperExtension.sendMessage({
+    subject: "removeTab",
+    data: { tabId: tabIdFromURL2 },
+  });
+  await helperExtension.awaitMessage("tabRemoved");
+
+  await extension.unload();
+  await helperExtension.unload();
+}
+
+// http://www.example.com host permission
+add_task(function query_with_host_permission_url1() {
+  return test_query(
+    [
+      {
+        query: { url: "*://www.example.com/*" },
+        matchingTabs: 1,
+      },
+      {
+        query: { url: "<all_urls>" },
+        matchingTabs: 1,
+      },
+      {
+        query: { url: ["*://www.example.com/*", "*://example.net/*"] },
+        matchingTabs: 1,
+      },
+      {
+        query: { title: "The Title" },
+        matchingTabs: 1,
+      },
+      {
+        query: { title: "Another Title" },
+        matchingTabs: 0,
+      },
+      {
+        query: {},
+        matchingTabs: 2,
+      },
+    ],
+    ["*://www.example.com/*"]
+  );
+});
+
+// http://example.net host permission
+add_task(function query_with_host_permission_url2() {
+  return test_query(
+    [
+      {
+        query: { url: "*://www.example.com/*" },
+        matchingTabs: 0,
+      },
+      {
+        query: { url: "<all_urls>" },
+        matchingTabs: 1,
+      },
+      {
+        query: { url: ["*://www.example.com/*", "*://example.net/*"] },
+        matchingTabs: 1,
+      },
+      {
+        query: { title: "The Title" },
+        matchingTabs: 0,
+      },
+      {
+        query: { title: "Another Title" },
+        matchingTabs: 1,
+      },
+      {
+        query: {},
+        matchingTabs: 2,
+      },
+    ],
+    ["*://example.net/*"]
+  );
+});
+
+// <all_urls> permission
+add_task(function query_with_host_permission_all_urls() {
+  return test_query(
+    [
+      {
+        query: { url: "*://www.example.com/*" },
+        matchingTabs: 1,
+      },
+      {
+        query: { url: "<all_urls>" },
+        matchingTabs: 2,
+      },
+      {
+        query: { url: ["*://www.example.com/*", "*://example.net/*"] },
+        matchingTabs: 2,
+      },
+      {
+        query: { title: "The Title" },
+        matchingTabs: 1,
+      },
+      {
+        query: { title: "Another Title" },
+        matchingTabs: 1,
+      },
+      {
+        query: {},
+        matchingTabs: 2,
+      },
+    ],
+    ["<all_urls>"]
+  );
+});
+
+// tabs permission
+add_task(function query_with_tabs_permission() {
+  return test_query(
+    [
+      {
+        query: { url: "*://www.example.com/*" },
+        matchingTabs: 1,
+      },
+      {
+        query: { url: "<all_urls>" },
+        matchingTabs: 2,
+      },
+      {
+        query: { url: ["*://www.example.com/*", "*://example.net/*"] },
+        matchingTabs: 2,
+      },
+      {
+        query: { title: "The Title" },
+        matchingTabs: 1,
+      },
+      {
+        query: { title: "Another Title" },
+        matchingTabs: 1,
+      },
+      {
+        query: {},
+        matchingTabs: 2,
+      },
+    ],
+    ["tabs"]
+  );
+});
+
+// activeTab permission
+add_task(function query_with_activeTab_permission() {
+  return test_query(
+    [
+      {
+        query: { url: "*://www.example.com/*" },
+        matchingTabs: 0,
+      },
+      {
+        query: { url: "<all_urls>" },
+        matchingTabs: 1,
+      },
+      {
+        query: { url: ["*://www.example.com/*", "*://example.net/*"] },
+        matchingTabs: 1,
+      },
+      {
+        query: { title: "The Title" },
+        matchingTabs: 0,
+      },
+      {
+        query: { title: "Another Title" },
+        matchingTabs: 1,
+      },
+      {
+        query: {},
+        matchingTabs: 2,
+      },
+    ],
+    ["activeTab"]
+  );
+});
+// no permission
+add_task(function query_without_permission() {
+  return test_query(
+    [
+      {
+        query: { url: "*://www.example.com/*" },
+        matchingTabs: 0,
+      },
+      {
+        query: { url: "<all_urls>" },
+        matchingTabs: 0,
+      },
+      {
+        query: { url: ["*://www.example.com/*", "*://example.net/*"] },
+        matchingTabs: 0,
+      },
+      {
+        query: { title: "The Title" },
+        matchingTabs: 0,
+      },
+      {
+        query: { title: "Another Title" },
+        matchingTabs: 0,
+      },
+      {
+        query: {},
+        matchingTabs: 2,
+      },
+    ],
+    []
+  );
+});
+
+/*
+ * Test tabs.onUpdate and tabs.get function
+ * Check if the changeInfo or tab object contains the restricted properties
+ * url and title only when the right permissions are granted
+ * The tab is updated without causing navigation in order to also test activeTab permission
+ */
+async function test_restricted_properties(
+  permissions,
+  hasRestrictedProperties
+) {
+  const helperExtension = ExtensionTestUtils.loadExtension(helperExtensionDef);
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "permissions@tests.mozilla.org",
+        },
+      },
+      permissions,
+    },
+
+    useAddonManager: "permanent",
+
+    async background() {
+      // wait for test start signal and data
+      const [
+        hasRestrictedProperties,
+        tabId,
+        urlHash,
+        title,
+      ] = await new Promise(resolve => {
+        browser.test.onMessage.addListener(message => {
+          resolve(message);
+        });
+      });
+
+      let hasURLChangeInfo = false,
+        hasTitleChangeInfo = false;
+      function onUpdateListener(tabId, changeInfo, tab) {
+        if (changeInfo.url?.endsWith(urlHash)) {
+          hasURLChangeInfo = true;
+        }
+        if (changeInfo.title === title) {
+          hasTitleChangeInfo = true;
+        }
+      }
+      browser.tabs.onUpdated.addListener(onUpdateListener);
+
+      // wait for test evaluation signal and data
+      await new Promise(resolve => {
+        browser.test.onMessage.addListener(message => {
+          if (message === "collectTestResults") {
+            resolve(message);
+          }
+        });
+        browser.test.sendMessage("waitingForTabPropertyChanges");
+      });
+
+      // check onUpdate changeInfo
+      browser.test.assertEq(
+        hasRestrictedProperties,
+        hasURLChangeInfo,
+        `Has changeInfo property "url"`
+      );
+      browser.test.assertEq(
+        hasRestrictedProperties,
+        hasTitleChangeInfo,
+        `Has changeInfo property "title"`
+      );
+      // check tab properties
+      const tabGet = await browser.tabs.get(tabId);
+      browser.test.assertEq(
+        hasRestrictedProperties,
+        !!tabGet.url?.endsWith(urlHash),
+        `Has tab property "url"`
+      );
+      browser.test.assertEq(
+        hasRestrictedProperties,
+        tabGet.title === title,
+        `Has tab property "title"`
+      );
+      // send end message
+      browser.test.notifyPass("tabs.restricted_properties");
+    },
+  });
+
+  const urlHash = "#ChangedURL";
+  const title = "Changed Title";
+
+  await helperExtension.startup();
+  await extension.startup();
+
+  helperExtension.sendMessage({
+    subject: "createTab",
+    data: { url: URL1 },
+  });
+  const tabId = await helperExtension.awaitMessage("tabCreated");
+
+  if (permissions.includes("activeTab")) {
+    extension.grantActiveTab(tabId);
+  }
+  // send test start signal and data
+  extension.sendMessage([hasRestrictedProperties, tabId, urlHash, title]);
+  await extension.awaitMessage("waitingForTabPropertyChanges");
+
+  helperExtension.sendMessage({
+    subject: "changeTabHashAndTitle",
+    data: {
+      tabId,
+      urlHash,
+      title,
+    },
+  });
+  await helperExtension.awaitMessage("tabHashAndTitleChanged");
+
+  // send end signal and evaluate results
+  extension.sendMessage("collectTestResults");
+  await extension.awaitFinish("tabs.restricted_properties");
+
+  helperExtension.sendMessage({
+    subject: "removeTab",
+    data: { tabId },
+  });
+  await helperExtension.awaitMessage("tabRemoved");
+
+  await extension.unload();
+  await helperExtension.unload();
+}
+
+// http://www.example.com host permission
+add_task(function has_restricted_properties_with_host_permission_url1() {
+  return test_restricted_properties(["*://www.example.com/*"], true);
+});
+// http://example.net host permission
+add_task(function has_restricted_properties_with_host_permission_url2() {
+  return test_restricted_properties(["*://example.net/*"], false);
+});
+// <all_urls> permission
+add_task(function has_restricted_properties_with_host_permission_all_urls() {
+  return test_restricted_properties(["<all_urls>"], true);
+});
+// tabs permission
+add_task(function has_restricted_properties_with_tabs_permission() {
+  return test_restricted_properties(["tabs"], true);
+});
+// activeTab permission
+add_task(function has_restricted_properties_with_activeTab_permission() {
+  return test_restricted_properties(["activeTab"], true);
+}).skip(); // TODO bug 1686080: support changeInfo.url with activeTab
+// no permission
+add_task(function has_restricted_properties_without_permission() {
+  return test_restricted_properties([], false);
+});
+
+
+/*
+ * Test tabs.onUpdate filter functionality
+ * Check if the restricted filter properties only work if the
+ * right permissions are granted
+ */
+async function test_onUpdateFilter(testCases, permissions) {
+  // Filters for onUpdated are not supported on Android.
+  if (AppConstants.platform === "android") {
+    return;
+  }
+
+  const helperExtension = ExtensionTestUtils.loadExtension(helperExtensionDef);
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "permissions@tests.mozilla.org",
+        },
+      },
+      permissions,
+    },
+
+    useAddonManager: "permanent",
+
+    async background() {
+      let listenerGotCalled = false;
+      function onUpdateListener(tabId, changeInfo, tab) {
+        listenerGotCalled = true;
+      }
+
+      browser.test.onMessage.addListener(async message => {
+        switch (message.subject) {
+          case "setup": {
+            browser.tabs.onUpdated.addListener(
+              onUpdateListener,
+              message.data.filter
+            );
+            browser.test.sendMessage("done");
+            break;
+          }
+
+          case "collectTestResults": {
+            browser.test.assertEq(
+              message.data.expectEvent,
+              listenerGotCalled,
+              `Update listener called`
+            );
+            browser.tabs.onUpdated.removeListener(onUpdateListener);
+            listenerGotCalled = false;
+            browser.test.sendMessage("done");
+            break;
+          }
+
+          default:
+            browser.test.fail(`Received unexpected message: ${message}`);
+        }
+      });
+    },
+  });
+
+  await helperExtension.startup();
+  await extension.startup();
+
+  for (const testCase of testCases) {
+    helperExtension.sendMessage({
+      subject: "createTab",
+      data: { url: URL1 },
+    });
+    const tabId = await helperExtension.awaitMessage("tabCreated");
+
+    extension.sendMessage({
+      subject: "setup",
+      data: {
+        filter: testCase.filter,
+      },
+    });
+    await extension.awaitMessage("done");
+
+    helperExtension.sendMessage({
+      subject: "changeTabURL",
+      data: {
+        tabId,
+        url: URL2,
+      },
+    });
+    await helperExtension.awaitMessage("tabURLChanged");
+
+    extension.sendMessage({
+      subject: "collectTestResults",
+      data: {
+        expectEvent: testCase.expectEvent,
+      },
+    });
+    await extension.awaitMessage("done");
+
+    helperExtension.sendMessage({
+      subject: "removeTab",
+      data: { tabId },
+    });
+    await helperExtension.awaitMessage("tabRemoved");
+  }
+
+  await extension.unload();
+  await helperExtension.unload();
+}
+
+// http://mozilla.org host permission
+add_task(function onUpdateFilter_with_host_permission_url3() {
+  return test_onUpdateFilter(
+    [
+      {
+        filter: { urls: ["*://mozilla.org/*"] },
+        expectEvent: false,
+      },
+      {
+        filter: { urls: ["<all_urls>"] },
+        expectEvent: false,
+      },
+      {
+        filter: { urls: ["*://mozilla.org/*", "*://example.net/*"] },
+        expectEvent: false,
+      },
+      {
+        filter: { properties: ["title"] },
+        expectEvent: false,
+      },
+      {
+        filter: {},
+        expectEvent: true,
+      },
+    ],
+    ["*://mozilla.org/*"]
+  );
+});
+
+// http://example.net host permission
+add_task(function onUpdateFilter_with_host_permission_url2() {
+  return test_onUpdateFilter(
+    [
+      {
+        filter: { urls: ["*://mozilla.org/*"] },
+        expectEvent: false,
+      },
+      {
+        filter: { urls: ["<all_urls>"] },
+        expectEvent: true,
+      },
+      {
+        filter: { urls: ["*://mozilla.org/*", "*://example.net/*"] },
+        expectEvent: true,
+      },
+      {
+        filter: { properties: ["title"] },
+        expectEvent: true,
+      },
+      {
+        filter: {},
+        expectEvent: true,
+      },
+    ],
+    ["*://example.net/*"]
+  );
+});
+
+// <all_urls> permission
+add_task(function onUpdateFilter_with_host_permission_all_urls() {
+  return test_onUpdateFilter(
+    [
+      {
+        filter: { urls: ["*://mozilla.org/*"] },
+        expectEvent: false,
+      },
+      {
+        filter: { urls: ["<all_urls>"] },
+        expectEvent: true,
+      },
+      {
+        filter: { urls: ["*://mozilla.org/*", "*://example.net/*"] },
+        expectEvent: true,
+      },
+      {
+        filter: { properties: ["title"] },
+        expectEvent: true,
+      },
+      {
+        filter: {},
+        expectEvent: true,
+      },
+    ],
+    ["<all_urls>"]
+  );
+});
+
+// tabs permission
+add_task(function onUpdateFilter_with_tabs_permission() {
+  return test_onUpdateFilter(
+    [
+      {
+        filter: { urls: ["*://mozilla.org/*"] },
+        expectEvent: false,
+      },
+      {
+        filter: { urls: ["<all_urls>"] },
+        expectEvent: true,
+      },
+      {
+        filter: { urls: ["*://mozilla.org/*", "*://example.net/*"] },
+        expectEvent: true,
+      },
+      {
+        filter: { properties: ["title"] },
+        expectEvent: true,
+      },
+      {
+        filter: {},
+        expectEvent: true,
+      },
+    ],
+    ["tabs"]
+  );
+});
+
+</script>
+
+</body>
+</html>

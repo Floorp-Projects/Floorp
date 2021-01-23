@@ -134,6 +134,10 @@ class MockExtension {
     return this._extension.testMessage(...args);
   }
 
+  get tabManager() {
+    return this._extension.tabManager;
+  }
+
   on(...args) {
     this._extensionPromise.then(extension => {
       extension.on(...args);
