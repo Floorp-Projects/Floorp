@@ -554,10 +554,6 @@ struct FrameMetrics {
   // pixels.
   CSSSize mRootCompositionSize;
 
-  // A display port expressed as layer margins that apply to the rect of what
-  // is drawn of the scrollable element.
-  ScreenMargin mDisplayPortMargins;
-
   uint32_t mPresShellId;
 
   // For a root scroll frame (RSF), the document's layout viewport
