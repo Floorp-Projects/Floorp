@@ -149,6 +149,7 @@ static void ValidateUntrustedModules(const UntrustedModulesData& aData) {
     // Make sure mModule is pointing to an entry of mModules.
     EXPECT_TRUE(moduleSet.Contains(evt.mModule));
     EXPECT_FALSE(evt.mIsDependent);
+    EXPECT_EQ(evt.mLoadStatus, 0);
   }
 
   // No check for the mXULLoadDurationMS field because the field has a value
@@ -313,7 +314,7 @@ BOOL CALLBACK UntrustedModulesFixture::InitialModuleLoadOnce(PINIT_ONCE, void*,
       u"\"processUptimeMS\":\\d+,\"loadDurationMS\":\\d+\\.\\d+," \
       u"\"threadID\":\\d+,\"threadName\":\"Main Thread\"," \
       u"\"baseAddress\":\"0x[0-9a-f]+\",\"moduleIndex\":0," \
-      u"\"isDependent\":false}\\]," \
+      u"\"isDependent\":false,\"loadStatus\":0}\\]," \
     u"\"combinedStacks\":{" \
       u"\"memoryMap\":\\[\\[\"\\w+\\.\\w+\",\"[0-9A-Z]+\"\\]" \
         u"(,\\[\"\\w+\\.\\w+\",\"[0-9A-Z]+\\\"\\])*\\]," \
