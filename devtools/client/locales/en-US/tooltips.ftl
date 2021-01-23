@@ -45,6 +45,8 @@ inactive-css-not-for-internal-table-elements = <strong>{ $property }</strong> ha
 
 inactive-css-not-for-internal-table-elements-except-table-cells = <strong>{ $property }</strong> has no effect on internal table elements except table cells.
 
+inactive-css-not-svg-shape-or-text = <strong>{ $property }</strong> has no effect on this element since it can only be applied to SVG basic shapes and text elements, though it may have an effect on its descendant elements.
+
 ## In the Rule View when a CSS property cannot be successfully applied we display
 ## an icon. When this icon is hovered this message is displayed to explain how
 ## the problem can be solved.
@@ -80,6 +82,8 @@ inactive-css-not-for-internal-table-elements-fix = Try setting its <strong>displ
 inactive-css-not-for-internal-table-elements-except-table-cells-fix = Try setting its <strong>display</strong> property to something else than <strong>table-column</strong>, <strong>table-row</strong>, <strong>table-column-group</strong>, <strong>table-row-group</strong>, or <strong>table-footer-group</strong>. { learn-more }
 
 inactive-outline-radius-when-outline-style-auto-or-none-fix = Try setting its <strong>outline-style</strong> property to something other than <strong>auto</strong> or <strong>none</strong>. { learn-more }
+
+inactive-css-not-svg-shape-or-text-fix = Ensure you are setting this property on one of the following SVG elements: <strong>&lt;circle&gt;</strong>, <strong>&lt;ellipse&gt;</strong>, <strong>&lt;line&gt;</strong>, <strong>&lt;path&gt;</strong>, <strong>&lt;polygon&gt;</strong>, <strong>&lt;polyline&gt;</strong>, <strong>&lt;rect&gt;</strong>, <strong>&lt;text&gt;</strong>, <strong>&lt;textPath&gt;</strong>, <strong>&lt;tspan&gt;</strong>. { learn-more }
 
 ## In the Rule View when a CSS property may have compatibility issues with other browsers
 ## we display an icon. When this icon is hovered this message is displayed to explain why
