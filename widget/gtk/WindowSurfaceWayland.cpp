@@ -861,7 +861,7 @@ void WindowImageSurface::DrawToTarget(
     gfx::IntRect r(iter.Get().ToUnknownRect());
     LOGWAYLAND(
         ("    draw rect [%d,%d] -> [%d x %d]\n", r.x, r.y, r.width, r.height));
-    aDest->CopySurface(mImageSurface, r, IntPoint(r.x, r.y));
+    aDest->CopySurface(mImageSurface, r, gfx::IntPoint(r.x, r.y));
   }
   aWaylandBufferDamage.OrWith(mUpdateRegion);
 }

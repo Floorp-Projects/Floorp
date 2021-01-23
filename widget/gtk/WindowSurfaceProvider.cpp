@@ -20,7 +20,6 @@
 namespace mozilla {
 namespace widget {
 
-using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 WindowSurfaceProvider::WindowSurfaceProvider()
@@ -79,7 +78,7 @@ UniquePtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
   // 1. XRender (iff XRender is enabled && we are in-process)
   // 2. MIT-SHM
   // 3. XPutImage
-  if (!mIsShaped && gfxVars::UseXRender()) {
+  if (!mIsShaped && gfx::gfxVars::UseXRender()) {
     LOGDRAW(("Drawing to Window 0x%lx will use XRender\n", mXWindow));
     return MakeUnique<WindowSurfaceXRender>(mXDisplay, mXWindow, mXVisual,
                                             mXDepth);
@@ -109,7 +108,7 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
   }
 
   *aBufferMode = BufferMode::BUFFER_NONE;
-  RefPtr<DrawTarget> dt = nullptr;
+  RefPtr<gfx::DrawTarget> dt = nullptr;
   if (!(dt = mWindowSurface->Lock(aInvalidRegion)) && mIsX11Display &&
       !mWindowSurface->IsFallback()) {
     // We can't use WindowSurfaceX11Image fallback on Wayland but
