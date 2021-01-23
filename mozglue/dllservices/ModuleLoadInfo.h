@@ -14,6 +14,12 @@
 namespace mozilla {
 
 struct ModuleLoadInfo final {
+  enum class Status : uint32_t {
+    Loaded = 0,
+    Blocked,
+    Redirected,
+  };
+
   // We do not provide these methods inside Gecko proper.
 #if !defined(MOZILLA_INTERNAL_API)
 
@@ -24,7 +30,8 @@ struct ModuleLoadInfo final {
       : mLoadTimeInfo(),
         mThreadId(nt::RtlGetCurrentThreadId()),
         mRequestedDllName(aRequestedDllName),
-        mBaseAddr(nullptr) {
+        mBaseAddr(nullptr),
+        mStatus(Status::Loaded) {
 #  if defined(IMPL_MFBT)
     ::QueryPerformanceCounter(&mBeginTimestamp);
 #  else
@@ -39,11 +46,12 @@ struct ModuleLoadInfo final {
    * of another library.
    */
   ModuleLoadInfo(nt::AllocatedUnicodeString&& aSectionName,
-                 const void* aBaseAddr)
+                 const void* aBaseAddr, Status aLoadStatus)
       : mLoadTimeInfo(),
         mThreadId(nt::RtlGetCurrentThreadId()),
         mSectionName(std::move(aSectionName)),
-        mBaseAddr(aBaseAddr) {
+        mBaseAddr(aBaseAddr),
+        mStatus(aLoadStatus) {
 #  if defined(IMPL_MFBT)
     ::QueryPerformanceCounter(&mBeginTimestamp);
 #  else
@@ -127,6 +135,14 @@ struct ModuleLoadInfo final {
    */
   bool WasMapped() const { return !mSectionName.IsEmpty(); }
 
+  /**
+   * Returns true for DLL load which was denied by our blocklist.
+   */
+  bool WasDenied() const {
+    return mStatus == ModuleLoadInfo::Status::Blocked ||
+           mStatus == ModuleLoadInfo::Status::Redirected;
+  }
+
   // Timestamp for the creation of this event
   LARGE_INTEGER mBeginTimestamp;
   // Duration of the LdrLoadDll call
@@ -143,6 +159,8 @@ struct ModuleLoadInfo final {
   const void* mBaseAddr;
   // If the module was successfully loaded, stack trace of the DLL load request
   Vector<PVOID, 0, nt::RtlAllocPolicy> mBacktrace;
+  // The status of DLL load
+  Status mStatus;
 };
 
 using ModuleLoadInfoVec = Vector<ModuleLoadInfo, 0, nt::RtlAllocPolicy>;
