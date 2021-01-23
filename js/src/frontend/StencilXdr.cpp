@@ -378,12 +378,12 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
 
   uint8_t kind;
   if (mode == XDR_ENCODE) {
-    if (sharedData.storage.is<SharedDataContainer::SingleSharedData>()) {
+    if (sharedData.isSingle()) {
       kind = uint8_t(Kind::Single);
-    } else if (sharedData.storage.is<SharedDataContainer::SharedDataVector>()) {
+    } else if (sharedData.isVector()) {
       kind = uint8_t(Kind::Vector);
     } else {
-      MOZ_ASSERT(sharedData.storage.is<SharedDataContainer::SharedDataMap>());
+      MOZ_ASSERT(sharedData.isMap());
       kind = uint8_t(Kind::Map);
     }
   }
@@ -391,21 +391,24 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
 
   switch (Kind(kind)) {
     case Kind::Single: {
-      if (mode == XDR_DECODE) {
-        sharedData.storage.emplace<SharedDataContainer::SingleSharedData>();
+      RefPtr<SharedImmutableScriptData> ref;
+      if (mode == XDR_ENCODE) {
+        ref = sharedData.asSingle();
       }
-      auto& data =
-          sharedData.storage.as<SharedDataContainer::SingleSharedData>();
-      MOZ_TRY(StencilXDR::SharedData<mode>(xdr, data));
+      MOZ_TRY(StencilXDR::SharedData<mode>(xdr, ref));
+      if (mode == XDR_DECODE) {
+        sharedData.setSingle(ref.forget());
+      }
       break;
     }
 
     case Kind::Vector: {
       if (mode == XDR_DECODE) {
-        sharedData.storage.emplace<SharedDataContainer::SharedDataVector>();
+        if (!sharedData.initVector(xdr->cx())) {
+          return xdr->fail(JS::TranscodeResult_Throw);
+        }
       }
-      auto& vec =
-          sharedData.storage.as<SharedDataContainer::SharedDataVector>();
+      auto& vec = *sharedData.asVector();
       MOZ_TRY(XDRVectorInitialized(xdr, vec));
       for (auto& entry : vec) {
         // NOTE: There can be nullptr, even if we don't perform syntax parsing,
@@ -426,10 +429,11 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
 
     case Kind::Map: {
       if (mode == XDR_DECODE) {
-        sharedData.storage.emplace<SharedDataContainer::SharedDataMap>();
+        if (!sharedData.initMap(xdr->cx())) {
+          return xdr->fail(JS::TranscodeResult_Throw);
+        }
       }
-      auto& map = sharedData.storage.as<SharedDataContainer::SharedDataMap>();
-
+      auto& map = *sharedData.asMap();
       uint32_t count;
       if (mode == XDR_ENCODE) {
         count = map.count();
@@ -470,12 +474,6 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
 
   return Ok();
 }
-
-template XDRResult XDRSharedDataContainer(XDRState<XDR_ENCODE>* xdr,
-                                          SharedDataContainer& sharedData);
-
-template XDRResult XDRSharedDataContainer(XDRState<XDR_DECODE>* xdr,
-                                          SharedDataContainer& sharedData);
 
 template <XDRMode mode>
 XDRResult XDRBaseCompilationStencilSpanSize(

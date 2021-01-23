@@ -6,8 +6,9 @@
 
 #include "frontend/Stencil.h"
 
-#include "mozilla/RefPtr.h"   // RefPtr
-#include "mozilla/Sprintf.h"  // SprintfLiteral
+#include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
+#include "mozilla/RefPtr.h"                 // RefPtr
+#include "mozilla/Sprintf.h"                // SprintfLiteral
 
 #include "frontend/AbstractScopePtr.h"     // ScopeIndex
 #include "frontend/BytecodeCompilation.h"  // CanLazilyParse
@@ -1029,11 +1030,44 @@ CompilationState::CompilationState(
       input(stencil.input),
       parserAtoms(cx->runtime(), stencil.alloc) {}
 
+SharedDataContainer::~SharedDataContainer() {
+  if (isEmpty()) {
+    // Nothing to do.
+  } else if (isSingle()) {
+    asSingle()->Release();
+  } else if (isVector()) {
+    js_delete(asVector());
+  } else {
+    MOZ_ASSERT(isMap());
+    js_delete(asMap());
+  }
+}
+
+bool SharedDataContainer::initVector(JSContext* cx) {
+  auto* vec = js_new<SharedDataVector>();
+  if (!vec) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  data_ = uintptr_t(vec) | VectorTag;
+  return true;
+}
+
+bool SharedDataContainer::initMap(JSContext* cx) {
+  auto* map = js_new<SharedDataMap>();
+  if (!map) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  data_ = uintptr_t(map) | MapTag;
+  return true;
+}
+
 bool SharedDataContainer::prepareStorageFor(JSContext* cx,
                                             size_t nonLazyScriptCount,
                                             size_t allScriptCount) {
   if (nonLazyScriptCount <= 1) {
-    MOZ_ASSERT(storage.is<SingleSharedData>());
+    MOZ_ASSERT(isSingle());
     return true;
   }
 
@@ -1046,14 +1080,18 @@ bool SharedDataContainer::prepareStorageFor(JSContext* cx,
   constexpr size_t thresholdRatio = 8;
   bool useHashMap = nonLazyScriptCount < allScriptCount / thresholdRatio;
   if (useHashMap) {
-    storage.emplace<SharedDataMap>();
-    if (!storage.as<SharedDataMap>().reserve(nonLazyScriptCount)) {
+    if (!initMap(cx)) {
+      return false;
+    }
+    if (!asMap()->reserve(nonLazyScriptCount)) {
       ReportOutOfMemory(cx);
       return false;
     }
   } else {
-    storage.emplace<SharedDataVector>();
-    if (!storage.as<SharedDataVector>().resize(allScriptCount)) {
+    if (!initVector(cx)) {
+      return false;
+    }
+    if (!asVector()->resize(allScriptCount)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -1063,66 +1101,56 @@ bool SharedDataContainer::prepareStorageFor(JSContext* cx,
 }
 
 js::SharedImmutableScriptData* SharedDataContainer::get(ScriptIndex index) {
-  struct Matcher {
-    ScriptIndex index;
-
-    js::SharedImmutableScriptData* operator()(SingleSharedData& ptr) {
-      if (index == CompilationStencil::TopLevelIndex) {
-        return ptr;
-      }
-      return nullptr;
+  if (isSingle()) {
+    if (index == CompilationStencil::TopLevelIndex) {
+      return asSingle();
     }
+    return nullptr;
+  }
 
-    js::SharedImmutableScriptData* operator()(SharedDataVector& vec) {
-      if (index.index < vec.length()) {
-        return vec[index];
-      }
-      return nullptr;
+  if (isVector()) {
+    auto& vec = *asVector();
+    if (index.index < vec.length()) {
+      return vec[index];
     }
+    return nullptr;
+  }
 
-    js::SharedImmutableScriptData* operator()(SharedDataMap& map) {
-      auto p = map.lookup(index);
-      if (p) {
-        return p->value();
-      }
-      return nullptr;
-    }
-  };
-
-  Matcher m{index};
-  return storage.match(m);
+  MOZ_ASSERT(isMap());
+  auto& map = *asMap();
+  auto p = map.lookup(index);
+  if (p) {
+    return p->value();
+  }
+  return nullptr;
 }
 
 bool SharedDataContainer::addAndShare(JSContext* cx, ScriptIndex index,
                                       js::SharedImmutableScriptData* data) {
-  struct Matcher {
-    JSContext* cx;
-    ScriptIndex index;
-    js::SharedImmutableScriptData* data;
-
-    bool operator()(SingleSharedData& ptr) {
-      MOZ_ASSERT(index == CompilationStencil::TopLevelIndex);
-      ptr = data;
-      return SharedImmutableScriptData::shareScriptData(cx, ptr);
+  if (isSingle()) {
+    MOZ_ASSERT(index == CompilationStencil::TopLevelIndex);
+    RefPtr<SharedImmutableScriptData> ref(data);
+    if (!SharedImmutableScriptData::shareScriptData(cx, ref)) {
+      return false;
     }
+    setSingle(ref.forget());
+    return true;
+  }
 
-    bool operator()(SharedDataVector& vec) {
-      // Resized by SharedDataContainer::prepareStorageFor.
-      vec[index] = data;
-      return SharedImmutableScriptData::shareScriptData(cx, vec[index]);
-    }
+  if (isVector()) {
+    auto& vec = *asVector();
+    // Resized by SharedDataContainer::prepareStorageFor.
+    vec[index] = data;
+    return SharedImmutableScriptData::shareScriptData(cx, vec[index]);
+  }
 
-    bool operator()(SharedDataMap& map) {
-      // Reserved by SharedDataContainer::prepareStorageFor.
-      map.putNewInfallible(index, data);
-      auto p = map.lookup(index);
-      MOZ_ASSERT(p);
-      return SharedImmutableScriptData::shareScriptData(cx, p->value());
-    }
-  };
-
-  Matcher m{cx, index, data};
-  return storage.match(m);
+  MOZ_ASSERT(isMap());
+  auto& map = *asMap();
+  // Reserved by SharedDataContainer::prepareStorageFor.
+  map.putNewInfallible(index, data);
+  auto p = map.lookup(index);
+  MOZ_ASSERT(p);
+  return SharedImmutableScriptData::shareScriptData(cx, p->value());
 }
 
 template <typename T, typename VectorT>
@@ -1890,38 +1918,41 @@ void SharedDataContainer::dump(js::JSONPrinter& json) {
 }
 
 void SharedDataContainer::dumpFields(js::JSONPrinter& json) {
-  struct Matcher {
-    js::JSONPrinter& json;
+  if (isEmpty()) {
+    json.nullProperty("ScriptIndex(0)");
+    return;
+  }
 
-    void operator()(SingleSharedData& ptr) {
-      json.formatProperty("ScriptIndex(0)", "u8[%zu]",
-                          ptr->immutableDataLength());
-    }
+  if (isSingle()) {
+    json.formatProperty("ScriptIndex(0)", "u8[%zu]",
+                        asSingle()->immutableDataLength());
+    return;
+  }
 
-    void operator()(SharedDataVector& vec) {
-      char index[64];
-      for (size_t i = 0; i < vec.length(); i++) {
-        SprintfLiteral(index, "ScriptIndex(%zu)", i);
-        if (vec[i]) {
-          json.formatProperty(index, "u8[%zu]", vec[i]->immutableDataLength());
-        } else {
-          json.nullProperty(index);
-        }
+  if (isVector()) {
+    auto& vec = *asVector();
+
+    char index[64];
+    for (size_t i = 0; i < vec.length(); i++) {
+      SprintfLiteral(index, "ScriptIndex(%zu)", i);
+      if (vec[i]) {
+        json.formatProperty(index, "u8[%zu]", vec[i]->immutableDataLength());
+      } else {
+        json.nullProperty(index);
       }
     }
+    return;
+  }
 
-    void operator()(SharedDataMap& map) {
-      char index[64];
-      for (auto iter = map.iter(); !iter.done(); iter.next()) {
-        SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
-        json.formatProperty(index, "u8[%zu]",
-                            iter.get().value()->immutableDataLength());
-      }
-    }
-  };
+  MOZ_ASSERT(isMap());
+  auto& map = *asMap();
 
-  Matcher m{json};
-  storage.match(m);
+  char index[64];
+  for (auto iter = map.iter(); !iter.done(); iter.next()) {
+    SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
+    json.formatProperty(index, "u8[%zu]",
+                        iter.get().value()->immutableDataLength());
+  }
 }
 
 void BaseCompilationStencil::dump() {
