@@ -36,8 +36,8 @@ function getImageDimensions(doc, imageUrl) {
     const imgObj = new doc.defaultView.Image();
     imgObj.onload = () => {
       imgObj.onload = null;
-      const { naturalWidth, naturalHeight } = imgObj;
-      resolve({ naturalWidth, naturalHeight });
+      const { width, height } = imgObj;
+      resolve({ width, height });
     };
     imgObj.src = imageUrl;
   });
