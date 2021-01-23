@@ -169,7 +169,11 @@ class TabBase {
    *        @readonly
    */
   get hasTabPermission() {
-    return this.extension.hasPermission("tabs") || this.hasActiveTabPermission;
+    return (
+      this.extension.hasPermission("tabs") ||
+      this.hasActiveTabPermission ||
+      this.matchesHostPermission
+    );
   }
 
   /**
@@ -188,6 +192,15 @@ class TabBase {
       this.activeTabWindowID != null &&
       this.activeTabWindowID === this.innerWindowID
     );
+  }
+
+  /**
+   * @property {boolean} matchesHostPermission
+   *        Returns true if the extensions host permissions match the current tab url.
+   *        @readonly
+   */
+  get matchesHostPermission() {
+    return this.extension.allowedOrigins.matches(this._url);
   }
 
   /**
@@ -612,12 +625,17 @@ class TabBase {
         return false;
       }
     }
-
-    if (queryInfo.url && !queryInfo.url.matches(this.uri)) {
-      return false;
-    }
-    if (queryInfo.title && !queryInfo.title.matches(this.title)) {
-      return false;
+    if (queryInfo.url || queryInfo.title) {
+      if (!this.hasTabPermission) {
+        return false;
+      }
+      // Using _url and _title instead of url/title to avoid repeated permission checks.
+      if (queryInfo.url && !queryInfo.url.matches(this._url)) {
+        return false;
+      }
+      if (queryInfo.title && !queryInfo.title.matches(this._title)) {
+        return false;
+      }
     }
 
     return true;

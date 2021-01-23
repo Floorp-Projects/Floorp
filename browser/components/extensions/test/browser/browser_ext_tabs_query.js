@@ -354,36 +354,6 @@ add_task(async function testQueryPermissions() {
   await extension.unload();
 });
 
-add_task(async function testQueryWithoutURLOrTitlePermissions() {
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: [],
-    },
-
-    async background() {
-      await browser.test.assertRejects(
-        browser.tabs.query({ url: "http://www.bbc.com/" }),
-        'The "tabs" permission is required to use the query API with the "url" or "title" parameters',
-        "Expected tabs.query with 'url' or 'title' to fail with permissions error message"
-      );
-
-      await browser.test.assertRejects(
-        browser.tabs.query({ title: "Foo" }),
-        'The "tabs" permission is required to use the query API with the "url" or "title" parameters',
-        "Expected tabs.query with 'url' or 'title' to fail with permissions error message"
-      );
-
-      browser.test.notifyPass("testQueryWithoutURLOrTitlePermissions");
-    },
-  });
-
-  await extension.startup();
-
-  await extension.awaitFinish("testQueryWithoutURLOrTitlePermissions");
-
-  await extension.unload();
-});
-
 add_task(async function testInvalidUrl() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
