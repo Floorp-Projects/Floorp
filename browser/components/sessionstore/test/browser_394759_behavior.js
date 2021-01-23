@@ -21,11 +21,9 @@
  */
 function testWindows(windowsToOpen, expectedResults) {
   return (async function() {
-    let num = 0;
     for (let winData of windowsToOpen) {
       let features = "chrome,dialog=no," + (winData.isPopup ? "all=no" : "all");
-      let url = "http://example.com/?window=" + num;
-      num = num + 1;
+      let url = "http://example.com/?window=" + windowsToOpen.length;
 
       let openWindowPromise = BrowserTestUtils.waitForNewWindow({ url });
       openDialog(AppConstants.BROWSER_CHROME_URL, "", features, url);
