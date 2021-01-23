@@ -14,8 +14,6 @@
 namespace mozilla {
 namespace widget {
 
-using namespace gfx;
-
 GtkCompositorWidget::GtkCompositorWidget(
     const GtkCompositorWidgetInitData& aInitData,
     const layers::CompositorOptions& aOptions, nsWindow* aWindow)
