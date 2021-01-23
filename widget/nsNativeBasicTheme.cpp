@@ -21,6 +21,29 @@ using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeBasicTheme, nsNativeTheme, nsITheme)
 
+namespace {
+
+// This pushes and pops a clip rect to the draw target.
+//
+// This is done to reduce fuzz in places where we may have antialiasing,
+// because skia is not clip-invariant: given different clips, it does not
+// guarantee the same result, even if the painted content doesn't intersect
+// the clips.
+//
+// This is a bit sad, overall, but...
+struct MOZ_RAII AutoClipRect {
+  AutoClipRect(DrawTarget& aDt, const LayoutDeviceRect& aRect) : mDt(aDt) {
+    mDt.PushClipRect(aRect.ToUnknownRect());
+  }
+
+  ~AutoClipRect() { mDt.PopClip(); }
+
+ private:
+  DrawTarget& mDt;
+};
+
+}  // namespace
+
 static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
   ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
   auto scrollbarWidth = style->StyleUIReset()->mScrollbarWidth;
@@ -1175,6 +1198,15 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       aFrame = parentFrame;
       eventState = GetContentState(parentFrame, aAppearance);
     }
+  }
+
+  // Hack to avoid skia fuzziness: Add a dummy clip if the widget doesn't
+  // overflow devPxRect.
+  Maybe<AutoClipRect> maybeClipRect;
+  if (aAppearance != StyleAppearance::FocusOutline &&
+      aAppearance != StyleAppearance::Range &&
+      !eventState.HasState(NS_EVENT_STATE_FOCUSRING)) {
+    maybeClipRect.emplace(*dt, devPxRect);
   }
 
   DPIRatio dpiRatio = GetDPIRatio(aFrame);

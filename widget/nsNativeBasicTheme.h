@@ -199,25 +199,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static bool IsRootScrollbar(nsIFrame* aFrame);
   static LayoutDeviceRect FixAspectRatio(const LayoutDeviceRect& aRect);
 
-  // This pushes and pops a clip rect to the draw target.
-  //
-  // This is done to reduce fuzz in places where we may have antialiasing,
-  // because skia is not clip-invariant: given different clips, it does not
-  // guarantee the same result, even if the painted content doesn't intersect
-  // the clips.
-  //
-  // This is a bit sad, overall, but...
-  struct MOZ_RAII AutoClipRect {
-    AutoClipRect(DrawTarget& aDt, const LayoutDeviceRect& aRect) : mDt(aDt) {
-      mDt.PushClipRect(aRect.ToUnknownRect());
-    }
-
-    ~AutoClipRect() { mDt.PopClip(); }
-
-   private:
-    DrawTarget& mDt;
-  };
-
   virtual std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(
       const EventStates& aState, StyleAppearance aAppearance);
   virtual sRGBColor ComputeCheckmarkColor(const EventStates& aState);
