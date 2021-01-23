@@ -14331,7 +14331,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       onChange: this.onPreferenceSelect,
       preference: "feeds.topsites",
       "aria-labelledby": "custom-shortcuts-title",
-      "aria-describedby": "custom-shortcuts-subtitle"
+      "aria-describedby": "custom-shortcuts-subtitle",
+      eventSource: "TOP_SITES"
     }), external_React_default.a.createElement("span", {
       className: "slider",
       role: "presentation"
@@ -14384,7 +14385,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       checked: showSponsoredTopSitesEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
-      preference: "showSponsoredTopSites"
+      preference: "showSponsoredTopSites",
+      eventSource: "SPONSORED_TOP_SITES"
     }), external_React_default.a.createElement("label", {
       className: "sponsored",
       htmlFor: "sponsored-shortcuts",
@@ -14401,7 +14403,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       onChange: this.onPreferenceSelect,
       preference: "feeds.section.topstories",
       "aria-labelledby": "custom-pocket-title",
-      "aria-describedby": "custom-pocket-subtitle"
+      "aria-describedby": "custom-pocket-subtitle",
+      eventSource: "TOP_STORIES"
     }), external_React_default.a.createElement("span", {
       className: "slider",
       role: "presentation"
@@ -14474,7 +14477,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       onChange: this.onPreferenceSelect,
       preference: "feeds.snippets",
       "aria-labelledby": "custom-snippets-title",
-      "aria-describedby": "custom-snippets-subtitle"
+      "aria-describedby": "custom-snippets-subtitle",
+      eventSource: "SNIPPETS"
     }), external_React_default.a.createElement("span", {
       className: "slider",
       role: "presentation"

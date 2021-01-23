@@ -58,15 +58,7 @@ Fragment brush_fs() {
 #if defined(SWGL) && (!defined(WR_FEATURE_ALPHA_PASS) || !defined(WR_FEATURE_DUAL_SOURCE_BLENDING))
 void swgl_drawSpanRGBA8() {
     #ifdef WR_FEATURE_ALPHA_PASS
-        if (needs_clip()) {
-            while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs(v_local_pos) * do_clip();
-                swgl_commitColorRGBA8(v_color, alpha);
-                v_local_pos += swgl_interpStep(v_local_pos);
-                vClipMaskUv += swgl_interpStep(vClipMaskUv);
-            }
-            return;
-        } else if (has_valid_transform_bounds()) {
+        if (has_valid_transform_bounds()) {
             while (swgl_SpanLength > 0) {
                 float alpha = init_transform_fs(v_local_pos);
                 swgl_commitColorRGBA8(v_color, alpha);
@@ -82,15 +74,7 @@ void swgl_drawSpanRGBA8() {
 
 void swgl_drawSpanR8() {
     #ifdef WR_FEATURE_ALPHA_PASS
-        if (needs_clip()) {
-            while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs(v_local_pos) * do_clip();
-                swgl_commitColorR8(v_color.x, alpha);
-                v_local_pos += swgl_interpStep(v_local_pos);
-                vClipMaskUv += swgl_interpStep(vClipMaskUv);
-            }
-            return;
-        } else if (has_valid_transform_bounds()) {
+        if (has_valid_transform_bounds()) {
             while (swgl_SpanLength > 0) {
                 float alpha = init_transform_fs(v_local_pos);
                 swgl_commitColorR8(v_color.x, alpha);

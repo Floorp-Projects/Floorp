@@ -4965,16 +4965,6 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
 
 #endif
 
-static bool SetLazyParsingDisabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  bool disable = !args.hasDefined(0) || ToBoolean(args[0]);
-  cx->realm()->behaviors().setDisableLazyParsing(disable);
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool CompileStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -5097,16 +5087,6 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   args.rval().set(retVal);
-  return true;
-}
-
-static bool SetDiscardSource(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  bool discard = !args.hasDefined(0) || ToBoolean(args[0]);
-  cx->realm()->behaviors().setDiscardSource(discard);
-
-  args.rval().setUndefined();
   return true;
 }
 
@@ -7130,16 +7110,6 @@ gc::ZealModeHelpText),
 "  Return a human-readable description of how the string |str| is represented.\n"),
 
 #endif
-
-    JS_FN_HELP("setLazyParsingDisabled", SetLazyParsingDisabled, 1, 0,
-"setLazyParsingDisabled(bool)",
-"  Explicitly disable lazy parsing in the current compartment.  The default is that lazy "
-"  parsing is not explicitly disabled."),
-
-    JS_FN_HELP("setDiscardSource", SetDiscardSource, 1, 0,
-"setDiscardSource(bool)",
-"  Explicitly enable source discarding in the current compartment.  The default is that "
-"  source discarding is not explicitly enabled."),
 
     JS_FN_HELP("allocationMarker", AllocationMarker, 0, 0,
 "allocationMarker([options])",

@@ -361,7 +361,7 @@ void swgl_drawSpanRGBA8() {
         vec2 uv = v_uv * perspective_divisor + v_uv_bounds.xy;
 
         #ifndef WR_FEATURE_ANTIALIASING
-        if (!needs_clip() && swgl_allowTextureNearest(sColor0, uv)) {
+        if (swgl_allowTextureNearest(sColor0, uv)) {
             #ifdef WR_FEATURE_ALPHA_PASS
             if (v_color != vec4(1.0)) {
                 swgl_commitTextureNearestColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_color, layer);
@@ -380,29 +380,10 @@ void swgl_drawSpanRGBA8() {
     #endif
 
     #ifdef WR_FEATURE_ALPHA_PASS
-        if (needs_clip()) {
-            while (swgl_SpanLength > 0) {
-                vec4 color = v_color * do_clip();
-                #ifdef WR_FEATURE_ANTIALIASING
-                    color *= init_transform_fs(v_local_pos);
-                    v_local_pos += swgl_interpStep(v_local_pos);
-                #endif
-                #ifdef WR_FEATURE_REPETITION
-                    vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
-                    vec2 uv = clamp(repeated_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
-                    swgl_commitTextureLinearColorRGBA8(sColor0, swgl_linearQuantize(sColor0, uv), color, layer);
-                    v_uv += swgl_interpStep(v_uv);
-                #else
-                    swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), color, layer);
-                    uv += step_uv;
-                #endif
-                vClipMaskUv += swgl_interpStep(vClipMaskUv);
-            }
-            return;
         #ifdef WR_FEATURE_ANTIALIASING
-        } else {
+        {
         #else
-        } else if (v_color != vec4(1.0)) {
+        if (v_color != vec4(1.0)) {
         #endif
             while (swgl_SpanLength > 0) {
                 vec4 color = v_color;

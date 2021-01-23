@@ -1,6 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("setDiscardSource")) -- uses the setDiscardSource testing function
-
-// Repeats the test from 'Function/function-toString-discard-source.js' and
+// Repeats the test from 'function/function-toString-discard-source.js' and
 // additionally verifies the name matches the expected value.
 //
 // This behaviour is not required by the ECMAScript standard.
@@ -8,8 +6,7 @@
 // The Function.prototype.toString() representation of sourceless functions
 // must match the NativeFunction syntax.
 
-setDiscardSource(true);
-
+function test() {
 // Greatly (!) simplified patterns for the PropertyName production.
 var propertyName = [
     // PropertyName :: LiteralPropertyName :: IdentifierName
@@ -217,7 +214,7 @@ function asm() {
 
 assertFunctionName(asm, "asm");
 assertFunctionName(asm().f, "f");
+}
 
-
-if (typeof reportCompare === "function")
-    reportCompare(0, 0);
+var g = newGlobal({ discardSource: true });
+g.evaluate(test.toString() + "test()");

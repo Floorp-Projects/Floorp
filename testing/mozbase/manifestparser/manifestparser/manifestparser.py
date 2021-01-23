@@ -825,7 +825,9 @@ class TestManifest(ManifestParser):
         self.filters = filterlist(DEFAULT_FILTERS)
         self.last_used_filters = []
 
-    def active_tests(self, exists=True, disabled=True, filters=None, **values):
+    def active_tests(
+        self, exists=True, disabled=True, filters=None, noDefaultFilters=False, **values
+    ):
         """
         Run all applied filters on the set of tests.
 
@@ -842,7 +844,11 @@ class TestManifest(ManifestParser):
             test["expected"] = test.get("expected", "pass")
 
         # make a copy so original doesn't get modified
-        fltrs = self.filters[:]
+        if noDefaultFilters:
+            fltrs = []
+        else:
+            fltrs = self.filters[:]
+
         if exists:
             if self.strict:
                 self.check_missing(tests)

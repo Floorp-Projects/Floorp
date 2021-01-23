@@ -120,9 +120,10 @@ struct CompilationAtomCache {
   bool hasAtomAt(ParserAtomIndex index) const;
   bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSAtom* atom);
   bool allocate(JSContext* cx, size_t length);
+  bool extendIfNecessary(JSContext* cx, size_t length);
 
   void stealBuffer(AtomCacheVector& atoms);
-  void returnBuffer(AtomCacheVector& atoms);
+  void releaseBuffer(AtomCacheVector& atoms);
 
   void trace(JSTracer* trc);
 } JS_HAZ_GC_POINTER;
@@ -620,29 +621,17 @@ struct CompilationStencilSet : public CompilationStencil {
 
   MOZ_MUST_USE bool buildDelazificationIndices(JSContext* cx);
 
-  // Parameterized chunk size to use for LifoAlloc.
-  static constexpr size_t LifoAllocChunkSize = 512;
-
  public:
-  LifoAlloc allocForDelazifications;
   Vector<BaseCompilationStencil, 0, js::SystemAllocPolicy> delazifications;
   ScriptIndexVector delazificationIndices;
   CompilationAtomCache::AtomCacheVector delazificationAtomCache;
 
   CompilationStencilSet(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options)
-      : CompilationStencil(cx, options),
-        allocForDelazifications(LifoAllocChunkSize) {}
+      : CompilationStencil(cx, options) {}
 
   // Move constructor is necessary to use Rooted.
-  CompilationStencilSet(CompilationStencilSet&& other) noexcept
-      : CompilationStencil(std::move(other)),
-        allocForDelazifications(LifoAllocChunkSize),
-        delazifications(std::move(other.delazifications)),
-        delazificationAtomCache(std::move(other.delazificationAtomCache)) {
-    // Steal the data from the LifoAlloc.
-    allocForDelazifications.steal(&other.allocForDelazifications);
-  }
+  CompilationStencilSet(CompilationStencilSet&& other) = default;
 
   // To avoid any misuses, make sure this is neither copyable or assignable.
   CompilationStencilSet(const CompilationStencilSet&) = delete;
@@ -662,8 +651,6 @@ struct CompilationStencilSet : public CompilationStencil {
   MOZ_MUST_USE bool deserializeStencils(JSContext* cx,
                                         const JS::TranscodeRange& range,
                                         bool* succeededOut);
-
-  void trace(JSTracer* trc);
 };
 
 }  // namespace frontend
