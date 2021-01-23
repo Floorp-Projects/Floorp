@@ -475,8 +475,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                      JSOp op);
   MOZ_MUST_USE bool emitRegExp(GCThingIndex index);
 
-  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitFunction(FunctionNode* funNode,
-                                                  bool needsProto = false);
+  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitFunction(
+      FunctionNode* funNode, bool needsProto = false,
+      ListNode* classContentsIfConstructor = nullptr);
   MOZ_NEVER_INLINE MOZ_MUST_USE bool emitObject(ListNode* objNode);
 
   MOZ_MUST_USE bool emitHoistedFunctionsInList(ListNode* stmtList);
