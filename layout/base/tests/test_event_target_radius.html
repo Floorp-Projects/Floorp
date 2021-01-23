@@ -68,6 +68,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
       <div id="t12_target" style="width: 100px; height: 20px; background-color: green"></div>
     </div>
   </div>
+
+  <div id="t13" class="target" style="cursor:pointer" hidden>
+   <div id="t13_touchlistener" style="width: 50px; height: 50px; background:red" ontouchend="x=1"></div>
+   <div id="t13_notouchlistener" style="width: 50px; height: 50px; background:green"></div>
+  </div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -384,6 +389,14 @@ function testTouchable() {
   testTouch("t9", -5*mm, 10, "body", "touch outside t9 left edge radius");
   testTouch("t9", -3*mm, 10, "t9", "touch inside t9 left edge radius");
   setShowing("t9", false);
+
+  // Element "t13" is clickable, so touches on descendants should not get retargeted.
+  // In particular, the touch that lands on t13_notouchlistener but within the touch radius
+  // of t13_touchlistener should not get retargeted.
+  setShowing("t13", true);
+  testTouch("t13", 10, 50 + (2*mm), "t13_notouchlistener", "touch outside t13_touchlistener bottom edge");
+  testTouch("t13", 10, 50 - (2*mm), "t13_touchlistener", "touch inside t13_touchlistener bottom edge");
+  setShowing("t13", false);
 
   endTest();
 }
