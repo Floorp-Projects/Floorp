@@ -200,7 +200,8 @@ ProcessedModuleLoadEvent::ProcessedModuleLoadEvent()
     : mProcessUptimeMS(0ULL),
       mThreadId(0UL),
       mBaseAddress(0U),
-      mIsDependent(false) {}
+      mIsDependent(false),
+      mLoadStatus(0) {}
 
 ProcessedModuleLoadEvent::ProcessedModuleLoadEvent(
     glue::EnhancedModuleLoadInfo&& aModLoadInfo,
@@ -213,7 +214,8 @@ ProcessedModuleLoadEvent::ProcessedModuleLoadEvent(
       mBaseAddress(
           reinterpret_cast<uintptr_t>(aModLoadInfo.mNtLoadInfo.mBaseAddr)),
       mModule(std::move(aModuleRecord)),
-      mIsDependent(aIsDependent) {
+      mIsDependent(aIsDependent),
+      mLoadStatus(static_cast<uint32_t>(aModLoadInfo.mNtLoadInfo.mStatus)) {
   if (!mModule || !(*mModule)) {
     return;
   }
