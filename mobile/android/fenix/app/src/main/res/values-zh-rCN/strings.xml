@@ -1253,7 +1253,7 @@
     <string name="onboarding_privacy_notice_header">您的隐私权</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description2">%s 的设计目标是让您可以控制要在网上披露哪些内容，以及告诉我们哪些信息。</string>
+    <string name="onboarding_privacy_notice_description2">%s 的设计旨在让您可以控制要在网上披露哪些内容，以及告诉我们哪些信息。</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">阅读我们的隐私声明</string>
 

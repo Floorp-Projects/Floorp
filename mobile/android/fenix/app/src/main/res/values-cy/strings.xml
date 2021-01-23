@@ -1087,6 +1087,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Yn rhyddhau lle storio</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Caniatâd gwefan</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Llwythi</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Dileu data pori</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1209,8 +1211,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="onboarding_privacy_notice_header">Eich preifatrwydd</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Rydym wedi cynllunio %s i roi rheolaeth i chi dros yr hyn rydych chi’n ei rannu
-        ar-lein a’r hyn rydych chi’n ei rannu gyda ni.
+    <string name="onboarding_privacy_notice_description2">Rydym wedi cynllunio %s i roi rheolaeth i chi dros yr hyn rydych chi’n ei rannu ar-lein a’r hyn rydych chi’n ei rannu gyda ni.
     </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Darllenwch ein hysbysiad preifatrwydd</string>

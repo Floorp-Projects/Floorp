@@ -1100,6 +1100,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Απελευθερώνει χώρο αποθήκευσης</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Δικαιώματα ιστοσελίδων</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Λήψεις</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Διαγραφή δεδομένων περιήγησης</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1226,9 +1228,7 @@
     <string name="onboarding_privacy_notice_header">Το απόρρητό σας</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Έχουμε σχεδιάσει το %s ώστε να έχετε τον έλεγχο του τι θα κοινοποιείτε
-        στο διαδίκτυο και σε εμάς.
-    </string>
+    <string name="onboarding_privacy_notice_description2">Έχουμε σχεδιάσει το %s έτσι, ώστε να ελέγχετε τι κοινοποιείτε στο διαδίκτυο και σε εμάς.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Διαβάστε τη σημείωση απορρήτου μας</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->

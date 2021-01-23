@@ -1119,6 +1119,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Libère de l’espace de stockage</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Permissions des sites</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Téléchargements</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Supprimer les données de navigation</string>
 
@@ -1245,9 +1247,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="onboarding_privacy_notice_header">Votre vie privée</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Nous avons conçu %s pour vous donner le contrôle sur ce que vous partagez
-        en ligne et sur ce que vous partagez avec nous.
-    </string>
+    <string name="onboarding_privacy_notice_description2">Nous avons conçu %s pour vous donner le contrôle de ce que vous partagez en ligne et de ce que vous partagez avec nous.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Consulter notre politique de confidentialité</string>
 

@@ -1120,6 +1120,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">可清理出儲存空間</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">網站權限</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">下載項目</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">刪除瀏覽資料</string>
 
@@ -1240,7 +1242,7 @@
     <string name="onboarding_privacy_notice_header">您的隱私權</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">我們將 %s 設計成讓您可以完整控制要在網路上分享哪些東西、以及與我們分享哪些東西。</string>
+    <string name="onboarding_privacy_notice_description2">我們將 %s 設計成讓您可以完整控制要在網路上分享哪些東西、以及與我們分享哪些東西。</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">閱讀我們的隱私權公告</string>
 
