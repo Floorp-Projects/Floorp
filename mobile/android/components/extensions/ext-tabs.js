@@ -230,14 +230,12 @@ this.tabs = class extends ExtensionAPI {
           register: fire => {
             const restricted = ["url", "favIconUrl", "title"];
 
-            function sanitize(extension, changeInfo) {
+            function sanitize(tab, changeInfo) {
               const result = {};
               let nonempty = false;
+              const hasTabs = tab.hasTabPermission;
               for (const prop in changeInfo) {
-                if (
-                  extension.hasPermission("tabs") ||
-                  !restricted.includes(prop)
-                ) {
+                if (hasTabs || !restricted.includes(prop)) {
                   nonempty = true;
                   result[prop] = changeInfo[prop];
                 }
@@ -246,7 +244,7 @@ this.tabs = class extends ExtensionAPI {
             }
 
             const fireForTab = (tab, changed) => {
-              const [needed, changeInfo] = sanitize(extension, changed);
+              const [needed, changeInfo] = sanitize(tab, changed);
               if (needed) {
                 fire.async(tab.id, changeInfo, tab.convert());
               }
@@ -256,7 +254,7 @@ this.tabs = class extends ExtensionAPI {
               const needed = [];
               let nativeTab;
               switch (event.type) {
-                case "DOMTitleChanged": {
+                case "pagetitlechanged": {
                   const window = getBrowserWindow(event.target.ownerGlobal);
                   nativeTab = window.tab;
 
@@ -299,10 +297,10 @@ this.tabs = class extends ExtensionAPI {
             };
 
             windowTracker.addListener("status", statusListener);
-            windowTracker.addListener("DOMTitleChanged", listener);
+            windowTracker.addListener("pagetitlechanged", listener);
             return () => {
               windowTracker.removeListener("status", statusListener);
-              windowTracker.removeListener("DOMTitleChanged", listener);
+              windowTracker.removeListener("pagetitlechanged", listener);
             };
           },
         }).api(),
@@ -455,14 +453,6 @@ this.tabs = class extends ExtensionAPI {
         },
 
         async query(queryInfo) {
-          if (!extension.hasPermission("tabs")) {
-            if (queryInfo.url !== null || queryInfo.title !== null) {
-              return Promise.reject({
-                message:
-                  'The "tabs" permission is required to use the query API with the "url" or "title" parameters',
-              });
-            }
-          }
           return Array.from(tabManager.query(queryInfo, context), tab =>
             tab.convert()
           );
