@@ -158,10 +158,6 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
     }
   }
 
-  if (script.hasMemberInitializers()) {
-    lazy->setMemberInitializers(scriptExtra.memberInitializers());
-  }
-
   function->initScript(lazy);
 
   return true;
@@ -567,6 +563,10 @@ static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
       ScopeIndex index = scriptStencil.lazyFunctionEnclosingScopeIndex();
       Scope* scope = gcOutput.scopes[index];
       script->setEnclosingScope(scope);
+
+      if (scriptStencil.hasMemberInitializers()) {
+        script->setMemberInitializers(scriptStencil.memberInitializers());
+      }
 
       // Inferred and Guessed names are computed by BytecodeEmitter and so may
       // need to be applied to existing JSFunctions during delazification.
@@ -1828,6 +1828,10 @@ void ScriptStencil::dump(js::JSONPrinter& json,
 
 void ScriptStencil::dumpFields(js::JSONPrinter& json,
                                BaseCompilationStencil* stencil) {
+  if (hasMemberInitializers()) {
+    json.property("memberInitializers", memberInitializers_);
+  }
+
   json.formatProperty("gcThingsOffset", "CompilationGCThingIndex(%u)",
                       gcThingsOffset.index);
   json.property("gcThingsLength", gcThingsLength);
@@ -1899,8 +1903,6 @@ void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) {
   json.property("lineno", extent.lineno);
   json.property("column", extent.column);
   json.endObject();
-
-  json.property("memberInitializers", memberInitializers_);
 
   json.property("nargs", nargs);
 }
