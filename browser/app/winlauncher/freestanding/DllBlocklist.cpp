@@ -437,28 +437,41 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
         resultView.isOk() ? &resultView.inspect()->mK32Exports : nullptr);
   }
 
-  if (blockAction == BlockAction::Allow) {
-    if (nt::RtlGetProcessHeap()) {
-      ModuleLoadFrame::NotifySectionMap(
-          nt::AllocatedUnicodeString(sectionFileName), *aBaseAddress,
-          stubStatus);
-    }
-    return stubStatus;
+  ModuleLoadInfo::Status loadStatus = ModuleLoadInfo::Status::Blocked;
+
+  switch (blockAction) {
+    case BlockAction::Allow:
+      loadStatus = ModuleLoadInfo::Status::Loaded;
+      break;
+
+    case BlockAction::NoOpEntryPoint:
+      loadStatus = ModuleLoadInfo::Status::Redirected;
+      break;
+
+    case BlockAction::SubstituteLSP:
+      // The process heap needs to be available here because
+      // NotifyLSPSubstitutionRequired below copies a given string into
+      // the heap. We use a soft assert here, assuming LSP load always
+      // occurs after the heap is initialized.
+      MOZ_ASSERT(nt::RtlGetProcessHeap());
+
+      // Notify patched_LdrLoadDll that it will be necessary to perform
+      // a substitution before returning.
+      ModuleLoadFrame::NotifyLSPSubstitutionRequired(&leafOnStack);
+      break;
+
+    default:
+      break;
   }
 
-  if (blockAction == BlockAction::SubstituteLSP) {
-    // The process heap needs to be available here because
-    // NotifyLSPSubstitutionRequired below copies a given string into the heap.
-    // We use a soft assert here, assuming LSP load always occurs after the heap
-    // is initialized.
-    MOZ_ASSERT(nt::RtlGetProcessHeap());
-
-    // Notify patched_LdrLoadDll that it will be necessary to perform a
-    // substitution before returning.
-    ModuleLoadFrame::NotifyLSPSubstitutionRequired(&leafOnStack);
+  if (nt::RtlGetProcessHeap()) {
+    ModuleLoadFrame::NotifySectionMap(
+        nt::AllocatedUnicodeString(sectionFileName), *aBaseAddress, stubStatus,
+        loadStatus);
   }
 
-  if (blockAction == BlockAction::NoOpEntryPoint) {
+  if (loadStatus == ModuleLoadInfo::Status::Loaded ||
+      loadStatus == ModuleLoadInfo::Status::Redirected) {
     return stubStatus;
   }
 
