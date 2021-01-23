@@ -616,7 +616,8 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("gcNumber", JSGC_NUMBER, false)                                        \
   _("majorGCNumber", JSGC_MAJOR_GC_NUMBER, false)                          \
   _("minorGCNumber", JSGC_MINOR_GC_NUMBER, false)                          \
-  _("mode", JSGC_MODE, true)                                               \
+  _("incrementalGCEnabled", JSGC_INCREMENTAL_GC_ENABLED, true)             \
+  _("perZoneGCEnabled", JSGC_PER_ZONE_GC_ENABLED, true)                    \
   _("unusedChunks", JSGC_UNUSED_CHUNKS, false)                             \
   _("totalChunks", JSGC_TOTAL_CHUNKS, false)                               \
   _("sliceTimeBudgetMS", JSGC_SLICE_TIME_BUDGET_MS, true)                  \

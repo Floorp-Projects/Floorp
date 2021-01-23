@@ -404,14 +404,14 @@ class GCRuntime {
   bool isIncrementalGCAllowed() const { return incrementalAllowed; }
   void disallowIncrementalGC() { incrementalAllowed = false; }
 
-  bool isIncrementalGCEnabled() const {
-    return (mode == JSGC_MODE_INCREMENTAL ||
-            mode == JSGC_MODE_ZONE_INCREMENTAL) &&
-           incrementalAllowed;
-  }
+  void setIncrementalGCEnabled(bool enabled);
+  bool isIncrementalGCEnabled() const { return incrementalGCEnabled; }
   bool isIncrementalGCInProgress() const {
     return state() != State::NotActive && !isVerifyPreBarriersEnabled();
   }
+
+  bool isPerZoneGCEnabled() const { return perZoneGCEnabled; }
+
   bool hasForegroundWork() const;
 
   bool isCompactingGCEnabled() const;
@@ -496,12 +496,6 @@ class GCRuntime {
 
   double computeHeapGrowthFactor(size_t lastBytes);
   size_t computeTriggerBytes(double growthFactor, size_t lastBytes);
-
-  JSGCMode gcMode() const { return mode; }
-  void setGCMode(JSGCMode m) {
-    mode = m;
-    marker.setGCMode(mode);
-  }
 
   inline void updateOnFreeArenaAlloc(const TenuredChunkInfo& info);
   inline void updateOnArenaFree();
@@ -929,12 +923,8 @@ class GCRuntime {
   MainThreadData<mozilla::TimeStamp> lastGCStartTime_;
   MainThreadData<mozilla::TimeStamp> lastGCEndTime_;
 
-  /*
-   * JSGC_MODE
-   * prefs: javascript.options.mem.gc_per_zone and
-   *   javascript.options.mem.gc_incremental.
-   */
-  MainThreadData<JSGCMode> mode;
+  MainThreadData<bool> incrementalGCEnabled;
+  MainThreadData<bool> perZoneGCEnabled;
 
   mozilla::Atomic<size_t, mozilla::ReleaseAcquire> numActiveZoneIters;
 
