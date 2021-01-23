@@ -2089,30 +2089,6 @@ static void SetMemoryPrefChangedCallbackBool(const char* aPrefName,
   SetGCParameter((JSGCParamKey)(uintptr_t)aClosure, pref);
 }
 
-static void SetMemoryGCModePrefChangedCallback(const char* aPrefName,
-                                               void* aClosure) {
-  bool enableZoneGC =
-      Preferences::GetBool("javascript.options.mem.gc_per_zone");
-  bool enableIncrementalGC =
-      Preferences::GetBool("javascript.options.mem.gc_incremental");
-  JSGCMode mode;
-  if (enableIncrementalGC) {
-    if (enableZoneGC) {
-      mode = JSGC_MODE_ZONE_INCREMENTAL;
-    } else {
-      mode = JSGC_MODE_INCREMENTAL;
-    }
-  } else {
-    if (enableZoneGC) {
-      mode = JSGC_MODE_ZONE;
-    } else {
-      mode = JSGC_MODE_GLOBAL;
-    }
-  }
-
-  SetGCParameter(JSGC_MODE, mode);
-}
-
 static void SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName,
                                                     void* aClosure) {
   int32_t pref = Preferences::GetInt(aPrefName, -1);
@@ -2220,11 +2196,13 @@ void nsJSContext::EnsureStatics() {
                                        "javascript.options.mem.nursery.max_kb",
                                        (void*)JSGC_MAX_NURSERY_BYTES);
 
-  Preferences::RegisterCallbackAndCall(SetMemoryGCModePrefChangedCallback,
-                                       "javascript.options.mem.gc_per_zone");
+  Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackBool,
+                                       "javascript.options.mem.gc_per_zone",
+                                       (void*)JSGC_PER_ZONE_GC_ENABLED);
 
-  Preferences::RegisterCallbackAndCall(SetMemoryGCModePrefChangedCallback,
-                                       "javascript.options.mem.gc_incremental");
+  Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackBool,
+                                       "javascript.options.mem.gc_incremental",
+                                       (void*)JSGC_INCREMENTAL_GC_ENABLED);
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryGCSliceTimePrefChangedCallback,

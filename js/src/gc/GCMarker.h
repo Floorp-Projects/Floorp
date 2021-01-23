@@ -145,9 +145,10 @@ class MarkStack {
   size_t position() const { return topIndex_; }
 
   enum StackType { MainStack, AuxiliaryStack };
-  MOZ_MUST_USE bool init(JSGCMode gcMode, StackType which);
+  MOZ_MUST_USE bool init(StackType which, bool incrementalGCEnabled);
 
-  MOZ_MUST_USE bool setCapacityForMode(JSGCMode mode, StackType which);
+  MOZ_MUST_USE bool setStackCapacity(StackType which,
+                                     bool incrementalGCEnabled);
 
   size_t maxCapacity() const { return maxCapacity_; }
   void setMaxCapacity(size_t maxCapacity);
@@ -175,8 +176,6 @@ class MarkStack {
     mozilla::Unused << stack().resize(NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY);
     topIndex_ = 0;
   }
-
-  void setGCMode(JSGCMode gcMode);
 
   void poisonUnused();
 
@@ -260,7 +259,7 @@ enum MarkingState : uint8_t {
 class GCMarker final : public JSTracer {
  public:
   explicit GCMarker(JSRuntime* rt);
-  MOZ_MUST_USE bool init(JSGCMode gcMode);
+  MOZ_MUST_USE bool init();
 
   void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
   size_t maxCapacity() const { return stack.maxCapacity(); }
@@ -362,9 +361,10 @@ class GCMarker final : public JSTracer {
   MOZ_MUST_USE bool markUntilBudgetExhausted(
       SliceBudget& budget, ShouldReportMarkTime reportTime = ReportMarkTime);
 
-  void setGCMode(JSGCMode mode) {
+  void setIncrementalGCEnabled(bool enabled) {
     // Ignore failure to resize the stack and keep using the existing stack.
-    mozilla::Unused << stack.setCapacityForMode(mode, gc::MarkStack::MainStack);
+    mozilla::Unused << stack.setStackCapacity(gc::MarkStack::MainStack,
+                                              enabled);
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

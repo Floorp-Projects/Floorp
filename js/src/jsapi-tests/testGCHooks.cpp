@@ -70,7 +70,7 @@ BEGIN_TEST(testGCRootsRemoved) {
   AutoLeaveZeal nozeal(cx);
 #endif /* JS_GC_ZEAL */
 
-  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
+  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
 
   gSliceCallbackCount = 0;
   JS::SetGCSliceCallback(cx, RootsRemovedGCSliceCallback);
@@ -91,7 +91,7 @@ BEGIN_TEST(testGCRootsRemoved) {
 
   JS::SetGCSliceCallback(cx, nullptr);
 
-  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_GLOBAL);
+  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, false);
 
   return true;
 }

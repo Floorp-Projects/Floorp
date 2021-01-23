@@ -26,8 +26,7 @@
  * For a collection to be carried out incrementally the following conditions
  * must be met:
  *  - the collection must be run by calling js::GCSlice() rather than js::GC()
- *  - the GC mode must have been set to JSGC_MODE_INCREMENTAL or
- *    JSGC_MODE_ZONE_INCREMENTAL with JS_SetGCParameter()
+ *  - the GC parameter JSGC_INCREMENTAL_GC_ENABLED must be true.
  *
  * The last condition is an engine-internal mechanism to ensure that incremental
  * collection is not carried out without the correct barriers being implemented.
@@ -915,7 +914,8 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       verifyPreData(nullptr),
       lastGCStartTime_(ReallyNow()),
       lastGCEndTime_(ReallyNow()),
-      mode(TuningDefaults::Mode),
+      incrementalGCEnabled(TuningDefaults::IncrementalGCEnabled),
+      perZoneGCEnabled(TuningDefaults::PerZoneGCEnabled),
       numActiveZoneIters(0),
       cleanUpEverything(false),
       grayBufferState(GCRuntime::GrayBufferState::Unused),
@@ -976,7 +976,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       decommitTask(this),
       nursery_(this),
       storeBuffer_(rt, nursery()) {
-  setGCMode(JSGC_MODE_GLOBAL);
+  marker.setIncrementalGCEnabled(incrementalGCEnabled);
 }
 
 #ifdef JS_GC_ZEAL
@@ -1294,11 +1294,7 @@ bool GCRuntime::init(uint32_t maxbytes) {
   }
 #endif
 
-  if (!marker.init(mode)) {
-    return false;
-  }
-
-  if (!initSweepActions()) {
+  if (!marker.init() || !initSweepActions()) {
     return false;
   }
 
@@ -1392,12 +1388,11 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       }
       setMarkStackLimit(value, lock);
       break;
-    case JSGC_MODE:
-      if (mode != JSGC_MODE_GLOBAL && mode != JSGC_MODE_ZONE &&
-          mode != JSGC_MODE_INCREMENTAL && mode != JSGC_MODE_ZONE_INCREMENTAL) {
-        return false;
-      }
-      mode = JSGCMode(value);
+    case JSGC_INCREMENTAL_GC_ENABLED:
+      setIncrementalGCEnabled(value != 0);
+      break;
+    case JSGC_PER_ZONE_GC_ENABLED:
+      perZoneGCEnabled = value != 0;
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = value != 0;
@@ -1452,8 +1447,11 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
     case JSGC_MARK_STACK_LIMIT:
       setMarkStackLimit(MarkStack::DefaultCapacity, lock);
       break;
-    case JSGC_MODE:
-      mode = TuningDefaults::Mode;
+    case JSGC_INCREMENTAL_GC_ENABLED:
+      setIncrementalGCEnabled(TuningDefaults::IncrementalGCEnabled);
+      break;
+    case JSGC_PER_ZONE_GC_ENABLED:
+      perZoneGCEnabled = TuningDefaults::PerZoneGCEnabled;
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = TuningDefaults::CompactingEnabled;
@@ -1508,8 +1506,10 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(majorGCNumber);
     case JSGC_MINOR_GC_NUMBER:
       return uint32_t(minorGCNumber);
-    case JSGC_MODE:
-      return uint32_t(mode);
+    case JSGC_INCREMENTAL_GC_ENABLED:
+      return incrementalGCEnabled;
+    case JSGC_PER_ZONE_GC_ENABLED:
+      return perZoneGCEnabled;
     case JSGC_UNUSED_CHUNKS:
       return uint32_t(emptyChunks(lock).count());
     case JSGC_TOTAL_CHUNKS:
@@ -1592,6 +1592,11 @@ void GCRuntime::setMarkStackLimit(size_t limit, AutoLockGC& lock) {
   AutoUnlockGC unlock(lock);
   AutoStopVerifyingBarriers pauseVerification(rt, false);
   marker.setMaxCapacity(limit);
+}
+
+void GCRuntime::setIncrementalGCEnabled(bool enabled) {
+  incrementalGCEnabled = enabled;
+  marker.setIncrementalGCEnabled(enabled);
 }
 
 void GCRuntime::updateHelperThreadCount() {
@@ -7084,8 +7089,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     if (unsafeReason == GCAbortReason::None) {
       if (reason == JS::GCReason::COMPARTMENT_REVIVED) {
         unsafeReason = GCAbortReason::CompartmentRevived;
-      } else if (mode != JSGC_MODE_INCREMENTAL &&
-                 mode != JSGC_MODE_ZONE_INCREMENTAL) {
+      } else if (!incrementalGCEnabled) {
         unsafeReason = GCAbortReason::ModeChange;
       }
     }
@@ -7184,8 +7188,7 @@ static void ScheduleZones(GCRuntime* gc) {
       continue;
     }
 
-    if (gc->gcMode() == JSGC_MODE_GLOBAL ||
-        gc->gcMode() == JSGC_MODE_INCREMENTAL) {
+    if (!gc->isPerZoneGCEnabled()) {
       zone->scheduleGC();
     }
 
@@ -8470,6 +8473,8 @@ JS_PUBLIC_API void JS::NonIncrementalGC(JSContext* cx,
   MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
 
   cx->runtime()->gc.gc(gckind, reason);
+
+  MOZ_ASSERT(!IsIncrementalGCInProgress(cx));
 }
 
 JS_PUBLIC_API void JS::StartIncrementalGC(JSContext* cx,
@@ -8604,7 +8609,8 @@ JS_PUBLIC_API void JS::DisableIncrementalGC(JSContext* cx) {
 }
 
 JS_PUBLIC_API bool JS::IsIncrementalGCEnabled(JSContext* cx) {
-  return cx->runtime()->gc.isIncrementalGCEnabled();
+  GCRuntime& gc = cx->runtime()->gc;
+  return gc.isIncrementalGCEnabled() && gc.isIncrementalGCAllowed();
 }
 
 JS_PUBLIC_API bool JS::IsIncrementalGCInProgress(JSContext* cx) {

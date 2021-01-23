@@ -35,7 +35,8 @@ testGetParam("unusedChunks");
 testGetParam("totalChunks");
 
 testChangeParam("maxBytes");
-testChangeParam("mode");
+testChangeParam("incrementalGCEnabled");
+testChangeParam("perZoneGCEnabled");
 testChangeParam("sliceTimeBudgetMS");
 testChangeParam("markStackLimit");
 testChangeParam("highFrequencyTimeLimit");
