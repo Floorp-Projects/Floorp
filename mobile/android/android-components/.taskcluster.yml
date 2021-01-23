@@ -7,7 +7,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: 32c7e914db92719dc1c508f4c08a02ac75e94105
+              revision: a458418ef7cdd6778f1283926c6116966255bc24
           trustDomain: mobile
       in:
           $let:
@@ -175,7 +175,7 @@ tasks:
                             routes:
                                 $flattenDeep:
                                     - checks
-                                    - $if: 'level == "3"'
+                                    - $if: 'level == "3" || repoUrl == "https://github.com/mozilla-releng/staging-android-components"'
                                       then:
                                           - tc-treeherder.v2.${project}.${head_sha}
                                           - $if: 'tasks_for == "github-push"'

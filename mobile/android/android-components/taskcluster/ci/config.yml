@@ -133,7 +133,10 @@ treeherder:
         samples-browser-system: samples-browser-system
 
 
-task-priority: highest
+task-priority:
+    by-project:
+        "android-components": highest
+        "staging-android-components": low
 
 taskgraph:
     register: ac_taskgraph:register
