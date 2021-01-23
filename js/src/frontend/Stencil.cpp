@@ -158,7 +158,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
   }
 
   if (script.hasMemberInitializers()) {
-    lazy->setMemberInitializers(script.memberInitializers());
+    lazy->setMemberInitializers(scriptExtra.memberInitializers());
   }
 
   function->initScript(lazy);
@@ -1800,10 +1800,6 @@ void ScriptStencil::dump(js::JSONPrinter& json,
 
 void ScriptStencil::dumpFields(js::JSONPrinter& json,
                                BaseCompilationStencil* stencil) {
-  if (hasMemberInitializers()) {
-    json.property("memberInitializers", memberInitializers_);
-  }
-
   json.formatProperty("gcThingsOffset", "CompilationGCThingIndex(%u)",
                       gcThingsOffset.index);
   json.property("gcThingsLength", gcThingsLength);
@@ -1875,6 +1871,8 @@ void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) {
   json.property("lineno", extent.lineno);
   json.property("column", extent.column);
   json.endObject();
+
+  json.property("memberInitializers", memberInitializers_);
 
   json.property("nargs", nargs);
 }
