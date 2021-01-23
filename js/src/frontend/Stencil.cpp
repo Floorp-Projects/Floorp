@@ -157,6 +157,10 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
     }
   }
 
+  if (script.hasMemberInitializers()) {
+    lazy->setMemberInitializers(script.memberInitializers());
+  }
+
   function->initScript(lazy);
 
   return true;
@@ -562,10 +566,6 @@ static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
       ScopeIndex index = scriptStencil.lazyFunctionEnclosingScopeIndex();
       Scope* scope = gcOutput.scopes[index];
       script->setEnclosingScope(scope);
-
-      if (scriptStencil.hasMemberInitializers()) {
-        script->setMemberInitializers(scriptStencil.memberInitializers());
-      }
 
       // Inferred and Guessed names are computed by BytecodeEmitter and so may
       // need to be applied to existing JSFunctions during delazification.

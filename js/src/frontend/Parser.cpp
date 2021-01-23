@@ -2806,8 +2806,6 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   // lazy functions. Instead that info will be updated when we finish our
   // compilation.
   MOZ_ASSERT(fun->baseScript()->hasEnclosingScript());
-  MOZ_ASSERT_IF(fun->isClassConstructor(),
-                !fun->baseScript()->getMemberInitializers().valid);
 
   PropagateTransitiveParseFlags(funbox, pc_->sc());
 
@@ -7499,11 +7497,9 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
   // Fields cannot re-use the constructor obtained via JSOp::ClassConstructor or
   // JSOp::DerivedConstructor due to needing to emit calls to the field
   // initializers in the constructor. So, synthesize a new one.
-  size_t numPrivateMethods = classInitializedMembers.privateMethods;
-  size_t numFields = classInitializedMembers.instanceFields;
-
-  if (classStmt.constructorBox == nullptr &&
-      numFields + numPrivateMethods > 0) {
+  size_t numMemberInitializers = classInitializedMembers.privateMethods +
+                                 classInitializedMembers.instanceFields;
+  if (classStmt.constructorBox == nullptr && numMemberInitializers) {
     MOZ_ASSERT(!options().selfHostingMode);
     // Unconditionally create the scope here, because it's always the
     // constructor.
@@ -7555,7 +7551,11 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     // finished parsing the class.
     ctorbox->setCtorToStringEnd(classEndOffset);
 
-    if (numFields + numPrivateMethods > 0) {
+    // Now that we have full set of initializers, update the constructor.
+    MemberInitializers initializers(numMemberInitializers);
+    ctorbox->setMemberInitializers(initializers);
+
+    if (numMemberInitializers) {
       // Field initialization need access to `this`.
       ctorbox->setCtorFunctionHasThisBinding();
     }
