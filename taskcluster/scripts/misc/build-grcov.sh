@@ -8,6 +8,12 @@ PROJECT=grcov
 case "$(uname -s)" in
 Linux)
     COMPRESS_EXT=xz
+
+    export CC=clang
+    export CXX=clang++
+    export RUSTFLAGS=-Clinker=clang++
+
+    export PATH="$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/binutils/bin:$PATH"
     ;;
 MINGW*)
     UPLOAD_DIR=$PWD/public/build

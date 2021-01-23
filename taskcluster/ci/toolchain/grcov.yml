@@ -20,6 +20,8 @@ linux64-grcov:
     fetches:
         toolchain:
             - linux64-rust-1.47
+            - linux64-clang
+            - linux64-binutils
 
 macosx64-grcov:
     treeherder:
@@ -29,6 +31,8 @@ macosx64-grcov:
     fetches:
         toolchain:
             - linux64-rust-1.47
+            - linux64-clang
+            - linux64-binutils
 
 win64-grcov:
     treeherder:
