@@ -539,35 +539,24 @@ nsIFrame* FindFrameTargetedByInputEvent(
     return target;
   }
 
-  if (aEvent->mClass == eTouchEventClass) {
-    nsIFrame* closestTouchable =
-        GetClosest(aRootFrame, aPointRelativeToRootFrame, targetRect, prefs,
-                   restrictToDescendants, nullptr, candidates);
-    if (closestTouchable) {
-      target = closestTouchable;
+  nsIContent* clickableAncestor = nullptr;
+  if (target) {
+    clickableAncestor = GetClickableAncestor(target, nsGkAtoms::body);
+    if (clickableAncestor) {
+      PET_LOG("Target %p is clickable\n", target);
+      // If the target that was directly hit has a clickable ancestor, that
+      // means it too is clickable. And since it is the same as or a
+      // descendant of clickableAncestor, it should become the root for the
+      // GetClosest search.
+      clickableAncestor = target->GetContent();
     }
-  } else {
-    MOZ_ASSERT(aEvent->mClass == eMouseEventClass);
+  }
 
-    nsIContent* clickableAncestor = nullptr;
-    if (target) {
-      clickableAncestor = GetClickableAncestor(target, nsGkAtoms::body);
-      if (clickableAncestor) {
-        PET_LOG("Target %p is clickable\n", target);
-        // If the target that was directly hit has a clickable ancestor, that
-        // means it too is clickable. And since it is the same as or a
-        // descendant of clickableAncestor, it should become the root for the
-        // GetClosest search.
-        clickableAncestor = target->GetContent();
-      }
-    }
-
-    nsIFrame* closestClickable =
-        GetClosest(aRootFrame, aPointRelativeToRootFrame, targetRect, prefs,
-                   restrictToDescendants, clickableAncestor, candidates);
-    if (closestClickable) {
-      target = closestClickable;
-    }
+  nsIFrame* closest =
+      GetClosest(aRootFrame, aPointRelativeToRootFrame, targetRect, prefs,
+                 restrictToDescendants, clickableAncestor, candidates);
+  if (closest) {
+    target = closest;
   }
 
   PET_LOG("Final target is %p\n", target);
