@@ -52,8 +52,8 @@ class RegExpStack;
 }  // namespace internal
 }  // namespace v8
 
-#define V8_WARN_UNUSED_RESULT MOZ_MUST_USE
-#define V8_EXPORT_PRIVATE MOZ_EXPORT
+#define V8_WARN_UNUSED_RESULT [[nodiscard]]
+#define V8_EXPORT_PRIVATE
 #define V8_FALLTHROUGH [[fallthrough]]
 
 #define FATAL(x) MOZ_CRASH(x)
