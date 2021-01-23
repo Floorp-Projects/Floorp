@@ -37,16 +37,9 @@ if (!window[window.GoogleAnalyticsObject || "ga"]) {
   ga.loaded = true;
 
   const gaName = window.GoogleAnalyticsObject || "ga";
-  const gaQueue = window[gaName];
   window[gaName] = ga;
-
-  try {
-    window.dataLayer.hide.end();
-  } catch (_) {}
-
-  if (gaQueue instanceof Function && Array.isArray(gaQueue.q)) {
-    for (const entry of gaQueue.q) {
-      ga(...entry);
-    }
-  }
 }
+
+try {
+  window.dataLayer.hide.end();
+} catch (_) {}

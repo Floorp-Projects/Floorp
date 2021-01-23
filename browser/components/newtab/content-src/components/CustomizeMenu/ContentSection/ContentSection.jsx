@@ -59,6 +59,7 @@ export class ContentSection extends React.PureComponent {
               preference="feeds.topsites"
               aria-labelledby="custom-shortcuts-title"
               aria-describedby="custom-shortcuts-subtitle"
+              eventSource="TOP_SITES"
             />
             <span className="slider" role="presentation"></span>
           </label>
@@ -125,6 +126,7 @@ export class ContentSection extends React.PureComponent {
                       type="checkbox"
                       onChange={this.onPreferenceSelect}
                       preference="showSponsoredTopSites"
+                      eventSource="SPONSORED_TOP_SITES"
                     />
                     <label
                       className="sponsored"
@@ -149,6 +151,7 @@ export class ContentSection extends React.PureComponent {
                 preference="feeds.section.topstories"
                 aria-labelledby="custom-pocket-title"
                 aria-describedby="custom-pocket-subtitle"
+                eventSource="TOP_STORIES"
               />
               <span className="slider" role="presentation"></span>
             </label>
@@ -239,6 +242,7 @@ export class ContentSection extends React.PureComponent {
               preference="feeds.snippets"
               aria-labelledby="custom-snippets-title"
               aria-describedby="custom-snippets-subtitle"
+              eventSource="SNIPPETS"
             />
             <span className="slider" role="presentation"></span>
           </label>

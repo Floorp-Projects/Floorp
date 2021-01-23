@@ -77,7 +77,7 @@ if os.path.isdir(mozbase):
         sys.path.append(os.path.join(mozbase, package))
 
 from manifestparser import TestManifest
-from manifestparser.filters import chunk_by_slice, tags, pathprefix
+from manifestparser.filters import chunk_by_slice, tags, pathprefix, failures
 from manifestparser.util import normsep
 from mozlog import commandline
 import mozcrash
@@ -1028,11 +1028,23 @@ class XPCShellTests(object):
             path_filter = pathprefix(test_paths)
             filters.append(path_filter)
 
+        noDefaultFilters = False
+        if self.runFailures:
+            filters.append(failures(self.runFailures))
+            noDefaultFilters = True
+
         if self.totalChunks > 1:
             filters.append(chunk_by_slice(self.thisChunk, self.totalChunks))
         try:
             self.alltests = list(
-                map(normalize, mp.active_tests(filters=filters, **mozinfo.info))
+                map(
+                    normalize,
+                    mp.active_tests(
+                        filters=filters,
+                        noDefaultFilters=noDefaultFilters,
+                        **mozinfo.info
+                    ),
+                )
             )
         except TypeError:
             sys.stderr.write("*** offending mozinfo.info: %s\n" % repr(mozinfo.info))
@@ -1630,6 +1642,7 @@ class XPCShellTests(object):
         self.jscovdir = options.get("jscovdir")
         self.enable_webrender = options.get("enable_webrender")
         self.headless = options.get("headless")
+        self.runFailures = options.get("runFailures")
 
         self.testCount = 0
         self.passCount = 0

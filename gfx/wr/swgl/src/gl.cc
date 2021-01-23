@@ -66,6 +66,8 @@ WINBASEAPI BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER* lpFrequency);
 
 #define UNUSED __attribute__((unused))
 
+#define FALLTHROUGH __attribute__((fallthrough))
+
 #ifdef MOZILLA_CLIENT
 #  define IMPLICIT __attribute__((annotate("moz_implicit")))
 #else
@@ -86,6 +88,14 @@ struct IntRect {
   int y0;
   int x1;
   int y1;
+
+  IntRect() : x0(0), y0(0), x1(0), y1(0) {}
+  IntRect(int x0, int y0, int x1, int y1) : x0(x0), y0(y0), x1(x1), y1(y1) {}
+  IntRect(IntPoint origin, IntPoint size)
+      : x0(origin.x),
+        y0(origin.y),
+        x1(origin.x + size.x),
+        y1(origin.y + size.y) {}
 
   int width() const { return x1 - x0; }
   int height() const { return y1 - y0; }
@@ -755,7 +765,9 @@ struct Program {
 // for GL defines to fully expand
 #define CONCAT_KEY(prefix, x, y, z, w, ...) prefix##x##y##z##w
 #define BLEND_KEY(...) CONCAT_KEY(BLEND_, __VA_ARGS__, 0, 0)
+#define MASK_BLEND_KEY(...) CONCAT_KEY(MASK_BLEND_, __VA_ARGS__, 0, 0)
 #define FOR_EACH_BLEND_KEY(macro)                                              \
+  macro(GL_ONE, GL_ZERO, 0, 0)                                                 \
   macro(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)  \
   macro(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, 0, 0)                                  \
   macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, 0, 0)                                 \
@@ -764,17 +776,19 @@ struct Program {
   macro(GL_ZERO, GL_SRC_COLOR, 0, 0)                                           \
   macro(GL_ONE, GL_ONE, 0, 0)                                                  \
   macro(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)                        \
-  macro(GL_ONE, GL_ZERO, 0, 0)                                                 \
   macro(GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ZERO, GL_ONE)                       \
   macro(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR, 0, 0)                       \
   macro(GL_ONE, GL_ONE_MINUS_SRC1_COLOR, 0, 0)
-// clang-format on
 
 #define DEFINE_BLEND_KEY(...) BLEND_KEY(__VA_ARGS__),
+#define DEFINE_MASK_BLEND_KEY(...) MASK_BLEND_KEY(__VA_ARGS__),
 enum BlendKey : uint8_t {
-  BLEND_KEY_NONE = 0,
   FOR_EACH_BLEND_KEY(DEFINE_BLEND_KEY)
+  FOR_EACH_BLEND_KEY(DEFINE_MASK_BLEND_KEY)
+  BLEND_KEY_NONE = BLEND_KEY(GL_ONE, GL_ZERO),
+  MASK_BLEND_KEY_NONE = MASK_BLEND_KEY(GL_ONE, GL_ZERO)
 };
+// clang-format on
 
 const size_t MAX_TEXTURE_UNITS = 16;
 
@@ -1249,7 +1263,6 @@ void Enable(GLenum cap) {
   switch (cap) {
     case GL_BLEND:
       ctx->blend = true;
-      blend_key = ctx->blend_key;
       break;
     case GL_DEPTH_TEST:
       ctx->depthtest = true;
@@ -1264,7 +1277,6 @@ void Disable(GLenum cap) {
   switch (cap) {
     case GL_BLEND:
       ctx->blend = false;
-      blend_key = BLEND_KEY_NONE;
       break;
     case GL_DEPTH_TEST:
       ctx->depthtest = false;
@@ -1441,10 +1453,6 @@ void BlendFunc(GLenum srgb, GLenum drgb, GLenum sa, GLenum da) {
       debugf("blendfunc: %x, %x, separate: %x, %x\n", srgb, drgb, sa, da);
       assert(false);
       break;
-  }
-
-  if (ctx->blend) {
-    blend_key = ctx->blend_key;
   }
 }
 
@@ -2859,6 +2867,50 @@ static inline WideRGBA8 pack_pixels_RGBA8() {
   return pack_pixels_RGBA8(fragment_shader->gl_FragColor);
 }
 
+// Load a partial span > 0 and < 4 pixels.
+template <typename V, typename P>
+static ALWAYS_INLINE V partial_load_span(const P* src, int span) {
+  return bit_cast<V>(
+      (span >= 2
+           ? combine(unaligned_load<V2<P>>(src),
+                     V2<P>{span > 2 ? unaligned_load<P>(src + 2) : P(0), 0})
+           : V4<P>{unaligned_load<P>(src), 0, 0, 0}));
+}
+
+// Store a partial span > 0 and < 4 pixels.
+template <typename V, typename P>
+static ALWAYS_INLINE void partial_store_span(P* dst, V src, int span) {
+  auto pixels = bit_cast<V4<P>>(src);
+  if (span >= 2) {
+    unaligned_store(dst, lowHalf(pixels));
+    if (span > 2) {
+      unaligned_store(dst + 2, pixels.z);
+    }
+  } else {
+    unaligned_store(dst, pixels.x);
+  }
+}
+
+// Dispatcher that chooses when to load a full or partial span
+template <typename V, typename P>
+static ALWAYS_INLINE V load_span(const P* src, int span) {
+  if (span >= 4) {
+    return unaligned_load<V, P>(src);
+  } else {
+    return partial_load_span<V, P>(src, span);
+  }
+}
+
+// Dispatcher that chooses when to store a full or partial span
+template <typename V, typename P>
+static ALWAYS_INLINE void store_span(P* dst, V src, int span) {
+  if (span >= 4) {
+    unaligned_store<V, P>(dst, src);
+  } else {
+    partial_store_span<V, P>(dst, src, span);
+  }
+}
+
 // (x*y + x) >> 8, cheap approximation of (x*y) / 255
 template <typename T>
 static inline T muldiv255(T x, T y) {
@@ -2887,7 +2939,32 @@ static inline WideRGBA8 alphas(WideRGBA8 c) {
   return SHUFFLE(c, c, 3, 3, 3, 3, 7, 7, 7, 7, 11, 11, 11, 11, 15, 15, 15, 15);
 }
 
-static inline WideRGBA8 blend_pixels_RGBA8(PackedRGBA8 pdst, WideRGBA8 src) {
+// A pointer into the color buffer for the start of the span.
+static void* swgl_SpanBuf = nullptr;
+// A pointer into the clip mask for the start of the span.
+static uint8_t* swgl_ClipMaskBuf = nullptr;
+
+static ALWAYS_INLINE WideR8 expand_clip_mask(uint8_t* buf, WideR8 mask) {
+  return mask;
+}
+static ALWAYS_INLINE WideRGBA8 expand_clip_mask(uint32_t* buf, WideR8 mask) {
+  WideRG8 maskRG = zip(mask, mask);
+  return zip(maskRG, maskRG);
+}
+
+// Loads a chunk of clip masks. The current pointer into the color buffer is
+// used to reconstruct the relative position within the span. From there, the
+// pointer into the clip mask can be generated from the start of the clip mask
+// span.
+template <typename P>
+static ALWAYS_INLINE auto load_clip_mask(P* buf, int span)
+    -> decltype(expand_clip_mask(buf, 0)) {
+  uint8_t* maskBuf = &swgl_ClipMaskBuf[buf - (P*)swgl_SpanBuf];
+  return expand_clip_mask(buf, unpack(load_span<PackedR8>(maskBuf, span)));
+}
+
+static inline WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
+                                     WideRGBA8 src, int span = 4) {
   WideRGBA8 dst = unpack(pdst);
   const WideRGBA8 RGB_MASK = {0xFFFF, 0xFFFF, 0xFFFF, 0,      0xFFFF, 0xFFFF,
                               0xFFFF, 0,      0xFFFF, 0xFFFF, 0xFFFF, 0,
@@ -2896,36 +2973,45 @@ static inline WideRGBA8 blend_pixels_RGBA8(PackedRGBA8 pdst, WideRGBA8 src) {
                                 0, 0, 0, 0xFFFF, 0, 0, 0, 0xFFFF};
   const WideRGBA8 ALPHA_OPAQUE = {0, 0, 0, 255, 0, 0, 0, 255,
                                   0, 0, 0, 255, 0, 0, 0, 255};
+
+  // Each blend case is preceded by the MASK_ variant. The MASK_ case first
+  // loads the mask values and multiplies the source value by them. After, it
+  // falls through to the normal blending case using the masked source.
+#define BLEND_CASE_KEY(key)                                     \
+  MASK_##key : src = muldiv255(src, load_clip_mask(buf, span)); \
+  FALLTHROUGH;                                                  \
+  case key
+#define BLEND_CASE(...) BLEND_CASE_KEY(BLEND_KEY(__VA_ARGS__))
+
   switch (blend_key) {
-    case BLEND_KEY_NONE:
+    case BLEND_CASE(GL_ONE, GL_ZERO):
       return src;
-    case BLEND_KEY(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
-                   GL_ONE_MINUS_SRC_ALPHA):
+    case BLEND_CASE(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+                    GL_ONE_MINUS_SRC_ALPHA):
       // dst + src.a*(src.rgb1 - dst)
       // use addlow for signed overflow
       return addlow(dst, muldiv255(alphas(src), (src | ALPHA_OPAQUE) - dst));
-    case BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC_ALPHA):
+    case BLEND_CASE(GL_ONE, GL_ONE_MINUS_SRC_ALPHA):
       return src + dst - muldiv255(dst, alphas(src));
-    case BLEND_KEY(GL_ZERO, GL_ONE_MINUS_SRC_COLOR):
+    case BLEND_CASE(GL_ZERO, GL_ONE_MINUS_SRC_COLOR):
       return dst - muldiv255(dst, src);
-    case BLEND_KEY(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE):
+    case BLEND_CASE(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE):
       return dst - (muldiv255(dst, src) & RGB_MASK);
-    case BLEND_KEY(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA):
+    case BLEND_CASE(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA):
       return dst - muldiv255(dst, alphas(src));
-    case BLEND_KEY(GL_ZERO, GL_SRC_COLOR):
+    case BLEND_CASE(GL_ZERO, GL_SRC_COLOR):
       return muldiv255(src, dst);
-    case BLEND_KEY(GL_ONE, GL_ONE):
+    case BLEND_CASE(GL_ONE, GL_ONE):
       return src + dst;
-    case BLEND_KEY(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA):
+    case BLEND_CASE(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA):
       return src + dst - (muldiv255(dst, src) & ALPHA_MASK);
-    case BLEND_KEY(GL_ONE, GL_ZERO):
-      return src;
-    case BLEND_KEY(GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ZERO, GL_ONE):
+    case BLEND_CASE(GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ZERO, GL_ONE):
       // src*(1-dst.a) + dst*1 = src - src*dst.a + dst
       return dst + ((src - muldiv255(src, alphas(dst))) & RGB_MASK);
-    case BLEND_KEY(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR):
-      // src*k + (1-src)*dst = src*k + dst - src*dst = dst + src*(k - dst)
-      // use addlow for signed overflow
+    case BLEND_CASE(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR):
+      // src*k + (1-src)*dst = src*k + dst -
+      // src*dst = dst + src*(k - dst) use addlow
+      // for signed overflow
       return addlow(
           dst, muldiv255(src, combine(ctx->blendcolor, ctx->blendcolor) - dst));
     case BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC1_COLOR): {
@@ -2933,78 +3019,48 @@ static inline WideRGBA8 blend_pixels_RGBA8(PackedRGBA8 pdst, WideRGBA8 src) {
           pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor);
       return src + dst - muldiv255(dst, secondary);
     }
+    case MASK_BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC1_COLOR): {
+      // We must explicitly handle the masked secondary blend case.
+      // The secondary color as well as the source must be multiplied by the
+      // mask.
+      WideRGBA8 mask = load_clip_mask(buf, span);
+      WideRGBA8 secondary =
+          pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor);
+      return muldiv255(src, mask) + dst -
+             muldiv255(dst, muldiv255(secondary, mask));
+    }
     default:
       UNREACHABLE;
       // return src;
   }
-}
 
-// Load a partial span > 0 and < 4 pixels.
-template <typename V, typename P>
-static ALWAYS_INLINE V partial_load_span(const P* src, int span) {
-  return bit_cast<V>(
-      (span >= 2
-           ? combine(unaligned_load<V2<P>>(src),
-                     V2<P>{span > 2 ? unaligned_load<P>(src + 2) : P(0), 0})
-           : V4<P>{unaligned_load<P>(src), 0, 0, 0}));
-}
-
-// Store a partial span > 0 and < 4 pixels.
-template <typename V, typename P>
-static ALWAYS_INLINE void partial_store_span(P* dst, V src, int span) {
-  auto pixels = bit_cast<V4<P>>(src);
-  if (span >= 2) {
-    unaligned_store(dst, lowHalf(pixels));
-    if (span > 2) {
-      unaligned_store(dst + 2, pixels.z);
-    }
-  } else {
-    unaligned_store(dst, pixels.x);
-  }
-}
-
-// Dispatcher that chooses when to load a full or partial span
-template <int SPAN, typename V, typename P>
-static ALWAYS_INLINE V load_span(const P* src) {
-  if (SPAN >= 4) {
-    return unaligned_load<V, P>(src);
-  } else {
-    return partial_load_span<V, P>(src, SPAN);
-  }
-}
-
-// Dispatcher that chooses when to store a full or partial span
-template <int SPAN, typename V, typename P>
-static ALWAYS_INLINE void store_span(P* dst, V src) {
-  if (SPAN >= 4) {
-    unaligned_store<V, P>(dst, src);
-  } else {
-    partial_store_span<V, P>(dst, src, SPAN);
-  }
+#undef BLEND_CASE
+#undef BLEND_CASE_KEY
 }
 
 template <bool DISCARD, int SPAN>
 static ALWAYS_INLINE void discard_output(uint32_t* buf, PackedRGBA8 mask) {
   WideRGBA8 r = pack_pixels_RGBA8();
-  PackedRGBA8 dst = load_span<SPAN, PackedRGBA8>(buf);
-  if (blend_key) r = blend_pixels_RGBA8(dst, r);
+  PackedRGBA8 dst = load_span<PackedRGBA8>(buf, SPAN);
+  if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
   if (DISCARD)
     mask |= bit_cast<PackedRGBA8>(fragment_shader->swgl_IsPixelDiscarded);
-  store_span<SPAN>(buf, (mask & dst) | (~mask & pack(r)));
+  store_span(buf, (mask & dst) | (~mask & pack(r)), SPAN);
 }
 
 template <bool DISCARD, int SPAN>
 static ALWAYS_INLINE void discard_output(uint32_t* buf) {
   WideRGBA8 r = pack_pixels_RGBA8();
   if (DISCARD) {
-    PackedRGBA8 dst = load_span<SPAN, PackedRGBA8>(buf);
-    if (blend_key) r = blend_pixels_RGBA8(dst, r);
+    PackedRGBA8 dst = load_span<PackedRGBA8>(buf, SPAN);
+    if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
     PackedRGBA8 mask =
         bit_cast<PackedRGBA8>(fragment_shader->swgl_IsPixelDiscarded);
-    store_span<SPAN>(buf, (mask & dst) | (~mask & pack(r)));
+    store_span(buf, (mask & dst) | (~mask & pack(r)), SPAN);
   } else {
-    if (blend_key) r = blend_pixels_RGBA8(load_span<SPAN, PackedRGBA8>(buf), r);
-    store_span<SPAN>(buf, pack(r));
+    if (blend_key)
+      r = blend_pixels(buf, load_span<PackedRGBA8>(buf, SPAN), r, SPAN);
+    store_span(buf, pack(r), SPAN);
   }
 }
 
@@ -3024,43 +3080,51 @@ static inline WideR8 pack_pixels_R8() {
   return pack_pixels_R8(fragment_shader->gl_FragColor.x);
 }
 
-static inline WideR8 blend_pixels_R8(WideR8 dst, WideR8 src) {
+static inline WideR8 blend_pixels(uint8_t* buf, WideR8 dst, WideR8 src,
+                                  int span = 4) {
+#define BLEND_CASE_KEY(key)                                     \
+  MASK_##key : src = muldiv255(src, load_clip_mask(buf, span)); \
+  FALLTHROUGH;                                                  \
+  case key
+#define BLEND_CASE(...) BLEND_CASE_KEY(BLEND_KEY(__VA_ARGS__))
+
   switch (blend_key) {
-    case BLEND_KEY_NONE:
+    case BLEND_CASE(GL_ONE, GL_ZERO):
       return src;
-    case BLEND_KEY(GL_ZERO, GL_SRC_COLOR):
+    case BLEND_CASE(GL_ZERO, GL_SRC_COLOR):
       return muldiv255(src, dst);
-    case BLEND_KEY(GL_ONE, GL_ONE):
+    case BLEND_CASE(GL_ONE, GL_ONE):
       return src + dst;
-    case BLEND_KEY(GL_ONE, GL_ZERO):
-      return src;
     default:
       UNREACHABLE;
       // return src;
   }
+
+#undef BLEND_CASE
+#undef BLEND_CASE_KEY
 }
 
 template <bool DISCARD, int SPAN>
 static inline void discard_output(uint8_t* buf, WideR8 mask) {
   WideR8 r = pack_pixels_R8();
-  WideR8 dst = unpack(load_span<SPAN, PackedR8>(buf));
-  if (blend_key) r = blend_pixels_R8(dst, r);
+  WideR8 dst = unpack(load_span<PackedR8>(buf, SPAN));
+  if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
   if (DISCARD) mask |= packR8(fragment_shader->swgl_IsPixelDiscarded);
-  store_span<SPAN>(buf, pack((mask & dst) | (~mask & r)));
+  store_span(buf, pack((mask & dst) | (~mask & r)), SPAN);
 }
 
 template <bool DISCARD, int SPAN>
 static inline void discard_output(uint8_t* buf) {
   WideR8 r = pack_pixels_R8();
   if (DISCARD) {
-    WideR8 dst = unpack(load_span<SPAN, PackedR8>(buf));
-    if (blend_key) r = blend_pixels_R8(dst, r);
+    WideR8 dst = unpack(load_span<PackedR8>(buf, SPAN));
+    if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
     WideR8 mask = packR8(fragment_shader->swgl_IsPixelDiscarded);
-    store_span<SPAN>(buf, pack((mask & dst) | (~mask & r)));
+    store_span(buf, pack((mask & dst) | (~mask & r)), SPAN);
   } else {
     if (blend_key)
-      r = blend_pixels_R8(unpack(load_span<SPAN, PackedR8>(buf)), r);
-    store_span<SPAN>(buf, pack(r));
+      r = blend_pixels(buf, unpack(load_span<PackedR8>(buf, SPAN)), r, SPAN);
+    store_span(buf, pack(r), SPAN);
   }
 }
 
@@ -3160,7 +3224,49 @@ struct ClipRect {
 
   explicit ClipRect(const IntRect& i)
       : x0(i.x0), y0(i.y0), x1(i.x1), y1(i.y1) {}
-  explicit ClipRect(const Texture& t) : ClipRect(ctx->apply_scissor(t)) {}
+  explicit ClipRect(const Texture& t) : ClipRect(ctx->apply_scissor(t)) {
+    // If blending is enabled, set blend_key to reflect the resolved blend
+    // state for the currently drawn primitive.
+    if (ctx->blend) {
+      blend_key = ctx->blend_key;
+      // If a clip mask is available, set up blending state to use the clip
+      // mask.
+      if (swgl_ClipMask) {
+        assert(swgl_ClipMask->format == TextureFormat::R8);
+        // Constrain the clip mask bounds to always fall within the clip mask.
+        swgl_ClipMaskBounds.intersect(IntRect{0, 0, int(swgl_ClipMask->width),
+                                              int(swgl_ClipMask->height)});
+        // The clip mask offset is relative to the viewport.
+        swgl_ClipMaskOffset += ctx->viewport.origin() - t.offset;
+        // The clip mask bounds are relative to the clip mask offset.
+        swgl_ClipMaskBounds.offset(swgl_ClipMaskOffset);
+        // Finally, constrain the clip rectangle by the clip mask bounds.
+        intersect(swgl_ClipMaskBounds);
+        // Modify the blend key so that it will use the clip mask while
+        // blending.
+        blend_key = BlendKey(MASK_BLEND_KEY_NONE + blend_key);
+      }
+    } else {
+      blend_key = BLEND_KEY_NONE;
+    }
+  }
+
+  void intersect(const IntRect& c) {
+    x0 = max(x0, float(c.x0));
+    y0 = max(y0, float(c.y0));
+    x1 = min(x1, float(c.x1));
+    y1 = min(y1, float(c.y1));
+  }
+
+  template <typename P>
+  void init_span(int x, int y, P* buf) const {
+    if (blend_key >= MASK_BLEND_KEY_NONE) {
+      swgl_SpanBuf = buf;
+      swgl_ClipMaskBuf = (uint8_t*)swgl_ClipMask->buf +
+                         (y - swgl_ClipMaskOffset.y) * swgl_ClipMask->stride +
+                         (x - swgl_ClipMaskOffset.x);
+    }
+  }
 
   template <typename P>
   bool overlaps(int nump, const P* p) const {
@@ -3546,6 +3652,7 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
         Interpolants o = left.interp + step * (startx + 0.5f - left.x);
         fragment_shader->init_span(&o, &step);
       }
+      clipRect.init_span(startx, y, buf);
       if (!use_discard) {
         // Fast paths for the case where fragment discard is not used.
         if (depth) {
@@ -3770,6 +3877,7 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
         Interpolants o = left.interp + step * (startx + 0.5f - left.x());
         fragment_shader->init_span<true>(&o, &step);
       }
+      clipRect.init_span(startx, y, buf);
       if (!use_discard) {
         // No discard is used. Common case.
         draw_span<false, true>(buf, depth, span, packDepth);
@@ -4051,6 +4159,7 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   // Reserve space for 6 sets of interpolants, in case we need to clip against
   // near and far planes in the perspective case.
   Interpolants interp_outs[4];
+  swgl_ClipMask = nullptr;
   vertex_shader->run_primitive((char*)interp_outs, sizeof(Interpolants));
   vec4 pos = vertex_shader->gl_Position;
   // Check if any vertex W is different from another. If so, use perspective.
@@ -4306,13 +4415,7 @@ void MakeCurrent(Context* c) {
     return;
   }
   ctx = c;
-  if (ctx) {
-    setup_program(ctx->current_program);
-    blend_key = ctx->blend ? ctx->blend_key : BLEND_KEY_NONE;
-  } else {
-    setup_program(0);
-    blend_key = BLEND_KEY_NONE;
-  }
+  setup_program(ctx ? ctx->current_program : 0);
 }
 
 Context* CreateContext() { return new Context; }

@@ -48,6 +48,10 @@ class GeckoTextMarker final {
 
   bool operator<(const GeckoTextMarker& aPoint) const;
 
+  bool operator==(const GeckoTextMarker& aPoint) const {
+    return mContainer == aPoint.mContainer && mOffset == aPoint.mOffset;
+  }
+
   AccessibleOrProxy mContainer;
   int32_t mOffset;
 

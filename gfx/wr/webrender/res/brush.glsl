@@ -159,7 +159,8 @@ void brush_shader_main_vs(
 #ifdef WR_FEATURE_ALPHA_PASS
     write_clip(
         vi.world_pos,
-        clip_area
+        clip_area,
+        pic_task
     );
 #endif
 

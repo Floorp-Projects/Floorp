@@ -2587,6 +2587,15 @@ void WasmTableObject::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
+// Return the JS value to use when a parameter to a function requiring a table
+// value is omitted. An implementation of [1].
+//
+// [1]
+// https://webassembly.github.io/reference-types/js-api/index.html#defaultvalue
+static Value TableDefaultValue(wasm::RefType tableType) {
+  return tableType.isExtern() ? UndefinedValue() : NullValue();
+}
+
 /* static */
 WasmTableObject* WasmTableObject::create(JSContext* cx, uint32_t initialLength,
                                          Maybe<uint32_t> maximumLength,
@@ -2728,6 +2737,23 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // Initialize the table to a default value
+  RootedValue initValue(
+      cx, args.length() < 2 ? TableDefaultValue(tableType) : args[1]);
+
+  // Skip initializing the table if the fill value is null, as that is the
+  // default value.
+  if (!initValue.isNull() &&
+      !table->fillRange(cx, 0, initialLength, initValue)) {
+    return false;
+  }
+#ifdef DEBUG
+  // Assert that null is the default value of a new table.
+  if (initValue.isNull()) {
+    table->assertRangeNull(0, initialLength);
+  }
+#endif
+
   args.rval().setObject(*table);
   return true;
 }
@@ -2868,7 +2894,7 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<WasmTableObject>());
   Table& table = tableObj->table();
 
-  if (!args.requireAtLeast(cx, "WebAssembly.Table.set", 2)) {
+  if (!args.requireAtLeast(cx, "WebAssembly.Table.set", 1)) {
     return false;
   }
 
@@ -2877,23 +2903,10 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  MOZ_ASSERT(index < MaxTableLength);
-  static_assert(MaxTableLength < UINT32_MAX, "Invariant");
-
-  RootedValue fillValue(cx, args[1]);
-  RootedFunction fun(cx);
-  RootedAnyRef any(cx, AnyRef::null());
-  if (!CheckRefType(cx, table.elemType(), fillValue, &fun, &any)) {
+  RootedValue fillValue(
+      cx, args.length() < 2 ? TableDefaultValue(table.elemType()) : args[1]);
+  if (!tableObj->fillRange(cx, index, 1, fillValue)) {
     return false;
-  }
-  switch (table.repr()) {
-    case TableRepr::Func:
-      MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      table.fillFuncRef(index, 1, FuncRef::fromJSFunction(fun), cx);
-      break;
-    case TableRepr::Ref:
-      table.fillAnyRef(index, 1, any);
-      break;
   }
 
   args.rval().setUndefined();
@@ -2929,48 +2942,20 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  RootedValue fillValue(cx);
-  fillValue.setNull();
-  if (args.length() > 1) {
-    fillValue = args[1];
+  // Fill the grown range of the table
+  RootedValue fillValue(
+      cx, args.length() < 2 ? TableDefaultValue(table.elemType()) : args[1]);
+
+  // Skip filling the grown range of the table if the fill value is null, as
+  // that is the default value.
+  if (!fillValue.isNull() &&
+      !tableObj->fillRange(cx, oldLength, delta, fillValue)) {
+    return false;
   }
-
-  MOZ_ASSERT(delta <= MaxTableLength);              // grow() should ensure this
-  MOZ_ASSERT(oldLength <= MaxTableLength - delta);  // ditto
-
-  static_assert(MaxTableLength < UINT32_MAX, "Invariant");
-
-  if (!fillValue.isNull()) {
-    RootedFunction fun(cx);
-    RootedAnyRef any(cx, AnyRef::null());
-    if (!CheckRefType(cx, table.elemType(), fillValue, &fun, &any)) {
-      return false;
-    }
-    switch (table.repr()) {
-      case TableRepr::Func:
-        MOZ_ASSERT(!table.isAsmJS());
-        table.fillFuncRef(oldLength, delta, FuncRef::fromJSFunction(fun), cx);
-        break;
-      case TableRepr::Ref:
-        table.fillAnyRef(oldLength, delta, any);
-        break;
-    }
-  }
-
 #ifdef DEBUG
+  // Assert that null is the default value of the grown range.
   if (fillValue.isNull()) {
-    switch (table.repr()) {
-      case TableRepr::Func:
-        for (uint32_t index = oldLength; index < oldLength + delta; index++) {
-          MOZ_ASSERT(table.getFuncRef(index).code == nullptr);
-        }
-        break;
-      case TableRepr::Ref:
-        for (uint32_t index = oldLength; index < oldLength + delta; index++) {
-          MOZ_ASSERT(table.getAnyRef(index).isNull());
-        }
-        break;
-    }
+    tableObj->assertRangeNull(oldLength, delta);
   }
 #endif
 
@@ -2997,6 +2982,49 @@ const JSFunctionSpec WasmTableObject::static_methods[] = {JS_FS_END};
 Table& WasmTableObject::table() const {
   return *(Table*)getReservedSlot(TABLE_SLOT).toPrivate();
 }
+
+bool WasmTableObject::fillRange(JSContext* cx, uint32_t index, uint32_t length,
+                                HandleValue value) const {
+  Table& tab = table();
+
+  // All consumers are required to either bounds check or statically be in
+  // bounds
+  MOZ_ASSERT(uint64_t(index) + uint64_t(length) <= tab.length());
+
+  RootedFunction fun(cx);
+  RootedAnyRef any(cx, AnyRef::null());
+  if (!CheckRefType(cx, tab.elemType(), value, &fun, &any)) {
+    return false;
+  }
+  switch (tab.repr()) {
+    case TableRepr::Func:
+      MOZ_RELEASE_ASSERT(!tab.isAsmJS());
+      tab.fillFuncRef(index, length, FuncRef::fromJSFunction(fun), cx);
+      break;
+    case TableRepr::Ref:
+      tab.fillAnyRef(index, length, any);
+      break;
+  }
+  return true;
+}
+
+#ifdef DEBUG
+void WasmTableObject::assertRangeNull(uint32_t index, uint32_t length) const {
+  Table& tab = table();
+  switch (tab.repr()) {
+    case TableRepr::Func:
+      for (uint32_t i = index; i < index + length; i++) {
+        MOZ_ASSERT(tab.getFuncRef(i).code == nullptr);
+      }
+      break;
+    case TableRepr::Ref:
+      for (uint32_t i = index; i < index + length; i++) {
+        MOZ_ASSERT(tab.getAnyRef(i).isNull());
+      }
+      break;
+  }
+}
+#endif
 
 // ============================================================================
 // WebAssembly.global class and methods
