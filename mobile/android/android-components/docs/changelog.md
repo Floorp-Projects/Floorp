@@ -17,6 +17,9 @@ permalink: /changelog/
 * **support-base**
   * ⚠️ **This is a breaking change**: Update the signature of `ActivityResultHandler.onActivityResult` to avoid conflict with internal Android APIs.
 
+* **feature-addons**
+  * 🚒 Bug fixed [issue #9484] https://github.com/mozilla-mobile/android-components/issues/9484) - Handle multiple add-ons update that require new permissions.
+
 # 71.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)

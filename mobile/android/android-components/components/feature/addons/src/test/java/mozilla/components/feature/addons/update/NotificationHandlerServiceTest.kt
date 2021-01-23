@@ -23,10 +23,10 @@ class NotificationHandlerServiceTest {
 
     @Test
     fun `onHandleIntent - reacts to the allow action`() {
-
+        val addonId = "addon_id"
         val allowIntent = Intent(testContext, NotificationHandlerService::class.java).apply {
             action = DefaultAddonUpdater.NOTIFICATION_ACTION_ALLOW
-            putExtra(DefaultAddonUpdater.NOTIFICATION_EXTRA_ADDON_ID, "addon_id")
+            putExtra(DefaultAddonUpdater.NOTIFICATION_EXTRA_ADDON_ID, addonId)
         }
 
         val handler = spy(NotificationHandlerService())
@@ -38,19 +38,20 @@ class NotificationHandlerServiceTest {
 
         handler.onHandleIntent(allowIntent)
 
-        verify(handler).handleAllowAction(allowIntent)
-        verify(handler).removeNotification()
-        verify(updater).update("addon_id")
-        assertTrue(storage.isPreviouslyAllowed(testContext, "addon_id"))
+        verify(handler).handleAllowAction(addonId)
+        verify(handler).removeNotification(addonId)
+        verify(updater).update(addonId)
+        assertTrue(storage.isPreviouslyAllowed(testContext, addonId))
 
         storage.clear(testContext)
     }
 
     @Test
     fun `onHandleIntent - reacts to the deny action`() {
-
+        val addonId = "addon_id"
         val allowIntent = Intent(testContext, NotificationHandlerService::class.java).apply {
             action = DefaultAddonUpdater.NOTIFICATION_ACTION_DENY
+            putExtra(DefaultAddonUpdater.NOTIFICATION_EXTRA_ADDON_ID, addonId)
         }
 
         val handler = spy(NotificationHandlerService())
@@ -62,8 +63,8 @@ class NotificationHandlerServiceTest {
 
         handler.onHandleIntent(allowIntent)
 
-        verify(handler).removeNotification()
-        verify(handler, times(0)).handleAllowAction(allowIntent)
+        verify(handler).removeNotification(addonId)
+        verify(handler, times(0)).handleAllowAction(addonId)
         verify(updater, times(0)).update("addon_id")
         assertFalse(storage.isPreviouslyAllowed(testContext, "addon_id"))
     }

@@ -270,7 +270,7 @@ class DefaultAddonUpdater(
         extension: WebExtension,
         newPermissions: List<String>
     ): Notification {
-        val notificationId = SharedIdsHelper.getIdForTag(applicationContext, NOTIFICATION_TAG)
+        val notificationId = NotificationHandlerService.getNotificationId(applicationContext, extension.id)
 
         val channel = ChannelData(
             NOTIFICATION_CHANNEL_ID,
@@ -291,8 +291,8 @@ class DefaultAddonUpdater(
                     .bigText(text)
             )
             .setContentIntent(createContentIntent())
-            .addAction(createAllowAction(extension))
-            .addAction(createDenyAction())
+            .addAction(createAllowAction(extension, notificationId))
+            .addAction(createDenyAction(extension, notificationId))
             .setAutoCancel(true)
             .build().also {
                 NotificationManagerCompat.from(applicationContext).notify(notificationId, it)
@@ -335,13 +335,18 @@ class DefaultAddonUpdater(
         )
     }
 
-    private fun createAllowAction(ext: WebExtension): NotificationCompat.Action {
-        val allowIntent = Intent(applicationContext, NotificationHandlerService::class.java).apply {
-            action = NOTIFICATION_ACTION_ALLOW
-            putExtra(NOTIFICATION_EXTRA_ADDON_ID, ext.id)
+    @VisibleForTesting
+    internal fun createNotificationIntent(extId: String, actionString: String): Intent {
+        return Intent(applicationContext, NotificationHandlerService::class.java).apply {
+            action = actionString
+            putExtra(NOTIFICATION_EXTRA_ADDON_ID, extId)
         }
+    }
 
-        val allowPendingIntent = PendingIntent.getService(applicationContext, 0, allowIntent, 0)
+    @VisibleForTesting
+    internal fun createAllowAction(ext: WebExtension, requestCode: Int): NotificationCompat.Action {
+        val allowIntent = createNotificationIntent(ext.id, NOTIFICATION_ACTION_ALLOW)
+        val allowPendingIntent = PendingIntent.getService(applicationContext, requestCode, allowIntent, 0)
 
         val allowText =
             applicationContext.getString(R.string.mozac_feature_addons_updater_notification_allow_button)
@@ -353,12 +358,10 @@ class DefaultAddonUpdater(
         ).build()
     }
 
-    private fun createDenyAction(): NotificationCompat.Action {
-        val allowIntent = Intent(applicationContext, NotificationHandlerService::class.java).apply {
-            action = NOTIFICATION_ACTION_DENY
-        }
-
-        val denyPendingIntent = PendingIntent.getService(applicationContext, 0, allowIntent, 0)
+    @VisibleForTesting
+    internal fun createDenyAction(ext: WebExtension, requestCode: Int): NotificationCompat.Action {
+        val denyIntent = createNotificationIntent(ext.id, NOTIFICATION_ACTION_DENY)
+        val denyPendingIntent = PendingIntent.getService(applicationContext, requestCode, denyIntent, 0)
 
         val denyText =
             applicationContext.getString(R.string.mozac_feature_addons_updater_notification_deny_button)
@@ -417,33 +420,31 @@ class DefaultAddonUpdater(
         internal var context: Context = this
 
         internal fun onHandleIntent(intent: Intent?) {
-            if (intent == null) return
+            val addonId = intent?.getStringExtra(NOTIFICATION_EXTRA_ADDON_ID) ?: return
 
             when (intent.action) {
                 NOTIFICATION_ACTION_ALLOW -> {
-                    handleAllowAction(intent)
+                    handleAllowAction(addonId)
                 }
                 NOTIFICATION_ACTION_DENY -> {
-                    removeNotification()
+                    removeNotification(addonId)
                 }
             }
         }
 
         @VisibleForTesting
-        internal fun removeNotification() {
-            val notificationId =
-                SharedIdsHelper.getIdForTag(context, NOTIFICATION_TAG)
+        internal fun removeNotification(addonId: String) {
+            val notificationId = getNotificationId(context, addonId)
             NotificationManagerCompat.from(context).cancel(notificationId)
         }
 
         @VisibleForTesting
-        internal fun handleAllowAction(intent: Intent) {
-            val addonId = intent.getStringExtra(NOTIFICATION_EXTRA_ADDON_ID)!!
+        internal fun handleAllowAction(addonId: String) {
             val storage = UpdateStatusStorage()
             logger.info("Addon $addonId permissions were granted")
             storage.markAsAllowed(context, addonId)
             GlobalAddonDependencyProvider.requireAddonUpdater().update(addonId)
-            removeNotification()
+            removeNotification(addonId)
         }
 
         override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -452,6 +453,13 @@ class DefaultAddonUpdater(
         }
 
         override fun onBind(intent: Intent?): IBinder? = null
+
+        companion object {
+            @VisibleForTesting
+            internal fun getNotificationId(context: Context, addonId: String): Int {
+                return SharedIdsHelper.getIdForTag(context, "$NOTIFICATION_TAG.$addonId")
+            }
+        }
     }
 
     /**
