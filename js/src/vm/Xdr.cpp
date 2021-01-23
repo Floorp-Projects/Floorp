@@ -799,9 +799,6 @@ XDRResult XDRStencilDecoder::codeStencils(
     return fail(JS::TranscodeResult_Throw);
   }
 
-  // All delazification share CompilationStencilSet.allocForDelazifications.
-  stencilAlloc_ = &stencilSet.allocForDelazifications;
-
   for (size_t i = 1; i < nchunks_; i++) {
     stencilSet.delazifications.infallibleEmplaceBack();
     auto& delazification = stencilSet.delazifications[i - 1];
