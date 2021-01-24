@@ -1049,7 +1049,7 @@
     <string name="url_copied">הקישור הועתק</string>
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">זהו טקסט לדוגמה. זה כאן כדי להראות כיצד טקסט יופיע בעת הגדלה או הקטנת הגודל עם הגדרה זו.</string>
+    <string name="accessibility_text_size_sample_text_1">זהו טקסט לדוגמה. זה כאן כדי להראות כיצד טקסט יוצג בעת הגדלה או הקטנת הגודל עם הגדרה זו.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">הגדלה או הקטנה של טקסט באתרים</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->

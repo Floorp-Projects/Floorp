@@ -821,6 +821,8 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Non</string>
 
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Permitir l\'audiu y videu</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Bloquiar namás l\'audiu y videu colos datos móviles</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
@@ -1279,7 +1281,7 @@ en llinia y con nós.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookies de rastrexu ente sitios</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Bloquia les cookies que les redes d\'anuncios y compañes d\'analís usen p\'atropar los tos datos de restolar en milenta sitios.</string>
+    <string name="etp_cookies_description">Bloquia les cookies que les redes d\'anuncios y compañes d\'análisis usen p\'atropar los tos datos de restolar en milenta sitios.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Criptomineros</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

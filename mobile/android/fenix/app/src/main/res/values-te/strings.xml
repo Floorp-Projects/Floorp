@@ -1072,6 +1072,8 @@
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">సైటు అనుమతులు</string>
 
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">దింపుకోళ్ళు</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">విహరణ డేటా తొలగించు</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1188,10 +1190,6 @@
     <string name="onboarding_private_browsing_button">అమరికలను తెరువు</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">మీ అంతరంగికత</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">మీరు ఆన్‌లైనులోనూ, మాతోనూ ఏమేం పంచుకుంటారన్నదానిపై
-        మీకు నియంత్రణ ఇవ్వడానికి మేము %s‌ని రూపొందించాము.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">మా గోప్యతా నోటీసును చదవండి</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->

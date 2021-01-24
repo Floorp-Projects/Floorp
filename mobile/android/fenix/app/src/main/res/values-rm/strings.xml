@@ -1085,6 +1085,8 @@
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Permissiuns per websites</string>
 
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Telechargiadas</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Stizzar las datas da navigaziun</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1206,8 +1208,7 @@
     <string name="onboarding_privacy_notice_header">Tia sfera privata</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Nus avain creà %s per che ti possias controllar tge che ti cundividas
-        cun l\'internet e tge che ti cundividas cun nus.</string>
+    <string name="onboarding_privacy_notice_description2">Nus avain creà %s per che ti possias controllar tge che ti cundividas en l\'internet e tge che ti cundividas cun nus.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Legia nossas directivas per la protecziun da datas</string>
 

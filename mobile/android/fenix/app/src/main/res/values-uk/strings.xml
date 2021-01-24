@@ -1531,7 +1531,7 @@
     <string name="preference_accessibility_force_enable_zoom_summary">Увімкніть, щоб дозволити масштабування, навіть на вебсайтах, які це не дозволяють.</string>
 
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
-    <string name="saved_logins_sort_strategy_alphabetically">Назва (A-Z)</string>
+    <string name="saved_logins_sort_strategy_alphabetically">Назва (А-Я)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Востаннє використано</string>
 
