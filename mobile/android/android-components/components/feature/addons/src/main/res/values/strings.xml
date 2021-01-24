@@ -54,7 +54,7 @@
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Monitor extension usage and manage themes</string>
     <!-- Description for native_messaging permission. -->
-    <string name="mozac_feature_addons_permissions_native_messaging_description">Exchange messages with apps other that this one</string>
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Exchange messages with apps other than this one</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Display notifications to you</string>
     <!-- Description for pkcs11 permission. -->
