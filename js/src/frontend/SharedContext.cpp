@@ -88,7 +88,9 @@ void ScopeContext::computeThisEnvironment(Scope* scope) {
 
         if (fun->isClassConstructor()) {
           memberInitializers =
-              mozilla::Some(fun->baseScript()->getMemberInitializers());
+              fun->baseScript()->useMemberInitializers()
+                  ? mozilla::Some(fun->baseScript()->getMemberInitializers())
+                  : mozilla::Some(MemberInitializers::Empty());
           MOZ_ASSERT(memberInitializers->valid);
         }
 

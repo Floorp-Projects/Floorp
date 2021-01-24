@@ -620,6 +620,14 @@ struct MemberInitializers {
 
   static MemberInitializers Invalid() { return MemberInitializers(); }
 
+  // Singleton to use for class constructors that do not have to initialize any
+  // fields. This is used when we elide the trivial data but still need a valid
+  // set to stop scope walking.
+  static const MemberInitializers& Empty() {
+    static const MemberInitializers zeroInitializers(0);
+    return zeroInitializers;
+  }
+
   uint32_t serialize() const { return numMemberInitializers; }
 
  private:
