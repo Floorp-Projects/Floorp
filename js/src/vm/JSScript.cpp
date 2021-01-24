@@ -3750,10 +3750,6 @@ bool PrivateScriptData::InitFromStencil(
     }
   }
 
-  if (scriptStencil.hasMemberInitializers()) {
-    script->setMemberInitializers(scriptStencil.memberInitializers());
-  }
-
   return true;
 }
 
@@ -3892,6 +3888,20 @@ bool JSScript::fullyInitFromStencil(
   if (!PrivateScriptData::InitFromStencil(cx, script, input, stencil, gcOutput,
                                           scriptIndex)) {
     return false;
+  }
+
+  // Member-initializer data is computed in initial parse only. If we are
+  // delazifying, make sure to copy it off the `lazyData` before we throw it
+  // away.
+  if (scriptStencil.hasMemberInitializers()) {
+    if (stencil.isInitialStencil()) {
+      MemberInitializers initializers(stencil.asCompilationStencil()
+                                          .scriptExtra[scriptIndex]
+                                          .memberInitializers());
+      script->setMemberInitializers(initializers);
+    } else {
+      script->setMemberInitializers(lazyData.get()->getMemberInitializers());
+    }
   }
 
   script->initSharedData(stencil.sharedData.get(scriptIndex));
