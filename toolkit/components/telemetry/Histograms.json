@@ -8321,12 +8321,34 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "alert_emails": ["hsivonen@mozilla.com"],
-    "bug_numbers": [840476, 977573, 1513473, 1554592, 1603047, 1648464],
+    "bug_numbers": [840476, 977573, 1513473, 1554592, 1603047, 1648464, 1686463],
     "expires_in_version": "91",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
-    "labels": ["AutoOverridden", "ManuallyOverridden", "LocalLabeled", "LocalUnlabeled", "UnlabeledInLk", "UnlabeledJp", "UnlabeledNonUtf8", "UnlabeledUtf8", "ChannelNonUtf8", "ChannelUtf8", "MetaNonUtf8", "MetaUtf8", "Bug"],
+    "labels": ["AutoOverridden", "ManuallyOverridden", "LocalLabeled", "LocalUnlabeled", "UnlabeledInLk", "UnlabeledJp", "UnlabeledNonUtf8", "UnlabeledUtf8", "ChannelNonUtf8", "ChannelUtf8", "MetaNonUtf8", "MetaUtf8", "Bug", "UnlabeledAscii", "UnlabeledNonUtf8TLD"],
     "description": "Labeling status of top-level page when overriding encoding"
+  },
+  "ENCODING_DETECTION_OUTCOME_TEXT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["hsivonen@mozilla.com"],
+    "bug_numbers": [1686463],
+    "expires_in_version": "91",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": ["UtfInitial", "UtfFinal", "TldInitial", "TldFinal", "ContentInitial", "ContentFinal", "GenericInitial", "GenericFinal"],
+    "description": "Type of automatic encoding detection outcome for text/plain excluding ASCII-only"
+  },
+  "ENCODING_DETECTION_OUTCOME_HTML": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["hsivonen@mozilla.com"],
+    "bug_numbers": [1686463],
+    "expires_in_version": "91",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": ["UtfInitial", "UtfFinal", "TldInitial", "TldFinal", "ContentInitial", "ContentFinal", "GenericInitial", "GenericFinal"],
+    "description": "Type of automatic encoding detection outcome for text/html excluding ASCII-only"
   },
   "LONG_REFLOW_INTERRUPTIBLE": {
     "record_in_processes": ["main", "content"],

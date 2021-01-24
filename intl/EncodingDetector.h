@@ -58,6 +58,15 @@ class EncodingDetector final {
   }
 
   /**
+   * Queries whether the TLD is considered non-generic and could affect the
+   * guess.
+   */
+  static inline bool TldMayAffectGuess(Span<const char> aTLD) {
+    return chardetng_encoding_detector_tld_may_affect_guess(aTLD.Elements(),
+                                                            aTLD.Length());
+  }
+
+  /**
    * Inform the detector of a chunk of input.
    *
    * The byte stream is represented as a sequence of calls to this

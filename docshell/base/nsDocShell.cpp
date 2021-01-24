@@ -1508,11 +1508,25 @@ nsDocShell::GatherCharsetMenuTelemetry() {
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledJp);
       break;
-    case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8:
-    case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8:
+    case kCharsetFromInitialAutoDetectionASCII:
+      // Deliberately no final version
+      LOGCHARSETMENU(("UnlabeledAscii"));
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledAscii);
+      break;
+    case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic:
+    case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic:
+    case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content:
+    case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content:
       LOGCHARSETMENU(("UnlabeledNonUtf8"));
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledNonUtf8);
+      break;
+    case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
+    case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
+      LOGCHARSETMENU(("UnlabeledNonUtf8TLD"));
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledNonUtf8TLD);
       break;
     case kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8:
     case kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8:
@@ -1979,13 +1993,8 @@ nsDocShell::GetCharsetAutodetected(bool* aCharsetAutodetected) {
   }
   int32_t source = doc->GetDocumentCharacterSetSource();
 
-  if (source == kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8 ||
-      source == kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8 ||
-
-      source == kCharsetFromFinalJapaneseAutoDetection ||
-      source == kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 ||
-      source == kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8 ||
-      source == kCharsetFromFinalAutoDetectionFile ||
+  if ((source >= kCharsetFromInitialAutoDetectionASCII &&
+       source <= kCharsetFromFinalAutoDetectionFile) ||
       source == kCharsetFromUserForcedJapaneseAutoDetection ||
       source == kCharsetFromPendingUserForcedAutoDetection ||
       source == kCharsetFromInitialUserForcedAutoDetection ||

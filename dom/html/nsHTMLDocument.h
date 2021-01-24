@@ -70,6 +70,8 @@ class nsHTMLDocument : public mozilla::dom::Document {
 
   bool IsPlainText() const { return mIsPlainText; }
 
+  bool IsViewSource() const { return mViewSource; }
+
   // Returns whether an object was found for aName.
   bool ResolveName(JSContext* aCx, const nsAString& aName,
                    JS::MutableHandle<JS::Value> aRetval,
@@ -194,6 +196,11 @@ class nsHTMLDocument : public mozilla::dom::Document {
    * Set to true once we know that we are loading plain text content.
    */
   bool mIsPlainText;
+
+  /**
+   * Set to true once we know that we are viewing source.
+   */
+  bool mViewSource;
 };
 
 namespace mozilla {
