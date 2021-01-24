@@ -551,9 +551,13 @@ static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
     result = GetDisplayPortFromRectData(aContent, rectData, aMultiplier);
   } else if (isDisplayportSuppressed ||
              nsLayoutUtils::ShouldDisableApzForElement(aContent)) {
-    DisplayPortMarginsPropertyData noMargins(
-        DisplayPortMargins::Empty(aContent), 1,
-        /*painted=*/false);
+    // Make a copy of the margins data but set the margins to empty.
+    // Do not create a new DisplayPortMargins object with
+    // DisplayPortMargins::Empty(), because that will record the visual
+    // and layout scroll offsets in place right now on the DisplayPortMargins,
+    // and those are only meant to be recorded when the margins are stored.
+    DisplayPortMarginsPropertyData noMargins = *marginsData;
+    noMargins.mMargins.mMargins = ScreenMargin();
     result = GetDisplayPortFromMarginsData(aContent, &noMargins, aMultiplier,
                                            aOptions);
   } else {
