@@ -21,14 +21,16 @@ NS_INTERFACE_MAP_END
 
 PerformanceEntry::PerformanceEntry(nsISupports* aParent, const nsAString& aName,
                                    const nsAString& aEntryType)
-    : mParent(aParent), mName(aName), mEntryType(aEntryType) {}
+    : mParent(aParent),
+      mName(NS_Atomize(aName)),
+      mEntryType(NS_Atomize(aEntryType)) {}
 
 PerformanceEntry::~PerformanceEntry() = default;
 
 size_t PerformanceEntry::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
-  return mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-         mEntryType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  // mName and mEntryType are considered to be owned by nsAtomTable.
+  return 0;
 }
 
 size_t PerformanceEntry::SizeOfIncludingThis(
