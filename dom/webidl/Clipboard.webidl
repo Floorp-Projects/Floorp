@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+typedef sequence<ClipboardItem> ClipboardItems;
 
 [SecureContext, Exposed=Window, Pref="dom.events.asyncClipboard"]
 interface Clipboard : EventTarget {
@@ -18,8 +19,9 @@ interface Clipboard : EventTarget {
   [Func="Clipboard::ReadTextEnabled", Throws, NeedsSubjectPrincipal]
   Promise<DOMString> readText();
 
-  [Pref="dom.events.asyncClipboard.dataTransfer", Throws, NeedsSubjectPrincipal]
-  Promise<void> write(DataTransfer data);
+  [Pref="dom.events.asyncClipboard.clipboardItem", Throws, NeedsSubjectPrincipal]
+  Promise<void> write(ClipboardItems data);
+
   [Throws, NeedsSubjectPrincipal]
   Promise<void> writeText(DOMString data);
 };
