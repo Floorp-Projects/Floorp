@@ -255,16 +255,16 @@ template <XDRMode mode>
 /* static */
 XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
                                         HandleScriptSourceObject sourceObject,
-                                        Handle<BaseScript*> lazy,
-                                        bool hasMemberInitializers) {
+                                        Handle<BaseScript*> lazy) {
   JSContext* cx = xdr->cx();
 
   RootedAtom atom(cx);
   RootedFunction func(cx);
 
-  if (hasMemberInitializers) {
+  if (lazy->useMemberInitializers()) {
     uint32_t numMemberInitializers;
     if (mode == XDR_ENCODE) {
+      MOZ_ASSERT(lazy->getMemberInitializers().valid);
       numMemberInitializers =
           lazy->getMemberInitializers().numMemberInitializers;
     }
@@ -814,9 +814,8 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
     data = script->data_;
   }
 
-  // Code the field initilizer data.
-  if (funOrMod && funOrMod->is<JSFunction>() &&
-      funOrMod->as<JSFunction>().isClassConstructor()) {
+  // Code the field initializer data.
+  if (script->useMemberInitializers()) {
     uint32_t numMemberInitializers;
     if (mode == XDR_ENCODE) {
       MOZ_ASSERT(data->getMemberInitializers().valid);
@@ -1328,12 +1327,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     }
   }
 
-  // FieldInitializer data is defined for class constructors during the initial
-  // parse and must be preserved so that delazification may have access to it.
-  bool hasMemberInitializers = fun->isClassConstructor();
-
-  MOZ_TRY(BaseScript::XDRLazyScriptData(xdr, sourceObject, lazy,
-                                        hasMemberInitializers));
+  MOZ_TRY(BaseScript::XDRLazyScriptData(xdr, sourceObject, lazy));
 
   return Ok();
 }
@@ -5015,8 +5009,9 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
   }
 
   // Allocate a PrivateScriptData if it will not be empty. Lazy class
-  // constructors also need PrivateScriptData for field lists.
-  if (ngcthings || fun->isClassConstructor()) {
+  // constructors that use member initializers also need PrivateScriptData for
+  // field data.
+  if (ngcthings || lazy->useMemberInitializers()) {
     UniquePtr<PrivateScriptData> data(PrivateScriptData::new_(cx, ngcthings));
     if (!data) {
       return nullptr;
