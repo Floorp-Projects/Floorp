@@ -328,11 +328,12 @@ void PerformanceObserver::GetSupportedEntryTypes(
 bool PerformanceObserver::ObservesTypeOfEntry(PerformanceEntry* aEntry) {
   for (auto& option : mOptions) {
     if (option.mType.WasPassed()) {
-      if (option.mType.Value() == aEntry->GetEntryType()) {
+      if (aEntry->GetEntryType()->Equals(option.mType.Value())) {
         return true;
       }
     } else {
-      if (option.mEntryTypes.Value().Contains(aEntry->GetEntryType())) {
+      if (option.mEntryTypes.Value().Contains(
+              nsDependentAtomString(aEntry->GetEntryType()))) {
         return true;
       }
     }
