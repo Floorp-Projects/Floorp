@@ -817,10 +817,9 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   // Code the field initilizer data.
   if (funOrMod && funOrMod->is<JSFunction>() &&
       funOrMod->as<JSFunction>().isClassConstructor()) {
-    MOZ_ASSERT(scriptEnclosingScope);
-
     uint32_t numMemberInitializers;
     if (mode == XDR_ENCODE) {
+      MOZ_ASSERT(data->getMemberInitializers().valid);
       numMemberInitializers =
           data->getMemberInitializers().numMemberInitializers;
     }
@@ -1329,9 +1328,9 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     }
   }
 
-  // FieldInitializer data is defined for class constructors, but only once
-  // their enclosing script has been compiled.
-  bool hasMemberInitializers = fun->isClassConstructor() && enclosingScope;
+  // FieldInitializer data is defined for class constructors during the initial
+  // parse and must be preserved so that delazification may have access to it.
+  bool hasMemberInitializers = fun->isClassConstructor();
 
   MOZ_TRY(BaseScript::XDRLazyScriptData(xdr, sourceObject, lazy,
                                         hasMemberInitializers));
