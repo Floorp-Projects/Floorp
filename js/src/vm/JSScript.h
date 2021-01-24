@@ -1810,8 +1810,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   template <XDRMode mode>
   static XDRResult XDRLazyScriptData(XDRState<mode>* xdr,
                                      HandleScriptSourceObject sourceObject,
-                                     Handle<BaseScript*> lazy,
-                                     bool hasFieldInitializer);
+                                     Handle<BaseScript*> lazy);
 
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() { return offsetOfHeaderPtr(); }

@@ -3285,7 +3285,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   funbox->initFromLazyFunction(fun);
   funbox->initStandalone(this->compilationState_.scopeContext, fun->flags(),
                          syntaxKind);
-  if (fun->isClassConstructor()) {
+  if (funbox->useMemberInitializers()) {
     funbox->setMemberInitializers(fun->baseScript()->getMemberInitializers());
   }
 
@@ -7551,11 +7551,11 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     // finished parsing the class.
     ctorbox->setCtorToStringEnd(classEndOffset);
 
-    // Now that we have full set of initializers, update the constructor.
-    MemberInitializers initializers(numMemberInitializers);
-    ctorbox->setMemberInitializers(initializers);
-
     if (numMemberInitializers) {
+      // Now that we have full set of initializers, update the constructor.
+      MemberInitializers initializers(numMemberInitializers);
+      ctorbox->setMemberInitializers(initializers);
+
       // Field initialization need access to `this`.
       ctorbox->setCtorFunctionHasThisBinding();
     }

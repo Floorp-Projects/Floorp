@@ -9495,8 +9495,8 @@ const MemberInitializers& BytecodeEmitter::findMemberInitializersForCall() {
       // expect fields in the first place.
       MOZ_RELEASE_ASSERT(funbox->isClassConstructor());
 
-      MOZ_ASSERT(funbox->memberInitializers().valid);
-      return funbox->memberInitializers();
+      return funbox->useMemberInitializers() ? funbox->memberInitializers()
+                                             : MemberInitializers::Empty();
     }
   }
 
@@ -9507,6 +9507,7 @@ const MemberInitializers& BytecodeEmitter::findMemberInitializersForCall() {
 bool BytecodeEmitter::emitInitializeInstanceMembers() {
   const MemberInitializers& memberInitializers =
       findMemberInitializersForCall();
+  MOZ_ASSERT(memberInitializers.valid);
   size_t numInitializers = memberInitializers.numMemberInitializers;
 
   if (numInitializers == 0) {
