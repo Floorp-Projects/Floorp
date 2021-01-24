@@ -10,6 +10,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
+#include "nsAtom.h"
 
 class nsISupports;
 
@@ -31,17 +32,25 @@ class PerformanceEntry : public nsISupports, public nsWrapperCache {
 
   nsISupports* GetParentObject() const { return mParent; }
 
-  void GetName(nsAString& aName) const { aName = mName; }
+  void GetName(nsAString& aName) const {
+    if (mName) {
+      mName->ToString(aName);
+    }
+  }
 
-  const nsAString& GetName() const { return mName; }
+  const nsAtom* GetName() const { return mName; }
 
-  void SetName(const nsAString& aName) { mName = aName; }
+  void GetEntryType(nsAString& aEntryType) const {
+    if (mEntryType) {
+      mEntryType->ToString(aEntryType);
+    }
+  }
 
-  void GetEntryType(nsAString& aEntryType) const { aEntryType = mEntryType; }
+  const nsAtom* GetEntryType() { return mEntryType; }
 
-  const nsAString& GetEntryType() { return mEntryType; }
-
-  void SetEntryType(const nsAString& aEntryType) { mEntryType = aEntryType; }
+  void SetEntryType(const nsAString& aEntryType) {
+    mEntryType = NS_Atomize(aEntryType);
+  }
 
   virtual DOMHighResTimeStamp StartTime() const { return 0; }
 
@@ -58,8 +67,8 @@ class PerformanceEntry : public nsISupports, public nsWrapperCache {
 
  private:
   nsCOMPtr<nsISupports> mParent;
-  nsString mName;
-  nsString mEntryType;
+  RefPtr<nsAtom> mName;
+  RefPtr<nsAtom> mEntryType;
 };
 
 // Helper classes

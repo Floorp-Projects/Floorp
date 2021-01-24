@@ -36,6 +36,11 @@ void PerformanceObserverEntryList::GetEntries(
     const PerformanceEntryFilterOptions& aFilter,
     nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   aRetval.Clear();
+  RefPtr<nsAtom> name =
+      aFilter.mName.WasPassed() ? NS_Atomize(aFilter.mName.Value()) : nullptr;
+  RefPtr<nsAtom> entryType = aFilter.mEntryType.WasPassed()
+                                 ? NS_Atomize(aFilter.mEntryType.Value())
+                                 : nullptr;
   for (const RefPtr<PerformanceEntry>& entry : mEntries) {
     if (aFilter.mInitiatorType.WasPassed()) {
       const PerformanceResourceTiming* resourceEntry =
@@ -49,12 +54,10 @@ void PerformanceObserverEntryList::GetEntries(
         continue;
       }
     }
-    if (aFilter.mName.WasPassed() &&
-        !entry->GetName().Equals(aFilter.mName.Value())) {
+    if (name && entry->GetName() != name) {
       continue;
     }
-    if (aFilter.mEntryType.WasPassed() &&
-        !entry->GetEntryType().Equals(aFilter.mEntryType.Value())) {
+    if (entryType && entry->GetEntryType() != entryType) {
       continue;
     }
 
@@ -66,8 +69,9 @@ void PerformanceObserverEntryList::GetEntries(
 void PerformanceObserverEntryList::GetEntriesByType(
     const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   aRetval.Clear();
+  RefPtr<nsAtom> entryType = NS_Atomize(aEntryType);
   for (const RefPtr<PerformanceEntry>& entry : mEntries) {
-    if (entry->GetEntryType().Equals(aEntryType)) {
+    if (entry->GetEntryType() == entryType) {
       aRetval.AppendElement(entry);
     }
   }
@@ -78,13 +82,15 @@ void PerformanceObserverEntryList::GetEntriesByName(
     const nsAString& aName, const Optional<nsAString>& aEntryType,
     nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   aRetval.Clear();
-  const bool typePassed = aEntryType.WasPassed();
+  RefPtr<nsAtom> name = NS_Atomize(aName);
+  RefPtr<nsAtom> entryType =
+      aEntryType.WasPassed() ? NS_Atomize(aEntryType.Value()) : nullptr;
   for (const RefPtr<PerformanceEntry>& entry : mEntries) {
-    if (!entry->GetName().Equals(aName)) {
+    if (entry->GetName() != name) {
       continue;
     }
 
-    if (typePassed && !entry->GetEntryType().Equals(aEntryType.Value())) {
+    if (entryType && entry->GetEntryType() != entryType) {
       continue;
     }
 

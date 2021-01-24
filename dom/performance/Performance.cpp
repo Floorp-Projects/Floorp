@@ -162,8 +162,9 @@ void Performance::GetEntriesByType(
   aRetval.Clear();
 
   if (aEntryType.EqualsLiteral("mark") || aEntryType.EqualsLiteral("measure")) {
+    RefPtr<nsAtom> entryType = NS_Atomize(aEntryType);
     for (PerformanceEntry* entry : mUserEntries) {
-      if (entry->GetEntryType().Equals(aEntryType)) {
+      if (entry->GetEntryType() == entryType) {
         aRetval.AppendElement(entry);
       }
     }
@@ -180,21 +181,23 @@ void Performance::GetEntriesByName(
     return;
   }
 
+  RefPtr<nsAtom> name = NS_Atomize(aName);
+  RefPtr<nsAtom> entryType =
+      aEntryType.WasPassed() ? NS_Atomize(aEntryType.Value()) : nullptr;
+
   // ::Measure expects that results from this function are already
   // passed through ReduceTimePrecision. mResourceEntries and mUserEntries
   // are, so the invariant holds.
   for (PerformanceEntry* entry : mResourceEntries) {
-    if (entry->GetName().Equals(aName) &&
-        (!aEntryType.WasPassed() ||
-         entry->GetEntryType().Equals(aEntryType.Value()))) {
+    if (entry->GetName() == name &&
+        (!entryType || entry->GetEntryType() == entryType)) {
       aRetval.AppendElement(entry);
     }
   }
 
   for (PerformanceEntry* entry : mUserEntries) {
-    if (entry->GetName().Equals(aName) &&
-        (!aEntryType.WasPassed() ||
-         entry->GetEntryType().Equals(aEntryType.Value()))) {
+    if (entry->GetName() == name &&
+        (!entryType || entry->GetEntryType() == entryType)) {
       aRetval.AppendElement(entry);
     }
   }
@@ -204,10 +207,13 @@ void Performance::GetEntriesByName(
 
 void Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
                                    const nsAString& aEntryType) {
-  mUserEntries.RemoveElementsBy([&aEntryName, &aEntryType](const auto& entry) {
-    return (!aEntryName.WasPassed() ||
-            entry->GetName().Equals(aEntryName.Value())) &&
-           (aEntryType.IsEmpty() || entry->GetEntryType().Equals(aEntryType));
+  MOZ_ASSERT(!aEntryType.IsEmpty());
+  RefPtr<nsAtom> name =
+      aEntryName.WasPassed() ? NS_Atomize(aEntryName.Value()) : nullptr;
+  RefPtr<nsAtom> entryType = NS_Atomize(aEntryType);
+  mUserEntries.RemoveElementsBy([name, entryType](const auto& entry) {
+    return (!name || entry->GetName() == name) &&
+           (entry->GetEntryType() == entryType);
   });
 }
 
@@ -392,11 +398,12 @@ void Performance::ClearMeasures(const Optional<nsAString>& aName) {
 
 void Performance::LogEntry(PerformanceEntry* aEntry,
                            const nsACString& aOwner) const {
-  PERFLOG(
-      "Performance Entry: %s|%s|%s|%f|%f|%" PRIu64 "\n", aOwner.BeginReading(),
-      NS_ConvertUTF16toUTF8(aEntry->GetEntryType()).get(),
-      NS_ConvertUTF16toUTF8(aEntry->GetName()).get(), aEntry->StartTime(),
-      aEntry->Duration(), static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC));
+  PERFLOG("Performance Entry: %s|%s|%s|%f|%f|%" PRIu64 "\n",
+          aOwner.BeginReading(),
+          NS_ConvertUTF16toUTF8(aEntry->GetEntryType()->GetUTF16String()).get(),
+          NS_ConvertUTF16toUTF8(aEntry->GetName()->GetUTF16String()).get(),
+          aEntry->StartTime(), aEntry->Duration(),
+          static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC));
 }
 
 void Performance::TimingNotification(PerformanceEntry* aEntry,
@@ -405,8 +412,8 @@ void Performance::TimingNotification(PerformanceEntry* aEntry,
   PerformanceEntryEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mName = aEntry->GetName();
-  init.mEntryType = aEntry->GetEntryType();
+  aEntry->GetName(init.mName);
+  aEntry->GetEntryType(init.mEntryType);
   init.mStartTime = aEntry->StartTime();
   init.mDuration = aEntry->Duration();
   init.mEpoch = aEpoch;
