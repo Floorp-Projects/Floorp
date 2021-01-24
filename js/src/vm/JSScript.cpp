@@ -3893,7 +3893,7 @@ bool JSScript::fullyInitFromStencil(
   // Member-initializer data is computed in initial parse only. If we are
   // delazifying, make sure to copy it off the `lazyData` before we throw it
   // away.
-  if (scriptStencil.hasMemberInitializers()) {
+  if (script->useMemberInitializers()) {
     if (stencil.isInitialStencil()) {
       MemberInitializers initializers(stencil.asCompilationStencil()
                                           .scriptExtra[scriptIndex]
