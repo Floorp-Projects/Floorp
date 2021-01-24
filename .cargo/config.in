@@ -77,10 +77,15 @@ git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
 rev = "0917fe780032a6bbb23d71be545f9c1834128d75"
 
+[source."https://github.com/hsivonen/chardetng_c"]
+git = "https://github.com/hsivonen/chardetng_c"
+replace-with = "vendored-sources"
+rev = "ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"
+
 [source."https://github.com/hsivonen/chardetng"]
 git = "https://github.com/hsivonen/chardetng"
 replace-with = "vendored-sources"
-rev = "7d5e0608d3e012bdfea3bd199111e3546607dd31"
+rev = "fd4ed671ef495af4dcda4c4cba3ef8d426db8af1"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"

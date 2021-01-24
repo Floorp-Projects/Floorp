@@ -363,6 +363,11 @@ class nsHtml5StreamParser final : public nsISupports {
   void ReDecodeLocalFile();
 
   /**
+   * Change a final autodetection source to the corresponding initial one.
+   */
+  int32_t MaybeRollBackSource(int32_t aSource);
+
+  /**
    * Potentially guess the encoding using mozilla::EncodingDetector.
    */
   void GuessEncoding(bool aEof, bool aInitial);
@@ -613,6 +618,10 @@ class nsHtml5StreamParser final : public nsISupports {
   bool mInitialEncodingWasFromParentFrame;
 
   bool mHasHadErrors;
+
+  bool mDetectorHasSeenNonAscii;
+
+  bool mDetectorHadOnlySeenAsciiWhenFirstGuessing;
 
   /**
    * If true, we are decoding a local file that lacks an encoding

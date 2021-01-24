@@ -11,12 +11,20 @@ enum {
   kCharsetFromFallback,
   kCharsetFromTopLevelDomain,
   kCharsetFromDocTypeDefault,  // This and up confident for XHR
+  // Start subdividing source for telementry purposes
+  kCharsetFromInitialAutoDetectionASCII,
   kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8,
-  kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8,
+  kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic,
+  kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content,
+  kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD,
   kCharsetFromFinalJapaneseAutoDetection,
+  // Deliberately no Final version of ASCII
   kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8,
-  kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8,
+  kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic,
+  kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content,
+  kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD,
   kCharsetFromFinalAutoDetectionFile,
+  // End subdividing source for telementry purposes
   kCharsetFromParentFrame,  // Same-origin parent takes precedence over detector
                             // to avoid breaking tests. (Also, the HTML spec
                             // says so.)

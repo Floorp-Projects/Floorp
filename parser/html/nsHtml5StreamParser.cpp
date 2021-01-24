@@ -228,6 +228,8 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mLoadFlusher(new nsHtml5LoadFlusher(aExecutor)),
       mInitialEncodingWasFromParentFrame(false),
       mHasHadErrors(false),
+      mDetectorHasSeenNonAscii(false),
+      mDetectorHadOnlySeenAsciiWhenFirstGuessing(false),
       mDecodingLocalFileWithoutTokenizing(false),
       mFlushTimer(NS_NewTimer(mEventTarget)),
       mFlushTimerMutex("nsHtml5StreamParser mFlushTimerMutex"),
@@ -278,11 +280,36 @@ nsresult nsHtml5StreamParser::GetChannel(nsIChannel** aChannel) {
                   : NS_ERROR_NOT_AVAILABLE;
 }
 
+int32_t nsHtml5StreamParser::MaybeRollBackSource(int32_t aSource) {
+  if (aSource ==
+      kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD) {
+    return kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD;
+  }
+  if (aSource == kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic) {
+    return kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic;
+  }
+  if (aSource == kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content) {
+    return kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content;
+  }
+  if (aSource == kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
+      !mDetectorHadOnlySeenAsciiWhenFirstGuessing) {
+    return kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8;
+  }
+  if (aSource == kCharsetFromFinalUserForcedAutoDetection) {
+    aSource = kCharsetFromInitialUserForcedAutoDetection;
+  }
+  return aSource;
+}
+
 void nsHtml5StreamParser::GuessEncoding(bool aEof, bool aInitial) {
   if (mJapaneseDetector) {
     return;
   }
-  if (!aInitial) {
+  if (aInitial) {
+    if (!mDetectorHasSeenNonAscii) {
+      mDetectorHadOnlySeenAsciiWhenFirstGuessing = true;
+    }
+  } else {
     mGuessEncoding = false;
   }
   bool forced = (mCharsetSource == kCharsetFromPendingUserForcedAutoDetection ||
@@ -291,43 +318,66 @@ void nsHtml5StreamParser::GuessEncoding(bool aEof, bool aInitial) {
       mCharsetSource != kCharsetFromFinalJapaneseAutoDetection &&
       mCharsetSource != kCharsetFromFinalUserForcedAutoDetection &&
       mCharsetSource != kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
-      mCharsetSource != kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8 &&
+      mCharsetSource !=
+          kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic &&
+      mCharsetSource !=
+          kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content &&
+      mCharsetSource !=
+          kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD &&
       mCharsetSource != kCharsetFromFinalAutoDetectionFile);
+  auto ifHadBeenForced = mDetector->Guess(EmptyCString(), true);
   auto encoding =
-      forced ? mDetector->Guess(EmptyCString(), true)
+      forced ? ifHadBeenForced
              : mDetector->Guess(mTLD, mDecodingLocalFileWithoutTokenizing);
-  auto source =
+  int32_t source =
       aInitial
-          ? (forced ? kCharsetFromInitialUserForcedAutoDetection
-                    : kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8)
+          ? (forced
+                 ? kCharsetFromInitialUserForcedAutoDetection
+                 : kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic)
           : (forced
                  ? kCharsetFromFinalUserForcedAutoDetection
                  : (mDecodingLocalFileWithoutTokenizing
                         ? kCharsetFromFinalAutoDetectionFile
-                        : kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8));
-  if (source == kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8) {
-    if (mDetector->Guess(EmptyCString(), true) == UTF_8_ENCODING) {
+                        : kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic));
+  if (source == kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic) {
+    if (encoding == ISO_2022_JP_ENCODING) {
+      if (EncodingDetector::TldMayAffectGuess(mTLD)) {
+        source = kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content;
+      }
+    } else if (!mDetectorHasSeenNonAscii) {
+      source = kCharsetFromInitialAutoDetectionASCII;  // deliberately Initial
+    } else if (ifHadBeenForced == UTF_8_ENCODING) {
       source = kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8;
+    } else if (encoding != ifHadBeenForced) {
+      source = kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD;
+    } else if (EncodingDetector::TldMayAffectGuess(mTLD)) {
+      source = kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content;
     }
-  } else if (source == kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8) {
-    if (mDetector->Guess(EmptyCString(), true) == UTF_8_ENCODING) {
+  } else if (source ==
+             kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic) {
+    if (encoding == ISO_2022_JP_ENCODING) {
+      if (EncodingDetector::TldMayAffectGuess(mTLD)) {
+        source = kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content;
+      }
+    } else if (!mDetectorHasSeenNonAscii) {
+      source = kCharsetFromInitialAutoDetectionASCII;
+    } else if (ifHadBeenForced == UTF_8_ENCODING) {
       source = kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8;
+    } else if (encoding != ifHadBeenForced) {
+      source =
+          kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD;
+    } else if (EncodingDetector::TldMayAffectGuess(mTLD)) {
+      source = kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content;
     }
   }
   if (HasDecoder() && !mDecodingLocalFileWithoutTokenizing) {
     if (mEncoding == encoding) {
-      MOZ_ASSERT(mCharsetSource < source, "Why are we running chardet at all?");
+      MOZ_ASSERT(mCharsetSource == kCharsetFromInitialAutoDetectionASCII ||
+                     mCharsetSource < source,
+                 "Why are we running chardet at all?");
       // Source didn't actually change between initial and final, so roll it
-      // back for future telemetry purposes, while taking into account the final
-      // UTF-8ness. https://bugzilla.mozilla.org/show_bug.cgi?id=1686463
-      if (source == kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8) {
-        source = kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8;
-      } else if (source == kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8) {
-        source = kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8;
-      } else if (source == kCharsetFromFinalUserForcedAutoDetection) {
-        source = kCharsetFromInitialUserForcedAutoDetection;
-      }
-      mCharsetSource = source;
+      // back for telemetry purposes.
+      mCharsetSource = MaybeRollBackSource(source);
       mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
     } else {
       MOZ_ASSERT(mCharsetSource < kCharsetFromFinalJapaneseAutoDetection ||
@@ -341,6 +391,11 @@ void nsHtml5StreamParser::GuessEncoding(bool aEof, bool aInitial) {
   } else {
     // Got a confident answer from the sniffing buffer. That code will
     // take care of setting up the decoder.
+    if (mCharsetSource == kCharsetUninitialized && aEof) {
+      // The document is so short that the initial buffer is the last
+      // buffer.
+      source = MaybeRollBackSource(source);
+    }
     mEncoding = encoding;
     mCharsetSource = source;
     mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
@@ -383,7 +438,7 @@ void nsHtml5StreamParser::FeedDetector(Span<const uint8_t> aBuffer,
   if (mJapaneseDetector) {
     FeedJapaneseDetector(aBuffer, aLast);
   } else {
-    Unused << mDetector->Feed(aBuffer, aLast);
+    mDetectorHasSeenNonAscii = mDetector->Feed(aBuffer, aLast);
   }
 }
 
