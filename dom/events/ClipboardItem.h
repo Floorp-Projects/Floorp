@@ -49,6 +49,8 @@ class ClipboardItem final : public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  const nsTArray<ItemEntry>& Entries() const { return mItems; }
+
  private:
   ~ClipboardItem() = default;
 
