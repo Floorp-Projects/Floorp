@@ -499,20 +499,7 @@
   translate: var(--pip-toggle-translate-x) -100%;
 }
 
-.pictureInPictureToggleIcon {
-  display: inline-block;
-  background-image: url(chrome://global/skin/media/pictureinpicture.svg);
-  background-position: center left;
-  background-repeat: no-repeat;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  width: var(--pip-toggle-icon-width-height);
-  height: var(--pip-toggle-icon-width-height);
-  min-width: max-content;
-}
-
-.videocontrols[localedir="rtl"] .statusIcon[type="pictureInPicture"],
-.videocontrols[localedir="rtl"] .pictureInPictureToggleIcon {
+.videocontrols[localedir="rtl"] .statusIcon[type="pictureInPicture"] {
   transform: scaleX(-1);
 }
 
