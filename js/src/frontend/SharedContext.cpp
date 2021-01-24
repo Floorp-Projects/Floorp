@@ -416,10 +416,6 @@ void FunctionBox::copyScriptFields(ScriptStencil& script) {
 
   SharedContext::copyScriptFields(script);
 
-  if (hasMemberInitializers()) {
-    script.setHasMemberInitializers();
-  }
-
   isScriptFieldCopiedToStencil = true;
 }
 
@@ -443,7 +439,7 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
 }
 
 void FunctionBox::copyFunctionExtraFields(ScriptStencilExtra& scriptExtra) {
-  if (hasMemberInitializers()) {
+  if (useMemberInitializers()) {
     scriptExtra.setMemberInitializers(memberInitializers());
   }
 
@@ -463,16 +459,13 @@ void FunctionBox::copyUpdatedExtent() {
 }
 
 void FunctionBox::copyUpdatedMemberInitializers() {
-  if (hasMemberInitializers()) {
-    ScriptStencil& script = functionStencil();
-    script.setHasMemberInitializers();
-    if (hasFunctionExtraStencil()) {
-      ScriptStencilExtra& scriptExtra = functionExtraStencil();
-      scriptExtra.setMemberInitializers(memberInitializers());
-    } else {
-      // We are delazifying and the original PrivateScriptData has the member
-      // initializer information already. See: JSScript::fullyInitFromStencil.
-    }
+  MOZ_ASSERT(useMemberInitializers());
+  if (hasFunctionExtraStencil()) {
+    ScriptStencilExtra& scriptExtra = functionExtraStencil();
+    scriptExtra.setMemberInitializers(memberInitializers());
+  } else {
+    // We are delazifying and the original PrivateScriptData has the member
+    // initializer information already. See: JSScript::fullyInitFromStencil.
   }
 }
 

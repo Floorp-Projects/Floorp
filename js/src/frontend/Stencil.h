@@ -761,19 +761,9 @@ class ScriptStencil {
   // The shared data is stored into BaseCompilationStencil.sharedData.
   static constexpr uint16_t HasSharedDataFlag = 1 << 2;
 
-  // Set if this script has member initializer.
-  //  - Member initializer data is computed during initial parse for all
-  //  scripts.
-  //  - ScriptStencilExtra::memberInitializers_ is only valid when this flag is
-  //    also set.
-  //  - During delazification this flag must still be set to same values as the
-  //    initial parse. In that case, the member initializer data is read from
-  //    the existing BaseScript and preserved in delazification.
-  static constexpr uint16_t HasMemberInitializersFlag = 1 << 3;
-
   // True if this script is lazy function and has enclosing scope.
   // `lazyFunctionEnclosingScopeIndex_` is valid only if this flag is set.
-  static constexpr uint16_t HasLazyFunctionEnclosingScopeIndexFlag = 1 << 4;
+  static constexpr uint16_t HasLazyFunctionEnclosingScopeIndexFlag = 1 << 3;
 
   uint16_t flags_ = 0;
 
@@ -804,12 +794,6 @@ class ScriptStencil {
   bool hasSharedData() const { return flags_ & HasSharedDataFlag; }
 
   void setHasSharedData() { flags_ |= HasSharedDataFlag; }
-
-  bool hasMemberInitializers() const {
-    return flags_ & HasMemberInitializersFlag;
-  }
-
-  void setHasMemberInitializers() { flags_ |= HasMemberInitializersFlag; }
 
   bool hasLazyFunctionEnclosingScopeIndex() const {
     return flags_ & HasLazyFunctionEnclosingScopeIndexFlag;
@@ -848,7 +832,7 @@ class ScriptStencilExtra {
   SourceExtent extent;
 
   // See `PrivateScriptData::memberInitializers_`.
-  // This data only valid when `ScriptStencil::hasMemberInitializers` is true.
+  // This data only valid when `UseMemberInitializers` script flag is true.
   uint32_t memberInitializers_ = 0;
 
   // See `JSFunction::nargs_`.
@@ -863,11 +847,18 @@ class ScriptStencilExtra {
     return immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsModule);
   }
 
+  bool useMemberInitializers() const {
+    return immutableFlags.hasFlag(
+        ImmutableScriptFlagsEnum::UseMemberInitializers);
+  }
+
   void setMemberInitializers(MemberInitializers member) {
+    MOZ_ASSERT(useMemberInitializers());
     memberInitializers_ = member.serialize();
   }
 
   MemberInitializers memberInitializers() const {
+    MOZ_ASSERT(useMemberInitializers());
     return MemberInitializers(memberInitializers_);
   }
 

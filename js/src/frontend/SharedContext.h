@@ -376,7 +376,7 @@ class FunctionBox : public SuspendableContext {
   // See: PrivateScriptData::memberInitializers_
   // This field is copied to ScriptStencil, and shouldn't be modified after the
   // copy.
-  mozilla::Maybe<MemberInitializers> memberInitializers_ = {};
+  MemberInitializers memberInitializers_ = MemberInitializers::Invalid();
 
  public:
   // Back pointer used by asm.js for error messages.
@@ -476,6 +476,7 @@ class FunctionBox : public SuspendableContext {
   // NeedsHomeObject: custom logic below.
   // IsDerivedClassConstructor: custom logic below.
   // IsFieldInitializer: custom logic below.
+  IMMUTABLE_FLAG_GETTER(useMemberInitializers, UseMemberInitializers)
   IMMUTABLE_FLAG_GETTER_SETTER(hasRest, HasRest)
   IMMUTABLE_FLAG_GETTER_SETTER(needsFunctionEnvironmentObjects,
                                NeedsFunctionEnvironmentObjects)
@@ -647,14 +648,15 @@ class FunctionBox : public SuspendableContext {
 
   size_t nargs() { return nargs_; }
 
-  bool hasMemberInitializers() const { return memberInitializers_.isSome(); }
   const MemberInitializers& memberInitializers() const {
-    return *memberInitializers_;
+    MOZ_ASSERT(useMemberInitializers());
+    return memberInitializers_;
   }
   void setMemberInitializers(MemberInitializers memberInitializers) {
-    MOZ_ASSERT(memberInitializers_.isNothing());
-    memberInitializers_ = mozilla::Some(memberInitializers);
+    immutableFlags_.setFlag(ImmutableFlags::UseMemberInitializers, true);
+    memberInitializers_ = memberInitializers;
     if (isScriptFieldCopiedToStencil) {
+      copyUpdatedImmutableFlags();
       copyUpdatedMemberInitializers();
     }
   }
