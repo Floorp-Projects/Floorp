@@ -158,7 +158,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInput& input,
     }
   }
 
-  if (script.hasMemberInitializers()) {
+  if (scriptExtra.useMemberInitializers()) {
     lazy->setMemberInitializers(scriptExtra.memberInitializers());
   }
 
@@ -1668,6 +1668,9 @@ static void DumpImmutableScriptFlags(js::JSONPrinter& json,
         case ImmutableScriptFlagsEnum::IsFieldInitializer:
           json.value("IsFieldInitializer");
           break;
+        case ImmutableScriptFlagsEnum::UseMemberInitializers:
+          json.value("UseMemberInitializers");
+          break;
         case ImmutableScriptFlagsEnum::HasRest:
           json.value("HasRest");
           break;
@@ -1849,9 +1852,6 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   }
   if (flags_ & HasSharedDataFlag) {
     json.value("HasSharedDataFlag");
-  }
-  if (flags_ & HasMemberInitializersFlag) {
-    json.value("HasMemberInitializersFlag");
   }
   if (flags_ & HasLazyFunctionEnclosingScopeIndexFlag) {
     json.value("HasLazyFunctionEnclosingScopeIndexFlag");
