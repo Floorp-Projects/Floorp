@@ -853,7 +853,8 @@ class nsContextMenu {
           "media.videocontrols.picture-in-picture.enabled"
         ) &&
         this.onVideo &&
-        !this.target.ownerDocument.fullscreen;
+        !this.target.ownerDocument.fullscreen &&
+        this.target.readyState > 0;
       this.showItem("context-video-pictureinpicture", shouldDisplay);
     }
     this.showItem("context-media-eme-learnmore", this.onDRMMedia);
