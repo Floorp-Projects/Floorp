@@ -814,6 +814,7 @@
 
 .videocontrols[localedir="rtl"] .pip-explainer {
   text-align: right;
+  direction: rtl;
 }
 
 .pip-wrapper.hovering > .pip-expanded > .pip-explainer {
