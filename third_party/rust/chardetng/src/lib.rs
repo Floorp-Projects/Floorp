@@ -2826,6 +2826,15 @@ impl EncodingDetector {
             closed: false,
         }
     }
+
+    /// Queries whether the TLD is considered non-generic and could affect the guess.
+    pub fn tld_may_affect_guess(tld: Option<&[u8]>) -> bool {
+        if let Some(tld) = tld {
+            classify_tld(tld) != Tld::Generic
+        } else {
+            false
+        }
+    }
 }
 
 #[cfg(test)]

@@ -18,10 +18,12 @@
 #include "mozilla/StaticPrefs_content.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPrefs_view_source.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/css/Loader.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsError.h"
+#include "nsHTMLDocument.h"
 #include "nsHtml5AutoPauseUpdate.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5StreamParser.h"
@@ -40,6 +42,11 @@
 #include "xpcpublic.h"
 
 using namespace mozilla;
+
+static mozilla::LazyLogModule gCharsetMenuLog("Chardetng");
+
+#define LOGCHARDETNG(args) \
+  MOZ_LOG(gCharsetMenuLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHtml5TreeOpExecutor,
                                              nsHtml5DocumentBuilder,
@@ -202,6 +209,118 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
   // OnStartRequest call.
   if (mStarted) {
     mDocument->EndLoad();
+
+    // Gather chardetng telemetry
+    MOZ_ASSERT(mDocument->IsHTMLDocument());
+    if (!aTerminated && !mDocument->AsHTMLDocument()->IsViewSource()) {
+      // We deliberately measure only normally-completed (non-aborted) loads
+      // that are not View Source loads. This seems like a better place for
+      // checking normal completion than anything in nsHtml5StreamParser.
+      bool plain = mDocument->AsHTMLDocument()->IsPlainText();
+      int32_t charsetSource = mDocument->GetDocumentCharacterSetSource();
+      switch (charsetSource) {
+        case kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8:
+          if (plain) {
+            LOGCHARDETNG(("TEXT::UtfInitial"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_TEXT::UtfInitial);
+          } else {
+            LOGCHARDETNG(("HTML::UtfInitial"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_HTML::UtfInitial);
+          }
+          break;
+        case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic:
+          if (plain) {
+            LOGCHARDETNG(("TEXT::GenericInitial"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_TEXT::
+                    GenericInitial);
+          } else {
+            LOGCHARDETNG(("HTML::GenericInitial"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_HTML::
+                    GenericInitial);
+          }
+          break;
+        case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content:
+          if (plain) {
+            LOGCHARDETNG(("TEXT::ContentInitial"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_TEXT::
+                    ContentInitial);
+          } else {
+            LOGCHARDETNG(("HTML::ContentInitial"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_HTML::
+                    ContentInitial);
+          }
+          break;
+        case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
+          if (plain) {
+            LOGCHARDETNG(("TEXT::TldInitial"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_TEXT::TldInitial);
+          } else {
+            LOGCHARDETNG(("HTML::TldInitial"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_HTML::TldInitial);
+          }
+          break;
+        // Deliberately no final version of ASCII
+        case kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8:
+          if (plain) {
+            LOGCHARDETNG(("TEXT::UtfFinal"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_TEXT::UtfFinal);
+          } else {
+            LOGCHARDETNG(("HTML::UtfFinal"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_HTML::UtfFinal);
+          }
+          break;
+        case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic:
+          if (plain) {
+            LOGCHARDETNG(("TEXT::GenericFinal"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_TEXT::
+                    GenericFinal);
+          } else {
+            LOGCHARDETNG(("HTML::GenericFinal"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_HTML::
+                    GenericFinal);
+          }
+          break;
+        case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content:
+          if (plain) {
+            LOGCHARDETNG(("TEXT::ContentFinal"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_TEXT::
+                    ContentFinal);
+          } else {
+            LOGCHARDETNG(("HTML::ContentFinal"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_HTML::
+                    ContentFinal);
+          }
+          break;
+        case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
+          if (plain) {
+            LOGCHARDETNG(("TEXT::TldFinal"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_TEXT::TldFinal);
+          } else {
+            LOGCHARDETNG(("HTML::TldFinal"));
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_ENCODING_DETECTION_OUTCOME_HTML::TldFinal);
+          }
+          break;
+        default:
+          // Chardetng didn't run automatically or the input was all ASCII.
+          break;
+      }
+    }
   }
 
   // Dropping the stream parser changes the parser's apparent

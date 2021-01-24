@@ -1,4 +1,4 @@
-// Copyright 2019 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -47,6 +47,28 @@ pub unsafe extern "C" fn chardetng_encoding_detector_new() -> *mut EncodingDetec
 #[no_mangle]
 pub unsafe extern "C" fn chardetng_encoding_detector_free(detector: *mut EncodingDetector) {
     let _ = Box::from_raw(detector);
+}
+
+/// Queries whether the TLD is considered non-generic and could affect the guess.
+///
+/// # Undefined Behavior
+///
+/// UB ensues if
+///
+/// * `tld` is non-NULL and `tld_len` is non-zero but `tld` and `tld_len`
+///   don't designate a range of memory valid for reading.
+#[no_mangle]
+pub unsafe extern "C" fn chardetng_encoding_detector_tld_may_affect_guess(
+    tld: *const u8,
+    tld_len: usize,
+) -> bool {
+    let tld_opt = if tld.is_null() {
+        assert_eq!(tld_len, 0);
+        None
+    } else {
+        Some(::std::slice::from_raw_parts(tld, tld_len))
+    };
+    EncodingDetector::tld_may_affect_guess(tld_opt)
 }
 
 /// Inform the detector of a chunk of input.
