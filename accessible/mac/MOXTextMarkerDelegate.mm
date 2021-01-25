@@ -84,16 +84,16 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 - (NSDictionary*)selectionChangeInfo {
   GeckoTextMarkerRange selectedGeckoRange =
       GeckoTextMarkerRange(mGeckoDocAccessible, mSelection);
+  int32_t stateChangeType = selectedGeckoRange.mStart == selectedGeckoRange.mEnd
+                                ? AXTextStateChangeTypeSelectionMove
+                                : AXTextStateChangeTypeSelectionExtend;
 
   // This is the base info object, includes the selected marker range and
   // the change type depending on the collapsed state of the selection.
   NSMutableDictionary* info = [@{
     @"AXSelectedTextMarkerRange" : selectedGeckoRange.IsValid() ? mSelection
                                                                 : [NSNull null],
-    @"AXTextStateChangeType" :
-                selectedGeckoRange.mStart == selectedGeckoRange.mEnd
-        ? @(AXTextStateChangeTypeSelectionMove)
-        : @(AXTextStateChangeTypeSelectionExtend)
+    @"AXTextStateChangeType" : @(stateChangeType),
   } mutableCopy];
 
   GeckoTextMarker caretMarker(mGeckoDocAccessible, mCaret);
@@ -107,7 +107,7 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
       [GetNativeFromGeckoAccessible(caretMarker.mContainer)
           moxEditableAncestor];
 
-  if (!caretEditable) {
+  if (!caretEditable && stateChangeType == AXTextStateChangeTypeSelectionMove) {
     // If we are not in an editable, VO expects AXTextStateSync to be present
     // and true.
     info[@"AXTextStateSync"] = @YES;

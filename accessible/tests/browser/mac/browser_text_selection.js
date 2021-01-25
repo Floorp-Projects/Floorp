@@ -22,7 +22,7 @@ addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
 
   let evt = waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
     return (
-      info.AXTextStateSync &&
+      !info.AXTextStateSync &&
       info.AXTextStateChangeType == AXTextStateChangeTypeSelectionExtend &&
       elem.getAttributeValue("AXRole") == "AXWebArea"
     );
@@ -49,7 +49,7 @@ addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
 
   evt = waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
     return (
-      info.AXTextStateSync &&
+      !info.AXTextStateSync &&
       info.AXTextStateChangeType == AXTextStateChangeTypeSelectionExtend &&
       elem.getAttributeValue("AXRole") == "AXWebArea"
     );
@@ -146,7 +146,7 @@ addAccessibleTask(
 
     let evt = waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
       return (
-        info.AXTextStateSync &&
+        !info.AXTextStateSync &&
         info.AXTextStateChangeType == AXTextStateChangeTypeSelectionExtend &&
         elem.getAttributeValue("AXRole") == "AXWebArea"
       );
