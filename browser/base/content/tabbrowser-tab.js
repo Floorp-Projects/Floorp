@@ -140,7 +140,7 @@
 
     set _visuallySelected(val) {
       if (val == (this.getAttribute("visuallyselected") == "true")) {
-        return val;
+        return;
       }
 
       if (val) {
@@ -149,8 +149,6 @@
         this.removeAttribute("visuallyselected");
       }
       gBrowser._tabAttrModified(this, ["visuallyselected"]);
-
-      return val;
     }
 
     set _selected(val) {
@@ -173,8 +171,6 @@
       ) {
         this._visuallySelected = val;
       }
-
-      return val;
     }
 
     get pinned() {
