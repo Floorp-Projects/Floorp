@@ -18,51 +18,26 @@ class SineWaveGenerator {
  public:
   static const int bytesPerSample = sizeof(Sample);
   static const int millisecondsPerSecond = PR_MSEC_PER_SEC;
+  static constexpr float twopi = 2 * M_PI;
 
   /* If more than 1 channel, generated samples are interleaved. */
-  SineWaveGenerator(uint32_t aSampleRate, uint32_t aFrequency,
-                    uint32_t aChannels = 1)
-      : mTotalLength(aSampleRate * aChannels / aFrequency), mReadLength(0) {
-    MOZ_ASSERT(aChannels >= 1);
-    // If we allow arbitrary frequencies, there's no guarantee we won't get
-    // rounded here We could include an error term and adjust for it in
-    // generation; not worth the trouble
-    // MOZ_ASSERT(mTotalLength * aFrequency == aSampleRate);
-    mAudioBuffer = MakeUnique<Sample[]>(mTotalLength);
-    for (uint32_t i = 0; i < aSampleRate / aFrequency; ++i) {
-      for (uint32_t j = 0; j < aChannels; ++j) {
-        mAudioBuffer[i * aChannels + j] =
-            Amplitude() * sin(2 * M_PI * i * aChannels / mTotalLength);
-      }
-    }
-  }
+  SineWaveGenerator(uint32_t aSampleRate, uint32_t aFrequency)
+      : mPhase(0.), mPhaseIncrement(twopi * aFrequency / aSampleRate) {}
 
   // NOTE: only safely called from a single thread (MTG callback)
-  void generate(Sample* aBuffer, TrackTicks aLengthInSamples) {
-    TrackTicks remaining = aLengthInSamples;
-
-    while (remaining) {
-      TrackTicks processSamples = 0;
-
-      if (mTotalLength - mReadLength >= remaining) {
-        processSamples = remaining;
-      } else {
-        processSamples = mTotalLength - mReadLength;
+  void generate(Sample* aBuffer, TrackTicks aFrameCount,
+                uint32_t aChannelCount = 1) {
+    while (aFrameCount--) {
+      Sample value = sin(mPhase) * Amplitude();
+      for (uint32_t channel = 0; channel < aChannelCount; channel++) {
+        *aBuffer++ = value;
       }
-      memcpy(aBuffer, &mAudioBuffer[mReadLength],
-             processSamples * bytesPerSample);
-      aBuffer += processSamples;
-      mReadLength += processSamples;
-      remaining -= processSamples;
-      if (mReadLength == mTotalLength) {
-        mReadLength = 0;
+      mPhase += mPhaseIncrement;
+      if (mPhase > twopi) {
+        mPhase -= twopi;
       }
     }
   }
-
-  void SetOffset(TrackTicks aFrames) { mReadLength = aFrames % mTotalLength; }
-
-  TrackTicks Offset() const { return mReadLength; }
 
   static float Amplitude() {
     // Set volume to -20db.
@@ -73,9 +48,8 @@ class SineWaveGenerator {
   }
 
  private:
-  UniquePtr<Sample[]> mAudioBuffer;
-  TrackTicks mTotalLength;
-  TrackTicks mReadLength;
+  double mPhase;
+  const double mPhaseIncrement;
 };
 
 }  // namespace mozilla
