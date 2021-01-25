@@ -540,8 +540,20 @@ addon-details {
   margin: 0;
 }
 
+.addon-detail-actions,
 .addon-detail-rating {
   display: flex;
+}
+
+.addon-detail-actions {
+  gap: 20px;
+}
+
+.addon-detail-actions > label {
+  /* Center the items and remove the whitespaces between the input and the span
+     to allow them to accomodate more space when it's constrained. */
+  display: inline-flex;
+  flex-wrap: wrap;
 }
 
 .addon-detail-rating > a {

@@ -178,7 +178,21 @@ tr:not(.deleted) > .cell-value {
 }
 
 #form-edit > label {
-  padding-inline-end: 10px;
+  /* Make the radiobutton's text wrap to a new line along with
+     the radiobutton itself, when space is constrained. */
+  display: inline-block;
+  /* margin-block to apply some spacing between the radio buttons
+     when the labels are wrapping. */
+  margin-block: 2px;
+  margin-inline-end: 30px;
+}
+
+#form-edit > label:last-of-type {
+  margin-inline-end: 0;
+}
+
+#form-edit > label > :is(input[type="radio"], span) {
+  vertical-align: middle;
 }
 
 td.cell-value > form > input[type="text"],
