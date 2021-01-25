@@ -1,8 +1,10 @@
 // |jit-test| test-join=--wasm-simd-wormhole; include:wasm-binary.js
 
-// Make sure the wormhole is only available on x64 and x86 native
-assertEq(!wasmSimdWormholeEnabled() || (getBuildConfiguration().x64 || getBuildConfiguration().x86) && !anySimulator(),
-         true);
+// Make sure the wormhole is only available on x64
+assertEq(!wasmSimdWormholeEnabled() || getBuildConfiguration().x64, true);
+
+// Make sure the wormhole is only available with Ion
+assertEq(!wasmSimdWormholeEnabled() || wasmCompileMode() == "ion", true);
 
 function wormhole_op(opcode) {
     return `i8x16.shuffle 31 0 30 2 29 4 28 6 27 8 26 10 25 12 24 ${opcode} `
@@ -21,11 +23,3 @@ if (wasmSimdWormholeEnabled()) {
         assertEq(mem[i], ans[i]);
 }
 
-function anySimulator() {
-    let conf = getBuildConfiguration();
-    for ( let n in conf ) {
-        if (n.indexOf("simulator") >= 0 && conf[n])
-            return true;
-    }
-    return false;
-}
