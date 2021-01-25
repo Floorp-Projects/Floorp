@@ -138,9 +138,7 @@ class RegionDetector {
   // Let tests wait for init to complete.
   _initPromise = null;
   // Topic for Observer events fired by Region.jsm.
-  REGION_TOPIC = "browser-region";
-  // Verb for event fired when we update the region.
-  REGION_UPDATED = "region-updated";
+  REGION_TOPIC = "browser-region-updated";
   // Values for telemetry.
   TELEMETRY = {
     SUCCESS: 0,
@@ -380,8 +378,7 @@ class RegionDetector {
     if (notify) {
       Services.obs.notifyObservers(
         this._createSupportsString(region),
-        this.REGION_TOPIC,
-        this.REGION_UPDATED
+        this.REGION_TOPIC
       );
     }
   }
