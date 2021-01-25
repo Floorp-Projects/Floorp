@@ -157,6 +157,7 @@ void GfxInfo::GetData() {
   nsCString glRenderer;
   nsCString glVersion;
   nsCString textureFromPixmap;
+  nsCString testType;
 
   // Available if GLX_MESA_query_renderer is supported.
   nsCString mesaVendor;
@@ -211,6 +212,8 @@ void GfxInfo::GetData() {
       stringToFill = pciDevices.AppendElement();
     } else if (!strcmp(line, "DRM_RENDERDEVICE")) {
       stringToFill = &drmRenderDevice;
+    } else if (!strcmp(line, "TEST_TYPE")) {
+      stringToFill = &testType;
     } else if (!strcmp(line, "WARNING")) {
       logString = true;
     } else if (!strcmp(line, "ERROR")) {
@@ -270,6 +273,7 @@ void GfxInfo::GetData() {
   }
 
   mDrmRenderDevice = std::move(drmRenderDevice);
+  mTestType = std::move(testType);
 
   // Mesa always exposes itself in the GL_VERSION string, but not always the
   // GL_VENDOR string.
@@ -582,7 +586,7 @@ void GfxInfo::GetData() {
     }
   }
 
-  if (error || errorLog) {
+  if (error || errorLog || mTestType.IsEmpty()) {
     if (!mAdapterDescription.IsEmpty()) {
       mAdapterDescription.AppendLiteral(" (See failure log)");
     } else {
@@ -956,6 +960,13 @@ NS_IMETHODIMP
 GfxInfo::GetDesktopEnvironment(nsAString& aDesktopEnvironment) {
   GetData();
   AppendASCIItoUTF16(mDesktopEnvironment, aDesktopEnvironment);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetTestType(nsAString& aTestType) {
+  GetData();
+  AppendASCIItoUTF16(mTestType, aTestType);
   return NS_OK;
 }
 

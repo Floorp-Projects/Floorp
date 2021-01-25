@@ -26,6 +26,7 @@ interface nsIGfxInfo : nsISupports
    */
   readonly attribute AString windowProtocol;
   readonly attribute AString desktopEnvironment;
+  readonly attribute AString testType;
 
   /*
    * These are valid across all platforms.
