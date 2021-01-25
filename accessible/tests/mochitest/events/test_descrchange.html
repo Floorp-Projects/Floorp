@@ -90,6 +90,22 @@
       getNode("descriptionChild").textContent = "d4";
       await descChanged;
 
+      const lateDescribedBy = getNode("lateDescribedBy");
+      descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        lateDescribedBy
+      );
+      info("Setting aria-describedby");
+      lateDescribedBy.setAttribute("aria-describedby", "lateDescription");
+      await descChanged;
+      descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        lateDescribedBy
+      );
+      info("Changing text of late aria-describedby target's child");
+      getNode("lateDescriptionChild").textContent = "d2";
+      await descChanged;
+
       SimpleTest.finish();
     }
 
@@ -116,6 +132,9 @@
 
   <div id="describedBy" aria-describedby="description"></div>
   <div id="description">d1</div>
+
+  <div id="lateDescribedBy"></div>
+  <div id="lateDescription"><p id="lateDescriptionChild">d1</p></div>
 
   <div id="eventdump"></div>
 </body>

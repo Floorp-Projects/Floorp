@@ -119,6 +119,16 @@
       getNode("labelChild").textContent = "l4";
       await nameChanged;
 
+      const lateLabelledBy = getNode("lateLabelledBy");
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, lateLabelledBy);
+      info("Setting aria-labelledby");
+      lateLabelledBy.setAttribute("aria-labelledby", "lateLabel");
+      await nameChanged;
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, lateLabelledBy);
+      info("Changing text of late aria-labelledby target's child");
+      getNode("lateLabelChild").textContent = "l2";
+      await nameChanged;
+
       SimpleTest.finish();
     }
 
@@ -147,6 +157,9 @@
 
   <div id="labelledBy" aria-labelledby="label"></div>
   <div id="label">l1</div>
+
+  <div id="lateLabelledBy"></div>
+  <div id="lateLabel"><p id="lateLabelChild">l1</p></div>
 
   <div id="eventdump"></div>
 </body>
