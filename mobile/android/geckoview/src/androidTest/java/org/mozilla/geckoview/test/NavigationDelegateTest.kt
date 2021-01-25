@@ -1393,7 +1393,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun loadUriReferrerSession() {
         val uri = "https://example.com/bar"
-        val referrer = "https://example.org/"
+        val referrer = "https://example.org/foo"
 
         sessionRule.session.loadUri(referrer)
         sessionRule.session.waitForPageStop()
