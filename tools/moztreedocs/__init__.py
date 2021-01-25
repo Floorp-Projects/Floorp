@@ -127,7 +127,7 @@ class _SphinxManager(object):
         If this is the case, we read the information, create a temporary file,
         reuse the front matter info into the md file
         """
-        with open(markdown_file, "r") as f:
+        with open(markdown_file, "r", encoding="utf_8") as f:
             # Load the front matter header
             post = frontmatter.load(f)
             if len(post.keys()) > 0:
