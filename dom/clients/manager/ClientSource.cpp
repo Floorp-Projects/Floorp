@@ -470,46 +470,7 @@ void ClientSource::InheritController(
     const ServiceWorkerDescriptor& aServiceWorker) {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
 
-  // If we are in legacy child-side intercept mode then we must tell the current
-  // process SWM that this client inherited a controller.  This will only update
-  // the local SWM data and not send any messages to the ClientManagerService.
-  if (!ServiceWorkerParentInterceptEnabled()) {
-    if (GetDocShell()) {
-      AssertIsOnMainThread();
-
-      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-      if (swm) {
-        swm->NoteInheritedController(mClientInfo, aServiceWorker);
-      }
-    } else {
-      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-      MOZ_ASSERT(workerPrivate);
-
-      RefPtr<StrongWorkerRef> strongWorkerRef = StrongWorkerRef::Create(
-          workerPrivate,
-          NS_ConvertUTF16toUTF8(workerPrivate->WorkerName()).get());
-      auto threadSafeWorkerRef =
-          MakeRefPtr<ThreadSafeWorkerRef>(strongWorkerRef);
-
-      nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-          __func__, [workerRef = threadSafeWorkerRef, clientInfo = mClientInfo,
-                     serviceWorker = aServiceWorker]() {
-            MOZ_ASSERT(IsBlobURI(workerRef->Private()->GetBaseURI()));
-
-            RefPtr<ServiceWorkerManager> swm =
-                ServiceWorkerManager::GetInstance();
-
-            if (swm) {
-              swm->NoteInheritedController(clientInfo, serviceWorker);
-            }
-          });
-
-      Unused << NS_WARN_IF(
-          NS_FAILED(workerPrivate->DispatchToMainThread(r.forget())));
-    }
-  }
-
-  // Also tell the parent-side ClientManagerService that the controller was
+  // Tell the parent-side ClientManagerService that the controller was
   // inherited.  This is necessary for clients.matchAll() to work properly.
   // In parent-side intercept mode this will also note the inheritance in
   // the parent-side SWM.
@@ -527,14 +488,6 @@ const Maybe<ServiceWorkerDescriptor>& ClientSource::GetController() const {
 }
 
 void ClientSource::NoteDOMContentLoaded() {
-  if (mController.isSome() && !ServiceWorkerParentInterceptEnabled()) {
-    AssertIsOnMainThread();
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (swm) {
-      swm->MaybeCheckNavigationUpdate(mClientInfo);
-    }
-  }
-
   MaybeExecute(
       [](PClientSourceChild* aActor) { aActor->SendNoteDOMContentLoaded(); });
 }
@@ -595,74 +548,6 @@ RefPtr<ClientOpPromise> ClientSource::PostMessage(
   rv.ThrowNotSupportedError(
       "postMessage to non-Window clients is not supported yet");
   return ClientOpPromise::CreateAndReject(rv, __func__);
-}
-
-RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
-  // The ClientSource::Claim method is only needed in the legacy
-  // mode where the ServiceWorkerManager is run in each child-process.
-  // In parent-process mode this method should not be called.
-  MOZ_DIAGNOSTIC_ASSERT(!ServiceWorkerParentInterceptEnabled());
-
-  nsIGlobalObject* global = GetGlobal();
-  if (NS_WARN_IF(!global)) {
-    CopyableErrorResult rv;
-    rv.ThrowInvalidStateError("Browsing context torn down");
-    return ClientOpPromise::CreateAndReject(rv, __func__);
-  }
-
-  // Note, we cannot just mark the ClientSource controlled.  We must go through
-  // the SWM so that it can keep track of which clients are controlled by each
-  // registration.  We must tell the child-process SWM in legacy child-process
-  // mode.  In parent-process service worker mode the SWM is notified in the
-  // parent-process in ClientManagerService::Claim().
-
-  RefPtr<GenericErrorResultPromise::Private> innerPromise =
-      new GenericErrorResultPromise::Private(__func__);
-  ServiceWorkerDescriptor swd(aArgs.serviceWorker());
-
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "ClientSource::Claim",
-      [innerPromise, clientInfo = mClientInfo, swd]() mutable {
-        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-        if (NS_WARN_IF(!swm)) {
-          CopyableErrorResult rv;
-          rv.ThrowInvalidStateError("Browser shutting down");
-          innerPromise->Reject(rv, __func__);
-          return;
-        }
-
-        RefPtr<GenericErrorResultPromise> p =
-            swm->MaybeClaimClient(clientInfo, swd);
-        p->ChainTo(innerPromise.forget(), __func__);
-      });
-
-  if (NS_IsMainThread()) {
-    r->Run();
-  } else {
-    MOZ_ALWAYS_SUCCEEDS(
-        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
-  }
-
-  RefPtr<ClientOpPromise::Private> outerPromise =
-      new ClientOpPromise::Private(__func__);
-
-  auto holder =
-      MakeRefPtr<DOMMozPromiseRequestHolder<GenericErrorResultPromise>>(global);
-
-  innerPromise
-      ->Then(
-          mEventTarget, __func__,
-          [outerPromise, holder](bool aResult) {
-            holder->Complete();
-            outerPromise->Resolve(CopyableErrorResult(), __func__);
-          },
-          [outerPromise, holder](const CopyableErrorResult& aResult) {
-            holder->Complete();
-            outerPromise->Reject(aResult, __func__);
-          })
-      ->Track(*holder);
-
-  return outerPromise;
 }
 
 RefPtr<ClientOpPromise> ClientSource::GetInfoAndState(
