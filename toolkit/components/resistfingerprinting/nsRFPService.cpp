@@ -184,7 +184,7 @@ class LRUCache final {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LRUCache)
 
-  nsCString Get(long long aKeyPart1, long long aKeyPart2) {
+  bool Get(long long aKeyPart1, long long aKeyPart2, nsACString& aOutString) {
     for (auto& cacheEntry : this->cache) {
       // Read optimistically befor locking
       if (cacheEntry.keyPart1 == aKeyPart1 &&
@@ -200,21 +200,22 @@ class LRUCache final {
           MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
                   ("LRU Cache HIT-MISS with %lli != %lli and %lli != %lli",
                    aKeyPart1, tmp_keyPart1, aKeyPart2, tmp_keyPart2));
-          return ""_ns;
+          return false;
         }
 
         cacheEntry.accessTime = ++mTimeCounter;
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
                 ("LRU Cache HIT with %lli %lli", aKeyPart1, aKeyPart2));
-        return cacheEntry.data;
+        aOutString.Assign(cacheEntry.data, HASH_DIGEST_SIZE_BYTES);
+        return true;
       }
     }
 
-    return ""_ns;
+    return false;
   }
 
   void Store(long long aKeyPart1, long long aKeyPart2,
-             const nsCString& aValue) {
+             const Span<char>& aValue) {
     MOZ_DIAGNOSTIC_ASSERT(aValue.Length() == HASH_DIGEST_SIZE_BYTES);
     MutexAutoLock lock(mLock);
 
@@ -235,7 +236,7 @@ class LRUCache final {
 
     lowestKey->keyPart1 = aKeyPart1;
     lowestKey->keyPart2 = aKeyPart2;
-    lowestKey->data = aValue;
+    PodCopy(lowestKey->data, aValue.Elements(), HASH_DIGEST_SIZE_BYTES);
     lowestKey->accessTime = ++mTimeCounter;
     MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
             ("LRU Cache STORE with %lli %lli", aKeyPart1, aKeyPart2));
@@ -248,20 +249,15 @@ class LRUCache final {
     Atomic<long long, Relaxed> keyPart1;
     Atomic<long long, Relaxed> keyPart2;
     uint64_t accessTime = 0;
-    nsCString data;
+    char data[HASH_DIGEST_SIZE_BYTES];
 
     CacheEntry() {
       this->keyPart1 = 0xFFFFFFFFFFFFFFFF;
       this->keyPart2 = 0xFFFFFFFFFFFFFFFF;
       this->accessTime = 0;
-      this->data = nullptr;
+      PodArrayZero(this->data);
     }
-    CacheEntry(const CacheEntry& obj) {
-      this->keyPart1.exchange(obj.keyPart1);
-      this->keyPart2.exchange(obj.keyPart2);
-      this->accessTime = obj.accessTime;
-      this->data = obj.data;
-    }
+    CacheEntry(const CacheEntry& obj) = delete;
   };
 
   AutoTArray<CacheEntry, LRU_CACHE_SIZE> cache;
@@ -396,9 +392,10 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
   long long extraClampedTime =
       (aClampedTimeUSec / reducedResolution) * reducedResolution;
 
-  nsCString hashResult = cache->Get(extraClampedTime, aContextMixin);
+  nsAutoCStringN<HASH_DIGEST_SIZE_BYTES + 1> hashResult;
+  bool foundCacheHit = cache->Get(extraClampedTime, aContextMixin, hashResult);
 
-  if (hashResult.Length() != HASH_DIGEST_SIZE_BYTES) {  // Cache Miss =(
+  if (!foundCacheHit) {  // Cache Miss =(
     // If someone has pased in the testing-only parameter, replace our seed with
     // it
     if (aSecretSeed != nullptr) {
@@ -469,7 +466,7 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
                         sizeof(extraClampedTime));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoCStringN<HASH_DIGEST_SIZE_BYTES> derivedSecret;
+    nsAutoCStringN<HASH_DIGEST_SIZE_BYTES + 1> derivedSecret;
     rv = hasher->Finish(false, derivedSecret);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -487,8 +484,8 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
   if (MOZ_UNLIKELY(byteOffset > (HASH_DIGEST_SIZE_BYTES - 4))) {
     byteOffset = 0;
   }
-  uint32_t deterministiclyRandomValue = *BitwiseCast<uint32_t*>(
-      PromiseFlatCString(hashResult).get() + byteOffset);
+  uint32_t deterministiclyRandomValue =
+      *BitwiseCast<uint32_t*>(hashResult.get() + byteOffset);
   deterministiclyRandomValue %= aResolutionUSec;
   *aMidpointOut = deterministiclyRandomValue;
 
