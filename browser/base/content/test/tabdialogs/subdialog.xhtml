@@ -14,6 +14,17 @@
     function acceptSubdialog() {
       window.arguments[0].acceptCount++;
     }
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!window.arguments) {
+        return;
+      }
+      let [options] = window.arguments;
+      if (options?.testCustomFocusHandler) {
+        document.subDialogSetDefaultFocus = () => {
+          document.getElementById("custom-focus-el").focus();
+        }
+      }
+    }, {once: true})
   </script>
 
   <description id="desc">A sample sub-dialog for testing</description>
@@ -24,6 +35,8 @@
     <html:option>Foo</html:option>
     <html:option>Bar</html:option>
   </html:select>
+
+  <html:input id="custom-focus-el" value="Custom Focus Test" />
 
   <separator class="thin"/>
 
