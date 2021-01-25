@@ -65,8 +65,8 @@ class ThreeDotMenuMainRobot {
     fun verifyRefreshButton() = assertRefreshButton()
     fun verifyCloseAllTabsButton() = assertCloseAllTabsButton()
     fun verifyShareButton() = assertShareButton()
-    fun verifyReaderViewToggle(visible: Boolean) = assertReaderViewToggle(visible)
     fun verifyReaderViewAppearance(visible: Boolean) = assertReaderViewAppearanceButton(visible)
+
     fun clickShareButton() {
         shareButton().click()
         mDevice.waitNotNull(Until.findObject(By.text("ALL ACTIONS")), waitingTime)
@@ -318,13 +318,6 @@ class ThreeDotMenuMainRobot {
             return BrowserRobot.Transition()
         }
 
-        fun toggleReaderView(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
-            readerViewToggle().click()
-
-            NavigationToolbarRobot().interact()
-            return NavigationToolbarRobot.Transition()
-        }
-
         fun openReaderViewAppearance(interact: ReaderViewRobot.() -> Unit): ReaderViewRobot.Transition {
             readerViewAppearanceToggle().click()
 
@@ -505,12 +498,6 @@ private fun assertWhatsNewButton() = whatsNewButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun addToHomeScreenButton() = onView(withText("Add to Home screen"))
-
-private fun readerViewToggle() = onView(allOf(withText(R.string.browser_menu_read)))
-private fun assertReaderViewToggle(visible: Boolean) = readerViewToggle()
-    .check(
-        if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
-    )
 
 private fun readerViewAppearanceToggle() =
     onView(allOf(withText(R.string.browser_menu_read_appearance)))

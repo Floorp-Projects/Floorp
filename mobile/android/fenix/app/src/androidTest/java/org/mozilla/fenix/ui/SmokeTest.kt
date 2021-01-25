@@ -45,6 +45,7 @@ class SmokeTest {
     private var searchSuggestionsIdlingResource: RecyclerViewIdlingResource? = null
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
     private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
+    private var readerViewNotification: ViewVisibilityIdlingResource? = null
     private val downloadFileName = "Globe.svg"
     private val searchEngine = object {
         var title = "Ecosia"
@@ -103,6 +104,10 @@ class SmokeTest {
 
         if (bookmarksListIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }
+
+        if (readerViewNotification != null) {
+            IdlingRegistry.getInstance().unregister(readerViewNotification)
         }
     }
 
@@ -1115,6 +1120,42 @@ class SmokeTest {
         }.openHomeScreenShortcut("yay app") {
             mDevice.waitForIdle()
             verifyNavURLBarHidden()
+        }
+    }
+
+    @Test
+    // Verifies that reader mode is detected and the custom appearance controls are displayed
+    fun verifyReaderViewAppearanceUI() {
+        val readerViewPage =
+            TestAssetHelper.getLoremIpsumAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(readerViewPage.url) {
+            org.mozilla.fenix.ui.robots.mDevice.waitForIdle()
+        }
+
+        readerViewNotification = ViewVisibilityIdlingResource(
+            activityTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
+            View.VISIBLE
+        )
+
+        IdlingRegistry.getInstance().register(readerViewNotification)
+
+        navigationToolbar {
+            verifyReaderViewDetected(true)
+            toggleReaderView()
+        }.openThreeDotMenu {
+            verifyReaderViewAppearance(true)
+        }.openReaderViewAppearance {
+            verifyAppearanceFontGroup(true)
+            verifyAppearanceFontSansSerif(true)
+            verifyAppearanceFontSerif(true)
+            verifyAppearanceFontIncrease(true)
+            verifyAppearanceFontDecrease(true)
+            verifyAppearanceColorGroup(true)
+            verifyAppearanceColorDark(true)
+            verifyAppearanceColorLight(true)
+            verifyAppearanceColorSepia(true)
         }
     }
 }

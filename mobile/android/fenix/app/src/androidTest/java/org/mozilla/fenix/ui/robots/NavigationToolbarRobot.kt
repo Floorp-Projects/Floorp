@@ -11,22 +11,27 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.not
@@ -54,7 +59,12 @@ class NavigationToolbarRobot {
 
     fun verifyTabButtonShortcutMenuItems() = assertTabButtonShortcutMenuItems()
 
+    fun verifyReaderViewDetected(visible: Boolean = false): ViewInteraction =
+        assertReaderViewDetected(visible)
+
     fun typeSearchTerm(searchTerm: String) = awesomeBar().perform(typeText(searchTerm))
+
+    fun toggleReaderView() = readerViewToggle().click()
 
     class Transition {
 
@@ -274,6 +284,20 @@ private fun tabTrayButton() = onView(withId(R.id.tab_button))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBar() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
 private fun goBackButton() = mDevice.pressBack()
+private fun readerViewToggle() =
+    onView(withParent(withId(R.id.mozac_browser_toolbar_page_actions)))
+
+private fun assertReaderViewDetected(visible: Boolean) =
+    onView(
+        allOf(
+            withParent(withId(R.id.mozac_browser_toolbar_page_actions)),
+            withContentDescription("Reader view")
+        )
+    ).check(
+        if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
+        else ViewAssertions.doesNotExist()
+    )
+
 inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
     try {
         IdlingRegistry.getInstance().register(ir)
