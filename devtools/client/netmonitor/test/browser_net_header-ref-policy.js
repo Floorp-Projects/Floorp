@@ -43,17 +43,8 @@ add_task(async function() {
     '"Referrer Policy" header is displayed in the header panel.'
   );
 
-  const defaultPolicy = Services.prefs.getIntPref(
-    "network.http.referer.defaultPolicy"
-  );
-  const stringMap = {
-    0: "no-referrer",
-    1: "same-origin",
-    2: "strict-origin-when-cross-origin",
-    3: "no-referrer-when-downgrade",
-  };
   is(
-    referrerPolicyValue.textContent === stringMap[defaultPolicy],
+    referrerPolicyValue.textContent === "no-referrer-when-downgrade",
     true,
     "The referrer policy value is reflected correctly."
   );

@@ -10,7 +10,7 @@ _referrerTests = [
     fromScheme: "http://",
     toScheme: "http://",
     cross: true,
-    result: "http://test1.example.com/", // origin
+    result: "http://test1.example.com/browser", // full referrer
   },
   {
     fromScheme: "https://",
