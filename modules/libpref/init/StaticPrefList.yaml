@@ -3289,12 +3289,6 @@
   value: false
   mirror: always
 
-# W3C draft pointer events
-- name: dom.w3c_pointer_events.enabled
-  type: RelaxedAtomicBool
-  value: @IS_NOT_ANDROID@
-  mirror: always
-
 #ifdef XP_WIN
   # Control firing WidgetMouseEvent by handling Windows pointer messages or
   # mouse messages.

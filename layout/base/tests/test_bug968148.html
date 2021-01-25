@@ -26,7 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=968148
         } else if (event.data == "run next") {
           SpecialPowers.pushPrefEnv({
             "set": [
-              ["dom.w3c_pointer_events.enabled", true],
               ["dom.w3c_pointer_events.implicit_capture", true]
             ]
           }, testWithImplicitPointerCapture);
@@ -35,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=968148
 
       SpecialPowers.pushPrefEnv({
         "set": [
-          ["dom.w3c_pointer_events.enabled", true],
           ["dom.w3c_pointer_events.implicit_capture", false]
         ]
       }, testWithoutImplicitPointerCapture);

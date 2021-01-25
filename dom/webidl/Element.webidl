@@ -115,13 +115,10 @@ interface Element : Node {
   boolean mozMatchesSelector(UTF8String selector);
 
   // Pointer events methods.
-  [Throws, Pref="dom.w3c_pointer_events.enabled"]
+  [Throws]
   void setPointerCapture(long pointerId);
-
-  [Throws, Pref="dom.w3c_pointer_events.enabled"]
+  [Throws]
   void releasePointerCapture(long pointerId);
-
-  [Pref="dom.w3c_pointer_events.enabled"]
   boolean hasPointerCapture(long pointerId);
 
   // Proprietary extensions

@@ -34,12 +34,6 @@ add_task(async function test_pointerevent() {
     },
   });
   await extension.startup();
-  await new Promise(resolve => {
-    SpecialPowers.pushPrefEnv(
-      { set: [["dom.w3c_pointer_events.enabled", true]] },
-      resolve
-    );
-  });
   let url = await extension.awaitMessage("ready");
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
     await extension.awaitMessage("pageReady");

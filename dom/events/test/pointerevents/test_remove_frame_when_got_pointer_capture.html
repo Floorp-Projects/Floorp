@@ -159,11 +159,7 @@ function startTest() {
   SimpleTest.finish();
 }
 
-SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({
-    "set": [["dom.w3c_pointer_events.enabled", true]]
-  }, startTest);
-});
+SimpleTest.waitForFocus(startTest);
 
 </script>
 </body>

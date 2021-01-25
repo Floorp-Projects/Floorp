@@ -99,25 +99,15 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler ontoggle;
 
            // Pointer events handlers
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointercancel;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointerdown;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointerup;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointermove;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointerout;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointerover;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointerenter;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointerleave;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler ongotpointercapture;
-           [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onlostpointercapture;
 
            // Mozilla-specific handlers. Unprefixed handlers live in

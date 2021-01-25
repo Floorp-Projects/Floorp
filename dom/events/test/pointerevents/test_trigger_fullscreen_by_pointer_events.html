@@ -45,8 +45,7 @@ function startTest() {
 SimpleTest.waitForFocus(() => {
   SpecialPowers.pushPrefEnv({
     "set": [
-      ["full-screen-api.allow-trusted-requests-only", false],
-      ["dom.w3c_pointer_events.enabled", true]
+      ["full-screen-api.allow-trusted-requests-only", false]
     ]
   }, startTest);
 });

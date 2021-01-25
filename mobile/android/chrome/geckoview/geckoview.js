@@ -497,8 +497,6 @@ function createBrowser() {
   browser.setAttribute("primary", "true");
   browser.setAttribute("flex", "1");
   browser.setAttribute("maychangeremoteness", "true");
-
-  Services.prefs.setBoolPref("dom.w3c_pointer_events.enabled", true);
   browser.setAttribute("remote", "true");
   browser.setAttribute("remoteType", E10SUtils.DEFAULT_REMOTE_TYPE);
 

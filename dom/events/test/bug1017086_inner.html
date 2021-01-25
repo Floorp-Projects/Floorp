@@ -24,9 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1017086
     function runTest() {
       testelem = document.getElementById("test");
       is(!!testelem, true, "Document should have element with id 'test'");
-      parent.turnOnOffPointerEvents( function() {
-        parent.part_of_checks(pointer_events, check, window, document, testelem);
-      });
+      parent.part_of_checks(pointer_events, check, window, document, testelem);
     }
   </script>
 </head>

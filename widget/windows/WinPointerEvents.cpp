@@ -61,7 +61,7 @@ bool WinPointerEvents::ShouldHandleWinPointerMessages(UINT aMsg,
                                                       WPARAM aWParam) {
   MOZ_ASSERT(aMsg == WM_POINTERDOWN || aMsg == WM_POINTERUP ||
              aMsg == WM_POINTERUPDATE || aMsg == WM_POINTERLEAVE);
-  if (!sLibraryHandle || !StaticPrefs::dom_w3c_pointer_events_enabled()) {
+  if (!sLibraryHandle) {
     return false;
   }
 
@@ -123,13 +123,13 @@ bool WinPointerEvents::ShouldRollupOnPointerEvent(UINT aMsg, WPARAM aWParam) {
 }
 
 bool WinPointerEvents::ShouldFirePointerEventByWinPointerMessages() {
-  MOZ_ASSERT(sLibraryHandle && StaticPrefs::dom_w3c_pointer_events_enabled());
+  MOZ_ASSERT(sLibraryHandle);
   return StaticPrefs::dom_w3c_pointer_events_dispatch_by_pointer_messages();
 }
 
 WinPointerInfo* WinPointerEvents::GetCachedPointerInfo(UINT aMsg,
                                                        WPARAM aWParam) {
-  if (!sLibraryHandle || !StaticPrefs::dom_w3c_pointer_events_enabled() ||
+  if (!sLibraryHandle ||
       MOUSE_INPUT_SOURCE() != dom::MouseEvent_Binding::MOZ_SOURCE_PEN ||
       ShouldFirePointerEventByWinPointerMessages()) {
     return nullptr;
