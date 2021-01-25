@@ -532,12 +532,8 @@ RefPtr<ClientOpPromise> ClientManagerService::Claim(
       continue;
     }
 
-    if (ServiceWorkerParentInterceptEnabled()) {
-      promiseList->AddPromise(ClaimOnMainThread(
-          source->Info(), ServiceWorkerDescriptor(serviceWorker)));
-    } else {
-      promiseList->AddPromise(source->StartOp(aArgs));
-    }
+    promiseList->AddPromise(ClaimOnMainThread(
+        source->Info(), ServiceWorkerDescriptor(serviceWorker)));
   }
 
   // Maybe finish the promise now in case we didn't find any matching clients.

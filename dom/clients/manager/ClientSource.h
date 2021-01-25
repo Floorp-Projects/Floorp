@@ -28,7 +28,6 @@ class ErrorResult;
 
 namespace dom {
 
-class ClientClaimArgs;
 class ClientControlledArgs;
 class ClientFocusArgs;
 class ClientGetInfoAndStateArgs;
@@ -142,8 +141,6 @@ class ClientSource final : public ClientThing<ClientSourceChild> {
   RefPtr<ClientOpPromise> Focus(const ClientFocusArgs& aArgs);
 
   RefPtr<ClientOpPromise> PostMessage(const ClientPostMessageArgs& aArgs);
-
-  RefPtr<ClientOpPromise> Claim(const ClientClaimArgs& aArgs);
 
   RefPtr<ClientOpPromise> GetInfoAndState(
       const ClientGetInfoAndStateArgs& aArgs);
