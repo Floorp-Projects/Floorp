@@ -926,7 +926,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::F64x2Splat):
             CHECK(iter.readConversion(ValType::F64, ValType::V128, &nothing));
 
-          case uint32_t(SimdOp::I8x16AnyTrue):
+          case uint32_t(SimdOp::V128AnyTrue):
           case uint32_t(SimdOp::I8x16AllTrue):
           case uint32_t(SimdOp::I16x8AnyTrue):
           case uint32_t(SimdOp::I16x8AllTrue):
