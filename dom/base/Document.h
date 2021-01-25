@@ -3518,6 +3518,13 @@ class Document : public nsINode,
     return mStyleSheetChangeEventsEnabled;
   }
 
+  void SetShadowRootAttachedEventEnabled(bool aValue) {
+    mShadowRootAttachedEventEnabled = aValue;
+  }
+  bool ShadowRootAttachedEventEnabled() const {
+    return mShadowRootAttachedEventEnabled;
+  }
+
   already_AddRefed<Promise> BlockParsing(Promise& aPromise,
                                          const BlockParsingOptions& aOptions,
                                          ErrorResult& aRv);
@@ -4523,6 +4530,9 @@ class Document : public nsINode,
 
   // Whether style sheet change events will be dispatched for this document
   bool mStyleSheetChangeEventsEnabled : 1;
+
+  // Whether shadowrootattached events will be dispatched for this document.
+  bool mShadowRootAttachedEventEnabled : 1;
 
   // Whether the document was created by a srcdoc iframe.
   bool mIsSrcdocDocument : 1;
