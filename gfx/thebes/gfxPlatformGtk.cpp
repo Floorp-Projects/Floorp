@@ -31,7 +31,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "nsAppRunner.h"
 #include "nsIGfxInfo.h"
@@ -81,15 +80,6 @@ static void screen_resolution_changed(GdkScreen* aScreen, GParamSpec* aPspec,
   sDPI = 0;
 }
 
-#if defined(MOZ_X11)
-// TODO(aosmond): The envvar is deprecated. We should remove it once EGL is the
-// default in release.
-static bool IsX11EGLEnvvarEnabled() {
-  const char* eglPref = PR_GetEnv("MOZ_X11_EGL");
-  return (eglPref && *eglPref);
-}
-#endif
-
 gfxPlatformGtk::gfxPlatformGtk() {
   if (!gfxPlatform::IsHeadless()) {
     gtk_init(nullptr, nullptr);
@@ -108,17 +98,7 @@ gfxPlatformGtk::gfxPlatformGtk() {
 
     bool useEGLOnX11 = false;
 #ifdef MOZ_X11
-    useEGLOnX11 =
-        StaticPrefs::gfx_prefer_x11_egl_AtStartup() || IsX11EGLEnvvarEnabled();
-    if (useEGLOnX11) {
-      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-      nsAutoString testType;
-      gfxInfo->GetTestType(testType);
-      // We can only use X11/EGL if we actually found the EGL library and
-      // successfully use it to determine system information in glxtest.
-      useEGLOnX11 = testType == u"EGL";
-    }
-
+    useEGLOnX11 = IsX11EGLEnabled();
 #endif
     if (IsWaylandDisplay() || useEGLOnX11) {
       gfxVars::SetUseEGL(true);
