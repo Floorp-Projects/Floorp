@@ -1065,7 +1065,6 @@ DownloadsDataCtor.prototype = {
 
   set panelHasShownBefore(aValue) {
     Services.prefs.setBoolPref("browser.download.panel.shown", aValue);
-    return aValue;
   },
 
   /**
@@ -1442,7 +1441,6 @@ DownloadsIndicatorDataCtor.prototype = {
   set attention(aValue) {
     this._attention = aValue;
     this._updateViews();
-    return aValue;
   },
   _attention: DownloadsCommon.ATTENTION_NONE,
 
@@ -1454,7 +1452,6 @@ DownloadsIndicatorDataCtor.prototype = {
     this._attentionSuppressed = aValue;
     this._attention = DownloadsCommon.ATTENTION_NONE;
     this._updateViews();
-    return aValue;
   },
   _attentionSuppressed: false,
 

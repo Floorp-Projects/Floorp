@@ -171,7 +171,7 @@ class UrlbarInput {
           return this.inputField[property];
         },
         set(val) {
-          return (this.inputField[property] = val);
+          this.inputField[property] = val;
         },
       });
     }
@@ -1560,7 +1560,7 @@ class UrlbarInput {
   }
 
   set value(val) {
-    return this._setValue(val, true);
+    this._setValue(val, true);
   }
 
   get lastSearchString() {

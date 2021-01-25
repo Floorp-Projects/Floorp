@@ -486,7 +486,6 @@ const DownloadsIndicatorView = {
         DownloadsButton.checkForAutoHide();
       }
     }
-    return aValue;
   },
   get hasDownloads() {
     return this._hasDownloads;
@@ -499,7 +498,7 @@ const DownloadsIndicatorView = {
    */
   set percentComplete(aValue) {
     if (!this._operational) {
-      return this._percentComplete;
+      return;
     }
 
     if (this._percentComplete !== aValue) {
@@ -517,7 +516,6 @@ const DownloadsIndicatorView = {
         this._progressIcon.style.animationDelay = "1s";
       }
     }
-    return aValue;
   },
   _percentComplete: null,
 
@@ -526,13 +524,12 @@ const DownloadsIndicatorView = {
    */
   set attention(aValue) {
     if (!this._operational) {
-      return this._attention;
+      return;
     }
     if (this._attention != aValue) {
       this._attention = aValue;
       this._refreshAttention();
     }
-    return this._attention;
   },
 
   _refreshAttention() {

@@ -268,7 +268,6 @@ DownloadsPlacesView.prototype = {
     if (this._active) {
       this._ensureVisibleElementsAreActive(true);
     }
-    return this._active;
   },
 
   /**
@@ -406,7 +405,7 @@ DownloadsPlacesView.prototype = {
       }
       this._ensureVisibleElementsAreActive();
     }
-    return (this._searchTerm = aValue);
+    this._searchTerm = aValue;
   },
 
   /**
