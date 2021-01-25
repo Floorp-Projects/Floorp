@@ -15019,7 +15019,7 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchSplat(SplatF32x4, ValType::F32));
           case uint32_t(SimdOp::F64x2Splat):
             CHECK_NEXT(dispatchSplat(SplatF64x2, ValType::F64));
-          case uint32_t(SimdOp::I8x16AnyTrue):
+          case uint32_t(SimdOp::V128AnyTrue):
           case uint32_t(SimdOp::I16x8AnyTrue):
           case uint32_t(SimdOp::I32x4AnyTrue):
             CHECK_NEXT(dispatchVectorReduction(AnyTrue));

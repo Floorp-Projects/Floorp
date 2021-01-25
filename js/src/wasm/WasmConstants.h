@@ -544,7 +544,7 @@ enum class SimdOp {
   // Unused = 0x5f
   I8x16Abs = 0x60,
   I8x16Neg = 0x61,
-  I8x16AnyTrue = 0x62,
+  V128AnyTrue = 0x62,  // Used to be I8x16AnyTrue
   I8x16AllTrue = 0x63,
   I8x16Bitmask = 0x64,
   I8x16NarrowSI16x8 = 0x65,
@@ -576,7 +576,7 @@ enum class SimdOp {
   // Unused = 0x7f
   I16x8Abs = 0x80,
   I16x8Neg = 0x81,
-  I16x8AnyTrue = 0x82,
+  I16x8AnyTrue = 0x82,  // OBSOLETE, but keeping it for now
   I16x8AllTrue = 0x83,
   I16x8Bitmask = 0x84,
   I16x8NarrowSI32x4 = 0x85,
@@ -608,7 +608,7 @@ enum class SimdOp {
   I16x8ExtMulHighUI8x16 = 0x9f,
   I32x4Abs = 0xa0,
   I32x4Neg = 0xa1,
-  I32x4AnyTrue = 0xa2,
+  I32x4AnyTrue = 0xa2,  // OBSOLETE, but keeping it for now
   I32x4AllTrue = 0xa3,
   I32x4Bitmask = 0xa4,
   // Narrow = 0xa5

@@ -3373,7 +3373,7 @@ void CodeGenerator::visitWasmReduceSimd128(LWasmReduceSimd128* ins) {
   uint32_t imm = ins->imm();
 
   switch (ins->simdOp()) {
-    case wasm::SimdOp::I8x16AnyTrue:
+    case wasm::SimdOp::V128AnyTrue:
     case wasm::SimdOp::I16x8AnyTrue:
     case wasm::SimdOp::I32x4AnyTrue:
       masm.anyTrueSimd128(src, ToRegister(dest));
@@ -3427,7 +3427,7 @@ void CodeGenerator::visitWasmReduceAndBranchSimd128(
   FloatRegister src = ToFloatRegister(ins->src());
 
   switch (ins->simdOp()) {
-    case wasm::SimdOp::I8x16AnyTrue:
+    case wasm::SimdOp::V128AnyTrue:
     case wasm::SimdOp::I16x8AnyTrue:
     case wasm::SimdOp::I32x4AnyTrue:
       // Set the zero flag if all of the lanes are zero, and branch on that.
