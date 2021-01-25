@@ -67,7 +67,6 @@ void SVGUseFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       newSVGReset->mY != oldSVGReset->mY) {
     // make sure our cached transform matrix gets (lazily) updated
     mCanvasTM = nullptr;
-    SVGObserverUtils::InvalidateRenderingObservers(this);
     SVGUtils::ScheduleReflowSVG(this);
     SVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
   }
