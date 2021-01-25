@@ -73,6 +73,17 @@ struct Module {
       size_t(ProcessSelector::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS);
 
   /**
+   * This allows category entries to be marked so that they are or are
+   * not loaded when in backgroundtask mode.
+   */
+  // Note: This must be kept in sync with the selector matching in
+  // StaticComponents.cpp.in.
+  enum BackgroundTasksSelector {
+    NO_TASKS = 0x0,
+    ALL_TASKS = 0xFFFF,
+  };
+
+  /**
    * The constructor callback is an implementation detail of the default binary
    * loader and may be null.
    */
