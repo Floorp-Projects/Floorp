@@ -75,7 +75,6 @@ from mochitest_options import (
 from mozprofile import Profile
 from mozprofile.cli import parse_preferences, parse_key_value, KeyValueParseError
 from mozprofile.permissions import ServerLocations
-from mozlog.formatters import TbplFormatter
 from mozlog import commandline, get_proxy_logger
 from mozrunner.utils import get_stack_fixer_function, test_environment
 from mozscreenshot import dump_screen
@@ -119,40 +118,6 @@ MOZ_LOG = ""
 #####################
 # Test log handling #
 #####################
-
-# output processing
-
-
-class MochitestFormatter(TbplFormatter):
-
-    """
-    The purpose of this class is to maintain compatibility with legacy users.
-    Mozharness' summary parser expects the count prefix, and others expect python
-    logging to contain a line prefix picked up by TBPL (bug 1043420).
-    Those directly logging "TEST-UNEXPECTED" require no prefix to log output
-    in order to turn a build orange (bug 1044206).
-
-    Once updates are propagated to Mozharness, this class may be removed.
-    """
-
-    log_num = 0
-
-    def __init__(self):
-        super(MochitestFormatter, self).__init__()
-
-    def __call__(self, data):
-        output = super(MochitestFormatter, self).__call__(data)
-        if not output:
-            return None
-        log_level = data.get("level", "info").upper()
-
-        if "js_source" in data or log_level == "ERROR":
-            data.pop("js_source", None)
-            output = "%d %s %s" % (MochitestFormatter.log_num, log_level, output)
-            MochitestFormatter.log_num += 1
-
-        return output
-
 
 # output processing
 
@@ -989,10 +954,6 @@ class MochitestDesktop(object):
         if logger_options.get("log"):
             self.log = logger_options["log"]
         else:
-            commandline.log_formatters["tbpl"] = (
-                MochitestFormatter,
-                "Mochitest specific tbpl formatter",
-            )
             self.log = commandline.setup_logging(
                 "mochitest", logger_options, {"tbpl": sys.stdout}
             )
