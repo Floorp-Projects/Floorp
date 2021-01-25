@@ -169,6 +169,9 @@ GfxInfo::GetDesktopEnvironment(nsAString& aDesktopEnvironment) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+GfxInfo::GetTestType(nsAString& aTestType) { return NS_ERROR_NOT_IMPLEMENTED; }
+
 static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName,
                             uint32_t& destValue, int type) {
   MOZ_ASSERT(type == REG_DWORD || type == REG_QWORD);
