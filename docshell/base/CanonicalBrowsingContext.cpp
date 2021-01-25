@@ -427,17 +427,20 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
   }
   newEntry->SetDocshellID(GetHistoryID());
   newEntry->SetIsDynamicallyAdded(CreatedDynamically());
-  newEntry->SetForInitialLoad(true);
 
   // Replacing the old entry.
   SessionHistoryEntry::SetByLoadId(aInfo->mLoadId, newEntry);
 
+  bool forInitialLoad = true;
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i].mLoadId == aInfo->mLoadId) {
+      forInitialLoad = mLoadingEntries[i].mEntry->ForInitialLoad();
       mLoadingEntries[i].mEntry = newEntry;
       break;
     }
   }
+
+  newEntry->SetForInitialLoad(forInitialLoad);
 
   return MakeUnique<LoadingSessionHistoryInfo>(newEntry, aInfo->mLoadId);
 }
@@ -510,26 +513,25 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
       bool addEntry = ShouldUpdateSessionHistory(aLoadType);
       if (IsTop()) {
         mActiveEntry = newActiveEntry;
+
+        if (LOAD_TYPE_HAS_FLAGS(aLoadType,
+                                nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
+          // Replace the current entry with the new entry.
+          int32_t index = shistory->GetIndexForReplace();
+
+          // If we're trying to replace an inexistant shistory entry then we
+          // should append instead.
+          addEntry = index < 0;
+          if (!addEntry) {
+            shistory->ReplaceEntry(index, mActiveEntry);
+          }
+        }
+
         if (loadFromSessionHistory) {
           // XXX Synchronize browsing context tree and session history tree?
           shistory->UpdateIndex();
-        } else {
-          if (LOAD_TYPE_HAS_FLAGS(
-                  aLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
-            // Replace the current entry with the new entry.
-            int32_t index = shistory->GetIndexForReplace();
-
-            // If we're trying to replace an inexistant shistory entry then we
-            // should append instead.
-            addEntry = index < 0;
-            if (!addEntry) {
-              shistory->ReplaceEntry(index, mActiveEntry);
-            }
-          }
-
-          if (addEntry) {
-            shistory->AddEntry(mActiveEntry, aPersist);
-          }
+        } else if (addEntry) {
+          shistory->AddEntry(mActiveEntry, aPersist);
         }
       } else {
         // FIXME The old implementations adds it to the parent's mLSHE if there
