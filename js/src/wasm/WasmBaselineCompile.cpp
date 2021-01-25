@@ -13250,6 +13250,54 @@ static void DotI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.widenDotInt16x8(rs, rsd);
 }
 
+static void ExtMulLowI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.extMulLowInt8x16(rs, rsd);
+}
+
+static void ExtMulHighI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.extMulHighInt8x16(rs, rsd);
+}
+
+static void ExtMulLowUI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.unsignedExtMulLowInt8x16(rs, rsd);
+}
+
+static void ExtMulHighUI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.unsignedExtMulHighInt8x16(rs, rsd);
+}
+
+static void ExtMulLowI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.extMulLowInt16x8(rs, rsd);
+}
+
+static void ExtMulHighI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.extMulHighInt16x8(rs, rsd);
+}
+
+static void ExtMulLowUI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.unsignedExtMulLowInt16x8(rs, rsd);
+}
+
+static void ExtMulHighUI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.unsignedExtMulHighInt16x8(rs, rsd);
+}
+
+static void ExtMulLowI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.extMulLowInt32x4(rs, rsd);
+}
+
+static void ExtMulHighI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.extMulHighInt32x4(rs, rsd);
+}
+
+static void ExtMulLowUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.unsignedExtMulLowInt32x4(rs, rsd);
+}
+
+static void ExtMulHighUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.unsignedExtMulHighInt32x4(rs, rsd);
+}
+
 static void CmpI8x16(MacroAssembler& masm, Assembler::Condition cond,
                      RegV128 rs, RegV128 rsd) {
   masm.compareInt8x16(cond, rs, rsd);
@@ -15222,6 +15270,30 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(PMinF64x2));
           case uint32_t(SimdOp::I32x4DotSI16x8):
             CHECK_NEXT(dispatchVectorBinary(DotI16x8));
+          case uint32_t(SimdOp::I16x8ExtMulLowSI8x16):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulLowI8x16));
+          case uint32_t(SimdOp::I16x8ExtMulHighSI8x16):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulHighI8x16));
+          case uint32_t(SimdOp::I16x8ExtMulLowUI8x16):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulLowUI8x16));
+          case uint32_t(SimdOp::I16x8ExtMulHighUI8x16):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulHighUI8x16));
+          case uint32_t(SimdOp::I32x4ExtMulLowSI16x8):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulLowI16x8));
+          case uint32_t(SimdOp::I32x4ExtMulHighSI16x8):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulHighI16x8));
+          case uint32_t(SimdOp::I32x4ExtMulLowUI16x8):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulLowUI16x8));
+          case uint32_t(SimdOp::I32x4ExtMulHighUI16x8):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulHighUI16x8));
+          case uint32_t(SimdOp::I64x2ExtMulLowSI32x4):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulLowI32x4));
+          case uint32_t(SimdOp::I64x2ExtMulHighSI32x4):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulHighI32x4));
+          case uint32_t(SimdOp::I64x2ExtMulLowUI32x4):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulLowUI32x4));
+          case uint32_t(SimdOp::I64x2ExtMulHighUI32x4):
+            CHECK_NEXT(dispatchVectorBinary(ExtMulHighUI32x4));
           case uint32_t(SimdOp::I8x16Neg):
             CHECK_NEXT(dispatchVectorUnary(NegI8x16));
           case uint32_t(SimdOp::I16x8Neg):

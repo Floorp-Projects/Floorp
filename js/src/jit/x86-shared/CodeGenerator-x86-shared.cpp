@@ -2576,6 +2576,42 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::I32x4DotSI16x8:
       masm.widenDotInt16x8(rhs, lhsDest);
       break;
+    case wasm::SimdOp::I16x8ExtMulLowSI8x16:
+      masm.extMulLowInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8ExtMulHighSI8x16:
+      masm.extMulHighInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8ExtMulLowUI8x16:
+      masm.unsignedExtMulLowInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8ExtMulHighUI8x16:
+      masm.unsignedExtMulHighInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4ExtMulLowSI16x8:
+      masm.extMulLowInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4ExtMulHighSI16x8:
+      masm.extMulHighInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4ExtMulLowUI16x8:
+      masm.unsignedExtMulLowInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4ExtMulHighUI16x8:
+      masm.unsignedExtMulHighInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I64x2ExtMulLowSI32x4:
+      masm.extMulLowInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I64x2ExtMulHighSI32x4:
+      masm.extMulHighInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I64x2ExtMulLowUI32x4:
+      masm.unsignedExtMulLowInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I64x2ExtMulHighUI32x4:
+      masm.unsignedExtMulHighInt32x4(rhs, lhsDest);
+      break;
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
     case wasm::SimdOp::MozWHSELFTEST: {
       static const int8_t mask[16] = {0xD, 0xE, 0xA, 0xD, 0xD, 0,   0,   0xD,
