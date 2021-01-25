@@ -143,10 +143,7 @@ AntiTracking._createTask({
       ok(false, "No query parameters should be found");
     }
   },
-  extraPrefs: [
-    ["network.http.referer.defaultPolicy", 3], // Ensure we don't downgrade because of the default policy.
-    ["network.http.referer.defaultPolicy.trackers", 3],
-  ],
+  extraPrefs: [["network.http.referer.defaultPolicy.trackers", 3]],
   expectedBlockingNotifications: 0,
   runInPrivateWindow: false,
   iframeSandbox: null,
@@ -202,10 +199,7 @@ AntiTracking._createTask({
       ok(false, "No query parameters should be found");
     }
   },
-  extraPrefs: [
-    ["network.http.referer.defaultPolicy", 3], // Ensure we don't downgrade because of the default policy.
-    ["network.http.referer.defaultPolicy.trackers", 3],
-  ],
+  extraPrefs: [["network.http.referer.defaultPolicy.trackers", 3]],
   expectedBlockingNotifications: 0,
   runInPrivateWindow: false,
   iframeSandbox: null,
