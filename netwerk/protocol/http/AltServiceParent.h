@@ -18,14 +18,12 @@ class AltServiceParent final : public PAltServiceParent {
 
   mozilla::ipc::IPCResult RecvClearHostMapping(
       const nsCString& aHost, const int32_t& aPort,
-      const OriginAttributes& aOriginAttributes,
-      const nsCString& aTopWindowOrigin);
+      const OriginAttributes& aOriginAttributes);
 
   mozilla::ipc::IPCResult RecvProcessHeader(
       const nsCString& aBuf, const nsCString& aOriginScheme,
       const nsCString& aOriginHost, const int32_t& aOriginPort,
-      const nsACString& aUsername, const nsACString& aTopWindowOrigin,
-      const bool& aPrivateBrowsing, const bool& aIsolated,
+      const nsACString& aUsername, const bool& aPrivateBrowsing,
       nsTArray<ProxyInfoCloneArgs>&& aProxyInfo, const uint32_t& aCaps,
       const OriginAttributes& aOriginAttributes);
 

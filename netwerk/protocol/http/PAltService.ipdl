@@ -18,17 +18,14 @@ refcounted protocol PAltService
 
 parent:
   async ClearHostMapping(nsCString host, int32_t port,
-                         OriginAttributes originAttributes,
-                         nsCString topWindowOrigin);
+                         OriginAttributes originAttributes);
 
   async ProcessHeader(nsCString buf,
                       nsCString originScheme,
                       nsCString originHost,
                       int32_t originPort,
                       nsCString username,
-                      nsCString topWindowOrigin,
                       bool privateBrowsing,
-                      bool isolated,
                       ProxyInfoCloneArgs[] proxyInfo,
                       uint32_t caps,
                       OriginAttributes originAttributes);
