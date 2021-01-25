@@ -41,7 +41,6 @@
 #include "nsFlexContainerFrame.h"
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
-#include "nsPluginFrame.h"
 #include "nsIBaseWindow.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
@@ -3113,19 +3112,17 @@ void nsIFrame::BuildDisplayListForStackingContext(
   EffectSet* effectSetForOpacity = EffectSet::GetEffectSetForFrame(
       this, nsCSSPropertyIDSet::OpacityProperties());
   // We can stop right away if this is a zero-opacity stacking context and
-  // we're painting, and we're not animating opacity. Don't do this
-  // if we're going to compute plugin geometry, since opacity-0 plugins
-  // need to have display items built for them.
+  // we're painting, and we're not animating opacity.
   bool needHitTestInfo =
       aBuilder->BuildCompositorHitTestInfo() &&
       StyleUI()->GetEffectivePointerEvents(this) != StylePointerEvents::None;
-  bool opacityItemForEventsAndPluginsOnly = false;
+  bool opacityItemForEventsOnly = false;
   if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !(disp->mWillChange.bits & StyleWillChangeBits::OPACITY) &&
       !nsLayoutUtils::HasAnimationOfPropertySet(
           this, nsCSSPropertyIDSet::OpacityProperties(), effectSetForOpacity)) {
-    if (needHitTestInfo || aBuilder->WillComputePluginGeometry()) {
-      opacityItemForEventsAndPluginsOnly = true;
+    if (needHitTestInfo) {
+      opacityItemForEventsOnly = true;
     } else {
       return;
     }
@@ -3404,8 +3401,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
                                                                   inTransform);
     nsDisplayListBuilder::AutoEnterFilter filterASRSetter(aBuilder,
                                                           usingFilter);
-    nsDisplayListBuilder::AutoInEventsAndPluginsOnly inEventsAndPluginsSetter(
-        aBuilder, opacityItemForEventsAndPluginsOnly);
+    nsDisplayListBuilder::AutoInEventsOnly inEventsSetter(
+        aBuilder, opacityItemForEventsOnly);
 
     CheckForApzAwareEventHandlers(aBuilder, this);
 
@@ -3632,8 +3629,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
         nsDisplayOpacity::NeedsActiveLayer(aBuilder, this);
 
     resultList.AppendNewToTop<nsDisplayOpacity>(
-        aBuilder, this, &resultList, containerItemASR,
-        opacityItemForEventsAndPluginsOnly, needsActiveOpacityLayer);
+        aBuilder, this, &resultList, containerItemASR, opacityItemForEventsOnly,
+        needsActiveOpacityLayer);
     ct.TrackContainer(resultList.GetTop());
   }
 
@@ -6743,7 +6740,6 @@ void nsIFrame::SetView(nsView* aView) {
     LayoutFrameType frameType = Type();
     NS_ASSERTION(frameType == LayoutFrameType::SubDocument ||
                      frameType == LayoutFrameType::ListControl ||
-                     frameType == LayoutFrameType::Object ||
                      frameType == LayoutFrameType::Viewport ||
                      frameType == LayoutFrameType::MenuPopup,
                  "Only specific frame types can have an nsView");
@@ -7415,17 +7411,12 @@ Layer* nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
       return nullptr;
     }
 
-    // Plugins can transition from not rendering anything to rendering,
-    // and still only call this. So always invalidate, with specifying
-    // the display item type just in case.
-    //
     // In the bug 930056, dialer app startup but not shown on the
     // screen because sometimes we don't have any retainned data
     // for remote type displayitem and thus Repaint event is not
-    // triggered. So, always invalidate here as well.
+    // triggered. So, always invalidate in this case.
     DisplayItemType displayItemKey = aDisplayItemKey;
-    if (aDisplayItemKey == DisplayItemType::TYPE_PLUGIN ||
-        aDisplayItemKey == DisplayItemType::TYPE_REMOTE) {
+    if (aDisplayItemKey == DisplayItemType::TYPE_REMOTE) {
       displayItemKey = DisplayItemType::TYPE_ZERO;
     }
 
@@ -11271,13 +11262,6 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     result += CompositorHitTestFlags::eInactiveScrollframe;
   } else if (aBuilder->GetAncestorHasApzAwareEventHandler()) {
     result += CompositorHitTestFlags::eApzAwareListeners;
-  } else if (IsObjectFrame()) {
-    // If the frame is a plugin frame and wants to handle wheel events as
-    // default action, we should add the frame to dispatch-to-content region.
-    nsPluginFrame* pluginFrame = do_QueryFrame(this);
-    if (pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
-      result += CompositorHitTestFlags::eApzAwareListeners;
-    }
   } else if (IsRangeFrame()) {
     // Range frames handle touch events directly without having a touch listener
     // so we need to let APZ know that this area cares about events.
@@ -12031,7 +12015,6 @@ void DR_State::InitFrameTypeTable() {
   AddFrameTypeInfo(LayoutFrameType::Letter, "letter", "letter");
   AddFrameTypeInfo(LayoutFrameType::Line, "line", "line");
   AddFrameTypeInfo(LayoutFrameType::ListControl, "select", "select");
-  AddFrameTypeInfo(LayoutFrameType::Object, "obj", "object");
   AddFrameTypeInfo(LayoutFrameType::Page, "page", "page");
   AddFrameTypeInfo(LayoutFrameType::Placeholder, "place", "placeholder");
   AddFrameTypeInfo(LayoutFrameType::Canvas, "canvas", "canvas");

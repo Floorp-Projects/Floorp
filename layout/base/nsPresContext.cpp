@@ -55,7 +55,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventListenerManager.h"
 #include "prenv.h"
-#include "nsPluginFrame.h"
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 #include "CounterStyleManager.h"
@@ -818,14 +817,6 @@ void nsPresContext::DetachPresShell() {
   if (mRefreshDriver && mRefreshDriver->GetPresContext() == this) {
     mRefreshDriver->Disconnect();
     // Can't null out the refresh driver here.
-  }
-
-  if (IsRoot()) {
-    nsRootPresContext* thisRoot = static_cast<nsRootPresContext*>(this);
-
-    // Have to cancel our plugin geometry timer, because the
-    // callback for that depends on a non-null presshell.
-    thisRoot->CancelApplyPluginGeometryTimer();
   }
 }
 
@@ -2689,244 +2680,6 @@ nsRootPresContext::nsRootPresContext(dom::Document* aDocument,
                                      nsPresContextType aType)
     : nsPresContext(aDocument, aType) {}
 
-nsRootPresContext::~nsRootPresContext() {
-  NS_ASSERTION(mRegisteredPlugins.Count() == 0,
-               "All plugins should have been unregistered");
-  CancelApplyPluginGeometryTimer();
-}
-
-void nsRootPresContext::RegisterPluginForGeometryUpdates(nsIContent* aPlugin) {
-  mRegisteredPlugins.PutEntry(aPlugin);
-}
-
-void nsRootPresContext::UnregisterPluginForGeometryUpdates(
-    nsIContent* aPlugin) {
-  mRegisteredPlugins.RemoveEntry(aPlugin);
-}
-
-void nsRootPresContext::ComputePluginGeometryUpdates(
-    nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayList* aList) {
-  if (mRegisteredPlugins.Count() == 0) {
-    return;
-  }
-
-  // Initially make the next state for each plugin descendant of aFrame be
-  // "hidden". Plugins that are visible will have their next state set to
-  // unhidden by nsDisplayPlugin::ComputeVisibility.
-  for (auto iter = mRegisteredPlugins.Iter(); !iter.Done(); iter.Next()) {
-    auto f =
-        static_cast<nsPluginFrame*>(iter.Get()->GetKey()->GetPrimaryFrame());
-    if (!f) {
-      NS_WARNING("Null frame in ComputePluginGeometryUpdates");
-      continue;
-    }
-    if (!nsLayoutUtils::IsAncestorFrameCrossDoc(aFrame, f)) {
-      // f is not managed by this frame so we should ignore it.
-      continue;
-    }
-    f->SetEmptyWidgetConfiguration();
-  }
-
-  if (aBuilder) {
-    MOZ_ASSERT(aList);
-    nsIFrame* rootFrame = mPresShell->GetRootFrame();
-
-    if (rootFrame && aBuilder->ContainsPluginItem()) {
-      aBuilder->SetForPluginGeometry(true);
-      // Merging and flattening has already been done and we should not do it
-      // again. nsDisplayScroll(Info)Layer doesn't support trying to flatten
-      // again.
-      aBuilder->SetAllowMergingAndFlattening(false);
-      nsRegion region = rootFrame->InkOverflowRectRelativeToSelf();
-      // nsDisplayPlugin::ComputeVisibility will automatically set a non-hidden
-      // widget configuration for the plugin, if it's visible.
-      aList->ComputeVisibilityForRoot(aBuilder, &region);
-      aBuilder->SetForPluginGeometry(false);
-    }
-  }
-
-#ifdef XP_MACOSX
-  // We control painting of Mac plugins, so just apply geometry updates now.
-  // This is not happening during a paint event.
-  ApplyPluginGeometryUpdates();
-#else
-  if (XRE_IsParentProcess()) {
-    InitApplyPluginGeometryTimer();
-  }
-#endif
-}
-
-static void ApplyPluginGeometryUpdatesCallback(nsITimer* aTimer,
-                                               void* aClosure) {
-  static_cast<nsRootPresContext*>(aClosure)->ApplyPluginGeometryUpdates();
-}
-
-void nsRootPresContext::InitApplyPluginGeometryTimer() {
-  if (mApplyPluginGeometryTimer) {
-    return;
-  }
-
-  // We'll apply the plugin geometry updates during the next compositing paint
-  // in this presContext (either from PresShell::WillPaintWindow() or from
-  // PresShell::DidPaintWindow(), depending on the platform).  But paints might
-  // get optimized away if the old plugin geometry covers the invalid region,
-  // so set a backup timer to do this too.  We want to make sure this
-  // won't fire before our normal paint notifications, if those would
-  // update the geometry, so set it for double the refresh driver interval.
-  mApplyPluginGeometryTimer = CreateTimer(
-      ApplyPluginGeometryUpdatesCallback, "ApplyPluginGeometryUpdatesCallback",
-      nsRefreshDriver::DefaultInterval() * 2);
-}
-
-void nsRootPresContext::CancelApplyPluginGeometryTimer() {
-  if (mApplyPluginGeometryTimer) {
-    mApplyPluginGeometryTimer->Cancel();
-    mApplyPluginGeometryTimer = nullptr;
-  }
-}
-
-#ifndef XP_MACOSX
-
-static bool HasOverlap(const LayoutDeviceIntPoint& aOffset1,
-                       const nsTArray<LayoutDeviceIntRect>& aClipRects1,
-                       const LayoutDeviceIntPoint& aOffset2,
-                       const nsTArray<LayoutDeviceIntRect>& aClipRects2) {
-  LayoutDeviceIntPoint offsetDelta = aOffset1 - aOffset2;
-  for (uint32_t i = 0; i < aClipRects1.Length(); ++i) {
-    for (uint32_t j = 0; j < aClipRects2.Length(); ++j) {
-      if ((aClipRects1[i] + offsetDelta).Intersects(aClipRects2[j])) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/**
- * Given a list of plugin windows to move to new locations, sort the list
- * so that for each window move, the window moves to a location that
- * does not intersect other windows. This minimizes flicker and repainting.
- * It's not always possible to do this perfectly, since in general
- * we might have cycles. But we do our best.
- * We need to take into account that windows are clipped to particular
- * regions and the clip regions change as the windows are moved.
- */
-static void SortConfigurations(
-    nsTArray<nsIWidget::Configuration>* aConfigurations) {
-  if (aConfigurations->Length() > 10) {
-    // Give up, we don't want to get bogged down here
-    return;
-  }
-
-  nsTArray<nsIWidget::Configuration> pluginsToMove =
-      std::move(*aConfigurations);
-
-  // Our algorithm is quite naive. At each step we try to identify
-  // a window that can be moved to its new location that won't overlap
-  // any other windows at the new location. If there is no such
-  // window, we just move the last window in the list anyway.
-  while (!pluginsToMove.IsEmpty()) {
-    // Find a window whose destination does not overlap any other window
-    uint32_t i;
-    for (i = 0; i + 1 < pluginsToMove.Length(); ++i) {
-      nsIWidget::Configuration* config = &pluginsToMove[i];
-      bool foundOverlap = false;
-      for (uint32_t j = 0; j < pluginsToMove.Length(); ++j) {
-        if (i == j) continue;
-        LayoutDeviceIntRect bounds = pluginsToMove[j].mChild->GetBounds();
-        AutoTArray<LayoutDeviceIntRect, 1> clipRects;
-        pluginsToMove[j].mChild->GetWindowClipRegion(&clipRects);
-        if (HasOverlap(bounds.TopLeft(), clipRects, config->mBounds.TopLeft(),
-                       config->mClipRegion)) {
-          foundOverlap = true;
-          break;
-        }
-      }
-      if (!foundOverlap) break;
-    }
-    // Note that we always move the last plugin in pluginsToMove, if we
-    // can't find any other plugin to move
-    aConfigurations->AppendElement(pluginsToMove[i]);
-    pluginsToMove.RemoveElementAt(i);
-  }
-}
-
-static void PluginGetGeometryUpdate(
-    nsTHashtable<nsRefPtrHashKey<nsIContent>>& aPlugins,
-    nsTArray<nsIWidget::Configuration>* aConfigurations) {
-  for (auto iter = aPlugins.Iter(); !iter.Done(); iter.Next()) {
-    auto f =
-        static_cast<nsPluginFrame*>(iter.Get()->GetKey()->GetPrimaryFrame());
-    if (!f) {
-      NS_WARNING("Null frame in PluginGeometryUpdate");
-      continue;
-    }
-    f->GetWidgetConfiguration(aConfigurations);
-  }
-}
-
-#endif  // #ifndef XP_MACOSX
-
-static void PluginDidSetGeometry(
-    nsTHashtable<nsRefPtrHashKey<nsIContent>>& aPlugins) {
-  for (auto iter = aPlugins.Iter(); !iter.Done(); iter.Next()) {
-    auto f =
-        static_cast<nsPluginFrame*>(iter.Get()->GetKey()->GetPrimaryFrame());
-    if (!f) {
-      NS_WARNING("Null frame in PluginDidSetGeometry");
-      continue;
-    }
-    f->DidSetWidgetGeometry();
-  }
-}
-
-void nsRootPresContext::ApplyPluginGeometryUpdates() {
-#ifndef XP_MACOSX
-  CancelApplyPluginGeometryTimer();
-
-  nsTArray<nsIWidget::Configuration> configurations;
-  PluginGetGeometryUpdate(mRegisteredPlugins, &configurations);
-  // Walk mRegisteredPlugins and ask each plugin for its configuration
-  if (!configurations.IsEmpty()) {
-    nsIWidget* widget = configurations[0].mChild->GetParent();
-    NS_ASSERTION(widget, "Plugins must have a parent window");
-    SortConfigurations(&configurations);
-    widget->ConfigureChildren(configurations);
-  }
-#endif  // #ifndef XP_MACOSX
-
-  PluginDidSetGeometry(mRegisteredPlugins);
-}
-
-void nsRootPresContext::CollectPluginGeometryUpdates(
-    LayerManager* aLayerManager) {
-#ifndef XP_MACOSX
-  // Collect and pass plugin widget configurations down to the compositor
-  // for transmission to the chrome process.
-  NS_ASSERTION(aLayerManager, "layer manager is invalid!");
-  mozilla::layers::ClientLayerManager* clm =
-      aLayerManager->AsClientLayerManager();
-
-  nsTArray<nsIWidget::Configuration> configurations;
-  // If there aren't any plugins to configure, clear the plugin data cache
-  // in the layer system.
-  if (!mRegisteredPlugins.Count() && clm) {
-    clm->StorePluginWidgetConfigurations(configurations);
-    return;
-  }
-  PluginGetGeometryUpdate(mRegisteredPlugins, &configurations);
-  if (configurations.IsEmpty()) {
-    PluginDidSetGeometry(mRegisteredPlugins);
-    return;
-  }
-  SortConfigurations(&configurations);
-  if (clm) {
-    clm->StorePluginWidgetConfigurations(configurations);
-  }
-  PluginDidSetGeometry(mRegisteredPlugins);
-#endif  // #ifndef XP_MACOSX
-}
-
 void nsRootPresContext::AddWillPaintObserver(nsIRunnable* aRunnable) {
   if (!mWillPaintFallbackEvent.IsPending()) {
     mWillPaintFallbackEvent = new RunWillPaintObservers(this);
@@ -2953,7 +2706,6 @@ size_t nsRootPresContext::SizeOfExcludingThis(
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mRegisteredPlugins
   // - mWillPaintObservers
   // - mWillPaintFallbackEvent
 }

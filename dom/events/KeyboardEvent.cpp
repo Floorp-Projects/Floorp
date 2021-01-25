@@ -247,9 +247,7 @@ uint32_t KeyboardEvent::Which(CallerType aCallerType) {
 
   switch (mEvent->mMessage) {
     case eKeyDown:
-    case eKeyDownOnPlugin:
     case eKeyUp:
-    case eKeyUpOnPlugin:
       return KeyCode(aCallerType);
     case eKeyPress:
       // Special case for 4xp bug 62878.  Try to make value of which

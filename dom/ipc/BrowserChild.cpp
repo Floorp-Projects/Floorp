@@ -2881,19 +2881,12 @@ void BrowserChild::MakeHidden() {
   }
 
   if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
-    // Hide all plugins in this tab. We don't use
+    // We don't use
     // BrowserChildBase::GetPresShell() here because that would create a content
     // viewer if one doesn't exist yet. Creating a content viewer can cause JS
     // to run, which we want to avoid. nsIDocShell::GetPresShell returns null if
     // no content viewer exists yet.
     if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
-      if (nsPresContext* presContext = presShell->GetPresContext()) {
-        nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-        nsIFrame* rootFrame = presShell->GetRootFrame();
-        rootPresContext->ComputePluginGeometryUpdates(rootFrame, nullptr,
-                                                      nullptr);
-        rootPresContext->ApplyPluginGeometryUpdates();
-      }
       presShell->SetIsActive(false);
     }
   }

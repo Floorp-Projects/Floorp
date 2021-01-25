@@ -133,28 +133,6 @@ child:
    */
   async RemotePaintIsReady();
 
-  /**
-   * Bounce plugin widget configurations over to the main thread for
-   * application on the widgets. Used on Windows and Linux in managing
-   * plugin widgets.
-   */
-  async UpdatePluginConfigurations(LayoutDeviceIntPoint aContentOffset,
-                                   LayoutDeviceIntRegion aVisibleRegion,
-                                   PluginWindowData[] aPlugins);
-
-  /**
-   * Captures an image for all visible child plugins of a given widget for use
-   * during scrolling.
-   * @param aParentWidget parent of widgets to be captured
-   */
-  async CaptureAllPlugins(uintptr_t aParentWidget);
-
-  /**
-   * Hides all registered plugin widgets associated with a particular chrome
-   * widget.
-   */
-  async HideAllPlugins(uintptr_t aParentWidget);
-
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
 
   async ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive);
@@ -179,11 +157,6 @@ parent:
   // Constructor for WebGPU IPDL
   // Must be called before Initialize().
   async PWebGPU();
-
-  /**
-   * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
-   */
-  async RemotePluginsReady();
 
   // The child is about to be destroyed, so perform any necessary cleanup.
   sync WillClose();
@@ -260,11 +233,6 @@ parent:
    * @see RemotePaintIsReady
    */
   async RequestNotifyAfterRemotePaint();
-
-  /**
-   * Sent when the child has finished CaptureAllPlugins.
-   */
-  async AllPluginsCaptured();
 
   async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, LayersId id, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
 

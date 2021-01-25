@@ -8,7 +8,6 @@
 interface nsIChannel;
 interface nsIRequest;
 interface nsIFrame;
-interface nsIObjectFrame;
 interface nsIPluginTag;
 interface nsIURI;
 
@@ -101,23 +100,6 @@ interface nsIObjectLoadingContent : nsISupports
    * content script must not execute.
    */
   [notxpcom,nostdcall] readonly attribute nsNPAPIPluginInstancePtr pluginInstance;
-
-  /**
-   * Tells the content about an associated object frame.
-   * This can be called multiple times for different frames.
-   *
-   * This is noscript because this is an internal method that will go away, and
-   * because nsIObjectFrame is unscriptable.
-   */
-  [noscript] void hasNewFrame(in nsIObjectFrame aFrame);
-
-  /**
-   * If this object is in going to be printed, this method
-   * returns the nsIObjectFrame object which should be used when
-   * printing the plugin. The returned nsIFrame is in the original document,
-   * not in the static clone.
-   */
-  [noscript] nsIFrame getPrintFrame();
 
   /*
    * Notifications from pluginhost that our instance crashed or was destroyed.

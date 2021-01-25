@@ -25,7 +25,6 @@
 #include "DocumentInlines.h"  // for Document and HTMLBodyElement
 #include "nsIScrollableFrame.h"
 #include "nsITimer.h"
-#include "nsPluginFrame.h"
 #include "nsPresContext.h"
 #include "prtime.h"
 #include "Units.h"
@@ -55,11 +54,10 @@ bool WheelHandlingUtils::CanScrollInRange(nscoord aMin, nscoord aValue,
 bool WheelHandlingUtils::CanScrollOn(nsIFrame* aFrame, double aDirectionX,
                                      double aDirectionY) {
   nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
-  if (scrollableFrame) {
-    return CanScrollOn(scrollableFrame, aDirectionX, aDirectionY);
+  if (!scrollableFrame) {
+    return false;
   }
-  nsPluginFrame* pluginFrame = do_QueryFrame(aFrame);
-  return pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction();
+  return CanScrollOn(scrollableFrame, aDirectionX, aDirectionY);
 }
 
 /* static */

@@ -21,7 +21,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIObjectFrame.h"
 #include "nsIOService.h"
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
@@ -67,7 +66,6 @@
 #include "nsObjectLoadingContent.h"
 #include "mozAutoDocUpdate.h"
 #include "GeckoProfiler.h"
-#include "nsPluginFrame.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMJSUtils.h"
 #include "js/Object.h"  // JS::GetClass
@@ -248,8 +246,7 @@ CheckPluginStopEvent::Run() {
     }
   }
 
-  // Still no frame, suspend plugin. HasNewFrame will restart us when we
-  // become rendered again
+  // Still no frame, suspend plugin.
   LOG(("OBJLC [%p]: Stopping plugin that lost frame", this));
   objLC->StopPluginInstance();
 
@@ -725,7 +722,6 @@ nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
     //             (Bug 767635)
     if (newOwner) {
       RefPtr<nsNPAPIPluginInstance> inst = newOwner->GetInstance();
-      newOwner->SetFrame(nullptr);
       if (inst) {
         pluginHost->StopPluginInstance(inst);
       }
@@ -741,18 +737,6 @@ nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
 
     rv = inst->GetRunID(&mRunID);
     mHasRunID = NS_SUCCEEDED(rv);
-  }
-
-  // Ensure the frame did not change during instantiation re-entry (common).
-  // HasNewFrame would not have mInstanceOwner yet, so the new frame would be
-  // dangling. (Bug 854082)
-  nsIFrame* frame = thisContent->GetPrimaryFrame();
-  if (frame && mInstanceOwner) {
-    mInstanceOwner->SetFrame(static_cast<nsPluginFrame*>(frame));
-
-    // Bug 870216 - Adobe Reader renders with incorrect dimensions until it gets
-    // a second SetWindow call. This is otherwise redundant.
-    mInstanceOwner->CallSetWindow();
   }
 
   // Set up scripting interfaces.
@@ -1114,42 +1098,6 @@ nsObjectLoadingContent::GetActualType(nsACString& aType) {
 NS_IMETHODIMP
 nsObjectLoadingContent::GetDisplayedType(uint32_t* aType) {
   *aType = DisplayedType();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame) {
-  if (mType != eType_Plugin) {
-    return NS_OK;
-  }
-
-  if (!aFrame) {
-    // Lost our frame. If we aren't going to be getting a new frame, e.g. we've
-    // become display:none, we'll want to stop the plugin. Queue a
-    // CheckPluginStopEvent
-    if (mInstanceOwner || mInstantiating) {
-      if (mInstanceOwner) {
-        mInstanceOwner->SetFrame(nullptr);
-      }
-      QueueCheckPluginStopEvent();
-    }
-    return NS_OK;
-  }
-
-  // Have a new frame
-
-  if (!mInstanceOwner) {
-    // We are successfully setup as type plugin, but have not spawned an
-    // instance due to a lack of a frame.
-    AsyncStartPluginInstance();
-    return NS_OK;
-  }
-
-  // Otherwise, we're just changing frames
-  // Set up relationship between instance owner and frame.
-  nsPluginFrame* objFrame = static_cast<nsPluginFrame*>(aFrame);
-  mInstanceOwner->SetFrame(objFrame);
-
   return NS_OK;
 }
 
@@ -2658,23 +2606,9 @@ nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
   return type;
 }
 
-nsPluginFrame* nsObjectLoadingContent::GetExistingFrame() {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  nsIFrame* frame = thisContent->GetPrimaryFrame();
-  nsIObjectFrame* objFrame = do_QueryFrame(frame);
-  return static_cast<nsPluginFrame*>(objFrame);
-}
-
 void nsObjectLoadingContent::CreateStaticClone(
     nsObjectLoadingContent* aDest) const {
   aDest->mType = mType;
-  nsObjectLoadingContent* thisObj = const_cast<nsObjectLoadingContent*>(this);
-  if (thisObj->mPrintFrame.IsAlive()) {
-    aDest->mPrintFrame = thisObj->mPrintFrame;
-  } else {
-    aDest->mPrintFrame = thisObj->GetExistingFrame();
-  }
 
   if (mFrameLoader) {
     nsCOMPtr<nsIContent> content =
@@ -2684,12 +2618,6 @@ void nsObjectLoadingContent::CreateStaticClone(
       doc->AddPendingFrameStaticClone(aDest, mFrameLoader);
     }
   }
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::GetPrintFrame(nsIFrame** aFrame) {
-  *aFrame = mPrintFrame.GetFrame();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2978,10 +2906,6 @@ nsObjectLoadingContent::StopPluginInstance() {
     LOG(("OBJLC [%p]: StopPluginInstance - Closing used channel", this));
     CloseChannel();
   }
-
-  // We detach the instance owner's frame before destruction, but don't destroy
-  // the instance owner until the plugin is stopped.
-  mInstanceOwner->SetFrame(nullptr);
 
   RefPtr<nsPluginInstanceOwner> ownerGrip(mInstanceOwner);
   mInstanceOwner = nullptr;

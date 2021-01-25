@@ -80,30 +80,17 @@ AsyncCompositionManager::AsyncCompositionManager(
 AsyncCompositionManager::~AsyncCompositionManager() = default;
 
 void AsyncCompositionManager::ResolveRefLayers(
-    CompositorBridgeParent* aCompositor, bool* aHasRemoteContent,
-    bool* aResolvePlugins) {
+    CompositorBridgeParent* aCompositor, bool* aHasRemoteContent) {
   if (aHasRemoteContent) {
     *aHasRemoteContent = false;
   }
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  // If valid *aResolvePlugins indicates if we need to update plugin geometry
-  // when we walk the tree.
-  bool resolvePlugins = (aCompositor && aResolvePlugins && *aResolvePlugins);
-#endif
-
   if (!mLayerManager->GetRoot()) {
-    // Updated the return value since this result controls completing
-    // composition.
-    if (aResolvePlugins) {
-      *aResolvePlugins = false;
-    }
     return;
   }
 
   mReadyForCompose = true;
   bool hasRemoteContent = false;
-  bool didResolvePlugins = false;
 
   ForEachNode<ForwardIterator>(mLayerManager->GetRoot(), [&](Layer* layer) {
     RefLayer* refLayer = layer->AsRefLayer();
@@ -136,20 +123,10 @@ void AsyncCompositionManager::ResolveRefLayers(
     }
 
     refLayer->ConnectReferentLayer(referent);
-
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-    if (resolvePlugins) {
-      didResolvePlugins |=
-          aCompositor->UpdatePluginWindowState(refLayer->GetReferentId());
-    }
-#endif
   });
 
   if (aHasRemoteContent) {
     *aHasRemoteContent = hasRemoteContent;
-  }
-  if (aResolvePlugins) {
-    *aResolvePlugins = didResolvePlugins;
   }
 }
 

@@ -60,7 +60,6 @@ class nsCSSFontFeatureValuesRule;
 class nsCSSFrameConstructor;
 class nsDisplayList;
 class nsDisplayListBuilder;
-class nsPluginFrame;
 class nsTransitionManager;
 class nsAnimationManager;
 class nsRefreshDriver;
@@ -1368,54 +1367,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 class nsRootPresContext final : public nsPresContext {
  public:
   nsRootPresContext(mozilla::dom::Document* aDocument, nsPresContextType aType);
-  virtual ~nsRootPresContext();
-
-  /**
-   * Registers a plugin to receive geometry updates (position and clip
-   * region) so it can update its widget.
-   * Callers must call UnregisterPluginForGeometryUpdates before
-   * the aPlugin frame is destroyed.
-   */
-  void RegisterPluginForGeometryUpdates(nsIContent* aPlugin);
-  /**
-   * Stops a plugin receiving geometry updates (position and clip
-   * region). If the plugin was not already registered, this does
-   * nothing.
-   */
-  void UnregisterPluginForGeometryUpdates(nsIContent* aPlugin);
-
-  bool NeedToComputePluginGeometryUpdates() {
-    return mRegisteredPlugins.Count() > 0;
-  }
-  /**
-   * Compute geometry updates for each plugin given that aList is the display
-   * list for aFrame. The updates are not yet applied;
-   * ApplyPluginGeometryUpdates is responsible for that. In the meantime they
-   * are stored on each nsPluginFrame.
-   * This needs to be called even when aFrame is a popup, since although
-   * windowed plugins aren't allowed in popups, windowless plugins are
-   * and ComputePluginGeometryUpdates needs to be called for them.
-   * aBuilder and aList can be null. This indicates that all plugins are
-   * hidden because we're in a background tab.
-   */
-  void ComputePluginGeometryUpdates(nsIFrame* aFrame,
-                                    nsDisplayListBuilder* aBuilder,
-                                    nsDisplayList* aList);
-
-  /**
-   * Apply the stored plugin geometry updates. This should normally be called
-   * in DidPaint so the plugins are moved/clipped immediately after we've
-   * updated our window, so they look in sync with our window.
-   */
-  void ApplyPluginGeometryUpdates();
-
-  /**
-   * Transfer stored plugin geometry updates to the compositor. Called during
-   * reflow, data is shipped over with layer updates. e10s specific.
-   */
-  void CollectPluginGeometryUpdates(
-      mozilla::layers::LayerManager* aLayerManager);
-
   virtual bool IsRoot() override { return true; }
 
   /**
@@ -1434,15 +1385,6 @@ class nsRootPresContext final : public nsPresContext {
       mozilla::MallocSizeOf aMallocSizeOf) const override;
 
  protected:
-  /**
-   * Start a timer to ensure we eventually run ApplyPluginGeometryUpdates.
-   */
-  void InitApplyPluginGeometryTimer();
-  /**
-   * Cancel the timer that ensures we eventually run ApplyPluginGeometryUpdates.
-   */
-  void CancelApplyPluginGeometryTimer();
-
   class RunWillPaintObservers : public mozilla::Runnable {
    public:
     explicit RunWillPaintObservers(nsRootPresContext* aPresContext)
@@ -1461,8 +1403,6 @@ class nsRootPresContext final : public nsPresContext {
 
   friend class nsPresContext;
 
-  nsCOMPtr<nsITimer> mApplyPluginGeometryTimer;
-  nsTHashtable<nsRefPtrHashKey<nsIContent>> mRegisteredPlugins;
   nsTArray<nsCOMPtr<nsIRunnable>> mWillPaintObservers;
   nsRevocableEventPtr<RunWillPaintObservers> mWillPaintFallbackEvent;
 };

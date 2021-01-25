@@ -70,14 +70,6 @@ class nsIDocumentLoaderFactory;
 
 #define PRODUCT_NAME "Gecko"
 
-/* 0ddf4df8-4dbb-4133-8b79-9afb966514f5 */
-#define NS_PLUGINDOCLOADERFACTORY_CID                \
-  {                                                  \
-    0x0ddf4df8, 0x4dbb, 0x4133, {                    \
-      0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 \
-    }                                                \
-  }
-
 #include "inDeepTreeWalker.h"
 
 static void Shutdown();

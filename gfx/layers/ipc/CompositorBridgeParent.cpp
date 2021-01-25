@@ -228,8 +228,7 @@ CompositorBridgeParent::LayerTreeState::LayerTreeState()
       mParent(nullptr),
       mLayerManager(nullptr),
       mContentCompositorBridgeParent(nullptr),
-      mLayerTree(nullptr),
-      mUpdatedPluginDataAvailable(false) {}
+      mLayerTree(nullptr) {}
 
 CompositorBridgeParent::LayerTreeState::~LayerTreeState() {
   if (mController) {
@@ -349,12 +348,6 @@ CompositorBridgeParent::CompositorBridgeParent(
       mCompositorScheduler(nullptr),
       mAnimationStorage(nullptr),
       mPaintTime(TimeDuration::Forever())
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      ,
-      mLastPluginUpdateLayerTreeId{0},
-      mDeferPluginWindows(false),
-      mPluginWindowsHidden(false)
-#endif
 {
 }
 
@@ -815,19 +808,7 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
     bool aScheduleComposite, uint32_t aPaintSequenceNumber,
     bool aIsRepeatTransaction, bool aHitTestUpdate) {
   if (!aIsRepeatTransaction && mLayerManager && mLayerManager->GetRoot()) {
-    // Process plugin data here to give time for them to update before the next
-    // composition.
-    bool pluginsUpdatedFlag = true;
-    AutoResolveRefLayers resolve(mCompositionManager, this, nullptr,
-                                 &pluginsUpdatedFlag);
-
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-    // If plugins haven't been updated, stop waiting.
-    if (!pluginsUpdatedFlag) {
-      mWaitForPluginsUntil = TimeStamp();
-      mHaveBlockedForPlugins = false;
-    }
-#endif
+    AutoResolveRefLayers resolve(mCompositionManager, this, nullptr);
 
     if (mApzUpdater) {
       mApzUpdater->UpdateFocusState(mRootLayerTreeID, aId, aFocusTarget);
@@ -904,41 +885,7 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
     return;
   }
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  if (!mWaitForPluginsUntil.IsNull() && mWaitForPluginsUntil > start) {
-    mHaveBlockedForPlugins = true;
-    ScheduleComposition();
-    return;
-  }
-#endif
-
-  /*
-   * AutoResolveRefLayers handles two tasks related to Windows and Linux
-   * plugin window management:
-   * 1) calculating if we have remote content in the view. If we do not have
-   * remote content, all plugin windows for this CompositorBridgeParent (window)
-   * can be hidden since we do not support plugins in chrome when running
-   * under e10s.
-   * 2) Updating plugin position, size, and clip. We do this here while the
-   * remote layer tree is hooked up to to chrome layer tree. This is needed
-   * since plugin clipping can depend on chrome (for example, due to tab modal
-   * prompts). Updates in step 2 are applied via an async ipc message sent
-   * to the main thread.
-   */
-  bool hasRemoteContent = false;
-  bool updatePluginsFlag = true;
-  AutoResolveRefLayers resolve(mCompositionManager, this, &hasRemoteContent,
-                               &updatePluginsFlag);
-
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  // We do not support plugins in local content. When switching tabs
-  // to local pages, hide every plugin associated with the window.
-  if (!hasRemoteContent && gfxVars::BrowserTabsRemoteAutostart() &&
-      mCachedPluginData.Length()) {
-    Unused << SendHideAllPlugins(GetWidget()->GetWidgetKey());
-    mCachedPluginData.Clear();
-  }
-#endif
+  AutoResolveRefLayers resolve(mCompositionManager, this);
 
   nsCString none;
   if (aTarget) {
@@ -967,14 +914,6 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
 
   if (requestNextFrame) {
     ScheduleComposition();
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-    // If we have visible windowed plugins then we need to wait for content (and
-    // then the plugins) to have been updated by the active animation.
-    if (!mPluginWindowsHidden && mCachedPluginData.Length()) {
-      mWaitForPluginsUntil =
-          mCompositorScheduler->GetLastComposeTime().Time() + (mVsyncRate * 2);
-    }
-#endif
   }
 
   RenderTraceLayers(mLayerManager->GetRoot(), "0000");
@@ -1029,24 +968,6 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
 
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
                                           start);
-}
-
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvRemotePluginsReady() {
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  mWaitForPluginsUntil = TimeStamp();
-  if (mHaveBlockedForPlugins) {
-    mHaveBlockedForPlugins = false;
-    ForceComposeToTarget(nullptr);
-  } else {
-    ScheduleComposition();
-  }
-  return IPC_OK();
-#else
-  MOZ_ASSERT_UNREACHABLE(
-      "CompositorBridgeParent::RecvRemotePluginsReady calls "
-      "unexpected on this platform.");
-  return IPC_FAIL_NO_REASON(this);
-#endif
 }
 
 void CompositorBridgeParent::ForceComposeToTarget(DrawTarget* aTarget,
@@ -2566,189 +2487,6 @@ void CompositorBridgeParent::NotifyWebRenderDisableNativeCompositor() {
   if (mWrBridge) {
     mWrBridge->DisableNativeCompositor();
   }
-}
-
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-//#define PLUGINS_LOG(...) printf_stderr("CP [%s]: ", __FUNCTION__);
-//                         printf_stderr(__VA_ARGS__);
-//                         printf_stderr("\n");
-#  define PLUGINS_LOG(...)
-
-bool CompositorBridgeParent::UpdatePluginWindowState(LayersId aId) {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  CompositorBridgeParent::LayerTreeState& lts = sIndirectLayerTrees[aId];
-  if (!lts.mParent) {
-    PLUGINS_LOG("[%" PRIu64 "] layer tree compositor parent pointer is null",
-                aId);
-    return false;
-  }
-
-  // Check if this layer tree has received any shadow layer updates
-  if (!lts.mUpdatedPluginDataAvailable) {
-    PLUGINS_LOG("[%" PRIu64 "] no plugin data", aId);
-    return false;
-  }
-
-  // pluginMetricsChanged tracks whether we need to send plugin update
-  // data to the main thread. If we do we'll have to block composition,
-  // which we want to avoid if at all possible.
-  bool pluginMetricsChanged = false;
-
-  // Same layer tree checks
-  if (mLastPluginUpdateLayerTreeId == aId) {
-    // no plugin data and nothing has changed, bail.
-    if (!mCachedPluginData.Length() && !lts.mPluginData.Length()) {
-      PLUGINS_LOG("[%" PRIu64 "] no data, no changes", aId);
-      return false;
-    }
-
-    if (mCachedPluginData.Length() == lts.mPluginData.Length()) {
-      // check for plugin data changes
-      for (uint32_t idx = 0; idx < lts.mPluginData.Length(); idx++) {
-        if (!(mCachedPluginData[idx] == lts.mPluginData[idx])) {
-          pluginMetricsChanged = true;
-          break;
-        }
-      }
-    } else {
-      // array lengths don't match, need to update
-      pluginMetricsChanged = true;
-    }
-  } else {
-    // exchanging layer trees, we need to update
-    pluginMetricsChanged = true;
-  }
-
-  // Check if plugin windows are currently hidden due to scrolling
-  if (mDeferPluginWindows) {
-    PLUGINS_LOG("[%" PRIu64 "] suppressing", aId);
-    return false;
-  }
-
-  // If the plugin windows were hidden but now are not, we need to force
-  // update the metrics to make sure they are visible again.
-  if (mPluginWindowsHidden) {
-    PLUGINS_LOG("[%" PRIu64 "] re-showing", aId);
-    mPluginWindowsHidden = false;
-    pluginMetricsChanged = true;
-  }
-
-  if (!lts.mPluginData.Length()) {
-    // Don't hide plugins if the previous remote layer tree didn't contain any.
-    if (!mCachedPluginData.Length()) {
-      PLUGINS_LOG("[%" PRIu64 "] nothing to hide", aId);
-      return false;
-    }
-
-    uintptr_t parentWidget = GetWidget()->GetWidgetKey();
-
-    // We will pass through here in cases where the previous shadow layer
-    // tree contained visible plugins and the new tree does not. All we need
-    // to do here is hide the plugins for the old tree, so don't waste time
-    // calculating clipping.
-    mPluginsLayerOffset = nsIntPoint(0, 0);
-    mPluginsLayerVisibleRegion.SetEmpty();
-    Unused << lts.mParent->SendHideAllPlugins(parentWidget);
-    lts.mUpdatedPluginDataAvailable = false;
-    PLUGINS_LOG("[%" PRIu64 "] hide all", aId);
-  } else {
-    // Retrieve the offset and visible region of the layer that hosts
-    // the plugins, CompositorBridgeChild needs these in calculating proper
-    // plugin clipping.
-    LayerTransactionParent* layerTree = lts.mLayerTree;
-    Layer* contentRoot = layerTree->GetRoot();
-    if (contentRoot) {
-      nsIntPoint offset;
-      nsIntRegion visibleRegion;
-      if (contentRoot->GetVisibleRegionRelativeToRootLayer(visibleRegion,
-                                                           &offset)) {
-        // Check to see if these values have changed, if so we need to
-        // update plugin window position within the window.
-        if (!pluginMetricsChanged &&
-            mPluginsLayerVisibleRegion == visibleRegion &&
-            mPluginsLayerOffset == offset) {
-          PLUGINS_LOG("[%" PRIu64 "] no change", aId);
-          return false;
-        }
-        mPluginsLayerOffset = offset;
-        mPluginsLayerVisibleRegion = visibleRegion;
-        Unused << lts.mParent->SendUpdatePluginConfigurations(
-            LayoutDeviceIntPoint::FromUnknownPoint(offset),
-            LayoutDeviceIntRegion::FromUnknownRegion(visibleRegion),
-            lts.mPluginData);
-        lts.mUpdatedPluginDataAvailable = false;
-        PLUGINS_LOG("[%" PRIu64 "] updated", aId);
-      } else {
-        PLUGINS_LOG("[%" PRIu64 "] no visibility data", aId);
-        return false;
-      }
-    } else {
-      PLUGINS_LOG("[%" PRIu64 "] no content root", aId);
-      return false;
-    }
-  }
-
-  mLastPluginUpdateLayerTreeId = aId;
-  mCachedPluginData = lts.mPluginData.Clone();
-  return true;
-}
-
-void CompositorBridgeParent::ScheduleShowAllPluginWindows() {
-  MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(
-      NewRunnableMethod("layers::CompositorBridgeParent::ShowAllPluginWindows",
-                        this, &CompositorBridgeParent::ShowAllPluginWindows));
-}
-
-void CompositorBridgeParent::ShowAllPluginWindows() {
-  MOZ_ASSERT(!NS_IsMainThread());
-  mDeferPluginWindows = false;
-  ScheduleComposition();
-}
-
-void CompositorBridgeParent::ScheduleHideAllPluginWindows() {
-  MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(
-      NewRunnableMethod("layers::CompositorBridgeParent::HideAllPluginWindows",
-                        this, &CompositorBridgeParent::HideAllPluginWindows));
-}
-
-void CompositorBridgeParent::HideAllPluginWindows() {
-  MOZ_ASSERT(!NS_IsMainThread());
-  // No plugins in the cache implies no plugins to manage
-  // in this content.
-  if (!mCachedPluginData.Length() || mDeferPluginWindows) {
-    return;
-  }
-
-  uintptr_t parentWidget = GetWidget()->GetWidgetKey();
-
-  mDeferPluginWindows = true;
-  mPluginWindowsHidden = true;
-
-#  if defined(XP_WIN)
-  // We will get an async reply that this has happened and then send hide.
-  mWaitForPluginsUntil = TimeStamp::Now() + mVsyncRate;
-  Unused << SendCaptureAllPlugins(parentWidget);
-#  else
-  Unused << SendHideAllPlugins(parentWidget);
-  ScheduleComposition();
-#  endif
-}
-#endif  // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvAllPluginsCaptured() {
-#if defined(XP_WIN)
-  mWaitForPluginsUntil = TimeStamp();
-  mHaveBlockedForPlugins = false;
-  ForceComposeToTarget(nullptr);
-  Unused << SendHideAllPlugins(GetWidget()->GetWidgetKey());
-  return IPC_OK();
-#else
-  MOZ_ASSERT_UNREACHABLE(
-      "CompositorBridgeParent::RecvAllPluginsCaptured calls unexpected.");
-  return IPC_FAIL_NO_REASON(this);
-#endif
 }
 
 int32_t RecordContentFrameTime(

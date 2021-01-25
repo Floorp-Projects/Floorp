@@ -173,13 +173,9 @@ class AsyncCompositionManager final {
    * to the layer tree, if found.
    * aHasRemoteContent - indicates if the layer tree contains a remote reflayer.
    *  May be null.
-   * aResolvePlugins - incoming value indicates if plugin windows should be
-   *  updated through a call on aCompositor's UpdatePluginWindowState. Applies
-   *  to linux and windows only, may be null. On return value indicates
-   *  if any updates occured.
    */
   void ResolveRefLayers(CompositorBridgeParent* aCompositor,
-                        bool* aHasRemoteContent, bool* aResolvePlugins);
+                        bool* aHasRemoteContent);
 
   /**
    * Detaches all referents resolved by ResolveRefLayers.
@@ -245,12 +241,10 @@ class MOZ_STACK_CLASS AutoResolveRefLayers {
  public:
   explicit AutoResolveRefLayers(AsyncCompositionManager* aManager,
                                 CompositorBridgeParent* aCompositor = nullptr,
-                                bool* aHasRemoteContent = nullptr,
-                                bool* aResolvePlugins = nullptr)
+                                bool* aHasRemoteContent = nullptr)
       : mManager(aManager) {
     if (mManager) {
-      mManager->ResolveRefLayers(aCompositor, aHasRemoteContent,
-                                 aResolvePlugins);
+      mManager->ResolveRefLayers(aCompositor, aHasRemoteContent);
     }
   }
 

@@ -46,7 +46,6 @@ def rustPreventForward(s):
     reason."""
     return s in (
         "nsIFrame",
-        "nsIObjectFrame",
         "nsSubDocumentFrame",
     )
 

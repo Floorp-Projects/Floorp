@@ -85,8 +85,6 @@ nsIFrame* NS_NewImageFrame(mozilla::PresShell* aPresShell,
 class nsInlineFrame;
 nsInlineFrame* NS_NewInlineFrame(mozilla::PresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
-nsIFrame* NS_NewObjectFrame(mozilla::PresShell* aPresShell,
-                            mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewTextFrame(mozilla::PresShell* aPresShell,
                           mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewContinuingTextFrame(mozilla::PresShell* aPresShell,
