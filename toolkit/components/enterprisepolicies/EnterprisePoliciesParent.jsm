@@ -32,6 +32,9 @@ const PREF_PER_USER_DIR = "toolkit.policies.perUserDir";
 // and set PREF_ALTERNATE_PATH in firefox.js as:
 // /your/repo/browser/components/enterprisepolicies/helpers/sample.json
 const PREF_ALTERNATE_PATH = "browser.policies.alternatePath";
+// For testing GPO, you can set an alternate location in testing
+const PREF_ALTERNATE_GPO = "browser.policies.alternateGPO";
+
 // For testing, we may want to set PREF_ALTERNATE_PATH to point to a file
 // relative to the test root directory. In order to enable this, the string
 // below may be placed at the beginning of that preference value and it will
@@ -601,8 +604,11 @@ class WindowsGPOPoliciesProvider {
     // user policies first and then replace them if necessary.
     log.debug("root = HKEY_CURRENT_USER");
     this._readData(wrk, wrk.ROOT_KEY_CURRENT_USER);
-    log.debug("root = HKEY_LOCAL_MACHINE");
-    this._readData(wrk, wrk.ROOT_KEY_LOCAL_MACHINE);
+    // We don't access machine policies in testing
+    if (!Cu.isInAutomation && !isXpcshell) {
+      log.debug("root = HKEY_LOCAL_MACHINE");
+      this._readData(wrk, wrk.ROOT_KEY_LOCAL_MACHINE);
+    }
   }
 
   get hasPolicies() {
@@ -619,7 +625,13 @@ class WindowsGPOPoliciesProvider {
 
   _readData(wrk, root) {
     try {
-      wrk.open(root, "SOFTWARE\\Policies", wrk.ACCESS_READ);
+      let regLocation = "SOFTWARE\\Policies";
+      if (Cu.isInAutomation || isXpcshell) {
+        try {
+          regLocation = Services.prefs.getStringPref(PREF_ALTERNATE_GPO);
+        } catch (e) {}
+      }
+      wrk.open(root, regLocation, wrk.ACCESS_READ);
       if (wrk.hasChild("Mozilla\\" + Services.appinfo.name)) {
         this._policies = WindowsGPOParser.readPolicies(wrk, this._policies);
       }
