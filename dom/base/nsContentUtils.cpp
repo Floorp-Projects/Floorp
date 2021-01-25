@@ -676,43 +676,23 @@ class SameOriginCheckerImpl final : public nsIChannelEventSink,
 
 }  // namespace
 
-AutoSuppressEventHandlingAndSuspend::AutoSuppressEventHandlingAndSuspend(
-    BrowsingContextGroup* aGroup) {
-  for (const auto& bc : aGroup->Toplevels()) {
-    SuppressBrowsingContext(bc);
-  }
+void AutoSuppressEventHandlingAndSuspend::SuppressDocument(Document* aDoc) {
+  // Note: Document::SuppressEventHandling will also automatically suppress
+  // event handling for any in-process sub-documents. However, since we need
+  // to deal with cases where remote BrowsingContexts may be interleaved
+  // with in-process ones, we still need to walk the entire tree ourselves.
+  // This may be slightly redundant in some cases, but since event handling
+  // suppressions maintain a count of current blockers, it does not cause
+  // any problems.
+  aDoc->SuppressEventHandling();
+  aDoc->GetInnerWindow()->Suspend();
 }
 
-void AutoSuppressEventHandlingAndSuspend::SuppressBrowsingContext(
-    BrowsingContext* aBC) {
-  if (nsCOMPtr<nsPIDOMWindowOuter> win = aBC->GetDOMWindow()) {
-    if (RefPtr<Document> doc = win->GetExtantDoc()) {
-      mDocuments.AppendElement(doc);
-      mWindows.AppendElement(win->GetCurrentInnerWindow());
-      // Note: Document::SuppressEventHandling will also automatically suppress
-      // event handling for any in-process sub-documents. However, since we need
-      // to deal with cases where remote BrowsingContexts may be interleaved
-      // with in-process ones, we still need to walk the entire tree ourselves.
-      // This may be slightly redundant in some cases, but since event handling
-      // suppressions maintain a count of current blockers, it does not cause
-      // any problems.
-      doc->SuppressEventHandling();
-      win->GetCurrentInnerWindow()->Suspend();
-    }
-  }
-
-  for (const auto& bc : aBC->Children()) {
-    SuppressBrowsingContext(bc);
-  }
-}
-
-AutoSuppressEventHandlingAndSuspend::~AutoSuppressEventHandlingAndSuspend() {
-  for (const auto& win : mWindows) {
+void AutoSuppressEventHandlingAndSuspend::UnsuppressDocument(Document* aDoc) {
+  if (nsCOMPtr<nsPIDOMWindowInner> win = aDoc->GetInnerWindow()) {
     win->Resume();
   }
-  for (const auto& doc : mDocuments) {
-    doc->UnsuppressEventHandlingAndFireEvents(true);
-  }
+  aDoc->UnsuppressEventHandlingAndFireEvents(true);
 }
 
 /**
