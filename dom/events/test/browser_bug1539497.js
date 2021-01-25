@@ -7,10 +7,7 @@ add_task(async function maxTouchPoints() {
   await new Promise(resolve => {
     SpecialPowers.pushPrefEnv(
       {
-        set: [
-          ["dom.w3c_pointer_events.enabled", true],
-          ["dom.maxtouchpoints.testing.value", 5],
-        ],
+        set: [["dom.maxtouchpoints.testing.value", 5]],
       },
       resolve
     );

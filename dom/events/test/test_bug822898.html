@@ -329,7 +329,7 @@ function runTests() {
 }
 
 window.onload = function() {
-  SpecialPowers.pushPrefEnv({"set":[["dom.w3c_pointer_events.enabled", true]]}, runTests);
+  SimpleTest.executeSoon(runTests);
 }
 
 SimpleTest.waitForExplicitFinish();

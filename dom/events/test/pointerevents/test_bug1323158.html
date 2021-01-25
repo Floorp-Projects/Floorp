@@ -84,9 +84,7 @@ function runTests() {
                   iframe.contentWindow);
 }
 
-SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
-});
+SimpleTest.waitForFocus(runTests);
 
 </script>
 </body>

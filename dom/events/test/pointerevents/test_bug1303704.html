@@ -127,7 +127,7 @@ function runTests() {
 }
 
 SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true], ["general.smoothScroll", false]]}, runTests);
+  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]}, runTests);
 });
 
 </script>

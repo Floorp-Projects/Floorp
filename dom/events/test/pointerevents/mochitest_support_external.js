@@ -30,14 +30,10 @@ function setImplicitPointerCapture(capture, callback) {
 }
 
 function turnOnPointerEvents(callback) {
-  console.log("SET dom.w3c_pointer_events.enabled as TRUE");
   console.log("SET layout.css.touch_action.enabled as TRUE");
   SpecialPowers.pushPrefEnv(
     {
-      set: [
-        ["dom.w3c_pointer_events.enabled", true],
-        ["layout.css.touch_action.enabled", true],
-      ],
+      set: [["layout.css.touch_action.enabled", true]],
     },
     callback
   );

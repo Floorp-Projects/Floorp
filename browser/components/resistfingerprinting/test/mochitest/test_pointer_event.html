@@ -233,8 +233,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1363508
   }
 
   SimpleTest.waitForFocus(() => {
-    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
-                                      ["privacy.resistFingerprinting", true]]},
+    SpecialPowers.pushPrefEnv({"set": [["privacy.resistFingerprinting", true]]},
                               doTests);
   });
 
