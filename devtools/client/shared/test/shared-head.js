@@ -1350,3 +1350,11 @@ async function assertSingleColorScreenshotImage(
   is(color.g, g, "node screenshot has the expected green component");
   is(color.b, b, "node screenshot has the expected blue component");
 }
+
+/**
+ * Check that the provided image has the expected color at a given position
+ */
+function checkImageColorAt({ image, x = 0, y, expectedColor, label }) {
+  const color = colorAt(image, x, y);
+  is(`rgb(${Object.values(color).join(", ")})`, expectedColor, label);
+}
