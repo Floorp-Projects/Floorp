@@ -7,7 +7,6 @@
 #include "IPCStreamUtils.h"
 
 #include "nsIIPCSerializableInputStream.h"
-#include "mozIRemoteLazyInputStream.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentChild.h"
@@ -18,8 +17,6 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/net/SocketProcessParent.h"
-#include "mozilla/InputStreamLengthHelper.h"
-#include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/Unused.h"
 #include "nsNetCID.h"
 #include "BackgroundParentImpl.h"
@@ -43,8 +40,6 @@ bool SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
   MOZ_RELEASE_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
-  // If you change this size, please also update the payload size in
-  // test_reload_large_postdata.html.
   const uint64_t kTooLargeStream = 1024 * 1024;
 
   uint32_t sizeUsed = 0;
@@ -134,55 +129,6 @@ bool SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue,
 }
 
 template <typename M>
-bool SerializeLazyInputStream(nsIInputStream* aStream, IPCStream& aValue,
-                              M* aManager) {
-  MOZ_ASSERT(aStream);
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  // avoid creating a loop between processes by accessing the underlying input
-  // stream.
-  nsCOMPtr<nsIInputStream> stream = aStream;
-  if (nsCOMPtr<mozIRemoteLazyInputStream> remoteLazyInputStream =
-          do_QueryInterface(stream)) {
-    stream = remoteLazyInputStream->GetInternalStream();
-    if (NS_WARN_IF(!stream)) {
-      return false;
-    }
-  }
-
-  uint64_t childID = 0;
-  if constexpr (std::is_same_v<dom::ContentParent, M>) {
-    childID = aManager->ChildID();
-  } else if constexpr (std::is_base_of_v<PBackgroundParent, M>) {
-    childID = BackgroundParent::GetChildID(aManager);
-  }
-
-  int64_t length = -1;
-  if (!InputStreamLengthHelper::GetSyncLength(stream, &length)) {
-    length = -1;
-  }
-
-  nsresult rv = NS_OK;
-  RefPtr<RemoteLazyInputStreamParent> actor =
-      RemoteLazyInputStreamParent::Create(aStream, length, childID, &rv,
-                                          aManager);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  if (!aManager->SendPRemoteLazyInputStreamConstructor(actor, actor->ID(),
-                                                       actor->Size())) {
-    return false;
-  }
-
-  aValue.stream() = RemoteLazyInputStreamParams(actor);
-  aValue.optionalFds() = void_t();
-
-  return true;
-}
-
-template <typename M>
 bool SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
                                IPCStream* aValue,
                                Maybe<IPCStream>* aOptionalValue,
@@ -220,16 +166,6 @@ bool SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aValue || aOptionalValue);
-
-  // When requesting a delayed start stream from the parent process, serialize
-  // it as a remote lazy stream to avoid bloating payloads.
-  if (aDelayedStart && XRE_IsParentProcess()) {
-    if (aValue) {
-      return SerializeLazyInputStream(aStream, *aValue, aManager);
-    }
-
-    return SerializeLazyInputStream(aStream, aOptionalValue->ref(), aManager);
-  }
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
       do_QueryInterface(aStream);
@@ -551,7 +487,7 @@ Maybe<IPCStream>& AutoIPCStream::TakeOptionalValue() {
 void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
                                              IProtocol* aActor,
                                              nsIInputStream* aParam) {
-  auto autoStream = MakeRefPtr<HoldIPCStream>(/* aDelayedStart */ true);
+  auto autoStream = MakeRefPtr<HoldIPCStream>();
 
   bool ok = false;
   bool found = false;
