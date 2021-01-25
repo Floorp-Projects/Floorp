@@ -51,10 +51,10 @@ KeyEventHandler* ShortcutKeys::GetHandlers(HandlerType aType) {
 /* static */
 nsAtom* ShortcutKeys::ConvertEventToDOMEventType(
     const WidgetKeyboardEvent* aWidgetKeyboardEvent) {
-  if (aWidgetKeyboardEvent->IsKeyDownOrKeyDownOnPlugin()) {
+  if (aWidgetKeyboardEvent->mMessage == eKeyDown) {
     return nsGkAtoms::keydown;
   }
-  if (aWidgetKeyboardEvent->IsKeyUpOrKeyUpOnPlugin()) {
+  if (aWidgetKeyboardEvent->mMessage == eKeyUp) {
     return nsGkAtoms::keyup;
   }
   // eAccessKeyNotFound event is always created from eKeyPress event and

@@ -91,7 +91,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   mozilla::ipc::IPCResult RecvCheckContentOnlyTDR(
       const uint32_t& sequenceNum, bool* isContentOnlyTDR) override;
 
-  mozilla::ipc::IPCResult RecvAllPluginsCaptured() override { return IPC_OK(); }
 
   mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart,
@@ -151,9 +150,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   AsyncCompositionManager* GetCompositionManager(
       LayerTransactionParent* aParent) override;
-  mozilla::ipc::IPCResult RecvRemotePluginsReady() override {
-    return IPC_FAIL_NO_REASON(this);
-  }
 
   already_AddRefed<dom::PWebGLParent> AllocPWebGLParent() override;
 

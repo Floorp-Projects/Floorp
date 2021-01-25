@@ -5402,24 +5402,10 @@ void AsyncPanZoomController::DispatchStateChangeNotification(
     if (!IsTransformingState(aOldState) && IsTransformingState(aNewState)) {
       controller->NotifyAPZStateChange(GetGuid(),
                                        APZStateChange::eTransformBegin);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      // Let the compositor know about scroll state changes so it can manage
-      // windowed plugins.
-      if (StaticPrefs::gfx_e10s_hide_plugins_for_scroll_AtStartup() &&
-          mCompositorController) {
-        mCompositorController->ScheduleHideAllPluginWindows();
-      }
-#endif
     } else if (IsTransformingState(aOldState) &&
                !IsTransformingState(aNewState)) {
       controller->NotifyAPZStateChange(GetGuid(),
                                        APZStateChange::eTransformEnd);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      if (StaticPrefs::gfx_e10s_hide_plugins_for_scroll_AtStartup() &&
-          mCompositorController) {
-        mCompositorController->ScheduleShowAllPluginWindows();
-      }
-#endif
     }
   }
 }

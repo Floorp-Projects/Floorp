@@ -29,7 +29,6 @@ class nsStopPluginRunnable;
 class AutoSetInstantiatingToFalse;
 class nsIPrincipal;
 class nsFrameLoader;
-class nsPluginFrame;
 class nsPluginInstanceOwner;
 
 namespace mozilla {
@@ -558,12 +557,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   ObjectType GetTypeOfContent(const nsCString& aMIMEType, bool aNoFakePlugin);
 
   /**
-   * Gets the frame that's associated with this content node.
-   * Does not flush.
-   */
-  nsPluginFrame* GetExistingFrame();
-
-  /**
    * Used for identifying whether we can rewrite a youtube flash embed to
    * possibly use HTML5 instead.
    *
@@ -703,8 +696,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // times during the load process.
   bool mPreferFallback : 1;
   bool mPreferFallbackKnown : 1;
-
-  WeakFrame mPrintFrame;
 
   RefPtr<nsPluginInstanceOwner> mInstanceOwner;
   nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;

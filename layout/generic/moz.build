@@ -88,9 +88,6 @@ with Files("*Scroll*"):
 with Files("nsFont*"):
     BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
 
-with Files("nsPluginFrame.*"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
-
 with Files("nsVideoFrame.*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
@@ -109,14 +106,12 @@ EXPORTS += [
     "nsIFrame.h",
     "nsIFrameInlines.h",
     "nsILineIterator.h",
-    "nsIObjectFrame.h",
     "nsIScrollableFrame.h",
     "nsIScrollPositionListener.h",
     "nsIStatefulFrame.h",
     "nsLineBox.h",
     "nsPageSequenceFrame.h",
     "nsPlaceholderFrame.h",
-    "nsPluginFrame.h",
     "nsQueryFrame.h",
     "nsRubyBaseContainerFrame.h",
     "nsRubyBaseFrame.h",
@@ -234,11 +229,6 @@ UNIFIED_SOURCES += [
     "WBRFrame.cpp",
 ]
 
-# nsPluginFrame.cpp needs to be built separately because of name clashes in the OS X headers.
-SOURCES += [
-    "nsPluginFrame.cpp",
-]
-
 GeneratedFile(
     "FrameIdList.h",
     script="GenerateFrameLists.py",
@@ -257,7 +247,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    "../../dom/plugins/base",
     "../base",
     "../forms",
     "../painting",

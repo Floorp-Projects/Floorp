@@ -3518,12 +3518,11 @@ nsCSSFrameConstructor::FindObjectData(const Element& aElement,
   static const FrameConstructionDataByInt sObjectData[] = {
       SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_LOADING,
                         NS_NewEmptyFrame),
-      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_PLUGIN,
-                        NS_NewObjectFrame),
       SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_IMAGE, NS_NewImageFrame),
       SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_DOCUMENT,
                         NS_NewSubDocumentFrame),
       // Fake plugin handlers load as documents
+      // XXXmats is TYPE_FAKE_PLUGIN something we need?
       SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_FAKE_PLUGIN,
                         NS_NewSubDocumentFrame)
       // Nothing for TYPE_NULL so we'll construct frames by display there

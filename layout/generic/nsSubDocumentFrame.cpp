@@ -40,7 +40,6 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "FrameLayerBuilder.h"
-#include "nsPluginFrame.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsQueryObject.h"
@@ -972,7 +971,6 @@ static CallState BeginSwapDocShellsForDocument(Document& aDocument) {
       ::DestroyDisplayItemDataForFrames(rootFrame);
     }
   }
-  aDocument.EnumerateActivityObservers(nsPluginFrame::BeginSwapDocShells);
   aDocument.EnumerateSubDocuments(BeginSwapDocShellsForDocument);
   return CallState::Continue;
 }
@@ -1056,7 +1054,6 @@ static CallState EndSwapDocShellsForDocument(Document& aDocument) {
     }
   }
 
-  aDocument.EnumerateActivityObservers(nsPluginFrame::EndSwapDocShells);
   aDocument.EnumerateSubDocuments(EndSwapDocShellsForDocument);
   return CallState::Continue;
 }

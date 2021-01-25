@@ -77,7 +77,6 @@
 #include "ScrollAnimationMSDPhysics.h"
 #include "ScrollSnap.h"
 #include "UnitTransforms.h"
-#include "nsPluginFrame.h"
 #include "nsSliderFrame.h"
 #include "ViewportFrame.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -772,10 +771,10 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
       LogicalPoint(wm), dummyContainerSize,
       ReflowChildFlags::NoMoveFrame | ReflowChildFlags::NoSizeView);
 
-  // XXX Some frames (e.g., nsPluginFrame, nsFrameFrame, nsTextFrame) don't
+  // XXX Some frames (e.g. nsFrameFrame, nsTextFrame) don't
   // bother setting their mOverflowArea. This is wrong because every frame
-  // should always set mOverflowArea. In fact nsPluginFrame and nsFrameFrame
-  // don't support the 'outline' property because of this. Rather than fix the
+  // should always set mOverflowArea. In fact nsFrameFrame doesn't
+  // support the 'outline' property because of this. Rather than fix the
   // world right now, just fix up the overflow area if necessary. Note that we
   // don't check HasOverflowRect() because it could be set even though the
   // overflow area doesn't include the frame bounds.
@@ -2335,20 +2334,6 @@ void ScrollFrameHelper::CompleteAsyncScroll(const nsRect& aRange,
   PostScrollEndEvent();
 }
 
-bool ScrollFrameHelper::HasPluginFrames() {
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  if (XRE_IsContentProcess()) {
-    nsPresContext* presContext = mOuter->PresContext();
-    nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-    if (!rootPresContext ||
-        rootPresContext->NeedToComputePluginGeometryUpdates()) {
-      return true;
-    }
-  }
-#endif
-  return false;
-}
-
 bool ScrollFrameHelper::HasBgAttachmentLocal() const {
   const nsStyleBackground* bg = mOuter->StyleBackground();
   return bg->HasLocalBackground();
@@ -3041,12 +3026,12 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
     displayPort.MoveBy(-mScrolledFrame->GetPosition());
 
     PAINT_SKIP_LOG(
-        "New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d plugins"
+        "New scrollpos %s usingDP %d dpEqual %d scrollableByApz "
         "%d perspective %d bglocal %d filter %d\n",
         ToString(CSSPoint::FromAppUnits(GetScrollPosition())).c_str(),
         usingDisplayPort, displayPort.IsEqualEdges(oldDisplayPort),
-        mScrollableByAPZ, HasPluginFrames(), HasPerspective(),
-        HasBgAttachmentLocal(), mHasOutOfFlowContentInsideFilter);
+        mScrollableByAPZ, HasPerspective(), HasBgAttachmentLocal(),
+        mHasOutOfFlowContentInsideFilter);
     if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort) &&
         !HasPerspective() && !HasBgAttachmentLocal() &&
         !mHasOutOfFlowContentInsideFilter) {
@@ -3054,7 +3039,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
           content->GetComposedDoc()->HasScrollLinkedEffect();
       bool apzDisabled = haveScrollLinkedEffects &&
                          StaticPrefs::apz_disable_for_scroll_linked_effects();
-      if (!apzDisabled && !HasPluginFrames()) {
+      if (!apzDisabled) {
         if (LastScrollOrigin() == ScrollOrigin::Apz) {
           schedulePaint = false;
           PAINT_SKIP_LOG("Skipping due to APZ scroll\n");

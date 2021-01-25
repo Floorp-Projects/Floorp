@@ -349,10 +349,6 @@ void ContentCompositorBridgeParent::ShadowLayersUpdated(
   }
   UpdateIndirectTree(id, shadowRoot, aInfo.targetConfig());
 
-  // Cache the plugin data for this remote layer tree
-  state->mPluginData = aInfo.plugins().Clone();
-  state->mUpdatedPluginDataAvailable = true;
-
   state->mParent->NotifyShadowTreeTransaction(
       id, aInfo.isFirstPaint(), aInfo.focusTarget(), aInfo.scheduleComposite(),
       aInfo.paintSequenceNumber(), aInfo.isRepeatTransaction(), aHitTestUpdate);

@@ -340,7 +340,6 @@ struct ActiveScrolledRoot {
 enum class nsDisplayListBuilderMode : uint8_t {
   Painting,
   EventDelivery,
-  PluginGeometry,
   FrameVisibility,
   TransformComputation,
   GenerateGlyph,
@@ -450,24 +449,6 @@ class nsDisplayListBuilder {
     mTemporaryItems.AppendElement(aItem);
   }
 
-  void SetWillComputePluginGeometry(bool aWillComputePluginGeometry) {
-    mWillComputePluginGeometry = aWillComputePluginGeometry;
-  }
-
-  void SetForPluginGeometry(bool aForPlugin) {
-    if (aForPlugin) {
-      NS_ASSERTION(mMode == nsDisplayListBuilderMode::Painting,
-                   "Can only switch from Painting to PluginGeometry");
-      NS_ASSERTION(mWillComputePluginGeometry,
-                   "Should have signalled this in advance");
-      mMode = nsDisplayListBuilderMode::PluginGeometry;
-    } else {
-      NS_ASSERTION(mMode == nsDisplayListBuilderMode::PluginGeometry,
-                   "Can only switch from Painting to PluginGeometry");
-      mMode = nsDisplayListBuilderMode::Painting;
-    }
-  }
-
   mozilla::layers::LayerManager* GetWidgetLayerManager(
       nsView** aView = nullptr);
 
@@ -477,17 +458,6 @@ class nsDisplayListBuilder {
    */
   bool IsForEventDelivery() const {
     return mMode == nsDisplayListBuilderMode::EventDelivery;
-  }
-
-  /**
-   * Be careful with this. The display list will be built in Painting mode
-   * first and then switched to PluginGeometry before a second call to
-   * ComputeVisibility.
-   * @return true if the display list is being built to compute geometry
-   * for plugins.
-   */
-  bool IsForPluginGeometry() const {
-    return mMode == nsDisplayListBuilderMode::PluginGeometry;
   }
 
   /**
@@ -516,8 +486,6 @@ class nsDisplayListBuilder {
   bool BuildCompositorHitTestInfo() const {
     return mBuildCompositorHitTestInfo;
   }
-
-  bool WillComputePluginGeometry() const { return mWillComputePluginGeometry; }
 
   /**
    * @return true if "painting is suppressed" during page load and we
@@ -611,13 +579,6 @@ class nsDisplayListBuilder {
    */
   void SetSelectedFramesOnly() { mSelectedFramesOnly = true; }
   bool GetSelectedFramesOnly() { return mSelectedFramesOnly; }
-  /**
-   * Calling this setter makes us compute accurate visible regions at the cost
-   * of performance if regions get very complex.
-   */
-  bool GetAccurateVisibleRegions() {
-    return mMode == nsDisplayListBuilderMode::PluginGeometry;
-  }
   /**
    * @return Returns true if we should include the caret in any display lists
    * that we make.
@@ -833,7 +794,7 @@ class nsDisplayListBuilder {
    */
   bool IsInTransform() const { return mInTransform; }
 
-  bool InEventsAndPluginsOnly() const { return mInEventsAndPluginsOnly; }
+  bool InEventsOnly() const { return mInEventsOnly; }
   /**
    * Indicate whether or not we're directly or indirectly under and
    * nsDisplayTransform or SVG foreignObject.
@@ -1220,17 +1181,14 @@ class nsDisplayListBuilder {
     bool mOldValue;
   };
 
-  class AutoInEventsAndPluginsOnly {
+  class AutoInEventsOnly {
    public:
-    AutoInEventsAndPluginsOnly(nsDisplayListBuilder* aBuilder,
-                               bool aInEventsAndPluginsOnly)
-        : mBuilder(aBuilder), mOldValue(aBuilder->mInEventsAndPluginsOnly) {
-      aBuilder->mInEventsAndPluginsOnly |= aInEventsAndPluginsOnly;
+    AutoInEventsOnly(nsDisplayListBuilder* aBuilder, bool aInEventsOnly)
+        : mBuilder(aBuilder), mOldValue(aBuilder->mInEventsOnly) {
+      aBuilder->mInEventsOnly |= aInEventsOnly;
     }
 
-    ~AutoInEventsAndPluginsOnly() {
-      mBuilder->mInEventsAndPluginsOnly = mOldValue;
-    }
+    ~AutoInEventsOnly() { mBuilder->mInEventsOnly = mOldValue; }
 
    private:
     nsDisplayListBuilder* mBuilder;
@@ -1647,9 +1605,6 @@ class nsDisplayListBuilder {
 
   bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem);
 
-  void SetContainsPluginItem() { mContainsPluginItem = true; }
-  bool ContainsPluginItem() { return mContainsPluginItem; }
-
   /**
    * mContainsBlendMode is true if we processed a display item that
    * has a blend mode attached. We do this so we can insert a
@@ -2040,11 +1995,10 @@ class nsDisplayListBuilder {
   bool mDescendIntoSubdocuments;
   bool mSelectedFramesOnly;
   bool mAllowMergingAndFlattening;
-  bool mWillComputePluginGeometry;
   // True when we're building a display list that's directly or indirectly
   // under an nsDisplayTransform
   bool mInTransform;
-  bool mInEventsAndPluginsOnly;
+  bool mInEventsOnly;
   bool mInFilter;
   bool mInPageSequence;
   bool mIsInChromePresContext;
@@ -2053,7 +2007,6 @@ class nsDisplayListBuilder {
   bool mUseHighQualityScaling;
   bool mIsPaintingForWebRender;
   bool mIsCompositingCheap;
-  bool mContainsPluginItem;
   bool mAncestorHasApzAwareEventHandler;
   // True when the first async-scrollable scroll frame for which we build a
   // display list has a display port. An async-scrollable scroll frame is one
@@ -2128,7 +2081,7 @@ void AssertUniqueItem(nsDisplayItem* aItem);
  * Returns true, if a display item of given |aType| needs to be built within
  * opacity:0 container.
  */
-bool ShouldBuildItemForEventsOrPlugins(const DisplayItemType aType);
+bool ShouldBuildItemForEvents(const DisplayItemType aType);
 
 void UpdateDisplayItemData(nsPaintedDisplayItem* aItem);
 
@@ -2142,9 +2095,8 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,
                 "Frame type should be derived from nsIFrame");
 
   const DisplayItemType type = T::ItemType();
-  if (aBuilder->InEventsAndPluginsOnly() &&
-      !ShouldBuildItemForEventsOrPlugins(type)) {
-    // This item is not needed for events or plugins.
+  if (aBuilder->InEventsOnly() && !ShouldBuildItemForEvents(type)) {
+    // This item is not needed for events.
     return nullptr;
   }
 
@@ -2931,9 +2883,6 @@ class nsDisplayItem : public nsDisplayItemBase {
    * this item to the intersection of *aVisibleRegion and this item's bounds.
    * We rely on that, so this should only be called by
    * nsDisplayList::ComputeVisibility or nsDisplayItem::RecomputeVisibility.
-   * aAllowVisibleRegionExpansion is a rect where we are allowed to
-   * expand the visible region and is only used for making sure the
-   * background behind a plugin is visible.
    * This method needs to be idempotent.
    *
    * @return true if the item is visible, false if no part of the item
@@ -5650,13 +5599,13 @@ class nsDisplayOpacity : public nsDisplayWrapList {
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    nsDisplayList* aList,
                    const ActiveScrolledRoot* aActiveScrolledRoot,
-                   bool aForEventsAndPluginsOnly, bool aNeedsActiveLayer);
+                   bool aForEventsOnly, bool aNeedsActiveLayer);
 
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                    const nsDisplayOpacity& aOther)
       : nsDisplayWrapList(aBuilder, aOther),
         mOpacity(aOther.mOpacity),
-        mForEventsAndPluginsOnly(aOther.mForEventsAndPluginsOnly),
+        mForEventsOnly(aOther.mForEventsOnly),
         mNeedsActiveLayer(aOther.mNeedsActiveLayer),
         mChildOpacityState(ChildOpacityState::Unknown) {
     MOZ_COUNT_CTOR(nsDisplayOpacity);
@@ -5714,7 +5663,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
                                  nsRegion* aInvalidRegion) const override;
 
   bool IsInvalid(nsRect& aRect) const override {
-    if (mForEventsAndPluginsOnly) {
+    if (mForEventsOnly) {
       return false;
     }
     return nsDisplayWrapList::IsInvalid(aRect);
@@ -5760,7 +5709,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
   bool ApplyToFilterOrMask(const bool aUsingLayers);
 
   float mOpacity;
-  bool mForEventsAndPluginsOnly : 1;
+  bool mForEventsOnly : 1;
   enum class ChildOpacityState : uint8_t {
     // Our child list has changed since the last time ApplyToChildren was
     // called.

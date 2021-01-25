@@ -28,7 +28,6 @@
 
 class nsIInputStream;
 class nsPluginDOMContextMenuListener;
-class nsPluginFrame;
 class nsDisplayListBuilder;
 
 #if defined(MOZ_X11)
@@ -168,9 +167,6 @@ class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
 
   void UpdateDocumentActiveState(bool aIsActive);
 
-  void SetFrame(nsPluginFrame* aFrame);
-  nsPluginFrame* GetFrame();
-
   uint32_t GetLastEventloopNestingLevel() const {
     return mLastEventloopNestingLevel;
   }
@@ -299,7 +295,6 @@ class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
 
   nsPluginNativeWindow* mPluginWindow;
   RefPtr<nsNPAPIPluginInstance> mInstance;
-  nsPluginFrame* mPluginFrame;
   nsWeakPtr mContent;  // WEAK, content owns us
   nsCString mDocumentBase;
   bool mWidgetCreationComplete;
@@ -353,17 +348,6 @@ class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
 #endif
 
 #ifdef XP_MACOSX
-  static NPBool ConvertPointPuppet(PuppetWidget* widget,
-                                   nsPluginFrame* pluginFrame, double sourceX,
-                                   double sourceY,
-                                   NPCoordinateSpace sourceSpace, double* destX,
-                                   double* destY, NPCoordinateSpace destSpace);
-  static NPBool ConvertPointNoPuppet(nsIWidget* widget,
-                                     nsPluginFrame* pluginFrame, double sourceX,
-                                     double sourceY,
-                                     NPCoordinateSpace sourceSpace,
-                                     double* destX, double* destY,
-                                     NPCoordinateSpace destSpace);
   void PerformDelayedBlurs();
 #endif  // XP_MACOSX
 

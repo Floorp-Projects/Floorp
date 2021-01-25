@@ -35,7 +35,6 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
 #include "nsIObserverService.h"
-#include "nsIObjectFrame.h"
 #include "BrowserChild.h"
 #include "nsFrameLoader.h"
 #include "nsHTMLDocument.h"
@@ -2210,36 +2209,6 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
                              false);
     }
 
-    // if an object/plug-in/remote browser is being blurred, move the system
-    // focus to the parent window, otherwise events will still get fired at the
-    // plugin. But don't do this if we are blurring due to the window being
-    // lowered, otherwise, the parent window can get raised again.
-    if (GetActiveBrowsingContext()) {
-      nsIFrame* contentFrame = element->GetPrimaryFrame();
-      nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
-      if (aAdjustWidget && objectFrame && !sTestMode) {
-        if (XRE_IsContentProcess()) {
-          // set focus to the top level window via the chrome process.
-          nsCOMPtr<nsIBrowserChild> browserChild = docShell->GetBrowserChild();
-          if (browserChild) {
-            static_cast<BrowserChild*>(browserChild.get())
-                ->SendDispatchFocusToTopLevelWindow();
-          }
-        } else {
-          // note that the presshell's widget is being retrieved here, not the
-          // one for the object frame.
-          if (nsViewManager* vm = presShell->GetViewManager()) {
-            nsCOMPtr<nsIWidget> widget;
-            vm->GetRootWidget(getter_AddRefs(widget));
-            if (widget) {
-              // set focus to the top level window but don't raise it.
-              widget->SetFocus(nsIWidget::Raise::No, CallerType::System);
-            }
-          }
-        }
-      }
-    }
-
     bool windowBeingLowered = !aBrowsingContextToClear &&
                               !aAncestorBrowsingContextToFocus &&
                               aIsLeavingDocument && aAdjustWidget;
@@ -2458,18 +2427,7 @@ void nsFocusManager::Focus(
 
   SetFocusedWindowInternal(aWindow);
 
-  // Update the system focus by focusing the root widget.  But avoid this
-  // if 1) aAdjustWidget is false or 2) aElement is a plugin that has its
-  // own widget and is either already focused or is about to be focused.
-  nsCOMPtr<nsIWidget> objectFrameWidget;
-  if (aElement) {
-    nsIFrame* contentFrame = aElement->GetPrimaryFrame();
-    nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
-    if (objectFrame) {
-      objectFrameWidget = objectFrame->GetWidget();
-    }
-  }
-  if (aAdjustWidget && !objectFrameWidget && !sTestMode) {
+  if (aAdjustWidget && !sTestMode) {
     if (nsViewManager* vm = presShell->GetViewManager()) {
       nsCOMPtr<nsIWidget> widget;
       vm->GetRootWidget(getter_AddRefs(widget));
@@ -2532,13 +2490,6 @@ void nsFocusManager::Focus(
       // that we might no longer be in the same document, due to the events we
       // fired above when aIsNewDocument.
       if (presShell->GetDocument() == aElement->GetComposedDoc()) {
-        if (aAdjustWidget && objectFrameWidget && !sTestMode) {
-          objectFrameWidget->SetFocus(nsIWidget::Raise::No,
-                                      aFlags & FLAG_NONSYSTEMCALLER
-                                          ? CallerType::NonSystem
-                                          : CallerType::System);
-        }
-
         // if the object being focused is a remote browser, activate remote
         // content
         ActivateRemoteFrameIfNeeded(*aElement, aActionId);
@@ -2572,23 +2523,6 @@ void nsFocusManager::Focus(
       }
     }
   } else {
-    // If the window focus event (fired above when aIsNewDocument) caused
-    // the plugin not to be focusable, update the system focus by focusing
-    // the root widget.
-    if (aAdjustWidget && objectFrameWidget &&
-        GetFocusedBrowsingContext() == aWindow->GetBrowsingContext() &&
-        mFocusedElement == nullptr && !sTestMode) {
-      if (nsViewManager* vm = presShell->GetViewManager()) {
-        nsCOMPtr<nsIWidget> widget;
-        vm->GetRootWidget(getter_AddRefs(widget));
-        if (widget) {
-          widget->SetFocus(nsIWidget::Raise::No, aFlags & FLAG_NONSYSTEMCALLER
-                                                     ? CallerType::NonSystem
-                                                     : CallerType::System);
-        }
-      }
-    }
-
     if (!mFocusedElement) {
       // When there is no focused element, IMEStateManager needs to adjust IME
       // enabled state with the document.
