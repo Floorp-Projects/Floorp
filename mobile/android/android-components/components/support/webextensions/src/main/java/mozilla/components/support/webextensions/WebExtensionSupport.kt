@@ -301,7 +301,6 @@ object WebExtensionSupport {
         runtime.listInstalledWebExtensions(
             onSuccess = {
                 extensions -> extensions.forEach { registerInstalledExtension(store, it) }
-//                emitWebExtensionsInitializedFact(extensions)
                 closeUnsupportedTabs(store, extensions)
                 initializationResult.complete(Unit)
                 onExtensionsLoaded?.invoke(extensions.filter { !it.isBuiltIn() })
