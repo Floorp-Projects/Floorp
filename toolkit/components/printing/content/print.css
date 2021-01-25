@@ -40,14 +40,6 @@ body[loading] #print {
   margin-block: 2px;
 }
 
-.row > input,
-.row > select,
-.col > input {
-  margin-inline: 0 0;
-  max-width: 100%;
-  display: inline-block;
-}
-
 .row.cols-2 {
   flex-direction: row;
   align-items: center;
@@ -116,47 +108,6 @@ select:not([size], [multiple])[iconic] {
 
 #printer-picker[output="pdf"] {
   background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://global/content/portrait.svg");
-}
-
-input[type="checkbox"] {
-  margin-inline-end: 8px;
-}
-
-input[type="radio"] {
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 50%;
-  margin: 0;
-  margin-inline-end: 8px;
-  background-color: var(--in-content-box-background);
-}
-
-input[type="radio"]:checked {
-  appearance: none;
-  background-image: url("chrome://global/skin/in-content/radio.svg");
-  -moz-context-properties: fill;
-  fill: #3485ff;
-}
-
-input[type="radio"]:enabled:-moz-focusring,
-input[type="radio"]:enabled:hover {
-  border-color: var(--in-content-border-focus);
-}
-
-input[type="radio"]:enabled:-moz-focusring {
-  outline: 2px solid var(--in-content-border-active);
-  /* offset outline to align with 1px border-width set for buttons/menulists above. */
-  outline-offset: -1px;
-  /* Make outline-radius slightly bigger than the border-radius set above,
-   * to make the thicker outline corners look smooth */
-  -moz-outline-radius: 50%;
-  box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
-}
-
-input[type="radio"]:disabled {
-  opacity: 0.5;
 }
 
 input[type="number"],
@@ -265,6 +216,7 @@ input[type="text"] {
 
 #custom-range {
   margin-top: 4px;
+  margin-inline: 0;
 }
 
 .vertical-margins,
