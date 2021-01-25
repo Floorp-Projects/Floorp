@@ -1,0 +1,4 @@
+category test-cat1 Cat1RegisteredComponent @unit.test.com/cat1-registered-component;1
+category test-cat1 Cat1BackgroundTaskRegisteredComponent @unit.test.com/cat1-backgroundtask-registered-component;1 backgroundtask
+category test-cat1 Cat1BackgroundTaskAlwaysRegisteredComponent @unit.test.com/cat1-backgroundtask-alwaysregistered-component;1 backgroundtask=1
+category test-cat1 Cat1BackgroundTaskNotRegisteredComponent @unit.test.com/cat1-backgroundtask-notregistered-component;1 backgroundtask=0

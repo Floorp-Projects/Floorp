@@ -189,6 +189,38 @@ add_test(function test_categoryRegistration()
   run_next_test();
 });
 
+add_test(function test_categoryBackgroundTaskRegistration()
+{
+  const CATEGORY_NAME = "test-cat1";
+
+  // Note that this test should succeed whether or not MOZ_BACKGROUNDTASKS is
+  // defined.  If it's defined, there's no active task so the `backgroundtask`
+  // directive is processed, dropped, and always succeeds.  If it's not defined,
+  // then the `backgroundtask` directive is processed and ignored.
+
+  // Load test components.
+  do_load_manifest("CatBackgroundTaskRegistrationComponents.manifest");
+
+  const EXPECTED_ENTRIES = new Map([
+    ["Cat1RegisteredComponent", "@unit.test.com/cat1-registered-component;1"],
+    ["Cat1BackgroundTaskNotRegisteredComponent", "@unit.test.com/cat1-backgroundtask-notregistered-component;1"],
+  ]);
+
+  // Verify the correct entries are registered in the "test-cat" category.
+  for (let {entry, value} of Services.catMan.enumerateCategory(CATEGORY_NAME)) {
+    ok(EXPECTED_ENTRIES.has(entry), `${entry} is expected`);
+    Assert.equal(EXPECTED_ENTRIES.get(entry), value);
+    EXPECTED_ENTRIES.delete(entry);
+  }
+  print("Check that all of the expected entries have been deleted.");
+  Assert.deepEqual(
+    Array.from(EXPECTED_ENTRIES.keys()),
+    [],
+    "All expected entries have been deleted."
+  );
+  run_next_test();
+});
+
 add_test(function test_generateSingletonFactory()
 {
   const XPCCOMPONENT_CONTRACTID = "@mozilla.org/singletonComponentTest;1";
