@@ -99,6 +99,9 @@ class BrowserConsoleManager {
     // gets called again we can return this console instead of opening another one.
     this._browserConsoleInitializing = (async () => {
       const target = await this.connect();
+      // Hack something in order to help TargetMixinFront to distinguish targets
+      // related to the BrowserConsole.
+      target.isBrowserConsoleTarget = true;
       await target.attach();
       const win = await this.openWindow();
       const browserConsole = await this.openBrowserConsole(target, win);
