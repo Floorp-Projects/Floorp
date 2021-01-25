@@ -80,7 +80,6 @@ class IPCStreamDestination {
   // away. If that happens, the reading of data will not be possible anymore.
   class DelayedStartInputStream;
   RefPtr<DelayedStartInputStream> mDelayedStartInputStream;
-  int64_t mLength = -1;
 
   nsCOMPtr<nsIThread> mOwningThread;
   bool mDelayedStart;

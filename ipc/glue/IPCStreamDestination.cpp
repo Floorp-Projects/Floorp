@@ -330,30 +330,26 @@ void IPCStreamDestination::SetLength(int64_t aLength) {
   mLengthSet = true;
 #endif
 
-  mLength = aLength;
+  if (aLength != -1) {
+    nsCOMPtr<nsIInputStream> finalStream;
+    finalStream = new InputStreamLengthWrapper(mReader.forget(), aLength);
+    mReader = do_QueryInterface(finalStream);
+    MOZ_ASSERT(mReader);
+  }
 }
 
 already_AddRefed<nsIInputStream> IPCStreamDestination::TakeReader() {
   MOZ_ASSERT(mReader);
   MOZ_ASSERT(!mDelayedStartInputStream);
 
-  nsCOMPtr<nsIAsyncInputStream> reader{mReader.forget()};
   if (mDelayedStart) {
     mDelayedStartInputStream =
-        new DelayedStartInputStream(this, std::move(reader));
-    reader = mDelayedStartInputStream;
-    MOZ_ASSERT(reader);
+        new DelayedStartInputStream(this, std::move(mReader));
+    RefPtr<nsIAsyncInputStream> inputStream = mDelayedStartInputStream;
+    return inputStream.forget();
   }
 
-  if (mLength != -1) {
-    MOZ_ASSERT(mLengthSet);
-    nsCOMPtr<nsIInputStream> finalStream =
-        new InputStreamLengthWrapper(reader.forget(), mLength);
-    reader = do_QueryInterface(finalStream);
-    MOZ_ASSERT(reader);
-  }
-
-  return reader.forget();
+  return mReader.forget();
 }
 
 bool IPCStreamDestination::IsOnOwningThread() const {
