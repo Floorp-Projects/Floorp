@@ -89,7 +89,7 @@ void ClientSourceOpChild::Init(const ClientOpConstructorArgs& aArgs) {
       break;
     }
     case ClientOpConstructorArgs::TClientClaimArgs: {
-      DoSourceOp(&ClientSource::Claim, aArgs.get_ClientClaimArgs());
+      MOZ_ASSERT_UNREACHABLE("shouldn't happen with parent intercept");
       break;
     }
     case ClientOpConstructorArgs::TClientGetInfoAndStateArgs: {
