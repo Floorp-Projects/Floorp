@@ -445,7 +445,7 @@ class VideoSessionConduit : public MediaSessionConduit {
   virtual Maybe<webrtc::VideoReceiveStream::Stats> GetReceiverStats() const = 0;
   virtual Maybe<webrtc::VideoSendStream::Stats> GetSenderStats() const = 0;
 
-  virtual void RecordTelemetry() = 0;
+  virtual void CollectTelemetryData() = 0;
 
   virtual bool AddFrameHistory(
       dom::Sequence<dom::RTCVideoFrameHistoryInternal>* outHistories) const = 0;

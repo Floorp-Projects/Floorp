@@ -2851,28 +2851,24 @@ RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetDataChannelStats(
       });
 }
 
-void PeerConnectionImpl::RecordConduitTelemetry() {
+void PeerConnectionImpl::CollectConduitTelemetryData() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!mMedia) {
     return;
   }
 
   nsTArray<RefPtr<VideoSessionConduit>> conduits;
   for (const auto& transceiver : mMedia->GetTransceivers()) {
-    RefPtr<MediaSessionConduit> conduit = transceiver->GetConduit();
-    if (conduit) {
-      auto asVideo = conduit->AsVideoSessionConduit();
-      if (asVideo) {
-        conduits.AppendElement(asVideo.value());
-      }
+    if (RefPtr<MediaSessionConduit> conduit = transceiver->GetConduit()) {
+      conduit->AsVideoSessionConduit().apply(
+          [&](const auto& aVideo) { conduits.AppendElement(aVideo); });
     }
   }
 
-  mSTSThread->Dispatch(
-      NS_NewRunnableFunction(__func__, [conduits = std::move(conduits)]() {
-        for (const auto& conduit : conduits) {
-          conduit->RecordTelemetry();
-        }
-      }));
+  for (const auto& conduit : conduits) {
+    conduit->CollectTelemetryData();
+  }
 }
 
 template <class T>

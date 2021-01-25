@@ -967,9 +967,39 @@ MediaConduitErrorCode WebrtcVideoConduit::Init() {
 void WebrtcVideoConduit::DeleteStreams() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  using namespace Telemetry;
+  if (mSendBitrate.NumDataValues() > 0) {
+    Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
+               mSendBitrate.Mean() / 1000);
+    Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+               mSendBitrate.StandardDeviation() / 1000);
+    mSendBitrate.Clear();
+  }
+  if (mSendFramerate.NumDataValues() > 0) {
+    Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
+               mSendFramerate.Mean());
+    Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+               mSendFramerate.StandardDeviation() * 10);
+    mSendFramerate.Clear();
+  }
+
+  if (mRecvBitrate.NumDataValues() > 0) {
+    Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
+               mRecvBitrate.Mean() / 1000);
+    Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+               mRecvBitrate.StandardDeviation() / 1000);
+    mRecvBitrate.Clear();
+  }
+  if (mRecvFramerate.NumDataValues() > 0) {
+    Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
+               mRecvFramerate.Mean());
+    Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+               mRecvFramerate.StandardDeviation() * 10);
+    mRecvFramerate.Clear();
+  }
+
   // We can't delete the VideoEngine until all these are released!
   // And we can't use a Scoped ptr, since the order is arbitrary
-
   MutexAutoLock lock(mMutex);
   DeleteSendStream();
   DeleteRecvStream();
@@ -1946,38 +1976,18 @@ uint64_t WebrtcVideoConduit::MozVideoLatencyAvg() {
   return mVideoLatencyAvg / sRoundingPadding;
 }
 
-void WebrtcVideoConduit::RecordTelemetry() {
-  ASSERT_ON_THREAD(mStsThread);
+void WebrtcVideoConduit::CollectTelemetryData() {
+  MOZ_ASSERT(NS_IsMainThread());
 
-  using namespace Telemetry;
   if (mEngineTransmitting) {
     webrtc::VideoSendStream::Stats stats = mSendStream->GetStats();
     mSendBitrate.Push(stats.media_bitrate_bps);
     mSendFramerate.Push(stats.encode_frame_rate);
-
-    Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
-               mSendBitrate.Mean() / 1000);
-    Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-               mSendBitrate.StandardDeviation() / 1000);
-    Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
-               mSendFramerate.Mean());
-    Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-               mSendFramerate.StandardDeviation() * 10);
   }
-
   if (mEngineReceiving) {
     webrtc::VideoReceiveStream::Stats stats = mRecvStream->GetStats();
     mRecvBitrate.Push(stats.total_bitrate_bps);
     mRecvFramerate.Push(stats.decode_frame_rate);
-
-    Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
-               mRecvBitrate.Mean() / 1000);
-    Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-               mRecvBitrate.StandardDeviation() / 1000);
-    Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
-               mRecvFramerate.Mean());
-    Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-               mRecvFramerate.StandardDeviation() * 10);
   }
 }
 
