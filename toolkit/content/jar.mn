@@ -88,7 +88,6 @@ toolkit.jar:
    content/global/elements/moz-input-box.js    (widgets/moz-input-box.js)
    content/global/elements/notificationbox.js  (widgets/notificationbox.js)
    content/global/elements/panel.js            (widgets/panel.js)
-   content/global/elements/pluginProblem.js    (widgets/pluginProblem.js)
    content/global/elements/radio.js            (widgets/radio.js)
    content/global/elements/richlistbox.js      (widgets/richlistbox.js)
    content/global/elements/marquee.css         (widgets/marquee.css)

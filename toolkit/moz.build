@@ -20,7 +20,6 @@ DIRS += [
     "mozapps/downloads",
     "mozapps/extensions",
     "mozapps/preferences",
-    "pluginproblem",
     "profile",
     "themes",
 ]
@@ -73,9 +72,6 @@ with Files("mozapps/installer/windows/**"):
 
 with Files("mozapps/preferences/**"):
     BUG_COMPONENT = ("Toolkit", "Preferences")
-
-with Files("pluginproblem/**"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
 
 with Files("l10n-registry.manifest"):
     BUG_COMPONENT = ("Core", "Localization")
