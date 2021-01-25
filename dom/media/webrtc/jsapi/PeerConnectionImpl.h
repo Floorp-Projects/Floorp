@@ -412,7 +412,7 @@ class PeerConnectionImpl final
   RefPtr<dom::RTCStatsReportPromise> GetStats(dom::MediaStreamTrack* aSelector,
                                               bool aInternalStats);
 
-  void RecordConduitTelemetry();
+  void CollectConduitTelemetryData();
 
   // for monitoring changes in track ownership
   // PeerConnectionMedia can't do it because it doesn't know about principals
