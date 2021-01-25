@@ -55,7 +55,6 @@ dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
 
 dictionary RTCRemoteInboundRtpStreamStats : RTCReceivedRtpStreamStats {
   DOMString localId;
-  long long bytesReceived; // Deprecated, to be removed in Bug 1529405
   double roundTripTime;
 };
 
