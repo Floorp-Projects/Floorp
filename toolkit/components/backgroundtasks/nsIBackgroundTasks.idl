@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Determine if this instance is running background task mode and
+ * what, if any, task is active.
+ */
+[scriptable, uuid(353dccb8-a863-49e4-941b-007382eac168)]
+interface nsIBackgroundTasks : nsISupports
+{
+  /**
+   * True if and only if this invocation is running in background task mode.
+   */
+  readonly attribute boolean isBackgroundTaskMode;
+
+  /**
+   * A non-empty task name if this invocation is running in background
+   * task mode, or `null` if this invocation is not running in
+   * background task mode.
+   */
+  AString backgroundTaskName();
+
+  /**
+   * Should only be used for testing.
+   * Set the background task name.
+   */
+  void overrideBackgroundTaskNameForTesting(in AString taskName);
+};
