@@ -476,6 +476,10 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I32x4TruncSSatF32x4:
         case SimdOp::I32x4TruncUSatF32x4:
         case SimdOp::I64x2Neg:
+        case SimdOp::I64x2WidenLowSI32x4:
+        case SimdOp::I64x2WidenHighSI32x4:
+        case SimdOp::I64x2WidenLowUI32x4:
+        case SimdOp::I64x2WidenHighUI32x4:
         case SimdOp::F32x4Abs:
         case SimdOp::F32x4Neg:
         case SimdOp::F32x4Sqrt:
