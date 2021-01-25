@@ -144,6 +144,6 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   }
 
   Services.console.reset();
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
 }

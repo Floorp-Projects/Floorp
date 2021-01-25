@@ -96,6 +96,6 @@ add_task(async function() {
     onAvailable: onSourceAvailable,
   });
 
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
 });

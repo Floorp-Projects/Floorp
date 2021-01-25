@@ -59,7 +59,7 @@ async function testDocumentEventResources() {
   );
   ok(true, "Document events are fired after reloading");
 
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
 }
 
@@ -86,7 +86,7 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
   await waitUntil(() => documentEvents.length === 3);
   assertEvents(...documentEvents);
 
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
 }
 
