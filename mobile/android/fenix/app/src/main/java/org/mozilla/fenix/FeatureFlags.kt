@@ -22,11 +22,6 @@ object FeatureFlags {
     val syncedTabsInTabsTray = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables downloads with external download managers.
-     */
-    const val externalDownloadManager = true
-
-    /**
      * Enables the Nimbus experiments library, especially the settings toggle to opt-out of
      * all experiments.
      */

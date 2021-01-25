@@ -35,7 +35,6 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -359,8 +358,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val debuggingKey = getPreferenceKey(R.string.pref_key_remote_debugging)
         val preferencePrivateBrowsing =
             requirePreference<Preference>(R.string.pref_key_private_browsing)
-        val preferenceExternalDownloadManager =
-            requirePreference<Preference>(R.string.pref_key_external_download_manager)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
         val preferenceMakeDefaultBrowser =
@@ -380,7 +377,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        preferenceExternalDownloadManager.isVisible = FeatureFlags.externalDownloadManager
         preferenceRemoteDebugging?.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
         preferenceRemoteDebugging?.setOnPreferenceChangeListener<Boolean> { preference, newValue ->
             preference.context.settings().preferences.edit()
