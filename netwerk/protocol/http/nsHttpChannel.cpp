@@ -3654,44 +3654,6 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
   return OpenCacheEntryInternal(isHttps, mApplicationCache, true);
 }
 
-bool nsHttpChannel::IsIsolated() {
-  return false;
-  // if (LoadHasBeenIsolatedChecked()) {
-  //   return LoadIsIsolated();
-  // }
-  // StoreIsIsolated(
-  //     StaticPrefs::browser_cache_cache_isolation() ||
-  //     (IsThirdPartyTrackingResource() &&
-  //      !ContentBlocking::ShouldAllowAccessFor(this, mURI, nullptr)));
-  // StoreHasBeenIsolatedChecked(true);
-  // return LoadIsIsolated();
-}
-
-const nsCString& nsHttpChannel::GetTopWindowOrigin() {
-  if (LoadTopWindowOriginComputed()) {
-    return mTopWindowOrigin;
-  }
-
-  nsCOMPtr<nsIURI> topWindowURI;
-  nsresult rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
-  bool isDocument = false;
-  if (NS_FAILED(rv) && NS_SUCCEEDED(GetIsMainDocumentChannel(&isDocument)) &&
-      isDocument) {
-    // For top-level documents, use the document channel's origin to compute
-    // the unique storage space identifier instead of the top Window URI.
-    rv = NS_GetFinalChannelURI(this, getter_AddRefs(topWindowURI));
-    NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
-  }
-
-  rv = nsContentUtils::GetASCIIOrigin(topWindowURI ? topWindowURI : mURI,
-                                      mTopWindowOrigin);
-  NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
-
-  StoreTopWindowOriginComputed(true);
-
-  return mTopWindowOrigin;
-}
-
 nsresult nsHttpChannel::OpenCacheEntryInternal(
     bool isHttps, nsIApplicationCache* applicationCache,
     bool allowApplicationCache) {

@@ -88,7 +88,6 @@ NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 TRRServiceChannel::TRRServiceChannel()
     : HttpAsyncAborter<TRRServiceChannel>(this),
-      mTopWindowOriginComputed(false),
       mPushedStreamId(0),
       mProxyRequest(nullptr, "TRRServiceChannel::mProxyRequest"),
       mCurrentEventTarget(GetCurrentEventTarget()) {
@@ -341,18 +340,6 @@ TRRServiceChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
     Unused << AsyncAbort(rv);
   }
   return rv;
-}
-
-const nsCString& TRRServiceChannel::GetTopWindowOrigin() {
-  if (mTopWindowOriginComputed) {
-    return mTopWindowOrigin;
-  }
-
-  nsresult rv = nsContentUtils::GetASCIIOrigin(mURI, mTopWindowOrigin);
-  NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
-
-  mTopWindowOriginComputed = true;
-  return mTopWindowOrigin;
 }
 
 nsresult TRRServiceChannel::BeginConnect() {
