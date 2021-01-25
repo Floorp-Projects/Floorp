@@ -273,7 +273,7 @@ class Documentation(MachCommandBase):
                 if file.endswith(".html"):
                     p = os.path.join(root, file)
 
-                    with open(p, "r") as file:
+                    with open(p, "r", encoding="utf_8") as file:
                         filedata = file.read()
 
                     # Workaround https://bugzilla.mozilla.org/show_bug.cgi?id=1607143
@@ -290,7 +290,7 @@ class Documentation(MachCommandBase):
                         filedata,
                     )
 
-                    with open(p, "w") as file:
+                    with open(p, "w", encoding="utf_8") as file:
                         file.write(filedata)
 
     @property
