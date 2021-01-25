@@ -67,7 +67,7 @@ void AltServiceChild::ClearHostMapping(nsHttpConnectionInfo* aCi) {
     if (!ci->GetOrigin().IsEmpty() && sAltServiceChild->CanSend()) {
       Unused << sAltServiceChild->SendClearHostMapping(
           ci->GetOrigin(), ci->OriginPort(), ci->GetOriginAttributes(),
-          ci->GetTopWindowOrigin());
+          ""_ns /* topWindowOrigin */);
     }
   };
 
