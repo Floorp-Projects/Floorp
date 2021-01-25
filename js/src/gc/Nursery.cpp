@@ -367,7 +367,7 @@ void js::Nursery::enterZealMode() {
       decommitTask.join();
       {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!chunk(0).markPagesInUseHard(ChunkSize - ArenaSize)) {
+        if (!chunk(0).markPagesInUseHard(ChunkSize)) {
           oomUnsafe.crash("Out of memory trying to extend chunk for zeal mode");
         }
       }
