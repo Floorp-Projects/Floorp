@@ -596,11 +596,6 @@ void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
     UnloadObject();
   }
 
-  // Unattach plugin problem UIWidget if any.
-  if (thisElement->IsInComposedDoc()) {
-    thisElement->NotifyUAWidgetTeardown();
-  }
-
   if (mType == eType_Plugin) {
     Document* doc = thisElement->GetComposedDoc();
     if (doc && doc->IsActive()) {
@@ -2535,35 +2530,6 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     {
       nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(thisEl, changedBits);
-    }
-  }
-
-  auto NeedsUAWidget = [](ObjectType aType, FallbackType aFallbackType) {
-    if (aType != eType_Null) {
-      return false;
-    }
-    return aFallbackType != eFallbackUnsupported &&
-           aFallbackType != eFallbackOutdated &&
-           aFallbackType != eFallbackAlternate &&
-           aFallbackType != eFallbackDisabled;
-  };
-
-  const bool needsWidget = NeedsUAWidget(mType, mFallbackType);
-  const bool neededWidget = NeedsUAWidget(aOldType, aOldFallbackType);
-  if (needsWidget != neededWidget) {
-    // Create/destroy plugin problem UAWidget.
-    if (neededWidget) {
-      thisEl->NotifyUAWidgetTeardown();
-    } else {
-      thisEl->AttachAndSetUAShadowRoot();
-      // When blocking all plugins, we do not want the element to have focus
-      // so relinquish focus if we are in that state.
-      if (PluginFallbackType() == eFallbackBlockAllPlugins) {
-        nsFocusManager* fm = nsFocusManager::GetFocusManager();
-        if (fm && fm->GetFocusedElement() == thisEl) {
-          fm->ClearFocus(doc->GetWindow());
-        }
-      }
     }
   }
 

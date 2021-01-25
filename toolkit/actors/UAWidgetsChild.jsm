@@ -100,11 +100,6 @@ class UAWidgetsChild extends JSWindowActorChild {
         uri = "chrome://global/content/elements/datetimebox.js";
         widgetName = "DateTimeBoxWidget";
         break;
-      case "embed":
-      case "object":
-        uri = "chrome://global/content/elements/pluginProblem.js";
-        widgetName = "PluginProblemWidget";
-        break;
       case "marquee":
         uri = "chrome://global/content/elements/marquee.js";
         widgetName = "MarqueeWidget";
