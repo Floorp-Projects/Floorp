@@ -439,6 +439,9 @@ partial interface Document {
   [ChromeOnly]
   attribute boolean styleSheetChangeEventsEnabled;
 
+  [ChromeOnly]
+  attribute boolean shadowRootAttachedEventEnabled;
+
   [ChromeOnly] readonly attribute DOMString contentLanguage;
 
   [ChromeOnly] readonly attribute nsILoadGroup? documentLoadGroup;
