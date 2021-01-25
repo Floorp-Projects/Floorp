@@ -28,7 +28,10 @@ add_task(async function() {
     enableBrowserToolboxFission: true,
   });
   await ToolboxTask.importFunctions({
-    selectNodeFront,
+    getNodeFront,
+    selectNode,
+    // selectNodeInFrames depends on selectNode and getNodeFront.
+    selectNodeInFrames,
   });
 
   const tab = await addTab(
@@ -45,44 +48,12 @@ add_task(async function() {
     inspector.sidebar.select("computedview");
     await onSidebarSelect;
 
-    info("Select the browser element for the content page");
-    const browserFront = await selectNodeFront(
-      inspector,
-      inspector.walker,
-      'browser[remote="true"][test-tab]'
-    );
-    const browserTarget = await browserFront.connectToRemoteFrame();
-    const browserWalker = (await browserTarget.getFront("inspector")).walker;
-
-    info("Select the iframe element in the content page");
-    const iframeFront = await selectNodeFront(
-      inspector,
-      browserWalker,
-      "iframe"
-    );
-
-    // With Fission, the iframe is a remoteFrame and will have a new dedicated
-    // target front. Without Fission, the iframe is in scope of the browser
-    // target front, so we will simply reuse browserTarget.
-    const iframeTarget = iframeFront.remoteFrame
-      ? await iframeFront.connectToRemoteFrame()
-      : browserTarget;
-    const iframeWalker = (await iframeTarget.getFront("inspector")).walker;
-
-    // We need to use the iframe's document node front as the root node of the
-    // next query, because in non-fission mode "iframeWalker" is actually the
-    // browserWalker and the simple selector "#inside-iframe" is not enough to
-    // find the node across iframes.
-    const { nodes } = await iframeWalker.children(iframeFront);
-    const iframeDocFront = nodes.find(n => n.nodeType === Node.DOCUMENT_NODE);
-
     info("Select the test element nested in the remote iframe");
-    const nodeFront = await selectNodeFront(
-      inspector,
-      iframeWalker,
-      "#inside-iframe",
-      iframeDocFront
+    const nodeFront = await selectNodeInFrames(
+      ['browser[remote="true"][test-tab]', "iframe", "#inside-iframe"],
+      inspector
     );
+
     return nodeFront.getAttribute("test-attribute");
   });
 
