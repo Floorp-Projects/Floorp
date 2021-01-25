@@ -183,10 +183,10 @@ extern "C" const char* __tsan_default_suppressions() {
          //
          // Probably a false-positive from crossbeam's deque not being
          // understood by tsan.
-         "race:crossbeam_deque::Worker*::resize\n"
-         "race:crossbeam_deque::Worker*::push\n"
-         "race:crossbeam_deque::Buffer*::write\n"
-         "race:crossbeam_deque::Buffer*::read\n"
+         "race:crossbeam_deque*::resize\n"
+         "race:crossbeam_deque*::push\n"
+         "race:crossbeam_deque*::write\n"
+         "race:crossbeam_deque*::read\n"
 
 
 
