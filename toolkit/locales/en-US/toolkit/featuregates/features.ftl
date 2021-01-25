@@ -122,3 +122,8 @@ experimental-features-multi-pip-description = Experimental support for allowing 
 experimental-features-http3 =
     .label = HTTP/3 protocol
 experimental-features-http3-description = Experimental support for the HTTP/3 protocol.
+
+# Search during IME
+experimental-features-ime-search =
+    .label = Address Bar: show results during IME composition
+experimental-features-ime-search-description = An IME (Input Method Editor) is a tool that allows you to enter complex symbols, such as those used in East Asian or Indic written languages, using a standard keyboard. Enabling this experiment will keep the address bar panel open, showing search results and suggestions, while using IME to input text. Note that the IME might display a panel that covers the address bar results, therefore this preference is only suggested for IME not using this type of panel.

@@ -58,7 +58,7 @@ add_task(async function() {
   // Test both pref values.
   for (let val of [true, false]) {
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.imeCompositionClosesPanel", val]],
+      set: [["browser.urlbar.keepPanelOpenDuringImeComposition", val]],
     });
     await test_composition(val);
     await test_composition_searchMode_preview(val);
@@ -66,7 +66,7 @@ add_task(async function() {
   }
 });
 
-async function test_composition(compositionClosesPanel) {
+async function test_composition(keepPanelOpenDuringImeComposition) {
   gURLBar.focus();
   await UrlbarTestUtils.promisePopupClose(window);
 
@@ -87,9 +87,9 @@ async function test_composition(compositionClosesPanel) {
 
   info("Check the panel state starting from an open panel.");
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
-  composeAndCheckPanel("t", !compositionClosesPanel);
+  composeAndCheckPanel("t", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "Int", "Check urlbar value");
-  composeAndCheckPanel("te", !compositionClosesPanel);
+  composeAndCheckPanel("te", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "Inte", "Check urlbar value");
 
   // Committing composition should open the popup.
@@ -103,9 +103,9 @@ async function test_composition(compositionClosesPanel) {
 
   info("If composition is cancelled, the value shouldn't be changed.");
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
-  composeAndCheckPanel("r", !compositionClosesPanel);
+  composeAndCheckPanel("r", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "Inter", "Check urlbar value");
-  composeAndCheckPanel("", !compositionClosesPanel);
+  composeAndCheckPanel("", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "Inte", "Check urlbar value");
   // Canceled compositionend should reopen the popup.
   await UrlbarTestUtils.promisePopupOpen(window, () => {
@@ -123,11 +123,11 @@ async function test_composition(compositionClosesPanel) {
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
   EventUtils.synthesizeKey("VK_LEFT", { shiftKey: true });
   EventUtils.synthesizeKey("VK_LEFT", { shiftKey: true });
-  composeAndCheckPanel("t", !compositionClosesPanel);
+  composeAndCheckPanel("t", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "Int", "Check urlbar value");
-  composeAndCheckPanel("te", !compositionClosesPanel);
+  composeAndCheckPanel("te", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "Inte", "Check urlbar value");
-  composeAndCheckPanel("", !compositionClosesPanel);
+  composeAndCheckPanel("", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
 
   // Canceled compositionend should search the result with the latest value.
@@ -179,11 +179,11 @@ async function test_composition(compositionClosesPanel) {
     "If popup is open at starting composition, the popup should be reopened after composition anyway."
   );
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
-  composeAndCheckPanel("I", !compositionClosesPanel);
+  composeAndCheckPanel("I", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
-  composeAndCheckPanel("In", !compositionClosesPanel);
+  composeAndCheckPanel("In", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
-  composeAndCheckPanel("", !compositionClosesPanel);
+  composeAndCheckPanel("", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "", "Check urlbar value");
   // A canceled compositionend should open the popup if it was open.
   await UrlbarTestUtils.promisePopupOpen(window, () => {
@@ -226,7 +226,9 @@ async function test_composition(compositionClosesPanel) {
   Assert.equal(gURLBar.value, "Mozilla.org/", "Check urlbar value");
 }
 
-async function test_composition_searchMode_preview(compositionClosesPanel) {
+async function test_composition_searchMode_preview(
+  keepPanelOpenDuringImeComposition
+) {
   info("Check Search Mode preview is retained by composition");
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -243,9 +245,9 @@ async function test_composition_searchMode_preview(compositionClosesPanel) {
     entry: "keywordoffer",
   };
   await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
-  composeAndCheckPanel("I", !compositionClosesPanel);
+  composeAndCheckPanel("I", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
-  if (!compositionClosesPanel) {
+  if (keepPanelOpenDuringImeComposition) {
     await UrlbarTestUtils.promiseSearchComplete(window);
   }
   // Test that we are in confirmed search mode.
@@ -256,7 +258,7 @@ async function test_composition_searchMode_preview(compositionClosesPanel) {
   await UrlbarTestUtils.exitSearchMode(window);
 }
 
-async function test_composition_tabToSearch(compositionClosesPanel) {
+async function test_composition_tabToSearch(keepPanelOpenDuringImeComposition) {
   info("Check Tab-to-Search is retained by composition");
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -273,9 +275,9 @@ async function test_composition_tabToSearch(compositionClosesPanel) {
     entry: "tabtosearch",
   };
   await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
-  composeAndCheckPanel("I", !compositionClosesPanel);
+  composeAndCheckPanel("I", keepPanelOpenDuringImeComposition);
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
-  if (!compositionClosesPanel) {
+  if (keepPanelOpenDuringImeComposition) {
     await UrlbarTestUtils.promiseSearchComplete(window);
   }
   // Test that we are in confirmed search mode.

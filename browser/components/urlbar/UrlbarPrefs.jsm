@@ -94,8 +94,8 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Applies URL highlighting and other styling to the text in the urlbar input.
   ["formatting.enabled", true],
 
-  // Whether during IME composition the results panel should be closed.
-  ["imeCompositionClosesPanel", true],
+  // Whether the results panel should be kept open during IME composition.
+  ["keepPanelOpenDuringImeComposition", false],
 
   // Controls the composition of search results.
   ["matchBuckets", "suggestion:4,general:Infinity"],
