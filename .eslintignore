@@ -220,3 +220,6 @@ tools/tryselect/selectors/chooser/templates/chooser.html
 
 # Ignore preprocessed *(P)refs.js files in update-packaging.
 tools/update-packaging/**/*refs.js
+
+# Ignore backgroundtasks preferences files.
+toolkit/components/backgroundtasks/defaults
