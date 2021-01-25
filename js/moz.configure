@@ -764,11 +764,8 @@ set_define("ENABLE_SHARED_MEMORY", enable_shared_memory)
 
 @depends("--enable-jit", "--enable-simulator", target)
 def default_wasm_simd(jit_enabled, simulator, target):
-    if not jit_enabled:
+    if not jit_enabled or simulator:
         return
-
-    if simulator and simulator[0] == "arm64":
-        return True
 
     if target.cpu in ("x86_64", "x86", "aarch64"):
         return True
