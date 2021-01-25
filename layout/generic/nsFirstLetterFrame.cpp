@@ -129,7 +129,8 @@ nscoord nsFirstLetterFrame::GetPrefISize(gfxContext* aRenderingContext) {
 nsIFrame::SizeComputationResult nsFirstLetterFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
+    ComputeSizeFlags aFlags) {
   if (GetPrevInFlow()) {
     // We're wrapping the text *after* the first letter, so behave like an
     // inline frame.
@@ -138,7 +139,7 @@ nsIFrame::SizeComputationResult nsFirstLetterFrame::ComputeSize(
   }
   return nsContainerFrame::ComputeSize(aRenderingContext, aWM, aCBSize,
                                        aAvailableISize, aMargin, aBorderPadding,
-                                       aFlags);
+                                       aSizeOverrides, aFlags);
 }
 
 void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
