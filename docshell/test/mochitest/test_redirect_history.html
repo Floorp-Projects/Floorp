@@ -34,7 +34,7 @@
           await new Promise(resolve => {
             addEventListener("message", resolve, { once: true });
             info("Posting");
-            win.postMessage(`${origin}/tests/docshell/test/mochitest/form_submit_redirect.sjs`, "*")
+            win.postMessage(`${origin}/tests/docshell/test/mochitest/form_submit_redirect.sjs?redirectTo=${loc}`, "*")
           });
           info("Done posting\n");
           is(win.history.length, length, `Test ${kind}: history length should not change.`);
