@@ -1,18 +1,41 @@
 <html>
   <head>
+    <meta charset="utf8">
     <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        --fixed-header-height: 50px;
+        margin-top: var(--fixed-header-height);
+      }
+
+      header {
+          height: var(--fixed-header-height);
+          background: rgb(255, 0, 0);
+          position: fixed;
+          left: 0;
+          top: 0;
+          right: 0;
+          /* Since we may check the background-color, put the text in the center so we don't pick a pixel from the text */
+          text-align: center;
+      }
+
       img {
         height: 100px;
         width: 100px;
       }
       .overflow {
         overflow: scroll;
-        height: 200%;
-        width: 200%;
+        height: 200vh;
+        width: 200vw;
       }
     </style>
   </head>
   <body>
-    <img id="testImage" ></img>
+    <header>Fixed header</header>
+    <img id="testImage"></img>
   </body>
 </html>
