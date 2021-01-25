@@ -304,13 +304,15 @@ class MozPromise : public MozPromiseBase {
       mResolveValues.SetLength(aDependentPromises);
     }
 
-    void Resolve(size_t aIndex, ResolveValueType&& aResolveValue) {
+    template <typename ResolveValueType_>
+    void Resolve(size_t aIndex, ResolveValueType_&& aResolveValue) {
       if (!mPromise) {
         // Already rejected.
         return;
       }
 
-      mResolveValues[aIndex].emplace(std::move(aResolveValue));
+      mResolveValues[aIndex].emplace(
+          std::forward<ResolveValueType_>(aResolveValue));
       if (--mOutstandingPromises == 0) {
         nsTArray<ResolveValueType> resolveValues;
         resolveValues.SetCapacity(mResolveValues.Length());
@@ -324,13 +326,14 @@ class MozPromise : public MozPromiseBase {
       }
     }
 
-    void Reject(RejectValueType&& aRejectValue) {
+    template <typename RejectValueType_>
+    void Reject(RejectValueType_&& aRejectValue) {
       if (!mPromise) {
         // Already rejected.
         return;
       }
 
-      mPromise->Reject(std::move(aRejectValue), __func__);
+      mPromise->Reject(std::forward<RejectValueType_>(aRejectValue), __func__);
       mPromise = nullptr;
       mResolveValues.Clear();
     }
@@ -349,6 +352,14 @@ class MozPromise : public MozPromiseBase {
   typedef std::conditional_t<IsExclusive, ResolveOrRejectValue&&,
                              const ResolveOrRejectValue&>
       ResolveOrRejectValueParam;
+
+  typedef std::conditional_t<IsExclusive, ResolveValueType&&,
+                             const ResolveValueType&>
+      ResolveValueTypeParam;
+
+  typedef std::conditional_t<IsExclusive, RejectValueType&&,
+                             const RejectValueType&>
+      RejectValueTypeParam;
 
   class AllSettledPromiseHolder : public MozPromiseRefcountable {
    public:
@@ -401,11 +412,11 @@ class MozPromise : public MozPromiseBase {
     for (size_t i = 0; i < aPromises.Length(); ++i) {
       aPromises[i]->Then(
           aProcessingTarget, __func__,
-          [holder, i](ResolveValueType aResolveValue) -> void {
-            holder->Resolve(i, std::move(aResolveValue));
+          [holder, i](ResolveValueTypeParam aResolveValue) -> void {
+            holder->Resolve(i, MaybeMove(aResolveValue));
           },
-          [holder](RejectValueType aRejectValue) -> void {
-            holder->Reject(std::move(aRejectValue));
+          [holder](RejectValueTypeParam aRejectValue) -> void {
+            holder->Reject(MaybeMove(aRejectValue));
           });
     }
     return promise;
