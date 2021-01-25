@@ -2214,16 +2214,6 @@
   value: true
   mirror: always
 
-# Whether the LinkStyle.sheet and DocumentOrShadowRoot.styleSheets accessor
-# exposes in-progress-loading stylesheets.
-#
-# Historical behavior is `true`, but other browsers (and also a bit of common
-# sense) match `false`.
-- name: dom.expose-incomplete-stylesheets
-  type: bool
-  value: false
-  mirror: always
-
 # Whether the Large-Allocation header is enabled.
 - name: dom.largeAllocationHeader.enabled
   type: bool
@@ -3324,7 +3314,7 @@
 # W3C pointer events draft.
 - name: dom.w3c_pointer_events.implicit_capture
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Is support for Navigator.webdriver enabled?
@@ -8351,7 +8341,7 @@
 # 3=no-referrer-when-downgrade.
 - name: network.http.referer.defaultPolicy
   type: uint32_t
-  value: 3
+  value: 2
   mirror: always
 
 # Set the default Referrer Policy applied to third-party trackers when the

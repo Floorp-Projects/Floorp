@@ -12,10 +12,19 @@
   -->
 
   <script type="application/javascript">
+    function getExpectedReferrer(referrer) {
+      let defaultPolicy = SpecialPowers.getIntPref("network.http.referer.defaultPolicy");
+      SimpleTest.ok([2, 3].indexOf(defaultPolicy) > -1, "default referrer policy should be either strict-origin-when-cross-origin(2) or no-referrer-when-downgrade(3)");
+      if (defaultPolicy == 2) {
+        return referrer.match(/https?:\/\/[^\/]+\/?/i)[0];
+      }
+      return referrer;
+    }
     const IFRAME_URL = `${location.origin}/tests/dom/security/test/referrer-policy/referrer_header_current_document_iframe.html`;
+
     SimpleTest.waitForExplicitFinish();
     window.addEventListener("message", (event) => {
-      SimpleTest.is(event.data, IFRAME_URL, "Must have the original iframe as the referrer!"); 
+      SimpleTest.is(event.data, getExpectedReferrer(IFRAME_URL), "Must have the original iframe as the referrer!");
       SimpleTest.finish();
     }, { once: true });
   </script>
