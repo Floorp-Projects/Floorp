@@ -5,6 +5,8 @@
 package org.mozilla.fenix.settings
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
 import android.content.DialogInterface
 import android.content.Intent
@@ -422,25 +424,63 @@ class SettingsFragment : PreferenceFragmentCompat() {
         setupAmoCollectionOverridePreference(requireContext().settings())
     }
 
+    /**
+     * For >=Q -> Use new RoleManager API to show in-app browser switching dialog.
+     * For <Q && >=N -> Navigate user to Android Default Apps Settings.
+     * For <N -> Open sumo page to show user how to change default app.
+     */
     private fun getClickListenerForMakeDefaultBrowser(): Preference.OnPreferenceClickListener {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Preference.OnPreferenceClickListener {
-                val intent = Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
-                startActivity(intent)
-                true
+        return when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                Preference.OnPreferenceClickListener {
+                    requireContext().getSystemService(RoleManager::class.java).also {
+                        if (!it.isRoleHeld(RoleManager.ROLE_BROWSER)) {
+                            startActivityForResult(it.createRequestRoleIntent(RoleManager.ROLE_BROWSER), 0)
+                        } else {
+                            navigateUserToDefaultAppsSettings()
+                        }
+                    }
+                    true
+                }
             }
-        } else {
-            Preference.OnPreferenceClickListener {
-                (activity as HomeActivity).openToBrowserAndLoad(
-                    searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                        requireContext(),
-                        SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
-                    ),
-                    newTab = true,
-                    from = BrowserDirection.FromSettings
-                )
-                true
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
+                Preference.OnPreferenceClickListener {
+                    navigateUserToDefaultAppsSettings()
+                    true
+                }
             }
+            else -> {
+                Preference.OnPreferenceClickListener {
+                    (activity as HomeActivity).openToBrowserAndLoad(
+                            searchTermOrURL = SupportUtils.getSumoURLForTopic(
+                                    requireContext(),
+                                    SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
+                            ),
+                            newTab = true,
+                            from = BrowserDirection.FromSettings
+                    )
+                    true
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        /*
+        If role manager doesn't show in-app browser changing dialog for a reason, navigate user to
+        Default Apps Settings.
+         */
+        if (resultCode == Activity.RESULT_CANCELED && requestCode == 0) {
+            navigateUserToDefaultAppsSettings()
+        }
+    }
+
+    private fun navigateUserToDefaultAppsSettings() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val intent = Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+            startActivity(intent)
         }
     }
 
