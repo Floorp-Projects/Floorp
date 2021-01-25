@@ -1371,8 +1371,8 @@ nsDNSService::GetCurrentTrrURI(nsACString& aURI) {
 }
 
 NS_IMETHODIMP
-nsDNSService::GetCurrentTrrMode(uint32_t* aMode) {
-  *aMode = 0;  // The default mode.
+nsDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
+  *aMode = nsIDNSService::MODE_NATIVEONLY;  // The default mode.
   if (mTrrService) {
     *aMode = mTrrService->Mode();
   }

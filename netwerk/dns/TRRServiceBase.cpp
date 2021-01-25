@@ -8,6 +8,7 @@
 
 #include "mozilla/Preferences.h"
 #include "nsIOService.h"
+#include "nsIDNSService.h"
 
 namespace mozilla {
 namespace net {
@@ -16,7 +17,8 @@ namespace net {
 extern mozilla::LazyLogModule gHostResolverLog;
 #define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
 
-TRRServiceBase::TRRServiceBase() : mMode(0), mURISetByDetection(false) {}
+TRRServiceBase::TRRServiceBase()
+    : mMode(nsIDNSService::MODE_NATIVEONLY), mURISetByDetection(false) {}
 
 void TRRServiceBase::ProcessURITemplate(nsACString& aURI) {
   // URI Template, RFC 6570.
@@ -87,32 +89,35 @@ void TRRServiceBase::CheckURIPrefs() {
 }
 
 // static
-uint32_t ModeFromPrefs() {
+nsIDNSService::ResolverMode ModeFromPrefs() {
   // 0 - off, 1 - reserved, 2 - TRR first, 3 - TRR only, 4 - reserved,
   // 5 - explicit off
 
-  auto processPrefValue = [](uint32_t value) -> uint32_t {
-    if (value == MODE_RESERVED1 || value == MODE_RESERVED4 ||
-        value > MODE_TRROFF) {
-      return MODE_TRROFF;
+  auto processPrefValue = [](uint32_t value) -> nsIDNSService::ResolverMode {
+    if (value == nsIDNSService::MODE_RESERVED1 ||
+        value == nsIDNSService::MODE_RESERVED4 ||
+        value > nsIDNSService::MODE_TRROFF) {
+      return nsIDNSService::MODE_TRROFF;
     }
-    return value;
+    return static_cast<nsIDNSService::ResolverMode>(value);
   };
 
-  uint32_t tmp = MODE_NATIVEONLY;
-  if (NS_SUCCEEDED(Preferences::GetUint("network.trr.mode", &tmp))) {
-    tmp = processPrefValue(tmp);
+  uint32_t tmp;
+  if (NS_FAILED(Preferences::GetUint("network.trr.mode", &tmp))) {
+    tmp = 0;
+  }
+  nsIDNSService::ResolverMode modeFromPref = processPrefValue(tmp);
+
+  if (modeFromPref != nsIDNSService::MODE_NATIVEONLY) {
+    return modeFromPref;
   }
 
-  if (tmp != MODE_NATIVEONLY) {
-    return tmp;
+  if (NS_FAILED(Preferences::GetUint(kRolloutModePref, &tmp))) {
+    tmp = 0;
   }
+  modeFromPref = processPrefValue(tmp);
 
-  if (NS_SUCCEEDED(Preferences::GetUint(kRolloutModePref, &tmp))) {
-    return processPrefValue(tmp);
-  }
-
-  return MODE_NATIVEONLY;
+  return modeFromPref;
 }
 
 void TRRServiceBase::OnTRRModeChange() {
@@ -126,7 +131,9 @@ void TRRServiceBase::OnTRRModeChange() {
   }
 
   static bool readHosts = false;
-  if ((mMode == MODE_TRRFIRST || mMode == MODE_TRRONLY) && !readHosts) {
+  if ((mMode == nsIDNSService::MODE_TRRFIRST ||
+       mMode == nsIDNSService::MODE_TRRONLY) &&
+      !readHosts) {
     readHosts = true;
     ReadEtcHostsFile();
   }

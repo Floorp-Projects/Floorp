@@ -37,18 +37,12 @@ namespace mozilla {
 namespace net {
 class TRR;
 class TRRQuery;
-enum ResolverMode {
-  MODE_NATIVEONLY,  // 0 - TRR OFF (by default)
-  MODE_RESERVED1,   // 1 - Reserved value. Used to be parallel resolve.
-  MODE_TRRFIRST,    // 2 - fallback to native on TRR failure
-  MODE_TRRONLY,     // 3 - don't even fallback
-  MODE_RESERVED4,   // 4 - Reserved value. Used to be race TRR with native.
-  MODE_TRROFF       // 5 - identical to MODE_NATIVEONLY but explicitly selected
-};
 }  // namespace net
 }  // namespace mozilla
 
-#define TRR_DISABLED(x) (((x) == MODE_NATIVEONLY) || ((x) == MODE_TRROFF))
+#define TRR_DISABLED(x)                       \
+  (((x) == nsIDNSService::MODE_NATIVEONLY) || \
+   ((x) == nsIDNSService::MODE_TRROFF))
 
 extern mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
 
@@ -564,7 +558,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                          nsHostRecord** result) override;
   nsresult TrrLookup_unlocked(nsHostRecord*,
                               mozilla::net::TRR* pushedTRR = nullptr) override;
-  static mozilla::net::ResolverMode Mode();
+  static nsIDNSService::ResolverMode Mode();
 
   virtual void MaybeRenewHostRecord(nsHostRecord* aRec) override;
 
