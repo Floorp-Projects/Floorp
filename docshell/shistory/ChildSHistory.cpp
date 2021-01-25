@@ -30,7 +30,11 @@ void ChildSHistory::SetBrowsingContext(BrowsingContext* aBrowsingContext) {
 
 void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
   if (!aIsInProcess) {
-    mHistory = nullptr;
+    MOZ_ASSERT_IF(mozilla::SessionHistoryInParent(), !mHistory);
+    if (!mozilla::SessionHistoryInParent()) {
+      RemovePendingHistoryNavigations();
+      mHistory = nullptr;
+    }
 
     return;
   }
