@@ -684,6 +684,9 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     this.setState({
       customizeMenuVisible: true
     });
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
+      event: "SHOW_PERSONALIZE"
+    }));
   }
 
   closeCustomizationMenu() {
@@ -692,6 +695,10 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
         customizeMenuVisible: false
       });
     }
+
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
+      event: "HIDE_PERSONALIZE"
+    }));
   }
 
   handleOnKeyDown(e) {
