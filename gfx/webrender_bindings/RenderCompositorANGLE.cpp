@@ -276,7 +276,13 @@ bool RenderCompositorANGLE::CreateSwapChain(nsACString& aError) {
     desc.SampleDesc.Quality = 0;
     desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 
-    if (gfx::gfxVars::UseWebRenderFlipSequentialWin()) {
+    bool useFlipSequential = gfx::gfxVars::UseWebRenderFlipSequentialWin();
+    if (useFlipSequential && !mWidget->AsWindows()->GetCompositorHwnd()) {
+      useFlipSequential = false;
+      gfxCriticalNoteOnce << "FLIP_SEQUENTIAL needs CompositorHwnd. Fallback";
+    }
+
+    if (useFlipSequential) {
       useTripleBuffering = gfx::gfxVars::UseWebRenderTripleBufferingWin();
       if (useTripleBuffering) {
         desc.BufferCount = 3;
@@ -299,7 +305,7 @@ bool RenderCompositorANGLE::CreateSwapChain(nsACString& aError) {
       mSwapChain = swapChain1;
       mSwapChain1 = swapChain1;
       mUseTripleBuffering = useTripleBuffering;
-    } else if (gfx::gfxVars::UseWebRenderFlipSequentialWin()) {
+    } else if (useFlipSequential) {
       gfxCriticalNoteOnce << "FLIP_SEQUENTIAL is not supported. Fallback";
 
       if (mWidget->AsWindows()->GetCompositorHwnd()) {
