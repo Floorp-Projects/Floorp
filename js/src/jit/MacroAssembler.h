@@ -2282,6 +2282,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                         FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
 
+  inline void q15MulrSatInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared, arm64);
+
   // Integer Negate
 
   inline void negInt8x16(FloatRegister src, FloatRegister dest)

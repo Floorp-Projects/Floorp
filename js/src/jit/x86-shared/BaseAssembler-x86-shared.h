@@ -813,6 +813,15 @@ class BaseAssembler : public GenericAssembler {
     threeByteOpSimd("vpmulld", VEX_PD, OP3_PMULLD_VdqWdq, ESCAPE_38, address,
                     src0, dst);
   }
+  void vpmulhrsw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
+    threeByteOpSimd("vpmulhrsw", VEX_PD, OP3_PMULHRSW_VdqWdq, ESCAPE_38, src1,
+                    src0, dst);
+  }
+  void vpmulhrsw_mr(int32_t offset, RegisterID base, XMMRegisterID src0,
+                    XMMRegisterID dst) {
+    threeByteOpSimd("vpmulhrsw", VEX_PD, OP3_PMULHRSW_VdqWdq, ESCAPE_38, offset,
+                    base, src0, dst);
+  }
 
   void vaddps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vaddps", VEX_PS, OP2_ADDPS_VpsWps, src1, src0, dst);

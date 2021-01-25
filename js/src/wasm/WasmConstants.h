@@ -602,7 +602,7 @@ enum class SimdOp {
   I16x8MaxU = 0x99,
   I16x8ExtMulLowSI8x16 = 0x9a,
   I16x8AvgrU = 0x9b,
-  // Unused = 0x9c
+  I16x8Q15MulrSatS = 0x9c,
   I16x8ExtMulHighSI8x16 = 0x9d,
   I16x8ExtMulLowUI8x16 = 0x9e,
   I16x8ExtMulHighUI8x16 = 0x9f,
