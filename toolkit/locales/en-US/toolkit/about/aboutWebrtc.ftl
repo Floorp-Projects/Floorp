@@ -58,11 +58,6 @@ about-webrtc-ice-pair-bytes-sent = Bytes sent:
 about-webrtc-ice-pair-bytes-received = Bytes received:
 about-webrtc-ice-component-id = Component ID
 
-## "Avg." is an abbreviation for Average. These are used as data labels.
-
-about-webrtc-avg-bitrate-label = Avg. bitrate:
-about-webrtc-avg-framerate-label = Avg. framerate:
-
 ## These adjectives are used to label a line of statistics collected for a peer
 ## connection. The data represents either the local or remote end of the
 ## connection.
@@ -125,6 +120,7 @@ about-webrtc-discarded-packets-label = Discarded packets:
 about-webrtc-decoder-label = Decoder
 about-webrtc-encoder-label = Encoder
 about-webrtc-show-tab-label = Show tab
+about-webrtc-current-framerate-label = Framerate
 about-webrtc-width-px = Width (px)
 about-webrtc-height-px = Height (px)
 about-webrtc-consecutive-frames = Consecutive Frames

@@ -30,10 +30,6 @@ const statsExpectedByType = {
     ],
     localVideoOnly: [
       "discardedPackets",
-      "framerateStdDev",
-      "framerateMean",
-      "bitrateMean",
-      "bitrateStdDev",
       "firCount",
       "pliCount",
       "framesDecoded",
@@ -75,11 +71,6 @@ const statsExpectedByType = {
       "nackCount",
     ],
     localVideoOnly: [
-      "droppedFrames",
-      "bitrateMean",
-      "bitrateStdDev",
-      "framerateMean",
-      "framerateStdDev",
       "framesEncoded",
       "firCount",
       "pliCount",
@@ -480,42 +471,6 @@ const pedanticChecks = report => {
         ok(stat.framesDecoded > 0 && stat.framesDecoded < 1000000, stat.type
           + ".framesDecoded is a sane number for a short test. value="
           + stat.framesDecoded);
-        // bitrateMean
-        // special exception, TODO: Bug 1341533
-        if (stat.bitrateMean !== undefined) {
-          // TODO: uncomment when Bug 1341533 lands
-          // ok(stat.bitrateMean >= 0 && stat.bitrateMean < 2 ** 25,
-          //   stat.type + ".bitrateMean is sane. value="
-          //   + stat.bitrateMean);
-        }
-
-        // bitrateStdDev
-        // special exception, TODO Bug 1341533
-        if (stat.bitrateStdDev !== undefined) {
-          // TODO: uncomment when Bug 1341533 lands
-          // ok(stat.bitrateStdDev >= 0 && stat.bitrateStdDev < 2 ** 25,
-          //   stat.type + ".bitrateStdDev is sane. value="
-          //   + stat.bitrateStdDev);
-        }
-
-        // framerateMean
-        // special exception, TODO: Bug 1341533
-        if (stat.framerateMean !== undefined) {
-          // TODO: uncomment when Bug 1341533 lands
-          // ok(stat.framerateMean >= 0 && stat.framerateMean < 120,
-          //   stat.type + ".framerateMean is sane. value="
-          //   + stat.framerateMean);
-        }
-
-        // framerateStdDev
-        // special exception, TODO: Bug 1341533
-        if (stat.framerateStdDev !== undefined) {
-          // TODO: uncomment when Bug 1341533 lands
-          // ok(stat.framerateStdDev >= 0 && stat.framerateStdDev < 120,
-          //   stat.type + ".framerateStdDev is sane. value="
-          //   + stat.framerateStdDev);
-        }
-
       }
     } else if (stat.type == "remote-inbound-rtp") {
       // roundTripTime
@@ -587,43 +542,6 @@ const pedanticChecks = report => {
           ok(stat.inner[field] !== undefined, stat.type + " has field " + field
             + " when kind is video and isRemote is false");
         });
-
-        // bitrateMean
-        if (stat.bitrateMean !== undefined) {
-          // TODO: uncomment when Bug 1341533 lands
-          // ok(stat.bitrateMean >= 0 && stat.bitrateMean < 2 ** 25,
-          //   stat.type + ".bitrateMean is sane. value="
-          //   + stat.bitrateMean);
-        }
-
-        // bitrateStdDev
-        if (stat.bitrateStdDev !== undefined) {
-          // TODO: uncomment when Bug 1341533 lands
-          // ok(stat.bitrateStdDev >= 0 && stat.bitrateStdDev < 2 ** 25,
-          //   stat.type + ".bitrateStdDev is sane. value="
-          //   + stat.bitrateStdDev);
-        }
-
-        // framerateMean
-        if (stat.framerateMean !== undefined) {
-          // TODO: uncomment when Bug 1341533 lands
-          // ok(stat.framerateMean >= 0 && stat.framerateMean < 120,
-          //   stat.type + ".framerateMean is sane. value="
-          //   + stat.framerateMean);
-        }
-
-        // framerateStdDev
-        if (stat.framerateStdDev !== undefined) {
-          // TODO: uncomment when Bug 1341533 lands
-          // ok(stat.framerateStdDev >= 0 && stat.framerateStdDev < 120,
-          //   stat.type + ".framerateStdDev is sane. value="
-          //   + stat.framerateStdDev);
-        }
-
-        // droppedFrames
-        ok(stat.droppedFrames >= 0 && stat.droppedFrames < 100000,
-          stat.type + ".droppedFrames is a sane number. value="
-          + stat.droppedFrames);
 
         // framesEncoded
         ok(stat.framesEncoded >= 0 && stat.framesEncoded < 100000, stat.type
