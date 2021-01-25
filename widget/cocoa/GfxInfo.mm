@@ -210,6 +210,10 @@ GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) { return NS_ERROR_NOT_IMP
 NS_IMETHODIMP
 GfxInfo::GetDesktopEnvironment(nsAString& aDesktopEnvironment) { return NS_ERROR_NOT_IMPLEMENTED; }
 
+/* readonly attribute DOMString testType; */
+NS_IMETHODIMP
+GfxInfo::GetDesktopEnvironment(nsAString& aTestType) { return NS_ERROR_NOT_IMPLEMENTED; }
+
 /* readonly attribute DOMString adapterDescription; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterDescription(nsAString& aAdapterDescription) {
