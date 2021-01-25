@@ -1851,9 +1851,9 @@ async function addExpression(dbg, input) {
   }
   findElementWithSelector(dbg, selectors.expressionInput).focus();
   type(dbg, input);
+  const evaluated = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
   pressKey(dbg, "Enter");
-
-  await waitForDispatch(dbg, "EVALUATE_EXPRESSION");
+  await evaluated;
 }
 
 async function editExpression(dbg, input) {
