@@ -187,6 +187,7 @@ struct ContractEntry final {
 struct StaticCategoryEntry final {
   StringOffset mEntry;
   StringOffset mValue;
+  Module::BackgroundTasksSelector mBackgroundTasksSelector;
   Module::ProcessSelector mProcessSelector;
 
   nsCString Entry() const;

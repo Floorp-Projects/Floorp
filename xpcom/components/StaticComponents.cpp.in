@@ -7,6 +7,9 @@
 #include "StaticComponents.h"
 
 #include "mozilla/ArrayUtils.h"
+#ifdef MOZ_BACKGROUNDTASKS
+#  include "mozilla/BackgroundTasks.h"
+#endif
 #include "mozilla/PerfectHash.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPtr.h"
@@ -256,11 +259,21 @@ void StaticModule::SetServiceInstance(
 nsCString StaticCategoryEntry::Entry() const {
   return GetString(mEntry);
 }
+
 nsCString StaticCategoryEntry::Value() const {
   return GetString(mValue);
 }
+
 bool StaticCategoryEntry::Active() const {
-  return FastProcessSelectorMatches(mProcessSelector);
+  if (!FastProcessSelectorMatches(mProcessSelector)) {
+    return false;
+  }
+#ifdef MOZ_BACKGROUNDTASKS
+  if (MOZ_UNLIKELY(BackgroundTasks::IsBackgroundTaskMode())) {
+    return mBackgroundTasksSelector != Module::BackgroundTasksSelector::NO_TASKS;
+  }
+#endif /* MOZ_BACKGROUNDTASKS */
+  return true;
 }
 
 nsCString StaticCategory::Name() const {
