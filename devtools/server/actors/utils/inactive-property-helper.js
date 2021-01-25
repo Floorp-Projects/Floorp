@@ -302,7 +302,7 @@ class InactivePropertyHelper {
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1551578
       {
         invalidProperties: ["text-overflow"],
-        when: () => !this.checkComputedStyle("overflow", ["hidden"]),
+        when: () => !this.hasInlineOverflow,
         fixId: "inactive-text-overflow-when-no-overflow-fix",
         msgId: "inactive-text-overflow-when-no-overflow",
         numFixProps: 1,
@@ -782,6 +782,17 @@ class InactivePropertyHelper {
    */
   get isFloated() {
     return this.style && this.style.cssFloat !== "none";
+  }
+
+  /**
+   * Check if the current node has inline overflow
+   */
+  get hasInlineOverflow() {
+    const property = this.hasVerticalWritingMode(this.node)
+      ? "overflow-y"
+      : "overflow-x";
+
+    return !this.checkComputedStyle(property, ["visible"]);
   }
 
   /**
