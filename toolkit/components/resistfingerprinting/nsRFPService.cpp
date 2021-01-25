@@ -203,7 +203,7 @@ class LRUCache final {
           return ""_ns;
         }
 
-        cacheEntry.accessTime = PR_Now();
+        cacheEntry.accessTime = ++mTimeCounter;
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
                 ("LRU Cache HIT with %lli %lli", aKeyPart1, aKeyPart2));
         return cacheEntry.data;
@@ -236,7 +236,7 @@ class LRUCache final {
     lowestKey->keyPart1 = aKeyPart1;
     lowestKey->keyPart2 = aKeyPart2;
     lowestKey->data = aValue;
-    lowestKey->accessTime = PR_Now();
+    lowestKey->accessTime = ++mTimeCounter;
     MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
             ("LRU Cache STORE with %lli %lli", aKeyPart1, aKeyPart2));
   }
@@ -247,7 +247,7 @@ class LRUCache final {
   struct CacheEntry {
     Atomic<long long, Relaxed> keyPart1;
     Atomic<long long, Relaxed> keyPart2;
-    PRTime accessTime = 0;
+    uint64_t accessTime = 0;
     nsCString data;
 
     CacheEntry() {
@@ -266,6 +266,13 @@ class LRUCache final {
 
   AutoTArray<CacheEntry, LRU_CACHE_SIZE> cache;
   mozilla::Mutex mLock;
+
+  // A reference "time" which is advanced with every access. We don't need
+  // actual timestamps, we only need to have a way to find the oldest item.
+  // Accessing and incrementing an integer is faster than getting the true
+  // system timestamp.
+  // Protected by mLock.
+  uint64_t mTimeCounter = 0;
 };
 
 // We make a single LRUCache
