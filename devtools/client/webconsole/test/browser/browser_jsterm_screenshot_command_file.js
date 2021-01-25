@@ -17,23 +17,71 @@ const { FileUtils } = ChromeUtils.import(
 const dpr = "--dpr 1";
 
 add_task(async function() {
-  await addTab(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  const hud = await openConsole();
-  ok(hud, "web console opened");
+  info("wait for the iframes to be loaded");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelectorAll(".loaded-iframe").length == 2
+    );
+  });
 
-  await testFile(hud);
-});
-
-async function testFile(hud) {
-  // Test capture to file
+  info("Test :screenshot to file");
   const file = FileUtils.getFile("TmpD", ["TestScreenshotFile.png"]);
   const command = `:screenshot ${file.path} ${dpr}`;
   await executeAndWaitForMessage(hud, command, `Saved to ${file.path}`);
 
-  ok(file.exists(), "Screenshot file exists");
-
-  if (file.exists()) {
-    file.remove(false);
+  const fileExists = file.exists();
+  if (!fileExists) {
+    throw new Error(`${file.path} does not exist`);
   }
-}
+
+  ok(fileExists, `Screenshot was saved to ${file.path}`);
+
+  info("Create an image using the downloaded file as source");
+  const image = new Image();
+  image.src = OS.Path.toFileURI(file.path);
+  await once(image, "load");
+
+  // The page has the following structure
+  // +--------------------------------------------------+
+  // |        Fixed header [50px tall, red]             |
+  // +--------------------------------------------------+
+  // | Same-origin iframe [50px tall, rgb(255, 255, 0)] |
+  // +--------------------------------------------------+
+  // |    Remote iframe [50px tall, rgb(0, 255, 255)]   |
+  // +--------------------------------------------------+
+  // |  Image  |
+  // |  100px  |
+  // |         |
+  // +---------+
+
+  info("Check that the header is rendered in the screenshot");
+  checkImageColorAt({
+    image,
+    y: 0,
+    expectedColor: `rgb(255, 0, 0)`,
+    label:
+      "The top-left corner has the expected red color, matching the header element",
+  });
+
+  info("Check that the same-origin iframe is rendered in the screenshot");
+  checkImageColorAt({
+    image,
+    y: 60,
+    expectedColor: `rgb(255, 255, 0)`,
+    label: "The same-origin iframe is rendered properly in the screenshot",
+  });
+
+  info("Check that the remote iframe is rendered in the screenshot");
+  checkImageColorAt({
+    image,
+    y: 110,
+    expectedColor: `rgb(0, 255, 255)`,
+    label: "The remote iframe is rendered properly in the screenshot",
+  });
+
+  info("Remove the downloaded screenshot file and cleanup downloads");
+  await OS.File.remove(file.path);
+  await resetDownloads();
+});
