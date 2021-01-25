@@ -188,7 +188,6 @@
 
     set smoothScroll(val) {
       this.setAttribute("smoothscroll", !!val);
-      return val;
     }
 
     get smoothScroll() {
