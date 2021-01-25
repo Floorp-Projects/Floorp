@@ -384,13 +384,15 @@ class MochiRemote(MochitestDesktop):
         startTime = datetime.datetime.now()
         status = 0
         profileDirectory = self.remoteProfile + "/"
-        extraArgs.extend(("-no-remote", "-profile", profileDirectory))
+        args = []
+        args.extend(extraArgs)
+        args.extend(("-no-remote", "-profile", profileDirectory))
 
         pid = rpm.launch(
             app,
             debuggerInfo,
             testUrl,
-            extraArgs,
+            args,
             env=self.environment(env=env, crashreporter=not debuggerInfo),
             e10s=e10s,
         )
