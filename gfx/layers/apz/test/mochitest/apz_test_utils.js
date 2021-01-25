@@ -767,31 +767,24 @@ function getQueryArgs() {
   return args;
 }
 
-// Return a function that returns a promise to create a script element with the
-// given URI and append it to the head of the document in the given window.
-// As with runContinuation(), the extra function wrapper is for convenience
-// at the call site, so that this can be chained with other promises:
-//   waitUntilApzStable().then(injectScript('foo'))
-//                       .then(injectScript('bar'));
-// If you want to do the injection right away, run the function returned by
-// this function:
-//   injectScript('foo')();
-function injectScript(aScript, aWindow = window) {
-  return function() {
-    return new Promise(function(resolve, reject) {
-      var e = aWindow.document.createElement("script");
-      e.type = "text/javascript";
-      e.onload = function() {
-        resolve();
-      };
-      e.onerror = function() {
-        dump("Script [" + aScript + "] errored out\n");
-        reject();
-      };
-      e.src = aScript;
-      aWindow.document.getElementsByTagName("head")[0].appendChild(e);
-    });
-  };
+// An async function that inserts a script element with the given URI into
+// the head of the document of the given window. This function returns when
+// the load or error event fires on the script element, indicating completion.
+async function injectScript(aScript, aWindow = window) {
+  var e = aWindow.document.createElement("script");
+  e.type = "text/javascript";
+  let loadPromise = new Promise((resolve, reject) => {
+    e.onload = function() {
+      resolve();
+    };
+    e.onerror = function() {
+      dump("Script [" + aScript + "] errored out\n");
+      reject();
+    };
+  });
+  e.src = aScript;
+  aWindow.document.getElementsByTagName("head")[0].appendChild(e);
+  await loadPromise;
 }
 
 // Compute some configuration information used for hit testing.
