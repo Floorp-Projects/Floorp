@@ -571,7 +571,6 @@ class MOZ_STACK_CLASS AutoPointerEventTargetUpdater final {
     MOZ_ASSERT(!aFrame->GetContent() ||
                aShell->GetDocument() == aFrame->GetContent()->OwnerDoc());
 
-    MOZ_ASSERT(StaticPrefs::dom_w3c_pointer_events_enabled());
     mShell = aShell;
     mWeakFrame = aFrame;
     mTargetContent = aTargetContent;
@@ -7242,10 +7241,6 @@ bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aEventTargetData);
   MOZ_ASSERT(aEventStatus);
-
-  if (!StaticPrefs::dom_w3c_pointer_events_enabled()) {
-    return true;
-  }
 
   // Dispatch pointer events from the mouse or touch events. Regarding
   // pointer events from mouse, we should dispatch those pointer events to

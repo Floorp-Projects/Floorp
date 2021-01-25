@@ -52,10 +52,6 @@
         {'type': 'popup', 'allow': DENY_ACTION,
          'context': xorigin}
       ]);
-      await SpecialPowers.pushPrefEnv({
-        "set": [["dom.w3c_pointer_events.enabled", true]]
-      });
-
       await new Promise(resolve => SimpleTest.waitForFocus(resolve));
     });
 

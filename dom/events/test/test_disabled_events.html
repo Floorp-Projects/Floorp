@@ -23,8 +23,7 @@ SpecialPowers.pushPrefEnv({"set": [
   ["device.sensors.orientation.enabled", false],
   ["device.sensors.motion.enabled", false],
   ["device.sensors.proximity.enabled", false],
-  ["device.sensors.ambientLight.enabled", false],
-  ["dom.w3c_pointer_events.enabled", false]
+  ["device.sensors.ambientLight.enabled", false]
 ]}, () => {
   is("DeviceProximityEvent" in window, false, "DeviceProximityEvent does not exist");
   is("UserProximityEvent" in window, false, "UserProximityEvent does not exist");

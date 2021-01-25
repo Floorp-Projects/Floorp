@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
     }
 
     function prepareTest() {
-      parent.turnOnPointerEvents(executeTest);
+      SimpleTest.executeSoon(executeTest);
     }
     function executeTest()
     {

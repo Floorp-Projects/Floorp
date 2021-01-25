@@ -172,10 +172,6 @@ static bool HasPointerListener(nsIContent* aContent) {
     return false;
   }
 
-  if (!StaticPrefs::dom_w3c_pointer_events_enabled()) {
-    return false;
-  }
-
   return elm->HasListenersFor(nsGkAtoms::onpointerdown) ||
          elm->HasListenersFor(nsGkAtoms::onpointerup);
 }

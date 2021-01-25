@@ -15,14 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
         SimpleTest.waitForExplicitFinish();
         SimpleTest.requestFlakyTimeout("untriaged");
         iframe = document.getElementById("testFrame");
-        turnOnPointerEvents(startTest);
-      }
-      function turnOnPointerEvents(callback) {
-        SpecialPowers.pushPrefEnv({
-          "set": [
-            ["dom.w3c_pointer_events.enabled", true]
-          ]
-        }, callback);
+        SimpleTest.executeSoon(startTest);
       }
       function startTest() {
         iframe.src = "bug1080361_inner.html";

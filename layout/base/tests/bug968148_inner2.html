@@ -289,7 +289,6 @@ function finishTest() {
 window.onload = function () {
   SpecialPowers.pushPrefEnv({
     "set": [
-      ["dom.w3c_pointer_events.enabled", true],
       ["dom.w3c_pointer_events.implicit_capture", true]
     ]
   }, runTests);

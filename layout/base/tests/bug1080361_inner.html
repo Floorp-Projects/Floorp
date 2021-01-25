@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
   <meta charset="utf-8">
   <title>Test for Bug 1080361</title>
   <meta name="author" content="Maksim Lebedev" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
@@ -71,7 +72,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
     }
 
     function prepareTest() {
-      parent.turnOnPointerEvents(executeTest);
+      SimpleTest.executeSoon(executeTest);
     }
     function executeTest()
     {
@@ -89,7 +90,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
       finishTest();
     }
     function finishTest() {
-      setTimeout(function() {
+      SimpleTest.executeSoon(function() {
         parent.is(test_target_down, true,   "pointerdown event should be received by target");
         parent.is(test_target_up,   true,   "pointerup event should be received by target");
         parent.is(test_first_exc,   true,   "first exception should be thrown");
@@ -99,7 +100,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
         parent.is(test_listener,    true,   "listener should receive gotpointercapture event");
         logger("finishTest");
         parent.finishTest();
-      }, 1000);
+      });
     }
   </script>
 </head>

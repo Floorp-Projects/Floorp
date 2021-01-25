@@ -11,17 +11,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1017086
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <script type="text/javascript">
       /** Test for Bug 1017086 **/
-      var pointer_events_enabled = true;
       function prepareTest() {
         SimpleTest.waitForExplicitFinish();
-        turnOnOffPointerEvents(startTest);
-      }
-      function turnOnOffPointerEvents(callback) {
-        SpecialPowers.pushPrefEnv({
-          "set": [
-            ["dom.w3c_pointer_events.enabled", pointer_events_enabled]
-          ]
-        }, callback);
+        SimpleTest.executeSoon(startTest);
       }
       function startTest() {
         var iframe = document.getElementById("testFrame");

@@ -132,8 +132,7 @@ function WaitExpectedEvents(aListenEvents, aExpectedEvents, aEventGenerator) {
 add_task(async function setup() {
   await SimpleTest.promiseFocus();
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.w3c_pointer_events.enabled", true],
-          ["dom.w3c_pointer_events.implicit_capture", false]]
+    set: [["dom.w3c_pointer_events.implicit_capture", false]]
   });
 });
 

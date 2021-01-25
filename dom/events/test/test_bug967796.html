@@ -20,14 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=967796
 
 /** Test for Bug 967796 **/
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(() => {
-  // Enable Pointer Events
-  SpecialPowers.pushPrefEnv({
-    "set": [
-      ["dom.w3c_pointer_events.enabled", true]
-    ]
-  }, runTests);
-});
+SimpleTest.waitForFocus(runTests);
 var outer;
 var middle;
 var inner;

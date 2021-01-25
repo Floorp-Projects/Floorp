@@ -15,8 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1447993
 
   var win;
   function start() {
-    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
-                                       ["dom.w3c_touch_events.enabled", 1]]},
+    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", 1]]},
     function() {
       win = window.open("window_bug1447993.html", "testwindow",
                         "width=" + window.screen.width +
