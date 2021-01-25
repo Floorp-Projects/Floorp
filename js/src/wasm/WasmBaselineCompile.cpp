@@ -13638,6 +13638,22 @@ static void WidenHighUI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.unsignedWidenHighInt16x8(rs, rd);
 }
 
+static void WidenLowI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.widenLowInt32x4(rs, rd);
+}
+
+static void WidenHighI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.widenHighInt32x4(rs, rd);
+}
+
+static void WidenLowUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.unsignedWidenLowInt32x4(rs, rd);
+}
+
+static void WidenHighUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.unsignedWidenHighInt32x4(rs, rd);
+}
+
 static void AbsI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.absInt8x16(rs, rd);
 }
@@ -15333,6 +15349,14 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(ConvertF32x4ToUI32x4));
           case uint32_t(SimdOp::I64x2Neg):
             CHECK_NEXT(dispatchVectorUnary(NegI64x2));
+          case uint32_t(SimdOp::I64x2WidenLowSI32x4):
+            CHECK_NEXT(dispatchVectorUnary(WidenLowI32x4));
+          case uint32_t(SimdOp::I64x2WidenHighSI32x4):
+            CHECK_NEXT(dispatchVectorUnary(WidenHighI32x4));
+          case uint32_t(SimdOp::I64x2WidenLowUI32x4):
+            CHECK_NEXT(dispatchVectorUnary(WidenLowUI32x4));
+          case uint32_t(SimdOp::I64x2WidenHighUI32x4):
+            CHECK_NEXT(dispatchVectorUnary(WidenHighUI32x4));
           case uint32_t(SimdOp::F32x4Abs):
             CHECK_NEXT(dispatchVectorUnary(AbsF32x4));
           case uint32_t(SimdOp::F32x4Neg):

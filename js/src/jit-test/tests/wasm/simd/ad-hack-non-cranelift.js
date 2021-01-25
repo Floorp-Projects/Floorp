@@ -126,3 +126,38 @@ assertEq(ins.exports.bitmask_i64x2(), 1);
 
 assertEq(ins.exports.const_bitmask_i64x2(), 1);
 
+// Widen low/high.
+// This is to be merged into the existing widening tests in ad-hack.js.
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "widen_low_i32x4_s")
+      (v128.store (i32.const 0) (i64x2.widen_low_i32x4_s (v128.load (i32.const 16)))))
+    (func (export "widen_high_i32x4_s")
+      (v128.store (i32.const 0) (i64x2.widen_high_i32x4_s (v128.load (i32.const 16)))))
+    (func (export "widen_low_i32x4_u")
+      (v128.store (i32.const 0) (i64x2.widen_low_i32x4_u (v128.load (i32.const 16)))))
+    (func (export "widen_high_i32x4_u")
+      (v128.store (i32.const 0) (i64x2.widen_high_i32x4_u (v128.load (i32.const 16))))))`);
+
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+var mem64 = new BigInt64Array(ins.exports.mem.buffer);
+var mem64u = new BigUint64Array(ins.exports.mem.buffer);
+
+var as = [205, 1, 192, 3].map((x) => x << 24);
+set(mem32, 4, as);
+
+ins.exports.widen_low_i32x4_s();
+assertSame(get(mem64, 0, 2), iota(2).map((n) => BigInt(as[n])))
+
+ins.exports.widen_high_i32x4_s();
+assertSame(get(mem64, 0, 2), iota(2).map((n) => BigInt(as[n+2])));
+
+ins.exports.widen_low_i32x4_u();
+assertSame(get(mem64u, 0, 2), iota(2).map((n) => BigInt(as[n] >>> 0)));
+
+ins.exports.widen_high_i32x4_u();
+assertSame(get(mem64u, 0, 2), iota(2).map((n) => BigInt(as[n+2] >>> 0)));
+
+
