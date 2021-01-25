@@ -51,7 +51,7 @@ bool EventQueue::PushNameChange(Accessible* aTarget) {
   // Fire name change event on parent given that this event hasn't been
   // coalesced, the parent's name was calculated from its subtree, and the
   // subtree was changed.
-  if (aTarget->HasNameDependentParent()) {
+  if (aTarget->HasNameDependent()) {
     // Only continue traversing up the tree if it's possible that the parent
     // accessible's name can depend on this accessible's name.
     Accessible* parent = aTarget->Parent();
