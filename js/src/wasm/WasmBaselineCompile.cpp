@@ -13298,6 +13298,10 @@ static void ExtMulHighUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.unsignedExtMulHighInt32x4(rs, rsd);
 }
 
+static void Q15MulrSatS(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.q15MulrSatInt16x8(rs, rsd);
+}
+
 static void CmpI8x16(MacroAssembler& masm, Assembler::Condition cond,
                      RegV128 rs, RegV128 rsd) {
   masm.compareInt8x16(cond, rs, rsd);
@@ -15321,6 +15325,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(ExtMulLowUI32x4));
           case uint32_t(SimdOp::I64x2ExtMulHighUI32x4):
             CHECK_NEXT(dispatchVectorBinary(ExtMulHighUI32x4));
+          case uint32_t(SimdOp::I16x8Q15MulrSatS):
+            CHECK_NEXT(dispatchVectorBinary(Q15MulrSatS));
           case uint32_t(SimdOp::I8x16Neg):
             CHECK_NEXT(dispatchVectorUnary(NegI8x16));
           case uint32_t(SimdOp::I16x8Neg):
