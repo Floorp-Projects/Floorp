@@ -481,6 +481,12 @@ function TargetMixin(parentClass) {
         return;
       }
 
+      // Avoid attaching the thread actor in the browser console
+      // in order to avoid trigerring any type of breakpoint.
+      if (targetList.targetFront.isBrowserConsoleTarget) {
+        return;
+      }
+
       const options = await getThreadOptions();
       // If the target is destroyed or soon will be, don't go further
       if (this.isDestroyedOrBeingDestroyed()) {
