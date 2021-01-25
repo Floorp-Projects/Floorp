@@ -240,7 +240,7 @@ async function testNetworkEventResources(options) {
       onUpdated: onResourceUpdated,
     }
   );
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
   BrowserTestUtils.removeTab(tab);
 }

@@ -167,7 +167,7 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
     checkConsoleAPICall(message, expected);
   }
 
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {

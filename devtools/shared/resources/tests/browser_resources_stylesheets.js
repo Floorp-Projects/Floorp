@@ -169,7 +169,7 @@ async function testResourceAvailableFeature() {
     ADDITIONAL_FROM_ACTOR_RESOURCE
   );
 
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
 }
 
@@ -297,7 +297,7 @@ async function testResourceUpdateFeature() {
   );
   assertMediaRules(styleSheetResult.mediaRules, expectedMediaRules);
 
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
 }
 
@@ -407,7 +407,7 @@ async function testNestedResourceUpdateFeature() {
 
   tab.ownerGlobal.resizeTo(originalWindowWidth, originalWindowHeight);
 
-  await targetList.destroy();
+  targetList.destroy();
   await client.close();
 }
 
