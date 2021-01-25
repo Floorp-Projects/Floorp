@@ -102,6 +102,16 @@ class PivotRoleRule : public PivotRule {
   AccessibleOrProxy mDirectDescendantsFrom;
 };
 
+/**
+ * This rule matches any local Accessible (i.e. not ProxyAccessible) in the
+ * same document as the anchor. That is, it includes any descendant
+ * OuterDocAccessible, but not its descendants.
+ */
+class LocalAccInSameDocRule : public PivotRule {
+ public:
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+};
+
 }  // namespace a11y
 }  // namespace mozilla
 
