@@ -4117,30 +4117,16 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 nsDisplayWrapList* ScrollFrameHelper::MaybeCreateTopLayerItems(
     nsDisplayListBuilder* aBuilder, bool* aIsOpaque) {
-  if (mIsRoot) {
-    if (ViewportFrame* viewportFrame = do_QueryFrame(mOuter->GetParent())) {
-      nsDisplayList topLayerList;
-      viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList,
-                                                 aIsOpaque);
-      if (!topLayerList.IsEmpty()) {
-        nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
-            aBuilder, viewportFrame);
-
-        // Wrap the whole top layer in a single item with maximum z-index,
-        // and append it at the very end, so that it stays at the topmost.
-        nsDisplayWrapList* wrapList =
-            MakeDisplayItemWithIndex<nsDisplayWrapList>(
-                aBuilder, viewportFrame, 2, &topLayerList,
-                aBuilder->CurrentActiveScrolledRoot(), false);
-        if (wrapList) {
-          wrapList->SetOverrideZIndex(
-              std::numeric_limits<decltype(wrapList->ZIndex())>::max());
-          return wrapList;
-        }
-      }
-    }
+  if (!mIsRoot) {
+    return nullptr;
   }
-  return nullptr;
+
+  ViewportFrame* viewport = do_QueryFrame(mOuter->GetParent());
+  if (!viewport) {
+    return nullptr;
+  }
+
+  return viewport->BuildDisplayListForTopLayer(aBuilder, aIsOpaque);
 }
 
 nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
