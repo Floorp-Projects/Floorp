@@ -149,12 +149,6 @@ class nsHttpConnectionInfo final : public ARefBase {
   }
   bool GetBeConservative() const { return mHashKey.CharAt(6) == 'C'; }
 
-  void SetIsolated(bool aIsolated) {
-    mIsolated = aIsolated;
-    RebuildHashKey();
-  }
-  bool GetIsolated() const { return mIsolated; }
-
   void SetTlsFlags(uint32_t aTlsFlags);
   uint32_t GetTlsFlags() const { return mTlsFlags; }
 
@@ -217,22 +211,6 @@ class nsHttpConnectionInfo final : public ARefBase {
   const nsCString& GetEchConfig() const { return mEchConfig; }
 
  private:
-  // These constructor versions are intended to be used from Clone() and
-  // DeserializeHttpConnectionInfoCloneArgs().
-  nsHttpConnectionInfo(const nsACString& originHost, int32_t originPort,
-                       const nsACString& npnToken, const nsACString& username,
-                       const nsACString& topWindowOrigin,
-                       nsProxyInfo* proxyInfo,
-                       const OriginAttributes& originAttributes,
-                       bool endToEndSSL, bool isolated, bool aIsHttp3);
-  nsHttpConnectionInfo(const nsACString& originHost, int32_t originPort,
-                       const nsACString& npnToken, const nsACString& username,
-                       const nsACString& topWindowOrigin,
-                       nsProxyInfo* proxyInfo,
-                       const OriginAttributes& originAttributes,
-                       const nsACString& routedHost, int32_t routedPort,
-                       bool isolated, bool aIsHttp3);
-
   void Init(const nsACString& host, int32_t port, const nsACString& npnToken,
             const nsACString& username, const nsACString& topWindowOrigin,
             nsProxyInfo* proxyInfo, const OriginAttributes& originAttributes,
@@ -257,7 +235,6 @@ class nsHttpConnectionInfo final : public ARefBase {
   nsIRequest::TRRMode mTRRMode;
 
   uint32_t mTlsFlags;
-  uint16_t mIsolated : 1;
   uint16_t mIsTrrServiceChannel : 1;
   uint16_t mIPv4Disabled : 1;
   uint16_t mIPv6Disabled : 1;
