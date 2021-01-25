@@ -5,20 +5,37 @@
 requestLongerTimeout(2);
 
 async function testCase(dbg, { name, steps }) {
-  invokeInTab(name);
-  const locations = [];
+  info(` ### Execute testCase "${name}"`);
 
   const {
     selectors: { getTopFrame, getCurrentThread }
   } = dbg;
+  const locations = [];
 
-  await stepOvers(dbg, steps.length, state => {
+  const recordFrame = state => {
     const { line, column } = getTopFrame(getCurrentThread()).location;
     locations.push([line, column]);
-  });
+    info(`Break on ${line}:${column}`);
+  };
+
+  info("Trigger the expected debugger statement");
+  const onPaused = waitForPaused(dbg);
+  invokeInTab(name);
+  await onPaused;
+  recordFrame();
+
+  info("Start stepping over");
+  for (let i = 0; i < steps.length - 1; i++) {
+    await dbg.actions.stepOver(getThreadContext(dbg));
+    await waitForPaused(dbg);
+    recordFrame();
+  }
 
   is(formatSteps(locations), formatSteps(steps), name);
+
+  const onResumed = waitForActive(dbg);
   await resume(dbg);
+  await onResumed;
 }
 
 add_task(async function test() {
@@ -63,14 +80,6 @@ add_task(async function test() {
     ]
   });
 });
-
-async function stepOvers(dbg, count, onStep = () => {}) {
-  for (let i = 0; i < count; i++) {
-    await dbg.actions.stepOver(getThreadContext(dbg));
-    await waitForPaused(dbg);
-    onStep();
-  }
-}
 
 function formatSteps(steps) {
   return steps.map(loc => `(${loc.join(",")})`).join(", ");
