@@ -3056,6 +3056,8 @@ void Simulator::NEONLoadStoreSingleStructHelper(const Instruction* instr,
   // and PostIndex addressing.
   bool do_load = false;
 
+  bool replicating = false;
+
   NEONFormatDecoder nfd(instr, NEONFormatDecoder::LoadStoreFormatMap());
   VectorFormat vf_t = nfd.GetVectorFormat();
 
@@ -3124,40 +3126,16 @@ void Simulator::NEONLoadStoreSingleStructHelper(const Instruction* instr,
     }
 
     case NEON_LD1R:
-    case NEON_LD1R_post: {
-      vf = vf_t;
-      ld1r(vf, vreg(rt), addr);
-      do_load = true;
-      break;
-    }
-
+    case NEON_LD1R_post:
     case NEON_LD2R:
-    case NEON_LD2R_post: {
-      vf = vf_t;
-      int rt2 = (rt + 1) % kNumberOfVRegisters;
-      ld2r(vf, vreg(rt), vreg(rt2), addr);
-      do_load = true;
-      break;
-    }
-
+    case NEON_LD2R_post:
     case NEON_LD3R:
-    case NEON_LD3R_post: {
-      vf = vf_t;
-      int rt2 = (rt + 1) % kNumberOfVRegisters;
-      int rt3 = (rt2 + 1) % kNumberOfVRegisters;
-      ld3r(vf, vreg(rt), vreg(rt2), vreg(rt3), addr);
-      do_load = true;
-      break;
-    }
-
+    case NEON_LD3R_post:
     case NEON_LD4R:
     case NEON_LD4R_post: {
       vf = vf_t;
-      int rt2 = (rt + 1) % kNumberOfVRegisters;
-      int rt3 = (rt2 + 1) % kNumberOfVRegisters;
-      int rt4 = (rt3 + 1) % kNumberOfVRegisters;
-      ld4r(vf, vreg(rt), vreg(rt2), vreg(rt3), vreg(rt4), addr);
       do_load = true;
+      replicating = true;
       break;
     }
     default: VIXL_UNIMPLEMENTED();
@@ -3180,7 +3158,11 @@ void Simulator::NEONLoadStoreSingleStructHelper(const Instruction* instr,
     case NEONLoadStoreSingle1:
       scale = 1;
       if (do_load) {
-        ld1(vf, vreg(rt), lane, addr);
+        if (replicating) {
+          ld1r(vf, vreg(rt), addr);
+        } else  {
+          ld1(vf, vreg(rt), lane, addr);
+        }
         LogVRead(addr, rt, print_format, lane);
       } else {
         st1(vf, vreg(rt), lane, addr);
@@ -3190,7 +3172,11 @@ void Simulator::NEONLoadStoreSingleStructHelper(const Instruction* instr,
     case NEONLoadStoreSingle2:
       scale = 2;
       if (do_load) {
-        ld2(vf, vreg(rt), vreg(rt2), lane, addr);
+        if (replicating) {
+          ld2r(vf, vreg(rt), vreg(rt2), addr);
+        } else {
+          ld2(vf, vreg(rt), vreg(rt2), lane, addr);
+        }
         LogVRead(addr, rt, print_format, lane);
         LogVRead(addr + esize, rt2, print_format, lane);
       } else {
@@ -3202,7 +3188,11 @@ void Simulator::NEONLoadStoreSingleStructHelper(const Instruction* instr,
     case NEONLoadStoreSingle3:
       scale = 3;
       if (do_load) {
-        ld3(vf, vreg(rt), vreg(rt2), vreg(rt3), lane, addr);
+        if (replicating) {
+          ld3r(vf, vreg(rt), vreg(rt2), vreg(rt3), addr);
+        } else {
+          ld3(vf, vreg(rt), vreg(rt2), vreg(rt3), lane, addr);
+        }
         LogVRead(addr, rt, print_format, lane);
         LogVRead(addr + esize, rt2, print_format, lane);
         LogVRead(addr + (2 * esize), rt3, print_format, lane);
@@ -3216,7 +3206,11 @@ void Simulator::NEONLoadStoreSingleStructHelper(const Instruction* instr,
     case NEONLoadStoreSingle4:
       scale = 4;
       if (do_load) {
-        ld4(vf, vreg(rt), vreg(rt2), vreg(rt3), vreg(rt4), lane, addr);
+        if (replicating) {
+          ld4r(vf, vreg(rt), vreg(rt2), vreg(rt3), vreg(rt4), addr);
+        } else {
+          ld4(vf, vreg(rt), vreg(rt2), vreg(rt3), vreg(rt4), lane, addr);
+        }
         LogVRead(addr, rt, print_format, lane);
         LogVRead(addr + esize, rt2, print_format, lane);
         LogVRead(addr + (2 * esize), rt3, print_format, lane);
