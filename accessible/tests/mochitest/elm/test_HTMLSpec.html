@@ -459,10 +459,7 @@
       testElm("em_container", obj);
 
       // ////////////////////////////////////////////////////////////////////////
-      // HTML:embed (windowless/windowed plugins and media)
-
-      ok(!isAccessible("embed_plugin_windowless"), "(blocked) windowless plugin embed element is not accessible");
-      ok(!isAccessible("embed_plugin_windowed"), "(blocked) windowed plugin embed element is not accessible");
+      // HTML:embed
 
       obj = {
         role: ROLE_GRAPHIC,
@@ -1119,10 +1116,7 @@
       testElm("nav", obj);
 
       // ////////////////////////////////////////////////////////////////////////
-      // HTML:object (windowless/windowed plugins and media) and HTML:param
-
-      ok(!isAccessible("object_plugin_windowless"), "(blocked) windowless plugin object element is not accessible");
-      ok(!isAccessible("object_plugin_windowed"), "(blocked) windowed plugin object element is not accessible");
+      // HTML:object and HTML:param
 
       obj = {
         role: ROLE_GRAPHIC,
@@ -1594,11 +1588,6 @@
 
   <p id="em_container">normal<em>emphasis</em></p>
 
-  <embed id="embed_plugin_windowless" type="application/x-test"
-         width="300" height="300"></embed>
-  <embed id="embed_plugin_windowed" type="application/x-test" wmode="window"
-         width="300" height="300"></embed>
-
   <embed id="embed_png" type="image/png" src="../moz.png"
          width="300" height="300">
   </embed>
@@ -1890,13 +1879,6 @@
       <li><a href="#">Contact</a></li>
     </ul>
   </nav>
-
-  <object id="object_plugin_windowless" type="application/x-test"
-         width="300" height="300">
-    <param name="foo" value="bar">
-  </object>
-  <object id="object_plugin_windowed" type="application/x-test" wmode="window"
-         width="300" height="300"></object>
 
   <object id="object_png" type="image/png" data="../moz.png"
          width="300" height="300">
