@@ -32,7 +32,9 @@ ThreadEventTarget::ThreadEventTarget(ThreadTargetSink* aSink,
   mThread = PR_GetCurrentThread();
 }
 
-void ThreadEventTarget::SetCurrentThread() { mThread = PR_GetCurrentThread(); }
+void ThreadEventTarget::SetCurrentThread(PRThread* aThread) {
+  mThread = aThread;
+}
 
 void ThreadEventTarget::ClearCurrentThread() { mThread = nullptr; }
 

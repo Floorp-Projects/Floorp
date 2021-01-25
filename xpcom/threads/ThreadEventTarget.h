@@ -30,7 +30,7 @@ class ThreadEventTarget final : public nsISerialEventTarget {
 
   // Sets the thread for which IsOnCurrentThread returns true to the current
   // thread.
-  void SetCurrentThread();
+  void SetCurrentThread(PRThread* aThread);
   // Call ClearCurrentThread() before the PRThread is deleted on thread join.
   void ClearCurrentThread();
 
