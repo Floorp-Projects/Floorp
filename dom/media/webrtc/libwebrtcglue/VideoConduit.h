@@ -267,7 +267,7 @@ class WebrtcVideoConduit
     mAllowSsrcChange = false;
   }
 
-  void RecordTelemetry() override;
+  void CollectTelemetryData() override;
 
   void SetRtcpEventObserver(mozilla::RtcpEventObserver* observer) override;
 
@@ -361,7 +361,7 @@ class WebrtcVideoConduit
   bool mUpdateResolution = false;
   int mSinkWantsPixelCount = std::numeric_limits<int>::max();
 
-  // Bookkeeping of stats for telemetry. Sts thread only.
+  // Bookkeeping of stats for telemetry. Main thread only.
   RunningStat mSendFramerate;
   RunningStat mSendBitrate;
   RunningStat mRecvFramerate;

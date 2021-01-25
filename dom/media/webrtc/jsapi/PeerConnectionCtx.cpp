@@ -287,7 +287,7 @@ void PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer,
                 }
               },
               [=](nsresult aError) {});
-      idAndPc.second->RecordConduitTelemetry();
+      idAndPc.second->CollectConduitTelemetryData();
     }
   }
 }
