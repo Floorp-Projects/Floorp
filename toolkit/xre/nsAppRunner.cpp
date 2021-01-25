@@ -250,6 +250,8 @@
 
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"
+#  include "nsIPowerManagerService.h"
+#  include "nsIStringBundle.h"
 #endif
 
 extern uint32_t gRestartMode;
@@ -5230,6 +5232,12 @@ nsresult XREMain::XRE_mainRun() {
     // We never open a window, but don't want to exit immediately.
     rv = appStartup->EnterLastWindowClosingSurvivalArea();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Avoid some small differences in initialization order across platforms.
+    nsCOMPtr<nsIPowerManagerService> powerManagerService =
+        do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+    nsCOMPtr<nsIStringBundleService> stringBundleService =
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID);
 
     rv = BackgroundTasks::RunBackgroundTask(cmdLine);
     NS_ENSURE_SUCCESS(rv, rv);
