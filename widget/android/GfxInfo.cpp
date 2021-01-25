@@ -596,8 +596,10 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       // Enable Webrender on all Adreno 6xx devices
       isUnblocked |= gpu.Find("Adreno (TM) 6", /*ignoreCase*/ true) >= 0;
 
-      // Enable Webrender on all Mali-Gxx GPUs
-      isUnblocked |= gpu.Find("Mali-G", /*ignoreCase*/ true) >= 0;
+      // Enable Webrender on all Mali-Gxx GPUs, excluding G76 due to bug
+      // 1688017.
+      isUnblocked |= gpu.Find("Mali-G", /*ignoreCase*/ true) >= 0 &&
+                     gpu.Find("Mali-G76", /*ignoreCase*/ true) == kNotFound;
 
       if (!isUnblocked) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
