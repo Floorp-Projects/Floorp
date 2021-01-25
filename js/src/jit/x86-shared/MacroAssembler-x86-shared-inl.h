@@ -1445,6 +1445,10 @@ void MacroAssembler::bitmaskInt32x4(FloatRegister src, Register dest) {
   vmovmskps(src, dest);
 }
 
+void MacroAssembler::bitmaskInt64x2(FloatRegister src, Register dest) {
+  vmovmskpd(src, dest);
+}
+
 // Swizzle - permute with variable indices
 
 void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest,

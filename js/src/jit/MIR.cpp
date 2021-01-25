@@ -4392,10 +4392,10 @@ template <typename T>
 static int32_t Bitmask(const T& v) {
   constexpr size_t count = sizeof(T) / sizeof(*v);
   constexpr size_t shift = 8 * sizeof(*v) - 1;
-  static_assert(shift == 7 || shift == 15 || shift == 31);
+  static_assert(shift == 7 || shift == 15 || shift == 31 || shift == 63);
   int32_t result = 0;
   for (unsigned i = 0; i < count; i++) {
-    result = result | (((v[i] >> shift) & 1) << i);
+    result = result | int32_t(((v[i] >> shift) & 1) << i);
   }
   return result;
 }
@@ -4438,6 +4438,10 @@ MDefinition* MWasmReduceSimd128::foldsTo(TempAllocator& alloc) {
       case wasm::SimdOp::I32x4Bitmask:
         i32Result = Bitmask(
             SimdConstant::CreateSimd128((int32_t*)c.bytes()).asInt32x4());
+        break;
+      case wasm::SimdOp::I64x2Bitmask:
+        i32Result = Bitmask(
+            SimdConstant::CreateSimd128((int64_t*)c.bytes()).asInt64x2());
         break;
       case wasm::SimdOp::I8x16ExtractLaneS:
         i32Result =

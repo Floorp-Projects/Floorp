@@ -935,6 +935,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::I8x16Bitmask):
           case uint32_t(SimdOp::I16x8Bitmask):
           case uint32_t(SimdOp::I32x4Bitmask):
+          case uint32_t(SimdOp::I64x2Bitmask):
             CHECK(iter.readConversion(ValType::V128, ValType::I32, &nothing));
 
           case uint32_t(SimdOp::I8x16ReplaceLane):

@@ -2635,6 +2635,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void bitmaskInt32x4(FloatRegister src, Register dest,
                              FloatRegister temp) DEFINED_ON(arm64);
 
+  inline void bitmaskInt64x2(FloatRegister src, Register dest)
+      DEFINED_ON(x86_shared);
+
+  inline void bitmaskInt64x2(FloatRegister src, Register dest,
+                             FloatRegister temp) DEFINED_ON(arm64);
+
   // Comparisons (integer and floating-point)
 
   inline void compareInt8x16(Assembler::Condition cond, FloatRegister rhs,
