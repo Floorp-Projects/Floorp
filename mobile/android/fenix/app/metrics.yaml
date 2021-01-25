@@ -2206,6 +2206,36 @@ reader_mode:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
 
+tabs_tray.cfr:
+  dismiss:
+    type: event
+    description: |
+      A user dismisses the tabs tray CFR.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/16485
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/17442
+      - https://github.com/mozilla-mobile/fenix/issues/16485#issuecomment-759641324
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  go_to_settings:
+    type: event
+    description: |
+      A user selects the CFR option to navigate to settings.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/16485
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/17442
+      - https://github.com/mozilla-mobile/fenix/issues/16485#issuecomment-759641324
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+
 tabs_tray:
   opened:
     type: event

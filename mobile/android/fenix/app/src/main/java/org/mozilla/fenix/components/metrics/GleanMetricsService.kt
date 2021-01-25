@@ -55,6 +55,7 @@ import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.TabsTray
+import org.mozilla.fenix.GleanMetrics.TabsTrayCfr
 import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
@@ -659,7 +660,13 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TabsTrayCloseAllTabsPressed -> EventWrapper<NoExtraKeys>(
             { TabsTray.closeAllTabs.record(it) }
         )
-        Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
+        is Event.TabsTrayCfrDismissed -> EventWrapper<NoExtraKeys>(
+            { TabsTrayCfr.dismiss.record(it) }
+        )
+        is Event.TabsTrayCfrTapped -> EventWrapper<NoExtraKeys>(
+            { TabsTrayCfr.goToSettings.record(it) }
+        )
+        is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }
         )
         is Event.AutoPlaySettingChanged -> EventWrapper(
@@ -692,25 +699,25 @@ private val Event.wrapper: EventWrapper<*>?
             { Events.recentlyClosedTabsOpened.record(it) }
         )
 
-        Event.MasterPasswordMigrationDisplayed -> EventWrapper<NoExtraKeys>(
+        is Event.MasterPasswordMigrationDisplayed -> EventWrapper<NoExtraKeys>(
             { MasterPassword.displayed.record(it) }
         )
-        Event.MasterPasswordMigrationSuccess -> EventWrapper<NoExtraKeys>(
+        is Event.MasterPasswordMigrationSuccess -> EventWrapper<NoExtraKeys>(
             { MasterPassword.migration.record(it) }
         )
-        Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
+        is Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
             { Tabs.settingOpened.record(it) }
         )
         Event.ContextMenuCopyTapped -> EventWrapper<NoExtraKeys>(
             { ContextualMenu.copyTapped.record(it) }
         )
-        Event.ContextMenuSearchTapped -> EventWrapper<NoExtraKeys>(
+        is Event.ContextMenuSearchTapped -> EventWrapper<NoExtraKeys>(
             { ContextualMenu.searchTapped.record(it) }
         )
-        Event.ContextMenuSelectAllTapped -> EventWrapper<NoExtraKeys>(
+        is Event.ContextMenuSelectAllTapped -> EventWrapper<NoExtraKeys>(
             { ContextualMenu.selectAllTapped.record(it) }
         )
-        Event.ContextMenuShareTapped -> EventWrapper<NoExtraKeys>(
+        is Event.ContextMenuShareTapped -> EventWrapper<NoExtraKeys>(
             { ContextualMenu.shareTapped.record(it) }
         )
 

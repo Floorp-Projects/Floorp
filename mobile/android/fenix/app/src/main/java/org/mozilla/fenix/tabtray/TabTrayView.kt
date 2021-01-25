@@ -288,7 +288,10 @@ class TabTrayView(
                 actionText = view.context.getString(R.string.tab_tray_grid_view_banner_positive_button_text),
                 container = view.infoBanner,
                 dismissByHiding = true,
-                dismissAction = { settings.shouldShowGridViewBanner = false }
+                dismissAction = {
+                    components.analytics.metrics.track(Event.TabsTrayCfrDismissed)
+                    settings.shouldShowGridViewBanner = false
+                }
             ) {
                 interactor.onGoToTabsSettings()
                 settings.shouldShowGridViewBanner = false

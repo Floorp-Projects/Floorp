@@ -254,5 +254,6 @@ class DefaultTabTrayController(
     override fun handleGoToTabsSettingClicked() {
         val directions = TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment()
         navController.navigate(directions)
+        metrics.track(Event.TabsTrayCfrTapped)
     }
 }

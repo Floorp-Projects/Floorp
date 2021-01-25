@@ -168,6 +168,7 @@ sealed class Event {
     object ContextualHintETPOutsideTap : Event()
     object ContextualHintETPInsideTap : Event()
 
+    // Tab tray
     object TabsTrayOpened : Event()
     object TabsTrayClosed : Event()
     object OpenedExistingTab : Event()
@@ -180,6 +181,8 @@ sealed class Event {
     object TabsTraySaveToCollectionPressed : Event()
     object TabsTrayShareAllTabsPressed : Event()
     object TabsTrayCloseAllTabsPressed : Event()
+    object TabsTrayCfrDismissed : Event()
+    object TabsTrayCfrTapped : Event()
 
     object ProgressiveWebAppOpenFromHomescreenTap : Event()
     object ProgressiveWebAppInstallAsShortcut : Event()

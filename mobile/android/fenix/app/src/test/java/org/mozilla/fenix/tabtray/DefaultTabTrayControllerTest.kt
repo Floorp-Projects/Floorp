@@ -15,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyAll
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -251,7 +252,7 @@ class DefaultTabTrayControllerTest {
 
         controller.handleSaveToCollectionClicked(setOf(tab))
 
-        verify {
+        verifyAll {
             metrics.track(Event.TabsTraySaveToCollectionPressed)
             registerCollectionStorageObserver()
             showChooseCollectionDialog(listOf(tab2))
@@ -279,7 +280,7 @@ class DefaultTabTrayControllerTest {
         val tab = Tab("1234", "mozilla.org")
 
         controller.handleDeleteSelectedTabs(setOf(tab))
-        verify {
+        verifyAll {
             tabsUseCases.removeTabs(listOf(tab.id))
             tabTrayFragmentStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
             showUndoSnackbarForTabs()
@@ -292,19 +293,31 @@ class DefaultTabTrayControllerTest {
         coEvery { bookmarksStorage.getBookmarksWithUrl("mozilla.org") } returns listOf()
 
         controller.handleBookmarkSelectedTabs(setOf(tab))
-        verify {
+        verifyAll {
             tabTrayFragmentStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
             showBookmarksSavedSnackbar()
         }
     }
 
     @Test
-    fun handleSetUpAutoCloseTabsClicked() {
+    fun handleRecentlyClosedClicked() {
+        controller.handleRecentlyClosedClicked()
+        val directions = TabTrayDialogFragmentDirections.actionGlobalRecentlyClosed()
+
+        verifyAll {
+            navController.navigate(directions)
+            metrics.track(Event.RecentlyClosedTabsOpened)
+        }
+    }
+
+    @Test
+    fun handleGoToTabsSettingClicked() {
         controller.handleGoToTabsSettingClicked()
         val directions = TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment()
 
-        verify {
+        verifyAll {
             navController.navigate(directions)
+            metrics.track(Event.TabsTrayCfrTapped)
         }
     }
 }
