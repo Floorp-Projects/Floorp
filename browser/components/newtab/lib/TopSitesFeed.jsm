@@ -139,7 +139,7 @@ this.TopSitesFeed = class TopSitesFeed {
     this._readDefaults({ isStartup: true });
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     Services.obs.addObserver(this, "browser-search-engine-modified");
-    Services.obs.addObserver(this, "browser-region");
+    Services.obs.addObserver(this, "browser-region-updated");
     Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_POLICY_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
@@ -148,7 +148,7 @@ this.TopSitesFeed = class TopSitesFeed {
   uninit() {
     PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
-    Services.obs.removeObserver(this, "browser-region");
+    Services.obs.removeObserver(this, "browser-region-updated");
     Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_POLICY_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
@@ -168,7 +168,7 @@ this.TopSitesFeed = class TopSitesFeed {
           this.refresh({ broadcast: true });
         }
         break;
-      case "browser-region":
+      case "browser-region-updated":
         this._readDefaults();
         break;
       case "nsPref:changed":

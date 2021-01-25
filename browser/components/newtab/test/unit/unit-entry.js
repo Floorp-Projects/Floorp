@@ -258,8 +258,7 @@ const TEST_GLOBAL = {
   },
   Region: {
     home: "US",
-    REGION_TOPIC: "browser-region",
-    REGION_UPDATED: "region-updated",
+    REGION_TOPIC: "browser-region-updated",
   },
   Services: {
     dirsvc: {
