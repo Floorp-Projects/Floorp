@@ -322,7 +322,6 @@ struct ParamTraits<mozilla::dom::RTCRemoteInboundRtpStreamStats> {
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mLocalId);
-    WriteParam(aMsg, aParam.mBytesReceived);  // To be removed in Bug 1529405
     WriteParam(aMsg, aParam.mRoundTripTime);
     WriteRTCReceivedRtpStreamStats(aMsg, aParam);
   }
@@ -330,9 +329,6 @@ struct ParamTraits<mozilla::dom::RTCRemoteInboundRtpStreamStats> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &(aResult->mLocalId)) &&
-           ReadParam(
-               aMsg, aIter,
-               &(aResult->mBytesReceived)) &&  // To be removed in Bug 1529405
            ReadParam(aMsg, aIter, &(aResult->mRoundTripTime)) &&
            ReadRTCReceivedRtpStreamStats(aMsg, aIter, aResult);
   }
