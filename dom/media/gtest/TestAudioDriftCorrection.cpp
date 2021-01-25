@@ -224,14 +224,12 @@ AudioChunk CreateAudioChunk(uint32_t aFrames, uint32_t aChannels,
                             AudioSampleFormat aSampleFormat);
 
 void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
-  const uint32_t channels = 1;
   const uint32_t sampleRateTransmitter = aSourceRate;
   const uint32_t sampleRateReceiver = aTargetRate;
   const uint32_t frequency = 100;
   AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
 
-  AudioGenerator<AudioDataValue> tone(channels, sampleRateTransmitter,
-                                      frequency);
+  AudioGenerator<AudioDataValue> tone(1, sampleRateTransmitter, frequency);
   AudioVerifier<AudioDataValue> inToneVerifier(sampleRateTransmitter,
                                                frequency);
   AudioVerifier<AudioDataValue> outToneVerifier(sampleRateReceiver, frequency);
@@ -301,9 +299,7 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
   const uint32_t sampleRateReceiver = aTargetRate;
   AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
 
-  AudioGenerator<AudioDataValue> monoTone(1, sampleRateTransmitter, frequency);
-  AudioGenerator<AudioDataValue> stereoTone(2, sampleRateTransmitter,
-                                            frequency);
+  AudioGenerator<AudioDataValue> tone(1, sampleRateTransmitter, frequency);
   AudioVerifier<AudioDataValue> inToneVerify(sampleRateTransmitter, frequency);
   AudioVerifier<AudioDataValue> outToneVerify(sampleRateReceiver, frequency);
 
@@ -322,10 +318,10 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
     for (uint32_t n = 0; n < 250; ++n) {
       // Create the input (sine tone) of two chunks.
       AudioSegment inSegment;
-      monoTone.Generate(inSegment, sourceFrames / 2);
-      stereoTone.SetOffset(monoTone.Offset());
-      stereoTone.Generate(inSegment, sourceFrames / 2);
-      monoTone.SetOffset(stereoTone.Offset());
+      tone.Generate(inSegment, sourceFrames / 2);
+      tone.SetChannelsCount(2);
+      tone.Generate(inSegment, sourceFrames / 2);
+      tone.SetChannelsCount(1);
       inToneVerify.AppendData(inSegment);
       // Print the input for debugging
       // printAudioSegment(inSegment);

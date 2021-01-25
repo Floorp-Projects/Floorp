@@ -94,7 +94,7 @@ cubeb_devid MockCubebStream::GetOutputDeviceID() const {
 }
 
 uint32_t MockCubebStream::InputChannels() const {
-  return mAudioGenerator.mChannels;
+  return mAudioGenerator.ChannelCount();
 }
 
 uint32_t MockCubebStream::OutputChannels() const {

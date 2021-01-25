@@ -18,60 +18,44 @@ class AudioGenerator {
  public:
   AudioGenerator(uint32_t aChannels, uint32_t aSampleRate,
                  uint32_t aFrequency = 1000)
-      : mChannels(aChannels),
-        mSampleRate(aSampleRate),
+      : mSampleRate(aSampleRate),
         mFrequency(aFrequency),
+        mChannelCount(aChannels),
         mGenerator(aSampleRate, aFrequency) {}
 
-  void Generate(mozilla::AudioSegment& aSegment, const uint32_t& aSamples) {
-    SetInterleaved(false);
+  void Generate(mozilla::AudioSegment& aSegment, uint32_t aFrameCount) {
     CheckedInt<size_t> bufferSize(sizeof(Sample));
-    bufferSize *= aSamples;
+    bufferSize *= aFrameCount;
     RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
     Sample* dest = static_cast<Sample*>(buffer->Data());
-    mGenerator.generate(dest, aSamples);
+    mGenerator.generate(dest, aFrameCount);
     AutoTArray<const Sample*, 1> channels;
-    for (uint32_t i = 0; i < mChannels; ++i) {
+    for (uint32_t i = 0; i < mChannelCount; ++i) {
       channels.AppendElement(dest);
     }
-    aSegment.AppendFrames(buffer.forget(), channels, aSamples,
+    aSegment.AppendFrames(buffer.forget(), channels, aFrameCount,
                           PRINCIPAL_HANDLE_NONE);
   }
 
-  void GenerateInterleaved(Sample* aBuffer, const uint32_t& aFrames) {
-    SetInterleaved(true);
-    mGenerator.generate(aBuffer, aFrames * mChannels);
+  void GenerateInterleaved(Sample* aSamples, uint32_t aFrameCount) {
+    mGenerator.generate(aSamples, aFrameCount, mChannelCount);
   }
 
-  void SetInterleaved(bool aInterleaved) {
-    if (aInterleaved == mInterleaved) {
-      return;
-    }
-    mInterleaved = aInterleaved;
-    if (mInterleaved) {
-      TrackTicks offset = Offset();
-      mGenerator =
-          SineWaveGenerator<Sample>(mSampleRate, mFrequency, mChannels);
-      mGenerator.SetOffset(offset * mChannels);
-    } else {
-      TrackTicks offset = Offset();
-      mGenerator = SineWaveGenerator<Sample>(mSampleRate, mFrequency);
-      mGenerator.SetOffset(offset / mChannels);
-    }
+  void SetChannelsCount(uint32_t aChannelCount) {
+    mChannelCount = aChannelCount;
   }
 
-  void SetOffset(TrackTicks aFrames) { mGenerator.SetOffset(aFrames); }
+  uint32_t ChannelCount() const { return mChannelCount; }
 
-  TrackTicks Offset() const { return mGenerator.Offset(); }
+  static float Amplitude() {
+    return mozilla::SineWaveGenerator<Sample>::Amplitude();
+  }
 
-  static float Amplitude() { return SineWaveGenerator<Sample>::Amplitude(); }
-
-  const uint32_t mChannels;
   const uint32_t mSampleRate;
   const uint32_t mFrequency;
 
  private:
-  bool mInterleaved = false;
+  uint32_t mChannelCount;
   mozilla::SineWaveGenerator<Sample> mGenerator;
 };
 
