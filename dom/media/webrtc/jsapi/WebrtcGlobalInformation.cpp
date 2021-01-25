@@ -624,58 +624,10 @@ static void StoreLongTermICEStatisticsImpl_m(RTCStatsReportInternal* report) {
 
   report->mClosed = true;
 
-  for (const auto& outboundRtpStats : report->mOutboundRtpStreamStats) {
-    bool isVideo = (outboundRtpStats.mId.Value().Find("video") != -1);
-    if (!isVideo) {
-      continue;
-    }
-    if (outboundRtpStats.mBitrateMean.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
-                 uint32_t(outboundRtpStats.mBitrateMean.Value() / 1000));
-    }
-    if (outboundRtpStats.mBitrateStdDev.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-                 uint32_t(outboundRtpStats.mBitrateStdDev.Value() / 1000));
-    }
-    if (outboundRtpStats.mFramerateMean.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
-                 uint32_t(outboundRtpStats.mFramerateMean.Value()));
-    }
-    if (outboundRtpStats.mFramerateStdDev.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-                 uint32_t(outboundRtpStats.mFramerateStdDev.Value() * 10));
-    }
-    if (outboundRtpStats.mDroppedFrames.WasPassed() &&
-        report->mCallDurationMs.WasPassed()) {
-      double mins = report->mCallDurationMs.Value() / (1000 * 60);
-      if (mins > 0) {
-        Accumulate(
-            WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM,
-            uint32_t(double(outboundRtpStats.mDroppedFrames.Value()) / mins));
-      }
-    }
-  }
-
   for (const auto& inboundRtpStats : report->mInboundRtpStreamStats) {
     bool isVideo = (inboundRtpStats.mId.Value().Find("video") != -1);
     if (!isVideo) {
       continue;
-    }
-    if (inboundRtpStats.mBitrateMean.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
-                 uint32_t(inboundRtpStats.mBitrateMean.Value() / 1000));
-    }
-    if (inboundRtpStats.mBitrateStdDev.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-                 uint32_t(inboundRtpStats.mBitrateStdDev.Value() / 1000));
-    }
-    if (inboundRtpStats.mFramerateMean.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
-                 uint32_t(inboundRtpStats.mFramerateMean.Value()));
-    }
-    if (inboundRtpStats.mFramerateStdDev.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-                 uint32_t(inboundRtpStats.mFramerateStdDev.Value() * 10));
     }
     if (inboundRtpStats.mDiscardedPackets.WasPassed() &&
         report->mCallDurationMs.WasPassed()) {
