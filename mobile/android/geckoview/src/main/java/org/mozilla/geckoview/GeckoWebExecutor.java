@@ -141,7 +141,7 @@ public class GeckoWebExecutor {
 
         final String uri = request.uri.toLowerCase(Locale.ROOT);
         // We don't need to fully validate the URI here, just a sanity check
-        if (!uri.matches("(http|blob).*")) {
+        if (!uri.startsWith("http") && !uri.startsWith("blob")) {
             throw new IllegalArgumentException("Unsupported URI scheme: " +
                     (uri.length() > 10 ? uri.substring(0, 10) : uri));
         }

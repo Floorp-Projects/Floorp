@@ -445,5 +445,22 @@ class WebExecutorTest {
                         equalTo("Unsupported URI scheme: $truncated"))
             }
         }
+
+        val legal = listOf(
+            "http://$TEST_ENDPOINT\n",
+            "http://$TEST_ENDPOINT/🥲",
+            "http://$TEST_ENDPOINT/abc"
+        )
+
+        for (uri in legal) {
+            try {
+                fetch(WebRequest(uri))
+                throw IllegalStateException("fetch() should have thrown")
+            } catch (e: WebRequestError) {
+                assertThat("Request should pass initial validation.",
+                        true,
+                        equalTo(true))
+            }
+        }
     }
 }
