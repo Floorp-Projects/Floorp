@@ -856,10 +856,10 @@ assertSame(get(mem16u, 0, 8), iota(8).map((n) => zero_extend(as[n], 8)));
 ins.exports.widen_high_i8x16_u();
 assertSame(get(mem16u, 0, 8), iota(8).map((n) => zero_extend(as[n+8], 8)));
 
-var mem32 = new Int16Array(ins.exports.mem.buffer);
-var mem32u = new Uint16Array(ins.exports.mem.buffer);
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+var mem32u = new Uint32Array(ins.exports.mem.buffer);
 
-var as = [0, 1, 192, 3, 205, 5, 6, 133].map((x) => x << 16);
+var as = [0, 1, 192, 3, 205, 5, 6, 133].map((x) => x << 8);
 
 set(mem16, 8, as);
 

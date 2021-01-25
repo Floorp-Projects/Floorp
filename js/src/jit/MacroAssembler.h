@@ -2910,6 +2910,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void unsignedWidenLowInt32x4(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
+  inline void widenHighInt32x4(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
+
+  inline void unsignedWidenHighInt32x4(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
+
   // Compare-based minimum/maximum
   //
   // On x86, the signature is (rhsDest, lhs); on arm64 it is (rhs, lhsDest).

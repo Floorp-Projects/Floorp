@@ -645,10 +645,10 @@ enum class SimdOp {
   I64x2Bitmask = 0xc4,
   // Narrow = 0xc5
   // Narrow = 0xc6
-  // Widen = 0xc7
-  // Widen = 0xc8
-  // Widen = 0xc9
-  // Widen = 0xca
+  I64x2WidenLowSI32x4 = 0xc7,
+  I64x2WidenHighSI32x4 = 0xc8,
+  I64x2WidenLowUI32x4 = 0xc9,
+  I64x2WidenHighUI32x4 = 0xca,
   I64x2Shl = 0xcb,
   I64x2ShrS = 0xcc,
   I64x2ShrU = 0xcd,

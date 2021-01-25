@@ -1990,6 +1990,8 @@ static inline ARMFPRegister Simd2D(FloatRegister r) { return SimdReg(r).V2D(); }
 
 static inline ARMFPRegister Simd1D(FloatRegister r) { return SimdReg(r).V1D(); }
 
+static inline ARMFPRegister SimdQ(FloatRegister r) { return SimdReg(r).Q(); }
+
 //{{{ check_macroassembler_style
 
 // Moves
@@ -2875,6 +2877,15 @@ void MacroAssembler::widenLowInt32x4(FloatRegister src, FloatRegister dest) {
 void MacroAssembler::unsignedWidenLowInt32x4(FloatRegister src,
                                              FloatRegister dest) {
   Ushll(Simd2D(dest), Simd2S(src), 0);
+}
+
+void MacroAssembler::widenHighInt32x4(FloatRegister src, FloatRegister dest) {
+  Sshll2(Simd2D(dest), Simd4S(src), 0);
+}
+
+void MacroAssembler::unsignedWidenHighInt32x4(FloatRegister src,
+                                              FloatRegister dest) {
+  Ushll2(Simd2D(dest), Simd4S(src), 0);
 }
 
 // Compare-based minimum/maximum (experimental as of August, 2020)
