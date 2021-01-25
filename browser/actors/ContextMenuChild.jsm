@@ -801,7 +801,7 @@ class ContextMenuChild extends JSWindowActorChild {
     let node = aEvent.composedTarget;
 
     // Set the node to containing <video>/<audio>/<embed>/<object> if the node
-    // is in the videocontrols/pluginProblem UA Widget.
+    // is in the videocontrols UA Widget.
     if (this.contentWindow.ShadowRoot) {
       let n = node;
       while (n) {
