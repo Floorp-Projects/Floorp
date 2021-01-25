@@ -712,8 +712,8 @@ enum class SimdOp {
   // to the shuffle opcode should be const 0.  If an operation uses one operand,
   // the operands to the shuffle opcode should both be that operand.
   //
-  // The wormhole must be enabled by a flag and is only supported on x64 and x86
-  // (though with both compilers).
+  // The wormhole must be enabled by a flag and is only supported by ion on x64,
+  // baseline must be disabled.
   //
   // The benefit of this mechanism is that it allows experimental opcodes to be
   // used without updating other tools (compilers, linkers, optimizers).

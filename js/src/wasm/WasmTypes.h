@@ -3955,11 +3955,6 @@ void DebugCodegen(DebugChannel channel, const char* fmt, ...)
 
 using PrintCallback = void (*)(const char*);
 
-#ifdef ENABLE_WASM_SIMD_WORMHOLE
-bool IsWormholeTrigger(const V128& shuffleMask);
-jit::SimdConstant WormholeSignature();
-#endif
-
 }  // namespace wasm
 
 template <>
