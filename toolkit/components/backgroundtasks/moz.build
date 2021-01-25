@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    # TODO: House this somewhere more specific?
+    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
+
+FINAL_LIBRARY = "xul"
+
+UNIFIED_SOURCES += [
+    "BackgroundTasks.cpp",
+]
+
+EXPORTS.mozilla += [
+    "BackgroundTasks.h",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+XPIDL_SOURCES += [
+    "nsIBackgroundTasks.idl",
+]
+
+XPIDL_MODULE = "toolkit_backgroundtasks"

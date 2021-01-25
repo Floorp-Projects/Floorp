@@ -219,6 +219,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_BACKGROUNDTASKS:
+#ifdef MOZ_BACKGROUNDTASKS
+  true,
+#else
+  false,
+#endif
+
   MOZ_UPDATE_AGENT:
 #ifdef MOZ_UPDATE_AGENT
   true,

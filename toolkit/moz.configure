@@ -2495,3 +2495,20 @@ def oxidized_breakpad(target):
 
 set_config("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)
 set_define("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)
+
+
+# Enable or disable running in background task mode: headless for
+# periodic, short-lived, maintenance tasks.
+# ==============================================================================
+
+
+option(
+    "--enable-backgroundtasks",
+    default=milestone.is_nightly,
+    help="{Enable|Disable} running in background task mode",
+)
+
+
+set_config(
+    "MOZ_BACKGROUNDTASKS", depends_if("--enable-backgroundtasks")(lambda _: True)
+)
