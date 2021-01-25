@@ -81,11 +81,11 @@ static ReferrerPolicy DefaultReferrerPolicyToReferrerPolicy(
       return ReferrerPolicy::No_referrer;
     case DefaultReferrerPolicy::eDefaultPolicySameOrgin:
       return ReferrerPolicy::Same_origin;
-    case DefaultReferrerPolicy::eDefaultPolicyStrictWhenXorigin:
-      return ReferrerPolicy::Strict_origin_when_cross_origin;
+    case DefaultReferrerPolicy::eDefaultPolicyNoReferrerWhenDownGrade:
+      return ReferrerPolicy::No_referrer_when_downgrade;
   }
 
-  return ReferrerPolicy::No_referrer_when_downgrade;
+  return ReferrerPolicy::Strict_origin_when_cross_origin;
 }
 
 struct LegacyReferrerPolicyTokenMap {
