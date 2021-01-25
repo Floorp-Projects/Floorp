@@ -594,3 +594,17 @@ uint16_t PivotRoleRule::Match(const AccessibleOrProxy& aAccOrProxy) {
 
   return result;
 }
+
+// LocalAccInSameDocRule
+
+uint16_t LocalAccInSameDocRule::Match(const AccessibleOrProxy& aAccOrProxy) {
+  Accessible* acc = aAccOrProxy.AsAccessible();
+  if (!acc) {
+    return nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  }
+  if (acc->IsOuterDoc()) {
+    return nsIAccessibleTraversalRule::FILTER_MATCH |
+           nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  }
+  return nsIAccessibleTraversalRule::FILTER_MATCH;
+}
