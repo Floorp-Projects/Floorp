@@ -69,13 +69,13 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
   virtual mozilla::IntrinsicSize GetIntrinsicSize() override;
   mozilla::AspectRatio GetIntrinsicRatio() const override;
 
-  SizeComputationResult ComputeSize(gfxContext* aRenderingContext,
-                                    mozilla::WritingMode aWM,
-                                    const mozilla::LogicalSize& aCBSize,
-                                    nscoord aAvailableISize,
-                                    const mozilla::LogicalSize& aMargin,
-                                    const mozilla::LogicalSize& aBorderPadding,
-                                    mozilla::ComputeSizeFlags aFlags) override;
+  SizeComputationResult ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
+      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
+      const mozilla::LogicalSize& aMargin,
+      const mozilla::LogicalSize& aBorderPadding,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
+      mozilla::ComputeSizeFlags aFlags) override;
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,

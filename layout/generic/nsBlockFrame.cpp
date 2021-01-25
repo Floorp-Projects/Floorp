@@ -7411,7 +7411,7 @@ void nsBlockFrame::ReflowOutsideMarker(nsIFrame* aMarkerFrame,
   availSize.BSize(markerWM) = NS_UNCONSTRAINEDSIZE;
 
   ReflowInput reflowInput(aState.mPresContext, ri, aMarkerFrame, availSize,
-                          Nothing(), {}, {ComputeSizeFlag::ShrinkWrap});
+                          Nothing(), {}, {}, {ComputeSizeFlag::ShrinkWrap});
   nsReflowStatus status;
   aMarkerFrame->Reflow(aState.mPresContext, aMetrics, reflowInput, status);
 

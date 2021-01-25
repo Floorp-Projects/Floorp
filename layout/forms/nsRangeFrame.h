@@ -71,11 +71,12 @@ class nsRangeFrame final : public nsContainerFrame,
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual mozilla::LogicalSize ComputeAutoSize(
+  mozilla::LogicalSize ComputeAutoSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin,
       const mozilla::LogicalSize& aBorderPadding,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
       mozilla::ComputeSizeFlags aFlags) override;
 
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
