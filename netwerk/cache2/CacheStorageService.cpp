@@ -1019,8 +1019,6 @@ NS_IMETHODIMP CacheStorageService::AsyncVisitAllStorages(
   RefPtr<WalkDiskCacheRunnable> event =
       new WalkDiskCacheRunnable(nullptr, aVisitEntries, aVisitor);
   return event->Walk();
-
-  return NS_OK;
 }
 
 // Methods used by CacheEntry for management of in-memory structures.

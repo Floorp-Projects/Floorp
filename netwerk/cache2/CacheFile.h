@@ -12,9 +12,11 @@
 #include "nsClassHashtable.h"
 #include "mozilla/Mutex.h"
 
+class nsIAsyncOutputStream;
+class nsICacheEntry;
+class nsICacheEntryMetaDataVisitor;
 class nsIInputStream;
 class nsIOutputStream;
-class nsICacheEntryMetaDataVisitor;
 
 namespace mozilla {
 namespace net {

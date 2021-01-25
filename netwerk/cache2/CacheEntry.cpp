@@ -9,6 +9,7 @@
 #include "CacheFileUtils.h"
 #include "CacheIndex.h"
 
+#include "nsIAsyncOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsISeekableStream.h"
