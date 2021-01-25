@@ -2212,6 +2212,66 @@ void MacroAssembler::mulInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Mul(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::extMulLowInt8x16(FloatRegister rhs,
+                                      FloatRegister lhsDest) {
+  Smull(Simd8H(lhsDest), Simd8B(lhsDest), Simd8B(rhs));
+}
+
+void MacroAssembler::extMulHighInt8x16(FloatRegister rhs,
+                                       FloatRegister lhsDest) {
+  Smull2(Simd8H(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
+}
+
+void MacroAssembler::unsignedExtMulLowInt8x16(FloatRegister rhs,
+                                              FloatRegister lhsDest) {
+  Umull(Simd8H(lhsDest), Simd8B(lhsDest), Simd8B(rhs));
+}
+
+void MacroAssembler::unsignedExtMulHighInt8x16(FloatRegister rhs,
+                                               FloatRegister lhsDest) {
+  Umull2(Simd8H(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
+}
+
+void MacroAssembler::extMulLowInt16x8(FloatRegister rhs,
+                                      FloatRegister lhsDest) {
+  Smull(Simd4S(lhsDest), Simd4H(lhsDest), Simd4H(rhs));
+}
+
+void MacroAssembler::extMulHighInt16x8(FloatRegister rhs,
+                                       FloatRegister lhsDest) {
+  Smull2(Simd4S(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::unsignedExtMulLowInt16x8(FloatRegister rhs,
+                                              FloatRegister lhsDest) {
+  Umull(Simd4S(lhsDest), Simd4H(lhsDest), Simd4H(rhs));
+}
+
+void MacroAssembler::unsignedExtMulHighInt16x8(FloatRegister rhs,
+                                               FloatRegister lhsDest) {
+  Umull2(Simd4S(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::extMulLowInt32x4(FloatRegister rhs,
+                                      FloatRegister lhsDest) {
+  Smull(Simd2D(lhsDest), Simd2S(lhsDest), Simd2S(rhs));
+}
+
+void MacroAssembler::extMulHighInt32x4(FloatRegister rhs,
+                                       FloatRegister lhsDest) {
+  Smull2(Simd2D(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::unsignedExtMulLowInt32x4(FloatRegister rhs,
+                                              FloatRegister lhsDest) {
+  Umull(Simd2D(lhsDest), Simd2S(lhsDest), Simd2S(rhs));
+}
+
+void MacroAssembler::unsignedExtMulHighInt32x4(FloatRegister rhs,
+                                               FloatRegister lhsDest) {
+  Umull2(Simd2D(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
 // Integer Negate
 
 void MacroAssembler::negInt8x16(FloatRegister src, FloatRegister dest) {
