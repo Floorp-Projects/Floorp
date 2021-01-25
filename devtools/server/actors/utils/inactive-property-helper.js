@@ -83,6 +83,20 @@ class InactivePropertyHelper {
    *
    * The main export is `isPropertyUsed()`, which can be used to check if a
    * property is used or not, and why.
+   *
+   * NOTE: We should generally *not* add rules here for any CSS properties that
+   * inherit by default, because it's hard for us to know whether such
+   * properties are truly "inactive". Web developers might legitimately set
+   * such a property on any arbitrary element, in order to concisely establish
+   * the default property-value throughout that element's subtree. For example,
+   * consider the "list-style-*" properties, which inherit by default and which
+   * only have a rendering effect on elements with "display:list-item"
+   * (e.g. <li>). It might superficially seem like we could add a rule here to
+   * warn about usages of these properties on non-"list-item" elements, but we
+   * shouldn't actually warn about that. A web developer may legitimately
+   * prefer to set these properties on an arbitrary container element (e.g. an
+   * <ol> element, or even the <html> element) in order to concisely adjust the
+   * rendering of a whole list (or all the lists in a document).
    */
   get VALIDATORS() {
     return [
