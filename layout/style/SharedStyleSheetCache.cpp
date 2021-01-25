@@ -342,12 +342,6 @@ void SharedStyleSheetCache::LoadCompletedInternal(
       // Insert the sheet into the tree now the sheet has loaded, but only if
       // the sheet is still relevant, and if this is a top-level sheet.
       const bool needInsertIntoTree = [&] {
-        if (StaticPrefs::dom_expose_incomplete_stylesheets()) {
-          // No need to do that, it's already done. This is technically a bit
-          // racy, but having to reload if you hit an in-progress load while
-          // switching the pref from about:config is not a big deal.
-          return false;
-        }
         if (!data->mLoader->GetDocument()) {
           // Not a document load, nothing to do.
           return false;

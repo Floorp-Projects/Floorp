@@ -102,6 +102,8 @@ class AccessibleCaretManagerTester : public ::testing::Test {
     Terminated IsTerminated() const override { return Terminated::No; }
     bool IsScrollStarted() const { return mIsScrollStarted; }
 
+    Terminated MaybeFlushLayout() override { return Terminated::No; }
+
     MOCK_CONST_METHOD0(GetCaretMode, CaretMode());
     MOCK_METHOD1(DispatchCaretStateChangedEvent,
                  void(CaretChangedReason aReason));

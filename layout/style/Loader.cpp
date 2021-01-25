@@ -1702,7 +1702,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   if (auto* linkStyle = LinkStyle::FromNodeOrNull(aInfo.mContent)) {
     linkStyle->SetStyleSheet(sheet);
   }
-  if (StaticPrefs::dom_expose_incomplete_stylesheets() || sheet->IsComplete()) {
+  if (sheet->IsComplete()) {
     InsertSheetInTree(*sheet, aInfo.mContent);
   }
 
@@ -1805,7 +1805,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   if (auto* linkStyle = LinkStyle::FromNodeOrNull(aInfo.mContent)) {
     linkStyle->SetStyleSheet(sheet);
   }
-  if (StaticPrefs::dom_expose_incomplete_stylesheets() || sheet->IsComplete()) {
+  if (sheet->IsComplete()) {
     InsertSheetInTree(*sheet, aInfo.mContent);
   }
 
