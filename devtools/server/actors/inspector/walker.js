@@ -266,6 +266,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this.onShadowrootattached
     );
 
+    for (const { document } of this.targetActor.windows) {
+      document.shadowRootAttachedEventEnabled = true;
+    }
+
     // Ensure that the root document node actor is ready and
     // managed.
     this.rootNode = this.document();
