@@ -260,10 +260,6 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
     WriteParam(aMsg, aParam.mNackCount);
     WriteParam(aMsg, aParam.mFirCount);
     WriteParam(aMsg, aParam.mPliCount);
-    WriteParam(aMsg, aParam.mBitrateMean);
-    WriteParam(aMsg, aParam.mBitrateStdDev);
-    WriteParam(aMsg, aParam.mFramerateMean);
-    WriteParam(aMsg, aParam.mFramerateStdDev);
     WriteRTCReceivedRtpStreamStats(aMsg, aParam);
   }
 
@@ -275,10 +271,6 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
            ReadParam(aMsg, aIter, &(aResult->mNackCount)) &&
            ReadParam(aMsg, aIter, &(aResult->mFirCount)) &&
            ReadParam(aMsg, aIter, &(aResult->mPliCount)) &&
-           ReadParam(aMsg, aIter, &(aResult->mBitrateMean)) &&
-           ReadParam(aMsg, aIter, &(aResult->mBitrateStdDev)) &&
-           ReadParam(aMsg, aIter, &(aResult->mFramerateMean)) &&
-           ReadParam(aMsg, aIter, &(aResult->mFramerateStdDev)) &&
            ReadRTCReceivedRtpStreamStats(aMsg, aIter, aResult);
   }
 };
@@ -309,11 +301,6 @@ struct ParamTraits<mozilla::dom::RTCOutboundRtpStreamStats> {
     WriteParam(aMsg, aParam.mNackCount);
     WriteParam(aMsg, aParam.mFirCount);
     WriteParam(aMsg, aParam.mPliCount);
-    WriteParam(aMsg, aParam.mBitrateMean);
-    WriteParam(aMsg, aParam.mBitrateStdDev);
-    WriteParam(aMsg, aParam.mFramerateMean);
-    WriteParam(aMsg, aParam.mFramerateStdDev);
-    WriteParam(aMsg, aParam.mDroppedFrames);
     WriteRTCSentRtpStreamStats(aMsg, aParam);
   }
 
@@ -325,11 +312,6 @@ struct ParamTraits<mozilla::dom::RTCOutboundRtpStreamStats> {
            ReadParam(aMsg, aIter, &(aResult->mNackCount)) &&
            ReadParam(aMsg, aIter, &(aResult->mFirCount)) &&
            ReadParam(aMsg, aIter, &(aResult->mPliCount)) &&
-           ReadParam(aMsg, aIter, &(aResult->mBitrateMean)) &&
-           ReadParam(aMsg, aIter, &(aResult->mBitrateStdDev)) &&
-           ReadParam(aMsg, aIter, &(aResult->mFramerateMean)) &&
-           ReadParam(aMsg, aIter, &(aResult->mFramerateStdDev)) &&
-           ReadParam(aMsg, aIter, &(aResult->mDroppedFrames)) &&
            ReadRTCSentRtpStreamStats(aMsg, aIter, aResult);
   }
 };
