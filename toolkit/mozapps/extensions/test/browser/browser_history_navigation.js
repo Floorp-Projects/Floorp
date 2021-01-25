@@ -244,17 +244,6 @@ add_task(async function test_keyboard_history_navigation() {
   info("Part 2");
   is_in_list(aManager, "addons://list/plugin", true, false);
 
-  // Backspace should not navigate back. We should still be on the same view.
-  is(
-    Services.prefs.getIntPref("browser.backspace_action"),
-    2,
-    "Backspace should not navigate back"
-  );
-  EventUtils.synthesizeKey("KEY_Backspace");
-  aManager = await wait_for_view_load(aManager);
-  info("Part 2b");
-  is_in_list(aManager, "addons://list/plugin", true, false);
-
   go_back_key();
 
   aManager = await wait_for_view_load(aManager);
