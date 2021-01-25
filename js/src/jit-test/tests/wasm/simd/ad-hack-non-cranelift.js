@@ -3,6 +3,7 @@
 // New instructions, not yet supported by cranelift
 
 // Widening multiplication.
+// This is to be moved into ad-hack.js
 //
 //   (iMxN.extmul_{high,low}_iKxL_{s,u} A B)
 //
@@ -93,4 +94,35 @@ for ( let [ WideArray, NarrowArray ] of
         }
     }
 }
+
+// Bitmask.  Ion constant folds, so test that too.
+// This is to be merged into the existing bitmask tests in ad-hack.js.
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "bitmask_i64x2") (result i32)
+      (i64x2.bitmask (v128.load (i32.const 16))))
+    (func (export "const_bitmask_i64x2") (result i32)
+      (i64x2.bitmask (v128.const i64x2 0xff337f8012345678 0x0001984212345678))))`);
+
+var mem8 = new Uint8Array(ins.exports.mem.buffer);
+var mem64 = new BigUint64Array(ins.exports.mem.buffer);
+
+set(mem8, 16, iota(16).map((_) => 0));
+assertEq(ins.exports.bitmask_i64x2(), 0);
+
+set(mem64, 2, [0x8000000000000000n, 0x8000000000000000n]);
+assertEq(ins.exports.bitmask_i64x2(), 3);
+
+set(mem64, 2, [0x7FFFFFFFFFFFFFFFn, 0x7FFFFFFFFFFFFFFFn]);
+assertEq(ins.exports.bitmask_i64x2(), 0);
+
+set(mem64, 2, [0n, 0x8000000000000000n]);
+assertEq(ins.exports.bitmask_i64x2(), 2);
+
+set(mem64, 2, [0x8000000000000000n, 0n]);
+assertEq(ins.exports.bitmask_i64x2(), 1);
+
+assertEq(ins.exports.const_bitmask_i64x2(), 1);
 
