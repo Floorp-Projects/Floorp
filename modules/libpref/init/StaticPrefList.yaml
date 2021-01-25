@@ -8347,7 +8347,7 @@
 # 3=no-referrer-when-downgrade.
 - name: network.http.referer.defaultPolicy
   type: uint32_t
-  value: 3
+  value: 2
   mirror: always
 
 # Set the default Referrer Policy applied to third-party trackers when the
