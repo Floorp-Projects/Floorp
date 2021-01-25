@@ -265,7 +265,7 @@ html|button {
 
 button:-moz-focusring,
 html|select:-moz-focusring,
-html|input:is([type="checkbox"], [type="color"]):-moz-focusring,
+html|input:is([type="checkbox"], [type="color"], [type="radio"]):-moz-focusring,
 xul|menulist:-moz-focusring {
   outline: 2px solid var(--in-content-border-active);
   /* offset outline to align with 1px border-width set for buttons/menulists above. */
@@ -274,6 +274,10 @@ xul|menulist:-moz-focusring {
    * to make the thicker outline corners look smooth */
   -moz-outline-radius: 3px;
   box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
+}
+
+html|input[type="radio"]:-moz-focusring {
+  -moz-outline-radius: 50%;
 }
 
 html|select:not([size], [multiple]) {
@@ -591,6 +595,7 @@ xul|radio {
   appearance: none;
 }
 
+html|input[type="radio"],
 xul|*.radio-check {
   appearance: none;
   width: 20px;
@@ -600,20 +605,31 @@ xul|*.radio-check {
   margin: 0;
   margin-inline-end: 10px;
   background-color: var(--grey-90-a10);
+  background-position: center;
 }
 
+html|input[type="radio"]:enabled:hover,
 xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
   background-color: var(--grey-90-a20);
 }
 
+html|input[type="radio"]:checked,
 xul|*.radio-check[selected] {
-  list-style-image: url("chrome://global/skin/in-content/radio.svg");
   -moz-context-properties: fill;
   fill: currentColor;
   color: white;
   background-color: var(--blue-60);
 }
 
+html|input[type="radio"]:checked {
+  background-image: url("chrome://global/skin/in-content/radio.svg");
+}
+
+xul|*.radio-check[selected] {
+  list-style-image: url("chrome://global/skin/in-content/radio.svg");
+}
+
+html|input[type="radio"]:enabled:checked:hover,
 xul|radio:not([disabled="true"])[selected]:hover > xul|*.radio-check {
   background-color: var(--blue-70);
 }
@@ -631,8 +647,9 @@ xul|label[disabled="true"] {
   color: inherit;
 }
 
-xul|checkbox[disabled="true"],
 html|input[type="checkbox"]:disabled,
+html|input[type="radio"]:disabled,
+xul|checkbox[disabled="true"],
 xul|radio[disabled="true"],
 xul|label[disabled="true"] {
   opacity: 0.5;
