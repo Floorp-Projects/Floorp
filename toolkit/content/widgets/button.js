@@ -115,7 +115,6 @@
 
     set type(val) {
       this.setAttribute("type", val);
-      return val;
     }
 
     get type() {
@@ -128,7 +127,6 @@
       } else {
         this.removeAttribute("disabled");
       }
-      return val;
     }
 
     get disabled() {
@@ -137,7 +135,6 @@
 
     set group(val) {
       this.setAttribute("group", val);
-      return val;
     }
 
     get group() {
@@ -153,7 +150,6 @@
       } else {
         this.removeAttribute("open");
       }
-      return val;
     }
 
     get open() {
@@ -173,8 +169,6 @@
       } else {
         this.removeAttribute("checked");
       }
-
-      return val;
     }
 
     get checked() {

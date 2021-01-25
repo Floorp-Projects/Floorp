@@ -27,7 +27,6 @@
     set src(val) {
       this._bundle = null;
       this.setAttribute("src", val);
-      return val;
     }
 
     get src() {

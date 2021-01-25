@@ -1584,7 +1584,7 @@ OS.Shared = {
     return SharedAll.Config.DEBUG;
   },
   set DEBUG(x) {
-    return (SharedAll.Config.DEBUG = x);
+    SharedAll.Config.DEBUG = x;
   },
 };
 Object.freeze(OS.Shared);
