@@ -38,6 +38,8 @@ activity_stream:
       "CLICK",
       "CLICK_PRIVACY_INFO",
       "CLOSE_NEWTAB_PREFS",
+      "SHOW_PERSONALIZE",
+      "HIDE_PERSONALIZE",
       "DELETE",
       "DELETE_FROM_POCKET",
       "DELETE_CONFIRM",
