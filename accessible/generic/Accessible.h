@@ -932,12 +932,10 @@ class Accessible : public nsISupports {
   bool KidsFromDOM() const { return !(mStateFlags & eNoKidsFromDOM); }
 
   /**
-   * Return true if this accessible has a parent whose name depends on this
-   * accessible.
+   * Return true if this accessible has a parent, relation or ancestor with a
+   * relation whose name depends on this accessible.
    */
-  bool HasNameDependentParent() const {
-    return mContextFlags & eHasNameDependentParent;
-  }
+  bool HasNameDependent() const { return mContextFlags & eHasNameDependent; }
 
   /**
    * Return true if the element is inside an alert.
@@ -1046,8 +1044,7 @@ class Accessible : public nsISupports {
    * Flags used for contextual information about the accessible.
    */
   enum ContextFlags {
-    eHasNameDependentParent =
-        1 << 0,  // Parent's name depends on this accessible.
+    eHasNameDependent = 1 << 0,  // See HasNameDependent().
     eInsideAlert = 1 << 1,
 
     eLastContextFlag = eInsideAlert
