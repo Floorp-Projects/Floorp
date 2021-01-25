@@ -4,6 +4,8 @@
 
 #include "CacheIOThread.h"
 #include "CacheFileIOManager.h"
+#include "CacheLog.h"
+#include "CacheObserver.h"
 
 #include "nsIRunnable.h"
 #include "nsISupportsImpl.h"
@@ -14,6 +16,8 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/ThreadEventQueue.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryHistogramEnums.h"
 #include "GeckoProfiler.h"
 
 #ifdef XP_WIN
