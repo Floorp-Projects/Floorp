@@ -391,8 +391,7 @@ nsresult TRRServiceChannel::BeginConnect() {
   mRequestHead.SetOrigin(scheme, host, port);
 
   RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
-      host, port, ""_ns, mUsername, GetTopWindowOrigin(), proxyInfo,
-      OriginAttributes(), isHttps);
+      host, port, ""_ns, mUsername, proxyInfo, OriginAttributes(), isHttps);
   // TODO: Bug 1622778 for using AltService in socket process.
   StoreAllowAltSvc(XRE_IsParentProcess() && LoadAllowAltSvc());
   bool http2Allowed = !gHttpHandler->IsHttp2Excluded(connInfo);
