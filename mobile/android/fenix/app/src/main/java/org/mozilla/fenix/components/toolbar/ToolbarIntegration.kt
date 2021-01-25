@@ -24,7 +24,6 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -120,20 +119,16 @@ class DefaultToolbarIntegration(
                 listOf(
                     DisplayToolbar.Indicators.TRACKING_PROTECTION,
                     DisplayToolbar.Indicators.SECURITY,
-                    DisplayToolbar.Indicators.EMPTY
+                    DisplayToolbar.Indicators.EMPTY,
+                    DisplayToolbar.Indicators.HIGHLIGHT
                 )
             } else {
                 listOf(
                     DisplayToolbar.Indicators.SECURITY,
-                    DisplayToolbar.Indicators.EMPTY
+                    DisplayToolbar.Indicators.EMPTY,
+                    DisplayToolbar.Indicators.HIGHLIGHT
                 )
             }
-
-        if (FeatureFlags.permissionIndicatorsToolbar) {
-            toolbar.display.indicators += DisplayToolbar.Indicators.HIGHLIGHT
-        }
-
-        toolbar.display.displayIndicatorSeparator =
             context.settings().shouldUseTrackingProtection
 
         toolbar.display.icons = toolbar.display.icons.copy(
