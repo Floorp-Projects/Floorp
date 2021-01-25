@@ -5,6 +5,8 @@
 .v-rl { writing-mode: vertical-rl; }
 .ltr, .rtl, .v-rl { border: 1px solid blue; }
 
+/* Vista or later wants 2px padding on textareas by default,
+   see nsNativeThemeWin::GetWidgetPadding(). */
 textarea {
   padding: 2px;
 }
