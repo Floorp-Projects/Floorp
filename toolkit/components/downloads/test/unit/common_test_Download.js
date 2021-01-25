@@ -423,7 +423,7 @@ add_task(async function test_windows_zoneInformation() {
       },
       expectedZoneId:
         "[ZoneTransfer]\r\nZoneId=3\r\n" +
-        "ReferrerUrl=http://example.com/abc\r\n" +
+        "ReferrerUrl=http://example.com/\r\n" +
         "HostUrl=" +
         httpSourceUrl +
         "\r\n",
