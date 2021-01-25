@@ -111,6 +111,11 @@ class AboutLoginsChild extends JSWindowActorChild {
         );
         break;
       }
+      case "AboutLoginsImportReportInit": {
+        this.sendAsyncMessage("AboutLogins:ImportReportInit");
+        break;
+      }
+
       case "AboutLoginsCopyLoginDetail": {
         ClipboardHelper.copyString(event.detail);
         break;
@@ -210,6 +215,9 @@ class AboutLoginsChild extends JSWindowActorChild {
 
   receiveMessage(message) {
     switch (message.name) {
+      case "AboutLogins:ImportReportData":
+        this.sendToContent("ImportReportData", message.data);
+        break;
       case "AboutLogins:MasterPasswordResponse":
         if (masterPasswordPromise) {
           masterPasswordPromise.resolve(message.data.result);
