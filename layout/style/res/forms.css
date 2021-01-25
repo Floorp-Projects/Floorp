@@ -99,6 +99,12 @@ input {
   overflow-clip-box: padding-box content-box;
 }
 
+@media (-moz-non-native-content-theme) {
+  input {
+    padding-inline: 2px;
+  }
+}
+
 input::-moz-text-control-editing-root,
 input::placeholder {
   word-wrap: normal;
@@ -111,8 +117,7 @@ textarea {
   -moz-default-appearance: textarea;
   margin-block: 1px;
   border: 2px inset ThreeDLightShadow;
-  /* The 1px inline padding is for parity with Win/IE */
-  padding-inline: 1px;
+  padding: 2px;
   background-color: Field;
   color: FieldText;
   font: medium -moz-fixed;
@@ -123,12 +128,6 @@ textarea {
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-clip-box: content-box;
-}
-
-@media (-moz-non-native-content-theme) {
-  input, textarea {
-    padding-inline: 2px;
-  }
 }
 
 /* A few properties that we don't want to inherit by default: */
