@@ -25,3 +25,5 @@ XPIDL_SOURCES += [
 ]
 
 XPIDL_MODULE = "toolkit_backgroundtasks"
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]

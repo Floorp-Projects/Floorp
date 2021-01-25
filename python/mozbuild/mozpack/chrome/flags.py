@@ -233,6 +233,7 @@ class Flags(OrderedDict):
         "xpcnativewrappers": Flag,
         "tablet": Flag,
         "process": StringFlag,
+        "backgroundtask": StringFlag,
     }
     RE = re.compile(r"([!<>=]+)")
 
