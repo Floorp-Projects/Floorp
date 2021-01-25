@@ -221,11 +221,15 @@ function getNodeFront(selector, { walker }) {
 /**
  * Set the inspector's current selection to the first match of the given css
  * selector
+ *
  * @param {String|NodeFront} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * loaded in the toolbox
- * @param {String} reason Defaults to "test" which instructs the inspector not
- * to highlight the node upon selection
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox.
+ * @param {String} reason
+ *        Defaults to "test" which instructs the inspector not to highlight the
+ *        node upon selection.
+ * @param {Boolean} isSlotted
+ *        Is the selection representing the slotted version the node.
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
 var selectNode = async function(
@@ -240,6 +244,76 @@ var selectNode = async function(
   inspector.selection.setNodeFront(nodeFront, { reason, isSlotted });
   await updated;
 };
+
+/**
+ * Helper to select a node in the markup-view, in a nested tree of
+ * frames/browser elements. The iframes can either be remote or same-process.
+ *
+ * Note: "frame" will refer to either "frame" or "browser" in the documentation
+ * and method.
+ *
+ * @param {Array} selectors
+ *        Arrays of CSS selectors from the root document to the node.
+ *        The last CSS selector of the array is for the node in its frame doc.
+ *        The before-last CSS selector is for the frame in its parent frame, etc...
+ *        Ex: ["frame.first-frame", ..., "frame.last-frame", ".target-node"]
+ * @param {InspectorPanel} inspector
+ *        See `selectNode`
+ * @param {String} reason
+ *        See `selectNode`
+ * @param {Boolean} isSlotted
+ *        See `selectNode`
+ * @return {NodeFront} The selected node front.
+ */
+async function selectNodeInFrames(
+  selectors,
+  inspector,
+  reason = "test",
+  isSlotted
+) {
+  let walker = inspector.walker;
+  let rootNode = walker.rootNode;
+
+  // Extract the last selector from the provided array of selectors.
+  const nodeSelector = selectors.pop();
+
+  // Remaining selectors should all be frame selectors. Renaming for clarity.
+  const frameSelectors = selectors;
+
+  info("Loop through all frame selectors");
+  for (const frameSelector of frameSelectors) {
+    const url = walker.targetFront.url;
+    info(`Find the frame element for selector ${frameSelector} in ${url}`);
+
+    const frameFront = await walker.querySelector(rootNode, frameSelector);
+    await selectNode(frameFront, inspector);
+
+    // For a remote frame, connect to the corresponding frame target.
+    // Otherwise, reuse the current targetFront.
+    let frameTarget = frameFront.targetFront;
+    if (frameFront.remoteFrame) {
+      info("Connect to remote frame and retrieve the targetFront");
+      frameTarget = await frameFront.connectToRemoteFrame();
+    }
+
+    walker = (await frameTarget.getFront("inspector")).walker;
+
+    if (frameFront.remoteFrame) {
+      // For remote frames or browser elements, use the walker's rootNode.
+      rootNode = walker.rootNode;
+    } else {
+      // For same-process frames, select the document front as the root node.
+      // It is a different node from the walker's rootNode.
+      info("Retrieve the children of the frame to find the document node");
+      const { nodes } = await walker.children(frameFront);
+      rootNode = nodes.find(n => n.nodeType === Node.DOCUMENT_NODE);
+    }
+  }
+
+  const nodeFront = await walker.querySelector(rootNode, nodeSelector);
+  await selectNode(nodeFront, inspector, reason, isSlotted);
+  return nodeFront;
+}
 
 /**
  * Create a throttling function that can be manually "flushed". This is to replace the
