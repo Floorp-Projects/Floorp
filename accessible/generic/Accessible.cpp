@@ -2070,10 +2070,11 @@ void Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent) {
   mIndexInParent = aIndexInParent;
 
   // Note: this is currently only used for richlistitems and their children.
-  if (mParent->HasNameDependentParent() || mParent->IsXULListItem())
-    mContextFlags |= eHasNameDependentParent;
-  else
-    mContextFlags &= ~eHasNameDependentParent;
+  if (mParent->HasNameDependent() || mParent->IsXULListItem()) {
+    mContextFlags |= eHasNameDependent;
+  } else {
+    mContextFlags &= ~eHasNameDependent;
+  }
 
   mContextFlags |=
       static_cast<uint32_t>((mParent->IsAlert() || mParent->IsInsideAlert())) &
@@ -2098,7 +2099,7 @@ void Accessible::UnbindFromParent() {
 
   delete mBits.groupInfo;
   mBits.groupInfo = nullptr;
-  mContextFlags &= ~eHasNameDependentParent & ~eInsideAlert;
+  mContextFlags &= ~eHasNameDependent & ~eInsideAlert;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
