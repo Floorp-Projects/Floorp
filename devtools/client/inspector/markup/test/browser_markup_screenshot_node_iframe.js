@@ -1,10 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-/* import-globals-from helper_screenshot_node.js */
 
 "use strict";
-
-loadHelperScript("helper_screenshot_node.js");
 
 const exampleNetDocument = `http://example.net/document-builder.sjs`;
 const exampleComDocument = `http://example.com/document-builder.sjs`;
