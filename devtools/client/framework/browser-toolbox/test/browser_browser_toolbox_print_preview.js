@@ -8,6 +8,12 @@ const { PromiseTestUtils } = ChromeUtils.import(
 );
 PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);
 
+/* import-globals-from ../../../inspector/test/shared-head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/inspector/test/shared-head.js",
+  this
+);
+
 // On debug test machine, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
@@ -32,24 +38,21 @@ add_task(async function() {
     enableBrowserToolboxFission: true,
   });
   await ToolboxTask.importFunctions({
-    selectNodeFront,
+    getNodeFront,
+    selectNode,
+    // selectNodeInFrames depends on selectNode and getNodeFront.
+    selectNodeInFrames,
   });
 
   const hasCloseButton = await ToolboxTask.spawn(null, async () => {
     /* global gToolbox */
     const inspector = gToolbox.getPanel("inspector");
 
-    info("Select the printpreview document in the markup view");
-    const browser = await selectNodeFront(
-      inspector,
-      inspector.walker,
-      'browser[printpreview="true"]'
+    info("Select the #test-div element in the printpreview document");
+    await selectNodeInFrames(
+      ['browser[printpreview="true"]', "#test-div"],
+      inspector
     );
-    const browserTarget = await browser.connectToRemoteFrame();
-    const walker = (await browserTarget.getFront("inspector")).walker;
-
-    info("Select the #test-div in the print preview document");
-    await selectNodeFront(inspector, walker, "#test-div");
     return !!gToolbox.doc.getElementById("toolbox-close");
   });
   ok(!hasCloseButton, "Browser toolbox doesn't have a close button");
