@@ -1100,6 +1100,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Vapauttaa tallennustilaa</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Sivustojen käyttöoikeudet</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Lataukset</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Poista selaustiedot</string>
 
@@ -1224,9 +1226,7 @@
     <string name="onboarding_privacy_notice_header">Yksityisyytesi</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">%s on suunniteltu antamaan sinulle päätösvalta sen suhteen,
-     mitä jaat verkossa ja mitä jaat kanssamme.
-    </string>
+    <string name="onboarding_privacy_notice_description2">Olemme suunnitelleet %sin siten, että voit hallita mitä jaat verkossa ja mitä jaat kanssamme.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lue yksityisyyskäytäntömme</string>
 

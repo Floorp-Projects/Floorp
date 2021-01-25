@@ -1083,6 +1083,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Giải phóng không gian lưu trữ</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Quyền hạn trang web</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Tải xuống</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Xóa dữ liệu duyệt web</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1203,9 +1205,7 @@
     <string name="onboarding_privacy_notice_header">Quyền riêng tư của bạn</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Chúng tôi đã thiết kế %s để cung cấp cho bạn quyền kiểm soát những gì bạn chia sẻ
-        trực tuyến và những gì bạn chia sẻ với chúng tôi.
-    </string>
+    <string name="onboarding_privacy_notice_description2">Chúng tôi đã thiết kế %s để cung cấp cho bạn quyền kiểm soát những gì bạn chia sẻ trực tuyến và những gì bạn chia sẻ với chúng tôi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Đọc thông báo bảo mật của chúng tôi</string>
 

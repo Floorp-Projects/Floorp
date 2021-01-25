@@ -1413,7 +1413,7 @@
     <!-- About page link text to open support link -->
     <string name="about_support">用户支持</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
-    <string name="about_crashes">崩溃</string>
+    <string name="about_crashes">崩溃信息</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">隐私声明</string>
     <!-- About page link text to open know your rights link -->

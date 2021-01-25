@@ -1122,6 +1122,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Освободит место</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Разрешения для сайтов</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Загрузки</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Удалить данные веб-сёрфинга</string>
 
@@ -1245,9 +1247,7 @@
 
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Мы создали %s, чтобы предоставить вам контроль над тем,
-        чем вы делитесь — как в Интернете, так и с нами.
-    </string>
+    <string name="onboarding_privacy_notice_description2">Мы создали %s, чтобы предоставить вам контроль над тем, чем вы делитесь — как в Интернете, так и с нами.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Уведомление о конфиденциальности</string>
 
