@@ -3169,6 +3169,12 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     }
   }
 
+  builder->ClearHaveScrollableDisplayPort();
+  if (builder->IsPaintingToWindow()) {
+    DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
+        aFrame, builder);
+  }
+
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   if (rootScrollFrame && !aFrame->GetParent()) {
     nsIScrollableFrame* rootScrollableFrame =
@@ -3224,12 +3230,6 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
           canvasArea,
           canvasFrame->CanvasArea() + builder->ToReferenceFrame(canvasFrame));
     }
-  }
-
-  builder->ClearHaveScrollableDisplayPort();
-  if (builder->IsPaintingToWindow()) {
-    DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
-        aFrame, builder);
   }
 
   nsRect visibleRect = visibleRegion.GetBounds();
