@@ -384,6 +384,8 @@ InplaceEditor.prototype = {
       // Hide the textarea resize handle.
       this.input.style.resize = "none";
       this.input.style.overflow = "hidden";
+      // Also reset padding.
+      this.input.style.padding = "0";
     }
 
     this.input.classList.add("styleinspector-propertyeditor");
