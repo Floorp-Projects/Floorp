@@ -44,7 +44,7 @@ var testCases = {
                                           'unsafe-url, no-referrer' : 'none',
                                           'invalid' : 'full' }},
 
-  'cross-origin':  { 'Referrer-Policy' : { 'default' : 'full',
+  'cross-origin':  { 'Referrer-Policy' : { 'default' : 'origin',
                                            'origin' : 'origin',
                                            'origin-when-cross-origin' : 'origin',
                                            'unsafe-url' : 'full',
@@ -53,7 +53,7 @@ var testCases = {
                                            'strict-origin-when-cross-origin' : 'origin',
                                            'no-referrer' : 'none',
                                            'unsafe-url, no-referrer' : 'none',
-                                           'invalid' : 'full' }},
+                                           'invalid' : 'origin' }},
 
   // Downgrading in worker is blocked entirely without unblock option
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1198078#c17
