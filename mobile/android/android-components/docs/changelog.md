@@ -33,6 +33,9 @@ permalink: /changelog/
 * **feature-webauthn**
   * 🆕 New component to enable support for WebAuthn specification with `WebAuthnFeature`.
 
+* **concept-storage**
+  * Introduced `CreditCardsAddressesStorage` interface for describing credit card and address storage.
+
 # 72.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)
