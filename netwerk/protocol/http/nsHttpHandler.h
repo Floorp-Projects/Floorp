@@ -364,12 +364,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
-      bool isolated, const nsACString& topWindowOrigin,
       const OriginAttributes& originAttributes, bool aHttp2Allowed,
       bool aHttp3Allowed) {
-    return mAltSvcCache->GetAltServiceMapping(scheme, host, port, pb, isolated,
-                                              topWindowOrigin, originAttributes,
-                                              aHttp2Allowed, aHttp3Allowed);
+    return mAltSvcCache->GetAltServiceMapping(
+        scheme, host, port, pb, originAttributes, aHttp2Allowed, aHttp3Allowed);
   }
 
   //
@@ -510,8 +508,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
       nsHttpConnectionInfo* aCI);
 
   void MaybeAddAltSvcForTesting(nsIURI* aUri, const nsACString& aUsername,
-                                const nsACString& aTopWindowOrigin,
-                                bool aPrivateBrowsing, bool aIsolated,
+                                bool aPrivateBrowsing,
                                 nsIInterfaceRequestor* aCallbacks,
                                 const OriginAttributes& aOriginAttributes);
 
