@@ -1831,8 +1831,9 @@ HttpBaseChannel::SetAllowSTS(bool value) {
     // We do this to prevent a TRR service channel's OCSP validation from
     // blocking DNS resolution completely.
     nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-    uint32_t trrMode = 0;
-    if (dns && NS_SUCCEEDED(dns->GetCurrentTrrMode(&trrMode)) && trrMode == 3) {
+    nsIDNSService::ResolverMode trrMode = nsIDNSService::MODE_NATIVEONLY;
+    if (dns && NS_SUCCEEDED(dns->GetCurrentTrrMode(&trrMode)) &&
+        trrMode == nsIDNSService::MODE_TRRONLY) {
       SetTRRMode(nsIRequest::TRR_FIRST_MODE);
     }
   }
