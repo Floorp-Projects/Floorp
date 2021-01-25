@@ -3284,7 +3284,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 104;
+    const UI_VERSION = 105;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3825,6 +3825,17 @@ BrowserGlue.prototype = {
         "browser.bookmarks.defaultLocation",
         "unfiled"
       );
+    }
+
+    // Renamed and flipped the logic of a pref to make its purpose more clear.
+    if (currentUIVersion < 105) {
+      const oldPrefName = "browser.urlbar.imeCompositionClosesPanel";
+      const oldPrefValue = Services.prefs.getBoolPref(oldPrefName, true);
+      Services.prefs.setBoolPref(
+        "browser.urlbar.keepPanelOpenDuringImeComposition",
+        !oldPrefValue
+      );
+      Services.prefs.clearUserPref(oldPrefName);
     }
 
     // Update the migration version.
