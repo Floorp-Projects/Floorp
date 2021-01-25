@@ -132,11 +132,7 @@ export class BaseContent extends React.PureComponent {
 
   onWindowScroll() {
     const prefs = this.props.Prefs.values;
-    // Show logo only if the logo is enabled and pocket is not enabled.
-    const showLogo =
-      prefs["logowordmark.alwaysVisible"] &&
-      !(prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"]);
-    const SCROLL_THRESHOLD = showLogo ? 179 : 34;
+    const SCROLL_THRESHOLD = prefs["logowordmark.alwaysVisible"] ? 179 : 34;
     if (global.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
       this.setState({ fixedSearch: true });
     } else if (global.scrollY <= SCROLL_THRESHOLD && this.state.fixedSearch) {
@@ -191,11 +187,6 @@ export class BaseContent extends React.PureComponent {
       !pocketEnabled &&
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const showLogo =
-      prefs["logowordmark.alwaysVisible"] &&
-      (!prefs["feeds.section.topstories"] ||
-        (!prefs["feeds.system.topstories"] && prefs.region));
-
     const customizationMenuEnabled = prefs["customizationMenu.enabled"];
     const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];
     const canShowCustomizationMenu =
@@ -223,7 +214,7 @@ export class BaseContent extends React.PureComponent {
         !noSectionsEnabled &&
         "fixed-search",
       prefs.showSearch && noSectionsEnabled && "only-search",
-      showLogo && "visible-logo",
+      prefs["logowordmark.alwaysVisible"] && "visible-logo",
       newNewtabExperienceEnabled && "newtab-experience",
     ]
       .filter(v => v)
@@ -260,7 +251,9 @@ export class BaseContent extends React.PureComponent {
               <div className="non-collapsible-section">
                 <ErrorBoundary>
                   <Search
-                    showLogo={noSectionsEnabled || showLogo}
+                    showLogo={
+                      noSectionsEnabled || prefs["logowordmark.alwaysVisible"]
+                    }
                     handoffEnabled={searchHandoffEnabled}
                     {...props.Search}
                   />

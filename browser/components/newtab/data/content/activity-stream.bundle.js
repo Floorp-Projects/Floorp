@@ -657,10 +657,8 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
   }
 
   onWindowScroll() {
-    const prefs = this.props.Prefs.values; // Show logo only if the logo is enabled and pocket is not enabled.
-
-    const showLogo = prefs["logowordmark.alwaysVisible"] && !(prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"]);
-    const SCROLL_THRESHOLD = showLogo ? 179 : 34;
+    const prefs = this.props.Prefs.values;
+    const SCROLL_THRESHOLD = prefs["logowordmark.alwaysVisible"] ? 179 : 34;
 
     if (global.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
       this.setState({
@@ -726,7 +724,6 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
     const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const showLogo = prefs["logowordmark.alwaysVisible"] && (!prefs["feeds.section.topstories"] || !prefs["feeds.system.topstories"] && prefs.region);
     const customizationMenuEnabled = prefs["customizationMenu.enabled"];
     const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];
     const canShowCustomizationMenu = customizationMenuEnabled || newNewtabExperienceEnabled;
@@ -744,7 +741,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     const {
       mayHaveSponsoredTopSites
     } = prefs;
-    const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", showLogo && "visible-logo", newNewtabExperienceEnabled && "newtab-experience"].filter(v => v).join(" ");
+    const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["logowordmark.alwaysVisible"] && "visible-logo", newNewtabExperienceEnabled && "newtab-experience"].filter(v => v).join(" ");
     return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", null, canShowCustomizationMenu ? react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("span", null, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PersonalizeButton, {
       onClick: this.openCustomizationMenu
     }), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_11__["CSSTransition"], {
@@ -768,7 +765,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("main", null, prefs.showSearch && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
       className: "non-collapsible-section"
     }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_6__["ErrorBoundary"], null, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Search_Search__WEBPACK_IMPORTED_MODULE_9__["Search"], _extends({
-      showLogo: noSectionsEnabled || showLogo,
+      showLogo: noSectionsEnabled || prefs["logowordmark.alwaysVisible"],
       handoffEnabled: searchHandoffEnabled
     }, props.Search)))), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(_asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_2__["ASRouterUISurface"], {
       adminContent: this.props.adminContent,
