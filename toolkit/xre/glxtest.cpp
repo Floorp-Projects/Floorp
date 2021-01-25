@@ -243,14 +243,14 @@ static void close_logging() {
 #define PCI_FILL_CLASS 0x0020
 #define PCI_BASE_CLASS_DISPLAY 0x03
 
-static int get_pci_status() {
+static void get_pci_status() {
   void* libpci = dlopen("libpci.so.3", RTLD_LAZY);
   if (!libpci) {
     libpci = dlopen("libpci.so", RTLD_LAZY);
   }
   if (!libpci) {
     record_warning("libpci missing");
-    return 0;
+    return;
   }
 
   typedef struct pci_dev {
@@ -295,25 +295,23 @@ static int get_pci_status() {
   if (!pci_alloc || !pci_cleanup || !pci_scan_bus || !pci_fill_info) {
     dlclose(libpci);
     record_warning("libpci missing methods");
-    return 0;
+    return;
   }
 
   pci_access* pacc = pci_alloc();
   if (!pacc) {
     dlclose(libpci);
     record_warning("libpci alloc failed");
-    return 0;
+    return;
   }
 
   pci_init(pacc);
   pci_scan_bus(pacc);
 
-  int count = 0;
   for (pci_dev* dev = pacc->devices; dev; dev = dev->next) {
     pci_fill_info(dev, PCI_FILL_IDENT | PCI_FILL_CLASS);
     if (dev->device_class >> 8 == PCI_BASE_CLASS_DISPLAY && dev->vendor_id &&
         dev->device_id) {
-      ++count;
       record_value("PCI_VENDOR_ID\n0x%04x\nPCI_DEVICE_ID\n0x%04x\n",
                    dev->vendor_id, dev->device_id);
     }
@@ -321,7 +319,6 @@ static int get_pci_status() {
 
   pci_cleanup(pacc);
   dlclose(libpci);
-  return count;
 }
 
 #ifdef MOZ_WAYLAND
@@ -407,7 +404,7 @@ static char* get_render_name(const char* name) {
 }
 #endif
 
-static bool get_gles_status(EGLDisplay dpy,
+static void get_gles_status(EGLDisplay dpy,
                             PFNEGLGETPROCADDRESS eglGetProcAddress) {
   typedef EGLBoolean (*PFNEGLCHOOSECONFIGPROC)(
       EGLDisplay dpy, EGLint const* attrib_list, EGLConfig* configs,
@@ -447,7 +444,7 @@ static bool get_gles_status(EGLDisplay dpy,
   if (!eglChooseConfig || !eglCreateContext || !eglCreatePbufferSurface ||
       !eglMakeCurrent) {
     record_error("libEGL missing methods for GLES test");
-    return false;
+    return;
   }
 
   typedef GLubyte* (*PFNGLGETSTRING)(GLenum);
@@ -463,8 +460,8 @@ static bool get_gles_status(EGLDisplay dpy,
     if (!libgl) {
       libgl = dlopen(LIBGLES_FILENAME, RTLD_LAZY);
       if (!libgl) {
-        record_warning(LIBGL_FILENAME " and " LIBGLES_FILENAME " missing");
-        return false;
+        record_error("Unable to load " LIBGL_FILENAME " or " LIBGLES_FILENAME);
+        return;
       }
     }
 
@@ -472,7 +469,7 @@ static bool get_gles_status(EGLDisplay dpy,
     if (!glGetString) {
       dlclose(libgl);
       record_error("libGL or libGLESv2 glGetString missing");
-      return false;
+      return;
     }
   }
 
@@ -522,15 +519,13 @@ static bool get_gles_status(EGLDisplay dpy,
   if (libgl) {
     dlclose(libgl);
   }
-  return true;
 }
 
-static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
-                           bool require_driver) {
+static void get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test) {
   void* libegl = dlopen(LIBEGL_FILENAME, RTLD_LAZY);
   if (!libegl) {
     record_warning("libEGL missing");
-    return false;
+    return;
   }
 
   PFNEGLGETPROCADDRESS eglGetProcAddress =
@@ -539,7 +534,7 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
   if (!eglGetProcAddress) {
     dlclose(libegl);
     record_error("no eglGetProcAddress");
-    return false;
+    return;
   }
 
   typedef EGLDisplay (*PFNEGLGETDISPLAYPROC)(void* native_display);
@@ -558,21 +553,25 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
   if (!eglGetDisplay || !eglInitialize || !eglTerminate) {
     dlclose(libegl);
     record_error("libEGL missing methods");
-    return false;
+    return;
   }
 
   EGLDisplay dpy = eglGetDisplay(native_dpy);
   if (!dpy) {
     dlclose(libegl);
     record_warning("libEGL no display");
-    return false;
+    return;
   }
 
   EGLint major, minor;
   if (!eglInitialize(dpy, &major, &minor)) {
     dlclose(libegl);
     record_warning("libEGL initialize failed");
-    return false;
+    return;
+  }
+
+  if (gles_test) {
+    get_gles_status(dpy, eglGetProcAddress);
   }
 
   typedef const char* (*PFNEGLGETDISPLAYDRIVERNAMEPROC)(EGLDisplay dpy);
@@ -580,30 +579,14 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
       cast<PFNEGLGETDISPLAYDRIVERNAMEPROC>(
           eglGetProcAddress("eglGetDisplayDriverName"));
   if (eglGetDisplayDriverName) {
-    // TODO(aosmond): If the driver name is empty, we probably aren't using Mesa
-    // and instead a proprietary GL, most likely NVIDIA's. The PCI device list
-    // in combination with the vendor name is very likely sufficient to identify
-    // the device.
     const char* driDriver = eglGetDisplayDriverName(dpy);
     if (driDriver) {
       record_value("DRI_DRIVER\n%s\n", driDriver);
     }
-  } else if (require_driver) {
-    record_warning("libEGL missing eglGetDisplayDriverName");
-    eglTerminate(dpy);
-    dlclose(libegl);
-    return false;
-  }
-
-  if (gles_test && !get_gles_status(dpy, eglGetProcAddress)) {
-    eglTerminate(dpy);
-    dlclose(libegl);
-    return false;
   }
 
   eglTerminate(dpy);
   dlclose(libegl);
-  return true;
 }
 
 #ifdef MOZ_X11
@@ -803,10 +786,8 @@ static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
   dlclose(libgl);
 }
 
-static bool x11_egltest(int pci_count) {
-  if (!get_egl_status(nullptr, true, pci_count != 1)) {
-    return false;
-  }
+static bool x11_egltest() {
+  get_egl_status(nullptr, true);
 
   Display* dpy = XOpenDisplay(nullptr);
   if (!dpy) {
@@ -817,7 +798,6 @@ static bool x11_egltest(int pci_count) {
   get_x11_screen_info(dpy);
 
   XCloseDisplay(dpy);
-  record_value("TEST_TYPE\nEGL\n");
   return true;
 }
 
@@ -827,14 +807,12 @@ static void glxtest() {
 
   get_glx_status(&gotGlxInfo, &gotDriDriver);
   if (!gotGlxInfo) {
-    get_egl_status(nullptr, true, false);
+    get_egl_status(nullptr, true);
   } else if (!gotDriDriver) {
     // If we failed to get the driver name from X, try via
     // EGL_MESA_query_driver. We are probably using Wayland.
-    get_egl_status(nullptr, false, true);
+    get_egl_status(nullptr, false);
   }
-
-  record_value("TEST_TYPE\nGLX\n");
 }
 #endif
 
@@ -1163,11 +1141,10 @@ static bool wayland_egltest() {
     return false;
   }
 
-  get_egl_status((EGLNativeDisplayType)dpy, true, false);
+  get_egl_status((EGLNativeDisplayType)dpy, true);
   get_wayland_screen_info(dpy);
 
   wl_display_disconnect(dpy);
-  record_value("TEST_TYPE\nEGL\n");
   return true;
 }
 #endif
@@ -1182,7 +1159,7 @@ int childgltest() {
   glxtest_bufsize = bufsize;
 
   // Get a list of all GPUs from the PCI bus.
-  int pci_count = get_pci_status();
+  get_pci_status();
 
   bool result = false;
 #ifdef MOZ_WAYLAND
@@ -1192,8 +1169,8 @@ int childgltest() {
 #endif
 #ifdef MOZ_X11
   // TODO: --display command line argument is not properly handled
-  if (!result) {
-    result = x11_egltest(pci_count);
+  if (!result && IsX11EGLEnabled()) {
+    result = x11_egltest();
   }
   if (!result) {
     glxtest();
