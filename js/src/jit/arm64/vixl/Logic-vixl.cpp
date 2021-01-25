@@ -1165,13 +1165,15 @@ LogicVRegister Simulator::sminmaxv(VectorFormat vform,
   dst.ClearForWrite(vform);
   int64_t dst_val = max ? INT64_MIN : INT64_MAX;
   for (int i = 0; i < LaneCountFromFormat(vform); i++) {
-    dst.SetInt(vform, i, 0);
     int64_t src_val = src.Int(vform, i);
     if (max == true) {
       dst_val = (src_val > dst_val) ? src_val : dst_val;
     } else {
       dst_val = (src_val < dst_val) ? src_val : dst_val;
     }
+  }
+  for (int i = 0; i < LaneCountFromFormat(vform); i++) {
+    dst.SetInt(vform, i, 0);
   }
   dst.SetInt(vform, 0, dst_val);
   return dst;
@@ -1280,13 +1282,15 @@ LogicVRegister Simulator::uminmaxv(VectorFormat vform,
   dst.ClearForWrite(vform);
   uint64_t dst_val = max ? 0 : UINT64_MAX;
   for (int i = 0; i < LaneCountFromFormat(vform); i++) {
-    dst.SetUint(vform, i, 0);
     uint64_t src_val = src.Uint(vform, i);
     if (max == true) {
       dst_val = (src_val > dst_val) ? src_val : dst_val;
     } else {
       dst_val = (src_val < dst_val) ? src_val : dst_val;
     }
+  }
+  for (int i = 0; i < LaneCountFromFormat(vform); i++) {
+    dst.SetUint(vform, i, 0);
   }
   dst.SetUint(vform, 0, dst_val);
   return dst;
