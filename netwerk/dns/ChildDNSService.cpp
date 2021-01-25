@@ -96,8 +96,8 @@ nsresult ChildDNSService::AsyncResolveInternal(
   if (XRE_IsParentProcess() && nsIOService::UseSocketProcess()) {
     resolveDNSInSocketProcess = true;
     if (type != nsIDNSService::RESOLVE_TYPE_DEFAULT &&
-        (mTRRServiceParent->Mode() != MODE_TRRFIRST &&
-         mTRRServiceParent->Mode() != MODE_TRRONLY)) {
+        (mTRRServiceParent->Mode() != nsIDNSService::MODE_TRRFIRST &&
+         mTRRServiceParent->Mode() != nsIDNSService::MODE_TRRONLY)) {
       return NS_ERROR_UNKNOWN_HOST;
     }
   }
@@ -312,7 +312,7 @@ ChildDNSService::GetCurrentTrrURI(nsACString& aURI) {
 }
 
 NS_IMETHODIMP
-ChildDNSService::GetCurrentTrrMode(uint32_t* aMode) {
+ChildDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
   if (!mTRRServiceParent) {
     return NS_ERROR_NOT_AVAILABLE;
   }

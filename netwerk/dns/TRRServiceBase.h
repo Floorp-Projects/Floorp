@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "nsString.h"
+#include "nsIDNSService.h"
 
 namespace mozilla {
 namespace net {
@@ -15,7 +16,7 @@ namespace net {
 class TRRServiceBase {
  public:
   TRRServiceBase();
-  uint32_t Mode() { return mMode; }
+  nsIDNSService::ResolverMode Mode() { return mMode; }
 
  protected:
   ~TRRServiceBase() = default;
@@ -41,7 +42,7 @@ class TRRServiceBase {
   nsCString mURIPref;
   nsCString mRolloutURIPref;
 
-  Atomic<uint32_t, Relaxed> mMode;
+  Atomic<nsIDNSService::ResolverMode, Relaxed> mMode;
   Atomic<bool, Relaxed> mURISetByDetection;
 };
 

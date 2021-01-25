@@ -41,6 +41,15 @@ interface nsIDNSService : nsISupports
         RESOLVE_TYPE_HTTPSSVC = 65,
     };
 
+    cenum ResolverMode : 32 { // 32 bits to allow this to be stored in an Atomic
+        MODE_NATIVEONLY = 0,  // TRR OFF (by default)
+        MODE_RESERVED1 = 1,   // Reserved value. Used to be parallel resolve.
+        MODE_TRRFIRST = 2,    // fallback to native on TRR failure
+        MODE_TRRONLY = 3,     // don't even fallback
+        MODE_RESERVED4 = 4,   // Reserved value. Used to be race TRR with native.
+        MODE_TRROFF = 5       // identical to MODE_NATIVEONLY but explicitly selected
+    };
+
     /**
      * kicks off an asynchronous host lookup.
      *
@@ -227,7 +236,7 @@ interface nsIDNSService : nsISupports
     /**
      * Returns the value of the TRR Service's current default mode.
      */
-    readonly attribute unsigned long currentTrrMode;
+    readonly attribute nsIDNSService_ResolverMode currentTrrMode;
 
     /**
      * @return the hostname of the operating system.

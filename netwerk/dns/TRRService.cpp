@@ -228,12 +228,13 @@ void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
 }
 
 bool TRRService::Enabled(nsIRequest::TRRMode aMode) {
-  if (mMode == MODE_TRROFF) {
+  if (mMode == nsIDNSService::MODE_TRROFF) {
     return false;
   }
   if (mConfirmationState == CONFIRM_INIT &&
       (!StaticPrefs::network_trr_wait_for_portal() || mCaptiveIsPassed ||
-       (mMode == MODE_TRRONLY || aMode == nsIRequest::TRR_ONLY_MODE))) {
+       (mMode == nsIDNSService::MODE_TRRONLY ||
+        aMode == nsIRequest::TRR_ONLY_MODE))) {
     LOG(("TRRService::Enabled => CONFIRM_TRYING\n"));
     mConfirmationState = CONFIRM_TRYING;
   }
@@ -298,7 +299,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
 
   if (!name || !strcmp(name, TRR_PREF("mode")) ||
       !strcmp(name, kRolloutModePref)) {
-    uint32_t prevMode = Mode();
+    nsIDNSService::ResolverMode prevMode = Mode();
 
     OnTRRModeChange();
 
@@ -323,7 +324,8 @@ nsresult TRRService::ReadPrefs(const char* name) {
     Preferences::GetCString(TRR_PREF("confirmationNS"), mConfirmationNS);
     if (name && !old.IsEmpty() && !mConfirmationNS.Equals(old) &&
         (mConfirmationState > CONFIRM_TRYING) &&
-        (mMode == MODE_TRRFIRST || mMode == MODE_TRRONLY)) {
+        (mMode == nsIDNSService::MODE_TRRFIRST ||
+         mMode == nsIDNSService::MODE_TRRONLY)) {
       LOG(("TRR::ReadPrefs: restart confirmationNS state\n"));
       mConfirmationState = CONFIRM_TRYING;
       MaybeConfirm_locked();
@@ -462,7 +464,7 @@ nsresult TRRService::GetCredentials(nsCString& result) {
 }
 
 uint32_t TRRService::GetRequestTimeout() {
-  if (mMode == MODE_TRRONLY) {
+  if (mMode == nsIDNSService::MODE_TRRONLY) {
     return StaticPrefs::network_trr_request_timeout_mode_trronly_ms();
   }
 
@@ -537,7 +539,7 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
 
     MutexAutoLock lock(mLock);
     if (((mConfirmationState == CONFIRM_INIT) && !mBootstrapAddr.IsEmpty() &&
-         (mMode == MODE_TRRONLY)) ||
+         (mMode == nsIDNSService::MODE_TRRONLY)) ||
         (mConfirmationState == CONFIRM_FAILED)) {
       mConfirmationState = CONFIRM_TRYING;
       MaybeConfirm_locked();
@@ -553,7 +555,8 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
 
     // We should avoid doing calling MaybeConfirm in response to a pref change
     // unless the service is in a TRR=enabled mode.
-    if (mMode == MODE_TRRFIRST || mMode == MODE_TRRONLY) {
+    if (mMode == nsIDNSService::MODE_TRRFIRST ||
+        mMode == nsIDNSService::MODE_TRRONLY) {
       if (!mCaptiveIsPassed) {
         if (mConfirmationState != CONFIRM_OK) {
           mConfirmationState = CONFIRM_TRYING;
@@ -623,7 +626,7 @@ void TRRService::MaybeConfirm() {
 
 void TRRService::MaybeConfirm_locked() {
   mLock.AssertCurrentThreadOwns();
-  if (mMode == MODE_TRROFF || mConfirmer ||
+  if (mMode == nsIDNSService::MODE_TRROFF || mConfirmer ||
       mConfirmationState != CONFIRM_TRYING) {
     LOG(
         ("TRRService:MaybeConfirm mode=%d, mConfirmer=%p "
@@ -632,7 +635,7 @@ void TRRService::MaybeConfirm_locked() {
     return;
   }
 
-  if (mConfirmationNS.Equals("skip") || mMode == MODE_TRRONLY) {
+  if (mConfirmationNS.Equals("skip") || mMode == nsIDNSService::MODE_TRRONLY) {
     LOG(("TRRService starting confirmation test %s SKIPPED\n",
          mPrivateURI.get()));
     mConfirmationState = CONFIRM_OK;
@@ -647,7 +650,7 @@ void TRRService::MaybeConfirm_locked() {
 bool TRRService::MaybeBootstrap(const nsACString& aPossible,
                                 nsACString& aResult) {
   MutexAutoLock lock(mLock);
-  if (mMode == MODE_TRROFF || mBootstrapAddr.IsEmpty()) {
+  if (mMode == nsIDNSService::MODE_TRROFF || mBootstrapAddr.IsEmpty()) {
     return false;
   }
 
@@ -709,7 +712,7 @@ bool TRRService::IsTemporarilyBlocked(const nsACString& aHost,
                                       bool aPrivateBrowsing,
                                       bool aParentsToo)  // false if domain
 {
-  if (mMode == MODE_TRRONLY) {
+  if (mMode == nsIDNSService::MODE_TRRONLY) {
     return false;  // might as well try
   }
 
@@ -852,7 +855,8 @@ void TRRService::TRRIsOkay(enum TrrOkay aReason) {
                  : Telemetry::LABELS_DNS_TRR_SUCCESS2::Bad));
   if (aReason == OKAY_NORMAL) {
     mTRRFailures = 0;
-  } else if ((mMode == MODE_TRRFIRST) && (mConfirmationState == CONFIRM_OK)) {
+  } else if ((mMode == nsIDNSService::MODE_TRRFIRST) &&
+             (mConfirmationState == CONFIRM_OK)) {
     // only count failures while in OK state
     uint32_t fails = ++mTRRFailures;
     if (fails >= StaticPrefs::network_trr_max_fails()) {
@@ -909,7 +913,7 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
         mRetryConfirmInterval *= 2;
       }
     } else {
-      if (mMode != MODE_TRRONLY) {
+      if (mMode != nsIDNSService::MODE_TRRONLY) {
         // don't accumulate trronly data here since trronly failures are
         // handled above by trying again, so counting the successes here would
         // skew the numbers

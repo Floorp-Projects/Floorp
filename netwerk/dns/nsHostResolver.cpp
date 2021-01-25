@@ -421,7 +421,7 @@ void AddrHostRecord::ResolveComplete() {
                     : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrFail);
   }
 
-  if (nsHostResolver::Mode() == MODE_TRRFIRST) {
+  if (nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST) {
     Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_TRR_FIRST,
                           mTRRTRRSkippedReason);
 
@@ -963,7 +963,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
 
   // By-Type requests use only TRR. If TRR is disabled we can return
   // immediately.
-  if (IS_OTHER_TYPE(type) && Mode() == MODE_TRROFF) {
+  if (IS_OTHER_TYPE(type) && Mode() == nsIDNSService::MODE_TRROFF) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -1350,7 +1350,8 @@ void nsHostResolver::MaybeRenewHostRecordLocked(nsHostRecord* aRec) {
 // returns error if no TRR resolve is issued
 // it is impt this is not called while a native lookup is going on
 nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
-  if (Mode() == MODE_TRROFF || StaticPrefs::network_dns_disabled()) {
+  if (Mode() == nsIDNSService::MODE_TRROFF ||
+      StaticPrefs::network_dns_disabled()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
   LOG(("TrrLookup host:%s af:%" PRId16, aRec->host.get(), aRec->af));
@@ -1463,14 +1464,14 @@ nsresult nsHostResolver::NativeLookup(nsHostRecord* aRec) {
 }
 
 // static
-ResolverMode nsHostResolver::Mode() {
+nsIDNSService::ResolverMode nsHostResolver::Mode() {
   if (gTRRService) {
-    return static_cast<ResolverMode>(gTRRService->Mode());
+    return gTRRService->Mode();
   }
 
   // If we don't have a TRR service just return MODE_TRROFF so we don't make
   // any TRR requests by mistake.
-  return MODE_TRROFF;
+  return nsIDNSService::MODE_TRROFF;
 }
 
 nsIRequest::TRRMode nsHostRecord::TRRMode() {
@@ -1479,7 +1480,7 @@ nsIRequest::TRRMode nsHostRecord::TRRMode() {
 
 // static
 void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
-  ResolverMode resolverMode = nsHostResolver::Mode();
+  nsIDNSService::ResolverMode resolverMode = nsHostResolver::Mode();
   nsIRequest::TRRMode requestMode = aRec->TRRMode();
 
   // For domains that are excluded from TRR or when parental control is enabled,
@@ -1511,7 +1512,7 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
     return;
   }
 
-  if (resolverMode == MODE_TRROFF) {
+  if (resolverMode == nsIDNSService::MODE_TRROFF) {
     aRec->RecordReason(nsHostRecord::TRR_OFF_EXPLICIT);
     aRec->mEffectiveTRRMode = nsIRequest::TRR_DISABLED_MODE;
     return;
@@ -1524,20 +1525,20 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
   }
 
   if ((requestMode == nsIRequest::TRR_DEFAULT_MODE &&
-       resolverMode == MODE_NATIVEONLY)) {
+       resolverMode == nsIDNSService::MODE_NATIVEONLY)) {
     aRec->RecordReason(nsHostRecord::TRR_MODE_NOT_ENABLED);
     aRec->mEffectiveTRRMode = nsIRequest::TRR_DISABLED_MODE;
     return;
   }
 
   if (requestMode == nsIRequest::TRR_DEFAULT_MODE &&
-      resolverMode == MODE_TRRFIRST) {
+      resolverMode == nsIDNSService::MODE_TRRFIRST) {
     aRec->mEffectiveTRRMode = nsIRequest::TRR_FIRST_MODE;
     return;
   }
 
   if (requestMode == nsIRequest::TRR_DEFAULT_MODE &&
-      resolverMode == MODE_TRRONLY) {
+      resolverMode == nsIDNSService::MODE_TRRONLY) {
     aRec->mEffectiveTRRMode = nsIRequest::TRR_ONLY_MODE;
     return;
   }
