@@ -37,8 +37,11 @@
  *     ==> test2.mochi.test
  */
 
-const BASEURL1 = "http://test1.mochi.test:8888/tests/docshell/test/navigation/";
-const BASEURL2 = "http://test2.mochi.test:8888/tests/docshell/test/navigation/";
+const BASEDOMAIN1 = "http://test1.mochi.test:8888/";
+const BASEDOMAIN2 = "http://test2.mochi.test:8888/";
+const PATH = "tests/docshell/test/navigation/";
+const BASEURL1 = BASEDOMAIN1 + PATH;
+const BASEURL2 = BASEDOMAIN2 + PATH;
 const TRIGGERINGPRINCIPALURI = BASEURL1 + "file_triggeringprincipal_frame_1.html";
 const LOADINGPRINCIPALURI = BASEURL2 + "file_triggeringprincipal_frame_2.html";
 
@@ -51,8 +54,8 @@ function receiveMessage(event) {
      "TriggeringPrincipal should be the navigating iframe (Frame 1)");
   is(event.data.loadingPrincipalURI, LOADINGPRINCIPALURI,
      "LoadingPrincipal should be the enclosing iframe (Frame 2)");
-  is(event.data.referrerURI, TRIGGERINGPRINCIPALURI,
-     "Referrer and TriggeringPrincipal should be identical (Frame 1)");
+  is(event.data.referrerURI, BASEDOMAIN1,
+     "The path of Referrer should be trimmed (Frame 1)");
 
   window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
