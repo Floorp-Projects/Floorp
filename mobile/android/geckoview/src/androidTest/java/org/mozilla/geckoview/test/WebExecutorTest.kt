@@ -130,7 +130,7 @@ class WebExecutorTest {
         assertThat("Headers should match", body.getJSONObject("headers").getString("Header1"), equalTo("Value"))
         assertThat("Headers should match", body.getJSONObject("headers").getString("Header2"), equalTo("Value1, Value2"))
         assertThat("Headers should match", body.getJSONObject("headers").getString("Content-Type"), equalTo("text/plain"))
-        assertThat("Referrer should match", body.getJSONObject("headers").getString("Referer"), equalTo("http://foo/"))
+        assertThat("Referrer should match", body.getJSONObject("headers").getString("Referer"), equalTo(referrer))
         assertThat("Data should match", body.getString("data"), equalTo(bodyString));
     }
 

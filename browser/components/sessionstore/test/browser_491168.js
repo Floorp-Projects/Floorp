@@ -5,20 +5,6 @@ const REFERRER2 = "http://example.org/?" + Math.random();
 const REFERRER3 = "http://example.org/?" + Math.random();
 
 add_task(async function() {
-  function getExpectedReferrer(referrer) {
-    let defaultPolicy = Services.prefs.getIntPref(
-      "network.http.referer.defaultPolicy"
-    );
-    ok(
-      [2, 3].indexOf(defaultPolicy) > -1,
-      "default referrer policy should be either strict-origin-when-cross-origin(2) or no-referrer-when-downgrade(3)"
-    );
-    if (defaultPolicy == 2) {
-      return referrer.match(/https?:\/\/[^\/]+\/?/i)[0];
-    }
-    return referrer;
-  }
-
   async function checkDocumentReferrer(referrer, msg) {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
@@ -77,7 +63,7 @@ add_task(async function() {
   await promiseTabState(tab, tabState);
 
   await checkDocumentReferrer(
-    getExpectedReferrer(REFERRER2),
+    REFERRER2,
     "document.referrer matches referrer set via setTabState using referrerInfo."
   );
   gBrowser.removeCurrentTab();
@@ -87,7 +73,7 @@ add_task(async function() {
   await promiseTabRestored(tab);
 
   await checkDocumentReferrer(
-    getExpectedReferrer(REFERRER2),
+    REFERRER2,
     "document.referrer is still correct after closing and reopening the tab."
   );
 
@@ -96,7 +82,7 @@ add_task(async function() {
   await promiseTabState(tab, tabState);
 
   await checkDocumentReferrer(
-    getExpectedReferrer(REFERRER3),
+    REFERRER3,
     "document.referrer matches referrer set via setTabState using referrer."
   );
   gBrowser.removeCurrentTab();
@@ -106,7 +92,7 @@ add_task(async function() {
   await promiseTabRestored(tab);
 
   await checkDocumentReferrer(
-    getExpectedReferrer(REFERRER3),
+    REFERRER3,
     "document.referrer is still correct after closing and reopening the tab."
   );
   gBrowser.removeCurrentTab();
