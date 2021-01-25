@@ -103,7 +103,6 @@ const statsExpectedByType = {
       "roundTripTime",
       "nackCount",
       "packetsReceived",
-      "bytesReceived",
     ],
     unimplemented: [
       "mediaTrackId",
@@ -500,14 +499,6 @@ const pedanticChecks = report => {
           && stat.packetsReceived < 10 ** 5,
           stat.type + ".packetsReceived is a sane number for a short test. value="
           + stat.packetsReceived);
-      }
-
-      // bytesReceived
-      if (stat.bytesReceived) {
-        ok(stat.bytesReceived >= 0
-          && stat.bytesReceived < 10 ** 9, // Not a magic number, just a guess
-          stat.type + ".bytesReceived is a sane number for a short test. value="
-          + stat.bytesReceived);
       }
 
     } else if (stat.type == "outbound-rtp") {
