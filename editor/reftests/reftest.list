@@ -75,7 +75,7 @@ needs-focus == caret_after_reframe.html caret_after_reframe-ref.html
 == nobogusnode-1.html nobogusnode-ref.html
 == nobogusnode-2.html nobogusnode-ref.html
 # Android turns off spellchecker (Bug 1541697)
-skip-if(Android) == spellcheck-hyphen-valid.html spellcheck-hyphen-valid-ref.html
+skip-if(Android) fuzzy-if(!nativeThemePref,0-3,0-1) == spellcheck-hyphen-valid.html spellcheck-hyphen-valid-ref.html
 skip-if(Android) needs-focus != spellcheck-hyphen-invalid.html spellcheck-hyphen-invalid-ref.html
 skip-if(Android) == spellcheck-slash-valid.html spellcheck-slash-valid-ref.html
 skip-if(Android) == spellcheck-period-valid.html spellcheck-period-valid-ref.html
@@ -90,7 +90,7 @@ skip-if(Android) needs-focus == spellcheck-non-latin-chinese-simplified.html spe
 skip-if(Android) needs-focus == spellcheck-non-latin-chinese-traditional.html spellcheck-non-latin-chinese-traditional-ref.html
 skip-if(Android) needs-focus == spellcheck-non-latin-hebrew.html spellcheck-non-latin-hebrew-ref.html
 skip-if(Android) needs-focus == spellcheck-non-latin-japanese.html spellcheck-non-latin-japanese-ref.html
-skip-if(Android) needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
+skip-if(Android) fuzzy-if(!nativeThemePref,0-3,0-1) needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
 fuzzy-if(browserIsRemote,0-255,0-3) asserts-if(browserIsRemote,0-3) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # bug 959132 for assertions
