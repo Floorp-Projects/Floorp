@@ -262,7 +262,8 @@ function createPingPathHandler(server, path, lazyHeaders) {
       }
 
       if ("referrer" in headers) {
-        is(request.getHeader("Referer"), headers.referrer, "valid referer header");
+        let expectedReferrer = headers.referrer.match(/https?:\/\/[^\/]+\/?/i)[0];
+        is(request.getHeader("Referer"), expectedReferrer, "valid referer header");
       } else {
         ok(!request.hasHeader("Referer"), "no referer header");
       }
