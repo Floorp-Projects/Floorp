@@ -166,7 +166,7 @@ add_task(async function process_switching_through_navigation_features() {
     await promiseLocation;
     // We will need to ensure that the process flip has fully completed so that
     // the navigation history data will be available when we do browser.goForward();
-    await BrowserTestUtils.waitForEvent(newTab, "SSTabRestored");
+    await BrowserTestUtils.browserLoaded(browser);
     is(
       browser.frameLoader.remoteTab.osPid,
       privilegedPid,
@@ -182,7 +182,7 @@ add_task(async function process_switching_through_navigation_features() {
     await promiseLocation;
     // We will need to ensure that the process flip has fully completed so that
     // the navigation history data will be available when we do browser.gotoIndex(0);
-    await BrowserTestUtils.waitForEvent(newTab, "SSTabRestored");
+    await BrowserTestUtils.browserLoaded(browser);
     checkBrowserRemoteType(
       browser,
       E10SUtils.WEB_REMOTE_TYPE,
