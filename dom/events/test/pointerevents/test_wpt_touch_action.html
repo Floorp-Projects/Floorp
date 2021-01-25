@@ -36,12 +36,12 @@ var apz_touch_action_prefs = [
 ];
 
 function apzScriptInjector(name) {
-  return function(childWin) {
+  return async function(childWin) {
     childWin._ACTIVE_TEST_NAME = name;
-    injectScript('/tests/SimpleTest/paint_listener.js', childWin)()
-    .then(injectScript('../apz_test_utils.js', childWin))
-    .then(injectScript('../apz_test_native_event_utils.js', childWin))
-    .then(injectScript('../touch_action_helpers.js', childWin));
+    await injectScript('/tests/SimpleTest/paint_listener.js', childWin);
+    await injectScript('../apz_test_utils.js', childWin);
+    await injectScript('../apz_test_native_event_utils.js', childWin);
+    await injectScript('../touch_action_helpers.js', childWin);
   };
 }
 
