@@ -5,6 +5,8 @@
 #include "CacheHashUtils.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/EndianUtils.h"
+#include "mozilla/SHA1.h"
 #include "plstr.h"
 
 namespace mozilla {

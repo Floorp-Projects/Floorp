@@ -179,8 +179,7 @@ bool CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk) {
 bool CacheObserver::IsPastShutdownIOLag() {
 #ifdef DEBUG
   return false;
-#endif
-
+#else
   if (sShutdownDemandedTime == PR_INTERVAL_NO_TIMEOUT ||
       MaxShutdownIOLag() == UINT32_MAX) {
     return false;
@@ -194,6 +193,7 @@ bool CacheObserver::IsPastShutdownIOLag() {
   }
 
   return false;
+#endif
 }
 
 NS_IMETHODIMP

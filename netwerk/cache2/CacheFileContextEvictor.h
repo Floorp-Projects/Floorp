@@ -6,8 +6,9 @@
 #define CacheFileContextEvictor__h__
 
 #include "mozilla/UniquePtr.h"
-#include "nsTArray.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 class nsIFile;
 class nsILoadContextInfo;

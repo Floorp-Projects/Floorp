@@ -5,6 +5,7 @@
 #include "CacheIndex.h"
 #include "CacheLog.h"
 #include "CacheFileUtils.h"
+#include "CacheObserver.h"
 #include "LoadContextInfo.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Telemetry.h"
