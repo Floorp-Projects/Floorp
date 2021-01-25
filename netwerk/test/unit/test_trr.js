@@ -4,9 +4,6 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
@@ -2136,55 +2133,4 @@ add_task(async function test_purge_trr_cache_on_mode_change() {
   await new DNSListener("cached.example.com", "127.0.0.1");
 
   Services.prefs.setBoolPref("network.trr.clear-cache-on-pref-change", false);
-  Services.prefs.setIntPref("doh-rollout.mode", 0);
-});
-
-add_task(async function test_fallback_telemetry() {
-  Services.prefs.setBoolPref(
-    "toolkit.telemetry.testing.overrideProductsCheck",
-    true
-  );
-
-  Services.prefs.setCharPref(
-    "network.trr.uri",
-    `https://foo.example.com:${h2Port}/doh?responseIP=none`
-  );
-  Services.prefs.setIntPref("network.trr.mode", 2);
-
-  // Make sure the connection is up.
-  await new DNSListener("ignored.example.com", "127.0.0.1");
-
-  let telemetryProbe = TelemetryTestUtils.getAndClearHistogram(
-    "TRR_SKIP_REASON_DNS_WORKED"
-  );
-  await new DNSListener("fallback.example.com", "127.0.0.1");
-
-  // Assert that the value we recorded is in bucket TRR_DECODE_FAILED (25)
-  // and all others are empty
-  TelemetryTestUtils.assertHistogram(telemetryProbe, 24, 1);
-
-  telemetryProbe = TelemetryTestUtils.getAndClearHistogram(
-    "TRR_SKIP_REASON_DNS_WORKED"
-  );
-
-  Services.prefs.setCharPref(
-    "network.trr.uri",
-    `https://foo.example.com:${h2Port}/404?responseIP=none`
-  );
-  // Reload the entry from the network. This time it should fail with
-  // TRR_FAILED (7)
-  await new DNSListener(
-    "fallback.example.com",
-    "127.0.0.1",
-    true,
-    0,
-    "",
-    false,
-    Ci.nsIDNSService.RESOLVE_BYPASS_CACHE
-  );
-  TelemetryTestUtils.assertHistogram(telemetryProbe, 7, 1);
-
-  Services.prefs.clearUserPref(
-    "toolkit.telemetry.testing.overrideProductsCheck"
-  );
 });
