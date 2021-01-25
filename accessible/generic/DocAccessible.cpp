@@ -16,6 +16,7 @@
 #include "nsEventShell.h"
 #include "nsLayoutUtils.h"
 #include "nsTextEquivUtils.h"
+#include "Pivot.h"
 #include "Role.h"
 #include "RootAccessible.h"
 #include "TreeWalker.h"
@@ -851,15 +852,50 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     return;
   }
 
+  dom::Element* elm = aAccessible->GetContent()->AsElement();
   if (aAttribute == nsGkAtoms::aria_describedby) {
     FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, aAccessible);
+    if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
+        aModType == dom::MutationEvent_Binding::ADDITION) {
+      // The subtrees of the new aria-describedby targets might be used to
+      // compute the description for aAccessible. Therefore, we need to set
+      // the eHasDescriptionDependent flag on all Accessibles in these subtrees.
+      IDRefsIterator iter(this, aAccessible->Elm(),
+                          nsGkAtoms::aria_describedby);
+      while (Accessible* target = iter.Next()) {
+        Pivot pivot(target);
+        LocalAccInSameDocRule rule;
+        for (AccessibleOrProxy anchor(target); !anchor.IsNull();
+             anchor = pivot.Next(anchor, rule)) {
+          Accessible* acc = anchor.AsAccessible();
+          MOZ_ASSERT(acc);
+          acc->mContextFlags |= eHasDescriptionDependent;
+        }
+      }
+    }
     return;
   }
 
-  dom::Element* elm = aAccessible->GetContent()->AsElement();
   if (aAttribute == nsGkAtoms::aria_labelledby &&
       !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
     FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
+    if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
+        aModType == dom::MutationEvent_Binding::ADDITION) {
+      // The subtrees of the new aria-labelledby targets might be used to
+      // compute the name for aAccessible. Therefore, we need to set
+      // the eHasNameDependent flag on all Accessibles in these subtrees.
+      IDRefsIterator iter(this, aAccessible->Elm(), nsGkAtoms::aria_labelledby);
+      while (Accessible* target = iter.Next()) {
+        Pivot pivot(target);
+        LocalAccInSameDocRule rule;
+        for (AccessibleOrProxy anchor(target); !anchor.IsNull();
+             anchor = pivot.Next(anchor, rule)) {
+          Accessible* acc = anchor.AsAccessible();
+          MOZ_ASSERT(acc);
+          acc->mContextFlags |= eHasNameDependent;
+        }
+      }
+    }
     return;
   }
 
