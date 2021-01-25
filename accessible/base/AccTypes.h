@@ -43,7 +43,6 @@ enum AccType {
   eHyperTextType,
   eImageType,
   eOuterDocType,
-  ePluginType,
   eTextLeafType,
 
   /**

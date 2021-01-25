@@ -2537,7 +2537,7 @@ nsRect nsLayoutUtils::TransformFrameRectToAncestor(
 static LayoutDeviceIntPoint GetWidgetOffset(nsIWidget* aWidget,
                                             nsIWidget*& aRootWidget) {
   LayoutDeviceIntPoint offset(0, 0);
-  while ((aWidget->WindowType() == eWindowType_child || aWidget->IsPlugin())) {
+  while (aWidget->WindowType() == eWindowType_child) {
     nsIWidget* parent = aWidget->GetParent();
     if (!parent) {
       break;
@@ -3082,10 +3082,6 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
   nsPresContext* presContext = aFrame->PresContext();
   PresShell* presShell = presContext->PresShell();
-  nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-  if (!rootPresContext) {
-    return NS_OK;
-  }
 
   TimeStamp startBuildDisplayList = TimeStamp::Now();
 
@@ -3196,18 +3192,6 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     visibleRegion = rootInkOverflow;
   } else {
     visibleRegion = aDirtyRegion;
-  }
-
-  // If the root has embedded plugins, flag the builder so we know we'll need
-  // to update plugin geometry after painting.
-  if ((aFlags & PaintFrameFlags::WidgetLayers) &&
-      !(aFlags & PaintFrameFlags::DocumentRelative) &&
-      rootPresContext->NeedToComputePluginGeometryUpdates()) {
-    builder->SetWillComputePluginGeometry(true);
-
-    // Disable partial updates for this paint as the list we're about to
-    // build has plugin-specific differences that won't trigger invalidations.
-    builder->SetDisablePartialUpdates(true);
   }
 
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
@@ -3457,8 +3441,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   }
 
   // Update the widget's opaque region information. This sets
-  // glass boundaries on Windows. Also set up the window dragging region
-  // and plugin clip regions and bounds.
+  // glass boundaries on Windows. Also set up the window dragging region.
   if ((aFlags & PaintFrameFlags::WidgetLayers) &&
       !(aFlags & PaintFrameFlags::DocumentRelative)) {
     nsIWidget* widget = aFrame->GetNearestWidget();
@@ -3471,35 +3454,6 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
       widget->UpdateWindowDraggingRegion(builder->GetWindowDraggingRegion());
     }
-  }
-
-  if (builder->WillComputePluginGeometry()) {
-    // For single process compute and apply plugin geometry updates to plugin
-    // windows, then request composition. For content processes skip eveything
-    // except requesting composition. Geometry updates were calculated and
-    // shipped to the chrome process in nsDisplayList when the layer
-    // transaction completed.
-    if (XRE_IsParentProcess()) {
-      rootPresContext->ComputePluginGeometryUpdates(aFrame, builder, list);
-      // We're not going to get a WillPaintWindow event here if we didn't do
-      // widget invalidation, so just apply the plugin geometry update here
-      // instead. We could instead have the compositor send back an equivalent
-      // to WillPaintWindow, but it should be close enough to now not to matter.
-      if (layerManager && !layerManager->NeedsWidgetInvalidation()) {
-        rootPresContext->ApplyPluginGeometryUpdates();
-      }
-    }
-
-    // We told the compositor thread not to composite when it received the
-    // transaction because we wanted to update plugins first. Schedule the
-    // composite now.
-    if (layerManager) {
-      layerManager->ScheduleComposite();
-    }
-
-    // Disable partial updates for the following paint as well, as we now have
-    // a plugin-specific display list.
-    builder->SetDisablePartialUpdates(true);
   }
 
   // Apply effects updates if we were actually painting

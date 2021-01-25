@@ -16,7 +16,6 @@
 #include "nsCOMPtr.h"
 #include "nsRegion.h"
 #include "nsCOMArray.h"
-#include "nsIPluginWidget.h"
 #include "nsXULPopupManager.h"
 #include "nsPresContext.h"
 #include "GeckoProfiler.h"
@@ -261,7 +260,7 @@ nsView* nsViewManager::GetDisplayRootFor(nsView* aView) {
     // If we have a combobox dropdown popup within a panel popup, both the view
     // for the dropdown popup and its parent will be floating, so we need to
     // distinguish this situation. We do this by looking for a widget. Any view
-    // with a widget is a display root, except for plugins.
+    // with a widget is a display root.
     nsIWidget* widget = displayRoot->GetWidget();
     if (widget && widget->WindowType() == eWindowType_popup) {
       NS_ASSERTION(displayRoot->GetFloating() && displayParent->GetFloating(),
@@ -540,46 +539,8 @@ void nsViewManager::InvalidateWidgetArea(nsView* aWidgetView,
     return;
   }
 
-  // Update all child widgets with the damage. In the process,
-  // accumulate the union of all the child widget areas, or at least
-  // some subset of that.
-  nsRegion children;
-  if (widget->GetTransparencyMode() != eTransparencyTransparent) {
-    for (nsIWidget* childWidget = widget->GetFirstChild(); childWidget;
-         childWidget = childWidget->GetNextSibling()) {
-      nsView* view = nsView::GetViewFor(childWidget);
-      NS_ASSERTION(view != aWidgetView, "will recur infinitely");
-      nsWindowType type = childWidget->WindowType();
-      if (view && childWidget->IsVisible() && type != eWindowType_popup) {
-        NS_ASSERTION(childWidget->IsPlugin(),
-                     "Only plugin or popup widgets can be children!");
-
-        // We do not need to invalidate in plugin widgets, but we should
-        // exclude them from the invalidation region IF we're not on
-        // Mac. On Mac we need to draw under plugin widgets, because
-        // plugin widgets are basically invisible
-#ifndef XP_MACOSX
-        // GetBounds should compensate for chrome on a toplevel widget
-        LayoutDeviceIntRect bounds = childWidget->GetBounds();
-
-        nsTArray<LayoutDeviceIntRect> clipRects;
-        childWidget->GetWindowClipRegion(&clipRects);
-        for (uint32_t i = 0; i < clipRects.Length(); ++i) {
-          nsRect rr = LayoutDeviceIntRect::ToAppUnits(
-              clipRects[i] + bounds.TopLeft(), AppUnitsPerDevPixel());
-          children.Or(children, rr - aWidgetView->ViewToWidgetOffset());
-          children.SimplifyInward(20);
-        }
-#endif
-      }
-    }
-  }
-
-  nsRegion leftOver;
-  leftOver.Sub(aDamagedRegion, children);
-
-  if (!leftOver.IsEmpty()) {
-    for (auto iter = leftOver.RectIter(); !iter.Done(); iter.Next()) {
+  if (!aDamagedRegion.IsEmpty()) {
+    for (auto iter = aDamagedRegion.RectIter(); !iter.Done(); iter.Next()) {
       LayoutDeviceIntRect bounds = ViewToWidget(aWidgetView, iter.Get());
       widget->Invalidate(bounds);
     }
@@ -670,10 +631,6 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget) {
       }
     }
   }
-
-  if (RefPtr<PresShell> presShell = mPresShell) {
-    presShell->WillPaintWindow();
-  }
 }
 
 bool nsViewManager::PaintWindow(nsIWidget* aWidget,
@@ -729,8 +686,7 @@ void nsViewManager::DispatchEvent(WidgetGUIEvent* aEvent, nsView* aView,
   // If the view has no frame, look for a view that does.
   nsIFrame* frame = view->GetFrame();
   if (!frame && (dispatchUsingCoordinates || aEvent->HasKeyEventMessage() ||
-                 aEvent->IsIMERelatedEvent() ||
-                 aEvent->HasPluginActivationEventMessage())) {
+                 aEvent->IsIMERelatedEvent())) {
     while (view && !view->GetFrame()) {
       view = view->GetParent();
     }

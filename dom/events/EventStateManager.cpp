@@ -81,7 +81,6 @@
 #include "nsIContentViewer.h"
 #include "nsFrameManager.h"
 #include "nsIBrowserChild.h"
-#include "nsPluginFrame.h"
 #include "nsMenuPopupFrame.h"
 
 #include "nsIObserverService.h"
@@ -2626,13 +2625,6 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
     // hasn't moved.
     nsIFrame* lastScrollFrame = WheelTransaction::GetTargetFrame();
     if (lastScrollFrame) {
-      if (aOptions & INCLUDE_PLUGIN_AS_TARGET) {
-        nsPluginFrame* pluginFrame = do_QueryFrame(lastScrollFrame);
-        if (pluginFrame &&
-            pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
-          return lastScrollFrame;
-        }
-      }
       nsIScrollableFrame* scrollableFrame =
           lastScrollFrame->GetScrollTargetFrame();
       if (scrollableFrame) {
@@ -2684,18 +2676,6 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
     // Check whether the frame wants to provide us with a scrollable view.
     nsIScrollableFrame* scrollableFrame = scrollFrame->GetScrollTargetFrame();
     if (!scrollableFrame) {
-      // If the frame is a plugin frame, then, the plugin content may handle
-      // wheel events.  Only when the caller computes the scroll target for
-      // default action handling, we should assume the plugin frame as
-      // scrollable if the plugin wants to handle wheel events as default
-      // action.
-      if (aOptions & INCLUDE_PLUGIN_AS_TARGET) {
-        nsPluginFrame* pluginFrame = do_QueryFrame(scrollFrame);
-        if (pluginFrame &&
-            pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
-          return scrollFrame;
-        }
-      }
       nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(scrollFrame);
       if (menuPopupFrame) {
         return nullptr;
@@ -3500,19 +3480,9 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // values is adjusted during its lifetime, the instance will restore the
       // adjusted delta when it's being destrcuted.
       ESMAutoDirWheelDeltaRestorer restorer(*wheelEvent);
-      // Check if the frame to scroll before checking the default action
-      // because if the scroll target is a plugin, the default action should be
-      // chosen by the plugin rather than by our prefs.
       nsIFrame* frameToScroll = ComputeScrollTargetAndMayAdjustWheelEvent(
           mCurrentTarget, wheelEvent,
           COMPUTE_DEFAULT_ACTION_TARGET_WITH_AUTO_DIR);
-      nsPluginFrame* pluginFrame = do_QueryFrame(frameToScroll);
-      if (pluginFrame) {
-        MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
-        // Plugins should receive original values instead of adjusted values.
-        horizontalizer.CancelHorizontalization();
-        action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
-      }
 
       switch (action) {
         case WheelPrefs::ACTION_SCROLL:
@@ -3574,23 +3544,6 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           DoScrollZoom(mCurrentTarget, intDelta);
           break;
         }
-        case WheelPrefs::ACTION_SEND_TO_PLUGIN:
-          MOZ_ASSERT(pluginFrame);
-
-          if (wheelEvent->mMessage != eWheel ||
-              (!wheelEvent->mDeltaX && !wheelEvent->mDeltaY)) {
-            break;
-          }
-
-          MOZ_ASSERT(static_cast<void*>(frameToScroll) ==
-                     static_cast<void*>(pluginFrame));
-          if (!WheelTransaction::WillHandleDefaultAction(wheelEvent,
-                                                         frameToScroll)) {
-            break;
-          }
-
-          pluginFrame->HandleWheelEventAsDefaultAction(wheelEvent);
-          break;
         case WheelPrefs::ACTION_NONE:
         default:
           bool allDeltaOverflown = false;

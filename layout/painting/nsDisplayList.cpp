@@ -155,9 +155,8 @@ void AssertUniqueItem(nsDisplayItem* aItem) {
 }
 #endif
 
-bool ShouldBuildItemForEventsOrPlugins(const DisplayItemType aType) {
+bool ShouldBuildItemForEvents(const DisplayItemType aType) {
   return aType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO ||
-         aType == DisplayItemType::TYPE_PLUGIN ||
          (GetDisplayItemFlagsForType(aType) & TYPE_IS_CONTAINER);
 }
 
@@ -589,9 +588,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mDescendIntoSubdocuments(true),
       mSelectedFramesOnly(false),
       mAllowMergingAndFlattening(true),
-      mWillComputePluginGeometry(false),
       mInTransform(false),
-      mInEventsAndPluginsOnly(false),
+      mInEventsOnly(false),
       mInFilter(false),
       mInPageSequence(false),
       mIsInChromePresContext(false),
@@ -600,7 +598,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mUseHighQualityScaling(false),
       mIsPaintingForWebRender(false),
       mIsCompositingCheap(false),
-      mContainsPluginItem(false),
       mAncestorHasApzAwareEventHandler(false),
       mHaveScrollableDisplayPort(false),
       mWindowDraggingAllowed(false),
@@ -1016,8 +1013,7 @@ void nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
   // to its bounds either, which can be very bad (see bug 516740).
   // Do let aVisibleRegion get more complex if by doing so we reduce its
   // area by at least half.
-  if (GetAccurateVisibleRegions() || tmp.GetNumRects() <= 15 ||
-      tmp.Area() <= aVisibleRegion->Area() / 2) {
+  if (tmp.GetNumRects() <= 15 || tmp.Area() <= aVisibleRegion->Area() / 2) {
     *aVisibleRegion = tmp;
   }
 }
@@ -2192,23 +2188,6 @@ static nsRegion TreatAsOpaque(nsDisplayItem* aItem,
   MOZ_ASSERT(
       (aBuilder->IsForEventDelivery() && aBuilder->HitTestIsForVisibility()) ||
       !opaque.IsComplex());
-  if (aBuilder->IsForPluginGeometry() &&
-      aItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-    // Treat all leaf chrome items as opaque, unless their frames are opacity:0.
-    // Since opacity:0 frames generate an nsDisplayOpacity, that item will
-    // not be treated as opaque here, so opacity:0 chrome content will be
-    // effectively ignored, as it should be.
-    // We treat leaf chrome items as opaque to ensure that they cover
-    // content plugins, for security reasons.
-    // Non-leaf chrome items don't render contents of their own so shouldn't
-    // be treated as opaque (and their bounds is just the union of their
-    // children, which might be a large area their contents don't really cover).
-    nsIFrame* f = aItem->Frame();
-    if (f->PresContext()->IsChrome() && !aItem->GetChildren() &&
-        f->StyleEffects()->mOpacity != 0.0) {
-      opaque = aItem->GetBounds(aBuilder, &snap);
-    }
-  }
   if (opaque.IsEmpty()) {
     return opaque;
   }
@@ -2482,19 +2461,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     }
 
     if (!sent) {
-      // Windowed plugins are not supported with WebRender enabled.
-      // But PluginGeometry needs to be updated to show plugin.
-      // Windowed plugins are going to be removed by Bug 1296400.
-      nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-      if (rootPresContext && XRE_IsContentProcess()) {
-        if (aBuilder->WillComputePluginGeometry()) {
-          rootPresContext->ComputePluginGeometryUpdates(
-              aBuilder->RootReferenceFrame(), aBuilder, this);
-        }
-        // This must be called even if PluginGeometryUpdates were not computed.
-        rootPresContext->CollectPluginGeometryUpdates(layerManager);
-      }
-
       auto* wrManager = static_cast<WebRenderLayerManager*>(layerManager.get());
 
       nsIDocShell* docShell = presContext->GetDocShell();
@@ -2566,16 +2532,9 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   bool temp =
       aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
   LayerManager::EndTransactionFlags flags = LayerManager::END_DEFAULT;
-  if (layerManager->NeedsWidgetInvalidation()) {
-    if (aFlags & PAINT_NO_COMPOSITE) {
-      flags = LayerManager::END_NO_COMPOSITE;
-    }
-  } else {
-    // Client layer managers never composite directly, so
-    // we don't need to worry about END_NO_COMPOSITE.
-    if (aBuilder->WillComputePluginGeometry()) {
-      flags = LayerManager::END_NO_REMOTE_COMPOSITE;
-    }
+  if (layerManager->NeedsWidgetInvalidation() &&
+      (aFlags & PAINT_NO_COMPOSITE)) {
+    flags = LayerManager::END_NO_COMPOSITE;
   }
 
   MaybeSetupTransactionIdAllocator(layerManager, presContext);
@@ -2592,20 +2551,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     if (!layerBuilder) {
       layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
       return nullptr;
-    }
-
-    // If this is the content process, we ship plugin geometry updates over with
-    // layer updates, so calculate that now before we call EndTransaction.
-    nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-    if (rootPresContext && XRE_IsContentProcess()) {
-      if (aBuilder->WillComputePluginGeometry()) {
-        rootPresContext->ComputePluginGeometryUpdates(
-            aBuilder->RootReferenceFrame(), aBuilder, this);
-      }
-      // The layer system caches plugin configuration information for forwarding
-      // with layer updates which needs to get set during reflow. This must be
-      // called even if there are no windowed plugins in the page.
-      rootPresContext->CollectPluginGeometryUpdates(layerManager);
     }
 
     layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aBuilder,
@@ -3026,9 +2971,6 @@ bool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
     SetPaintRect(itemVisible.GetBounds());
   }
 
-  // When we recompute visibility within layers we don't need to
-  // expand the visible region for content behind plugins (the plugin
-  // is not in the layer).
   if (!ComputeVisibility(aBuilder, aVisibleRegion)) {
     SetPaintRect(nsRect());
     return false;
@@ -5804,11 +5746,11 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
 
 nsDisplayOpacity::nsDisplayOpacity(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-    const ActiveScrolledRoot* aActiveScrolledRoot,
-    bool aForEventsAndPluginsOnly, bool aNeedsActiveLayer)
+    const ActiveScrolledRoot* aActiveScrolledRoot, bool aForEventsOnly,
+    bool aNeedsActiveLayer)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, true),
       mOpacity(aFrame->StyleEffects()->mOpacity),
-      mForEventsAndPluginsOnly(aForEventsAndPluginsOnly),
+      mForEventsOnly(aForEventsOnly),
       mNeedsActiveLayer(aNeedsActiveLayer),
       mChildOpacityState(ChildOpacityState::Unknown) {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
@@ -6073,7 +6015,7 @@ nsDisplayItem::LayerState nsDisplayOpacity::GetLayerState(
   // If we only created this item so that we'd get correct nsDisplayEventRegions
   // for child frames, then force us to inactive to avoid unnecessary
   // layerization changes for content that won't ever be painted.
-  if (mForEventsAndPluginsOnly) {
+  if (mForEventsOnly) {
     MOZ_ASSERT(mOpacity == 0);
     return LayerState::LAYER_INACTIVE;
   }

@@ -29,7 +29,6 @@
 #include "nsFontMetrics.h"
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
-#include "nsIObjectFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsQueryObject.h"

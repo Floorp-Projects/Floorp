@@ -236,31 +236,6 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg,
 
       break;
 
-    case WM_MOUSEACTIVATE: {
-      // If a child window of this plug-in is already focused,
-      // don't focus the parent to avoid focus dance. We'll
-      // receive a follow up WM_SETFOCUS which will notify
-      // the appropriate window anyway.
-      HWND focusedWnd = ::GetFocus();
-      if (!::IsChild((HWND)win->window, focusedWnd)) {
-        // Notify the dom / focus manager the plugin has focus when one of
-        // it's child windows receives it. OOPP specific - this code is
-        // critical in notifying the dom of focus changes when the plugin
-        // window in the child process receives focus via a mouse click.
-        // WM_MOUSEACTIVATE is sent by nsWindow via a custom window event
-        // sent from PluginInstanceParent in response to focus events sent
-        // from the child. (bug 540052) Note, this gui event could also be
-        // sent directly from widget.
-        nsCOMPtr<nsIWidget> widget;
-        win->GetPluginWidget(getter_AddRefs(widget));
-        if (widget) {
-          WidgetGUIEvent event(true, ePluginActivate, widget);
-          nsEventStatus status;
-          widget->DispatchEvent(&event, status);
-        }
-      }
-    } break;
-
     case WM_SETFOCUS:
     case WM_KILLFOCUS: {
       // Make sure setfocus and killfocus get through to the widget procedure
