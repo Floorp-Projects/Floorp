@@ -23,4 +23,5 @@ A separate and important back-end piece currently is `toolkit/components/places/
    telemetry
    debugging
    experiments
+   dynamic-result-types
    contact
