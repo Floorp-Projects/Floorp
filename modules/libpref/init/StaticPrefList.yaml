@@ -4447,6 +4447,12 @@
   value: false
   mirror: always
 
+# Prefer EGL over GLX if available.
+- name: gfx.prefer-x11-egl
+  type: bool
+  value: false
+  mirror: once
+
 - name: gfx.testing.device-fail
   type: RelaxedAtomicBool
   value: false
