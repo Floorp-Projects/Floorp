@@ -54,7 +54,10 @@ function run_test() {
   prefs.setIntPref("network.http.sendRefererHeader", 0);
   Assert.equal(null, getTestReferrer(server_uri, referer_uri));
   prefs.setIntPref("network.http.sendRefererHeader", 2);
-  Assert.equal(getTestReferrer(server_uri, referer_uri), referer_uri);
+  Assert.equal(
+    getTestReferrer(server_uri, referer_uri),
+    "http://foo.example.com/"
+  );
 
   // test that https ref is not sent to http
   Assert.equal(null, getTestReferrer(server_uri_2, referer_uri_https));
