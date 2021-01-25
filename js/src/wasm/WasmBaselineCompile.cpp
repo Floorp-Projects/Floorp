@@ -13774,6 +13774,10 @@ static void BitmaskI32x4(MacroAssembler& masm, RegV128 rs, RegI32 rd) {
   masm.bitmaskInt32x4(rs, rd);
 }
 
+static void BitmaskI64x2(MacroAssembler& masm, RegV128 rs, RegI32 rd) {
+  masm.bitmaskInt64x2(rs, rd);
+}
+
 static void Swizzle(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                     RegV128 temp) {
   masm.swizzleInt8x16(rs, rsd, temp);
@@ -13792,6 +13796,11 @@ static void BitmaskI16x8(MacroAssembler& masm, RegV128 rs, RegI32 rd,
 static void BitmaskI32x4(MacroAssembler& masm, RegV128 rs, RegI32 rd,
                          RegV128 temp) {
   masm.bitmaskInt32x4(rs, rd, temp);
+}
+
+static void BitmaskI64x2(MacroAssembler& masm, RegV128 rs, RegI32 rd,
+                         RegV128 temp) {
+  masm.bitmaskInt64x2(rs, rd, temp);
 }
 
 static void Swizzle(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
@@ -15035,6 +15044,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorReduction(BitmaskI16x8));
           case uint32_t(SimdOp::I32x4Bitmask):
             CHECK_NEXT(dispatchVectorReduction(BitmaskI32x4));
+          case uint32_t(SimdOp::I64x2Bitmask):
+            CHECK_NEXT(dispatchVectorReduction(BitmaskI64x2));
           case uint32_t(SimdOp::I8x16ReplaceLane):
             CHECK_NEXT(dispatchReplaceLane(ReplaceLaneI8x16, ValType::I32, 16));
           case uint32_t(SimdOp::I16x8ReplaceLane):

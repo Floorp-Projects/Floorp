@@ -642,7 +642,7 @@ enum class SimdOp {
   I64x2Neg = 0xc1,
   // AnyTrue = 0xc2
   // AllTrue = 0xc3
-  // Bitmask = 0xc4
+  I64x2Bitmask = 0xc4,
   // Narrow = 0xc5
   // Narrow = 0xc6
   // Widen = 0xc7

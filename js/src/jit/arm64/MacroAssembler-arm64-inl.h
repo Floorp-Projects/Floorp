@@ -2620,6 +2620,14 @@ void MacroAssembler::bitmaskInt32x4(FloatRegister src, Register dest,
   Mov(ARMRegister(dest, 32), Simd4S(scratch), 0);
 }
 
+void MacroAssembler::bitmaskInt64x2(FloatRegister src, Register dest,
+                                    FloatRegister temp) {
+  Sqxtn(Simd2S(temp), Simd2D(src));
+  Ushr(Simd2S(temp), Simd2S(temp), 31);
+  Usra(ARMFPRegister(temp, 64), ARMFPRegister(temp, 64), 31);
+  Fmov(ARMRegister(dest, 32), ARMFPRegister(temp, 32));
+}
+
 // Comparisons (integer and floating-point)
 
 void MacroAssembler::compareInt8x16(Assembler::Condition cond,
