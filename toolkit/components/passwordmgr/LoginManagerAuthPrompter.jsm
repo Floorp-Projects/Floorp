@@ -94,7 +94,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * Invoked by [toolkit/components/prompts/src/Prompter.jsm]
  */
 function LoginManagerAuthPromptFactory() {
+  Services.obs.addObserver(this, "quit-application-granted", true);
   Services.obs.addObserver(this, "passwordmgr-crypto-login", true);
+  Services.obs.addObserver(this, "passwordmgr-crypto-loginCanceled", true);
 }
 
 LoginManagerAuthPromptFactory.prototype = {
@@ -105,23 +107,20 @@ LoginManagerAuthPromptFactory.prototype = {
     "nsISupportsWeakReference",
   ]),
 
-  // Tracks pending auth prompts per top level browser and hash key.
-  // browser -> hashkey -> prompt
-  // This enables us to consolidate auth prompts with the same browser and
-  // hashkey (level, origin, realm).
-  _pendingPrompts: new WeakMap(),
-  // We use a separate bucket for when we don't have a browser.
-  // _noBrowser -> hashkey -> prompt
-  _noBrowser: {},
-  // Promise used to defer prompts if the password manager isn't ready when
-  // they're called.
-  _uiBusyPromise: null,
+  _asyncPrompts: {},
+  _asyncPromptInProgress: false,
 
   observe(subject, topic, data) {
     this.log("Observed: " + topic);
-    if (topic == "passwordmgr-crypto-login") {
-      // Show the deferred prompters.
-      this._uiBusyPromise?.resolve();
+    if (topic == "quit-application-granted") {
+      this._cancelPendingPrompts();
+    } else if (topic == "passwordmgr-crypto-login") {
+      // Start processing the deferred prompters.
+      this._doAsyncPrompt();
+    } else if (topic == "passwordmgr-crypto-loginCanceled") {
+      // User canceled a Master Password prompt, so go ahead and cancel
+      // all pending auth prompts to avoid nagging over and over.
+      this._cancelPendingPrompts();
     }
   },
 
@@ -131,114 +130,143 @@ LoginManagerAuthPromptFactory.prototype = {
     return prompt;
   },
 
-  getPendingPrompt(browser, hashKey) {
-    return this._pendingPrompts.get(browser || this._noBrowser)?.get(hashKey);
-  },
-
-  _setPendingPrompt(prompt, hashKey) {
-    let browser = prompt.prompter.browser || this._noBrowser;
-    let hashToPrompt = this._pendingPrompts.get(browser);
-    if (!hashToPrompt) {
-      hashToPrompt = new Map();
-      this._pendingPrompts.set(browser, hashToPrompt);
-    }
-    hashToPrompt.set(hashKey, prompt);
-  },
-
-  _removePendingPrompt(prompt, hashKey) {
-    let browser = prompt.prompter.browser || this._noBrowser;
-    let hashToPrompt = this._pendingPrompts.get(browser);
-    if (!hashToPrompt) {
+  _doAsyncPrompt() {
+    if (this._asyncPromptInProgress) {
+      this.log("_doAsyncPrompt bypassed, already in progress");
       return;
     }
-    hashToPrompt.delete(hashKey);
-    if (!hashToPrompt.size) {
-      this._pendingPrompts.delete(browser);
+
+    // Find the first prompt key we have in the queue
+    var hashKey = null;
+    for (hashKey in this._asyncPrompts) {
+      break;
     }
-  },
 
-  async _waitForLoginsUI(prompt) {
-    await this._uiBusyPromise;
+    if (!hashKey) {
+      this.log("_doAsyncPrompt:run bypassed, no prompts in the queue");
+      return;
+    }
 
-    let [origin, httpRealm] = prompt.prompter._getAuthTarget(
+    // If login manger has logins for this host, defer prompting if we're
+    // already waiting on a master password entry.
+    var prompt = this._asyncPrompts[hashKey];
+    var prompter = prompt.prompter;
+    var [origin, httpRealm] = prompter._getAuthTarget(
       prompt.channel,
       prompt.authInfo
     );
 
-    // No UI to wait for.
-    if (!Services.logins.uiBusy) {
-      return;
-    }
-
-    let hasLogins = Services.logins.countLogins(origin, null, httpRealm) > 0;
-    if (
-      !hasLogins &&
-      LoginHelper.schemeUpgrades &&
-      origin.startsWith("https://")
-    ) {
-      let httpOrigin = origin.replace(/^https:\/\//, "http://");
-      hasLogins = Services.logins.countLogins(httpOrigin, null, httpRealm) > 0;
-    }
-    // We don't depend on saved logins.
-    if (!hasLogins) {
-      return;
-    }
-
-    this.log("Waiting for master password UI");
-
-    this._uiBusyPromise = new Promise();
-    await this._uiBusyPromise;
-  },
-
-  async _doAsyncPrompt(prompt, hashKey) {
-    this._setPendingPrompt(prompt, hashKey);
-
-    // UI might be busy due to the master password dialog. Wait for it to close.
-    await this._waitForLoginsUI(prompt);
-
-    let ok = false;
-    let promptAborted = false;
-    try {
-      this.log("_doAsyncPrompt - performing the prompt for '" + hashKey + "'");
-      ok = await prompt.prompter.promptAuthInternal(
-        prompt.channel,
-        prompt.level,
-        prompt.authInfo
-      );
-    } catch (e) {
+    if (Services.logins.uiBusy) {
+      let hasLogins = Services.logins.countLogins(origin, null, httpRealm) > 0;
       if (
-        e instanceof Components.Exception &&
-        e.result == Cr.NS_ERROR_NOT_AVAILABLE
+        !hasLogins &&
+        LoginHelper.schemeUpgrades &&
+        origin.startsWith("https://")
       ) {
-        this.log(
-          "_doAsyncPrompt bypassed, UI is not available in this context"
-        );
-        // Prompts throw NS_ERROR_NOT_AVAILABLE if they're aborted.
-        promptAborted = true;
-      } else {
-        Cu.reportError("LoginManagerAuthPrompter: _doAsyncPrompt " + e + "\n");
+        let httpOrigin = origin.replace(/^https:\/\//, "http://");
+        hasLogins =
+          Services.logins.countLogins(httpOrigin, null, httpRealm) > 0;
+      }
+      if (hasLogins) {
+        this.log("_doAsyncPrompt:run bypassed, master password UI busy");
+        return;
       }
     }
 
-    this._removePendingPrompt(prompt, hashKey);
+    var self = this;
 
-    // Handle callbacks
-    for (var consumer of prompt.consumers) {
-      if (!consumer.callback) {
-        // Not having a callback means that consumer didn't provide it
-        // or canceled the notification
+    var runnable = {
+      cancel: false,
+      run() {
+        var ok = false;
+        if (!this.cancel) {
+          try {
+            self.log(
+              "_doAsyncPrompt:run - performing the prompt for '" + hashKey + "'"
+            );
+            ok = prompter.promptAuth(
+              prompt.channel,
+              prompt.level,
+              prompt.authInfo
+            );
+          } catch (e) {
+            if (
+              e instanceof Components.Exception &&
+              e.result == Cr.NS_ERROR_NOT_AVAILABLE
+            ) {
+              self.log(
+                "_doAsyncPrompt:run bypassed, UI is not available in this context"
+              );
+            } else {
+              Cu.reportError(
+                "LoginManagerAuthPrompter: _doAsyncPrompt:run: " + e + "\n"
+              );
+            }
+          }
+
+          delete self._asyncPrompts[hashKey];
+          prompt.inProgress = false;
+          self._asyncPromptInProgress = false;
+        }
+
+        for (var consumer of prompt.consumers) {
+          if (!consumer.callback) {
+            // Not having a callback means that consumer didn't provide it
+            // or canceled the notification
+            continue;
+          }
+
+          self.log("Calling back to " + consumer.callback + " ok=" + ok);
+          try {
+            if (ok) {
+              consumer.callback.onAuthAvailable(
+                consumer.context,
+                prompt.authInfo
+              );
+            } else {
+              consumer.callback.onAuthCancelled(consumer.context, !this.cancel);
+            }
+          } catch (e) {
+            /* Throw away exceptions caused by callback */
+          }
+        }
+        self._doAsyncPrompt();
+      },
+    };
+
+    this._asyncPromptInProgress = true;
+    prompt.inProgress = true;
+
+    Services.tm.dispatchToMainThread(runnable);
+    this.log("_doAsyncPrompt:run dispatched");
+  },
+
+  _cancelPendingPrompts() {
+    this.log("Canceling all pending prompts...");
+    var asyncPrompts = this._asyncPrompts;
+    this.__proto__._asyncPrompts = {};
+
+    for (var hashKey in asyncPrompts) {
+      let prompt = asyncPrompts[hashKey];
+      // Watch out! If this prompt is currently prompting, let it handle
+      // notifying the callbacks of success/failure, since it's already
+      // asking the user for input. Reusing a callback can be crashy.
+      if (prompt.inProgress) {
+        this.log("skipping a prompt in progress");
         continue;
       }
 
-      this.log("Calling back to " + consumer.callback + " ok=" + ok);
-      try {
-        if (ok) {
-          consumer.callback.onAuthAvailable(consumer.context, prompt.authInfo);
-        } else {
-          consumer.callback.onAuthCancelled(consumer.context, !promptAborted);
+      for (var consumer of prompt.consumers) {
+        if (!consumer.callback) {
+          continue;
         }
-      } catch (e) {
-        /* Throw away exceptions caused by callback */
+
+        this.log("Canceling async auth prompt callback " + consumer.callback);
+        try {
+          consumer.callback.onAuthCancelled(consumer.context, true);
+        } catch (e) {
+          /* Just ignore exceptions from the callback */
+        }
       }
     }
   },
@@ -609,7 +637,16 @@ LoginManagerAuthPrompter.prototype = {
     return [formattedOrigin, formattedOrigin + pathname, uri.username];
   },
 
-  async promptAuthInternal(aChannel, aLevel, aAuthInfo) {
+  /* ---------- nsIAuthPrompt2 prompts ---------- */
+
+  /**
+   * Implementation of nsIAuthPrompt2.
+   *
+   * @param {nsIChannel} aChannel
+   * @param {int}        aLevel
+   * @param {nsIAuthInformation} aAuthInfo
+   */
+  promptAuth(aChannel, aLevel, aAuthInfo) {
     var selectedLogin = null;
     var checkbox = { value: false };
     var checkboxLabel = null;
@@ -719,16 +756,29 @@ LoginManagerAuthPrompter.prototype = {
           this._browser
         );
       }
-
-      ok = await Services.prompt.asyncPromptAuth(
-        this._browser?.browsingContext,
-        LoginManagerAuthPrompter.promptAuthModalType,
-        aChannel,
-        aLevel,
-        aAuthInfo,
-        checkboxLabel,
-        checkbox
-      );
+      if (this._browser) {
+        ok = Services.prompt.promptAuthBC(
+          this._browser.browsingContext,
+          LoginManagerAuthPrompter.promptAuthModalType,
+          aChannel,
+          aLevel,
+          aAuthInfo,
+          checkboxLabel,
+          checkbox
+        );
+      } else {
+        // Can't tab prompt without browser. Fallback to window prompt.
+        // For cases where this._chromeWindow is defined, this will keep our
+        // parent relationship intact as opposed to passing null above.
+        ok = Services.prompt.promptAuth(
+          this._chromeWindow,
+          aChannel,
+          aLevel,
+          aAuthInfo,
+          checkboxLabel,
+          checkbox
+        );
+      }
     }
 
     let [username, password] = this._GetAuthInfo(aAuthInfo);
@@ -818,25 +868,6 @@ LoginManagerAuthPrompter.prototype = {
     return ok;
   },
 
-  /* ---------- nsIAuthPrompt2 prompts ---------- */
-
-  /**
-   * Implementation of nsIAuthPrompt2.
-   *
-   * @param {nsIChannel} aChannel
-   * @param {int}        aLevel
-   * @param {nsIAuthInformation} aAuthInfo
-   */
-  promptAuth(aChannel, aLevel, aAuthInfo) {
-    let closed = false;
-    let result = false;
-    this.promptAuthInternal(aChannel, aLevel, aAuthInfo)
-      .then(ok => (result = ok))
-      .finally(() => (closed = true));
-    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
-    return result;
-  },
-
   asyncPromptAuth(aChannel, aCallback, aContext, aLevel, aAuthInfo) {
     var cancelable = null;
 
@@ -850,33 +881,32 @@ LoginManagerAuthPrompter.prototype = {
 
       cancelable = this._newAsyncPromptConsumer(aCallback, aContext);
 
-      let [origin, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
+      var [origin, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
 
-      let hashKey = aLevel + "|" + origin + "|" + httpRealm;
+      var hashKey = aLevel + "|" + origin + "|" + httpRealm;
       this.log("Async prompt key = " + hashKey);
-      let pendingPrompt = this._factory.getPendingPrompt(
-        this._browser,
-        hashKey
-      );
-      if (pendingPrompt) {
+      var asyncPrompt = this._factory._asyncPrompts[hashKey];
+      if (asyncPrompt) {
         this.log(
           "Prompt bound to an existing one in the queue, callback = " +
             aCallback
         );
-        pendingPrompt.consumers.push(cancelable);
+        asyncPrompt.consumers.push(cancelable);
         return cancelable;
       }
 
-      this.log("Adding new async prompt, callback = " + aCallback);
-      let asyncPrompt = {
+      this.log("Adding new prompt to the queue, callback = " + aCallback);
+      asyncPrompt = {
         consumers: [cancelable],
         channel: aChannel,
         authInfo: aAuthInfo,
         level: aLevel,
+        inProgress: false,
         prompter: this,
       };
 
-      this._factory._doAsyncPrompt(asyncPrompt, hashKey);
+      this._factory._asyncPrompts[hashKey] = asyncPrompt;
+      this._factory._doAsyncPrompt();
     } catch (e) {
       Cu.reportError(
         "LoginManagerAuthPrompter: " +
@@ -916,10 +946,6 @@ LoginManagerAuthPrompter.prototype = {
 
   set browser(aBrowser) {
     this._browser = aBrowser;
-  },
-
-  get browser() {
-    return this._browser;
   },
 
   set openerBrowser(aOpenerBrowser) {
