@@ -85,7 +85,11 @@ Class definitions may have the following properties:
 ``categories`` (optional)
   A dict of category entries to register for this component's contract ID.
   Each key in the dict is the name of the category. Each value is either a
-  string containing a single entry name, or a list of entry name strings.
+  string containing a single entry, or a list of entries.  Each entry is either
+  a string name, or a dictionary of the form ``{'name': 'value', 'backgroundtasks':
+  BackgroundTasksSelector.ALL_TASKS}``.  By default, category entries are registered
+  for **no background tasks**: they have
+  ``'backgroundtasks': BackgroundTasksSelector.NO_TASKS``.
 
 ``type`` (optional, default=``nsISupports``)
   The fully-qualified type of the class implementing this component. Defaults
