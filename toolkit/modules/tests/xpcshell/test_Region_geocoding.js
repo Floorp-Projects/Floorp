@@ -92,7 +92,7 @@ add_task(async function test_geolocation_update() {
   );
   Assert.equal(region.home, "AU", "First update will mark new region as seen");
 
-  let regionUpdate = TestUtils.topicObserved("browser-region");
+  let regionUpdate = TestUtils.topicObserved("browser-region-updated");
   Services.obs.notifyObservers(
     { coords: { latitude: -5.066019, longitude: 39.1026251 } },
     "geolocation-position-events"

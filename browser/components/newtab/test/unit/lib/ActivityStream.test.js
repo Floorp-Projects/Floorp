@@ -369,12 +369,7 @@ describe("ActivityStream", () => {
         .stub(global.Services.obs, "addObserver")
         .callsFake((pref, obs) => {
           setTimeout(() => {
-            Services.obs.notifyObservers(
-              null,
-              "browser-region",
-              "region-updated",
-              "US"
-            );
+            Services.obs.notifyObservers("US", "browser-region-updated");
           });
         });
     });

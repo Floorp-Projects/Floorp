@@ -22,11 +22,6 @@ interface nsIRegion : nsISupports
 /**
  * The observer topic to listen to for Region notifications.
  */
-#define REGION_TOPIC "browser-region"
-
-/**
- * The observer data sent when the region is updated.
- */
-#define REGION_UPDATED "region-updated"
+#define REGION_TOPIC "browser-region-updated"
 
 %}

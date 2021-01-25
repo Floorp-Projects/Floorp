@@ -39,7 +39,7 @@ add_task(async function test_basic() {
     send(res, { country_code: "UK" });
   });
   // start to listen the notification
-  let updateRegion = TestUtils.topicObserved("browser-region");
+  let updateRegion = TestUtils.topicObserved("browser-region-updated");
   await Region._fetchRegion();
   let [subject] = await updateRegion;
 
