@@ -7,7 +7,11 @@
 }
 
 .radioRestoreContainer:not(:last-child) {
-  margin-bottom: 0.2em;
+  margin-bottom: 0.4em;
+}
+
+.radioRestoreContainer > :is(.radioRestoreButton, .radioRestoreLabel) {
+  vertical-align: middle;
 }
 
 /* tablist starts out hidden, but JS may make it visible in response to
