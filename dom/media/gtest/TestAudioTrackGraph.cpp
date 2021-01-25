@@ -501,6 +501,23 @@ TEST(TestAudioTrackGraph, ReOpenAudioInput)
   EXPECT_LE(nrDiscontinuities, 1U);
 }
 
+// Sum the signal to mono and compute the root mean square, in float32,
+// regardless of the input format.
+float rmsf32(AudioDataValue* aSamples, uint32_t aChannels, uint32_t aFrames) {
+  float downmixed;
+  float rms = 0.;
+  uint32_t readIdx = 0;
+  for (uint32_t i = 0; i < aFrames; i++) {
+    downmixed = 0.;
+    for (uint32_t j = 0; j < aChannels; j++) {
+      downmixed += AudioSampleToFloat(aSamples[readIdx++]);
+    }
+    rms += downmixed * downmixed;
+  }
+  rms = rms / aFrames;
+  return sqrt(rms);
+}
+
 TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
 {
   MockCubeb* cubeb = new MockCubeb();
@@ -594,23 +611,28 @@ TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
   Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
       WaitFor(stream->OutputVerificationEvent());
 
-  const char* dir = getenv("MOZ_UPLOAD_DIR");
-  if (dir && nrDiscontinuities != ITERATION_COUNT) {
-    WavDumper dumper;
-    char uploadPath[256];
-    SprintfLiteral(
-        uploadPath, "%s/%s.wav", dir,
-        ::testing::UnitTest::GetInstance()->current_test_info()->name());
-    printf("Writing debug WAV to %s\n", uploadPath);
-    dumper.OpenExplicit(uploadPath, 1, graph->GraphRate());
-    auto data = stream->TakeRecordedOutput();
-    dumper.Write(data.Elements(), data.Length());
+  auto data = stream->TakeRecordedOutput();
+
+  // check that there is non-silence and silence at the expected time in the
+  // stereo recording, while allowing for a bit of scheduling uncertainty, by
+  // checking half a second after the theoretical muting/unmuting.
+  // non-silence starts around: 0s, 2s, 4s
+  // silence start around: 1s, 3s, 5s
+  // To detect silence or non-silence, we compute the RMS of the signal for
+  // 100ms.
+  float noisyTime_s[] = {0.5, 2.5, 4.5};
+  float silenceTime_s[] = {1.5, 3.5, 5.5};
+
+  uint32_t rate = graph->GraphRate();
+  for (float& time : noisyTime_s) {
+    uint32_t startIdx = time * rate * 2 /* stereo */;
+    EXPECT_NE(rmsf32(&(data[startIdx]), 2, rate / 10), 0.0);
   }
 
-  // We're enabling/disabling the track ITERATION_COUNT times, so we expect the
-  // same number of discontinuities.
-  std::cerr << "nrDiscontinuities" << nrDiscontinuities << std::endl;
-  EXPECT_EQ(nrDiscontinuities, ITERATION_COUNT);
+  for (float& time : silenceTime_s) {
+    uint32_t startIdx = time * rate * 2 /* stereo */;
+    EXPECT_EQ(rmsf32(&(data[startIdx]), 2, rate / 10), 0.0);
+  }
 }
 
 void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
