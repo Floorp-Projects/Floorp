@@ -6076,13 +6076,14 @@ static MinMaxSize ComputeTransferredMinMaxInlineSize(
 nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
+    ComputeSizeFlags aFlags) {
   MOZ_ASSERT(!GetIntrinsicRatio(),
              "Please override this method and call "
              "nsContainerFrame::ComputeSizeWithIntrinsicDimensions instead.");
   LogicalSize result =
       ComputeAutoSize(aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin,
-                      aBorderPadding, aFlags);
+                      aBorderPadding, aSizeOverrides, aFlags);
   const nsStylePosition* stylePos = StylePosition();
   const nsStyleDisplay* disp = StyleDisplay();
   auto aspectRatioUsage = AspectRatioUsage::None;
@@ -6431,7 +6432,8 @@ LogicalSize nsIFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM,
     const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
     const mozilla::LogicalSize& aMargin,
-    const mozilla::LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
+    const mozilla::LogicalSize& aBorderPadding,
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   // Use basic shrink-wrapping as a default implementation.
   LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
 
@@ -10682,7 +10684,7 @@ void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
             ComputeSize(
                 aRenderingContext, wm, logicalSize, logicalSize.ISize(wm),
                 reflowInput.ComputedLogicalMargin(wm).Size(wm),
-                reflowInput.ComputedLogicalBorderPadding(wm).Size(wm), {})
+                reflowInput.ComputedLogicalBorderPadding(wm).Size(wm), {}, {})
                 .mLogicalSize.Height(wm));
       }
     }

@@ -62,13 +62,12 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   virtual IntrinsicSize GetIntrinsicSize() override;
   AspectRatio GetIntrinsicRatio() const override;
 
-  SizeComputationResult ComputeSize(gfxContext* aRenderingContext,
-                                    WritingMode aWritingMode,
-                                    const LogicalSize& aCBSize,
-                                    nscoord aAvailableISize,
-                                    const LogicalSize& aMargin,
-                                    const LogicalSize& aBorderPadding,
-                                    ComputeSizeFlags aFlags) override;
+  SizeComputationResult ComputeSize(
+      gfxContext* aRenderingContext, WritingMode aWritingMode,
+      const LogicalSize& aCBSize, nscoord aAvailableISize,
+      const LogicalSize& aMargin, const LogicalSize& aBorderPadding,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
+      ComputeSizeFlags aFlags) override;
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
