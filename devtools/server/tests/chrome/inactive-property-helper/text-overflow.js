@@ -19,10 +19,64 @@ export default [
     isActive: true,
   },
   {
+    info: "text-overflow is active when overflow is set to auto",
+    property: "text-overflow",
+    tagName: "div",
+    rules: ["div { text-overflow: ellipsis; overflow: auto; }"],
+    isActive: true,
+  },
+  {
+    info: "text-overflow is active when overflow is set to scroll",
+    property: "text-overflow",
+    tagName: "div",
+    rules: ["div { text-overflow: ellipsis; overflow: scroll; }"],
+    isActive: true,
+  },
+  {
     info: "text-overflow is inactive when overflow is set to visible",
     property: "text-overflow",
     tagName: "div",
     rules: ["div { text-overflow: ellipsis; overflow: visible; }"],
+    isActive: false,
+  },
+  {
+    info:
+      "text-overflow is active when overflow-x is set to hidden on horizontal writing mode",
+    property: "text-overflow",
+    tagName: "div",
+    rules: [
+      "div { writing-mode: lr; text-overflow: ellipsis; overflow-x: hidden; }",
+    ],
+    isActive: true,
+  },
+  {
+    info:
+      "text-overflow is inactive when overflow-x is set to visible on horizontal writing mode",
+    property: "text-overflow",
+    tagName: "div",
+    rules: [
+      "div { writing-mode: lr; text-overflow: ellipsis; overflow-x: visible; }",
+    ],
+    isActive: false,
+  },
+  {
+    info:
+      "text-overflow is active when overflow-y is set to hidden on vertical writing mode",
+    property: "text-overflow",
+    tagName: "div",
+    rules: [
+      "div { writing-mode: vertical-lr; text-overflow: ellipsis; overflow-y: hidden; }",
+    ],
+    isActive: true,
+  },
+  {
+    info:
+      "text-overflow is inactive when overflow-y is set to visible on vertical writing mode",
+    property: "text-overflow",
+    tagName: "div",
+    rules: [
+      "div { writing-mode: vertical-lr; text-overflow: ellipsis; overflow-y: visible; }",
+    ],
     isActive: false,
   },
   {
