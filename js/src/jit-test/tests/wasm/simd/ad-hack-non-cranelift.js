@@ -160,4 +160,20 @@ assertSame(get(mem64u, 0, 2), iota(2).map((n) => BigInt(as[n] >>> 0)));
 ins.exports.widen_high_i32x4_u();
 assertSame(get(mem64u, 0, 2), iota(2).map((n) => BigInt(as[n+2] >>> 0)));
 
+// Saturating rounding q-format multiplication.
+// This is to be moved into ad-hack.js
 
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "q15mulr_sat_s")
+      (v128.store (i32.const 0) (i16x8.q15mulr_sat_s (v128.load (i32.const 16)) (v128.load (i32.const 32))))))`);
+
+var mem16 = new Int16Array(ins.exports.mem.buffer);
+for ( let [as, bs] of cross(Int16Array.inputs) ) {
+    set(mem16, 8, as);
+    set(mem16, 16, bs);
+    ins.exports.q15mulr_sat_s();
+    assertSame(get(mem16, 0, 8),
+               iota(8).map((i) => signed_saturate((as[i] * bs[i] + 0x4000) >> 15, 16)));
+}

@@ -2274,6 +2274,11 @@ void MacroAssembler::unsignedExtMulHighInt32x4(FloatRegister rhs,
   Umull2(Simd2D(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::q15MulrSatInt16x8(FloatRegister rhs,
+                                       FloatRegister lhsDest) {
+  Sqrdmulh(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
 // Integer Negate
 
 void MacroAssembler::negInt8x16(FloatRegister src, FloatRegister dest) {

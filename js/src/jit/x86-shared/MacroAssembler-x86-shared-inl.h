@@ -1694,6 +1694,15 @@ void MacroAssembler::unsignedExtMulHighInt32x4(FloatRegister rhs,
   vpmuludq(Operand(scratch), lhsDest, lhsDest);
 }
 
+void MacroAssembler::q15MulrSatInt16x8(FloatRegister rhs,
+                                       FloatRegister lhsDest) {
+  ScratchSimd128Scope scratch(*this);
+  vpmulhrsw(Operand(rhs), lhsDest, lhsDest);
+  vmovdqa(lhsDest, scratch);
+  vpcmpeqwSimd128(SimdConstant::SplatX8(0x8000), scratch);
+  vpxor(scratch, lhsDest, lhsDest);
+}
+
 // Integer negate
 
 void MacroAssembler::negInt8x16(FloatRegister src, FloatRegister dest) {
