@@ -39,7 +39,7 @@
             return this.inputField[property];
           },
           set(val) {
-            return (this.inputField[property] = val);
+            this.inputField[property] = val;
           },
         });
       }
@@ -118,7 +118,6 @@
 
     set timeout(val) {
       this.setAttribute("timeout", val);
-      return val;
     }
 
     get timeout() {
@@ -135,7 +134,6 @@
         this.setAttribute("aria-autocomplete", "list");
         this._searchButtonIcon.setAttribute("role", "none");
       }
-      return val;
     }
 
     get searchButton() {
@@ -154,7 +152,6 @@
       if (this._timer) {
         clearTimeout(this._timer);
       }
-      return val;
     }
 
     get value() {
@@ -172,7 +169,6 @@
       } else {
         this.removeAttribute("disabled");
       }
-      return val;
     }
 
     get disabled() {
