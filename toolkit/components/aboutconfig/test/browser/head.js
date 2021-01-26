@@ -81,7 +81,7 @@ class AboutConfigTest {
     return BrowserTestUtils.withNewTab(
       {
         gBrowser,
-        url: "chrome://browser/content/aboutconfig/aboutconfig.html",
+        url: "chrome://global/content/aboutconfig/aboutconfig.html",
       },
       async browser => {
         let scope = new this(browser);

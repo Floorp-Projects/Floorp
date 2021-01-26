@@ -1,0 +1,11 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+  content/global/aboutconfig/aboutconfig.css     (content/aboutconfig.css)
+  content/global/aboutconfig/aboutconfig.html    (content/aboutconfig.html)
+  content/global/aboutconfig/aboutconfig.js      (content/aboutconfig.js)
+  content/global/aboutconfig/background.svg      (content/background.svg)
+  content/global/aboutconfig/toggle.svg          (content/toggle.svg)

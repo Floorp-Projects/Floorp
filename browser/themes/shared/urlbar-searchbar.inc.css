@@ -124,7 +124,7 @@
 
 #urlbar.searchButton > #urlbar-input-container > #urlbar-search-button {
   width: @urlbarSearchButtonWidth@;
-  background-image: url(chrome://browser/skin/search-glass.svg);
+  background-image: url(chrome://global/skin/icons/search-glass.svg);
   background-repeat: no-repeat;
   background-position: center;
   -moz-context-properties: fill, fill-opacity;
@@ -863,7 +863,7 @@
 }
 
 .searchbar-search-icon {
-  list-style-image: url(chrome://browser/skin/search-glass.svg);
+  list-style-image: url(chrome://global/skin/icons/search-glass.svg);
   -moz-context-properties: fill, fill-opacity;
   pointer-events: none;
   margin-inline: 8px 6px;

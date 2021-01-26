@@ -64,7 +64,7 @@ async function runNewTabTest() {
 
   // We only show the engine's own icon for app provided engines, otherwise show
   // a default. xref https://bugzilla.mozilla.org/show_bug.cgi?id=1449338#c19
-  await ensureIcon(tab, "chrome://browser/skin/search-glass.svg");
+  await ensureIcon(tab, "chrome://global/skin/icons/search-glass.svg");
 
   await Services.search.setDefault(defaultEngine);
 
@@ -102,7 +102,7 @@ add_task(async function test_content_search_icon_in_private_window() {
 
   // We only show the engine's own icon for app provided engines, otherwise show
   // a default. xref https://bugzilla.mozilla.org/show_bug.cgi?id=1449338#c19
-  await ensureIcon(tab, "chrome://browser/skin/search-glass.svg");
+  await ensureIcon(tab, "chrome://global/skin/icons/search-glass.svg");
 
   await Services.search.setDefault(defaultEngine);
 
