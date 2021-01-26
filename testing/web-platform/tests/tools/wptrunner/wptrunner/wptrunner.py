@@ -287,6 +287,7 @@ def run_tests(config, test_paths, product, **kwargs):
                                                                 test_type,
                                                                 run_info,
                                                                 config=test_environment.config,
+                                                                num_test_groups=len(test_groups),
                                                                 **kwargs)
 
                     executor_cls = product.executor_classes.get(test_type)
