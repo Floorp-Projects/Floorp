@@ -6,6 +6,7 @@
 
 #include "APZThreadUtils.h"
 
+#include "GeckoProfiler.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticMutex.h"
 
@@ -72,6 +73,7 @@ void APZThreadUtils::RunOnControllerThread(RefPtr<Runnable>&& aTask) {
   }
 
   if (thread->IsOnCurrentThread()) {
+    AUTO_PROFILE_FOLLOWING_RUNNABLE(task);
     task->Run();
   } else {
     thread->Dispatch(task.forget());

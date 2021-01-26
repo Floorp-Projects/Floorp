@@ -62,6 +62,8 @@
 #  define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, categoryPair, \
                                            ctx, flags)
 
+#  define AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable)
+
 // Function stubs for when MOZ_GECKO_PROFILER is not defined.
 
 // This won't be used, it's just there to allow the empty definition of
@@ -100,7 +102,9 @@ profiler_capture_backtrace() {
 #  include "mozilla/TimeStamp.h"
 #  include "mozilla/UniquePtr.h"
 #  include "nscore.h"
+#  include "nsINamed.h"
 #  include "nsString.h"
+#  include "nsThreadUtils.h"
 
 #  include <functional>
 #  include <stdint.h>
@@ -1164,6 +1168,51 @@ class MOZ_RAII AutoProfilerLabel {
 // each variable to be set.
 void GetProfilerEnvVarsForChildProcess(
     std::function<void(const char* key, const char* value)>&& aSetEnv);
+
+#  ifndef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#    define AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable)
+#  else
+#    define AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable) \
+      mozilla::AutoProfileRunnable PROFILER_RAII(runnable)
+
+class MOZ_RAII AutoProfileRunnable {
+ public:
+  explicit AutoProfileRunnable(Runnable* aRunnable)
+      : mStartTime(TimeStamp::Now()) {
+    if (!profiler_thread_is_being_profiled()) {
+      return;
+    }
+
+    aRunnable->GetName(mName);
+  }
+  explicit AutoProfileRunnable(nsIRunnable* aRunnable)
+      : mStartTime(TimeStamp::Now()) {
+    if (!profiler_thread_is_being_profiled()) {
+      return;
+    }
+
+    nsCOMPtr<nsINamed> named = do_QueryInterface(aRunnable);
+    if (named) {
+      named->GetName(mName);
+    }
+  }
+
+  ~AutoProfileRunnable() {
+    if (!profiler_thread_is_being_profiled()) {
+      return;
+    }
+
+    AUTO_PROFILER_STATS(AUTO_PROFILE_RUNNABLE);
+    profiler_add_marker("Runnable", ::mozilla::baseprofiler::category::OTHER,
+                        MarkerTiming::IntervalUntilNowFrom(mStartTime),
+                        geckoprofiler::markers::TextMarker{}, mName);
+  }
+
+ protected:
+  TimeStamp mStartTime;
+  nsAutoCString mName;
+};
+#  endif
 
 }  // namespace mozilla
 
