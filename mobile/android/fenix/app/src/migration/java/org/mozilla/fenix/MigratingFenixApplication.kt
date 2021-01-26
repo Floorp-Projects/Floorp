@@ -24,7 +24,7 @@ class MigratingFenixApplication : FenixApplication() {
 
     val migrator by lazy {
         FennecMigrator.Builder(this, this.components.analytics.crashReporter)
-            .migrateOpenTabs(this.components.core.sessionManager)
+            .migrateOpenTabs(this.components.useCases.tabsUseCases)
             .migrateHistory(this.components.core.lazyHistoryStorage)
             .migrateBookmarks(
                 this.components.core.lazyBookmarksStorage,
