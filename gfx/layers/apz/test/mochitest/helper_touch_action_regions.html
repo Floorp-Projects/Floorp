@@ -182,6 +182,13 @@ function* test(testDriver) {
   //   normal runnables may be preempted by input events and be executed in an
   //   unexpected order.
 
+  // Also note that this test is intentionally kept as a yield-style test using
+  // the runContinuation helper, even though all other similar tests have since
+  // been migrated to using async/await and Promise-based architectures. This is
+  // because yield and async/await have different semantics with respect to
+  // timing, and this test requires very specific timing behaviour (as described
+  // above).
+
   // The other problem we need to deal with is the asynchronicity in the chrome
   // process. That is, we might request a snapshot before the chrome process has
   // actually synthesized the event and processed it. To guard against this, we
@@ -260,6 +267,38 @@ function* test(testDriver) {
   dump("done registering listener, going to yield\n");
   yield;
   document.body.removeEventListener("touchstart", listenerFunc);
+}
+
+// Despite what this function name says, this does not *directly* run the
+// provided continuation testFunction. Instead, it returns a function that
+// can be used to run the continuation. The extra level of indirection allows
+// it to be more easily added to a promise chain, like so:
+//   waitUntilApzStable().then(runContinuation(myTest));
+function runContinuation(testFunction) {
+  return function() {
+    return new Promise(function(resolve, reject) {
+      var testContinuation = null;
+
+      function driveTest() {
+        if (!testContinuation) {
+          testContinuation = testFunction(driveTest);
+        }
+        var ret = testContinuation.next();
+        if (ret.done) {
+          resolve();
+        }
+      }
+
+      try {
+        driveTest();
+      } catch (ex) {
+        SimpleTest.ok(
+          false,
+          "APZ test continuation failed with exception: " + ex
+        );
+      }
+    });
+  };
 }
 
 if (SpecialPowers.isMainProcess()) {

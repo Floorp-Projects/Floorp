@@ -638,47 +638,6 @@ function isKeyApzEnabled() {
   return isApzEnabled() && SpecialPowers.getBoolPref("apz.keyboard.enabled");
 }
 
-// Despite what this function name says, this does not *directly* run the
-// provided continuation testFunction. Instead, it returns a function that
-// can be used to run the continuation. The extra level of indirection allows
-// it to be more easily added to a promise chain, like so:
-//   waitUntilApzStable().then(runContinuation(myTest));
-//
-// If you want to run the continuation directly, outside of a promise chain,
-// you can invoke the return value of this function, like so:
-//   runContinuation(myTest)();
-function runContinuation(testFunction) {
-  // We need to wrap this in an extra function, so that the call site can
-  // be more readable without running the promise too early. In other words,
-  // if we didn't have this extra function, the promise would start running
-  // during construction of the promise chain, concurrently with the first
-  // promise in the chain.
-  return function() {
-    return new Promise(function(resolve, reject) {
-      var testContinuation = null;
-
-      function driveTest() {
-        if (!testContinuation) {
-          testContinuation = testFunction(driveTest);
-        }
-        var ret = testContinuation.next();
-        if (ret.done) {
-          resolve();
-        }
-      }
-
-      try {
-        driveTest();
-      } catch (ex) {
-        SimpleTest.ok(
-          false,
-          "APZ test continuation failed with exception: " + ex
-        );
-      }
-    });
-  };
-}
-
 // Take a snapshot of the given rect, *including compositor transforms* (i.e.
 // includes async scroll transforms applied by APZ). If you don't need the
 // compositor transforms, you can probably get away with using
