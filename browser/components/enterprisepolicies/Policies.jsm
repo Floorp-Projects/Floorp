@@ -2362,11 +2362,6 @@ function blockAboutPage(manager, feature, neededOnContentProcess = false) {
   } catch (e) {
     // Some about pages don't have chrome URLS (compat)
   }
-
-  if (feature == "about:config") {
-    // Hide old page until it is removed
-    gBlockedAboutPages.push("chrome://global/content/config.xhtml");
-  }
 }
 
 let ChromeURLBlockPolicy = {
