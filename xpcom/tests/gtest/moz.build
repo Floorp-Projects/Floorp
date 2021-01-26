@@ -20,7 +20,6 @@ UNIFIED_SOURCES += [
     "TestEscape.cpp",
     "TestEventPriorities.cpp",
     "TestEventTargetQI.cpp",
-    "TestExpirationTracker.cpp",
     "TestFile.cpp",
     "TestGCPostBarriers.cpp",
     "TestID.cpp",
@@ -73,6 +72,10 @@ if CONFIG["OS_TARGET"] != "Android":
 # skip the test on windows10-aarch64 due to perma-fail, bug 1422219
 if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
     UNIFIED_SOURCES += ["TestThreadUtils.cpp"]
+
+# skip the test on debug OSX due to frequent failures (bug 1571186)
+if not (CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Darwin"):
+    UNIFIED_SOURCES += ["TestExpirationTracker.cpp"]
 
 # skip the test on windows10-aarch64 and Android, aarch64 due to bug 1545670
 if CONFIG["OS_TARGET"] != "Android" and not (
