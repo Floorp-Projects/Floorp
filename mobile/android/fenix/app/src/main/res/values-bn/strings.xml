@@ -33,6 +33,13 @@
     <!-- Content description for close button while in multiselect mode in tab tray -->
     <string name="tab_tray_close_multiselect_content_description">মাল্টিলেক্ট মোড থেকে প্রস্থান করুন</string>
 
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s নির্বাচিত</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s অনির্বাচিত</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">নির্বাচিত</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s হচ্ছে Mozilla দ্বারা তৈরি।</string>
 
@@ -925,6 +932,8 @@
     <string name="preferences_delete_browsing_data_cookies_subtitle">আপনি বেশিরভাগ সাইট থেকে লগ আউট হয়ে যাবেন</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">ক্যাশেড চিত্র এবং ফাইল</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">সংরক্ষণের জায়গা মুক্ত করুন</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">সাইটের অনুমতি</string>
     <!-- Text for the button to delete browsing data -->
@@ -950,6 +959,9 @@
     <string name="preferences_delete_browsing_data_snackbar">ব্রাউজিং ডেটা মুছে ফেলা হয়েছে</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">ব্রাউজিং ডেটা মুছে ফেলা হচ্ছে ...</string>
+
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">নতুন Nightly তে পরিবর্তন করুন</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1055,6 +1067,8 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">কুকিস</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">অদেখা ওয়েবসাইটের কুকিস</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">সমস্ত কুকিস (ওয়েবসাইট ভাঙার কারণ হতে পারে)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ট্র্যাকিং কন্টেন্ট</string>
@@ -1100,6 +1114,9 @@
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">আপনার অধিকার সম্পর্কে জানুন</string>
 
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">লাইসেন্স এর তথ্য</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 ট্যাব</string>
 
@@ -1122,6 +1139,8 @@
     <string name="add_to_homescreen_cancel">বাতিল করুন</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">যোগ করুন</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">ওয়েবসাইটে চালিয়ে যান</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">শর্টকাটের নাম</string>
 
@@ -1143,6 +1162,8 @@
     <string name="preferences_passwords_sync_logins_reconnect">পুনঃসংযোগ</string>
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Sync করতে সাইন ইন করুন</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">সংরক্ষিত লগইনগুলো</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync সম্পর্কে আরো জানুন।</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
