@@ -1235,6 +1235,24 @@ void CodeGenerator::visitFloat32ToIntegerInt32(LFloat32ToIntegerInt32* lir) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitAdjustDataViewLength(LAdjustDataViewLength* lir) {
+  Register output = ToRegister(lir->output());
+  MOZ_ASSERT(ToRegister(lir->input()) == output);
+
+  uint32_t byteSize = lir->mir()->byteSize();
+
+#ifdef DEBUG
+  Label ok;
+  masm.branchTest32(Assembler::NotSigned, output, output, &ok);
+  masm.assumeUnreachable("Unexpected negative value in LAdjustDataViewLength");
+  masm.bind(&ok);
+#endif
+
+  Label bail;
+  masm.branchSub32(Assembler::Signed, Imm32(byteSize - 1), output, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::emitOOLTestObject(Register objreg,
                                       Label* ifEmulatesUndefined,
                                       Label* ifDoesntEmulateUndefined,

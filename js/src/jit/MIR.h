@@ -3246,10 +3246,7 @@ class MReturnFromCtor : public MBinaryInstruction,
 class MToFPInstruction : public MUnaryInstruction, public ToDoublePolicy::Data {
  public:
   // Types of values which can be converted.
-  enum ConversionKind {
-    NonStringPrimitives,
-    NumbersOnly
-  };
+  enum ConversionKind { NonStringPrimitives, NumbersOnly };
 
  private:
   ConversionKind conversion_;
@@ -3621,6 +3618,39 @@ class MWasmAnyRefFromJSObject : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
 
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+// Subtracts (byteSize - 1) from the input value. Bails out if the result is
+// negative. This is used to implement bounds checks for DataView accesses.
+class MAdjustDataViewLength : public MUnaryInstruction,
+                              public NoTypePolicy::Data {
+  const uint32_t byteSize_;
+
+  MAdjustDataViewLength(MDefinition* input, uint32_t byteSize)
+      : MUnaryInstruction(classOpcode, input), byteSize_(byteSize) {
+    MOZ_ASSERT(input->type() == MIRType::Int32);
+    MOZ_ASSERT(byteSize > 1);
+    setResultType(MIRType::Int32);
+    setMovable();
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(AdjustDataViewLength)
+  TRIVIAL_NEW_WRAPPERS
+
+  uint32_t byteSize() const { return byteSize_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isAdjustDataViewLength()) {
+      return false;
+    }
+    if (ins->toAdjustDataViewLength()->byteSize() != byteSize()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
