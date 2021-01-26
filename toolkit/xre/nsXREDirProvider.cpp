@@ -39,6 +39,9 @@
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "mozilla/AutoRestore.h"
+#ifdef MOZ_BACKGROUNDTASKS
+#  include "mozilla/BackgroundTasks.h"
+#endif
 #include "mozilla/Components.h"
 #include "mozilla/Services.h"
 #include "mozilla/Omnijar.h"
@@ -966,13 +969,21 @@ nsXREDirProvider::DoStartup() {
     mozilla::SandboxBroker::GeckoDependentInitialize();
 #endif
 
-    // Init the Extension Manager
-    nsCOMPtr<nsIObserver> em =
-        do_GetService("@mozilla.org/addons/integration;1");
-    if (em) {
-      em->Observe(nullptr, "addons-startup", nullptr);
-    } else {
-      NS_WARNING("Failed to create Addons Manager.");
+    bool initExtensionManager =
+#ifdef MOZ_BACKGROUNDTASKS
+        !mozilla::BackgroundTasks::IsBackgroundTaskMode();
+#else
+        true;
+#endif
+    if (initExtensionManager) {
+      // Init the Extension Manager
+      nsCOMPtr<nsIObserver> em =
+          do_GetService("@mozilla.org/addons/integration;1");
+      if (em) {
+        em->Observe(nullptr, "addons-startup", nullptr);
+      } else {
+        NS_WARNING("Failed to create Addons Manager.");
+      }
     }
 
     obsSvc->NotifyObservers(nullptr, "profile-after-change", kStartup);
