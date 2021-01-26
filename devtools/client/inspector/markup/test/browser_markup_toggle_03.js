@@ -15,14 +15,7 @@ add_task(async function() {
   const container = await getContainerForSelector("ul", inspector);
 
   info("Alt-clicking on collapsed expander should expand all children");
-  const onUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeMouseAtCenter(
-    container.expander,
-    { altKey: true },
-    inspector.markup.doc.defaultView
-  );
-  await onUpdated;
-  await waitForMultipleChildrenUpdates(inspector);
+  await expandContainerByClick(inspector, container, { altKey: true });
 
   info("Checking that all nodes exist and are expanded");
   let nodeFronts = await getNodeFronts(inspector);
@@ -36,13 +29,7 @@ add_task(async function() {
   }
 
   info("Alt-clicking on expanded expander should collapse all children");
-  EventUtils.synthesizeMouseAtCenter(
-    container.expander,
-    { altKey: true },
-    inspector.markup.doc.defaultView
-  );
-  await waitForMultipleChildrenUpdates(inspector);
-  // No need to wait for inspector-updated here since we are not retrieving new nodes.
+  await collapseContainerByClick(inspector, container, { altKey: true });
 
   info("Checking that all nodes are collapsed");
   nodeFronts = await getNodeFronts(inspector);

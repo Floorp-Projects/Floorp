@@ -23,15 +23,7 @@ add_task(async function() {
   is(container.expander.style.visibility, "visible", "HTML twisty is visible");
 
   info("Clicking on the UL parent expander, and waiting for children");
-  const onChildren = waitForChildrenUpdated(inspector);
-  const onUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeMouseAtCenter(
-    container.expander,
-    {},
-    inspector.markup.doc.defaultView
-  );
-  await onChildren;
-  await onUpdated;
+  await expandContainerByClick(inspector, container);
 
   info("Checking that child LI elements have been created");
   let numLi = await testActor.getNumberOfElementMatches("li");
@@ -45,13 +37,7 @@ add_task(async function() {
   ok(container.expanded, "Parent UL container is expanded");
 
   info("Clicking again on the UL expander");
-  // No need to wait, this is a local, synchronous operation where nodes are
-  // only hidden from the view, not destroyed
-  EventUtils.synthesizeMouseAtCenter(
-    container.expander,
-    {},
-    inspector.markup.doc.defaultView
-  );
+  collapseContainerByClick(inspector, container);
 
   info("Checking that child LI elements have been hidden");
   numLi = await testActor.getNumberOfElementMatches("li");
