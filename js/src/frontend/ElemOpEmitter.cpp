@@ -112,7 +112,10 @@ bool ElemOpEmitter::emitPrivateGuardForAssignment() {
 bool ElemOpEmitter::emitGet() {
   MOZ_ASSERT(state_ == State::Key);
 
-  if (isIncDec() || isCompoundAssignment()) {
+  // Inc/dec and compound assignment use the KEY twice, but if it's an object,
+  // it must be converted ToPropertyKey only once, per spec. But for a private
+  // field, KEY is always a symbol and ToPropertyKey would be a no-op.
+  if ((isIncDec() || isCompoundAssignment()) && !isPrivate()) {
     if (!bce_->emit1(JSOp::ToPropertyKey)) {
       //            [stack] # if Super
       //            [stack] THIS KEY
