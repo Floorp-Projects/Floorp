@@ -271,6 +271,7 @@ class MOZ_STACK_CLASS ElemOpEmitter {
   // When we have private names, we may need to emit a CheckPrivateField
   // op to potentially throw errors where required.
   MOZ_MUST_USE bool emitPrivateGuard();
+  MOZ_MUST_USE bool emitPrivateGuardForAssignment();
 };
 
 } /* namespace frontend */
