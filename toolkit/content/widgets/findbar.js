@@ -278,7 +278,6 @@
     set findMode(val) {
       this._findMode = val;
       this._updateBrowserWithState();
-      return val;
     }
 
     get findMode() {
@@ -287,7 +286,6 @@
 
     set prefillWithSelection(val) {
       this.setAttribute("prefillwithselection", val);
-      return val;
     }
 
     get prefillWithSelection() {
@@ -340,7 +338,6 @@
 
         this._browser.finder.addResultListener(this);
       }
-      return val;
     }
 
     get browser() {

@@ -10,13 +10,12 @@
   class MozDeck extends MozXULElement {
     set selectedIndex(val) {
       if (this.selectedIndex == val) {
-        return val;
+        return;
       }
       this.setAttribute("selectedIndex", val);
       var event = document.createEvent("Events");
       event.initEvent("select", true, true);
       this.dispatchEvent(event);
-      return val;
     }
 
     get selectedIndex() {
@@ -33,7 +32,6 @@
         ++selectedIndex;
       }
       this.selectedIndex = selectedIndex;
-      return val;
     }
 
     get selectedPanel() {
