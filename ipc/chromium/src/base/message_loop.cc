@@ -13,6 +13,7 @@
 #include "base/message_pump_default.h"
 #include "base/string_util.h"
 #include "base/thread_local.h"
+#include "GeckoProfiler.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
@@ -461,9 +462,12 @@ void MessageLoop::RunTask(already_AddRefed<nsIRunnable> aTask) {
 
   nsCOMPtr<nsIRunnable> task = aTask;
 
-  mozilla::LogRunnable::Run log(task.get());
-  task->Run();
-  task = nullptr;
+  {
+    mozilla::LogRunnable::Run log(task.get());
+    AUTO_PROFILE_FOLLOWING_RUNNABLE(task);
+    task->Run();
+    task = nullptr;
+  }
 
   nestable_tasks_allowed_ = true;
 }

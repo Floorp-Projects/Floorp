@@ -298,6 +298,7 @@ nsThreadPool::Run() {
       current->SetRunningEventDelay(delay, TimeStamp::Now());
 
       LogRunnable::Run log(event);
+      AUTO_PROFILE_FOLLOWING_RUNNABLE(event);
       event->Run();
       // To cover the event's destructor code in the LogRunnable span
       event = nullptr;

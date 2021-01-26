@@ -5578,7 +5578,10 @@ void nsContentUtils::RemoveScriptBlocker() {
     ++firstBlocker;
 
     // Calling the runnable can reenter us
-    runnable->Run();
+    {
+      AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
+      runnable->Run();
+    }
     // So can dropping the reference to the runnable
     runnable = nullptr;
 
@@ -5639,6 +5642,7 @@ void nsContentUtils::AddScriptRunner(already_AddRefed<nsIRunnable> aRunnable) {
     return;
   }
 
+  AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
   runnable->Run();
 }
 
@@ -8900,9 +8904,9 @@ static inline bool ShouldEscape(nsIContent* aParent) {
   }
 
   static const nsAtom* nonEscapingElements[] = {
-      nsGkAtoms::style, nsGkAtoms::script, nsGkAtoms::xmp, nsGkAtoms::iframe,
-      nsGkAtoms::noembed, nsGkAtoms::noframes, nsGkAtoms::plaintext,
-      nsGkAtoms::noscript};
+      nsGkAtoms::style,     nsGkAtoms::script,  nsGkAtoms::xmp,
+      nsGkAtoms::iframe,    nsGkAtoms::noembed, nsGkAtoms::noframes,
+      nsGkAtoms::plaintext, nsGkAtoms::noscript};
   static mozilla::BloomFilter<12, nsAtom> sFilter;
   static bool sInitialized = false;
   if (!sInitialized) {
