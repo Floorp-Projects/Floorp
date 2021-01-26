@@ -63,7 +63,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
@@ -145,8 +144,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private val sessionManager: SessionManager
-        get() = requireComponents.core.sessionManager
     private val store: BrowserStore
         get() = requireComponents.core.store
 
@@ -235,7 +232,6 @@ class HomeFragment : Fragment() {
                 engine = components.core.engine,
                 metrics = components.analytics.metrics,
                 store = store,
-                sessionManager = sessionManager,
                 tabCollectionStorage = components.core.tabCollectionStorage,
                 addTabUseCase = components.useCases.tabsUseCases.addTab,
                 restoreUseCase = components.useCases.tabsUseCases.restore,
@@ -474,9 +470,9 @@ class HomeFragment : Fragment() {
 
     private fun removeAllTabsAndShowSnackbar(sessionCode: String) {
         if (sessionCode == ALL_PRIVATE_TABS) {
-            sessionManager.removePrivateSessions()
+            requireComponents.useCases.tabsUseCases.removePrivateTabs()
         } else {
-            sessionManager.removeNormalSessions()
+            requireComponents.useCases.tabsUseCases.removeNormalTabs()
         }
 
         val snackbarMessage = if (sessionCode == ALL_PRIVATE_TABS) {
