@@ -8501,6 +8501,18 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
   // transparent windows so don't even try. I'm also not sure if we even
   // want to support this case. See bug 593471.
   //
+  // Windows' support for transparent accelerated surfaces isn't great.
+  // Some possible approaches:
+  //  - Readback the data and update it using UpdateLayeredWindow/UpdateLayeredWindowIndirect
+  //    This is what WPF does. See CD3DDeviceLevel1::PresentWithGDI/CD3DSwapChainWithSwDC in WpfGfx
+  //  - Use D3D11_RESOURCE_MISC_GDI_COMPATIBLE, IDXGISurface1::GetDC(),
+  //    and UpdateLayeredWindowIndirect.
+  //    This is suggested here: https://docs.microsoft.com/en-us/archive/msdn-magazine/2009/december/windows-with-c-layered-windows-with-direct2d
+  //  - Creating the window with the WS_EX_NOREDIRECTIONBITMAP flag and use DirectComposition.
+  //    Not supported on Win7.
+  //  - Using DwmExtendFrameIntoClientArea with negative margins and something to turn off the glass effect.
+  //    This doesn't work when the DWM is not running (Win7)
+  //
   // Also see bug 1150376, D3D11 composition can cause issues on some devices
   // on Windows 7 where presentation fails randomly for windows with drop
   // shadows.
