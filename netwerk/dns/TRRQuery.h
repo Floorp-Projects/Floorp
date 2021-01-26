@@ -19,7 +19,7 @@ class TRRQuery : public AHostResolver {
         mRecord(aHostRecord),
         mTrrLock("TRRQuery.mTrrLock") {}
 
-  nsresult DispatchLookup(TRR* pushedTRR = nullptr);
+  nsresult DispatchLookup(TRR* pushedTRR = nullptr, bool aUseODoHProxy = false);
 
   void Cancel();
 
