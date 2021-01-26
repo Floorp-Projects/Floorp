@@ -1754,7 +1754,7 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
-  writer.loadTypedArrayLengthResult(objId);
+  writer.loadTypedArrayLengthInt32Result(objId);
   writer.returnFromIC();
 
   trackAttached("TypedArrayLength");
@@ -7800,7 +7800,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
     writer.guardIsNotProxy(objArgId);
   }
 
-  writer.loadTypedArrayLengthResult(objArgId);
+  writer.loadTypedArrayLengthInt32Result(objArgId);
   writer.returnFromIC();
 
   trackAttached("TypedArrayLength");

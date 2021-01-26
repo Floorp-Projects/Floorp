@@ -7331,9 +7331,10 @@ class MArrayBufferByteLengthInt32 : public MUnaryInstruction,
 // Read the length of an array buffer view.
 class MArrayBufferViewLength : public MUnaryInstruction,
                                public SingleObjectPolicy::Data {
-  explicit MArrayBufferViewLength(MDefinition* obj)
+  explicit MArrayBufferViewLength(MDefinition* obj, MIRType type)
       : MUnaryInstruction(classOpcode, obj) {
-    setResultType(MIRType::Int32);
+    MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::IntPtr);
+    setResultType(type);
     setMovable();
   }
 
@@ -7341,6 +7342,16 @@ class MArrayBufferViewLength : public MUnaryInstruction,
   INSTRUCTION_HEADER(ArrayBufferViewLength)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
+
+  bool fallible() const {
+    // On 64-bit platforms we need to bail out for lengths > INT32_MAX if we're
+    // returning an int32.
+#ifdef JS_64BIT
+    return type() == MIRType::Int32;
+#else
+    return false;
+#endif
+  }
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
