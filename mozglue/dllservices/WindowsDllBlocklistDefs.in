@@ -270,6 +270,11 @@ BROWSER_PROCESS += [
     DllBlocklistEntry("oly.dll", (1, 1, 3, 19920)),
     DllBlocklistEntry("pdzipmenu64.dll", (1, 4, 4, 20103)),
     DllBlocklistEntry("pdzipmenu32.dll", (1, 4, 4, 20103)),
+
+    # McAfee Data Loss Prevention causes crashs with multiple signatures,
+    # bug 1634090
+    DllBlocklistEntry("fcagff.dll", (11, 6, 0xffff, 0xffff)),
+    DllBlocklistEntry("fcagff64.dll", (11, 6, 0xffff, 0xffff)),
 ]
 
 CHILD_PROCESSES += [
