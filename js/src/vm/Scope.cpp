@@ -662,11 +662,15 @@ size_t Scope::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
 }
 
 void Scope::dump() {
-  for (ScopeIter si(this); si; si++) {
-    fprintf(stderr, "%s [%p]", ScopeKindString(si.kind()), si.scope());
-    if (si.scope()->enclosing()) {
-      fprintf(stderr, " -> ");
-    }
+  JSContext* cx = TlsContext.get();
+  if (!cx) {
+    fprintf(stderr, "*** can't get JSContext for current thread\n");
+    return;
+  }
+  for (Rooted<ScopeIter> si(cx, ScopeIter(this)); si; si++) {
+    fprintf(stderr, "- %s [%p]\n", ScopeKindString(si.kind()), si.scope());
+    DumpBindings(cx, si.scope());
+    fprintf(stderr, "\n");
   }
   fprintf(stderr, "\n");
 }
@@ -1887,7 +1891,7 @@ void js::DumpBindings(JSContext* cx, Scope* scopeArg) {
       MaybePrintAndClearPendingException(cx);
       return;
     }
-    fprintf(stderr, "%s %s ", BindingKindString(bi.kind()), bytes.get());
+    fprintf(stderr, "    %s %s ", BindingKindString(bi.kind()), bytes.get());
     switch (bi.location().kind()) {
       case BindingLocation::Kind::Global:
         if (bi.isTopLevelFunction()) {
