@@ -102,7 +102,8 @@ open class ExternalAppBrowserActivity : HomeActivity() {
             // exists then remove it now to free all its resources. Once this activity is finished
             // then there's no way to get back to it other than relaunching it.
             val tabId = getExternalTabId()
-            if (tabId != null) {
+            val customTab = tabId?.let { components.core.store.state.findCustomTab(it) }
+            if (tabId != null && customTab != null) {
                 components.useCases.customTabsUseCases.remove(tabId)
             }
         }
