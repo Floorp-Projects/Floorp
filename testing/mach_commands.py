@@ -618,11 +618,17 @@ class SpiderMonkeyTests(MachCommandBase):
     )
     @CommandArgument("--shell", help="The shell to be used")
     @CommandArgument(
+        "--cgc",
+        action="store_true",
+        default=False,
+        help="Run with the SM(cgc) job's env vars",
+    )
+    @CommandArgument(
         "params",
         nargs=argparse.REMAINDER,
         help="Extra arguments to pass down to the test harness.",
     )
-    def run_jittests(self, shell, params):
+    def run_jittests(self, shell, cgc, params):
         import subprocess
 
         self.virtualenv_manager.ensure()
@@ -635,7 +641,11 @@ class SpiderMonkeyTests(MachCommandBase):
             js,
         ] + params
 
-        return subprocess.call(jittest_cmd)
+        env = os.environ.copy()
+        if cgc:
+            env["JS_GC_ZEAL"] = "IncrementalMultipleSlices"
+
+        return subprocess.call(jittest_cmd, env=env)
 
     @Command(
         "jsapi-tests", category="testing", description="Run SpiderMonkey JSAPI tests."
