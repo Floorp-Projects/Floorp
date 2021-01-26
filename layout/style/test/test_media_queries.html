@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=156716
 <head>
   <title>Test for Bug 156716</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome/chrome-only-media-queries.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="run()">
@@ -688,122 +689,18 @@ function run() {
   should_not_apply("(grid: 2)");
   should_not_apply("(grid: -1)");
 
-  // System metrics
-  expression_should_not_be_parseable("-moz-scrollbar-start-backward");
-  expression_should_not_be_parseable("-moz-scrollbar-start-forward");
-  expression_should_not_be_parseable("-moz-scrollbar-end-backward");
-  expression_should_not_be_parseable("-moz-scrollbar-end-forward");
-  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional");
-  expression_should_not_be_parseable("-moz-overlay-scrollbars");
-  expression_should_not_be_parseable("-moz-windows-default-theme");
-  expression_should_not_be_parseable("-moz-mac-graphite-theme");
-  expression_should_not_be_parseable("-moz-mac-big-sur-theme");
-  expression_should_not_be_parseable("-moz-windows-accent-color-in-titlebar");
-  expression_should_not_be_parseable("-moz-windows-compositor");
-  expression_should_not_be_parseable("-moz-windows-classic");
-  expression_should_not_be_parseable("-moz-windows-glass");
-  expression_should_not_be_parseable("-moz-swipe-animation-enabled");
-  expression_should_not_be_parseable("-moz-gtk-csd-available");
-  expression_should_not_be_parseable("-moz-gtk-csd-hide-titlebar-by-default");
-  expression_should_not_be_parseable("-moz-gtk-csd-transparent-background");
-  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button");
-  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button");
-  expression_should_not_be_parseable("-moz-gtk-csd-close-button");
-  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement");
+  for (let toggle of CHROME_ONLY_TOGGLES) {
+    expression_should_not_be_parseable(toggle);
+    expression_should_not_be_parseable(toggle + ": 1");
+    expression_should_not_be_parseable(toggle + ": 0");
+    expression_should_not_be_parseable(toggle + ": -1");
+    expression_should_not_be_parseable(toggle + ": true");
+    expression_should_not_be_parseable(toggle + ": false");
+  }
 
-  expression_should_not_be_parseable("-moz-scrollbar-start-backward: 0");
-  expression_should_not_be_parseable("-moz-scrollbar-start-forward: 0");
-  expression_should_not_be_parseable("-moz-scrollbar-end-backward: 0");
-  expression_should_not_be_parseable("-moz-scrollbar-end-forward: 0");
-  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional: 0");
-  expression_should_not_be_parseable("-moz-overlay-scrollbars: 0");
-  expression_should_not_be_parseable("-moz-windows-default-theme: 0");
-  expression_should_not_be_parseable("-moz-mac-graphite-theme: 0");
-  expression_should_not_be_parseable("-moz-mac-big-sur-theme: 0");
-  expression_should_not_be_parseable("-moz-windows-accent-color-in-titlebar: 0");
-  expression_should_not_be_parseable("-moz-windows-compositor: 0");
-  expression_should_not_be_parseable("-moz-windows-classic: 0");
-  expression_should_not_be_parseable("-moz-windows-glass: 0");
-  expression_should_not_be_parseable("-moz-swipe-animation-enabled: 0");
-  expression_should_not_be_parseable("-moz-gtk-csd-available: 0");
-  expression_should_not_be_parseable("-moz-gtk-csd-hide-titlebar-by-default: 0");
-  expression_should_not_be_parseable("-moz-gtk-csd-transparent-background: 0");
-  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: 0");
-  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: 0");
-  expression_should_not_be_parseable("-moz-gtk-csd-close-button: 0");
-  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement: 0");
-
-  expression_should_not_be_parseable("-moz-scrollbar-start-backward: 1");
-  expression_should_not_be_parseable("-moz-scrollbar-start-forward: 1");
-  expression_should_not_be_parseable("-moz-scrollbar-end-backward: 1");
-  expression_should_not_be_parseable("-moz-scrollbar-end-forward: 1");
-  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional: 1");
-  expression_should_not_be_parseable("-moz-overlay-scrollbars: 1");
-  expression_should_not_be_parseable("-moz-windows-default-theme: 1");
-  expression_should_not_be_parseable("-moz-mac-graphite-theme: 1");
-  expression_should_not_be_parseable("-moz-mac-big-sur-theme: 1");
-  expression_should_not_be_parseable("-moz-windows-accent-color-in-titlebar: 1");
-  expression_should_not_be_parseable("-moz-windows-compositor: 1");
-  expression_should_not_be_parseable("-moz-windows-classic: 1");
-  expression_should_not_be_parseable("-moz-windows-glass: 1");
-  expression_should_not_be_parseable("-moz-swipe-animation-enabled: 1");
-  expression_should_not_be_parseable("-moz-gtk-csd-available: 1");
-  expression_should_not_be_parseable("-moz-gtk-csd-hide-titlebar-by-default: 1");
-  expression_should_not_be_parseable("-moz-gtk-csd-transparent-background: 1");
-  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: 1");
-  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: 1");
-  expression_should_not_be_parseable("-moz-gtk-csd-close-button: 1");
-  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement: 1");
-
-  expression_should_not_be_parseable("-moz-scrollbar-start-backward: -1");
-  expression_should_not_be_parseable("-moz-scrollbar-start-forward: -1");
-  expression_should_not_be_parseable("-moz-scrollbar-end-backward: -1");
-  expression_should_not_be_parseable("-moz-scrollbar-end-forward: -1");
-  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional: -1");
-  expression_should_not_be_parseable("-moz-overlay-scrollbars: -1");
-  expression_should_not_be_parseable("-moz-windows-default-theme: -1");
-  expression_should_not_be_parseable("-moz-mac-graphite-theme: -1");
-  expression_should_not_be_parseable("-moz-mac-big-sur-theme: -1");
-  expression_should_not_be_parseable("-moz-windows-accent-color-in-titlebar: -1");
-  expression_should_not_be_parseable("-moz-windows-compositor: -1");
-  expression_should_not_be_parseable("-moz-windows-classic: -1");
-  expression_should_not_be_parseable("-moz-windows-glass: -1");
-  expression_should_not_be_parseable("-moz-swipe-animation-enabled: -1");
-  expression_should_not_be_parseable("-moz-gtk-csd-available: -1");
-  expression_should_not_be_parseable("-moz-gtk-csd-hide-titlebar-by-default: -1");
-  expression_should_not_be_parseable("-moz-gtk-csd-transparent-background: -1");
-  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: -1");
-  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: -1");
-  expression_should_not_be_parseable("-moz-gtk-csd-close-button: -1");
-  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement: -1");
-
-  expression_should_not_be_parseable("-moz-scrollbar-start-backward: true");
-  expression_should_not_be_parseable("-moz-scrollbar-start-forward: true");
-  expression_should_not_be_parseable("-moz-scrollbar-end-backward: true");
-  expression_should_not_be_parseable("-moz-scrollbar-end-forward: true");
-  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional: true");
-  expression_should_not_be_parseable("-moz-overlay-scrollbars: true");
-  expression_should_not_be_parseable("-moz-windows-default-theme: true");
-  expression_should_not_be_parseable("-moz-mac-graphite-theme: true");
-  expression_should_not_be_parseable("-moz-mac-big-sur-theme: true");
-  expression_should_not_be_parseable("-moz-windows-accent-color-in-titlebar: true");
-  expression_should_not_be_parseable("-moz-windows-compositor: true");
-  expression_should_not_be_parseable("-moz-windows-classic: true");
-  expression_should_not_be_parseable("-moz-windows-glass: true");
-  expression_should_not_be_parseable("-moz-swipe-animation-enabled: true");
-  expression_should_not_be_parseable("-moz-gtk-csd-available: true");
-  expression_should_not_be_parseable("-moz-gtk-csd-hide-titlebar-by-default: true");
-  expression_should_not_be_parseable("-moz-gtk-csd-transparent-background: true");
-  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: true");
-  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: true");
-  expression_should_not_be_parseable("-moz-gtk-csd-close-button: true");
-  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement: true");
-
-  // os version media queries (currently windows only)
-  expression_should_not_be_parseable("-moz-os-version: windows-win7");
-  expression_should_not_be_parseable("-moz-os-version: windows-win8");
-  expression_should_not_be_parseable("-moz-os-version: windows-win10");
-  expression_should_not_be_parseable("-moz-os-version: ");
+  for (let toggle of CHROME_ONLY_QUERIES) {
+    expression_should_not_be_parseable(toggle);
+  }
 
   {
     let should_be_parseable_if_enabled = SpecialPowers.getBoolPref('layout.css.prefers-contrast.enabled')

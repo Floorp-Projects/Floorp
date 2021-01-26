@@ -1,6 +1,7 @@
 <!doctype html>
 <title>Test for parsing of non-content-exposed media-queries.</title>
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome-only-media-queries.js"></script>
 <style></style>
 <script>
 const SHEET = document.querySelector('style');
@@ -33,6 +34,9 @@ function testToggle(toggle) {
   expectParseable(`(${toggle}: 0)`);
 
   expectNonParseable(`(${toggle}: foo)`);
+  expectNonParseable(`(${toggle}: true)`);
+  expectNonParseable(`(${toggle}: false)`);
+  expectNonParseable(`(${toggle}: -1)`);
   expectNonParseable(`(min-${toggle}: 0)`);
   expectNonParseable(`(max-${toggle}: 0)`);
   expectNonParseable(`(max-${toggle})`);
@@ -44,37 +48,21 @@ function testToggle(toggle) {
   is(matches_0 || matches_1, true, `Should match at least one: ${toggle}`);
 }
 
-const TOGGLES = [
-  "-moz-is-glyph",
-  "-moz-print-preview",
-  "-moz-non-native-content-theme",
-  "-moz-scrollbar-start-backward",
-  "-moz-scrollbar-start-forward",
-  "-moz-scrollbar-end-backward",
-  "-moz-scrollbar-end-forward",
-  "-moz-overlay-scrollbars",
-  "-moz-windows-default-theme",
-  "-moz-mac-graphite-theme",
-  "-moz-mac-big-sur-theme",
-  "-moz-windows-accent-color-in-titlebar",
-  "-moz-windows-compositor",
-  "-moz-windows-classic",
-  "-moz-windows-glass",
-  "-moz-swipe-animation-enabled",
-];
-
-for (let i = 0; i < TOGGLES.length; ++i) {
-  testToggle(TOGGLES[i])
+for (let toggle of CHROME_ONLY_TOGGLES) {
+  testToggle(toggle)
 }
 
-expectParseable("(-moz-os-version: windows-win7)");
-expectParseable("(-moz-os-version: windows-win8)");
-expectParseable("(-moz-os-version: windows-win10)");
-expectNonParseable("(-moz-os-version: )");
+for (let query of CHROME_ONLY_QUERIES) {
+  expectParseable(query);
+}
 
+// These might be exposed to content by pref, we just want to make sure they're
+// always exposed to chrome.
 expectParseable("(prefers-contrast: more)")
 expectParseable("(prefers-contrast: forced)")
 expectParseable("(prefers-contrast: no-preference)")
 expectParseable("(prefers-contrast: less)");
 expectParseable("(prefers-contrast)")
+
+expectNonParseable("(-moz-os-version: )");
 </script>
