@@ -1,0 +1,107 @@
+changeset:   599606:74707e8ecf38
+user:        Greg V <greg@unrelenting.technology>
+date:        Wed May 06 17:44:19 2020 +0000
+summary:     Bug 1634205 - Support Gecko Profiler and Base Profiler on FreeBSD r=mstange
+
+diff --git a/src/common/dwarf/elf_reader.cc b/src/common/dwarf/elf_reader.cc
+--- a/src/common/dwarf/elf_reader.cc
++++ b/src/common/dwarf/elf_reader.cc
+@@ -52,17 +52,17 @@
+ 
+ // EM_AARCH64 is not defined by elf.h of GRTE v3 on x86.
+ // TODO(dougkwan): Remove this when v17 is retired.
+ #if !defined(EM_AARCH64)
+ #define EM_AARCH64      183             /* ARM AARCH64 */
+ #endif
+ 
+ // Map Linux macros to their Apple equivalents.
+-#if __APPLE__
++#if __APPLE__ || __FreeBSD__
+ #ifndef __LITTLE_ENDIAN
+ #define __LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
+ #endif  // __LITTLE_ENDIAN
+ #ifndef __BIG_ENDIAN
+ #define __BIG_ENDIAN __ORDER_BIG_ENDIAN__
+ #endif  // __BIG_ENDIAN
+ #ifndef __BYTE_ORDER
+ #define __BYTE_ORDER __BYTE_ORDER__
+diff --git a/src/common/linux/elfutils.cc b/src/common/linux/elfutils.cc
+--- a/src/common/linux/elfutils.cc
++++ b/src/common/linux/elfutils.cc
+@@ -30,16 +30,20 @@
+ #include "common/linux/elfutils.h"
+ 
+ #include <assert.h>
+ #include <string.h>
+ 
+ #include "common/linux/linux_libc_support.h"
+ #include "common/linux/elfutils-inl.h"
+ 
++#if defined(__FreeBSD__)
++#  define ElfW(type) Elf_##type
++#endif
++
+ namespace google_breakpad {
+ 
+ namespace {
+ 
+ template<typename ElfClass>
+ void FindElfClassSection(const char *elf_base,
+                          const char *section_name,
+                          typename ElfClass::Word section_type,
+diff --git a/src/common/memory_allocator.h b/src/common/memory_allocator.h
+--- a/src/common/memory_allocator.h
++++ b/src/common/memory_allocator.h
+@@ -37,17 +37,17 @@
+ 
+ #include <memory>
+ #include <vector>
+ 
+ #if defined(MEMORY_SANITIZER)
+ #include <sanitizer/msan_interface.h>
+ #endif
+ 
+-#ifdef __APPLE__
++#if defined(__APPLE__) || defined(__FreeBSD__)
+ #define sys_mmap mmap
+ #define sys_munmap munmap
+ #define MAP_ANONYMOUS MAP_ANON
+ #else
+ #include "third_party/lss/linux_syscall_support.h"
+ #endif
+ 
+ namespace google_breakpad {
+diff --git a/src/third_party/lss/linux_syscall_support.h b/src/third_party/lss/linux_syscall_support.h
+--- a/src/third_party/lss/linux_syscall_support.h
++++ b/src/third_party/lss/linux_syscall_support.h
+@@ -4527,10 +4527,27 @@ struct kernel_statfs {
+ #pragma pop_macro("pread64")
+ #pragma pop_macro("pwrite64")
+ #pragma pop_macro("getdents64")
+ 
+ #if defined(__cplusplus) && !defined(SYS_CPLUSPLUS)
+ }
+ #endif
+ 
+-#endif
+-#endif
++#elif defined(__FreeBSD__)
++
++#include <unistd.h>
++#include <sys/stat.h>
++
++#define sys_readlink readlink
++
++#define sys_open open
++#define sys_close close
++#define sys_fstat fstat
++#define sys_fstat64 fstat
++#define kernel_stat stat
++#define kernel_stat64 stat
++#define sys_mmap mmap
++#define sys_munmap munmap
++
++#endif
++
++#endif
+
