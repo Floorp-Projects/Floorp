@@ -71,7 +71,8 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
   mStreamFilterEndpoints = std::move(aStreamFilterEndpoints);
 
   if (mDocumentLoadListener->IsDocumentLoad() &&
-      mozilla::SessionHistoryInParent() && GetDocShell()) {
+      mozilla::SessionHistoryInParent() && GetDocShell() &&
+      mDocumentLoadListener->GetLoadingSessionHistoryInfo()) {
     GetDocShell()->SetLoadingSessionHistoryInfo(
         *mDocumentLoadListener->GetLoadingSessionHistoryInfo());
   }
