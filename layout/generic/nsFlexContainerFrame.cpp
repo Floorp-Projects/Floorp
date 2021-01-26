@@ -182,16 +182,10 @@ static inline bool IsAutoOrEnumOnBSize(const StyleSize& aSize, bool aIsInline) {
 // these macros can be used to ensure that only the needed expression is
 // evaluated.
 #define GET_MAIN_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_) \
-  wm_.IsOrthogonalTo((axisTracker_).GetWritingMode()) !=              \
-          (axisTracker_).IsRowOriented()                              \
-      ? (isize_)                                                      \
-      : (bsize_)
+  (axisTracker_).IsInlineAxisMainAxis((wm_)) ? (isize_) : (bsize_)
 
 #define GET_CROSS_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_) \
-  wm_.IsOrthogonalTo((axisTracker_).GetWritingMode()) !=               \
-          (axisTracker_).IsRowOriented()                               \
-      ? (bsize_)                                                       \
-      : (isize_)
+  (axisTracker_).IsInlineAxisMainAxis((wm_)) ? (bsize_) : (isize_)
 
 // Encapsulates our flex container's main & cross axes. This class is backed by
 // a FlexboxAxisInfo helper member variable, and it adds some convenience APIs
@@ -319,6 +313,16 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
     // or we're column-oriented and our writing mode IS vertical,
     // then our main axis is horizontal. This handles all cases:
     return IsRowOriented() != mWM.IsVertical();
+  }
+
+  // Returns true if this flex item's inline axis in aItemWM is parallel (or
+  // antiparallel) to the container's main axis. Returns false, otherwise.
+  //
+  // Note: this is a helper for implementing macros and can also be used before
+  // constructing FlexItem. Inside of flex reflow code,
+  // FlexItem::IsInlineAxisMainAxis() is equivalent & more optimal.
+  bool IsInlineAxisMainAxis(WritingMode aItemWM) const {
+    return IsRowOriented() != GetWritingMode().IsOrthogonalTo(aItemWM);
   }
 
   // Delete copy-constructor & reassignment operator, to prevent accidental
@@ -1984,8 +1988,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       mCrossMinSize(aCrossMinSize),
       mCrossMaxSize(aCrossMaxSize),
       mCrossSize(aTentativeCrossSize),
-      mIsInlineAxisMainAxis(aAxisTracker.IsRowOriented() !=
-                            aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM))
+      mIsInlineAxisMainAxis(aAxisTracker.IsInlineAxisMainAxis(mWM))
 // mNeedsMinSizeAutoResolution is initialized in CheckForMinSizeAuto()
 // mAlignSelf, mHasAnyAutoMargin see below
 {
