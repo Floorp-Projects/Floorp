@@ -20,7 +20,11 @@
  *   timeline.on("markers", function(markers) {...})
  */
 
-const { Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
+
+const {
+  getChildDocShells,
+} = require("devtools/server/actors/targets/browsing-context");
 
 // Be aggressive about lazy loading, as this will run on every
 // toolbox startup
@@ -101,12 +105,7 @@ Timeline.prototype = {
       return [];
     }
 
-    const docShells = originalDocShell.getAllDocShellsInSubtree(
-      Ci.nsIDocShellTreeItem.typeAll,
-      Ci.nsIDocShell.ENUMERATE_FORWARDS
-    );
-
-    return docShells;
+    return getChildDocShells(originalDocShell);
   },
 
   /**
