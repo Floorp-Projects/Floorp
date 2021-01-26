@@ -9,6 +9,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsIDNService.h"
 #include "nsIObserverService.h"
+#include "nsServiceManagerUtils.h"
 #include "TRRService.h"
 
 namespace mozilla {

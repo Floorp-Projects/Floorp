@@ -4,6 +4,7 @@
 
 #include "TRRQuery.h"
 #include "TRR.h"
+#include "ODoH.h"
 
 namespace mozilla {
 namespace net {
@@ -49,7 +50,12 @@ void TRRQuery::Cancel() {
   }
 }
 
-nsresult TRRQuery::DispatchLookup(TRR* pushedTRR) {
+nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
+  if (aUseODoH && pushedTRR) {
+    MOZ_ASSERT(false, "ODoH should not support push");
+    return NS_ERROR_UNKNOWN_HOST;
+  }
+
   mTrrStart = TimeStamp::Now();
 
   RefPtr<AddrHostRecord> addrRec;
@@ -91,7 +97,12 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR) {
       }
       LOG(("TRR Resolve %s type %d\n", addrRec->host.get(), (int)rectype));
       RefPtr<TRR> trr;
-      trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
+      if (aUseODoH) {
+        trr = new ODoH(this, mRecord, rectype);
+      } else {
+        trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
+      }
+
       if (pushedTRR || NS_SUCCEEDED(gTRRService->DispatchTRRRequest(trr))) {
         MutexAutoLock trrlock(mTrrLock);
         if (rectype == TRRTYPE_A) {
@@ -132,8 +143,12 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR) {
 
     LOG(("TRR Resolve %s type %d\n", typeRec->host.get(), (int)rectype));
     RefPtr<TRR> trr;
-    trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
-    RefPtr<TRR> trrRequest = trr;
+    if (aUseODoH) {
+      trr = new ODoH(this, mRecord, rectype);
+    } else {
+      trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
+    }
+
     if (pushedTRR || NS_SUCCEEDED(gTRRService->DispatchTRRRequest(trr))) {
       MutexAutoLock trrlock(mTrrLock);
       MOZ_ASSERT(!mTrrByType);

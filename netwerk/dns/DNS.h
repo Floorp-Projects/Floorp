@@ -151,6 +151,20 @@ union NetAddr {
   bool ToStringBuffer(char* buf, uint32_t bufSize) const;
 };
 
+struct ObliviousDoHConfigContents {
+  uint16_t mKemId;
+  uint16_t mKdfId;
+  uint16_t mAeadId;
+  nsTArray<uint8_t> mPublicKey;
+};
+
+struct ObliviousDoHConfig {
+  uint16_t mVersion;
+  uint16_t mLength;
+  ObliviousDoHConfigContents mContents;
+  nsTArray<uint8_t> mConfigId;
+};
+
 class AddrInfo {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AddrInfo)
 
