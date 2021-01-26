@@ -769,17 +769,14 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout,
       if (!parent || parent->ChildEnteringOnload(this)) {
         nsresult loadGroupStatus = NS_OK;
         mLoadGroup->GetStatus(&loadGroupStatus);
-
-        // Can "doc" or "window" ever come back null here?  Our state machine
-        // is complicated enough I wouldn't bet against it...
-        nsCOMPtr<Document> doc = do_GetInterface(GetAsSupports(this));
-        if (doc) {
-          // Make sure we're not canceling the loadgroup.  If we are, then just
-          // like the normal navigation case we should not fire a load event.
-          if (NS_SUCCEEDED(loadGroupStatus) ||
-              loadGroupStatus == NS_ERROR_PARSED_DATA_CACHED) {
-            // The readyState change is required to pass
-            // dom/html/test/test_bug347174_write.html
+        // Make sure we're not canceling the loadgroup.  If we are, then just
+        // like the normal navigation case we should not fire a load event.
+        if (NS_SUCCEEDED(loadGroupStatus) ||
+            loadGroupStatus == NS_ERROR_PARSED_DATA_CACHED) {
+          // Can "doc" or "window" ever come back null here?  Our state machine
+          // is complicated enough I wouldn't bet against it...
+          nsCOMPtr<Document> doc = do_GetInterface(GetAsSupports(this));
+          if (doc) {
             doc->SetReadyStateInternal(Document::READYSTATE_COMPLETE,
                                        /* updateTimingInformation = */ false);
             doc->StopDocumentLoad();
@@ -820,19 +817,6 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout,
                   }
                 }
               }
-            }
-          } else if (loadGroupStatus == NS_BINDING_ABORTED) {
-            doc->NotifyAbortedLoad();
-          }
-
-          if (doc->IsCurrentActiveDocument() && !doc->IsShowing() &&
-              loadGroupStatus != NS_BINDING_ABORTED) {
-            nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(this);
-            bool isInUnload;
-            if (docShell &&
-                NS_SUCCEEDED(docShell->GetIsInUnload(&isInUnload)) &&
-                !isInUnload) {
-              doc->OnPageShow(false, nullptr);
             }
           }
         }
