@@ -5374,6 +5374,9 @@ startup:
         FailedFillingBottomRect:
           We failed filling the solid color of the main browser below the
           browser chrome.
+        CrashedOnce:
+          At some point the skeleton UI crashed, so we've disabled it for the
+          user.
         Unknown:
           An unknown error occurred - this generally should not happen.
     expires: "92"
