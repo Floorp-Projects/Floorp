@@ -22,7 +22,6 @@
 #include "gc/MaybeRooted.h"
 #include "util/StringBuffer.h"
 #include "vm/EnvironmentObject.h"
-#include "vm/ErrorReporting.h"  // MaybePrintAndClearPendingException
 #include "vm/JSScript.h"
 #include "wasm/WasmInstance.h"
 
@@ -662,12 +661,10 @@ size_t Scope::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
 }
 
 void Scope::dump() {
-  JSContext* cx = TlsContext.get();
   for (ScopeIter si(this); si; si++) {
-    fprintf(stderr, "- %s [%p]\n", ScopeKindString(si.kind()), si.scope());
-    if (cx) {
-      DumpBindings(cx, si.scope());
-      fprintf(stderr, "\n");
+    fprintf(stderr, "%s [%p]", ScopeKindString(si.kind()), si.scope());
+    if (si.scope()->enclosing()) {
+      fprintf(stderr, " -> ");
     }
   }
   fprintf(stderr, "\n");
@@ -1886,10 +1883,9 @@ void js::DumpBindings(JSContext* cx, Scope* scopeArg) {
   for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++) {
     UniqueChars bytes = AtomToPrintableString(cx, bi.name());
     if (!bytes) {
-      MaybePrintAndClearPendingException(cx);
       return;
     }
-    fprintf(stderr, "    %s %s ", BindingKindString(bi.kind()), bytes.get());
+    fprintf(stderr, "%s %s ", BindingKindString(bi.kind()), bytes.get());
     switch (bi.location().kind()) {
       case BindingLocation::Kind::Global:
         if (bi.isTopLevelFunction()) {
