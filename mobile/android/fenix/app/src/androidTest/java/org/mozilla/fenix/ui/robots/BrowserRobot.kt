@@ -466,6 +466,20 @@ class BrowserRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
+
+        fun clickTabCrashedCloseButton(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+
+            assertTrue(
+                mDevice.findObject(UiSelector().resourceId("$packageName:id/closeTabButton"))
+                    .waitForExists(waitingTime)
+            )
+
+            val tabCrashedCloseButton = mDevice.findObject(text("Close tab"))
+            tabCrashedCloseButton.click()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
     }
 }
 
@@ -526,3 +540,14 @@ private fun mediaPlayerPlayButton() =
             .className("android.widget.Button")
             .text("Play")
     )
+
+fun clickTabCrashedRestoreButton() {
+
+    assertTrue(
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/restoreTabButton"))
+            .waitForExists(waitingTime)
+    )
+
+    val tabCrashRestoreButton = mDevice.findObject(UiSelector().resourceIdMatches("$packageName:id/restoreTabButton"))
+    tabCrashRestoreButton.click()
+}

@@ -26,6 +26,7 @@ import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clickTabCrashedRestoreButton
 import org.mozilla.fenix.ui.robots.clickUrlbar
 import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
@@ -1162,6 +1163,33 @@ class SmokeTest {
             verifyAppearanceColorDark(true)
             verifyAppearanceColorLight(true)
             verifyAppearanceColorSepia(true)
+        }
+    }
+
+    @Test
+    fun closeTabCrashedReporterTest() {
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.openTabCrashReporter {
+        }.clickTabCrashedCloseButton {
+        }.openTabDrawer {
+            verifyNoTabsOpened()
+        }
+    }
+
+    @Test
+    fun restoreTabCrashedReporterTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {}
+
+        navigationToolbar {
+        }.openTabCrashReporter {
+            clickTabCrashedRestoreButton()
+            verifyPageContent(website.content)
         }
     }
 }

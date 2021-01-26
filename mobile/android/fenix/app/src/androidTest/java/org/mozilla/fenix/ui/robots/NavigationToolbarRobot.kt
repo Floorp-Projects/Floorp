@@ -30,6 +30,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.anyOf
@@ -115,6 +116,30 @@ class NavigationToolbarRobot {
                     )
                 )
                     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            }
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openTabCrashReporter(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            val crashUrl = "about:crashcontent"
+
+            sessionLoadedIdlingResource = SessionLoadedIdlingResource()
+
+            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/toolbar")),
+                waitingTime
+            )
+            urlBar().click()
+            mDevice.waitNotNull(
+                Until.findObject(By.res("$packageName:id/mozac_browser_toolbar_edit_url_view")),
+                waitingTime
+            )
+
+            awesomeBar().perform(replaceText(crashUrl), pressImeActionButton())
+
+            runWithIdleRes(sessionLoadedIdlingResource) {
+                mDevice.findObject(UiSelector().resourceId("$packageName:id/crash_tab_image"))
             }
 
             BrowserRobot().interact()
