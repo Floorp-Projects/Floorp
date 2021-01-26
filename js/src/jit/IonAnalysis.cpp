@@ -2954,6 +2954,7 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::Int64:
     case MIRType::RefOrNull:
     case MIRType::StackResults:
+    case MIRType::IntPtr:
       return false;
   }
   MOZ_CRASH("Unknown MIRType.");

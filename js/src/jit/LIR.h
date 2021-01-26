@@ -627,6 +627,7 @@ class LDefinition {
       case MIRType::Elements:
         return LDefinition::SLOTS;
       case MIRType::Pointer:
+      case MIRType::IntPtr:
         return LDefinition::GENERAL;
 #if defined(JS_PUNBOX64)
       case MIRType::Int64:
