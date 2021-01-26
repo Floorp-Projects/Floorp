@@ -2167,109 +2167,90 @@ WorkerThreadPrimaryRunnable::Run() {
 
   using mozilla::ipc::BackgroundChild;
 
-  class MOZ_STACK_CLASS SetThreadHelper final {
-    // Raw pointer: this class is on the stack.
-    WorkerPrivate* mWorkerPrivate;
-
-   public:
-    SetThreadHelper(WorkerPrivate* aWorkerPrivate, WorkerThread& aThread)
-        : mWorkerPrivate(aWorkerPrivate) {
-      MOZ_ASSERT(mWorkerPrivate);
-
-      mWorkerPrivate->SetWorkerPrivateInWorkerThread(&aThread);
-    }
-
-    ~SetThreadHelper() {
-      if (mWorkerPrivate) {
-        mWorkerPrivate->ResetWorkerPrivateInWorkerThread();
-      }
-    }
-
-    void Nullify() {
-      MOZ_ASSERT(mWorkerPrivate);
-      mWorkerPrivate->ResetWorkerPrivateInWorkerThread();
-      mWorkerPrivate = nullptr;
-    }
-  };
-
-  SetThreadHelper threadHelper(mWorkerPrivate, *mThread);
-
-  auto failureCleanup = MakeScopeExit([&]() {
-    // The creation of threadHelper above is the point at which a worker is
-    // considered to have run, because the `mPreStartRunnables` are all
-    // re-dispatched after `mThread` is set.  We need to let the WorkerPrivate
-    // know so it can clean up the various event loops and delete the worker.
-    mWorkerPrivate->RunLoopNeverRan();
-  });
-
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  // This needs to be initialized on the worker thread before being used on
-  // the main thread.
-  mWorkerPrivate->EnsurePerformanceStorage();
-
-  if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread())) {
-    return NS_ERROR_FAILURE;
-  }
-
   {
-    nsCycleCollector_startup();
+    auto failureCleanup = MakeScopeExit([&]() {
+      // The creation of threadHelper above is the point at which a worker is
+      // considered to have run, because the `mPreStartRunnables` are all
+      // re-dispatched after `mThread` is set.  We need to let the WorkerPrivate
+      // know so it can clean up the various event loops and delete the worker.
+      mWorkerPrivate->RunLoopNeverRan();
+    });
 
-    auto context = MakeUnique<WorkerJSContext>(mWorkerPrivate);
-    nsresult rv = context->Initialize(mParentRuntime);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    mWorkerPrivate->SetWorkerPrivateInWorkerThread(mThread.unsafeGetRawPtr());
 
-    JSContext* cx = context->Context();
+    const auto threadCleanup = MakeScopeExit([&] {
+      // This must be called before ScheduleDeletion, which is either called
+      // from failureCleanup leaving scope, or from the outer scope.
+      mWorkerPrivate->ResetWorkerPrivateInWorkerThread();
+    });
 
-    if (!InitJSContextForWorker(mWorkerPrivate, cx)) {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+
+    // This needs to be initialized on the worker thread before being used on
+    // the main thread.
+    mWorkerPrivate->EnsurePerformanceStorage();
+
+    if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread())) {
       return NS_ERROR_FAILURE;
     }
 
-    failureCleanup.release();
-
     {
-      PROFILER_SET_JS_CONTEXT(cx);
+      nsCycleCollector_startup();
 
-      {
-        // We're on the worker thread here, and WorkerPrivate's refcounting is
-        // non-threadsafe: you can only do it on the parent thread.  What that
-        // means in practice is that we're relying on it being kept alive while
-        // we run.  Hopefully.
-        MOZ_KnownLive(mWorkerPrivate)->DoRunLoop(cx);
-        // The AutoJSAPI in DoRunLoop should have reported any exceptions left
-        // on cx.
-        MOZ_ASSERT(!JS_IsExceptionPending(cx));
+      auto context = MakeUnique<WorkerJSContext>(mWorkerPrivate);
+      nsresult rv = context->Initialize(mParentRuntime);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
 
-      BackgroundChild::CloseForCurrentThread();
+      JSContext* cx = context->Context();
 
-      PROFILER_CLEAR_JS_CONTEXT();
+      if (!InitJSContextForWorker(mWorkerPrivate, cx)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      failureCleanup.release();
+
+      {
+        PROFILER_SET_JS_CONTEXT(cx);
+
+        {
+          // We're on the worker thread here, and WorkerPrivate's refcounting is
+          // non-threadsafe: you can only do it on the parent thread.  What that
+          // means in practice is that we're relying on it being kept alive
+          // while we run.  Hopefully.
+          MOZ_KnownLive(mWorkerPrivate)->DoRunLoop(cx);
+          // The AutoJSAPI in DoRunLoop should have reported any exceptions left
+          // on cx.
+          MOZ_ASSERT(!JS_IsExceptionPending(cx));
+        }
+
+        BackgroundChild::CloseForCurrentThread();
+
+        PROFILER_CLEAR_JS_CONTEXT();
+      }
+
+      // There may still be runnables on the debugger event queue that hold a
+      // strong reference to the debugger global scope. These runnables are not
+      // visible to the cycle collector, so we need to make sure to clear the
+      // debugger event queue before we try to destroy the context. If we don't,
+      // the garbage collector will crash.
+      mWorkerPrivate->ClearDebuggerEventQueue();
+
+      // Perform a full GC. This will collect the main worker global and CC,
+      // which should break all cycles that touch JS.
+      JS_GC(cx, JS::GCReason::WORKER_SHUTDOWN);
+
+      // Before shutting down the cycle collector we need to do one more pass
+      // through the event loop to clean up any C++ objects that need deferred
+      // cleanup.
+      mWorkerPrivate->ClearMainEventQueue(WorkerPrivate::WorkerRan);
+
+      // Now WorkerJSContext goes out of scope and its destructor will shut
+      // down the cycle collector. This breaks any remaining cycles and collects
+      // any remaining C++ objects.
     }
-
-    // There may still be runnables on the debugger event queue that hold a
-    // strong reference to the debugger global scope. These runnables are not
-    // visible to the cycle collector, so we need to make sure to clear the
-    // debugger event queue before we try to destroy the context. If we don't,
-    // the garbage collector will crash.
-    mWorkerPrivate->ClearDebuggerEventQueue();
-
-    // Perform a full GC. This will collect the main worker global and CC,
-    // which should break all cycles that touch JS.
-    JS_GC(cx, JS::GCReason::WORKER_SHUTDOWN);
-
-    // Before shutting down the cycle collector we need to do one more pass
-    // through the event loop to clean up any C++ objects that need deferred
-    // cleanup.
-    mWorkerPrivate->ClearMainEventQueue(WorkerPrivate::WorkerRan);
-
-    // Now WorkerJSContext goes out of scope and its destructor will shut
-    // down the cycle collector. This breaks any remaining cycles and collects
-    // any remaining C++ objects.
   }
-
-  threadHelper.Nullify();
 
   mWorkerPrivate->ScheduleDeletion(WorkerPrivate::WorkerRan);
 
