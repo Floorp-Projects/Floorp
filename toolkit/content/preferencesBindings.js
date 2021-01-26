@@ -522,6 +522,7 @@ const Preferences = (window.Preferences = (function() {
         }
         this.emit("change");
       }
+      return val;
     }
 
     get locked() {
@@ -602,13 +603,13 @@ const Preferences = (window.Preferences = (function() {
     set valueFromPreferences(val) {
       // Exit early if nothing to do.
       if (this.readonly || this.valueFromPreferences == val) {
-        return;
+        return val;
       }
 
       // The special value undefined means 'reset preference to default'.
       if (val === undefined) {
         Services.prefs.clearUserPref(this.id);
-        return;
+        return val;
       }
 
       // Force a resync of preferences with value.
@@ -656,6 +657,7 @@ const Preferences = (window.Preferences = (function() {
       if (!this.batching) {
         Services.prefs.savePrefFile(null);
       }
+      return val;
     }
   }
 

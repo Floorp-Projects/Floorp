@@ -1131,7 +1131,7 @@ MockAddon.prototype = {
 
   set appDisabled(val) {
     if (val == this._appDisabled) {
-      return;
+      return val;
     }
 
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, [
@@ -1142,6 +1142,8 @@ MockAddon.prototype = {
     this._appDisabled = val;
     var newActive = this.shouldBeActive;
     this._updateActiveState(currentActive, newActive);
+
+    return val;
   },
 
   get userDisabled() {
@@ -1186,7 +1188,7 @@ MockAddon.prototype = {
   },
 
   set permissions(val) {
-    this._permissions = val;
+    return (this._permissions = val);
   },
 
   get applyBackgroundUpdates() {

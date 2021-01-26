@@ -1346,7 +1346,7 @@ Object.defineProperty(exports.OS.Shared, "DEBUG", {
     return Config.DEBUG;
   },
   set(x) {
-    Config.DEBUG = x;
+    return (Config.DEBUG = x);
   },
 });
 Object.defineProperty(exports.OS.Shared, "TEST", {
@@ -1354,7 +1354,7 @@ Object.defineProperty(exports.OS.Shared, "TEST", {
     return Config.TEST;
   },
   set(x) {
-    Config.TEST = x;
+    return (Config.TEST = x);
   },
 });
 

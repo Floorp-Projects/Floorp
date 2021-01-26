@@ -136,7 +136,7 @@ class UrlbarView {
 
     if (val < 0) {
       this._selectElement(null);
-      return;
+      return val;
     }
 
     let items = Array.from(this._rows.children).filter(r =>
@@ -146,6 +146,7 @@ class UrlbarView {
       throw new Error(`UrlbarView: Index ${val} is out of bounds.`);
     }
     this._selectElement(items[val]);
+    return val;
   }
 
   get selectedElementIndex() {
@@ -165,7 +166,7 @@ class UrlbarView {
 
     if (val < 0) {
       this._selectElement(null);
-      return;
+      return val;
     }
 
     let selectableElement = this._getFirstSelectableElement();
@@ -178,6 +179,7 @@ class UrlbarView {
     }
 
     this._selectElement(selectableElement);
+    return val;
   }
 
   /**

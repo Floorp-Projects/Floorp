@@ -984,7 +984,7 @@ AddonWrapper = class {
     }
 
     if (val == addon.applyBackgroundUpdates) {
-      return;
+      return val;
     }
 
     XPIDatabase.setAddonProperties(addon, {
@@ -993,12 +993,14 @@ AddonWrapper = class {
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, [
       "applyBackgroundUpdates",
     ]);
+
+    return val;
   }
 
   set syncGUID(val) {
     let addon = addonFor(this);
     if (addon.syncGUID == val) {
-      return;
+      return val;
     }
 
     if (addon.inDatabase) {
@@ -1006,6 +1008,8 @@ AddonWrapper = class {
     }
 
     addon.syncGUID = val;
+
+    return val;
   }
 
   get install() {

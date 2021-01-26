@@ -145,7 +145,7 @@
     }
 
     set title(val) {
-      document.title = val;
+      return (document.title = val);
     }
 
     get title() {
@@ -154,7 +154,7 @@
 
     set canAdvance(val) {
       this.getButton("next").disabled = !val;
-      this._canAdvance = val;
+      return (this._canAdvance = val);
     }
 
     get canAdvance() {
@@ -163,7 +163,7 @@
 
     set canRewind(val) {
       this.getButton("back").disabled = !val;
-      this._canRewind = val;
+      return (this._canRewind = val);
     }
 
     get canRewind() {
@@ -180,7 +180,7 @@
 
     set currentPage(val) {
       if (!val) {
-        return;
+        return val;
       }
 
       this._currentPage = val;
@@ -195,6 +195,8 @@
       this._advanceFocusToPage(val);
 
       this._fireEvent(val, "pageshow");
+
+      return val;
     }
 
     get currentPage() {
@@ -203,12 +205,14 @@
 
     set pageIndex(val) {
       if (val < 0 || val >= this.pageCount) {
-        return;
+        return val;
       }
 
       var page = this.wizardPages[val];
       this._pageStack[this._pageStack.length - 1] = page;
       this.currentPage = page;
+
+      return val;
     }
 
     get pageIndex() {
@@ -508,6 +512,7 @@
     set next(val) {
       this.setAttribute("next", val);
       this.parentNode._accessMethod = "random";
+      return val;
     }
   }
 

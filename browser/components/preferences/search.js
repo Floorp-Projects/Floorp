@@ -666,6 +666,7 @@ EngineStore.prototype = {
   },
   set engines(val) {
     this._engines = val;
+    return val;
   },
 
   _getIndexForEngine(aEngine) {
