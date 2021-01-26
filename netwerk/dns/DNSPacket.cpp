@@ -4,6 +4,11 @@
 
 #include "DNSPacket.h"
 
+#include "DNS.h"
+#include "mozilla/EndianUtils.h"
+#include "mozilla/ScopeExit.h"
+#include "ODoHService.h"
+
 namespace mozilla {
 namespace net {
 
@@ -981,6 +986,78 @@ nsresult DNSPacket::Decode(
                         mBodySize);
 }
 
+static SECItem* CreateRawConfig(const ObliviousDoHConfig& aConfig) {
+  SECItem* item(::SECITEM_AllocItem(nullptr, nullptr,
+                                    8 + aConfig.mContents.mPublicKey.Length()));
+  if (!item) {
+    return nullptr;
+  }
+
+  uint16_t index = 0;
+  NetworkEndian::writeUint16(&item->data[index], aConfig.mContents.mKemId);
+  index += 2;
+  NetworkEndian::writeUint16(&item->data[index], aConfig.mContents.mKdfId);
+  index += 2;
+  NetworkEndian::writeUint16(&item->data[index], aConfig.mContents.mAeadId);
+  index += 2;
+  uint16_t keyLength = aConfig.mContents.mPublicKey.Length();
+  NetworkEndian::writeUint16(&item->data[index], keyLength);
+  index += 2;
+  memcpy(&item->data[index], aConfig.mContents.mPublicKey.Elements(),
+         aConfig.mContents.mPublicKey.Length());
+  return item;
+}
+
+static bool CreateConfigId(ObliviousDoHConfig& aConfig) {
+  SECStatus rv;
+  CK_HKDF_PARAMS params = {0};
+  SECItem paramsi = {siBuffer, (unsigned char*)&params, sizeof(params)};
+
+  UniquePK11SlotInfo slot(PK11_GetInternalSlot());
+  if (!slot) {
+    return false;
+  }
+
+  UniqueSECItem rawConfig(CreateRawConfig(aConfig));
+  if (!rawConfig) {
+    return false;
+  }
+
+  UniquePK11SymKey configKey(PK11_ImportDataKey(slot.get(), CKM_HKDF_DATA,
+                                                PK11_OriginUnwrap, CKA_DERIVE,
+                                                rawConfig.get(), NULL));
+  if (!configKey) {
+    return false;
+  }
+
+  params.bExtract = CK_TRUE;
+  params.bExpand = CK_TRUE;
+  params.prfHashMechanism = CKM_SHA256;
+  params.ulSaltType = CKF_HKDF_SALT_NULL;
+  params.pInfo = (unsigned char*)&hODoHConfigID[0];
+  params.ulInfoLen = strlen(hODoHConfigID);
+  UniquePK11SymKey derived(PK11_DeriveWithFlags(
+      configKey.get(), CKM_HKDF_DATA, &paramsi, CKM_HKDF_DERIVE, CKA_DERIVE,
+      SHA256_LENGTH, CKF_SIGN | CKF_VERIFY));
+
+  rv = PK11_ExtractKeyValue(derived.get());
+  if (rv != SECSuccess) {
+    return false;
+  }
+
+  SECItem* derivedItem = PK11_GetKeyData(derived.get());
+  if (!derivedItem) {
+    return false;
+  }
+
+  if (derivedItem->len != SHA256_LENGTH) {
+    return false;
+  }
+
+  aConfig.mConfigId.AppendElements(derivedItem->data, derivedItem->len);
+  return true;
+}
+
 // static
 bool ODoHDNSPacket::ParseODoHConfigs(const nsCString& aRawODoHConfig,
                                      nsTArray<ObliviousDoHConfig>& aOut) {
@@ -1001,24 +1078,421 @@ bool ODoHDNSPacket::ParseODoHConfigs(const nsCString& aRawODoHConfig,
   //
   //  ObliviousDoHConfig ObliviousDoHConfigs<1..2^16-1>;
 
-  // TODO
-  return false;
+  // At least we need two bytes to indicate the total length of ODoHConfig.
+  if (aRawODoHConfig.Length() < 2) {
+    return false;
+  }
+
+  const unsigned char* data =
+      reinterpret_cast<const unsigned char*>(aRawODoHConfig.BeginReading());
+
+  uint32_t index = 0;
+  uint16_t length = get16bit(data, index);
+  index += 2;
+
+  if (length != aRawODoHConfig.Length() - 2) {
+    return false;
+  }
+
+  nsTArray<ObliviousDoHConfig> result;
+  while (length > 0) {
+    ObliviousDoHConfig config;
+    config.mVersion = get16bit(data, index);
+    index += 2;
+    length -= 2;
+
+    config.mLength = get16bit(data, index);
+    index += 2;
+    length -= 2;
+
+    if (config.mLength > length) {
+      return false;
+    }
+
+    config.mContents.mKemId = get16bit(data, index);
+    index += 2;
+    length -= 2;
+    config.mContents.mKdfId = get16bit(data, index);
+    index += 2;
+    length -= 2;
+    config.mContents.mAeadId = get16bit(data, index);
+    index += 2;
+    length -= 2;
+
+    uint16_t keyLength = get16bit(data, index);
+    index += 2;
+    length -= 2;
+    if (keyLength > length) {
+      return false;
+    }
+
+    config.mContents.mPublicKey.AppendElements(Span(data + index, keyLength));
+    index += keyLength;
+    length -= keyLength;
+
+    CreateConfigId(config);
+
+    // Check if the version of the config is supported and validate its content.
+    if (config.mVersion == ODOH_VERSION &&
+        PK11_HPKE_ValidateParameters(
+            static_cast<HpkeKemId>(config.mContents.mKemId),
+            static_cast<HpkeKdfId>(config.mContents.mKdfId),
+            static_cast<HpkeAeadId>(config.mContents.mAeadId)) == SECSuccess) {
+      result.AppendElement(std::move(config));
+    }
+  }
+
+  aOut = std::move(result);
+  return true;
 }
 
-ODoHDNSPacket::~ODoHDNSPacket() {}
+ODoHDNSPacket::~ODoHDNSPacket() { PK11_HPKE_DestroyContext(mContext, true); }
 
 nsresult ODoHDNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
                                       uint16_t aType, bool aDisableECS) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsAutoCString queryBody;
+  nsresult rv = DNSPacket::EncodeRequest(queryBody, aHost, aType, aDisableECS);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!gODoHService->ODoHConfigs() || gODoHService->ODoHConfigs()->IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // We only use the first ODoHConfig.
+  const ObliviousDoHConfig& config = (*gODoHService->ODoHConfigs())[0];
+
+  ObliviousDoHMessage message;
+  if (!EncryptDNSQuery(queryBody, 2, config, message)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aBody.Truncate();
+  aBody += message.mType;
+  uint16_t keyIdLength = message.mKeyId.Length();
+  aBody += static_cast<uint8_t>(keyIdLength >> 8);
+  aBody += static_cast<uint8_t>(keyIdLength);
+  aBody.Append(reinterpret_cast<const char*>(message.mKeyId.Elements()),
+               keyIdLength);
+  uint16_t messageLen = message.mEncryptedMessage.Length();
+  aBody += static_cast<uint8_t>(messageLen >> 8);
+  aBody += static_cast<uint8_t>(messageLen);
+  aBody.Append(
+      reinterpret_cast<const char*>(message.mEncryptedMessage.Elements()),
+      messageLen);
+
+  return NS_OK;
+}
+
+/*
+ * def encrypt_query_body(pkR, key_id, Q_plain):
+ *     enc, context = SetupBaseS(pkR, "odoh query")
+ *     aad = 0x01 || len(key_id) || key_id
+ *     ct = context.Seal(aad, Q_plain)
+ *     Q_encrypted = enc || ct
+ *     return Q_encrypted
+ */
+bool ODoHDNSPacket::EncryptDNSQuery(const nsACString& aQuery,
+                                    uint16_t aPaddingLen,
+                                    const ObliviousDoHConfig& aConfig,
+                                    ObliviousDoHMessage& aOut) {
+  mContext = PK11_HPKE_NewContext(
+      static_cast<HpkeKemId>(aConfig.mContents.mKemId),
+      static_cast<HpkeKdfId>(aConfig.mContents.mKdfId),
+      static_cast<HpkeAeadId>(aConfig.mContents.mAeadId), nullptr, nullptr);
+  if (!mContext) {
+    LOG(("ODoHDNSPacket::EncryptDNSQuery create context failed"));
+    return false;
+  }
+
+  SECKEYPublicKey* pkR;
+  SECStatus rv =
+      PK11_HPKE_Deserialize(mContext, aConfig.mContents.mPublicKey.Elements(),
+                            aConfig.mContents.mPublicKey.Length(), &pkR);
+  if (rv != SECSuccess) {
+    return false;
+  }
+
+  UniqueSECItem hpkeInfo(
+      ::SECITEM_AllocItem(nullptr, nullptr, strlen(kODoHQuery)));
+  if (!hpkeInfo) {
+    return false;
+  }
+
+  memcpy(hpkeInfo->data, kODoHQuery, strlen(kODoHQuery));
+
+  rv = PK11_HPKE_SetupS(mContext, nullptr, nullptr, pkR, hpkeInfo.get());
+  if (rv != SECSuccess) {
+    LOG(("ODoHDNSPacket::EncryptDNSQuery setupS failed"));
+    return false;
+  }
+
+  const SECItem* hpkeEnc = PK11_HPKE_GetEncapPubKey(mContext);
+  if (!hpkeEnc) {
+    return false;
+  }
+
+  // aad = 0x01 || len(key_id) || key_id
+  UniqueSECItem aad(::SECITEM_AllocItem(nullptr, nullptr,
+                                        1 + 2 + aConfig.mConfigId.Length()));
+  if (!aad) {
+    return false;
+  }
+
+  aad->data[0] = ODOH_QUERY;
+  NetworkEndian::writeUint16(&aad->data[1], aConfig.mConfigId.Length());
+  memcpy(&aad->data[3], aConfig.mConfigId.Elements(),
+         aConfig.mConfigId.Length());
+
+  // struct {
+  //     opaque dns_message<1..2^16-1>;
+  //     opaque padding<0..2^16-1>;
+  // } ObliviousDoHMessagePlaintext;
+  SECItem* odohPlainText(::SECITEM_AllocItem(
+      nullptr, nullptr, 2 + aQuery.Length() + 2 + aPaddingLen));
+  if (!odohPlainText) {
+    return false;
+  }
+
+  mPlainQuery.reset(odohPlainText);
+  memset(mPlainQuery->data, 0, mPlainQuery->len);
+  NetworkEndian::writeUint16(&mPlainQuery->data[0], aQuery.Length());
+  memcpy(&mPlainQuery->data[2], aQuery.BeginReading(), aQuery.Length());
+  NetworkEndian::writeUint16(&mPlainQuery->data[2 + aQuery.Length()],
+                             aPaddingLen);
+
+  SECItem* chCt = nullptr;
+  rv = PK11_HPKE_Seal(mContext, aad.get(), mPlainQuery.get(), &chCt);
+  if (rv != SECSuccess) {
+    LOG(("ODoHDNSPacket::EncryptDNSQuery seal failed"));
+    return false;
+  }
+
+  UniqueSECItem ct(chCt);
+
+  aOut.mType = ODOH_QUERY;
+  aOut.mKeyId.AppendElements(aConfig.mConfigId);
+  aOut.mEncryptedMessage.AppendElements(Span(hpkeEnc->data, hpkeEnc->len));
+  aOut.mEncryptedMessage.AppendElements(Span(ct->data, ct->len));
+
+  return true;
 }
 
 nsresult ODoHDNSPacket::Decode(
     nsCString& aHost, enum TrrType aType, nsCString& aCname, bool aAllowRFC1918,
-    nsHostRecord::TRRSkippedReason& reason, DOHresp& aResp,
+    nsHostRecord::TRRSkippedReason& aReason, DOHresp& aResp,
     TypeRecordResultType& aTypeResult,
     nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
     uint32_t& aTTL) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!DecryptDNSResponse()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t index = 0;
+  uint16_t responseLength = get16bit(mResponse, index);
+  index += 2;
+
+  if (mBodySize < (index + responseLength)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  unsigned char* plainResponse = &mResponse[index];
+  index += responseLength;
+
+  uint16_t paddingLen = get16bit(mResponse, index);
+
+  if ((4 + responseLength + paddingLen) != mBodySize) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aReason, aResp,
+                        aTypeResult, aAdditionalRecords, aTTL, plainResponse,
+                        responseLength);
+}
+
+static bool CreateObliviousDoHMessage(const unsigned char* aData,
+                                      unsigned int aLength,
+                                      ObliviousDoHMessage& aOut) {
+  if (aLength < 5) {
+    return false;
+  }
+
+  unsigned int index = 0;
+  aOut.mType = static_cast<ObliviousDoHMessageType>(aData[index++]);
+
+  uint16_t keyIdLength = get16bit(aData, index);
+  index += 2;
+  if (aLength < (index + keyIdLength)) {
+    return false;
+  }
+
+  aOut.mKeyId.AppendElements(Span(aData + index, keyIdLength));
+  index += keyIdLength;
+
+  uint16_t messageLen = get16bit(aData, index);
+  index += 2;
+  if (aLength < (index + messageLen)) {
+    return false;
+  }
+
+  aOut.mEncryptedMessage.AppendElements(Span(aData + index, messageLen));
+  return true;
+}
+
+static SECStatus HKDFExtract(SECItem* aSalt, PK11SymKey* aIkm,
+                             UniquePK11SymKey& aOutKey) {
+  CK_HKDF_PARAMS params = {0};
+  SECItem paramsItem = {siBuffer, (unsigned char*)&params, sizeof(params)};
+
+  params.bExtract = CK_TRUE;
+  params.bExpand = CK_FALSE;
+  params.prfHashMechanism = CKM_SHA256;
+  params.ulSaltType = aSalt ? CKF_HKDF_SALT_DATA : CKF_HKDF_SALT_NULL;
+  params.pSalt = aSalt ? (CK_BYTE_PTR)aSalt->data : NULL;
+  params.ulSaltLen = aSalt ? aSalt->len : 0;
+
+  UniquePK11SymKey prk(PK11_Derive(aIkm, CKM_HKDF_DERIVE, &paramsItem,
+                                   CKM_HKDF_DERIVE, CKA_DERIVE, 0));
+  if (!prk) {
+    return SECFailure;
+  }
+
+  aOutKey.swap(prk);
+  return SECSuccess;
+}
+
+static SECStatus HKDFExpand(PK11SymKey* aPrk, const SECItem* aInfo,
+                            unsigned int aLen, bool aKey,
+                            UniquePK11SymKey& aOutKey) {
+  CK_HKDF_PARAMS params = {0};
+  SECItem paramsItem = {siBuffer, (unsigned char*)&params, sizeof(params)};
+
+  params.bExtract = CK_FALSE;
+  params.bExpand = CK_TRUE;
+  params.prfHashMechanism = CKM_SHA256;
+  params.ulSaltType = CKF_HKDF_SALT_NULL;
+  params.pInfo = (CK_BYTE_PTR)aInfo->data;
+  params.ulInfoLen = aInfo->len;
+  CK_MECHANISM_TYPE deriveMech = CKM_HKDF_DERIVE;
+  CK_MECHANISM_TYPE keyMech = aKey ? CKM_AES_GCM : CKM_HKDF_DERIVE;
+
+  UniquePK11SymKey derivedKey(
+      PK11_Derive(aPrk, deriveMech, &paramsItem, keyMech, CKA_DERIVE, aLen));
+  if (!derivedKey) {
+    return SECFailure;
+  }
+
+  aOutKey.swap(derivedKey);
+  return SECSuccess;
+}
+
+/* def decrypt_response_body(context, Q_plain, R_encrypted):
+ *    key, nonce = derive_secrets(context, Q_plain)
+ *    aad = 0x02 || 0x0000 // 0x0000 represents a 0-length KeyId
+ *    R_plain, error = Open(key, nonce, aad, R_encrypted)
+ *    return R_plain, error
+ */
+bool ODoHDNSPacket::DecryptDNSResponse() {
+  ObliviousDoHMessage message;
+  if (!CreateObliviousDoHMessage(mResponse, mBodySize, message)) {
+    LOG(("ODoHDNSPacket::DecryptDNSResponse invalid responce"));
+    return false;
+  }
+
+  if (message.mType != ODOH_RESPONSE) {
+    return false;
+  }
+
+  // KeyID for response should be empty.
+  if (!message.mKeyId.IsEmpty()) {
+    return false;
+  }
+
+  // def derive_secrets(context, Q_plain):
+  //    odoh_secret = context.Export("odoh secret", 32)
+  //    odoh_prk = Extract(Q_plain, odoh_secret)
+  //    key = Expand(odoh_prk, "odoh key", Nk)
+  //    nonce = Expand(odoh_prk, "odoh nonce", Nn)
+  //    return key, nonce
+  const SECItem kODoHSecretInfoItem = {
+      siBuffer, (unsigned char*)kODoHSecret,
+      static_cast<unsigned int>(strlen(kODoHSecret))};
+  const unsigned int kAes128GcmKeyLen = 16;
+  const unsigned int kAes128GcmNonceLen = 12;
+  PK11SymKey* tmp = nullptr;
+  SECStatus rv =
+      PK11_HPKE_ExportSecret(mContext, &kODoHSecretInfoItem, 32, &tmp);
+  if (rv != SECSuccess) {
+    LOG(("ODoHDNSPacket::DecryptDNSResponse export secret failed"));
+    return false;
+  }
+  UniquePK11SymKey odohSecret(tmp);
+
+  SECItem* salt(::SECITEM_AllocItem(nullptr, nullptr, mPlainQuery->len));
+  memcpy(salt->data, mPlainQuery->data, mPlainQuery->len);
+  UniqueSECItem st(salt);
+  UniquePK11SymKey odohPrk;
+  rv = HKDFExtract(salt, odohSecret.get(), odohPrk);
+  if (rv != SECSuccess) {
+    LOG(("ODoHDNSPacket::DecryptDNSResponse extract failed"));
+    return false;
+  }
+
+  SECItem keyInfoItem = {siBuffer, (unsigned char*)&kODoHKey[0],
+                         static_cast<unsigned int>(strlen(kODoHKey))};
+  UniquePK11SymKey key;
+  rv = HKDFExpand(odohPrk.get(), &keyInfoItem, kAes128GcmKeyLen, true, key);
+  if (rv != SECSuccess) {
+    LOG(("ODoHDNSPacket::DecryptDNSResponse expand key failed"));
+    return false;
+  }
+
+  SECItem nonceInfoItem = {siBuffer, (unsigned char*)&kODoHNonce[0],
+                           static_cast<unsigned int>(strlen(kODoHNonce))};
+  UniquePK11SymKey nonce;
+  rv = HKDFExpand(odohPrk.get(), &nonceInfoItem, kAes128GcmNonceLen, false,
+                  nonce);
+  if (rv != SECSuccess) {
+    LOG(("ODoHDNSPacket::DecryptDNSResponse expand nonce failed"));
+    return false;
+  }
+
+  rv = PK11_ExtractKeyValue(nonce.get());
+  if (rv != SECSuccess) {
+    return false;
+  }
+
+  SECItem* derivedItem = PK11_GetKeyData(nonce.get());
+  if (!derivedItem) {
+    return false;
+  }
+
+  // aad = 0x02 || 0x0000
+  uint8_t aad[] = {0x2, 0, 0};
+
+  SECItem paramItem;
+  CK_GCM_PARAMS param;
+  param.pIv = derivedItem->data;
+  param.ulIvLen = derivedItem->len;
+  param.ulIvBits = param.ulIvLen * 8;
+  param.ulTagBits = 16 * 8;
+  param.pAAD = (CK_BYTE_PTR)aad;
+  param.ulAADLen = 3;
+
+  paramItem.type = siBuffer;
+  paramItem.data = (unsigned char*)(&param);
+  paramItem.len = sizeof(CK_GCM_PARAMS);
+
+  memset(mResponse, 0, mBodySize);
+  rv = PK11_Decrypt(key.get(), CKM_AES_GCM, &paramItem, mResponse, &mBodySize,
+                    MAX_SIZE, message.mEncryptedMessage.Elements(),
+                    message.mEncryptedMessage.Length());
+  if (rv != SECSuccess) {
+    LOG(("ODoHDNSPacket::DecryptDNSResponse decrypt failed"));
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace net

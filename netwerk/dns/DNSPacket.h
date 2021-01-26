@@ -7,6 +7,8 @@
 
 #include "mozilla/Result.h"
 #include "nsHostResolver.h"
+#include "pk11pub.h"
+#include "ScopedNSSTypes.h"
 
 namespace mozilla {
 namespace net {
@@ -95,6 +97,13 @@ class ODoHDNSPacket final : public DNSPacket {
       uint32_t& aTTL) override;
 
  protected:
+  bool EncryptDNSQuery(const nsACString& aQuery, uint16_t aPaddingLen,
+                       const ObliviousDoHConfig& aConfig,
+                       ObliviousDoHMessage& aOut);
+  bool DecryptDNSResponse();
+
+  HpkeContext* mContext = nullptr;
+  UniqueSECItem mPlainQuery;
 };
 
 }  // namespace net
