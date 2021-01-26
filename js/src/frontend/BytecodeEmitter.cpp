@@ -1762,6 +1762,12 @@ bool BytecodeEmitter::emitTDZCheckIfNeeded(const ParserAtom* name,
   MOZ_ASSERT(loc.hasKnownSlot());
   MOZ_ASSERT(loc.isLexical());
 
+  // Private names are implemented as lexical bindings, but it's just an
+  // implementation detail. Per spec there's no TDZ check when using them.
+  if (name->isPrivateName()) {
+    return true;
+  }
+
   Maybe<MaybeCheckTDZ> check =
       innermostTDZCheckCache->needsTDZCheck(this, name);
   if (!check) {
