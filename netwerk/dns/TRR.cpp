@@ -134,6 +134,32 @@ nsresult TRR::CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult) {
                                                aResult);
 }
 
+DNSPacket* TRR::GetOrCreateDNSPacket() {
+  if (!mPacket) {
+    mPacket = MakeUnique<DNSPacket>();
+  }
+
+  return mPacket.get();
+}
+
+nsresult TRR::CreateQueryURI(nsIURI** aOutURI) {
+  nsAutoCString uri;
+  nsCOMPtr<nsIURI> dnsURI;
+  if (UseDefaultServer()) {
+    gTRRService->GetURI(uri);
+  } else {
+    uri = mRec->mTrrServer;
+  }
+
+  nsresult rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  dnsURI.forget(aOutURI);
+  return NS_OK;
+}
+
 nsresult TRR::SendHTTPRequest() {
   // This is essentially the "run" method - created from nsHostResolver
 
@@ -175,38 +201,30 @@ nsresult TRR::SendHTTPRequest() {
     }
   }
 
-  bool useGet = StaticPrefs::network_trr_useGET();
-  nsAutoCString body;
-  nsCOMPtr<nsIURI> dnsURI;
-  bool disableECS = StaticPrefs::network_trr_disable_ECS();
-  nsresult rv;
-
   LOG(("TRR::SendHTTPRequest resolve %s type %u\n", mHost.get(), mType));
 
-  if (useGet) {
-    nsAutoCString tmp;
-    rv = DNSPacket::EncodeRequest(tmp, mHost, mType, disableECS);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString body;
+  bool disableECS = StaticPrefs::network_trr_disable_ECS();
+  nsresult rv =
+      GetOrCreateDNSPacket()->EncodeRequest(body, mHost, mType, disableECS);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  bool useGet = StaticPrefs::network_trr_useGET();
+  nsCOMPtr<nsIURI> dnsURI;
+  rv = CreateQueryURI(getter_AddRefs(dnsURI));
+  if (NS_FAILED(rv)) {
+    LOG(("TRR:SendHTTPRequest: NewURI failed!\n"));
+    return rv;
+  }
+
+  if (useGet) {
     /* For GET requests, the outgoing packet needs to be Base64url-encoded and
        then appended to the end of the URI. */
-    rv = Base64URLEncode(tmp.Length(),
-                         reinterpret_cast<const unsigned char*>(tmp.get()),
-                         Base64URLEncodePaddingPolicy::Omit, body);
+    nsAutoCString encoded;
+    rv = Base64URLEncode(body.Length(),
+                         reinterpret_cast<const unsigned char*>(body.get()),
+                         Base64URLEncodePaddingPolicy::Omit, encoded);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoCString uri;
-    if (UseDefaultServer()) {
-      gTRRService->GetURI(uri);
-    } else {
-      uri = mRec->mTrrServer;
-    }
-
-    rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
-    if (NS_FAILED(rv)) {
-      LOG(("TRR:SendHTTPRequest: NewURI failed!\n"));
-      return rv;
-    }
 
     nsAutoCString query;
     rv = dnsURI->GetQuery(query);
@@ -219,25 +237,10 @@ nsresult TRR::SendHTTPRequest() {
     } else {
       query.Append("&dns="_ns);
     }
-    query.Append(body);
+    query.Append(encoded);
 
     rv = NS_MutateURI(dnsURI).SetQuery(query).Finalize(dnsURI);
     LOG(("TRR::SendHTTPRequest GET dns=%s\n", body.get()));
-  } else {
-    rv = DNSPacket::EncodeRequest(body, mHost, mType, disableECS);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoCString uri;
-    if (UseDefaultServer()) {
-      gTRRService->GetURI(uri);
-    } else {
-      uri = mRec->mTrrServer;
-    }
-    rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
-  }
-  if (NS_FAILED(rv)) {
-    LOG(("TRR:SendHTTPRequest: NewURI failed!\n"));
-    return rv;
   }
 
   nsCOMPtr<nsIChannel> channel;
@@ -264,8 +267,8 @@ nsresult TRR::SendHTTPRequest() {
   rv = httpChannel->SetTRRMode(nsIRequest::TRR_DISABLED_MODE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = httpChannel->SetRequestHeader("Accept"_ns, "application/dns-message"_ns,
-                                     false);
+  nsCString contentType(ContentType());
+  rv = httpChannel->SetRequestHeader("Accept"_ns, contentType, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString cred;
@@ -303,13 +306,12 @@ nsresult TRR::SendHTTPRequest() {
         NS_NewCStringInputStream(getter_AddRefs(uploadStream), std::move(body));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = uploadChannel->ExplicitSetUploadStream(uploadStream,
-                                                "application/dns-message"_ns,
+    rv = uploadChannel->ExplicitSetUploadStream(uploadStream, contentType,
                                                 streamLength, "POST"_ns, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = SetupTRRServiceChannelInternal(httpChannel, useGet);
+  rv = SetupTRRServiceChannelInternal(httpChannel, useGet, contentType);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -336,7 +338,8 @@ nsresult TRR::SendHTTPRequest() {
 
 // static
 nsresult TRR::SetupTRRServiceChannelInternal(nsIHttpChannel* aChannel,
-                                             bool aUseGet) {
+                                             bool aUseGet,
+                                             const nsACString& aContentType) {
   nsCOMPtr<nsIHttpChannel> httpChannel = aChannel;
   MOZ_ASSERT(httpChannel);
 
@@ -366,7 +369,7 @@ nsresult TRR::SetupTRRServiceChannelInternal(nsIHttpChannel* aChannel,
   }
 
   // set the *default* response content type
-  if (NS_FAILED(httpChannel->SetContentType("application/dns-message"_ns))) {
+  if (NS_FAILED(httpChannel->SetContentType(aContentType))) {
     LOG(("TRR::SetupTRRServiceChannelInternal: couldn't set content-type!\n"));
   }
 
@@ -748,7 +751,7 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
     LOG(("TRR: check for CNAME record for %s within previous response\n",
          cname.get()));
     nsClassHashtable<nsCStringHashKey, DOHresp> additionalRecords;
-    rv = mPacket.Decode(
+    rv = GetOrCreateDNSPacket()->Decode(
         cname, mType, mCname, StaticPrefs::network_trr_allow_rfc1918(),
         mTRRSkippedReason, mDNS, mResult, additionalRecords, mTTL);
     if (NS_FAILED(rv)) {
@@ -781,7 +784,7 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
 nsresult TRR::On200Response(nsIChannel* aChannel) {
   // decode body and create an AddrInfo struct for the response
   nsClassHashtable<nsCStringHashKey, DOHresp> additionalRecords;
-  nsresult rv = mPacket.Decode(
+  nsresult rv = GetOrCreateDNSPacket()->Decode(
       mHost, mType, mCname, StaticPrefs::network_trr_allow_rfc1918(),
       mTRRSkippedReason, mDNS, mResult, additionalRecords, mTTL);
 
@@ -864,7 +867,7 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     nsAutoCString contentType;
     httpChannel->GetContentType(contentType);
     if (contentType.Length() &&
-        !contentType.LowerCaseEqualsLiteral("application/dns-message")) {
+        !contentType.LowerCaseEqualsASCII(ContentType())) {
       LOG(("TRR:OnStopRequest %p %s %d wrong content type %s\n", this,
            mHost.get(), mType, contentType.get()));
       FailData(NS_ERROR_UNEXPECTED);
@@ -903,8 +906,8 @@ TRR::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv =
-      mPacket.OnDataAvailable(aRequest, aInputStream, aOffset, aCount);
+  nsresult rv = GetOrCreateDNSPacket()->OnDataAvailable(aRequest, aInputStream,
+                                                        aOffset, aCount);
   if (NS_FAILED(rv)) {
     LOG(("TRR::OnDataAvailable:%d fail\n", __LINE__));
     mFailed = true;
