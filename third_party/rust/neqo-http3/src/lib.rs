@@ -39,7 +39,7 @@ pub use connection_client::Http3Parameters;
 pub use hframe::HFrameReader;
 pub use neqo_qpack::Header;
 pub use server::Http3Server;
-pub use server_events::Http3ServerEvent;
+pub use server_events::{ClientRequestStream, Http3ServerEvent};
 
 type Res<T> = Result<T, Error>;
 
@@ -48,7 +48,9 @@ pub enum Error {
     HttpNoError,
     HttpGeneralProtocol,
     HttpGeneralProtocolStream, //this is the same as the above but it should only close a stream not a connection.
-    HttpInternal,
+    // When using this error, you need to provide a value that is unique, which
+    // will allow the specific error to be identified.  This will be validated in CI.
+    HttpInternal(u16),
     HttpStreamCreation,
     HttpClosedCriticalStream,
     HttpFrameUnexpected,
@@ -93,7 +95,7 @@ impl Error {
             Self::HttpGeneralProtocol | Self::HttpGeneralProtocolStream | Self::InvalidHeader => {
                 0x101
             }
-            Self::HttpInternal => 0x102,
+            Self::HttpInternal(..) => 0x102,
             Self::HttpStreamCreation => 0x103,
             Self::HttpClosedCriticalStream => 0x104,
             Self::HttpFrameUnexpected => 0x105,
@@ -118,7 +120,7 @@ impl Error {
         matches!(
             self,
             Self::HttpGeneralProtocol
-                | Self::HttpInternal
+                | Self::HttpInternal(..)
                 | Self::HttpStreamCreation
                 | Self::HttpClosedCriticalStream
                 | Self::HttpFrameUnexpected
@@ -192,8 +194,8 @@ impl Error {
     ///   Any error is mapped to the indicated type.
     fn map_error<R>(r: Result<R, impl Into<Self>>, err: Self) -> Result<R, Self> {
         Ok(r.map_err(|e| {
-            debug_assert!(!matches!(e.into(), Self::HttpInternal));
-            debug_assert!(!matches!(err, Self::HttpInternal));
+            debug_assert!(!matches!(e.into(), Self::HttpInternal(..)));
+            debug_assert!(!matches!(err, Self::HttpInternal(..)));
             err
         })?)
     }
@@ -209,7 +211,6 @@ impl From<QpackError> for Error {
     fn from(err: QpackError) -> Self {
         match err {
             QpackError::ClosedCriticalStream => Error::HttpClosedCriticalStream,
-            QpackError::InternalError => Error::HttpInternal,
             e => Self::QpackError(e),
         }
     }
@@ -236,7 +237,7 @@ impl From<AppError> for Error {
             0x200 => Self::QpackError(QpackError::DecompressionFailed),
             0x201 => Self::QpackError(QpackError::EncoderStream),
             0x202 => Self::QpackError(QpackError::DecoderStream),
-            _ => Self::HttpInternal,
+            _ => Self::HttpInternal(0),
         }
     }
 }

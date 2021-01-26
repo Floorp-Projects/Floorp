@@ -231,6 +231,10 @@ impl PacketBuilder {
         self.limit = limit;
     }
 
+    pub fn limit(&mut self) -> usize {
+        self.limit
+    }
+
     /// How many bytes remain against the size limit for the builder.
     #[must_use]
     pub fn remaining(&self) -> usize {
@@ -238,8 +242,14 @@ impl PacketBuilder {
     }
 
     /// Pad with "PADDING" frames.
-    pub fn pad(&mut self) {
+    pub fn pad(&mut self) -> Res<()> {
         self.encoder.pad_to(self.limit, 0);
+        if self.len() > self.limit {
+            qwarn!("Packet contents are more than the limit");
+            debug_assert!(false);
+            return Err(Error::InternalError(17));
+        }
+        Ok(())
     }
 
     /// Add unpredictable values for unprotected parts of the packet.
@@ -252,18 +262,25 @@ impl PacketBuilder {
 
     /// For an Initial packet, encode the token.
     /// If you fail to do this, then you will not get a valid packet.
-    pub fn initial_token(&mut self, token: &[u8]) {
+    pub fn initial_token(&mut self, token: &[u8]) -> Res<()> {
         debug_assert_eq!(
             self.encoder[self.header.start] & 0xb0,
             PACKET_BIT_LONG | PACKET_TYPE_INITIAL << 4
         );
         self.encoder.encode_vvec(token);
+
+        if self.len() > self.limit {
+            qwarn!("Packet contents are more than the limit");
+            debug_assert!(false);
+            return Err(Error::InternalError(18));
+        }
+        Ok(())
     }
 
     /// Add a packet number of the given size.
     /// For a long header packet, this also inserts a dummy length.
     /// The length is filled in after calling `build`.
-    pub fn pn(&mut self, pn: PacketNumber, pn_len: usize) {
+    pub fn pn(&mut self, pn: PacketNumber, pn_len: usize) -> Res<()> {
         // Reserve space for a length in long headers.
         if self.is_long() {
             self.offsets.len = self.encoder.len();
@@ -282,6 +299,13 @@ impl PacketBuilder {
         self.encoder[self.header.start] |= u8::try_from(pn_len - 1).unwrap();
         self.header.end = self.encoder.len();
         self.pn = pn;
+
+        if self.len() > self.limit {
+            qwarn!("Packet contents are more than the limit");
+            debug_assert!(false);
+            return Err(Error::InternalError(19));
+        }
+        Ok(())
     }
 
     fn write_len(&mut self, expansion: usize) {
@@ -307,7 +331,7 @@ impl PacketBuilder {
         if self.len() > self.limit {
             qwarn!("Packet contents are more than the limit");
             debug_assert!(false);
-            return Err(Error::InternalError);
+            return Err(Error::InternalError(5));
         }
 
         self.pad_for_crypto(crypto);
@@ -500,6 +524,11 @@ impl<'a> PublicPacket<'a> {
         let first = Self::opt(decoder.decode_byte())?;
 
         if first & 0x80 == PACKET_BIT_SHORT {
+            // Conveniently, this also guarantees that there is enough space
+            // for a connection ID of any size.
+            if decoder.remaining() < SAMPLE_OFFSET + SAMPLE_SIZE {
+                return Err(Error::InvalidPacket);
+            }
             let dcid = Self::opt(dcid_decoder.decode_cid(&mut decoder))?;
             if decoder.remaining() < SAMPLE_OFFSET + SAMPLE_SIZE {
                 return Err(Error::InvalidPacket);
@@ -799,7 +828,7 @@ impl Deref for DecryptedPacket {
 mod tests {
     use super::*;
     use crate::crypto::{CryptoDxState, CryptoStates};
-    use crate::{FixedConnectionIdManager, QuicVersion};
+    use crate::{EmptyConnectionIdGenerator, QuicVersion, RandomConnectionIdGenerator};
     use neqo_common::Encoder;
     use test_fixture::{fixture_init, now};
 
@@ -807,8 +836,8 @@ mod tests {
     const SERVER_CID: &[u8] = &[0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5];
 
     /// This is a connection ID manager, which is only used for decoding short header packets.
-    fn cid_mgr() -> FixedConnectionIdManager {
-        FixedConnectionIdManager::new(SERVER_CID.len())
+    fn cid_mgr() -> RandomConnectionIdGenerator {
+        RandomConnectionIdGenerator::new(SERVER_CID.len())
     }
 
     const SAMPLE_INITIAL_PAYLOAD: &[u8] = &[
@@ -849,8 +878,8 @@ mod tests {
             &ConnectionId::from(&[][..]),
             &ConnectionId::from(SERVER_CID),
         );
-        builder.initial_token(&[]);
-        builder.pn(1, 2);
+        builder.initial_token(&[]).unwrap();
+        builder.pn(1, 2).unwrap();
         builder.encode(&SAMPLE_INITIAL_PAYLOAD);
         let packet = builder.build(&mut prot).expect("build");
         assert_eq!(&packet[..], SAMPLE_INITIAL);
@@ -911,7 +940,7 @@ mod tests {
         fixture_init();
         let mut builder =
             PacketBuilder::short(Encoder::new(), true, &ConnectionId::from(SERVER_CID));
-        builder.pn(0, 1);
+        builder.pn(0, 1).unwrap();
         builder.encode(SAMPLE_SHORT_PAYLOAD); // Enough payload for sampling.
         let packet = builder
             .build(&mut CryptoDxState::test_default())
@@ -927,7 +956,7 @@ mod tests {
             let mut builder =
                 PacketBuilder::short(Encoder::new(), true, &ConnectionId::from(SERVER_CID));
             builder.scramble(true);
-            builder.pn(0, 1);
+            builder.pn(0, 1).unwrap();
             firsts.push(builder[0]);
         }
         let is_set = |bit| move |v| v & bit == bit;
@@ -959,7 +988,7 @@ mod tests {
         fixture_init();
         let (packet, remainder) = PublicPacket::decode(
             SAMPLE_SHORT,
-            &FixedConnectionIdManager::new(SERVER_CID.len() - 1),
+            &RandomConnectionIdGenerator::new(SERVER_CID.len() - 1),
         )
         .unwrap();
         assert_eq!(packet.packet_type(), PacketType::Short);
@@ -974,7 +1003,7 @@ mod tests {
     fn decode_short_long_cid() {
         assert!(PublicPacket::decode(
             SAMPLE_SHORT,
-            &FixedConnectionIdManager::new(SERVER_CID.len() + 1)
+            &RandomConnectionIdGenerator::new(SERVER_CID.len() + 1)
         )
         .is_err());
     }
@@ -990,14 +1019,14 @@ mod tests {
             &ConnectionId::from(SERVER_CID),
             &ConnectionId::from(CLIENT_CID),
         );
-        builder.pn(0, 1);
+        builder.pn(0, 1).unwrap();
         builder.encode(&[0; 3]);
         let encoder = builder.build(&mut prot).expect("build");
         assert_eq!(encoder.len(), 45);
         let first = encoder.clone();
 
         let mut builder = PacketBuilder::short(encoder, false, &ConnectionId::from(SERVER_CID));
-        builder.pn(1, 3);
+        builder.pn(1, 3).unwrap();
         builder.encode(&[0]); // Minimal size (packet number is big enough).
         let encoder = builder.build(&mut prot).expect("build");
         assert_eq!(
@@ -1024,7 +1053,7 @@ mod tests {
             &ConnectionId::from(&[][..]),
             &ConnectionId::from(&[][..]),
         );
-        builder.pn(0, 1);
+        builder.pn(0, 1).unwrap();
         builder.encode(&[1, 2, 3]);
         let packet = builder.build(&mut CryptoDxState::test_default()).unwrap();
         assert_eq!(&packet[..], EXPECTED);
@@ -1043,7 +1072,7 @@ mod tests {
                 &ConnectionId::from(&[][..]),
                 &ConnectionId::from(&[][..]),
             );
-            builder.pn(0, 1);
+            builder.pn(0, 1).unwrap();
             builder.scramble(true);
             if (builder[0] & PACKET_BIT_FIXED_QUIC) == 0 {
                 found_unset = true;
@@ -1064,8 +1093,8 @@ mod tests {
             &ConnectionId::from(&[][..]),
             &ConnectionId::from(SERVER_CID),
         );
-        builder.initial_token(&[]);
-        builder.pn(1, 2);
+        builder.initial_token(&[]).unwrap();
+        builder.pn(1, 2).unwrap();
         let encoder = builder.abort();
         assert!(encoder.is_empty());
     }
@@ -1175,7 +1204,7 @@ mod tests {
     fn decode_retry(quic_version: QuicVersion, sample_retry: &[u8]) {
         fixture_init();
         let (packet, remainder) =
-            PublicPacket::decode(sample_retry, &FixedConnectionIdManager::new(5)).unwrap();
+            PublicPacket::decode(sample_retry, &RandomConnectionIdGenerator::new(5)).unwrap();
         assert!(packet.is_valid_retry(&ConnectionId::from(CLIENT_CID)));
         assert_eq!(Some(quic_version), packet.quic_version);
         assert!(packet.dcid().is_empty());
@@ -1218,7 +1247,7 @@ mod tests {
     #[test]
     fn invalid_retry() {
         fixture_init();
-        let cid_mgr = FixedConnectionIdManager::new(5);
+        let cid_mgr = RandomConnectionIdGenerator::new(5);
         let odcid = ConnectionId::from(CLIENT_CID);
 
         assert!(PublicPacket::decode(&[], &cid_mgr).is_err());
@@ -1270,7 +1299,7 @@ mod tests {
     #[test]
     fn parse_vn() {
         let (packet, remainder) =
-            PublicPacket::decode(SAMPLE_VN, &FixedConnectionIdManager::new(5)).unwrap();
+            PublicPacket::decode(SAMPLE_VN, &EmptyConnectionIdGenerator::default()).unwrap();
         assert!(remainder.is_empty());
         assert_eq!(&packet.dcid[..], SERVER_CID);
         assert!(packet.scid.is_some());
@@ -1291,7 +1320,7 @@ mod tests {
         enc.encode_uint(4, 0x5a6a_7a8a_u64);
 
         let (packet, remainder) =
-            PublicPacket::decode(&enc, &FixedConnectionIdManager::new(5)).unwrap();
+            PublicPacket::decode(&enc, &EmptyConnectionIdGenerator::default()).unwrap();
         assert!(remainder.is_empty());
         assert_eq!(&packet.dcid[..], BIG_DCID);
         assert!(packet.scid.is_some());
@@ -1327,7 +1356,7 @@ mod tests {
         ];
         fixture_init();
         let (packet, slice) =
-            PublicPacket::decode(PACKET, &FixedConnectionIdManager::new(0)).unwrap();
+            PublicPacket::decode(PACKET, &EmptyConnectionIdGenerator::default()).unwrap();
         assert!(slice.is_empty());
         let decrypted = packet
             .decrypt(&mut CryptoStates::test_chacha(), now())
