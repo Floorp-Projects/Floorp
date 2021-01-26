@@ -126,7 +126,7 @@ function wiener_filter_h_16bpc_neon, export=1
 
         tst             w7,  #2 // LR_HAVE_RIGHT
         b.ne            4f
-        // If we'll need to pad the right edge, load that byte to pad with
+        // If we'll need to pad the right edge, load that pixel to pad with
         // here since we can find it pretty easily from here.
         sub             w9,  w5,  #14
         ldr             h27, [x2,  w9, sxtw #1]
@@ -143,12 +143,6 @@ function wiener_filter_h_16bpc_neon, export=1
         b               6f
 
 4:      // Loop horizontally
-.macro ushll_sz d0, d1, src, shift, wd
-        ushll           \d0\().4s,  \src\().4h,  \shift
-.ifc \wd, .8h
-        ushll2          \d1\().4s,  \src\().8h,  \shift
-.endif
-.endm
 .macro add_sz d0, d1, s0, s1, c, wd
         add             \d0\().4s,  \s0\().4s,   \c\().4s
 .ifc \wd, .8h
@@ -172,14 +166,13 @@ function wiener_filter_h_16bpc_neon, export=1
         // Interleaving the mul/mla chains actually hurts performance
         // significantly on Cortex A53, thus keeping mul/mla tightly
         // chained like this.
-        ext             v18.16b, v2.16b,  v3.16b, #6
         ext             v16.16b, v2.16b,  v3.16b, #2
         ext             v17.16b, v2.16b,  v3.16b, #4
+        ext             v18.16b, v2.16b,  v3.16b, #6
         ext             v19.16b, v2.16b,  v3.16b, #8
         ext             v20.16b, v2.16b,  v3.16b, #10
-        ushll_sz        v6,  v7,  v18, #7, \wd
         ext             v21.16b, v2.16b,  v3.16b, #12
-        smlal           v6.4s,   v2.4h,   v0.h[0]
+        smull           v6.4s,   v2.4h,   v0.h[0]
         smlal           v6.4s,   v16.4h,  v0.h[1]
         smlal           v6.4s,   v17.4h,  v0.h[2]
         smlal           v6.4s,   v18.4h,  v0.h[3]
@@ -187,7 +180,7 @@ function wiener_filter_h_16bpc_neon, export=1
         smlal           v6.4s,   v20.4h,  v0.h[5]
         smlal           v6.4s,   v21.4h,  v0.h[6]
 .ifc \wd, .8h
-        smlal2          v7.4s,   v2.8h,   v0.h[0]
+        smull2          v7.4s,   v2.8h,   v0.h[0]
         smlal2          v7.4s,   v16.8h,  v0.h[1]
         smlal2          v7.4s,   v17.8h,  v0.h[2]
         smlal2          v7.4s,   v18.8h,  v0.h[3]
@@ -195,14 +188,13 @@ function wiener_filter_h_16bpc_neon, export=1
         smlal2          v7.4s,   v20.8h,  v0.h[5]
         smlal2          v7.4s,   v21.8h,  v0.h[6]
 .endif
-        ext             v21.16b, v4.16b,  v5.16b, #6
         ext             v19.16b, v4.16b,  v5.16b, #2
         ext             v20.16b, v4.16b,  v5.16b, #4
+        ext             v21.16b, v4.16b,  v5.16b, #6
         ext             v22.16b, v4.16b,  v5.16b, #8
         ext             v23.16b, v4.16b,  v5.16b, #10
-        ushll_sz        v16, v17, v21, #7, \wd
         ext             v24.16b, v4.16b,  v5.16b, #12
-        smlal           v16.4s,  v4.4h,   v0.h[0]
+        smull           v16.4s,  v4.4h,   v0.h[0]
         smlal           v16.4s,  v19.4h,  v0.h[1]
         smlal           v16.4s,  v20.4h,  v0.h[2]
         smlal           v16.4s,  v21.4h,  v0.h[3]
@@ -210,7 +202,7 @@ function wiener_filter_h_16bpc_neon, export=1
         smlal           v16.4s,  v23.4h,  v0.h[5]
         smlal           v16.4s,  v24.4h,  v0.h[6]
 .ifc \wd, .8h
-        smlal2          v17.4s,  v4.8h,   v0.h[0]
+        smull2          v17.4s,  v4.8h,   v0.h[0]
         smlal2          v17.4s,  v19.8h,  v0.h[1]
         smlal2          v17.4s,  v20.8h,  v0.h[2]
         smlal2          v17.4s,  v21.8h,  v0.h[3]
@@ -329,13 +321,9 @@ L(variable_shift_tbl):
         add             v16.4s,  v16.4s,  v17.4s
         addv            s6,      v6.4s
         addv            s7,      v16.4s
-        dup             v16.4h,  v2.h[3]
-        ins             v16.h[1], v4.h[3]
         ins             v6.s[1], v7.s[0]
         mvni            v24.4h,  #0x80, lsl #8 // 0x7fff = (1 << 15) - 1
-        ushll           v16.4s,  v16.4h,  #7
         add             v6.2s,   v6.2s,   v30.2s
-        add             v6.2s,   v6.2s,   v16.2s
         srshl           v6.2s,   v6.2s,   v29.2s
         sqxtun          v6.4h,   v6.4s
         umin            v6.4h,   v6.4h,   v24.4h
@@ -371,9 +359,7 @@ function wiener_filter_v_16bpc_neon, export=1
         ld1             {v0.8h},  [x5]
         dup             v31.8h,  w8
         clz             w8,  w8
-        movi            v1.8h,   #128
         sub             w8,  w8,  #11   // round_bits_v
-        add             v1.8h,   v1.8h,   v0.8h
         dup             v30.4s,  w8
         mov             w8,  w4
         neg             v30.4s,  v30.4s // -round_bits_v
@@ -421,14 +407,14 @@ function wiener_filter_v_16bpc_neon, export=1
         smull           v2.4s,  v16.4h,  v0.h[0]
         smlal           v2.4s,  v17.4h,  v0.h[1]
         smlal           v2.4s,  v18.4h,  v0.h[2]
-        smlal           v2.4s,  v19.4h,  v1.h[3]
+        smlal           v2.4s,  v19.4h,  v0.h[3]
         smlal           v2.4s,  v20.4h,  v0.h[4]
         smlal           v2.4s,  v21.4h,  v0.h[5]
         smlal           v2.4s,  v22.4h,  v0.h[6]
         smull2          v3.4s,  v16.8h,  v0.h[0]
         smlal2          v3.4s,  v17.8h,  v0.h[1]
         smlal2          v3.4s,  v18.8h,  v0.h[2]
-        smlal2          v3.4s,  v19.8h,  v1.h[3]
+        smlal2          v3.4s,  v19.8h,  v0.h[3]
         smlal2          v3.4s,  v20.8h,  v0.h[4]
         smlal2          v3.4s,  v21.8h,  v0.h[5]
         smlal2          v3.4s,  v22.8h,  v0.h[6]
@@ -770,16 +756,9 @@ function sgr_box3_h_16bpc_neon, export=1
         ext             v16.16b, v18.16b, v16.16b, #12
 
 2:
-        umull           v2.4s,   v0.4h,   v0.4h
-        umull2          v3.4s,   v0.8h,   v0.8h
-        umull           v4.4s,   v1.4h,   v1.4h
-        umull           v18.4s,  v16.4h,  v16.4h
-        umull2          v19.4s,  v16.8h,  v16.8h
-        umull           v20.4s,  v17.4h,  v17.4h
-
         tst             w7,  #2 // LR_HAVE_RIGHT
         b.ne            4f
-        // If we'll need to pad the right edge, load that byte to pad with
+        // If we'll need to pad the right edge, load that pixel to pad with
         // here since we can find it pretty easily from here.
         sub             w13, w5, #(2 + 16 - 2 + 1)
         ldr             h30, [x3,  w13, sxtw #1]
@@ -796,40 +775,32 @@ function sgr_box3_h_16bpc_neon, export=1
         b               6f
 
 4:      // Loop horizontally
-.macro ext_n            dst1, dst2, src1, src2, src3, n, w
-        ext             \dst1,  \src1,  \src2,  \n
-.if \w > 4
-        ext             \dst2,  \src2,  \src3,  \n
-.endif
-.endm
-.macro add_n            dst1, dst2, src1, src2, src3, src4, w
-        add             \dst1,  \src1,  \src3
-.if \w > 4
-        add             \dst2,  \src2,  \src4
-.endif
-.endm
-
 .macro add3 w, wd
-        ext             v24.16b, v0.16b,  v1.16b,  #2
-        ext             v25.16b, v0.16b,  v1.16b,  #4
-        ext             v26.16b, v16.16b, v17.16b, #2
-        ext             v27.16b, v16.16b, v17.16b, #4
-        add             v6\wd,   v0\wd,   v24\wd
-        add             v7\wd,   v16\wd,  v26\wd
-        add             v6\wd,   v6\wd,   v25\wd
-        add             v7\wd,   v7\wd,   v27\wd
+        ext             v26.16b, v0.16b,  v1.16b,  #2
+        ext             v28.16b, v16.16b, v17.16b, #2
+        ext             v27.16b, v0.16b,  v1.16b,  #4
+        ext             v29.16b, v16.16b, v17.16b, #4
 
-        ext_n           v24.16b, v25.16b, v2.16b,  v3.16b,  v4.16b,  #4, \w
-        ext_n           v26.16b, v27.16b, v2.16b,  v3.16b,  v4.16b,  #8, \w
-
-        add_n           v22.4s,  v23.4s,  v2.4s,   v3.4s,   v24.4s,  v25.4s,  \w
-        add_n           v22.4s,  v23.4s,  v22.4s,  v23.4s,  v26.4s,  v27.4s,  \w
-
-        ext_n           v24.16b, v25.16b, v18.16b, v19.16b, v20.16b, #4, \w
-        ext_n           v26.16b, v27.16b, v18.16b, v19.16b, v20.16b, #8, \w
-
-        add_n           v24.4s,  v25.4s,  v18.4s,  v19.4s,  v24.4s,  v25.4s,  \w
-        add_n           v24.4s,  v25.4s,  v24.4s,  v25.4s,  v26.4s,  v27.4s,  \w
+        add             v6\wd,   v0\wd,   v26\wd
+        umull           v22.4s,  v0.4h,   v0.4h
+        umlal           v22.4s,  v26.4h,  v26.4h
+        umlal           v22.4s,  v27.4h,  v27.4h
+        add             v7\wd,   v16\wd,  v28\wd
+        umull           v24.4s,  v16.4h,  v16.4h
+        umlal           v24.4s,  v28.4h,  v28.4h
+        umlal           v24.4s,  v29.4h,  v29.4h
+        add             v6\wd,   v6\wd,   v27\wd
+.if \w > 4
+        umull2          v23.4s,  v0.8h,   v0.8h
+        umlal2          v23.4s,  v26.8h,  v26.8h
+        umlal2          v23.4s,  v27.8h,  v27.8h
+.endif
+        add             v7\wd,   v7\wd,   v29\wd
+.if \w > 4
+        umull2          v25.4s,  v16.8h,  v16.8h
+        umlal2          v25.4s,  v28.8h,  v28.8h
+        umlal2          v25.4s,  v29.8h,  v29.8h
+.endif
 .endm
         add3            8, .8h
         st1             {v6.8h},         [x1],  #16
@@ -844,12 +815,6 @@ function sgr_box3_h_16bpc_neon, export=1
         mov             v16.16b, v17.16b
         ld1             {v1.8h},  [x3],  #16
         ld1             {v17.8h}, [x12], #16
-        mov             v2.16b,  v4.16b
-        umull2          v3.4s,   v0.8h,   v0.8h
-        umull           v4.4s,   v1.4h,   v1.4h
-        mov             v18.16b, v20.16b
-        umull2          v19.4s,  v16.8h,  v16.8h
-        umull           v20.4s,  v17.4h,  v17.4h
 
         b.ne            4b // If we don't need to pad, just keep summing.
         b               3b // If we need to pad, check how many pixels we have left.
@@ -907,11 +872,6 @@ L(box3_variable_shift_tbl):
         .hword L(box3_variable_shift_tbl) - 55b
 
 88:
-        umull           v2.4s,   v0.4h,   v0.4h
-        umull2          v3.4s,   v0.8h,   v0.8h
-        umull           v18.4s,  v16.4h,  v16.4h
-        umull2          v19.4s,  v16.8h,  v16.8h
-
         add3            4, .4h
         subs            w5,  w5,  #4
         st1             {v6.4h},  [x1],  #8
@@ -921,10 +881,6 @@ L(box3_variable_shift_tbl):
         b.le            9f
         ext             v0.16b,  v0.16b,  v0.16b,  #8
         ext             v16.16b, v16.16b, v16.16b, #8
-        mov             v2.16b,  v3.16b
-        mov             v3.16b,  v4.16b
-        mov             v18.16b, v19.16b
-        mov             v19.16b, v20.16b
         // Only one needed pixel left, but do a normal 4 pixel
         // addition anyway
         add3            4, .4h
@@ -1026,7 +982,7 @@ function sgr_box5_h_16bpc_neon, export=1
         // and shift v0/v1 to have 3x the first pixel at the front.
         dup             v2.8h,  v0.h[0]
         dup             v18.8h, v16.h[0]
-        // Move x3 back to account for the last 6 bytes we loaded before,
+        // Move x3 back to account for the last 3 pixels we loaded before,
         // which we shifted out.
         sub             x3,  x3,  #6
         sub             x12, x12, #6
@@ -1036,16 +992,9 @@ function sgr_box5_h_16bpc_neon, export=1
         ext             v16.16b, v18.16b, v16.16b, #10
 
 2:
-        umull           v2.4s,   v0.4h,   v0.4h
-        umull2          v3.4s,   v0.8h,   v0.8h
-        umull           v4.4s,   v1.4h,   v1.4h
-        umull           v18.4s,  v16.4h,  v16.4h
-        umull2          v19.4s,  v16.8h,  v16.8h
-        umull           v20.4s,  v17.4h,  v17.4h
-
         tst             w7,  #2 // LR_HAVE_RIGHT
         b.ne            4f
-        // If we'll need to pad the right edge, load that byte to pad with
+        // If we'll need to pad the right edge, load that pixel to pad with
         // here since we can find it pretty easily from here.
         sub             w13, w5, #(2 + 16 - 3 + 1)
         ldr             h30, [x3,  w13, sxtw #1]
@@ -1063,43 +1012,53 @@ function sgr_box5_h_16bpc_neon, export=1
 
 4:      // Loop horizontally
 .macro add5 w, wd
-        ext             v24.16b, v0.16b,  v1.16b,  #2
-        ext             v25.16b, v0.16b,  v1.16b,  #4
-        ext             v26.16b, v0.16b,  v1.16b,  #6
-        ext             v27.16b, v0.16b,  v1.16b,  #8
+        ext             v26.16b, v0.16b,  v1.16b,  #2
+        ext             v28.16b, v16.16b, v17.16b, #2
+        ext             v27.16b, v0.16b,  v1.16b,  #4
+        ext             v29.16b, v16.16b, v17.16b, #4
 
-        add             v6\wd,   v0\wd,   v24\wd
-        add             v25\wd,  v25\wd,  v26\wd
+        add             v6\wd,   v0\wd,   v26\wd
+        umull           v22.4s,  v0.4h,   v0.4h
+        umlal           v22.4s,  v26.4h,  v26.4h
+        umlal           v22.4s,  v27.4h,  v27.4h
+        add             v7\wd,   v16\wd,  v28\wd
+        umull           v24.4s,  v16.4h,  v16.4h
+        umlal           v24.4s,  v28.4h,  v28.4h
+        umlal           v24.4s,  v29.4h,  v29.4h
         add             v6\wd,   v6\wd,   v27\wd
+.if \w > 4
+        umull2          v23.4s,  v0.8h,   v0.8h
+        umlal2          v23.4s,  v26.8h,  v26.8h
+        umlal2          v23.4s,  v27.8h,  v27.8h
+.endif
+        add             v7\wd,   v7\wd,   v29\wd
+.if \w > 4
+        umull2          v25.4s,  v16.8h,  v16.8h
+        umlal2          v25.4s,  v28.8h,  v28.8h
+        umlal2          v25.4s,  v29.8h,  v29.8h
+.endif
 
-        ext             v26.16b, v16.16b, v17.16b, #2
-        ext             v27.16b, v16.16b, v17.16b, #4
+        ext             v26.16b, v0.16b,  v1.16b,  #6
         ext             v28.16b, v16.16b, v17.16b, #6
+        ext             v27.16b, v0.16b,  v1.16b,  #8
         ext             v29.16b, v16.16b, v17.16b, #8
 
-        add             v7\wd,   v16\wd,  v26\wd
-        add             v27\wd,  v27\wd,  v28\wd
+        add             v6\wd,   v6\wd,   v26\wd
+        umlal           v22.4s,  v26.4h,  v26.4h
+        umlal           v22.4s,  v27.4h,  v27.4h
+        add             v7\wd,   v7\wd,   v28\wd
+        umlal           v24.4s,  v28.4h,  v28.4h
+        umlal           v24.4s,  v29.4h,  v29.4h
+        add             v6\wd,   v6\wd,   v27\wd
+.if \w > 4
+        umlal2          v23.4s,  v26.8h,  v26.8h
+        umlal2          v23.4s,  v27.8h,  v27.8h
+.endif
         add             v7\wd,   v7\wd,   v29\wd
-        add             v6\wd,   v6\wd,   v25\wd
-        add             v7\wd,   v7\wd,   v27\wd
-
-        ext_n           v24.16b, v25.16b, v2.16b,  v3.16b,  v4.16b,  #4,  \w
-        ext_n           v26.16b, v27.16b, v2.16b,  v3.16b,  v4.16b,  #8,  \w
-        ext_n           v28.16b, v29.16b, v2.16b,  v3.16b,  v4.16b,  #12, \w
-
-        add_n           v22.4s,  v23.4s,  v2.4s,   v3.4s,   v24.4s,  v25.4s,  \w
-        add_n           v26.4s,  v27.4s,  v26.4s,  v27.4s,  v28.4s,  v29.4s,  \w
-        add_n           v22.4s,  v23.4s,  v22.4s,  v23.4s,  v3.4s,   v4.4s,   \w
-        add_n           v22.4s,  v23.4s,  v22.4s,  v23.4s,  v26.4s,  v27.4s,  \w
-
-        ext_n           v24.16b, v25.16b, v18.16b, v19.16b, v20.16b, #4,  \w
-        ext_n           v26.16b, v27.16b, v18.16b, v19.16b, v20.16b, #8,  \w
-        ext_n           v28.16b, v29.16b, v18.16b, v19.16b, v20.16b, #12, \w
-
-        add_n           v24.4s,  v25.4s,  v18.4s,  v19.4s,  v24.4s,  v25.4s,  \w
-        add_n           v26.4s,  v27.4s,  v26.4s,  v27.4s,  v28.4s,  v29.4s,  \w
-        add_n           v24.4s,  v25.4s,  v24.4s,  v25.4s,  v19.4s,  v20.4s,  \w
-        add_n           v24.4s,  v25.4s,  v24.4s,  v25.4s,  v26.4s,  v27.4s,  \w
+.if \w > 4
+        umlal2          v25.4s,  v28.8h,  v28.8h
+        umlal2          v25.4s,  v29.8h,  v29.8h
+.endif
 .endm
         add5            8, .8h
         st1             {v6.8h},         [x1],  #16
@@ -1114,12 +1073,6 @@ function sgr_box5_h_16bpc_neon, export=1
         mov             v16.16b, v17.16b
         ld1             {v1.8h},  [x3],  #16
         ld1             {v17.8h}, [x12], #16
-        mov             v2.16b,  v4.16b
-        umull2          v3.4s,   v0.8h,   v0.8h
-        umull           v4.4s,   v1.4h,   v1.4h
-        mov             v18.16b, v20.16b
-        umull2          v19.4s,  v16.8h,  v16.8h
-        umull           v20.4s,  v17.4h,  v17.4h
 
         b.ne            4b // If we don't need to pad, just keep summing.
         b               3b // If we need to pad, check how many pixels we have left.
@@ -1193,13 +1146,6 @@ L(box5_variable_shift_tbl):
         .hword L(box5_variable_shift_tbl) - 77b
 
 88:
-        umull           v2.4s,   v0.4h,   v0.4h
-        umull2          v3.4s,   v0.8h,   v0.8h
-        umull           v4.4s,   v1.4h,   v1.4h
-        umull           v18.4s,  v16.4h,  v16.4h
-        umull2          v19.4s,  v16.8h,  v16.8h
-        umull           v20.4s,  v17.4h,  v17.4h
-
         add5            4, .4h
         subs            w5,  w5,  #4
         st1             {v6.4h},  [x1],  #8
@@ -1209,10 +1155,6 @@ L(box5_variable_shift_tbl):
         b.le            9f
         ext             v0.16b,  v0.16b,  v1.16b,  #8
         ext             v16.16b, v16.16b, v17.16b, #8
-        mov             v2.16b,  v3.16b
-        mov             v3.16b,  v4.16b
-        mov             v18.16b, v19.16b
-        mov             v19.16b, v20.16b
         add5            4, .4h
         st1             {v6.4h},  [x1],  #8
         st1             {v7.4h},  [x11], #8

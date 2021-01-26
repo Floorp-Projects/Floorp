@@ -45,12 +45,11 @@
 // 1 << (bitdepth + 6 - round_bits_h).
 void BF(dav1d_wiener_filter_h, neon)(int16_t *dst, const pixel (*left)[4],
                                      const pixel *src, ptrdiff_t stride,
-                                     const int16_t fh[7], const intptr_t w,
+                                     const int16_t fh[8], intptr_t w,
                                      int h, enum LrEdgeFlags edges
                                      HIGHBD_DECL_SUFFIX);
 // This calculates things slightly differently than the reference C version.
 // This version calculates roughly this:
-// fv[3] += 128;
 // int32_t sum = 0;
 // for (int i = 0; i < 7; i++)
 //     sum += mid[idx] * fv[i];
@@ -58,7 +57,7 @@ void BF(dav1d_wiener_filter_h, neon)(int16_t *dst, const pixel (*left)[4],
 // This function assumes that the width is a multiple of 8.
 void BF(dav1d_wiener_filter_v, neon)(pixel *dst, ptrdiff_t stride,
                                      const int16_t *mid, int w, int h,
-                                     const int16_t fv[7], enum LrEdgeFlags edges,
+                                     const int16_t fv[8], enum LrEdgeFlags edges,
                                      ptrdiff_t mid_stride HIGHBD_DECL_SUFFIX);
 void BF(dav1d_copy_narrow, neon)(pixel *dst, ptrdiff_t stride,
                                  const pixel *src, int w, int h);
@@ -66,29 +65,30 @@ void BF(dav1d_copy_narrow, neon)(pixel *dst, ptrdiff_t stride,
 static void wiener_filter_neon(pixel *const dst, const ptrdiff_t dst_stride,
                                const pixel (*const left)[4],
                                const pixel *lpf, const ptrdiff_t lpf_stride,
-                               const int w, const int h, const int16_t fh[7],
-                               const int16_t fv[7], const enum LrEdgeFlags edges
-                               HIGHBD_DECL_SUFFIX)
+                               const int w, const int h,
+                               const int16_t filter[2][8],
+                               const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
     ALIGN_STK_16(int16_t, mid, 68 * 384,);
     int mid_stride = (w + 7) & ~7;
 
     // Horizontal filter
     BF(dav1d_wiener_filter_h, neon)(&mid[2 * mid_stride], left, dst, dst_stride,
-                                    fh, w, h, edges HIGHBD_TAIL_SUFFIX);
+                                    filter[0], w, h, edges HIGHBD_TAIL_SUFFIX);
     if (edges & LR_HAVE_TOP)
         BF(dav1d_wiener_filter_h, neon)(mid, NULL, lpf, lpf_stride,
-                                        fh, w, 2, edges HIGHBD_TAIL_SUFFIX);
+                                        filter[0], w, 2, edges
+                                        HIGHBD_TAIL_SUFFIX);
     if (edges & LR_HAVE_BOTTOM)
         BF(dav1d_wiener_filter_h, neon)(&mid[(2 + h) * mid_stride], NULL,
                                         lpf + 6 * PXSTRIDE(lpf_stride),
-                                        lpf_stride, fh, w, 2, edges
+                                        lpf_stride, filter[0], w, 2, edges
                                         HIGHBD_TAIL_SUFFIX);
 
     // Vertical filter
     if (w >= 8)
         BF(dav1d_wiener_filter_v, neon)(dst, dst_stride, &mid[2*mid_stride],
-                                        w & ~7, h, fv, edges,
+                                        w & ~7, h, filter[1], edges,
                                         mid_stride * sizeof(*mid)
                                         HIGHBD_TAIL_SUFFIX);
     if (w & 7) {
@@ -97,14 +97,13 @@ static void wiener_filter_neon(pixel *const dst, const ptrdiff_t dst_stride,
         ALIGN_STK_16(pixel, tmp, 64 * 8,);
         BF(dav1d_wiener_filter_v, neon)(tmp, (w & 7) * sizeof(pixel),
                                         &mid[2*mid_stride + (w & ~7)],
-                                        w & 7, h, fv, edges,
+                                        w & 7, h, filter[1], edges,
                                         mid_stride * sizeof(*mid)
                                         HIGHBD_TAIL_SUFFIX);
         BF(dav1d_copy_narrow, neon)(dst + (w & ~7), dst_stride, tmp, w & 7, h);
     }
 }
 
-#if BITDEPTH == 8 || ARCH_AARCH64
 void BF(dav1d_sgr_box3_h, neon)(int32_t *sumsq, int16_t *sum,
                                 const pixel (*left)[4],
                                 const pixel *src, const ptrdiff_t stride,
@@ -283,16 +282,13 @@ static void sgr_filter_neon(pixel *const dst, const ptrdiff_t dst_stride,
         }
     }
 }
-#endif // BITDEPTH == 8
 
 COLD void bitfn(dav1d_loop_restoration_dsp_init_arm)(Dav1dLoopRestorationDSPContext *const c, int bpc) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-    c->wiener = wiener_filter_neon;
-#if BITDEPTH == 8 || ARCH_AARCH64
+    c->wiener[0] = c->wiener[1] = wiener_filter_neon;
     if (bpc <= 10)
         c->selfguided = sgr_filter_neon;
-#endif
 }

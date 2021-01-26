@@ -454,7 +454,7 @@ endfunc
 //                                    const pixel *src, const ptrdiff_t src_stride,
 //                                    const int16_t *t1, const int16_t *t2,
 //                                    const int w, const int h,
-//                                    const int16_t wt[2]);
+//                                    const int16_t wt[2], const int bitdepth_max);
 function sgr_weighted2_\bpc\()bpc_neon, export=1
 .if \bpc == 8
         ldr             x8,  [sp]

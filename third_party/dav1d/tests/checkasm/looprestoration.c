@@ -27,11 +27,16 @@
 
 #include "tests/checkasm/checkasm.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "src/levels.h"
 #include "src/looprestoration.h"
 #include "src/tables.h"
+
+static int to_binary(int x) { /* 0-15 -> 0000-1111 */
+    return (x & 1) + 5 * (x & 2) + 25 * (x & 4) + 125 * (x & 8);
+}
 
 static void init_tmp(pixel *buf, const ptrdiff_t stride,
                      const int w, const int h, const int bitdepth_max)
@@ -47,37 +52,29 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc)
     ALIGN_STK_64(pixel, c_dst, 448 * 64,);
     ALIGN_STK_64(pixel, a_dst, 448 * 64,);
     ALIGN_STK_64(pixel, h_edge, 448 * 8,);
+    ALIGN_STK_16(int16_t, filter, 2, [8]);
     pixel left[64][4];
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride,
                  const pixel (*const left)[4],
                  const pixel *lpf, ptrdiff_t lpf_stride,
-                 int w, int h, const int16_t filterh[7],
-                 const int16_t filterv[7], enum LrEdgeFlags edges
-                 HIGHBD_DECL_SUFFIX);
+                 int w, int h, const int16_t filter[2][8],
+                 enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX);
 
-    for (int pl = 0; pl < 2; pl++) {
-        if (check_func(c->wiener, "wiener_%s_%dbpc",
-                       pl ? "chroma" : "luma", bpc))
-        {
-            int16_t filter[2][3], filter_v[7], filter_h[7];
+    for (int t = 0; t < 2; t++) {
+        if (check_func(c->wiener[t], "wiener_%dtap_%dbpc", t ? 5 : 7, bpc)) {
+            filter[0][0] = filter[0][6] = t ? 0 : (rnd() & 15) - 5;
+            filter[0][1] = filter[0][5] = (rnd() & 31) - 23;
+            filter[0][2] = filter[0][4] = (rnd() & 63) - 17;
+            filter[0][3] = -(filter[0][0] + filter[0][1] + filter[0][2]) * 2;
+#if BITDEPTH != 8
+            filter[0][3] += 128;
+#endif
 
-            filter[0][0] = pl ? 0 : (rnd() & 15) - 5;
-            filter[0][1] = (rnd() & 31) - 23;
-            filter[0][2] = (rnd() & 63) - 17;
-            filter[1][0] = pl ? 0 : (rnd() & 15) - 5;
-            filter[1][1] = (rnd() & 31) - 23;
-            filter[1][2] = (rnd() & 63) - 17;
-
-            filter_h[0] = filter_h[6] = filter[0][0];
-            filter_h[1] = filter_h[5] = filter[0][1];
-            filter_h[2] = filter_h[4] = filter[0][2];
-            filter_h[3] = -((filter_h[0] + filter_h[1] + filter_h[2]) * 2);
-
-            filter_v[0] = filter_v[6] = filter[1][0];
-            filter_v[1] = filter_v[5] = filter[1][1];
-            filter_v[2] = filter_v[4] = filter[1][2];
-            filter_v[3] = -((filter_v[0] + filter_v[1] + filter_v[2]) * 2);
+            filter[1][0] = filter[1][6] = t ? 0 : (rnd() & 15) - 5;
+            filter[1][1] = filter[1][5] = (rnd() & 31) - 23;
+            filter[1][2] = filter[1][4] = (rnd() & 63) - 17;
+            filter[1][3] = 128 - (filter[1][0] + filter[1][1] + filter[1][2]) * 2;
 
             const int base_w = 1 + (rnd() % 384);
             const int base_h = 1 + (rnd() & 63);
@@ -95,17 +92,22 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc)
 
                 call_ref(c_dst + 32, 448 * sizeof(pixel), left,
                          h_edge + 32, 448 * sizeof(pixel),
-                         w, h, filter_h, filter_v, edges HIGHBD_TAIL_SUFFIX);
+                         w, h, filter, edges HIGHBD_TAIL_SUFFIX);
                 call_new(a_dst + 32, 448 * sizeof(pixel), left,
                          h_edge + 32, 448 * sizeof(pixel),
-                         w, h, filter_h, filter_v, edges HIGHBD_TAIL_SUFFIX);
-                checkasm_check_pixel(c_dst + 32, 448 * sizeof(pixel),
-                                     a_dst + 32, 448 * sizeof(pixel),
-                                     w, h, "dst");
+                         w, h, filter, edges HIGHBD_TAIL_SUFFIX);
+                if (checkasm_check_pixel(c_dst + 32, 448 * sizeof(pixel),
+                                         a_dst + 32, 448 * sizeof(pixel),
+                                         w, h, "dst"))
+                {
+                    fprintf(stderr, "size = %dx%d, edges = %04d\n",
+                            w, h, to_binary(edges));
+                    break;
+                }
             }
             bench_new(a_dst + 32, 448 * sizeof(pixel), left,
                       h_edge + 32, 448 * sizeof(pixel),
-                      256, 64, filter_h, filter_v, 0xf HIGHBD_TAIL_SUFFIX);
+                      256, 64, filter, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }
 }

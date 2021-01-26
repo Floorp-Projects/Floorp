@@ -909,12 +909,11 @@ function blend_v_16bpc_neon, export=1
         b.gt            8b
         ret
 160:
-        ld1             {v16.8b, v17.8b}, [x5]
+        ld1             {v16.16b}, [x5]
         sub             x1,  x1,  #16
-        neg             v16.8b,  v16.8b           // -m
-        neg             v17.8b,  v17.8b
-        sxtl            v16.8h,  v16.8b
-        sxtl            v17.8h,  v17.8b
+        neg             v17.16b, v16.16b          // -m
+        sxtl            v16.8h,  v17.8b
+        sxtl2           v17.8h,  v17.16b
         shl             v16.8h,  v16.8h,  #9      // -m << 9
         shl             v17.4h,  v17.4h,  #9
 16:

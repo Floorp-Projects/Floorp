@@ -46,11 +46,14 @@ typedef struct Dav1dMemPoolBuffer {
 typedef struct Dav1dMemPool {
     pthread_mutex_t lock;
     Dav1dMemPoolBuffer *buf;
+    int ref_cnt;
+    int end;
 } Dav1dMemPool;
 
 void dav1d_mem_pool_push(Dav1dMemPool *pool, Dav1dMemPoolBuffer *buf);
 Dav1dMemPoolBuffer *dav1d_mem_pool_pop(Dav1dMemPool *pool, size_t size);
-void dav1d_mem_pool_destroy(Dav1dMemPool *pool);
+int dav1d_mem_pool_init(Dav1dMemPool **pool);
+void dav1d_mem_pool_end(Dav1dMemPool *pool);
 
 /*
  * Allocate align-byte aligned memory. The return value can be released

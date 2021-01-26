@@ -30,7 +30,7 @@
 
 // void dav1d_wiener_filter_h_8bpc_neon(int16_t *dst, const pixel (*left)[4],
 //                                      const pixel *src, ptrdiff_t stride,
-//                                      const int16_t fh[7], const intptr_t w,
+//                                      const int16_t fh[8], intptr_t w,
 //                                      int h, enum LrEdgeFlags edges);
 function wiener_filter_h_8bpc_neon, export=1
         mov             w8,  w5
@@ -308,13 +308,11 @@ endfunc
 
 // void dav1d_wiener_filter_v_8bpc_neon(pixel *dst, ptrdiff_t stride,
 //                                      const int16_t *mid, int w, int h,
-//                                      const int16_t fv[7], enum LrEdgeFlags edges,
+//                                      const int16_t fv[8], enum LrEdgeFlags edges,
 //                                      ptrdiff_t mid_stride);
 function wiener_filter_v_8bpc_neon, export=1
         mov             w8,  w4
         ld1             {v0.8h},  [x5]
-        movi            v1.8h, #128
-        add             v1.8h,  v1.8h,  v0.8h
 
         // Calculate the number of rows to move back when looping vertically
         mov             w11, w4
@@ -359,14 +357,14 @@ function wiener_filter_v_8bpc_neon, export=1
         smull           v2.4s,  v16.4h,  v0.h[0]
         smlal           v2.4s,  v17.4h,  v0.h[1]
         smlal           v2.4s,  v18.4h,  v0.h[2]
-        smlal           v2.4s,  v19.4h,  v1.h[3]
+        smlal           v2.4s,  v19.4h,  v0.h[3]
         smlal           v2.4s,  v20.4h,  v0.h[4]
         smlal           v2.4s,  v21.4h,  v0.h[5]
         smlal           v2.4s,  v22.4h,  v0.h[6]
         smull2          v3.4s,  v16.8h,  v0.h[0]
         smlal2          v3.4s,  v17.8h,  v0.h[1]
         smlal2          v3.4s,  v18.8h,  v0.h[2]
-        smlal2          v3.4s,  v19.8h,  v1.h[3]
+        smlal2          v3.4s,  v19.8h,  v0.h[3]
         smlal2          v3.4s,  v20.8h,  v0.h[4]
         smlal2          v3.4s,  v21.8h,  v0.h[5]
         smlal2          v3.4s,  v22.8h,  v0.h[6]

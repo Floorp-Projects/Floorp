@@ -3462,7 +3462,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
 
     // ref_mvs
     if ((f->frame_hdr->frame_type & 1) || f->frame_hdr->allow_intrabc) {
-        f->mvs_ref = dav1d_ref_create_using_pool(&c->refmvs_pool,
+        f->mvs_ref = dav1d_ref_create_using_pool(c->refmvs_pool,
             sizeof(*f->mvs) * f->sb128h * 16 * (f->b4_stride >> 1));
         if (!f->mvs_ref) {
             res = DAV1D_ERR(ENOMEM);
@@ -3526,7 +3526,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
             // We're updating an existing map, but need somewhere to
             // put the new values. Allocate them here (the data
             // actually gets set elsewhere)
-            f->cur_segmap_ref = dav1d_ref_create_using_pool(&c->segmap_pool,
+            f->cur_segmap_ref = dav1d_ref_create_using_pool(c->segmap_pool,
                 sizeof(*f->cur_segmap) * f->b4_stride * 32 * f->sb128h);
             if (!f->cur_segmap_ref) {
                 dav1d_ref_dec(&f->prev_segmap_ref);
@@ -3543,7 +3543,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         } else {
             // We need to make a new map. Allocate one here and zero it out.
             const size_t segmap_size = sizeof(*f->cur_segmap) * f->b4_stride * 32 * f->sb128h;
-            f->cur_segmap_ref = dav1d_ref_create_using_pool(&c->segmap_pool, segmap_size);
+            f->cur_segmap_ref = dav1d_ref_create_using_pool(c->segmap_pool, segmap_size);
             if (!f->cur_segmap_ref) {
                 res = DAV1D_ERR(ENOMEM);
                 goto error;
