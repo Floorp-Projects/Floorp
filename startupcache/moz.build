@@ -31,7 +31,4 @@ XPIDL_SOURCES += [
     "nsIStartupCacheInfo.idl",
 ]
 
-if CONFIG["MOZ_BACKGROUNDTASKS"]:
-    DEFINES["MOZ_BACKGROUNDTASKS"] = True
-
 FINAL_LIBRARY = "xul"

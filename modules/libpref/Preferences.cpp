@@ -86,9 +86,6 @@
 #include "plstr.h"
 #include "prlink.h"
 #include "xpcpublic.h"
-#ifdef MOZ_BACKGROUNDTASKS
-#  include "mozilla/BackgroundTasks.h"
-#endif
 
 #ifdef DEBUG
 #  include <map>
@@ -4533,13 +4530,6 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
     rv = pref_ReadDefaultPrefs(jarReader, "defaults/pref/*.js$");
     NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_BACKGROUNDTASKS
-    if (BackgroundTasks::IsBackgroundTaskMode()) {
-      rv = pref_ReadDefaultPrefs(jarReader, "defaults/backgroundtasks/*.js$");
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
     // Load jar:$gre/omni.jar!/defaults/pref/$MOZ_ANDROID_CPU_ABI/*.js.
     nsAutoCString path;
@@ -4619,25 +4609,6 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
         NS_WARNING("Error parsing preferences.");
       }
     }
-
-#ifdef MOZ_BACKGROUNDTASKS
-    if (BackgroundTasks::IsBackgroundTaskMode()) {
-      rv = appJarReader->FindInit("defaults/backgroundtasks/*.js$",
-                                  getter_Transfers(find));
-      NS_ENSURE_SUCCESS(rv, rv);
-      prefEntries.Clear();
-      while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
-        prefEntries.AppendElement(Substring(entryName, entryNameLen));
-      }
-      prefEntries.Sort();
-      for (uint32_t i = prefEntries.Length(); i--;) {
-        rv = pref_ReadPrefFromJar(appJarReader, prefEntries[i].get());
-        if (NS_FAILED(rv)) {
-          NS_WARNING("Error parsing preferences.");
-        }
-      }
-    }
-#endif
   }
 
   nsCOMPtr<nsIProperties> dirSvc(
