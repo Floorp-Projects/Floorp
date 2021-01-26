@@ -190,52 +190,52 @@
 
     async function doTests() {
       // Test opening details objects
-      // await openNode("detailsOpen", "summaryOpen", true);
-      // await openNode("detailsOpen", "summaryOpen", false);
-      // await openNode("detailsOpen1", "summaryOpen1", true);
-      // await openNode("detailsOpen2", "summaryOpen2", true);
-      // await openNode("detailsOpen3", "summaryOpen3", true);
-      // await openNode("detailsOpen4", "summaryOpen4", true);
-      // await openNode("detailsOpen5", "summaryOpen5", true);
-      // await openNode("detailsOpen6", "summaryOpen6", true);
+      await openNode("detailsOpen", "summaryOpen", true);
+      await openNode("detailsOpen", "summaryOpen", false);
+      await openNode("detailsOpen1", "summaryOpen1", true);
+      await openNode("detailsOpen2", "summaryOpen2", true);
+      await openNode("detailsOpen3", "summaryOpen3", true);
+      await openNode("detailsOpen4", "summaryOpen4", true);
+      await openNode("detailsOpen5", "summaryOpen5", true);
+      await openNode("detailsOpen6", "summaryOpen6", true);
 
-      // // Test delayed editable state change
-      // var doc = document.getElementById("iframe").contentDocument;
-      // await makeEditableDoc(doc);
+      // Test delayed editable state change
+      var doc = document.getElementById("iframe").contentDocument;
+      await makeEditableDoc(doc);
 
-      // // invalid state change
-      // await invalidInput("email");
+      // invalid state change
+      await invalidInput("email");
 
-      // // checked state change
-      // await changeCheckInput("checkbox", true);
-      // await changeCheckInput("checkbox", false);
-      // await changeCheckInput("radio", true);
-      // await changeCheckInput("radio", false);
+      // checked state change
+      await changeCheckInput("checkbox", true);
+      await changeCheckInput("checkbox", false);
+      await changeCheckInput("radio", true);
+      await changeCheckInput("radio", false);
 
-      // // required state change
-      // await changeRequiredState("checkbox", true);
+      // required state change
+      await changeRequiredState("checkbox", true);
 
-      // // file input inherited state changes
-      // await stateChangeOnFileInput("file", "aria-busy", "true",
-      //                              STATE_BUSY, false, true);
-      // await stateChangeOnFileInput("file", "aria-required", "true",
-      //                              STATE_REQUIRED, false, true);
-      // await stateChangeOnFileInput("file", "aria-invalid", "true",
-      //                              STATE_INVALID, false, true);
+      // file input inherited state changes
+      await stateChangeOnFileInput("file", "aria-busy", "true",
+                                   STATE_BUSY, false, true);
+      await stateChangeOnFileInput("file", "aria-required", "true",
+                                   STATE_REQUIRED, false, true);
+      await stateChangeOnFileInput("file", "aria-invalid", "true",
+                                   STATE_INVALID, false, true);
 
-      // await dupeStateChange("div", "aria-busy", "true",
-      //                       STATE_BUSY, false, true);
-      // await oppositeStateChange("div", "aria-busy",
-      //                           STATE_BUSY, false);
+      await dupeStateChange("div", "aria-busy", "true",
+                            STATE_BUSY, false, true);
+      await oppositeStateChange("div", "aria-busy",
+                                STATE_BUSY, false);
 
-      // await echoingStateChange("text1", "aria-disabled", "disabled", "true",
-      //                          EXT_STATE_ENABLED, true, false);
-      // await echoingStateChange("text1", "aria-disabled", "disabled", null,
-      //                          EXT_STATE_ENABLED, true, true);
+      await echoingStateChange("text1", "aria-disabled", "disabled", "true",
+                               EXT_STATE_ENABLED, true, false);
+      await echoingStateChange("text1", "aria-disabled", "disabled", null,
+                               EXT_STATE_ENABLED, true, true);
 
-      // await testLinked();
+      await testLinked();
 
-      // await testHasPopup();
+      await testHasPopup();
 
       await toggleStateChange("textbox", "aria-multiline", EXT_STATE_MULTI_LINE, true);
       SimpleTest.finish();
