@@ -41,6 +41,10 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       border: 1px solid var(--newtab-focus-border);
       box-shadow: 0 0 0 2px var(--newtab-focus-outline);
     }
+
+    .fake-caret {
+      top: 18px;
+    }
   }
 }
 
@@ -290,21 +294,48 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     &.visible-logo {
       main {
-        padding-top: 291px;
+        padding-top: 276px;
+      }
+    }
+
+    &:not(.newtab-experience) {
+      .search-wrapper{
+        $search-height: 35px;
+        $search-icon-size: 16px;
+        $search-icon-padding: 16px;
+
+        border-bottom: solid 1px var(--newtab-border-secondary-color);
+        padding: 30px 0;
+      }
+    }
+
+    &.newtab-experience {
+      main {
+        padding-top: 124px;
+      }
+
+      &.visible-logo {
+        main {
+          padding-top: 254px;
+        }
+      }
+
+      .search-wrapper {
+        $search-height: 45px;
+        $search-icon-size: 16px;
+        $search-icon-padding: 16px;
+
+        border-bottom: solid 1px var(--newtab-seperator-line-color);
+        padding: 27px 0;
       }
     }
 
     .search-wrapper {
       $search-header-bar-height: 95px;
-      $search-height: 35px;
-      $search-icon-size: 16px;
-      $search-icon-padding: 16px;
 
       background-color: var(--newtab-search-header-background-color);
-      border-bottom: solid 1px var(--newtab-border-secondary-color);
       min-height: $search-header-bar-height;
       left: 0;
-      padding: 30px 0;
       position: fixed;
       top: 0;
       width: 100%;
