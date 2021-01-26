@@ -55,8 +55,6 @@
 #include <windows.h>
 #endif
 
-#include <string>
-
 #ifdef HAVE_GTEST
 
 #include <gtest/gtest.h>
@@ -110,25 +108,7 @@
 #include "lzo/lzo1x.h"
 #endif
 
-#ifdef HAVE_LIBLZF
-extern "C" {
-#include "lzf.h"
-}
-#endif
-
-#ifdef HAVE_LIBFASTLZ
-#include "fastlz.h"
-#endif
-
-#ifdef HAVE_LIBQUICKLZ
-#include "quicklz.h"
-#endif
-
 namespace {
-
-namespace File {
-  void Init() { }
-}  // namespace File
 
 namespace file {
   int Defaults() { return 0; }
@@ -138,7 +118,8 @@ namespace file {
     void CheckSuccess() { }
   };
 
-  DummyStatus GetContents(const string& filename, string* data, int unused) {
+  DummyStatus GetContents(
+      const std::string& filename, std::string* data, int unused) {
     FILE* fp = fopen(filename.c_str(), "rb");
     if (fp == NULL) {
       perror(filename.c_str());
@@ -153,7 +134,7 @@ namespace file {
         perror("fread");
         exit(1);
       }
-      data->append(string(buf, ret));
+      data->append(std::string(buf, ret));
     }
 
     fclose(fp);
@@ -161,9 +142,8 @@ namespace file {
     return DummyStatus();
   }
 
-  DummyStatus SetContents(const string& filename,
-                          const string& str,
-                          int unused) {
+  inline DummyStatus SetContents(
+      const std::string& filename, const std::string& str, int unused) {
     FILE* fp = fopen(filename.c_str(), "wb");
     if (fp == NULL) {
       perror(filename.c_str());
@@ -187,7 +167,7 @@ namespace file {
 namespace snappy {
 
 #define FLAGS_test_random_seed 301
-typedef string TypeParam;
+using TypeParam = std::string;
 
 void Test_CorruptedTest_VerifyCorrupted();
 void Test_Snappy_SimpleTests();
@@ -201,63 +181,13 @@ void Test_Snappy_ReadPastEndOfBuffer();
 void Test_Snappy_FindMatchLength();
 void Test_Snappy_FindMatchLengthRandom();
 
-string ReadTestDataFile(const string& base, size_t size_limit);
+std::string ReadTestDataFile(const std::string& base, size_t size_limit);
 
-string ReadTestDataFile(const string& base);
+std::string ReadTestDataFile(const std::string& base);
 
 // A sprintf() variant that returns a std::string.
 // Not safe for general use due to truncation issues.
-string StringPrintf(const char* format, ...);
-
-// A simple, non-cryptographically-secure random generator.
-class ACMRandom {
- public:
-  explicit ACMRandom(uint32 seed) : seed_(seed) {}
-
-  int32 Next();
-
-  int32 Uniform(int32 n) {
-    return Next() % n;
-  }
-  uint8 Rand8() {
-    return static_cast<uint8>((Next() >> 1) & 0x000000ff);
-  }
-  bool OneIn(int X) { return Uniform(X) == 0; }
-
-  // Skewed: pick "base" uniformly from range [0,max_log] and then
-  // return "base" random bits.  The effect is to pick a number in the
-  // range [0,2^max_log-1] with bias towards smaller numbers.
-  int32 Skewed(int max_log);
-
- private:
-  static const uint32 M = 2147483647L;   // 2^31-1
-  uint32 seed_;
-};
-
-inline int32 ACMRandom::Next() {
-  static const uint64 A = 16807;  // bits 14, 8, 7, 5, 2, 1, 0
-  // We are computing
-  //       seed_ = (seed_ * A) % M,    where M = 2^31-1
-  //
-  // seed_ must not be zero or M, or else all subsequent computed values
-  // will be zero or M respectively.  For all other values, seed_ will end
-  // up cycling through every number in [1,M-1]
-  uint64 product = seed_ * A;
-
-  // Compute (product % M) using the fact that ((x << 31) % M) == x.
-  seed_ = (product >> 31) + (product & M);
-  // The first reduction may overflow by 1 bit, so we may need to repeat.
-  // mod == M is not possible; using > allows the faster sign-bit-based test.
-  if (seed_ > M) {
-    seed_ -= M;
-  }
-  return seed_;
-}
-
-inline int32 ACMRandom::Skewed(int max_log) {
-  const int32 base = (Next() - 1) % (max_log+1);
-  return (Next() - 1) & ((1u << base)-1);
-}
+std::string StrFormat(const char* format, ...);
 
 // A wall-time clock. This stub is not super-accurate, nor resistant to the
 // system time changing.
@@ -311,8 +241,8 @@ typedef void (*BenchmarkFunction)(int, int);
 
 class Benchmark {
  public:
-  Benchmark(const string& name, BenchmarkFunction function) :
-      name_(name), function_(function) {}
+  Benchmark(const std::string& name, BenchmarkFunction function)
+      : name_(name), function_(function) {}
 
   Benchmark* DenseRange(int start, int stop) {
     start_ = start;
@@ -323,7 +253,7 @@ class Benchmark {
   void Run();
 
  private:
-  const string name_;
+  const std::string name_;
   const BenchmarkFunction function_;
   int start_, stop_;
 };
@@ -335,11 +265,13 @@ extern Benchmark* Benchmark_BM_UFlat;
 extern Benchmark* Benchmark_BM_UIOVec;
 extern Benchmark* Benchmark_BM_UValidate;
 extern Benchmark* Benchmark_BM_ZFlat;
+extern Benchmark* Benchmark_BM_ZFlatAll;
+extern Benchmark* Benchmark_BM_ZFlatIncreasingTableSize;
 
 void ResetBenchmarkTiming();
 void StartBenchmarkTiming();
 void StopBenchmarkTiming();
-void SetBenchmarkLabel(const string& str);
+void SetBenchmarkLabel(const std::string& str);
 void SetBenchmarkBytesProcessed(int64 bytes);
 
 #ifdef HAVE_LIBZ
@@ -467,7 +399,7 @@ class ZLib {
 
 DECLARE_bool(run_microbenchmarks);
 
-static void RunSpecifiedBenchmarks() {
+static inline void RunSpecifiedBenchmarks() {
   if (!FLAGS_run_microbenchmarks) {
     return;
   }
@@ -486,6 +418,8 @@ static void RunSpecifiedBenchmarks() {
   snappy::Benchmark_BM_UIOVec->Run();
   snappy::Benchmark_BM_UValidate->Run();
   snappy::Benchmark_BM_ZFlat->Run();
+  snappy::Benchmark_BM_ZFlatAll->Run();
+  snappy::Benchmark_BM_ZFlatIncreasingTableSize->Run();
 
   fprintf(stderr, "\n");
 }
@@ -515,10 +449,6 @@ static inline int RUN_ALL_TESTS() {
 // For main().
 namespace snappy {
 
-static void CompressFile(const char* fname);
-static void UncompressFile(const char* fname);
-static void MeasureFile(const char* fname);
-
 // Logging.
 
 #define LOG(level) LogMessage()
@@ -529,15 +459,15 @@ class LogMessage {
  public:
   LogMessage() { }
   ~LogMessage() {
-    cerr << endl;
+    std::cerr << std::endl;
   }
 
   LogMessage& operator<<(const std::string& msg) {
-    cerr << msg;
+    std::cerr << msg;
     return *this;
   }
   LogMessage& operator<<(int x) {
-    cerr << x;
+    std::cerr << x;
     return *this;
   }
 };
@@ -546,7 +476,7 @@ class LogMessage {
 // and ones that are always active.
 
 #define CRASH_UNLESS(condition) \
-    PREDICT_TRUE(condition) ? (void)0 : \
+    SNAPPY_PREDICT_TRUE(condition) ? (void)0 : \
     snappy::LogMessageVoidify() & snappy::LogMessageCrash()
 
 #ifdef _MSC_VER
@@ -560,7 +490,7 @@ class LogMessageCrash : public LogMessage {
  public:
   LogMessageCrash() { }
   ~LogMessageCrash() {
-    cerr << endl;
+    std::cerr << std::endl;
     abort();
   }
 };
@@ -590,10 +520,6 @@ class LogMessageVoidify {
 #define CHECK_GT(a, b) CRASH_UNLESS((a) > (b))
 #define CHECK_OK(cond) (cond).CheckSuccess()
 
-}  // namespace
-
-using snappy::CompressFile;
-using snappy::UncompressFile;
-using snappy::MeasureFile;
+}  // namespace snappy
 
 #endif  // THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_TEST_H_
