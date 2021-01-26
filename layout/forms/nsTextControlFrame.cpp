@@ -567,8 +567,10 @@ LogicalSize nsTextControlFrame::ComputeAutoSize(
 
   // Note: nsContainerFrame::ComputeAutoSize only computes the inline-size (and
   // only for 'auto'), the block-size it returns is always NS_UNCONSTRAINEDSIZE.
-  const auto& iSizeCoord = StylePosition()->ISize(aWM);
-  if (iSizeCoord.IsAuto()) {
+  const auto& styleISize = aSizeOverrides.mStyleISize
+                               ? *aSizeOverrides.mStyleISize
+                               : StylePosition()->ISize(aWM);
+  if (styleISize.IsAuto()) {
     if (aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize)) {
       // CalcIntrinsicSize isn't aware of grid-item margin-box clamping, so we
       // fall back to nsContainerFrame's ComputeAutoSize to handle that.
