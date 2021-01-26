@@ -8,7 +8,7 @@
 
 use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram};
 use neqo_crypto::{init_db, AllowZeroRtt, AntiReplay};
-use neqo_http3::{Error, Http3Server, Http3ServerEvent};
+use neqo_http3::{ClientRequestStream, Error, Http3Server, Http3ServerEvent};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::Server;
 use neqo_transport::{ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator};
@@ -51,7 +51,7 @@ struct Http3TestServer {
     server: Http3Server,
     // This a map from a post request to amount of data ithas been received on the request.
     // The respons will carry the amount of data received.
-    posts: HashMap<String, usize>,
+    posts: HashMap<ClientRequestStream, usize>,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -205,7 +205,7 @@ impl HttpServer for Http3TestServer {
                                     .unwrap();
                             } else if path == "/post" {
                                 // Read all data before responding.
-                                self.posts.insert(format!("{}", request), 0);
+                                self.posts.insert(request, 0);
                             } else {
                                 match path.trim_matches(|p| p == '/').parse::<usize>() {
                                     Ok(v) => request
@@ -239,11 +239,11 @@ impl HttpServer for Http3TestServer {
                     data,
                     fin,
                 } => {
-                    if let Some(r) = self.posts.get_mut(&format!("{}", request)) {
+                    if let Some(r) = self.posts.get_mut(&request) {
                         *r += data.len();
                     }
                     if fin {
-                        if let Some(r) = self.posts.remove(&format!("{}", request)) {
+                        if let Some(r) = self.posts.remove(&request) {
                             let default_ret = b"Hello World".to_vec();
                             request
                                 .set_response(
