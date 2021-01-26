@@ -621,7 +621,7 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
       aCBReflowInput.mRenderingContext, wm, aCBReflowInput.ComputedSize(wm),
       aFloatAvailableISize,
       aFloatOffsetState.ComputedLogicalMargin(wm).Size(wm),
-      aFloatOffsetState.ComputedLogicalBorderPadding(wm).Size(wm),
+      aFloatOffsetState.ComputedLogicalBorderPadding(wm).Size(wm), {},
       ComputeSizeFlag::ShrinkWrap);
 
   WritingMode cbwm = aCBReflowInput.GetWritingMode();
