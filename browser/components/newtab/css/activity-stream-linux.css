@@ -87,6 +87,7 @@ body {
   --newtab-focus-outline: rgba(0, 96, 223, 0.25);
   --newtab-focus-border: #0060DF;
   --newtab-focus-border-selected: rgba(0, 0, 0, 0.15);
+  --newtab-seperator-line-color: #E1E0E6;
   --newtab-primary-action-background: #0060DF;
   --newtab-primary-action-background-off: #E9E9E9;
   --customize-menu-primary-text-color: #20123A;
@@ -1274,6 +1275,8 @@ main {
   .fake-focus .outer-wrapper.newtab-experience .search-handoff-button {
     border: 1px solid var(--newtab-focus-border);
     box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
+  .outer-wrapper.newtab-experience .search-handoff-button .fake-caret {
+    top: 18px; }
 
 .search-wrapper {
   padding: 34px 0 64px; }
@@ -1440,24 +1443,32 @@ main {
   body:not(.inline-onboarding) .fixed-search main {
     padding-top: 146px; }
   body:not(.inline-onboarding) .fixed-search.visible-logo main {
-    padding-top: 291px; }
+    padding-top: 276px; }
+  body:not(.inline-onboarding) .fixed-search:not(.newtab-experience) .search-wrapper {
+    border-bottom: solid 1px var(--newtab-border-secondary-color);
+    padding: 30px 0; }
+  body:not(.inline-onboarding) .fixed-search.newtab-experience main {
+    padding-top: 124px; }
+  body:not(.inline-onboarding) .fixed-search.newtab-experience.visible-logo main {
+    padding-top: 254px; }
+  body:not(.inline-onboarding) .fixed-search.newtab-experience .search-wrapper {
+    border-bottom: solid 1px var(--newtab-seperator-line-color);
+    padding: 27px 0; }
   body:not(.inline-onboarding) .fixed-search .search-wrapper {
     background-color: var(--newtab-search-header-background-color);
-    border-bottom: solid 1px var(--newtab-border-secondary-color);
     min-height: 95px;
     left: 0;
-    padding: 30px 0;
     position: fixed;
     top: 0;
     width: 100%;
     z-index: 9; }
     body:not(.inline-onboarding) .fixed-search .search-wrapper .search-inner-wrapper {
-      min-height: 35px; }
+      min-height: 48px; }
     body:not(.inline-onboarding) .fixed-search .search-wrapper input {
-      background-position-x: 16px;
-      background-size: 16px; }
+      background-position-x: 12px;
+      background-size: 24px; }
       body:not(.inline-onboarding) .fixed-search .search-wrapper input:dir(rtl) {
-        background-position-x: right 16px; }
+        background-position-x: right 12px; }
     body:not(.inline-onboarding) .fixed-search .search-wrapper .logo-and-wordmark {
       display: none; }
   body:not(.inline-onboarding) .fixed-search .search-handoff-button {
