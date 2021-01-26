@@ -28,7 +28,7 @@ const RESULT_DATA_BY_TYPE = {
     },
   },
   [UrlbarUtils.RESULT_TYPE.SEARCH]: {
-    icon: "chrome://browser/skin/search-glass.svg",
+    icon: "chrome://global/skin/icons/search-glass.svg",
     actionL10n: {
       id: "urlbar-result-action-search-w-engine",
       args: { engine: TEST_DEFAULT_ENGINE_NAME },

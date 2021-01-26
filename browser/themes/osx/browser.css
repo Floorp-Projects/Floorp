@@ -322,7 +322,7 @@
   min-height: 24px;
   height: 24px;
   color: inherit;
-  list-style-image: url("chrome://browser/skin/add.svg");
+  list-style-image: url("chrome://global/skin/icons/add.svg");
 }
 
 #editBMPanel_newFolderButton:hover {

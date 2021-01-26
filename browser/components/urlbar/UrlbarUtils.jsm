@@ -135,7 +135,7 @@ var UrlbarUtils = {
     // DEFAULT is defined lazily so it doesn't eagerly initialize PlacesUtils.
     EXTENSION: "chrome://browser/content/extension.svg",
     HISTORY: "chrome://browser/skin/history.svg",
-    SEARCH_GLASS: "chrome://browser/skin/search-glass.svg",
+    SEARCH_GLASS: "chrome://global/skin/icons/search-glass.svg",
     SEARCH_GLASS_INVERTED: "chrome://browser/skin/search-glass-inverted.svg",
     TIP: "chrome://browser/skin/tip.svg",
   },

@@ -144,7 +144,7 @@ add_task(async function localOneOff() {
   );
   Assert.equal(
     result.image,
-    "chrome://browser/skin/search-glass.svg",
+    "chrome://global/skin/icons/search-glass.svg",
     "Check the heuristic icon"
   );
 });
@@ -354,7 +354,7 @@ add_task(async function localOneOff_suggestion() {
   // Like in the normal engine one-offs case, we don't replace the favicon.
   Assert.equal(
     result.image,
-    "chrome://browser/skin/search-glass.svg",
+    "chrome://global/skin/icons/search-glass.svg",
     "Check the suggestion icon"
   );
 
@@ -374,7 +374,7 @@ add_task(async function localOneOff_suggestion() {
   );
   Assert.equal(
     result.image,
-    "chrome://browser/skin/search-glass.svg",
+    "chrome://global/skin/icons/search-glass.svg",
     "Check the suggestion icon"
   );
 
@@ -387,7 +387,7 @@ add_task(async function localOneOff_suggestion() {
   );
   Assert.equal(
     result.image,
-    "chrome://browser/skin/search-glass.svg",
+    "chrome://global/skin/icons/search-glass.svg",
     "Check the suggestion icon"
   );
 });
@@ -453,7 +453,7 @@ add_task(async function localOneOff_shortcut() {
   );
   Assert.notEqual(
     result.image,
-    "chrome://browser/skin/search-glass.svg",
+    "chrome://global/skin/icons/search-glass.svg",
     "Check the icon was not replaced"
   );
 

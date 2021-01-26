@@ -12,7 +12,7 @@ function confirmDefaults() {
   } else {
     is(
       getComputedStyle(document.getElementById("identity-icon")).listStyleImage,
-      'url("chrome://browser/skin/search-glass.svg")',
+      'url("chrome://global/skin/icons/search-glass.svg")',
       "Identity icon should be the search icon"
     );
   }

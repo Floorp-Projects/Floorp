@@ -114,13 +114,13 @@ var gBuiltInInputs = {
   },
   Find: {
     title: "find",
-    image: "chrome://browser/skin/search-glass.svg",
+    image: "chrome://global/skin/icons/search-glass.svg",
     type: kInputTypes.BUTTON,
     callback: () => execCommand("cmd_find"),
   },
   NewTab: {
     title: "new-tab",
-    image: "chrome://browser/skin/add.svg",
+    image: "chrome://global/skin/icons/add.svg",
     type: kInputTypes.BUTTON,
     callback: () => execCommand("cmd_newNavigatorTabNoEvent"),
   },
@@ -149,7 +149,7 @@ var gBuiltInInputs = {
   OpenLocation: {
     key: "open-location",
     title: "open-location",
-    image: "chrome://browser/skin/search-glass.svg",
+    image: "chrome://global/skin/icons/search-glass.svg",
     type: kInputTypes.MAIN_BUTTON,
     callback: () => execCommand("Browser:OpenLocation"),
   },
@@ -164,7 +164,7 @@ var gBuiltInInputs = {
   },
   SearchPopover: {
     title: "search-popover",
-    image: "chrome://browser/skin/search-glass.svg",
+    image: "chrome://global/skin/icons/search-glass.svg",
     type: kInputTypes.POPOVER,
     children: {
       SearchScrollViewLabel: {
@@ -437,7 +437,7 @@ class TouchBarHelper {
         } else {
           gBuiltInInputs.OpenLocation.title = "open-location";
           gBuiltInInputs.OpenLocation.image =
-            "chrome://browser/skin/search-glass.svg";
+            "chrome://global/skin/icons/search-glass.svg";
           gBuiltInInputs.OpenLocation.callback = () =>
             execCommand("Browser:OpenLocation", "OpenLocation");
         }
