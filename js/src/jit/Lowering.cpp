@@ -2222,6 +2222,15 @@ void LIRGenerator::visitTruncateToInt32(MTruncateToInt32* truncate) {
   }
 }
 
+void LIRGenerator::visitAdjustDataViewLength(MAdjustDataViewLength* ins) {
+  MDefinition* input = ins->input();
+  MOZ_ASSERT(input->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LAdjustDataViewLength(useRegisterAtStart(input));
+  assignSnapshot(lir, ins->bailoutKind());
+  defineReuseInput(lir, ins, 0);
+}
+
 void LIRGenerator::visitToBigInt(MToBigInt* ins) {
   MDefinition* opd = ins->input();
 

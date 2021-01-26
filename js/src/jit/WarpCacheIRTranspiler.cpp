@@ -2137,25 +2137,10 @@ void WarpCacheIRTranspiler::addDataViewData(MDefinition* obj, Scalar::Type type,
 
   // Adjust the length to account for accesses near the end of the dataview.
   if (size_t byteSize = Scalar::byteSize(type); byteSize > 1) {
-    // To ensure |0 <= offset && offset + byteSize <= length|, we can either
-    // emit |BoundsCheck(offset, length)| followed by
-    // |BoundsCheck(offset + (byteSize - 1), length)|, or alternatively emit
-    // |BoundsCheck(offset, Max(length - (byteSize - 1), 0))|. The latter should
-    // result in faster code when LICM moves the length adjustment and also
-    // ensures Spectre index masking occurs after all bounds checks.
-
-    auto* byteSizeMinusOne = MConstant::New(alloc(), Int32Value(byteSize - 1));
-    add(byteSizeMinusOne);
-
-    length = MSub::New(alloc(), length, byteSizeMinusOne, MIRType::Int32);
-    length->toSub()->setTruncateKind(TruncateKind::Truncate);
-    add(length);
-
-    // |length| mustn't be negative for MBoundsCheck.
-    auto* zero = MConstant::New(alloc(), Int32Value(0));
-    add(zero);
-
-    length = MMinMax::New(alloc(), length, zero, MIRType::Int32, true);
+    // To ensure |0 <= offset && offset + byteSize <= length|, first adjust the
+    // length by subtracting |byteSize - 1| (bailing out if that becomes
+    // negative).
+    length = MAdjustDataViewLength::New(alloc(), length, byteSize);
     add(length);
   }
 
