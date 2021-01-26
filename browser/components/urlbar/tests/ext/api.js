@@ -13,11 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderExtension: "resource:///modules/UrlbarProviderExtension.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -75,20 +73,6 @@ this.experiments_urlbar = class extends ExtensionAPI {
               return () => provider.setEventListener("getViewUpdate", null);
             },
           }).api(),
-
-          suggestionsEnabled: async queryContext => {
-            return (
-              queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.SEARCH) &&
-              (!queryContext.restrictSource ||
-                queryContext.restrictSource ==
-                  UrlbarUtils.RESULT_SOURCE.SEARCH) &&
-              queryContext.allowSearchSuggestions &&
-              UrlbarPrefs.get("suggest.searches") &&
-              UrlbarPrefs.get("browser.search.suggest.enabled") &&
-              (!queryContext.isPrivate ||
-                UrlbarPrefs.get("browser.search.suggest.enabled.private"))
-            );
-          },
         },
       },
     };
