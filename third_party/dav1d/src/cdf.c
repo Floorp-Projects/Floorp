@@ -4096,7 +4096,7 @@ void dav1d_cdf_thread_copy(CdfContext *const dst, const CdfThreadContext *const 
 int dav1d_cdf_thread_alloc(Dav1dContext *const c, CdfThreadContext *const cdf,
                            struct thread_data *const t)
 {
-    cdf->ref = dav1d_ref_create_using_pool(&c->cdf_pool,
+    cdf->ref = dav1d_ref_create_using_pool(c->cdf_pool,
                                            sizeof(CdfContext) + sizeof(atomic_uint));
     if (!cdf->ref) return DAV1D_ERR(ENOMEM);
     cdf->data.cdf = cdf->ref->data;

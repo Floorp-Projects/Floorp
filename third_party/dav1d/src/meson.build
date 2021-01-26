@@ -132,6 +132,7 @@ if is_asm_enabled
             endif
         elif host_machine.cpu_family().startswith('arm')
             libdav1d_sources_asm = files(
+                'arm/32/looprestoration_common.S',
                 'arm/32/msac.S',
             )
 
@@ -149,6 +150,7 @@ if is_asm_enabled
             if dav1d_bitdepths.contains('16')
                 libdav1d_sources_asm += files(
                     'arm/32/cdef16.S',
+                    'arm/32/loopfilter16.S',
                     'arm/32/looprestoration16.S',
                     'arm/32/mc16.S',
                 )
@@ -199,7 +201,7 @@ if is_asm_enabled
                 'x86/ipred_ssse3.asm',
                 'x86/itx_ssse3.asm',
                 'x86/loopfilter_ssse3.asm',
-                'x86/looprestoration_ssse3.asm',
+                'x86/looprestoration_sse.asm',
                 'x86/mc_sse.asm',
             )
         endif

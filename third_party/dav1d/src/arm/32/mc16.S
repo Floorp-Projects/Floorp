@@ -123,8 +123,7 @@
 .macro bidir_fn type, bdmax
 function \type\()_16bpc_neon, export=1
         push            {r4-r7,lr}
-        ldr             r4,  [sp, #20]
-        ldr             r5,  [sp, #24]
+        ldrd            r4,  r5,  [sp, #20]
         ldr             r6,  [sp, #28]
         clz             r4,  r4
 .ifnc \type, avg
@@ -273,6 +272,727 @@ bidir_fn avg, r6
 bidir_fn w_avg, r7
 bidir_fn mask, r7
 
+
+.macro w_mask_fn type
+function w_mask_\type\()_16bpc_neon, export=1
+        push            {r4-r10,lr}
+        vpush           {q4-q7}
+        ldrd            r4,  r5,  [sp, #96]
+        ldrd            r6,  r7,  [sp, #104]
+        ldr             r8,  [sp, #112]
+        clz             r9,  r4
+        adr             lr,  L(w_mask_\type\()_tbl)
+        vdup.16         q15, r8       // bitdepth_max
+        sub             r9,  r9,  #24
+        clz             r8,  r8       // clz(bitdepth_max)
+        ldr             r9,  [lr,  r9,  lsl #2]
+        add             r9,  lr,  r9
+        sub             r8,  r8,  #12 // sh = intermediate_bits + 6 = clz(bitdepth_max) - 12
+        mov             r10, #PREP_BIAS*64
+        neg             r8,  r8       // -sh
+        movw            r12, #27615   // (64 + 1 - 38)<<mask_sh - 1 - mask_rnd
+        vdup.32         q14, r8       // -sh
+        vdup.16         q0,  r12
+.if \type == 444
+        vmov.i8         q1,  #64
+.elseif \type == 422
+        vdup.8          d4,  r7
+        vmov.i8         d2,  #129
+        vsub.i16        d2,  d2,  d4
+.elseif \type == 420
+        vdup.16         q2,  r7
+        vmov.i16        q1,  #0x100
+        vsub.i16        q1,  q1,  q2
+.endif
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+        bx              r9
+
+        .align 2
+L(w_mask_\type\()_tbl):
+        .word 1280f - L(w_mask_\type\()_tbl) + CONFIG_THUMB
+        .word 640f  - L(w_mask_\type\()_tbl) + CONFIG_THUMB
+        .word 320f  - L(w_mask_\type\()_tbl) + CONFIG_THUMB
+        .word 160f  - L(w_mask_\type\()_tbl) + CONFIG_THUMB
+        .word 8f    - L(w_mask_\type\()_tbl) + CONFIG_THUMB
+        .word 4f    - L(w_mask_\type\()_tbl) + CONFIG_THUMB
+
+4:
+        vld1.16         {q2, q3}, [r2, :128]! // tmp1 (four rows at once)
+        vld1.16         {q4, q5}, [r3, :128]! // tmp2 (four rows at once)
+        subs            r5,  r5,  #4
+        vdup.32         q13, r10       // PREP_BIAS*64
+        vabd.s16        q6,  q2,  q4   // abs(tmp1 - tmp2)
+        vabd.s16        q7,  q3,  q5
+        vsubl.s16       q8,  d8,  d4   // tmp2 - tmp1 (requires 17 bit)
+        vsubl.s16       q9,  d9,  d5
+        vsubl.s16       q10, d10, d6
+        vsubl.s16       q11, d11, d7
+        vqsub.u16       q6,  q0,  q6   // 27615 - abs()
+        vqsub.u16       q7,  q0,  q7
+        vshll.s16       q5,  d7,  #6   // tmp1 << 6
+        vshll.s16       q4,  d6,  #6
+        vshll.s16       q3,  d5,  #6
+        vshll.s16       q2,  d4,  #6
+        vshr.u16        q6,  q6,  #10  // 64-m = (27615 - abs()) >> mask_sh
+        vshr.u16        q7,  q7,  #10
+        vadd.i32        q2,  q2,  q13  // += PREP_BIAS*64
+        vadd.i32        q3,  q3,  q13
+        vadd.i32        q4,  q4,  q13
+        vadd.i32        q5,  q5,  q13
+        vmovl.u16       q12, d12
+        vmovl.u16       q13, d13
+        vmla.i32        q2,  q8,  q12  // (tmp2-tmp1)*(64-m)
+        vmovl.u16       q12, d14
+        vmla.i32        q3,  q9,  q13
+        vmovl.u16       q13, d15
+        vmla.i32        q4,  q10, q12
+        vmla.i32        q5,  q11, q13
+        vrshl.s32       q2,  q2,  q14  // (tmp1<<6 + (tmp2-tmp1)*(64-m) + (1 << (sh-1)) + PREP_BIAS*64) >> sh
+        vrshl.s32       q3,  q3,  q14
+        vrshl.s32       q4,  q4,  q14
+        vrshl.s32       q5,  q5,  q14
+        vqmovun.s32     d4,  q2        // iclip_pixel
+        vqmovun.s32     d5,  q3
+        vqmovun.s32     d6,  q4
+        vqmovun.s32     d7,  q5
+        vmin.u16        q2,  q2,  q15  // iclip_pixel
+        vmin.u16        q3,  q3,  q15  // iclip_pixel
+.if \type == 444
+        vmovn.i16       d12, q6        // 64 - m
+        vmovn.i16       d13, q7
+        vsub.i16        q6,  q1,  q6   // m
+        vst1.8          {q6}, [r6, :128]!
+.elseif \type == 422
+        vpadd.i16       d12, d12, d13  // (64 - m) + (64 - n) (column wise addition)
+        vpadd.i16       d13, d14, d15
+        vmovn.i16       d12, q6
+        vhsub.u8        d12, d2,  d12  // ((129 - sign) - ((64 - m) + (64 - n)) >> 1
+        vst1.8          {d12}, [r6, :64]!
+.elseif \type == 420
+        vadd.i16        d12, d12, d13  // (64 - my1) + (64 - my2) (row wise addition)
+        vadd.i16        d13, d14, d15
+        vpadd.i16       d12, d12, d13  // (128 - m) + (128 - n) (column wise addition)
+        vsub.i16        d12, d2,  d12  // (256 - sign) - ((128 - m) + (128 - n))
+        vrshrn.i16      d12, q6,  #2   // ((256 - sign) - ((128 - m) + (128 - n)) + 2) >> 2
+        vst1.32         {d12[0]}, [r6, :32]!
+.endif
+        vst1.16         {d4}, [r0,  :64], r1
+        vst1.16         {d5}, [r12, :64], r1
+        vst1.16         {d6}, [r0,  :64], r1
+        vst1.16         {d7}, [r12, :64], r1
+        bgt             4b
+        vpop            {q4-q7}
+        pop             {r4-r10,pc}
+8:
+        vld1.16         {q2, q3}, [r2, :128]! // tmp1
+        vld1.16         {q4, q5}, [r3, :128]! // tmp2
+        subs            r5,  r5,  #2
+        vdup.32         q13, r10       // PREP_BIAS*64
+        vabd.s16        q6,  q2,  q4   // abs(tmp1 - tmp2)
+        vabd.s16        q7,  q3,  q5
+        vsubl.s16       q8,  d8,  d4   // tmp2 - tmp1 (requires 17 bit)
+        vsubl.s16       q9,  d9,  d5
+        vsubl.s16       q10, d10, d6
+        vsubl.s16       q11, d11, d7
+        vqsub.u16       q6,  q0,  q6   // 27615 - abs()
+        vqsub.u16       q7,  q0,  q7
+        vshll.s16       q5,  d7,  #6   // tmp1 << 6
+        vshll.s16       q4,  d6,  #6
+        vshll.s16       q3,  d5,  #6
+        vshll.s16       q2,  d4,  #6
+        vshr.u16        q6,  q6,  #10  // 64-m = (27615 - abs()) >> mask_sh
+        vshr.u16        q7,  q7,  #10
+        vadd.i32        q2,  q2,  q13  // += PREP_BIAS*64
+        vadd.i32        q3,  q3,  q13
+        vadd.i32        q4,  q4,  q13
+        vadd.i32        q5,  q5,  q13
+        vmovl.u16       q12, d12
+        vmovl.u16       q13, d13
+        vmla.i32        q2,  q8,  q12  // (tmp2-tmp1)*(64-m)
+        vmovl.u16       q12, d14
+        vmla.i32        q3,  q9,  q13
+        vmovl.u16       q13, d15
+        vmla.i32        q4,  q10, q12
+        vmla.i32        q5,  q11, q13
+        vrshl.s32       q2,  q2,  q14  // (tmp1<<6 + (tmp2-tmp1)*(64-m) + (1 << (sh-1)) + PREP_BIAS*64) >> sh
+        vrshl.s32       q3,  q3,  q14
+        vrshl.s32       q4,  q4,  q14
+        vrshl.s32       q5,  q5,  q14
+        vqmovun.s32     d4,  q2        // iclip_pixel
+        vqmovun.s32     d5,  q3
+        vqmovun.s32     d6,  q4
+        vqmovun.s32     d7,  q5
+        vmin.u16        q2,  q2,  q15  // iclip_pixel
+        vmin.u16        q3,  q3,  q15  // iclip_pixel
+.if \type == 444
+        vmovn.i16       d12, q6        // 64 - m
+        vmovn.i16       d13, q7
+        vsub.i16        q6,  q1,  q6   // m
+        vst1.8          {q6}, [r6, :128]!
+.elseif \type == 422
+        vpadd.i16       d12, d12, d13  // (64 - m) + (64 - n) (column wise addition)
+        vpadd.i16       d13, d14, d15
+        vmovn.i16       d12, q6
+        vhsub.u8        d12, d2,  d12  // ((129 - sign) - ((64 - m) + (64 - n)) >> 1
+        vst1.8          {d12}, [r6, :64]!
+.elseif \type == 420
+        vadd.i16        q6,  q6,  q7   // (64 - my1) + (64 - my2) (row wise addition)
+        vpadd.i16       d12, d12, d13  // (128 - m) + (128 - n) (column wise addition)
+        vsub.i16        d12, d2,  d12  // (256 - sign) - ((128 - m) + (128 - n))
+        vrshrn.i16      d12, q6,  #2   // ((256 - sign) - ((128 - m) + (128 - n)) + 2) >> 2
+        vst1.32         {d12[0]}, [r6, :32]!
+.endif
+        vst1.16         {q2}, [r0,  :128], r1
+        vst1.16         {q3}, [r12, :128], r1
+        bgt             8b
+        vpop            {q4-q7}
+        pop             {r4-r10,pc}
+1280:
+640:
+320:
+160:
+        sub             r1,  r1,  r4,  lsl #1
+.if \type == 444
+        add             lr,  r6,  r4
+.elseif \type == 422
+        add             lr,  r6,  r4,  lsr #1
+.endif
+        add             r7,  r2,  r4,  lsl #1
+        add             r9,  r3,  r4,  lsl #1
+161:
+        mov             r8,  r4
+16:
+        vld1.16         {q2}, [r2, :128]! // tmp1
+        vld1.16         {q4}, [r3, :128]! // tmp2
+        vld1.16         {q3}, [r7, :128]!
+        vld1.16         {q5}, [r9, :128]!
+        subs            r8,  r8,  #8
+        vdup.32         q13, r10       // PREP_BIAS*64
+        vabd.s16        q6,  q2,  q4   // abs(tmp1 - tmp2)
+        vabd.s16        q7,  q3,  q5
+        vsubl.s16       q8,  d8,  d4   // tmp2 - tmp1 (requires 17 bit)
+        vsubl.s16       q9,  d9,  d5
+        vsubl.s16       q10, d10, d6
+        vsubl.s16       q11, d11, d7
+        vqsub.u16       q6,  q0,  q6   // 27615 - abs()
+        vqsub.u16       q7,  q0,  q7
+        vshll.s16       q5,  d7,  #6   // tmp1 << 6
+        vshll.s16       q4,  d6,  #6
+        vshll.s16       q3,  d5,  #6
+        vshll.s16       q2,  d4,  #6
+        vshr.u16        q6,  q6,  #10  // 64-m = (27615 - abs()) >> mask_sh
+        vshr.u16        q7,  q7,  #10
+        vadd.i32        q2,  q2,  q13  // += PREP_BIAS*64
+        vadd.i32        q3,  q3,  q13
+        vadd.i32        q4,  q4,  q13
+        vadd.i32        q5,  q5,  q13
+        vmovl.u16       q12, d12
+        vmovl.u16       q13, d13
+        vmla.i32        q2,  q8,  q12  // (tmp2-tmp1)*(64-m)
+        vmovl.u16       q12, d14
+        vmla.i32        q3,  q9,  q13
+        vmovl.u16       q13, d15
+        vmla.i32        q4,  q10, q12
+        vmla.i32        q5,  q11, q13
+        vrshl.s32       q2,  q2,  q14  // (tmp1<<6 + (tmp2-tmp1)*(64-m) + (1 << (sh-1)) + PREP_BIAS*64) >> sh
+        vrshl.s32       q3,  q3,  q14
+        vrshl.s32       q4,  q4,  q14
+        vrshl.s32       q5,  q5,  q14
+        vqmovun.s32     d4,  q2        // iclip_pixel
+        vqmovun.s32     d5,  q3
+        vqmovun.s32     d6,  q4
+        vqmovun.s32     d7,  q5
+        vmin.u16        q2,  q2,  q15  // iclip_pixel
+        vmin.u16        q3,  q3,  q15  // iclip_pixel
+.if \type == 444
+        vmovn.i16       d12, q6        // 64 - m
+        vmovn.i16       d13, q7
+        vsub.i16        q6,  q1,  q6   // m
+        vst1.8          {d12}, [r6, :64]!
+        vst1.8          {d13}, [lr, :64]!
+.elseif \type == 422
+        vpadd.i16       d12, d12, d13  // (64 - m) + (64 - n) (column wise addition)
+        vpadd.i16       d13, d14, d15
+        vmovn.i16       d12, q6
+        vhsub.u8        d12, d2,  d12  // ((129 - sign) - ((64 - m) + (64 - n)) >> 1
+        vst1.32         {d12[0]}, [r6, :32]!
+        vst1.32         {d12[1]}, [lr, :32]!
+.elseif \type == 420
+        vadd.i16        q6,  q6,  q7   // (64 - my1) + (64 - my2) (row wise addition)
+        vpadd.i16       d12, d12, d13  // (128 - m) + (128 - n) (column wise addition)
+        vsub.i16        d12, d2,  d12  // (256 - sign) - ((128 - m) + (128 - n))
+        vrshrn.i16      d12, q6,  #2   // ((256 - sign) - ((128 - m) + (128 - n)) + 2) >> 2
+        vst1.32         {d12[0]}, [r6, :32]!
+.endif
+        vst1.16         {q2}, [r0,  :128]!
+        vst1.16         {q3}, [r12, :128]!
+        bgt             16b
+        subs            r5,  r5,  #2
+        add             r2,  r2,  r4,  lsl #1
+        add             r3,  r3,  r4,  lsl #1
+        add             r7,  r7,  r4,  lsl #1
+        add             r9,  r9,  r4,  lsl #1
+.if \type == 444
+        add             r6,  r6,  r4
+        add             lr,  lr,  r4
+.elseif \type == 422
+        add             r6,  r6,  r4,  lsr #1
+        add             lr,  lr,  r4,  lsr #1
+.endif
+        add             r0,  r0,  r1
+        add             r12, r12, r1
+        bgt             161b
+        vpop            {q4-q7}
+        pop             {r4-r10,pc}
+endfunc
+.endm
+
+w_mask_fn 444
+w_mask_fn 422
+w_mask_fn 420
+
+function blend_16bpc_neon, export=1
+        push            {r4-r5,lr}
+        ldrd            r4,  r5,  [sp, #12]
+        clz             lr,  r3
+        adr             r3,  L(blend_tbl)
+        sub             lr,  lr,  #26
+        ldr             lr,  [r3,  lr,  lsl #2]
+        add             r3,  r3,  lr
+        bx              r3
+
+        .align 2
+L(blend_tbl):
+        .word 320f - L(blend_tbl) + CONFIG_THUMB
+        .word 160f - L(blend_tbl) + CONFIG_THUMB
+        .word 80f  - L(blend_tbl) + CONFIG_THUMB
+        .word 40f  - L(blend_tbl) + CONFIG_THUMB
+
+40:
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+4:
+        vld1.8          {d4}, [r5, :64]!
+        vld1.16         {q1}, [r2, :128]!
+        vld1.16         {d0}, [r0, :64]
+        vneg.s8         d4,  d4       // -m
+        subs            r4,  r4,  #2
+        vld1.16         {d1}, [r12, :64]
+        vmovl.s8        q2,  d4
+        vshl.i16        q2,  q2,  #9  // -m << 9
+        vsub.i16        q1,  q0,  q1  // a - b
+        vqrdmulh.s16    q1,  q1,  q2  // ((a-b)*-m + 32) >> 6
+        vadd.i16        q0,  q0,  q1
+        vst1.16         {d0}, [r0,  :64], r1
+        vst1.16         {d1}, [r12, :64], r1
+        bgt             4b
+        pop             {r4-r5,pc}
+80:
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+8:
+        vld1.8          {q8},     [r5, :128]!
+        vld1.16         {q2, q3}, [r2, :128]!
+        vneg.s8         q9,  q8       // -m
+        vld1.16         {q0},     [r0,  :128]
+        vld1.16         {q1},     [r12, :128]
+        vmovl.s8        q8,  d18
+        vmovl.s8        q9,  d19
+        vshl.i16        q8,  q8,  #9  // -m << 9
+        vshl.i16        q9,  q9,  #9
+        vsub.i16        q2,  q0,  q2  // a - b
+        vsub.i16        q3,  q1,  q3
+        subs            r4,  r4,  #2
+        vqrdmulh.s16    q2,  q2,  q8  // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    q3,  q3,  q9
+        vadd.i16        q0,  q0,  q2
+        vadd.i16        q1,  q1,  q3
+        vst1.16         {q0}, [r0,  :128], r1
+        vst1.16         {q1}, [r12, :128], r1
+        bgt             8b
+        pop             {r4-r5,pc}
+160:
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+16:
+        vld1.8          {q12, q13}, [r5, :128]!
+        vld1.16         {q8,  q9},  [r2, :128]!
+        subs            r4,  r4,  #2
+        vneg.s8         q14, q12      // -m
+        vld1.16         {q0,  q1},  [r0, :128]
+        vneg.s8         q15, q13
+        vld1.16         {q10, q11}, [r2, :128]!
+        vmovl.s8        q12, d28
+        vmovl.s8        q13, d29
+        vmovl.s8        q14, d30
+        vmovl.s8        q15, d31
+        vld1.16         {q2,  q3},  [r12, :128]
+        vshl.i16        q12, q12, #9  // -m << 9
+        vshl.i16        q13, q13, #9
+        vshl.i16        q14, q14, #9
+        vshl.i16        q15, q15, #9
+        vsub.i16        q8,  q0,  q8  // a - b
+        vsub.i16        q9,  q1,  q9
+        vsub.i16        q10, q2,  q10
+        vsub.i16        q11, q3,  q11
+        vqrdmulh.s16    q8,  q8,  q12 // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    q9,  q9,  q13
+        vqrdmulh.s16    q10, q10, q14
+        vqrdmulh.s16    q11, q11, q15
+        vadd.i16        q0,  q0,  q8
+        vadd.i16        q1,  q1,  q9
+        vadd.i16        q2,  q2,  q10
+        vst1.16         {q0, q1}, [r0,  :128], r1
+        vadd.i16        q3,  q3,  q11
+        vst1.16         {q2, q3}, [r12, :128], r1
+        bgt             16b
+        pop             {r4-r5,pc}
+320:
+        add             r12, r0,  #32
+32:
+        vld1.8          {q12, q13}, [r5, :128]!
+        vld1.16         {q8,  q9},  [r2, :128]!
+        subs            r4,  r4,  #1
+        vneg.s8         q14, q12      // -m
+        vld1.16         {q0,  q1},  [r0, :128]
+        vneg.s8         q15, q13
+        vld1.16         {q10, q11}, [r2, :128]!
+        vmovl.s8        q12, d28
+        vmovl.s8        q13, d29
+        vmovl.s8        q14, d30
+        vmovl.s8        q15, d31
+        vld1.16         {q2,  q3},  [r12, :128]
+        vshl.i16        q12, q12, #9  // -m << 9
+        vshl.i16        q13, q13, #9
+        vshl.i16        q14, q14, #9
+        vshl.i16        q15, q15, #9
+        vsub.i16        q8,  q0,  q8  // a - b
+        vsub.i16        q9,  q1,  q9
+        vsub.i16        q10, q2,  q10
+        vsub.i16        q11, q3,  q11
+        vqrdmulh.s16    q8,  q8,  q12 // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    q9,  q9,  q13
+        vqrdmulh.s16    q10, q10, q14
+        vqrdmulh.s16    q11, q11, q15
+        vadd.i16        q0,  q0,  q8
+        vadd.i16        q1,  q1,  q9
+        vadd.i16        q2,  q2,  q10
+        vst1.16         {q0, q1}, [r0,  :128], r1
+        vadd.i16        q3,  q3,  q11
+        vst1.16         {q2, q3}, [r12, :128], r1
+        bgt             32b
+        pop             {r4-r5,pc}
+endfunc
+
+function blend_h_16bpc_neon, export=1
+        push            {r4-r5,lr}
+        ldr             r4,  [sp, #12]
+        movrel          r5,  X(obmc_masks)
+        add             r5,  r5,  r4
+        sub             r4,  r4,  r4,  lsr #2
+        clz             lr,  r3
+        adr             r12, L(blend_h_tbl)
+        sub             lr,  lr,  #24
+        ldr             lr,  [r12, lr,  lsl #2]
+        add             r12, r12, lr
+        bx              r12
+
+        .align 2
+L(blend_h_tbl):
+        .word 1280f - L(blend_h_tbl) + CONFIG_THUMB
+        .word 640f  - L(blend_h_tbl) + CONFIG_THUMB
+        .word 320f  - L(blend_h_tbl) + CONFIG_THUMB
+        .word 160f  - L(blend_h_tbl) + CONFIG_THUMB
+        .word 80f   - L(blend_h_tbl) + CONFIG_THUMB
+        .word 40f   - L(blend_h_tbl) + CONFIG_THUMB
+        .word 20f   - L(blend_h_tbl) + CONFIG_THUMB
+
+20:
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+2:
+        vld2.8          {d4[], d5[]}, [r5, :16]!
+        vld1.16         {d2},         [r2, :64]!
+        vext.8          d4,  d4,  d5,  #6
+        subs            r4,  r4,  #2
+        vneg.s8         d4,  d4       // -m
+        vld1.32         {d0[]},  [r0, :32]
+        vld1.32         {d0[1]}, [r12, :32]
+        vmovl.s8        q2,  d4
+        vshl.i16        d4,  d4,  #9  // -m << 9
+        vsub.i16        d2,  d0,  d2  // a - b
+        vqrdmulh.s16    d2,  d2,  d4  // ((a-b)*-m + 32) >> 6
+        vadd.i16        d0,  d0,  d2
+        vst1.32         {d0[0]}, [r0,  :32], r1
+        vst1.32         {d0[1]}, [r12, :32], r1
+        bgt             2b
+        pop             {r4-r5,pc}
+40:
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+4:
+        vld2.8          {d4[], d5[]}, [r5, :16]!
+        vld1.16         {q1},         [r2, :128]!
+        vext.8          d4,  d4,  d5,  #4
+        subs            r4,  r4,  #2
+        vneg.s8         d4,  d4       // -m
+        vld1.16         {d0}, [r0,  :64]
+        vld1.16         {d1}, [r12, :64]
+        vmovl.s8        q2,  d4
+        vshl.i16        q2,  q2,  #9  // -m << 9
+        vsub.i16        q1,  q0,  q1  // a - b
+        vqrdmulh.s16    q1,  q1,  q2  // ((a-b)*-m + 32) >> 6
+        vadd.i16        q0,  q0,  q1
+        vst1.16         {d0}, [r0,  :64], r1
+        vst1.16         {d1}, [r12, :64], r1
+        bgt             4b
+        pop             {r4-r5,pc}
+80:
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+8:
+        vld2.8          {d16[], d17[]}, [r5, :16]!
+        vld1.16         {q2, q3},       [r2, :128]!
+        vneg.s8         q9,  q8      // -m
+        vld1.16         {q0}, [r0, :128]
+        subs            r4,  r4,  #2
+        vmovl.s8        q8,  d18
+        vmovl.s8        q9,  d19
+        vld1.16         {q1}, [r12, :128]
+        vshl.i16        q8,  q8,  #9  // -m << 9
+        vshl.i16        q9,  q9,  #9
+        vsub.i16        q2,  q0,  q2  // a - b
+        vsub.i16        q3,  q1,  q3
+        vqrdmulh.s16    q2,  q2,  q8  // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    q3,  q3,  q9
+        vadd.i16        q0,  q0,  q2
+        vadd.i16        q1,  q1,  q3
+        vst1.16         {q0}, [r0,  :128], r1
+        vst1.16         {q1}, [r12, :128], r1
+        bgt             8b
+        pop             {r4-r5,pc}
+160:
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+16:
+        vld2.8          {d24[], d25[]}, [r5, :16]!
+        vld1.16         {q8,  q9},  [r2, :128]!
+        subs            r4,  r4,  #2
+        vneg.s8         q13, q12      // -m
+        vld1.16         {q0,  q1},  [r0, :128]
+        vmovl.s8        q12, d26
+        vld1.16         {q10, q11}, [r2, :128]!
+        vmovl.s8        q13, d27
+        vld1.16         {q2,  q3},  [r12, :128]
+        vshl.i16        q12, q12, #9  // -m << 9
+        vshl.i16        q13, q13, #9
+        vsub.i16        q8,  q0,  q8  // a - b
+        vsub.i16        q9,  q1,  q9
+        vsub.i16        q10, q2,  q10
+        vsub.i16        q11, q3,  q11
+        vqrdmulh.s16    q8,  q8,  q12 // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    q9,  q9,  q12
+        vqrdmulh.s16    q10, q10, q13
+        vqrdmulh.s16    q11, q11, q13
+        vadd.i16        q0,  q0,  q8
+        vadd.i16        q1,  q1,  q9
+        vadd.i16        q2,  q2,  q10
+        vadd.i16        q3,  q3,  q11
+        vst1.16         {q0, q1}, [r0,  :128], r1
+        vst1.16         {q2, q3}, [r12, :128], r1
+        bgt             16b
+        pop             {r4-r5,pc}
+1280:
+640:
+320:
+        sub             r1,  r1,  r3,  lsl #1
+321:
+        vld1.8          {d24[]}, [r5]!
+        mov             r12, r3
+        vneg.s8         d24, d24      // -m
+        vmovl.s8        q12, d24
+        vshl.i16        q12, q12, #9  // -m << 9
+32:
+        vld1.16         {q8,  q9},  [r2, :128]!
+        vld1.16         {q0,  q1},  [r0, :128]!
+        subs            r12, r12, #32
+        vld1.16         {q10, q11}, [r2, :128]!
+        vld1.16         {q2,  q3},  [r0, :128]
+        vsub.i16        q8,  q0,  q8  // a - b
+        vsub.i16        q9,  q1,  q9
+        vsub.i16        q10, q2,  q10
+        vsub.i16        q11, q3,  q11
+        sub             r0,  r0,  #32
+        vqrdmulh.s16    q8,  q8,  q12 // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    q9,  q9,  q12
+        vqrdmulh.s16    q10, q10, q12
+        vqrdmulh.s16    q11, q11, q12
+        vadd.i16        q0,  q0,  q8
+        vadd.i16        q1,  q1,  q9
+        vadd.i16        q2,  q2,  q10
+        vst1.16         {q0, q1}, [r0, :128]!
+        vadd.i16        q3,  q3,  q11
+        vst1.16         {q2, q3}, [r0, :128]!
+        bgt             32b
+        subs            r4,  r4,  #1
+        add             r0,  r0,  r1
+        bgt             321b
+        pop             {r4-r5,pc}
+endfunc
+
+function blend_v_16bpc_neon, export=1
+        push            {r4,lr}
+        ldr             r4,  [sp, #8]
+        movrel          lr,  X(obmc_masks)
+        add             lr,  lr,  r3
+        clz             r12, r3
+        adr             r3,  L(blend_v_tbl)
+        sub             r12, r12, #26
+        ldr             r12, [r3,  r12, lsl #2]
+        add             r3,  r3,  r12
+        bx              r3
+
+        .align 2
+L(blend_v_tbl):
+        .word 320f - L(blend_v_tbl) + CONFIG_THUMB
+        .word 160f - L(blend_v_tbl) + CONFIG_THUMB
+        .word 80f  - L(blend_v_tbl) + CONFIG_THUMB
+        .word 40f  - L(blend_v_tbl) + CONFIG_THUMB
+        .word 20f  - L(blend_v_tbl) + CONFIG_THUMB
+
+20:
+        add             r12, r0,  r1
+        lsl             r1,  r1,  #1
+        vld1.8          {d4[]}, [lr]
+        vneg.s8         d4,  d4       // -m
+        vmovl.s8        q2,  d4
+        vshl.i16        d4,  d4,  #9  // -m << 9
+2:
+        vld1.32         {d2[]},  [r2, :32]!
+        vld1.16         {d0[]},  [r0, :16]
+        subs            r4,  r4,  #2
+        vld1.16         {d2[1]}, [r2,  :16]
+        vld1.16         {d0[1]}, [r12, :16]
+        add             r2,  r2,  #4
+        vsub.i16        d2,  d0,  d2  // a - b
+        vqrdmulh.s16    d2,  d2,  d4  // ((a-b)*-m + 32) >> 6
+        vadd.i16        d0,  d0,  d2
+        vst1.16         {d0[0]}, [r0,  :16], r1
+        vst1.16         {d0[1]}, [r12, :16], r1
+        bgt             2b
+        pop             {r4,pc}
+40:
+        vld1.32         {d4[]}, [lr, :32]
+        add             r12, r0,  r1
+        vneg.s8         d4,  d4       // -m
+        lsl             r1,  r1,  #1
+        vmovl.s8        q2,  d4
+        sub             r1,  r1,  #4
+        vshl.i16        q2,  q2,  #9  // -m << 9
+4:
+        vld1.16         {q1}, [r2, :128]!
+        vld1.16         {d0}, [r0,  :64]
+        vld1.16         {d1}, [r12, :64]
+        subs            r4,  r4,  #2
+        vsub.i16        q1,  q0,  q1  // a - b
+        vqrdmulh.s16    q1,  q1,  q2  // ((a-b)*-m + 32) >> 6
+        vadd.i16        q0,  q0,  q1
+        vst1.32         {d0[0]}, [r0,  :32]!
+        vst1.32         {d1[0]}, [r12, :32]!
+        vst1.16         {d0[2]}, [r0,  :16], r1
+        vst1.16         {d1[2]}, [r12, :16], r1
+        bgt             4b
+        pop             {r4,pc}
+80:
+        vld1.8          {d16}, [lr, :64]
+        add             r12, r0,  r1
+        vneg.s8         d16, d16      // -m
+        lsl             r1,  r1,  #1
+        vmovl.s8        q8,  d16
+        sub             r1,  r1,  #8
+        vshl.i16        q8,  q8,  #9  // -m << 9
+8:
+        vld1.16         {q2, q3}, [r2,  :128]!
+        vld1.16         {q0},     [r0,  :128]
+        vld1.16         {q1},     [r12, :128]
+        subs            r4,  r4,  #2
+        vsub.i16        q2,  q0,  q2  // a - b
+        vsub.i16        q3,  q1,  q3
+        vqrdmulh.s16    q2,  q2,  q8  // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    q3,  q3,  q8
+        vadd.i16        q0,  q0,  q2
+        vadd.i16        q1,  q1,  q3
+        vst1.16         {d0},    [r0,  :64]!
+        vst1.16         {d2},    [r12, :64]!
+        vst1.32         {d1[0]}, [r0,  :32], r1
+        vst1.32         {d3[0]}, [r12, :32], r1
+        bgt             8b
+        pop             {r4,pc}
+160:
+        vld1.8          {q12}, [lr, :128]
+        add             r12, r0,  r1
+        vneg.s8         q13, q12      // -m
+        lsl             r1,  r1,  #1
+        vmovl.s8        q12, d26
+        vmovl.s8        q13, d27
+        vshl.i16        q12, q12, #9  // -m << 9
+        vshl.i16        d26, d26, #9
+16:
+        vld1.16         {q8,  q9},      [r2,  :128]!
+        vld1.16         {d0,  d1,  d2}, [r0,  :64]
+        subs            r4,  r4,  #2
+        vld1.16         {q10, q11},     [r2,  :128]!
+        vsub.i16        q8,  q0,  q8  // a - b
+        vld1.16         {d4,  d5,  d6}, [r12, :64]
+        vsub.i16        d18, d2,  d18
+        vsub.i16        q10, q2,  q10
+        vsub.i16        d22, d6,  d22
+        vqrdmulh.s16    q8,  q8,  q12  // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    d18, d18, d26
+        vqrdmulh.s16    q10, q10, q12
+        vqrdmulh.s16    d22, d22, d26
+        vadd.i16        q0,  q0,  q8
+        vadd.i16        d2,  d2,  d18
+        vadd.i16        q2,  q2,  q10
+        vst1.16         {d0,  d1,  d2}, [r0,  :64], r1
+        vadd.i16        d6,  d6,  d22
+        vst1.16         {d4,  d5,  d6}, [r12, :64], r1
+        bgt             16b
+        pop             {r4,pc}
+320:
+        vld1.8          {d24, d25, d26}, [lr, :64]
+        vneg.s8         q14, q12      // -m
+        vneg.s8         d30, d26
+        vmovl.s8        q12, d28
+        vmovl.s8        q13, d29
+        vmovl.s8        q14, d30
+        sub             r1,  r1,  #32
+        vshl.i16        q12, q12, #9  // -m << 9
+        vshl.i16        q13, q13, #9
+        vshl.i16        q14, q14, #9
+32:
+        vld1.16         {q8,  q9},  [r2, :128]!
+        vld1.16         {q0,  q1},  [r0, :128]!
+        subs            r4,  r4,  #1
+        vld1.16         {q10},      [r2, :128]
+        vsub.i16        q8,  q0,  q8  // a - b
+        vld1.16         {q2},       [r0, :128]
+        sub             r0,  r0,  #32
+        vsub.i16        q9,  q1,  q9
+        vsub.i16        q10, q2,  q10
+        vqrdmulh.s16    q8,  q8,  q12  // ((a-b)*-m + 32) >> 6
+        vqrdmulh.s16    q9,  q9,  q13
+        vqrdmulh.s16    q10, q10, q14
+        vadd.i16        q0,  q0,  q8
+        vadd.i16        q1,  q1,  q9
+        vadd.i16        q2,  q2,  q10
+        vst1.16         {q0, q1}, [r0, :128]!
+        add             r2,  r2,  #32
+        vst1.16         {q2},     [r0, :128], r1
+        bgt             32b
+        pop             {r4,pc}
+endfunc
 
 // This has got the same signature as the put_8tap functions,
 // and assumes that r9 is set to (clz(w)-24).
@@ -2605,8 +3325,8 @@ function warp_affine_8x8\t\()_16bpc_neon, export=1
 
         ldrd            r8,  r9,  [r4]
         sxth            r7,  r8
-        asr             r8,  r8, #16
-        asr             r4,  r9, #16
+        asr             r8,  r8,  #16
+        asr             r4,  r9,  #16
         sxth            r9,  r9
         mov             r10, #8
         sub             r2,  r2,  r3, lsl #1
@@ -2666,26 +3386,26 @@ function warp_affine_8x8\t\()_16bpc_neon, export=1
 
         // This ordering of vmull/vmlal is highly beneficial for
         // Cortex A8/A9/A53 here, but harmful for Cortex A7.
-        vmull.s16       q0,  d16,  d2
-        vmlal.s16       q0,  d18,  d4
-        vmlal.s16       q0,  d20,  d6
-        vmlal.s16       q0,  d22,  d8
-        vmlal.s16       q0,  d24,  d10
-        vmlal.s16       q0,  d26,  d12
-        vmull.s16       q1,  d17,  d3
-        vmlal.s16       q1,  d19,  d5
-        vmlal.s16       q1,  d21,  d7
-        vmlal.s16       q1,  d23,  d9
-        vmlal.s16       q1,  d25,  d11
-        vmlal.s16       q1,  d27,  d13
+        vmull.s16       q0,  d16, d2
+        vmlal.s16       q0,  d18, d4
+        vmlal.s16       q0,  d20, d6
+        vmlal.s16       q0,  d22, d8
+        vmlal.s16       q0,  d24, d10
+        vmlal.s16       q0,  d26, d12
+        vmull.s16       q1,  d17, d3
+        vmlal.s16       q1,  d19, d5
+        vmlal.s16       q1,  d21, d7
+        vmlal.s16       q1,  d23, d9
+        vmlal.s16       q1,  d25, d11
+        vmlal.s16       q1,  d27, d13
 
         vmovl.s8        q2,  d14
         vmovl.s8        q3,  d15
 
-        vmlal.s16       q0,  d28,  d4
-        vmlal.s16       q0,  d30,  d6
-        vmlal.s16       q1,  d29,  d5
-        vmlal.s16       q1,  d31,  d7
+        vmlal.s16       q0,  d28, d4
+        vmlal.s16       q0,  d30, d6
+        vmlal.s16       q1,  d29, d5
+        vmlal.s16       q1,  d31, d7
 
 .ifb \t
         ldr             lr,  [sp, #4]   // -(7 + intermediate_bits)
@@ -2732,3 +3452,193 @@ endfunc
 
 warp
 warp t
+
+// void dav1d_emu_edge_16bpc_neon(
+//         const intptr_t bw, const intptr_t bh,
+//         const intptr_t iw, const intptr_t ih,
+//         const intptr_t x, const intptr_t y,
+//         pixel *dst, const ptrdiff_t dst_stride,
+//         const pixel *ref, const ptrdiff_t ref_stride)
+function emu_edge_16bpc_neon, export=1
+        push            {r4-r11,lr}
+        ldrd            r4,  r5,  [sp, #36]
+        ldrd            r6,  r7,  [sp, #44]
+        ldrd            r8,  r9,  [sp, #52]
+
+        // ref += iclip(y, 0, ih - 1) * PXSTRIDE(ref_stride)
+        // ref += iclip(x, 0, iw - 1)
+        sub             r12, r3,  #1           // ih - 1
+        cmp             r5,  r3
+        sub             lr,  r2,  #1           // iw - 1
+        it              lt
+        movlt           r12, r5                // min(y, ih - 1)
+        cmp             r4,  r2
+        bic             r12, r12, r12, asr #31 // max(min(y, ih - 1), 0)
+        it              lt
+        movlt           lr,  r4                // min(x, iw - 1)
+        bic             lr,  lr,  lr,  asr #31 // max(min(x, iw - 1), 0)
+        mla             r8,  r12, r9,  r8      // ref += iclip() * stride
+        add             r8,  r8,  lr,  lsl #1  // ref += iclip()
+
+        // bottom_ext = iclip(y + bh - ih, 0, bh - 1)
+        // top_ext = iclip(-y, 0, bh - 1)
+        add             r10, r5,  r1           // y + bh
+        neg             r5,  r5                // -y
+        sub             r10, r10, r3           // y + bh - ih
+        sub             r12, r1,  #1           // bh - 1
+        cmp             r10, r1
+        bic             r5,  r5,  r5,  asr #31 // max(-y, 0)
+        it              ge
+        movge           r10, r12               // min(y + bh - ih, bh-1)
+        cmp             r5,  r1
+        bic             r10, r10, r10, asr #31 // max(min(y + bh - ih, bh-1), 0)
+        it              ge
+        movge           r5,  r12               // min(max(-y, 0), bh-1)
+
+        // right_ext = iclip(x + bw - iw, 0, bw - 1)
+        // left_ext = iclip(-x, 0, bw - 1)
+        add             r11, r4,  r0           // x + bw
+        neg             r4,  r4                // -x
+        sub             r11, r11, r2           // x + bw - iw
+        sub             lr,  r0,  #1           // bw - 1
+        cmp             r11, r0
+        bic             r4,  r4,  r4,  asr #31 // max(-x, 0)
+        it              ge
+        movge           r11, lr                // min(x + bw - iw, bw-1)
+        cmp             r4,  r0
+        bic             r11, r11, r11, asr #31 // max(min(x + bw - iw, bw-1), 0)
+        it              ge
+        movge           r4,  lr                // min(max(-x, 0), bw - 1)
+
+        // center_h = bh - top_ext - bottom_ext
+        // dst += top_ext * PXSTRIDE(dst_stride)
+        // center_w = bw - left_ext - right_ext
+        sub             r1,  r1,  r5           // bh - top_ext
+        mla             r6,  r5,  r7,  r6
+        sub             r2,  r0,  r4           // bw - left_ext
+        sub             r1,  r1,  r10          // center_h = bh - top_ext - bottom_ext
+        sub             r2,  r2,  r11          // center_w = bw - left_ext - right_ext
+
+        mov             r0,  r6                // backup of dst
+
+.macro v_loop need_left, need_right
+0:
+.if \need_left
+        vld1.16         {d0[], d1[]}, [r8]
+        mov             r12, r6                // out = dst
+        mov             r3,  r4
+        vmov            q1,  q0
+1:
+        subs            r3,  r3,  #16
+        vst1.16         {q0, q1}, [r12, :128]!
+        bgt             1b
+.endif
+        mov             lr,  r8
+        add             r12, r6,  r4,  lsl #1  // out = dst + left_ext
+        mov             r3,  r2
+1:
+        vld1.16         {q0, q1}, [lr]!
+        subs            r3,  r3,  #32
+        vld1.16         {q2, q3}, [lr]!
+.if \need_left
+        vst1.16         {q0, q1}, [r12]!
+        vst1.16         {q2, q3}, [r12]!
+.else
+        vst1.16         {q0, q1}, [r12, :128]!
+        vst1.16         {q2, q3}, [r12, :128]!
+.endif
+        bgt             1b
+.if \need_right
+        add             r3,  r8,  r2,  lsl #1  // in + center_w
+        sub             r3,  r3,  #2           // in + center_w - 1
+        add             r12, r6,  r4,  lsl #1  // dst + left_ext
+        vld1.16         {d0[], d1[]}, [r3]
+        add             r12, r12, r2,  lsl #1  // out = dst + left_ext + center_w
+        mov             r3,  r11
+        vmov            q1,  q0
+1:
+        subs            r3,  r3,  #16
+        vst1.16         {q0, q1}, [r12]!
+        bgt             1b
+.endif
+
+        subs            r1,  r1,  #1           // center_h--
+        add             r6,  r6,  r7
+        add             r8,  r8,  r9
+        bgt             0b
+.endm
+
+        cmp             r4,  #0
+        beq             2f
+        // need_left
+        cmp             r11, #0
+        beq             3f
+        // need_left + need_right
+        v_loop          1,   1
+        b               5f
+
+2:
+        // !need_left
+        cmp             r11, #0
+        beq             4f
+        // !need_left + need_right
+        v_loop          0,   1
+        b               5f
+
+3:
+        // need_left + !need_right
+        v_loop          1,   0
+        b               5f
+
+4:
+        // !need_left + !need_right
+        v_loop          0,   0
+
+5:
+        cmp             r10, #0
+        // Storing the original dst in r0 overwrote bw, recalculate it here
+        add             r2,  r2,  r4           // center_w + left_ext
+        add             r2,  r2,  r11          // bw = center_w + left_ext + right_ext
+
+        beq             3f
+        // need_bottom
+        sub             r8,  r6,  r7           // ref = dst - stride
+        mov             r4,  r2
+        sub             r12, r7,  #32
+1:
+        vld1.16         {q0, q1}, [r8, :128]!
+        mov             r3,  r10
+        vld1.16         {q2, q3}, [r8, :128]!
+2:
+        vst1.16         {q0, q1}, [r6, :128]!
+        subs            r3,  r3,  #1
+        vst1.16         {q2, q3}, [r6, :128], r12
+        bgt             2b
+        mls             r6,  r7,  r10, r6      // dst -= bottom_ext * stride
+        subs            r4,  r4,  #32          // bw -= 32
+        add             r6,  r6,  #64          // dst += 32
+        bgt             1b
+
+3:
+        cmp             r5,  #0
+        beq             3f
+        // need_top
+        mls             r6,  r7,  r5,  r0      // dst = stored_dst - top_ext * stride
+        sub             r12, r7,  #32
+1:
+        vld1.16         {q0, q1}, [r0, :128]!
+        mov             r3,  r5
+        vld1.16         {q2, q3}, [r0, :128]!
+2:
+        vst1.16         {q0, q1}, [r6, :128]!
+        subs            r3,  r3,  #1
+        vst1.16         {q2, q3}, [r6, :128], r12
+        bgt             2b
+        mls             r6,  r7,  r5,  r6      // dst -= top_ext * stride
+        subs            r2,  r2,  #32          // bw -= 32
+        add             r6,  r6,  #64          // dst += 32
+        bgt             1b
+
+3:
+        pop             {r4-r11,pc}
+endfunc

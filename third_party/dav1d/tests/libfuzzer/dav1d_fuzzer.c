@@ -178,12 +178,19 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
             dav1d_data_unref(&buf);
     }
 
-    do {
-        memset(&pic, 0, sizeof(pic));
-        err = dav1d_get_picture(ctx, &pic);
-        if (err == 0)
-            dav1d_picture_unref(&pic);
-    } while (err != DAV1D_ERR(EAGAIN));
+    memset(&pic, 0, sizeof(pic));
+    if ((err = dav1d_get_picture(ctx, &pic)) == 0) {
+        /* Test calling dav1d_picture_unref() after dav1d_close() */
+        do {
+            Dav1dPicture pic2 = { 0 };
+            if ((err = dav1d_get_picture(ctx, &pic2)) == 0)
+                dav1d_picture_unref(&pic2);
+        } while (err != DAV1D_ERR(EAGAIN));
+
+        dav1d_close(&ctx);
+        dav1d_picture_unref(&pic);
+        return 0;
+    }
 
 cleanup:
     dav1d_flush(ctx);

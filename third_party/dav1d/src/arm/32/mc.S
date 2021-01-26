@@ -71,8 +71,7 @@
 .macro bidir_fn type
 function \type\()_8bpc_neon, export=1
         push            {r4-r6,lr}
-        ldr             r4, [sp, #16]
-        ldr             r5, [sp, #20]
+        ldrd            r4,  r5,  [sp, #16]
         clz             r4,  r4
 .ifnc \type, avg
         ldr             lr, [sp, #24]
@@ -220,10 +219,8 @@ bidir_fn mask
 .macro w_mask_fn type
 function w_mask_\type\()_8bpc_neon, export=1
         push            {r4-r9,lr}
-        ldr             r4,  [sp, #28]
-        ldr             r5,  [sp, #32]
-        ldr             r6,  [sp, #36]
-        ldr             r7,  [sp, #40]
+        ldrd            r4,  r5,  [sp, #28]
+        ldrd            r6,  r7,  [sp, #36]
         clz             r8,  r4
         adr             r9,  L(w_mask_\type\()_tbl)
         sub             r8,  r8,  #24
@@ -455,8 +452,7 @@ w_mask_fn 420
 
 function blend_8bpc_neon, export=1
         push            {r4-r5,lr}
-        ldr             r4,  [sp, #12]
-        ldr             r5,  [sp, #16]
+        ldrd            r4,  r5,  [sp, #12]
         clz             lr,  r3
         adr             r3,  L(blend_tbl)
         sub             lr,  lr,  #26
@@ -566,17 +562,17 @@ L(blend_tbl):
 endfunc
 
 function blend_h_8bpc_neon, export=1
-        push            {r4-r8,lr}
-        ldr             r4,  [sp, #24]
+        push            {r4-r5,lr}
+        ldr             r4,  [sp, #12]
         movrel          r5,  X(obmc_masks)
         add             r5,  r5,  r4
         sub             r4,  r4,  r4,  lsr #2
-        clz             r6,  r3
-        adr             r7,  L(blend_h_tbl)
-        sub             r6,  r6,  #24
-        ldr             r6,  [r7, r6, lsl #2]
-        add             r7,  r7,  r6
-        bx              r7
+        clz             lr,  r3
+        adr             r12, L(blend_h_tbl)
+        sub             lr,  lr,  #24
+        ldr             lr,  [r12, lr, lsl #2]
+        add             r12, r12, lr
+        bx              r12
 
         .align 2
 L(blend_h_tbl):
@@ -594,7 +590,7 @@ L(blend_h_tbl):
         lsl             r1,  r1,  #1
 2:
         vld1.16         {d2[], d3[]},  [r5,  :16]!
-        vld1.32         {d1[0]},  [r2,  :32]!
+        vld1.32         {d1[]},  [r2,  :32]!
         subs            r4,  r4,  #2
         vld1.16         {d0[]},   [r0,  :16]
         vzip.8          d2,  d3
@@ -606,7 +602,7 @@ L(blend_h_tbl):
         vst1.16         {d20[0]}, [r0,  :16], r1
         vst1.16         {d20[1]}, [r12, :16], r1
         bgt             2b
-        pop             {r4-r8,pc}
+        pop             {r4-r5,pc}
 40:
         vmov.i8         d22, #64
         add             r12, r0,  r1
@@ -625,7 +621,7 @@ L(blend_h_tbl):
         vst1.32         {d20[0]}, [r0,  :32], r1
         vst1.32         {d20[1]}, [r12, :32], r1
         bgt             4b
-        pop             {r4-r8,pc}
+        pop             {r4-r5,pc}
 80:
         vmov.i8         q8, #64
         add             r12, r0,  r1
@@ -646,7 +642,7 @@ L(blend_h_tbl):
         vst1.u8         {d22}, [r0,  :64], r1
         vst1.u8         {d23}, [r12, :64], r1
         bgt             8b
-        pop             {r4-r8,pc}
+        pop             {r4-r5,pc}
 160:
         vmov.i8         q12, #64
         add             r12, r0,  r1
@@ -673,7 +669,7 @@ L(blend_h_tbl):
         vst1.u8         {q9},  [r0,  :128], r1
         vst1.u8         {q10}, [r12, :128], r1
         bgt             16b
-        pop             {r4-r8,pc}
+        pop             {r4-r5,pc}
 320:
 640:
 1280:
@@ -682,7 +678,7 @@ L(blend_h_tbl):
 321:
         vld1.u8         {d6[]},  [r5]!
         vsub.i8         d7,  d20, d6
-        mov             r8,  r3
+        mov             r12, r3
 32:
         vld1.u8         {q8,  q9},  [r2,  :128]!
         vld1.u8         {q0,  q1},  [r0,  :128]
@@ -698,25 +694,25 @@ L(blend_h_tbl):
         vmlal.u8        q14, d3,  d7
         vrshrn.i16      d2,  q15, #6
         vrshrn.i16      d3,  q14, #6
+        subs            r12, r12, #32
         vst1.u8         {q0,  q1},  [r0,  :128]!
-        subs            r8,  r8,  #32
         bgt             32b
         add             r0,  r0,  r1
         subs            r4,  r4,  #1
         bgt             321b
-        pop             {r4-r8,pc}
+        pop             {r4-r5,pc}
 endfunc
 
 function blend_v_8bpc_neon, export=1
-        push            {r4-r5,lr}
-        ldr             r4,  [sp, #12]
-        movrel          r5,  X(obmc_masks)
-        add             r5,  r5,  r3
-        clz             lr,  r3
+        push            {r4,lr}
+        ldr             r4,  [sp, #8]
+        movrel          lr,  X(obmc_masks)
+        add             lr,  lr,  r3
+        clz             r12, r3
         adr             r3,  L(blend_v_tbl)
-        sub             lr,  lr,  #26
-        ldr             lr,  [r3, lr, lsl #2]
-        add             r3,  r3,  lr
+        sub             r12, r12, #26
+        ldr             r12, [r3, r12, lsl #2]
+        add             r3,  r3,  r12
         bx              r3
 
         .align 2
@@ -729,7 +725,7 @@ L(blend_v_tbl):
 
 20:
         vmov.i8         d22, #64
-        vld1.8          {d2[]},   [r5]
+        vld1.8          {d2[]},   [lr]
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
         vsub.i8         d3,  d22, d2
@@ -746,10 +742,10 @@ L(blend_v_tbl):
         vst1.8          {d6[0]},  [r0],  r1
         vst1.8          {d6[1]},  [r12], r1
         bgt             2b
-        pop             {r4-r5,pc}
+        pop             {r4,pc}
 40:
         vmov.i8         d22, #64
-        vld1.32         {d4[]},   [r5,  :32]
+        vld1.32         {d4[]},   [lr,  :32]
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
         vsub.i8         d5,  d22, d4
@@ -767,10 +763,10 @@ L(blend_v_tbl):
         vst1.8          {d20[2]}, [r0],  r1
         vst1.8          {d20[6]}, [r12], r1
         bgt             4b
-        pop             {r4-r5,pc}
+        pop             {r4,pc}
 80:
         vmov.i8         d16, #64
-        vld1.u8         {d2},  [r5,  :64]
+        vld1.u8         {d2},  [lr,  :64]
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
         vsub.i8         d17, d16, d2
@@ -791,10 +787,10 @@ L(blend_v_tbl):
         vst1.16         {d22[2]}, [r0,  :16], r1
         vst1.16         {d23[2]}, [r12, :16], r1
         bgt             8b
-        pop             {r4-r5,pc}
+        pop             {r4,pc}
 160:
         vmov.i8         q12, #64
-        vld1.u8         {q14}, [r5,  :128]
+        vld1.u8         {q14}, [lr,  :128]
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
         vsub.i8         q11, q12, q14
@@ -821,10 +817,10 @@ L(blend_v_tbl):
         vst1.32         {d19[0]}, [r0,  :32], r1
         vst1.32         {d21[0]}, [r12, :32], r1
         bgt             16b
-        pop             {r4-r5,pc}
+        pop             {r4,pc}
 320:
         vmov.i8         q10, #64
-        vld1.u8         {q2,  q3},  [r5,  :128]
+        vld1.u8         {q2,  q3},  [lr,  :128]
         vsub.i8         q11, q10, q2
         vsub.i8         d24, d20, d6
 32:
@@ -842,7 +838,7 @@ L(blend_v_tbl):
         vrshrn.i16      d2,  q15, #6
         vst1.u8         {d0,  d1,  d2},  [r0,  :64],  r1
         bgt             32b
-        pop             {r4-r5,pc}
+        pop             {r4,pc}
 endfunc
 
 
@@ -3238,10 +3234,9 @@ function emu_edge_8bpc_neon, export=1
 .macro v_loop need_left, need_right
 0:
 .if \need_left
-        vld1.8          {d0[]}, [r8]
+        vld1.8          {d0[], d1[]}, [r8]
         mov             r12, r6                // out = dst
         mov             r3,  r4
-        vmov            d1,  d0
 1:
         subs            r3,  r3,  #16
         vst1.8          {q0}, [r12, :128]!
@@ -3263,10 +3258,9 @@ function emu_edge_8bpc_neon, export=1
         add             r3,  r8,  r2           // in + center_w
         sub             r3,  r3,  #1           // in + center_w - 1
         add             r12, r6,  r4           // dst + left_ext
-        vld1.8          {d0[]}, [r3]
+        vld1.8          {d0[], d1[]}, [r3]
         add             r12, r12, r2           // out = dst + left_ext + center_w
         mov             r3,  r11
-        vmov            d1,  d0
 1:
         subs            r3,  r3,  #16
         vst1.8          {q0}, [r12]!

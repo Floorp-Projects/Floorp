@@ -102,17 +102,13 @@ void bitfn(dav1d_mc_dsp_init_arm)(Dav1dMCDSPContext *const c) {
     c->avg = BF(dav1d_avg, neon);
     c->w_avg = BF(dav1d_w_avg, neon);
     c->mask = BF(dav1d_mask, neon);
-#if BITDEPTH == 8 || ARCH_AARCH64
     c->blend = BF(dav1d_blend, neon);
     c->blend_h = BF(dav1d_blend_h, neon);
     c->blend_v = BF(dav1d_blend_v, neon);
     c->w_mask[0] = BF(dav1d_w_mask_444, neon);
     c->w_mask[1] = BF(dav1d_w_mask_422, neon);
     c->w_mask[2] = BF(dav1d_w_mask_420, neon);
-#endif
     c->warp8x8 = BF(dav1d_warp_affine_8x8, neon);
     c->warp8x8t = BF(dav1d_warp_affine_8x8t, neon);
-#if BITDEPTH == 8 || ARCH_AARCH64
     c->emu_edge = BF(dav1d_emu_edge, neon);
-#endif
 }

@@ -1422,8 +1422,7 @@ endfunc
 function ipred_filter_8bpc_neon, export=1
         push            {r4-r8, lr}
         movw            r12, #511
-        ldr             r5, [sp, #28]
-        ldr             r4, [sp, #24]
+        ldrd            r4,  r5,  [sp, #24]
         and             r5,  r5,  r12 // 511
         movrel          r6,  X(filter_intra_taps)
         lsl             r5,  r5,  #6
@@ -1594,8 +1593,7 @@ endfunc
 //                         const int w, const int h);
 function pal_pred_8bpc_neon, export=1
         push            {r4-r5, lr}
-        ldr             r4,  [sp, #12]
-        ldr             r5,  [sp, #16]
+        ldrd            r4,  r5,  [sp, #12]
         vld1.16         {q0}, [r2, :128]
         clz             lr,  r4
         adr             r12, L(pal_pred_tbl)
@@ -1706,8 +1704,7 @@ endfunc
 //                              const int16_t *ac, const int alpha);
 function ipred_cfl_128_8bpc_neon, export=1
         push            {r4-r8, lr}
-        ldr             r4,  [sp, #24]
-        ldr             r5,  [sp, #28]
+        ldrd            r4,  r5,  [sp, #24]
         ldr             r6,  [sp, #32]
         clz             lr,  r3
         adr             r12, L(ipred_cfl_128_tbl)
@@ -1834,8 +1831,7 @@ endfunc
 //                              const int16_t *ac, const int alpha);
 function ipred_cfl_top_8bpc_neon, export=1
         push            {r4-r8, lr}
-        ldr             r4,  [sp, #24]
-        ldr             r5,  [sp, #28]
+        ldrd            r4,  r5,  [sp, #24]
         ldr             r6,  [sp, #32]
         clz             lr,  r3
         adr             r12, L(ipred_cfl_top_tbl)
@@ -1898,8 +1894,7 @@ endfunc
 //                               const int16_t *ac, const int alpha);
 function ipred_cfl_left_8bpc_neon, export=1
         push            {r4-r8, lr}
-        ldr             r4,  [sp, #24]
-        ldr             r5,  [sp, #28]
+        ldrd            r4,  r5,  [sp, #24]
         ldr             r6,  [sp, #32]
         sub             r2,  r2,  r4
         clz             lr,  r3
@@ -1970,8 +1965,7 @@ endfunc
 //                          const int16_t *ac, const int alpha);
 function ipred_cfl_8bpc_neon, export=1
         push            {r4-r8, lr}
-        ldr             r4,  [sp, #24]
-        ldr             r5,  [sp, #28]
+        ldrd            r4,  r5,  [sp, #24]
         ldr             r6,  [sp, #32]
         sub             r2,  r2,  r4
         add             r8,  r3,  r4  // width + height
@@ -2134,8 +2128,7 @@ endfunc
 //                           const int h_pad, const int cw, const int ch);
 function ipred_cfl_ac_420_8bpc_neon, export=1
         push            {r4-r8,lr}
-        ldr             r4,  [sp, #24]
-        ldr             r5,  [sp, #28]
+        ldrd            r4,  r5,  [sp, #24]
         ldr             r6,  [sp, #32]
         clz             r8,  r5
         lsl             r4,  r4,  #2
@@ -2447,8 +2440,7 @@ endfunc
 //                           const int h_pad, const int cw, const int ch);
 function ipred_cfl_ac_422_8bpc_neon, export=1
         push            {r4-r8,lr}
-        ldr             r4,  [sp, #24]
-        ldr             r5,  [sp, #28]
+        ldrd            r4,  r5,  [sp, #24]
         ldr             r6,  [sp, #32]
         clz             r8,  r5
         lsl             r4,  r4,  #2
@@ -2678,8 +2670,7 @@ endfunc
 //                           const int h_pad, const int cw, const int ch);
 function ipred_cfl_ac_444_8bpc_neon, export=1
         push            {r4-r8,lr}
-        ldr             r4,  [sp, #24]
-        ldr             r5,  [sp, #28]
+        ldrd            r4,  r5,  [sp, #24]
         ldr             r6,  [sp, #32]
         clz             r8,  r5
         lsl             r4,  r4,  #2
