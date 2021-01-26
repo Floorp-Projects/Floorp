@@ -152,6 +152,7 @@ const ContentProcessTargetActor = TargetActorMixin(
         threadActor: this.threadActor.actorID,
         memoryActor: this.memoryActor.actorID,
         processID: Services.appinfo.processID,
+        remoteType: Services.appinfo.remoteType,
 
         traits: {
           networkMonitor: false,
