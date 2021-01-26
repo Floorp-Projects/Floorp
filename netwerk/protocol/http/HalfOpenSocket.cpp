@@ -163,7 +163,7 @@ nsresult HalfOpenSocket::SetupStreams(nsISocketTransport** transport,
     tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
   }
 
-  if (ci->GetPrivate()) {
+  if (ci->GetPrivate() || ci->GetIsolated()) {
     tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
   }
 
