@@ -3,13 +3,22 @@ layout: page
 title: Changelog
 permalink: /changelog/
 ---
-# 72.0.0-SNAPSHOT (In Development)
+
+# 73.0.0-SNAPSHOT (In Development)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v72.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/133?closed=1)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/134?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
+
+# 72.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/133?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v72.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v72.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v72.0.0/.config.yml)
 
 * **feature-prompts**:
   * 🚒 Bug fixed [issue #9471](https://github.com/mozilla-mobile/android-components/issues/9471) - Confirm and alert js dialogs don't show "OK" and "Cancel" buttons when the message is too long.
@@ -25,7 +34,7 @@ permalink: /changelog/
 
 # 71.0.0
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v70.0.0...v71.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/132?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v71.0.0/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v71.0.0/buildSrc/src/main/java/Gecko.kt)
