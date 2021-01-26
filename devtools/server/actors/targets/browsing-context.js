@@ -92,20 +92,24 @@ function getDocShellChromeEventHandler(docShell) {
   return handler;
 }
 
+/**
+ * Helper to retrieve all children docshells of a given docshell.
+ *
+ * Given that docshell interfaces can only be used within the same process,
+ * this only returns docshells for children documents that runs in the same process
+ * as the given docshell.
+ */
 function getChildDocShells(parentDocShell) {
-  const allDocShells = parentDocShell.getAllDocShellsInSubtree(
-    Ci.nsIDocShellTreeItem.typeAll,
-    Ci.nsIDocShell.ENUMERATE_FORWARDS
-  );
-
-  const docShells = [];
-  for (const docShell of allDocShells) {
-    docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
-    docShells.push(docShell);
-  }
-  return docShells;
+  return parentDocShell.browsingContext
+    .getAllBrowsingContextsInSubtree()
+    .filter(browsingContext => {
+      // Filter out browsingContext which don't expose any docshell (e.g. remote frame)
+      return browsingContext.docShell;
+    })
+    .map(browsingContext => {
+      // Map BrowsingContext to DocShell
+      return browsingContext.docShell;
+    });
 }
 
 exports.getChildDocShells = getChildDocShells;
