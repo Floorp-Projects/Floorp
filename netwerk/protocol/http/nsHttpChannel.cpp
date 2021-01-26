@@ -3657,15 +3657,16 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
 }
 
 bool nsHttpChannel::IsIsolated() {
-  if (LoadHasBeenIsolatedChecked()) {
-    return LoadIsIsolated();
-  }
-  StoreIsIsolated(
-      StaticPrefs::browser_cache_cache_isolation() ||
-      (IsThirdPartyTrackingResource() &&
-       !ContentBlocking::ShouldAllowAccessFor(this, mURI, nullptr)));
-  StoreHasBeenIsolatedChecked(true);
-  return LoadIsIsolated();
+  return false;
+  // if (LoadHasBeenIsolatedChecked()) {
+  //   return LoadIsIsolated();
+  // }
+  // StoreIsIsolated(
+  //     StaticPrefs::browser_cache_cache_isolation() ||
+  //     (IsThirdPartyTrackingResource() &&
+  //      !ContentBlocking::ShouldAllowAccessFor(this, mURI, nullptr)));
+  // StoreHasBeenIsolatedChecked(true);
+  // return LoadIsIsolated();
 }
 
 const nsCString& nsHttpChannel::GetTopWindowOrigin() {
@@ -3813,16 +3814,6 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   }
   if (mRequestHead.IsHead()) {
     mCacheIdExtension.Append("HEAD");
-  }
-
-  if (IsIsolated()) {
-    auto& topWindowOrigin = GetTopWindowOrigin();
-    if (topWindowOrigin.IsEmpty()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mCacheIdExtension.Append("-unique:");
-    mCacheIdExtension.Append(topWindowOrigin);
   }
 
   mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
