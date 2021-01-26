@@ -9,7 +9,7 @@ use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
 use neqo_qpack::QpackSettings;
 use neqo_transport::{
-    ConnectionParameters, Error as TransportError, FixedConnectionIdManager, Output, QuicVersion,
+    ConnectionParameters, Error as TransportError, Output, QuicVersion, RandomConnectionIdGenerator,
 };
 use nserror::*;
 use nsstring::*;
@@ -88,10 +88,12 @@ impl NeqoHttp3Conn {
 
         let mut conn = match Http3Client::new(
             origin_conv,
-            Rc::new(RefCell::new(FixedConnectionIdManager::new(3))),
+            Rc::new(RefCell::new(RandomConnectionIdGenerator::new(3))),
             local,
             remote,
-            &ConnectionParameters::default().quic_version(quic_version),
+            ConnectionParameters::default()
+                .quic_version(quic_version)
+                .disable_preferred_address(),
             &http3_settings,
         ) {
             Ok(c) => c,
@@ -398,11 +400,13 @@ pub enum CloseError {
     Http3AppError(u64),
 }
 
-impl From<neqo_transport::CloseError> for CloseError {
-    fn from(error: neqo_transport::CloseError) -> CloseError {
+impl From<neqo_transport::ConnectionError> for CloseError {
+    fn from(error: neqo_transport::ConnectionError) -> CloseError {
         match error {
-            neqo_transport::CloseError::Transport(c) => CloseError::QuicTransportError(c),
-            neqo_transport::CloseError::Application(c) => CloseError::Http3AppError(c),
+            neqo_transport::ConnectionError::Transport(c) => {
+                CloseError::QuicTransportError(c.code())
+            }
+            neqo_transport::ConnectionError::Application(c) => CloseError::Http3AppError(c),
         }
     }
 }
