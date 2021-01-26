@@ -4033,6 +4033,10 @@ class LArrayBufferViewLength : public LInstructionHelper<1, 1, 0> {
   }
 
   const LAllocation* object() { return getOperand(0); }
+
+  const MArrayBufferViewLength* mir() const {
+    return mir_->toArrayBufferViewLength();
+  }
 };
 
 // Read the byteOffset of an array buffer view.

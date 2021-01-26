@@ -2937,9 +2937,14 @@ void LIRGenerator::visitArrayBufferByteLengthInt32(
 
 void LIRGenerator::visitArrayBufferViewLength(MArrayBufferViewLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  define(new (alloc())
-             LArrayBufferViewLength(useRegisterAtStart(ins->object())),
-         ins);
+  MOZ_ASSERT(ins->type() == MIRType::Int32 || ins->type() == MIRType::IntPtr);
+
+  auto* lir =
+      new (alloc()) LArrayBufferViewLength(useRegisterAtStart(ins->object()));
+  if (ins->fallible()) {
+    assignSnapshot(lir, ins->bailoutKind());
+  }
+  define(lir, ins);
 }
 
 void LIRGenerator::visitArrayBufferViewByteOffset(

@@ -7819,7 +7819,17 @@ void CodeGenerator::visitArrayBufferByteLengthInt32(
 void CodeGenerator::visitArrayBufferViewLength(LArrayBufferViewLength* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.loadArrayBufferViewLengthInt32(obj, out);
+
+  if (lir->mir()->type() == MIRType::Int32) {
+    Label bail;
+    masm.loadArrayBufferViewLengthInt32(obj, out, &bail);
+    if (bail.used()) {
+      bailoutFrom(&bail, lir->snapshot());
+    }
+  } else {
+    MOZ_ASSERT(lir->mir()->type() == MIRType::IntPtr);
+    masm.loadArrayBufferViewLengthPtr(obj, out);
+  }
 }
 
 void CodeGenerator::visitArrayBufferViewByteOffset(
