@@ -156,7 +156,11 @@ void brush_shader_main_vs(
     //           shaders that don't clip in the future,
     //           but it's reasonable to assume that one
     //           implies the other, for now.
-#ifdef WR_FEATURE_ALPHA_PASS
+    // SW-WR may decay some requests for alpha-pass shaders to
+    // the opaque version if only the clip-mask is required. In
+    // that case the opaque vertex shader must still write out
+    // the clip information, which is cheap to do for SWGL.
+#if defined(WR_FEATURE_ALPHA_PASS) || defined(SWGL)
     write_clip(
         vi.world_pos,
         clip_area,

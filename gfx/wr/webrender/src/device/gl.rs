@@ -981,6 +981,9 @@ pub struct Capabilities {
     /// Whether the driver prefers fewer and larger texture uploads
     /// over many smaller updates.
     pub prefers_batched_texture_uploads: bool,
+    /// Whether clip-masking is supported natively by the GL implementation
+    /// rather than emulated in shaders.
+    pub uses_native_clip_mask: bool,
     /// The name of the renderer, as reported by GL
     pub renderer_name: String,
 }
@@ -1627,6 +1630,12 @@ impl Device {
             gl::GlType::Gles => gl_version >= [3, 1],
         };
 
+        // SWGL uses swgl_clipMask() instead of implementing clip-masking in shaders.
+        // This allows certain shaders to potentially bypass the more expensive alpha-
+        // pass variants if they know the alpha-pass was only required to deal with
+        // clip-masking.
+        let uses_native_clip_mask = is_software_webrender;
+
         // On Mali-Gxx the driver really struggles with many small texture uploads,
         // and handles fewer, larger uploads better.
         let prefers_batched_texture_uploads = is_mali_g;
@@ -1654,6 +1663,7 @@ impl Device {
                 supports_render_target_partial_update,
                 supports_shader_storage_object,
                 prefers_batched_texture_uploads,
+                uses_native_clip_mask,
                 renderer_name,
             },
 

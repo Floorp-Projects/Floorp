@@ -1060,6 +1060,7 @@ impl Shaders {
         key: &BatchKey,
         mut features: BatchFeatures,
         debug_flags: DebugFlags,
+        device: &Device,
     ) -> &mut LazilyCompiledShader {
         match key.kind {
             BatchKind::SplitComposite => {
@@ -1089,7 +1090,15 @@ impl Shaders {
                     BrushBatchKind::MixBlend { .. } => {
                         &mut self.brush_mix_blend
                     }
+                    BrushBatchKind::LinearGradient |
+                    BrushBatchKind::RadialGradient |
                     BrushBatchKind::ConicGradient => {
+                        // SWGL uses a native clip mask implementation that bypasses the shader.
+                        // Don't consider it in that case when deciding whether or not to use
+                        // an alpha-pass shader.
+                        if device.get_capabilities().uses_native_clip_mask {
+                            features.remove(BatchFeatures::CLIP_MASK);
+                        }
                         // Gradient brushes can optimistically use the opaque shader even
                         // with a blend mode if they don't require any features.
                         if !features.intersects(
@@ -1099,31 +1108,12 @@ impl Shaders {
                         ) {
                             features.remove(BatchFeatures::ALPHA_PASS);
                         }
-                        &mut self.brush_conic_gradient
-                    }
-                    BrushBatchKind::RadialGradient => {
-                        // Gradient brushes can optimistically use the opaque shader even
-                        // with a blend mode if they don't require any features.
-                        if !features.intersects(
-                            BatchFeatures::ANTIALIASING
-                                | BatchFeatures::REPETITION
-                                | BatchFeatures::CLIP_MASK,
-                        ) {
-                            features.remove(BatchFeatures::ALPHA_PASS);
+                        match brush_kind {
+                            BrushBatchKind::LinearGradient => &mut self.brush_linear_gradient,
+                            BrushBatchKind::RadialGradient => &mut self.brush_radial_gradient,
+                            BrushBatchKind::ConicGradient => &mut self.brush_conic_gradient,
+                            _ => panic!(),
                         }
-                        &mut self.brush_radial_gradient
-                    }
-                    BrushBatchKind::LinearGradient => {
-                        // Gradient brushes can optimistically use the opaque shader even
-                        // with a blend mode if they don't require any features.
-                        if !features.intersects(
-                            BatchFeatures::ANTIALIASING
-                                | BatchFeatures::REPETITION
-                                | BatchFeatures::CLIP_MASK,
-                        ) {
-                            features.remove(BatchFeatures::ALPHA_PASS);
-                        }
-                        &mut self.brush_linear_gradient
                     }
                     BrushBatchKind::YuvImage(image_buffer_kind, ..) => {
                         let shader_index =
