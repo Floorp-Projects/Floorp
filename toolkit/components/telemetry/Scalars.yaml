@@ -278,24 +278,6 @@ browser.engagement:
     record_in_processes:
       - 'main'
 
-  restored_pinned_tabs_count:
-    bug_numbers:
-      - 1373728
-      - 1451475
-    description: >
-      The count of the number of pinned tabs that were restored.
-    expires: '67'
-    kind: uint
-    notification_emails:
-      - chutten@mozilla.com
-      - jrediger@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
-
   active_ticks:
     bug_numbers:
       - 1376942

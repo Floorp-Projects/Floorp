@@ -209,10 +209,6 @@ var SessionStartup = {
           }, 0)
         );
       }, 0);
-      Services.telemetry.scalarSet(
-        "browser.engagement.restored_pinned_tabs_count",
-        pinnedTabCount
-      );
       Services.telemetry.scalarSetMaximum(
         "browser.engagement.max_concurrent_tab_pinned_count",
         pinnedTabCount
