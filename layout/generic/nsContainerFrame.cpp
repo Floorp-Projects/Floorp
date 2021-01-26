@@ -986,16 +986,10 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
   if (aFlags.contains(ComputeSizeFlag::ShrinkWrap) ||
       IsFrameOfType(eReplaced)) {
     // Only bother computing our 'auto' ISize if the result will be used.
-    // It'll be used under two scenarios:
-    // - If our ISize property is itself 'auto'.
-    // - If we're using flex-basis in place of our ISize property (i.e. we're a
-    // flex item with our inline axis being the main axis), AND we have
-    // flex-basis:content.
-    const nsStylePosition* pos = StylePosition();
-    if (pos->ISize(aWM).IsAuto() ||
-        aFlags.contains(ComputeSizeFlag::UseAutoISize) ||
-        (pos->mFlexBasis.IsContent() && IsFlexItem() &&
-         nsFlexContainerFrame::IsItemInlineAxisMainAxis(this))) {
+    const auto& styleISize = aSizeOverrides.mStyleISize
+                                 ? *aSizeOverrides.mStyleISize
+                                 : StylePosition()->ISize(aWM);
+    if (styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize)) {
       result.ISize(aWM) =
           ShrinkWidthToFit(aRenderingContext, availBased, aFlags);
     }
@@ -2394,8 +2388,12 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
     ComputeSizeFlags aFlags) {
   const nsStylePosition* stylePos = StylePosition();
-  const auto* inlineStyleCoord = &stylePos->ISize(aWM);
-  const auto* blockStyleCoord = &stylePos->BSize(aWM);
+  const auto* inlineStyleCoord = aSizeOverrides.mStyleISize
+                                     ? aSizeOverrides.mStyleISize.ptr()
+                                     : &stylePos->ISize(aWM);
+  const auto* blockStyleCoord = aSizeOverrides.mStyleBSize
+                                    ? aSizeOverrides.mStyleBSize.ptr()
+                                    : &stylePos->BSize(aWM);
   auto* parentFrame = GetParent();
   const bool isGridItem = IsGridItem();
   const bool isFlexItem =
@@ -2431,45 +2429,6 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         inlineStyleCoord = imposedMainSizeStyleCoord.ptr();
       } else {
         blockStyleCoord = imposedMainSizeStyleCoord.ptr();
-      }
-
-    } else {
-      // Flex items use their "flex-basis" property in place of their main-size
-      // property (e.g. "width") for sizing purposes, *unless* they have
-      // "flex-basis:auto", in which case they use their main-size property
-      // after all.
-      // NOTE: The logic here should match the similar chunk for updating
-      // mainAxisCoord in nsIFrame::ComputeSize() (aside from using a different
-      // dummy value in the IsUsedFlexBasisContent() case).
-      const auto* flexBasis = &stylePos->mFlexBasis;
-      auto& mainAxisCoord =
-          (flexMainAxis == eLogicalAxisInline ? inlineStyleCoord
-                                              : blockStyleCoord);
-
-      if (nsFlexContainerFrame::IsUsedFlexBasisContent(*flexBasis,
-                                                       *mainAxisCoord)) {
-        // If we get here, we're resolving the flex base size for a flex item,
-        // and we fall into the flexbox spec section 9.2 step 3, substep C (if
-        // we have a definite cross size) or E (if not). And specifically:
-        //
-        // * If we have a definite cross size, we're supposed to resolve our
-        //   main-size based on that and our intrinsic ratio.
-        // * Otherwise, we're supposed to produce our max-content size.
-        //
-        // Conveniently, we can handle both of those scenarios (regardless of
-        // which substep we fall into) by using the 'auto' keyword for our
-        // main-axis coordinate here. (This makes sense, because the spec is
-        // effectively trying to produce the 'auto' sizing behavior).
-        static const StyleSize autoSize(StyleSize::Auto());
-        mainAxisCoord = &autoSize;
-      } else if (flexBasis->IsSize() && !flexBasis->IsAuto()) {
-        // For all other non-'auto' flex-basis values, we just swap in the
-        // flex-basis itself for the main-size property.
-        mainAxisCoord = &flexBasis->AsSize();
-      } else {
-        MOZ_ASSERT(flexBasis->IsAuto());
-        // else: flex-basis is 'auto', which is deferring to some explicit
-        // value in mainAxisCoord. So we proceed w/o touching mainAxisCoord.
       }
     }
   }
