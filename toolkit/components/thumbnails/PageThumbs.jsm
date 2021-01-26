@@ -292,11 +292,7 @@ var PageThumbs = {
       return aCanvas;
     }
     // The content is a local page, grab a thumbnail sync.
-    PageThumbUtils.createSnapshotThumbnail(
-      aBrowser.contentWindow,
-      aCanvas,
-      aArgs
-    );
+    await PageThumbUtils.createSnapshotThumbnail(aBrowser, aCanvas, aArgs);
     return aCanvas;
   },
 
