@@ -2641,7 +2641,7 @@ policies and contribution forms [3].
             var record = new AssertRecord();
             record.assert_name = assert.assert_name;
             record.args = assert.args;
-            record.test = this.tests[assert.test.index];
+            record.test = assert.test != null ? this.tests[assert.test.index] : null;
             record.status = assert.status;
             record.stack = assert.stack;
             tests.asserts_run.push(record);
