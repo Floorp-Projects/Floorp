@@ -25,9 +25,7 @@ class AltServiceChild final : public PAltServiceChild {
   static void ProcessHeader(const nsCString& aBuf,
                             const nsCString& aOriginScheme,
                             const nsCString& aOriginHost, int32_t aOriginPort,
-                            const nsCString& aUsername,
-                            const nsCString& aTopWindowOrigin,
-                            bool aPrivateBrowsing, bool aIsolated,
+                            const nsCString& aUsername, bool aPrivateBrowsing,
                             nsIInterfaceRequestor* aCallbacks,
                             nsProxyInfo* aProxyInfo, uint32_t aCaps,
                             const OriginAttributes& aOriginAttributes);

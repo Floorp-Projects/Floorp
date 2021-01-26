@@ -16,12 +16,11 @@ namespace net {
 
 mozilla::ipc::IPCResult AltServiceParent::RecvClearHostMapping(
     const nsCString& aHost, const int32_t& aPort,
-    const OriginAttributes& aOriginAttributes,
-    const nsCString& aTopWindowOrigin) {
+    const OriginAttributes& aOriginAttributes) {
   LOG(("AltServiceParent::RecvClearHostMapping [this=%p]\n", this));
   if (gHttpHandler) {
-    gHttpHandler->AltServiceCache()->ClearHostMapping(
-        aHost, aPort, aOriginAttributes, aTopWindowOrigin);
+    gHttpHandler->AltServiceCache()->ClearHostMapping(aHost, aPort,
+                                                      aOriginAttributes);
   }
   return IPC_OK();
 }
@@ -29,8 +28,7 @@ mozilla::ipc::IPCResult AltServiceParent::RecvClearHostMapping(
 mozilla::ipc::IPCResult AltServiceParent::RecvProcessHeader(
     const nsCString& aBuf, const nsCString& aOriginScheme,
     const nsCString& aOriginHost, const int32_t& aOriginPort,
-    const nsACString& aUsername, const nsACString& aTopWindowOrigin,
-    const bool& aPrivateBrowsing, const bool& aIsolated,
+    const nsACString& aUsername, const bool& aPrivateBrowsing,
     nsTArray<ProxyInfoCloneArgs>&& aProxyInfo, const uint32_t& aCaps,
     const OriginAttributes& aOriginAttributes) {
   LOG(("AltServiceParent::RecvProcessHeader [this=%p]\n", this));
@@ -38,8 +36,7 @@ mozilla::ipc::IPCResult AltServiceParent::RecvProcessHeader(
                         ? nullptr
                         : nsProxyInfo::DeserializeProxyInfo(aProxyInfo);
   AltSvcMapping::ProcessHeader(aBuf, aOriginScheme, aOriginHost, aOriginPort,
-                               aUsername, aTopWindowOrigin, aPrivateBrowsing,
-                               aIsolated, nullptr, pi, aCaps,
+                               aUsername, aPrivateBrowsing, nullptr, pi, aCaps,
                                aOriginAttributes);
   return IPC_OK();
 }

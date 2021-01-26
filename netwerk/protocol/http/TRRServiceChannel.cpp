@@ -405,9 +405,8 @@ nsresult TRRServiceChannel::BeginConnect() {
       AltSvcMapping::AcceptableProxy(proxyInfo) &&
       (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) &&
       (mapping = gHttpHandler->GetAltServiceMapping(
-           scheme, host, port, mPrivateBrowsing, IsIsolated(),
-           GetTopWindowOrigin(), OriginAttributes(), http2Allowed,
-           http3Allowed))) {
+           scheme, host, port, mPrivateBrowsing, OriginAttributes(),
+           http2Allowed, http3Allowed))) {
     LOG(("TRRServiceChannel %p Alt Service Mapping Found %s://%s:%d [%s]\n",
          this, scheme.get(), mapping->AlternateHost().get(),
          mapping->AlternatePort(), mapping->HashKey().get()));
@@ -966,24 +965,21 @@ void TRRServiceChannel::ProcessAltService() {
     proxyInfo = do_QueryInterface(mProxyInfo);
   }
 
-  nsCString topWindowOrigin = GetTopWindowOrigin();
-  bool isIsolated = IsIsolated();
   auto processHeaderTask = [altSvc, scheme, originHost, originPort,
-                            userName(mUsername), topWindowOrigin,
-                            privateBrowsing(mPrivateBrowsing), isIsolated,
-                            callbacks, proxyInfo, caps(mCaps)]() {
+                            userName(mUsername),
+                            privateBrowsing(mPrivateBrowsing), callbacks,
+                            proxyInfo, caps(mCaps)]() {
     if (XRE_IsSocketProcess()) {
-      AltServiceChild::ProcessHeader(
-          altSvc, scheme, originHost, originPort, userName, topWindowOrigin,
-          privateBrowsing, isIsolated, callbacks, proxyInfo,
-          caps & NS_HTTP_DISALLOW_SPDY, OriginAttributes());
+      AltServiceChild::ProcessHeader(altSvc, scheme, originHost, originPort,
+                                     userName, privateBrowsing, callbacks,
+                                     proxyInfo, caps & NS_HTTP_DISALLOW_SPDY,
+                                     OriginAttributes());
       return;
     }
 
     AltSvcMapping::ProcessHeader(
-        altSvc, scheme, originHost, originPort, userName, topWindowOrigin,
-        privateBrowsing, isIsolated, callbacks, proxyInfo,
-        caps & NS_HTTP_DISALLOW_SPDY, OriginAttributes());
+        altSvc, scheme, originHost, originPort, userName, privateBrowsing,
+        callbacks, proxyInfo, caps & NS_HTTP_DISALLOW_SPDY, OriginAttributes());
   };
 
   if (NS_IsMainThread()) {
