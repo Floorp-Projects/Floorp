@@ -4961,8 +4961,14 @@ bool TextInputHandlerBase::SetSelection(NSRange& aRange) {
 }
 
 /* static */ bool TextInputHandlerBase::IsSecureEventInputEnabled() {
-  NS_ASSERTION(!!sSecureEventInputCount == !!::IsSecureEventInputEnabled(),
-               "Some other process has enabled secure event input");
+  // sSecureEventInputCount is our mechanism to track when Secure Event Input
+  //   is enabled. Non-zero indicates we have enabled Secure Input. But
+  //   zero does not mean that Secure Input is _disabled_ because another
+  //   application may have enabled it.  If the OS reports Secure Event
+  //   Input is disabled though, a non-zero sSecureEventInputCount is an error.
+  NS_ASSERTION(
+      ::IsSecureEventInputEnabled() || 0 == sSecureEventInputCount,
+      "sSecureEventInputCount is not zero when the OS thinks SecureEventInput is disabled.");
   return !!sSecureEventInputCount;
 }
 
