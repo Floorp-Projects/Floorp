@@ -9,7 +9,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use crate::cc::{
-    ClassicCongestionControl, CongestionControl, CongestionControlAlgorithm, NewReno,
+    ClassicCongestionControl, CongestionControl, CongestionControlAlgorithm, Cubic, NewReno,
     MAX_DATAGRAM_SIZE,
 };
 use crate::pace::Pacer;
@@ -46,6 +46,9 @@ impl PacketSender {
                 CongestionControlAlgorithm::NewReno => {
                     Box::new(ClassicCongestionControl::new(NewReno::default()))
                 }
+                CongestionControlAlgorithm::Cubic => {
+                    Box::new(ClassicCongestionControl::new(Cubic::default()))
+                }
             },
             pacer: None,
         }
@@ -67,8 +70,8 @@ impl PacketSender {
     }
 
     // Multi-packet version of OnPacketAckedCC
-    pub fn on_packets_acked(&mut self, acked_pkts: &[SentPacket]) {
-        self.cc.on_packets_acked(acked_pkts);
+    pub fn on_packets_acked(&mut self, acked_pkts: &[SentPacket], min_rtt: Duration, now: Instant) {
+        self.cc.on_packets_acked(acked_pkts, min_rtt, now);
     }
 
     pub fn on_packets_lost(

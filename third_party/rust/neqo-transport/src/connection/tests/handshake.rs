@@ -4,24 +4,25 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{Connection, FixedConnectionIdManager, Output, State, LOCAL_IDLE_TIMEOUT};
+use super::super::{Connection, Output, State, LOCAL_IDLE_TIMEOUT};
 use super::{
     assert_error, connect_force_idle, connect_with_rtt, default_client, default_server, get_tokens,
-    handshake, maybe_authenticate, send_something, AT_LEAST_PTO, DEFAULT_RTT, DEFAULT_STREAM_DATA,
+    handshake, maybe_authenticate, send_something, CountingConnectionIdGenerator, AT_LEAST_PTO,
+    DEFAULT_RTT, DEFAULT_STREAM_DATA,
 };
 use crate::connection::AddressValidation;
 use crate::events::ConnectionEvent;
-use crate::frame::StreamType;
 use crate::path::PATH_MTU_V6;
 use crate::server::ValidateAddress;
-use crate::{ConnectionError, ConnectionParameters, Error};
+use crate::tparams::TransportParameter;
+use crate::{ConnectionError, ConnectionParameters, EmptyConnectionIdGenerator, Error, StreamType};
 
 use neqo_common::{event::Provider, qdebug, Datagram};
 use neqo_crypto::{constants::TLS_CHACHA20_POLY1305_SHA256, AuthenticationStatus};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
-use test_fixture::{self, assertions, fixture_init, loopback, now, split_datagram};
+use test_fixture::{self, addr, assertions, fixture_init, now, split_datagram};
 
 #[test]
 fn full_handshake() {
@@ -103,10 +104,10 @@ fn no_alpn() {
     let mut client = Connection::new_client(
         "example.com",
         &["bad-alpn"],
-        Rc::new(RefCell::new(FixedConnectionIdManager::new(9))),
-        loopback(),
-        loopback(),
-        &ConnectionParameters::default(),
+        Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
+        addr(),
+        addr(),
+        ConnectionParameters::default(),
     )
     .unwrap();
     let mut server = default_server();
@@ -176,8 +177,8 @@ fn crypto_frame_split() {
     let mut server = Connection::new_server(
         test_fixture::LONG_CERT_KEYS,
         test_fixture::DEFAULT_ALPN,
-        Rc::new(RefCell::new(FixedConnectionIdManager::new(6))),
-        &ConnectionParameters::default(),
+        Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
+        ConnectionParameters::default(),
     )
     .expect("create a server");
 
@@ -231,10 +232,10 @@ fn chacha20poly1305() {
     let mut client = Connection::new_client(
         test_fixture::DEFAULT_SERVER_NAME,
         test_fixture::DEFAULT_ALPN,
-        Rc::new(RefCell::new(FixedConnectionIdManager::new(0))),
-        loopback(),
-        loopback(),
-        &ConnectionParameters::default(),
+        Rc::new(RefCell::new(EmptyConnectionIdGenerator::default())),
+        addr(),
+        addr(),
+        ConnectionParameters::default(),
     )
     .expect("create a default client");
     client.set_ciphers(&[TLS_CHACHA20_POLY1305_SHA256]).unwrap();
@@ -551,8 +552,9 @@ fn reorder_1rtt() {
     now += RTT / 2;
     let s2 = server.process(c2, now).dgram();
     // The server has now received those packets, and saved them.
-    // The two additional are an Initial ACK and Handshake.
-    assert_eq!(server.stats().packets_rx, PACKETS * 2 + 4);
+    // The three additional are: an Initial ACK, a Handshake,
+    // and a 1-RTT (containing NEW_CONNECTION_ID).
+    assert_eq!(server.stats().packets_rx, PACKETS * 2 + 5);
     assert_eq!(server.stats().saved_datagrams, PACKETS);
     assert_eq!(server.stats().dropped_rx, 1);
     assert_eq!(*server.state(), State::Confirmed);
@@ -618,8 +620,8 @@ fn verify_pkt_honors_mtu() {
     assert_eq!(res, Output::Callback(LOCAL_IDLE_TIMEOUT));
 
     // Try to send a large stream and verify first packet is correctly sized
-    assert_eq!(client.stream_create(StreamType::UniDi).unwrap(), 2);
-    assert_eq!(client.stream_send(2, &[0xbb; 2000]).unwrap(), 2000);
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(client.stream_send(stream_id, &[0xbb; 2000]).unwrap(), 2000);
     let pkt0 = client.process(None, now);
     assert!(matches!(pkt0, Output::Datagram(_)));
     assert_eq!(pkt0.as_dgram_ref().unwrap().len(), PATH_MTU_V6);
@@ -694,4 +696,53 @@ fn extra_initial_invalid_cid() {
     let dgram_copy = Datagram::new(hs.destination(), hs.source(), copy);
     let nothing = client.process(Some(dgram_copy), now).dgram();
     assert!(nothing.is_none());
+}
+
+#[test]
+fn anti_amplification() {
+    let mut client = default_client();
+    let mut server = default_server();
+    let mut now = now();
+
+    // With a gigantic transport parameter, the server is unable to complete
+    // the handshake within the amplification limit.
+    let very_big = TransportParameter::Bytes(vec![0; PATH_MTU_V6 * 3]);
+    server.set_local_tparam(0xce16, very_big).unwrap();
+
+    let c_init = client.process_output(now).dgram();
+    now += DEFAULT_RTT / 2;
+    let s_init1 = server.process(c_init, now).dgram().unwrap();
+    assert_eq!(s_init1.len(), PATH_MTU_V6);
+    let s_init2 = server.process_output(now).dgram().unwrap();
+    assert_eq!(s_init2.len(), PATH_MTU_V6);
+    let s_init3 = server.process_output(now).dgram().unwrap();
+    assert_eq!(s_init3.len(), PATH_MTU_V6);
+    let cb = server.process_output(now).callback();
+    assert_ne!(cb, Duration::new(0, 0));
+
+    now += DEFAULT_RTT / 2;
+    client.process_input(s_init1, now);
+    client.process_input(s_init2, now);
+    let ack_count = client.stats().frame_tx.ack;
+    let frame_count = client.stats().frame_tx.all;
+    let ack = client.process(Some(s_init3), now).dgram().unwrap();
+    assert!(!maybe_authenticate(&mut client)); // No need yet.
+
+    // The client sends a padded datagram, with just ACK for Initial + Handshake.
+    assert_eq!(client.stats().frame_tx.ack, ack_count + 2);
+    assert_eq!(client.stats().frame_tx.all, frame_count + 2);
+    assert_ne!(ack.len(), PATH_MTU_V6); // Not padded (it includes Handshake).
+
+    now += DEFAULT_RTT / 2;
+    let remainder = server.process(Some(ack), now).dgram();
+
+    now += DEFAULT_RTT / 2;
+    client.process_input(remainder.unwrap(), now);
+    assert!(maybe_authenticate(&mut client)); // OK, we have all of it.
+    let fin = client.process_output(now).dgram();
+    assert_eq!(*client.state(), State::Connected);
+
+    now += DEFAULT_RTT / 2;
+    server.process_input(fin.unwrap(), now);
+    assert_eq!(*server.state(), State::Confirmed);
 }

@@ -49,6 +49,8 @@ impl ClientRequestStream {
     }
 
     /// Supply a response to a request.
+    /// # Errors
+    /// It may return `InvalidStreamId` if a stream does not exist anymore.
     pub fn set_response(&mut self, headers: &[Header], data: &[u8]) -> Res<()> {
         qinfo!([self], "Set new response.");
         self.handler
@@ -57,6 +59,8 @@ impl ClientRequestStream {
     }
 
     /// Request a peer to stop sending a request.
+    /// # Errors
+    /// It may return `InvalidStreamId` if a stream does not exist anymore.
     pub fn stream_stop_sending(&mut self, app_error: AppError) -> Res<()> {
         qdebug!(
             [self],
@@ -71,6 +75,8 @@ impl ClientRequestStream {
     }
 
     /// Reset a stream/request.
+    /// # Errors
+    /// It may return `InvalidStreamId` if a stream does not exist anymore
     pub fn stream_reset(&mut self, app_error: AppError) -> Res<()> {
         qdebug!([self], "reset error:{}.", app_error);
         self.handler.borrow_mut().stream_reset(
@@ -80,6 +86,22 @@ impl ClientRequestStream {
         )
     }
 }
+
+impl std::hash::Hash for ClientRequestStream {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.conn.hash(state);
+        state.write_u64(self.stream_id);
+        state.finish();
+    }
+}
+
+impl PartialEq for ClientRequestStream {
+    fn eq(&self, other: &Self) -> bool {
+        self.conn == other.conn && self.stream_id == other.stream_id
+    }
+}
+
+impl Eq for ClientRequestStream {}
 
 #[derive(Debug, Clone)]
 pub enum Http3ServerEvent {

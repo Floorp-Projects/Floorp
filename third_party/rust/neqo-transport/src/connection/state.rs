@@ -4,14 +4,20 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cmp::Ordering;
+use neqo_common::Encoder;
+use std::cmp::{min, Ordering};
 use std::mem;
+use std::rc::Rc;
 use std::time::Instant;
 
-use crate::frame::{Frame, FrameType};
+use crate::frame::{
+    FrameType, FRAME_TYPE_CONNECTION_CLOSE_APPLICATION, FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT,
+    FRAME_TYPE_HANDSHAKE_DONE,
+};
 use crate::packet::PacketBuilder;
+use crate::path::PathRef;
 use crate::recovery::RecoveryToken;
-use crate::{CloseError, ConnectionError};
+use crate::{ConnectionError, Error, Res};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// The state of the Connection.
@@ -46,28 +52,8 @@ impl State {
 
 // Implement `PartialOrd` so that we can enforce monotonic state progression.
 impl PartialOrd for State {
-    #[allow(clippy::match_same_arms)] // Lint bug: rust-lang/rust-clippy#860
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if mem::discriminant(self) == mem::discriminant(other) {
-            return Some(Ordering::Equal);
-        }
-        Some(match (self, other) {
-            (Self::Init, _) => Ordering::Less,
-            (_, Self::Init) => Ordering::Greater,
-            (Self::WaitInitial, _) => Ordering::Less,
-            (_, Self::WaitInitial) => Ordering::Greater,
-            (Self::Handshaking, _) => Ordering::Less,
-            (_, Self::Handshaking) => Ordering::Greater,
-            (Self::Connected, _) => Ordering::Less,
-            (_, Self::Connected) => Ordering::Greater,
-            (Self::Confirmed, _) => Ordering::Less,
-            (_, Self::Confirmed) => Ordering::Greater,
-            (Self::Closing { .. }, _) => Ordering::Less,
-            (_, Self::Closing { .. }) => Ordering::Greater,
-            (Self::Draining { .. }, _) => Ordering::Less,
-            (_, Self::Draining { .. }) => Ordering::Greater,
-            (Self::Closed(_), _) => unreachable!(),
-        })
+        Some(self.cmp(other))
     }
 }
 
@@ -76,6 +62,7 @@ impl Ord for State {
         if mem::discriminant(self) == mem::discriminant(other) {
             return Ordering::Equal;
         }
+        #[allow(clippy::match_same_arms)] // Lint bug: rust-lang/rust-clippy#860
         match (self, other) {
             (Self::Init, _) => Ordering::Less,
             (_, Self::Init) => Ordering::Greater,
@@ -96,7 +83,77 @@ impl Ord for State {
     }
 }
 
-type ClosingFrame = Frame<'static>;
+#[derive(Debug, Clone)]
+pub struct ClosingFrame {
+    path: PathRef,
+    error: ConnectionError,
+    frame_type: FrameType,
+    reason_phrase: Vec<u8>,
+}
+
+impl ClosingFrame {
+    fn new(
+        path: PathRef,
+        error: ConnectionError,
+        frame_type: FrameType,
+        message: impl AsRef<str>,
+    ) -> Self {
+        let reason_phrase = message.as_ref().as_bytes().to_vec();
+        Self {
+            path,
+            error,
+            frame_type,
+            reason_phrase,
+        }
+    }
+
+    pub fn path(&self) -> &PathRef {
+        &self.path
+    }
+
+    pub fn sanitize(&self) -> Option<Self> {
+        if let ConnectionError::Application(_) = self.error {
+            // The default CONNECTION_CLOSE frame that is sent when an application
+            // error code needs to be sent in an Initial or Handshake packet.
+            Some(Self {
+                path: Rc::clone(&self.path),
+                error: ConnectionError::Transport(Error::ApplicationError),
+                frame_type: 0,
+                reason_phrase: Vec::new(),
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn write_frame(&self, builder: &mut PacketBuilder) {
+        // Allow 8 bytes for the reason phrase to ensure that if it needs to be
+        // truncated there is still at least a few bytes of the value.
+        if builder.remaining() < 1 + 8 + 8 + 2 + 8 {
+            return;
+        }
+        match &self.error {
+            ConnectionError::Transport(e) => {
+                builder.encode_varint(FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT);
+                builder.encode_varint(e.code());
+                builder.encode_varint(self.frame_type);
+            }
+            ConnectionError::Application(code) => {
+                builder.encode_varint(FRAME_TYPE_CONNECTION_CLOSE_APPLICATION);
+                builder.encode_varint(*code);
+            }
+        }
+        // Truncate the reason phrase if it doesn't fit.  As we send this frame in
+        // multiple packet number spaces, limit the overall size to 256.
+        let available = min(256, builder.remaining());
+        let reason = if available < Encoder::vvec_len(self.reason_phrase.len()) {
+            &self.reason_phrase[..available - 2]
+        } else {
+            &self.reason_phrase
+        };
+        builder.encode_vvec(reason);
+    }
+}
 
 /// `StateSignaling` manages whether we need to send HANDSHAKE_DONE and CONNECTION_CLOSE.
 /// Valid state transitions are:
@@ -106,7 +163,7 @@ type ClosingFrame = Frame<'static>;
 /// * Closing/Draining -> CloseSent: after sending CONNECTION_CLOSE
 /// * CloseSent -> Closing: any time a new CONNECTION_CLOSE is needed
 /// * -> Reset: from any state in case of a stateless reset
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum StateSignaling {
     Idle,
     HandshakeDone,
@@ -121,55 +178,47 @@ pub enum StateSignaling {
 
 impl StateSignaling {
     pub fn handshake_done(&mut self) {
-        if *self != Self::Idle {
+        if !matches!(self, Self::Idle) {
             debug_assert!(false, "StateSignaling must be in Idle state.");
             return;
         }
         *self = Self::HandshakeDone
     }
 
-    pub fn write_done(&mut self, builder: &mut PacketBuilder) -> Option<RecoveryToken> {
-        if *self == Self::HandshakeDone && builder.remaining() >= 1 {
+    pub fn write_done(&mut self, builder: &mut PacketBuilder) -> Res<Option<RecoveryToken>> {
+        if matches!(self, Self::HandshakeDone) && builder.remaining() >= 1 {
             *self = Self::Idle;
-            builder.encode_varint(Frame::HandshakeDone.get_type());
-            Some(RecoveryToken::HandshakeDone)
+            builder.encode_varint(FRAME_TYPE_HANDSHAKE_DONE);
+            if builder.len() > builder.limit() {
+                return Err(Error::InternalError(14));
+            }
+            Ok(Some(RecoveryToken::HandshakeDone))
         } else {
-            None
-        }
-    }
-
-    fn make_close_frame(
-        error: ConnectionError,
-        frame_type: FrameType,
-        message: impl AsRef<str>,
-    ) -> ClosingFrame {
-        let reason_phrase = message.as_ref().as_bytes().to_owned();
-        Frame::ConnectionClose {
-            error_code: CloseError::from(error),
-            frame_type,
-            reason_phrase,
+            Ok(None)
         }
     }
 
     pub fn close(
         &mut self,
+        path: PathRef,
         error: ConnectionError,
         frame_type: FrameType,
         message: impl AsRef<str>,
     ) {
-        if *self != Self::Reset {
-            *self = Self::Closing(Self::make_close_frame(error, frame_type, message));
+        if !matches!(self, Self::Reset) {
+            *self = Self::Closing(ClosingFrame::new(path, error, frame_type, message));
         }
     }
 
     pub fn drain(
         &mut self,
+        path: PathRef,
         error: ConnectionError,
         frame_type: FrameType,
         message: impl AsRef<str>,
     ) {
-        if *self != Self::Reset {
-            *self = Self::Draining(Self::make_close_frame(error, frame_type, message));
+        if !matches!(self, Self::Reset) {
+            *self = Self::Draining(ClosingFrame::new(path, error, frame_type, message));
         }
     }
 
@@ -178,15 +227,15 @@ impl StateSignaling {
         match self {
             Self::Closing(frame) => {
                 // When we are closing, we might need to send the close frame again.
-                let frame = mem::replace(frame, Frame::Padding);
+                let res = Some(frame.clone());
                 *self = Self::CloseSent(Some(frame.clone()));
-                Some(frame)
+                res
             }
             Self::Draining(frame) => {
                 // When we are draining, just send once.
-                let frame = mem::replace(frame, Frame::Padding);
+                let res = Some(frame.clone());
                 *self = Self::CloseSent(None);
-                Some(frame)
+                res
             }
             _ => None,
         }
@@ -195,8 +244,7 @@ impl StateSignaling {
     /// If a close can be sent again, prepare to send it again.
     pub fn send_close(&mut self) {
         if let Self::CloseSent(Some(frame)) = self {
-            let frame = mem::replace(frame, Frame::Padding);
-            *self = Self::Closing(frame);
+            *self = Self::Closing(frame.clone());
         }
     }
 

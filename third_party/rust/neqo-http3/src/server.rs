@@ -16,7 +16,9 @@ use neqo_common::{qtrace, Datagram};
 use neqo_crypto::{AntiReplay, Cipher};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::{ActiveConnectionRef, Server, ValidateAddress};
-use neqo_transport::{ConnectionIdManager, ConnectionParameters, Output};
+use neqo_transport::{
+    tparams::PreferredAddress, ConnectionIdGenerator, ConnectionParameters, Output,
+};
 use std::cell::RefCell;
 use std::cell::RefMut;
 use std::collections::HashMap;
@@ -50,7 +52,7 @@ impl Http3Server {
         certs: &[impl AsRef<str>],
         protocols: &[impl AsRef<str>],
         anti_replay: AntiReplay,
-        cid_manager: Rc<RefCell<dyn ConnectionIdManager>>,
+        cid_manager: Rc<RefCell<dyn ConnectionIdGenerator>>,
         qpack_settings: QpackSettings,
     ) -> Res<Self> {
         Ok(Self {
@@ -79,6 +81,10 @@ impl Http3Server {
 
     pub fn set_ciphers(&mut self, ciphers: impl AsRef<[Cipher]>) {
         self.server.set_ciphers(ciphers);
+    }
+
+    pub fn set_preferred_address(&mut self, spa: PreferredAddress) {
+        self.server.set_preferred_address(spa);
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
@@ -232,12 +238,13 @@ mod tests {
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_qpack::QpackSettings;
     use neqo_transport::{
-        CloseError, Connection, ConnectionEvent, FixedConnectionIdManager, State, StreamType,
-        ZeroRttState,
+        Connection, ConnectionError, ConnectionEvent, State, StreamType, ZeroRttState,
     };
+    use std::collections::HashMap;
     use std::ops::{Deref, DerefMut};
     use test_fixture::{
-        anti_replay, default_client, fixture_init, now, DEFAULT_ALPN, DEFAULT_KEYS,
+        anti_replay, default_client, fixture_init, now, CountingConnectionIdGenerator,
+        DEFAULT_ALPN, DEFAULT_KEYS,
     };
 
     const DEFAULT_SETTINGS: QpackSettings = QpackSettings {
@@ -253,7 +260,7 @@ mod tests {
             DEFAULT_KEYS,
             DEFAULT_ALPN,
             anti_replay(),
-            Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
+            Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
             settings,
         )
         .expect("create a server")
@@ -265,7 +272,7 @@ mod tests {
     }
 
     fn assert_closed(hconn: &mut Http3Server, expected: &Error) {
-        let err = CloseError::Application(expected.code());
+        let err = ConnectionError::Application(expected.code());
         let closed = |e| {
             matches!(e,
             Http3ServerEvent::StateChange{ state: Http3State::Closing(e), .. }
@@ -1064,5 +1071,40 @@ mod tests {
             },
             &ZeroRttState::AcceptedClient,
         );
+    }
+
+    #[test]
+    fn client_request_hash() {
+        let (mut hconn, mut peer_conn) = connect();
+
+        let request_stream_id_1 = peer_conn.stream_create(StreamType::BiDi).unwrap();
+        // Send only request headers for now.
+        peer_conn
+            .stream_send(request_stream_id_1, &REQUEST_WITH_BODY)
+            .unwrap();
+
+        let request_stream_id_2 = peer_conn.stream_create(StreamType::BiDi).unwrap();
+        // Send only request headers for now.
+        peer_conn
+            .stream_send(request_stream_id_2, &REQUEST_WITH_BODY)
+            .unwrap();
+
+        let out = peer_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
+        let mut requests = HashMap::new();
+        while let Some(event) = hconn.next_event() {
+            match event {
+                Http3ServerEvent::Headers { request, .. } => {
+                    assert!(requests.get(&request).is_none());
+                    requests.insert(request, 0);
+                }
+                Http3ServerEvent::Data { request, .. } => {
+                    assert!(requests.get(&request).is_some());
+                }
+                _ => {}
+            }
+        }
+        assert_eq!(requests.len(), 2);
     }
 }
