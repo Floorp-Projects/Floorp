@@ -2707,6 +2707,9 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
     // Int64 compared as unsigneds.
     Compare_UInt64,
 
+    // IntPtr compared as unsigneds.
+    Compare_UIntPtr,
+
     // Double compared to Double
     Compare_Double,
 
@@ -2878,7 +2881,8 @@ class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
 // lir->jsop() instead of the mir->jsop() when it is present.
 static inline Assembler::Condition JSOpToCondition(
     MCompare::CompareType compareType, JSOp op) {
-  bool isSigned = (compareType != MCompare::Compare_UInt32);
+  bool isSigned = (compareType != MCompare::Compare_UInt32 &&
+                   compareType != MCompare::Compare_UIntPtr);
   return JSOpToCondition(op, isSigned);
 }
 
