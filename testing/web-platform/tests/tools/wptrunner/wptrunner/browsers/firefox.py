@@ -101,7 +101,7 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "config": config,
             "browser_channel": kwargs["browser_channel"],
             "headless": kwargs["headless"],
-            "preload_browser": kwargs["preload_browser"],
+            "preload_browser": kwargs["preload_browser"] and not kwargs["pause_after_test"] and not kwargs["num_test_groups"] == 1,
             "specialpowers_path": kwargs["specialpowers_path"]}
 
 
