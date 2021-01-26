@@ -261,10 +261,13 @@ using namespace mozilla::a11y;
   // Because moxChildren does ignore filtering, and because
   // our base ignore method filters out invisible accessibles,
   // we override this method.
-  mozAccessible* directGrandparent =
-      GetNativeFromGeckoAccessible([parent geckoAccessible].Parent());
-  if ([directGrandparent isKindOfClass:[MOXWebAreaAccessible class]]) {
-    return [parent moxIgnoreWithParent:directGrandparent];
+  AccessibleOrProxy parentAcc = [parent geckoAccessible];
+  if (!parentAcc.IsNull()) {
+    mozAccessible* directGrandparent =
+        GetNativeFromGeckoAccessible(parentAcc.Parent());
+    if ([directGrandparent isKindOfClass:[MOXWebAreaAccessible class]]) {
+      return [parent moxIgnoreWithParent:directGrandparent];
+    }
   }
 
   id grandparent = [parent moxParent];
