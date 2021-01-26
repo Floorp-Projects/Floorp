@@ -134,7 +134,9 @@ this.tabpaint = class extends ExtensionAPI {
    */
   async openTabFromParent(gBrowser, target) {
     let win = BrowserWindowTracker.getTopWindow();
-    TalosParentProfiler.resume("tabpaint parent start");
+
+    TalosParentProfiler.resume("TabPaint Parent Start");
+    let startTime = Cu.now();
 
     gBrowser.selectedTab = gBrowser.addTab(
       //win.performance.now() + win.performance.timing.navigationStart gives the UNIX timestamp.
@@ -146,7 +148,10 @@ this.tabpaint = class extends ExtensionAPI {
     );
 
     let { tab, delta } = await this.whenTabShown();
-    TalosParentProfiler.pause("tabpaint parent end");
+    TalosParentProfiler.pause(
+      "Talos - Tabpaint: Open Tab from Parent",
+      startTime
+    );
     await this.removeTab(tab);
     return delta;
   }
@@ -163,12 +168,16 @@ this.tabpaint = class extends ExtensionAPI {
    *         with the time (in ms) it took to open the tab from content.
    */
   async openTabFromContent(gBrowser) {
-    TalosParentProfiler.resume("tabpaint content start");
+    TalosParentProfiler.resume("TabPaint Content Start");
+    let start_time = Cu.now();
 
     Services.mm.broadcastAsyncMessage("TabPaint:OpenFromContent");
 
     let { tab, delta } = await this.whenTabShown();
-    TalosParentProfiler.pause("tabpaint content end");
+    TalosParentProfiler.pause(
+      "Talos - Tabpaint: Open Tab from Content",
+      start_time
+    );
     await this.removeTab(tab);
     return delta;
   }
@@ -195,6 +204,7 @@ this.tabpaint = class extends ExtensionAPI {
    * @return Promise
    */
   removeTab(tab) {
+    TalosParentProfiler.mark("Tabpaint: Remove Tab");
     return new Promise(resolve => {
       let { messageManager: mm, frameLoader } = tab.linkedBrowser;
       mm.addMessageListener(

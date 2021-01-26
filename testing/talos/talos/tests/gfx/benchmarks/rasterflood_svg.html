@@ -123,6 +123,7 @@ function runFrame() {
 
   window.requestAnimationFrame(runFrame);
   gIterations++;
+  TalosContentProfiler.mark("rasterflood svg", gStart);
 }
 
 function startTest() {

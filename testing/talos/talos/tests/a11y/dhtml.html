@@ -8,6 +8,7 @@
   /* globals initAccessibility */
   // based on: http://hacks.mozilla.org/2010/05/better-performance-with-lazy-frame-construction/
   var ppDate = null;
+  var startTime;
 
   function doInsertion() {
     if (!initAccessibility()) {
@@ -15,10 +16,12 @@
       return;
     }
 
-    TalosContentProfiler.resume("dhtml test start", true).then(() => {
+    TalosContentProfiler.resume("a11y: Begin dhtml test", true).then(() => {
       var container = document.getElementById("container");
       var lastchild = document.getElementById("lastchild");
-      var start = window.performance.now();
+
+      startTime = window.performance.now();
+
       var i, div;
       for (i = 0; i < 2000; i++) {
         div = document.createElement("div");
@@ -39,15 +42,14 @@
         container.appendChild(div);
       }
       document.documentElement.offsetLeft; // flush layout
-      setTimeout(postProcessingRecord, 0, start);
+      setTimeout(postProcessingRecord, 0, startTime);
     });
   }
 
-  function postProcessingRecord(s) {
-    // alert(window.performance.now() - s);
-    let delta = window.performance.now() - s;
-    TalosContentProfiler.pause("dhtml test finish", true).then(() => {
-      tpRecordTime(delta, window.performance.timing.navigationStart + s);
+  function postProcessingRecord(start) {
+    let delta = window.performance.now() - start;
+    TalosContentProfiler.pause("a11y: dhtml test", true, startTime).then(() => {
+      tpRecordTime(delta, window.performance.timing.navigationStart + start);
     });
   }
 </script>

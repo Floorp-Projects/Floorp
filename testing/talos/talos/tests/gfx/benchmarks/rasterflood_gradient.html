@@ -74,6 +74,8 @@ function runFrame() {
     return;
   }
 
+  TalosContentProfiler.mark("rasterflood_gradient", true, start);
+
   window.requestAnimationFrame(runFrame);
 }
 
@@ -109,6 +111,7 @@ addEventListener("load", function() {
       startTest();
     });
   } catch (e) {
+    TalosContentProfiler.resume("rasterflood_gradient.html loaded", true);
     startTest();
   }
 });
