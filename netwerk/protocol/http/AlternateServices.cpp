@@ -362,8 +362,8 @@ void AltSvcMapping::GetConnectionInfo(
     nsHttpConnectionInfo** outCI, nsProxyInfo* pi,
     const OriginAttributes& originAttributes) {
   RefPtr<nsHttpConnectionInfo> ci = new nsHttpConnectionInfo(
-      mOriginHost, mOriginPort, mNPNToken, mUsername, mTopWindowOrigin, pi,
-      originAttributes, mAlternateHost, mAlternatePort, mIsHttp3);
+      mOriginHost, mOriginPort, mNPNToken, mUsername, pi, originAttributes,
+      mAlternateHost, mAlternatePort, mIsHttp3);
 
   // http:// without the mixed-scheme attribute needs to be segmented in the
   // connection manager connection information hash with this attribute
@@ -1257,7 +1257,7 @@ void AltSvcCache::ClearHostMapping(const nsACString& host, int32_t port,
 void AltSvcCache::ClearHostMapping(nsHttpConnectionInfo* ci) {
   if (!ci->GetOrigin().IsEmpty()) {
     ClearHostMapping(ci->GetOrigin(), ci->OriginPort(),
-                     ci->GetOriginAttributes(), ci->GetTopWindowOrigin());
+                     ci->GetOriginAttributes(), ""_ns /* topWindowOrigin */);
   }
 }
 
