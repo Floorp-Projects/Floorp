@@ -6095,12 +6095,12 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
                                        aBorderPadding.ISize(aWM) -
                                        boxSizingAdjust.ISize(aWM);
 
-  const auto* inlineStyleCoord = aSizeOverrides.mStyleISize
-                                     ? aSizeOverrides.mStyleISize.ptr()
-                                     : &stylePos->ISize(aWM);
-  const auto* blockStyleCoord = aSizeOverrides.mStyleBSize
-                                    ? aSizeOverrides.mStyleBSize.ptr()
-                                    : &stylePos->BSize(aWM);
+  const auto& styleISize = aSizeOverrides.mStyleISize
+                               ? *aSizeOverrides.mStyleISize
+                               : stylePos->ISize(aWM);
+  const auto& styleBSize = aSizeOverrides.mStyleBSize
+                               ? *aSizeOverrides.mStyleBSize
+                               : stylePos->BSize(aWM);
 
   auto parentFrame = GetParent();
   auto alignCB = parentFrame;
@@ -6135,20 +6135,20 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
 
   const auto aspectRatio = GetAspectRatio();
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
-  const bool isAutoISize = inlineStyleCoord->IsAuto() ||
-                           aFlags.contains(ComputeSizeFlag::UseAutoISize);
+  const bool isAutoISize =
+      styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize);
   // Compute inline-axis size
   if (!isAutoISize) {
-    auto iSizeResult = ComputeISizeValue(
-        aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-        boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags);
+    auto iSizeResult =
+        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
+                          boxSizingToMarginEdgeISize, styleISize, aFlags);
     result.ISize(aWM) = iSizeResult.mISize;
     aspectRatioUsage = iSizeResult.mAspectRatioUsage;
-  } else if (aspectRatio && !nsLayoutUtils::IsAutoBSize(*blockStyleCoord,
-                                                        aCBSize.BSize(aWM))) {
+  } else if (aspectRatio &&
+             !nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM))) {
     auto bSize = nsLayoutUtils::ComputeBSizeValue(
         aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-        blockStyleCoord->AsLengthPercentage());
+        styleBSize.AsLengthPercentage());
     result.ISize(aWM) = aspectRatio.ComputeRatioDependentSize(
         LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
     aspectRatioUsage = AspectRatioUsage::ToComputeISize;
@@ -6186,7 +6186,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // aspect ratio is called the ratio-dependent axis, and the resulting size
   // is definite if its input sizes are also definite.
   const bool isDefiniteISize =
-      inlineStyleCoord->IsLengthPercentage() ||
+      styleISize.IsLengthPercentage() ||
       aspectRatioUsage == AspectRatioUsage::ToComputeISize;
   const bool isFlexItemInlineAxisMainAxis =
       isFlexItem && flexMainAxis == eLogicalAxisInline;
@@ -6238,7 +6238,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     // This implements "Implied Minimum Size of Grid Items".
     // https://drafts.csswg.org/css-grid/#min-size-auto
     minISize = std::min(maxISize, GetMinISize(aRenderingContext));
-    if (inlineStyleCoord->IsLengthPercentage()) {
+    if (styleISize.IsLengthPercentage()) {
       minISize = std::min(minISize, result.ISize(aWM));
     } else if (aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize)) {
       // "if the grid item spans only grid tracks that have a fixed max track
@@ -6276,17 +6276,17 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // flag -- then, we'll just stick with the bsize that we already calculated
   // in the initial ComputeAutoSize() call.)
   if (!aFlags.contains(ComputeSizeFlag::UseAutoBSize)) {
-    if (!nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM))) {
+    if (!nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM))) {
       result.BSize(aWM) = nsLayoutUtils::ComputeBSizeValue(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-          blockStyleCoord->AsLengthPercentage());
+          styleBSize.AsLengthPercentage());
     } else if (aspectRatio && result.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
       result.BSize(aWM) = aspectRatio.ComputeRatioDependentSize(
           LogicalAxis::eLogicalAxisBlock, aWM, result.ISize(aWM),
           boxSizingAdjust);
       MOZ_ASSERT(aspectRatioUsage == AspectRatioUsage::None);
       aspectRatioUsage = AspectRatioUsage::ToComputeBSize;
-    } else if (MOZ_UNLIKELY(isGridItem) && blockStyleCoord->IsAuto() &&
+    } else if (MOZ_UNLIKELY(isGridItem) && styleBSize.IsAuto() &&
                !IsTrueOverflowContainer() &&
                !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisInline
                                                 : eLogicalAxisBlock)) {
