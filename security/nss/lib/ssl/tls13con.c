@@ -61,7 +61,7 @@ tls13_DeriveSecretWrap(sslSocket *ss, PK11SymKey *key,
                        const char *suffix,
                        const char *keylogLabel,
                        PK11SymKey **dest);
-static SECStatus
+SECStatus
 tls13_DeriveSecret(sslSocket *ss, PK11SymKey *key,
                    const char *label,
                    unsigned int labelLen,
@@ -1184,13 +1184,12 @@ tls13_DeriveEarlySecrets(sslSocket *ss)
 }
 
 static SECStatus
-tls13_ComputeHandshakeSecrets(sslSocket *ss)
+tls13_ComputeHandshakeSecret(sslSocket *ss)
 {
     SECStatus rv;
     PK11SymKey *derivedSecret = NULL;
     PK11SymKey *newSecret = NULL;
-
-    SSL_TRC(5, ("%d: TLS13[%d]: compute handshake secrets (%s)",
+    SSL_TRC(5, ("%d: TLS13[%d]: compute handshake secret (%s)",
                 SSL_GETPID(), ss->fd, SSL_ROLE(ss)));
 
     /* If no PSK, generate the default early secret. */
@@ -1205,7 +1204,7 @@ tls13_ComputeHandshakeSecrets(sslSocket *ss)
     PORT_Assert(ss->ssl3.hs.currentSecret);
     PORT_Assert(ss->ssl3.hs.dheSecret);
 
-    /* Expand before we extract. */
+    /* Derive-Secret(., "derived", "") */
     rv = tls13_DeriveSecretNullHash(ss, ss->ssl3.hs.currentSecret,
                                     kHkdfLabelDerivedSecret,
                                     strlen(kHkdfLabelDerivedSecret),
@@ -1215,18 +1214,32 @@ tls13_ComputeHandshakeSecrets(sslSocket *ss)
         return rv;
     }
 
+    /* HKDF-Extract(ECDHE, .) = Handshake Secret */
     rv = tls13_HkdfExtract(derivedSecret, ss->ssl3.hs.dheSecret,
                            tls13_GetHash(ss), &newSecret);
     PK11_FreeSymKey(derivedSecret);
-
     if (rv != SECSuccess) {
         LOG_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE);
         return rv;
     }
-    PK11_FreeSymKey(ss->ssl3.hs.dheSecret);
-    ss->ssl3.hs.dheSecret = NULL;
+
     PK11_FreeSymKey(ss->ssl3.hs.currentSecret);
     ss->ssl3.hs.currentSecret = newSecret;
+    return SECSuccess;
+}
+
+static SECStatus
+tls13_ComputeHandshakeSecrets(sslSocket *ss)
+{
+    SECStatus rv;
+    PK11SymKey *derivedSecret = NULL;
+    PK11SymKey *newSecret = NULL;
+
+    PK11_FreeSymKey(ss->ssl3.hs.dheSecret);
+    ss->ssl3.hs.dheSecret = NULL;
+
+    SSL_TRC(5, ("%d: TLS13[%d]: compute handshake secrets (%s)",
+                SSL_GETPID(), ss->fd, SSL_ROLE(ss)));
 
     /* Now compute |*HsTrafficSecret| */
     rv = tls13_DeriveSecretWrap(ss, ss->ssl3.hs.currentSecret,
@@ -1865,20 +1878,14 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
         PRINT_BUF(50, (ss, "Client sent cookie",
                        ss->xtnData.cookie.data, ss->xtnData.cookie.len));
 
-        rv = tls13_RecoverHashState(ss, ss->xtnData.cookie.data,
-                                    ss->xtnData.cookie.len,
-                                    &previousCipherSuite,
-                                    &previousGroup,
-                                    &previousEchOffered);
+        rv = tls13_HandleHrrCookie(ss, ss->xtnData.cookie.data,
+                                   ss->xtnData.cookie.len,
+                                   &previousCipherSuite,
+                                   &previousGroup,
+                                   &previousEchOffered,
+                                   NULL, NULL, NULL, NULL, PR_TRUE);
         if (rv != SECSuccess) {
             FATAL_ERROR(ss, SSL_ERROR_BAD_2ND_CLIENT_HELLO, illegal_parameter);
-            goto loser;
-        }
-
-        /* CH1/CH2 must either both include ECH, or both exclude it. */
-        if ((ss->xtnData.echConfigId.len > 0) != previousEchOffered) {
-            FATAL_ERROR(ss, SSL_ERROR_BAD_2ND_CLIENT_HELLO,
-                        illegal_parameter);
             goto loser;
         }
     }
@@ -1933,6 +1940,13 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
         if (!clientShare) {
             FATAL_ERROR(ss, SSL_ERROR_BAD_2ND_CLIENT_HELLO,
                         illegal_parameter);
+            goto loser;
+        }
+
+        /* CH1/CH2 must either both include ECH, or both exclude it. */
+        if (previousEchOffered != (ss->xtnData.ech != NULL)) {
+            FATAL_ERROR(ss, SSL_ERROR_BAD_2ND_CLIENT_HELLO,
+                        previousEchOffered ? missing_extension : illegal_parameter);
             goto loser;
         }
 
@@ -2825,6 +2839,11 @@ tls13_SendServerHelloSequence(sslSocket *ss)
         return SECFailure;
     }
 
+    rv = tls13_ComputeHandshakeSecret(ss);
+    if (rv != SECSuccess) {
+        return SECFailure; /* error code is set. */
+    }
+
     rv = ssl3_SendServerHello(ss);
     if (rv != SECSuccess) {
         return rv; /* err code is set. */
@@ -2909,7 +2928,7 @@ tls13_SendServerHelloSequence(sslSocket *ss)
 }
 
 SECStatus
-tls13_HandleServerHelloPart2(sslSocket *ss)
+tls13_HandleServerHelloPart2(sslSocket *ss, const PRUint8 *savedMsg, PRUint32 savedLength)
 {
     SECStatus rv;
     sslSessionID *sid = ss->sec.ci.sid;
@@ -2991,6 +3010,17 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
     if (rv != SECSuccess) {
         return SECFailure;
     }
+
+    rv = tls13_ComputeHandshakeSecret(ss);
+    if (rv != SECSuccess) {
+        return SECFailure; /* error code is set. */
+    }
+
+    rv = tls13_MaybeHandleEchSignal(ss, savedMsg, savedLength);
+    if (rv != SECSuccess) {
+        return SECFailure; /* error code is set. */
+    }
+
     rv = tls13_ComputeHandshakeSecrets(ss);
     if (rv != SECSuccess) {
         return SECFailure; /* error code is set. */
@@ -4960,15 +4990,16 @@ tls13_FinishHandshake(sslSocket *ss)
 
     TLS13_SET_HS_STATE(ss, idle_handshake);
 
-    if (offeredEch &&
-        !ssl3_ExtensionNegotiated(ss, ssl_tls13_encrypted_client_hello_xtn)) {
+    PORT_Assert(ss->ssl3.hs.echAccepted ==
+                ssl3_ExtensionNegotiated(ss, ssl_tls13_encrypted_client_hello_xtn));
+    if (offeredEch && !ss->ssl3.hs.echAccepted) {
         SSL3_SendAlert(ss, alert_fatal, ech_required);
 
-        /* "If [one, none] of the values contains a supported version, the client can
+        /* "If [one, none] of the retry_configs contains a supported version, the client can
          * regard ECH as securely [replaced, disabled] by the server." */
-        if (ss->xtnData.echRetryConfigs.len) {
+        if (ss->xtnData.ech && ss->xtnData.ech->retryConfigs.len) {
             PORT_SetError(SSL_ERROR_ECH_RETRY_WITH_ECH);
-            ss->xtnData.echRetryConfigsValid = PR_TRUE;
+            ss->xtnData.ech->retryConfigsValid = PR_TRUE;
         } else {
             PORT_SetError(SSL_ERROR_ECH_RETRY_WITHOUT_ECH);
         }
@@ -5520,6 +5551,7 @@ static const struct {
                                             hello_retry_request) },
     { ssl_record_size_limit_xtn, _M2(client_hello, encrypted_extensions) },
     { ssl_tls13_encrypted_client_hello_xtn, _M2(client_hello, encrypted_extensions) },
+    { ssl_tls13_ech_is_inner_xtn, _M1(client_hello) },
     { ssl_tls13_outer_extensions_xtn, _M_NONE /* Encoding/decoding only */ },
     { ssl_tls13_post_handshake_auth_xtn, _M1(client_hello) }
 };

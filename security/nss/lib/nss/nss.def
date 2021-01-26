@@ -1213,3 +1213,10 @@ PK11_PubUnwrapSymKeyWithMechanism;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.62 { 	# NSS 3.62 release
+;+    global:
+PK11_HPKE_ExportContext;
+PK11_HPKE_ImportContext;
+;+    local:
+;+       *;
+;+};

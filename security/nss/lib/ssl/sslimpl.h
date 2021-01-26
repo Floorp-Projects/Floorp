@@ -36,9 +36,9 @@
 
 typedef struct sslSocketStr sslSocket;
 typedef struct sslNamedGroupDefStr sslNamedGroupDef;
-typedef struct sslEsniKeysStr sslEsniKeys;
 typedef struct sslEchConfigStr sslEchConfig;
 typedef struct sslEchConfigContentsStr sslEchConfigContents;
+typedef struct sslEchXtnStateStr sslEchXtnState;
 typedef struct sslPskStr sslPsk;
 typedef struct sslDelegatedCredentialStr sslDelegatedCredential;
 typedef struct sslEphemeralKeyPairStr sslEphemeralKeyPair;
@@ -287,6 +287,7 @@ typedef struct sslOptionsStr {
     unsigned int enableDtls13VersionCompat : 1;
     unsigned int suppressEndOfEarlyData : 1;
     unsigned int enableTls13GreaseEch : 1;
+    unsigned int enableTls13BackendEch : 1;
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -748,6 +749,7 @@ typedef struct SSL3HandshakeStateStr {
     HpkeContext *echHpkeCtx;   /* Client/Server: HPKE context for ECH. */
     const char *echPublicName; /* Client: If rejected, the ECHConfig.publicName to
                                 * use for certificate verification. */
+    sslBuffer greaseEchBuf;    /* Client: Remember GREASE ECH, as advertised, for CH2 (HRR case). */
 
 } SSL3HandshakeState;
 
@@ -1122,8 +1124,9 @@ struct sslSocketStr {
     SSLProtocolVariant protocolVariant;
 
     /* TLS 1.3 Encrypted Client Hello. */
-    PRCList echConfigs;           /* Client/server: Must not change while hs is in-progress. */
-    SECKEYPublicKey *echPubKey;   /* Server: The ECH keypair used in HPKE setup */
+    PRCList echConfigs;           /* Client/server: Must not change while hs
+                                   * is in-progress. */
+    SECKEYPublicKey *echPubKey;   /* Server: The ECH keypair used in HPKE. */
     SECKEYPrivateKey *echPrivKey; /* As above. */
 
     /* Anti-replay for TLS 1.3 0-RTT. */
@@ -1947,6 +1950,8 @@ SECStatus SSLExp_CreateMask(SSLMaskingContext *ctx, const PRUint8 *sample,
 SECStatus SSLExp_DestroyMaskingContext(SSLMaskingContext *ctx);
 
 SECStatus SSLExp_EnableTls13GreaseEch(PRFileDesc *fd, PRBool enabled);
+
+SECStatus SSLExp_EnableTls13BackendEch(PRFileDesc *fd, PRBool enabled);
 
 SEC_END_PROTOS
 

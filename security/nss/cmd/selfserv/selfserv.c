@@ -42,6 +42,7 @@
 #include "cert.h"
 #include "certt.h"
 #include "ocsp.h"
+#include "nssb64.h"
 
 #ifndef PORT_Sprintf
 #define PORT_Sprintf sprintf
@@ -140,6 +141,7 @@ static int configureReuseECDHE = -1; /* -1: don't configure, 0 refresh, >=1 reus
 static int configureWeakDHE = -1;    /* -1: don't configure, 0 disable, >=1 enable*/
 SECItem psk = { siBuffer, NULL, 0 };
 SECItem pskLabel = { siBuffer, NULL, 0 };
+char *echParamsStr = NULL;
 
 static PRThread *acceptorThread;
 
@@ -247,7 +249,14 @@ PrintParameterUsage()
         "-z Configure a TLS 1.3 External PSK with the given hex string for a key.\n"
         "   To specify a label, use ':' as a delimiter. For example:\n"
         "   0xAAAABBBBCCCCDDDD:mylabel. Otherwise, the default label of\n"
-        "  'Client_identity' will be used.\n",
+        "  'Client_identity' will be used.\n"
+        "-X Configure the server for ECH via the given <ECHParams>.  ECHParams\n"
+        "   are expected in one of two formats:\n"
+        "      1. A string containing the ECH public name prefixed by the substring\n"
+        "         \"publicname:\". For example, \"publicname:example.com\". In this mode,\n"
+        "         an ephemeral ECH keypair is generated and ECHConfigs are printed to stdout.\n"
+        "      2. As a Base64 tuple of <ECHRawPrivateKey> || <ECHConfigs>. In this mode, the\n"
+        "         raw private key is used to bootstrap the HPKE context.\n",
         stderr);
 }
 
@@ -1873,6 +1882,196 @@ importPsk(PRFileDesc *model_sock)
     return rv;
 }
 
+static SECStatus
+configureEchWithPublicName(PRFileDesc *model_sock, const char *public_name)
+{
+    SECStatus rv;
+
+#define OID_LEN 65
+    unsigned char paramBuf[OID_LEN];
+    SECItem ecParams = { siBuffer, paramBuf, sizeof(paramBuf) };
+    SECKEYPublicKey *pubKey = NULL;
+    SECKEYPrivateKey *privKey = NULL;
+    SECOidData *oidData;
+    char *echConfigBase64 = NULL;
+    PRUint8 configBuf[1000];
+    unsigned int len = 0;
+    unsigned int echCipherSuite = ((unsigned int)HpkeKdfHkdfSha256 << 16) |
+                                  HpkeAeadChaCha20Poly1305;
+    PK11SlotInfo *slot = PK11_GetInternalKeySlot();
+    if (!slot) {
+        errWarn("PK11_GetInternalKeySlot failed");
+        return SECFailure;
+    }
+
+    oidData = SECOID_FindOIDByTag(SEC_OID_CURVE25519);
+    if (oidData && (2 + oidData->oid.len) < sizeof(paramBuf)) {
+        ecParams.data[0] = SEC_ASN1_OBJECT_ID;
+        ecParams.data[1] = oidData->oid.len;
+        memcpy(ecParams.data + 2, oidData->oid.data, oidData->oid.len);
+        ecParams.len = oidData->oid.len + 2;
+    } else {
+        errWarn("SECOID_FindOIDByTag failed");
+        goto loser;
+    }
+    privKey = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, &ecParams,
+                                   &pubKey, PR_FALSE, PR_FALSE, NULL);
+
+    if (!privKey || !pubKey) {
+        errWarn("Failed to generate ECH keypair");
+        goto loser;
+    }
+    rv = SSL_EncodeEchConfig(echParamsStr, &echCipherSuite, 1,
+                             HpkeDhKemX25519Sha256, pubKey, 50,
+                             configBuf, &len, sizeof(configBuf));
+    if (rv != SECSuccess) {
+        errWarn("SSL_EncodeEchConfig failed");
+        goto loser;
+    }
+
+    rv = SSL_SetServerEchConfigs(model_sock, pubKey, privKey, configBuf, len);
+    if (rv != SECSuccess) {
+        errWarn("SSL_SetServerEchConfigs failed");
+        goto loser;
+    }
+
+    SECItem echConfigItem = { siBuffer, configBuf, len };
+    echConfigBase64 = NSSBase64_EncodeItem(NULL, NULL, 0, &echConfigItem);
+    if (!echConfigBase64) {
+        errWarn("NSSBase64_EncodeItem failed");
+        goto loser;
+    }
+
+    // Remove the newline characters that NSSBase64_EncodeItem unhelpfully inserts.
+    char *newline = strstr(echConfigBase64, "\r\n");
+    if (newline) {
+        memmove(newline, newline + 2, strlen(newline + 2) + 1);
+    }
+
+    printf("%s\n", echConfigBase64);
+    PORT_Free(echConfigBase64);
+    SECKEY_DestroyPrivateKey(privKey);
+    SECKEY_DestroyPublicKey(pubKey);
+    PK11_FreeSlot(slot);
+    return SECSuccess;
+
+loser:
+    PORT_Free(echConfigBase64);
+    SECKEY_DestroyPrivateKey(privKey);
+    SECKEY_DestroyPublicKey(pubKey);
+    PK11_FreeSlot(slot);
+    return SECFailure;
+}
+
+static SECStatus
+configureEchWithData(PRFileDesc *model_sock)
+{
+/* The input should be a Base64-encoded ECHKey struct:
+     *  struct {
+     *     opaque sk<0..2^16-1>;
+     *     ECHConfig config<0..2^16>; // draft-ietf-tls-esni-09
+     * } ECHKey;
+     *
+     * This is not a standardized format, rather it's designed for
+     * interoperability with https://github.com/xvzcf/tls-interop-runner.
+     */
+
+#define REMAINING_BYTES(rdr, buf) \
+    buf->len - (rdr - buf->data)
+
+    SECStatus rv;
+    size_t len;
+    unsigned char *reader;
+    PK11SlotInfo *slot = NULL;
+    SECItem *decoded = NULL;
+    SECItem *pkcs8Key = NULL;
+    SECKEYPublicKey *pk = NULL;
+    SECKEYPrivateKey *sk = NULL;
+
+    decoded = NSSBase64_DecodeBuffer(NULL, NULL, echParamsStr, PORT_Strlen(echParamsStr));
+    if (!decoded || decoded->len < 2) {
+        errWarn("Couldn't decode ECHParams");
+        goto loser;
+    };
+    reader = decoded->data;
+
+    len = (*(reader++) << 8);
+    len |= *(reader++);
+    if (len > (REMAINING_BYTES(reader, decoded) - 2)) {
+        errWarn("Bad ECHParams encoding");
+        goto loser;
+    }
+    /* Importing a raw KEM private key is generally awful,
+     * however since we only support X25519, we can hardcode
+     * all the OID data. */
+    const PRUint8 pkcs8Start[] = { 0x30, 0x67, 0x02, 0x01, 0x00, 0x30, 0x14, 0x06,
+                                   0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01,
+                                   0x06, 0x09, 0x2B, 0x06, 0x01, 0x04, 0x01, 0xDA,
+                                   0x47, 0x0F, 0x01, 0x04, 0x4C, 0x30, 0x4A, 0x02,
+                                   0x01, 0x01, 0x04, 0x20 };
+    const PRUint8 pkcs8End[] = { 0xA1, 0x23, 0x03, 0x21, 0x00, 0x00, 0x00, 0x00,
+                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                 0x00, 0x00, 0x00, 0x00, 0x00 };
+    pkcs8Key = SECITEM_AllocItem(NULL, NULL, sizeof(pkcs8Start) + len + sizeof(pkcs8End));
+    if (!pkcs8Key) {
+        goto loser;
+    }
+    PORT_Memcpy(pkcs8Key->data, pkcs8Start, sizeof(pkcs8Start));
+    PORT_Memcpy(&pkcs8Key->data[sizeof(pkcs8Start)], reader, len);
+    PORT_Memcpy(&pkcs8Key->data[sizeof(pkcs8Start) + len], pkcs8End, sizeof(pkcs8End));
+    reader += len;
+
+    /* Convert the key bytes to key handles */
+    slot = PK11_GetInternalKeySlot();
+    rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
+        slot, pkcs8Key, NULL, NULL, PR_FALSE, PR_FALSE, KU_ALL, &sk, NULL);
+    if (rv != SECSuccess || !sk) {
+        errWarn("ECH key import failed");
+        goto loser;
+    }
+    pk = SECKEY_ConvertToPublicKey(sk);
+    if (!pk) {
+        errWarn("ECH key conversion failed");
+        goto loser;
+    }
+
+    /* Remainder is the ECHConfig. */
+    rv = SSL_SetServerEchConfigs(model_sock, pk, sk, reader,
+                                 REMAINING_BYTES(reader, decoded));
+    if (rv != SECSuccess) {
+        errWarn("SSL_SetServerEchConfigs failed");
+        goto loser;
+    }
+
+    PK11_FreeSlot(slot);
+    SECKEY_DestroyPrivateKey(sk);
+    SECKEY_DestroyPublicKey(pk);
+    SECITEM_FreeItem(pkcs8Key, PR_TRUE);
+    SECITEM_FreeItem(decoded, PR_TRUE);
+    return SECSuccess;
+loser:
+    if (slot) {
+        PK11_FreeSlot(slot);
+    }
+    SECKEY_DestroyPrivateKey(sk);
+    SECKEY_DestroyPublicKey(pk);
+    SECITEM_FreeItem(pkcs8Key, PR_TRUE);
+    SECITEM_FreeItem(decoded, PR_TRUE);
+    return SECFailure;
+}
+
+static SECStatus
+configureEch(PRFileDesc *model_sock)
+{
+    if (!PORT_Strncmp(echParamsStr, "publicname:", PORT_Strlen("publicname:"))) {
+        return configureEchWithPublicName(model_sock,
+                                          &echParamsStr[PORT_Strlen("publicname:")]);
+    }
+    return configureEchWithData(model_sock);
+}
+
 void
 server_main(
     PRFileDesc *listen_sock,
@@ -2086,6 +2285,13 @@ server_main(
         rv = importPsk(model_sock);
         if (rv != SECSuccess) {
             errExit("importPsk failed");
+        }
+    }
+
+    if (echParamsStr) {
+        rv = configureEch(model_sock);
+        if (rv != SECSuccess) {
+            errExit("configureEch failed");
         }
     }
 
@@ -2332,7 +2538,7 @@ main(int argc, char **argv)
     ** XXX: 'B', and 'q' were used in the past but removed
     **      in 3.28, please leave some time before resuing those. */
     optstate = PL_CreateOptState(argc, argv,
-                                 "2:A:C:DEGH:I:J:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:rst:uvw:x:yz:");
+                                 "2:A:C:DEGH:I:J:L:M:NP:QRS:T:U:V:W:X:YZa:bc:d:e:f:g:hi:jk:lmn:op:rst:uvw:x:yz:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         ++optionsFound;
         switch (optstate->option) {
@@ -2599,9 +2805,17 @@ main(int argc, char **argv)
                 }
                 break;
 
+            case 'X':
+                echParamsStr = PORT_Strdup(optstate->value);
+                if (echParamsStr == NULL) {
+                    PL_DestroyOptState(optstate);
+                    fprintf(stderr, "echParamsStr copy failed.\n");
+                    exit(5);
+                }
+                break;
             default:
             case '?':
-                fprintf(stderr, "Unrecognized or bad option specified.\n");
+                fprintf(stderr, "Unrecognized or bad option specified: %c\n", optstate->option);
                 fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
                 exit(4);
                 break;
@@ -2921,6 +3135,7 @@ cleanup:
     }
     SECITEM_ZfreeItem(&psk, PR_FALSE);
     SECITEM_ZfreeItem(&pskLabel, PR_FALSE);
+    PORT_Free(echParamsStr);
     if (NSS_Shutdown() != SECSuccess) {
         SECU_PrintError(progName, "NSS_Shutdown");
         if (loggerThread) {
