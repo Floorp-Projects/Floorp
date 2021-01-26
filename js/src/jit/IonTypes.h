@@ -465,6 +465,7 @@ enum class MIRType : uint8_t {
   Boolean,
   Int32,
   Int64,
+  IntPtr,
   Double,
   Float32,
   // Types above have trivial conversion to a number.
@@ -588,6 +589,8 @@ static inline const char* StringFromMIRType(MIRType type) {
       return "Int32";
     case MIRType::Int64:
       return "Int64";
+    case MIRType::IntPtr:
+      return "IntPtr";
     case MIRType::Double:
       return "Double";
     case MIRType::Float32:
