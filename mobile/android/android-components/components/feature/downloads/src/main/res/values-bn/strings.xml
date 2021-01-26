@@ -22,6 +22,9 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">ফাইল খোলা যায়নি</string>
 
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">%1$s ফাইলটি খুলতে কোনো অ্যাপ পাওয়া যায়নি</string>
+
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">বিরতি দিন</string>
     <!-- Button that resumes the download when pressed -->
@@ -35,4 +38,6 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">বন্ধ</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s খুলতে ব্যর্থ</string>
 </resources>

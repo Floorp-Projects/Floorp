@@ -85,6 +85,11 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">প্রস্তাবিত লগইনগুলি</string>
 
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">সাইটে আবার তথ্য পাঠাবে?</string>
+    <string name="mozac_feature_prompt_repost_message">এই পৃষ্ঠাটি রিফ্রেশ করলে সাম্প্রতিক কাজ আবার হতে পারে যেমন কোনও অর্থ প্রদান বা দুইবার মন্তব্য পোস্ট করা।</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">তথ্য আবার পাঠাও</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">বাতিল</string>
 </resources>
