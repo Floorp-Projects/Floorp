@@ -2384,15 +2384,15 @@ class UpdateAltSvcEvent : public Runnable {
     if (XRE_IsSocketProcess()) {
       AltServiceChild::ProcessHeader(
           mHeader, originScheme, originHost, originPort, mCI->GetUsername(),
-          mCI->GetTopWindowOrigin(), mCI->GetPrivate(), mCI->GetIsolated(),
-          mCallbacks, mCI->ProxyInfo(), 0, mCI->GetOriginAttributes());
+          mCI->GetTopWindowOrigin(), mCI->GetPrivate(), false, mCallbacks,
+          mCI->ProxyInfo(), 0, mCI->GetOriginAttributes());
       return NS_OK;
     }
 
     AltSvcMapping::ProcessHeader(
         mHeader, originScheme, originHost, originPort, mCI->GetUsername(),
-        mCI->GetTopWindowOrigin(), mCI->GetPrivate(), mCI->GetIsolated(),
-        nullptr, mCI->ProxyInfo(), 0, mCI->GetOriginAttributes());
+        mCI->GetTopWindowOrigin(), mCI->GetPrivate(), false, nullptr,
+        mCI->ProxyInfo(), 0, mCI->GetOriginAttributes());
     return NS_OK;
   }
 
