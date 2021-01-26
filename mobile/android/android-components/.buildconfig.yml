@@ -159,6 +159,10 @@ projects:
     path: components/feature/qr
     description: 'A feature that provides functionality for scanning QR codes.'
     publish: true
+  feature-webauthn:
+    path: components/feature/webauthn
+    description: 'A feature that provides WebAuthn functionality for supported engines.'
+    publish: true
   feature-webcompat:
     path: components/feature/webcompat
     description: 'Feature that provides hotfixes for websites from Mozilla''s Web Compatibility team'

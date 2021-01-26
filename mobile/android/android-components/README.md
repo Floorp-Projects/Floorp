@@ -172,6 +172,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔵 [**Site Permissions**](components/feature/sitepermissions/README.md) - A feature for showing site permission request prompts.
 
+* ⚪ [**WebAuthn**](components/feature/webauthn/README.md) - A feature that provides WebAuthn functionality for supported engines.
+
 * 🔵 [**Web Notifications**](components/feature/webnotifications/README.md) - A component for displaying web notifications.
 
 * 🔵 [**WebCompat**](components/feature/webcompat/README.md) - A feature to enable website-hotfixing via the Web Compatibility System-Addon.

@@ -64,6 +64,7 @@ treeherder:
         feature-tabs: feature-tabs
         feature-toolbar: feature-toolbar
         feature-top-sites: feature-top-sites
+        feature-webauthn: feature-webauthn
         feature-webcompat: feature-webcompat
         feature-webnotifications: feature-webnotifications
         lib-crash: lib-crash

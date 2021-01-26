@@ -16,6 +16,9 @@ permalink: /changelog/
   * 🚒 Bug fixed [issue #9441](https://github.com/mozilla-mobile/android-components/issues/9441) - Don't ask for redundant system files permission if not required.
   * 🚒 Bug fixed [issue #9526](https://github.com/mozilla-mobile/android-components/issues/9526) - Downloads with generic content types use the correct file extension.
 
+* **feature-webauthn**
+  * 🆕 New component to enable support for WebAuthn specification with `WebAuthnFeature`.
+
 # 72.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)
