@@ -3,6 +3,8 @@
 <title>Test mouse capture for iframe</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 <style>
 #target {
@@ -41,6 +43,8 @@ add_task(async function init() {
     content.document.addEventListener("mousemove", handler);
     content.document.addEventListener("mouseup", handler);
   });
+
+  await waitUntilApzStable();
 });
 
 add_task(async function testMouseCaptureOnXoriginIframe() {
