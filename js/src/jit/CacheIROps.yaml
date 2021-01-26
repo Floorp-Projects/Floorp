@@ -968,7 +968,7 @@
   args:
     obj: ObjId
 
-- name: TypedArrayByteOffsetResult
+- name: TypedArrayByteOffsetInt32Result
   shared: true
   transpile: true
   cost_estimate: 1
