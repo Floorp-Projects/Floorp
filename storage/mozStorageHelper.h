@@ -6,6 +6,7 @@
 #ifndef MOZSTORAGEHELPER_H
 #define MOZSTORAGEHELPER_H
 
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/DebugOnly.h"
 
