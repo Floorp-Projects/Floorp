@@ -641,7 +641,7 @@ add_task(async function sessionTimeExcludingAndIncludingSuspend() {
   // clocks are from different system calls, and it can fail in test condition
   // because the machine has not been suspended.
   if (
-    AppConstants.platform != "windows" ||
+    AppConstants.platform != "win" ||
     AppConstants.isPlatformAndVersionAtLeast("win", "10.0")
   ) {
     Assert.greaterOrEqual(
