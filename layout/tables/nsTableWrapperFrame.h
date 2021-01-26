@@ -92,12 +92,11 @@ class nsTableWrapperFrame : public nsContainerFrame {
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
-  mozilla::LogicalSize ComputeAutoSize(
+  virtual mozilla::LogicalSize ComputeAutoSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin,
       const mozilla::LogicalSize& aBorderPadding,
-      const mozilla::StyleSizeOverrides& aSizeOverrides,
       mozilla::ComputeSizeFlags aFlags) override;
 
   /** process a reflow command for the table.
@@ -267,12 +266,11 @@ class nsTableWrapperFrame : public nsContainerFrame {
    * If aMarginResult is non-null, fill it with the part of the
    * margin-isize that was contributed by the margin.
    */
-  nscoord ChildShrinkWrapISize(
-      gfxContext* aRenderingContext, nsIFrame* aChildFrame,
-      mozilla::WritingMode aWM, mozilla::LogicalSize aCBSize,
-      nscoord aAvailableISize,
-      const mozilla::StyleSizeOverrides& aSizeOverrides,
-      nscoord* aMarginResult = nullptr) const;
+  nscoord ChildShrinkWrapISize(gfxContext* aRenderingContext,
+                               nsIFrame* aChildFrame, mozilla::WritingMode aWM,
+                               mozilla::LogicalSize aCBSize,
+                               nscoord aAvailableISize,
+                               nscoord* aMarginResult = nullptr) const;
 
  private:
   nsFrameList mCaptionFrames;
