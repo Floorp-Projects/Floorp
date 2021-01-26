@@ -13,6 +13,7 @@
   overflow: auto;
   transform: translateX(435px);
   visibility: hidden;
+  cursor: default;
 
   &:dir(rtl) {
     transform: translateX(-435px);
