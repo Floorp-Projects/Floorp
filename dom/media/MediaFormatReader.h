@@ -12,7 +12,6 @@
 #  include "MediaEventSource.h"
 #  include "MediaMetadataManager.h"
 #  include "MediaPromiseDefs.h"
-#  include "PDMFactory.h"
 #  include "PlatformDecoderModule.h"
 #  include "SeekTarget.h"
 #  include "mozilla/Atomics.h"
@@ -316,9 +315,6 @@ class MediaFormatReader final
   // storage of the decoder benchmark.
   // This is called only on TaskQueue.
   void NotifyDecoderBenchmarkStore();
-
-  RefPtr<PDMFactory> mPlatform;
-  RefPtr<PDMFactory> mEncryptedPlatform;
 
   enum class DrainState {
     None,

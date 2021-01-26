@@ -16,6 +16,7 @@
 #include "MediaData.h"
 #include "MediaDataDecoderProxy.h"
 #include "MediaInfo.h"
+#include "PDMFactory.h"
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
 #include "mozilla/AbstractThread.h"
@@ -345,15 +346,11 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
   AUTO_PROFILER_LABEL("DecoderFactory::DoCreateDecoder", MEDIA_PLAYBACK);
   auto& ownerData = aData.mOwnerData;
   auto& decoder = mOwner->GetDecoderData(aData.mTrack);
-  auto& platform =
-      decoder.IsEncrypted() ? mOwner->mEncryptedPlatform : mOwner->mPlatform;
 
-  if (!platform) {
-    platform = new PDMFactory();
-    if (decoder.IsEncrypted()) {
-      MOZ_ASSERT(mOwner->mCDMProxy);
-      platform->SetCDMProxy(mOwner->mCDMProxy);
-    }
+  RefPtr<PDMFactory> platform = new PDMFactory();
+  if (decoder.IsEncrypted()) {
+    MOZ_ASSERT(mOwner->mCDMProxy);
+    platform->SetCDMProxy(mOwner->mCDMProxy);
   }
 
   RefPtr<PlatformDecoderModule::CreateDecoderPromise> p;
@@ -981,8 +978,6 @@ RefPtr<ShutdownPromise> MediaFormatReader::TearDownDecoders() {
   }
 
   mDecoderFactory = nullptr;
-  mPlatform = nullptr;
-  mEncryptedPlatform = nullptr;
   mVideoFrameContainer = nullptr;
 
   ReleaseResources();
@@ -1079,9 +1074,6 @@ RefPtr<SetCDMPromise> MediaFormatReader::SetCDMProxy(CDMProxy* aProxy) {
   }
 
   mCDMProxy = aProxy;
-
-  // Release old PDMFactory which contains an EMEDecoderModule.
-  mEncryptedPlatform = nullptr;
 
   if (!mInitDone || mSetCDMForTracks.isEmpty() || !mCDMProxy) {
     // 1) MFR is not initialized yet or
