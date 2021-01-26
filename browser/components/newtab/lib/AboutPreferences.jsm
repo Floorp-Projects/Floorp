@@ -20,7 +20,7 @@ const PREFS_BEFORE_SECTIONS = [
       feed: "showSearch",
       titleString: "home-prefs-search-header",
     },
-    icon: "chrome://browser/skin/search-glass.svg",
+    icon: "chrome://global/skin/icons/search-glass.svg",
   },
   {
     id: "topsites",

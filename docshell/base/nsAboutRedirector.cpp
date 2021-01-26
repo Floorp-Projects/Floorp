@@ -58,6 +58,9 @@ class CrashChannel final : public nsBaseChannel {
 
   URI_SAFE_FOR_UNTRUSTED_CONTENT is not enough to let web pages load that page,
   for that you need MAKE_LINKABLE.
+
+  NOTE: changes to this redir map need to be accompanied with changes to
+    docshell/build/components.conf
  */
 static const RedirEntry kRedirMap[] = {
     {"about", "chrome://global/content/aboutAbout.html", 0},
@@ -68,8 +71,10 @@ static const RedirEntry kRedirMap[] = {
     {"checkerboard", "chrome://global/content/aboutCheckerboard.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT},
-#ifndef MOZ_BUILD_APP_IS_BROWSER
-    {"config", "chrome://global/content/config.xhtml", 0},
+#ifndef MOZ_WIDGET_ANDROID
+    {"config", "chrome://global/content/aboutconfig/aboutconfig.html", 0},
+#else
+    {"config", "chrome://geckoview/content/config.xhtml", 0},
 #endif
 #ifdef MOZ_CRASHREPORTER
     {"crashes", "chrome://global/content/crashes.html", 0},

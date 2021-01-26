@@ -43,6 +43,9 @@ struct RedirEntry {
   unless your about: page really needs chrome privileges. Security review is
   required before adding new map entries without
   URI_SAFE_FOR_UNTRUSTED_CONTENT.
+
+  NOTE: changes to this redir map need to be accompanied with changes to
+    browser/components/about/components.conf
 */
 static const RedirEntry kRedirMap[] = {
     {"blocked", "chrome://browser/content/blockedSite.xhtml",
@@ -53,7 +56,6 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::URI_CAN_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT |
          nsIAboutModule::HIDE_FROM_ABOUTABOUT},
-    {"config", "chrome://browser/content/aboutconfig/aboutconfig.html", 0},
     {"framecrashed", "chrome://browser/content/aboutFrameCrashed.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::HIDE_FROM_ABOUTABOUT},

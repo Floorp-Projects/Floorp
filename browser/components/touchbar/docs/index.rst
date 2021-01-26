@@ -181,7 +181,7 @@ The search popover
 
     SearchPopover: {
       title: "search-popover",
-      image: "chrome://browser/skin/search-glass.svg",
+      image: "chrome://global/skin/icons/search-glass.svg",
       type: kInputTypes.POPOVER,
       children: {
         SearchScrollViewLabel: {

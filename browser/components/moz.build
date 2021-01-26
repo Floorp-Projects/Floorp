@@ -28,7 +28,6 @@ with Files("controlcenter/**"):
 
 DIRS += [
     "about",
-    "aboutconfig",
     "aboutlogins",
     "attribution",
     "contextualidentity",

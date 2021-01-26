@@ -854,7 +854,7 @@
 
 #tabs-newtab-button,
 #TabsToolbar #new-tab-button {
-  list-style-image: url(chrome://browser/skin/add.svg);
+  list-style-image: url(chrome://global/skin/icons/add.svg);
 }
 
 /* All tabs button and menupopup */
@@ -944,7 +944,7 @@
 }
 
 #allTabsMenu-undoCloseTab {
-  list-style-image: url(chrome://browser/skin/undo.svg);
+  list-style-image: url(chrome://global/skin/icons/undo.svg);
 }
 
 #allTabsMenu-undoCloseTab > .toolbarbutton-icon:-moz-locale-dir(rtl) {
@@ -952,5 +952,5 @@
 }
 
 #allTabsMenu-searchTabs {
-  list-style-image: url(chrome://browser/skin/search-glass.svg);
+  list-style-image: url(chrome://global/skin/icons/search-glass.svg);
 }

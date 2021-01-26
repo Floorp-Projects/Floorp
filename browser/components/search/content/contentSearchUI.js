@@ -691,7 +691,7 @@ this.ContentSearchUIController = (function() {
       // a default. xref https://bugzilla.mozilla.org/show_bug.cgi?id=1449338#c19
       let icon = this.defaultEngine.isAppProvided
         ? this.defaultEngine.icon
-        : "chrome://browser/skin/search-glass.svg";
+        : "chrome://global/skin/icons/search-glass.svg";
 
       document.body.style.setProperty(
         "--newtab-search-icon",

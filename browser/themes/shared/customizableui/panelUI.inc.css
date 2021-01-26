@@ -1810,7 +1810,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   fill: currentColor;
   fill-opacity: 1;
 %ifdef XP_MACOSX
-  list-style-image: url("chrome://browser/skin/search-glass.svg");
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
 %else
   list-style-image: url("chrome://browser/skin/folder.svg");
 %endif
