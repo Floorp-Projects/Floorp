@@ -477,6 +477,16 @@ ImageTestCase GreenIconTestCase();
 ImageTestCase GreenWebPTestCase();
 ImageTestCase GreenAVIFTestCase();
 
+ImageTestCase Transparent10bit420AVIFTestCase();
+ImageTestCase Transparent10bit422AVIFTestCase();
+ImageTestCase Transparent10bit444AVIFTestCase();
+ImageTestCase Transparent12bit420AVIFTestCase();
+ImageTestCase Transparent12bit422AVIFTestCase();
+ImageTestCase Transparent12bit444AVIFTestCase();
+ImageTestCase Transparent8bit420AVIFTestCase();
+ImageTestCase Transparent8bit422AVIFTestCase();
+ImageTestCase Transparent8bit444AVIFTestCase();
+
 ImageTestCase StackCheckAVIFTestCase();
 
 ImageTestCase LargeWebPTestCase();
