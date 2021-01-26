@@ -151,38 +151,6 @@ union NetAddr {
   bool ToStringBuffer(char* buf, uint32_t bufSize) const;
 };
 
-#define ODOH_VERSION 0xff03
-static const char kODoHQuery[] = "odoh query";
-static const char hODoHConfigID[] = "odoh key id";
-static const char kODoHSecret[] = "odoh secret";
-static const char kODoHKey[] = "odoh key";
-static const char kODoHNonce[] = "odoh nonce";
-
-struct ObliviousDoHConfigContents {
-  uint16_t mKemId;
-  uint16_t mKdfId;
-  uint16_t mAeadId;
-  nsTArray<uint8_t> mPublicKey;
-};
-
-struct ObliviousDoHConfig {
-  uint16_t mVersion;
-  uint16_t mLength;
-  ObliviousDoHConfigContents mContents;
-  nsTArray<uint8_t> mConfigId;
-};
-
-enum ObliviousDoHMessageType : uint8_t {
-  ODOH_QUERY = 1,
-  ODOH_RESPONSE = 2,
-};
-
-struct ObliviousDoHMessage {
-  ObliviousDoHMessageType mType;
-  nsTArray<uint8_t> mKeyId;
-  nsTArray<uint8_t> mEncryptedMessage;
-};
-
 class AddrInfo {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AddrInfo)
 
