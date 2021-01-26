@@ -90,6 +90,7 @@ enum class PreXULSkeletonUIError : uint32_t {
   FailedGettingDC,
   FailedBlitting,
   FailedFillingBottomRect,
+  CrashedOnce,
   Unknown,
 };
 
@@ -138,6 +139,8 @@ inline const wchar_t* GetPreXULSkeletonUIErrorString(
       return L"FailedBlitting";
     case PreXULSkeletonUIError::FailedFillingBottomRect:
       return L"FailedFillingBottomRect";
+    case PreXULSkeletonUIError::CrashedOnce:
+      return L"CrashedOnce";
     case PreXULSkeletonUIError::Unknown:
       return L"Unknown";
   }
@@ -145,6 +148,11 @@ inline const wchar_t* GetPreXULSkeletonUIErrorString(
   MOZ_ASSERT_UNREACHABLE();
   return L"Unknown";
 }
+
+enum class PreXULSkeletonUIProgress : uint32_t {
+  Started,
+  Completed,
+};
 
 MFBT_API void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                                              char** argv);

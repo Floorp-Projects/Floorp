@@ -185,6 +185,7 @@ static const wchar_t* sSearchbarRegSuffix = L"|SearchbarCSSSpan";
 static const wchar_t* sSpringsCSSRegSuffix = L"|SpringsCSSSpan";
 static const wchar_t* sThemeRegSuffix = L"|Theme";
 static const wchar_t* sFlagsRegSuffix = L"|Flags";
+static const wchar_t* sProgressSuffix = L"|Progress";
 
 struct LoadedCoTaskMemFreeDeleter {
   void operator()(void* ptr) {
@@ -1860,16 +1861,34 @@ static Result<Ok, PreXULSkeletonUIError> CreateAndStorePreXULSkeletonUIImpl(
     return Err(PreXULSkeletonUIError::Ineligible);
   }
 
-  bool explicitProfile = false;
-  MOZ_TRY(ValidateCmdlineArguments(argc, argv, &explicitProfile));
-  MOZ_TRY(ValidateEnvVars());
-
   HKEY regKey;
   MOZ_TRY_VAR(regKey, OpenPreXULSkeletonUIRegKey());
   AutoCloseRegKey closeKey(regKey);
 
   UniquePtr<wchar_t[]> binPath;
   MOZ_TRY_VAR(binPath, GetBinaryPath());
+
+  std::wstring regProgressName =
+      GetRegValueName(binPath.get(), sProgressSuffix);
+  auto progressResult = ReadRegUint(regKey, regProgressName);
+  if (!progressResult.isErr() &&
+      progressResult.unwrap() !=
+          static_cast<uint32_t>(PreXULSkeletonUIProgress::Completed)) {
+    return Err(PreXULSkeletonUIError::CrashedOnce);
+  }
+
+  MOZ_TRY(
+      WriteRegUint(regKey, regProgressName,
+                   static_cast<uint32_t>(PreXULSkeletonUIProgress::Started)));
+  auto writeCompletion = MakeScopeExit([&] {
+    Unused << WriteRegUint(
+        regKey, regProgressName,
+        static_cast<uint32_t>(PreXULSkeletonUIProgress::Completed));
+  });
+
+  bool explicitProfile = false;
+  MOZ_TRY(ValidateCmdlineArguments(argc, argv, &explicitProfile));
+  MOZ_TRY(ValidateEnvVars());
 
   auto enabledResult =
       ReadRegBool(regKey, GetRegValueName(binPath.get(), sEnabledRegSuffix));
