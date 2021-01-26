@@ -781,7 +781,7 @@ class ScriptStencil {
   bool hasGCThings() const { return gcThingsLength; }
 
   mozilla::Span<TaggedScriptThingIndex> gcthings(
-      BaseCompilationStencil& stencil) const;
+      const BaseCompilationStencil& stencil) const;
 
   bool wasFunctionEmitted() const { return flags_ & WasFunctionEmittedFlag; }
 
