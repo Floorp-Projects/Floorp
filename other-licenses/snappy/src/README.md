@@ -34,7 +34,7 @@ Snappy is intended to be fast. On a single core of a Core i7 processor
 in 64-bit mode, it compresses at about 250 MB/sec or more and decompresses at
 about 500 MB/sec or more. (These numbers are for the slowest inputs in our
 benchmark suite; others are much faster.) In our tests, Snappy usually
-is faster than algorithms in the same class (e.g. LZO, LZF, FastLZ, QuickLZ,
+is faster than algorithms in the same class (e.g. LZO, LZF, QuickLZ,
 etc.) while achieving comparable compression ratios.
 
 Typical compression ratios (based on the benchmark suite) are about 1.5-1.7x
@@ -51,8 +51,8 @@ In particular:
 
  - Snappy uses 64-bit operations in several places to process more data at
    once than would otherwise be possible.
- - Snappy assumes unaligned 32- and 64-bit loads and stores are cheap.
-   On some platforms, these must be emulated with single-byte loads 
+ - Snappy assumes unaligned 32 and 64-bit loads and stores are cheap.
+   On some platforms, these must be emulated with single-byte loads
    and stores, which is much slower.
  - Snappy assumes little-endian throughout, and needs to byte-swap data in
    several places if running on a big-endian platform.
@@ -62,25 +62,40 @@ Performance optimizations, whether for 64-bit x86 or other platforms,
 are of course most welcome; see "Contact", below.
 
 
+Building
+========
+
+You need the CMake version specified in [CMakeLists.txt](./CMakeLists.txt)
+or later to build:
+
+```bash
+mkdir build
+cd build && cmake ../ && make
+```
+
 Usage
 =====
 
 Note that Snappy, both the implementation and the main interface,
 is written in C++. However, several third-party bindings to other languages
-are available; see the home page at http://google.github.io/snappy/
-for more information. Also, if you want to use Snappy from C code, you can
-use the included C bindings in snappy-c.h.
+are available; see the [home page](docs/README.md) for more information.
+Also, if you want to use Snappy from C code, you can use the included C
+bindings in snappy-c.h.
 
 To use Snappy from your own C++ program, include the file "snappy.h" from
 your calling file, and link against the compiled library.
 
 There are many ways to call Snappy, but the simplest possible is
 
-  snappy::Compress(input.data(), input.size(), &output);
+```c++
+snappy::Compress(input.data(), input.size(), &output);
+```
 
 and similarly
 
-  snappy::Uncompress(input.data(), input.size(), &output);
+```c++
+snappy::Uncompress(input.data(), input.size(), &output);
+```
 
 where "input" and "output" are both instances of std::string.
 
@@ -102,12 +117,12 @@ tests to verify you have not broken anything. Note that if you have the
 Google Test library installed, unit test behavior (especially failures) will be
 significantly more user-friendly. You can find Google Test at
 
-  http://github.com/google/googletest
+  https://github.com/google/googletest
 
 You probably also want the gflags library for handling of command-line flags;
 you can find it at
 
-  http://gflags.github.io/gflags/
+  https://gflags.github.io/gflags/
 
 In addition to the unit tests, snappy contains microbenchmarks used to
 tune compression and decompression performance. These are automatically run
@@ -116,7 +131,7 @@ before the unit tests, but you can disable them using the flag
 need to edit the source).
 
 Finally, snappy can benchmark Snappy against a few other compression libraries
-(zlib, LZO, LZF, FastLZ and QuickLZ), if they were detected at configure time.
+(zlib, LZO, LZF, and QuickLZ), if they were detected at configure time.
 To benchmark using a given file, give the compression algorithm you want to test
 Snappy against (e.g. --zlib) and then a list of one or more file names on the
 command line. The testdata/ directory contains the files used by the
@@ -130,10 +145,4 @@ Contact
 =======
 
 Snappy is distributed through GitHub. For the latest version, a bug tracker,
-and other information, see
-
-  http://google.github.io/snappy/
-
-or the repository at
-
-  https://github.com/google/snappy
+and other information, see https://github.com/google/snappy.
