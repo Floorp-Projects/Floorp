@@ -21,8 +21,9 @@ JSErrNum js::ThrowMsgKindToErrNum(ThrowMsgKind kind) {
     case ThrowMsgKind::PrivateDoubleInit:
       return JSMSG_PRIVATE_FIELD_DOUBLE;
     case ThrowMsgKind::MissingPrivateOnGet:
+      return JSMSG_GET_MISSING_PRIVATE;
     case ThrowMsgKind::MissingPrivateOnSet:
-      return JSMSG_UNDECLARED_PRIVATE;
+      return JSMSG_SET_MISSING_PRIVATE;
   }
 
   MOZ_CRASH("Unexpected message kind");

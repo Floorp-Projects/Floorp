@@ -43,7 +43,7 @@ add_task(async function test_contentscript_private_field_xrays() {
     browser.test.log("Read");
     browser.test.assertThrows(
       () => A.gx(node.wrappedJSObject),
-      /Trying to read undeclared field/,
+      /can't access private field or method/,
       "Underlying object should not have our private field"
     );
 
@@ -58,7 +58,7 @@ add_task(async function test_contentscript_private_field_xrays() {
     browser.test.log("read");
     browser.test.assertThrows(
       () => A.gx(node.wrappedJSObject),
-      /Trying to read undeclared field/,
+      /can't access private field or method/,
       "Adoption should really not change expandos private fields"
     );
     browser.test.log("threw2");
@@ -77,7 +77,7 @@ add_task(async function test_contentscript_private_field_xrays() {
     );
     browser.test.assertThrows(
       () => A.gx(node.wrappedJSObject),
-      /Trying to read undeclared field/,
+      /can't access private field or method/,
       "Underlying object should not have exxpando. (2)"
     );
 
@@ -91,7 +91,7 @@ add_task(async function test_contentscript_private_field_xrays() {
     );
     browser.test.assertThrows(
       () => A.gx(node.wrappedJSObject),
-      /Trying to read undeclared field/,
+      /can't access private field or method/,
       "Underlying object should not have exxpando. (3)"
     );
 
@@ -107,7 +107,7 @@ add_task(async function test_contentscript_private_field_xrays() {
     );
     browser.test.assertThrows(
       () => A.gx(node.wrappedJSObject),
-      /Trying to read undeclared field/,
+      /can't access private field or method/,
       "Underlying object should not have exxpando. (4)"
     );
 
@@ -120,7 +120,7 @@ add_task(async function test_contentscript_private_field_xrays() {
     );
     browser.test.assertThrows(
       () => A.gx(node.wrappedJSObject),
-      /Trying to read undeclared field/,
+      /can't access private field or method/,
       "Adoption should not change underlying object. (4)"
     );
 
