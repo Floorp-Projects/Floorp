@@ -19,7 +19,7 @@ NS_IMETHODIMP
 nsNativeBasicThemeCocoa::GetMinimumWidgetSize(
     nsPresContext* aPresContext, nsIFrame* aFrame, StyleAppearance aAppearance,
     mozilla::LayoutDeviceIntSize* aResult, bool* aIsOverridable) {
-  DPIRatio dpiRatio = GetDPIRatio(aFrame);
+  DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
 
   switch (aAppearance) {
     case StyleAppearance::ScrollbarthumbHorizontal:
