@@ -7808,7 +7808,12 @@ void CodeGenerator::visitArrayBufferByteLengthInt32(
     LArrayBufferByteLengthInt32* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.loadArrayBufferByteLengthInt32(obj, out);
+
+  Label bail;
+  masm.loadArrayBufferByteLengthInt32(obj, out, &bail);
+  if (bail.used()) {
+    bailoutFrom(&bail, lir->snapshot());
+  }
 }
 
 void CodeGenerator::visitArrayBufferViewLength(LArrayBufferViewLength* lir) {
