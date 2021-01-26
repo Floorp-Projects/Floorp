@@ -544,6 +544,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   void SetOriginHeader();
   void SetDoNotTrack();
 
+  bool IsIsolated();
+
+  const nsCString& GetTopWindowOrigin();
+
   already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 
   // Start an internal redirect to a new InterceptedHttpChannel which will
@@ -716,6 +720,17 @@ class nsHttpChannel final : public HttpBaseChannel,
     // Used to suspend any newly created pumps in mCallOnResume handler.
     (uint32_t, AsyncResumePending, 1),
 
+    // True only when we have checked whether this channel has been isolated for
+    // anti-tracking purposes.
+    (uint32_t, HasBeenIsolatedChecked, 1),
+    // True only when we have determined this channel should be isolated for
+    // anti-tracking purposes.  Can never ben true unless HasBeenIsolatedChecked
+    // is true.
+    (uint32_t, IsIsolated, 1),
+
+    // True only when we have computed the value of the top window origin.
+    (uint32_t, TopWindowOriginComputed, 1),
+
     // True if the data will be sent from the socket process to the
     // content process directly.
     (uint32_t, DataSentToChildProcess, 1),
@@ -733,6 +748,10 @@ class nsHttpChannel final : public HttpBaseChannel,
     (uint32_t, EchConfigUsed, 1)
   ))
   // clang-format on
+
+  // The origin of the top window, only valid when TopWindowOriginComputed is
+  // true.
+  nsCString mTopWindowOrigin;
 
   nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
