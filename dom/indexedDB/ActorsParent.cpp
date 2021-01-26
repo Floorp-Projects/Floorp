@@ -123,6 +123,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsParent.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/quota/CachingDatabaseConnection.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/DecryptingInputStream_impl.h"
@@ -174,7 +175,6 @@
 #include "nsITimer.h"
 #include "nsIURIMutator.h"
 #include "nsIVariant.h"
-#include "nsInterfaceHashtable.h"
 #include "nsLiteralString.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
@@ -1132,54 +1132,17 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
  * ConnectionPool declarations
  ******************************************************************************/
 
-class DatabaseConnection final {
+class DatabaseConnection final : public CachingDatabaseConnection {
   friend class ConnectionPool;
 
   enum class CheckpointMode { Full, Restart, Truncate };
 
  public:
   class AutoSavepoint;
-  class CachedStatement;
   class UpdateRefcountFunction;
 
-  class MOZ_STACK_CLASS BorrowedStatement : mozStorageStatementScoper {
-   public:
-    mozIStorageStatement& operator*() const;
-
-    MOZ_NONNULL_RETURN mozIStorageStatement* operator->() const
-        MOZ_NO_ADDREF_RELEASE_ON_RETURN;
-
-    BorrowedStatement(BorrowedStatement&& aOther) = default;
-
-    // No funny business allowed.
-    BorrowedStatement& operator=(BorrowedStatement&&) = delete;
-    BorrowedStatement(const BorrowedStatement&) = delete;
-    BorrowedStatement& operator=(const BorrowedStatement&) = delete;
-
-   private:
-    friend class CachedStatement;
-
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-    BorrowedStatement(NotNull<mozIStorageStatement*> aStatement,
-                      const nsACString& aQuery)
-        : mozStorageStatementScoper(aStatement),
-          mExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery} {}
-
-    ScopedLogExtraInfo mExtraInfo;
-#else
-    MOZ_IMPLICIT BorrowedStatement(NotNull<mozIStorageStatement*> aStatement)
-        : mozStorageStatementScoper(aStatement) {}
-#endif
-  };
-
-  class LazyStatement;
-
  private:
-  InitializedOnce<const NotNull<nsCOMPtr<mozIStorageConnection>>>
-      mStorageConnection;
   InitializedOnce<const NotNull<SafeRefPtr<FileManager>>> mFileManager;
-  nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
-      mCachedStatements;
   RefPtr<UpdateRefcountFunction> mUpdateRefcountFunction;
   RefPtr<QuotaObject> mQuotaObject;
   RefPtr<QuotaObject> mJournalQuotaObject;
@@ -1190,48 +1153,14 @@ class DatabaseConnection final {
   uint32_t mDEBUGSavepointCount;
 #endif
 
-  NS_DECL_OWNINGTHREAD
-
  public:
-  void AssertIsOnConnectionThread() const {
-    NS_ASSERT_OWNINGTHREAD(DatabaseConnection);
-  }
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DatabaseConnection)
-
-  bool HasStorageConnection() const {
-    return static_cast<bool>(mStorageConnection);
-  }
-
-  mozIStorageConnection& MutableStorageConnection() const {
-    AssertIsOnConnectionThread();
-    MOZ_ASSERT(mStorageConnection);
-
-    return **mStorageConnection;
-  }
 
   UpdateRefcountFunction* GetUpdateRefcountFunction() const {
     AssertIsOnConnectionThread();
 
     return mUpdateRefcountFunction;
   }
-
-  Result<CachedStatement, nsresult> GetCachedStatement(
-      const nsACString& aQuery);
-
-  Result<BorrowedStatement, nsresult> BorrowCachedStatement(
-      const nsACString& aQuery);
-
-  template <typename BindFunctor>
-  nsresult ExecuteCachedStatement(const nsACString& aQuery,
-                                  BindFunctor&& aBindFunctor);
-
-  nsresult ExecuteCachedStatement(const nsACString& aQuery);
-
-  template <typename BindFunctor>
-  Result<Maybe<BorrowedStatement>, nsresult>
-  BorrowAndExecuteSingleStepStatement(const nsACString& aQuery,
-                                      BindFunctor&& aBindFunctor);
 
   nsresult BeginWriteTransaction();
 
@@ -1298,111 +1227,6 @@ class MOZ_STACK_CLASS DatabaseConnection::AutoSavepoint final {
   nsresult Start(const TransactionBase& aTransaction);
 
   nsresult Commit();
-};
-
-class DatabaseConnection::CachedStatement final {
-  friend class DatabaseConnection;
-
-  nsCOMPtr<mozIStorageStatement> mStatement;
-
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-  nsCString mQuery;
-#endif
-
-#ifdef DEBUG
-  DatabaseConnection* mDEBUGConnection;
-#endif
-
- public:
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
-  CachedStatement();
-  ~CachedStatement();
-#else
-  CachedStatement() = default;
-#endif
-
-  void AssertIsOnConnectionThread() const {
-#ifdef DEBUG
-    if (mDEBUGConnection) {
-      mDEBUGConnection->AssertIsOnConnectionThread();
-    }
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!IsOnBackgroundThread());
-#endif
-  }
-
-  explicit operator bool() const;
-
-  BorrowedStatement Borrow() const;
-
- private:
-  // Only called by DatabaseConnection.
-  CachedStatement(DatabaseConnection* aConnection,
-                  nsCOMPtr<mozIStorageStatement> aStatement,
-                  const nsACString& aQuery);
-
- public:
-#if defined(NS_BUILD_REFCNT_LOGGING)
-  CachedStatement(CachedStatement&& aOther)
-      : mStatement(std::move(aOther.mStatement))
-#  if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-        ,
-        mQuery(std::move(aOther.mQuery))
-#  endif
-#  ifdef DEBUG
-        ,
-        mDEBUGConnection(aOther.mDEBUGConnection)
-#  endif
-  {
-    MOZ_COUNT_CTOR(DatabaseConnection::CachedStatement);
-  }
-#else
-  CachedStatement(CachedStatement&&) = default;
-#endif
-
-  CachedStatement& operator=(CachedStatement&&) = default;
-
-  // No funny business allowed.
-  CachedStatement(const CachedStatement&) = delete;
-  CachedStatement& operator=(const CachedStatement&) = delete;
-};
-
-class DatabaseConnection::LazyStatement final {
- public:
-  LazyStatement(DatabaseConnection& aConnection, const nsACString& aQueryString)
-      : mConnection{aConnection}, mQueryString{aQueryString} {}
-
-  Result<DatabaseConnection::BorrowedStatement, nsresult> Borrow() {
-    if (!mCachedStatement) {
-      IDB_TRY(Initialize());
-    }
-
-    return mCachedStatement.Borrow();
-  }
-
-  template <typename BindFunctor>
-  Result<Maybe<DatabaseConnection::BorrowedStatement>, nsresult>
-  BorrowAndExecuteSingleStep(BindFunctor&& aBindFunctor) {
-    IDB_TRY_UNWRAP(auto borrowedStatement, Borrow());
-
-    IDB_TRY(std::forward<BindFunctor>(aBindFunctor)(*borrowedStatement));
-
-    IDB_TRY_INSPECT(const bool& hasResult,
-                    MOZ_TO_RESULT_INVOKE(&*borrowedStatement, ExecuteStep));
-
-    return hasResult ? Some(std::move(borrowedStatement)) : Nothing{};
-  }
-
- private:
-  Result<Ok, nsresult> Initialize() {
-    IDB_TRY_UNWRAP(mCachedStatement,
-                   mConnection.GetCachedStatement(mQueryString));
-    return Ok{};
-  }
-
-  DatabaseConnection& mConnection;
-  const nsCString mQueryString;
-  DatabaseConnection::CachedStatement mCachedStatement;
 };
 
 class DatabaseConnection::UpdateRefcountFunction final
@@ -6887,7 +6711,8 @@ auto DeserializeIndexValueToUpdateInfos(
   return NS_FAILED(rv) ? Err(rv) : ResultType{std::move(updateInfoArray)};
 }
 
-bool IsSome(const Maybe<DatabaseConnection::BorrowedStatement>& aMaybeStmt) {
+bool IsSome(
+    const Maybe<CachingDatabaseConnection::BorrowedStatement>& aMaybeStmt) {
   return aMaybeStmt.isSome();
 }
 
@@ -6999,7 +6824,7 @@ nsresult FileManager::AsyncDeleteFile(int64_t aFileId) {
 DatabaseConnection::DatabaseConnection(
     MovingNotNull<nsCOMPtr<mozIStorageConnection>> aStorageConnection,
     MovingNotNull<SafeRefPtr<FileManager>> aFileManager)
-    : mStorageConnection(std::move(aStorageConnection)),
+    : CachingDatabaseConnection(std::move(aStorageConnection)),
       mFileManager(std::move(aFileManager)),
       mInReadTransaction(false),
       mInWriteTransaction(false)
@@ -7013,9 +6838,7 @@ DatabaseConnection::DatabaseConnection(
 }
 
 DatabaseConnection::~DatabaseConnection() {
-  MOZ_ASSERT(!mStorageConnection);
   MOZ_ASSERT(!mFileManager);
-  MOZ_ASSERT(!mCachedStatements.Count());
   MOZ_ASSERT(!mUpdateRefcountFunction);
   MOZ_DIAGNOSTIC_ASSERT(!mInWriteTransaction);
   MOZ_ASSERT(!mDEBUGSavepointCount);
@@ -7033,79 +6856,9 @@ nsresult DatabaseConnection::Init() {
   return NS_OK;
 }
 
-Result<DatabaseConnection::CachedStatement, nsresult>
-DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(!aQuery.IsEmpty());
-  MOZ_ASSERT(mStorageConnection);
-
-  AUTO_PROFILER_LABEL("DatabaseConnection::GetCachedStatement", DOM);
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-
-  if (!mCachedStatements.Get(aQuery, getter_AddRefs(stmt))) {
-    const auto extraInfo =
-        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
-
-    IDB_TRY_UNWRAP(
-        stmt,
-        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
-                                   **mStorageConnection, CreateStatement,
-                                   aQuery),
-        QM_PROPAGATE,
-        ([&aQuery, &storageConnection = **mStorageConnection](const auto&) {
-#ifdef DEBUG
-          nsCString msg;
-          MOZ_ALWAYS_SUCCEEDS(storageConnection.GetLastErrorString(msg));
-
-          nsAutoCString error =
-              "The statement '"_ns + aQuery +
-              "' failed to compile with the error message '"_ns + msg + "'."_ns;
-
-          NS_WARNING(error.get());
-#else
-          (void)aQuery;
-#endif
-        }));
-
-    mCachedStatements.Put(aQuery, stmt);
-  }
-
-  return CachedStatement{this, std::move(stmt), aQuery};
-}
-
-Result<DatabaseConnection::BorrowedStatement, nsresult>
-DatabaseConnection::BorrowCachedStatement(const nsACString& aQuery) {
-  IDB_TRY_UNWRAP(auto cachedStatement, GetCachedStatement(aQuery));
-
-  return cachedStatement.Borrow();
-}
-
-template <typename BindFunctor>
-nsresult DatabaseConnection::ExecuteCachedStatement(
-    const nsACString& aQuery, BindFunctor&& aBindFunctor) {
-  IDB_TRY_INSPECT(const auto& stmt, BorrowCachedStatement(aQuery));
-  IDB_TRY(std::forward<BindFunctor>(aBindFunctor)(*stmt));
-  IDB_TRY(stmt->Execute());
-
-  return NS_OK;
-}
-
-nsresult DatabaseConnection::ExecuteCachedStatement(const nsACString& aQuery) {
-  return ExecuteCachedStatement(aQuery, [](auto&) { return NS_OK; });
-}
-
-template <typename BindFunctor>
-Result<Maybe<DatabaseConnection::BorrowedStatement>, nsresult>
-DatabaseConnection::BorrowAndExecuteSingleStepStatement(
-    const nsACString& aQuery, BindFunctor&& aBindFunctor) {
-  return LazyStatement{*this, aQuery}.BorrowAndExecuteSingleStep(
-      std::forward<BindFunctor>(aBindFunctor));
-}
-
 nsresult DatabaseConnection::BeginWriteTransaction() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(HasStorageConnection());
   MOZ_ASSERT(mInReadTransaction);
   MOZ_ASSERT(!mInWriteTransaction);
 
@@ -7122,9 +6875,9 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
     RefPtr<UpdateRefcountFunction> function =
         new UpdateRefcountFunction(this, **mFileManager);
 
-    IDB_TRY((*mStorageConnection)
-                ->CreateFunction("update_refcount"_ns,
-                                 /* aNumArguments */ 2, function));
+    IDB_TRY(MutableStorageConnection().CreateFunction("update_refcount"_ns,
+                                                      /* aNumArguments */ 2,
+                                                      function));
 
     mUpdateRefcountFunction = std::move(function);
   }
@@ -7167,7 +6920,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
 
 nsresult DatabaseConnection::CommitWriteTransaction() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(HasStorageConnection());
   MOZ_ASSERT(!mInReadTransaction);
   MOZ_ASSERT(mInWriteTransaction);
 
@@ -7182,7 +6935,7 @@ nsresult DatabaseConnection::CommitWriteTransaction() {
 void DatabaseConnection::RollbackWriteTransaction() {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(!mInReadTransaction);
-  MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(HasStorageConnection());
 
   AUTO_PROFILER_LABEL("DatabaseConnection::RollbackWriteTransaction", DOM);
 
@@ -7202,7 +6955,7 @@ void DatabaseConnection::RollbackWriteTransaction() {
 
 void DatabaseConnection::FinishWriteTransaction() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(HasStorageConnection());
   MOZ_ASSERT(!mInReadTransaction);
   MOZ_ASSERT(!mInWriteTransaction);
 
@@ -7219,7 +6972,7 @@ void DatabaseConnection::FinishWriteTransaction() {
 
 nsresult DatabaseConnection::StartSavepoint() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(HasStorageConnection());
   MOZ_ASSERT(mUpdateRefcountFunction);
   MOZ_ASSERT(mInWriteTransaction);
 
@@ -7239,7 +6992,7 @@ nsresult DatabaseConnection::StartSavepoint() {
 
 nsresult DatabaseConnection::ReleaseSavepoint() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(HasStorageConnection());
   MOZ_ASSERT(mUpdateRefcountFunction);
   MOZ_ASSERT(mInWriteTransaction);
 
@@ -7259,7 +7012,7 @@ nsresult DatabaseConnection::ReleaseSavepoint() {
 
 nsresult DatabaseConnection::RollbackSavepoint() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(HasStorageConnection());
   MOZ_ASSERT(mUpdateRefcountFunction);
   MOZ_ASSERT(mInWriteTransaction);
 
@@ -7328,7 +7081,7 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::DoIdleProcessing", DOM);
 
-  DatabaseConnection::CachedStatement freelistStmt;
+  CachingDatabaseConnection::CachedStatement freelistStmt;
   const uint32_t freelistCount = [this, &freelistStmt] {
     IDB_TRY_RETURN(GetFreelistCount(freelistStmt), 0u);
   }();
@@ -7515,7 +7268,6 @@ Result<uint32_t, nsresult> DatabaseConnection::GetFreelistCount(
 
 void DatabaseConnection::Close() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
   MOZ_ASSERT(!mDEBUGSavepointCount);
   MOZ_DIAGNOSTIC_ASSERT(!mInWriteTransaction);
 
@@ -7523,28 +7275,24 @@ void DatabaseConnection::Close() {
 
   if (mUpdateRefcountFunction) {
     MOZ_ALWAYS_SUCCEEDS(
-        (*mStorageConnection)->RemoveFunction("update_refcount"_ns));
+        MutableStorageConnection().RemoveFunction("update_refcount"_ns));
     mUpdateRefcountFunction = nullptr;
   }
 
-  mCachedStatements.Clear();
-
-  MOZ_ALWAYS_SUCCEEDS((*mStorageConnection)->Close());
-  mStorageConnection.destroy();
+  CachingDatabaseConnection::Close();
 
   mFileManager.destroy();
 }
 
 nsresult DatabaseConnection::DisableQuotaChecks() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(HasStorageConnection());
 
   if (!mQuotaObject) {
     MOZ_ASSERT(!mJournalQuotaObject);
 
-    IDB_TRY((*mStorageConnection)
-                ->GetQuotaObjects(getter_AddRefs(mQuotaObject),
-                                  getter_AddRefs(mJournalQuotaObject)));
+    IDB_TRY(MutableStorageConnection().GetQuotaObjects(
+        getter_AddRefs(mQuotaObject), getter_AddRefs(mJournalQuotaObject)));
 
     MOZ_ASSERT(mQuotaObject);
     MOZ_ASSERT(mJournalQuotaObject);
@@ -7599,75 +7347,6 @@ Result<int64_t, nsresult> DatabaseConnection::GetFileSize(
   }
 
   return 0;
-}
-
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
-DatabaseConnection::CachedStatement::CachedStatement()
-#  ifdef DEBUG
-    : mDEBUGConnection(nullptr)
-#  endif
-{
-  AssertIsOnConnectionThread();
-
-  MOZ_COUNT_CTOR(DatabaseConnection::CachedStatement);
-}
-
-DatabaseConnection::CachedStatement::~CachedStatement() {
-  AssertIsOnConnectionThread();
-
-  MOZ_COUNT_DTOR(DatabaseConnection::CachedStatement);
-}
-#endif
-
-DatabaseConnection::CachedStatement::operator bool() const {
-  AssertIsOnConnectionThread();
-
-  return mStatement;
-}
-
-mozIStorageStatement& DatabaseConnection::BorrowedStatement::operator*() const {
-  return *operator->();
-}
-
-mozIStorageStatement* DatabaseConnection::BorrowedStatement::operator->()
-    const {
-  MOZ_ASSERT(mStatement);
-
-  return mStatement;
-}
-
-DatabaseConnection::BorrowedStatement
-DatabaseConnection::CachedStatement::Borrow() const {
-  AssertIsOnConnectionThread();
-
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-  return BorrowedStatement{WrapNotNull(mStatement), mQuery};
-#else
-  return BorrowedStatement{WrapNotNull(mStatement)};
-#endif
-}
-
-DatabaseConnection::CachedStatement::CachedStatement(
-    DatabaseConnection* aConnection, nsCOMPtr<mozIStorageStatement> aStatement,
-    const nsACString& aQuery)
-    : mStatement(std::move(aStatement))
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-      ,
-      mQuery(aQuery)
-#endif
-#if defined(DEBUG)
-      ,
-      mDEBUGConnection(aConnection)
-#endif
-{
-#ifdef DEBUG
-  MOZ_ASSERT(aConnection);
-  aConnection->AssertIsOnConnectionThread();
-#endif
-  MOZ_ASSERT(mStatement);
-  AssertIsOnConnectionThread();
-
-  MOZ_COUNT_CTOR(DatabaseConnection::CachedStatement);
 }
 
 DatabaseConnection::AutoSavepoint::AutoSavepoint()
@@ -15007,7 +14686,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
   IDB_TRY_INSPECT(
       const auto& selectStmt,
       ([singleRowOnly, &aConnection, &objectStoreKey, &aKeyRange]()
-           -> Result<DatabaseConnection::BorrowedStatement, nsresult> {
+           -> Result<CachingDatabaseConnection::BorrowedStatement, nsresult> {
         if (singleRowOnly) {
           IDB_TRY_UNWRAP(auto selectStmt,
                          aConnection->BorrowCachedStatement(
