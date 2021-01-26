@@ -43,6 +43,14 @@ struct MOZ_RAII AutoClipRect {
   DrawTarget& mDt;
 };
 
+static LayoutDeviceIntCoord SnapBorderWidth(
+    CSSCoord aCssWidth, nsNativeBasicTheme::DPIRatio aDpiRatio) {
+  if (aCssWidth == 0.0f) {
+    return 0;
+  }
+  return std::max(LayoutDeviceIntCoord(1), (aCssWidth * aDpiRatio).Truncated());
+}
+
 }  // namespace
 
 static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
@@ -483,7 +491,7 @@ void nsNativeBasicTheme::PaintRoundedRect(DrawTarget* aDrawTarget,
                                           CSSCoord aBorderWidth,
                                           RectCornerRadii aDpiAdjustedRadii,
                                           DPIRatio aDpiRatio) {
-  const LayoutDeviceCoord borderWidth(aBorderWidth * aDpiRatio);
+  const LayoutDeviceCoord borderWidth(SnapBorderWidth(aBorderWidth, aDpiRatio));
 
   LayoutDeviceRect rect(aRect);
   // Deflate the rect by half the border width, so that the middle of the stroke
@@ -512,12 +520,11 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
                                               const LayoutDeviceRect& aRect,
                                               const EventStates& aState,
                                               DPIRatio aDpiRatio) {
-  const CSSCoord borderWidth = 2.0f;
   const CSSCoord radius = 2.0f;
   auto [backgroundColor, borderColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Checkbox);
   PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
-                             borderWidth, radius, aDpiRatio);
+                             kCheckboxRadioBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, 5.0f, 1.0f);
@@ -1342,24 +1349,23 @@ LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
     case StyleAppearance::NumberInput: {
-      // FIXME: Do we want this margin not to be int-based? The native windows
-      // theme rounds (see ScaleForDPI)...
-      LayoutDeviceIntCoord w = (kTextFieldBorderWidth * dpiRatio).Rounded();
+      LayoutDeviceIntCoord w = SnapBorderWidth(kTextFieldBorderWidth, dpiRatio);
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton: {
-      LayoutDeviceIntCoord w = (kMenulistBorderWidth * dpiRatio).Rounded();
+      LayoutDeviceIntCoord w = SnapBorderWidth(kMenulistBorderWidth, dpiRatio);
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Button: {
-      LayoutDeviceIntCoord w = (kButtonBorderWidth * dpiRatio).Rounded();
+      LayoutDeviceIntCoord w = SnapBorderWidth(kButtonBorderWidth, dpiRatio);
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio: {
-      LayoutDeviceIntCoord w = (kCheckboxRadioBorderWidth * dpiRatio).Rounded();
+      LayoutDeviceIntCoord w =
+          SnapBorderWidth(kCheckboxRadioBorderWidth, dpiRatio);
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     default:
