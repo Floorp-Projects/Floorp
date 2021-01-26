@@ -1803,7 +1803,9 @@ void MInitializedLength::computeRange(TempAllocator& alloc) {
 }
 
 void MArrayBufferViewLength::computeRange(TempAllocator& alloc) {
-  setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+  if (ArrayBufferObject::maxBufferByteLength() <= INT32_MAX) {
+    setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+  }
 }
 
 void MArrayBufferViewByteOffset::computeRange(TempAllocator& alloc) {
