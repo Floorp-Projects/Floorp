@@ -74,8 +74,9 @@
 #include "vm/BytecodeLocation.h"
 #include "vm/Compression.h"
 #include "vm/DateObject.h"
-#include "vm/FrameIter.h"      // js::ScriptFrameIter
-#include "vm/FunctionFlags.h"  // js::FunctionFlags
+#include "vm/ErrorReporting.h"  // js::MaybePrintAndClearPendingException
+#include "vm/FrameIter.h"       // js::ScriptFrameIter
+#include "vm/FunctionFlags.h"   // js::FunctionFlags
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
@@ -2723,29 +2724,6 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
   return shg;
 }
 
-static void MaybePrintAndClearPendingException(JSContext* cx, FILE* file) {
-  if (!cx->isExceptionPending()) {
-    return;
-  }
-
-  AutoClearPendingException acpe(cx);
-
-  JS::ExceptionStack exnStack(cx);
-  if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
-    fprintf(file, "error getting pending exception\n");
-    return;
-  }
-
-  JS::ErrorReportBuilder report(cx);
-  if (!report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
-    fprintf(file, "out of memory initializing JS::ErrorReportBuilder\n");
-    return;
-  }
-
-  MOZ_ASSERT(!report.report()->isWarning());
-  JS::PrintError(cx, file, report, true);
-}
-
 class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {
   JSContext* cx_;
   JS::WarningReporter oldReporter_;
@@ -2762,7 +2740,7 @@ class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {
     // instance, ReportOutOfMemory will throw the "out of memory" string
     // without going through ErrorToException. We handle these other
     // exceptions here.
-    MaybePrintAndClearPendingException(cx_, stderr);
+    MaybePrintAndClearPendingException(cx_);
   }
 };
 

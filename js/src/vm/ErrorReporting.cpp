@@ -568,3 +568,26 @@ bool js::ReportErrorVA(JSContext* cx, IsWarning isWarning, const char* format,
 
   return report.isWarning();
 }
+
+void js::MaybePrintAndClearPendingException(JSContext* cx) {
+  if (!cx->isExceptionPending()) {
+    return;
+  }
+
+  AutoClearPendingException acpe(cx);
+
+  JS::ExceptionStack exnStack(cx);
+  if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
+    fprintf(stderr, "error getting pending exception\n");
+    return;
+  }
+
+  JS::ErrorReportBuilder report(cx);
+  if (!report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+    fprintf(stderr, "out of memory initializing JS::ErrorReportBuilder\n");
+    return;
+  }
+
+  MOZ_ASSERT(!report.report()->isWarning());
+  JS::PrintError(cx, stderr, report, true);
+}
