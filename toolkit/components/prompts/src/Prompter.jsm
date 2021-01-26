@@ -691,75 +691,25 @@ Prompter.prototype = {
   },
 
   /**
-   * Asynchronously prompt the user for a username and password.
-   * This has largely the same semantics as promptUsernameAndPassword(),
-   * but returns immediately after calling and returns the entered
-   * data in a callback.
-   *
-   * @param {mozIDOMWindowProxy} domWin - The parent window or null.
-   * @param {nsIChannel} channel - The channel that requires authentication.
-   * @param {nsIAuthPromptCallback} callback - Called once the prompt has been
-   *        closed.
-   * @param {nsISupports} context
-   * @param {Number} level - Security level of the credential transmission.
-   *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
-   * @param {nsIAuthInformation} authInfo
-   * @param {String} checkLabel - Text to appear with the checkbox.
-   *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after the callback.
-   * @returns {nsICancelable} Interface to cancel prompt.
-   */
-  asyncPromptAuth(
-    domWin,
-    channel,
-    callback,
-    context,
-    level,
-    authInfo,
-    checkLabel,
-    checkValue
-  ) {
-    let p = this.pickPrompter({ domWin });
-    return p.asyncPromptAuth(
-      channel,
-      callback,
-      context,
-      level,
-      authInfo,
-      checkLabel,
-      checkValue
-    );
-  },
-
-  /**
-   * Asynchronously prompt the user for a username and password.
-   * This has largely the same semantics as promptUsernameAndPassword(),
-   * but returns immediately after calling and returns the entered
-   * data in a callback.
-   *
+   * Requests a username and a password. Shows a dialog with username and
+   * password field, depending on flags also a domain field.
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
    *        nsIPromptService.<MODAL_TYPE_WINDOW|MODAL_TYPE_TAB|MODAL_TYPE_CONTENT>
    * @param {nsIChannel} channel - The channel that requires authentication.
-   * @param {nsIAuthPromptCallback} callback - Called once the prompt has been
-   *        closed.
-   * @param {nsISupports} context
    * @param {Number} level - Security level of the credential transmission.
    *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
-   * @param {nsIAuthInformation} authInfo
+   * @param {nsIAuthInformation} authInfo - Authentication information object.
    * @param {String} checkLabel - Text to appear with the checkbox.
    *        If null, check box will not be shown.
-   * @param {Object} checkValue - Contains the initial checked state of the
-   *        checkbox when this method is called and the final checked state
-   *        after the callback.
-   * @returns {nsICancelable} Interface to cancel prompt.
+   * @param {Object} checkValue - Initial checked state of the checkbox.
+   * @returns {Promise<nsIPropertyBag<{ ok: Boolean }>>}
+   *          A promise which resolves when the prompt is dismissed.
    */
-  asyncPromptAuthBC(browsingContext, modalType, ...promptArgs) {
-    let p = this.pickPrompter({ browsingContext, modalType });
-    return p.asyncPromptAuth(...promptArgs);
+  asyncPromptAuth(browsingContext, modalType, ...promptArgs) {
+    let p = this.pickPrompter({ browsingContext, modalType, async: true });
+    return p.promptAuth(...promptArgs);
   },
 };
 
@@ -1646,12 +1596,12 @@ class ModalPrompter {
 
     let [username, password] = PromptUtils.getAuthInfo(authInfo);
 
-    let userParam = { value: username };
-    let passParam = { value: password };
+    let userParam = this.async ? username : { value: username };
+    let passParam = this.async ? password : { value: password };
 
-    let ok;
+    let result;
     if (authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD) {
-      ok = this.nsIPrompt_promptPassword(
+      result = this.nsIPrompt_promptPassword(
         null,
         message,
         passParam,
@@ -1659,7 +1609,7 @@ class ModalPrompter {
         checkValue
       );
     } else {
-      ok = this.nsIPrompt_promptUsernameAndPassword(
+      result = this.nsIPrompt_promptUsernameAndPassword(
         null,
         message,
         userParam,
@@ -1669,10 +1619,25 @@ class ModalPrompter {
       );
     }
 
-    if (ok) {
+    // For the async case result is an nsIPropertyBag with prompt results.
+    if (this.async) {
+      return result.then(bag => {
+        let ok = bag.getProperty("ok");
+        if (ok) {
+          let username = bag.getProperty("user");
+          let password = bag.getProperty("pass");
+          PromptUtils.setAuthInfo(authInfo, username, password);
+        }
+        return ok;
+      });
+    }
+
+    // For the sync case result is the "ok" boolean which indicates whether
+    // the user has confirmed the dialog.
+    if (result) {
       PromptUtils.setAuthInfo(authInfo, userParam.value, passParam.value);
     }
-    return ok;
+    return result;
   }
 
   asyncPromptAuth(
