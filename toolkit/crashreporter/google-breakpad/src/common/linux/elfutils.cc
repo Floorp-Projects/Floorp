@@ -35,6 +35,10 @@
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/elfutils-inl.h"
 
+#if defined(__FreeBSD__)
+#  define ElfW(type) Elf_##type
+#endif
+
 namespace google_breakpad {
 
 namespace {
