@@ -9,6 +9,7 @@
 
 #include <windows.h>
 #include "mozilla/EnumSet.h"
+#include "mozilla/Result.h"
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
 
@@ -67,15 +68,96 @@ struct ThemeColors {
   uint32_t animationColor;
 };
 
+enum class PreXULSkeletonUIError : uint32_t {
+  None,
+  Ineligible,
+  Disabled,
+  EnabledKeyDoesNotExist,
+  OOM,
+  Cmdline,
+  EnvVars,
+  FailedToOpenRegistryKey,
+  RegistryError,
+  FailedLoadingDynamicProcs,
+  FailedGettingLock,
+  FilesystemFailure,
+  NoStartWithLastProfile,
+  FailedRegisteringWindowClass,
+  CorruptData,
+  BadWindowDimensions,
+  FailedGettingMonitorInfo,
+  CreateWindowFailed,
+  FailedGettingDC,
+  FailedBlitting,
+  FailedFillingBottomRect,
+  Unknown,
+};
+
+inline const wchar_t* GetPreXULSkeletonUIErrorString(
+    PreXULSkeletonUIError error) {
+  switch (error) {
+    case PreXULSkeletonUIError::None:
+      return L"None";
+    case PreXULSkeletonUIError::Ineligible:
+      return L"Ineligible";
+    case PreXULSkeletonUIError::Disabled:
+      return L"Disabled";
+    case PreXULSkeletonUIError::OOM:
+      return L"OOM";
+    case PreXULSkeletonUIError::Cmdline:
+      return L"Cmdline";
+    case PreXULSkeletonUIError::EnvVars:
+      return L"EnvVars";
+    case PreXULSkeletonUIError::FailedToOpenRegistryKey:
+      return L"FailedToOpenRegistryKey";
+    case PreXULSkeletonUIError::RegistryError:
+      return L"RegistryError";
+    case PreXULSkeletonUIError::FailedLoadingDynamicProcs:
+      return L"FailedLoadingDynamicProcs";
+    case PreXULSkeletonUIError::FailedGettingLock:
+      return L"FailedGettingLock";
+    case PreXULSkeletonUIError::FilesystemFailure:
+      return L"FilesystemFailure";
+    case PreXULSkeletonUIError::NoStartWithLastProfile:
+      return L"NoStartWithLastProfile";
+    case PreXULSkeletonUIError::FailedRegisteringWindowClass:
+      return L"FailedRegisteringWindowClass";
+    case PreXULSkeletonUIError::CorruptData:
+      return L"CorruptData";
+    case PreXULSkeletonUIError::BadWindowDimensions:
+      return L"BadWindowDimensions";
+    case PreXULSkeletonUIError::FailedGettingMonitorInfo:
+      return L"FailedGettingMonitorInfo";
+    case PreXULSkeletonUIError::EnabledKeyDoesNotExist:
+      return L"EnabledKeyDoesNotExist";
+    case PreXULSkeletonUIError::CreateWindowFailed:
+      return L"CreateWindowFailed";
+    case PreXULSkeletonUIError::FailedGettingDC:
+      return L"FailedGettingDC";
+    case PreXULSkeletonUIError::FailedBlitting:
+      return L"FailedBlitting";
+    case PreXULSkeletonUIError::FailedFillingBottomRect:
+      return L"FailedFillingBottomRect";
+    case PreXULSkeletonUIError::Unknown:
+      return L"Unknown";
+  }
+
+  MOZ_ASSERT_UNREACHABLE();
+  return L"Unknown";
+}
+
 MFBT_API void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                                              char** argv);
-MFBT_API HWND ConsumePreXULSkeletonUIHandle();
+MFBT_API Result<HWND, PreXULSkeletonUIError> ConsumePreXULSkeletonUIHandle();
 MFBT_API bool WasPreXULSkeletonUIMaximized();
-MFBT_API void PersistPreXULSkeletonUIValues(const SkeletonUISettings& settings);
+MFBT_API Result<Ok, PreXULSkeletonUIError> PersistPreXULSkeletonUIValues(
+    const SkeletonUISettings& settings);
 MFBT_API bool GetPreXULSkeletonUIEnabled();
-MFBT_API void SetPreXULSkeletonUIEnabledIfAllowed(bool value);
+MFBT_API Result<Ok, PreXULSkeletonUIError> SetPreXULSkeletonUIEnabledIfAllowed(
+    bool value);
 MFBT_API void PollPreXULSkeletonUIEvents();
-MFBT_API void SetPreXULSkeletonUIThemeId(ThemeMode theme);
+MFBT_API Result<Ok, PreXULSkeletonUIError> SetPreXULSkeletonUIThemeId(
+    ThemeMode theme);
 
 }  // namespace mozilla
 
