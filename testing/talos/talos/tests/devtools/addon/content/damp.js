@@ -7,12 +7,7 @@
 /* globals dampWindow */
 
 const { Ci, Cc, Cu } = require("chrome");
-const {
-  gBrowser,
-  MozillaFileLogger,
-  performance,
-  requestIdleCallback,
-} = dampWindow;
+const { gBrowser, MozillaFileLogger, requestIdleCallback } = dampWindow;
 
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
@@ -44,7 +39,7 @@ function Damp() {}
 Damp.prototype = {
   async garbageCollect() {
     dump("Garbage collect\n");
-    let start = performance.now();
+    let start = Cu.now();
 
     // Minimize memory usage
     // mimic miminizeMemoryUsage, by only flushing JS objects via GC.
@@ -133,11 +128,11 @@ Damp.prototype = {
       this.allocationTracker.flushAllocations();
     }
 
-    let start = performance.now();
+    let start = Cu.now();
 
     return {
       done: () => {
-        let end = performance.now();
+        let end = Cu.now();
         let duration = end - start;
         ChromeUtils.addProfilerMarker("DAMP", start, label);
         if (record) {
@@ -178,7 +173,7 @@ Damp.prototype = {
 
   async waitForPendingPaints(window) {
     let utils = window.windowUtils;
-    let startTime = performance.now();
+    let startTime = Cu.now();
     while (utils.isMozAfterPaintPending) {
       await new Promise(done => {
         window.addEventListener(
@@ -222,7 +217,7 @@ Damp.prototype = {
     // Force freeing memory now so that it doesn't happen during the next test
     await this.garbageCollect();
 
-    let duration = Math.round(performance.now() - this._startTime);
+    let duration = Math.round(Cu.now() - this._startTime);
     dump(`${this._currentTest} took ${duration}ms.\n`);
 
     this._runNextTest();
@@ -253,7 +248,7 @@ Damp.prototype = {
     }
 
     let test = this._tests[this._nextTestIndex++];
-    this._startTime = performance.now();
+    this._startTime = Cu.now();
     this._currentTest = test;
 
     dump(`Loading test '${test}'\n`);
@@ -471,7 +466,7 @@ Damp.prototype = {
 
       this.waitBeforeRunningTests()
         .then(() => {
-          this._startTimestamp = performance.now();
+          this._startTimestamp = Cu.now();
           this.TalosParentProfiler.resume();
           this._doSequence(sequenceArray, this._doneInternal);
         })
