@@ -43,6 +43,8 @@ LOCAL_INCLUDES += [
     "/gfx/2d",
     # Decoders need ImageLib headers.
     "/image",
+    # for libyuv::ARGBAttenuate and ::ARGBUnattenuate
+    "/media/libyuv/libyuv/include",
 ]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]

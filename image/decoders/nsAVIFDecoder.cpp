@@ -12,6 +12,7 @@
 
 #include "mozilla/gfx/Types.h"
 #include "YCbCrUtils.h"
+#include "libyuv.h"
 
 #include "SurfacePipeFactory.h"
 
@@ -912,8 +913,8 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   AccumulateCategorical(
       gColorDepthLabel[static_cast<size_t>(decodedData.mColorDepth)]);
 
-  const IntSize intrinsicSize = Size();
-  IntSize rgbSize = intrinsicSize;
+  IntSize rgbSize = Size();
+  MOZ_ASSERT(rgbSize == decodedData.mPicSize);
 
   // Get suggested format and size. Note that GetYCbCrToRGBDestFormatAndSize
   // force format to be B8G8R8X8 if it's not.
@@ -950,10 +951,22 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   }
 
   if (hasAlpha) {
+    const auto wantPremultiply =
+        !bool(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
+    const bool& hasPremultiply = decodedData.mPremultipliedAlpha;
+
+    PremultFunc premultOp = nullptr;
+    if (wantPremultiply && !hasPremultiply) {
+      premultOp = libyuv::ARGBAttenuate;
+    } else if (!wantPremultiply && hasPremultiply) {
+      premultOp = libyuv::ARGBUnattenuate;
+    }
+
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
-            ("[this=%p] calling gfx::ConvertYCbCrAToARGB", this));
+            ("[this=%p] calling gfx::ConvertYCbCrAToARGB premultOp: %p", this,
+             premultOp));
     gfx::ConvertYCbCrAToARGB(decodedData, format, rgbSize, rgbBuf.get(),
-                             rgbStride.value());
+                             rgbStride.value(), premultOp);
   } else {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] calling gfx::ConvertYCbCrToRGB", this));
@@ -961,23 +974,11 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
                            rgbStride.value());
   }
 
-  const bool alphaPremultiplicationRequested =
-      !bool(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
-  SurfacePipeFlags pipeFlags = SurfacePipeFlags();
-  // If the consumer of this decoder has requested output with alpha
-  // premultiplication and the decoded data wasn't already premultipilied, do it
-  // in our pipeline
-  if (alphaPremultiplicationRequested && hasAlpha &&
-      !decodedData.mPremultipliedAlpha) {
-    MOZ_LOG(sAVIFLog, LogLevel::Debug,
-            ("[this=%p] PREMULTIPLY_ALPHA is applied", this));
-    pipeFlags |= SurfacePipeFlags::PREMULTIPLY_ALPHA;
-  }
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
           ("[this=%p] calling SurfacePipeFactory::CreateSurfacePipe", this));
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
       this, rgbSize, OutputSize(), FullFrame(), format, format, Nothing(),
-      nullptr, pipeFlags);
+      nullptr, SurfacePipeFlags());
 
   if (!pipe) {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,

@@ -582,13 +582,5 @@ void ConvertI420AlphaToARGB32(const uint8* y_buf,
   MOZ_ASSERT(!err);
 }
 
-void ARGBAttenuate(const uint8_t* src_argb, int src_stride_argb,
-                   uint8_t* dst_argb, int dst_stride_argb, int width,
-                   int height) {
-  DebugOnly<int> err = libyuv::ARGBAttenuate(
-      src_argb, src_stride_argb, dst_argb, dst_stride_argb, width, height);
-  MOZ_ASSERT(!err);
-}
-
 } // namespace gfx
 } // namespace mozilla
