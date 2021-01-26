@@ -28,10 +28,19 @@ class ContentProcessTargetFront extends TargetMixin(
     // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
     this.targetForm = json;
+
+    this.remoteType = json.remoteType;
   }
 
   get name() {
-    return `Content Process (pid ${this.processID})`;
+    // @backward-compat { version 87 } We now have `remoteType` attribute.
+    if (this.remoteType) {
+      return `(pid ${this.processID}) ${this.remoteType.replace(
+        "webIsolated=",
+        ""
+      )}`;
+    }
+    return `(pid ${this.processID}) Content Process`;
   }
 
   attach() {
