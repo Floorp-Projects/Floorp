@@ -320,17 +320,17 @@ struct SharedDataContainer {
     MOZ_ASSERT(isSingle());
   }
 
-  SingleSharedDataPtr asSingle() {
+  SingleSharedDataPtr asSingle() const {
     MOZ_ASSERT(isSingle());
     MOZ_ASSERT(!isEmpty());
     static_assert(SingleTag == 0);
     return reinterpret_cast<SingleSharedDataPtr>(data_);
   }
-  SharedDataVectorPtr asVector() {
+  SharedDataVectorPtr asVector() const {
     MOZ_ASSERT(isVector());
     return reinterpret_cast<SharedDataVectorPtr>(data_ & ~TagMask);
   }
-  SharedDataMapPtr asMap() {
+  SharedDataMapPtr asMap() const {
     MOZ_ASSERT(isMap());
     return reinterpret_cast<SharedDataMapPtr>(data_ & ~TagMask);
   }
@@ -339,7 +339,7 @@ struct SharedDataContainer {
                          size_t allScriptCount);
 
   // Returns index-th script's shared data, or nullptr if it doesn't have.
-  js::SharedImmutableScriptData* get(ScriptIndex index);
+  js::SharedImmutableScriptData* get(ScriptIndex index) const;
 
   // Add data for index-th script and share it with VM.
   bool addAndShare(JSContext* cx, ScriptIndex index,
@@ -602,8 +602,8 @@ struct CompilationStencil : public BaseCompilationStencil {
                                                CompilationStencil& stencil,
                                                CompilationGCOutput& gcOutput);
   static MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
-      JSContext* cx, CompilationInput& input, BaseCompilationStencil& stencil,
-      CompilationGCOutput& gcOutput);
+      JSContext* cx, CompilationInput& input,
+      const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
                                       bool* succeededOut = nullptr);
@@ -624,7 +624,7 @@ struct CompilationStencil : public BaseCompilationStencil {
   CompilationStencil& operator=(CompilationStencil&&) = delete;
 
   static ScriptStencilIterable functionScriptStencils(
-      BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput) {
+      const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput) {
     return ScriptStencilIterable(stencil, gcOutput);
   }
 
