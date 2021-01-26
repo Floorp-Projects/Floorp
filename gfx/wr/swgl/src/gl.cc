@@ -2836,7 +2836,7 @@ static ALWAYS_INLINE void discard_depth(Z z, DepthRun* zbuf, I32 mask) {
   }
 }
 
-static inline HalfRGBA8 packRGBA8(I32 a, I32 b) {
+static ALWAYS_INLINE HalfRGBA8 packRGBA8(I32 a, I32 b) {
 #if USE_SSE2
   return _mm_packs_epi32(a, b);
 #elif USE_NEON
@@ -2846,7 +2846,7 @@ static inline HalfRGBA8 packRGBA8(I32 a, I32 b) {
 #endif
 }
 
-static inline WideRGBA8 pack_pixels_RGBA8(const vec4& v) {
+static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(const vec4& v) {
   ivec4 i = round_pixel(v);
   HalfRGBA8 xz = packRGBA8(i.z, i.x);
   HalfRGBA8 yw = packRGBA8(i.y, i.w);
@@ -2857,13 +2857,13 @@ static inline WideRGBA8 pack_pixels_RGBA8(const vec4& v) {
   return combine(lo, hi);
 }
 
-UNUSED static inline WideRGBA8 pack_pixels_RGBA8(const vec4_scalar& v) {
+UNUSED static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(const vec4_scalar& v) {
   I32 i = round_pixel((Float){v.z, v.y, v.x, v.w});
   HalfRGBA8 c = packRGBA8(i, i);
   return combine(c, c);
 }
 
-static inline WideRGBA8 pack_pixels_RGBA8() {
+static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8() {
   return pack_pixels_RGBA8(fragment_shader->gl_FragColor);
 }
 
@@ -2913,7 +2913,7 @@ static ALWAYS_INLINE void store_span(P* dst, V src, int span) {
 
 // (x*y + x) >> 8, cheap approximation of (x*y) / 255
 template <typename T>
-static inline T muldiv255(T x, T y) {
+static ALWAYS_INLINE T muldiv255(T x, T y) {
   return (x * y + x) >> 8;
 }
 
@@ -2930,12 +2930,12 @@ static inline T muldiv255(T x, T y) {
 // overflow without the troublesome carry, giving us only the remaining 8 low
 // bits we actually need while keeping the high bits at zero.
 template <typename T>
-static inline T addlow(T x, T y) {
+static ALWAYS_INLINE T addlow(T x, T y) {
   typedef VectorType<uint8_t, sizeof(T)> bytes;
   return bit_cast<T>(bit_cast<bytes>(x) + bit_cast<bytes>(y));
 }
 
-static inline WideRGBA8 alphas(WideRGBA8 c) {
+static ALWAYS_INLINE WideRGBA8 alphas(WideRGBA8 c) {
   return SHUFFLE(c, c, 3, 3, 3, 3, 7, 7, 7, 7, 11, 11, 11, 11, 15, 15, 15, 15);
 }
 
@@ -2963,8 +2963,8 @@ static ALWAYS_INLINE auto load_clip_mask(P* buf, int span)
   return expand_clip_mask(buf, unpack(load_span<PackedR8>(maskBuf, span)));
 }
 
-static inline WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
-                                     WideRGBA8 src, int span = 4) {
+static ALWAYS_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
+                                            WideRGBA8 src, int span = 4) {
   WideRGBA8 dst = unpack(pdst);
   const WideRGBA8 RGB_MASK = {0xFFFF, 0xFFFF, 0xFFFF, 0,      0xFFFF, 0xFFFF,
                               0xFFFF, 0,      0xFFFF, 0xFFFF, 0xFFFF, 0,
@@ -3064,7 +3064,7 @@ static ALWAYS_INLINE void discard_output(uint32_t* buf) {
   }
 }
 
-static inline WideR8 packR8(I32 a) {
+static ALWAYS_INLINE WideR8 packR8(I32 a) {
 #if USE_SSE2
   return lowHalf(bit_cast<V8<uint16_t>>(_mm_packs_epi32(a, a)));
 #elif USE_NEON
@@ -3074,14 +3074,16 @@ static inline WideR8 packR8(I32 a) {
 #endif
 }
 
-static inline WideR8 pack_pixels_R8(Float c) { return packR8(round_pixel(c)); }
+static ALWAYS_INLINE WideR8 pack_pixels_R8(Float c) {
+  return packR8(round_pixel(c));
+}
 
-static inline WideR8 pack_pixels_R8() {
+static ALWAYS_INLINE WideR8 pack_pixels_R8() {
   return pack_pixels_R8(fragment_shader->gl_FragColor.x);
 }
 
-static inline WideR8 blend_pixels(uint8_t* buf, WideR8 dst, WideR8 src,
-                                  int span = 4) {
+static ALWAYS_INLINE WideR8 blend_pixels(uint8_t* buf, WideR8 dst, WideR8 src,
+                                         int span = 4) {
 #define BLEND_CASE_KEY(key)                                     \
   MASK_##key : src = muldiv255(src, load_clip_mask(buf, span)); \
   FALLTHROUGH;                                                  \
@@ -3105,7 +3107,7 @@ static inline WideR8 blend_pixels(uint8_t* buf, WideR8 dst, WideR8 src,
 }
 
 template <bool DISCARD, int SPAN>
-static inline void discard_output(uint8_t* buf, WideR8 mask) {
+static ALWAYS_INLINE void discard_output(uint8_t* buf, WideR8 mask) {
   WideR8 r = pack_pixels_R8();
   WideR8 dst = unpack(load_span<PackedR8>(buf, SPAN));
   if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
@@ -3114,7 +3116,7 @@ static inline void discard_output(uint8_t* buf, WideR8 mask) {
 }
 
 template <bool DISCARD, int SPAN>
-static inline void discard_output(uint8_t* buf) {
+static ALWAYS_INLINE void discard_output(uint8_t* buf) {
   WideR8 r = pack_pixels_R8();
   if (DISCARD) {
     WideR8 dst = unpack(load_span<PackedR8>(buf, SPAN));
