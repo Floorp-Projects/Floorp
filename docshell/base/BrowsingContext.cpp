@@ -2459,7 +2459,8 @@ bool BrowsingContext::CanSet(
     FieldIndex<IDX_TouchEventsOverrideInternal>,
     const enum TouchEventsOverride& aTouchEventsOverride,
     ContentParent* aSource) {
-  return CheckOnlyOwningProcessCanSet(aSource);
+  // TODO: Bug 1688948 - Should only be set in the parent process.
+  return true;
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_DisplayMode>,
