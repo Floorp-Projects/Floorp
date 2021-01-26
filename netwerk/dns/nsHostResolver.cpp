@@ -37,6 +37,7 @@
 #include "TRR.h"
 #include "TRRQuery.h"
 #include "TRRService.h"
+#include "ODoHService.h"
 
 #include "mozilla/Atomics.h"
 #include "mozilla/HashFunctions.h"
@@ -1383,7 +1384,9 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
   MaybeRenewHostRecordLocked(rec);
 
   RefPtr<TRRQuery> query = new TRRQuery(this, rec);
-  nsresult rv = query->DispatchLookup(pushedTRR);
+  bool useODoH = gODoHService->Enabled() &&
+                 !((rec->flags & nsIDNSService::RESOLVE_DISABLE_ODOH));
+  nsresult rv = query->DispatchLookup(pushedTRR, useODoH);
   if (NS_FAILED(rv)) {
     rec->RecordReason(nsHostRecord::TRR_DID_NOT_MAKE_QUERY);
     return rv;

@@ -8765,6 +8765,30 @@
   value: true
   mirror: always
 
+# Whether to enable odoh.
+- name: network.trr.odoh.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# The uri of Oblivious Proxy.
+- name: network.trr.odoh.proxy_uri
+  type: String
+  value: ""
+  mirror: never
+
+# The host name of Oblivious Target.
+- name: network.trr.odoh.target_host
+  type: String
+  value: ""
+  mirror: never
+
+# The uri path of the odoh uri.
+- name: network.trr.odoh.target_path
+  type: String
+  value: ""
+  mirror: never
+
 # Allow the network changed event to get sent when a network topology or setup
 # change is noticed while running.
 - name: network.notify.changed

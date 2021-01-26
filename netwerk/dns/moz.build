@@ -71,6 +71,8 @@ UNIFIED_SOURCES += [
     "NativeDNSResolverOverrideParent.cpp",
     "nsDNSService2.cpp",
     "nsIDNService.cpp",
+    "ODoH.cpp",
+    "ODoHService.cpp",
     "punycode.c",
     "TRR.cpp",
     "TRRQuery.cpp",
