@@ -1235,6 +1235,25 @@ void CodeGenerator::visitFloat32ToIntegerInt32(LFloat32ToIntegerInt32* lir) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitInt32ToIntPtr(LInt32ToIntPtr* lir) {
+  Register input = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+
+  // Zero-extension is more efficient than sign-extension, so use that if the
+  // input can't be negative.
+  if (lir->mir()->canBeNegative()) {
+    masm.move32SignExtendToPtr(input, output);
+  } else {
+#ifdef DEBUG
+    Label ok;
+    masm.branch32(Assembler::NotSigned, input, input, &ok);
+    masm.assumeUnreachable("LInt32ToIntPtr: Unexpected negative input");
+    masm.bind(&ok);
+#endif
+    masm.move32ZeroExtendToPtr(input, output);
+  }
+}
+
 void CodeGenerator::visitAdjustDataViewLength(LAdjustDataViewLength* lir) {
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);

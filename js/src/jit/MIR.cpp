@@ -2531,6 +2531,16 @@ MDefinition* MPow::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MInt32ToIntPtr::foldsTo(TempAllocator& alloc) {
+  MDefinition* def = input();
+  if (!def->isConstant()) {
+    return this;
+  }
+
+  int32_t i = def->toConstant()->toInt32();
+  return MConstant::NewIntPtr(alloc, intptr_t(i));
+}
+
 bool MAbs::fallible() const {
   return !implicitTruncate_ && (!range() || !range()->hasInt32Bounds());
 }

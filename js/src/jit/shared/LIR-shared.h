@@ -5601,6 +5601,18 @@ class LRest : public LCallInstructionHelper<1, 1, 3> {
   MRest* mir() const { return mir_->toRest(); }
 };
 
+class LInt32ToIntPtr : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(Int32ToIntPtr)
+
+  explicit LInt32ToIntPtr(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+
+  MInt32ToIntPtr* mir() const { return mir_->toInt32ToIntPtr(); }
+};
+
 class LAdjustDataViewLength : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(AdjustDataViewLength)

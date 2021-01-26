@@ -1850,6 +1850,10 @@ void MSpectreMaskIndex::computeRange(TempAllocator& alloc) {
   setRange(new (alloc) Range(index()));
 }
 
+void MInt32ToIntPtr::computeRange(TempAllocator& alloc) {
+  setRange(new (alloc) Range(input()));
+}
+
 void MArrayPush::computeRange(TempAllocator& alloc) {
   // MArrayPush returns the new array length.
   setRange(Range::NewUInt32Range(alloc, 0, UINT32_MAX));
@@ -3284,6 +3288,13 @@ void MLoadElementHole::collectRangeInfoPreTrunc() {
   if (indexRange.isFiniteNonNegative()) {
     needsNegativeIntCheck_ = false;
     setNotGuard();
+  }
+}
+
+void MInt32ToIntPtr::collectRangeInfoPreTrunc() {
+  Range inputRange(input());
+  if (inputRange.isFiniteNonNegative()) {
+    canBeNegative_ = false;
   }
 }
 

@@ -3627,6 +3627,35 @@ class MWasmAnyRefFromJSObject : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
+// Converts an int32 value to intptr by sign-extending it.
+class MInt32ToIntPtr : public MUnaryInstruction,
+                       public UnboxedInt32Policy<0>::Data {
+  bool canBeNegative_ = true;
+
+  explicit MInt32ToIntPtr(MDefinition* def)
+      : MUnaryInstruction(classOpcode, def) {
+    setResultType(MIRType::IntPtr);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(Int32ToIntPtr)
+  TRIVIAL_NEW_WRAPPERS
+
+  bool canBeNegative() const { return canBeNegative_; }
+  void setCanNotBeNegative() { canBeNegative_ = false; }
+
+  void computeRange(TempAllocator& alloc) override;
+  void collectRangeInfoPreTrunc() override;
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Subtracts (byteSize - 1) from the input value. Bails out if the result is
 // negative. This is used to implement bounds checks for DataView accesses.
 class MAdjustDataViewLength : public MUnaryInstruction,

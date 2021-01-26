@@ -2222,6 +2222,36 @@ void LIRGenerator::visitTruncateToInt32(MTruncateToInt32* truncate) {
   }
 }
 
+void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
+  MDefinition* input = ins->input();
+  MOZ_ASSERT(input->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->type() == MIRType::IntPtr);
+
+  // If the result is only used by instructions that expect a bounds-checked
+  // index, we must have eliminated or hoisted a bounds check and we can assume
+  // the index is non-negative. This lets us generate more efficient code.
+  // In debug builds we verify this non-negative assumption at runtime.
+  if (ins->canBeNegative()) {
+    bool canBeNegative = false;
+    for (MUseDefIterator iter(ins); iter; iter++) {
+      if (!iter.def()->isSpectreMaskIndex() &&
+          !iter.def()->isLoadUnboxedScalar() &&
+          !iter.def()->isStoreUnboxedScalar() &&
+          !iter.def()->isLoadDataViewElement() &&
+          !iter.def()->isStoreDataViewElement()) {
+        canBeNegative = true;
+        break;
+      }
+    }
+    if (!canBeNegative) {
+      ins->setCanNotBeNegative();
+    }
+  }
+
+  auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitAdjustDataViewLength(MAdjustDataViewLength* ins) {
   MDefinition* input = ins->input();
   MOZ_ASSERT(input->type() == MIRType::Int32);
