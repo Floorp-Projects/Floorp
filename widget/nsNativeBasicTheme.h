@@ -192,9 +192,8 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   nsNativeBasicTheme() = default;
   virtual ~nsNativeBasicTheme() = default;
 
-  static DPIRatio GetDPIRatio(nsIFrame* aFrame);
+  static DPIRatio GetDPIRatio(nsIFrame* aFrame, StyleAppearance);
   static bool IsDateTimeResetButton(nsIFrame* aFrame);
-  static bool IsDateTimeTextField(nsIFrame* aFrame);
   static bool IsColorPickerButton(nsIFrame* aFrame);
   static bool IsRootScrollbar(nsIFrame* aFrame);
   static LayoutDeviceRect FixAspectRatio(const LayoutDeviceRect& aRect);
