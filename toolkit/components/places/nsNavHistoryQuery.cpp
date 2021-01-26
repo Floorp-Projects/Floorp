@@ -550,7 +550,8 @@ nsresult ParseQueryBooleanString(const nsCString& aString, bool* aValue) {
   if (aString.EqualsLiteral("1") || aString.EqualsLiteral("true")) {
     *aValue = true;
     return NS_OK;
-  } else if (aString.EqualsLiteral("0") || aString.EqualsLiteral("false")) {
+  }
+  if (aString.EqualsLiteral("0") || aString.EqualsLiteral("false")) {
     *aValue = false;
     return NS_OK;
   }
