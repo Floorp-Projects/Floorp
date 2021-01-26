@@ -71,6 +71,7 @@
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/quota/CachingDatabaseConnection.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/OriginScope.h"
@@ -337,9 +338,9 @@ const uint32_t kShadowMaxWALSize = 512 * 1024;
 
 const uint32_t kShadowJournalSizeLimit = kShadowMaxWALSize * 3;
 
-bool IsOnConnectionThread();
+bool IsOnGlobalConnectionThread();
 
-void AssertIsOnConnectionThread();
+void AssertIsOnGlobalConnectionThread();
 
 /*******************************************************************************
  * SQLite functions
@@ -356,7 +357,7 @@ nsCString GetArchivedOriginHashKey(const nsACString& aOriginSuffix,
 }
 
 nsresult CreateTables(mozIStorageConnection* aConnection) {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(aConnection);
 
   // Table `database`
@@ -448,7 +449,7 @@ template <typename CorruptedFileHandler>
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
     nsIFile& aDBFile, nsIFile& aUsageFile, const nsACString& aOrigin,
     CorruptedFileHandler&& aCorruptedFileHandler) {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
 
   // XXX Common logic should be refactored out of this method and
   // cache::DBAction::OpenDBConnection, and maybe other similar functions.
@@ -611,7 +612,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
 
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> GetStorageConnection(
     const nsAString& aDatabaseFilePath) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
   MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, u".sqlite"_ns));
 
@@ -739,7 +740,7 @@ nsresult DetachArchiveDatabase(mozIStorageConnection* aConnection) {
 }
 
 Result<nsCOMPtr<nsIFile>, nsresult> GetShadowFile(const nsAString& aBasePath) {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(!aBasePath.IsEmpty());
 
   LS_TRY_UNWRAP(auto archiveFile, QM_NewLocalFile(aBasePath));
@@ -750,7 +751,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> GetShadowFile(const nsAString& aBasePath) {
 }
 
 nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(aConnection);
 
   // Try enabling WAL mode. This can fail in various circumstances so we have to
@@ -798,7 +799,7 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
 
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
     const nsAString& aBasePath) {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(!aBasePath.IsEmpty());
 
   LS_TRY_INSPECT(const auto& shadowFile, GetShadowFile(aBasePath));
@@ -868,7 +869,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> GetShadowStorageConnection(
 
 nsresult AttachShadowDatabase(const nsAString& aBasePath,
                               mozIStorageConnection* aConnection) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(!aBasePath.IsEmpty());
   MOZ_ASSERT(aConnection);
 
@@ -899,7 +900,7 @@ nsresult AttachShadowDatabase(const nsAString& aBasePath,
 }
 
 nsresult DetachShadowDatabase(mozIStorageConnection* aConnection) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(aConnection);
 
   LS_TRY(aConnection->ExecuteSimpleSQL("DETACH DATABASE shadow"_ns));
@@ -909,7 +910,7 @@ nsresult DetachShadowDatabase(mozIStorageConnection* aConnection) {
 
 Result<nsCOMPtr<nsIFile>, nsresult> GetUsageFile(
     const nsAString& aDirectoryPath) {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(!aDirectoryPath.IsEmpty());
 
   LS_TRY_UNWRAP(auto usageFile, QM_NewLocalFile(aDirectoryPath));
@@ -921,7 +922,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> GetUsageFile(
 
 Result<nsCOMPtr<nsIFile>, nsresult> GetUsageJournalFile(
     const nsAString& aDirectoryPath) {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(!aDirectoryPath.IsEmpty());
 
   LS_TRY_UNWRAP(auto usageJournalFile, QM_NewLocalFile(aDirectoryPath));
@@ -962,7 +963,7 @@ Result<bool, nsresult> ExistsAsFile(nsIFile& aFile) {
 
 nsresult UpdateUsageFile(nsIFile* aUsageFile, nsIFile* aUsageJournalFile,
                          int64_t aUsage) {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(aUsageFile);
   MOZ_ASSERT(aUsageJournalFile);
   MOZ_ASSERT(aUsage >= 0);
@@ -1171,13 +1172,9 @@ class ConnectionDatastoreOperationBase : public DatastoreOperationBase {
   NS_DECL_NSIRUNNABLE
 };
 
-class Connection final {
+class Connection final : public CachingDatabaseConnection {
   friend class ConnectionThread;
 
- public:
-  class CachedStatement;
-
- private:
   class InitTemporaryOriginHelper;
 
   class FlushOp;
@@ -1186,10 +1183,7 @@ class Connection final {
   RefPtr<ConnectionThread> mConnectionThread;
   RefPtr<QuotaClient> mQuotaClient;
   nsCOMPtr<nsITimer> mFlushTimer;
-  nsCOMPtr<mozIStorageConnection> mStorageConnection;
   UniquePtr<ArchivedOriginScope> mArchivedOriginScope;
-  nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
-      mCachedStatements;
   ConnectionWriteOptimizer mWriteOptimizer;
   const QuotaInfo mQuotaInfo;
   nsString mDirectoryPath;
@@ -1265,15 +1259,12 @@ class Connection final {
   nsresult EnsureStorageConnection();
 
   mozIStorageConnection* StorageConnection() const {
-    AssertIsOnConnectionThread();
+    AssertIsOnGlobalConnectionThread();
 
-    return mStorageConnection;
+    return &MutableStorageConnection();
   }
 
   void CloseStorageConnection();
-
-  nsresult GetCachedStatement(const nsACString& aQuery,
-                              CachedStatement* aCachedStatement);
 
   nsresult BeginWriteTransaction();
 
@@ -1294,30 +1285,6 @@ class Connection final {
   void Flush();
 
   static void FlushTimerCallback(nsITimer* aTimer, void* aClosure);
-};
-
-class Connection::CachedStatement final {
-  friend class Connection;
-
-  nsCOMPtr<mozIStorageStatement> mStatement;
-  Maybe<mozStorageStatementScoper> mScoper;
-
- public:
-  CachedStatement();
-  ~CachedStatement();
-
-  operator mozIStorageStatement*() const;
-
-  mozIStorageStatement* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN;
-
- private:
-  // Only called by Connection.
-  void Assign(Connection* aConnection,
-              already_AddRefed<mozIStorageStatement> aStatement);
-
-  // No funny business allowed.
-  CachedStatement(const CachedStatement&) = delete;
-  CachedStatement& operator=(const CachedStatement&) = delete;
 };
 
 /**
@@ -1344,7 +1311,7 @@ class Connection::InitTemporaryOriginHelper final : public Runnable {
         mQuotaInfo(aQuotaInfo),
         mIOThreadResultCode(NS_OK),
         mWaiting(true) {
-    AssertIsOnConnectionThread();
+    AssertIsOnGlobalConnectionThread();
   }
 
   Result<nsString, nsresult> BlockAndReturnOriginDirectoryPath();
@@ -2583,7 +2550,7 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   }
 
   mozilla::Mutex& ShadowDatabaseMutex() {
-    MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+    MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
 
     return mShadowDatabaseMutex;
   }
@@ -2794,12 +2761,12 @@ StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
 // Can only be touched on the Quota Manager I/O thread.
 bool gInitializedShadowStorage = false;
 
-bool IsOnConnectionThread() {
+bool IsOnGlobalConnectionThread() {
   MOZ_ASSERT(gConnectionThread);
   return gConnectionThread->IsOnConnectionThread();
 }
 
-void AssertIsOnConnectionThread() {
+void AssertIsOnGlobalConnectionThread() {
   MOZ_ASSERT(gConnectionThread);
   gConnectionThread->AssertIsOnConnectionThread();
 }
@@ -3534,7 +3501,7 @@ void DatastoreWriteOptimizer::ApplyAndReset(
 
 Result<int64_t, nsresult> ConnectionWriteOptimizer::Perform(
     Connection* aConnection, bool aShadowWrites) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(aConnection);
 
   // The order of elements is not stored in the database, so write infos don't
@@ -3575,30 +3542,18 @@ Result<int64_t, nsresult> ConnectionWriteOptimizer::Perform(
     }
   }
 
-  {
-    Connection::CachedStatement stmt;
-    nsresult rv = aConnection->GetCachedStatement(
-        nsLiteralCString("UPDATE database "
-                         "SET usage = usage + :delta"),
-        &stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+  LS_TRY(aConnection->ExecuteCachedStatement(
+      "UPDATE database "
+      "SET usage = usage + :delta"_ns,
+      [this](auto& stmt) -> Result<Ok, nsresult> {
+        LS_TRY(stmt.BindInt64ByName("delta"_ns, mTotalDelta));
 
-    rv = stmt->BindInt64ByName("delta"_ns, mTotalDelta);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-
-    rv = stmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-  }
+        return Ok{};
+      }));
 
   LS_TRY_INSPECT(const auto& stmt, CreateAndExecuteSingleStepStatement<
                                        SingleStepResult::ReturnNullIfNoResult>(
-                                       *aConnection->StorageConnection(),
+                                       aConnection->MutableStorageConnection(),
                                        "SELECT usage FROM database"_ns));
 
   LS_TRY(OkIf(stmt), Err(NS_ERROR_FAILURE));
@@ -3609,96 +3564,51 @@ Result<int64_t, nsresult> ConnectionWriteOptimizer::Perform(
 nsresult ConnectionWriteOptimizer::PerformInsertOrUpdate(
     Connection* aConnection, bool aShadowWrites, const nsAString& aKey,
     const LSValue& aValue) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(aConnection);
 
-  Connection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement(
-      nsLiteralCString(
-          "INSERT OR REPLACE INTO data (key, value, utf16Length, compressed) "
-          "VALUES(:key, :value, :utf16Length, :compressed)"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(aConnection->ExecuteCachedStatement(
+      "INSERT OR REPLACE INTO data (key, value, utf16Length, compressed) "
+      "VALUES(:key, :value, :utf16Length, :compressed)"_ns,
+      [&aKey, &aValue](auto& stmt) -> Result<Ok, nsresult> {
+        LS_TRY(stmt.BindStringByName("key"_ns, aKey));
+        LS_TRY(stmt.BindUTF8StringByName("value"_ns, aValue));
+        LS_TRY(stmt.BindInt32ByName("utf16Length"_ns, aValue.UTF16Length()));
+        LS_TRY(stmt.BindInt32ByName("compressed"_ns, aValue.IsCompressed()));
 
-  rv = stmt->BindStringByName("key"_ns, aKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindUTF8StringByName("value"_ns, aValue);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindInt32ByName("utf16Length"_ns, aValue.UTF16Length());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindInt32ByName("compressed"_ns, aValue.IsCompressed());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      }));
 
   if (!aShadowWrites) {
     return NS_OK;
   }
 
-  rv = aConnection->GetCachedStatement(
-      nsLiteralCString(
-          "INSERT OR REPLACE INTO shadow.webappsstore2 "
-          "(originAttributes, originKey, scope, key, value) "
-          "VALUES (:originAttributes, :originKey, :scope, :key, :value) "),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(aConnection->ExecuteCachedStatement(
+      "INSERT OR REPLACE INTO shadow.webappsstore2 "
+      "(originAttributes, originKey, scope, key, value) "
+      "VALUES (:originAttributes, :originKey, :scope, :key, :value) "_ns,
+      [&aConnection, &aKey, &aValue](auto& stmt) -> Result<Ok, nsresult> {
+        const ArchivedOriginScope* const archivedOriginScope =
+            aConnection->GetArchivedOriginScope();
 
-  ArchivedOriginScope* archivedOriginScope =
-      aConnection->GetArchivedOriginScope();
+        LS_TRY(archivedOriginScope->BindToStatement(&stmt));
 
-  rv = archivedOriginScope->BindToStatement(stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        LS_TRY(stmt.BindUTF8StringByName(
+            "scope"_ns, Scheme0Scope(archivedOriginScope->OriginSuffix(),
+                                     archivedOriginScope->OriginNoSuffix())));
 
-  nsCString scope = Scheme0Scope(archivedOriginScope->OriginSuffix(),
-                                 archivedOriginScope->OriginNoSuffix());
+        LS_TRY(stmt.BindStringByName("key"_ns, aKey));
 
-  rv = stmt->BindUTF8StringByName("scope"_ns, scope);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        if (aValue.IsCompressed()) {
+          nsCString value;
+          LS_TRY(OkIf(SnappyUncompress(aValue, value)), Err(NS_ERROR_FAILURE));
+          LS_TRY(stmt.BindUTF8StringByName("value"_ns, value));
+        } else {
+          LS_TRY(stmt.BindUTF8StringByName("value"_ns, aValue));
+        }
 
-  rv = stmt->BindStringByName("key"_ns, aKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (aValue.IsCompressed()) {
-    nsCString value;
-    if (NS_WARN_IF(!SnappyUncompress(aValue, value))) {
-      return NS_ERROR_FAILURE;
-    }
-    rv = stmt->BindUTF8StringByName("value"_ns, value);
-  } else {
-    rv = stmt->BindUTF8StringByName("value"_ns, aValue);
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      }));
 
   return NS_OK;
 }
@@ -3706,98 +3616,58 @@ nsresult ConnectionWriteOptimizer::PerformInsertOrUpdate(
 nsresult ConnectionWriteOptimizer::PerformDelete(Connection* aConnection,
                                                  bool aShadowWrites,
                                                  const nsAString& aKey) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(aConnection);
 
-  Connection::CachedStatement stmt;
-  nsresult rv =
-      aConnection->GetCachedStatement(nsLiteralCString("DELETE FROM data "
-                                                       "WHERE key = :key;"),
-                                      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(aConnection->ExecuteCachedStatement(
+      "DELETE FROM data "
+      "WHERE key = :key;"_ns,
+      [&aKey](auto& stmt) -> Result<Ok, nsresult> {
+        LS_TRY(stmt.BindStringByName("key"_ns, aKey));
 
-  rv = stmt->BindStringByName("key"_ns, aKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      }));
 
   if (!aShadowWrites) {
     return NS_OK;
   }
 
-  rv = aConnection->GetCachedStatement(
-      nsLiteralCString("DELETE FROM shadow.webappsstore2 "
-                       "WHERE originAttributes = :originAttributes "
-                       "AND originKey = :originKey "
-                       "AND key = :key;"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(aConnection->ExecuteCachedStatement(
+      "DELETE FROM shadow.webappsstore2 "
+      "WHERE originAttributes = :originAttributes "
+      "AND originKey = :originKey "
+      "AND key = :key;"_ns,
+      [&aConnection, &aKey](auto& stmt) -> Result<Ok, nsresult> {
+        LS_TRY(aConnection->GetArchivedOriginScope()->BindToStatement(&stmt));
 
-  rv = aConnection->GetArchivedOriginScope()->BindToStatement(stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        LS_TRY(stmt.BindStringByName("key"_ns, aKey));
 
-  rv = stmt->BindStringByName("key"_ns, aKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      }));
 
   return NS_OK;
 }
 
 nsresult ConnectionWriteOptimizer::PerformTruncate(Connection* aConnection,
                                                    bool aShadowWrites) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(aConnection);
 
-  Connection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement("DELETE FROM data;"_ns, &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(aConnection->ExecuteCachedStatement("DELETE FROM data;"_ns));
 
   if (!aShadowWrites) {
     return NS_OK;
   }
 
-  rv = aConnection->GetCachedStatement(
-      nsLiteralCString("DELETE FROM shadow.webappsstore2 "
-                       "WHERE originAttributes = :originAttributes "
-                       "AND originKey = :originKey;"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(aConnection->ExecuteCachedStatement(
+      "DELETE FROM shadow.webappsstore2 "
+      "WHERE originAttributes = :originAttributes "
+      "AND originKey = :originKey;"_ns,
+      [&aConnection](auto& stmt) -> Result<Ok, nsresult> {
+        LS_TRY(aConnection->GetArchivedOriginScope()->BindToStatement(&stmt));
 
-  rv = aConnection->GetArchivedOriginScope()->BindToStatement(stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      }));
 
   return NS_OK;
 }
@@ -3840,7 +3710,7 @@ void ConnectionDatastoreOperationBase::OnFailure(nsresult aResultCode) {
 }
 
 void ConnectionDatastoreOperationBase::RunOnConnectionThread() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
 
@@ -3856,7 +3726,7 @@ void ConnectionDatastoreOperationBase::RunOnConnectionThread() {
       if (NS_WARN_IF(NS_FAILED(rv))) {
         SetFailureCode(rv);
       } else {
-        MOZ_ASSERT(mConnection->StorageConnection());
+        MOZ_ASSERT(mConnection->HasStorageConnection());
       }
     }
 
@@ -3890,7 +3760,7 @@ void ConnectionDatastoreOperationBase::RunOnOwningThread() {
 
 NS_IMETHODIMP
 ConnectionDatastoreOperationBase::Run() {
-  if (IsOnConnectionThread()) {
+  if (IsOnGlobalConnectionThread()) {
     RunOnConnectionThread();
   } else {
     RunOnOwningThread();
@@ -3927,8 +3797,6 @@ Connection::Connection(ConnectionThread* aConnectionThread,
 
 Connection::~Connection() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mStorageConnection);
-  MOZ_ASSERT(!mCachedStatements.Count());
   MOZ_ASSERT(!mFlushScheduled);
   MOZ_ASSERT(!mInUpdateBatch);
   MOZ_ASSERT(mFinished);
@@ -4009,9 +3877,9 @@ void Connection::EndUpdateBatch() {
 }
 
 nsresult Connection::EnsureStorageConnection() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
 
-  if (mStorageConnection) {
+  if (HasStorageConnection()) {
     return NS_OK;
   }
 
@@ -4033,7 +3901,9 @@ nsresult Connection::EnsureStorageConnection() {
         const auto& databaseFilePath,
         MOZ_TO_RESULT_INVOKE_TYPED(nsString, directoryEntry, GetPath));
 
-    LS_TRY_UNWRAP(mStorageConnection, GetStorageConnection(databaseFilePath));
+    LS_TRY_UNWRAP(auto storageConnection,
+                  GetStorageConnection(databaseFilePath));
+    LazyInit(WrapMovingNotNull(std::move(storageConnection)));
 
     return NS_OK;
   }
@@ -4108,99 +3978,40 @@ nsresult Connection::EnsureStorageConnection() {
     mHasCreatedDatabase = true;
   }
 
-  mStorageConnection = storageConnection;
+  LazyInit(WrapMovingNotNull(std::move(storageConnection)));
 
   return NS_OK;
 }
 
 void Connection::CloseStorageConnection() {
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  AssertIsOnGlobalConnectionThread();
 
-  mCachedStatements.Clear();
-
-  MOZ_ALWAYS_SUCCEEDS(mStorageConnection->Close());
-  mStorageConnection = nullptr;
-}
-
-nsresult Connection::GetCachedStatement(const nsACString& aQuery,
-                                        CachedStatement* aCachedStatement) {
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(!aQuery.IsEmpty());
-  MOZ_ASSERT(aCachedStatement);
-  MOZ_ASSERT(mStorageConnection);
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-
-  if (!mCachedStatements.Get(aQuery, getter_AddRefs(stmt))) {
-    nsresult rv =
-        mStorageConnection->CreateStatement(aQuery, getter_AddRefs(stmt));
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      nsCString msg;
-      MOZ_ALWAYS_SUCCEEDS(mStorageConnection->GetLastErrorString(msg));
-
-      nsAutoCString error = "The statement '"_ns + aQuery +
-                            "' failed to compile with the error message '"_ns +
-                            msg + "'."_ns;
-
-      NS_WARNING(error.get());
-#endif
-      return rv;
-    }
-
-    mCachedStatements.Put(aQuery, stmt);
-  }
-
-  aCachedStatement->Assign(this, stmt.forget());
-  return NS_OK;
+  CachingDatabaseConnection::Close();
 }
 
 nsresult Connection::BeginWriteTransaction() {
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  AssertIsOnGlobalConnectionThread();
+  MOZ_ASSERT(HasStorageConnection());
 
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement("BEGIN IMMEDIATE;"_ns, &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(ExecuteCachedStatement("BEGIN IMMEDIATE;"_ns));
 
   return NS_OK;
 }
 
 nsresult Connection::CommitWriteTransaction() {
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  AssertIsOnGlobalConnectionThread();
+  MOZ_ASSERT(HasStorageConnection());
 
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement("COMMIT;"_ns, &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(ExecuteCachedStatement("COMMIT;"_ns));
 
   return NS_OK;
 }
 
 nsresult Connection::RollbackWriteTransaction() {
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  AssertIsOnGlobalConnectionThread();
+  MOZ_ASSERT(HasStorageConnection());
 
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement("ROLLBACK;"_ns, &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const auto& stmt, BorrowCachedStatement("ROLLBACK;"_ns));
 
   // This may fail if SQLite already rolled back the transaction so ignore any
   // errors.
@@ -4250,48 +4061,9 @@ void Connection::FlushTimerCallback(nsITimer* aTimer, void* aClosure) {
   self->Flush();
 }
 
-Connection::CachedStatement::CachedStatement() {
-  AssertIsOnConnectionThread();
-
-  MOZ_COUNT_CTOR(Connection::CachedStatement);
-}
-
-Connection::CachedStatement::~CachedStatement() {
-  AssertIsOnConnectionThread();
-
-  MOZ_COUNT_DTOR(Connection::CachedStatement);
-}
-
-Connection::CachedStatement::operator mozIStorageStatement*() const {
-  AssertIsOnConnectionThread();
-
-  return mStatement;
-}
-
-mozIStorageStatement* Connection::CachedStatement::operator->() const {
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStatement);
-
-  return mStatement;
-}
-
-void Connection::CachedStatement::Assign(
-    Connection* aConnection,
-    already_AddRefed<mozIStorageStatement> aStatement) {
-  AssertIsOnConnectionThread();
-
-  mScoper.reset();
-
-  mStatement = aStatement;
-
-  if (mStatement) {
-    mScoper.emplace(mStatement);
-  }
-}
-
 Result<nsString, nsresult>
 Connection::InitTemporaryOriginHelper::BlockAndReturnOriginDirectoryPath() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
@@ -4351,7 +4123,7 @@ Connection::FlushOp::FlushOp(Connection* aConnection,
       mShadowWrites(gShadowWrites) {}
 
 nsresult Connection::FlushOp::DoDatastoreWork() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(mConnection);
 
   AutoWriteTransaction autoWriteTransaction(mShadowWrites);
@@ -4387,10 +4159,10 @@ void Connection::FlushOp::Cleanup() {
 }
 
 nsresult Connection::CloseOp::DoDatastoreWork() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(mConnection);
 
-  if (mConnection->StorageConnection()) {
+  if (mConnection->HasStorageConnection()) {
     mConnection->CloseStorageConnection();
   }
 
@@ -7661,7 +7433,7 @@ void PrepareDatastoreOp::DirectoryLockFailed() {
 }
 
 nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(mPrepareDatastoreOp);
   MOZ_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
@@ -7673,14 +7445,10 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
     return NS_ERROR_FAILURE;
   }
 
-  Connection::CachedStatement stmt;
-  nsresult rv = mConnection->GetCachedStatement(
-      nsLiteralCString("SELECT key, value, utf16Length, compressed "
-                       "FROM data;"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const auto& stmt,
+                 mConnection->BorrowCachedStatement(
+                     "SELECT key, value, utf16Length, compressed "
+                     "FROM data;"_ns));
 
   LS_TRY(quota::CollectWhileHasResult(
       *stmt, [this](auto& stmt) -> mozilla::Result<Ok, nsresult> {
@@ -8114,7 +7882,7 @@ nsLiteralCString ArchivedOriginScope::GetBindingClause() const {
 
 nsresult ArchivedOriginScope::BindToStatement(
     mozIStorageStatement* aStmt) const {
-  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(aStmt);
 
   struct Matcher {
@@ -8964,13 +8732,13 @@ QuotaClient::MatchFunction::OnFunctionCall(
 
 AutoWriteTransaction::AutoWriteTransaction(bool aShadowWrites)
     : mConnection(nullptr), mShadowWrites(aShadowWrites) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
 
   MOZ_COUNT_CTOR(mozilla::dom::AutoWriteTransaction);
 }
 
 AutoWriteTransaction::~AutoWriteTransaction() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
 
   MOZ_COUNT_DTOR(mozilla::dom::AutoWriteTransaction);
 
@@ -8986,7 +8754,7 @@ AutoWriteTransaction::~AutoWriteTransaction() {
 }
 
 nsresult AutoWriteTransaction::Start(Connection* aConnection) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(aConnection);
   MOZ_ASSERT(!mConnection);
 
@@ -9002,7 +8770,7 @@ nsresult AutoWriteTransaction::Start(Connection* aConnection) {
 }
 
 nsresult AutoWriteTransaction::Commit() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(mConnection);
 
   LS_TRY(mConnection->CommitWriteTransaction());
@@ -9018,7 +8786,7 @@ nsresult AutoWriteTransaction::Commit() {
 
 nsresult AutoWriteTransaction::LockAndAttachShadowDatabase(
     Connection* aConnection) {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(aConnection);
   MOZ_ASSERT(!mConnection);
   MOZ_ASSERT(mShadowDatabaseLock.isNothing());
@@ -9027,20 +8795,17 @@ nsresult AutoWriteTransaction::LockAndAttachShadowDatabase(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsCOMPtr<mozIStorageConnection> storageConnection =
-      aConnection->StorageConnection();
-  MOZ_ASSERT(storageConnection);
-
   mShadowDatabaseLock.emplace(
       aConnection->GetQuotaClient()->ShadowDatabaseMutex());
 
-  LS_TRY(AttachShadowDatabase(quotaManager->GetBasePath(), storageConnection));
+  LS_TRY(AttachShadowDatabase(quotaManager->GetBasePath(),
+                              &aConnection->MutableStorageConnection()));
 
   return NS_OK;
 }
 
 nsresult AutoWriteTransaction::DetachShadowDatabaseAndUnlock() {
-  AssertIsOnConnectionThread();
+  AssertIsOnGlobalConnectionThread();
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(mShadowDatabaseLock.isSome());
   MOZ_ASSERT(mShadowWrites);

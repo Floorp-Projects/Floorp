@@ -13,8 +13,19 @@ namespace mozilla::dom::quota {
 
 CachingDatabaseConnection::CachingDatabaseConnection(
     MovingNotNull<nsCOMPtr<mozIStorageConnection>> aStorageConnection)
-    : mStorageConnection(std::move(aStorageConnection)) {
-  AssertIsOnConnectionThread();
+    :
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+      mOwningThread{nsAutoOwningThread{}},
+#endif
+      mStorageConnection(std::move(aStorageConnection)) {
+}
+
+void CachingDatabaseConnection::LazyInit(
+    MovingNotNull<nsCOMPtr<mozIStorageConnection>> aStorageConnection) {
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+  mOwningThread.init();
+#endif
+  mStorageConnection.init(std::move(aStorageConnection));
 }
 
 Result<CachingDatabaseConnection::CachedStatement, nsresult>
