@@ -170,6 +170,12 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     return true;
   }
 
+  if (compare->compareType() == MCompare::Compare_UIntPtr) {
+    MOZ_ASSERT(compare->lhs()->type() == MIRType::IntPtr);
+    MOZ_ASSERT(compare->rhs()->type() == MIRType::IntPtr);
+    return true;
+  }
+
   // Compare_BigInt_Int32 specialization is done for "BigInt <cmp> Int32".
   // Compare_BigInt_Double specialization is done for "BigInt <cmp> Double".
   // Compare_BigInt_String specialization is done for "BigInt <cmp> String".

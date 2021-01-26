@@ -2811,6 +2811,8 @@ MIRType MCompare::inputType() {
     case Compare_UInt32:
     case Compare_Int32:
       return MIRType::Int32;
+    case Compare_UIntPtr:
+      return MIRType::IntPtr;
     case Compare_Double:
       return MIRType::Double;
     case Compare_Float32:
@@ -3492,15 +3494,15 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
     return false;
   }
 
-  MOZ_ASSERT(compareType_ == Compare_Undefined ||
-             compareType_ == Compare_Null || compareType_ == Compare_Int32 ||
-             compareType_ == Compare_UInt32 || compareType_ == Compare_Double ||
-             compareType_ == Compare_Float32 ||
-             compareType_ == Compare_String || compareType_ == Compare_Object ||
-             compareType_ == Compare_Symbol || compareType_ == Compare_BigInt ||
-             compareType_ == Compare_BigInt_Int32 ||
-             compareType_ == Compare_BigInt_Double ||
-             compareType_ == Compare_BigInt_String);
+  MOZ_ASSERT(
+      compareType_ == Compare_Undefined || compareType_ == Compare_Null ||
+      compareType_ == Compare_Int32 || compareType_ == Compare_UInt32 ||
+      compareType_ == Compare_Double || compareType_ == Compare_Float32 ||
+      compareType_ == Compare_UIntPtr || compareType_ == Compare_String ||
+      compareType_ == Compare_Object || compareType_ == Compare_Symbol ||
+      compareType_ == Compare_BigInt || compareType_ == Compare_BigInt_Int32 ||
+      compareType_ == Compare_BigInt_Double ||
+      compareType_ == Compare_BigInt_String);
 
   if (isDoubleComparison() || isFloat32Comparison()) {
     if (!operandsAreNeverNaN()) {
