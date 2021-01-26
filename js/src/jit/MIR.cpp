@@ -801,7 +801,11 @@ MConstant* MConstant::NewFloat32(TempAllocator& alloc, double d) {
 }
 
 MConstant* MConstant::NewInt64(TempAllocator& alloc, int64_t i) {
-  return new (alloc) MConstant(i);
+  return new (alloc) MConstant(MIRType::Int64, i);
+}
+
+MConstant* MConstant::NewIntPtr(TempAllocator& alloc, intptr_t i) {
+  return new (alloc) MConstant(MIRType::IntPtr, i);
 }
 
 MConstant* MConstant::New(TempAllocator& alloc, const Value& v, MIRType type) {
@@ -877,9 +881,15 @@ MConstant::MConstant(float f) : MNullaryInstruction(classOpcode) {
   setMovable();
 }
 
-MConstant::MConstant(int64_t i) : MNullaryInstruction(classOpcode) {
-  setResultType(MIRType::Int64);
-  payload_.i64 = i;
+MConstant::MConstant(MIRType type, int64_t i)
+    : MNullaryInstruction(classOpcode) {
+  MOZ_ASSERT(type == MIRType::Int64 || type == MIRType::IntPtr);
+  setResultType(type);
+  if (type == MIRType::Int64) {
+    payload_.i64 = i;
+  } else {
+    payload_.iptr = i;
+  }
   setMovable();
 }
 
@@ -911,6 +921,7 @@ void MConstant::assertInitializedPayload() const {
     case MIRType::Object:
     case MIRType::Symbol:
     case MIRType::BigInt:
+    case MIRType::IntPtr:
 #  if MOZ_LITTLE_ENDIAN()
       MOZ_ASSERT_IF(JS_BITS_PER_WORD == 32, (payload_.asBits >> 32) == 0);
 #  else
@@ -970,6 +981,9 @@ void MConstant::printOpcode(GenericPrinter& out) const {
       break;
     case MIRType::Int64:
       out.printf("0x%" PRIx64, uint64_t(toInt64()));
+      break;
+    case MIRType::IntPtr:
+      out.printf("0x%" PRIxPTR, uintptr_t(toIntPtr()));
       break;
     case MIRType::Double:
       out.printf("%.16g", toDouble());

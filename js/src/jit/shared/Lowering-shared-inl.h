@@ -228,7 +228,12 @@ void LIRGeneratorShared::defineInt64(
     LDefinition::Policy policy) {
   // Call instructions should use defineReturn.
   MOZ_ASSERT(!lir->isCall());
+
+#ifdef JS_64BIT
+  MOZ_ASSERT(mir->type() == MIRType::Int64 || mir->type() == MIRType::IntPtr);
+#else
   MOZ_ASSERT(mir->type() == MIRType::Int64);
+#endif
 
   uint32_t vreg = getVirtualRegister();
 
