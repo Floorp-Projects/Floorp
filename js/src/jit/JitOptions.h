@@ -62,6 +62,7 @@ struct DefaultJitOptions {
   bool jitForTrustedPrincipals;
   bool nativeRegExp;
   bool forceInlineCaches;
+  bool forceMegamorphicICs;
   bool fullDebugChecks;
   bool limitScriptSize;
   bool osr;

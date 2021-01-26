@@ -113,6 +113,11 @@ class ICState {
 
   void reset() {
     setMode(Mode::Specialized);
+#ifdef DEBUG
+    if (JitOptions.forceMegamorphicICs) {
+      setMode(Mode::Megamorphic);
+    }
+#endif
     trialInliningState_ = uint32_t(TrialInliningState::Initial);
     usedByTranspiler_ = false;
     numOptimizedStubs_ = 0;

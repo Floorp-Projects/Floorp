@@ -5210,6 +5210,9 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       }
       jit::JitOptions.baselineJitWarmUpThreshold = value;
       break;
+    case JSJITCOMPILER_IC_FORCE_MEGAMORPHIC:
+      jit::JitOptions.forceMegamorphicICs = !!value;
+      break;
     case JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER:
       if (value == uint32_t(-1)) {
         jit::JitOptions.resetNormalIonWarmUpThreshold();
@@ -5371,6 +5374,9 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
       *valueOut = jit::JitOptions.baselineJitWarmUpThreshold;
+      break;
+    case JSJITCOMPILER_IC_FORCE_MEGAMORPHIC:
+      *valueOut = jit::JitOptions.forceMegamorphicICs;
       break;
     case JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER:
       *valueOut = jit::JitOptions.normalIonWarmUpThreshold;
