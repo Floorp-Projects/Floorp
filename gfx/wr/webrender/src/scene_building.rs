@@ -736,7 +736,7 @@ impl<'a> SceneBuilder<'a> {
                         // If this is a root iframe, force a new tile cache both before and after
                         // adding primitives for this iframe.
                         if self.iframe_size.is_empty() {
-                            self.tile_cache_builder.add_tile_cache_barrier();
+                            self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
                         }
 
                         self.rf_mapper.push_scope();
@@ -773,7 +773,7 @@ impl<'a> SceneBuilder<'a> {
 
                     self.clip_store.pop_clip_root();
                     if self.iframe_size.is_empty() {
-                        self.tile_cache_builder.add_tile_cache_barrier();
+                        self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
                     }
 
                     traversal = parent_traversal;
@@ -1682,6 +1682,20 @@ impl<'a> SceneBuilder<'a> {
         );
     }
 
+    /// If no stacking contexts are present (i.e. we are adding prims to a tile
+    /// cache), set a barrier to force creation of a slice before the next prim
+    fn add_tile_cache_barrier_if_needed(
+        &mut self,
+        slice_flags: SliceFlags,
+    ) {
+        if self.sc_stack.is_empty() {
+            // Shadows can only exist within a stacking context
+            assert!(self.pending_shadow_items.is_empty());
+
+            self.tile_cache_builder.add_tile_cache_barrier(slice_flags);
+        }
+    }
+
     /// Push a new stacking context. Returns context that must be passed to pop_stacking_context().
     fn push_stacking_context(
         &mut self,
@@ -1791,15 +1805,23 @@ impl<'a> SceneBuilder<'a> {
             flags,
             &context_3d,
             &composite_ops,
-            prim_flags,
             blit_reason,
             self.sc_stack.last(),
         );
+
+        // If stacking context is a scrollbar, force a new slice for the primitives
+        // within. The stacking context will be redundant and removed by above check.
+        let set_tile_cache_barrier = prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER);
+
+        if set_tile_cache_barrier {
+            self.add_tile_cache_barrier_if_needed(SliceFlags::IS_SCROLLBAR);
+        }
 
         let mut sc_info = StackingContextInfo {
             pop_clip_root: false,
             pop_stacking_context: false,
             pop_containing_block: false,
+            set_tile_cache_barrier,
         };
 
         // If this is not 3d, then it establishes an ancestor root for child 3d contexts.
@@ -1868,6 +1890,10 @@ impl<'a> SceneBuilder<'a> {
         // If the stacking context formed a containing block, pop off the stack
         if info.pop_containing_block {
             self.containing_block_stack.pop().unwrap();
+        }
+
+        if info.set_tile_cache_barrier {
+            self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
         }
 
         // If the stacking context established a clip root, pop off the stack
@@ -2696,6 +2722,10 @@ impl<'a> SceneBuilder<'a> {
         clip_chain_id: ClipChainId,
         info: &LayoutPrimitiveInfo,
     ) {
+        // Clear prims must be in their own picture cache slice to
+        // be composited correctly.
+        self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
+
         self.add_primitive(
             spatial_node_index,
             clip_chain_id,
@@ -2703,6 +2733,8 @@ impl<'a> SceneBuilder<'a> {
             Vec::new(),
             PrimitiveKeyKind::Clear,
         );
+
+        self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
     }
 
     pub fn add_line(
@@ -3497,6 +3529,8 @@ struct StackingContextInfo {
     pop_containing_block: bool,
     /// If true, pop an entry from the flattened stacking context stack.
     pop_stacking_context: bool,
+    /// If true, set a tile cache barrier when popping the stacking context.
+    set_tile_cache_barrier: bool,
 }
 
 /// Properties of a stacking context that are maintained
@@ -3551,7 +3585,6 @@ impl FlattenedStackingContext {
         sc_flags: StackingContextFlags,
         context_3d: &Picture3DContext<ExtendedPrimitiveInstance>,
         composite_ops: &CompositeOps,
-        prim_flags: PrimitiveFlags,
         blit_reason: BlitReason,
         parent: Option<&FlattenedStackingContext>,
     ) -> bool {
@@ -3582,11 +3615,6 @@ impl FlattenedStackingContext {
 
         // If need to isolate in surface due to clipping / mix-blend-mode
         if !blit_reason.is_empty() {
-            return false;
-        }
-
-        // If this stacking context is a scrollbar, retain it so it can form a picture cache slice
-        if prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER) {
             return false;
         }
 
