@@ -26,6 +26,38 @@
 %define appmenuWarningBackgroundColorActiveBrightText hsla(55,100%,50%,.2)
 %define appmenuWarningColorBrightText #F9F9FA
 
+:root {
+  --arrowpanel-menuitem-margin: 0;
+  --arrowpanel-menuitem-padding: 4px 12px;
+  --arrowpanel-menuitem-border-radius: unset;
+
+  --panelview-toolbarbutton-hover-bgcolor: var(--arrowpanel-dimmed);
+  --panelview-toolbarbutton-hover-color: inherit;
+  --panelview-toolbarbutton-active-bgcolor: var(--arrowpanel-dimmed-further);
+  --panelview-toolbarbutton-active-color: inherit;
+}
+
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+:root {
+  --panelview-toolbarbutton-hover-bgcolor: #0250BB;
+  --panelview-toolbarbutton-hover-color: #FFFFFF;
+  --panelview-toolbarbutton-active-bgcolor: #053E94;
+  --panelview-toolbarbutton-active-color: #FFFFFF;
+
+  --arrowpanel-menuitem-margin: 0 8px;
+  --arrowpanel-menuitem-padding: 8px 12px;
+  --arrowpanel-menuitem-border-radius: 4px;
+}
+
+:root[lwt-popup-brighttext] {
+  --panelview-toolbarbutton-hover-bgcolor: #00B4F5;
+  --panelview-toolbarbutton-hover-color: #FFFFFF;
+  --panelview-toolbarbutton-active-bgcolor: #008DEB;
+  --panelview-toolbarbutton-active-color: #FFFFFF;
+}
+
+} /*** END proton ***/
+
 :root:not([uidensity=compact], [chromehidden~="toolbar"]) #PanelUI-button {
   margin-inline-start: 3px;
   border-inline-start: 1px solid;
@@ -1073,9 +1105,10 @@ panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1 {
   appearance: none;
-  margin: 0;
+  margin: var(--arrowpanel-menuitem-margin);
   min-height: 24px;
-  padding: 4px 12px;
+  padding: var(--arrowpanel-menuitem-padding);
+  border-radius: var(--arrowpanel-menuitem-border-radius);
   background-color: transparent;
 }
 
@@ -1131,6 +1164,12 @@ panelview .toolbarbutton-1,
   -moz-context-properties: fill;
   fill: currentColor;
 }
+
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+.subviewbutton-iconic:not(.subviewbutton-back) > .toolbarbutton-icon {
+  display: none;
+}
+} /*** END proton ***/
 
 /* We don't always display: none this item, and if it has forced width (like above)
  * or margin, that impacts the position of the label. Fix:
@@ -1327,8 +1366,8 @@ menu.subviewbutton@menuStateHover@,
 menuitem.subviewbutton@menuStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
-  color: inherit;
-  background-color: var(--arrowpanel-dimmed);
+  color: var(--panelview-toolbarbutton-hover-color);
+  background-color: var(--panelview-toolbarbutton-hover-bgcolor);
 }
 
 panelview .toolbarbutton-1@buttonStateActive@,
@@ -1338,8 +1377,8 @@ menu.subviewbutton@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
-  color: inherit;
-  background-color: var(--arrowpanel-dimmed-further);
+  color: var(--panelview-toolbarbutton-active-color);
+  background-color: var(--panelview-toolbarbutton-active-bgcolor);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
