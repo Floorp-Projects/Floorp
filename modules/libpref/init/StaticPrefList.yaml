@@ -4784,6 +4784,16 @@
   value: 512
   mirror: always
 
+# Whether to use EGL robustness or not.
+- name: gfx.webrender.prefer-robustness
+  type: bool
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  value: true
+#else
+  value: false
+#endif
+  mirror: once
+
 # Whether to use the WebRender software backend
 - name: gfx.webrender.software
   type: bool

@@ -64,6 +64,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Logging.h"
@@ -322,6 +323,9 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
   }
 
   CreateContextFlags flags = CreateContextFlags::NONE;
+  if (aWebRender && StaticPrefs::gfx_webrender_prefer_robustness_AtStartup()) {
+    flags |= CreateContextFlags::PREFER_ROBUSTNESS;
+  }
   if (aWebRender && aUseGles) {
     flags |= CreateContextFlags::PREFER_ES3;
   }
@@ -689,30 +693,43 @@ RefPtr<GLContextEGL> GLContextEGL::CreateGLContext(
     required_attribs.push_back(LOCAL_EGL_TRUE);
   }
 
-  std::vector<EGLint> robustness_attribs;
-  std::vector<EGLint> rbab_attribs;  // RBAB: Robust Buffer Access Behavior
+  std::vector<EGLint> ext_robustness_attribs;
+  std::vector<EGLint> ext_rbab_attribs;  // RBAB: Robust Buffer Access Behavior
+  std::vector<EGLint> khr_robustness_attribs;
+  std::vector<EGLint> khr_rbab_attribs;  // RBAB: Robust Buffer Access Behavior
   if (flags & CreateContextFlags::PREFER_ROBUSTNESS) {
+    std::vector<EGLint> base_robustness_attribs = required_attribs;
+    if (egl->IsExtensionSupported(
+            EGLExtension::NV_robustness_video_memory_purge)) {
+      base_robustness_attribs.push_back(
+          LOCAL_EGL_GENERATE_RESET_ON_VIDEO_MEMORY_PURGE_NV);
+      base_robustness_attribs.push_back(LOCAL_EGL_TRUE);
+    }
+
     if (egl->IsExtensionSupported(
             EGLExtension::EXT_create_context_robustness)) {
-      robustness_attribs = required_attribs;
-      robustness_attribs.push_back(
+      ext_robustness_attribs = base_robustness_attribs;
+      ext_robustness_attribs.push_back(
           LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
-      robustness_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
+      ext_robustness_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
 
       if (gfxVars::AllowEglRbab()) {
-        rbab_attribs = robustness_attribs;
-        rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
-        rbab_attribs.push_back(LOCAL_EGL_TRUE);
+        ext_rbab_attribs = ext_robustness_attribs;
+        ext_rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
+        ext_rbab_attribs.push_back(LOCAL_EGL_TRUE);
       }
-    } else if (egl->IsExtensionSupported(EGLExtension::KHR_create_context)) {
-      robustness_attribs = required_attribs;
-      robustness_attribs.push_back(
-          LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
-      robustness_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
+    }
 
-      rbab_attribs = robustness_attribs;
-      rbab_attribs.push_back(LOCAL_EGL_CONTEXT_FLAGS_KHR);
-      rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR);
+    if (egl->IsExtensionSupported(EGLExtension::KHR_create_context)) {
+      khr_robustness_attribs = base_robustness_attribs;
+      khr_robustness_attribs.push_back(
+          LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
+      khr_robustness_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
+
+      khr_rbab_attribs = khr_robustness_attribs;
+      khr_rbab_attribs.push_back(LOCAL_EGL_CONTEXT_FLAGS_KHR);
+      khr_rbab_attribs.push_back(
+          LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR);
     }
   }
 
@@ -729,16 +746,28 @@ RefPtr<GLContextEGL> GLContextEGL::CreateGLContext(
 
   EGLContext context;
   do {
-    if (!rbab_attribs.empty()) {
-      context = fnCreate(rbab_attribs);
+    if (!khr_rbab_attribs.empty()) {
+      context = fnCreate(khr_rbab_attribs);
       if (context) break;
-      NS_WARNING("Failed to create EGLContext with rbab_attribs");
+      NS_WARNING("Failed to create EGLContext with khr_rbab_attribs");
     }
 
-    if (!robustness_attribs.empty()) {
-      context = fnCreate(robustness_attribs);
+    if (!ext_rbab_attribs.empty()) {
+      context = fnCreate(ext_rbab_attribs);
       if (context) break;
-      NS_WARNING("Failed to create EGLContext with robustness_attribs");
+      NS_WARNING("Failed to create EGLContext with ext_rbab_attribs");
+    }
+
+    if (!khr_robustness_attribs.empty()) {
+      context = fnCreate(khr_robustness_attribs);
+      if (context) break;
+      NS_WARNING("Failed to create EGLContext with khr_robustness_attribs");
+    }
+
+    if (!ext_robustness_attribs.empty()) {
+      context = fnCreate(ext_robustness_attribs);
+      if (context) break;
+      NS_WARNING("Failed to create EGLContext with ext_robustness_attribs");
     }
 
     context = fnCreate(required_attribs);
