@@ -171,6 +171,14 @@ extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorNotes::Note* notep, va_list ap);
 
+/*
+ * If there is a pending exception, print it to stderr and clear it. Otherwise
+ * do nothing.
+ *
+ * For reporting bugs or unexpected errors in testing functions.
+ */
+extern void MaybePrintAndClearPendingException(JSContext* cx);
+
 }  // namespace js
 
 #endif /* vm_ErrorReporting_h */
