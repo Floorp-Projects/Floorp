@@ -350,7 +350,7 @@ CryptoWrapper.prototype = {
   // Keep both plaintext and encrypted versions of the id to verify integrity
   set id(val) {
     super.id = val;
-    return (this.cleartext.id = val);
+    this.cleartext.id = val;
   },
 };
 
