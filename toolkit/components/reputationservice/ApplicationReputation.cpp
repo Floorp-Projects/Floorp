@@ -1330,8 +1330,9 @@ nsresult PendingLookup::GetStrippedSpec(nsIURI* aUri, nsACString& escaped) {
          "[this = %p]",
          PromiseFlatCString(escaped).get(), this));
     return NS_OK;
+  }
 
-  } else if (escaped.EqualsLiteral("data")) {
+  if (escaped.EqualsLiteral("data")) {
     // Replace URI with "data:<everything before comma>,SHA256(<whole URI>)"
     aUri->GetSpec(escaped);
     int32_t comma = escaped.FindChar(',');
