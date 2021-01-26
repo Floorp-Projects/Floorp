@@ -8,11 +8,13 @@
 
 import argparse
 import json
+import logging
 import os
 import statistics
 import subprocess
 import sys
 import tarfile
+import time
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from multiprocessing import cpu_count
@@ -24,6 +26,10 @@ from jsonschema import validate
 from voluptuous import ALLOW_EXTRA, Required, Schema
 
 
+#: The max run time for a command (5 minutes)
+MAX_TIME = 300
+
+
 #: The directory where artifacts from this job will be placed.
 OUTPUT_DIR = Path("/", "builds", "worker", "artifacts")
 
@@ -33,6 +39,9 @@ OUTPUT_DIR = Path("/", "builds", "worker", "artifacts")
 class Job:
     #: The name of the test.
     test_name = attr.ib(type=str)
+
+    #: A unique number for the job.
+    count = attr.ib(type=int)
 
     #: The extra options for this job.
     extra_options = attr.ib(type=str)
@@ -64,11 +73,20 @@ BROWSERTIME_SCHEMA = Schema(
     [{Required("files"): {Required("video"): [str]}}], extra=ALLOW_EXTRA
 )
 
+SHOULD_ALERT = {
+    "ContentfulSpeedIndex": True,
+    "FirstVisualChange": True,
+    "LastVisualChange": True,
+    "PerceptualSpeedIndex": True,
+    "SpeedIndex": True,
+    "videoRecordingStart": False,
+}
+
 with Path("/", "builds", "worker", "performance-artifact-schema.json").open() as f:
     PERFHERDER_SCHEMA = json.loads(f.read())
 
 
-def run_command(log, cmd):
+def run_command(log, cmd, job_count):
     """Run a command using subprocess.check_output
 
     Args:
@@ -79,13 +97,52 @@ def run_command(log, cmd):
         A tuple of the process' exit status and standard output.
     """
     log.info("Running command", cmd=cmd)
-    try:
-        res = subprocess.check_output(cmd)
-        log.info("Command succeeded", result=res)
-        return 0, res
-    except subprocess.CalledProcessError as e:
-        log.info("Command failed", cmd=cmd, status=e.returncode, output=e.output)
-        return e.returncode, e.output
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    lines = []
+    res = None
+    start = time.time()
+    while time.time() - start <= MAX_TIME:
+        time.sleep(0.1)
+        output = process.stdout.readline()
+        if output == b"" and process.poll() is not None:
+            break
+        if output:
+            res = output.strip()
+            lines.append(res.decode("utf-8", "ignore"))
+        else:
+            time.sleep(5)
+
+    if time.time() - start > MAX_TIME:
+        log.error(
+            "TEST-UNEXPECTED-FAIL | Timed out waiting for response from command",
+            cmd=cmd,
+        )
+        return 1, "Timed out"
+
+    rc = process.poll()
+    job_prefix = "[JOB-" + str(job_count) + "] "
+    for line in lines:
+        # Some output doesn't start with the levels because it comes
+        # from FFMPEG rather than the script itself
+        if line.startswith(("[INFO]", "[WARNING]", "[CRITICAL]", "[ERROR]")):
+            splitline = line.split(" - ")
+            level = splitline[0]
+            line = " - ".join(splitline[1:])
+        else:
+            level = "[INFO]"
+
+        newline = job_prefix + line
+        if level.strip() in ("[ERROR]", "[CRITICAL]"):
+            if rc == 0:
+                rc = 1
+            log.error("TEST-UNEXPECTED-FAIL | " + newline)
+        elif level == "[WARNING]":
+            log.warning(newline)
+        else:
+            log.info(newline)
+
+    return rc, res
 
 
 def append_result(log, suites, test_name, name, result, extra_options):
@@ -107,13 +164,14 @@ def append_result(log, suites, test_name, name, result, extra_options):
         log.error("%s" % result)
         result = 0
 
+    orig_test_name = test_name
     if test_name in suites and suites[test_name]["extraOptions"] != extra_options:
         missing = set(extra_options) - set(suites[test_name]["extraOptions"])
         test_name = test_name + "-".join(list(missing))
 
     subtests = suites.setdefault(
         test_name,
-        {"name": test_name, "subtests": {}, "extraOptions": extra_options}
+        {"name": orig_test_name, "subtests": {}, "extraOptions": extra_options},
     )["subtests"]
 
     if name not in subtests:
@@ -122,6 +180,7 @@ def append_result(log, suites, test_name, name, result, extra_options):
             "replicates": [result],
             "lowerIsBetter": True,
             "unit": "ms",
+            "shouldAlert": SHOULD_ALERT[name],
         }
     else:
         subtests[name]["replicates"].append(result)
@@ -169,7 +228,7 @@ def read_json(json_path, schema):
         The contents of the file at ``json_path`` interpreted as JSON.
     """
     try:
-        with open(str(json_path),  "r", encoding="utf-8", errors="ignore") as f:
+        with open(str(json_path), "r", encoding="utf-8", errors="ignore") as f:
             data = json.load(f)
     except Exception:
         log.error("Could not read JSON file", path=json_path, exc_info=True)
@@ -219,7 +278,7 @@ def main(log, args):
         log.error(
             "Could not read/extract browsertime results archive",
             path=browsertime_results_path,
-            exc_info=True
+            exc_info=True,
         )
         return 1
     log.info("Extracted browsertime results", path=browsertime_results_path)
@@ -229,13 +288,12 @@ def main(log, args):
         jobs_json = read_json(jobs_json_path, JOB_SCHEMA)
     except Exception:
         log.error(
-            "Could not open the jobs.json file",
-            path=jobs_json_path,
-            exc_info=True
+            "Could not open the jobs.json file", path=jobs_json_path, exc_info=True
         )
         return 1
 
     jobs = []
+    count = 0
 
     for job in jobs_json["jobs"]:
         browsertime_json_path = fetch_dir / job["browsertime_json_path"]
@@ -246,19 +304,22 @@ def main(log, args):
             log.error(
                 "Could not open a browsertime.json file",
                 path=browsertime_json_path,
-                exc_info=True
+                exc_info=True,
             )
             return 1
 
         for site in browsertime_json:
             for video in site["files"]["video"]:
+                count += 1
                 jobs.append(
                     Job(
                         test_name=job["test_name"],
-                        extra_options=len(job["extra_options"]) > 0 and
-                        job["extra_options"] or jobs_json["extra_options"],
+                        extra_options=len(job["extra_options"]) > 0
+                        and job["extra_options"]
+                        or jobs_json["extra_options"],
                         json_path=browsertime_json_path,
                         video_path=browsertime_json_path.parent / video,
+                        count=count,
                     )
                 )
 
@@ -286,10 +347,10 @@ def main(log, args):
                 )
                 failed_runs += 1
             else:
-                # Python 3.5 requires a str object (not 3.6+)
-                res = json.loads(res.decode("utf8"))
                 for name, value in res.items():
-                    append_result(log, suites, job.test_name, name, value, job.extra_options)
+                    append_result(
+                        log, suites, job.test_name, name, value, job.extra_options
+                    )
 
     suites = [get_suite(suite) for suite in suites.values()]
 
@@ -300,23 +361,11 @@ def main(log, args):
         "suites": suites,
     }
 
-    # Try to get the similarity for all possible tests, this means that we
-    # will also get a comparison of recorded vs. live sites to check
-    # the on-going quality of our recordings.
-    try:
-        from similarity import calculate_similarity
-        for name, value in calculate_similarity(jobs_json, fetch_dir, OUTPUT_DIR).items():
-            if value is None:
-                continue
-            suites[0]["subtests"].append({
-                "name": name,
-                "value": value,
-                "replicates": [value],
-                "lowerIsBetter": False,
-                "unit": "a.u.",
-            })
-    except Exception:
-        log.info("Failed to calculate similarity score", exc_info=True)
+    # TODO: Try to get the similarity for all possible tests, this means that we
+    # will also get a comparison of recorded vs. live sites to check the on-going
+    # quality of our recordings.
+    # Bug 1674927 - Similarity metric is disabled until we figure out
+    # why it had a huge increase in run time.
 
     # Validates the perf data complies with perfherder schema.
     # The perfherder schema uses jsonschema so we can't use voluptuous here.
@@ -350,18 +399,52 @@ def run_visual_metrics(job, visualmetrics_path, options):
     Returns:
        A returncode and a string containing the output of visualmetrics.py
     """
-    cmd = ["/usr/bin/python", str(visualmetrics_path), "--video", str(job.video_path)]
+    cmd = [
+        "/usr/bin/python",
+        str(visualmetrics_path),
+        "-vvv",
+        "--logformat",
+        "[%(levelname)s] - %(message)s",
+        "--video",
+        str(job.video_path),
+    ]
     cmd.extend(options)
-    return run_command(log, cmd)
+    rc, res = run_command(log, cmd, job.count)
+
+    if rc == 0:
+        # Python 3.5 requires a str object (not 3.6+)
+        res = json.loads(res.decode("utf8"))
+
+        # Ensure that none of these values are at 0 which
+        # is indicative of a failling test
+        monitored_tests = [
+            "contentfulspeedindex",
+            "lastvisualchange",
+            "perceptualspeedindex",
+            "speedindex",
+        ]
+        failed_tests = []
+        for metric, val in res.items():
+            if metric.lower() in monitored_tests and val == 0:
+                failed_tests.append(metric)
+        if failed_tests:
+            log.error(
+                "TEST-UNEXPECTED-FAIL | Some visual metrics have an erroneous value of 0."
+            )
+            log.info("Tests which failed: %s" % str(failed_tests))
+            rc += 1
+
+    return rc, res
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format="%(levelname)s - %(message)s", level=logging.INFO)
     structlog.configure(
         processors=[
-            structlog.processors.TimeStamper(fmt="iso"),
             structlog.processors.format_exc_info,
             structlog.dev.ConsoleRenderer(colors=False),
         ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
 
