@@ -24,11 +24,15 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                   unsigned char* aDestBuffer,
                   int32_t aStride);
 
+using PremultFunc = int (*)(const uint8_t* src_argb, int src_stride_argb,
+                            uint8_t* dst_argb, int dst_stride_argb, int width,
+                            int height);
+
 void ConvertYCbCrAToARGB(const layers::PlanarYCbCrAData& aData,
                          const SurfaceFormat& aDestFormat,
                          const IntSize& aDestSize,
                          unsigned char* aDestBuffer,
-                         int32_t aStride);
+                         int32_t aStride, PremultFunc premultiplyAlphaOp);
 
 void
 ConvertI420AlphaToARGB(const uint8_t* aSrcY,
@@ -38,7 +42,6 @@ ConvertI420AlphaToARGB(const uint8_t* aSrcY,
                        int aSrcStrideYA, int aSrcStrideUV,
                        uint8_t* aDstARGB, int aDstStrideARGB,
                        int aWidth, int aHeight);
-
 } // namespace gfx
 } // namespace mozilla
 

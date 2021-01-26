@@ -705,6 +705,42 @@ TEST_F(ImageDecoders, AVIFSingleChunk) {
   CheckDecoderSingleChunk(GreenAVIFTestCase());
 }
 
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent10bit420) {
+  CheckDecoderSingleChunk(Transparent10bit420AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent10bit422) {
+  CheckDecoderSingleChunk(Transparent10bit422AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent10bit444) {
+  CheckDecoderSingleChunk(Transparent10bit444AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent12bit420) {
+  CheckDecoderSingleChunk(Transparent12bit420AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent12bit422) {
+  CheckDecoderSingleChunk(Transparent12bit422AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent12bit444) {
+  CheckDecoderSingleChunk(Transparent12bit444AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent8bit420) {
+  CheckDecoderSingleChunk(Transparent8bit420AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent8bit422) {
+  CheckDecoderSingleChunk(Transparent8bit422AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkTransparent8bit444) {
+  CheckDecoderSingleChunk(Transparent8bit444AVIFTestCase());
+}
+
 TEST_F(ImageDecoders, AVIFMultiLayerSingleChunk) {
   CheckDecoderSingleChunk(MultiLayerAVIFTestCase());
 }

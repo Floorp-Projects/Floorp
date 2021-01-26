@@ -10,6 +10,7 @@
 #include "YCbCrUtils.h"
 #include "yuv_convert.h"
 #include "ycbcr_to_rgb565.h"
+#include "libyuv.h"
 
 namespace mozilla {
 namespace gfx {
@@ -79,16 +80,24 @@ ConvertYCbCr16to8Line(uint8_t* aDst,
                       int aHeight,
                       int aBitDepth)
 {
-  uint16_t mask = (1 << aBitDepth) - 1;
-
-  for (int i = 0; i < aHeight; i++) {
-    for (int j = 0; j < aWidth; j++) {
-      uint16_t val = (aSrc[j] & mask) >> (aBitDepth - 8);
-      aDst[j] = val;
-    }
-    aDst += aStride;
-    aSrc += aStride16;
+  // These values from from the comment on from libyuv's Convert16To8Row_C:
+  int scale;
+  switch (aBitDepth) {
+    case 10:
+      scale = 16384;
+      break;
+    case 12:
+      scale = 4096;
+      break;
+    case 16:
+      scale = 256;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("invalid bit depth value");
+      return;
   }
+
+  libyuv::Convert16To8Plane(aSrc, aStride16, aDst, aStride, scale, aWidth, aHeight);
 }
 
 void
@@ -288,35 +297,57 @@ void FillAlphaToRGBA(const uint8_t* aAlpha, const int32_t aAlphaStride,
 void ConvertYCbCrAToARGB(const layers::PlanarYCbCrAData& aData,
                          const SurfaceFormat& aDestFormat,
                          const IntSize& aDestSize, unsigned char* aDestBuffer,
-                         int32_t aStride) {
+                         int32_t aStride, PremultFunc premultiplyAlphaOp) {
   // libyuv makes endian-correct result, so the format needs to be B8G8R8A8.
   MOZ_ASSERT(aDestFormat == SurfaceFormat::B8G8R8A8);
-
   MOZ_ASSERT(aData.mAlphaSize == aData.mYSize);
+  MOZ_ASSERT(aData.mAlphaChannel);
 
-  YUVType yuvtype = TypeFromSize(aData.mYSize.width, aData.mYSize.height,
-                                 aData.mCbCrSize.width, aData.mCbCrSize.height);
+  // libyuv has libyuv::I420AlphaToARGB, but lacks support for 422 and 444.
+  // Until that's added, we'll rely on our own code to handle this more
+  // generally, rather than have a special case and more redundant code.
 
-  if (yuvtype == YV12) {
-    // Currently this function only has support for I420 type
-    ConvertI420AlphaToARGB(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
-                           aData.mAlphaChannel, aData.mYStride,
-                           aData.mCbCrStride, aDestBuffer, aStride,
-                           aData.mPicSize.width, aData.mPicSize.height);
-    return;
-  }
+  UniquePtr<uint8_t[]> alphaChannel;
+  int32_t alphaStride8bpp = 0;
+  uint8_t* alphaChannel8bpp = nullptr;
 
   // This function converts non-8-bpc images to 8-bpc. (Bug 1682322)
   ConvertYCbCrToRGBInternal(aData, aDestFormat, aDestSize, aDestBuffer,
                             aStride);
 
-  // Note alpha stride is equal to Y stride.
-  FillAlphaToRGBA(aData.mAlphaChannel, aData.mYStride, aDestBuffer,
+  if (aData.mColorDepth != ColorDepth::COLOR_8) {
+    // These two lines are borrowed from ConvertYCbCrToRGBInternal, since
+    // there's not a very elegant way of sharing the logic that I can see
+    alphaStride8bpp = (aData.mAlphaSize.width + 31) & ~31;
+    size_t alphaSize =
+        GetAlignedStride<1>(alphaStride8bpp, aData.mAlphaSize.height);
+
+    alphaChannel = MakeUnique<uint8_t[]>(alphaSize);
+
+    ConvertYCbCr16to8Line(alphaChannel.get(), alphaStride8bpp,
+                          reinterpret_cast<uint16_t*>(aData.mAlphaChannel),
+                          aData.mYStride / 2, aData.mAlphaSize.width,
+                          aData.mAlphaSize.height,
+                          BitDepthForColorDepth(aData.mColorDepth));
+
+    alphaChannel8bpp = alphaChannel.get();
+  } else {
+    alphaStride8bpp = aData.mYStride;
+    alphaChannel8bpp = aData.mAlphaChannel;
+  }
+
+  MOZ_ASSERT(alphaStride8bpp != 0);
+  MOZ_ASSERT(alphaChannel8bpp);
+
+  FillAlphaToRGBA(alphaChannel8bpp, alphaStride8bpp, aDestBuffer,
                   aData.mPicSize.width, aData.mPicSize.height, aDestFormat);
 
-  // Do preattenuate as what ConvertI420AlphaToARGB does
-  ARGBAttenuate(aDestBuffer, aStride, aDestBuffer, aStride,
-                aData.mPicSize.width, aData.mPicSize.height);
+  if (premultiplyAlphaOp) {
+    DebugOnly<int> err =
+        premultiplyAlphaOp(aDestBuffer, aStride, aDestBuffer, aStride,
+                           aData.mPicSize.width, aData.mPicSize.height);
+    MOZ_ASSERT(!err);
+  }
 
 #if MOZ_BIG_ENDIAN()
   // libyuv makes endian-correct result, which needs to be swapped to BGRA
