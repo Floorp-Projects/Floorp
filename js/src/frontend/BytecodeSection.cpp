@@ -52,8 +52,8 @@ mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
 }
 
 bool js::frontend::EmitScriptThingsVector(
-    JSContext* cx, CompilationInput& input, BaseCompilationStencil& stencil,
-    CompilationGCOutput& gcOutput,
+    JSContext* cx, CompilationInput& input,
+    const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput,
     mozilla::Span<const TaggedScriptThingIndex> things,
     mozilla::Span<JS::GCCellPtr> output) {
   MOZ_ASSERT(things.size() <= INDEX_LIMIT);
@@ -75,7 +75,7 @@ bool js::frontend::EmitScriptThingsVector(
         output[i] = JS::GCCellPtr(nullptr);
         break;
       case TaggedScriptThingIndex::Kind::BigInt: {
-        BigIntStencil& data = stencil.bigIntData[thing.toBigInt()];
+        const BigIntStencil& data = stencil.bigIntData[thing.toBigInt()];
         BigInt* bi = data.createBigInt(cx);
         if (!bi) {
           return false;
@@ -84,7 +84,8 @@ bool js::frontend::EmitScriptThingsVector(
         break;
       }
       case TaggedScriptThingIndex::Kind::ObjLiteral: {
-        ObjLiteralStencil& data = stencil.objLiteralData[thing.toObjLiteral()];
+        const ObjLiteralStencil& data =
+            stencil.objLiteralData[thing.toObjLiteral()];
         JSObject* obj = data.create(cx, atomCache);
         if (!obj) {
           return false;
