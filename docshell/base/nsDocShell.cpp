@@ -3416,6 +3416,27 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
 
   uint32_t loadFlags = aLoadURIOptions.mLoadFlags;
   if (NS_ERROR_MALFORMED_URI == rv) {
+    MOZ_LOG(gSHLog, LogLevel::Debug,
+            ("Creating an active entry on nsDocShell %p to %s (because "
+             "we're showing an error page)",
+             this, NS_ConvertUTF16toUTF8(aURI).get()));
+
+    // We need to store a session history entry. We don't have a valid URI, so
+    // we use about:blank instead.
+    nsCOMPtr<nsIURI> uri;
+    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), "about:blank"_ns));
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    if (aLoadURIOptions.mTriggeringPrincipal) {
+      triggeringPrincipal = aLoadURIOptions.mTriggeringPrincipal;
+    } else {
+      triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+    }
+    mActiveEntry = MakeUnique<SessionHistoryInfo>(
+        uri, triggeringPrincipal, nullptr, nullptr, nullptr,
+        nsLiteralCString("text/html"));
+    mBrowsingContext->SetActiveSessionHistoryEntry(
+        Nothing(), mActiveEntry.get(), MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags),
+        /* aUpdatedCacheKey = */ 0);
     if (DisplayLoadError(rv, nullptr, PromiseFlatString(aURI).get(), nullptr) &&
         (loadFlags & LOAD_FLAGS_ERROR_LOAD_CHANGES_RV) != 0) {
       return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
