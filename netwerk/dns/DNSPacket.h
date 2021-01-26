@@ -58,10 +58,18 @@ class DNSPacket {
   // something is wrong. Typical ones are much smaller.
   static const unsigned int MAX_SIZE = 3200;
 
-  nsresult PassQName(unsigned int& index);
-  nsresult GetQname(nsACString& aQname, unsigned int& aIndex);
+  nsresult PassQName(unsigned int& index, const unsigned char* aBuffer);
+  nsresult GetQname(nsACString& aQname, unsigned int& aIndex,
+                    const unsigned char* aBuffer);
   nsresult ParseSvcParam(unsigned int svcbIndex, uint16_t key,
-                         SvcFieldValue& field, uint16_t length);
+                         SvcFieldValue& field, uint16_t length,
+                         const unsigned char* aBuffer);
+  nsresult DecodeInternal(
+      nsCString& aHost, enum TrrType aType, nsCString& aCname,
+      bool aAllowRFC1918, nsHostRecord::TRRSkippedReason& reason,
+      DOHresp& aResp, TypeRecordResultType& aTypeResult,
+      nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
+      uint32_t& aTTL, const unsigned char* aBuffer, uint32_t aLen);
 
   // The response buffer.
   unsigned char mResponse[MAX_SIZE]{};
