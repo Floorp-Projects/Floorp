@@ -536,7 +536,7 @@ impl SendStream {
         (length, false)
     }
 
-    pub fn write_frame(&mut self, builder: &mut PacketBuilder) -> Option<RecoveryToken> {
+    pub fn write_frame(&mut self, builder: &mut PacketBuilder) -> Res<Option<RecoveryToken>> {
         let id = self.stream_id;
         let final_size = self.final_size();
         if let Some((offset, data)) = self.next_bytes() {
@@ -549,14 +549,14 @@ impl SendStream {
                 };
             if overhead > builder.remaining() {
                 qtrace!("SendStream::write_frame no space for header");
-                return None;
+                return Ok(None);
             }
 
             let (length, fill) = Self::length_and_fill(data.len(), builder.remaining() - overhead);
             let fin = final_size.map_or(false, |fs| fs == offset + u64::try_from(length).unwrap());
             if length == 0 && !fin {
                 qtrace!("SendStream::write_frame no data, no fin");
-                return None;
+                return Ok(None);
             }
 
             // Write the stream out.
@@ -571,15 +571,19 @@ impl SendStream {
                 builder.encode_vvec(&data[..length]);
             }
 
+            if builder.len() > builder.limit() {
+                return Err(Error::InternalError(23));
+            }
+
             self.mark_as_sent(offset, length, fin);
-            Some(RecoveryToken::Stream(StreamRecoveryToken {
+            Ok(Some(RecoveryToken::Stream(StreamRecoveryToken {
                 id,
                 offset,
                 length,
                 fin,
-            }))
+            })))
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -868,13 +872,14 @@ impl SendStreams {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) {
+    ) -> Res<()> {
         for (_, stream) in self {
-            if let Some(t) = stream.write_frame(builder) {
+            if let Some(t) = stream.write_frame(builder)? {
                 tokens.push(t);
                 stats.stream += 1;
             }
         }
+        Ok(())
     }
 }
 
@@ -1315,7 +1320,8 @@ mod tests {
         // Write a small frame: no fin.
         let written = builder.len();
         builder.set_limit(written + 6);
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written + 6);
         assert_eq!(tokens.len(), 1);
         let f1_token = tokens.remove(0);
@@ -1324,7 +1330,8 @@ mod tests {
         // Write the rest: fin.
         let written = builder.len();
         builder.set_limit(written + 200);
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written + 10);
         assert_eq!(tokens.len(), 1);
         let f2_token = tokens.remove(0);
@@ -1332,7 +1339,8 @@ mod tests {
 
         // Should be no more data to frame.
         let written = builder.len();
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written);
         assert!(tokens.is_empty());
 
@@ -1346,7 +1354,8 @@ mod tests {
         // Next frame should not set fin even though stream has fin but frame
         // does not include end of stream
         let written = builder.len();
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written + 7); // Needs a length this time.
         assert_eq!(tokens.len(), 1);
         let f4_token = tokens.remove(0);
@@ -1361,7 +1370,8 @@ mod tests {
 
         // Next frame should set fin because it includes end of stream
         let written = builder.len();
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written + 10);
         assert_eq!(tokens.len(), 1);
         let f5_token = tokens.remove(0);
@@ -1384,19 +1394,22 @@ mod tests {
 
         let mut tokens = Vec::new();
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         let f1_token = tokens.remove(0);
         assert!(matches!(&f1_token, RecoveryToken::Stream(x) if x.offset == 0));
         assert!(matches!(&f1_token, RecoveryToken::Stream(x) if x.length == 10));
         assert!(matches!(&f1_token, RecoveryToken::Stream(x) if !x.fin));
 
         // Should be no more data to frame
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert!(tokens.is_empty());
 
         ss.get_mut(StreamId::from(0)).unwrap().close();
 
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         let f2_token = tokens.remove(0);
         assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.offset == 10));
         assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.length == 0));
@@ -1410,7 +1423,8 @@ mod tests {
         }
 
         // Next frame should set fin
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         let f3_token = tokens.remove(0);
         assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.offset == 10));
         assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.length == 0));
@@ -1424,7 +1438,8 @@ mod tests {
         }
 
         // Next frame should set fin and include all data
-        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         let f4_token = tokens.remove(0);
         assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.offset == 0));
         assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.length == 10));
@@ -1551,7 +1566,7 @@ mod tests {
 
         // No frame should be sent here.
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        assert!(s.write_frame(&mut builder).is_none());
+        assert!(s.write_frame(&mut builder).unwrap().is_none());
     }
 
     /// Create a `SendStream` and force it into a state where it believes that
@@ -1591,7 +1606,7 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + space);
-        let token = s.write_frame(&mut builder);
+        let token = s.write_frame(&mut builder).unwrap();
         qtrace!("STREAM frame: {}", hex_with_len(&builder[header_len..]));
         token.is_some()
     }
@@ -1685,7 +1700,7 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + DATA16384.len() + 2);
-        let token = s.write_frame(&mut builder);
+        let token = s.write_frame(&mut builder).unwrap();
         assert!(token.is_some());
         // Expect STREAM + FIN only.
         assert_eq!(&builder[header_len..header_len + 2], &[0b1001, 0]);
@@ -1700,7 +1715,7 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + DATA16384.len() + 3);
-        let token = s.write_frame(&mut builder);
+        let token = s.write_frame(&mut builder).unwrap();
         assert!(token.is_some());
         // Expect STREAM + LEN + FIN.
         assert_eq!(
@@ -1726,7 +1741,7 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + 66);
-        let token = s.write_frame(&mut builder);
+        let token = s.write_frame(&mut builder).unwrap();
         assert!(token.is_some());
         // Expect STREAM + FIN only.
         assert_eq!(&builder[header_len..header_len + 2], &[0b1001, 0]);
@@ -1737,7 +1752,7 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + 67);
-        let token = s.write_frame(&mut builder);
+        let token = s.write_frame(&mut builder).unwrap();
         assert!(token.is_some());
         // Expect STREAM + LEN, not FIN.
         assert_eq!(&builder[header_len..header_len + 3], &[0b1010, 0, 63]);
