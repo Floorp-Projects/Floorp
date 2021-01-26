@@ -112,10 +112,7 @@ bool ElemOpEmitter::emitPrivateGuardForAssignment() {
 bool ElemOpEmitter::emitGet() {
   MOZ_ASSERT(state_ == State::Key);
 
-  // Inc/dec and compound assignment use the KEY twice, but if it's an object,
-  // it must be converted ToPropertyKey only once, per spec. But for a private
-  // field, KEY is always a symbol and ToPropertyKey would be a no-op.
-  if ((isIncDec() || isCompoundAssignment()) && !isPrivate()) {
+  if (isIncDec() || isCompoundAssignment()) {
     if (!bce_->emit1(JSOp::ToPropertyKey)) {
       //            [stack] # if Super
       //            [stack] THIS KEY
@@ -258,14 +255,8 @@ bool ElemOpEmitter::emitAssignment() {
 
   MOZ_ASSERT_IF(isPropInit(), !isSuper());
 
-  if (!isCompoundAssignment()) {
-    // For compound assignment, we call emitGet(), then emitAssignment().  So
-    // we already went through emitGet() and emitted a guard for this object
-    // and key. There's no point checking again--a private field can't be
-    // removed from an object.
-    if (!emitPrivateGuardForAssignment()) {
-      return false;
-    }
+  if (!emitPrivateGuardForAssignment()) {
+    return false;
   }
 
   JSOp setOp = isPropInit() ? JSOp::InitElem
