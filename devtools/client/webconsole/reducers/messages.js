@@ -551,8 +551,13 @@ function messages(
       };
       let hasNetworkError = null;
       for (const message of action.messages) {
-        updatedState.messagesById.set(message.id, message);
-        updatedState.networkMessagesUpdateById[message.id] = message;
+        const { id } = message;
+        updatedState.messagesById.set(id, message);
+        updatedState.networkMessagesUpdateById[id] = {
+          ...(updatedState.networkMessagesUpdateById[id] || {}),
+          ...message,
+        };
+
         if (isMessageNetworkError(message)) {
           hasNetworkError = true;
         }
