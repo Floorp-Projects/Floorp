@@ -160,19 +160,30 @@ let PromptTestUtils = {
 
     let dialog;
     await TestUtils.topicObserved(topic, subject => {
+      // If we are not given a browser, use the currently selected browser of the window
+      let browser =
+        parentBrowser || subject.ownerGlobal.gBrowser.selectedBrowser;
       if (isCommonDialog(modalType)) {
         // Is not associated with given parent window, skip
         if (parentWindow && subject.opener !== parentWindow) {
           return false;
         }
+
+        // For tab prompts, ensure that the associated browser matches.
+        if (modalType == Services.prompt.MODAL_TYPE_TAB) {
+          let dialogBox = parentWindow.gBrowser.getTabDialogBox(browser);
+          let hasMatchingDialog = dialogBox._tabDialogManager._dialogs.some(
+            d => d._frame?.browsingContext == subject.browsingContext
+          );
+          if (!hasMatchingDialog) {
+            return false;
+          }
+        }
+
         // subject is the window object of the prompt which has a Dialog object
         // attached.
         dialog = subject.Dialog;
       } else {
-        // If we are not given a browser, use the currently selected browser of the window
-        let browser =
-          parentBrowser || subject.ownerGlobal.gBrowser.selectedBrowser;
-
         // subject is the tabprompt dom node
         // Get the full prompt object which has the dialog object
         let prompt = browser.tabModalPromptBox.getPrompt(subject);
