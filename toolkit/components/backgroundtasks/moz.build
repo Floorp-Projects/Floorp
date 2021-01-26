@@ -22,31 +22,8 @@ XPCOM_MANIFESTS += [
 
 XPIDL_SOURCES += [
     "nsIBackgroundTasks.idl",
-    "nsIBackgroundTasksManager.idl",
 ]
 
 XPIDL_MODULE = "toolkit_backgroundtasks"
 
-EXTRA_JS_MODULES += [
-    "BackgroundTasksManager.jsm",
-]
-
-EXTRA_JS_MODULES.backgroundtasks += [
-    "BackgroundTask_exception.jsm",
-    "BackgroundTask_failure.jsm",
-    "BackgroundTask_success.jsm",
-]
-
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
-
-TESTING_JS_MODULES.backgroundtasks += [
-    "tests/BackgroundTask_backgroundtask_specific_pref.jsm",
-    "tests/BackgroundTask_crash.jsm",
-    "tests/BackgroundTask_policies.jsm",
-    "tests/BackgroundTask_wait.jsm",
-]
-
-FINAL_TARGET_FILES.defaults.backgroundtasks += [
-    "defaults/backgroundtasks.js",
-]
