@@ -232,7 +232,7 @@ var TalosContentProfiler;
      *        for us, and we can skip the initialization check. This is usually
      *        true for pageloader tests.
      * @returns Promise
-     *          Resolves once the Gecko Profiler has resumed.
+     *        Resolves once the Gecko Profiler has resumed.
      */
     resume(marker = "", inittedInParent = false) {
       if (initted || inittedInParent) {
@@ -250,12 +250,15 @@ var TalosContentProfiler;
      *        If true, it is assumed that the parent has already started profiling
      *        for us, and we can skip the initialization check. This is usually
      *        true for pageloader tests.
+     * @param startTime (number, optional)
+     *        Start time, used to create an interval profile marker. If
+     *        undefined, a single instance marker will be placed.
      * @returns Promise
-     *          Resolves once the Gecko Profiler has paused.
+     *        Resolves once the Gecko Profiler has paused.
      */
-    pause(marker = "", inittedInParent = false) {
+    pause(marker = "", inittedInParent = false, startTime = undefined) {
       if (initted || inittedInParent) {
-        return sendEventAndWait("Profiler:Pause", { marker });
+        return sendEventAndWait("Profiler:Pause", { marker, startTime });
       }
 
       return Promise.resolve();
@@ -264,17 +267,26 @@ var TalosContentProfiler;
     /**
      * Adds a marker to the profile.
      *
+     * @param marker (string)
+     *        If non-empty, will set a marker immediately before pausing.
+     * @param inittedInParent (bool, optional)
+     *        If true, it is assumed that the parent has already started profiling
+     *        for us, and we can skip the initialization check. This is usually
+     *        true for pageloader tests.
+     * @param startTime (number, optional)
+     *        Start time, used to create an interval profile marker. If
+     *        undefined, a single instance marker will be placed.
      * @returns Promise
      *          Resolves once the marker has been set.
      */
-    mark(marker) {
-      if (initted) {
+    mark(marker, inittedInParent = false, startTime = undefined) {
+      if (initted || inittedInParent) {
         // If marker is omitted, just use the test name
         if (!marker) {
           marker = currentTest;
         }
 
-        return sendEventAndWait("Profiler:Marker", { marker });
+        return sendEventAndWait("Profiler:Marker", { marker, startTime });
       }
 
       return Promise.resolve();

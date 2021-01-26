@@ -185,29 +185,39 @@ const TalosParentProfiler = {
   /**
    * Pauses the Gecko Profiler sampler. Can also simultaneously set a marker.
    *
+   * @param marker (string, optional)
+   *        If non-empty, will set a marker immediately before pausing.
+   * @param startTime (number, optional)
+   *        Start time, used to create an interval profile marker. If
+   *        undefined, a single instance marker will be placed.
    * @returns Promise
-   *          Resolves once the Gecko Profiler has paused.
+   *          Resolves once the Gecko Profiler has resumed.
    */
-  pause(marker = "") {
+  pause(marker = "", startTime = undefined) {
     if (this.initted) {
-      this.TalosPowers.profilerPause(marker);
+      this.TalosPowers.profilerPause(marker, startTime);
     }
   },
 
   /**
    * Adds a marker to the profile.
    *
+   * @param marker (string, optional)
+   *        If non-empty, will set a marker immediately before pausing.
+   * @param startTime (number, optional)
+   *        Start time, used to create an interval profile marker. If
+   *        undefined, a single instance marker will be placed.
    * @returns Promise
    *          Resolves once the marker has been set.
    */
-  mark(marker) {
+  mark(marker, startTime = undefined) {
     if (this.initted) {
       // If marker is omitted, just use the test name
       if (!marker) {
         marker = this.currentTest;
       }
 
-      this.TalosPowers.profilerMarker(marker);
+      this.TalosPowers.addIntervalMarker(marker, startTime);
     }
   },
 

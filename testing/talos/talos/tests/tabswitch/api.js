@@ -283,9 +283,11 @@ async function test(window) {
     await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
 
     await forceGC(win, tab.linkedBrowser);
-    TalosParentProfiler.resume("start: " + tab.linkedBrowser.currentURI.spec);
+    TalosParentProfiler.resume();
     let time = await switchToTab(tab);
-    TalosParentProfiler.pause("finish: " + tab.linkedBrowser.currentURI.spec);
+    TalosParentProfiler.pause(
+      "TabSwitch Test: " + tab.linkedBrowser.currentURI.spec
+    );
     dump(`${tab.linkedBrowser.currentURI.spec}: ${time}ms\n`);
     times.push(time);
     await switchToTab(initialTab);
