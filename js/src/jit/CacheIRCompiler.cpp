@@ -3154,8 +3154,12 @@ bool CacheIRCompiler::emitLoadArrayBufferByteLengthInt32Result(
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  masm.loadArrayBufferByteLengthInt32(obj, scratch);
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
 
+  masm.loadArrayBufferByteLengthInt32(obj, scratch, failure->label());
   masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
