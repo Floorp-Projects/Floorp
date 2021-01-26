@@ -100,6 +100,9 @@ object Log {
     enum class Priority(val value: Int) {
         // For simplicity the values mirror the Android log constants values:
         // https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/core/java/android/util/Log.java
+        //
+        // We intentionally omit ASSERT and VERBOSE. If you change this,
+        // be aware of the impact on consumers.
 
         DEBUG(android.util.Log.DEBUG),
         INFO(android.util.Log.INFO),
