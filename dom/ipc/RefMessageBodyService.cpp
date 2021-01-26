@@ -17,6 +17,7 @@
 
 namespace mozilla::dom {
 
+// Guards sService and its members.
 StaticMutex sRefMessageBodyServiceMutex;
 
 // Raw pointer because the service is kept alive by other objects.
@@ -35,16 +36,18 @@ already_AddRefed<RefMessageBodyService> RefMessageBodyService::GetOrCreate() {
 RefMessageBodyService* RefMessageBodyService::GetOrCreateInternal(
     const StaticMutexAutoLock& aProofOfLock) {
   if (!sService) {
-    sService = new RefMessageBodyService();
+    sService = new RefMessageBodyService(aProofOfLock);
   }
   return sService;
 }
 
-RefMessageBodyService::RefMessageBodyService() {
+RefMessageBodyService::RefMessageBodyService(
+    const StaticMutexAutoLock& aProofOfLock) {
   MOZ_DIAGNOSTIC_ASSERT(sService == nullptr);
 }
 
 RefMessageBodyService::~RefMessageBodyService() {
+  StaticMutexAutoLock lock(sRefMessageBodyServiceMutex);
   MOZ_DIAGNOSTIC_ASSERT(sService == this);
   sService = nullptr;
 }
