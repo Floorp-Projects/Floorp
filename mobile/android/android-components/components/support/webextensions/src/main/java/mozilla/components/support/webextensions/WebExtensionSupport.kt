@@ -35,8 +35,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
-import mozilla.components.support.webextensions.facts.emitWebExtensionEnabledFact
-import mozilla.components.support.webextensions.facts.emitWebExtensionInstalledFact
+import mozilla.components.support.webextensions.facts.emitWebExtensionsInitializedFact
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -244,7 +243,6 @@ object WebExtensionSupport {
             override fun onEnabled(extension: WebExtension) {
                 installedExtensions[extension.id] = extension
                 store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, true))
-                emitWebExtensionEnabledFact(extension)
             }
 
             override fun onDisabled(extension: WebExtension) {
@@ -301,6 +299,7 @@ object WebExtensionSupport {
         runtime.listInstalledWebExtensions(
             onSuccess = {
                 extensions -> extensions.forEach { registerInstalledExtension(store, it) }
+                emitWebExtensionsInitializedFact(extensions)
                 closeUnsupportedTabs(store, extensions)
                 initializationResult.complete(Unit)
                 onExtensionsLoaded?.invoke(extensions.filter { !it.isBuiltIn() })
@@ -318,10 +317,6 @@ object WebExtensionSupport {
     private fun registerInstalledExtension(store: BrowserStore, webExtension: WebExtension) {
         installedExtensions[webExtension.id] = webExtension
         store.dispatch(WebExtensionAction.InstallWebExtensionAction(webExtension.toState()))
-
-        if (!webExtension.isBuiltIn()) {
-            emitWebExtensionInstalledFact(webExtension)
-        }
 
         // Register action handler for all existing engine sessions on the new extension,
         // an issue was filed to get us an API, so we don't have to do this per extension:
