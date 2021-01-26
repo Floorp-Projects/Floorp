@@ -122,7 +122,7 @@ class RefMessageBodyService final {
   void SetMaxCount(const nsID& aID, uint32_t aMaxCount);
 
  private:
-  RefMessageBodyService();
+  explicit RefMessageBodyService(const StaticMutexAutoLock& aProofOfLock);
   ~RefMessageBodyService();
 
   static RefMessageBodyService* GetOrCreateInternal(
