@@ -23,6 +23,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIUrlClassifierDBService.h"
+#include "nsIURLFormatter.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 
@@ -1573,9 +1574,13 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   // If the remote lookup URL is empty or absent, bail.
-  nsAutoCString serviceUrl;
-  if (NS_FAILED(Preferences::GetCString(PREF_SB_APP_REP_URL, serviceUrl)) ||
-      serviceUrl.IsEmpty()) {
+  nsString serviceUrl;
+  nsCOMPtr<nsIURLFormatter> formatter(
+      do_GetService("@mozilla.org/toolkit/URLFormatterService;1"));
+  if (!formatter ||
+      NS_FAILED(formatter->FormatURLPref(
+          NS_ConvertASCIItoUTF16(PREF_SB_APP_REP_URL), serviceUrl)) ||
+      serviceUrl.IsEmpty() || u"about:blank"_ns.Equals(serviceUrl)) {
     LOG(("Remote lookup URL is empty or absent [this = %p]", this));
     aReason = Reason::RemoteLookupDisabled;
     return NS_ERROR_NOT_AVAILABLE;
@@ -1683,7 +1688,7 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
 
   // Set up the channel to transmit the request to the service.
   nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-  rv = ios->NewChannel(serviceUrl, nullptr, nullptr,
+  rv = ios->NewChannel(NS_ConvertUTF16toUTF8(serviceUrl), nullptr, nullptr,
                        nullptr,  // aLoadingNode
                        nsContentUtils::GetSystemPrincipal(),
                        nullptr,  // aTriggeringPrincipal
