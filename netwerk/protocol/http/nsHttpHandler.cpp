@@ -3001,8 +3001,7 @@ void nsHttpHandler::SetDeviceModelId(const nsCString& aModelId) {
 }
 
 void nsHttpHandler::MaybeAddAltSvcForTesting(
-    nsIURI* aUri, const nsACString& aUsername,
-    const nsACString& aTopWindowOrigin, bool aPrivateBrowsing, bool aIsolated,
+    nsIURI* aUri, const nsACString& aUsername, bool aPrivateBrowsing,
     nsIInterfaceRequestor* aCallbacks,
     const OriginAttributes& aOriginAttributes) {
   if (!IsHttp3Enabled() || mAltSvcMappingTemptativeMap.IsEmpty()) {
@@ -3026,10 +3025,9 @@ void nsHttpHandler::MaybeAddAltSvcForTesting(
     aUri->GetPort(&originPort);
     LOG(("nsHttpHandler::MaybeAddAltSvcForTesting for %s map: %s",
          originHost.get(), PromiseFlatCString(*map).get()));
-    AltSvcMapping::ProcessHeader(*map, nsCString("https"), originHost,
-                                 originPort, aUsername, aTopWindowOrigin,
-                                 aPrivateBrowsing, aIsolated, aCallbacks,
-                                 nullptr, 0, aOriginAttributes, true);
+    AltSvcMapping::ProcessHeader(
+        *map, nsCString("https"), originHost, originPort, aUsername,
+        aPrivateBrowsing, aCallbacks, nullptr, 0, aOriginAttributes, true);
   }
 }
 
