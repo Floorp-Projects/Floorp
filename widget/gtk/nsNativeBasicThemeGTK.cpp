@@ -71,9 +71,11 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   }
 
   switch (aAppearance) {
+    case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarthumbHorizontal:
       aResult->width = kGtkMinimumScrollbarThumbSize * dpiRatio;
       break;
+    case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarthumbVertical:
       aResult->height = kGtkMinimumScrollbarThumbSize * dpiRatio;
       break;
