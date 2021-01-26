@@ -697,6 +697,7 @@ Action.prototype = {
       PageActions.onActionToggledPinnedToUrlbar(this);
       this.onPinToUrlbarToggled();
     }
+    return this.pinnedToUrlbar;
   },
 
   /**

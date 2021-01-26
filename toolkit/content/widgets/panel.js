@@ -81,7 +81,7 @@
       if (!v) {
         this.initialize();
       }
-      super.hidden = v;
+      return (super.hidden = v);
     }
 
     removeAttribute(name) {

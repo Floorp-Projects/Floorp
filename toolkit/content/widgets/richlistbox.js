@@ -209,6 +209,7 @@
       if (kids && kids.item(0)) {
         this.selectItem(kids[0]);
       }
+      return val;
     }
     get value() {
       if (this.selectedItems.length) {
@@ -225,6 +226,7 @@
     // nsIDOMXULSelectControlElement
     set selType(val) {
       this.setAttribute("seltype", val);
+      return val;
     }
     get selType() {
       return this.getAttribute("seltype");
@@ -233,7 +235,7 @@
     // nsIDOMXULSelectControlElement
     set currentItem(val) {
       if (this._currentItem == val) {
-        return;
+        return val;
       }
 
       if (this._currentItem) {
@@ -253,6 +255,8 @@
           this._fireEvent(val, "DOMMenuItemActive");
         }
       }
+
+      return val;
     }
     get currentItem() {
       return this._currentItem;
@@ -947,6 +951,7 @@
       else {
         this.removeAttribute("searchlabel");
       }
+      return val;
     }
 
     get searchLabel() {
@@ -959,6 +964,7 @@
      */
     set value(val) {
       this.setAttribute("value", val);
+      return val;
     }
 
     get value() {
@@ -974,6 +980,8 @@
       } else {
         this.removeAttribute("selected");
       }
+
+      return val;
     }
 
     get selected() {
@@ -999,6 +1007,7 @@
       } else {
         this.removeAttribute("current");
       }
+      return val;
     }
 
     get current() {

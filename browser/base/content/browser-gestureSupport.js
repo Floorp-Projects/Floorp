@@ -577,6 +577,7 @@ var gGestureSupport = {
     if (this._currentRotation < 0) {
       this._currentRotation += 360;
     }
+    return this._currentRotation;
   },
 
   /**

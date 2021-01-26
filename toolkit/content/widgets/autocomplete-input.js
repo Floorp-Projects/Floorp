@@ -178,6 +178,7 @@
 
     set disableAutoComplete(val) {
       this.setAttribute("disableautocomplete", val);
+      return val;
     }
 
     get disableAutoComplete() {
@@ -186,6 +187,7 @@
 
     set completeDefaultIndex(val) {
       this.setAttribute("completedefaultindex", val);
+      return val;
     }
 
     get completeDefaultIndex() {
@@ -194,6 +196,7 @@
 
     set completeSelectedIndex(val) {
       this.setAttribute("completeselectedindex", val);
+      return val;
     }
 
     get completeSelectedIndex() {
@@ -202,6 +205,7 @@
 
     set forceComplete(val) {
       this.setAttribute("forcecomplete", val);
+      return val;
     }
 
     get forceComplete() {
@@ -210,6 +214,7 @@
 
     set minResultsForPopup(val) {
       this.setAttribute("minresultsforpopup", val);
+      return val;
     }
 
     get minResultsForPopup() {
@@ -219,6 +224,7 @@
 
     set timeout(val) {
       this.setAttribute("timeout", val);
+      return val;
     }
 
     get timeout() {
@@ -228,6 +234,7 @@
 
     set searchParam(val) {
       this.setAttribute("autocompletesearchparam", val);
+      return val;
     }
 
     get searchParam() {
@@ -251,6 +258,8 @@
       // "input" event is automatically dispatched by the editor if
       // necessary.
       this._setValueInternal(val, true);
+
+      return this.value;
     }
 
     get textValue() {
@@ -263,7 +272,9 @@
       return true;
     }
 
-    set crop(val) {}
+    set crop(val) {
+      return false;
+    }
 
     get crop() {
       return false;
@@ -282,7 +293,7 @@
     }
 
     set value(val) {
-      this._setValueInternal(val, false);
+      return this._setValueInternal(val, false);
     }
 
     get value() {
@@ -298,6 +309,7 @@
      */
     set maxRows(val) {
       this.setAttribute("maxrows", val);
+      return val;
     }
 
     get maxRows() {
@@ -309,6 +321,7 @@
      */
     set maxdropmarkerrows(val) {
       this.setAttribute("maxdropmarkerrows", val);
+      return val;
     }
 
     get maxdropmarkerrows() {
@@ -320,6 +333,7 @@
      */
     set tabScrolling(val) {
       this.setAttribute("tabscrolling", val);
+      return val;
     }
 
     get tabScrolling() {
@@ -331,6 +345,7 @@
      */
     set ignoreBlurWhileSearching(val) {
       this.setAttribute("ignoreblurwhilesearching", val);
+      return val;
     }
 
     get ignoreBlurWhileSearching() {
@@ -341,6 +356,7 @@
      */
     set highlightNonMatches(val) {
       this.setAttribute("highlightnonmatches", val);
+      return val;
     }
 
     get highlightNonMatches() {

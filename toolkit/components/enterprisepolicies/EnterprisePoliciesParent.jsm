@@ -339,6 +339,7 @@ EnterprisePoliciesManager.prototype = {
     if (val != Ci.nsIEnterprisePolicies.INACTIVE) {
       Services.ppmm.sharedData.set("EnterprisePolicies:Status", val);
     }
+    return val;
   },
 
   get status() {

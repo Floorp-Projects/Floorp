@@ -640,6 +640,8 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     }
 
     this._devToolsToolbox = toolbox;
+
+    return toolbox;
   }
 
   get devToolsToolbox() {

@@ -211,6 +211,7 @@
           break;
         }
       }
+      return val;
     }
 
     get value() {
@@ -227,6 +228,7 @@
       for (var i = 0; i < children.length; ++i) {
         children[i].disabled = val;
       }
+      return val;
     }
 
     get disabled() {
@@ -252,6 +254,7 @@
 
     set selectedIndex(val) {
       this.selectedItem = this._getRadioChildren()[val];
+      return val;
     }
 
     get selectedIndex() {
@@ -317,6 +320,8 @@
           }
         }
       }
+
+      return val;
     }
 
     get selectedItem() {
@@ -345,6 +350,7 @@
           children[i].removeAttribute("focused");
         }
       }
+      return val;
     }
 
     get focusedItem() {

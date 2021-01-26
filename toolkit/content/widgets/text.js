@@ -300,6 +300,7 @@
 
     set href(val) {
       this.setAttribute("href", val);
+      return val;
     }
 
     get href() {
