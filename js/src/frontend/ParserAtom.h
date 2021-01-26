@@ -319,6 +319,8 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
     return isIndex(&index);
   }
 
+  bool isPrivateName() const;
+
   bool isAscii() const {
     if (hasTwoByteChars()) {
       return false;
