@@ -330,6 +330,11 @@ interface nsIDNSService : nsISupports
      * resolve/asyncResolve.
      */
     const unsigned long RESOLVE_IP_HINT = 1 << 14;
+
+    /**
+     * If set, do not use ODoH for resolving the host name.
+     */
+    const unsigned long RESOLVE_DISABLE_ODOH = 1 << 15;
 };
 
 %{C++

@@ -6,7 +6,10 @@
 
 #include "TRRServiceBase.h"
 
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "nsHostResolver.h"
+#include "nsNetUtil.h"
 #include "nsIOService.h"
 #include "nsIDNSService.h"
 
