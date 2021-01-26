@@ -491,7 +491,7 @@ Task.Debugging = {
     if (!x) {
       gCurrentTask = null;
     }
-    return (gMaintainStack = x);
+    gMaintainStack = x;
   },
 
   /**

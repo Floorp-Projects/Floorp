@@ -193,7 +193,6 @@ LinksStorage.prototype = {
   set _storedVersion(aValue) {
     Services.prefs.setIntPref("browser.newtabpage.storageVersion", aValue);
     this.__storedVersion = aValue;
-    return aValue;
   },
 
   /**

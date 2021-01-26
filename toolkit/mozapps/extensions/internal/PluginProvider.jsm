@@ -323,7 +323,7 @@ PluginWrapper.prototype = {
     }
 
     if (val === previousVal) {
-      return val;
+      return;
     }
 
     let { tags } = pluginFor(this);
@@ -362,8 +362,6 @@ PluginWrapper.prototype = {
         "userDisabled",
       ]);
     }
-
-    return val;
   },
 
   async enable() {
