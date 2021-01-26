@@ -720,14 +720,6 @@ class nsHttpChannel final : public HttpBaseChannel,
     // Used to suspend any newly created pumps in mCallOnResume handler.
     (uint32_t, AsyncResumePending, 1),
 
-    // True only when we have checked whether this channel has been isolated for
-    // anti-tracking purposes.
-    (uint32_t, HasBeenIsolatedChecked, 1),
-    // True only when we have determined this channel should be isolated for
-    // anti-tracking purposes.  Can never ben true unless HasBeenIsolatedChecked
-    // is true.
-    (uint32_t, IsIsolated, 1),
-
     // True only when we have computed the value of the top window origin.
     (uint32_t, TopWindowOriginComputed, 1),
 
