@@ -66,7 +66,8 @@ void AltServiceChild::ClearHostMapping(nsHttpConnectionInfo* aCi) {
 
     if (!ci->GetOrigin().IsEmpty() && sAltServiceChild->CanSend()) {
       Unused << sAltServiceChild->SendClearHostMapping(
-          ci->GetOrigin(), ci->OriginPort(), ci->GetOriginAttributes());
+          ci->GetOrigin(), ci->OriginPort(), ci->GetOriginAttributes(),
+          ci->GetTopWindowOrigin());
     }
   };
 
@@ -83,8 +84,9 @@ void AltServiceChild::ClearHostMapping(nsHttpConnectionInfo* aCi) {
 void AltServiceChild::ProcessHeader(
     const nsCString& aBuf, const nsCString& aOriginScheme,
     const nsCString& aOriginHost, int32_t aOriginPort,
-    const nsCString& aUsername, bool aPrivateBrowsing,
-    nsIInterfaceRequestor* aCallbacks, nsProxyInfo* aProxyInfo, uint32_t aCaps,
+    const nsCString& aUsername, const nsCString& aTopWindowOrigin,
+    bool aPrivateBrowsing, bool aIsolated, nsIInterfaceRequestor* aCallbacks,
+    nsProxyInfo* aProxyInfo, uint32_t aCaps,
     const OriginAttributes& aOriginAttributes) {
   LOG(("AltServiceChild::ProcessHeader"));
   MOZ_ASSERT(NS_IsMainThread());
@@ -104,7 +106,8 @@ void AltServiceChild::ProcessHeader(
 
   Unused << sAltServiceChild->SendProcessHeader(
       aBuf, aOriginScheme, aOriginHost, aOriginPort, aUsername,
-      aPrivateBrowsing, proxyInfoArray, aCaps, aOriginAttributes);
+      aTopWindowOrigin, aPrivateBrowsing, aIsolated, proxyInfoArray, aCaps,
+      aOriginAttributes);
 }
 
 }  // namespace net
