@@ -24,14 +24,14 @@ PER_INSTANCE in ivec2 aStretchMode;
 PER_INSTANCE in vec4 aClipDestRect;
 
 struct ClipMaskInstanceBoxShadow {
-    ClipMaskInstanceCommon shared;
+    ClipMaskInstanceCommon base;
     ivec2 resource_address;
 };
 
 ClipMaskInstanceBoxShadow fetch_clip_item() {
     ClipMaskInstanceBoxShadow cmi;
 
-    cmi.shared = fetch_clip_item_common();
+    cmi.base = fetch_clip_item_common();
     cmi.resource_address = aClipDataResourceAddress;
 
     return cmi;
@@ -58,8 +58,8 @@ BoxShadowData fetch_data() {
 
 void main(void) {
     ClipMaskInstanceBoxShadow cmi = fetch_clip_item();
-    Transform clip_transform = fetch_transform(cmi.shared.clip_transform_id);
-    Transform prim_transform = fetch_transform(cmi.shared.prim_transform_id);
+    Transform clip_transform = fetch_transform(cmi.base.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.base.prim_transform_id);
     BoxShadowData bs_data = fetch_data();
     ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
@@ -69,10 +69,10 @@ void main(void) {
         dest_rect,
         prim_transform,
         clip_transform,
-        cmi.shared.sub_rect,
-        cmi.shared.task_origin,
-        cmi.shared.screen_origin,
-        cmi.shared.device_pixel_scale
+        cmi.base.sub_rect,
+        cmi.base.task_origin,
+        cmi.base.screen_origin,
+        cmi.base.device_pixel_scale
     );
     vLayer = res.layer;
     vClipMode = float(bs_data.clip_mode);

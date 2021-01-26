@@ -31,14 +31,14 @@ PER_INSTANCE in vec4 aClipRect_BR;
 PER_INSTANCE in vec4 aClipRadii_BR;
 
 struct ClipMaskInstanceRect {
-    ClipMaskInstanceCommon shared;
+    ClipMaskInstanceCommon base;
     vec2 local_pos;
 };
 
 ClipMaskInstanceRect fetch_clip_item() {
     ClipMaskInstanceRect cmi;
 
-    cmi.shared = fetch_clip_item_common();
+    cmi.base = fetch_clip_item_common();
     cmi.local_pos = aClipLocalPos;
 
     return cmi;
@@ -76,8 +76,8 @@ ClipData fetch_clip() {
 
 void main(void) {
     ClipMaskInstanceRect cmi = fetch_clip_item();
-    Transform clip_transform = fetch_transform(cmi.shared.clip_transform_id);
-    Transform prim_transform = fetch_transform(cmi.shared.prim_transform_id);
+    Transform clip_transform = fetch_transform(cmi.base.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.base.prim_transform_id);
     ClipData clip = fetch_clip();
 
     RectWithSize local_rect = clip.rect.rect;
@@ -87,10 +87,10 @@ void main(void) {
         local_rect,
         prim_transform,
         clip_transform,
-        cmi.shared.sub_rect,
-        cmi.shared.task_origin,
-        cmi.shared.screen_origin,
-        cmi.shared.device_pixel_scale
+        cmi.base.sub_rect,
+        cmi.base.task_origin,
+        cmi.base.screen_origin,
+        cmi.base.device_pixel_scale
     );
 
     vClipMode = clip.rect.mode;

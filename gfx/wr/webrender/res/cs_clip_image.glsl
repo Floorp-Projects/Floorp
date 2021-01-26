@@ -17,7 +17,7 @@ PER_INSTANCE in ivec2 aClipDataResourceAddress;
 PER_INSTANCE in vec4 aClipLocalRect;
 
 struct ClipMaskInstanceImage {
-    ClipMaskInstanceCommon shared;
+    ClipMaskInstanceCommon base;
     RectWithSize tile_rect;
     ivec2 resource_address;
     RectWithSize local_rect;
@@ -26,7 +26,7 @@ struct ClipMaskInstanceImage {
 ClipMaskInstanceImage fetch_clip_item() {
     ClipMaskInstanceImage cmi;
 
-    cmi.shared = fetch_clip_item_common();
+    cmi.base = fetch_clip_item_common();
 
     cmi.tile_rect = RectWithSize(aClipTileRect.xy, aClipTileRect.zw);
     cmi.resource_address = aClipDataResourceAddress;
@@ -37,18 +37,18 @@ ClipMaskInstanceImage fetch_clip_item() {
 
 void main(void) {
     ClipMaskInstanceImage cmi = fetch_clip_item();
-    Transform clip_transform = fetch_transform(cmi.shared.clip_transform_id);
-    Transform prim_transform = fetch_transform(cmi.shared.prim_transform_id);
+    Transform clip_transform = fetch_transform(cmi.base.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.base.prim_transform_id);
     ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
     ClipVertexInfo vi = write_clip_tile_vertex(
         cmi.local_rect,
         prim_transform,
         clip_transform,
-        cmi.shared.sub_rect,
-        cmi.shared.task_origin,
-        cmi.shared.screen_origin,
-        cmi.shared.device_pixel_scale
+        cmi.base.sub_rect,
+        cmi.base.task_origin,
+        cmi.base.screen_origin,
+        cmi.base.device_pixel_scale
     );
     vLocalPos = vi.local_pos;
     vClipMaskImageUv = (vi.local_pos.xy - cmi.tile_rect.p0 * vi.local_pos.w) / cmi.tile_rect.size;
