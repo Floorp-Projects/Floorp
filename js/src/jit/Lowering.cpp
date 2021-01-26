@@ -2945,9 +2945,14 @@ void LIRGenerator::visitArrayBufferViewLength(MArrayBufferViewLength* ins) {
 void LIRGenerator::visitArrayBufferViewByteOffset(
     MArrayBufferViewByteOffset* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  define(new (alloc())
-             LArrayBufferViewByteOffset(useRegisterAtStart(ins->object())),
-         ins);
+  MOZ_ASSERT(ins->type() == MIRType::Int32);
+
+  auto* lir = new (alloc())
+      LArrayBufferViewByteOffset(useRegisterAtStart(ins->object()));
+#ifdef JS_64BIT
+  assignSnapshot(lir, ins->bailoutKind());
+#endif
+  define(lir, ins);
 }
 
 void LIRGenerator::visitArrayBufferViewElements(MArrayBufferViewElements* ins) {

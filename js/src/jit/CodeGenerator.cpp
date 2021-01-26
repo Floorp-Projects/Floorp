@@ -7826,7 +7826,12 @@ void CodeGenerator::visitArrayBufferViewByteOffset(
     LArrayBufferViewByteOffset* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.loadArrayBufferViewByteOffsetInt32(obj, out);
+
+  Label bail;
+  masm.loadArrayBufferViewByteOffsetInt32(obj, out, &bail);
+  if (bail.used()) {
+    bailoutFrom(&bail, lir->snapshot());
+  }
 }
 
 void CodeGenerator::visitArrayBufferViewElements(

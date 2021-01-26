@@ -3301,7 +3301,8 @@ bool WarpCacheIRTranspiler::emitIsTypedArrayResult(ObjOperandId objId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetResult(ObjOperandId objId) {
+bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetInt32Result(
+    ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
   auto* ins = MArrayBufferViewByteOffset::New(alloc(), obj);
