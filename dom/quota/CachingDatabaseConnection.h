@@ -63,7 +63,9 @@ class CachingDatabaseConnection {
   class LazyStatement;
 
   void AssertIsOnConnectionThread() const {
-    NS_ASSERT_OWNINGTHREAD(DatabaseConnection);
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+    mOwningThread->AssertOwnership("CachingDatabaseConnection not thread-safe");
+#endif
   }
 
   bool HasStorageConnection() const {
@@ -111,12 +113,20 @@ class CachingDatabaseConnection {
   explicit CachingDatabaseConnection(
       MovingNotNull<nsCOMPtr<mozIStorageConnection>> aStorageConnection);
 
+  CachingDatabaseConnection() = default;
+
+  void LazyInit(
+      MovingNotNull<nsCOMPtr<mozIStorageConnection>> aStorageConnection);
+
   void Close();
 
  private:
-  NS_DECL_OWNINGTHREAD
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+  LazyInitializedOnce<const nsAutoOwningThread> mOwningThread;
+#endif
 
-  InitializedOnce<const NotNull<nsCOMPtr<mozIStorageConnection>>>
+  LazyInitializedOnceEarlyDestructible<
+      const NotNull<nsCOMPtr<mozIStorageConnection>>>
       mStorageConnection;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
       mCachedStatements;
