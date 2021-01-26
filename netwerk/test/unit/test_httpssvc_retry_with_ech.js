@@ -144,7 +144,7 @@ function channelOpenPromise(chan, flags) {
 
 add_task(async function testConnectWithECH() {
   const ECH_CONFIG_FIXED =
-    "AEr+CABGABZlY2gtcHVibGljLmV4YW1wbGUuY29tACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAgAAQAAQADADIAAA==";
+    "AEr+CQBGABZlY2gtcHVibGljLmV4YW1wbGUuY29tACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAgAAQAAQADADIAAA==";
   trrServer = new TRRServer();
   await trrServer.start();
 
@@ -217,7 +217,7 @@ add_task(async function testEchRetry() {
   dns.clearCache(true);
 
   const ECH_CONFIG_TRUSTED_RETRY =
-    "AEr+CABGABZlY2gtcHVibGljLmV4YW1wbGUuY29tACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAgAAQAAQABADIAAA==";
+    "AEr+CQBGABZlY2gtcHVibGljLmV4YW1wbGUuY29tACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAgAAQAAQABADIAAA==";
   trrServer = new TRRServer();
   await trrServer.start();
 
