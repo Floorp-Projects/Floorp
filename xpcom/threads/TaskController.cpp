@@ -54,6 +54,16 @@ static int32_t GetPoolThreadCount() {
   return std::min<int32_t>(kMaximumPoolThreadCount, numCores - 1);
 }
 
+#if defined(MOZ_GECKO_PROFILER) && defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY)
+#  define AUTO_PROFILE_FOLLOWING_TASK(task)                                  \
+    nsAutoCString name;                                                      \
+    (task)->GetName(name);                                                   \
+    AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE("Task", OTHER, name); \
+    AUTO_PROFILER_MARKER_TEXT("Runnable", OTHER, {}, name);
+#else
+#  define AUTO_PROFILE_FOLLOWING_TASK(task)
+#endif
+
 bool TaskManager::
     UpdateCachesForCurrentIterationAndReportPriorityModifierChanged(
         const MutexAutoLock& aProofOfLock, IterationType aIterationType) {
@@ -245,6 +255,7 @@ void TaskController::RunPoolThread() {
         {
           MutexAutoUnlock unlock(mGraphMutex);
           lastTask = nullptr;
+          AUTO_PROFILE_FOLLOWING_TASK(task);
           taskCompleted = task->Run();
           ranTask = true;
         }
@@ -738,6 +749,7 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
 
         {
           LogTask::Run log(task);
+          AUTO_PROFILE_FOLLOWING_TASK(task);
           result = task->Run();
         }
 

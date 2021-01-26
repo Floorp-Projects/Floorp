@@ -1160,7 +1160,16 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
 
       mLastEventStart = now;
 
-      event->Run();
+      if (!usingTaskController) {
+        AUTO_PROFILE_FOLLOWING_RUNNABLE(event);
+        event->Run();
+      } else {
+        // Avoid generating "Runnable" profiler markers for the
+        // "TaskController::ExecutePendingMTTasks" runnables created
+        // by TaskController, which already adds "Runnable" markers
+        // when executing tasks.
+        event->Run();
+      }
 
       if (usingTaskController) {
         *aResult = TaskController::Get()->MTTaskRunnableProcessedTask();
