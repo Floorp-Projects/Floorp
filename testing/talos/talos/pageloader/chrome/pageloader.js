@@ -724,7 +724,8 @@ function _loadHandlerCapturing() {
 
   if (gTime !== -1) {
     plRecordTime(gTime);
-    TalosParentProfiler.pause("capturing load handler fired");
+    TalosParentProfiler.mark("Talos - capturing load handler fired");
+    TalosParentProfiler.pause();
     gTime = -1;
     recordedName = null;
     setTimeout(plNextPage, delay);

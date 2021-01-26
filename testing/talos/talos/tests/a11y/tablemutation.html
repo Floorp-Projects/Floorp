@@ -82,11 +82,14 @@ window.onload = function() {
     mutateTable();
   }, 100);
 };
+
+
 function mutateTable() {
   var htmTable = document.getElementById("datatable");
   var TableRows = [ ];
 
   // Locate all TR elements of the table
+  TalosContentProfiler.mark('a11yr tablemutation - locate all TR elements of the table', true)
   var htmRow = htmTable.childNodes[0];
   while (htmRow) {
     if (htmRow.nodeType == 1) {
@@ -104,6 +107,7 @@ function mutateTable() {
   Range.setEndAfter(TableRows[TableRows.length - 1]);
 
   // Put all rows into a Fragment
+  TalosContentProfiler.mark('a11yr tablemutation - put all rows into a fragment', true)
   var Fragment = document.createDocumentFragment();
   for (var Index in TableRows) {
     Fragment.appendChild(TableRows[Index]);
@@ -118,23 +122,20 @@ function mutateTable() {
   ensureAccessibleTreeForId("start");
 
   TalosContentProfiler.resume("tablemutation start", true).then(() => {
-    var start = window.performance.now();
-
     // Cause all kinds of crazy events
     Range.deleteContents();
     Range.insertNode(Fragment);
 
     document.documentElement.offsetLeft; // flush layout
 
-    setTimeout(postProcessingRecord, 0, start);
+    setTimeout(postProcessingRecord, 0);
   });
 }
 
-function postProcessingRecord(s) {
-  // alert(window.performance.now() - s);
-  let delta = window.performance.now() - s;
-  TalosContentProfiler.pause("tablemutation finish", true).then(() => {
-    tpRecordTime(delta, window.performance.timing.navigationStart + s);
+function postProcessingRecord(startTime) {
+  let delta = window.performance.now() - startTime;
+  TalosContentProfiler.pause("a11y test: tablemutation", true).then(() => {
+    tpRecordTime(delta, window.performance.timing.navigationStart + startTime);
   });
 }
 </script>
