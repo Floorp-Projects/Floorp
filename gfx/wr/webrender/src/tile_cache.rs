@@ -9,7 +9,7 @@ use crate::frame_builder::FrameBuilderConfig;
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::picture::{PrimitiveList, PictureCompositeMode, PictureOptions, PicturePrimitive, SliceId};
 use crate::picture::{Picture3DContext, TileCacheParams, TileOffset};
-use crate::prim_store::{PrimitiveInstance, PrimitiveInstanceKind, PrimitiveStore, PictureIndex};
+use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PictureIndex};
 use crate::scene_building::SliceFlags;
 use crate::scene_builder_thread::Interners;
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, SpatialTree};
@@ -31,8 +31,8 @@ pub struct PendingTileCache {
 
 /// Used during scene building to construct the list of pending tile caches.
 pub struct TileCacheBuilder {
-    /// When true, a new tile cache will be created for the next primitive.
-    need_new_tile_cache: bool,
+    /// When Some(..), a new tile cache will be created for the next primitive.
+    force_new_tile_cache: Option<SliceFlags>,
     /// List of tile caches that have been created so far (last in the list is currently active).
     pending_tile_caches: Vec<PendingTileCache>,
 
@@ -75,7 +75,7 @@ impl TileCacheBuilder {
     /// Construct a new tile cache builder.
     pub fn new() -> Self {
         TileCacheBuilder {
-            need_new_tile_cache: true,
+            force_new_tile_cache: None,
             pending_tile_caches: Vec::new(),
             prev_scroll_root_cache: (ROOT_SPATIAL_NODE_INDEX, ROOT_SPATIAL_NODE_INDEX),
             prim_clips_buffer: Vec::new(),
@@ -84,8 +84,11 @@ impl TileCacheBuilder {
     }
 
     /// Set a barrier that forces a new tile cache next time a prim is added.
-    pub fn add_tile_cache_barrier(&mut self) {
-        self.need_new_tile_cache = true;
+    pub fn add_tile_cache_barrier(
+        &mut self,
+        slice_flags: SliceFlags,
+    ) {
+        self.force_new_tile_cache = Some(slice_flags);
     }
 
     /// Add a primitive, either to the current tile cache, or a new one, depending on various conditions.
@@ -101,21 +104,12 @@ impl TileCacheBuilder {
         config: &FrameBuilderConfig,
         quality_settings: &QualitySettings,
     ) {
-        // Scrollbars and clear primitives always get their own slice
-        let is_scrollbar_container = prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER);
-        let is_clear_prim = match prim_instance.kind {
-            PrimitiveInstanceKind::Clear { .. } => true,
-            _ => false,
-        };
-        let requires_own_slice = is_scrollbar_container || is_clear_prim;
-
         // Check if we want to create a new slice based on the current / next scroll root
         let scroll_root = self.find_scroll_root(spatial_node_index, spatial_tree);
 
         // Also create a new slice if there was a barrier previously set
         let mut want_new_tile_cache =
-            self.need_new_tile_cache ||
-            requires_own_slice ||
+            self.force_new_tile_cache.is_some() ||
             self.pending_tile_caches.is_empty();
 
         let current_scroll_root = self.pending_tile_caches
@@ -231,11 +225,7 @@ impl TileCacheBuilder {
                         virtual_surface_size: config.compositor_kind.get_virtual_surface_size(),
                     }
                 } else {
-                    let slice_flags = if is_scrollbar_container {
-                        SliceFlags::IS_SCROLLBAR
-                    } else {
-                        SliceFlags::empty()
-                    };
+                    let slice_flags = self.force_new_tile_cache.unwrap_or(SliceFlags::empty());
 
                     let background_color = if slice == 0 {
                         config.background_color
@@ -271,7 +261,7 @@ impl TileCacheBuilder {
                     params,
                 });
 
-                self.need_new_tile_cache = requires_own_slice;
+                self.force_new_tile_cache = None;
             }
         }
 
