@@ -1332,6 +1332,7 @@ class MConstant : public MNullaryInstruction {
       bool b;
       int32_t i32;
       int64_t i64;
+      intptr_t iptr;
       float f;
       double d;
       JSString* str;
@@ -1357,7 +1358,7 @@ class MConstant : public MNullaryInstruction {
   MConstant(TempAllocator& alloc, const Value& v);
   explicit MConstant(JSObject* obj);
   explicit MConstant(float f);
-  explicit MConstant(int64_t i);
+  explicit MConstant(MIRType type, int64_t i);
 
  public:
   INSTRUCTION_HEADER(Constant)
@@ -1366,6 +1367,7 @@ class MConstant : public MNullaryInstruction {
   static MConstant* New(TempAllocator& alloc, const Value& v, MIRType type);
   static MConstant* NewFloat32(TempAllocator& alloc, double d);
   static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
+  static MConstant* NewIntPtr(TempAllocator& alloc, intptr_t i);
   static MConstant* NewObject(TempAllocator& alloc, JSObject* v);
   static MConstant* Copy(TempAllocator& alloc, MConstant* src) {
     return new (alloc) MConstant(*src);
@@ -1421,6 +1423,10 @@ class MConstant : public MNullaryInstruction {
   int64_t toInt64() const {
     MOZ_ASSERT(type() == MIRType::Int64);
     return payload_.i64;
+  }
+  intptr_t toIntPtr() const {
+    MOZ_ASSERT(type() == MIRType::IntPtr);
+    return payload_.iptr;
   }
   bool isInt32(int32_t i) const {
     return type() == MIRType::Int32 && payload_.i32 == i;

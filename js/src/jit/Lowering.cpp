@@ -5388,6 +5388,13 @@ void LIRGenerator::visitConstant(MConstant* ins) {
     case MIRType::Int64:
       defineInt64(new (alloc()) LInteger64(ins->toInt64()), ins);
       break;
+    case MIRType::IntPtr:
+#ifdef JS_64BIT
+      defineInt64(new (alloc()) LInteger64(ins->toIntPtr()), ins);
+#else
+      define(new (alloc()) LInteger(ins->toIntPtr()), ins);
+#endif
+      break;
     case MIRType::String:
       define(new (alloc()) LPointer(ins->toString()), ins);
       break;
