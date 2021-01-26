@@ -242,13 +242,6 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
          js::CheckStringIsIndex(twoByteChars(), len, indexp);
 }
 
-bool ParserAtomEntry::isPrivateName() const {
-  return length() > 0 &&
-         (hasLatin1Chars()
-             ? latin1Chars()[0] == '#'
-             : twoByteChars()[0] == '#');
-}
-
 JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
                                   CompilationAtomCache& atomCache) const {
   if (isParserAtomIndex()) {
