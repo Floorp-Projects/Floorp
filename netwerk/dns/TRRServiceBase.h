@@ -13,6 +13,9 @@
 namespace mozilla {
 namespace net {
 
+static const char kRolloutURIPref[] = "doh-rollout.uri";
+static const char kRolloutModePref[] = "doh-rollout.mode";
+
 class TRRServiceBase {
  public:
   TRRServiceBase();

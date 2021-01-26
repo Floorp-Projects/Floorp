@@ -32,8 +32,6 @@ static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kClearPrivateData[] = "clear-private-data";
 static const char kPurge[] = "browser:purge-session-history";
 static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
-static const char kRolloutURIPref[] = "doh-rollout.uri";
-static const char kRolloutModePref[] = "doh-rollout.mode";
 
 #define TRR_PREF_PREFIX "network.trr."
 #define TRR_PREF(x) TRR_PREF_PREFIX x
@@ -198,6 +196,11 @@ nsresult TRRService::Init() {
                                            [] { RemoveTRRBlocklistFile(); }),
           EventQueuePriority::Idle);
     }
+  }
+
+  mODoHService = new ODoHService();
+  if (!mODoHService->Init()) {
+    return NS_ERROR_FAILURE;
   }
 
   LOG(("Initialized TRRService\n"));
@@ -492,18 +495,24 @@ nsresult TRRService::DispatchTRRRequest(TRR* aTrrRequest) {
 nsresult TRRService::DispatchTRRRequestInternal(TRR* aTrrRequest,
                                                 bool aWithLock) {
   NS_ENSURE_ARG_POINTER(aTrrRequest);
-  if (!StaticPrefs::network_trr_fetch_off_main_thread() ||
-      XRE_IsSocketProcess()) {
-    return NS_DispatchToMainThread(aTrrRequest);
-  }
 
-  RefPtr<TRR> trr = aTrrRequest;
-  nsCOMPtr<nsIThread> thread = aWithLock ? TRRThread() : TRRThread_locked();
+  nsCOMPtr<nsIThread> thread = MainThreadOrTRRThread(aWithLock);
   if (!thread) {
     return NS_ERROR_FAILURE;
   }
 
+  RefPtr<TRR> trr = aTrrRequest;
   return thread->Dispatch(trr.forget());
+}
+
+already_AddRefed<nsIThread> TRRService::MainThreadOrTRRThread(bool aWithLock) {
+  if (!StaticPrefs::network_trr_fetch_off_main_thread() ||
+      XRE_IsSocketProcess()) {
+    return do_GetMainThread();
+  }
+
+  nsCOMPtr<nsIThread> thread = aWithLock ? TRRThread() : TRRThread_locked();
+  return thread.forget();
 }
 
 already_AddRefed<nsIThread> TRRService::TRRThread() {
