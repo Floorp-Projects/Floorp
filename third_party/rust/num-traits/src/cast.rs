@@ -6,9 +6,16 @@ use core::{i128, u128};
 use core::{i16, i32, i64, i8, isize};
 use core::{u16, u32, u64, u8, usize};
 
-use float::FloatCore;
-
 /// A generic trait for converting a value to a number.
+///
+/// A value can be represented by the target type when it lies within
+/// the range of scalars supported by the target type.
+/// For example, a negative integer cannot be represented by an unsigned
+/// integer type, and an `i64` with a very high magnitude might not be
+/// convertible to an `i32`.
+/// On the other hand, conversions with possible precision loss or truncation
+/// are admitted, like an `f32` with a decimal part to an integer type, or
+/// even a large `f64` saturating to `f32` infinity.
 pub trait ToPrimitive {
     /// Converts the value of `self` to an `isize`. If the value cannot be
     /// represented by an `isize`, then `None` is returned.
@@ -94,7 +101,7 @@ pub trait ToPrimitive {
     ///
     /// This method is only available with feature `i128` enabled on Rust >= 1.26.
     ///
-    /// The default implementation converts through `to_u64()`.  Types implementing
+    /// The default implementation converts through `to_u64()`. Types implementing
     /// this trait should override this method if they can represent a greater range.
     #[inline]
     #[cfg(has_i128)]
@@ -102,15 +109,21 @@ pub trait ToPrimitive {
         self.to_u64().map(From::from)
     }
 
-    /// Converts the value of `self` to an `f32`. If the value cannot be
-    /// represented by an `f32`, then `None` is returned.
+    /// Converts the value of `self` to an `f32`. Overflows may map to positive
+    /// or negative inifinity, otherwise `None` is returned if the value cannot
+    /// be represented by an `f32`.
     #[inline]
     fn to_f32(&self) -> Option<f32> {
         self.to_f64().as_ref().and_then(ToPrimitive::to_f32)
     }
 
-    /// Converts the value of `self` to an `f64`. If the value cannot be
-    /// represented by an `f64`, then `None` is returned.
+    /// Converts the value of `self` to an `f64`. Overflows may map to positive
+    /// or negative inifinity, otherwise `None` is returned if the value cannot
+    /// be represented by an `f64`.
+    ///
+    /// The default implementation tries to convert through `to_i64()`, and
+    /// failing that through `to_u64()`. Types implementing this trait should
+    /// override this method if they can represent a greater range.
     #[inline]
     fn to_f64(&self) -> Option<f64> {
         match self.to_i64() {
@@ -271,17 +284,27 @@ macro_rules! impl_to_primitive_float_to_float {
     ($SrcT:ident : $( fn $method:ident -> $DstT:ident ; )*) => {$(
         #[inline]
         fn $method(&self) -> Option<$DstT> {
-            // Only finite values that are reducing size need to worry about overflow.
-            if size_of::<$SrcT>() > size_of::<$DstT>() && FloatCore::is_finite(*self) {
-                let n = *self as f64;
-                if n < $DstT::MIN as f64 || n > $DstT::MAX as f64 {
-                    return None;
-                }
-            }
-            // We can safely cast NaN, +-inf, and finite values in range.
+            // We can safely cast all values, whether NaN, +-inf, or finite.
+            // Finite values that are reducing size may saturate to +-inf.
             Some(*self as $DstT)
         }
     )*}
+}
+
+#[cfg(has_to_int_unchecked)]
+macro_rules! float_to_int_unchecked {
+    // SAFETY: Must not be NaN or infinite; must be representable as the integer after truncating.
+    // We already checked that the float is in the exclusive range `(MIN-1, MAX+1)`.
+    ($float:expr => $int:ty) => {
+        unsafe { $float.to_int_unchecked::<$int>() }
+    };
+}
+
+#[cfg(not(has_to_int_unchecked))]
+macro_rules! float_to_int_unchecked {
+    ($float:expr => $int:ty) => {
+        $float as $int
+    };
 }
 
 macro_rules! impl_to_primitive_float_to_signed_int {
@@ -296,7 +319,7 @@ macro_rules! impl_to_primitive_float_to_signed_int {
                 const MIN_M1: $f = $i::MIN as $f - 1.0;
                 const MAX_P1: $f = $i::MAX as $f + 1.0;
                 if *self > MIN_M1 && *self < MAX_P1 {
-                    return Some(*self as $i);
+                    return Some(float_to_int_unchecked!(*self => $i));
                 }
             } else {
                 // We can't represent `MIN-1` exactly, but there's no fractional part
@@ -306,7 +329,7 @@ macro_rules! impl_to_primitive_float_to_signed_int {
                 // `MAX+1` (a power of two) when we cast it.
                 const MAX_P1: $f = $i::MAX as $f;
                 if *self >= MIN && *self < MAX_P1 {
-                    return Some(*self as $i);
+                    return Some(float_to_int_unchecked!(*self => $i));
                 }
             }
             None
@@ -325,7 +348,7 @@ macro_rules! impl_to_primitive_float_to_unsigned_int {
                 // With a larger size, we can represent the range exactly.
                 const MAX_P1: $f = $u::MAX as $f + 1.0;
                 if *self > -1.0 && *self < MAX_P1 {
-                    return Some(*self as $u);
+                    return Some(float_to_int_unchecked!(*self => $u));
                 }
             } else {
                 // We can't represent `MAX` exactly, but it will round up to exactly
@@ -333,7 +356,7 @@ macro_rules! impl_to_primitive_float_to_unsigned_int {
                 // (`u128::MAX as f32` is infinity, but this is still ok.)
                 const MAX_P1: $f = $u::MAX as $f;
                 if *self > -1.0 && *self < MAX_P1 {
-                    return Some(*self as $u);
+                    return Some(float_to_int_unchecked!(*self => $u));
                 }
             }
             None
@@ -376,6 +399,15 @@ impl_to_primitive_float!(f32);
 impl_to_primitive_float!(f64);
 
 /// A generic trait for converting a number to a value.
+///
+/// A value can be represented by the target type when it lies within
+/// the range of scalars supported by the target type.
+/// For example, a negative integer cannot be represented by an unsigned
+/// integer type, and an `i64` with a very high magnitude might not be
+/// convertible to an `i32`.
+/// On the other hand, conversions with possible precision loss or truncation
+/// are admitted, like an `f32` with a decimal part to an integer type, or
+/// even a large `f64` saturating to `f32` infinity.
 pub trait FromPrimitive: Sized {
     /// Converts an `isize` to return an optional value of this type. If the
     /// value cannot be represented by this type, then `None` is returned.
@@ -476,6 +508,10 @@ pub trait FromPrimitive: Sized {
 
     /// Converts a `f64` to return an optional value of this type. If the
     /// value cannot be represented by this type, then `None` is returned.
+    ///
+    /// The default implementation tries to convert through `from_i64()`, and
+    /// failing that through `from_u64()`. Types implementing this trait should
+    /// override this method if they can represent a greater range.
     #[inline]
     fn from_f64(n: f64) -> Option<Self> {
         match n.to_i64() {
@@ -656,6 +692,15 @@ pub trait NumCast: Sized + ToPrimitive {
     /// Creates a number from another value that can be converted into
     /// a primitive via the `ToPrimitive` trait. If the source value cannot be
     /// represented by the target type, then `None` is returned.
+    ///
+    /// A value can be represented by the target type when it lies within
+    /// the range of scalars supported by the target type.
+    /// For example, a negative integer cannot be represented by an unsigned
+    /// integer type, and an `i64` with a very high magnitude might not be
+    /// convertible to an `i32`.
+    /// On the other hand, conversions with possible precision loss or truncation
+    /// are admitted, like an `f32` with a decimal part to an integer type, or
+    /// even a large `f64` saturating to `f32` infinity.
     fn from<T: ToPrimitive>(n: T) -> Option<Self>;
 }
 
@@ -712,23 +757,14 @@ impl<T: NumCast> NumCast for Wrapping<T> {
 ///
 /// # Safety
 ///
-/// Currently, some uses of the `as` operator are not entirely safe.
-/// In particular, it is undefined behavior if:
-///
-/// - A truncated floating point value cannot fit in the target integer
-///   type ([#10184](https://github.com/rust-lang/rust/issues/10184));
+/// **In Rust versions before 1.45.0**, some uses of the `as` operator were not entirely safe.
+/// In particular, it was undefined behavior if
+/// a truncated floating point value could not fit in the target integer
+/// type ([#10184](https://github.com/rust-lang/rust/issues/10184)).
 ///
 /// ```ignore
 /// # use num_traits::AsPrimitive;
 /// let x: u8 = (1.04E+17).as_(); // UB
-/// ```
-///
-/// - Or a floating point value does not fit in another floating
-///   point type ([#15536](https://github.com/rust-lang/rust/issues/15536)).
-///
-/// ```ignore
-/// # use num_traits::AsPrimitive;
-/// let x: f32 = (1e300f64).as_(); // UB
 /// ```
 ///
 pub trait AsPrimitive<T>: 'static + Copy

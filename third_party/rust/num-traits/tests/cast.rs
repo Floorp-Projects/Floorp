@@ -24,7 +24,8 @@ use core::num::Wrapping;
 #[test]
 fn to_primitive_float() {
     let f32_toolarge = 1e39f64;
-    assert_eq!(f32_toolarge.to_f32(), None);
+    assert_eq!(f32_toolarge.to_f32(), Some(f32::INFINITY));
+    assert_eq!((-f32_toolarge).to_f32(), Some(f32::NEG_INFINITY));
     assert_eq!((f32::MAX as f64).to_f32(), Some(f32::MAX));
     assert_eq!((-f32::MAX as f64).to_f32(), Some(-f32::MAX));
     assert_eq!(f64::INFINITY.to_f32(), Some(f32::INFINITY));

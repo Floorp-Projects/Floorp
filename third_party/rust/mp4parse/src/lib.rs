@@ -2344,6 +2344,11 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: Option<MediaContext>) -> Resu
             BoxType::UserdataBox => {
                 userdata = Some(read_udta(&mut b));
                 debug!("{:?}", userdata);
+                if let Some(Err(_)) = userdata {
+                    // There was an error parsing userdata. Such failures are not fatal to overall
+                    // parsing, just skip the rest of the box.
+                    skip_box_remain(&mut b)?;
+                }
             }
             _ => skip_box_content(&mut b)?,
         };
