@@ -101,11 +101,8 @@ class TRR : public Runnable,
   RefPtr<nsHostRecord> mRec;
   RefPtr<AHostResolver> mHostResolver;
 
- protected:
-  virtual ~TRR() = default;
-  virtual DNSPacket* GetOrCreateDNSPacket();
-  virtual nsresult CreateQueryURI(nsIURI** aOutURI);
-  virtual const char* ContentType() const { return "application/dns-message"; }
+ private:
+  ~TRR() = default;
   nsresult SendHTTPRequest();
   nsresult ReturnData(nsIChannel* aChannel);
 
@@ -129,14 +126,14 @@ class TRR : public Runnable,
   nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);
 
   friend class TRRServiceChannel;
-  static nsresult SetupTRRServiceChannelInternal(
-      nsIHttpChannel* aChannel, bool aUseGet, const nsACString& aContentType);
+  static nsresult SetupTRRServiceChannelInternal(nsIHttpChannel* aChannel,
+                                                 bool aUseGet);
 
   void StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord);
 
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
-  UniquePtr<DNSPacket> mPacket;
+  DNSPacket mPacket;
   bool mFailed = false;
   bool mPB;
   DOHresp mDNS;

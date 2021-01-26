@@ -1170,16 +1170,10 @@ nsresult TRRServiceChannel::SetupReplacementChannel(nsIURI* aNewURI,
     encodedChannel->SetApplyConversion(LoadApplyConversion());
   }
 
-  // Make sure we set content-type on the old channel properly.
-  MOZ_ASSERT(mContentTypeHint.Equals("application/dns-message") ||
-             mContentTypeHint.Equals("application/oblivious-dns-message"));
-
-  // Apply TRR specific settings. Note that we already know mContentTypeHint is
-  // "application/dns-message" or "application/oblivious-dns-message" here.
+  // Apply TRR specific settings.
   return TRR::SetupTRRServiceChannelInternal(
       httpChannel,
-      mRequestHead.ParsedMethod() == nsHttpRequestHead::kMethod_Get,
-      mContentTypeHint);
+      mRequestHead.ParsedMethod() == nsHttpRequestHead::kMethod_Get);
 }
 
 NS_IMETHODIMP
