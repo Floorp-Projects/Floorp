@@ -152,7 +152,18 @@ static void LazyLoadCallback(
     MOZ_ASSERT(entry->Target()->IsHTMLElement(nsGkAtoms::img));
     if (entry->IsIntersecting()) {
       static_cast<HTMLImageElement*>(entry->Target())
-          ->StopLazyLoadingAndStartLoadIfNeeded();
+          ->StopLazyLoadingAndStartLoadIfNeeded(true);
+    }
+  }
+}
+
+static void LazyLoadCallbackReachViewport(
+    const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& aEntries) {
+  for (const auto& entry : aEntries) {
+    MOZ_ASSERT(entry->Target()->IsHTMLElement(nsGkAtoms::img));
+    if (entry->IsIntersecting()) {
+      static_cast<HTMLImageElement*>(entry->Target())
+          ->LazyLoadImageReachedViewport();
     }
   }
 }
@@ -186,6 +197,14 @@ DOMIntersectionObserver::CreateLazyLoadObserver(Document& aDocument) {
   SET_MARGIN(Left, left);
 #undef SET_MARGIN
 
+  return observer.forget();
+}
+
+already_AddRefed<DOMIntersectionObserver>
+DOMIntersectionObserver::CreateLazyLoadObserverViewport(Document& aDocument) {
+  RefPtr<DOMIntersectionObserver> observer =
+      new DOMIntersectionObserver(aDocument, LazyLoadCallbackReachViewport);
+  observer->mThresholds.AppendElement(std::numeric_limits<double>::min());
   return observer.forget();
 }
 
