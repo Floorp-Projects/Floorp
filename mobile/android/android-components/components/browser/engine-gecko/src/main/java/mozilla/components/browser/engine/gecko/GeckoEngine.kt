@@ -73,7 +73,6 @@ class GeckoEngine(
 ) : Engine, WebExtensionRuntime {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
-    private val sharedPref = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
     @VisibleForTesting internal val speculativeConnectionFactory = SpeculativeSessionFactory()
     private var webExtensionDelegate: WebExtensionDelegate? = null
     private val webExtensionActionHandler = object : ActionHandler {
@@ -339,21 +338,9 @@ class GeckoEngine(
                 extension -> GeckoWebExtension(extension, runtime)
             } ?: emptyList()
 
-            val privateBrowsingMigrated = sharedPref.getBoolean(MOZAC_HAS_RESET_WEBEXT_PRIVATE_BROWSING_DEFAULT, false)
             extensions.forEach { extension ->
-                // As a workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1621385,
-                // we set all installed extensions to be allowed in private browsing mode.
-                // We need to revert back to false which is now the default.
-                if (!extension.isBuiltIn() && extension.isAllowedInPrivateBrowsing() && !privateBrowsingMigrated) {
-                    setAllowedInPrivateBrowsing(extension, false)
-                }
-
                 extension.registerActionHandler(webExtensionActionHandler)
                 extension.registerTabHandler(webExtensionTabHandler)
-            }
-
-            if (!privateBrowsingMigrated) {
-                sharedPref.edit().putBoolean(MOZAC_HAS_RESET_WEBEXT_PRIVATE_BROWSING_DEFAULT, true).apply()
             }
 
             onSuccess(extensions)
@@ -727,13 +714,6 @@ class GeckoEngine(
             blockedCategories = (blockedCategories + shimmedCategories).distinct(),
             cookiesHasBeenBlocked = cookiesHasBeenBlocked
         )
-    }
-
-    companion object {
-        private const val PREFERENCE_NAME =
-            "MOZAC_GECKO_ENGINE"
-        private const val MOZAC_HAS_RESET_WEBEXT_PRIVATE_BROWSING_DEFAULT =
-            "MOZAC_HAS_RESET_WEBEXT_PRIVATE_BROWSING_DEFAULT"
     }
 }
 

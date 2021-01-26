@@ -1353,49 +1353,6 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun `migrate private browsing default`() {
-        val bundle = GeckoBundle()
-        bundle.putString("webExtensionId", "id")
-        bundle.putString("locationURI", "uri")
-        val metaDataBundle = GeckoBundle()
-        metaDataBundle.putBoolean("privateBrowsingAllowed", true)
-        metaDataBundle.putStringArray("disabledFlags", emptyArray())
-        bundle.putBundle("metaData", metaDataBundle)
-        val installedExtension = MockWebExtension(bundle)
-
-        val installedExtensions = listOf<GeckoWebExtension>(installedExtension)
-        val installedExtensionResult = GeckoResult<List<GeckoWebExtension>>()
-
-        val runtime = mock<GeckoRuntime>()
-        val extensionController: WebExtensionController = mock()
-        whenever(extensionController.list()).thenReturn(installedExtensionResult)
-        whenever(runtime.webExtensionController).thenReturn(extensionController)
-
-        val allowedInPrivateBrowsingExtensionResult = GeckoResult<GeckoWebExtension>()
-        whenever(extensionController.setAllowedInPrivateBrowsing(any(), anyBoolean())).thenReturn(allowedInPrivateBrowsingExtensionResult)
-
-        val engine = spy(GeckoEngine(testContext, runtime = runtime))
-        var extensions: List<WebExtension>? = null
-        var onErrorCalled = false
-
-        engine.listInstalledWebExtensions(
-                onSuccess = { extensions = it },
-                onError = { onErrorCalled = true }
-        )
-        installedExtensionResult.complete(installedExtensions)
-        assertFalse(onErrorCalled)
-        assertNotNull(extensions)
-        val installedWebExtension = extensions!![0]
-        verify(engine, times(1)).setAllowedInPrivateBrowsing(eq(installedWebExtension), eq(false), any(), any())
-
-        engine.listInstalledWebExtensions(
-                onSuccess = { extensions = it },
-                onError = { onErrorCalled = true }
-        )
-        verify(engine, times(1)).setAllowedInPrivateBrowsing(eq(installedWebExtension), eq(false), any(), any())
-    }
-
-    @Test
     fun `list web extensions failure`() {
         val installedExtensionResult = GeckoResult<List<GeckoWebExtension>>()
 

@@ -174,6 +174,11 @@ class GeckoPromptDelegateTest {
 
         request.onConfirm(request.choices.first())
         assertTrue(confirmWasCalled)
+
+        confirmWasCalled = false
+        request.onConfirm(request.choices.first())
+
+        assertFalse(confirmWasCalled)
     }
 
     @Test(expected = InvalidParameterException::class)
