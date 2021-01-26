@@ -30,20 +30,7 @@ class nsReflowStatus;
 
 namespace mozilla {
 enum class LayoutFrameType : uint8_t;
-
-/**
- * A set of StyleSizes used as an input parameter to various functions that
- * compute sizes like nsIFrame::ComputeSize(). If any of the member fields has a
- * value, the function may use the value instead of retrieving it from the
- * frame's style.
- *
- * The logical sizes are assumed to be in the associated frame's writing-mode.
- */
-struct StyleSizeOverrides {
-  Maybe<StyleSize> mStyleISize;
-  Maybe<StyleSize> mStyleBSize;
-};
-}  // namespace mozilla
+}
 
 /**
  * @return aValue clamped to [aMinValue, aMaxValue].
@@ -525,9 +512,6 @@ struct ReflowInput : public SizeComputationInput {
     bool mIsBSizeSetByAspectRatio : 1;
   };
   Flags mFlags;
-
-  mozilla::StyleSizeOverrides mStyleSizeOverrides;
-
   mozilla::ComputeSizeFlags mComputeSizeFlags;
 
   // This value keeps track of how deeply nested a given reflow input
@@ -628,8 +612,6 @@ struct ReflowInput : public SizeComputationInput {
    *        Init() instead.
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        InitFlags above).
-   * @param aStyleSizeOverrides The style data used to override mFrame's when we
-   *        call nsIFrame::ComputeSize() internally.
    * @param aComputeSizeFlags A set of flags used when we call
    *        nsIFrame::ComputeSize() internally.
    */
@@ -639,7 +621,6 @@ struct ReflowInput : public SizeComputationInput {
               const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
                   mozilla::Nothing(),
               InitFlags aFlags = {},
-              const mozilla::StyleSizeOverrides& aSizeOverrides = {},
               mozilla::ComputeSizeFlags aComputeSizeFlags = {});
 
   /**
@@ -661,6 +642,13 @@ struct ReflowInput : public SizeComputationInput {
                 mozilla::Nothing(),
             const mozilla::Maybe<mozilla::LogicalMargin>& aPadding =
                 mozilla::Nothing());
+
+  /**
+   * Find the content isize of our containing block for the given writing mode,
+   * which need not be the same as the reflow input's mode.
+   */
+  nscoord GetContainingBlockContentISize(
+      mozilla::WritingMode aWritingMode) const;
 
   /**
    * Calculate the used line-height property. The return value will be >= 0.
