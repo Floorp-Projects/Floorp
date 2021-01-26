@@ -11,7 +11,7 @@ use neqo_crypto::{init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{Error, Http3Server, Http3ServerEvent};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::Server;
-use neqo_transport::{ConnectionEvent, ConnectionParameters, FixedConnectionIdManager, Output};
+use neqo_transport::{ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator};
 use std::env;
 
 use std::cell::RefCell;
@@ -461,7 +461,7 @@ impl ServersRunner {
     fn create_server(&self, server_type: ServerType) -> Box<dyn HttpServer> {
         let anti_replay = AntiReplay::new(Instant::now(), Duration::from_secs(10), 7, 14)
             .expect("unable to setup anti-replay");
-        let cid_mgr = Rc::new(RefCell::new(FixedConnectionIdManager::new(10)));
+        let cid_mgr = Rc::new(RefCell::new(RandomConnectionIdGenerator::new(10)));
 
         match server_type {
             ServerType::Http3 => Box::new(Http3TestServer::new(
