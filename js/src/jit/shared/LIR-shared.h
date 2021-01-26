@@ -5601,6 +5601,20 @@ class LRest : public LCallInstructionHelper<1, 1, 3> {
   MRest* mir() const { return mir_->toRest(); }
 };
 
+class LAdjustDataViewLength : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(AdjustDataViewLength)
+
+  explicit LAdjustDataViewLength(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+
+  const MAdjustDataViewLength* mir() const {
+    return mir_->toAdjustDataViewLength();
+  }
+};
+
 // Convert a Boolean to an Int64, following ToBigInt.
 class LBooleanToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
  public:
