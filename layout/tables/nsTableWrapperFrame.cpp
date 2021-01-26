@@ -819,20 +819,21 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   WritingMode wm = aOuterRI.GetWritingMode();
   uint8_t captionSide = GetCaptionSide();
   WritingMode captionWM = wm;  // will be changed below if necessary
+  const nscoord contentBoxISize = aOuterRI.ComputedSize(wm).ISize(wm);
 
   if (captionSide == NO_SIDE) {
     // We don't have a caption.
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI, innerRI,
-                          aOuterRI.ComputedSize(wm).ISize(wm));
+                          contentBoxISize);
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
              captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
     // ComputeAutoSize takes care of making side captions small. Compute
     // the caption's size first, and tell the table to fit in what's left.
     OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRI,
-                          captionRI, aOuterRI.ComputedSize(wm).ISize(wm));
+                          captionRI, contentBoxISize);
     captionWM = captionRI->GetWritingMode();
     nscoord innerAvailISize =
-        aOuterRI.ComputedSize(wm).ISize(wm) -
+        contentBoxISize -
         captionRI->ComputedSizeWithMarginBorderPadding(wm).ISize(wm);
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI, innerRI,
                           innerAvailISize);
@@ -847,7 +848,7 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
     // We don't actually make our anonymous box that isize (if we did,
     // it would break 'auto' margins), but this effectively does that.
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI, innerRI,
-                          aOuterRI.ComputedSize(wm).ISize(wm));
+                          contentBoxISize);
     // It's good that CSS 2.1 says not to include margins, since we
     // can't, since they already been converted so they exactly
     // fill the available isize (ignoring the margin on one side if
@@ -868,7 +869,7 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
                           captionRI,
                           aOuterRI.ComputedSize(captionWM).ISize(captionWM));
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI, innerRI,
-                          aOuterRI.ComputedSize(wm).ISize(wm));
+                          contentBoxISize);
   }
 
   // First reflow the caption.
@@ -916,7 +917,7 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
           // Reset the inner table's ReflowInput to stretch it to the new size.
           innerRI.reset();
           OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI,
-                                innerRI, aOuterRI.ComputedSize(wm).ISize(wm));
+                                innerRI, contentBoxISize);
         }
       }
     }
