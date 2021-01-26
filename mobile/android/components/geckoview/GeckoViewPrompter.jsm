@@ -94,6 +94,12 @@ class GeckoViewPrompter {
     return result;
   }
 
+  asyncShowPromptPromise(aMsg) {
+    return new Promise(resolve => {
+      this.asyncShowPrompt(aMsg, resolve);
+    });
+  }
+
   asyncShowPrompt(aMsg, aCallback) {
     let handled = false;
     const onResponse = response => {
