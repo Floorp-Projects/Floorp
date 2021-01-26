@@ -60,6 +60,8 @@ function commonDialogOnLoad() {
     Dialog.onButton3();
     window.close();
   });
+  document.subDialogSetDefaultFocus = isInitialFocus =>
+    Dialog.setDefaultFocus(isInitialFocus);
   Dialog.onLoad(dialog);
 
   // resize the window to the content
