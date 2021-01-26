@@ -11423,7 +11423,7 @@ class MAtomicIsLockFree : public MUnaryInstruction,
 
 class MCompareExchangeTypedArrayElement
     : public MQuaternaryInstruction,
-      public MixPolicy<UnboxedInt32Policy<1>, TruncateToInt32Policy<2>,
+      public MixPolicy<TruncateToInt32Policy<2>,
                        TruncateToInt32Policy<3>>::Data {
   Scalar::Type arrayType_;
 
@@ -11435,6 +11435,7 @@ class MCompareExchangeTypedArrayElement
       : MQuaternaryInstruction(classOpcode, elements, index, oldval, newval),
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
     setGuard();  // Not removable
   }
 
@@ -11453,9 +11454,8 @@ class MCompareExchangeTypedArrayElement
   }
 };
 
-class MAtomicExchangeTypedArrayElement
-    : public MTernaryInstruction,
-      public MixPolicy<UnboxedInt32Policy<1>, TruncateToInt32Policy<2>>::Data {
+class MAtomicExchangeTypedArrayElement : public MTernaryInstruction,
+                                         public TruncateToInt32Policy<2>::Data {
   Scalar::Type arrayType_;
 
   MAtomicExchangeTypedArrayElement(MDefinition* elements, MDefinition* index,
@@ -11463,6 +11463,7 @@ class MAtomicExchangeTypedArrayElement
       : MTernaryInstruction(classOpcode, elements, index, value),
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
     MOZ_ASSERT(arrayType <= Scalar::Uint32);
     setGuard();  // Not removable
   }
@@ -11481,9 +11482,8 @@ class MAtomicExchangeTypedArrayElement
   }
 };
 
-class MAtomicTypedArrayElementBinop
-    : public MTernaryInstruction,
-      public MixPolicy<UnboxedInt32Policy<1>, TruncateToInt32Policy<2>>::Data {
+class MAtomicTypedArrayElementBinop : public MTernaryInstruction,
+                                      public TruncateToInt32Policy<2>::Data {
  private:
   AtomicOp op_;
   Scalar::Type arrayType_;
@@ -11496,6 +11496,7 @@ class MAtomicTypedArrayElementBinop
         op_(op),
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
     setGuard();  // Not removable
   }
 
