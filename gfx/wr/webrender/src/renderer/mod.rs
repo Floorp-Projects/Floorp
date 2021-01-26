@@ -3038,7 +3038,7 @@ impl Renderer {
                     }
 
                     self.shaders.borrow_mut()
-                        .get(&batch.key, batch.features, self.debug_flags)
+                        .get(&batch.key, batch.features, self.debug_flags, &self.device)
                         .bind(
                             &mut self.device, projection,
                             &mut self.renderer_errors,
@@ -3078,6 +3078,7 @@ impl Renderer {
                     &batch.key,
                     batch.features | BatchFeatures::ALPHA_PASS,
                     self.debug_flags,
+                    &self.device,
                 );
 
                 if batch.key.blend_mode != prev_blend_mode {
