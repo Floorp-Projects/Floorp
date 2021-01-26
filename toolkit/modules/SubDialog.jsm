@@ -755,7 +755,22 @@ SubDialog.prototype = {
     this._untrapFocus();
   },
 
-  focus() {
+  /**
+   * Focus the dialog content.
+   * If the embedded document defines a custom focus handler it will be called.
+   * Otherwise we will focus the first focusable element in the content window.
+   * @param {boolean} [isInitialFocus] - Whether the dialog is focused for the
+   * first time after opening.
+   */
+  focus(isInitialFocus = false) {
+    // If the content window has its own focus logic, hand off the focus call.
+    let focusHandler = this._frame?.contentDocument?.subDialogSetDefaultFocus;
+    if (focusHandler) {
+      focusHandler(isInitialFocus);
+      return;
+    }
+    // Handle focus ourselves. Try to move the focus to the first element in
+    // the content window.
     let fm = Services.focus;
     let focusedElement = fm.moveFocus(
       this._frame.contentWindow,
@@ -771,7 +786,6 @@ SubDialog.prototype = {
   },
 
   _trapFocus() {
-    this.focus();
     // Attach a system event listener so the dialog can cancel keydown events.
     // See Bug 1669990.
     this._box.addEventListener("keydown", this, { mozSystemGroup: true });
@@ -890,22 +904,19 @@ class SubDialogManager {
       this._dialogStack.hidden = false;
       this._dialogStack.classList.remove("temporarilyHidden");
       this._topLevelPrevActiveElement = doc.activeElement;
-
-      // Mark the top dialog according to the array insertion order.
-      // This is needed because when multiple dialog are opening, their callbacks
-      // don't necessarily arrive in order.
-      this._preloadDialog.isTop = true;
-    } else if (this._orderType === SubDialogManager.ORDER_STACK) {
-      this._preloadDialog.isTop = true;
-      this._dialogs[this._dialogs.length - 1].isTop = false;
     }
 
+    this._dialogs.push(this._preloadDialog);
     this._preloadDialog.open(
       aURL,
-      { features, closingCallback, closedCallback, sizeTo },
+      {
+        features,
+        closingCallback,
+        closedCallback,
+        sizeTo,
+      },
       ...aParams
     );
-    this._dialogs.push(this._preloadDialog);
 
     let openedDialog = this._preloadDialog;
 
@@ -973,20 +984,19 @@ class SubDialogManager {
   }
 
   _onDialogOpen(dialog) {
-    // The first dialog is always on top
-    if (this._dialogs.length === 1) {
-      return;
-    }
-
     let lowerDialogs = [];
-
-    if (!dialog.isTop) {
+    if (dialog == this._topDialog) {
+      dialog.focus(true);
+    } else {
       // Opening dialog is not on top, hide it
       lowerDialogs.push(dialog);
     }
 
     // For stack order, hide the previous top
-    if (this._orderType === SubDialogManager.ORDER_STACK) {
+    if (
+      this._dialogs.length &&
+      this._orderType === SubDialogManager.ORDER_STACK
+    ) {
       let index = this._dialogs.indexOf(dialog);
       if (index > 0) {
         lowerDialogs.push(this._dialogs[index - 1]);
@@ -1006,7 +1016,11 @@ class SubDialogManager {
 
     if (this._topDialog) {
       // The prevActiveElement is only set for stacked dialogs
-      this._topDialog._prevActiveElement?.focus();
+      if (this._topDialog._prevActiveElement) {
+        this._topDialog._prevActiveElement.focus();
+      } else {
+        this._topDialog.focus(true);
+      }
       this._topDialog._overlay.setAttribute("topmost", true);
       this._topDialog._addDialogEventListeners(false);
       this._dialogStack.hidden = false;
