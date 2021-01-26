@@ -53,6 +53,7 @@ from manifestparser.filters import (
     pathprefix,
     subsuite,
     tags,
+    failures,
 )
 from mozgeckoprofiler import symbolicate_profile_json, view_gecko_profile
 
@@ -1549,7 +1550,10 @@ toolbar#nav-bar {
                     # Given the mochitest flavor, load the runtimes information
                     # for only that flavor due to manifest runtime format change in Bug 1637463.
                     with open(runtime_file, "r") as f:
-                        runtimes = json.load(f).get(options.suite_name, {})
+                        if "suite_name" in options:
+                            runtimes = json.load(f).get(options.suite_name, {})
+                        else:
+                            runtimes = {}
 
                     filters.append(
                         chunk_by_runtime(
@@ -1561,8 +1565,17 @@ toolbar#nav-bar {
                         chunk_by_slice(options.thisChunk, options.totalChunks)
                     )
 
+            noDefaultFilters = False
+            if options.runFailures:
+                filters.append(failures(options.runFailures))
+                noDefaultFilters = True
+
             tests = manifest.active_tests(
-                exists=False, disabled=disabled, filters=filters, **info
+                exists=False,
+                disabled=disabled,
+                filters=filters,
+                noDefaultFilters=noDefaultFilters,
+                **info
             )
 
             if len(tests) == 0:
