@@ -113,7 +113,6 @@ class TRRServiceChannel : public HttpBaseChannel,
   virtual ~TRRServiceChannel();
 
   void CancelNetworkRequest(nsresult aStatus);
-  const nsCString& GetTopWindowOrigin();
   nsresult BeginConnect();
   nsresult ContinueOnBeforeConnect();
   nsresult Connect();
@@ -139,13 +138,7 @@ class TRRServiceChannel : public HttpBaseChannel,
   virtual bool SameOriginWithOriginalUri(nsIURI* aURI) override;
   bool DispatchRelease();
 
-  // True only when we have computed the value of the top window origin.
-  bool mTopWindowOriginComputed;
-
   nsCString mUsername;
-  // The origin of the top window, only valid when mTopWindowOriginComputed is
-  // true.
-  nsCString mTopWindowOrigin;
 
   // Needed for accurate DNS timing
   RefPtr<nsDNSPrefetch> mDNSPrefetch;
