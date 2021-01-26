@@ -1740,9 +1740,15 @@ void MacroAssembler::setIsDefinitelyTypedArrayConstructor(Register obj,
 }
 
 void MacroAssembler::loadArrayBufferByteLengthInt32(Register obj,
-                                                    Register output) {
+                                                    Register output,
+                                                    Label* fail) {
   Address slotAddr(obj, ArrayBufferObject::offsetOfByteLengthSlot());
   loadPrivate(slotAddr, output);
+
+  if (fail && ArrayBufferObject::maxBufferByteLength() > INT32_MAX) {
+    branchPtr(Assembler::Above, output, Imm32(INT32_MAX), fail);
+    return;
+  }
 
 #ifdef DEBUG
   Label ok;
@@ -1753,9 +1759,15 @@ void MacroAssembler::loadArrayBufferByteLengthInt32(Register obj,
 }
 
 void MacroAssembler::loadArrayBufferViewByteOffsetInt32(Register obj,
-                                                        Register output) {
+                                                        Register output,
+                                                        Label* fail) {
   Address slotAddr(obj, ArrayBufferViewObject::byteOffsetOffset());
   loadPrivate(slotAddr, output);
+
+  if (fail && ArrayBufferObject::maxBufferByteLength() > INT32_MAX) {
+    branchPtr(Assembler::Above, output, Imm32(INT32_MAX), fail);
+    return;
+  }
 
 #ifdef DEBUG
   Label ok;
@@ -1766,9 +1778,14 @@ void MacroAssembler::loadArrayBufferViewByteOffsetInt32(Register obj,
 }
 
 void MacroAssembler::loadArrayBufferViewLengthInt32(Register obj,
-                                                    Register output) {
-  Address slotAddr(obj, ArrayBufferViewObject::lengthOffset());
-  loadPrivate(slotAddr, output);
+                                                    Register output,
+                                                    Label* fail) {
+  loadArrayBufferViewLengthPtr(obj, output);
+
+  if (fail && ArrayBufferObject::maxBufferByteLength() > INT32_MAX) {
+    branchPtr(Assembler::Above, output, Imm32(INT32_MAX), fail);
+    return;
+  }
 
 #ifdef DEBUG
   Label ok;
@@ -1776,6 +1793,12 @@ void MacroAssembler::loadArrayBufferViewLengthInt32(Register obj,
   assumeUnreachable("Expecting length to fit in int32");
   bind(&ok);
 #endif
+}
+
+void MacroAssembler::loadArrayBufferViewLengthPtr(Register obj,
+                                                  Register output) {
+  Address slotAddr(obj, ArrayBufferViewObject::lengthOffset());
+  loadPrivate(slotAddr, output);
 }
 
 void MacroAssembler::loadDOMExpandoValueGuardGeneration(
