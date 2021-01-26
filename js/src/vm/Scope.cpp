@@ -22,6 +22,7 @@
 #include "gc/MaybeRooted.h"
 #include "util/StringBuffer.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/ErrorReporting.h"  // MaybePrintAndClearPendingException
 #include "vm/JSScript.h"
 #include "wasm/WasmInstance.h"
 
@@ -1883,6 +1884,7 @@ void js::DumpBindings(JSContext* cx, Scope* scopeArg) {
   for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++) {
     UniqueChars bytes = AtomToPrintableString(cx, bi.name());
     if (!bytes) {
+      MaybePrintAndClearPendingException(cx);
       return;
     }
     fprintf(stderr, "%s %s ", BindingKindString(bi.kind()), bytes.get());
