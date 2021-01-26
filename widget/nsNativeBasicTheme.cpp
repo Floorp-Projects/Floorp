@@ -52,11 +52,15 @@ static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
 }
 
 /* static */
-auto nsNativeBasicTheme::GetDPIRatio(nsIFrame* aFrame) -> DPIRatio {
-  return DPIRatio(float(AppUnitsPerCSSPixel()) /
-                  aFrame->PresContext()
-                      ->DeviceContext()
-                      ->AppUnitsPerDevPixelAtUnitFullZoom());
+auto nsNativeBasicTheme::GetDPIRatio(nsIFrame* aFrame,
+                                     StyleAppearance aAppearance) -> DPIRatio {
+  nsPresContext* pc = aFrame->PresContext();
+  // Widgets react to zoom, except scrollbars.
+  nscoord auPerPx =
+      IsWidgetScrollbarPart(aAppearance)
+          ? pc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom()
+          : pc->AppUnitsPerDevPixel();
+  return DPIRatio(float(AppUnitsPerCSSPixel()) / auPerPx);
 }
 
 /* static */
@@ -74,12 +78,6 @@ bool nsNativeBasicTheme::IsDateTimeResetButton(nsIFrame* aFrame) {
     }
   }
   return false;
-}
-
-/* static */
-bool nsNativeBasicTheme::IsDateTimeTextField(nsIFrame* aFrame) {
-  nsDateTimeControlFrame* dateTimeFrame = do_QueryFrame(aFrame);
-  return dateTimeFrame;
 }
 
 /* static */
@@ -1181,8 +1179,6 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                          const nsRect& aRect,
                                          const nsRect& /* aDirtyRect */) {
   DrawTarget* dt = aContext->GetDrawTarget();
-  // FIXME(emilio): Why does this use AppUnitsPerDevPixel() but GetDPIRatio()
-  // uses AppUnitsPerDevPixelAtUnitFullZoom()?
   const nscoord twipsPerPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   EventStates eventState = GetContentState(aFrame, aAppearance);
   EventStates docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
@@ -1210,7 +1206,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     maybeClipRect.emplace(*dt, devPxRect);
   }
 
-  DPIRatio dpiRatio = GetDPIRatio(aFrame);
+  DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
 
   switch (aAppearance) {
     case StyleAppearance::Radio: {
@@ -1341,7 +1337,7 @@ aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect) {
 
 LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  DPIRatio dpiRatio = GetDPIRatio(aFrame);
+  DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
   switch (aAppearance) {
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
@@ -1442,7 +1438,7 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          StyleAppearance aAppearance,
                                          LayoutDeviceIntSize* aResult,
                                          bool* aIsOverridable) {
-  DPIRatio dpiRatio = GetDPIRatio(aFrame);
+  DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
 
   aResult->width = aResult->height = (kMinimumWidgetSize * dpiRatio).Rounded();
 
