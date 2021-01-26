@@ -937,7 +937,6 @@
 
     set _tabMinWidth(val) {
       this.style.setProperty("--tab-min-width", val + "px");
-      return val;
     }
 
     get _isCustomizing() {
