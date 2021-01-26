@@ -60,6 +60,7 @@
     class MozMenuBase extends MozMenuItemBaseMixin(Base) {
       set open(val) {
         this.openMenu(val);
+        return val;
       }
 
       get open() {

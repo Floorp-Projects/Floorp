@@ -3051,6 +3051,7 @@ var AddonManagerInternal = {
     if (aValue != gAutoUpdateDefault) {
       Services.prefs.setBoolPref(PREF_EM_AUTOUPDATE_DEFAULT, aValue);
     }
+    return aValue;
   },
 
   get checkCompatibility() {
@@ -3066,6 +3067,7 @@ var AddonManagerInternal = {
         Services.prefs.clearUserPref(PREF_EM_CHECK_COMPATIBILITY);
       }
     }
+    return aValue;
   },
 
   get strictCompatibility() {
@@ -3077,6 +3079,7 @@ var AddonManagerInternal = {
     if (aValue != gStrictCompatibility) {
       Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, aValue);
     }
+    return aValue;
   },
 
   get checkUpdateSecurityDefault() {
@@ -3096,6 +3099,7 @@ var AddonManagerInternal = {
         Services.prefs.clearUserPref(PREF_EM_CHECK_UPDATE_SECURITY);
       }
     }
+    return aValue;
   },
 
   get updateEnabled() {
@@ -3107,6 +3111,7 @@ var AddonManagerInternal = {
     if (aValue != gUpdateEnabled) {
       Services.prefs.setBoolPref(PREF_EM_UPDATE_ENABLED, aValue);
     }
+    return aValue;
   },
 
   _verifyThirdPartyInstall(browser, url, install, info, source) {

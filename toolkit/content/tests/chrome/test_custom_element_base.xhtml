@@ -288,6 +288,7 @@
       set disabled(val) {
         if (val) this.setAttribute("disabled", "true");
         else this.removeAttribute("disabled");
+        return val;
       }
 
       get tabIndex() {
@@ -297,6 +298,7 @@
       set tabIndex(val) {
         if (val) this.setAttribute("tabIndex", val);
         else this.removeAttribute("tabIndex");
+        return val;
       }
     }
 
@@ -361,3 +363,4 @@
   ]]>
   </script>
 </window>
+

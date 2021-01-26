@@ -742,6 +742,7 @@
     class BaseText extends MozElements.BaseControlMixin(Base) {
       set label(val) {
         this.setAttribute("label", val);
+        return val;
       }
 
       get label() {
@@ -750,6 +751,7 @@
 
       set crop(val) {
         this.setAttribute("crop", val);
+        return val;
       }
 
       get crop() {
@@ -758,6 +760,7 @@
 
       set image(val) {
         this.setAttribute("image", val);
+        return val;
       }
 
       get image() {
@@ -766,6 +769,7 @@
 
       set command(val) {
         this.setAttribute("command", val);
+        return val;
       }
 
       get command() {
@@ -780,6 +784,7 @@
         if (this.labelElement) {
           this.labelElement.accessKey = val;
         }
+        return val;
       }
 
       get accessKey() {

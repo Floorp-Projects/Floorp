@@ -14,14 +14,14 @@ SlowScriptDebug.prototype = {
     return this._activationHandler;
   },
   set activationHandler(cb) {
-    this._activationHandler = cb;
+    return (this._activationHandler = cb);
   },
 
   get remoteActivationHandler() {
     return this._remoteActivationHandler;
   },
   set remoteActivationHandler(cb) {
-    this._remoteActivationHandler = cb;
+    return (this._remoteActivationHandler = cb);
   },
 };
 

@@ -168,6 +168,7 @@
 
     set buttons(val) {
       this._configureButtons(val);
+      return val;
     }
 
     get buttons() {
@@ -176,6 +177,7 @@
 
     set defaultButton(val) {
       this._setDefaultButton(val);
+      return val;
     }
 
     get defaultButton() {

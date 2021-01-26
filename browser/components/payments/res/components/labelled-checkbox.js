@@ -52,7 +52,7 @@ export default class LabelledCheckbox extends ObservedPropertiesMixin(
   }
 
   set checked(value) {
-    this._checkbox.checked = value;
+    return (this._checkbox.checked = value);
   }
 }
 

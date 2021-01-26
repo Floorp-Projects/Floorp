@@ -172,6 +172,7 @@
       } else {
         Services.search.defaultEngine = val;
       }
+      return val;
     }
 
     get currentEngine() {
@@ -193,7 +194,7 @@
     }
 
     set value(val) {
-      this._textbox.value = val;
+      return (this._textbox.value = val);
     }
 
     get value() {
@@ -643,6 +644,7 @@
         },
         set(val) {
           this.setAttribute("autocompletesearchparam", val);
+          return val;
         },
       });
 
@@ -651,7 +653,7 @@
           return this.popup.oneOffButtons.selectedButton;
         },
         set(val) {
-          this.popup.oneOffButtons.selectedButton = val;
+          return (this.popup.oneOffButtons.selectedButton = val);
         },
       });
 

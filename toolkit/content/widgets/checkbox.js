@@ -70,6 +70,7 @@
         event.initEvent("CheckboxStateChange", true, true);
         this.dispatchEvent(event);
       }
+      return val;
     }
 
     get checked() {

@@ -127,6 +127,8 @@
       }
 
       sendMessageToBrowser("FormAutofill:PreviewProfile");
+
+      return val;
     }
 
     get selected() {
@@ -344,7 +346,8 @@
     }
 
     set selected(val) {
-      // This item is unselectable since we see this item as a pure message.
+      // Make this item unselectable since we see this item as a pure message.
+      return false;
     }
 
     get selected() {

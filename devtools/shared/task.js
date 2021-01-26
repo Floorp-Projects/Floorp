@@ -480,6 +480,7 @@ Task.Debugging = {
       gCurrentTask = null;
     }
     gMaintainStack = x;
+    return x;
   },
 
   /**

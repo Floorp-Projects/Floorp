@@ -292,10 +292,11 @@
         gSharedTabWarning.willShowSharedTabWarning(val) ||
         (gNavToolbox.collapsed && !this._allowTabChange)
       ) {
-        return;
+        return this.tabbox.selectedTab;
       }
       // Update the tab
       this.tabbox.selectedTab = val;
+      return val;
     },
 
     get selectedTab() {
@@ -6447,6 +6448,8 @@ var StatusPanel = {
       this.panel.setAttribute("inactive", "true");
       MousePosTracker.removeListener(this);
     }
+
+    return val;
   },
 
   getMouseTargetRect() {
