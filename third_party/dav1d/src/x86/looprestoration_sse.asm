@@ -29,35 +29,33 @@
 
 SECTION_RODATA 16
 
-pb_right_ext_mask: times 16 db 0xff
-                   times 16 db 0
-pb_14x0_1_2: times 14 db 0
-             db 1, 2
-pb_0_to_15_min_n: db 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 13, 13
-                  db 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 14
-pb_unpcklwdw: db 0, 1, 0, 1, 4, 5, 4, 5, 8, 9, 8, 9, 12, 13, 12, 13
-pb_0: times 16 db 0
-pb_2: times 16 db 2
-pb_3: times 16 db 3
-pb_4: times 16 db 4
-pb_15: times 16 db 15
-pb_0_1: times 8 db 0, 1
-pb_6_7: times 8 db 6, 7
-pb_14_15: times 8 db 14, 15
-pw_1: times 8 dw 1
-pw_16: times 8 dw 16
-pw_128: times 8 dw 128
-pw_255: times 8 dw 255
-pw_256: times 8 dw 256
-pw_2048: times 8 dw 2048
-pw_16380: times 8 dw 16380
-pw_5_6: times 4 dw 5, 6
-pw_0_128: times 4 dw 0, 128
-pd_1024: times 4 dd 1024
+wiener_init:   db  6,  7,  6,  7,  6,  7,  6,  7,  0,  0,  0,  0,  2,  4,  2,  4
+wiener_shufA:  db  1,  7,  2,  8,  3,  9,  4, 10,  5, 11,  6, 12,  7, 13,  8, 14
+wiener_shufB:  db  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8,  8,  9,  9, 10
+wiener_shufC:  db  6,  5,  7,  6,  8,  7,  9,  8, 10,  9, 11, 10, 12, 11, 13, 12
+wiener_shufD:  db  4, -1,  5, -1,  6, -1,  7, -1,  8, -1,  9, -1, 10, -1, 11, -1
+wiener_l_shuf: db  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11
+pb_unpcklwdw:  db  0,  1,  0,  1,  4,  5,  4,  5,  8,  9,  8,  9, 12, 13, 12, 13
+
+pb_right_ext_mask: times 24 db 0xff
+                   times 8 db 0
+pb_0:          times 16 db 0
+pb_3:          times 16 db 3
+pb_15:         times 16 db 15
+pb_0_1:        times 8 db 0, 1
+pb_14_15:      times 8 db 14, 15
+pw_1:          times 8 dw 1
+pw_16:         times 8 dw 16
+pw_128:        times 8 dw 128
+pw_256:        times 8 dw 256
+pw_2048:       times 8 dw 2048
+pw_2056:       times 8 dw 2056
+pw_m16380:     times 8 dw -16380
+pw_5_6:        times 4 dw 5, 6
+pd_1024:       times 4 dd 1024
 %if ARCH_X86_32
-pd_256: times 4 dd 256
-pd_512: times 4 dd 512
-pd_2048: times 4 dd 2048
+pd_512:        times 4 dd 512
+pd_2048:       times 4 dd 2048
 %endif
 pd_0xF0080029: times 4 dd 0xF0080029
 pd_0xF00801C7: times 4 dd 0XF00801C7
@@ -96,541 +94,1037 @@ SECTION .text
  %define PIC_sym(sym)   (sym)
 %endif
 
-%macro PALIGNR 4 ; dst, src1, src2, shift
- %if cpuflag(ssse3)
-    palignr       %1, %2, %3, %4
- %else
-  %assign %%i regnumof%+%1 + 1
-  %define %%tmp m %+ %%i
-    psrldq        %1, %3, %4
-    pslldq     %%tmp, %2, 16-%4
-    por           %1, %%tmp
- %endif
-%endmacro
-
-%macro PMADDUBSW 5 ; dst, src, zero, tmp, reset_zero
- %if cpuflag(ssse3)
-    pmaddubsw     %1, %2
- %else
-  %if %5 == 1
-    pxor          %3, %3
-  %endif
-    punpckhbw     %4, %1, %3
-    punpcklbw     %1, %3
-    pmaddwd       %4, %2
-    pmaddwd       %1, %2
-    packssdw      %1, %4
- %endif
-%endmacro
-
-;;;;;;;;;;;;;;;;;;;;;;
-;;      wiener      ;;
-;;;;;;;;;;;;;;;;;;;;;;
-
-%macro WIENER_H 0
+%macro WIENER 0
 %if ARCH_X86_64
-cglobal wiener_filter_h, 5, 15, 16, dst, left, src, stride, fh, w, h, edge
-    mov        edged, edgem
-    movifnidn     wd, wm
-    mov           hd, hm
-%else
-cglobal wiener_filter_h, 5, 7, 8, -84, dst, left, src, stride, fh, w, h, edge
-    mov           r5, edgem
-    mov     [esp+12], r5
-    mov           wd, wm
-    mov           hd, hm
-    SETUP_PIC hd
- %define m15 m0
- %define m14 m1
- %define m13 m2
- %define m12 m3
-%endif
-
-    movq         m15, [fhq]
+DECLARE_REG_TMP 4, 10, 7, 11, 12, 13, 14 ; ring buffer pointers
+cglobal wiener_filter7, 5, 15, 16, -384*12-16, dst, dst_stride, left, lpf, \
+                                               lpf_stride, w, edge, flt, h, x
+    %define base 0
+    mov           fltq, fltmp
+    mov          edged, r8m
+    mov             wd, wm
+    mov             hd, r6m
+    movq           m14, [fltq]
+    add           lpfq, wq
+    lea             t1, [rsp+wq*2+16]
+    mova           m15, [pw_2056]
+    add           dstq, wq
+    movq            m7, [fltq+16]
+    neg             wq
 %if cpuflag(ssse3)
-    pshufb       m12, m15, [PIC_sym(pb_6_7)]
-    pshufb       m13, m15, [PIC_sym(pb_4)]
-    pshufb       m14, m15, [PIC_sym(pb_2)]
-    pshufb       m15, m15, [PIC_sym(pb_0)]
+    pshufb         m14, [wiener_init]
+    mova            m8, [wiener_shufA]
+    pshufd         m12, m14, q2222  ; x0 x0
+    mova            m9, [wiener_shufB]
+    pshufd         m13, m14, q3333  ; x1 x2
+    mova           m10, [wiener_shufC]
+    punpcklqdq     m14, m14         ; x3
+    mova           m11, [wiener_shufD]
 %else
-    pshuflw      m12, m15, q3333
-    punpcklbw    m15, m15
-    pshufhw      m13, m15, q0000
-    pshuflw      m14, m15, q2222
-    pshuflw      m15, m15, q0000
-    punpcklqdq   m12, m12
-    punpckhqdq   m13, m13
-    punpcklqdq   m14, m14
-    punpcklqdq   m15, m15
-    psraw        m13, 8
-    psraw        m14, 8
-    psraw        m15, 8
+    mova           m10, [pw_m16380]
+    punpcklwd      m14, m14
+    pshufd         m11, m14, q0000 ; x0
+    pshufd         m12, m14, q1111 ; x1
+    pshufd         m13, m14, q2222 ; x2
+    pshufd         m14, m14, q3333 ; x3
 %endif
-
-%if ARCH_X86_64
-    mova         m11, [pw_2048]
-    mova         m10, [pw_16380]
-    lea          r11, [pb_right_ext_mask]
-
-    DEFINE_ARGS dst, left, src, stride, x, w, h, edge, srcptr, dstptr, xlim
 %else
- %define m10    [PIC_sym(pw_16380)]
- %define m11    [PIC_sym(pw_2048)]
- %define m12    [esp+0x14]
- %define m13    [esp+0x24]
- %define m14    [esp+0x34]
- %define m15    [esp+0x44]
-    mova         m12, m3
-    mova         m13, m2
-    mova         m14, m1
-    mova         m15, m0
-
-    DEFINE_ARGS dst, left, src, stride, x, w, h, edge
- %define srcptrq    srcq
- %define dstptrq    dstq
- %define hd         dword [esp+ 0]
- %define edgeb      byte  [esp+12]
- %define xlimd      dword [esp+16]
-%endif
-
-    ; if (edge & has_right) align_w_to_16
-    ; else w -= 3, and use that as limit in x loop
-    test       edgeb, 2 ; has_right
-    jnz .align
-    mov        xlimd, -3
-    jmp .loop
-.align:
-    add           wd, 15
-    and           wd, ~15
-%if ARCH_X86_64
-    xor        xlimd, xlimd
-%else
-    mov        xlimd, 0
-%endif
-
-    ; main y loop for vertical filter
-.loop:
-%if ARCH_X86_64
-    mov      srcptrq, srcq
-    mov      dstptrq, dstq
-    lea           xd, [wq+xlimq]
-%else
-    mov      [esp+8], srcq
-    mov      [esp+4], dstq
-    mov           xd, xlimd
-    add           xd, wd
-%endif
-
-    ; load left edge pixels
-    test       edgeb, 1 ; have_left
-    jz .emu_left
-    test       leftq, leftq ; left == NULL for the edge-extended bottom/top
-    jz .load_left_combined
-    movd          m0, [leftq]
-    movd          m1, [srcq]
-    punpckldq     m0, m1
-    pslldq        m0, 9
-    add        leftq, 4
-    jmp .left_load_done
-.load_left_combined:
-    movq          m0, [srcq-3]
-    pslldq        m0, 10
-    jmp .left_load_done
-.emu_left:
-    movd          m0, [srcq]
+DECLARE_REG_TMP 4, 0, _, 5
 %if cpuflag(ssse3)
-    pshufb        m0, [PIC_sym(pb_14x0_1_2)]
+    %define m10         [base+wiener_shufC]
+    %define m11         [base+wiener_shufD]
+    %define stk_off     96
 %else
-    pslldq        m1, m0, 13
-    punpcklbw     m0, m0
-    pshuflw       m0, m0, q0000
-    punpcklqdq    m0, m0
-    psrldq        m0, 2
-    por           m0, m1
+    %define m10         [base+pw_m16380]
+    %define m11         [stk+96]
+    %define stk_off     112
 %endif
-
-    ; load right edge pixels
-.left_load_done:
-    cmp           xd, 16
-    jg .main_load
-    test          xd, xd
-    jg .load_and_splat
-    je .splat_right
-
-    ; for very small images (w=[1-2]), edge-extend the original cache,
-    ; ugly, but only runs in very odd cases
+cglobal wiener_filter7, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stride
+    %define base        r6-pb_right_ext_mask-21
+    %define stk         esp
+    %define dstq        leftq
+    %define edgeb       byte edged
+    %define edged       [stk+ 8]
+    %define dstmp       [stk+12]
+    %define hd    dword [stk+16]
+    %define wq          [stk+20]
+    %define dst_strideq [stk+24]
+    %define leftmp      [stk+28]
+    %define t2          [stk+32]
+    %define t4          [stk+36]
+    %define t5          [stk+40]
+    %define t6          [stk+44]
+    %define m8          [base+wiener_shufA]
+    %define m9          [base+wiener_shufB]
+    %define m12         [stk+48]
+    %define m13         [stk+64]
+    %define m14         [stk+80]
+    %define m15         [base+pw_2056]
+    mov             r1, r7m ; flt
+    mov             r0, r0m ; dst
+    mov             r5, r5m ; w
+    mov           lpfq, lpfm
+    mov             r2, r8m ; edge
+    mov             r4, r6m ; h
+    movq            m3, [r1+ 0]
+    movq            m7, [r1+16]
+    add             r0, r5
+    mov             r1, r1m ; dst_stride
+    add           lpfq, r5
+    mov          edged, r2
+    mov             r2, r2m ; left
+    mov          dstmp, r0
+    lea             t1, [rsp+r5*2+stk_off]
+    mov             hd, r4
+    neg             r5
+    mov    lpf_strideq, lpf_stridem
+    LEA             r6, pb_right_ext_mask+21
+    mov             wq, r5
+    mov    dst_strideq, r1
+    mov         leftmp, r2
 %if cpuflag(ssse3)
-    add           wd, wd
- %if ARCH_X86_64
-    pshufb        m0, [r11-pb_right_ext_mask+pb_0_to_15_min_n+wq*8-16]
- %else
-    pshufb        m0, [PIC_sym(pb_0_to_15_min_n)+wq*8-16]
- %endif
-    shr           wd, 1
+    pshufb          m3, [base+wiener_init]
+    pshufd          m1, m3, q2222
+    pshufd          m2, m3, q3333
+    punpcklqdq      m3, m3
 %else
-    shl           wd, 4
-    pcmpeqd       m2, m2
-    movd          m3, wd
-    psrldq        m2, 2
-    punpckhbw     m1, m0, m0
-    pshufhw       m1, m1, q1122
-    psllq         m1, m3
-    pand          m0, m2
-    pandn         m2, m1
-    por           m0, m2
-    shr           wd, 4
+    punpcklwd       m3, m3
+    pshufd          m0, m3, q0000
+    pshufd          m1, m3, q1111
+    pshufd          m2, m3, q2222
+    pshufd          m3, m3, q3333
+    mova           m11, m0
 %endif
-
-    ; main x loop, mostly this starts in .main_load
-.splat_right:
-    ; no need to load new pixels, just extend them from the (possibly previously
-    ; extended) previous load into m0
-%if cpuflag(ssse3)
-    pshufb        m1, m0, [PIC_sym(pb_15)]
-%else
-    punpckhbw     m1, m0, m0
-    pshufhw       m1, m1, q3333
-    punpckhqdq    m1, m1
+    mova           m12, m1
+    mova           m13, m2
+    mova           m14, m3
 %endif
-    jmp .main_loop
-.load_and_splat:
-    ; load new pixels and extend edge for right-most
-    movu          m1, [srcptrq+3]
-%if ARCH_X86_64
-    sub          r11, xq
-    movu          m2, [r11+16]
-    add          r11, xq
-%else
-    sub      PIC_reg, xd
-    movu          m2, [PIC_sym(pb_right_ext_mask)+16]
-    add      PIC_reg, xd
-%endif
-    movd          m3, [srcptrq+2+xq]
-%if cpuflag(ssse3)
-    pshufb        m3, [PIC_sym(pb_0)]
-%else
-    punpcklbw     m3, m3
-    pshuflw       m3, m3, q0000
-    punpcklqdq    m3, m3
-%endif
-    pand          m1, m2
-    pxor          m2, [PIC_sym(pb_right_ext_mask)]
-    pand          m3, m2
-    pxor          m2, [PIC_sym(pb_right_ext_mask)]
-    por           m1, m3
-    jmp .main_loop
-.main_load:
-    ; load subsequent line
-    movu          m1, [srcptrq+3]
+    pshufd          m6, m7, q0000 ; y0 y1
+    pshufd          m7, m7, q1111 ; y2 y3
+    test         edgeb, 4 ; LR_HAVE_TOP
+    jz .no_top
+    call .h_top
+    add           lpfq, lpf_strideq
+    mov             t6, t1
+    mov             t5, t1
+    add             t1, 384*2
+    call .h_top
+    lea             t3, [lpfq+lpf_strideq*4]
+    mov           lpfq, dstmp
+    mov [rsp+gprsize*1], lpf_strideq
+    add             t3, lpf_strideq
+    mov [rsp+gprsize*0], t3 ; below
+    mov             t4, t1
+    add             t1, 384*2
+    call .h
+    mov             t3, t1
+    mov             t2, t1
+    dec             hd
+    jz .v1
+    add           lpfq, dst_strideq
+    add             t1, 384*2
+    call .h
+    mov             t2, t1
+    dec             hd
+    jz .v2
+    add           lpfq, dst_strideq
+    add             t1, 384*2
+    call .h
+    dec             hd
+    jz .v3
+.main:
+    lea             t0, [t1+384*2]
 .main_loop:
-%if ARCH_X86_64
-    PALIGNR       m2, m1, m0, 10
-    PALIGNR       m3, m1, m0, 11
-    PALIGNR       m4, m1, m0, 12
-    PALIGNR       m5, m1, m0, 13
-    PALIGNR       m6, m1, m0, 14
-    PALIGNR       m7, m1, m0, 15
-
-    punpcklbw     m0, m2, m1
-    punpckhbw     m2, m1
-    punpcklbw     m8, m3, m7
-    punpckhbw     m3, m7
-    punpcklbw     m7, m4, m6
-    punpckhbw     m4, m6
-    PMADDUBSW     m0, m15, m6, m9, 1
-    PMADDUBSW     m2, m15, m6, m9, 0
-    PMADDUBSW     m8, m14, m6, m9, 0
-    PMADDUBSW     m3, m14, m6, m9, 0
-    PMADDUBSW     m7, m13, m6, m9, 0
-    PMADDUBSW     m4, m13, m6, m9, 0
-    paddw         m0, m8
-    paddw         m2, m3
- %if cpuflag(ssse3)
-    pxor          m6, m6
- %endif
-    punpcklbw     m3, m5, m6
-    punpckhbw     m5, m6
-    psllw         m8, m3, 7
-    psllw         m6, m5, 7
-    psubw         m8, m10
-    psubw         m6, m10
-    pmullw        m3, m12
-    pmullw        m5, m12
-    paddw         m0, m7
-    paddw         m2, m4
-    paddw         m0, m3
-    paddw         m2, m5
-    paddsw        m0, m8 ; see the avx2 for an explanation
-    paddsw        m2, m6 ; of how the clipping works here
-    psraw         m0, 3
-    psraw         m2, 3
-    paddw         m0, m11
-    paddw         m2, m11
-    mova [dstptrq+ 0], m0
-    mova [dstptrq+16], m2
-%else
-    PALIGNR       m2, m1, m0, 10
-    punpcklbw     m3, m2, m1
-    punpckhbw     m2, m1
-    PMADDUBSW     m3, m15, m4, m5, 1
-    PMADDUBSW     m2, m15, m4, m5, 0
-    PALIGNR       m4, m1, m0, 11
-    PALIGNR       m5, m1, m0, 15
-    punpcklbw     m6, m4, m5
-    punpckhbw     m4, m5
-    PMADDUBSW     m6, m14, m5, m7, 1
-    PMADDUBSW     m4, m14, m5, m7, 0
-    paddw         m3, m6
-    paddw         m2, m4
-    PALIGNR       m4, m1, m0, 12
-    PALIGNR       m5, m1, m0, 14
-    punpcklbw     m6, m4, m5
-    punpckhbw     m4, m5
-    PMADDUBSW     m6, m13, m5, m7, 1
-    PMADDUBSW     m4, m13, m5, m7, 0
-    paddw         m3, m6
-    paddw         m2, m4
-    PALIGNR       m6, m1, m0, 13
- %if cpuflag(ssse3)
-    pxor          m5, m5
- %endif
-    punpcklbw     m4, m6, m5
-    punpckhbw     m6, m5
-    psllw         m5, m4, 7
-    psllw         m7, m6, 7
-    psubw         m5, m10
-    psubw         m7, m10
-    pmullw        m4, m12
-    pmullw        m6, m12
-    paddw         m3, m4
-    paddw         m2, m6
-    paddsw        m3, m5
-    paddsw        m2, m7
-    psraw         m3, 3
-    psraw         m2, 3
-    paddw         m3, m11
-    paddw         m2, m11
-    mova [dstptrq+ 0], m3
-    mova [dstptrq+16], m2
-%endif
-
-    mova          m0, m1
-    add      srcptrq, 16
-    add      dstptrq, 32
-    sub           xd, 16
-    cmp           xd, 16
-    jg .main_load
-    test          xd, xd
-    jg .load_and_splat
-    cmp           xd, xlimd
-    jg .splat_right
-
-%if ARCH_X86_32
-    mov         srcq, [esp+8]
-    mov         dstq, [esp+4]
-%endif
-    add         srcq, strideq
-    add         dstq, 384*2
-    dec           hd
-    jg .loop
+    call .hv
+    dec             hd
+    jnz .main_loop
+    test         edgeb, 8 ; LR_HAVE_BOTTOM
+    jz .v3
+    mov           lpfq, [rsp+gprsize*0]
+    call .hv_bottom
+    add           lpfq, [rsp+gprsize*1]
+    call .hv_bottom
+.v1:
+    call mangle(private_prefix %+ _wiener_filter7_ssse3).v
     RET
+.no_top:
+    lea             t3, [lpfq+lpf_strideq*4]
+    mov           lpfq, dstmp
+    mov [rsp+gprsize*1], lpf_strideq
+    lea             t3, [t3+lpf_strideq*2]
+    mov [rsp+gprsize*0], t3
+    call .h
+    mov             t6, t1
+    mov             t5, t1
+    mov             t4, t1
+    mov             t3, t1
+    mov             t2, t1
+    dec             hd
+    jz .v1
+    add           lpfq, dst_strideq
+    add             t1, 384*2
+    call .h
+    mov             t2, t1
+    dec             hd
+    jz .v2
+    add           lpfq, dst_strideq
+    add             t1, 384*2
+    call .h
+    dec             hd
+    jz .v3
+    lea             t0, [t1+384*2]
+    call .hv
+    dec             hd
+    jz .v3
+    add             t0, 384*8
+    call .hv
+    dec             hd
+    jnz .main
+.v3:
+    call mangle(private_prefix %+ _wiener_filter7_ssse3).v
+.v2:
+    call mangle(private_prefix %+ _wiener_filter7_ssse3).v
+    jmp .v1
+.extend_right:
+    movd            m2, [lpfq-4]
+%if ARCH_X86_64
+    push            r0
+    lea             r0, [pb_right_ext_mask+21]
+    movu            m0, [r0+xq+0]
+    movu            m1, [r0+xq+8]
+    pop             r0
+%else
+    movu            m0, [r6+xq+0]
+    movu            m1, [r6+xq+8]
+%endif
+%if cpuflag(ssse3)
+    pshufb          m2, [base+pb_3]
+%else
+    punpcklbw       m2, m2
+    pshuflw         m2, m2, q3333
+    punpcklqdq      m2, m2
+%endif
+    pand            m4, m0
+    pand            m5, m1
+    pandn           m0, m2
+    pandn           m1, m2
+    por             m4, m0
+    por             m5, m1
+    ret
+.h:
+    %define stk esp+4 ; offset due to call
+    mov             xq, wq
+    test         edgeb, 1 ; LR_HAVE_LEFT
+    jz .h_extend_left
+    movifnidn    leftq, leftmp
+    mova            m4, [lpfq+xq]
+    movd            m5, [leftq]
+    add          leftq, 4
+    pslldq          m4, 4
+    por             m4, m5
+    movifnidn   leftmp, leftq
+    jmp .h_main
+.h_extend_left:
+%if cpuflag(ssse3)
+    mova            m4, [lpfq+xq]
+    pshufb          m4, [base+wiener_l_shuf]
+%else
+    mova            m5, [lpfq+xq]
+    pshufd          m4, m5, q2103
+    punpcklbw       m5, m5
+    punpcklwd       m5, m5
+    movss           m4, m5
+%endif
+    jmp .h_main
+.h_top:
+    mov             xq, wq
+    test         edgeb, 1 ; LR_HAVE_LEFT
+    jz .h_extend_left
+.h_loop:
+    movu            m4, [lpfq+xq-4]
+.h_main:
+    movu            m5, [lpfq+xq+4]
+    test         edgeb, 2 ; LR_HAVE_RIGHT
+    jnz .h_have_right
+    cmp             xd, -18
+    jl .h_have_right
+    call .extend_right
+.h_have_right:
+%macro %%h7 0
+%if cpuflag(ssse3)
+    pshufb          m0, m4, m8
+    pmaddubsw       m0, m12
+    pshufb          m1, m5, m8
+    pmaddubsw       m1, m12
+    pshufb          m2, m4, m9
+    pmaddubsw       m2, m13
+    pshufb          m3, m5, m9
+    pmaddubsw       m3, m13
+    paddw           m0, m2
+    pshufb          m2, m4, m10
+    pmaddubsw       m2, m13
+    paddw           m1, m3
+    pshufb          m3, m5, m10
+    pmaddubsw       m3, m13
+    pshufb          m4, m11
+    paddw           m0, m2
+    pmullw          m2, m14, m4
+    pshufb          m5, m11
+    paddw           m1, m3
+    pmullw          m3, m14, m5
+    psllw           m4, 7
+    psllw           m5, 7
+    paddw           m0, m2
+    mova            m2, [base+pw_m16380]
+    paddw           m1, m3
+    paddw           m4, m2
+    paddw           m5, m2
+    paddsw          m0, m4
+    paddsw          m1, m5
+%else
+    psrldq          m0, m4, 1
+    pslldq          m1, m4, 1
+    pxor            m3, m3
+    punpcklbw       m0, m3
+    punpckhbw       m1, m3
+    paddw           m0, m1
+    pmullw          m0, m11
+    psrldq          m1, m4, 2
+    pslldq          m2, m4, 2
+    punpcklbw       m1, m3
+    punpckhbw       m2, m3
+    paddw           m1, m2
+    pmullw          m1, m12
+    paddw           m0, m1
+    pshufd          m2, m4, q0321
+    punpcklbw       m2, m3
+    pmullw          m1, m14, m2
+    paddw           m0, m1
+    psrldq          m1, m4, 3
+    pslldq          m4, 3
+    punpcklbw       m1, m3
+    punpckhbw       m4, m3
+    paddw           m1, m4
+    pmullw          m1, m13
+    paddw           m0, m1
+    psllw           m2, 7
+    paddw           m2, m10
+    paddsw          m0, m2
+    psrldq          m1, m5, 1
+    pslldq          m2, m5, 1
+    punpcklbw       m1, m3
+    punpckhbw       m2, m3
+    paddw           m1, m2
+    pmullw          m1, m11
+    psrldq          m2, m5, 2
+    pslldq          m4, m5, 2
+    punpcklbw       m2, m3
+    punpckhbw       m4, m3
+    paddw           m2, m4
+    pmullw          m2, m12
+    paddw           m1, m2
+    pshufd          m4, m5, q0321
+    punpcklbw       m4, m3
+    pmullw          m2, m14, m4
+    paddw           m1, m2
+    psrldq          m2, m5, 3
+    pslldq          m5, 3
+    punpcklbw       m2, m3
+    punpckhbw       m5, m3
+    paddw           m2, m5
+    pmullw          m2, m13
+    paddw           m1, m2
+    psllw           m4, 7
+    paddw           m4, m10
+    paddsw          m1, m4
+%endif
 %endmacro
-
-%macro WIENER_V 0
-%if ARCH_X86_64
-cglobal wiener_filter_v, 4, 10, 16, dst, stride, mid, w, h, fv, edge
-    mov        edged, edgem
-    movifnidn    fvq, fvmp
-    movifnidn     hd, hm
-    movq         m15, [fvq]
-    pshufd       m14, m15, q1111
-    pshufd       m15, m15, q0000
-    paddw        m14, [pw_0_128]
-    mova         m12, [pd_1024]
-
-    DEFINE_ARGS dst, stride, mid, w, h, y, edge, ylim, mptr, dstptr
-
-    mov        ylimd, edged
-    and        ylimd, 8 ; have_bottom
-    shr        ylimd, 2
-    sub        ylimd, 3
+    %%h7
+    psraw           m0, 3
+    psraw           m1, 3
+    paddw           m0, m15
+    paddw           m1, m15
+    mova  [t1+xq*2+ 0], m0
+    mova  [t1+xq*2+16], m1
+    add             xq, 16
+    jl .h_loop
+    ret
+ALIGN function_align
+.hv:
+    add           lpfq, dst_strideq
+    mov             xq, wq
+    test         edgeb, 1 ; LR_HAVE_LEFT
+    jz .hv_extend_left
+    movifnidn    leftq, leftmp
+    mova            m4, [lpfq+xq]
+    movd            m5, [leftq]
+    add          leftq, 4
+    pslldq          m4, 4
+    por             m4, m5
+    movifnidn   leftmp, leftq
+    jmp .hv_main
+.hv_extend_left:
+%if cpuflag(ssse3)
+    mova            m4, [lpfq+xq]
+    pshufb          m4, [base+wiener_l_shuf]
 %else
-cglobal wiener_filter_v, 5, 7, 8, -96, dst, stride, mid, w, h, fv, edge
- %define ylimd [esp+12]
-
-    mov          r5d, edgem
-    and          r5d, 8
-    shr          r5d, 2
-    sub          r5d, 3
-    mov        ylimd, r5d
-    mov          fvq, fvmp
-    mov        edged, edgem
-
-    SETUP_PIC edged
-
-    movq          m0, [fvq]
-    pshufd        m1, m0, q1111
-    pshufd        m0, m0, q0000
-    paddw         m1, [PIC_sym(pw_0_128)]
-    mova  [esp+0x50], m0
-    mova  [esp+0x40], m1
-
-    DEFINE_ARGS dst, stride, mid, w, h, y, edge
- %define mptrq      midq
- %define dstptrq    dstq
- %define edgeb      byte [esp]
+    mova            m5, [lpfq+xq]
+    pshufd          m4, m5, q2103
+    punpcklbw       m5, m5
+    punpcklwd       m5, m5
+    movss           m4, m5
 %endif
-
-    ; main x loop for vertical filter, does one column of 16 pixels
-.loop_x:
-    mova          m3, [midq] ; middle line
-
-    ; load top pixels
-    test       edgeb, 4 ; have_top
-    jz .emu_top
-    mova          m0, [midq-384*4]
-    mova          m2, [midq-384*2]
-    mova          m1, m0
-    jmp .load_bottom_pixels
-.emu_top:
-    mova          m0, m3
-    mova          m1, m3
-    mova          m2, m3
-
-    ; load bottom pixels
-.load_bottom_pixels:
-    mov           yd, hd
+    jmp .hv_main
+.hv_bottom:
+    mov             xq, wq
+    test         edgeb, 1 ; LR_HAVE_LEFT
+    jz .hv_extend_left
+.hv_loop:
+    movu            m4, [lpfq+xq-4]
+.hv_main:
+    movu            m5, [lpfq+xq+4]
+    test         edgeb, 2 ; LR_HAVE_RIGHT
+    jnz .hv_have_right
+    cmp             xd, -18
+    jl .hv_have_right
+    call .extend_right
+.hv_have_right:
+    %%h7
 %if ARCH_X86_64
-    mov        mptrq, midq
-    mov      dstptrq, dstq
-    add           yd, ylimd
+    mova            m2, [t4+xq*2]
+    paddw           m2, [t2+xq*2]
 %else
-    mov      [esp+8], midq
-    mov      [esp+4], dstq
-    add           yd, ylimd
+    mov             r2, t4
+    mova            m2, [r2+xq*2]
+    mov             r2, t2
+    paddw           m2, [r2+xq*2]
+    mov             r2, t5
 %endif
-    jg .load_threelines
-
-    ; the remainder here is somewhat messy but only runs in very weird
-    ; circumstances at the bottom of the image in very small blocks (h=[1-3]),
-    ; so performance is not terribly important here...
-    je .load_twolines
-    cmp           yd, -1
-    je .load_oneline
-    ; h == 1 case
-    mova          m5, m3
-    mova          m4, m3
-    mova          m6, m3
-    jmp .loop
-.load_oneline:
-    ; h == 2 case
-    mova          m4, [midq+384*2]
-    mova          m5, m4
-    mova          m6, m4
-    jmp .loop
-.load_twolines:
-    ; h == 3 case
-    mova          m4, [midq+384*2]
-    mova          m5, [midq+384*4]
-    mova          m6, m5
-    jmp .loop
-.load_threelines:
-    ; h > 3 case
-    mova          m4, [midq+384*2]
-    mova          m5, [midq+384*4]
-    ; third line loaded in main loop below
-
-    ; main y loop for vertical filter
-.loop_load:
-    ; load one line into m6. if that pixel is no longer available, do
-    ; nothing, since m6 still has the data from the previous line in it. We
-    ; try to structure the loop so that the common case is evaluated fastest
-    mova          m6, [mptrq+384*6]
-.loop:
+    mova            m3, [t3+xq*2]
 %if ARCH_X86_64
-    paddw         m7, m0, m6
-    paddw         m8, m1, m5
-    paddw         m9, m2, m4
-    punpcklwd    m10, m7, m8
-    punpckhwd     m7, m8
-    punpcklwd    m11, m9, m3
-    punpckhwd     m9, m3
-    pmaddwd      m10, m15
-    pmaddwd       m7, m15
-    pmaddwd      m11, m14
-    pmaddwd       m9, m14
-    paddd        m10, m12
-    paddd         m7, m12
-    paddd        m10, m11
-    paddd         m7, m9
-    psrad        m10, 11
-    psrad         m7, 11
-    packssdw     m10, m7
-    packuswb     m10, m10
-    movq   [dstptrq], m10
+    mova            m5, [t5+xq*2]
 %else
-    mova  [esp+0x30], m1
-    mova  [esp+0x20], m2
-    mova  [esp+0x10], m3
-    paddw         m0, m6
-    paddw         m1, m5
-    paddw         m2, m4
-    punpcklwd     m7, m2, m3
-    punpckhwd     m2, m3
-    punpcklwd     m3, m0, m1
-    punpckhwd     m0, m1
-    mova          m1, [esp+0x50]
-    pmaddwd       m3, m1
-    pmaddwd       m0, m1
-    mova          m1, [esp+0x40]
-    pmaddwd       m7, m1
-    pmaddwd       m2, m1
-    paddd         m3, [PIC_sym(pd_1024)]
-    paddd         m0, [PIC_sym(pd_1024)]
-    paddd         m3, m7
-    paddd         m0, m2
-    psrad         m3, 11
-    psrad         m0, 11
-    packssdw      m3, m0
-    packuswb      m3, m3
-    movq      [dstq], m3
-    mova          m1, [esp+0x30]
-    mova          m2, [esp+0x20]
-    mova          m3, [esp+0x10]
+    mova            m5, [r2+xq*2]
+    mov             r2, t6
 %endif
-    ; shift pixels one position
-    mova          m0, m1
-    mova          m1, m2
-    mova          m2, m3
-    mova          m3, m4
-    mova          m4, m5
-    mova          m5, m6
-    add        mptrq, 384*2
-    add      dstptrq, strideq
-    dec           yd
-    jg .loop_load
-    ; for the bottom pixels, continue using m6 (as extended edge)
-    cmp           yd, ylimd
-    jg .loop
+    paddw           m5, [t1+xq*2]
+    psraw           m0, 3
+    psraw           m1, 3
+    paddw           m0, m15
+    paddw           m1, m15
+%if ARCH_X86_64
+    paddw           m4, m0, [t6+xq*2]
+%else
+    paddw           m4, m0, [r2+xq*2]
+    mov             r2, t4
+%endif
+    mova     [t0+xq*2], m0
+    punpcklwd       m0, m2, m3
+    pmaddwd         m0, m7
+    punpckhwd       m2, m3
+    pmaddwd         m2, m7
+    punpcklwd       m3, m4, m5
+    pmaddwd         m3, m6
+    punpckhwd       m4, m5
+    pmaddwd         m4, m6
+    paddd           m0, m3
+    mova            m3, [t3+xq*2+16]
+    paddd           m4, m2
+%if ARCH_X86_64
+    mova            m2, [t4+xq*2+16]
+    paddw           m2, [t2+xq*2+16]
+    mova            m5, [t5+xq*2+16]
+%else
+    mova            m2, [r2+xq*2+16]
+    mov             r2, t2
+    paddw           m2, [r2+xq*2+16]
+    mov             r2, t5
+    mova            m5, [r2+xq*2+16]
+    mov             r2, t6
+%endif
+    paddw           m5, [t1+xq*2+16]
+    psrad           m0, 11
+    psrad           m4, 11
+    packssdw        m0, m4
+%if ARCH_X86_64
+    paddw           m4, m1, [t6+xq*2+16]
+%else
+    paddw           m4, m1, [r2+xq*2+16]
+    mov           dstq, dstmp
+%endif
+    mova  [t0+xq*2+16], m1
+    punpcklwd       m1, m2, m3
+    pmaddwd         m1, m7
+    punpckhwd       m2, m3
+    pmaddwd         m2, m7
+    punpcklwd       m3, m4, m5
+    pmaddwd         m3, m6
+    punpckhwd       m4, m5
+    pmaddwd         m4, m6
+    paddd           m1, m3
+    paddd           m2, m4
+    psrad           m1, 11
+    psrad           m2, 11
+    packssdw        m1, m2
+    packuswb        m0, m1
+    mova     [dstq+xq], m0
+    add             xq, 16
+    jl .hv_loop
+    add           dstq, dst_strideq
+%if ARCH_X86_64
+    mov             t6, t5
+    mov             t5, t4
+    mov             t4, t3
+    mov             t3, t2
+    mov             t2, t1
+    mov             t1, t0
+    mov             t0, t6
+%else
+    mov          dstmp, dstq
+    mov             r1, t5
+    mov             r2, t4
+    mov             t6, r1
+    mov             t5, r2
+    mov             t4, t3
+    mov             t3, t2
+    mov             t2, t1
+    mov             t1, t0
+    mov             t0, r1
+%endif
+    ret
+%if cpuflag(ssse3) ; identical in sse2 and ssse3, so share code
+.v:
+    mov             xq, wq
+.v_loop:
+%if ARCH_X86_64
+    mova            m1, [t4+xq*2]
+    paddw           m1, [t2+xq*2]
+%else
+    mov             r2, t4
+    mova            m1, [r2+xq*2]
+    mov             r2, t2
+    paddw           m1, [r2+xq*2]
+    mov             r2, t6
+%endif
+    mova            m2, [t3+xq*2]
+    mova            m4, [t1+xq*2]
+%if ARCH_X86_64
+    paddw           m3, m4, [t6+xq*2]
+    paddw           m4, [t5+xq*2]
+%else
+    paddw           m3, m4, [r2+xq*2]
+    mov             r2, t5
+    paddw           m4, [r2+xq*2]
+    mov             r2, t4
+%endif
+    punpcklwd       m0, m1, m2
+    pmaddwd         m0, m7
+    punpckhwd       m1, m2
+    pmaddwd         m1, m7
+    punpcklwd       m2, m3, m4
+    pmaddwd         m2, m6
+    punpckhwd       m3, m4
+    pmaddwd         m3, m6
+    paddd           m0, m2
+    paddd           m1, m3
+%if ARCH_X86_64
+    mova            m2, [t4+xq*2+16]
+    paddw           m2, [t2+xq*2+16]
+%else
+    mova            m2, [r2+xq*2+16]
+    mov             r2, t2
+    paddw           m2, [r2+xq*2+16]
+    mov             r2, t6
+%endif
+    mova            m3, [t3+xq*2+16]
+    mova            m5, [t1+xq*2+16]
+%if ARCH_X86_64
+    paddw           m4, m5, [t6+xq*2+16]
+    paddw           m5, [t5+xq*2+16]
+%else
+    paddw           m4, m5, [r2+xq*2+16]
+    mov             r2, t5
+    paddw           m5, [r2+xq*2+16]
+    movifnidn     dstq, dstmp
+%endif
+    psrad           m0, 11
+    psrad           m1, 11
+    packssdw        m0, m1
+    punpcklwd       m1, m2, m3
+    pmaddwd         m1, m7
+    punpckhwd       m2, m3
+    pmaddwd         m2, m7
+    punpcklwd       m3, m4, m5
+    pmaddwd         m3, m6
+    punpckhwd       m4, m5
+    pmaddwd         m4, m6
+    paddd           m1, m3
+    paddd           m2, m4
+    psrad           m1, 11
+    psrad           m2, 11
+    packssdw        m1, m2
+    packuswb        m0, m1
+    mova     [dstq+xq], m0
+    add             xq, 16
+    jl .v_loop
+    add           dstq, dst_strideq
+%if ARCH_X86_64
+    mov             t6, t5
+    mov             t5, t4
+%else
+    mov          dstmp, dstq
+    mov             r1, t5
+    mov             r2, t4
+    mov             t6, r1
+    mov             t5, r2
+%endif
+    mov             t4, t3
+    mov             t3, t2
+    mov             t2, t1
+    ret
+%endif
 
-%if ARCH_X86_32
-    mov         midq, [esp+8]
-    mov         dstq, [esp+4]
+%if ARCH_X86_64
+cglobal wiener_filter5, 5, 13, 16, 384*8+16, dst, dst_stride, left, lpf, \
+                                             lpf_stride, w, edge, flt, h, x
+    mov           fltq, fltmp
+    mov          edged, r8m
+    mov             wd, wm
+    mov             hd, r6m
+    movq           m14, [fltq]
+    add           lpfq, wq
+    mova            m8, [pw_m16380]
+    lea             t1, [rsp+wq*2+16]
+    mova           m15, [pw_2056]
+    add           dstq, wq
+    movq            m7, [fltq+16]
+    neg             wq
+%if cpuflag(ssse3)
+    pshufb         m14, [wiener_init]
+    mova            m9, [wiener_shufB]
+    pshufd         m13, m14, q3333  ; x1 x2
+    mova           m10, [wiener_shufC]
+    punpcklqdq     m14, m14         ; x3
+    mova           m11, [wiener_shufD]
+    mova           m12, [wiener_l_shuf]
+%else
+    punpcklwd      m14, m14
+    pshufd         m11, m14, q1111 ; x1
+    pshufd         m13, m14, q2222 ; x2
+    pshufd         m14, m14, q3333 ; x3
 %endif
-    add         midq, 16
-    add         dstq, 8
-    sub           wd, 8
-    jg .loop_x
+%else
+%if cpuflag(ssse3)
+    %define stk_off     80
+%else
+    %define m11         [stk+80]
+    %define stk_off     96
+%endif
+cglobal wiener_filter5, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_stride
+    %define stk         esp
+    %define leftmp      [stk+28]
+    %define m8          [base+pw_m16380]
+    %define m12         [base+wiener_l_shuf]
+    %define m14         [stk+48]
+    mov             r1, r7m ; flt
+    mov             r0, r0m ; dst
+    mov             r5, r5m ; w
+    mov           lpfq, lpfm
+    mov             r2, r8m ; edge
+    mov             r4, r6m ; h
+    movq            m2, [r1+ 0]
+    movq            m7, [r1+16]
+    add             r0, r5
+    mov             r1, r1m ; dst_stride
+    add           lpfq, r5
+    mov          edged, r2
+    mov             r2, r2m ; left
+    mov          dstmp, r0
+    lea             t1, [rsp+r5*2+stk_off]
+    mov             hd, r4
+    neg             r5
+    mov    lpf_strideq, lpf_stridem
+    LEA             r6, pb_right_ext_mask+21
+    mov             wq, r5
+    mov    dst_strideq, r1
+    mov         leftmp, r2
+%if cpuflag(ssse3)
+    pshufb          m2, [base+wiener_init]
+    pshufd          m1, m2, q3333
+    punpcklqdq      m2, m2
+%else
+    punpcklwd       m2, m2
+    pshufd          m0, m2, q1111
+    pshufd          m1, m2, q2222
+    pshufd          m2, m2, q3333
+    mova           m11, m0
+%endif
+    mova           m13, m1
+    mova           m14, m2
+%endif
+    pshufd          m6, m7, q0000 ; __ y1
+    pshufd          m7, m7, q1111 ; y2 y3
+    test         edgeb, 4 ; LR_HAVE_TOP
+    jz .no_top
+    call .h_top
+    add           lpfq, lpf_strideq
+    mov             t4, t1
+    add             t1, 384*2
+    call .h_top
+    lea             xq, [lpfq+lpf_strideq*4]
+    mov           lpfq, dstmp
+    mov             t3, t1
+    add             t1, 384*2
+    mov [rsp+gprsize*1], lpf_strideq
+    add             xq, lpf_strideq
+    mov [rsp+gprsize*0], xq ; below
+    call .h
+    mov             t2, t1
+    dec             hd
+    jz .v1
+    add           lpfq, dst_strideq
+    add             t1, 384*2
+    call .h
+    dec             hd
+    jz .v2
+.main:
+    mov             t0, t4
+.main_loop:
+    call .hv
+    dec             hd
+    jnz .main_loop
+    test         edgeb, 8 ; LR_HAVE_BOTTOM
+    jz .v2
+    mov           lpfq, [rsp+gprsize*0]
+    call .hv_bottom
+    add           lpfq, [rsp+gprsize*1]
+    call .hv_bottom
+.end:
     RET
+.no_top:
+    lea             t3, [lpfq+lpf_strideq*4]
+    mov           lpfq, dstmp
+    mov [rsp+gprsize*1], lpf_strideq
+    lea             t3, [t3+lpf_strideq*2]
+    mov [rsp+gprsize*0], t3
+    call .h
+    mov             t4, t1
+    mov             t3, t1
+    mov             t2, t1
+    dec             hd
+    jz .v1
+    add           lpfq, dst_strideq
+    add             t1, 384*2
+    call .h
+    dec             hd
+    jz .v2
+    lea             t0, [t1+384*2]
+    call .hv
+    dec             hd
+    jz .v2
+    add             t0, 384*6
+    call .hv
+    dec             hd
+    jnz .main
+.v2:
+    call mangle(private_prefix %+ _wiener_filter5_ssse3).v
+    add           dstq, dst_strideq
+    mov             t4, t3
+    mov             t3, t2
+    mov             t2, t1
+    movifnidn    dstmp, dstq
+.v1:
+    call mangle(private_prefix %+ _wiener_filter5_ssse3).v
+    jmp .end
+.h:
+    %define stk esp+4
+    mov             xq, wq
+    test         edgeb, 1 ; LR_HAVE_LEFT
+    jz .h_extend_left
+    movifnidn    leftq, leftmp
+    mova            m4, [lpfq+xq]
+    movd            m5, [leftq]
+    add          leftq, 4
+    pslldq          m4, 4
+    por             m4, m5
+    movifnidn   leftmp, leftq
+    jmp .h_main
+.h_extend_left:
+%if cpuflag(ssse3)
+    mova            m4, [lpfq+xq]
+    pshufb          m4, m12
+%else
+    mova            m5, [lpfq+xq]
+    pshufd          m4, m5, q2103
+    punpcklbw       m5, m5
+    punpcklwd       m5, m5
+    movss           m4, m5
+%endif
+    jmp .h_main
+.h_top:
+    mov             xq, wq
+    test         edgeb, 1 ; LR_HAVE_LEFT
+    jz .h_extend_left
+.h_loop:
+    movu            m4, [lpfq+xq-4]
+.h_main:
+    movu            m5, [lpfq+xq+4]
+    test         edgeb, 2 ; LR_HAVE_RIGHT
+    jnz .h_have_right
+    cmp             xd, -17
+    jl .h_have_right
+    call mangle(private_prefix %+ _wiener_filter7 %+ SUFFIX).extend_right
+.h_have_right:
+%macro %%h5 0
+%if cpuflag(ssse3)
+    pshufb          m0, m4, m9
+    pmaddubsw       m0, m13
+    pshufb          m1, m5, m9
+    pmaddubsw       m1, m13
+    pshufb          m2, m4, m10
+    pmaddubsw       m2, m13
+    pshufb          m3, m5, m10
+    pmaddubsw       m3, m13
+    pshufb          m4, m11
+    paddw           m0, m2
+    pmullw          m2, m14, m4
+    pshufb          m5, m11
+    paddw           m1, m3
+    pmullw          m3, m14, m5
+    psllw           m4, 7
+    psllw           m5, 7
+    paddw           m4, m8
+    paddw           m5, m8
+    paddw           m0, m2
+    paddw           m1, m3
+    paddsw          m0, m4
+    paddsw          m1, m5
+%else
+    psrldq          m0, m4, 2
+    pslldq          m1, m4, 2
+    pxor            m3, m3
+    punpcklbw       m0, m3
+    punpckhbw       m1, m3
+    paddw           m0, m1
+    pmullw          m0, m11
+    pshufd          m2, m4, q0321
+    punpcklbw       m2, m3
+    pmullw          m1, m14, m2
+    paddw           m0, m1
+    psrldq          m1, m4, 3
+    pslldq          m4, 3
+    punpcklbw       m1, m3
+    punpckhbw       m4, m3
+    paddw           m1, m4
+    pmullw          m1, m13
+    paddw           m0, m1
+    psllw           m2, 7
+    paddw           m2, m8
+    paddsw          m0, m2
+    psrldq          m1, m5, 2
+    pslldq          m4, m5, 2
+    punpcklbw       m1, m3
+    punpckhbw       m4, m3
+    paddw           m1, m4
+    pmullw          m1, m11
+    pshufd          m4, m5, q0321
+    punpcklbw       m4, m3
+    pmullw          m2, m14, m4
+    paddw           m1, m2
+    psrldq          m2, m5, 3
+    pslldq          m5, 3
+    punpcklbw       m2, m3
+    punpckhbw       m5, m3
+    paddw           m2, m5
+    pmullw          m2, m13
+    paddw           m1, m2
+    psllw           m4, 7
+    paddw           m4, m8
+    paddsw          m1, m4
+%endif
+%endmacro
+    %%h5
+    psraw           m0, 3
+    psraw           m1, 3
+    paddw           m0, m15
+    paddw           m1, m15
+    mova  [t1+xq*2+ 0], m0
+    mova  [t1+xq*2+16], m1
+    add             xq, 16
+    jl .h_loop
+    ret
+ALIGN function_align
+.hv:
+    add           lpfq, dst_strideq
+    mov             xq, wq
+    test         edgeb, 1 ; LR_HAVE_LEFT
+    jz .hv_extend_left
+    movifnidn    leftq, leftmp
+    mova            m4, [lpfq+xq]
+    movd            m5, [leftq]
+    add          leftq, 4
+    pslldq          m4, 4
+    por             m4, m5
+    movifnidn   leftmp, leftq
+    jmp .hv_main
+.hv_extend_left:
+%if cpuflag(ssse3)
+    mova            m4, [lpfq+xq]
+    pshufb          m4, m12
+%else
+    mova            m5, [lpfq+xq]
+    pshufd          m4, m5, q2103
+    punpcklbw       m5, m5
+    punpcklwd       m5, m5
+    movss           m4, m5
+%endif
+    jmp .hv_main
+.hv_bottom:
+    mov             xq, wq
+    test         edgeb, 1 ; LR_HAVE_LEFT
+    jz .hv_extend_left
+.hv_loop:
+    movu            m4, [lpfq+xq-4]
+.hv_main:
+    movu            m5, [lpfq+xq+4]
+    test         edgeb, 2 ; LR_HAVE_RIGHT
+    jnz .hv_have_right
+    cmp             xd, -17
+    jl .hv_have_right
+    call mangle(private_prefix %+ _wiener_filter7 %+ SUFFIX).extend_right
+.hv_have_right:
+    %%h5
+    mova            m2, [t3+xq*2]
+    paddw           m2, [t1+xq*2]
+    psraw           m0, 3
+    psraw           m1, 3
+    paddw           m0, m15
+    paddw           m1, m15
+%if ARCH_X86_64
+    mova            m3, [t2+xq*2]
+    paddw           m4, m0, [t4+xq*2]
+%else
+    mov             r2, t2
+    mova            m3, [r2+xq*2]
+    mov             r2, t4
+    paddw           m4, m0, [r2+xq*2]
+%endif
+    mova     [t0+xq*2], m0
+    punpcklwd       m0, m2, m3
+    pmaddwd         m0, m7
+    punpckhwd       m2, m3
+    pmaddwd         m2, m7
+    punpcklwd       m3, m4, m4
+    pmaddwd         m3, m6
+    punpckhwd       m4, m4
+    pmaddwd         m4, m6
+    paddd           m0, m3
+    paddd           m4, m2
+    mova            m2, [t3+xq*2+16]
+    paddw           m2, [t1+xq*2+16]
+    psrad           m0, 11
+    psrad           m4, 11
+    packssdw        m0, m4
+%if ARCH_X86_64
+    mova            m3, [t2+xq*2+16]
+    paddw           m4, m1, [t4+xq*2+16]
+%else
+    paddw           m4, m1, [r2+xq*2+16]
+    mov             r2, t2
+    mova            m3, [r2+xq*2+16]
+    mov           dstq, dstmp
+%endif
+    mova  [t0+xq*2+16], m1
+    punpcklwd       m1, m2, m3
+    pmaddwd         m1, m7
+    punpckhwd       m2, m3
+    pmaddwd         m2, m7
+    punpcklwd       m3, m4, m4
+    pmaddwd         m3, m6
+    punpckhwd       m4, m4
+    pmaddwd         m4, m6
+    paddd           m1, m3
+    paddd           m2, m4
+    psrad           m1, 11
+    psrad           m2, 11
+    packssdw        m1, m2
+    packuswb        m0, m1
+    mova     [dstq+xq], m0
+    add             xq, 16
+    jl .hv_loop
+    add           dstq, dst_strideq
+    mov             t4, t3
+    mov             t3, t2
+    mov             t2, t1
+    mov             t1, t0
+    mov             t0, t4
+    movifnidn    dstmp, dstq
+    ret
+%if cpuflag(ssse3)
+.v:
+    mov             xq, wq
+.v_loop:
+    mova            m3, [t1+xq*2]
+    paddw           m1, m3, [t3+xq*2]
+%if ARCH_X86_64
+    mova            m2, [t2+xq*2]
+    paddw           m3, [t4+xq*2]
+%else
+    mov             r2, t2
+    mova            m2, [r2+xq*2]
+    mov             r2, t4
+    paddw           m3, [r2+xq*2]
+%endif
+    punpcklwd       m0, m1, m2
+    pmaddwd         m0, m7
+    punpckhwd       m1, m2
+    pmaddwd         m1, m7
+    punpcklwd       m2, m3
+    pmaddwd         m2, m6
+    punpckhwd       m3, m3
+    pmaddwd         m3, m6
+    paddd           m0, m2
+    paddd           m1, m3
+    mova            m4, [t1+xq*2+16]
+    paddw           m2, m4, [t3+xq*2+16]
+%if ARCH_X86_64
+    mova            m3, [t2+xq*2+16]
+    paddw           m4, [t4+xq*2+16]
+%else
+    paddw           m4, [r2+xq*2+16]
+    mov             r2, t2
+    mova            m3, [r2+xq*2+16]
+    mov           dstq, dstmp
+%endif
+    psrad           m0, 11
+    psrad           m1, 11
+    packssdw        m0, m1
+    punpcklwd       m1, m2, m3
+    pmaddwd         m1, m7
+    punpckhwd       m2, m3
+    pmaddwd         m2, m7
+    punpcklwd       m3, m4
+    pmaddwd         m3, m6
+    punpckhwd       m4, m4
+    pmaddwd         m4, m6
+    paddd           m1, m3
+    paddd           m2, m4
+    psrad           m1, 11
+    psrad           m2, 11
+    packssdw        m1, m2
+    packuswb        m0, m1
+    mova     [dstq+xq], m0
+    add             xq, 16
+    jl .v_loop
+    ret
+%endif
 %endmacro
 
 INIT_XMM sse2
-WIENER_H
-WIENER_V
+WIENER
 
 INIT_XMM ssse3
-WIENER_H
-WIENER_V
+WIENER
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      self-guided     ;;
@@ -701,7 +1195,7 @@ cglobal sgr_box3_h, 6, 7, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
     neg           xq
     mov           wq, xq
 %if ARCH_X86_64
-    lea          r10, [pb_right_ext_mask+16]
+    lea          r10, [pb_right_ext_mask+24]
 %endif
 .loop_y:
     mov           xq, wq
@@ -737,7 +1231,7 @@ cglobal sgr_box3_h, 6, 7, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
 %if ARCH_X86_64
     movu          m4, [r10+xq*2]
 %else
-    movu          m4, [PIC_sym(pb_right_ext_mask+16)+xd*2]
+    movu          m4, [PIC_sym(pb_right_ext_mask)+xd*2+24]
 %endif
     pand          m2, m4
     pandn         m4, m3
@@ -1135,7 +1629,7 @@ cglobal sgr_finish_filter1, 7, 7, 8, -144, t, src, stride, a, b, x, y
     psubw         m1, m4                            ; aa
     movq          m0, [srcq]
     XCHG_PIC_REG
-    punpcklbw     m0, [PIC_sym(pb_right_ext_mask)+16]
+    punpcklbw     m0, [PIC_sym(pb_0)]
     punpcklwd     m4, m1, [PIC_sym(pw_16)]
     punpckhwd     m1, [PIC_sym(pw_16)]
     punpcklwd     m2, m0, [PIC_sym(pw_16)]
@@ -1269,7 +1763,7 @@ cglobal sgr_box5_h, 7, 7, 8, sumsq, sum, left, src, xlim, x, h, edge
     lea       sumsqq, [sumsqq+wq*4-4]
     neg           wq
 %if ARCH_X86_64
-    lea          r10, [pb_right_ext_mask+16]
+    lea          r10, [pb_right_ext_mask+24]
 %else
     mov           wm, xd
  %define wq wm
@@ -1316,7 +1810,7 @@ cglobal sgr_box5_h, 7, 7, 8, sumsq, sum, left, src, xlim, x, h, edge
 %if ARCH_X86_64
     movu          m4, [r10+xq*2]
 %else
-    movu          m4, [PIC_sym(pb_right_ext_mask+16)+xd*2]
+    movu          m4, [PIC_sym(pb_right_ext_mask)+xd*2+24]
     XCHG_PIC_REG
 %endif
     pand          m2, m4
@@ -1883,6 +2377,7 @@ cglobal sgr_finish_filter2, 6, 7, 8, t, src, stride, a, b, x, y
 %endif
     RET
 
+%undef t2
 cglobal sgr_weighted2, 4, 7, 12, dst, stride, t1, t2, w, h, wt
     movifnidn     wd, wm
     movd          m0, wtm

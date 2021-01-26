@@ -76,35 +76,6 @@ COLD void dav1d_default_settings(Dav1dSettings *const s) {
     s->frame_size_limit = 0;
 }
 
-static COLD int init_mem_pools(Dav1dContext *const c) {
-    if (!pthread_mutex_init(&c->seq_hdr_pool.lock, NULL)) {
-        if (!pthread_mutex_init(&c->frame_hdr_pool.lock, NULL)) {
-            if (!pthread_mutex_init(&c->segmap_pool.lock, NULL)) {
-                if (!pthread_mutex_init(&c->refmvs_pool.lock, NULL)) {
-                    if (!pthread_mutex_init(&c->cdf_pool.lock, NULL)) {
-                        if (c->allocator.alloc_picture_callback == dav1d_default_picture_alloc) {
-                            if (!pthread_mutex_init(&c->picture_pool.lock, NULL)) {
-                                c->allocator.cookie = &c->picture_pool;
-                                c->mem_pools_inited = 2;
-                                return 0;
-                            }
-                        } else {
-                            c->mem_pools_inited = 1;
-                            return 0;
-                        }
-                        pthread_mutex_destroy(&c->cdf_pool.lock);
-                    }
-                    pthread_mutex_destroy(&c->refmvs_pool.lock);
-                }
-                pthread_mutex_destroy(&c->segmap_pool.lock);
-            }
-            pthread_mutex_destroy(&c->frame_hdr_pool.lock);
-        }
-        pthread_mutex_destroy(&c->seq_hdr_pool.lock);
-    }
-    return -1;
-}
-
 static void close_internal(Dav1dContext **const c_out, int flush);
 
 NO_SANITIZE("cfi-icall") // CFI is broken with dlsym()
@@ -157,7 +128,18 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
     c->all_layers = s->all_layers;
     c->frame_size_limit = s->frame_size_limit;
 
-    if (init_mem_pools(c)) goto error;
+    if (dav1d_mem_pool_init(&c->seq_hdr_pool) ||
+        dav1d_mem_pool_init(&c->frame_hdr_pool) ||
+        dav1d_mem_pool_init(&c->segmap_pool) ||
+        dav1d_mem_pool_init(&c->refmvs_pool) ||
+        dav1d_mem_pool_init(&c->cdf_pool))
+    {
+        goto error;
+    }
+    if (c->allocator.alloc_picture_callback == dav1d_default_picture_alloc) {
+        if (dav1d_mem_pool_init(&c->picture_pool)) goto error;
+        c->allocator.cookie = c->picture_pool;
+    }
 
     /* On 32-bit systems extremely large frame sizes can cause overflows in
      * dav1d_decode_frame() malloc size calculations. Prevent that from occuring
@@ -602,15 +584,12 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
     dav1d_ref_dec(&c->content_light_ref);
     dav1d_ref_dec(&c->itut_t35_ref);
 
-    if (c->mem_pools_inited) {
-        dav1d_mem_pool_destroy(&c->seq_hdr_pool);
-        dav1d_mem_pool_destroy(&c->frame_hdr_pool);
-        dav1d_mem_pool_destroy(&c->segmap_pool);
-        dav1d_mem_pool_destroy(&c->refmvs_pool);
-        dav1d_mem_pool_destroy(&c->cdf_pool);
-        if (c->mem_pools_inited == 2)
-            dav1d_mem_pool_destroy(&c->picture_pool);
-    }
+    dav1d_mem_pool_end(c->seq_hdr_pool);
+    dav1d_mem_pool_end(c->frame_hdr_pool);
+    dav1d_mem_pool_end(c->segmap_pool);
+    dav1d_mem_pool_end(c->refmvs_pool);
+    dav1d_mem_pool_end(c->cdf_pool);
+    dav1d_mem_pool_end(c->picture_pool);
 
     dav1d_freep_aligned(c_out);
 }

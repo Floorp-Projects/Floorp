@@ -38,10 +38,8 @@ COLD void bitfn(dav1d_loop_filter_dsp_init_arm)(Dav1dLoopFilterDSPContext *const
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-#if BITDEPTH == 8 || ARCH_AARCH64
     c->loop_filter_sb[0][0] = BF(dav1d_lpf_h_sb_y, neon);
     c->loop_filter_sb[0][1] = BF(dav1d_lpf_v_sb_y, neon);
     c->loop_filter_sb[1][0] = BF(dav1d_lpf_h_sb_uv, neon);
     c->loop_filter_sb[1][1] = BF(dav1d_lpf_v_sb_uv, neon);
-#endif
 }

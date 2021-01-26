@@ -31,52 +31,19 @@
 #include "common/intops.h"
 #include "src/tables.h"
 
-// Future potential optimizations:
-// - special chroma versions which don't filter [0]/[6];
-// - running filter_h_avx2 transposed (one col of 32 pixels per iteration, top
-//   to bottom) instead of scanline-ordered should be faster since then the
-//   if (have_left) and similar conditions run only once instead of per line;
-// - filter_v_avx2 currently runs 16 pixels per iteration, it should be possible
-//   to run 32 (like filter_h_avx2), and then all vpermqs can go;
-// - maybe split out the top/bottom filter_h_avx2 from the main body filter_h_avx2,
-//   since then the have_left condition can be inlined;
-// - consider having the wrapper (wiener_filter_${ext}) also in hand-written
-//   assembly, so the setup overhead is minimized.
-
 #define WIENER_FILTER(ext) \
-\
-void dav1d_wiener_filter_h_##ext(int16_t *dst, const pixel (*left)[4], \
-                                 const pixel *src, ptrdiff_t stride, \
-                                 const int16_t fh[7], const intptr_t w, \
-                                 int h, enum LrEdgeFlags edges); \
-void dav1d_wiener_filter_v_##ext(pixel *dst, ptrdiff_t stride, \
-                                 const int16_t *mid, int w, int h, \
-                                 const int16_t fv[7], enum LrEdgeFlags edges); \
-\
-static void wiener_filter_##ext(pixel *const dst, const ptrdiff_t dst_stride, \
-                                const pixel (*const left)[4], \
-                                const pixel *lpf, const ptrdiff_t lpf_stride, \
-                                const int w, const int h, const int16_t fh[7], \
-                                const int16_t fv[7], const enum LrEdgeFlags edges) \
-{ \
-    ALIGN_STK_32(int16_t, mid, 68 * 384,); \
-\
-    /* horizontal filter */ \
-    dav1d_wiener_filter_h_##ext(&mid[2 * 384], left, dst, dst_stride, \
-                               fh, w, h, edges); \
-    if (edges & LR_HAVE_TOP) \
-        dav1d_wiener_filter_h_##ext(mid, NULL, lpf, lpf_stride, \
-                                   fh, w, 2, edges); \
-    if (edges & LR_HAVE_BOTTOM) \
-        dav1d_wiener_filter_h_##ext(&mid[(2 + h) * 384], NULL, \
-                                   lpf + 6 * PXSTRIDE(lpf_stride), lpf_stride, \
-                                   fh, w, 2, edges); \
-\
-    dav1d_wiener_filter_v_##ext(dst, dst_stride, &mid[2*384], w, h, fv, edges); \
-}
+void dav1d_wiener_filter7_##ext(pixel *const dst, ptrdiff_t dst_stride, \
+                                const pixel (*left)[4], const pixel *lpf, \
+                                ptrdiff_t lpf_stride, int w, int h, \
+                                const int16_t filter[2][8], \
+                                enum LrEdgeFlags edges); \
+void dav1d_wiener_filter5_##ext(pixel *const dst, ptrdiff_t dst_stride, \
+                                const pixel (*left)[4], const pixel *lpf, \
+                                ptrdiff_t lpf_stride, int w, int h, \
+                                const int16_t filter[2][8], \
+                                enum LrEdgeFlags edges);
 
 #define SGR_FILTER(ext) \
-\
 void dav1d_sgr_box3_h_##ext(int32_t *sumsq, int16_t *sum, \
                             const pixel (*left)[4], \
                             const pixel *src, const ptrdiff_t stride, \
@@ -199,15 +166,13 @@ static void sgr_filter_##ext(pixel *const dst, const ptrdiff_t dst_stride, \
     } \
 }
 
-#define DEF_LR_FILTERS(ext) \
-WIENER_FILTER(ext) \
-SGR_FILTER(ext)
-
 #if BITDEPTH == 8
 WIENER_FILTER(sse2)
-DEF_LR_FILTERS(ssse3)
+WIENER_FILTER(ssse3)
+SGR_FILTER(ssse3)
 # if ARCH_X86_64
-DEF_LR_FILTERS(avx2)
+WIENER_FILTER(avx2)
+SGR_FILTER(avx2)
 # endif
 #endif
 
@@ -216,18 +181,21 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init_x86)(Dav1dLoopRestorationDSPCont
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSE2)) return;
 #if BITDEPTH == 8
-    c->wiener = wiener_filter_sse2;
+    c->wiener[0] = dav1d_wiener_filter7_sse2;
+    c->wiener[1] = dav1d_wiener_filter5_sse2;
 #endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
 #if BITDEPTH == 8
-    c->wiener = wiener_filter_ssse3;
+    c->wiener[0] = dav1d_wiener_filter7_ssse3;
+    c->wiener[1] = dav1d_wiener_filter5_ssse3;
     c->selfguided = sgr_filter_ssse3;
 #endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 #if BITDEPTH == 8 && ARCH_X86_64
-    c->wiener = wiener_filter_avx2;
+    c->wiener[0] = dav1d_wiener_filter7_avx2;
+    c->wiener[1] = dav1d_wiener_filter5_avx2;
     c->selfguided = sgr_filter_avx2;
 #endif
 }

@@ -49,7 +49,7 @@ static inline i32x4 iclip_vec(i32x4 v, const i32x4 minv, const i32x4 maxv) {
 
 static void wiener_filter_h_vsx(int32_t *hor_ptr,
                                 uint8_t *tmp_ptr,
-                                const int16_t filterh[7],
+                                const int16_t filterh[8],
                                 const int w, const int h)
 {
     static const i32x4 zerov = vec_splats(0);
@@ -149,14 +149,10 @@ static inline i16x8 iclip_u8_vec(i16x8 v) {
 } while (0)
 
 #define LOAD_AND_APPLY_FILTER_V(sumpixelv, hor) do { \
-    i32x4 v_1 = (i32x4) vec_ld( 0, &hor[(j + 3) * REST_UNIT_STRIDE + i]); \
-    i32x4 v_2 = (i32x4) vec_ld(16, &hor[(j + 3) * REST_UNIT_STRIDE + i]); \
-    i32x4 v_3 = (i32x4) vec_ld(32, &hor[(j + 3) * REST_UNIT_STRIDE + i]); \
-    i32x4 v_4 = (i32x4) vec_ld(48, &hor[(j + 3) * REST_UNIT_STRIDE + i]); \
-    i32x4 sum1 = -round_offset_vec; \
-    i32x4 sum2 = -round_offset_vec; \
-    i32x4 sum3 = -round_offset_vec; \
-    i32x4 sum4 = -round_offset_vec; \
+    i32x4 sum1 = round_vec; \
+    i32x4 sum2 = round_vec; \
+    i32x4 sum3 = round_vec; \
+    i32x4 sum4 = round_vec; \
     APPLY_FILTER_V(0, filterv0); \
     APPLY_FILTER_V(1, filterv1); \
     APPLY_FILTER_V(2, filterv2); \
@@ -164,31 +160,25 @@ static inline i16x8 iclip_u8_vec(i16x8 v) {
     APPLY_FILTER_V(4, filterv4); \
     APPLY_FILTER_V(5, filterv5); \
     APPLY_FILTER_V(6, filterv6); \
-    sum1 = (v_1 << seven_vec) + sum1 + rounding_off_vec; \
-    sum2 = (v_2 << seven_vec) + sum2 + rounding_off_vec; \
-    sum3 = (v_3 << seven_vec) + sum3 + rounding_off_vec; \
-    sum4 = (v_4 << seven_vec) + sum4 + rounding_off_vec; \
     sum1 = sum1 >> round_bits_vec; \
     sum2 = sum2 >> round_bits_vec; \
     sum3 = sum3 >> round_bits_vec; \
     sum4 = sum4 >> round_bits_vec; \
-    i16x8 sum_short_packed_1 = (i16x8) vec_pack( sum1, sum2 ); \
-    i16x8 sum_short_packed_2 = (i16x8) vec_pack( sum3, sum4 ); \
+    i16x8 sum_short_packed_1 = (i16x8) vec_pack(sum1, sum2); \
+    i16x8 sum_short_packed_2 = (i16x8) vec_pack(sum3, sum4); \
     sum_short_packed_1 = iclip_u8_vec(sum_short_packed_1); \
     sum_short_packed_2 = iclip_u8_vec(sum_short_packed_2); \
-    sum_pixel = (u8x16) vec_pack(sum_short_packed_1, sum_short_packed_2 ); \
+    sum_pixel = (u8x16) vec_pack(sum_short_packed_1, sum_short_packed_2); \
 } while (0)
 
 static inline void wiener_filter_v_vsx(uint8_t *p,
                                        const ptrdiff_t p_stride,
                                        const int32_t *hor,
-                                       const int16_t filterv[7],
+                                       const int16_t filterv[8],
                                        const int w, const int h)
 {
     static const i32x4 round_bits_vec = vec_splats(11);
-    static const i32x4 rounding_off_vec = vec_splats(1 << 10);
-    static const i32x4 round_offset_vec = vec_splats(1 << 18);
-    static const i32x4 seven_vec = vec_splats(7);
+    static const i32x4 round_vec = vec_splats((1 << 10) - (1 << 18));
 
     i32x4 filterv0 =  vec_splats((int32_t) filterv[0]);
     i32x4 filterv1 =  vec_splats((int32_t) filterv[1]);
@@ -319,8 +309,7 @@ static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t p_stride,
                               const uint8_t *lpf,
                               const ptrdiff_t lpf_stride,
                               const int w, const int h,
-                              const int16_t filterh[7],
-                              const int16_t filterv[7],
+                              const int16_t filter[2][8],
                               const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
     // Wiener filtering is applied to a maximum stripe height of 64 + 3 pixels
@@ -329,8 +318,8 @@ static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t p_stride,
     padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
     ALIGN_STK_16(int32_t, hor, 70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE + 64,);
 
-    wiener_filter_h_vsx(hor, tmp, filterh, w, h);
-    wiener_filter_v_vsx(p, p_stride, hor, filterv, w, h);
+    wiener_filter_h_vsx(hor, tmp, filter[0], w, h);
+    wiener_filter_v_vsx(p, p_stride, hor, filter[1], w, h);
 
 }
 #endif
@@ -343,7 +332,7 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init_ppc)
     if (!(flags & DAV1D_PPC_CPU_FLAG_VSX)) return;
 
 #if BITDEPTH == 8
-    c->wiener = wiener_filter_vsx;
+    c->wiener[0] = c->wiener[1] = wiener_filter_vsx;
 #endif
 }
 

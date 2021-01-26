@@ -135,7 +135,7 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
                      const pixel (*const left)[4],
                      const pixel *lpf, const ptrdiff_t lpf_stride,
                      const int w, const int h,
-                     const int16_t filterh[7], const int16_t filterv[7],
+                     const int16_t filter[2][8],
                      const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
     // Wiener filtering is applied to a maximum stripe height of 64 + 3 pixels
@@ -156,10 +156,13 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
     const int clip_limit = 1 << (bitdepth + 1 + 7 - round_bits_h);
     for (int j = 0; j < h + 6; j++) {
         for (int i = 0; i < w; i++) {
-            int sum = (tmp_ptr[i + 3] << 7) + (1 << (bitdepth + 6));
+            int sum = (1 << (bitdepth + 6));
+#if BITDEPTH == 8
+            sum += tmp_ptr[i + 3] * 128;
+#endif
 
             for (int k = 0; k < 7; k++) {
-                sum += tmp_ptr[i + k] * filterh[k];
+                sum += tmp_ptr[i + k] * filter[0][k];
             }
 
             hor_ptr[i] =
@@ -174,10 +177,10 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
     const int round_offset = 1 << (bitdepth + (round_bits_v - 1));
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
-            int sum = (hor[(j + 3) * REST_UNIT_STRIDE + i] << 7) - round_offset;
+            int sum = -round_offset;
 
             for (int k = 0; k < 7; k++) {
-                sum += hor[(j + k) * REST_UNIT_STRIDE + i] * filterv[k];
+                sum += hor[(j + k) * REST_UNIT_STRIDE + i] * filter[1][k];
             }
 
             p[j * PXSTRIDE(p_stride) + i] =
@@ -506,7 +509,7 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
 }
 
 COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext *const c, int bpc) {
-    c->wiener = wiener_c;
+    c->wiener[0] = c->wiener[1] = wiener_c;
     c->selfguided = selfguided_c;
 
 #if HAVE_ASM

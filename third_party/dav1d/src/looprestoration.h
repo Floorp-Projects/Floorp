@@ -54,9 +54,8 @@ typedef const void *const_left_pixel_row;
 void (name)(pixel *dst, ptrdiff_t dst_stride, \
             const_left_pixel_row left, \
             const pixel *lpf, ptrdiff_t lpf_stride, \
-            int w, int h, const int16_t filterh[7], \
-            const int16_t filterv[7], enum LrEdgeFlags edges \
-            HIGHBD_DECL_SUFFIX)
+            int w, int h, const int16_t filter[2][8], \
+            enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 typedef decl_wiener_filter_fn(*wienerfilter_fn);
 
 #define decl_selfguided_filter_fn(name) \
@@ -68,7 +67,7 @@ void (name)(pixel *dst, ptrdiff_t dst_stride, \
 typedef decl_selfguided_filter_fn(*selfguided_fn);
 
 typedef struct Dav1dLoopRestorationDSPContext {
-    wienerfilter_fn wiener;
+    wienerfilter_fn wiener[2]; /* 7-tap, 5-tap */
     selfguided_fn selfguided;
 } Dav1dLoopRestorationDSPContext;
 

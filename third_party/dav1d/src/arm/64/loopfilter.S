@@ -1034,11 +1034,11 @@ function lpf_\dir\()_sb_\type\()_8bpc_neon, export=1
         ld1r            {v6.16b}, [x5]            // sharp[1]
         sub             x5,  x5,  #8
         bif             v1.16b,  v0.16b,  v3.16b  // if (!l[0][0]) L = l[offset][0]
+        cmtst           v2.4s,   v1.4s,   v2.4s   // L != 0
         mul             v1.4s,   v1.4s,   v4.4s   // L
 .ifc \type, y
         dup             v15.4s,  w2               // vmask[2]
 .endif
-        cmtst           v2.4s,   v1.4s,   v2.4s   // L != 0
         dup             v14.4s,  w7               // vmask[1]
         mov             x16, v2.d[0]
         mov             x17, v2.d[1]
