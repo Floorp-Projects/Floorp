@@ -1174,17 +1174,56 @@ async function expandContainer(inspector, container) {
  * Expand the provided markup container by clicking on the expand arrow and waiting for
  * inspector and children to update. Similar to expandContainer helper, but this method
  * uses a click rather than programatically calling expandNode().
+ *
+ * @param {InspectorPanel} inspector
+ *        The current inspector instance.
+ * @param {MarkupContainer} container
+ *        The markup container to click on.
+ * @param {Object} modifiers
+ *        options.altKey {Boolean} Use the altKey modifier, to recursively apply
+ *        the action to all the children of the container.
  */
-async function expandContainerByClick(inspector, container) {
-  const onChildren = waitForChildrenUpdated(inspector);
+async function expandContainerByClick(
+  inspector,
+  container,
+  { altKey = false } = {}
+) {
   const onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(
     container.expander,
-    {},
+    {
+      altKey,
+    },
     inspector.markup.doc.defaultView
   );
-  await onChildren;
+
+  // Wait for any pending children updates
+  await waitForMultipleChildrenUpdates(inspector);
+
+  // Wait for inspector-updated triggered by selecting the node.
   await onUpdated;
+}
+
+/**
+ * Collapse the provided markup container. See expandContainerByClick.
+ */
+async function collapseContainerByClick(
+  inspector,
+  container,
+  { altKey = false } = {}
+) {
+  // No need to wait, this is a local, synchronous operation where nodes are
+  // only hidden from the view, not destroyed
+  EventUtils.synthesizeMouseAtCenter(
+    container.expander,
+    {
+      altKey,
+    },
+    inspector.markup.doc.defaultView
+  );
+
+  // Wait for any pending children updates
+  await waitForMultipleChildrenUpdates(inspector);
 }
 
 /**
