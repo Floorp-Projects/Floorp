@@ -625,6 +625,7 @@ class nsWindow final : public nsWindowBase {
   static bool sIsInMouseCapture;
   static bool sHaveInitializedPrefs;
   static bool sIsRestoringSession;
+  static bool sFirstTopLevelWindowCreated;
 
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
 

@@ -1910,7 +1910,7 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
 
   settings.rtlEnabled = intl::LocaleService::GetInstance()->IsAppLocaleRTL();
 
-  PersistPreXULSkeletonUIValues(settings);
+  Unused << PersistPreXULSkeletonUIValues(settings);
 #endif
 
   return NS_OK;
@@ -3141,7 +3141,7 @@ AppWindow::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
         RefPtr<Promise> promise = l10n->Ready();
         MOZ_ASSERT(promise);
         RefPtr<L10nReadyPromiseHandler> handler =
-          new L10nReadyPromiseHandler(menubarDoc, mWindow);
+            new L10nReadyPromiseHandler(menubarDoc, mWindow);
         promise->AppendNativeHandler(handler);
       } else {
         // Something went wrong loading the doc and l10n wasn't created. This

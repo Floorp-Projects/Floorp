@@ -284,6 +284,8 @@ BYTE nsWindow::sLastMouseButton = 0;
 bool nsWindow::sHaveInitializedPrefs = false;
 bool nsWindow::sIsRestoringSession = false;
 
+bool nsWindow::sFirstTopLevelWindowCreated = false;
+
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
 static SystemTimeConverter<DWORD>& TimeConverter() {
@@ -893,9 +895,18 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     style |= WS_DISABLED;
   }
 
-  if (aInitData->mWindowType == eWindowType_toplevel && !aParent) {
-    mWnd = ConsumePreXULSkeletonUIHandle();
-    if (mWnd) {
+  if (aInitData->mWindowType == eWindowType_toplevel && !aParent &&
+      !sFirstTopLevelWindowCreated) {
+    sFirstTopLevelWindowCreated = true;
+    auto skeletonUIResult = ConsumePreXULSkeletonUIHandle();
+    if (skeletonUIResult.isErr()) {
+      nsAutoString errorString(
+          GetPreXULSkeletonUIErrorString(skeletonUIResult.unwrapErr()));
+      Telemetry::ScalarSet(
+          Telemetry::ScalarID::STARTUP_SKELETON_UI_DISABLED_REASON,
+          errorString);
+    } else {
+      mWnd = skeletonUIResult.unwrap();
       MOZ_ASSERT(style == kPreXULSkeletonUIWindowStyle,
                  "The skeleton UI window style should match the expected "
                  "style for the first window created");

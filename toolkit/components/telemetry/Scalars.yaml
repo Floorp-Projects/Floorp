@@ -5311,6 +5311,83 @@ startup:
     record_in_processes:
       - 'main'
 
+  skeleton_ui_disabled_reason:
+    bug_numbers:
+      - 1686301
+    description: >
+      The reason why the skeleton UI was not shown to the user. This should be
+      one of the following values:
+        None:
+          There was no reason for not showing the skeleton UI. This should not
+          be recorded.
+        Ineligible:
+          The user was ineligible for the skeleton UI due to information which
+          should already be trivially available via telemetry (i.e., the user
+          is running an OS version that doesn't support the skeleton UI.)
+        Disabled:
+          The registry specified "Enabled" as 0 for the skeleton UI.
+        EnabledKeyDoesNotExist:
+          The "Enabled" key in the registry does not exist.
+        OOM:
+          We encountered an allocation failure while trying to show the
+          skeleton UI.
+        Cmdline:
+          The skeleton UI was disabled due to the presence of an unsupported
+          command line argument.
+        EnvVars:
+          The skeleton UI was disabled due to an explicitly unsupported
+          environment variable.
+        FailedToOpenRegistryKey:
+          We were unable to open the skeleton UI Windows registry key.
+        RegistryError:
+          We encountered an error trying to read/write a skeleton UI registry
+          value.
+        FailedLoadingDynamicProcs:
+          We were unable to dynamically load one of the functions we require in
+          order to show the skeleton UI.
+        FailedGettingLock:
+          We were unable to acquire the skeleton UI lock - this should mean
+          that an existing instance of the application is already running.
+        FilesystemFailure:
+          Encountered some error getting the path to a file or reading from a
+          particular file while trying to show the skeleton UI.
+        NoStartWithLastProfile:
+          The user has set up their profiles so Firefox always shows the
+          profile manager during startup.
+        FailedRegisteringWindowClass:
+          We failed to register the window class needed to show the skeleton UI
+          window.
+        CorruptData:
+          Clearly invalid data was found when trying to load the necessary
+          information to show the skeleton UI in the right place.
+        BadWindowDimensions:
+          Window dimensions outside of the supported size for the skeleton UI.
+        FailedGettingMonitorInfo:
+          Couldn't get the monitor information when trying to display the
+          skeleton UI.
+        CreateWindowFailed:
+          The call to CreateWindow failed.
+        FailedGettingDC:
+          We failed to get the HDC to draw into.
+        FailedBlitting:
+          We failed blitting the actual skeleton UI to the HDC.
+        FailedFillingBottomRect:
+          We failed filling the solid color of the main browser below the
+          browser chrome.
+        Unknown:
+          An unknown error occurred - this generally should not happen.
+    expires: "92"
+    keyed: false
+    kind: string
+    notification_emails:
+      - dothayer@mozilla.com
+      - emalysz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 script.preloader:
   mainthread_recompile:
     bug_numbers:
