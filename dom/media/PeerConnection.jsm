@@ -856,7 +856,7 @@ class RTCPeerConnection {
         return this.getEH(name);
       },
       set(h) {
-        return this.setEH(name, h);
+        this.setEH(name, h);
       },
     });
   }
@@ -868,7 +868,7 @@ class RTCPeerConnection {
       },
       set(h) {
         this.logWarning(name + " is deprecated! " + msg);
-        return this.setEH(name, h);
+        this.setEH(name, h);
       },
     });
   }
