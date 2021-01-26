@@ -454,8 +454,6 @@ class MessageQueue extends Handler {
       clearTimeout(this._timeout);
       this._timeout = null;
     }
-
-    return val;
   }
 
   uninit() {

@@ -660,14 +660,5 @@ module.exports = {
         "mozilla/reject-chromeutils-import-null": "off",
       },
     },
-    {
-      files: [
-        "mobile/android/chrome/geckoview/SessionStateAggregator.js",
-        "mobile/android/modules/geckoview/DelayedInit.jsm",
-      ],
-      rules: {
-        "no-setter-return": "off",
-      },
-    },
   ],
 };
