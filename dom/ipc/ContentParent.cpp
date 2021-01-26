@@ -60,6 +60,7 @@
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoginReputationIPC.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/Preferences.h"
@@ -372,6 +373,9 @@ static std::map<RemoteDecodeIn, PDMFactory::MediaCodecsSupported>
 
 /* static */
 uint32_t ContentParent::sMaxContentProcesses = 0;
+
+/* static */
+Maybe<TimeStamp> ContentParent::sLastContentProcessLaunch = Nothing();
 
 /* static */
 LogModule* ContentParent::GetLog() { return gProcessLog; }
@@ -7511,6 +7515,7 @@ JSActorManager* ContentParent::AsJSActorManager() { return this; }
 
 /* static */
 void ContentParent::DidLaunchSubprocess() {
+  TimeStamp now = TimeStamp::Now();
   uint32_t count = 0;
   for (auto* parent : ContentParent::AllProcesses(ContentParent::eLive)) {
     Unused << parent;
@@ -7520,6 +7525,14 @@ void ContentParent::DidLaunchSubprocess() {
   if (count > sMaxContentProcesses) {
     Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_MAX, count);
   }
+
+  if (sLastContentProcessLaunch) {
+    TimeStamp last = *sLastContentProcessLaunch;
+
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::CONTENT_PROCESS_TIME_SINCE_LAST_LAUNCH_MS, last, now);
+  }
+  sLastContentProcessLaunch = Some(now);
 }
 
 }  // namespace dom
