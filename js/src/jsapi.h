@@ -2631,6 +2631,7 @@ extern JS_PUBLIC_API void JS_SetOffthreadIonCompilationEnabled(JSContext* cx,
 #define JIT_COMPILER_OPTIONS(Register) \
   Register(BASELINE_INTERPRETER_WARMUP_TRIGGER, "blinterp.warmup.trigger") \
   Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger") \
+  Register(IC_FORCE_MEGAMORPHIC, "ic.force-megamorphic") \
   Register(ION_NORMAL_WARMUP_TRIGGER, "ion.warmup.trigger") \
   Register(ION_GVN_ENABLE, "ion.gvn.enable") \
   Register(ION_FORCE_IC, "ion.forceinlineCaches") \
