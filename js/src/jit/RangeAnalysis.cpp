@@ -1807,7 +1807,9 @@ void MArrayBufferViewLength::computeRange(TempAllocator& alloc) {
 }
 
 void MArrayBufferViewByteOffset::computeRange(TempAllocator& alloc) {
-  setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+  if (ArrayBufferObject::maxBufferByteLength() <= INT32_MAX) {
+    setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+  }
 }
 
 void MTypedArrayElementShift::computeRange(TempAllocator& alloc) {
