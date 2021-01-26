@@ -662,9 +662,6 @@ module.exports = {
     },
     {
       files: [
-        "devtools/client/shared/async-store-helper.js",
-        "devtools/client/shared/prefs.js",
-        "devtools/shared/task.js",
         "dom/base/SlowScriptDebug.jsm",
         "dom/media/PeerConnection.jsm",
         "mobile/android/chrome/geckoview/SessionStateAggregator.js",
