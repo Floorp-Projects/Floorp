@@ -371,7 +371,6 @@ void AltSvcMapping::GetConnectionInfo(
     ci->SetInsecureScheme(true);
   }
   ci->SetPrivate(mPrivate);
-  ci->SetIsolated(mIsolated);
   ci.forget(outCI);
 }
 

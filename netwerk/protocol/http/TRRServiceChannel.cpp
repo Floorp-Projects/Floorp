@@ -523,7 +523,6 @@ nsresult TRRServiceChannel::ContinueOnBeforeConnect() {
   // Finalize ConnectionInfo flags before SpeculativeConnect
   mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
   mConnectionInfo->SetPrivate(mPrivateBrowsing);
-  mConnectionInfo->SetIsolated(IsIsolated());
   mConnectionInfo->SetNoSpdy(mCaps & NS_HTTP_DISALLOW_SPDY);
   mConnectionInfo->SetBeConservative((mCaps & NS_HTTP_BE_CONSERVATIVE) ||
                                      LoadBeConservative());
