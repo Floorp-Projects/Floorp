@@ -50,7 +50,8 @@ bool hardFail(uint16_t code) {
 
 // static
 nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
-                                  SvcFieldValue& field, uint16_t length) {
+                                  SvcFieldValue& field, uint16_t length,
+                                  const unsigned char* aBuffer) {
   switch (key) {
     case SvcParamKeyMandatory: {
       if (length % 2 != 0) {
@@ -58,7 +59,7 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
         return NS_ERROR_UNEXPECTED;
       }
       while (length > 0) {
-        uint16_t mandatoryKey = get16bit(mResponse, svcbIndex);
+        uint16_t mandatoryKey = get16bit(aBuffer, svcbIndex);
         length -= 2;
         svcbIndex += 2;
 
@@ -74,14 +75,14 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
       field.mValue = AsVariant(SvcParamAlpn());
       auto& alpnArray = field.mValue.as<SvcParamAlpn>().mValue;
       while (length > 0) {
-        uint8_t alpnIdLength = mResponse[svcbIndex++];
+        uint8_t alpnIdLength = aBuffer[svcbIndex++];
         length -= 1;
         if (alpnIdLength > length) {
           return NS_ERROR_UNEXPECTED;
         }
 
         alpnArray.AppendElement(
-            nsCString((const char*)&mResponse[svcbIndex], alpnIdLength));
+            nsCString((const char*)&aBuffer[svcbIndex], alpnIdLength));
         length -= alpnIdLength;
         svcbIndex += alpnIdLength;
       }
@@ -101,7 +102,7 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
         return NS_ERROR_UNEXPECTED;
       }
       field.mValue =
-          AsVariant(SvcParamPort{.mValue = get16bit(mResponse, svcbIndex)});
+          AsVariant(SvcParamPort{.mValue = get16bit(aBuffer, svcbIndex)});
       break;
     }
     case SvcParamKeyIpv4Hint: {
@@ -116,7 +117,7 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
         NetAddr addr;
         addr.inet.family = AF_INET;
         addr.inet.port = 0;
-        addr.inet.ip = ntohl(get32bit(mResponse, svcbIndex));
+        addr.inet.ip = ntohl(get32bit(aBuffer, svcbIndex));
         ipv4array.AppendElement(addr);
         length -= 4;
         svcbIndex += 4;
@@ -125,7 +126,7 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
     }
     case SvcParamKeyEchConfig: {
       field.mValue = AsVariant(SvcParamEchConfig{
-          .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
+          .mValue = nsCString((const char*)(&aBuffer[svcbIndex]), length)});
       break;
     }
     case SvcParamKeyIpv6Hint: {
@@ -143,7 +144,7 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
         addr.inet6.flowinfo = 0;  // unknown
         addr.inet6.scope_id = 0;  // unknown
         for (int i = 0; i < 16; i++, svcbIndex++) {
-          addr.inet6.ip.u8[i] = mResponse[svcbIndex];
+          addr.inet6.ip.u8[i] = aBuffer[svcbIndex];
         }
         ipv6array.AppendElement(addr);
         length -= 16;
@@ -153,7 +154,7 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
     }
     case SvcParamKeyODoHConfig: {
       field.mValue = AsVariant(SvcParamODoHConfig{
-          .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
+          .mValue = nsCString((const char*)(&aBuffer[svcbIndex]), length)});
       break;
     }
     default: {
@@ -165,14 +166,15 @@ nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
   return NS_OK;
 }
 
-nsresult DNSPacket::PassQName(unsigned int& index) {
+nsresult DNSPacket::PassQName(unsigned int& index,
+                              const unsigned char* aBuffer) {
   uint8_t length;
   do {
     if (mBodySize < (index + 1)) {
       LOG(("TRR: PassQName:%d fail at index %d\n", __LINE__, index));
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    length = static_cast<uint8_t>(mResponse[index]);
+    length = static_cast<uint8_t>(aBuffer[index]);
     if ((length & 0xc0) == 0xc0) {
       // name pointer, advance over it and be done
       if (mBodySize < (index + 2)) {
@@ -197,7 +199,8 @@ nsresult DNSPacket::PassQName(unsigned int& index) {
 
 // GetQname: retrieves the qname (stores in 'aQname') and stores the index
 // after qname was parsed into the 'aIndex'.
-nsresult DNSPacket::GetQname(nsACString& aQname, unsigned int& aIndex) {
+nsresult DNSPacket::GetQname(nsACString& aQname, unsigned int& aIndex,
+                             const unsigned char* aBuffer) {
   uint8_t clength = 0;
   unsigned int cindex = aIndex;
   unsigned int loop = 128;    // a valid DNS name can never loop this much
@@ -207,14 +210,14 @@ nsresult DNSPacket::GetQname(nsACString& aQname, unsigned int& aIndex) {
       LOG(("TRR: bad Qname packet\n"));
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    clength = static_cast<uint8_t>(mResponse[cindex]);
+    clength = static_cast<uint8_t>(aBuffer[cindex]);
     if ((clength & 0xc0) == 0xc0) {
       // name pointer, get the new offset (14 bits)
       if ((cindex + 1) >= mBodySize) {
         return NS_ERROR_ILLEGAL_VALUE;
       }
       // extract the new index position for the next label
-      uint16_t newpos = (clength & 0x3f) << 8 | mResponse[cindex + 1];
+      uint16_t newpos = (clength & 0x3f) << 8 | aBuffer[cindex + 1];
       if (!endindex) {
         // only update on the first "jump"
         endindex = cindex + 2;
@@ -237,7 +240,7 @@ nsresult DNSPacket::GetQname(nsACString& aQname, unsigned int& aIndex) {
       if ((cindex + clength) > mBodySize) {
         return NS_ERROR_ILLEGAL_VALUE;
       }
-      aQname.Append((const char*)(&mResponse[cindex]), clength);
+      aQname.Append((const char*)(&aBuffer[cindex]), clength);
       cindex += clength;  // skip label
     }
   } while (clength && --loop);
@@ -411,16 +414,12 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
   return NS_OK;
 }
 
-//
-// DohDecode() collects the TTL and the IP addresses in the response
-//
-// static
-nsresult DNSPacket::Decode(
+nsresult DNSPacket::DecodeInternal(
     nsCString& aHost, enum TrrType aType, nsCString& aCname, bool aAllowRFC1918,
     nsHostRecord::TRRSkippedReason& aReason, DOHresp& aResp,
     TypeRecordResultType& aTypeResult,
     nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
-    uint32_t& aTTL) {
+    uint32_t& aTTL, const unsigned char* aBuffer, uint32_t aLen) {
   // The response has a 12 byte header followed by the question (returned)
   // and then the answer. The answer section itself contains the name, type
   // and class again and THEN the record data.
@@ -440,15 +439,15 @@ nsresult DNSPacket::Decode(
   nsresult rv;
   uint16_t extendedError = UINT16_MAX;
 
-  LOG(("doh decode %s %d bytes\n", aHost.get(), mBodySize));
+  LOG(("doh decode %s %d bytes\n", aHost.get(), aLen));
 
   aCname.Truncate();
 
-  if (mBodySize < 12 || mResponse[0] || mResponse[1]) {
+  if (aLen < 12 || aBuffer[0] || aBuffer[1]) {
     LOG(("TRR bad incoming DOH, eject!\n"));
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  uint8_t rcode = mResponse[3] & 0x0F;
+  uint8_t rcode = aBuffer[3] & 0x0F;
   LOG(("TRR Decode %s RCODE %d\n", aHost.get(), rcode));
   if (rcode) {
     if (aReason == nsHostRecord::TRR_UNSET) {
@@ -456,30 +455,29 @@ nsresult DNSPacket::Decode(
     }
   }
 
-  uint16_t questionRecords = get16bit(mResponse, 4);  // qdcount
+  uint16_t questionRecords = get16bit(aBuffer, 4);  // qdcount
   // iterate over the single(?) host name in question
   while (questionRecords) {
     do {
-      if (mBodySize < (index + 1)) {
-        LOG(("TRR Decode 1 index: %u size: %u", index, mBodySize));
+      if (aLen < (index + 1)) {
+        LOG(("TRR Decode 1 index: %u size: %u", index, aLen));
         return NS_ERROR_ILLEGAL_VALUE;
       }
-      length = static_cast<uint8_t>(mResponse[index]);
+      length = static_cast<uint8_t>(aBuffer[index]);
       if (length) {
         if (host.Length()) {
           host.Append(".");
         }
-        if (mBodySize < (index + 1 + length)) {
-          LOG(("TRR Decode 2 index: %u size: %u len: %u", index, mBodySize,
-               length));
+        if (aLen < (index + 1 + length)) {
+          LOG(("TRR Decode 2 index: %u size: %u len: %u", index, aLen, length));
           return NS_ERROR_ILLEGAL_VALUE;
         }
-        host.Append(((char*)mResponse) + index + 1, length);
+        host.Append(((char*)aBuffer) + index + 1, length);
       }
       index += 1 + length;  // skip length byte + label
     } while (length);
-    if (mBodySize < (index + 4)) {
-      LOG(("TRR Decode 3 index: %u size: %u", index, mBodySize));
+    if (aLen < (index + 4)) {
+      LOG(("TRR Decode 3 index: %u size: %u", index, aLen));
       return NS_ERROR_ILLEGAL_VALUE;
     }
     index += 4;  // skip question's type, class
@@ -487,23 +485,23 @@ nsresult DNSPacket::Decode(
   }
 
   // Figure out the number of answer records from ANCOUNT
-  uint16_t answerRecords = get16bit(mResponse, 6);
+  uint16_t answerRecords = get16bit(aBuffer, 6);
 
   LOG(("TRR Decode: %d answer records (%u bytes body) %s index=%u\n",
-       answerRecords, mBodySize, host.get(), index));
+       answerRecords, aLen, host.get(), index));
 
   while (answerRecords) {
     nsAutoCString qname;
-    rv = GetQname(qname, index);
+    rv = GetQname(qname, index, aBuffer);
     if (NS_FAILED(rv)) {
       return rv;
     }
     // 16 bit TYPE
-    if (mBodySize < (index + 2)) {
+    if (aLen < (index + 2)) {
       LOG(("TRR: Dohdecode:%d fail at index %d\n", __LINE__, index + 2));
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    uint16_t TYPE = get16bit(mResponse, index);
+    uint16_t TYPE = get16bit(aBuffer, index);
 
     if ((TYPE != TRRTYPE_CNAME) && (TYPE != TRRTYPE_HTTPSSVC) &&
         (TYPE != static_cast<uint16_t>(aType))) {
@@ -515,11 +513,11 @@ nsresult DNSPacket::Decode(
     index += 2;
 
     // 16 bit class
-    if (mBodySize < (index + 2)) {
+    if (aLen < (index + 2)) {
       LOG(("TRR: Dohdecode:%d fail at index %d\n", __LINE__, index + 2));
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    uint16_t CLASS = get16bit(mResponse, index);
+    uint16_t CLASS = get16bit(aBuffer, index);
     if (kDNS_CLASS_IN != CLASS) {
       LOG(("TRR bad CLASS (%u) at index %d\n", CLASS, index));
       return NS_ERROR_UNEXPECTED;
@@ -527,22 +525,22 @@ nsresult DNSPacket::Decode(
     index += 2;
 
     // 32 bit TTL (seconds)
-    if (mBodySize < (index + 4)) {
+    if (aLen < (index + 4)) {
       LOG(("TRR: Dohdecode:%d fail at index %d\n", __LINE__, index));
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    uint32_t TTL = get32bit(mResponse, index);
+    uint32_t TTL = get32bit(aBuffer, index);
     index += 4;
 
     // 16 bit RDLENGTH
-    if (mBodySize < (index + 2)) {
+    if (aLen < (index + 2)) {
       LOG(("TRR: Dohdecode:%d fail at index %d\n", __LINE__, index));
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    uint16_t RDLENGTH = get16bit(mResponse, index);
+    uint16_t RDLENGTH = get16bit(aBuffer, index);
     index += 2;
 
-    if (mBodySize < (index + RDLENGTH)) {
+    if (aLen < (index + RDLENGTH)) {
       LOG(("TRR: Dohdecode:%d fail RDLENGTH=%d at index %d\n", __LINE__,
            RDLENGTH, index));
       return NS_ERROR_ILLEGAL_VALUE;
@@ -567,7 +565,7 @@ nsresult DNSPacket::Decode(
             LOG(("TRR bad length for A (%u)\n", RDLENGTH));
             return NS_ERROR_UNEXPECTED;
           }
-          rv = aResp.Add(TTL, mResponse, index, RDLENGTH, aAllowRFC1918);
+          rv = aResp.Add(TTL, aBuffer, index, RDLENGTH, aAllowRFC1918);
           if (NS_FAILED(rv)) {
             LOG(
                 ("TRR:DohDecode failed: local IP addresses or unknown IP "
@@ -580,7 +578,7 @@ nsresult DNSPacket::Decode(
             LOG(("TRR bad length for AAAA (%u)\n", RDLENGTH));
             return NS_ERROR_UNEXPECTED;
           }
-          rv = aResp.Add(TTL, mResponse, index, RDLENGTH, aAllowRFC1918);
+          rv = aResp.Add(TTL, aBuffer, index, RDLENGTH, aAllowRFC1918);
           if (NS_FAILED(rv)) {
             LOG(("TRR got unique/local IPv6 address!\n"));
             return rv;
@@ -593,7 +591,7 @@ nsresult DNSPacket::Decode(
           if (aCname.IsEmpty()) {
             nsAutoCString qname;
             unsigned int qnameindex = index;
-            rv = GetQname(qname, qnameindex);
+            rv = GetQname(qname, qnameindex, aBuffer);
             if (NS_FAILED(rv)) {
               return rv;
             }
@@ -619,13 +617,13 @@ nsresult DNSPacket::Decode(
           uint16_t available = RDLENGTH;
 
           while (available > 0) {
-            uint8_t characterStringLen = mResponse[txtIndex++];
+            uint8_t characterStringLen = aBuffer[txtIndex++];
             available--;
             if (characterStringLen > available) {
               LOG(("DNSPacket::DohDecode MALFORMED TXT RECORD\n"));
               break;
             }
-            txt.Append((const char*)(&mResponse[txtIndex]), characterStringLen);
+            txt.Append((const char*)(&aBuffer[txtIndex]), characterStringLen);
             txtIndex += characterStringLen;
             available -= characterStringLen;
           }
@@ -659,10 +657,10 @@ nsresult DNSPacket::Decode(
             return NS_ERROR_UNEXPECTED;
           }
 
-          parsed.mSvcFieldPriority = get16bit(mResponse, svcbIndex);
+          parsed.mSvcFieldPriority = get16bit(aBuffer, svcbIndex);
           svcbIndex += 2;
 
-          rv = GetQname(parsed.mSvcDomainName, svcbIndex);
+          rv = GetQname(parsed.mSvcDomainName, svcbIndex, aBuffer);
           if (NS_FAILED(rv)) {
             return rv;
           }
@@ -690,7 +688,7 @@ nsresult DNSPacket::Decode(
             // If the length ever goes above the available data, meaning if
             // available ever underflows, then that is an error.
             struct SvcFieldValue value;
-            uint16_t key = get16bit(mResponse, svcbIndex);
+            uint16_t key = get16bit(aBuffer, svcbIndex);
             svcbIndex += 2;
 
             // 2.2 Clients MUST consider an RR malformed if SvcParamKeys are
@@ -701,7 +699,7 @@ nsresult DNSPacket::Decode(
             }
             lastSvcParamKey = key;
 
-            uint16_t len = get16bit(mResponse, svcbIndex);
+            uint16_t len = get16bit(aBuffer, svcbIndex);
             svcbIndex += 2;
 
             available -= 4 + len;
@@ -709,7 +707,7 @@ nsresult DNSPacket::Decode(
               return NS_ERROR_UNEXPECTED;
             }
 
-            rv = ParseSvcParam(svcbIndex, key, value, len);
+            rv = ParseSvcParam(svcbIndex, key, value, len, aBuffer);
             if (NS_FAILED(rv)) {
               return rv;
             }
@@ -773,20 +771,20 @@ nsresult DNSPacket::Decode(
 
     index += RDLENGTH;
     LOG(("done with record type %u len %u index now %u of %u\n", TYPE, RDLENGTH,
-         index, mBodySize));
+         index, aLen));
     answerRecords--;
   }
 
   // NSCOUNT
-  uint16_t nsRecords = get16bit(mResponse, 8);
-  LOG(("TRR Decode: %d ns records (%u bytes body)\n", nsRecords, mBodySize));
+  uint16_t nsRecords = get16bit(aBuffer, 8);
+  LOG(("TRR Decode: %d ns records (%u bytes body)\n", nsRecords, aLen));
   while (nsRecords) {
-    rv = PassQName(index);
+    rv = PassQName(index, aBuffer);
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    if (mBodySize < (index + 8)) {
+    if (aLen < (index + 8)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
     index += 2;  // type
@@ -794,56 +792,56 @@ nsresult DNSPacket::Decode(
     index += 4;  // ttl
 
     // 16 bit RDLENGTH
-    if (mBodySize < (index + 2)) {
+    if (aLen < (index + 2)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    uint16_t RDLENGTH = get16bit(mResponse, index);
+    uint16_t RDLENGTH = get16bit(aBuffer, index);
     index += 2;
-    if (mBodySize < (index + RDLENGTH)) {
+    if (aLen < (index + RDLENGTH)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
     index += RDLENGTH;
-    LOG(("done with nsRecord now %u of %u\n", index, mBodySize));
+    LOG(("done with nsRecord now %u of %u\n", index, aLen));
     nsRecords--;
   }
 
   // additional resource records
-  uint16_t arRecords = get16bit(mResponse, 10);
+  uint16_t arRecords = get16bit(aBuffer, 10);
   LOG(("TRR Decode: %d additional resource records (%u bytes body)\n",
-       arRecords, mBodySize));
+       arRecords, aLen));
 
   while (arRecords) {
     nsAutoCString qname;
-    rv = GetQname(qname, index);
+    rv = GetQname(qname, index, aBuffer);
     if (NS_FAILED(rv)) {
       LOG(("Bad qname for additional record"));
       return rv;
     }
 
-    if (mBodySize < (index + 8)) {
+    if (aLen < (index + 8)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    uint16_t type = get16bit(mResponse, index);
+    uint16_t type = get16bit(aBuffer, index);
     index += 2;
     // The next two bytes encode class
     // (or udpPayloadSize when type is TRRTYPE_OPT)
-    uint16_t cls = get16bit(mResponse, index);
+    uint16_t cls = get16bit(aBuffer, index);
     index += 2;
     // The next 4 bytes encode TTL
     // (or extRCode + ednsVersion + flags when type is TRRTYPE_OPT)
-    uint32_t ttl = get32bit(mResponse, index);
+    uint32_t ttl = get32bit(aBuffer, index);
     index += 4;
     // cls and ttl are unused when type is TRRTYPE_OPT
 
     // 16 bit RDLENGTH
-    if (mBodySize < (index + 2)) {
+    if (aLen < (index + 2)) {
       LOG(("Record too small"));
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    uint16_t rdlength = get16bit(mResponse, index);
+    uint16_t rdlength = get16bit(aBuffer, index);
     index += 2;
-    if (mBodySize < (index + rdlength)) {
+    if (aLen < (index + rdlength)) {
       LOG(("rdlength too big"));
       return NS_ERROR_ILLEGAL_VALUE;
     }
@@ -865,7 +863,7 @@ nsresult DNSPacket::Decode(
             LOG(("TRR bad length for A (%u)\n", rdlength));
             return;
           }
-          rv = entry->Add(ttl, mResponse, index, rdlength, aAllowRFC1918);
+          rv = entry->Add(ttl, aBuffer, index, rdlength, aAllowRFC1918);
           if (NS_FAILED(rv)) {
             LOG(
                 ("TRR:DohDecode failed: local IP addresses or unknown IP "
@@ -882,7 +880,7 @@ nsresult DNSPacket::Decode(
             LOG(("TRR bad length for AAAA (%u)\n", rdlength));
             return;
           }
-          rv = entry->Add(ttl, mResponse, index, rdlength, aAllowRFC1918);
+          rv = entry->Add(ttl, aBuffer, index, rdlength, aAllowRFC1918);
           if (NS_FAILED(rv)) {
             LOG(("TRR got unique/local IPv6 address!\n"));
             return;
@@ -892,13 +890,13 @@ nsresult DNSPacket::Decode(
           LOG(("Parsing opt rdlen: %u", rdlength));
           unsigned int offset = 0;
           while (offset + 2 <= rdlength) {
-            uint16_t optCode = get16bit(mResponse, index + offset);
+            uint16_t optCode = get16bit(aBuffer, index + offset);
             LOG(("optCode: %u", optCode));
             offset += 2;
             if (offset + 2 > rdlength) {
               break;
             }
-            uint16_t optLen = get16bit(mResponse, index + offset);
+            uint16_t optLen = get16bit(aBuffer, index + offset);
             LOG(("optLen: %u", optLen));
             offset += 2;
             if (offset + optLen > rdlength) {
@@ -919,12 +917,11 @@ nsresult DNSPacket::Decode(
             if (offset + 2 > rdlength || optLen < 2) {
               break;
             }
-            extendedError = get16bit(mResponse, index + offset);
+            extendedError = get16bit(aBuffer, index + offset);
 
-            LOG((
-                "Extended error code: %u message: %s", extendedError,
-                nsAutoCString((char*)mResponse + index + offset + 2, optLen - 2)
-                    .get()));
+            LOG(("Extended error code: %u message: %s", extendedError,
+                 nsAutoCString((char*)aBuffer + index + offset + 2, optLen - 2)
+                     .get()));
             offset += optLen;
           }
           break;
@@ -937,13 +934,13 @@ nsresult DNSPacket::Decode(
     parseRecord();
 
     index += rdlength;
-    LOG(("done with additional rr now %u of %u\n", index, mBodySize));
+    LOG(("done with additional rr now %u of %u\n", index, aLen));
     arRecords--;
   }
 
-  if (index != mBodySize) {
+  if (index != aLen) {
     LOG(("DohDecode failed to parse entire response body, %u out of %u bytes\n",
-         index, mBodySize));
+         index, aLen));
     // failed to parse 100%, do not continue
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -968,6 +965,20 @@ nsresult DNSPacket::Decode(
   }
 
   return NS_OK;
+}
+
+//
+// DohDecode() collects the TTL and the IP addresses in the response
+//
+nsresult DNSPacket::Decode(
+    nsCString& aHost, enum TrrType aType, nsCString& aCname, bool aAllowRFC1918,
+    nsHostRecord::TRRSkippedReason& aReason, DOHresp& aResp,
+    TypeRecordResultType& aTypeResult,
+    nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
+    uint32_t& aTTL) {
+  return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aReason, aResp,
+                        aTypeResult, aAdditionalRecords, aTTL, mResponse,
+                        mBodySize);
 }
 
 // static
