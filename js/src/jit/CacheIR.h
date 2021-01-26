@@ -106,6 +106,12 @@ class ValueTagOperandId : public OperandId {
   explicit ValueTagOperandId(uint16_t id) : OperandId(id) {}
 };
 
+class IntPtrOperandId : public OperandId {
+ public:
+  IntPtrOperandId() = default;
+  explicit IntPtrOperandId(uint16_t id) : OperandId(id) {}
+};
+
 class ObjOperandId : public OperandId {
  public:
   ObjOperandId() = default;
@@ -167,8 +173,12 @@ class TypedOperandId : public OperandId {
       : OperandId(id.id()), type_(JSVAL_TYPE_BOOLEAN) {}
   MOZ_IMPLICIT TypedOperandId(Int32OperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_INT32) {}
+
   MOZ_IMPLICIT TypedOperandId(ValueTagOperandId val)
       : OperandId(val.id()), type_(JSVAL_TYPE_UNKNOWN) {}
+  MOZ_IMPLICIT TypedOperandId(IntPtrOperandId id)
+      : OperandId(id.id()), type_(JSVAL_TYPE_UNKNOWN) {}
+
   TypedOperandId(ValOperandId val, JSValueType type)
       : OperandId(val.id()), type_(type) {}
 
@@ -1073,6 +1083,10 @@ class MOZ_RAII CacheIRReader {
   ValOperandId valOperandId() { return ValOperandId(buffer_.readByte()); }
   ValueTagOperandId valueTagOperandId() {
     return ValueTagOperandId(buffer_.readByte());
+  }
+
+  IntPtrOperandId intPtrOperandId() {
+    return IntPtrOperandId(buffer_.readByte());
   }
 
   ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
