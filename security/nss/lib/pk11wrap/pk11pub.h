@@ -728,7 +728,7 @@ CK_BBOOL PK11_HasAttributeSet(PK11SlotInfo *slot,
                               PRBool haslock /* must be set to PR_FALSE */);
 
 /**********************************************************************
- *                   Hybrid Public Key Encryption  (draft-05)
+ *                   Hybrid Public Key Encryption  (draft-07)
  **********************************************************************/
 /*
  * NOTE: All HPKE functions will fail with SEC_ERROR_INVALID_ALGORITHM
@@ -746,9 +746,28 @@ HpkeContext *PK11_HPKE_NewContext(HpkeKemId kemId, HpkeKdfId kdfId, HpkeAeadId a
 SECStatus PK11_HPKE_Deserialize(const HpkeContext *cx, const PRUint8 *enc,
                                 unsigned int encLen, SECKEYPublicKey **outPubKey);
 void PK11_HPKE_DestroyContext(HpkeContext *cx, PRBool freeit);
-const SECItem *PK11_HPKE_GetEncapPubKey(const HpkeContext *cx);
+
+/* Serialize an initialized receiver context. This only retains the keys and
+ * associated information necessary to resume Export and Open operations after
+ * import. Serialization is currently supported for receiver contexts only.
+ * This is done for two reasons: 1) it avoids having to move the encryption
+ * sequence number outside of the token (or adding encryption context
+ * serialization support to softoken), and 2) we don't have to worry about IV
+ * reuse due to sequence number cloning.
+ *
+ * |wrapKey| is required when exporting in FIPS mode. If exported with a
+ * wrapping key, that same key must be provided to the import function,
+ * otherwise behavior is undefined.
+ *
+ * Even when exported with key wrap, HPKE expects the nonce to also be kept
+ * secret and that value is not protected by wrapKey. Applications are
+ * responsible for maintaining the confidentiality of the exported information.
+ */
+SECStatus PK11_HPKE_ExportContext(const HpkeContext *cx, PK11SymKey *wrapKey, SECItem **serialized);
 SECStatus PK11_HPKE_ExportSecret(const HpkeContext *cx, const SECItem *info, unsigned int L,
                                  PK11SymKey **outKey);
+const SECItem *PK11_HPKE_GetEncapPubKey(const HpkeContext *cx);
+HpkeContext *PK11_HPKE_ImportContext(const SECItem *serialized, PK11SymKey *wrapKey);
 SECStatus PK11_HPKE_Open(HpkeContext *cx, const SECItem *aad, const SECItem *ct, SECItem **outPt);
 SECStatus PK11_HPKE_Seal(HpkeContext *cx, const SECItem *aad, const SECItem *pt, SECItem **outCt);
 SECStatus PK11_HPKE_Serialize(const SECKEYPublicKey *pk, PRUint8 *buf, unsigned int *len, unsigned int maxLen);

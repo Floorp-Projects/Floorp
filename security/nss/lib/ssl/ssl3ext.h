@@ -131,13 +131,9 @@ struct TLSExtensionDataStr {
      * rather through tls13_DestoryPskList(). */
     sslPsk *selectedPsk;
 
-    /* ECH working state. */
-    SECItem innerCh;             /* Server: "payload value of ClientECH. */
-    SECItem echSenderPubKey;     /* Server: "enc value of ClientECH, required for CHInner decryption. */
-    SECItem echConfigId;         /* Server: "config_id" value of ClientECH.  */
-    PRUint32 echCipherSuite;     /* Server: "cipher_suite" value of ClientECH. */
-    SECItem echRetryConfigs;     /* Client: Retry_configs from ServerEncryptedCH. */
-    PRBool echRetryConfigsValid; /* Client: Permits retry_configs to be extracted. */
+    /* ECH working state. Non-null when a valid Encrypted Client Hello extension
+     * was received. */
+    sslEchXtnState *ech;
 };
 
 typedef struct TLSExtensionStr {

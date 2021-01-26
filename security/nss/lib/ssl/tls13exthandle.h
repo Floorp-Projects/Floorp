@@ -94,6 +94,9 @@ SECStatus tls13_ServerSendEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                  sslBuffer *buf, PRBool *added);
 SECStatus tls13_ClientHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                    SECItem *data);
+SECStatus tls13_ServerHandleEchIsInnerXtn(const sslSocket *ss,
+                                          TLSExtensionData *xtnData,
+                                          SECItem *data);
 SECStatus tls13_ClientSendPostHandshakeAuthXtn(const sslSocket *ss,
                                                TLSExtensionData *xtnData,
                                                sslBuffer *buf, PRBool *added);

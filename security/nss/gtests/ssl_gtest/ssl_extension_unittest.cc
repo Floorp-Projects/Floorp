@@ -1098,22 +1098,6 @@ TEST_P(TlsExtensionTest13, HrrThenRemoveSupportedGroups) {
                               SSL_ERROR_MISSING_SUPPORTED_GROUPS_EXTENSION);
 }
 
-#ifdef NSS_ENABLE_DRAFT_HPKE
-TEST_P(TlsExtensionTest13, HrrThenRemoveEch) {
-  if (variant_ == ssl_variant_datagram) {
-    // ECH not supported in DTLS.
-    GTEST_SKIP();
-  }
-
-  EnsureTlsSetup();
-  SetupEch(client_, server_);
-  ExpectAlert(server_, kTlsAlertIllegalParameter);
-  HrrThenRemoveExtensionsTest(ssl_tls13_encrypted_client_hello_xtn,
-                              SSL_ERROR_ILLEGAL_PARAMETER_ALERT,
-                              SSL_ERROR_BAD_2ND_CLIENT_HELLO);
-}
-#endif
-
 TEST_P(TlsExtensionTest13, EmptyVersionList) {
   static const uint8_t ext[] = {0x00, 0x00};
   ConnectWithBogusVersionList(ext, sizeof(ext));

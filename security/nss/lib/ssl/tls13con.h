@@ -76,7 +76,7 @@ SECStatus tls13_HandleClientHelloPart2(sslSocket *ss,
                                        sslSessionID *sid,
                                        const PRUint8 *msg,
                                        unsigned int len);
-SECStatus tls13_HandleServerHelloPart2(sslSocket *ss);
+SECStatus tls13_HandleServerHelloPart2(sslSocket *ss, const PRUint8 *savedMsg, PRUint32 savedLength);
 SECStatus tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, PRUint8 *b,
                                                 PRUint32 length);
 SECStatus tls13_ConstructHelloRetryRequest(sslSocket *ss,

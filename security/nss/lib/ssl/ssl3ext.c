@@ -15,6 +15,7 @@
 #include "sslimpl.h"
 #include "sslproto.h"
 #include "ssl3exthandle.h"
+#include "tls13ech.h"
 #include "tls13err.h"
 #include "tls13exthandle.h"
 #include "tls13subcerts.h"
@@ -54,6 +55,7 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_tls13_psk_key_exchange_modes_xtn, &tls13_ServerHandlePskModesXtn },
     { ssl_tls13_cookie_xtn, &tls13_ServerHandleCookieXtn },
     { ssl_tls13_post_handshake_auth_xtn, &tls13_ServerHandlePostHandshakeAuthXtn },
+    { ssl_tls13_ech_is_inner_xtn, &tls13_ServerHandleEchIsInnerXtn },
     { ssl_record_size_limit_xtn, &ssl_HandleRecordSizeLimitXtn },
     { 0, NULL }
 };
@@ -1020,12 +1022,8 @@ ssl3_DestroyExtensionData(TLSExtensionData *xtnData)
     PORT_Free(xtnData->advertised);
     tls13_DestroyDelegatedCredential(xtnData->peerDelegCred);
 
-    /* ECH State */
-    SECITEM_FreeItem(&xtnData->innerCh, PR_FALSE);
-    SECITEM_FreeItem(&xtnData->echSenderPubKey, PR_FALSE);
-    SECITEM_FreeItem(&xtnData->echConfigId, PR_FALSE);
-    SECITEM_FreeItem(&xtnData->echRetryConfigs, PR_FALSE);
-    xtnData->echRetryConfigsValid = PR_FALSE;
+    tls13_DestroyEchXtnState(xtnData->ech);
+    xtnData->ech = NULL;
 }
 
 /* Free everything that has been allocated and then reset back to

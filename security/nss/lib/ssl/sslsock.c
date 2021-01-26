@@ -93,7 +93,8 @@ static sslOptions ssl_defaults = {
     .enableV2CompatibleHello = PR_FALSE,
     .enablePostHandshakeAuth = PR_FALSE,
     .suppressEndOfEarlyData = PR_FALSE,
-    .enableTls13GreaseEch = PR_FALSE
+    .enableTls13GreaseEch = PR_FALSE,
+    .enableTls13BackendEch = PR_FALSE
 };
 
 /*
@@ -4293,6 +4294,7 @@ struct {
     EXP(DestroyAead),
     EXP(DestroyMaskingContext),
     EXP(DestroyResumptionTokenInfo),
+    EXP(EnableTls13BackendEch),
     EXP(EnableTls13GreaseEch),
     EXP(EncodeEchConfig),
     EXP(GetCurrentEpoch),
@@ -4368,6 +4370,17 @@ SSLExp_EnableTls13GreaseEch(PRFileDesc *fd, PRBool enabled)
         return SECFailure;
     }
     ss->opt.enableTls13GreaseEch = enabled;
+    return SECSuccess;
+}
+
+SECStatus
+SSLExp_EnableTls13BackendEch(PRFileDesc *fd, PRBool enabled)
+{
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        return SECFailure;
+    }
+    ss->opt.enableTls13BackendEch = enabled;
     return SECSuccess;
 }
 

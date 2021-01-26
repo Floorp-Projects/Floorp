@@ -183,6 +183,7 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
         PORT_Assert(ss->ssl3.hs.echPublicName);
         PORT_Free((void *)ss->ssl3.hs.echPublicName); /* CONST */
         ss->ssl3.hs.echPublicName = NULL;
+        sslBuffer_Clear(&ss->ssl3.hs.greaseEchBuf);
     }
 
     if (!ss->TCPconnected)
