@@ -255,8 +255,14 @@ bool ElemOpEmitter::emitAssignment() {
 
   MOZ_ASSERT_IF(isPropInit(), !isSuper());
 
-  if (!emitPrivateGuardForAssignment()) {
-    return false;
+  if (!isCompoundAssignment()) {
+    // For compound assignment, we call emitGet(), then emitAssignment().  So
+    // we already went through emitGet() and emitted a guard for this object
+    // and key. There's no point checking again--a private field can't be
+    // removed from an object.
+    if (!emitPrivateGuardForAssignment()) {
+      return false;
+    }
   }
 
   JSOp setOp = isPropInit() ? JSOp::InitElem
