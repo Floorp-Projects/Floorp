@@ -4,23 +4,21 @@ Mozilla does not modify the actual snappy source with the exception of the
 'snappy-stubs-public.h' header. We have replaced its build system with our own.
 
 Snappy comes from:
-  http://code.google.com/p/snappy/
+  https://github.com/google/snappy
 
-We are currently using revision: 114
+We are currently using revision: 1.1.8
 
 To upgrade to a newer version:
   1. Check out the new code using subversion.
   2. Update 'snappy-stubs-public.h' in this directory with any changes that were
      made to 'snappy-stubs-public.h.in' in the new source.
-  3. Copy the major/minor/patch versions from 'configure.ac' into
+  3. Copy the major/minor/patch versions from 'CMakeLists.txt' into
      'snappy-stubs-public.h'.
   4. Copy all source files from the new version into the src subdirectory. The
-     following files are not needed:
-       - 'autom4te.cache' subdirectory
-       - 'm4' subdirectory
+     following are not needed:
+       - 'CMakeLists.txt' file
+       - 'cmake' subdirectory
+       - 'docs' subdirectory
        - 'testdata' subdirectory
-       - 'autogen.sh'
-       - 'configure.ac'
-       - 'Makefile.am'
-       - 'snappy.pc.in'
   5. Update the revision stamp in this file.
+

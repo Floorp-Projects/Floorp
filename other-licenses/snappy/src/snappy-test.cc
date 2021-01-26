@@ -33,6 +33,9 @@
 #endif
 
 #ifdef HAVE_WINDOWS_H
+// Needed to be able to use std::max without workarounds in the source code.
+// https://support.microsoft.com/en-us/help/143208/prb-using-stl-in-windows-program-can-cause-min-max-conflicts
+#define NOMINMAX
 #include <windows.h>
 #endif
 
@@ -45,12 +48,12 @@ DEFINE_bool(run_microbenchmarks, true,
 
 namespace snappy {
 
-string ReadTestDataFile(const string& base, size_t size_limit) {
-  string contents;
+std::string ReadTestDataFile(const std::string& base, size_t size_limit) {
+  std::string contents;
   const char* srcdir = getenv("srcdir");  // This is set by Automake.
-  string prefix;
+  std::string prefix;
   if (srcdir) {
-    prefix = string(srcdir) + "/";
+    prefix = std::string(srcdir) + "/";
   }
   file::GetContents(prefix + "testdata/" + base, &contents, file::Defaults()
       ).CheckSuccess();
@@ -60,11 +63,11 @@ string ReadTestDataFile(const string& base, size_t size_limit) {
   return contents;
 }
 
-string ReadTestDataFile(const string& base) {
+std::string ReadTestDataFile(const std::string& base) {
   return ReadTestDataFile(base, 0);
 }
 
-string StringPrintf(const char* format, ...) {
+std::string StrFormat(const char* format, ...) {
   char buf[4096];
   va_list ap;
   va_start(ap, format);
@@ -76,7 +79,7 @@ string StringPrintf(const char* format, ...) {
 bool benchmark_running = false;
 int64 benchmark_real_time_us = 0;
 int64 benchmark_cpu_time_us = 0;
-string *benchmark_label = NULL;
+std::string* benchmark_label = nullptr;
 int64 benchmark_bytes_processed = 0;
 
 void ResetBenchmarkTiming() {
@@ -160,11 +163,11 @@ void StopBenchmarkTiming() {
   benchmark_running = false;
 }
 
-void SetBenchmarkLabel(const string& str) {
+void SetBenchmarkLabel(const std::string& str) {
   if (benchmark_label) {
     delete benchmark_label;
   }
-  benchmark_label = new string(str);
+  benchmark_label = new std::string(str);
 }
 
 void SetBenchmarkBytesProcessed(int64 bytes) {
@@ -201,7 +204,7 @@ void Benchmark::Run() {
     if (benchmark_real_time_us > 0) {
       num_iterations = 200000 * kCalibrateIterations / benchmark_real_time_us;
     }
-    num_iterations = max(num_iterations, kCalibrateIterations);
+    num_iterations = std::max(num_iterations, kCalibrateIterations);
     BenchmarkRun benchmark_runs[kNumRuns];
 
     for (int run = 0; run < kNumRuns; ++run) {
@@ -214,13 +217,13 @@ void Benchmark::Run() {
       benchmark_runs[run].cpu_time_us = benchmark_cpu_time_us;
     }
 
-    string heading = StringPrintf("%s/%d", name_.c_str(), test_case_num);
-    string human_readable_speed;
+    std::string heading = StrFormat("%s/%d", name_.c_str(), test_case_num);
+    std::string human_readable_speed;
 
-    nth_element(benchmark_runs,
-                benchmark_runs + kMedianPos,
-                benchmark_runs + kNumRuns,
-                BenchmarkCompareCPUTime());
+    std::nth_element(benchmark_runs,
+                     benchmark_runs + kMedianPos,
+                     benchmark_runs + kNumRuns,
+                     BenchmarkCompareCPUTime());
     int64 real_time_us = benchmark_runs[kMedianPos].real_time_us;
     int64 cpu_time_us = benchmark_runs[kMedianPos].cpu_time_us;
     if (cpu_time_us <= 0) {
@@ -229,15 +232,16 @@ void Benchmark::Run() {
       int64 bytes_per_second =
           benchmark_bytes_processed * 1000000 / cpu_time_us;
       if (bytes_per_second < 1024) {
-        human_readable_speed = StringPrintf("%dB/s", bytes_per_second);
+        human_readable_speed =
+            StrFormat("%dB/s", static_cast<int>(bytes_per_second));
       } else if (bytes_per_second < 1024 * 1024) {
-        human_readable_speed = StringPrintf(
+        human_readable_speed = StrFormat(
             "%.1fkB/s", bytes_per_second / 1024.0f);
       } else if (bytes_per_second < 1024 * 1024 * 1024) {
-        human_readable_speed = StringPrintf(
+        human_readable_speed = StrFormat(
             "%.1fMB/s", bytes_per_second / (1024.0f * 1024.0f));
       } else {
-        human_readable_speed = StringPrintf(
+        human_readable_speed = StrFormat(
             "%.1fGB/s", bytes_per_second / (1024.0f * 1024.0f * 1024.0f));
       }
     }
@@ -523,8 +527,8 @@ int ZLib::UncompressAtMostOrAll(Bytef *dest, uLongf *destLen,
     LOG(WARNING)
       << "UncompressChunkOrAll: Received some extra data, bytes total: "
       << uncomp_stream_.avail_in << " bytes: "
-      << string(reinterpret_cast<const char *>(uncomp_stream_.next_in),
-                min(int(uncomp_stream_.avail_in), 20));
+      << std::string(reinterpret_cast<const char *>(uncomp_stream_.next_in),
+                     std::min(int(uncomp_stream_.avail_in), 20));
     UncompressErrorInit();
     return Z_DATA_ERROR;       // what's the extra data for?
   } else if (err != Z_OK && err != Z_STREAM_END && err != Z_BUF_ERROR) {
