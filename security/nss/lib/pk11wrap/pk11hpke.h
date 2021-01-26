@@ -9,7 +9,7 @@
 #include "seccomon.h"
 
 #ifdef NSS_ENABLE_DRAFT_HPKE
-#define HPKE_DRAFT_VERSION 5
+#define HPKE_DRAFT_VERSION 7
 
 #define CLEANUP                    \
     PORT_Assert(rv == SECSuccess); \
@@ -42,13 +42,15 @@ typedef enum {
     HpkeModePsk = 1,
 } HpkeModeId;
 
-/* https://tools.ietf.org/html/draft-irtf-cfrg-hpke-05#section-7.1 */
+/* https://tools.ietf.org/html/draft-irtf-cfrg-hpke-07#section-7.1 */
 typedef enum {
     HpkeDhKemX25519Sha256 = 0x20,
 } HpkeKemId;
 
 typedef enum {
     HpkeKdfHkdfSha256 = 1,
+    HpkeKdfHkdfSha384 = 2,
+    HpkeKdfHkdfSha512 = 3,
 } HpkeKdfId;
 
 typedef enum {

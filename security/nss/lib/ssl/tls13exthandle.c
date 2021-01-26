@@ -1211,6 +1211,12 @@ tls13_ClientHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     PRCList parsedConfigs;
     PR_INIT_CLIST(&parsedConfigs);
 
+    PORT_Assert(!xtnData->ech);
+    xtnData->ech = PORT_ZNew(sslEchXtnState);
+    if (!xtnData->ech) {
+        return SECFailure;
+    }
+
     /* Parse the list to determine 1) That the configs are valid
      * and properly encoded, and 2) If any are compatible. */
     rv = tls13_DecodeEchConfigs(data, &parsedConfigs);
@@ -1219,11 +1225,11 @@ tls13_ClientHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
         return SECFailure;
     }
-    /* Don't mark ECH negotiated on retry. Save the the raw
-     * configs so the application can retry. If we sent GREASE
-     * ECH (no echHpkeCtx), don't apply returned retry_configs. */
+    /* Don't mark ECH negotiated on rejection with retry_config.
+     * Save the the raw configs so the application can retry. If
+     * we sent GREASE ECH (no echHpkeCtx), don't apply retry_configs. */
     if (ss->ssl3.hs.echHpkeCtx && !PR_CLIST_IS_EMPTY(&parsedConfigs)) {
-        rv = SECITEM_CopyItem(NULL, &xtnData->echRetryConfigs, data);
+        rv = SECITEM_CopyItem(NULL, &xtnData->ech->retryConfigs, data);
     }
     tls13_DestroyEchConfigs(&parsedConfigs);
 
@@ -1465,14 +1471,22 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         return SECSuccess;
     }
 
-    /* On CHInner, the extension must be empty. */
-    if (ss->ssl3.hs.echAccepted && data->len > 0) {
+    if (ss->ssl3.hs.echAccepted) {
         ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
+        PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
         return SECFailure;
-    } else if (ss->ssl3.hs.echAccepted) {
-        xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_encrypted_client_hello_xtn;
-        return SECSuccess;
+    }
+
+    if (ssl3_FindExtension(CONST_CAST(sslSocket, ss), ssl_tls13_ech_is_inner_xtn)) {
+        ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+        PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+        return SECFailure;
+    }
+
+    PORT_Assert(!xtnData->ech);
+    xtnData->ech = PORT_ZNew(sslEchXtnState);
+    if (!xtnData->ech) {
+        return SECFailure;
     }
 
     /* Parse the KDF and AEAD. */
@@ -1503,37 +1517,40 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         goto alert_loser;
     }
 
-    /* payload */
+    /* payload, which must be final and non-empty. */
     rv = ssl3_ExtConsumeHandshakeVariable(ss, &encryptedCh, 2,
                                           &data->data, &data->len);
     if (rv != SECSuccess) {
         goto alert_loser;
     }
-
-    if (data->len) {
+    if (data->len || !encryptedCh.len) {
         goto alert_loser;
     }
 
-    /* All fields required. */
-    if (!configId.len || !senderPubKey.len || !encryptedCh.len) {
-        goto alert_loser;
+    if (!ss->ssl3.hs.helloRetry) {
+        /* In the real ECH HRR case, config_id and enc should be empty. This
+         * is checked after acceptance, because it might be GREASE ECH. */
+        if (!configId.len || !senderPubKey.len) {
+            goto alert_loser;
+        }
+
+        rv = SECITEM_CopyItem(NULL, &xtnData->ech->senderPubKey, &senderPubKey);
+        if (rv == SECFailure) {
+            return SECFailure;
+        }
+
+        rv = SECITEM_CopyItem(NULL, &xtnData->ech->configId, &configId);
+        if (rv == SECFailure) {
+            return SECFailure;
+        }
     }
 
-    rv = SECITEM_CopyItem(NULL, &xtnData->echSenderPubKey, &senderPubKey);
+    rv = SECITEM_CopyItem(NULL, &xtnData->ech->innerCh, &encryptedCh);
     if (rv == SECFailure) {
         return SECFailure;
     }
-
-    rv = SECITEM_CopyItem(NULL, &xtnData->innerCh, &encryptedCh);
-    if (rv == SECFailure) {
-        return SECFailure;
-    }
-
-    rv = SECITEM_CopyItem(NULL, &xtnData->echConfigId, &configId);
-    if (rv == SECFailure) {
-        return SECFailure;
-    }
-    xtnData->echCipherSuite = (aead & 0xFFFF) << 16 | (kdf & 0xFFFF);
+    xtnData->ech->kdfId = kdf;
+    xtnData->ech->aeadId = aead;
 
     /* Not negotiated until tls13_MaybeAcceptEch. */
     return SECSuccess;
@@ -1542,4 +1559,37 @@ alert_loser:
     ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
     PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
     return SECFailure;
+}
+
+SECStatus
+tls13_ServerHandleEchIsInnerXtn(const sslSocket *ss,
+                                TLSExtensionData *xtnData,
+                                SECItem *data)
+{
+    SSL_TRC(3, ("%d: TLS13[%d]: handle ech_is_inner extension",
+                SSL_GETPID(), ss->fd));
+
+    if (data->len) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
+        return SECFailure;
+    }
+
+    if (ssl3_FindExtension(CONST_CAST(sslSocket, ss), ssl_tls13_encrypted_client_hello_xtn)) {
+        ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+        PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+        return SECFailure;
+    }
+
+    /* Consider encrypted_client_hello_xtn negotiated if we performed the
+     * CHOuter decryption. This is only supported in shared mode, so we'll also
+     * handle ech_is_inner in that case. We might, however, receive a CHInner
+     * that was forwarded by a different client-facing server. In this case,
+     * mark ech_is_inner as negotiated, which triggers sending of the ECH
+     * acceptance signal. ech_is_inner_xtn being negotiated does not imply
+     * that any other ECH state actually exists. */
+    if (ss->ssl3.hs.echAccepted) {
+        xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_encrypted_client_hello_xtn;
+    }
+    xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_ech_is_inner_xtn;
+    return SECSuccess;
 }
