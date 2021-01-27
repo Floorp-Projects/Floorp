@@ -1440,7 +1440,8 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
     return;
   }
 
-  const Selection* sel = GetSelection();
+  const RefPtr<Selection> sel =
+      AccessibleCaretManager::GetSelection(*mPresShell);
   if (!sel) {
     return;
   }
@@ -1487,14 +1488,15 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
   // Send isEditable info w/ event detail. This info can help determine
   // whether to show cut command on selection dialog or not.
   init.mSelectionEditable =
-      commonAncestorFrame && GetEditingHostForFrame(commonAncestorFrame);
+      commonAncestorFrame &&
+      AccessibleCaretManager::GetEditingHostForFrame(commonAncestorFrame);
 
   init.mBoundingClientRect = domRect;
   init.mReason = aReason;
   init.mCollapsed = sel->IsCollapsed();
   init.mCaretVisible = mCarets.AreLogicallyVisible();
   init.mCaretVisuallyVisible = mCarets.AreVisuallyVisible();
-  init.mSelectedTextContent = StringifiedSelection();
+  init.mSelectedTextContent = mSelectionStringifyer.Stringify(*sel);
 
   RefPtr<CaretStateChangedEvent> event = CaretStateChangedEvent::Constructor(
       doc, u"mozcaretstatechanged"_ns, init);
