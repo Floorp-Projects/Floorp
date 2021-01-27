@@ -11,6 +11,22 @@ function handleRequest(request, response)
 
   var expected_user = "test", expected_pass = "testpass", realm = "mochitest";
 
+  // user=xxx
+  match = /[^_]user=([^&]*)/.exec(query);
+  if (match)
+    expected_user = match[1];
+
+  // pass=xxx
+  match = /[^_]pass=([^&]*)/.exec(query);
+  if (match)
+    expected_pass = match[1];
+
+  // realm=xxx
+  match = /[^_]realm=([^&]*)/.exec(query);
+  if (match)
+    realm = match[1];
+
+
   // Look for an authentication header, if any, in the request.
   //
   // EG: Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
