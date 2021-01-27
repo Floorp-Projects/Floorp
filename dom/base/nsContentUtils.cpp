@@ -6873,6 +6873,24 @@ Document* nsContentUtils::GetRootDocument(Document* aDoc) {
   return doc;
 }
 
+/* static */
+bool nsContentUtils::IsInPointerLockContext(BrowsingContext* aContext) {
+  if (!aContext) {
+    return false;
+  }
+
+  nsCOMPtr<Document> pointerLockedDoc =
+      do_QueryReferent(EventStateManager::sPointerLockedDoc);
+  if (!pointerLockedDoc || !pointerLockedDoc->GetBrowsingContext()) {
+    return false;
+  }
+
+  BrowsingContext* lockTop = pointerLockedDoc->GetBrowsingContext()->Top();
+  BrowsingContext* top = aContext->Top();
+
+  return top == lockTop;
+}
+
 // static
 int32_t nsContentUtils::GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
                                                        int32_t aOffset) {
