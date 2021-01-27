@@ -533,7 +533,7 @@ void LIRGeneratorX86Shared::lowerCompareExchangeTypedArrayElement(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
 
   // If the target is a floating register then we need a temp at the
   // lower level; that temp must be eax.
@@ -586,7 +586,7 @@ void LIRGeneratorX86Shared::lowerAtomicExchangeTypedArrayElement(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
   const LAllocation value = useRegister(ins->value());
 
   // The underlying instruction is XCHG, which can operate on any
@@ -625,7 +625,7 @@ void LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
 
   // Case 1: the result of the operation is not used.
   //

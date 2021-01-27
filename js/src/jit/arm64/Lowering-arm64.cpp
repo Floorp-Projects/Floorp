@@ -468,7 +468,7 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
 
   LAllocation value = useRegister(ins->value());
 
@@ -493,7 +493,7 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
 
   // If the target is an FPReg then we need a temporary at the CodeGenerator
   // level for creating the result.
@@ -521,7 +521,7 @@ void LIRGenerator::visitAtomicExchangeTypedArrayElement(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
   const LAllocation value = useRegister(ins->value());
 
   LDefinition tempDef = LDefinition::BogusTemp();

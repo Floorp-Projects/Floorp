@@ -180,6 +180,11 @@ class LIRGeneratorShared {
   inline LAllocation useRegisterOrZero(MDefinition* mir);
   inline LAllocation useRegisterOrNonDoubleConstant(MDefinition* mir);
 
+  // These methods accept either an Int32 or IntPtr value. A constant is used if
+  // the value fits in an int32.
+  inline LAllocation useRegisterOrInt32Constant(MDefinition* mir);
+  inline LAllocation useAnyOrInt32Constant(MDefinition* mir);
+
   inline LUse useRegisterForTypedLoad(MDefinition* mir, MIRType type);
 
 #ifdef JS_NUNBOX32

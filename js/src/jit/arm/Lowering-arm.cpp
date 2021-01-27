@@ -830,7 +830,7 @@ void LIRGenerator::visitAtomicExchangeTypedArrayElement(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
 
   // If the target is a floating register then we need a temp at the
   // CodeGenerator level for creating the result.
@@ -858,7 +858,7 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
   const LAllocation value = useRegister(ins->value());
 
   if (!ins->hasUses()) {
@@ -899,7 +899,7 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
 
   // If the target is a floating register then we need a temp at the
   // CodeGenerator level for creating the result.
