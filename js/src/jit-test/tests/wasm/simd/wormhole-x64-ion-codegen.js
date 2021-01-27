@@ -1,4 +1,4 @@
-// |jit-test| --wasm-compiler=optimizing; --wasm-simd-wormhole; skip-if: !wasmSimdWormholeEnabled() || !hasDisassembler() || !getBuildConfiguration().x64 || wasmCompileMode() != "ion"; include:codegen-x64-test.js; include:wasm-binary.js
+// |jit-test| --wasm-compiler=optimizing; --wasm-simd-wormhole; skip-if: !wasmSimdWormholeEnabled() || !hasDisassembler(); include:codegen-x64-test.js; include:wasm-binary.js
 
 function wormhole_op(opcode) {
     return `i8x16.shuffle 31 0 30 2 29 4 28 6 27 8 26 10 25 12 24 ${opcode} `
