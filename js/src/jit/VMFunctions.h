@@ -627,10 +627,10 @@ bool StringBigIntCompare(JSContext* cx, HandleString x, HandleBigInt y,
 BigInt* BigIntAsIntN(JSContext* cx, HandleBigInt x, int32_t bits);
 BigInt* BigIntAsUintN(JSContext* cx, HandleBigInt x, int32_t bits);
 
-using AtomicsCompareExchangeFn = int32_t (*)(TypedArrayObject*, int32_t,
-                                             int32_t, int32_t);
+using AtomicsCompareExchangeFn = int32_t (*)(TypedArrayObject*, size_t, int32_t,
+                                             int32_t);
 
-using AtomicsReadWriteModifyFn = int32_t (*)(TypedArrayObject*, int32_t,
+using AtomicsReadWriteModifyFn = int32_t (*)(TypedArrayObject*, size_t,
                                              int32_t);
 
 AtomicsCompareExchangeFn AtomicsCompareExchange(Scalar::Type elementType);
