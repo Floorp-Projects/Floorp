@@ -41,7 +41,9 @@ class StackTracePanel extends Component {
    */
   componentDidMount() {
     const { request, connector } = this.props;
-    fetchNetworkUpdatePacket(connector.requestData, request, ["stackTrace"]);
+    if (!request.stacktrace) {
+      fetchNetworkUpdatePacket(connector.requestData, request, ["stackTrace"]);
+    }
   }
 
   /**

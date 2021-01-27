@@ -963,7 +963,9 @@ async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
   // By default urlInConsole should be the same as the complete url.
   urlInConsole = urlInConsole || url;
 
-  const message = await waitFor(() => findMessage(hud, urlInConsole));
+  const message = await waitFor(() =>
+    findMessage(hud, urlInConsole, ".network")
+  );
 
   const onNetmonitorSelected = toolbox.once(
     "netmonitor-selected",
