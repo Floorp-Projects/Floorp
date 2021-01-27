@@ -18,7 +18,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-let gCurrentTestCase = -1;
 const TEST_CASES = [
   {
     desc: "no HSTS",
@@ -40,63 +39,48 @@ const TEST_CASES = [
 
 async function startTest()
 {
+  info("Test detection of HTTP Strict Transport Security.");
+  for (const testCase of TEST_CASES) {
+    await checkHSTS(testCase)
+  }
 
-  SimpleTest.registerCleanupFunction(() => {
-    // Reset HSTS state.
-    const gSSService = Cc["@mozilla.org/ssservice;1"]
-                       .getService(Ci.nsISiteSecurityService);
+  // Reset HSTS state.
+  const gSSService = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
+  const uri = Services.io.newURI(TEST_CASES[0].url);
+  gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
 
-    const gIOService = Services.io;
+  SimpleTest.finish();
+}
 
-    const uri = gIOService.newURI(TEST_CASES[0].url);
-    gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
+async function checkHSTS({desc, url, usesHSTS}) {
+  info("Testing HSTS for " + url);
+  const { resourceWatcher, target } = await createResourceWatcherForTab();
+  const resource = await new Promise(resolve => {
+    resourceWatcher
+      .watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
+        onAvailable: () => {},
+        onUpdated: resourceUpdate => {
+          resolve(resourceUpdate[0].resource);
+        },
+      })
+      .then(() => {
+        // Spawn the network requests after we started watching
+        const iframe = document.querySelector("iframe").contentWindow;
+        iframe.wrappedJSObject.makeXhrCallback("GET", url);
+      });
   });
 
-  info("Test detection of HTTP Strict Transport Security.");
-  removeEventListener("load", startTest);
-  const {state} = await attachConsoleToTab(["NetworkActivity"]);
-  onAttach(state);
+  const webConsoleFront = await target.getFront("console");
+  const packet = await webConsoleFront.getSecurityInfo(resource.actor);
+  is(
+    packet.securityInfo.hsts,
+    usesHSTS,
+    "Strict Transport Security detected correctly for " + url
+  );
+  await target.client.close();
 }
 
-function onAttach(aState)
-{
-  onNetworkEventUpdate = onNetworkEventUpdate.bind(null, aState);
-  aState.dbgClient.on("networkEventUpdate", onNetworkEventUpdate);
-
-  runNextCase(aState);
-}
-
-function runNextCase(aState) {
-  gCurrentTestCase++;
-  if (gCurrentTestCase === TEST_CASES.length) {
-    info("Tests ran. Cleaning up.");
-    closeDebugger(aState, SimpleTest.finish);
-    return;
-  }
-
-  const { desc, url } = TEST_CASES[gCurrentTestCase];
-  info("Testing site with " + desc);
-
-  const iframe = document.querySelector("iframe").contentWindow;
-  iframe.wrappedJSObject.makeXhrCallback("GET", url);
-}
-
-function onNetworkEventUpdate(aState, aPacket)
-{
-  function onSecurityInfo(packet) {
-    const data = TEST_CASES[gCurrentTestCase];
-    is(packet.securityInfo.hsts, data.usesHSTS,
-      "Strict Transport Security detected correctly.");
-
-    runNextCase(aState);
-  }
-
-  if (aPacket.updateType === "securityInfo") {
-    aState.webConsoleFront.getSecurityInfo(aPacket.from, onSecurityInfo);
-  }
-}
-
-addEventListener("load", startTest);
+addEventListener("load", startTest, { once: true });
 </script>
 </body>
 </html>
