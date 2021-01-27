@@ -463,6 +463,19 @@ static MOZ_ALWAYS_INLINE bool NumberIsInt32(T aValue, int32_t* aInt32) {
 }
 
 /**
+ * If |aValue| is identical to some |int64_t| value, set |*aInt64| to that value
+ * and return true.  Otherwise return false, leaving |*aInt64| in an
+ * indeterminate state.
+ *
+ * This method returns false for negative zero.  If you want to consider -0 to
+ * be 0, use NumberEqualsInt64 below.
+ */
+template <typename T>
+static MOZ_ALWAYS_INLINE bool NumberIsInt64(T aValue, int64_t* aInt64) {
+  return detail::NumberIsSignedInteger(aValue, aInt64);
+}
+
+/**
  * If |aValue| is equal to some int32_t value (where -0 and +0 are considered
  * equal), set |*aInt32| to that value and return true.  Otherwise return false,
  * leaving |*aInt32| in an indeterminate state.
@@ -473,6 +486,19 @@ static MOZ_ALWAYS_INLINE bool NumberIsInt32(T aValue, int32_t* aInt32) {
 template <typename T>
 static MOZ_ALWAYS_INLINE bool NumberEqualsInt32(T aValue, int32_t* aInt32) {
   return detail::NumberEqualsSignedInteger(aValue, aInt32);
+}
+
+/**
+ * If |aValue| is equal to some int64_t value (where -0 and +0 are considered
+ * equal), set |*aInt64| to that value and return true.  Otherwise return false,
+ * leaving |*aInt64| in an indeterminate state.
+ *
+ * |NumberEqualsInt64(-0.0, ...)| will return true.  To test whether a value can
+ * be losslessly converted to |int64_t| and back, use NumberIsInt64 above.
+ */
+template <typename T>
+static MOZ_ALWAYS_INLINE bool NumberEqualsInt64(T aValue, int64_t* aInt64) {
+  return detail::NumberEqualsSignedInteger(aValue, aInt64);
 }
 
 /**
