@@ -25,6 +25,13 @@ function columnWise() {
   debugger;
 }
 
+function objectProperties() {
+  const obj = { hello: "world", a: { b: "c" } };
+  console.log(obj.hello);
+  console.log(obj.a.b);
+  debugger;
+}
+
 function btnClick() {
   const btn = document.querySelector("button");
   debugger;

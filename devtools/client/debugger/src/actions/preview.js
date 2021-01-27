@@ -145,7 +145,7 @@ export function setPreview(
         front: getFront(result),
       },
     };
-    const properties = await client.loadObjectProperties(root);
+    const properties = await client.loadObjectProperties(root, thread);
 
     // The first time a popup is rendered, the mouse should be hovered
     // on the token. If it happens to be hovered on whitespace, it should

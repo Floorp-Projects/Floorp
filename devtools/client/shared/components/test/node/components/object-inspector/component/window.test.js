@@ -17,7 +17,10 @@ const windowNode = createNode({
   contents: { value: gripWindowStubs.get("Window") },
 });
 
-const client = { createObjectFront: grip => ObjectFront(grip) };
+const client = {
+  createObjectFront: grip => ObjectFront(grip),
+  getFrontByID: _id => null,
+};
 
 function generateDefaults(overrides) {
   return {

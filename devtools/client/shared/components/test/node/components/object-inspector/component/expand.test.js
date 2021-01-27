@@ -76,6 +76,8 @@ function getClient(overrides = {}) {
         },
       }),
 
+    getFrontByID: _id => null,
+
     ...overrides,
   };
 }
