@@ -328,11 +328,13 @@ bool PowPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   }
 
   // Power may be an int32 or a double. Integers receive a faster path.
-  if (ins->toPow()->power()->type() == MIRType::Int32) {
-    return true;
-  }
-  if (ins->toPow()->powerIsInt32()) {
-    return UnboxedInt32Policy<1>::staticAdjustInputs(alloc, ins);
+  MDefinition* power = ins->toPow()->power();
+  if (power->isToDouble()) {
+    MDefinition* input = power->toToDouble()->input();
+    if (input->type() == MIRType::Int32) {
+      ins->replaceOperand(1, input);
+      return true;
+    }
   }
   return DoublePolicy<1>::staticAdjustInputs(alloc, ins);
 }
