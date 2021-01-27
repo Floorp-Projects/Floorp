@@ -242,7 +242,8 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       hasDestructuringArgs(false),
       hasDuplicateParameters(false),
       hasExprBody_(false),
-      isFunctionFieldCopiedToStencil(false) {}
+      isFunctionFieldCopiedToStencil(false),
+      isInitialCompilation(stencil.isInitialStencil()) {}
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   BaseScript* lazy = fun->baseScript();
@@ -392,10 +393,6 @@ ScriptStencilExtra& FunctionBox::functionExtraStencil() const {
   return compilationState_.scriptExtra[funcDataIndex_];
 }
 
-bool FunctionBox::hasFunctionExtraStencil() const {
-  return funcDataIndex_ < compilationState_.scriptExtra.length();
-}
-
 void SharedContext::copyScriptExtraFields(ScriptStencilExtra& scriptExtra) {
   MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
 
@@ -440,7 +437,7 @@ void FunctionBox::copyFunctionExtraFields(ScriptStencilExtra& scriptExtra) {
 }
 
 void FunctionBox::copyUpdatedImmutableFlags() {
-  if (hasFunctionExtraStencil()) {
+  if (isInitialCompilation) {
     ScriptStencilExtra& scriptExtra = functionExtraStencil();
     scriptExtra.immutableFlags = immutableFlags_;
   }
@@ -453,7 +450,7 @@ void FunctionBox::copyUpdatedExtent() {
 
 void FunctionBox::copyUpdatedMemberInitializers() {
   MOZ_ASSERT(useMemberInitializers());
-  if (hasFunctionExtraStencil()) {
+  if (isInitialCompilation) {
     ScriptStencilExtra& scriptExtra = functionExtraStencil();
     scriptExtra.setMemberInitializers(memberInitializers());
   } else {
