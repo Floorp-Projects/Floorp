@@ -1403,10 +1403,6 @@ Document::Document(const char* aContentType)
       mOnloadBlockCount(0),
       mAsyncOnloadBlockCount(0),
       mWriteLevel(0),
-      mLazyLoadImageCount(0),
-      mLazyLoadImageStarted(0),
-      mLazyLoadImageReachViewportLoading(0),
-      mLazyLoadImageReachViewportLoaded(0),
       mContentEditableCount(0),
       mEditingState(EditingState::eOff),
       mCompatMode(eCompatibility_FullStandards),
@@ -2378,7 +2374,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLazyLoadImageObserver)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLazyLoadImageObserverViewport)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOrientationPendingPromise)
@@ -2501,7 +2496,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSecurityInfo)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLazyLoadImageObserver)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLazyLoadImageObserverViewport)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n)
@@ -15415,25 +15409,6 @@ void Document::ReportDocumentUseCounters() {
             (" > %s\n", Telemetry::GetHistogramName(id)));
     Telemetry::Accumulate(id, 1);
   }
-
-  ReportDocumentLazyLoadCounters();
-}
-
-void Document::ReportDocumentLazyLoadCounters() {
-  if (!mLazyLoadImageCount) {
-    return;
-  }
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_TOTAL, mLazyLoadImageCount);
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_STARTED,
-                        mLazyLoadImageStarted);
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_NOT_VIEWPORT,
-                        mLazyLoadImageStarted -
-                            mLazyLoadImageReachViewportLoading -
-                            mLazyLoadImageReachViewportLoaded);
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_VIEWPORT_LOADING,
-                        mLazyLoadImageReachViewportLoading);
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_VIEWPORT_LOADED,
-                        mLazyLoadImageReachViewportLoaded);
 }
 
 void Document::SendPageUseCounters() {
@@ -15560,22 +15535,6 @@ DOMIntersectionObserver& Document::EnsureLazyLoadImageObserver() {
         DOMIntersectionObserver::CreateLazyLoadObserver(*this);
   }
   return *mLazyLoadImageObserver;
-}
-
-DOMIntersectionObserver& Document::EnsureLazyLoadImageObserverViewport() {
-  if (!mLazyLoadImageObserverViewport) {
-    mLazyLoadImageObserverViewport =
-        DOMIntersectionObserver::CreateLazyLoadObserverViewport(*this);
-  }
-  return *mLazyLoadImageObserverViewport;
-}
-
-void Document::IncLazyLoadImageReachViewport(bool aLoading) {
-  if (aLoading) {
-    ++mLazyLoadImageReachViewportLoading;
-  } else {
-    ++mLazyLoadImageReachViewportLoaded;
-  }
 }
 
 void Document::NotifyLayerManagerRecreated() {
