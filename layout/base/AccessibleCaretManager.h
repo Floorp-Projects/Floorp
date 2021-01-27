@@ -364,6 +364,8 @@ class AccessibleCaretManager {
 
     AccessibleCaret* GetFirst() const { return mFirst.get(); }
 
+    AccessibleCaret* GetSecond() const { return mSecond.get(); }
+
     // First caret is attached to nsCaret in cursor mode, and is attached to
     // selection highlight as the left caret in selection mode.
     UniquePtr<AccessibleCaret> mFirst;
