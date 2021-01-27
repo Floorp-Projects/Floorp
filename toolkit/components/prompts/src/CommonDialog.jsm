@@ -18,6 +18,9 @@ const { AppConstants } = ChromeUtils.import(
 function CommonDialog(args, ui) {
   this.args = args;
   this.ui = ui;
+  this.initialFocusPromise = new Promise(resolve => {
+    this.initialFocusResolver = resolve;
+  });
 }
 
 CommonDialog.prototype = {
@@ -29,6 +32,8 @@ CommonDialog.prototype = {
   iconClass: undefined,
   soundID: undefined,
   focusTimer: null,
+  initialFocusPromise: null,
+  initialFocusResolver: null,
 
   /**
    * @param [commonDialogEl] - Dialog element from commonDialog.xhtml,
@@ -202,21 +207,12 @@ CommonDialog.prototype = {
       button.setAttribute("default", "true");
     }
 
-    let focusReady;
-    if (!this.ui.promptContainer || !this.ui.promptContainer.hidden) {
-      // Set default focus and select textbox contents if applicable.
-
-      if (commonDialogEl && this.ui.prompt.docShell.chromeEventHandler) {
-        // We're embedded. Delay focus until onload, to after when our embedder
-        // (SubDialog) has focused the frame.
-        focusReady = new Promise(resolve =>
-          this.ui.prompt.addEventListener("load", resolve, { once: true })
-        ).then(() => {
-          this.setDefaultFocus(true);
-        });
-      } else {
-        this.setDefaultFocus(true);
-      }
+    let isEmbedded =
+      commonDialogEl && this.ui.prompt.docShell.chromeEventHandler;
+    if (!isEmbedded && !this.ui.promptContainer?.hidden) {
+      // Set default focus and select textbox contents if applicable. If we're
+      // embedded SubDialogManager will call setDefaultFocus for us.
+      this.setDefaultFocus(true);
     }
 
     if (this.args.enableDelay) {
@@ -240,10 +236,11 @@ CommonDialog.prototype = {
     }
 
     if (commonDialogEl) {
-      // If we delayed default focus above, wait for it to be ready before
-      // sending the notification.
-      await focusReady;
-      // ui.prompt is the window object of the dialog.
+      if (isEmbedded) {
+        // If we delayed default focus above, wait for it to be ready before
+        // sending the notification.
+        await this.initialFocusPromise;
+      }
       Services.obs.notifyObservers(this.ui.prompt, "common-dialog-loaded");
     } else {
       // ui.promptContainer is the <tabmodalprompt> element.
@@ -322,6 +319,10 @@ CommonDialog.prototype = {
       this.ui.loginTextbox.select();
     } else {
       this.ui.loginTextbox.focus();
+    }
+
+    if (isInitialLoad) {
+      this.initialFocusResolver();
     }
   },
 
