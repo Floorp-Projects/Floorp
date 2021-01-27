@@ -242,8 +242,13 @@ class AccessibleCaretManager {
   void ClearMaintainedSelection() const;
 
   static dom::Element* GetEditingHostForFrame(const nsIFrame* aFrame);
+
   dom::Selection* GetSelection() const;
+  static dom::Selection* GetSelection(PresShell& aPresShell);
+
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
+  static already_AddRefed<nsFrameSelection> GetFrameSelection(
+      PresShell& aPresShell);
 
   class LayoutFlusher final {
    public:
