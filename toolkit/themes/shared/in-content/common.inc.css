@@ -40,6 +40,7 @@
   --in-content-link-color-hover: var(--blue-70);
   --in-content-link-color-active: var(--blue-80);
   --in-content-link-color-visited: var(--blue-60);
+   /* button background states are also used for checkboxes and radiobuttons */
   --in-content-button-background: var(--grey-90-a10);
   --in-content-button-background-hover: var(--grey-90-a20);
   --in-content-button-background-active: var(--grey-90-a30);
@@ -277,7 +278,7 @@ xul|menulist:-moz-focusring {
 }
 
 html|input[type="radio"]:-moz-focusring {
-  -moz-outline-radius: 50%;
+  -moz-outline-radius: 100%;
 }
 
 html|select:not([size], [multiple]) {
@@ -550,14 +551,19 @@ html|input[type="checkbox"] {
   border-radius: 2px;
   margin: 0;
   margin-inline-end: 10px;
-  background-color: var(--grey-90-a10);
+  background-color: var(--in-content-button-background);
   background-position: center;
   background-repeat: no-repeat;
 }
 
 xul|checkbox:not([disabled="true"]):hover > xul|*.checkbox-check,
 html|input[type="checkbox"]:enabled:hover {
-  background-color: var(--grey-90-a20);
+  background-color: var(--in-content-button-background-hover);
+}
+
+xul|checkbox:not([disabled="true"]):hover:active > xul|*.checkbox-check,
+html|input[type="checkbox"]:enabled:hover:active {
+  background-color: var(--in-content-button-background-active);
 }
 
 xul|checkbox[checked] > xul|*.checkbox-check,
@@ -566,6 +572,7 @@ html|input[type="checkbox"]:checked {
   fill: currentColor;
   color: white;
   background-color: var(--blue-60);
+  border-color: transparent;
 }
 
 xul|checkbox[checked] > xul|*.checkbox-check {
@@ -579,6 +586,11 @@ html|input[type="checkbox"]:checked {
 xul|checkbox:not([disabled="true"])[checked]:hover > xul|*.checkbox-check,
 html|input[type="checkbox"]:enabled:checked:hover {
   background-color: var(--blue-70);
+}
+
+xul|checkbox:not([disabled="true"])[checked]:hover:active > xul|*.checkbox-check,
+html|input[type="checkbox"]:enabled:checked:hover:active {
+  background-color: var(--blue-80);
 }
 
 xul|richlistitem > xul|*.checkbox-check {
@@ -601,16 +613,21 @@ xul|*.radio-check {
   width: 20px;
   height: 20px;
   border: 1px solid var(--in-content-box-border-color);
-  border-radius: 50%;
+  border-radius: 100%;
   margin: 0;
   margin-inline-end: 10px;
-  background-color: var(--grey-90-a10);
+  background-color: var(--in-content-button-background);
   background-position: center;
 }
 
 html|input[type="radio"]:enabled:hover,
 xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
-  background-color: var(--grey-90-a20);
+  background-color: var(--in-content-button-background-hover);
+}
+
+html|input[type="radio"]:enabled:hover:active,
+xul|radio:not([disabled="true"]):hover:active > xul|*.radio-check {
+  background-color: var(--in-content-button-background-active);
 }
 
 html|input[type="radio"]:checked,
@@ -619,6 +636,7 @@ xul|*.radio-check[selected] {
   fill: currentColor;
   color: white;
   background-color: var(--blue-60);
+  border-color: transparent;
 }
 
 html|input[type="radio"]:checked {
@@ -632,6 +650,11 @@ xul|*.radio-check[selected] {
 html|input[type="radio"]:enabled:checked:hover,
 xul|radio:not([disabled="true"])[selected]:hover > xul|*.radio-check {
   background-color: var(--blue-70);
+}
+
+html|input[type="radio"]:enabled:checked:hover:active,
+xul|radio:not([disabled="true"])[selected]:hover:active > xul|*.radio-check {
+  background-color: var(--blue-80);
 }
 
 xul|*.radio-label-box {
