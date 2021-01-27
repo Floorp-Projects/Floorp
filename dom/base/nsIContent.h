@@ -29,12 +29,6 @@ struct IMEState;
 }  // namespace widget
 }  // namespace mozilla
 
-enum nsLinkState {
-  eLinkState_Unvisited = 1,
-  eLinkState_Visited = 2,
-  eLinkState_NotLink = 3
-};
-
 // IID for the nsIContent interface
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_ICONTENT_IID                              \
