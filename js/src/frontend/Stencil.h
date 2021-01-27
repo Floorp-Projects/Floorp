@@ -212,33 +212,23 @@ class RegExpStencil {
 class BigIntStencil {
   friend class StencilXDR;
 
-  UniqueTwoByteChars buf_;
-  size_t length_ = 0;
+  // Source of the BigInt literal.
+  // It's not null-terminated, and also trailing 'n' suffix is not included.
+  mozilla::Span<char16_t> source_;
 
  public:
   BigIntStencil() = default;
 
-  MOZ_MUST_USE bool init(JSContext* cx, const Vector<char16_t, 32>& buf) {
-#ifdef DEBUG
-    // Assert we have no separators; if we have a separator then the algorithm
-    // used in BigInt::literalIsZero will be incorrect.
-    for (char16_t c : buf) {
-      MOZ_ASSERT(c != '_');
-    }
-#endif
-    length_ = buf.length();
-    buf_ = js::DuplicateString(cx, buf.begin(), buf.length());
-    return buf_ != nullptr;
-  }
+  MOZ_MUST_USE bool init(JSContext* cx, LifoAlloc& alloc,
+                         const Vector<char16_t, 32>& buf);
 
   BigInt* createBigInt(JSContext* cx) const {
-    mozilla::Range<const char16_t> source(buf_.get(), length_);
-
+    mozilla::Range<const char16_t> source(source_.data(), source_.size());
     return js::ParseBigIntLiteral(cx, source);
   }
 
   bool isZero() const {
-    mozilla::Range<const char16_t> source(buf_.get(), length_);
+    mozilla::Range<const char16_t> source(source_.data(), source_.size());
     return js::BigIntLiteralIsZero(source);
   }
 

@@ -7,9 +7,11 @@
 #include "frontend/Stencil.h"
 
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
+#include "mozilla/PodOperations.h"          // mozilla::PodCopy
 #include "mozilla/RefPtr.h"                 // RefPtr
 #include "mozilla/Sprintf.h"                // SprintfLiteral
 
+#include "ds/LifoAlloc.h"                  // LifoAlloc
 #include "frontend/AbstractScopePtr.h"     // ScopeIndex
 #include "frontend/BytecodeCompilation.h"  // CanLazilyParse
 #include "frontend/BytecodeSection.h"      // EmitScriptThingsVector
@@ -1214,6 +1216,26 @@ mozilla::Span<TaggedScriptThingIndex> ScriptStencil::gcthings(
   return stencil.gcThingData.Subspan(gcThingsOffset, gcThingsLength);
 }
 
+MOZ_MUST_USE bool BigIntStencil::init(JSContext* cx, LifoAlloc& alloc,
+                                      const Vector<char16_t, 32>& buf) {
+#ifdef DEBUG
+  // Assert we have no separators; if we have a separator then the algorithm
+  // used in BigInt::literalIsZero will be incorrect.
+  for (char16_t c : buf) {
+    MOZ_ASSERT(c != '_');
+  }
+#endif
+  size_t length = buf.length();
+  char16_t* p = alloc.template newArrayUninitialized<char16_t>(length);
+  if (!p) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  mozilla::PodCopy(p, buf.begin(), length);
+  source_ = mozilla::Span(p, length);
+  return true;
+}
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
 void frontend::DumpTaggedParserAtomIndex(js::JSONPrinter& json,
@@ -1346,8 +1368,8 @@ void BigIntStencil::dump(js::JSONPrinter& json) {
 }
 
 void BigIntStencil::dumpCharsNoQuote(GenericPrinter& out) {
-  for (size_t i = 0; i < length_; i++) {
-    out.putChar(char(buf_[i]));
+  for (char16_t c : source_) {
+    out.putChar(char(c));
   }
 }
 
