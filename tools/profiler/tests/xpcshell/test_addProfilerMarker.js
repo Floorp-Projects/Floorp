@@ -35,9 +35,11 @@ function expectDuration(marker) {
     "number",
     "startTime should be a number"
   );
-  Assert.equal(
-    Math.round(marker.startTime * 10 ** 6) / 10 ** 6,
-    startTime,
+  // Floats can cause rounding issues. We've seen up to a 1e-6 difference in
+  // intermittent failures, so we are permissive and accept up to 1e-5.
+  Assert.less(
+    Math.abs(marker.startTime - startTime),
+    1e-5,
     "startTime should be the expected time"
   );
   Assert.equal(typeof marker.endTime, "number", "endTime should be a number");
@@ -84,7 +86,12 @@ add_task(async () => {
   }
 
   startProfiler();
-  startTime = Math.round(Cu.now() * 10 ** 6) / 10 ** 6;
+  startTime = Cu.now();
+  while (Cu.now() < startTime + 1) {
+    // Busy wait for 1ms to ensure the intentionally set start time of markers
+    // will be significantly different from the time at which the marker is
+    // recorded.
+  }
   info("startTime used for markers with durations: " + startTime);
 
   /* Each call to testMarker will record a marker with a unique name.
