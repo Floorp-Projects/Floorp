@@ -3308,6 +3308,47 @@ void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
   DispatchInputEvent(&event);
 }
 
+bool nsWindow::CheckResizerEdge(LayoutDeviceIntPoint aPoint,
+                                GdkWindowEdge& aOutEdge) {
+  // We only need to handle resizers for PIP window.
+  if (!mIsPIPWindow) {
+    return false;
+  }
+
+  // Don't allow resizing maximized windows.
+  if (mSizeState != nsSizeMode_Normal) {
+    return false;
+  }
+
+#define RESIZER_SIZE 15
+  int resizerSize = RESIZER_SIZE * GdkScaleFactor();
+  int topDist = aPoint.y;
+  int leftDist = aPoint.x;
+  int rightDist = mBounds.width - aPoint.x;
+  int bottomDist = mBounds.height - aPoint.y;
+
+  if (leftDist <= resizerSize && topDist <= resizerSize) {
+    aOutEdge = GDK_WINDOW_EDGE_NORTH_WEST;
+  } else if (rightDist <= resizerSize && topDist <= resizerSize) {
+    aOutEdge = GDK_WINDOW_EDGE_NORTH_EAST;
+  } else if (leftDist <= resizerSize && bottomDist <= resizerSize) {
+    aOutEdge = GDK_WINDOW_EDGE_SOUTH_WEST;
+  } else if (rightDist <= resizerSize && bottomDist <= resizerSize) {
+    aOutEdge = GDK_WINDOW_EDGE_SOUTH_EAST;
+  } else if (topDist <= resizerSize) {
+    aOutEdge = GDK_WINDOW_EDGE_NORTH;
+  } else if (leftDist <= resizerSize) {
+    aOutEdge = GDK_WINDOW_EDGE_WEST;
+  } else if (rightDist <= resizerSize) {
+    aOutEdge = GDK_WINDOW_EDGE_EAST;
+  } else if (bottomDist <= resizerSize) {
+    aOutEdge = GDK_WINDOW_EDGE_SOUTH;
+  } else {
+    return false;
+  }
+  return true;
+}
+
 template <typename Event>
 static LayoutDeviceIntPoint GetRefPoint(nsWindow* aWindow, Event* aEvent) {
   if (aEvent->window == aWindow->GetGdkWindow()) {
@@ -3368,6 +3409,39 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
     }
   }
 #endif /* MOZ_X11 */
+
+  GdkWindowEdge edge;
+  if (CheckResizerEdge(GetRefPoint(this, aEvent), edge)) {
+    nsCursor cursor = eCursor_none;
+    switch (edge) {
+      case GDK_WINDOW_EDGE_NORTH:
+        cursor = eCursor_n_resize;
+        break;
+      case GDK_WINDOW_EDGE_NORTH_WEST:
+        cursor = eCursor_nw_resize;
+        break;
+      case GDK_WINDOW_EDGE_NORTH_EAST:
+        cursor = eCursor_ne_resize;
+        break;
+      case GDK_WINDOW_EDGE_WEST:
+        cursor = eCursor_w_resize;
+        break;
+      case GDK_WINDOW_EDGE_EAST:
+        cursor = eCursor_e_resize;
+        break;
+      case GDK_WINDOW_EDGE_SOUTH:
+        cursor = eCursor_s_resize;
+        break;
+      case GDK_WINDOW_EDGE_SOUTH_WEST:
+        cursor = eCursor_sw_resize;
+        break;
+      case GDK_WINDOW_EDGE_SOUTH_EAST:
+        cursor = eCursor_se_resize;
+        break;
+    }
+    SetCursor(cursor, nullptr, 0, 0);
+    return;
+  }
 
   WidgetMouseEvent event(true, eMouseMove, this, WidgetMouseEvent::eReal);
 
@@ -3536,6 +3610,15 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   // check to see if we should rollup
   if (CheckForRollup(aEvent->x_root, aEvent->y_root, false, false)) return;
+
+  // Check to see if the event is within our window's resize region
+  GdkWindowEdge edge;
+  if (CheckResizerEdge(GetRefPoint(this, aEvent), edge)) {
+    gdk_window_begin_resize_drag(gtk_widget_get_window(mShell), edge,
+                                 aEvent->button, aEvent->x_root, aEvent->y_root,
+                                 aEvent->time);
+    return;
+  }
 
   gdouble pressure = 0;
   gdk_event_get_axis((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
@@ -4515,8 +4598,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
       if (mWindowType == eWindowType_toplevel ||
           mWindowType == eWindowType_dialog) {
-        bool isPopup = mIsPIPWindow || mWindowType == eWindowType_dialog;
-        mCSDSupportLevel = GetSystemCSDSupportLevel(isPopup);
+        mCSDSupportLevel = GetSystemCSDSupportLevel();
       }
 
       // Don't use transparency for PictureInPicture windows.
@@ -7627,6 +7709,11 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
   LOG(("nsWindow::SetDrawsInTitlebar() [%p] State %d mCSDSupportLevel %d\n",
        (void*)this, aState, (int)mCSDSupportLevel));
 
+  if (mIsPIPWindow && aState == mDrawInTitlebar) {
+    gtk_window_set_decorated(GTK_WINDOW(mShell), !aState);
+    return;
+  }
+
   if (!mShell || mCSDSupportLevel == CSD_SUPPORT_NONE ||
       aState == mDrawInTitlebar) {
     return;
@@ -7974,7 +8061,7 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   return NS_OK;
 }
 
-nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(bool aIsPopup) {
+nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
   if (sCSDSupportLevel != CSD_SUPPORT_UNKNOWN) {
     return sCSDSupportLevel;
   }
@@ -8003,13 +8090,13 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(bool aIsPopup) {
   if (currentDesktop) {
     // GNOME Flashback (fallback)
     if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr) {
-      sCSDSupportLevel = aIsPopup ? CSD_SUPPORT_CLIENT : CSD_SUPPORT_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
       // Pop Linux Bug 1629198
     } else if (strstr(currentDesktop, "pop:GNOME") != nullptr) {
       sCSDSupportLevel = CSD_SUPPORT_CLIENT;
       // gnome-shell
     } else if (strstr(currentDesktop, "GNOME") != nullptr) {
-      sCSDSupportLevel = aIsPopup ? CSD_SUPPORT_CLIENT : CSD_SUPPORT_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
     } else if (strstr(currentDesktop, "XFCE") != nullptr) {
       sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     } else if (strstr(currentDesktop, "X-Cinnamon") != nullptr) {
