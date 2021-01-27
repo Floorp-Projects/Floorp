@@ -4673,6 +4673,10 @@ mozilla::ipc::IPCResult ContentParent::RecvConsoleMessage(
 mozilla::ipc::IPCResult ContentParent::RecvReportFrameTimingData(
     uint64_t aInnerWindowId, const nsString& entryName,
     const nsString& initiatorType, UniquePtr<PerformanceTimingData>&& aData) {
+  if (!aData) {
+    return IPC_FAIL(this, "aData should not be null");
+  }
+
   RefPtr<WindowGlobalParent> parent =
       WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
   if (!parent || !parent->GetContentParent()) {

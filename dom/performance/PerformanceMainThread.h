@@ -34,11 +34,14 @@ class PerformanceMainThread final : public Performance,
 
   virtual void AddEntry(nsIHttpChannel* channel,
                         nsITimedChannel* timedChannel) override;
+
+  // aData must be non-null.
   virtual void AddEntry(const nsString& entryName,
                         const nsString& initiatorType,
                         UniquePtr<PerformanceTimingData>&& aData) override;
 
-  void AddRawEntry(UniquePtr<PerformanceTimingData>,
+  // aPerformanceTimingData must be non-null.
+  void AddRawEntry(UniquePtr<PerformanceTimingData> aPerformanceTimingData,
                    const nsAString& aInitiatorType,
                    const nsAString& aEntryName);
   virtual void SetFCPTimingEntry(PerformancePaintTiming* aEntry) override;

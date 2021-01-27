@@ -21,9 +21,11 @@ class PerformanceProxyData {
                        const nsAString& aEntryName)
       : mData(std::move(aData)),
         mInitiatorType(aInitiatorType),
-        mEntryName(aEntryName) {}
+        mEntryName(aEntryName) {
+    MOZ_RELEASE_ASSERT(mData);
+  }
 
-  UniquePtr<PerformanceTimingData> mData;
+  UniquePtr<PerformanceTimingData> mData;  // always non-null
   nsString mInitiatorType;
   nsString mEntryName;
 };
