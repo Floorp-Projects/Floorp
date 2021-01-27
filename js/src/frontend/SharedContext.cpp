@@ -38,7 +38,7 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
       inClass_(false),
       localStrict(false),
       hasExplicitUseStrict_(false),
-      isScriptFieldCopiedToStencil(false) {
+      isScriptExtraFieldCopiedToStencil(false) {
   // Compute the script kind "input" flags.
   if (kind == Kind::FunctionBox) {
     setFlag(ImmutableFlags::IsFunction);
@@ -396,29 +396,20 @@ bool FunctionBox::hasFunctionExtraStencil() const {
   return funcDataIndex_ < compilationState_.scriptExtra.length();
 }
 
-void SharedContext::copyScriptFields(ScriptStencil& script) {
-  MOZ_ASSERT(!isScriptFieldCopiedToStencil);
-  isScriptFieldCopiedToStencil = true;
-}
-
 void SharedContext::copyScriptExtraFields(ScriptStencilExtra& scriptExtra) {
+  MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
+
   scriptExtra.immutableFlags = immutableFlags_;
   scriptExtra.extent = extent_;
+
+  isScriptExtraFieldCopiedToStencil = true;
 }
 
 void FunctionBox::finishScriptFlags() {
-  MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+  MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
 
   using ImmutableFlags = ImmutableScriptFlagsEnum;
   immutableFlags_.setFlag(ImmutableFlags::HasMappedArgsObj, hasMappedArgsObj());
-}
-
-void FunctionBox::copyScriptFields(ScriptStencil& script) {
-  MOZ_ASSERT(&script == &functionStencil());
-
-  SharedContext::copyScriptFields(script);
-
-  isScriptFieldCopiedToStencil = true;
 }
 
 void FunctionBox::copyFunctionFields(ScriptStencil& script) {

@@ -170,14 +170,14 @@ class SharedContext {
   // True if "use strict"; appears in the body instead of being inherited.
   bool hasExplicitUseStrict_ : 1;
 
-  // Tracks if script-related fields are already copied to ScriptStencil.
+  // Tracks if script-related fields are already copied to ScriptStencilExtra.
   //
   // If this field is true, those fileds shouldn't be modified.
   //
   // For FunctionBox, some fields are allowed to be modified, but the
-  // modification should be synced with ScriptStencil by
+  // modification should be synced with ScriptStencilExtra by
   // FunctionBox::copyUpdated* methods.
-  bool isScriptFieldCopiedToStencil : 1;
+  bool isScriptExtraFieldCopiedToStencil : 1;
 
   // End of fields.
 
@@ -190,7 +190,7 @@ class SharedContext {
     return immutableFlags_.hasFlag(flag);
   }
   void setFlag(ImmutableFlags flag, bool b = true) {
-    MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+    MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
     immutableFlags_.setFlag(flag, b);
   }
 
@@ -272,7 +272,6 @@ class SharedContext {
   inline JSAtom* liftParserAtomToJSAtom(JSContext* cx,
                                         const ParserAtom* atomId);
 
-  void copyScriptFields(ScriptStencil& script);
   void copyScriptExtraFields(ScriptStencilExtra& scriptExtra);
 };
 
@@ -609,14 +608,14 @@ class FunctionBox : public SuspendableContext {
   bool useAsmOrInsideUseAsm() const { return useAsm; }
 
   void setStart(uint32_t offset, uint32_t line, uint32_t column) {
-    MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+    MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
     extent_.sourceStart = offset;
     extent_.lineno = line;
     extent_.column = column;
   }
 
   void setEnd(uint32_t end) {
-    MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+    MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
     // For all functions except class constructors, the buffer and
     // toString ending positions are the same. Class constructors override
     // the toString ending position with the end of the class definition.
@@ -626,14 +625,14 @@ class FunctionBox : public SuspendableContext {
 
   void setCtorToStringEnd(uint32_t end) {
     extent_.toStringEnd = end;
-    if (isScriptFieldCopiedToStencil) {
+    if (isScriptExtraFieldCopiedToStencil) {
       copyUpdatedExtent();
     }
   }
 
   void setCtorFunctionHasThisBinding() {
     immutableFlags_.setFlag(ImmutableFlags::FunctionHasThisBinding, true);
-    if (isScriptFieldCopiedToStencil) {
+    if (isScriptExtraFieldCopiedToStencil) {
       copyUpdatedImmutableFlags();
     }
   }
@@ -655,7 +654,7 @@ class FunctionBox : public SuspendableContext {
   void setMemberInitializers(MemberInitializers memberInitializers) {
     immutableFlags_.setFlag(ImmutableFlags::UseMemberInitializers, true);
     memberInitializers_ = memberInitializers;
-    if (isScriptFieldCopiedToStencil) {
+    if (isScriptExtraFieldCopiedToStencil) {
       copyUpdatedImmutableFlags();
       copyUpdatedMemberInitializers();
     }
@@ -664,7 +663,6 @@ class FunctionBox : public SuspendableContext {
   ScriptIndex index() { return funcDataIndex_; }
 
   void finishScriptFlags();
-  void copyScriptFields(ScriptStencil& script);
   void copyFunctionFields(ScriptStencil& script);
   void copyFunctionExtraFields(ScriptStencilExtra& scriptExtra);
 
