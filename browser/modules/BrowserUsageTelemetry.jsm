@@ -26,7 +26,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+  setInterval: "resource://gre/modules/Timer.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
+  clearInterval: "resource://gre/modules/Timer.jsm",
 });
 
 // This pref is in seconds!
@@ -65,7 +67,10 @@ const UNFILTERED_URI_COUNT_SCALAR_NAME =
 const TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE_SCALAR_NAME =
   "browser.engagement.total_uri_count_normal_and_private_mode";
 
+const CONTENT_PROCESS_COUNT = "CONTENT_PROCESS_COUNT";
+
 const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
+const CONTENT_PROCESS_COUNT_INTERVAL_MS = 5 * 60 * 1000;
 
 // The elements we consider to be interactive.
 const UI_TARGET_ELEMENTS = [
@@ -426,6 +431,10 @@ let BrowserUsageTelemetry = {
     Services.prefs.addObserver("browser.tabs.drawInTitlebar", this);
 
     this._recordUITelemetry();
+    this._contentProcessCountInterval = setInterval(
+      () => this._recordContentProcessCount(),
+      CONTENT_PROCESS_COUNT_INTERVAL_MS
+    );
   },
 
   /**
@@ -467,6 +476,9 @@ let BrowserUsageTelemetry = {
     }
     Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC);
     Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC);
+
+    clearInterval(this._recordContentProcessCountInterval);
+    this._recordContentProcessCountDelayed = null;
   },
 
   observe(subject, topic, data) {
@@ -1237,6 +1249,16 @@ let BrowserUsageTelemetry = {
       }
     }
     return "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_50_PLUS";
+  },
+
+  /**
+   * Record the number of content processes.
+   */
+  _recordContentProcessCount() {
+    // All DOM processes includes the parent.
+    const count = ChromeUtils.getAllDOMProcesses().length - 1;
+
+    Services.telemetry.getHistogramById(CONTENT_PROCESS_COUNT).add(count);
   },
 };
 
