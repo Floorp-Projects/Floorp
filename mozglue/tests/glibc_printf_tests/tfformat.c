@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 
 /* Tests taken from Cygnus C library. */
@@ -4009,6 +4010,10 @@ sprint_double_type sprint_doubles[] =
   {__LINE__, 11.25,			"11.2", "%.1f"},
   {__LINE__, 1.75,			"1.8", "%.1f"},
   {__LINE__, 11.75,			"11.8", "%.1f"},
+  {__LINE__, -1.25,			"-1.2", "%.1f"},
+  {__LINE__, -11.25,			"-11.2", "%.1f"},
+  {__LINE__, -1.75,			"-1.8", "%.1f"},
+  {__LINE__, -11.75,			"-11.8", "%.1f"},
   {__LINE__, 16,			"0x1.0p+4", "%.1a"},
   {__LINE__, 16,			"0x1.00000000000000000000p+4", "%.20a"},
   {__LINE__, 4444.88888888,		"4445", "%2.F"},
@@ -4038,6 +4043,29 @@ sprint_double_type sprint_doubles[] =
   {__LINE__, 999.9998,			"1000.00", "%#g"},
   {__LINE__, 912.98,			"913", "%.4g"},
   {__LINE__, 50.999999,			"51", "%.5g"},
+
+  {__LINE__, 0.0,			"0000.00000", "%010.5f"},
+  {__LINE__, 0.0,			" 000.00000", "% 010.5f"},
+  {__LINE__, -0.0,			"-000.00000", "% 010.5f"},
+
+  {__LINE__, NAN,			"nan", "%f"},
+  {__LINE__, NAN,			"+nan", "%+f"},
+  {__LINE__, NAN,			"       nan", "%010.2f"},
+  {__LINE__, NAN,			"      +nan", "%+010.2f"},
+  {__LINE__, -NAN,			"-nan", "%f"},
+  {__LINE__, -NAN,			"-nan", "%+f"},
+  {__LINE__, -NAN,			"      -nan", "%010.2f"},
+  {__LINE__, -NAN,			"      -nan", "%+010.2f"},
+  {__LINE__, NAN,			"NAN", "%F"},
+  {__LINE__, INFINITY,			"inf", "%f"},
+  {__LINE__, INFINITY,			"+inf", "%+f"},
+  {__LINE__, INFINITY,			"       inf", "%010.2f"},
+  {__LINE__, INFINITY,			"      +inf", "%+010.2f"},
+  {__LINE__, -INFINITY,			"-inf", "%f"},
+  {__LINE__, -INFINITY,			"-inf", "%+f"},
+  {__LINE__, -INFINITY,			"      -inf", "%010.2f"},
+  {__LINE__, -INFINITY,			"      -inf", "%+010.2f"},
+  {__LINE__, INFINITY,			"INF", "%F"},
 
   {0 }
 
@@ -4090,7 +4118,7 @@ int main(int argc, char *argv[])
 
       sprintf (buffer, "%.999g", dptr->value);
       sscanf (buffer, "%lg", &d);
-      if (dptr->value != d)
+      if (dptr->value != d && !isnan(d))
 	{
 	  errcount++;
 	  printf ("Error in line %d.  String is \"%s\", value is %g.\n",
