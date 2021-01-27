@@ -205,6 +205,9 @@ sealed class Event {
     object ContextMenuSelectAllTapped : Event()
     object ContextMenuShareTapped : Event()
 
+    object HaveTopSites : Event()
+    object HaveNoTopSites : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {

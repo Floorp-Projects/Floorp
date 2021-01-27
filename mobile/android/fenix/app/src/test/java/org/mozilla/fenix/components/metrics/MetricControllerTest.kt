@@ -10,7 +10,12 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyAll
+import mozilla.components.feature.top.sites.facts.TopSitesFacts
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.log.logger.Logger
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -166,5 +171,60 @@ class MetricControllerTest {
 
         controller.track(Event.TabMediaPause)
         verify { marketingService1.track(Event.TabMediaPause) }
+    }
+
+    @Test
+    fun `topsites fact should convert to the right events`() {
+        var enabled = true
+        val controller = ReleaseMetricController(
+            services = listOf(dataService1),
+            isDataTelemetryEnabled = { enabled },
+            isMarketingDataTelemetryEnabled = { enabled }
+        )
+
+        var fact = Fact(
+            Component.FEATURE_TOP_SITES,
+            Action.INTERACTION,
+            TopSitesFacts.Items.COUNT,
+            "1"
+        )
+
+        assertEquals(controller.factToEvent(fact), Event.HaveTopSites)
+
+        fact = Fact(
+            Component.FEATURE_TOP_SITES,
+            Action.INTERACTION,
+            TopSitesFacts.Items.COUNT,
+            "0"
+        )
+
+        assertEquals(controller.factToEvent(fact), Event.HaveNoTopSites)
+
+        fact = Fact(
+            Component.FEATURE_TOP_SITES,
+            Action.INTERACTION,
+            TopSitesFacts.Items.COUNT,
+            "10"
+        )
+
+        assertEquals(controller.factToEvent(fact), Event.HaveTopSites)
+
+        fact = Fact(
+            Component.FEATURE_TOP_SITES,
+            Action.INTERACTION,
+            TopSitesFacts.Items.COUNT,
+            "-4"
+        )
+
+        assertEquals(controller.factToEvent(fact), Event.HaveNoTopSites)
+
+        fact = Fact(
+            Component.FEATURE_TOP_SITES,
+            Action.INTERACTION,
+            TopSitesFacts.Items.COUNT,
+            "test"
+        )
+
+        assertEquals(controller.factToEvent(fact), Event.HaveNoTopSites)
     }
 }

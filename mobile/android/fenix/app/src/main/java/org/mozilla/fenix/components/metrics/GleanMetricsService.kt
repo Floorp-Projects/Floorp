@@ -726,6 +726,12 @@ private val Event.wrapper: EventWrapper<*>?
         Event.HaveNoOpenTabs -> EventWrapper<NoExtraKeys>(
             { Metrics.hasOpenTabs.set(false) }
         )
+        Event.HaveTopSites -> EventWrapper<NoExtraKeys>(
+            { Metrics.hasTopSites.set(true) }
+        )
+        Event.HaveNoTopSites -> EventWrapper<NoExtraKeys>(
+            { Metrics.hasTopSites.set(false) }
+        )
 
         // Don't record other events in Glean:
         is Event.AddBookmark -> null

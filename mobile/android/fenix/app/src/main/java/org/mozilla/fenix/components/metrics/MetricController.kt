@@ -22,6 +22,7 @@ import mozilla.components.feature.findinpage.facts.FindInPageFacts
 import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
+import mozilla.components.feature.top.sites.facts.TopSitesFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -134,6 +135,13 @@ internal class ReleaseMetricController(
             }
     }
 
+    @VisibleForTesting
+    internal fun factToEvent(
+        fact: Fact
+    ): Event? {
+        return fact.toEvent()
+    }
+
     private fun isInitialized(type: MetricServiceType): Boolean = initialized.contains(type)
 
     private fun isTelemetryEnabled(type: MetricServiceType): Boolean = when (type) {
@@ -241,6 +249,23 @@ internal class ReleaseMetricController(
         }
         Component.FEATURE_PWA to ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT -> {
             Event.ProgressiveWebAppInstallAsShortcut
+        }
+        Component.FEATURE_TOP_SITES to TopSitesFacts.Items.COUNT -> {
+            value?.let {
+                var count = 0
+                try {
+                    count = it.toInt()
+                } catch (e: NumberFormatException) {
+                    // Do nothing
+                }
+
+                return if (count > 0) {
+                    Event.HaveTopSites
+                } else {
+                    Event.HaveNoTopSites
+                }
+            }
+            null
         }
         else -> null
     }
