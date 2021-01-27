@@ -146,6 +146,55 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    fun `initialize does not update toolbar background if flag is set`() {
+        val tab = createCustomTab("https://www.mozilla.org", id = "mozilla", config = CustomTabConfig(
+            toolbarColor = Color.RED
+        ))
+
+        val store = BrowserStore(BrowserState(
+            customTabs = listOf(tab)
+        ))
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val toolbar = spy(BrowserToolbar(testContext))
+        val useCases = CustomTabsUseCases(
+            sessionManager = sessionManager,
+            loadUrlUseCase = SessionUseCases(store, sessionManager).loadUrl
+        )
+        val window: Window = mock()
+        `when`(window.decorView).thenReturn(mock())
+
+        run {
+            val feature = CustomTabsToolbarFeature(
+                store,
+                toolbar,
+                sessionId = "mozilla",
+                useCases = useCases,
+                window = window,
+                updateToolbarBackground = false
+            ) {}
+
+            feature.init(tab)
+
+            verify(toolbar, never()).setBackgroundColor(Color.RED)
+        }
+
+        run {
+            val feature = CustomTabsToolbarFeature(
+                store,
+                toolbar,
+                sessionId = "mozilla",
+                useCases = useCases,
+                window = window,
+                updateToolbarBackground = true
+            ) {}
+
+            feature.init(tab)
+
+            verify(toolbar).setBackgroundColor(Color.RED)
+        }
+    }
+
+    @Test
     fun `adds close button`() {
         val tab = createCustomTab("https://www.mozilla.org", id = "mozilla", config = CustomTabConfig())
 

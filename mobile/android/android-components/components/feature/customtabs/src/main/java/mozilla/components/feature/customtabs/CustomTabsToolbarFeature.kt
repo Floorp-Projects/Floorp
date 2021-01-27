@@ -21,6 +21,7 @@ import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.CustomTabActionButtonConfig
+import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -41,6 +42,7 @@ import mozilla.components.support.utils.ColorUtils.getReadableTextColor
 
 /**
  * Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig.
+ *
  * @param toolbar Reference to the browser toolbar, so that the color and menu items can be set.
  * @param sessionId ID of the custom tab session. No-op if null or invalid.
  * @param menuBuilder Menu builder reference to pull menu options from.
@@ -48,6 +50,10 @@ import mozilla.components.support.utils.ColorUtils.getReadableTextColor
  * @param window Reference to the window so the navigation bar color can be set.
  * @param shareListener Invoked when the share button is pressed.
  * @param closeListener Invoked when the close button is pressed.
+ * @param updateToolbarBackground Whether or not the toolbar background should be changed based on
+ * [CustomTabConfig.toolbarColor].
+ * @param forceActionButtonTinting When set to true the toolbar action button will always be tinted
+ * based on the toolbar background, ignoring the value of [CustomTabActionButtonConfig.tint].
  */
 @Suppress("LargeClass", "LongParameterList")
 class CustomTabsToolbarFeature(
@@ -58,6 +64,8 @@ class CustomTabsToolbarFeature(
     private val menuBuilder: BrowserMenuBuilder? = null,
     private val menuItemIndex: Int = menuBuilder?.items?.size ?: 0,
     private val window: Window? = null,
+    private val updateToolbarBackground: Boolean = true,
+    private val forceActionButtonTinting: Boolean = false,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit
 ) : LifecycleAwareFeature, UserInteractionHandler {
@@ -102,8 +110,8 @@ class CustomTabsToolbarFeature(
         toolbar.display.onUrlClicked = { false }
 
         // If it's available, hold on to the readable colour for other assets.
-        config.toolbarColor?.let {
-            readableColor = getReadableTextColor(it)
+        if (updateToolbarBackground && config.toolbarColor != null) {
+            readableColor = getReadableTextColor(config.toolbarColor!!)
         }
 
         // Change the toolbar colour
@@ -130,8 +138,8 @@ class CustomTabsToolbarFeature(
 
     @VisibleForTesting
     internal fun updateToolbarColor(@ColorInt toolbarColor: Int?, @ColorInt navigationBarColor: Int?) {
-        toolbarColor?.let { color ->
-            toolbar.setBackgroundColor(color)
+        if (updateToolbarBackground && toolbarColor != null) {
+            toolbar.setBackgroundColor(toolbarColor)
 
             toolbar.display.colors = toolbar.display.colors.copy(
                 text = readableColor,
@@ -142,7 +150,7 @@ class CustomTabsToolbarFeature(
                 menu = readableColor
             )
 
-            window?.setStatusBarTheme(color)
+            window?.setStatusBarTheme(toolbarColor)
         }
         navigationBarColor?.let { color ->
             window?.setNavigationBarTheme(color)
@@ -184,7 +192,7 @@ class CustomTabsToolbarFeature(
                 ACTION_BUTTON_DRAWABLE_HEIGHT_DP.dpToPx(context.resources.displayMetrics),
                 true)
                 .toDrawable(context.resources)
-            if (config.tint) {
+            if (config.tint || forceActionButtonTinting) {
                 drawableIcon.setTint(readableColor)
             }
 
