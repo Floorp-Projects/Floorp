@@ -7,7 +7,6 @@
 #include "PointerEventHandler.h"
 #include "nsIFrame.h"
 #include "PointerEvent.h"
-#include "PointerLockManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -196,7 +195,7 @@ bool PointerEventHandler::SetPointerCaptureRemoteTarget(
   MOZ_ASSERT(sPointerCaptureRemoteTargetTable);
   MOZ_ASSERT(aBrowserParent);
 
-  if (PointerLockManager::GetLockedRemoteTarget()) {
+  if (BrowserParent::GetPointerLockedRemoteTarget()) {
     return false;
   }
 
