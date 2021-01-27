@@ -77,7 +77,7 @@ std::ostream& operator<<(
 #undef AC_PROCESS_ENUM_TO_STREAM
 
 AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell)
-    : mPresShell(aPresShell) {
+    : mSelectionStringifyer{mLayoutFlusher}, mPresShell{aPresShell} {
   if (!mPresShell) {
     return;
   }
@@ -838,13 +838,16 @@ already_AddRefed<nsFrameSelection> AccessibleCaretManager::GetFrameSelection()
 }
 
 nsAutoString AccessibleCaretManager::StringifiedSelection() const {
-  nsAutoString str;
   RefPtr<Selection> selection = GetSelection();
-  if (selection) {
-    selection->Stringify(str, mLayoutFlusher.mAllowFlushing
-                                  ? Selection::FlushFrames::Yes
-                                  : Selection::FlushFrames::No);
-  }
+  return mSelectionStringifyer.Stringify(*selection);
+}
+
+nsAutoString AccessibleCaretManager::SelectionStringifyer::Stringify(
+    Selection& aSelection) const {
+  nsAutoString str;
+  aSelection.Stringify(str, mLayoutFlusher.mAllowFlushing
+                                ? Selection::FlushFrames::Yes
+                                : Selection::FlushFrames::No);
   return str;
 }
 

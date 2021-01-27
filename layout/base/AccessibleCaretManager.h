@@ -245,8 +245,39 @@ class AccessibleCaretManager {
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
 
-  MOZ_CAN_RUN_SCRIPT
-  nsAutoString StringifiedSelection() const;
+  class LayoutFlusher final {
+   public:
+    ~LayoutFlusher();
+
+    MOZ_CAN_RUN_SCRIPT void MaybeFlush(const PresShell& aPresShell);
+
+    // Set to false to disallow flushing layout in some callbacks such as
+    // OnReflow(), OnScrollStart(), OnScrollStart(), or
+    // OnScrollPositionChanged().
+    bool mAllowFlushing = true;
+
+   private:
+    // Whether we're flushing layout, used for sanity-checking.
+    bool mFlushing = false;
+  };
+
+  LayoutFlusher mLayoutFlusher;
+
+  MOZ_CAN_RUN_SCRIPT nsAutoString StringifiedSelection() const;
+
+  class SelectionStringifyer final {
+   public:
+    explicit SelectionStringifyer(LayoutFlusher& aLayoutFlusher)
+        : mLayoutFlusher{aLayoutFlusher} {}
+
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsAutoString
+    Stringify(dom::Selection& aSelection) const;
+
+   private:
+    LayoutFlusher mLayoutFlusher;
+  };
+
+  SelectionStringifyer mSelectionStringifyer;
 
   // Get the union of all the child frame scrollable overflow rects for aFrame,
   // which is used as a helper function to restrict the area where the caret can
@@ -351,24 +382,6 @@ class AccessibleCaretManager {
 
   // Set to true in OnScrollStart() and set to false in OnScrollEnd().
   bool mIsScrollStarted = false;
-
-  class LayoutFlusher final {
-   public:
-    ~LayoutFlusher();
-
-    MOZ_CAN_RUN_SCRIPT void MaybeFlush(const PresShell& aPresShell);
-
-    // Set to false to disallow flushing layout in some callbacks such as
-    // OnReflow(), OnScrollStart(), OnScrollStart(), or
-    // OnScrollPositionChanged().
-    bool mAllowFlushing = true;
-
-  private:
-    // Whether we're flushing layout, used for sanity-checking.
-    bool mFlushing = false;
-  };
-
-  LayoutFlusher mLayoutFlusher;
 
   // Set to True if one of the caret's position is changed in last update.
   bool mIsCaretPositionChanged = false;
