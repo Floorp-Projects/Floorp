@@ -9,6 +9,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/IHistory.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsLayoutUtils.h"
@@ -18,7 +19,6 @@
 
 #include "nsEscape.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLDNSPrefetch.h"
 #include "nsString.h"
 #include "mozAutoDocUpdate.h"
 
@@ -52,7 +52,7 @@ Link::~Link() {
   // !mElement is for mock_Link.
   MOZ_ASSERT(!mElement || !mElement->IsInComposedDoc());
   if (IsInDNSPrefetch()) {
-    nsHTMLDNSPrefetch::LinkDestroyed(this);
+    HTMLDNSPrefetch::LinkDestroyed(this);
   }
   UnregisterFromHistory();
 }
@@ -65,8 +65,8 @@ bool Link::ElementHasHref() const {
 
 void Link::TryDNSPrefetch() {
   MOZ_ASSERT(mElement->IsInComposedDoc());
-  if (ElementHasHref() && nsHTMLDNSPrefetch::IsAllowed(mElement->OwnerDoc())) {
-    nsHTMLDNSPrefetch::Prefetch(this, nsHTMLDNSPrefetch::Priority::Low);
+  if (ElementHasHref() && HTMLDNSPrefetch::IsAllowed(mElement->OwnerDoc())) {
+    HTMLDNSPrefetch::Prefetch(this, HTMLDNSPrefetch::Priority::Low);
   }
 }
 
@@ -80,8 +80,8 @@ void Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
     mElement->UnsetFlags(aRequestedFlag);
     // Possible that hostname could have changed since binding, but since this
     // covers common cases, most DNS prefetch requests will be canceled
-    nsHTMLDNSPrefetch::CancelPrefetch(this, nsHTMLDNSPrefetch::Priority::Low,
-                                      NS_ERROR_ABORT);
+    HTMLDNSPrefetch::CancelPrefetch(this, HTMLDNSPrefetch::Priority::Low,
+                                    NS_ERROR_ABORT);
   }
 }
 

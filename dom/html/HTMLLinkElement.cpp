@@ -13,15 +13,16 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLLinkElementBinding.h"
+#include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLDNSPrefetch.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "nsINode.h"
@@ -637,8 +638,8 @@ void HTMLLinkElement::
   }
 
   if (linkTypes & eDNS_PREFETCH) {
-    if (nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
-      nsHTMLDNSPrefetch::Prefetch(this, nsHTMLDNSPrefetch::Priority::Low);
+    if (HTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
+      HTMLDNSPrefetch::Prefetch(this, HTMLDNSPrefetch::Priority::Low);
     }
   }
 }
