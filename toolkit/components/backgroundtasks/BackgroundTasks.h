@@ -8,9 +8,11 @@
 
 #include "nsCOMPtr.h"
 #include "nsIBackgroundTasks.h"
+#include "nsIBackgroundTasksManager.h"
 #include "nsICommandLine.h"
 #include "nsIFile.h"
 #include "nsISupports.h"
+#include "nsImportModule.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
 
@@ -111,7 +113,14 @@ class BackgroundTasks final : public nsIBackgroundTasks {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    // For now, do nothing.
+    nsCOMPtr<nsIBackgroundTasksManager> manager =
+        do_ImportModule("resource://gre/modules/BackgroundTasksManager.jsm",
+                        "BackgroundTasksManager");
+
+    NS_ENSURE_TRUE(manager, NS_ERROR_FAILURE);
+
+    NS_ConvertASCIItoUTF16 name(task.ref().get());
+    Unused << manager->RunBackgroundTaskNamed(name, aCmdLine);
 
     return NS_OK;
   }

@@ -55,6 +55,11 @@ if (AppConstants.platform == "macosx") {
   gExceptionPaths.push("resource://gre/res/touchbar/");
 }
 
+if (AppConstants.MOZ_BACKGROUNDTASKS) {
+  // `BackgroundTask_id.jsm` is loaded at runtime by `app --backgroundtask id ...`.
+  gExceptionPaths.push("resource://gre/modules/backgroundtasks/");
+}
+
 // Each whitelist entry should have a comment indicating which file is
 // referencing the whitelisted file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.
