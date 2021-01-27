@@ -58,3 +58,6 @@ devtools/client/debugger/src/test/mochitest/examples/ember/quickstart
 
 # These are source mapped and the locations are asserted in the test case.
 devtools/client/webconsole/test/browser/test-mangled-function.*
+
+# Ignore backgroundtasks preferences files.
+toolkit/components/backgroundtasks/defaults
