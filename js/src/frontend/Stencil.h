@@ -191,7 +191,7 @@ class RegExpStencil {
   JS::RegExpFlags flags() const { return JS::RegExpFlags(flags_); }
 
   RegExpObject* createRegExp(JSContext* cx,
-                             CompilationAtomCache& atomCache) const;
+                             const CompilationAtomCache& atomCache) const;
 
   // This is used by `Reflect.parse` when we need the RegExpObject but are not
   // doing a complete instantiation of the BaseCompilationStencil.

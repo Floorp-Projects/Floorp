@@ -3721,7 +3721,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 /* static */
 bool PrivateScriptData::InitFromStencil(
     JSContext* cx, js::HandleScript script,
-    js::frontend::CompilationInput& input,
+    const js::frontend::CompilationInput& input,
     const js::frontend::BaseCompilationStencil& stencil,
     js::frontend::CompilationGCOutput& gcOutput,
     const js::frontend::ScriptIndex scriptIndex) {
@@ -3815,7 +3815,7 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 
 /* static */
 bool JSScript::fullyInitFromStencil(
-    JSContext* cx, js::frontend::CompilationInput& input,
+    JSContext* cx, const js::frontend::CompilationInput& input,
     const js::frontend::BaseCompilationStencil& stencil,
     frontend::CompilationGCOutput& gcOutput, HandleScript script,
     const js::frontend::ScriptIndex scriptIndex) {
@@ -3937,7 +3937,6 @@ bool JSScript::fullyInitFromStencil(
 }
 
 JSScript* JSScript::fromStencil(JSContext* cx,
-                                js::frontend::CompilationInput& input,
                                 const js::frontend::CompilationStencil& stencil,
                                 frontend::CompilationGCOutput& gcOutput,
                                 const js::frontend::ScriptIndex scriptIndex) {
@@ -3960,7 +3959,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
     return nullptr;
   }
 
-  if (!fullyInitFromStencil(cx, input, stencil, gcOutput, script,
+  if (!fullyInitFromStencil(cx, stencil.input, stencil, gcOutput, script,
                             scriptIndex)) {
     return nullptr;
   }
