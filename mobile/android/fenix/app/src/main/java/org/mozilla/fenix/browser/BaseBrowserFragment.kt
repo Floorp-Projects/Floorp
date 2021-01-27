@@ -70,7 +70,6 @@ import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.PictureInPictureFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SwipeRefreshFeature
-import mozilla.components.feature.session.behavior.EngineViewBottomBehavior
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.lib.state.ext.consumeFlow
@@ -103,9 +102,7 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarMenuController
-import org.mozilla.fenix.components.toolbar.SwipeRefreshScrollingViewBehavior
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
-import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
 import org.mozilla.fenix.ext.accessibilityManager
@@ -128,9 +125,11 @@ import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
+import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
 import mozilla.components.feature.webauthn.WebAuthnFeature
 import mozilla.components.support.base.feature.ActivityResultHandler
 import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
+import mozilla.components.feature.session.behavior.ToolbarPosition as MozacToolbarPosition
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -838,34 +837,42 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 !inFullScreen
     }
 
-    private fun initializeEngineView(toolbarHeight: Int) {
+    @VisibleForTesting
+    internal fun initializeEngineView(toolbarHeight: Int) {
         val context = requireContext()
 
-        if (context.settings().isDynamicToolbarEnabled) {
-            engineView.setDynamicToolbarMaxHeight(toolbarHeight)
+        // If there is an a11y service enabled and the user hasn't explicitly set bottom toolbar
+        val isTopToolbarForced =
+            !context.settings().shouldUseBottomToolbar &&
+                context.settings().shouldUseFixedTopToolbar
 
-            val behavior = when (context.settings().toolbarPosition) {
-                // Set engineView dynamic vertical clipping depending on the toolbar position.
-                ToolbarPosition.BOTTOM -> EngineViewBottomBehavior(context, null)
-                // Set scroll flags depending on if if the browser or the website is doing the scroll.
-                ToolbarPosition.TOP -> SwipeRefreshScrollingViewBehavior(
+        if (!isTopToolbarForced && context.settings().isDynamicToolbarEnabled) {
+            getEngineView().setDynamicToolbarMaxHeight(toolbarHeight)
+
+            val toolbarPosition = if (context.settings().shouldUseBottomToolbar) {
+                MozacToolbarPosition.BOTTOM
+            } else {
+                MozacToolbarPosition.TOP
+            }
+            (getSwipeRefreshLayout().layoutParams as CoordinatorLayout.LayoutParams).behavior =
+                EngineViewBrowserToolbarBehavior(
                     context,
                     null,
-                    engineView,
-                    browserToolbarView
+                    getSwipeRefreshLayout(),
+                    toolbarHeight,
+                    toolbarPosition
                 )
-            }
-
-            (swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
         } else {
             // Ensure webpage's bottom elements are aligned to the very bottom of the engineView.
-            engineView.setDynamicToolbarMaxHeight(0)
+            getEngineView().setDynamicToolbarMaxHeight(0)
 
-            // Effectively place the engineView on top of the toolbar if that is not dynamic.
+            // Effectively place the engineView on top/below of the toolbar if that is not dynamic.
+            val swipeRefreshParams =
+                getSwipeRefreshLayout().layoutParams as CoordinatorLayout.LayoutParams
             if (context.settings().shouldUseBottomToolbar) {
-                val browserEngine = swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
-                browserEngine.bottomMargin =
-                    requireContext().resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+                swipeRefreshParams.bottomMargin = toolbarHeight
+            } else {
+                swipeRefreshParams.topMargin = toolbarHeight
             }
         }
     }
@@ -1251,6 +1258,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             browserToolbarView.view.isVisible = false
             val browserEngine = swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
             browserEngine.bottomMargin = 0
+            browserEngine.topMargin = 0
+            swipeRefresh.translationY = 0f
 
             engineView.setDynamicToolbarMaxHeight(0)
             browserToolbarView.expand()
@@ -1330,7 +1339,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
 
     override fun onAccessibilityStateChanged(enabled: Boolean) {
         if (_browserToolbarView != null) {
-            browserToolbarView.setScrollFlags(enabled)
+            browserToolbarView.setToolbarBehavior(enabled)
         }
     }
 
@@ -1352,4 +1361,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             }
         }
     }
+
+    /**
+     * Convenience method for replacing EngineView (id/engineView) in unit tests.
+     */
+    @VisibleForTesting
+    internal fun getEngineView() = engineView
+
+    /**
+     * Convenience method for replacing SwipeRefreshLayout (id/swipeRefresh) in unit tests.
+     */
+    @VisibleForTesting
+    internal fun getSwipeRefreshLayout() = swipeRefresh
 }

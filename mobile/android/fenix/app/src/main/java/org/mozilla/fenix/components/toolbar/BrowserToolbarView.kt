@@ -9,25 +9,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
+import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.LifecycleOwner
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
-import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
-import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
-import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
-import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
+import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.utils.URLStringUtils
 import mozilla.components.ui.tabcounter.TabCounterMenu
@@ -40,6 +33,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.ToolbarPopupWindow
 import java.lang.ref.WeakReference
+import mozilla.components.browser.toolbar.behavior.ToolbarPosition as MozacToolbarPosition
 
 interface BrowserToolbarViewInteractor {
     fun onBrowserToolbarPaste(text: String)
@@ -76,12 +70,14 @@ class BrowserToolbarView(
     private val layout = LayoutInflater.from(container.context)
         .inflate(toolbarLayout, container, true)
 
-    val view: BrowserToolbar = layout
+    @VisibleForTesting
+    internal var view: BrowserToolbar = layout
         .findViewById(R.id.toolbar)
 
     val toolbarIntegration: ToolbarIntegration
 
-    private val isPwaTabOrTwaTab: Boolean
+    @VisibleForTesting
+    internal val isPwaTabOrTwaTab: Boolean
         get() = customTabSession?.customTabConfig?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP ||
                 customTabSession?.customTabConfig?.externalAppType == ExternalAppType.TRUSTED_WEB_ACTIVITY
 
@@ -101,17 +97,8 @@ class BrowserToolbarView(
         with(container.context) {
             val isPinningSupported = components.useCases.webAppUseCases.isPinningSupported()
 
-            if (toolbarPosition == ToolbarPosition.TOP) {
-                val offsetChangedListener =
-                    AppBarLayout.OnOffsetChangedListener { _: AppBarLayout?, verticalOffset: Int ->
-                        interactor.onScrolled(verticalOffset)
-                    }
-
-                app_bar.addOnOffsetChangedListener(offsetChangedListener)
-            }
-
             view.apply {
-                setScrollFlags()
+                setToolbarBehavior()
 
                 elevation = resources.getDimension(R.dimen.browser_fragment_toolbar_elevation)
 
@@ -222,16 +209,9 @@ class BrowserToolbarView(
         if (isPwaTabOrTwaTab) {
             return
         }
-        when (settings.toolbarPosition) {
-            ToolbarPosition.BOTTOM -> {
-                (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-                    // behavior can be null if the "Scroll to hide toolbar" setting is toggled off.
-                    (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(view)
-                }
-            }
-            ToolbarPosition.TOP -> {
-                layout.app_bar?.setExpanded(true)
-            }
+
+        (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
+            (behavior as? BrowserToolbarBehavior)?.forceExpand(view)
         }
     }
 
@@ -240,38 +220,51 @@ class BrowserToolbarView(
     }
 
     /**
-     * Dynamically sets scroll flags for the toolbar when the user does not have a screen reader enabled
-     * Note that the toolbar will have the flags set and be able to be hidden
-     * only if the user didn't disabled this behavior in app's settings.
+     * Sets whether the toolbar will have a dynamic behavior (to be scrolled) or not.
+     *
+     * This will intrinsically check and disable the dynamic behavior if
+     *  - this is disabled in app settings
+     *  - toolbar is placed at the bottom and tab shows a PWA or TWA
+     *
+     *  Also if the user has not explicitly set a toolbar position and has a screen reader enabled
+     *  the toolbar will be placed at the top and in a fixed position.
+     *
+     * @param shouldDisableScroll force disable of the dynamic behavior irrespective of the intrinsic checks.
      */
-    fun setScrollFlags(shouldDisableScroll: Boolean = false) {
+    fun setToolbarBehavior(shouldDisableScroll: Boolean = false) {
         when (settings.toolbarPosition) {
             ToolbarPosition.BOTTOM -> {
                 if (settings.isDynamicToolbarEnabled && !isPwaTabOrTwaTab) {
-                    (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-                        behavior = BrowserToolbarBottomBehavior(view.context, null)
-                    }
+                    setDynamicToolbarBehavior(MozacToolbarPosition.BOTTOM)
                 } else {
-                    expand()
+                    expandToolbarAndMakeItFixed()
                 }
             }
             ToolbarPosition.TOP -> {
-                view.updateLayoutParams<AppBarLayout.LayoutParams> {
-                    scrollFlags =
-                        if (settings.shouldUseFixedTopToolbar ||
-                            !settings.isDynamicToolbarEnabled ||
-                            shouldDisableScroll) {
-                        // Force expand the toolbar so the user is not stuck with a hidden toolbar
-                        expand()
-                        0
-                    } else {
-                        SCROLL_FLAG_SCROLL or
-                                SCROLL_FLAG_ENTER_ALWAYS or
-                                SCROLL_FLAG_SNAP or
-                                SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
-                    }
+                if (settings.shouldUseFixedTopToolbar ||
+                    !settings.isDynamicToolbarEnabled ||
+                    shouldDisableScroll
+                ) {
+                    expandToolbarAndMakeItFixed()
+                } else {
+                    setDynamicToolbarBehavior(MozacToolbarPosition.TOP)
                 }
             }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun expandToolbarAndMakeItFixed() {
+        expand()
+        (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
+            behavior = null
+        }
+    }
+
+    @VisibleForTesting
+    internal fun setDynamicToolbarBehavior(toolbarPosition: MozacToolbarPosition) {
+        (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
+            behavior = BrowserToolbarBehavior(view.context, null, toolbarPosition)
         }
     }
 

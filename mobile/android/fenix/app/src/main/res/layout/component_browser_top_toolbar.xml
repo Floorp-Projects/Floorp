@@ -2,12 +2,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<com.google.android.material.appbar.AppBarLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/app_bar"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+
 <mozilla.components.browser.toolbar.BrowserToolbar
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/toolbar"
     android:layout_width="match_parent"
@@ -17,13 +14,10 @@
     android:clickable="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
     app:browserToolbarClearColor="?primaryText"
     app:browserToolbarInsecureColor="?primaryText"
     app:browserToolbarMenuColor="?primaryText"
     app:browserToolbarProgressBarGravity="bottom"
     app:browserToolbarSecureColor="?primaryText"
     app:browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor="?toolbarDivider" />
-</com.google.android.material.appbar.AppBarLayout>
 
-<!-- NOTE: Scroll flags set dynamically with `setScrollFlagsForTopToolbar` -->
