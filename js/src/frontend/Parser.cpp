@@ -195,7 +195,9 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     void* internalSyntaxParser)
     : ParserBase(cx, options, foldConstants, stencil, compilationState),
       handler_(cx, compilationState.allocScope.alloc(), stencil.input.lazy),
-      internalSyntaxParser_(internalSyntaxParser) {}
+      internalSyntaxParser_(internalSyntaxParser) {
+  MOZ_ASSERT(stencil.isInitialStencil() == !stencil.input.lazy);
+}
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
