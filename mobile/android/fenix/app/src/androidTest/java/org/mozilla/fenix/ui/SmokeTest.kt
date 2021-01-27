@@ -1144,6 +1144,7 @@ class SmokeTest {
         navigationToolbar {
             verifyReaderViewDetected(true)
             toggleReaderView()
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.openReaderViewAppearance {

@@ -119,12 +119,14 @@ class ReaderViewTest {
         navigationToolbar {
             verifyReaderViewDetected(true)
             toggleReaderView()
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.closeBrowserMenuToBrowser { }
 
         navigationToolbar {
             toggleReaderView()
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
             verifyReaderViewAppearance(false)
         }.close { }
@@ -150,6 +152,7 @@ class ReaderViewTest {
         navigationToolbar {
             verifyReaderViewDetected(true)
             toggleReaderView()
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.openReaderViewAppearance {
@@ -185,6 +188,7 @@ class ReaderViewTest {
         navigationToolbar {
             verifyReaderViewDetected(true)
             toggleReaderView()
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.openReaderViewAppearance {
@@ -226,6 +230,7 @@ class ReaderViewTest {
         navigationToolbar {
             verifyReaderViewDetected(true)
             toggleReaderView()
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.openReaderViewAppearance {
