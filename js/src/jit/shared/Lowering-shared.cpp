@@ -9,6 +9,7 @@
 #include "jit/LIR.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
+#include "jit/ScalarTypeUtils.h"
 
 #include "vm/SymbolType.h"
 
@@ -141,6 +142,20 @@ bool LRecoverInfo::OperandIter::canOptimizeOutIfUnused() {
   return true;
 }
 #endif
+
+LAllocation LIRGeneratorShared::useRegisterOrIndexConstant(
+    MDefinition* mir, Scalar::Type type, int32_t offsetAdjustment) {
+  if (CanUseInt32Constant(mir)) {
+    MConstant* cst = mir->toConstant();
+    int32_t val =
+        cst->type() == MIRType::Int32 ? cst->toInt32() : cst->toIntPtr();
+    int32_t offset;
+    if (ArrayOffsetFitsInInt32(val, type, offsetAdjustment, &offset)) {
+      return LAllocation(mir->toConstant());
+    }
+  }
+  return useRegister(mir);
+}
 
 #ifdef JS_NUNBOX32
 LSnapshot* LIRGeneratorShared::buildSnapshot(MResumePoint* rp,

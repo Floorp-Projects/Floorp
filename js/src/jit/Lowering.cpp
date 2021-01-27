@@ -3312,7 +3312,8 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrInt32Constant(ins->index());
+  const LAllocation index = useRegisterOrIndexConstant(
+      ins->index(), ins->storageType(), ins->offsetAdjustment());
 
   MOZ_ASSERT(IsNumericType(ins->type()) || ins->type() == MIRType::Boolean);
 
@@ -3481,7 +3482,8 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
   }
 
   LUse elements = useRegister(ins->elements());
-  LAllocation index = useRegisterOrInt32Constant(ins->index());
+  LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->writeType());
   LAllocation value;
 
   // For byte arrays, the value has to be in a byte register on x86.
