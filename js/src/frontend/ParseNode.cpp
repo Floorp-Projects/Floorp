@@ -398,7 +398,7 @@ const ParserAtom* NumericLiteral::toAtom(JSContext* cx,
 }
 
 RegExpObject* RegExpStencil::createRegExp(
-    JSContext* cx, CompilationAtomCache& atomCache) const {
+    JSContext* cx, const CompilationAtomCache& atomCache) const {
   RootedAtom atom(cx, atomCache.getExistingAtomAt(cx, atom_));
   return RegExpObject::createSyntaxChecked(cx, atom, flags(), TenuredObject);
 }

@@ -531,7 +531,7 @@ struct ObjLiteralReader : private ObjLiteralReaderBase {
 };
 
 JSObject* InterpretObjLiteral(JSContext* cx,
-                              frontend::CompilationAtomCache& atomCache,
+                              const frontend::CompilationAtomCache& atomCache,
                               const mozilla::Span<const uint8_t> insns,
                               ObjLiteralFlags flags);
 
@@ -548,7 +548,7 @@ class ObjLiteralStencil {
       : code_(mozilla::Span(code, length)), flags_(flags) {}
 
   JSObject* create(JSContext* cx,
-                   frontend::CompilationAtomCache& atomCache) const;
+                   const frontend::CompilationAtomCache& atomCache) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
