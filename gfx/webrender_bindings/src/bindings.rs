@@ -1259,6 +1259,8 @@ extern "C" {
         compositor: *mut c_void,
         dirty_rects: *const DeviceIntRect,
         num_dirty_rects: usize,
+        opaque_rects: *const DeviceIntRect,
+        num_opaque_rects: usize,
     );
     fn wr_compositor_end_frame(compositor: *mut c_void);
     fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
@@ -1370,9 +1372,19 @@ impl Compositor for WrCompositor {
         }
     }
 
-    fn start_compositing(&mut self, dirty_rects: &[DeviceIntRect]) {
+    fn start_compositing(
+        &mut self,
+        dirty_rects: &[DeviceIntRect],
+        opaque_rects: &[DeviceIntRect],
+    ) {
         unsafe {
-            wr_compositor_start_compositing(self.0, dirty_rects.as_ptr(), dirty_rects.len());
+            wr_compositor_start_compositing(
+                self.0,
+                dirty_rects.as_ptr(),
+                dirty_rects.len(),
+                opaque_rects.as_ptr(),
+                opaque_rects.len(),
+            );
         }
     }
 
