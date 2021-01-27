@@ -54,6 +54,7 @@ class AccessibleCaretManager {
  public:
   // @param aPresShell may be nullptr for testing.
   explicit AccessibleCaretManager(PresShell* aPresShell);
+
   virtual ~AccessibleCaretManager() = default;
 
   // Called by AccessibleCaretEventHub to inform us that PresShell is destroyed.
@@ -129,6 +130,11 @@ class AccessibleCaretManager {
   bool ShouldDisableApz() const;
 
  protected:
+  class Carets;
+
+  // @param aPresShell may be nullptr for testing.
+  AccessibleCaretManager(PresShell* aPresShell, Carets aCarets);
+
   // This enum representing the number of AccessibleCarets on the screen.
   enum class CaretMode : uint8_t {
     // No caret on the screen.
@@ -372,6 +378,12 @@ class AccessibleCaretManager {
 
     AccessibleCaret* GetSecond() const { return mSecond.get(); }
 
+    void Terminate() {
+      mFirst.reset();
+      mSecond.reset();
+    }
+
+   private:
     // First caret is attached to nsCaret in cursor mode, and is attached to
     // selection highlight as the left caret in selection mode.
     UniquePtr<AccessibleCaret> mFirst;

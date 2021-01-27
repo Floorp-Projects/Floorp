@@ -77,10 +77,17 @@ std::ostream& operator<<(
 #undef AC_PROCESS_ENUM_TO_STREAM
 
 AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell)
+    : AccessibleCaretManager{
+          aPresShell,
+          Carets{aPresShell ? MakeUnique<AccessibleCaret>(aPresShell) : nullptr,
+                 aPresShell ? MakeUnique<AccessibleCaret>(aPresShell)
+                            : nullptr}} {}
+
+AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell,
+                                               Carets aCarets)
     : mSelectionStringifyer{mLayoutFlusher},
       mPresShell{aPresShell},
-      mCarets{mPresShell ? MakeUnique<AccessibleCaret>(mPresShell) : nullptr,
-              mPresShell ? MakeUnique<AccessibleCaret>(mPresShell) : nullptr} {}
+      mCarets{std::move(aCarets)} {}
 
 AccessibleCaretManager::LayoutFlusher::~LayoutFlusher() {
   MOZ_RELEASE_ASSERT(!mFlushing,
@@ -88,8 +95,7 @@ AccessibleCaretManager::LayoutFlusher::~LayoutFlusher() {
 }
 
 void AccessibleCaretManager::Terminate() {
-  mCarets.mFirst = nullptr;
-  mCarets.mSecond = nullptr;
+  mCarets.Terminate();
   mActiveCaret = nullptr;
   mPresShell = nullptr;
 }
