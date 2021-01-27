@@ -17,6 +17,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PointerLockManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
@@ -517,7 +518,7 @@ WidgetEvent* Event::WidgetEventPtr() { return mEvent; }
 CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
                                    WidgetEvent* aEvent,
                                    LayoutDeviceIntPoint aPoint) {
-  if (EventStateManager::sIsPointerLocked) {
+  if (PointerLockManager::IsLocked()) {
     return EventStateManager::sLastScreenPoint;
   }
 
@@ -587,7 +588,7 @@ CSSIntPoint Event::GetClientCoords(nsPresContext* aPresContext,
                                    WidgetEvent* aEvent,
                                    LayoutDeviceIntPoint aPoint,
                                    CSSIntPoint aDefaultPoint) {
-  if (EventStateManager::sIsPointerLocked) {
+  if (PointerLockManager::IsLocked()) {
     return EventStateManager::sLastClientPoint;
   }
 
