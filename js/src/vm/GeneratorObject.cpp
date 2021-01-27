@@ -155,6 +155,7 @@ bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
   }
 
   genObj->setResumeIndex(pc);
+  genObj->setLastOpcode(JSOp(*pc));
   genObj->setEnvironmentChain(*frame.environmentChain());
   return true;
 }
@@ -477,24 +478,7 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
     return false;
   }
 
-  JSScript* script = callee().nonLazyScript();
-  jsbytecode* code = script->code();
-  uint32_t nextOffset = script->resumeOffsets()[resumeIndex()];
-  if (JSOp(code[nextOffset]) != JSOp::AfterYield) {
-    return false;
-  }
-
-  static_assert(JSOpLength_Yield == JSOpLength_InitialYield,
-                "JSOp::Yield and JSOp::InitialYield must have the same length");
-  static_assert(JSOpLength_Yield == JSOpLength_Await,
-                "JSOp::Yield and JSOp::Await must have the same length");
-
-  uint32_t offset = nextOffset - JSOpLength_Yield;
-  JSOp prevOp = JSOp(code[offset]);
-  MOZ_ASSERT(prevOp == JSOp::InitialYield || prevOp == JSOp::Yield ||
-             prevOp == JSOp::Await);
-
-  return prevOp == op;
+  return lastOpcode() == op;
 }
 
 template <>
