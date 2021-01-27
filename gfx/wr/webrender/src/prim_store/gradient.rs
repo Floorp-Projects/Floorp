@@ -824,14 +824,14 @@ pub const GRADIENT_DATA_SIZE: usize = GRADIENT_DATA_TABLE_SIZE + 2;
 #[repr(C)]
 struct GradientDataEntry {
     start_color: PremultipliedColorF,
-    end_color: PremultipliedColorF,
+    end_step: PremultipliedColorF,
 }
 
 impl GradientDataEntry {
     fn white() -> Self {
         Self {
             start_color: PremultipliedColorF::WHITE,
-            end_color: PremultipliedColorF::WHITE,
+            end_step: PremultipliedColorF::TRANSPARENT,
         }
     }
 }
@@ -851,10 +851,12 @@ impl GradientGpuBlockBuilder {
     ) {
         // Calculate the color difference for individual steps in the ramp.
         let inv_steps = 1.0 / (end_idx - start_idx) as f32;
-        let step_r = (end_color.r - start_color.r) * inv_steps;
-        let step_g = (end_color.g - start_color.g) * inv_steps;
-        let step_b = (end_color.b - start_color.b) * inv_steps;
-        let step_a = (end_color.a - start_color.a) * inv_steps;
+        let step = PremultipliedColorF {
+            r: (end_color.r - start_color.r) * inv_steps,
+            g: (end_color.g - start_color.g) * inv_steps,
+            b: (end_color.b - start_color.b) * inv_steps,
+            a: (end_color.a - start_color.a) * inv_steps,
+        };
 
         let mut cur_color = *start_color;
 
@@ -862,11 +864,11 @@ impl GradientGpuBlockBuilder {
         for index in start_idx .. end_idx {
             let entry = &mut entries[index];
             entry.start_color = cur_color;
-            cur_color.r += step_r;
-            cur_color.g += step_g;
-            cur_color.b += step_b;
-            cur_color.a += step_a;
-            entry.end_color = cur_color;
+            cur_color.r += step.r;
+            cur_color.g += step.g;
+            cur_color.b += step.b;
+            cur_color.a += step.a;
+            entry.end_step = step;
         }
     }
 
@@ -1002,7 +1004,7 @@ impl GradientGpuBlockBuilder {
 
         for entry in entries.iter() {
             request.push(entry.start_color);
-            request.push(entry.end_color);
+            request.push(entry.end_step);
         }
     }
 }

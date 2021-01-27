@@ -66,7 +66,7 @@ fuzzy-if(skiaContent,0-1,0-2) fuzzy-if(webrender,0-2,0-4894) == border-image-rad
 fuzzy(0-1,0-9000) fuzzy-if(webrender,0-3,0-66698) == border-image-radial-gradient-slice-width.html border-image-radial-gradient-slice-width-ref.html
 
 # OS X failures tracked in bug 957025
-fuzzy-if(webrender&&!geckoview,1-4,938-2000) == border-image-repeating-linear-gradient.html border-image-repeating-linear-gradient-ref.html
+fuzzy-if(webrender&&!geckoview,1-4,935-2000) == border-image-repeating-linear-gradient.html border-image-repeating-linear-gradient-ref.html
 fuzzy(0-1,0-6690) fails-if(OSX) fuzzy-if(skiaContent,0-1,0-6093) fuzzy-if(webrender,0-3,0-95449) == border-image-repeating-linear-gradient-slice-fill-2.html border-image-repeating-linear-gradient-slice-fill-2-ref.html
 fuzzy(0-1,0-19200) fails-if(OSX) fuzzy-if(skiaContent,0-3,0-20000) fuzzy-if(webrender&&!geckoview,1-4,4150-14000) == border-image-repeating-linear-gradient-repeat-round-2.html border-image-repeating-linear-gradient-repeat-round-2-ref.html
 
