@@ -1,6 +1,8 @@
 Advanced Layers
 ===============
 
+Note: Advanced Layers has been deprecated in favor of WebRender.
+
 Advanced Layers is a new method of compositing layers in Gecko. This
 document serves as a technical overview and provides a short
 walk-through of its source code.
