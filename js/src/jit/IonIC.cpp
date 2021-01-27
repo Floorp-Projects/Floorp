@@ -76,10 +76,10 @@ Register IonIC::scratchRegisterForEntryJump() {
 }
 
 void IonIC::discardStubs(Zone* zone, IonScript* ionScript) {
-  if (firstStub_ && zone->needsIncrementalBarrier()) {
-    // We are removing edges from IonIC to gcthings. Perform one final trace
-    // of the stub for incremental GC, as it must know about those edges.
-    trace(zone->barrierTracer(), ionScript);
+  if (firstStub_) {
+    // We are removing edges from IonIC to gcthings. Perform a write barrier to
+    // let the GC know about those edges.
+    PreWriteBarrier(zone, ionScript);
   }
 
 #ifdef JS_CRASH_DIAGNOSTICS
