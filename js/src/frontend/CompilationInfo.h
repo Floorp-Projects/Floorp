@@ -236,6 +236,7 @@ struct MOZ_RAII CompilationState {
   //
   // See corresponding BaseCompilationStencil fields for desription.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
+  Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
   Vector<ScriptStencilExtra, 0, js::SystemAllocPolicy> scriptExtra;
   Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
@@ -357,7 +358,7 @@ struct BaseCompilationStencil {
   // Hold onto the RegExpStencil, BigIntStencil, and ObjLiteralStencil that are
   // allocated during parse to ensure correct destruction.
   mozilla::Span<RegExpStencil> regExpData;
-  Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;
+  mozilla::Span<BigIntStencil> bigIntData;
   Vector<ObjLiteralStencil, 0, js::SystemAllocPolicy> objLiteralData;
 
   // Stencil for all function and non-function scripts. The TopLevelIndex is

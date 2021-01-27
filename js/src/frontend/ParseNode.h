@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Span.h"  // mozilla::Span
 
 #include <iterator>
 #include <stddef.h>
@@ -19,7 +20,7 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParserAtom.h"
-#include "frontend/Stencil.h"
+#include "frontend/Stencil.h"  // BigIntStencil
 #include "frontend/Token.h"
 #include "js/RootingAPI.h"
 #include "vm/BytecodeUtil.h"
@@ -1577,15 +1578,14 @@ class NumericLiteral : public ParseNode {
 };
 
 class BigIntLiteral : public ParseNode {
-  BaseCompilationStencil& stencil_;
   BigIntIndex index_;
+  bool isZero_;
 
  public:
-  BigIntLiteral(BigIntIndex index, BaseCompilationStencil& stencil,
-                const TokenPos& pos)
+  BigIntLiteral(BigIntIndex index, bool isZero, const TokenPos& pos)
       : ParseNode(ParseNodeKind::BigIntExpr, pos),
-        stencil_(stencil),
-        index_(index) {}
+        index_(index),
+        isZero_(isZero) {}
 
   static bool test(const ParseNode& node) {
     return node.isKind(ParseNodeKind::BigIntExpr);
@@ -1604,10 +1604,7 @@ class BigIntLiteral : public ParseNode {
 
   BigIntIndex index() { return index_; }
 
-  // Create a BigInt value of this BigInt literal.
-  BigInt* create(JSContext* cx);
-
-  bool isZero();
+  bool isZero() const { return isZero_; }
 };
 
 class LexicalScopeNode : public ParseNode {

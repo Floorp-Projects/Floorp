@@ -10469,24 +10469,26 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
     return null();
   }
 
-  BigIntIndex index(this->stencil_.bigIntData.length());
+  BigIntIndex index(this->compilationState_.bigIntData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx_);
     return null();
   }
-  if (!this->stencil_.bigIntData.emplaceBack()) {
+  if (!this->compilationState_.bigIntData.emplaceBack()) {
     js::ReportOutOfMemory(cx_);
     return null();
   }
 
-  if (!this->stencil_.bigIntData[index].init(this->cx_, this->stencilAlloc(),
-                                             chars)) {
+  if (!this->compilationState_.bigIntData[index].init(
+          this->cx_, this->stencilAlloc(), chars)) {
     return null();
   }
 
+  bool isZero = this->compilationState_.bigIntData[index].isZero();
+
   // Should the operations below fail, the buffer held by data will
   // be cleaned up by the CompilationStencil destructor.
-  return handler_.newBigInt(index, this->stencil_, pos());
+  return handler_.newBigInt(index, isZero, pos());
 }
 
 template <typename Unit>
