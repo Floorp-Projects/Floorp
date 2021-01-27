@@ -409,8 +409,8 @@ bool wasm::SimdAvailable(JSContext* cx) {
 }
 
 bool wasm::SimdWormholeAvailable(JSContext* cx) {
-  return WasmSimdWormholeFlag(cx) && SimdAvailable(cx) &&
-         (IonAvailable(cx) || BaselineAvailable(cx)) && !CraneliftAvailable(cx);
+  return WasmSimdWormholeFlag(cx) && SimdAvailable(cx) && IonAvailable(cx) &&
+         !BaselineAvailable(cx) && !CraneliftAvailable(cx);
 }
 
 bool wasm::ThreadsAvailable(JSContext* cx) {
