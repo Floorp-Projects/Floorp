@@ -35,6 +35,9 @@
 #include "GeckoProfiler.h"
 #include "nsAppRunner.h"
 #include "xpcpublic.h"
+#ifdef MOZ_BACKGROUNDTASKS
+#  include "mozilla/BackgroundTasks.h"
+#endif
 
 #if defined(XP_WIN)
 #  include <windows.h>
@@ -115,6 +118,12 @@ StartupCache* StartupCache::GetSingletonNoInit() {
 }
 
 StartupCache* StartupCache::GetSingleton() {
+#ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    return nullptr;
+  }
+#endif
+
   if (!gStartupCache) {
     if (!XRE_IsParentProcess()) {
       return nullptr;
