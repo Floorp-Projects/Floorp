@@ -3,6 +3,8 @@
 <title>Test mouseenter and mouseleave for iframe.</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 <style>
 #start {
@@ -157,6 +159,9 @@ add_task(async function init() {
   // Wait for focus before starting tests.
   await SimpleTest.promiseFocus();
 
+  // Wait for apz getting stable.
+  await waitUntilApzStable();
+
   // Move mouse to initial position.
   await moveMouseToInitialPosition();
 });
@@ -262,6 +267,8 @@ add_task(async function testMouseEnterLeaveSwitchWindow() {
   win.close();
   // Trigger a reflow which will generate synthesized mouse move event.
   reflow();
+  // Wait for apz getting stable.
+  await waitUntilApzStable();
   synthesizeNativeMouseMove(target, targetRect.width / 2, targetRect.height / 2);
   await promise;
 
