@@ -92,6 +92,10 @@ class ToolbarInteractorTest {
         override fun invalidateActions() {
             fail()
         }
+
+        override fun dismissMenu() {
+            fail()
+        }
     }
 
     @Test

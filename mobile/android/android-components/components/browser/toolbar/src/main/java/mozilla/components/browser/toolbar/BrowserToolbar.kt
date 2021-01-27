@@ -312,6 +312,13 @@ class BrowserToolbar @JvmOverloads constructor(
         updateState(State.DISPLAY)
     }
 
+    /**
+     * Dismisses the display toolbar popup menu.
+     */
+    override fun dismissMenu() {
+        display.views.menu.dismissMenu()
+    }
+
     internal fun onUrlEntered(url: String) {
         if (urlCommitListener?.invoke(url) != false) {
             // Return to display mode if there's no urlCommitListener or if it returned true. This lets

@@ -109,6 +109,10 @@ class ToolbarAutocompleteFeatureTest {
         override fun invalidateActions() {
             fail()
         }
+
+        override fun dismissMenu() {
+            fail()
+        }
     }
 
     @Test

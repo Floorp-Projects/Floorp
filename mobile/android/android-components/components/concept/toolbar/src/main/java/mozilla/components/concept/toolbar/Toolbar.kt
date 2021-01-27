@@ -168,6 +168,11 @@ interface Toolbar {
     fun editMode()
 
     /**
+     * Dismisses the display toolbar popup menu
+     */
+    fun dismissMenu()
+
+    /**
      * Listener to be invoked when the user edits the URL.
      */
     interface OnEditListener {
