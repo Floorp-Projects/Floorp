@@ -107,6 +107,9 @@ class DownloadUtilsTest {
         assertEquals("file.html", DownloadUtils.guessFileName(null, null, "http://example.com/file", "text/html"))
         assertEquals("file.html", DownloadUtils.guessFileName(null, null, "http://example.com/file", "text/html; charset=utf-8"))
         assertEquals("file.txt", DownloadUtils.guessFileName(null, null, "http://example.com/file.txt", "text/html"))
+        assertEquals("file.data", DownloadUtils.guessFileName(null, null, "http://example.com/file.data", "application/octet-stream"))
+        assertEquals("file.data", DownloadUtils.guessFileName(null, null, "http://example.com/file.data", "binary/octet-stream"))
+        assertEquals("file.data", DownloadUtils.guessFileName(null, null, "http://example.com/file.data", "application/unknown"))
     }
 
     @Test
