@@ -170,13 +170,7 @@ impl SwTile {
         clip_rect: &DeviceIntRect,
     ) -> Option<DeviceIntRect> {
         let origin = self.origin(surface);
-        // If the tile was invalidated this frame, then we don't have precise
-        // bounds. Instead, just use the default surface tile size.
-        let bounds = if self.invalid.get() {
-            DeviceIntRect::new(origin, surface.tile_size)
-        } else {
-            self.valid_rect.translate(origin.to_vector())
-        };
+        let bounds = self.valid_rect.translate(origin.to_vector());
         let device_rect = transform.outer_transformed_rect(&bounds.to_f32())?.round_out().to_i32();
         device_rect.intersection(clip_rect)
     }
@@ -1426,13 +1420,14 @@ impl Compositor for SwCompositor {
         }
     }
 
-    fn invalidate_tile(&mut self, id: NativeTileId) {
+    fn invalidate_tile(&mut self, id: NativeTileId, valid_rect: DeviceIntRect) {
         if self.use_native_compositor {
-            self.compositor.invalidate_tile(id);
+            self.compositor.invalidate_tile(id, valid_rect);
         }
         if let Some(surface) = self.surfaces.get_mut(&id.surface_id) {
             if let Some(tile) = surface.tiles.iter_mut().find(|t| t.x == id.x && t.y == id.y) {
                 tile.invalid.set(true);
+                tile.valid_rect = valid_rect;
             }
         }
     }
@@ -1448,7 +1443,7 @@ impl Compositor for SwCompositor {
         if let Some(surface) = self.surfaces.get_mut(&id.surface_id) {
             if let Some(tile) = surface.tiles.iter_mut().find(|t| t.x == id.x && t.y == id.y) {
                 tile.dirty_rect = dirty_rect;
-                tile.valid_rect = valid_rect;
+                assert_eq!(tile.valid_rect, valid_rect);
                 if valid_rect.is_empty() {
                     return surface_info;
                 }
