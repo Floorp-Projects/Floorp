@@ -192,7 +192,7 @@ function str_call(prefix, edge, env) {
   }
 
   print(JSON.stringify(edge, null, 4));
-  throw "unhandled format error";
+  throw new Error("unhandled format error");
 }
 
 function str_assign(prefix, edge) {
@@ -224,7 +224,7 @@ function str_assume(prefix, edge) {
   }
 
   print(JSON.stringify(edge, null, 4));
-  throw "unhandled format error";
+  throw new Error("unhandled format error");
 }
 
 function str_edge(edge, env) {
