@@ -32,7 +32,9 @@ class RenderCompositorSWGL : public RenderCompositor {
   RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
 
   void StartCompositing(const wr::DeviceIntRect* aDirtyRects,
-                        size_t aNumDirtyRects) override;
+                        size_t aNumDirtyRects,
+                        const wr::DeviceIntRect* aOpaqueRects,
+                        size_t aNumOpaqueRects) override;
 
   bool UsePartialPresent() override { return true; }
 

@@ -139,7 +139,9 @@ class RenderCompositor {
   // Called in the middle of a frame after all surfaces have been added but
   // before tiles are updated to signal that early compositing can start
   virtual void StartCompositing(const wr::DeviceIntRect* aDirtyRects,
-                                size_t aNumDirtyRects) {}
+                                size_t aNumDirtyRects,
+                                const wr::DeviceIntRect* aOpaqueRects,
+                                size_t aNumOpaqueRects) {}
   virtual void EnableNativeCompositor(bool aEnable) {}
   virtual void DeInit() {}
   virtual CompositorCapabilities GetCompositorCapabilities() = 0;
