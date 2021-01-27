@@ -7,6 +7,8 @@
 #ifndef AccessibleCaretManager_h
 #define AccessibleCaretManager_h
 
+#include <utility>
+
 #include "AccessibleCaret.h"
 
 #include "mozilla/Attributes.h"
@@ -352,6 +354,10 @@ class AccessibleCaretManager {
 
   class Carets {
    public:
+    Carets(UniquePtr<AccessibleCaret> aFirst,
+           UniquePtr<AccessibleCaret> aSecond)
+        : mFirst{std::move(aFirst)}, mSecond{std::move(aSecond)} {}
+
     // See `AccessibleCaret::IsLogicallyVisible`.
     bool AreLogicallyVisible() const {
       return mFirst->IsLogicallyVisible() || mSecond->IsLogicallyVisible();
