@@ -208,18 +208,15 @@ class nsTableWrapperFrame : public nsContainerFrame {
 
   mozilla::StyleVerticalAlignKeyword GetCaptionVerticalAlign() const;
 
-  void SetDesiredSize(uint8_t aCaptionSide,
-                      const mozilla::LogicalSize& aInnerSize,
-                      const mozilla::LogicalSize& aCaptionSize,
-                      const mozilla::LogicalMargin& aInnerMargin,
-                      const mozilla::LogicalMargin& aCaptionMargin,
-                      nscoord& aISize, nscoord& aBSize,
-                      mozilla::WritingMode aWM);
+  nscoord ComputeFinalBSize(uint8_t aCaptionSide,
+                            const mozilla::LogicalSize& aInnerSize,
+                            const mozilla::LogicalSize& aCaptionSize,
+                            const mozilla::LogicalMargin& aCaptionMargin,
+                            const mozilla::WritingMode aWM) const;
 
   nsresult GetCaptionOrigin(uint32_t aCaptionSide,
                             const mozilla::LogicalSize& aContainBlockSize,
                             const mozilla::LogicalSize& aInnerSize,
-                            const mozilla::LogicalMargin& aInnerMargin,
                             const mozilla::LogicalSize& aCaptionSize,
                             mozilla::LogicalMargin& aCaptionMargin,
                             mozilla::LogicalPoint& aOrigin,
@@ -230,7 +227,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
                           const mozilla::LogicalSize& aCaptionSize,
                           const mozilla::LogicalMargin& aCaptionMargin,
                           const mozilla::LogicalSize& aInnerSize,
-                          mozilla::LogicalMargin& aInnerMargin,
                           mozilla::LogicalPoint& aOrigin,
                           mozilla::WritingMode aWM);
 

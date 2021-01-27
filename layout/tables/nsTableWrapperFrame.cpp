@@ -442,74 +442,41 @@ StyleVerticalAlignKeyword nsTableWrapperFrame::GetCaptionVerticalAlign() const {
   return va.IsKeyword() ? va.AsKeyword() : StyleVerticalAlignKeyword::Top;
 }
 
-void nsTableWrapperFrame::SetDesiredSize(uint8_t aCaptionSide,
-                                         const LogicalSize& aInnerSize,
-                                         const LogicalSize& aCaptionSize,
-                                         const LogicalMargin& aInnerMargin,
-                                         const LogicalMargin& aCaptionMargin,
-                                         nscoord& aISize, nscoord& aBSize,
-                                         WritingMode aWM) {
-  aISize = aBSize = 0;
-
-  // compute the overall inline-size
-  switch (aCaptionSide) {
-    case NS_STYLE_CAPTION_SIDE_LEFT:
-      aISize =
-          std::max(aInnerMargin.LineLeft(aWM),
-                   aCaptionMargin.IStartEnd(aWM) + aCaptionSize.ISize(aWM)) +
-          aInnerSize.ISize(aWM) + aInnerMargin.LineRight(aWM);
-      break;
-    case NS_STYLE_CAPTION_SIDE_RIGHT:
-      aISize =
-          std::max(aInnerMargin.LineRight(aWM),
-                   aCaptionMargin.IStartEnd(aWM) + aCaptionSize.ISize(aWM)) +
-          aInnerSize.ISize(aWM) + aInnerMargin.LineLeft(aWM);
-      break;
-    default:
-      aISize =
-          std::max(aInnerMargin.IStartEnd(aWM) + aInnerSize.ISize(aWM),
-                   aCaptionMargin.IStartEnd(aWM) + aCaptionSize.ISize(aWM));
-      break;
-  }
+nscoord nsTableWrapperFrame::ComputeFinalBSize(
+    uint8_t aCaptionSide, const LogicalSize& aInnerSize,
+    const LogicalSize& aCaptionSize, const LogicalMargin& aCaptionMargin,
+    const WritingMode aWM) const {
+  nscoord bSize = 0;
 
   // compute the overall block-size
   switch (aCaptionSide) {
     case NS_STYLE_CAPTION_SIDE_TOP:
     case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
-      aBSize = aInnerSize.BSize(aWM) + aInnerMargin.BEnd(aWM);
-      aBSize +=
-          std::max(aInnerMargin.BStart(aWM),
-                   aCaptionSize.BSize(aWM) + aCaptionMargin.BStartEnd(aWM));
-      break;
     case NS_STYLE_CAPTION_SIDE_BOTTOM:
     case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
-      aBSize = aInnerSize.BSize(aWM) + aInnerMargin.BStart(aWM);
-      aBSize +=
-          std::max(aInnerMargin.BEnd(aWM),
-                   aCaptionSize.BSize(aWM) + aCaptionMargin.BStartEnd(aWM));
+      bSize =
+          aInnerSize.BSize(aWM) +
+          std::max(0, aCaptionSize.BSize(aWM) + aCaptionMargin.BStartEnd(aWM));
       break;
     case NS_STYLE_CAPTION_SIDE_LEFT:
     case NS_STYLE_CAPTION_SIDE_RIGHT:
-      aBSize = aInnerMargin.BStart(aWM);
-      aBSize += std::max(aInnerSize.BSize(aWM) + aInnerMargin.BEnd(aWM),
-                         aCaptionSize.BSize(aWM) + aCaptionMargin.BEnd(aWM));
+      bSize = std::max(aInnerSize.BSize(aWM),
+                       aCaptionSize.BSize(aWM) + aCaptionMargin.BEnd(aWM));
       break;
     default:
       NS_ASSERTION(aCaptionSide == NO_SIDE, "unexpected caption side");
-      aBSize = aInnerSize.BSize(aWM) + aInnerMargin.BStartEnd(aWM);
+      bSize = aInnerSize.BSize(aWM);
       break;
   }
 
   // negative sizes can upset overflow-area code
-  aISize = std::max(aISize, 0);
-  aBSize = std::max(aBSize, 0);
+  return std::max(bSize, 0);
 }
 
 nsresult nsTableWrapperFrame::GetCaptionOrigin(
     uint32_t aCaptionSide, const LogicalSize& aContainBlockSize,
-    const LogicalSize& aInnerSize, const LogicalMargin& aInnerMargin,
-    const LogicalSize& aCaptionSize, LogicalMargin& aCaptionMargin,
-    LogicalPoint& aOrigin, WritingMode aWM) {
+    const LogicalSize& aInnerSize, const LogicalSize& aCaptionSize,
+    LogicalMargin& aCaptionMargin, LogicalPoint& aOrigin, WritingMode aWM) {
   aOrigin.I(aWM) = aOrigin.B(aWM) = 0;
   if ((NS_UNCONSTRAINEDSIZE == aInnerSize.ISize(aWM)) ||
       (NS_UNCONSTRAINEDSIZE == aInnerSize.BSize(aWM)) ||
@@ -528,49 +495,36 @@ nsresult nsTableWrapperFrame::GetCaptionOrigin(
 
   // inline-dir computation
   switch (aCaptionSide) {
+    case NS_STYLE_CAPTION_SIDE_TOP:
+    case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
     case NS_STYLE_CAPTION_SIDE_BOTTOM:
     case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
       aOrigin.I(aWM) = aCaptionMargin.IStart(aWM);
-      if (aCaptionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
-        // We placed the caption using only the table's isize as available
-        // isize, and we should position it this way as well.
-        aOrigin.I(aWM) += aInnerMargin.IStart(aWM);
-      }
       break;
     case NS_STYLE_CAPTION_SIDE_LEFT:
     case NS_STYLE_CAPTION_SIDE_RIGHT:
       aOrigin.I(aWM) = aCaptionMargin.IStart(aWM);
       if (aWM.IsBidiLTR() == (aCaptionSide == NS_STYLE_CAPTION_SIDE_RIGHT)) {
-        aOrigin.I(aWM) += aInnerMargin.IStart(aWM) + aInnerSize.ISize(aWM);
+        aOrigin.I(aWM) += aInnerSize.ISize(aWM);
       }
       break;
-    default:  // block-start
-      NS_ASSERTION(aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP ||
-                       aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE,
-                   "unexpected caption side");
-      aOrigin.I(aWM) = aCaptionMargin.IStart(aWM);
-      if (aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP) {
-        // We placed the caption using only the table's isize as available
-        // isize, and we should position it this way as well.
-        aOrigin.I(aWM) += aInnerMargin.IStart(aWM);
-      }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown caption alignment type");
       break;
   }
   // block-dir computation
   switch (aCaptionSide) {
     case NS_STYLE_CAPTION_SIDE_RIGHT:
     case NS_STYLE_CAPTION_SIDE_LEFT:
-      aOrigin.B(aWM) = aInnerMargin.BStart(aWM);
+      aOrigin.B(aWM) = 0;
       switch (GetCaptionVerticalAlign()) {
         case StyleVerticalAlignKeyword::Middle:
           aOrigin.B(aWM) = std::max(
-              0, aInnerMargin.BStart(aWM) +
-                     ((aInnerSize.BSize(aWM) - aCaptionSize.BSize(aWM)) / 2));
+              0, (aInnerSize.BSize(aWM) - aCaptionSize.BSize(aWM)) / 2);
           break;
         case StyleVerticalAlignKeyword::Bottom:
           aOrigin.B(aWM) =
-              std::max(0, aInnerMargin.BStart(aWM) + aInnerSize.BSize(aWM) -
-                              aCaptionSize.BSize(aWM));
+              std::max(0, aInnerSize.BSize(aWM) - aCaptionSize.BSize(aWM));
           break;
         default:
           break;
@@ -578,12 +532,11 @@ nsresult nsTableWrapperFrame::GetCaptionOrigin(
       break;
     case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
     case NS_STYLE_CAPTION_SIDE_BOTTOM:
-      aOrigin.B(aWM) = aInnerMargin.BStart(aWM) + aInnerSize.BSize(aWM) +
-                       aCaptionMargin.BStart(aWM);
+      aOrigin.B(aWM) = aInnerSize.BSize(aWM) + aCaptionMargin.BStart(aWM);
       break;
     case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
     case NS_STYLE_CAPTION_SIDE_TOP:
-      aOrigin.B(aWM) = aInnerMargin.BStart(aWM) + aCaptionMargin.BStart(aWM);
+      aOrigin.B(aWM) = aCaptionMargin.BStart(aWM);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown caption alignment type");
@@ -595,16 +548,10 @@ nsresult nsTableWrapperFrame::GetCaptionOrigin(
 nsresult nsTableWrapperFrame::GetInnerOrigin(
     uint32_t aCaptionSide, const LogicalSize& aContainBlockSize,
     const LogicalSize& aCaptionSize, const LogicalMargin& aCaptionMargin,
-    const LogicalSize& aInnerSize, LogicalMargin& aInnerMargin,
-    LogicalPoint& aOrigin, WritingMode aWM) {
+    const LogicalSize& aInnerSize, LogicalPoint& aOrigin, WritingMode aWM) {
   NS_ASSERTION(NS_AUTOMARGIN != aCaptionMargin.IStart(aWM) &&
                    NS_AUTOMARGIN != aCaptionMargin.IEnd(aWM),
                "The computed caption margin is auto?");
-  NS_ASSERTION(NS_AUTOMARGIN != aInnerMargin.IStart(aWM) &&
-                   NS_AUTOMARGIN != aInnerMargin.IEnd(aWM) &&
-                   NS_AUTOMARGIN != aInnerMargin.BStart(aWM) &&
-                   NS_AUTOMARGIN != aInnerMargin.BEnd(aWM),
-               "The computed inner margin is auto?");
 
   aOrigin.I(aWM) = aOrigin.B(aWM) = 0;
   if ((NS_UNCONSTRAINEDSIZE == aInnerSize.ISize(aWM)) ||
@@ -620,15 +567,10 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
   switch (aCaptionSide) {
     case NS_STYLE_CAPTION_SIDE_LEFT:
     case NS_STYLE_CAPTION_SIDE_RIGHT:
-      if (aWM.IsBidiLTR() == (aCaptionSide == NS_STYLE_CAPTION_SIDE_LEFT)) {
-        if (aInnerMargin.IStart(aWM) < minCapISize) {
-          // shift the inner table to get some place for the caption
-          aInnerMargin.IEnd(aWM) += aInnerMargin.IStart(aWM) - minCapISize;
-          aInnerMargin.IEnd(aWM) = std::max(0, aInnerMargin.IEnd(aWM));
-          aInnerMargin.IStart(aWM) = minCapISize;
-        }
-      }
-      aOrigin.I(aWM) = aInnerMargin.IStart(aWM);
+      aOrigin.I(aWM) =
+          (aWM.IsBidiLTR() == (aCaptionSide == NS_STYLE_CAPTION_SIDE_LEFT))
+              ? minCapISize
+              : 0;
       break;
     default:
       NS_ASSERTION(aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP ||
@@ -637,7 +579,7 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
                        aCaptionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE ||
                        aCaptionSide == NO_SIDE,
                    "unexpected caption side");
-      aOrigin.I(aWM) = aInnerMargin.IStart(aWM);
+      aOrigin.I(aWM) = 0;
       break;
   }
 
@@ -645,21 +587,19 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
   switch (aCaptionSide) {
     case NS_STYLE_CAPTION_SIDE_BOTTOM:
     case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
-      aOrigin.B(aWM) = aInnerMargin.BStart(aWM);
+      aOrigin.B(aWM) = 0;
       break;
     case NS_STYLE_CAPTION_SIDE_LEFT:
     case NS_STYLE_CAPTION_SIDE_RIGHT:
-      aOrigin.B(aWM) = aInnerMargin.BStart(aWM);
+      aOrigin.B(aWM) = 0;
       switch (GetCaptionVerticalAlign()) {
         case StyleVerticalAlignKeyword::Middle:
-          aOrigin.B(aWM) =
-              std::max(aInnerMargin.BStart(aWM),
-                       (aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM)) / 2);
+          aOrigin.B(aWM) = std::max(
+              0, (aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM)) / 2);
           break;
         case StyleVerticalAlignKeyword::Bottom:
           aOrigin.B(aWM) =
-              std::max(aInnerMargin.BStart(aWM),
-                       aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM));
+              std::max(0, aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM));
           break;
         default:
           break;
@@ -668,8 +608,7 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
     case NO_SIDE:
     case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
     case NS_STYLE_CAPTION_SIDE_TOP:
-      aOrigin.B(aWM) = aInnerMargin.BStart(aWM) + aCaptionSize.BSize(aWM) +
-                       aCaptionMargin.BStartEnd(aWM);
+      aOrigin.B(aWM) = aCaptionSize.BSize(aWM) + aCaptionMargin.BStartEnd(aWM);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown caption alignment type");
@@ -909,13 +848,9 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   // We have zero border and padding, so content-box inline-size is our desired
   // border-box inline-size.
   desiredSize.ISize(wm) = contentBoxISize;
+  desiredSize.BSize(wm) =
+      ComputeFinalBSize(captionSide, innerSize, captionSize, captionMargin, wm);
 
-  // TODO: Simplified SetDesiredSize() since innerMargin is now all zero,
-  // and we only need to compute our block-size.
-  LogicalMargin innerMargin(wm);
-  nscoord dummyISize = 0;
-  SetDesiredSize(captionSide, innerSize, captionSize, innerMargin,
-                 captionMargin, dummyISize, desiredSize.BSize(wm), wm);
   aDesiredSize.SetSize(wm, desiredSize);
   nsSize containerSize = aDesiredSize.PhysicalSize();
   // XXX It's possible for this to be NS_UNCONSTRAINEDSIZE, which will result
@@ -923,8 +858,8 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
 
   if (mCaptionFrames.NotEmpty()) {
     LogicalPoint captionOrigin(wm);
-    GetCaptionOrigin(captionSide, containSize, innerSize, innerMargin,
-                     captionSize, captionMargin, captionOrigin, wm);
+    GetCaptionOrigin(captionSide, containSize, innerSize, captionSize,
+                     captionMargin, captionOrigin, wm);
     FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, *captionMet,
                       captionRI.ptr(), wm, captionOrigin, containerSize,
                       ReflowChildFlags::Default);
@@ -935,7 +870,7 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
 
   LogicalPoint innerOrigin(wm);
   GetInnerOrigin(captionSide, containSize, captionSize, captionMargin,
-                 innerSize, innerMargin, innerOrigin, wm);
+                 innerSize, innerOrigin, wm);
   FinishReflowChild(InnerTableFrame(), aPresContext, innerMet, innerRI.ptr(),
                     wm, innerOrigin, containerSize, ReflowChildFlags::Default);
   innerRI.reset();
