@@ -2487,7 +2487,9 @@ set_define("MOZ_USE_NATIVE_POPUP_WINDOWS", True, when="MOZ_USE_NATIVE_POPUP_WIND
 # ==============================================================
 @depends(target)
 def oxidized_breakpad(target):
-    return False  # Disabled pending further testing
+    if target.kernel == "Linux" and target.os != "Android":
+        return False  # Disabled pending further testing
+    return False
 
 
 set_config("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)
