@@ -37,7 +37,13 @@ static inline bool IsConstant(const LInt64Allocation& a) {
 
 static inline int32_t ToInt32(const LAllocation* a) {
   if (a->isConstantValue()) {
-    return a->toConstant()->toInt32();
+    const MConstant* cst = a->toConstant();
+    if (cst->type() == MIRType::Int32) {
+      return cst->toInt32();
+    }
+    intptr_t val = cst->toIntPtr();
+    MOZ_ASSERT(INT32_MIN <= val && val <= INT32_MAX);
+    return int32_t(val);
   }
   if (a->isConstantIndex()) {
     return a->toConstantIndex()->index();

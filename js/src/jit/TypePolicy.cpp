@@ -472,6 +472,22 @@ template bool UnboxedInt32Policy<3>::staticAdjustInputs(TempAllocator& alloc,
                                                         MInstruction* def);
 
 template <unsigned Op>
+bool Int32OrIntPtrPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
+                                                 MInstruction* def) {
+  MDefinition* in = def->getOperand(Op);
+  if (in->type() == MIRType::IntPtr) {
+    return true;
+  }
+
+  return UnboxedInt32Policy<Op>::staticAdjustInputs(alloc, def);
+}
+
+template bool Int32OrIntPtrPolicy<0>::staticAdjustInputs(TempAllocator& alloc,
+                                                         MInstruction* def);
+template bool Int32OrIntPtrPolicy<1>::staticAdjustInputs(TempAllocator& alloc,
+                                                         MInstruction* def);
+
+template <unsigned Op>
 bool ConvertToInt32Policy<Op>::staticAdjustInputs(TempAllocator& alloc,
                                                   MInstruction* def) {
   MDefinition* in = def->getOperand(Op);
@@ -1105,6 +1121,7 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(MixPolicy<ConvertToStringPolicy<0>, ObjectPolicy<1>>)                     \
   _(MixPolicy<DoublePolicy<0>, DoublePolicy<1>>)                              \
   _(MixPolicy<UnboxedInt32Policy<0>, UnboxedInt32Policy<1>>)                  \
+  _(MixPolicy<Int32OrIntPtrPolicy<0>, Int32OrIntPtrPolicy<1>>)                \
   _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>)                                 \
   _(MixPolicy<BoxExceptPolicy<0, MIRType::Object>, CacheIdPolicy<1>>)         \
   _(MixPolicy<CacheIdPolicy<0>, ObjectPolicy<1>>)                             \

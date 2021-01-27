@@ -3055,9 +3055,9 @@ void LIRGenerator::visitNot(MNot* ins) {
 }
 
 void LIRGenerator::visitBoundsCheck(MBoundsCheck* ins) {
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->length()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->type() == MIRType::Int32 || ins->type() == MIRType::IntPtr);
+  MOZ_ASSERT(ins->index()->type() == ins->type());
+  MOZ_ASSERT(ins->length()->type() == ins->type());
 
   if (!ins->fallible()) {
     return;
@@ -3065,20 +3065,21 @@ void LIRGenerator::visitBoundsCheck(MBoundsCheck* ins) {
 
   LInstruction* check;
   if (ins->minimum() || ins->maximum()) {
-    check = new (alloc()) LBoundsCheckRange(useRegisterOrConstant(ins->index()),
-                                            useAny(ins->length()), temp());
+    check = new (alloc())
+        LBoundsCheckRange(useRegisterOrInt32Constant(ins->index()),
+                          useAny(ins->length()), temp());
   } else {
-    check = new (alloc()) LBoundsCheck(useRegisterOrConstant(ins->index()),
-                                       useAnyOrConstant(ins->length()));
+    check = new (alloc()) LBoundsCheck(useRegisterOrInt32Constant(ins->index()),
+                                       useAnyOrInt32Constant(ins->length()));
   }
   assignSnapshot(check, ins->bailoutKind());
   add(check, ins);
 }
 
 void LIRGenerator::visitSpectreMaskIndex(MSpectreMaskIndex* ins) {
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->length()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->type() == MIRType::Int32 || ins->type() == MIRType::IntPtr);
+  MOZ_ASSERT(ins->index()->type() == ins->type());
+  MOZ_ASSERT(ins->length()->type() == ins->type());
 
   auto* lir = new (alloc())
       LSpectreMaskIndex(useRegister(ins->index()), useAny(ins->length()));
@@ -3311,7 +3312,7 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation index = useRegisterOrInt32Constant(ins->index());
 
   MOZ_ASSERT(IsNumericType(ins->type()) || ins->type() == MIRType::Boolean);
 
@@ -3480,7 +3481,7 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
   }
 
   LUse elements = useRegister(ins->elements());
-  LAllocation index = useRegisterOrConstant(ins->index());
+  LAllocation index = useRegisterOrInt32Constant(ins->index());
   LAllocation value;
 
   // For byte arrays, the value has to be in a byte register on x86.

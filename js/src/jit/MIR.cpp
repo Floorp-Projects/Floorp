@@ -4841,7 +4841,8 @@ MDefinition* MPopcnt::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MBoundsCheck::foldsTo(TempAllocator& alloc) {
-  if (index()->isConstant() && length()->isConstant()) {
+  if (type() == MIRType::Int32 && index()->isConstant() &&
+      length()->isConstant()) {
     uint32_t len = length()->toConstant()->toInt32();
     uint32_t idx = index()->toConstant()->toInt32();
     if (idx + uint32_t(minimum()) < len && idx + uint32_t(maximum()) < len) {
