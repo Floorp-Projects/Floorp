@@ -10,8 +10,8 @@
 
 #include "frontend/BytecodeEmitter.h"
 
-#include "mozilla/Casting.h"     // mozilla::AssertedCast
-#include "mozilla/DebugOnly.h"   // mozilla::DebugOnly
+#include "mozilla/Casting.h"    // mozilla::AssertedCast
+#include "mozilla/DebugOnly.h"  // mozilla::DebugOnly
 #include "mozilla/FloatingPoint.h"  // mozilla::NumberEqualsInt32, mozilla::NumberIsInt32
 #include "mozilla/Maybe.h"          // mozilla::{Maybe,Nothing,Some}
 #include "mozilla/PodOperations.h"  // mozilla::PodCopy
@@ -11269,7 +11269,6 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
     MOZ_ASSERT(script.isFunction());
   } else {
     ScriptStencilExtra& scriptExtra = compilationState.scriptExtra[scriptIndex];
-    sc->copyScriptFields(script);
     sc->copyScriptExtraFields(scriptExtra);
   }
 

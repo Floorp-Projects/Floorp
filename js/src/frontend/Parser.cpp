@@ -1967,7 +1967,6 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
 
   funbox->finishScriptFlags();
   funbox->copyFunctionFields(script);
-  funbox->copyScriptFields(script);
 
   if (!handler_.canSkipLazyInnerFunctions()) {
     ScriptStencilExtra& scriptExtra = funbox->functionExtraStencil();
@@ -1995,7 +1994,6 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   funbox->finishScriptFlags();
   funbox->copyFunctionFields(script);
-  funbox->copyScriptFields(script);
 
   ScriptStencilExtra& scriptExtra = funbox->functionExtraStencil();
   funbox->copyFunctionExtraFields(scriptExtra);
@@ -2795,7 +2793,6 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   ScriptStencil& script = funbox->functionStencil();
   funbox->initFromLazyFunction(fun);
   funbox->copyFunctionFields(script);
-  funbox->copyScriptFields(script);
 
   MOZ_ASSERT_IF(pc_->isFunctionBox(),
                 pc_->functionBox()->index() < funbox->index());
