@@ -73,18 +73,22 @@ void brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-Fragment brush_fs() {
+float get_gradient_offset() {
+    // Get the brush position to solve for gradient offset.
     vec2 pos = compute_gradient_pos();
 
     // Rescale UV to actual repetition size. This can't be done in the vertex
     // shader due to the use of atan() below.
     pos *= v_repeated_size;
 
+    // Use inverse trig to find the angle offset from the relative position.
     vec2 current_dir = pos - v_center;
     float current_angle = atan(current_dir.y, current_dir.x) + v_angle;
-    float offset = (fract(current_angle / (2.0 * PI)) - v_start_offset) * v_offset_scale;
+    return (fract(current_angle / (2.0 * PI)) - v_start_offset) * v_offset_scale;
+}
 
-    vec4 color = sample_gradient(offset);
+Fragment brush_fs() {
+    vec4 color = sample_gradient(get_gradient_offset());
 
 #ifdef WR_FEATURE_ALPHA_PASS
     color *= init_transform_fs(v_local_pos);

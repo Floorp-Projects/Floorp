@@ -495,6 +495,62 @@ static bool allowTextureNearest(S sampler, T P, int span) {
 #define swgl_allowTextureNearest(s, p) \
   allowTextureNearest(s, p, swgl_SpanLength)
 
+// Checks if a gradient table of the specified size exists at the UV coords of
+// the address within an RGBA32F texture. If so, a linear address within the
+// texture is returned that may be used to sample the gradient table later. If
+// the address doesn't describe a valid gradient, then a negative value is
+// returned.
+static inline int swgl_validateGradient(sampler2D sampler, ivec2_scalar address,
+                                        int entries) {
+  return sampler->format == TextureFormat::RGBA32F && address.y >= 0 &&
+                 address.y < int(sampler->height) && address.x >= 0 &&
+                 address.x < int(sampler->width) && entries > 0 &&
+                 address.x + 2 * entries <= int(sampler->width)
+             ? address.y * sampler->stride + address.x * 4
+             : -1;
+}
+
+// Swizzle RGBA gradient result to BGRA.
+static ALWAYS_INLINE HalfRGBA8 swizzleGradient(HalfRGBA8 v) {
+  return SHUFFLE(v, v, 2, 1, 0, 3, 6, 5, 4, 7);
+}
+
+static inline WideRGBA8 sampleGradient(sampler2D sampler, int address,
+                                       Float entry) {
+  assert(sampler->format == TextureFormat::RGBA32F);
+  assert(address >= 0 && address < int(sampler->height * sampler->stride));
+  // Get the integer portion of the entry index to find the entry colors.
+  I32 index = cast(entry);
+  // Use the fractional portion of the entry index to control blending between
+  // entry colors.
+  Float offset = entry - cast(index);
+  // Every entry is a pair of colors blended by the fractional offset.
+  index *= 2;
+  assert(test_all(index >= 0 && index < int(sampler->width) - 1));
+  Float* buf = (Float*)&sampler->buf[address];
+  // Blend between the colors for each SIMD lane, then pack them to RGBA8
+  // result. Since the layout of the RGBA8 framebuffer is actually BGRA while
+  // the gradient table has RGBA colors, swizzling is required.
+  return combine(swizzleGradient(packRGBA8(
+                     round_pixel(buf[index.x] + buf[index.x + 1] * offset.x),
+                     round_pixel(buf[index.y] + buf[index.y + 1] * offset.y))),
+                 swizzleGradient(packRGBA8(
+                     round_pixel(buf[index.z] + buf[index.z + 1] * offset.z),
+                     round_pixel(buf[index.w] + buf[index.w + 1] * offset.w))));
+}
+
+// Samples a gradient entry from the gradient at the provided linearized
+// address. The integer portion of the entry index is used to find the entry
+// within the table whereas the fractional portion is used to blend between
+// adjacent table entries.
+#define swgl_commitGradientRGBA8(sampler, address, entry) \
+  swgl_commitChunk(RGBA8, sampleGradient(sampler, address, entry))
+
+// Variant that allows specifying a color multiplier of the gradient result.
+#define swgl_commitGradientColorRGBA8(sampler, address, entry, color)        \
+  swgl_commitChunk(RGBA8, muldiv255(sampleGradient(sampler, address, entry), \
+                                    pack_pixels_RGBA8(color)))
+
 // Extension to set a clip mask image to be sampled during blending. The offset
 // specifies the positioning of the clip mask image relative to the viewport
 // origin. The bounding box specifies the rectangle relative to the clip mask's
