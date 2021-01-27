@@ -420,8 +420,7 @@ void AccessibleCaretManager::DesiredAsyncPanZoomState::Update(
 }
 
 bool AccessibleCaretManager::UpdateCaretsForOverlappingTilt() {
-  if (!mCarets.mFirst->IsVisuallyVisible() ||
-      !mCarets.mSecond->IsVisuallyVisible()) {
+  if (!mCarets.AreVisuallyVisible()) {
     return false;
   }
 
@@ -1476,8 +1475,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
   init.mReason = aReason;
   init.mCollapsed = sel->IsCollapsed();
   init.mCaretVisible = mCarets.AreLogicallyVisible();
-  init.mCaretVisuallyVisible = mCarets.mFirst->IsVisuallyVisible() ||
-                               mCarets.mSecond->IsVisuallyVisible();
+  init.mCaretVisuallyVisible = mCarets.AreVisuallyVisible();
   init.mSelectedTextContent = StringifiedSelection();
 
   RefPtr<CaretStateChangedEvent> event = CaretStateChangedEvent::Constructor(
