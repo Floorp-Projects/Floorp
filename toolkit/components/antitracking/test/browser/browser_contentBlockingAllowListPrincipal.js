@@ -90,6 +90,19 @@ function createFrame(browser, src, id, sandboxAttr) {
   );
 }
 
+add_task(async setup => {
+  // Disable heuristics. We don't need them and if enabled the resulting
+  // telemetry can race with the telemetry in the next test.
+  // See Bug 1686836, Bug 1686894.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.restrict3rdpartystorage.heuristic.redirect", false],
+      ["privacy.restrict3rdpartystorage.heuristic.recently_visited", false],
+      ["privacy.restrict3rdpartystorage.heuristic.window_open", false],
+    ],
+  });
+});
+
 /**
  * Test that we get the correct allow list principal which matches the content
  * principal for an https site.
