@@ -5302,9 +5302,10 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                     js::frontend::ParseGoal goal) {
   using namespace js::frontend;
 
-  Parser<FullParseHandler, Unit> parser(cx, options, units, length, false,
-                                        stencil, compilationState, nullptr,
-                                        nullptr);
+  Parser<FullParseHandler, Unit> parser(cx, options, units, length,
+                                        /* foldConstants = */ false, stencil,
+                                        compilationState,
+                                        /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -5673,8 +5674,9 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
                                               stencil.get());
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
-      cx, options, chars, length, false, stencil.get(), compilationState,
-      nullptr, nullptr);
+      cx, options, chars, length,
+      /* foldConstants = */ false, stencil.get(), compilationState,
+      /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
