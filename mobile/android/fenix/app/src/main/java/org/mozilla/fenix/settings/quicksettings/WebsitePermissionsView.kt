@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatSpinner
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.quicksettings_permissions.view.*
@@ -151,11 +152,34 @@ class WebsitePermissionsView(
                 }
 
                 val selectedIndex = permissionState.options.indexOf(permissionState.autoplayValue)
-                val adapter = ArrayAdapter(
+
+                val adapter = object : ArrayAdapter<AutoplayValue>(
                     context,
                     R.layout.quicksettings_permission_spinner_item,
                     permissionState.options
-                )
+                ) {
+                    override fun getDropDownView(
+                        position: Int,
+                        convertView: View?,
+                        parent: ViewGroup
+                    ): View {
+                        val view = super.getDropDownView(
+                            position,
+                            convertView,
+                            parent
+                        )
+                        if (position == viewHolder.status.selectedItemPosition) {
+                            view.setBackgroundColor(
+                                ContextCompat.getColor(
+                                    context,
+                                    R.color.spinner_selected_item
+                                )
+                            )
+                        }
+                        return view
+                    }
+                }
+
                 adapter.setDropDownViewResource(R.layout.quicksetting_permission_spinner_dropdown)
                 viewHolder.status.adapter = adapter
 

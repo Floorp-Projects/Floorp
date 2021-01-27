@@ -5,7 +5,7 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_checked="true">
         <shape>
-            <solid android:color="#1415141A"/>
+            <solid android:color="@color/spinner_selected_item"/>
         </shape>
     </item>
 </selector>
