@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1509710
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 1509710</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+#scroll {
+  width: 200px;
+  height: 200px;
+  overflow: scroll;
+}
+#scrolled {
+  width: 200px;
+  height: 1000px; /* so the subframe has room to scroll */
+  will-change: transform; /* to force active layers */
+}
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1509710">Mozilla Bug 1509710</a>
+<p id="display"></p>
+<div id="scroll">
+<div id="scrolled"></div>
+</div>
+<script type="text/javascript">
+
+/** Test for Bug 1509710 **/
+add_task(async function test_pointer_mouse_event() {
+  await SimpleTest.promiseFocus();
+
+  let subframe = document.getElementById("scroll");
+  if (subframe.clientWidth == 200) {
+    // No scrollbar, abort the test. This can happen e.g. on local macOS runs
+    // with OS settings to only show scrollbars on trackpad/mouse activity.
+    ok(false, "No scrollbars found, cannot run this test!");
+    return;
+  }
+
+  let receivedEvent = {};
+  let handler = function(e) {
+    receivedEvent[e.type] = true;
+  };
+  subframe.addEventListener("pointerdown", handler);
+  subframe.addEventListener("pointermove", handler);
+  subframe.addEventListener("pointerup", handler);
+  subframe.addEventListener("mousedown", handler);
+  subframe.addEventListener("mousemove", handler);
+  subframe.addEventListener("mouseup", handler);
+
+  // synthesize mouse actions on scrollbar.
+  let scrollbarX = (200 + subframe.clientWidth) / 2;
+  synthesizeMouse(subframe, scrollbarX, 30, { type: "mousedown" });
+  synthesizeMouse(subframe, scrollbarX, 40, { type: "mousemove" });
+  synthesizeMouse(subframe, scrollbarX, 40, { type: "mouseup" });
+
+  await new Promise(SimpleTest.executeSoon);
+
+  // Test pointer event
+  ok(receivedEvent.pointerdown, "should receive pointerdown event");
+  ok(!receivedEvent.pointermove, "should not receive pointermove event");
+  ok(receivedEvent.pointerup, "should receive pointerup event");
+
+  // Test mouse event
+  ok(receivedEvent.mousedown, "should receive mousedown event");
+  ok(!receivedEvent.mousemove, "should not receive mousemove event");
+  ok(receivedEvent.mouseup, "should receive mouseup event");
+});
+
+</script>
+</body>
+</html>
