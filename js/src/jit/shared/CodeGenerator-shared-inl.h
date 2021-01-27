@@ -10,6 +10,7 @@
 #include "jit/shared/CodeGenerator-shared.h"
 
 #include "jit/JitFrames.h"
+#include "jit/ScalarTypeUtils.h"
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -272,6 +273,17 @@ Address CodeGeneratorShared::ToAddress(const LAllocation& a) const {
 
 Address CodeGeneratorShared::ToAddress(const LAllocation* a) const {
   return ToAddress(*a);
+}
+
+// static
+Address CodeGeneratorShared::ToAddress(Register elements,
+                                       const LAllocation* index,
+                                       Scalar::Type type,
+                                       int32_t offsetAdjustment) {
+  int32_t idx = ToInt32(index);
+  int32_t offset;
+  MOZ_ALWAYS_TRUE(ArrayOffsetFitsInInt32(idx, type, offsetAdjustment, &offset));
+  return Address(elements, offset);
 }
 
 int32_t CodeGeneratorShared::ToFramePointerOffset(LAllocation a) const {
