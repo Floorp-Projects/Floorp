@@ -414,7 +414,7 @@ class nsWindow final : public nsBaseWidget {
    * Get the support of Client Side Decoration by checking
    * the XDG_CURRENT_DESKTOP environment variable.
    */
-  static CSDSupportLevel GetSystemCSDSupportLevel(bool aIsPopup = false);
+  static CSDSupportLevel GetSystemCSDSupportLevel();
 
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
@@ -506,6 +506,10 @@ class nsWindow final : public nsBaseWidget {
   void ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
                  bool aRepaint);
   void NativeMoveResizeWaylandPopup(GdkPoint* aPosition, GdkRectangle* aSize);
+
+  // Returns true if the given point (in device pixels) is within a resizer
+  // region of the window. Only used when drawing decorations client side.
+  bool CheckResizerEdge(LayoutDeviceIntPoint aPoint, GdkWindowEdge& aOutEdge);
 
   GtkTextDirection GetTextDirection();
 
