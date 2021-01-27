@@ -837,21 +837,14 @@ def wasm_simd_experimental(value, wasm_simd):
 set_config("ENABLE_WASM_SIMD_EXPERIMENTAL", wasm_simd_experimental)
 set_define("ENABLE_WASM_SIMD_EXPERIMENTAL", wasm_simd_experimental)
 
-# Wormhole opcodes are experimental *and* Intel-only
+# Wormhole opcodes are experimental *and* x64-only
 
 
-@depends("--enable-wasm-simd-experimental", "--enable-simulator", target)
-def default_wasm_simd_wormhole(wasm_simd_experimental, simulator, target):
-    if not wasm_simd_experimental:
-        return
+@depends("--enable-wasm-simd-experimental", target)
+def default_wasm_simd_wormhole(wasm_simd_experimental, target):
+    if wasm_simd_experimental and target.cpu == "x86_64":
+        return True
 
-    if simulator:
-        return
-
-    if target.cpu not in ("x86", "x86_64"):
-        return
-
-    return True
 
 option(
     "--enable-wasm-simd-wormhole",
@@ -860,19 +853,16 @@ option(
 )
 
 
-@depends("--enable-wasm-simd-wormhole", "--enable-wasm-simd-experimental", "--enable-simulator", target)
-def wasm_simd_wormhole(value, wasm_simd_experimental, simulator, target):
+@depends("--enable-wasm-simd-wormhole", "--enable-wasm-simd-experimental", target)
+def wasm_simd_wormhole(value, wasm_simd_experimental, target):
     if not value:
         return
 
     if not wasm_simd_experimental:
         die("SIMD wormhole also requires --enable-wasm-simd-experimental.")
 
-    if simulator:
-        die("SIMD wormhole currently not supported on any simulator")
-
-    if target.cpu not in ("x86", "x86_64"):
-        die("SIMD wormhole is only available on Intel architectures.")
+    if target.cpu != "x86_64":
+        die("SIMD wormhole is only available on x86_64.")
 
     return True
 

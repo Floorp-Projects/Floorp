@@ -4325,7 +4325,12 @@ static bool EmitShuffleSimd128(FunctionCompiler& f) {
   }
 
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
-  if (f.moduleEnv().features.simdWormhole && IsWormholeTrigger(control)) {
+  static const uint8_t trigger[] = {31, 0, 30, 2,  29, 4,  28, 6,
+                                    27, 8, 26, 10, 25, 12, 24};
+  static_assert(sizeof(trigger) == 15);
+
+  if (f.moduleEnv().features.simdWormhole &&
+      memcmp(control.bytes, trigger, sizeof(trigger)) == 0) {
     switch (control.bytes[15]) {
       case 0:
         f.iter().setResult(
