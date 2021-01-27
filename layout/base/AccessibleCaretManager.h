@@ -7,8 +7,6 @@
 #ifndef AccessibleCaretManager_h
 #define AccessibleCaretManager_h
 
-#include <utility>
-
 #include "AccessibleCaret.h"
 
 #include "mozilla/Attributes.h"
@@ -54,7 +52,6 @@ class AccessibleCaretManager {
  public:
   // @param aPresShell may be nullptr for testing.
   explicit AccessibleCaretManager(PresShell* aPresShell);
-
   virtual ~AccessibleCaretManager() = default;
 
   // Called by AccessibleCaretEventHub to inform us that PresShell is destroyed.
@@ -130,11 +127,6 @@ class AccessibleCaretManager {
   bool ShouldDisableApz() const;
 
  protected:
-  class Carets;
-
-  // @param aPresShell may be nullptr for testing.
-  AccessibleCaretManager(PresShell* aPresShell, Carets aCarets);
-
   // This enum representing the number of AccessibleCarets on the screen.
   enum class CaretMode : uint8_t {
     // No caret on the screen.
@@ -250,47 +242,11 @@ class AccessibleCaretManager {
   void ClearMaintainedSelection() const;
 
   static dom::Element* GetEditingHostForFrame(const nsIFrame* aFrame);
-
   dom::Selection* GetSelection() const;
-  static dom::Selection* GetSelection(PresShell& aPresShell);
-
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
-  static already_AddRefed<nsFrameSelection> GetFrameSelection(
-      PresShell& aPresShell);
 
-  class LayoutFlusher final {
-   public:
-    ~LayoutFlusher();
-
-    MOZ_CAN_RUN_SCRIPT void MaybeFlush(const PresShell& aPresShell);
-
-    // Set to false to disallow flushing layout in some callbacks such as
-    // OnReflow(), OnScrollStart(), OnScrollStart(), or
-    // OnScrollPositionChanged().
-    bool mAllowFlushing = true;
-
-   private:
-    // Whether we're flushing layout, used for sanity-checking.
-    bool mFlushing = false;
-  };
-
-  LayoutFlusher mLayoutFlusher;
-
-  MOZ_CAN_RUN_SCRIPT nsAutoString StringifiedSelection() const;
-
-  class SelectionStringifyer final {
-   public:
-    explicit SelectionStringifyer(LayoutFlusher& aLayoutFlusher)
-        : mLayoutFlusher{aLayoutFlusher} {}
-
-    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsAutoString
-    Stringify(dom::Selection& aSelection) const;
-
-   private:
-    LayoutFlusher mLayoutFlusher;
-  };
-
-  SelectionStringifyer mSelectionStringifyer;
+  MOZ_CAN_RUN_SCRIPT
+  nsAutoString StringifiedSelection() const;
 
   // Get the union of all the child frame scrollable overflow rects for aFrame,
   // which is used as a helper function to restrict the area where the caret can
@@ -358,42 +314,13 @@ class AccessibleCaretManager {
   // nullptr either we are in gtest or PresShell::IsDestroying() is true.
   PresShell* MOZ_NON_OWNING_REF mPresShell = nullptr;
 
-  class Carets {
-   public:
-    Carets(UniquePtr<AccessibleCaret> aFirst,
-           UniquePtr<AccessibleCaret> aSecond)
-        : mFirst{std::move(aFirst)}, mSecond{std::move(aSecond)} {}
+  // First caret is attached to nsCaret in cursor mode, and is attached to
+  // selection highlight as the left caret in selection mode.
+  UniquePtr<AccessibleCaret> mFirstCaret;
 
-    // See `AccessibleCaret::IsLogicallyVisible`.
-    bool AreLogicallyVisible() const {
-      return mFirst->IsLogicallyVisible() || mSecond->IsLogicallyVisible();
-    }
-
-    // See `AccessibleCaret::IsVisuallyVisible`.
-    bool AreVisuallyVisible() const {
-      return mFirst->IsVisuallyVisible() || mSecond->IsVisuallyVisible();
-    }
-
-    AccessibleCaret* GetFirst() const { return mFirst.get(); }
-
-    AccessibleCaret* GetSecond() const { return mSecond.get(); }
-
-    void Terminate() {
-      mFirst.reset();
-      mSecond.reset();
-    }
-
-   private:
-    // First caret is attached to nsCaret in cursor mode, and is attached to
-    // selection highlight as the left caret in selection mode.
-    UniquePtr<AccessibleCaret> mFirst;
-
-    // Second caret is used solely in selection mode, and is attached to
-    // selection highlight as the right caret.
-    UniquePtr<AccessibleCaret> mSecond;
-  };
-
-  Carets mCarets;
+  // Second caret is used solely in selection mode, and is attached to selection
+  // highlight as the right caret.
+  UniquePtr<AccessibleCaret> mSecondCaret;
 
   // The caret being pressed or dragged.
   AccessibleCaret* mActiveCaret = nullptr;
@@ -409,6 +336,24 @@ class AccessibleCaretManager {
 
   // Set to true in OnScrollStart() and set to false in OnScrollEnd().
   bool mIsScrollStarted = false;
+
+  class LayoutFlusher final {
+   public:
+    ~LayoutFlusher();
+
+    MOZ_CAN_RUN_SCRIPT void MaybeFlush(const PresShell& aPresShell);
+
+    // Set to false to disallow flushing layout in some callbacks such as
+    // OnReflow(), OnScrollStart(), OnScrollStart(), or
+    // OnScrollPositionChanged().
+    bool mAllowFlushing = true;
+
+   private:
+    // Whether we're flushing layout, used for sanity-checking.
+    bool mFlushing = false;
+  };
+
+  LayoutFlusher mLayoutFlusher;
 
   // Set to True if one of the caret's position is changed in last update.
   bool mIsCaretPositionChanged = false;
