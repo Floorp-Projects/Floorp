@@ -12,6 +12,7 @@
 #include "nsString.h"
 
 class nsITimer;
+class nsIURI;
 namespace mozilla {
 
 class OriginAttributes;
@@ -22,7 +23,9 @@ class NeckoParent;
 
 namespace dom {
 class Document;
-class Link;
+class Element;
+
+class SupportsDNSPrefetch;
 
 class HTMLDNSPrefetch {
  public:
@@ -51,7 +54,7 @@ class HTMLDNSPrefetch {
     Medium,
     High,
   };
-  static nsresult Prefetch(Link* aElement, Priority);
+  static nsresult Prefetch(SupportsDNSPrefetch&, Element&, Priority);
   static nsresult Prefetch(
       const nsAString& host, bool isHttps,
       const OriginAttributes& aPartitionedPrincipalOriginAttributes,
@@ -60,9 +63,9 @@ class HTMLDNSPrefetch {
       const nsAString& host, bool isHttps,
       const OriginAttributes& aPartitionedPrincipalOriginAttributes,
       nsIRequest::TRRMode aTRRMode, Priority, nsresult aReason);
-  static nsresult CancelPrefetch(Link* aElement, Priority, nsresult aReason);
-
-  static void LinkDestroyed(Link* aLink);
+  static nsresult CancelPrefetch(SupportsDNSPrefetch&, Element&, Priority,
+                                 nsresult aReason);
+  static void ElementDestroyed(Element&, SupportsDNSPrefetch&);
 
  private:
   static uint32_t PriorityToDNSServiceFlags(Priority);
@@ -77,6 +80,64 @@ class HTMLDNSPrefetch {
       uint32_t flags, nsresult aReason);
 
   friend class net::NeckoParent;
+};
+
+// Elements that support DNS prefetch are expected to subclass this.
+class SupportsDNSPrefetch {
+ public:
+  bool IsInDNSPrefetch() { return mInDNSPrefetch; }
+  void SetIsInDNSPrefetch() { mInDNSPrefetch = true; }
+  void ClearIsInDNSPrefetch() { mInDNSPrefetch = false; }
+
+  void DNSPrefetchRequestStarted() {
+    mDNSPrefetchDeferred = false;
+    mDNSPrefetchRequested = true;
+  }
+
+  void DNSPrefetchRequestDeferred() {
+    mDNSPrefetchDeferred = true;
+    mDNSPrefetchRequested = false;
+  }
+
+  bool IsDNSPrefetchRequestDeferred() const { return mDNSPrefetchDeferred; }
+
+  // This could be a virtual function or something like that, but that would
+  // cause our subclasses to grow by two pointers, rather than just 1 byte at
+  // most.
+  nsIURI* GetURIForDNSPrefetch(Element& aOwner);
+
+ protected:
+  SupportsDNSPrefetch()
+      : mInDNSPrefetch(false),
+        mDNSPrefetchRequested(false),
+        mDNSPrefetchDeferred(false),
+        mDestroyedCalled(false) {}
+
+  void CancelDNSPrefetch(Element&);
+  void TryDNSPrefetch(Element&);
+
+  // This MUST be called on the destructor of the Element subclass.
+  // Our own destructor ensures that.
+  void Destroyed(Element& aOwner) {
+    MOZ_DIAGNOSTIC_ASSERT(!mDestroyedCalled,
+                          "Multiple calls to SupportsDNSPrefetch::Destroyed?");
+    mDestroyedCalled = true;
+    if (mInDNSPrefetch) {
+      HTMLDNSPrefetch::ElementDestroyed(aOwner, *this);
+    }
+  }
+
+  ~SupportsDNSPrefetch() {
+    MOZ_DIAGNOSTIC_ASSERT(mDestroyedCalled,
+                          "Need to call SupportsDNSPrefetch::Destroyed "
+                          "from the owner element");
+  }
+
+ private:
+  bool mInDNSPrefetch : 1;
+  bool mDNSPrefetchRequested : 1;
+  bool mDNSPrefetchDeferred : 1;
+  bool mDestroyedCalled : 1;
 };
 
 }  // namespace dom

@@ -8,8 +8,9 @@
 #define mozilla_dom_HTMLLinkElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/Link.h"
+#include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/dom/LinkStyle.h"
+#include "mozilla/dom/Link.h"
 #include "mozilla/WeakPtr.h"
 #include "nsGenericHTMLElement.h"
 #include "nsDOMTokenList.h"
@@ -25,7 +26,8 @@ namespace dom {
 // IsHTMLElement(nsGkAtoms::link) checks in Link.cpp.
 class HTMLLinkElement final : public nsGenericHTMLElement,
                               public LinkStyle,
-                              public Link {
+                              public Link,
+                              public SupportsDNSPrefetch {
  public:
   explicit HTMLLinkElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -74,10 +76,6 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   EventStates IntrinsicState() const override;
 
   void CreateAndDispatchEvent(Document* aDoc, const nsAString& aEventName);
-
-  void OnDNSPrefetchDeferred() override;
-  void OnDNSPrefetchRequested() override;
-  bool HasDeferredDNSPrefetchRequest() override;
 
   // WebIDL
   bool Disabled() const;
