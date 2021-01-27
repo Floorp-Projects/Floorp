@@ -37,8 +37,8 @@
       }
 
       /* exported testXhrGet */
-      function testXhrGet(callback) {
-        makeXhr("get", "data.json", null, callback);
+      function testXhrGet(callback, url = "data.json") {
+        makeXhr("get", url, null, callback);
       }
 
       /* exported testXhrPost */
