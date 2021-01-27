@@ -800,26 +800,41 @@ bool AccessibleCaretManager::ShouldDisableApz() const {
 }
 
 Selection* AccessibleCaretManager::GetSelection() const {
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  if (!mPresShell) {
+    return nullptr;
+  }
+
+  return AccessibleCaretManager::GetSelection(*mPresShell);
+}
+
+// static
+Selection* AccessibleCaretManager::GetSelection(PresShell& aPresShell) {
+  RefPtr<nsFrameSelection> fs = GetFrameSelection(aPresShell);
   if (!fs) {
     return nullptr;
   }
   return fs->GetSelection(SelectionType::eNormal);
 }
 
+// static
 already_AddRefed<nsFrameSelection> AccessibleCaretManager::GetFrameSelection()
     const {
   if (!mPresShell) {
     return nullptr;
   }
 
+  return AccessibleCaretManager::GetFrameSelection(*mPresShell);
+}
+
+already_AddRefed<nsFrameSelection> AccessibleCaretManager::GetFrameSelection(
+    PresShell& aPresShell) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   MOZ_ASSERT(fm);
 
   nsIContent* focusedContent = fm->GetFocusedElement();
   if (!focusedContent) {
     // For non-editable content
-    return mPresShell->FrameSelection();
+    return aPresShell.FrameSelection();
   }
 
   nsIFrame* focusFrame = focusedContent->GetPrimaryFrame();
@@ -830,7 +845,7 @@ already_AddRefed<nsFrameSelection> AccessibleCaretManager::GetFrameSelection()
   // Prevent us from touching the nsFrameSelection associated with other
   // PresShell.
   RefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
-  if (!fs || fs->GetPresShell() != mPresShell) {
+  if (!fs || fs->GetPresShell() != &aPresShell) {
     return nullptr;
   }
 
