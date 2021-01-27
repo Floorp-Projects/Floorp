@@ -7268,10 +7268,6 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       }
     }
 
-    if (!abortIfSyntaxParser()) {
-      return false;
-    }
-
     if (isStatic) {
       classInitializedMembers.staticFields++;
     } else {
@@ -7404,10 +7400,6 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     if (propAtom == cx_->parserNames().hashConstructor) {
       // #constructor is an invalid private name.
       errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
-      return false;
-    }
-
-    if (!abortIfSyntaxParser()) {
       return false;
     }
 
@@ -7772,6 +7764,10 @@ typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     const ParserAtom* className, TokenPos synthesizedBodyPos,
     HasHeritage hasHeritage) {
+  if (!abortIfSyntaxParser()) {
+    return null();
+  }
+
   FunctionSyntaxKind functionSyntaxKind =
       hasHeritage == HasHeritage::Yes
           ? FunctionSyntaxKind::DerivedClassConstructor
@@ -7928,6 +7924,10 @@ typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
     TokenPos propNamePos, const ParserAtom* propAtom,
     const ParserAtom* storedMethodAtom) {
+  if (!abortIfSyntaxParser()) {
+    return null();
+  }
+
   // Synthesize an initializer function that the constructor can use to stamp a
   // private method onto an instance object.
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::FieldInitializer;
@@ -8026,6 +8026,10 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     TokenPos propNamePos, Node propName, const ParserAtom* propAtom,
     ClassInitializedMembers& classInitializedMembers, bool isStatic,
     HasHeritage hasHeritage) {
+  if (!abortIfSyntaxParser()) {
+    return null();
+  }
+
   bool hasInitializer = false;
   if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
                               TokenStream::SlashIsDiv)) {
