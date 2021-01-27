@@ -56,7 +56,8 @@ export default class ImportSummaryDialog extends HTMLElement {
       this._error,
       "about-logins-import-dialog-items-error"
     );
-    return this._genericDialog.show();
+    this._genericDialog.show();
+    window.AboutLoginsUtils.setFocus(this._genericDialog._dismissButton);
   }
 
   _updateCount(count, component, message) {
