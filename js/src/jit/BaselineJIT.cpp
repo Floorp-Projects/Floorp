@@ -534,9 +534,7 @@ void BaselineScript::trace(JSTracer* trc) {
 
 /* static */
 void BaselineScript::preWriteBarrier(Zone* zone, BaselineScript* script) {
-  if (zone->needsIncrementalBarrier()) {
-    script->trace(zone->barrierTracer());
-  }
+  PreWriteBarrier(zone, script);
 }
 
 void BaselineScript::Destroy(JSFreeOp* fop, BaselineScript* script) {
