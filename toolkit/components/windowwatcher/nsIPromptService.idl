@@ -627,29 +627,18 @@ interface nsIPromptService : nsISupports
                        in nsIAuthInformation authInfo,
                        in wstring checkboxLabel,
                        inout boolean checkValue);
-  nsICancelable asyncPromptAuth(in mozIDOMWindowProxy aParent,
-                                in nsIChannel aChannel,
-                                in nsIAuthPromptCallback aCallback,
-                                in nsISupports aContext,
-                                in uint32_t level,
-                                in nsIAuthInformation authInfo,
-                                in wstring checkboxLabel,
-                                inout boolean checkValue);
   /**
-   * Like asyncPromptAuth, but with a BrowsingContext as parent.
+   * Async version of promptAuthBC
    *
-   * @param aBrowsingContext
-   *        The browsing context the prompt should be opened for.
-   * @param modalType
-   *        Whether the prompt should be window, tab or content modal.
+   * @return A promise which resolves when the prompt is dismissed.
+   *
+   * @resolves nsIPropertyBag { ok: boolean }
    */
-  nsICancelable asyncPromptAuthBC(in BrowsingContext aBrowsingContext,
-                                  in unsigned long modalType,
-                                  in nsIChannel aChannel,
-                                  in nsIAuthPromptCallback aCallback,
-                                  in nsISupports aContext,
-                                  in uint32_t level,
-                                  in nsIAuthInformation authInfo,
-                                  in wstring checkboxLabel,
-                                  inout boolean checkValue);
+  Promise asyncPromptAuth(in BrowsingContext aBrowsingContext,
+                      in unsigned long modalType,
+                      in nsIChannel aChannel,
+                      in uint32_t level,
+                      in nsIAuthInformation authInfo,
+                      in wstring checkboxLabel,
+                      in boolean checkValue);
 };
