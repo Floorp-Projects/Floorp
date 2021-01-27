@@ -48,8 +48,10 @@ add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   // This is only needed as otherwise events will not be properly notified
   // due to https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchUtils.jsm#186
+  let settingsFileWritten = promiseAfterSettings();
   await Services.search.init(false);
   Services.search.wrappedJSObject._removeObservers();
+  await settingsFileWritten;
 });
 
 add_task(async function() {
