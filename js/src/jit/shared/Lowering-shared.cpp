@@ -490,15 +490,21 @@ static bool TryPermute32x4(SimdConstant* control) {
 // just lanes[0], and *control is unchanged.
 static bool TryRotateRight8x16(SimdConstant* control) {
   const SimdConstant::I8x16& lanes = control->asInt8x16();
-  // Look for the first run of consecutive bytes.
+  // Look for the end of the first run of consecutive bytes.
   int i = ScanIncreasingMasked(lanes, 0);
 
-  // If we reach the end of the vector, the vector must start at 0.
-  if (i == 16) {
-    return lanes[0] == 0;
+  // First run must start at a value s.t. we have a rotate if all remaining
+  // bytes are a run.
+  if (lanes[0] != 16 - i) {
+    return false;
   }
 
-  // Second run must start at source lane zero
+  // If we reached the end of the vector, we're done.
+  if (i == 16) {
+    return true;
+  }
+
+  // Second run must start at source lane zero.
   if (lanes[i] != 0) {
     return false;
   }
