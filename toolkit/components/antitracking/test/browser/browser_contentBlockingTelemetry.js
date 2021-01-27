@@ -100,6 +100,9 @@ add_task(async function setup() {
   });
 
   // Clear Telemetry probes before testing.
+  // There can be telemetry race conditions if the previous test generates
+  // content blocking telemetry.
+  // See Bug 1686836, Bug 1686894.
   clearTelemetry();
 
   await UrlClassifierTestUtils.addTestTrackers();
