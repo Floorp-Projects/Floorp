@@ -354,7 +354,10 @@ CookieServiceChild::GetCookieStringFromDocument(Document* aDocument,
   }
 
   nsAutoCString hostFromURI;
-  principal->GetAsciiHost(hostFromURI);
+  rv = nsContentUtils::GetHostOrIPv6WithBrackets(principal, hostFromURI);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
 
   nsAutoCString pathFromURI;
   principal->GetFilePath(pathFromURI);

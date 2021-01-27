@@ -2790,6 +2790,11 @@ class nsContentUtils {
   static uint64_t GetInnerWindowID(nsILoadGroup* aLoadGroup);
 
   /**
+   * Encloses aHost in brackets if it is an IPv6 address.
+   */
+  static void MaybeFixIPv6Host(nsACString& aHost);
+
+  /**
    * If the hostname for aURI is an IPv6 it encloses it in brackets,
    * otherwise it just outputs the hostname in aHost.
    */
