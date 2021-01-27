@@ -162,6 +162,10 @@ class CodeGeneratorShared : public LElementVisitor {
   inline Address ToAddress(const LAllocation& a) const;
   inline Address ToAddress(const LAllocation* a) const;
 
+  static inline Address ToAddress(Register elements, const LAllocation* index,
+                                  Scalar::Type type,
+                                  int32_t offsetAdjustment = 0);
+
   // Returns the offset from FP to address incoming stack arguments
   // when we use wasm stack argument abi (useWasmStackArgumentAbi()).
   inline int32_t ToFramePointerOffset(LAllocation a) const;

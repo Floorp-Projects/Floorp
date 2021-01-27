@@ -12341,14 +12341,13 @@ void CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir) {
   const MLoadUnboxedScalar* mir = lir->mir();
 
   Scalar::Type storageType = mir->storageType();
-  size_t width = Scalar::byteSize(storageType);
 
   Label fail;
   if (lir->index()->isConstant()) {
-    Address source(elements,
-                   ToInt32(lir->index()) * width + mir->offsetAdjustment());
+    Address source = ToAddress(elements, lir->index(), storageType);
     masm.loadFromTypedArray(storageType, source, out, temp, &fail);
   } else {
+    size_t width = Scalar::byteSize(storageType);
     BaseIndex source(elements, ToRegister(lir->index()),
                      ScaleFromElemWidth(width), mir->offsetAdjustment());
     masm.loadFromTypedArray(storageType, source, out, temp, &fail);
@@ -12368,13 +12367,13 @@ void CodeGenerator::visitLoadUnboxedBigInt(LLoadUnboxedBigInt* lir) {
   const MLoadUnboxedScalar* mir = lir->mir();
 
   Scalar::Type storageType = mir->storageType();
-  size_t width = Scalar::byteSize(storageType);
 
   if (lir->index()->isConstant()) {
-    Address source(elements,
-                   ToInt32(lir->index()) * width + mir->offsetAdjustment());
+    Address source =
+        ToAddress(elements, lir->index(), storageType, mir->offsetAdjustment());
     masm.load64(source, temp64);
   } else {
+    size_t width = Scalar::byteSize(storageType);
     BaseIndex source(elements, ToRegister(lir->index()),
                      ScaleFromElemWidth(width), mir->offsetAdjustment());
     masm.load64(source, temp64);
@@ -12734,12 +12733,11 @@ void CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir) {
 
   Scalar::Type writeType = mir->writeType();
 
-  size_t width = Scalar::byteSize(mir->writeType());
-
   if (lir->index()->isConstant()) {
-    Address dest(elements, ToInt32(lir->index()) * width);
+    Address dest = ToAddress(elements, lir->index(), writeType);
     StoreToTypedArray(masm, writeType, value, dest);
   } else {
+    size_t width = Scalar::byteSize(mir->writeType());
     BaseIndex dest(elements, ToRegister(lir->index()),
                    ScaleFromElemWidth(width));
     StoreToTypedArray(masm, writeType, value, dest);
@@ -12753,14 +12751,14 @@ void CodeGenerator::visitStoreUnboxedBigInt(LStoreUnboxedBigInt* lir) {
 
   const MStoreUnboxedScalar* mir = lir->mir();
   Scalar::Type writeType = mir->writeType();
-  size_t width = Scalar::byteSize(mir->writeType());
 
   masm.loadBigInt64(value, temp);
 
   if (lir->index()->isConstant()) {
-    Address dest(elements, ToInt32(lir->index()) * width);
+    Address dest = ToAddress(elements, lir->index(), writeType);
     masm.storeToTypedBigIntArray(writeType, temp, dest);
   } else {
+    size_t width = Scalar::byteSize(mir->writeType());
     BaseIndex dest(elements, ToRegister(lir->index()),
                    ScaleFromElemWidth(width));
     masm.storeToTypedBigIntArray(writeType, temp, dest);
