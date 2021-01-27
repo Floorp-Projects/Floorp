@@ -294,7 +294,10 @@ bool AbstractGeneratorObject::resume(JSContext* cx,
     storage->setDenseInitializedLength(0);
   }
 
-  JSScript* script = callee->nonLazyScript();
+  JSScript* script = JSFunction::getOrCreateScript(cx, callee);
+  if (!script) {
+    return false;
+  }
   uint32_t offset = script->resumeOffsets()[genObj->resumeIndex()];
   activation.regs().pc = script->offsetToPC(offset);
 
