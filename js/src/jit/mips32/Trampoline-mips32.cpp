@@ -954,7 +954,7 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
   masm.setupUnalignedABICall(a2);
   masm.passABIArg(a0);
   masm.passABIArg(a1);
-  masm.callWithABI(JitMarkFunction(type));
+  masm.callWithABI(JitPreWriteBarrier(type));
 
   save.take(AnyRegister(ra));
   masm.PopRegsInMask(save);
