@@ -19,12 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/filepicker;1",
   "nsIFilePicker"
 );
-XPCOMUtils.defineLazyGetter(this, "strings", () =>
-  Services.strings.createBundle("chrome://global/locale/aboutWebrtc.properties")
-);
 
-const string = strings.GetStringFromName;
-const format = strings.formatStringFromName;
 const WGI = WebrtcGlobalInformation;
 
 const LOGFILE_NAME_DEFAULT = "aboutWebrtc.html";
@@ -37,8 +32,13 @@ async function getStats() {
 
 const getLog = () => new Promise(r => WGI.getLogging("", r));
 
-const renderElement = (name, options) =>
-  Object.assign(document.createElement(name), options);
+const renderElement = (name, options, l10n_id, l10n_args) => {
+  let elem = Object.assign(document.createElement(name), options);
+  if (l10n_id) {
+    document.l10n.setAttributes(elem, l10n_id, l10n_args);
+  }
+  return elem;
+};
 
 const renderText = (name, textContent, options) =>
   renderElement(name, Object.assign({ textContent }, options));
@@ -54,24 +54,40 @@ const renderElements = (name, options, list) => {
 class Control {
   label = null;
   message = null;
+  messageArgs = null;
   messageHeader = null;
 
   render() {
-    this.ctrl = renderElement("button", { onclick: () => this.onClick() });
+    this.ctrl = renderElement(
+      "button",
+      { onclick: () => this.onClick() },
+      this.label
+    );
     this.msg = renderElement("p");
     this.update();
     return [this.ctrl, this.msg];
   }
 
   update() {
-    this.ctrl.textContent = this.label;
+    document.l10n.setAttributes(this.ctrl, this.label);
     this.msg.textContent = "";
     if (this.message) {
       this.msg.append(
-        renderText("span", `${this.messageHeader}: `, {
-          className: "info-label",
-        }),
-        this.message
+        renderElement(
+          "span",
+          {
+            className: "info-label",
+          },
+          this.messageHeader
+        ),
+        renderElement(
+          "span",
+          {
+            className: "info-body",
+          },
+          this.message,
+          this.messageArgs
+        )
       );
     }
   }
@@ -80,17 +96,16 @@ class Control {
 class SavePage extends Control {
   constructor() {
     super();
-    this.messageHeader = string("save_page_label");
-    this.label = string("save_page_label");
+    this.messageHeader = "about-webrtc-save-page-label";
+    this.label = "about-webrtc-save-page-label";
   }
 
   async onClick() {
     FoldEffect.expandAll();
-    FilePicker.init(
-      window,
-      string("save_page_dialog_title"),
-      FilePicker.modeSave
-    );
+    let [dialogTitle] = await document.l10n.formatValues([
+      { id: "about-webrtc-save-page-dialog-title" },
+    ]);
+    FilePicker.init(window, dialogTitle, FilePicker.modeSave);
     FilePicker.defaultString = LOGFILE_NAME_DEFAULT;
     const rv = await new Promise(r => FilePicker.open(r));
     if (rv != FilePicker.returnOK && rv != FilePicker.returnReplace) {
@@ -113,7 +128,8 @@ class SavePage extends Control {
         node.style.removeProperty("display");
       }
     }
-    this.message = format("save_page_msg", [FilePicker.file.path]);
+    this.message = "about-webrtc-save-page-msg";
+    this.messageArgs = { path: FilePicker.file.path };
     this.update();
   }
 }
@@ -121,21 +137,25 @@ class SavePage extends Control {
 class DebugMode extends Control {
   constructor() {
     super();
-    this.messageHeader = string("debug_mode_msg_label");
+    this.messageHeader = "about-webrtc-debug-mode-msg-label";
 
     if (WGI.debugLevel > 0) {
       this.setState(true);
     } else {
-      this.label = string("debug_mode_off_state_label");
+      this.label = "about-webrtc-debug-mode-off-state-label";
     }
   }
 
   setState(state) {
-    const stateString = state ? "on" : "off";
-    this.label = string(`debug_mode_${stateString}_state_label`);
+    this.label = state
+      ? "about-webrtc-debug-mode-on-state-label"
+      : "about-webrtc-debug-mode-off-state-label";
     try {
       const file = Services.prefs.getCharPref("media.webrtc.debug.log_file");
-      this.message = format(`debug_mode_${stateString}_state_msg`, [file]);
+      this.message = state
+        ? "about-webrtc-debug-mode-on-state-msg"
+        : "about-webrtc-debug-mode-off-state-msg";
+      this.messageArgs = { path: file };
     } catch (e) {
       this.message = null;
     }
@@ -151,24 +171,27 @@ class DebugMode extends Control {
 class AecLogging extends Control {
   constructor() {
     super();
-    this.messageHeader = string("aec_logging_msg_label");
+    this.messageHeader = "about-webrtc-aec-logging-msg-label";
 
     if (WGI.aecDebug) {
       this.setState(true);
     } else {
-      this.label = string("aec_logging_off_state_label");
+      this.label = "about-webrtc-aec-logging-off-state-label";
       this.message = null;
     }
   }
 
   setState(state) {
-    this.label = string(`aec_logging_${state ? "on" : "off"}_state_label`);
+    this.label = state
+      ? "about-webrtc-aec-logging-on-state-label"
+      : "about-webrtc-aec-logging-off-state-label";
     try {
       if (!state) {
         const file = WGI.aecDebugLogDir;
-        this.message = format("aec_logging_off_state_msg", [file]);
+        this.message = "about-webrtc-aec-logging-off-state-msg";
+        this.messageArgs = { path: file };
       } else {
-        this.message = string("aec_logging_on_state_msg");
+        this.message = "about-webrtc-aec-logging-on-state-msg";
       }
     } catch (e) {
       this.message = null;
@@ -184,7 +207,7 @@ class AecLogging extends Control {
 class ShowTab extends Control {
   constructor(browserId) {
     super();
-    this.label = string("show_tab_label");
+    this.label = "about-webrtc-show-tab-label";
     this.message = null;
     this.browserId = browserId;
   }
@@ -207,8 +230,6 @@ class ShowTab extends Control {
   const haveReports = getStats();
   const haveLog = getLog();
   await new Promise(r => (window.onload = r));
-
-  document.title = string("document_title");
   {
     const ctrl = renderElement("div", { className: "control" });
     const msg = renderElement("div", { className: "message" });
@@ -240,36 +261,43 @@ class ShowTab extends Control {
   function refresh() {
     const pcDiv = renderElements("div", { className: "stats" }, [
       renderElements("span", { className: "section-heading" }, [
-        renderText("h3", string("stats_heading")),
-        renderText("button", string("stats_clear"), {
-          className: "no-print",
-          onclick: async () => {
-            WGI.clearAllStats();
-            reports = await getStats();
-            refresh();
+        renderElement("h3", {}, "about-webrtc-stats-heading"),
+        renderElement(
+          "button",
+          {
+            className: "no-print",
+            onclick: async () => {
+              WGI.clearAllStats();
+              reports = await getStats();
+              refresh();
+            },
           },
-        }),
+          "about-webrtc-stats-clear"
+        ),
       ]),
       ...reports.map(renderPeerConnection),
     ]);
     const logDiv = renderElements("div", { className: "log" }, [
       renderElements("span", { className: "section-heading" }, [
-        renderText("h3", string("log_heading")),
-        renderElement("button", {
-          textContent: string("log_clear"),
-          className: "no-print",
-          onclick: async () => {
-            WGI.clearLogging();
-            log = await getLog();
-            refresh();
+        renderElement("h3", {}, "about-webrtc-log-heading"),
+        renderElement(
+          "button",
+          {
+            className: "no-print",
+            onclick: async () => {
+              WGI.clearLogging();
+              log = await getLog();
+              refresh();
+            },
           },
-        }),
+          "about-webrtc-log-clear"
+        ),
       ]),
     ]);
     if (log.length) {
       const div = renderFoldableSection(logDiv, {
-        showMsg: string("log_show_msg"),
-        hideMsg: string("log_hide_msg"),
+        showMsg: "about-webrtc-log-show-msg",
+        hideMsg: "about-webrtc-log-hide-msg",
       });
       div.append(...log.map(line => renderText("p", line)));
       logDiv.append(div);
@@ -313,11 +341,22 @@ function renderPeerConnection(report) {
   {
     const id = pcid.match(/id=(\S+)/)[1];
     const url = pcid.match(/url=([^)]+)/)[1];
-    const closedStr = closed ? `(${string("connection_closed")})` : "";
-    const now = new Date(timestamp).toString();
+    const now = new Date(timestamp);
 
     pcDiv.append(
-      renderText("h3", `[ ${browserId} | ${id} ] ${url} ${closedStr} ${now}`)
+      closed
+        ? renderElement("h3", {}, "about-webrtc-connection-closed", {
+            "browser-id": browserId,
+            id,
+            url,
+            now,
+          })
+        : renderElement("h3", {}, "about-webrtc-connection-open", {
+            "browser-id": browserId,
+            id,
+            url,
+            now,
+          })
     );
     pcDiv.append(new ShowTab(browserId).render()[0]);
   }
@@ -325,9 +364,13 @@ function renderPeerConnection(report) {
     const section = renderFoldableSection(pcDiv);
     section.append(
       renderElements("div", {}, [
-        renderText("span", `${string("peer_connection_id_label")}: `, {
-          className: "info-label",
-        }),
+        renderElement(
+          "span",
+          {
+            className: "info-label",
+          },
+          "about-webrtc-peerconnection-id-label"
+        ),
         renderText("span", pcid, { className: "info-body" }),
       ]),
       renderConfiguration(configuration),
@@ -346,33 +389,37 @@ function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
   const trimNewlines = sdp => sdp.replaceAll("\r\n", "\n");
 
   const statsDiv = renderElements("div", {}, [
-    renderText("h4", string("sdp_heading")),
-    renderText(
+    renderElement("h4", {}, "about-webrtc-sdp-heading"),
+    renderElement(
       "h5",
-      `${string("local_sdp_heading")} (${string(offerer ? "offer" : "answer")})`
+      {},
+      offerer
+        ? "about-webrtc-local-sdp-heading-offer"
+        : "about-webrtc-local-sdp-heading-answer"
     ),
     renderText("pre", trimNewlines(localSdp)),
-    renderText(
+    renderElement(
       "h5",
-      `${string("remote_sdp_heading")} (${string(
-        offerer ? "answer" : "offer"
-      )})`
+      {},
+      offerer
+        ? "about-webrtc-remote-sdp-heading-answer"
+        : "about-webrtc-remote-sdp-heading-offer"
     ),
     renderText("pre", trimNewlines(remoteSdp)),
-    renderText("h4", string("sdp_history_heading")),
+    renderElement("h4", {}, "about-webrtc-sdp-history-heading"),
   ]);
 
   // All SDP in sequential order. Add onclick handler to scroll the associated
   // SDP into view below.
   for (const { isLocal, timestamp } of sdpHistory) {
     const histDiv = renderElement("div", {});
-    const text = renderText(
+    const text = renderElement(
       "h5",
-      format("sdp_set_at_timestamp", [
-        string(`${isLocal ? "local" : "remote"}_sdp_heading`),
-        timestamp,
-      ]),
-      { className: "sdp-history-link" }
+      { className: "sdp-history-link" },
+      isLocal
+        ? "about-webrtc-sdp-set-at-timestamp-local"
+        : "about-webrtc-sdp-set-at-timestamp-remote",
+      { timestamp }
     );
     text.onclick = () => {
       const elem = document.getElementById("sdp-history: " + timestamp);
@@ -387,10 +434,10 @@ function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
   // Render the SDP into separate columns for local and remote.
   const section = renderElement("div", { className: "sdp-history" });
   const localDiv = renderElements("div", {}, [
-    renderText("h4", `${string("local_sdp_heading")}`),
+    renderElement("h4", {}, "about-webrtc-local-sdp-heading"),
   ]);
   const remoteDiv = renderElements("div", {}, [
-    renderText("h4", `${string("remote_sdp_heading")}`),
+    renderElement("h4", {}, "about-webrtc-remote-sdp-heading"),
   ]);
 
   let first = NaN;
@@ -400,14 +447,17 @@ function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
     }
     const histDiv = isLocal ? localDiv : remoteDiv;
     histDiv.append(
-      renderText(
+      renderElement(
         "h5",
-        format("sdp_set_timestamp", [timestamp, timestamp - first]),
-        { id: "sdp-history: " + timestamp }
+        { id: "sdp-history: " + timestamp },
+        "about-webrtc-sdp-set-timestamp",
+        { timestamp, "relative-timestamp": timestamp - first }
       )
     );
     if (errors.length) {
-      histDiv.append(renderElement("h5", string("sdp_parsing_errors_heading")));
+      histDiv.append(
+        renderElement("h5", {}, "about-webrtc-sdp-parsing-errors-heading")
+      );
     }
     for (const { lineNumber, error } of errors) {
       histDiv.append(renderElement("br"), `${lineNumber}: ${error}`);
@@ -426,13 +476,13 @@ function renderBandwidthStats(report) {
   const table = renderSimpleTable(
     "",
     [
-      "track_identifier",
-      "send_bandwidth_bytes_sec",
-      "receive_bandwidth_bytes_sec",
-      "max_padding_bytes_sec",
-      "pacer_delay_ms",
-      "round_trip_time_ms",
-    ].map(columnName => string(columnName)),
+      "about-webrtc-track-identifier",
+      "about-webrtc-send-bandwidth-bytes-sec",
+      "about-webrtc-receive-bandwidth-bytes-sec",
+      "about-webrtc-max-padding-bytes-sec",
+      "about-webrtc-pacer-delay-ms",
+      "about-webrtc-round-trip-time-ms",
+    ],
     report.bandwidthEstimations.map(stat => [
       stat.trackIdentifier,
       stat.sendBandwidthBps,
@@ -442,7 +492,10 @@ function renderBandwidthStats(report) {
       stat.rttMs,
     ])
   );
-  statsDiv.append(renderText("h4", string("bandwidth_stats_heading")), table);
+  statsDiv.append(
+    renderElement("h4", {}, "about-webrtc-bandwidth-stats-heading"),
+    table
+  );
   return statsDiv;
 }
 
@@ -452,13 +505,13 @@ function renderFrameRateStats(report) {
     const stats = history.entries.map(stat => {
       stat.elapsed = stat.lastFrameTimestamp - stat.firstFrameTimestamp;
       if (stat.elapsed < 1) {
-        stat.elapsed = 0;
+        stat.elapsed = "0.00";
       }
       stat.elapsed = (stat.elapsed / 1_000).toFixed(3);
       if (stat.elapsed && stat.consecutiveFrames) {
         stat.avgFramerate = (stat.consecutiveFrames / stat.elapsed).toFixed(2);
       } else {
-        stat.avgFramerate = string("n_a");
+        stat.avgFramerate = "0.00";
       }
       return stat;
     });
@@ -466,17 +519,17 @@ function renderFrameRateStats(report) {
     const table = renderSimpleTable(
       "",
       [
-        "width_px",
-        "height_px",
-        "consecutive_frames",
-        "time_elapsed",
-        "estimated_framerate",
-        "rotation_degrees",
-        "first_frame_timestamp",
-        "last_frame_timestamp",
-        "local_receive_ssrc",
-        "remote_send_ssrc",
-      ].map(columnName => string(columnName)),
+        "about-webrtc-width-px",
+        "about-webrtc-height-px",
+        "about-webrtc-consecutive-frames",
+        "about-webrtc-time-elapsed",
+        "about-webrtc-estimated-framerate",
+        "about-webrtc-rotation-degrees",
+        "about-webrtc-first-frame-timestamp",
+        "about-webrtc-last-frame-timestamp",
+        "about-webrtc-local-receive-ssrc",
+        "about-webrtc-remote-send-ssrc",
+      ],
       stats.map(stat =>
         [
           stat.width,
@@ -494,12 +547,9 @@ function renderFrameRateStats(report) {
     );
 
     statsDiv.append(
-      renderText(
-        "h4",
-        `${string("frame_stats_heading")} - MediaStreamTrack Id: ${
-          history.trackIdentifier
-        }`
-      ),
+      renderElement("h4", {}, "about-webrtc-frame-stats-heading", {
+        "track-identifier": history.trackIdentifier,
+      }),
       table
     );
   });
@@ -534,7 +584,7 @@ function renderRTPStats(report, history) {
 
   // Render stats set
   return renderElements("div", { id: "rtp-stats: " + report.pcid }, [
-    renderText("h4", string("rtp_stats_heading")),
+    renderElement("h4", {}, "about-webrtc-rtp-stats-heading"),
     ...stats.map(stat => {
       const { id, remoteId, remoteRtpStats } = stat;
       const div = renderElements("div", {}, [
@@ -559,32 +609,82 @@ function renderCoderStats({
   discardedPackets,
   packetsReceived,
 }) {
-  let s = "";
+  let elements = [];
 
   if (bitrateMean) {
-    s += ` ${string("avg_bitrate_label")}: ${(bitrateMean / 1000000).toFixed(
-      2
-    )} Mbps`;
+    elements.push(
+      renderElement(
+        "span",
+        { className: "stat-label" },
+        "about-webrtc-avg-bitrate-label"
+      )
+    );
+    elements.push(
+      renderText("span", ` ${(bitrateMean / 1000000).toFixed(2)}`, {})
+    );
+
     if (bitrateStdDev) {
-      s += ` (${(bitrateStdDev / 1000000).toFixed(2)} SD)`;
+      elements.push(
+        renderText("span", ` (${(bitrateStdDev / 1000000).toFixed(2)} SD)`, {})
+      );
     }
   }
-  if (framerateMean) {
-    s += ` ${string("avg_framerate_label")}: ${framerateMean.toFixed(2)} fps`;
+  if (bitrateMean) {
+    elements.push(
+      renderElement(
+        "span",
+        { className: "stat-label" },
+        "about-webrtc-avg-framerate-label"
+      )
+    );
+    elements.push(
+      renderText("span", ` ${(framerateMean / 1000000).toFixed(2)}`, {})
+    );
+
     if (framerateStdDev) {
-      s += ` (${framerateStdDev.toFixed(2)} SD)`;
+      elements.push(
+        renderText(
+          "span",
+          ` (${(framerateStdDev / 1000000).toFixed(2)} SD)`,
+          {}
+        )
+      );
     }
   }
   if (droppedFrames) {
-    s += ` ${string("dropped_frames_label")}: ${droppedFrames}`;
+    elements.push(
+      renderElement(
+        "span",
+        { className: "stat-label" },
+        "about-webrtc-dropped-frames-label"
+      )
+    );
+    elements.push(renderText("span", ` ${droppedFrames}`, {}));
   }
   if (discardedPackets) {
-    s += ` ${string("discarded_packets_label")}: ${discardedPackets}`;
+    elements.push(
+      renderElement(
+        "span",
+        { className: "stat-label" },
+        "about-webrtc-discarded-packets-label"
+      )
+    );
+    elements.push(renderText("span", ` ${discardedPackets}`, {}));
   }
-  if (s.length) {
-    s = ` ${string(`${packetsReceived ? "de" : "en"}coder_label`)}:${s}`;
+  if (elements.length) {
+    if (packetsReceived) {
+      elements.unshift(
+        renderElement("span", {}, "about-webrtc-decoder-label"),
+        renderText("span", ": ")
+      );
+    } else {
+      elements.unshift(
+        renderElement("span", {}, "about-webrtc-encoder-label"),
+        renderText("span", ": ")
+      );
+    }
   }
-  return renderText("p", s);
+  return renderElements("div", {}, elements);
 }
 
 function renderTransportStats(
@@ -604,8 +704,6 @@ function renderTransportStats(
   local,
   history
 ) {
-  const typeLabel = local ? string("typeLocal") : string("typeRemote");
-
   if (history) {
     if (history[id] === undefined) {
       history[id] = {};
@@ -614,26 +712,48 @@ function renderTransportStats(
 
   const estimateKbps = (timestamp, lastTimestamp, bytes, lastBytes) => {
     if (!timestamp || !lastTimestamp || !bytes || !lastBytes) {
-      return string("n_a");
+      return "0.0";
     }
     const elapsedTime = timestamp - lastTimestamp;
     if (elapsedTime <= 0) {
-      return string("n_a");
+      return "0.0";
     }
     return ((bytes - lastBytes) / elapsedTime).toFixed(1);
   };
 
-  const time = new Date(timestamp).toTimeString();
-  let s = `${typeLabel}: ${time} ${type} SSRC: ${ssrc}`;
+  let elements = [];
 
-  const packets = string("packets");
+  if (local) {
+    elements.push(
+      renderElement("span", {}, "about-webrtc-type-local"),
+      renderText("span", ": ")
+    );
+  } else {
+    elements.push(
+      renderElement("span", {}, "about-webrtc-type-remote"),
+      renderText("span", ": ")
+    );
+  }
+
+  const time = new Date(timestamp).toTimeString();
+  elements.push(renderText("span", `${time} ${type} SSRC: ${ssrc}`));
+
   if (packetsReceived) {
-    s += ` ${string("received_label")}: ${packetsReceived} ${packets}`;
+    elements.push(
+      renderElement(
+        "span",
+        { className: "stat-label" },
+        "about-webrtc-received-label",
+        {
+          packets: packetsReceived,
+        }
+      )
+    );
 
     if (bytesReceived) {
-      s += ` (${(bytesReceived / 1024).toFixed(2)} Kb`;
+      let s = ` (${(bytesReceived / 1024).toFixed(2)} Kb`;
       if (local && history) {
-        s += ` , ~${estimateKbps(
+        s += ` , ${estimateKbps(
           timestamp,
           history[id].lastTimestamp,
           bytesReceived,
@@ -641,21 +761,48 @@ function renderTransportStats(
         )} Kbps`;
       }
       s += ")";
+      elements.push(renderText("span", s));
     }
 
-    s += ` ${string("lost_label")}: ${packetsLost} ${string(
-      "jitter_label"
-    )}: ${jitter}`;
+    elements.push(
+      renderElement(
+        "span",
+        { className: "stat-label" },
+        "about-webrtc-lost-label",
+        {
+          packets: packetsReceived,
+        }
+      )
+    );
+    elements.push(
+      renderElement(
+        "span",
+        { className: "stat-label" },
+        "about-webrtc-jitter-label",
+        {
+          jitter,
+        }
+      )
+    );
 
     if (roundTripTime) {
-      s += ` RTT: ${roundTripTime * 1000} ms`;
+      elements.push(renderText("span", ` RTT: ${roundTripTime * 1000} ms`));
     }
   } else if (packetsSent) {
-    s += ` ${string("sent_label")}: ${packetsSent} ${packets}`;
+    elements.push(
+      renderElement(
+        "span",
+        { className: "stat-label" },
+        "about-webrtc-sent-label",
+        {
+          packets: packetsSent,
+        }
+      )
+    );
     if (bytesSent) {
-      s += ` (${(bytesSent / 1024).toFixed(2)} Kb`;
+      let s = ` (${(bytesSent / 1024).toFixed(2)} Kb`;
       if (local && history) {
-        s += `, ~${estimateKbps(
+        s += `, ${estimateKbps(
           timestamp,
           history[id].lastTimestamp,
           bytesSent,
@@ -663,6 +810,7 @@ function renderTransportStats(
         )} Kbps`;
       }
       s += ")";
+      elements.push(renderText("span", s));
     }
   }
 
@@ -673,13 +821,13 @@ function renderTransportStats(
     history[id].lastTimestamp = timestamp;
   }
 
-  return renderText("p", s);
+  return renderElements("div", {}, elements);
 }
 
 function renderRawIceTable(caption, candidates) {
   const table = renderSimpleTable(
     "",
-    [string(caption)],
+    [caption],
     [...new Set(candidates.sort())].filter(i => i).map(i => [i])
   );
   table.className = "raw-candidate";
@@ -687,25 +835,25 @@ function renderRawIceTable(caption, candidates) {
 }
 
 function renderConfiguration(c) {
-  const provided = string("configuration_element_provided");
-  const notProvided = string("configuration_element_not_provided");
+  const provided = "about-webrtc-configuration-element-provided";
+  const notProvided = "about-webrtc-configuration-element-not-provided";
 
   // Create the text for a configuration field
   const cfg = (obj, key) => [
     renderElement("br"),
     `${key}: `,
-    key in obj ? obj[key] : renderText("i", notProvided),
+    key in obj ? obj[key] : renderElement("i", {}, notProvided),
   ];
 
   // Create the text for a fooProvided configuration field
   const pro = (obj, key) => [
     renderElement("br"),
     `${key}(`,
-    renderText("i", provided),
+    renderElement("i", {}, provided),
     `/`,
-    renderText("i", notProvided),
+    renderElement("i", {}, notProvided),
     `): `,
-    renderText("i", obj[`${key}Provided`] ? provided : notProvided),
+    renderElement("i", {}, obj[`${key}Provided`] ? provided : notProvided),
   ];
 
   return renderElements("div", { classList: "peer-connection-config" }, [
@@ -717,7 +865,7 @@ function renderConfiguration(c) {
     renderElement("br"),
     "iceServers: ",
     ...(!c.iceServers
-      ? [renderText("i", notProvided)]
+      ? [renderElement("i", {}, notProvided)]
       : c.iceServers.map(i =>
           renderElements("div", {}, [
             `urls: ${JSON.stringify(i.urls)}`,
@@ -730,33 +878,16 @@ function renderConfiguration(c) {
 
 function renderICEStats(report) {
   const iceDiv = renderElements("div", { id: "ice-stats: " + report.pcid }, [
-    renderText("h4", string("ice_stats_heading")),
+    renderElement("h4", {}, "about-webrtc-ice-stats-heading"),
   ]);
 
   // Render ICECandidate table
   {
-    const caption = renderElement("caption", { className: "no-print" });
-
-    // This takes the caption message with the replacement token, breaks
-    // it around the token, and builds the spans for each portion of the
-    // caption.  This is to allow localization to put the color name for
-    // the highlight wherever it is appropriate in the translated string
-    // while avoiding innerHTML warnings from eslint.
-    const [start, end] = string("trickle_caption_msg2").split(/%(?:1\$)?S/);
-
-    // only append span if non-whitespace chars present
-    if (/\S/.test(start)) {
-      caption.append(renderText("span", start));
-    }
-    caption.append(
-      renderText("span", string("trickle_highlight_color_name2"), {
-        className: "ice-trickled",
-      })
+    const caption = renderElement(
+      "caption",
+      { className: "no-print" },
+      "about-webrtc-trickle-caption-msg"
     );
-    // only append span if non-whitespace chars present
-    if (/\S/.test(end)) {
-      caption.append(renderText("span", end));
-    }
 
     // Generate ICE stats
     const stats = [];
@@ -833,16 +964,16 @@ function renderICEStats(report) {
     const statsTable = renderSimpleTable(
       caption,
       [
-        "ice_state",
-        "nominated",
-        "selected",
-        "local_candidate",
-        "remote_candidate",
-        "ice_component_id",
-        "priority",
-        "ice_pair_bytes_sent",
-        "ice_pair_bytes_received",
-      ].map(columnName => string(columnName)),
+        "about-webrtc-ice-state",
+        "about-webrtc-nominated",
+        "about-webrtc-selected",
+        "about-webrtc-local-candidate",
+        "about-webrtc-remote-candidate",
+        "about-webrtc-ice-component-id",
+        "about-webrtc-priority",
+        "about-webrtc-ice-pair-bytes-sent",
+        "about-webrtc-ice-pair-bytes-received",
+      ],
       stats.map(stat =>
         [
           stat.state,
@@ -903,25 +1034,34 @@ function renderICEStats(report) {
   // counts and the ICE candidate pair table above.
   iceDiv.append(
     renderElement("br"),
-    renderIceMetric("ice_restart_count_label", report.iceRestarts),
-    renderIceMetric("ice_rollback_count_label", report.iceRollbacks)
+    renderIceMetric("about-webrtc-ice-restart-count-label", report.iceRestarts),
+    renderIceMetric(
+      "about-webrtc-ice-rollback-count-label",
+      report.iceRollbacks
+    )
   );
 
   // Render raw ICECandidate section
   {
     const section = renderElements("div", {}, [
-      renderText("h4", string("raw_candidates_heading")),
+      renderElement("h4", {}, "about-webrtc-raw-candidates-heading"),
     ]);
     const foldSection = renderFoldableSection(section, {
-      showMsg: string("raw_cand_show_msg"),
-      hideMsg: string("raw_cand_hide_msg"),
+      showMsg: "about-webrtc-raw-cand-show-msg",
+      hideMsg: "about-webrtc-raw-cand-hide-msg",
     });
 
     // render raw candidates
     foldSection.append(
       renderElements("div", {}, [
-        renderRawIceTable("raw_local_candidate", report.rawLocalCandidates),
-        renderRawIceTable("raw_remote_candidate", report.rawRemoteCandidates),
+        renderRawIceTable(
+          "about-webrtc-raw-local-candidate",
+          report.rawLocalCandidates
+        ),
+        renderRawIceTable(
+          "about-webrtc-raw-remote-candidate",
+          report.rawRemoteCandidates
+        ),
       ])
     );
     section.append(foldSection);
@@ -932,7 +1072,7 @@ function renderICEStats(report) {
 
 function renderIceMetric(label, value) {
   return renderElements("div", {}, [
-    renderText("span", `${string(label)}: `, { className: "info-label" }),
+    renderElement("span", { className: "info-label" }, label),
     renderText("span", value, { className: "info-body" }),
   ]);
 }
@@ -987,7 +1127,11 @@ function renderUserPrefs() {
     },
     [
       renderElements("span", { className: "section-heading" }, [
-        renderText("h3", string("custom_webrtc_configuration_heading")),
+        renderElement(
+          "h3",
+          {},
+          "about-webrtc-custom-webrtc-configuration-heading"
+        ),
       ]),
       ...display,
     ]
@@ -1006,7 +1150,7 @@ function renderFoldableSection(parent, options = {}) {
 }
 
 function renderSimpleTable(caption, headings, data) {
-  const heads = headings.map(text => renderText("th", text));
+  const heads = headings.map(text => renderElement("th", {}, text));
   const renderCell = text => renderText("td", text);
 
   return renderElements("table", {}, [
@@ -1022,15 +1166,11 @@ class FoldEffect {
   constructor(
     target,
     {
-      showMsg = string("fold_show_msg"),
-      showHint = string("fold_show_hint"),
-      hideMsg = string("fold_hide_msg"),
-      hideHint = string("fold_hide_hint"),
+      showMsg = "about-webrtc-fold-show-msg",
+      hideMsg = "about-webrtc-fold-hide-msg",
     } = {}
   ) {
-    showMsg = `\u25BC ${showMsg}`;
-    hideMsg = `\u25B2 ${hideMsg}`;
-    Object.assign(this, { target, showMsg, showHint, hideMsg, hideHint });
+    Object.assign(this, { target, showMsg, hideMsg });
   }
 
   render() {
@@ -1050,14 +1190,12 @@ class FoldEffect {
 
   expand() {
     this.target.classList.remove("fold-closed");
-    this.trigger.setAttribute("title", this.hideHint);
-    this.trigger.textContent = this.hideMsg;
+    document.l10n.setAttributes(this.trigger, this.hideMsg);
   }
 
   collapse() {
     this.target.classList.add("fold-closed");
-    this.trigger.setAttribute("title", this.showHint);
-    this.trigger.textContent = this.showMsg;
+    document.l10n.setAttributes(this.trigger, this.showMsg);
   }
 
   static expandAll() {
