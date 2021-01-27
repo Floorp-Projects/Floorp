@@ -627,6 +627,10 @@ struct CompilationStencil : public BaseCompilationStencil {
     return ScriptStencilIterable(stencil, gcOutput);
   }
 
+  void setFunctionKey(BaseScript* lazy) {
+    functionKey = toFunctionKey(lazy->extent());
+  }
+
   void trace(JSTracer* trc);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)

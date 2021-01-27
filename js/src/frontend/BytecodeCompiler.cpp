@@ -1006,6 +1006,7 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
                                              Handle<BaseScript*> lazy,
                                              const Unit* units, size_t length) {
   MOZ_ASSERT(cx->compartment() == lazy->compartment());
+  MOZ_ASSERT(!stencil.isInitialStencil());
 
   // We can only compile functions whose parents have previously been
   // compiled, because compilation requires full information about the
@@ -1063,10 +1064,6 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   if (!compilationState.finish(cx, stencil)) {
     return false;
   }
-
-  // Record the FunctionKey in the BaseCompilationStencil since it does not
-  // contain any of the SourceExtents itself.
-  stencil.functionKey = BaseCompilationStencil::toFunctionKey(lazy->extent());
 
   assertException.reset();
   return true;
