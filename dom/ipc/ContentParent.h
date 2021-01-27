@@ -1465,6 +1465,14 @@ class ContentParent final
 
   void AssertAlive();
 
+  /**
+   * Called when a subprocess succesfully launches.
+   *
+   * May submit telemetry if the new number of content processes is greater
+   * than the previous maximum.
+   */
+  static void DidLaunchSubprocess();
+
  private:
   // Released in ActorDealloc; deliberately not exposed to the CC.
   RefPtr<ContentParent> mSelfRef;
@@ -1625,6 +1633,8 @@ class ContentParent final
   // A preference serializer used to share preferences with the process.
   // Cleared once startup is complete.
   UniquePtr<mozilla::ipc::SharedPreferenceSerializer> mPrefSerializer;
+
+  static uint32_t sMaxContentProcesses;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentParent, NS_CONTENTPARENT_IID)
