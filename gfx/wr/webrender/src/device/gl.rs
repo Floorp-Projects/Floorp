@@ -954,6 +954,8 @@ pub struct Capabilities {
     pub supports_multisampling: bool,
     /// Whether the function `glCopyImageSubData` is available.
     pub supports_copy_image_sub_data: bool,
+    /// Whether the RGBAF32 textures can be bound to framebuffers.
+    pub supports_color_buffer_float: bool,
     /// Whether the device supports persistently mapped buffers, via glBufferStorage.
     pub supports_buffer_storage: bool,
     /// Whether we are able to use `glBlitFramebuffers` with the draw fbo
@@ -1540,6 +1542,11 @@ impl Device {
             supports_extension(&extensions, "GL_ARB_copy_image")
         };
 
+        let supports_color_buffer_float = match gl.get_type() {
+            gl::GlType::Gl => true,
+            gl::GlType::Gles => supports_extension(&extensions, "GL_EXT_color_buffer_float"),
+        };
+
         let is_adreno = renderer_name.starts_with("Adreno");
 
         // There appears to be a driver bug on older versions of the Adreno
@@ -1652,6 +1659,7 @@ impl Device {
             capabilities: Capabilities {
                 supports_multisampling: false, //TODO
                 supports_copy_image_sub_data,
+                supports_color_buffer_float,
                 supports_buffer_storage,
                 supports_blit_to_texture_array,
                 supports_advanced_blend_equation,
