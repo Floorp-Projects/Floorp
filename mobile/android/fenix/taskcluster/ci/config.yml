@@ -17,7 +17,10 @@ treeherder:
         'Rap-P': 'Raptor power tests'
         'TL': 'Toolchain builds for Linux 64-bits'
 
-task-priority: highest
+task-priority:
+    by-project:
+        "fenix": highest
+        "staging-fenix": low
 
 taskgraph:
     register: fenix_taskgraph:register

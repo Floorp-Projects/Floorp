@@ -166,7 +166,7 @@ tasks:
                           routes:
                               $flattenDeep:
                                   - checks
-                                  - $if: 'level == "3"'
+                                  - $if: 'level == "3" || repoUrl == "https://github.com/mozilla-releng/staging-fenix"'
                                     then:
                                         - tc-treeherder.v2.${project}.${head_sha}
                                         # TODO Bug 1601928: Make this scope fork-friendly once ${project} is better defined. This will enable
