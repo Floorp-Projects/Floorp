@@ -59,6 +59,7 @@ interface nsIAuthPrompt2 : nsISupports
    *
    * @note   Exceptions thrown from this function will be treated like a
    *         return value of false.
+   * @deprecated use asyncPromptAuth
    */
   boolean promptAuth(in nsIChannel aChannel,
                      in uint32_t level,
