@@ -341,10 +341,13 @@ class WeakMap
   inline void forgetKey(UnbarrieredKey key);
 
   void barrierForInsert(Key k, const Value& v) {
+    MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(zone()));
+
     assertMapIsSameZoneWithValue(v);
     if (!mapColor) {
       return;
     }
+
     auto mapZone = JS::shadow::Zone::from(zone());
     if (!mapZone->needsIncrementalBarrier()) {
       return;

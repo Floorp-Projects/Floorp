@@ -491,10 +491,12 @@ void JS::Zone::beforeClearDelegateInternal(JSObject* wrapper,
                                            JSObject* delegate) {
   MOZ_ASSERT(js::gc::detail::GetDelegate(wrapper) == delegate);
   MOZ_ASSERT(needsIncrementalBarrier());
+  MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(this));
   GCMarker::fromTracer(barrierTracer())->severWeakDelegate(wrapper, delegate);
 }
 
 void JS::Zone::afterAddDelegateInternal(JSObject* wrapper) {
+  MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(this));
   JSObject* delegate = js::gc::detail::GetDelegate(wrapper);
   if (delegate) {
     GCMarker::fromTracer(barrierTracer())
