@@ -1183,6 +1183,10 @@ bool CompilationState::finish(JSContext* cx, CompilationStencil& stencil) {
     return false;
   }
 
+  if (!CopyVectorToSpan(cx, stencil.alloc, stencil.bigIntData, bigIntData)) {
+    return false;
+  }
+
   if (!CopyVectorToSpan(cx, stencil.alloc, stencil.scriptData, scriptData)) {
     return false;
   }
@@ -2017,7 +2021,7 @@ void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   json.endObject();
 
   json.beginObjectProperty("bigIntData");
-  for (size_t i = 0; i < bigIntData.length(); i++) {
+  for (size_t i = 0; i < bigIntData.size(); i++) {
     SprintfLiteral(index, "BigIntIndex(%zu)", i);
     GenericPrinter& out = json.beginStringProperty(index);
     bigIntData[i].dumpCharsNoQuote(out);
