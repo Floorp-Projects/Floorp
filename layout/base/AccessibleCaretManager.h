@@ -314,13 +314,17 @@ class AccessibleCaretManager {
   // nullptr either we are in gtest or PresShell::IsDestroying() is true.
   PresShell* MOZ_NON_OWNING_REF mPresShell = nullptr;
 
-  // First caret is attached to nsCaret in cursor mode, and is attached to
-  // selection highlight as the left caret in selection mode.
-  UniquePtr<AccessibleCaret> mFirstCaret;
+  struct Carets {
+    // First caret is attached to nsCaret in cursor mode, and is attached to
+    // selection highlight as the left caret in selection mode.
+    UniquePtr<AccessibleCaret> mFirst;
 
-  // Second caret is used solely in selection mode, and is attached to selection
-  // highlight as the right caret.
-  UniquePtr<AccessibleCaret> mSecondCaret;
+    // Second caret is used solely in selection mode, and is attached to
+    // selection highlight as the right caret.
+    UniquePtr<AccessibleCaret> mSecond;
+  };
+
+  Carets mCarets;
 
   // The caret being pressed or dragged.
   AccessibleCaret* mActiveCaret = nullptr;
