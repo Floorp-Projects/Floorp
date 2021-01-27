@@ -15,9 +15,9 @@ namespace mozilla {
 template <typename M>
 /* static */
 already_AddRefed<RemoteLazyInputStreamParent>
-RemoteLazyInputStreamParent::Create(nsIInputStream* aInputStream,
-                                    uint64_t aSize, uint64_t aChildID,
-                                    nsresult* aRv, M* aManager) {
+RemoteLazyInputStreamParent::CreateCommon(nsIInputStream* aInputStream,
+                                          uint64_t aSize, uint64_t aChildID,
+                                          nsresult* aRv, M* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aRv);
 
@@ -59,10 +59,14 @@ RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
   return nullptr;
 }
 
-template already_AddRefed<RemoteLazyInputStreamParent>
-RemoteLazyInputStreamParent::Create<mozilla::ipc::PBackgroundParent>(
-    nsIInputStream*, uint64_t, uint64_t, nsresult*,
-    mozilla::ipc::PBackgroundParent*);
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(nsIInputStream* aInputStream,
+                                    uint64_t aSize, uint64_t aChildID,
+                                    nsresult* aRv,
+                                    mozilla::ipc::PBackgroundParent* aManager) {
+  return CreateCommon(aInputStream, aSize, aChildID, aRv, aManager);
+}
 
 /* static */
 already_AddRefed<RemoteLazyInputStreamParent>
@@ -81,16 +85,27 @@ RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
   return nullptr;
 }
 
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(
+    nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
+    nsresult* aRv, mozilla::net::SocketProcessParent* aManager) {
+  return CreateCommon(aInputStream, aSize, aChildID, aRv, aManager);
+}
+
 template already_AddRefed<RemoteLazyInputStreamParent>
-RemoteLazyInputStreamParent::Create<mozilla::net::SocketProcessParent>(
+RemoteLazyInputStreamParent::CreateCommon<mozilla::net::SocketProcessParent>(
     nsIInputStream*, uint64_t, uint64_t, nsresult*,
     mozilla::net::SocketProcessParent*);
 
-template already_AddRefed<RemoteLazyInputStreamParent>
-RemoteLazyInputStreamParent::Create<dom::ContentParent>(nsIInputStream*,
-                                                        uint64_t, uint64_t,
-                                                        nsresult*,
-                                                        dom::ContentParent*);
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(nsIInputStream* aInputStream,
+                                    uint64_t aSize, uint64_t aChildID,
+                                    nsresult* aRv,
+                                    mozilla::dom::ContentParent* aManager) {
+  return CreateCommon(aInputStream, aSize, aChildID, aRv, aManager);
+}
 
 RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
     const nsID& aID, uint64_t aSize, dom::ContentParent* aManager)
