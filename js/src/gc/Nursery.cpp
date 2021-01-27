@@ -358,38 +358,50 @@ bool js::Nursery::isEmpty() const {
 
 #ifdef JS_GC_ZEAL
 void js::Nursery::enterZealMode() {
-  if (isEnabled()) {
-    MOZ_ASSERT(isEmpty());
-    if (isSubChunkMode()) {
-      // The poisoning call below must not race with background decommit,
-      // which could be attempting to decommit the currently-unused part of this
-      // chunk.
-      decommitTask.join();
-      {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!chunk(0).markPagesInUseHard(ChunkSize)) {
-          oomUnsafe.crash("Out of memory trying to extend chunk for zeal mode");
-        }
-      }
-
-      // It'd be simpler to poison the whole chunk, but we can't do that
-      // because the nursery might be partially used.
-      chunk(0).poisonRange(capacity_, ChunkSize - capacity_,
-                           JS_FRESH_NURSERY_PATTERN,
-                           MemCheckKind::MakeUndefined);
-    }
-    capacity_ = RoundUp(tunables().gcMaxNurseryBytes(), ChunkSize);
-    setCurrentEnd();
+  if (!isEnabled()) {
+    return;
   }
+
+  MOZ_ASSERT(isEmpty());
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+
+  if (isSubChunkMode()) {
+    // The poisoning call below must not race with background decommit,
+    // which could be attempting to decommit the currently-unused part of this
+    // chunk.
+    decommitTask.join();
+    {
+      if (!chunk(0).markPagesInUseHard(ChunkSize)) {
+        oomUnsafe.crash("Out of memory trying to extend chunk for zeal mode");
+      }
+    }
+
+    // It'd be simpler to poison the whole chunk, but we can't do that
+    // because the nursery might be partially used.
+    chunk(0).poisonRange(capacity_, ChunkSize - capacity_,
+                         JS_FRESH_NURSERY_PATTERN, MemCheckKind::MakeUndefined);
+  }
+
+  capacity_ = RoundUp(tunables().gcMaxNurseryBytes(), ChunkSize);
+
+  if (!decommitTask.reserveSpaceForBytes(capacity_)) {
+    oomUnsafe.crash("Nursery::enterZealMode");
+  }
+
+  setCurrentEnd();
 }
 
 void js::Nursery::leaveZealMode() {
-  if (isEnabled()) {
-    MOZ_ASSERT(isEmpty());
-    setCurrentChunk(0);
-    setStartPosition();
-    poisonAndInitCurrentChunk();
+  if (!isEnabled()) {
+    return;
   }
+
+  MOZ_ASSERT(isEmpty());
+
+  setCurrentChunk(0);
+  setStartPosition();
+  poisonAndInitCurrentChunk();
 }
 #endif  // JS_GC_ZEAL
 
