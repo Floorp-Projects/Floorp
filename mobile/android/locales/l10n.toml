@@ -232,6 +232,9 @@ exclude-multi-locale = [
     reference = "toolkit/locales/en-US/chrome/global/aboutWebrtc.properties"
     l10n = "{l}toolkit/chrome/global/aboutWebrtc.properties"
 
+[[paths]]
+    reference = "toolkit/locales/en-US/toolkit/about/*Webrtc.ftl"
+    l10n = "{l}toolkit/toolkit/about/*Webrtc.ftl"
 
 [[filters]]
     path = [
