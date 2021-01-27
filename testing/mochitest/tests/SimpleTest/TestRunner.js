@@ -975,6 +975,8 @@ var xOriginDispatchMap = {
     TestRunner.structuredLogger.activateBuffering,
   "structuredLogger.testStatus": TestRunner.structuredLogger.testStatus,
   "structuredLogger.info": TestRunner.structuredLogger.info,
+  "structuredLogger.warning": TestRunner.structuredLogger.warning,
+  "structuredLogger.error": TestRunner.structuredLogger.error,
   testFinished: TestRunner.testFinished,
   addAssertionCount: TestRunner.addAssertionCount,
 };
@@ -983,6 +985,7 @@ function xOriginTestRunnerHandler(event) {
   if (event.data.harnessType != "SimpleTest") {
     return;
   }
+  // Handles messages from xOriginRunner in SimpleTest.js.
   if (event.data.command in xOriginDispatchMap) {
     xOriginDispatchMap[event.data.command].apply(
       xOriginDispatchMap[event.data.applyOn],

@@ -73,6 +73,7 @@ let xOriginRunner = {
     this.expected = url.searchParams.get("expected");
   },
   callHarnessMethod(applyOn, command, ...params) {
+    // Message handled by xOriginTestRunnerHandler in TestRunner.js
     this.harnessWindow.postMessage(
       {
         harnessType: "SimpleTest",
@@ -100,15 +101,7 @@ let xOriginRunner = {
     this.callHarnessMethod("runner", "expectChildProcessCrash");
   },
   requestLongerTimeout(factor) {
-    this.harnessWindow.postMessage(
-      {
-        harnessType: "SimpleTest",
-        command: "requestLongerTimeout",
-        applyOn: "runner",
-        params: [factor],
-      },
-      "*"
-    );
+    this.callHarnessMethod("runner", "requestLongerTimeout", factor);
   },
   _lastAssertionCount: 0,
   testFinished(tests) {
@@ -121,6 +114,13 @@ let xOriginRunner = {
   structuredLogger: {
     info(msg) {
       xOriginRunner.callHarnessMethod("logger", "structuredLogger.info", msg);
+    },
+    warning(msg) {
+      xOriginRunner.callHarnessMethod(
+        "logger",
+        "structuredLogger.warning",
+        msg
+      );
     },
     error(msg) {
       xOriginRunner.callHarnessMethod("logger", "structuredLogger.error", msg);
