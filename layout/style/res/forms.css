@@ -626,7 +626,6 @@ input:is([type=reset], [type=button], [type=submit]):hover {
 button:active:hover,
 input:is([type=reset], [type=button], [type=submit], [type=color]):active:hover {
   border-style: inset;
-  background-color: ButtonFace;
 }
 
 ::file-selector-button:active:hover,
