@@ -410,6 +410,10 @@ class FunctionBox : public SuspendableContext {
   // ScriptStencil by copyUpdated* methods.
   bool isFunctionFieldCopiedToStencil : 1;
 
+  // True if this is part of initial compilation.
+  // False if this is part of delazification.
+  bool isInitialCompilation : 1;
+
   // End of fields.
 
   FunctionBox(JSContext* cx, SourceExtent extent, CompilationStencil& stencil,
@@ -419,8 +423,6 @@ class FunctionBox : public SuspendableContext {
 
   ScriptStencil& functionStencil() const;
   ScriptStencilExtra& functionExtraStencil() const;
-
-  bool hasFunctionExtraStencil() const;
 
   LexicalScope::ParserData* namedLambdaBindings() {
     return namedLambdaBindings_;
