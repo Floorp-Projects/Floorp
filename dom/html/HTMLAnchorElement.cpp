@@ -25,27 +25,13 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
 namespace mozilla::dom {
 
-#define ANCHOR_ELEMENT_FLAG_BIT(n_) \
-  NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
-
-// Anchor element specific bits
-enum {
-  // Indicates that a DNS Prefetch has been requested from this Anchor elem
-  HTML_ANCHOR_DNS_PREFETCH_REQUESTED = ANCHOR_ELEMENT_FLAG_BIT(0),
-
-  // Indicates that a DNS Prefetch was added to the deferral queue
-  HTML_ANCHOR_DNS_PREFETCH_DEFERRED = ANCHOR_ELEMENT_FLAG_BIT(1)
-};
-
-ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
-
-#undef ANCHOR_ELEMENT_FLAG_BIT
-
 // static
 const DOMTokenListSupportedToken HTMLAnchorElement::sSupportedRelValues[] = {
     "noreferrer", "noopener", nullptr};
 
-HTMLAnchorElement::~HTMLAnchorElement() = default;
+HTMLAnchorElement::~HTMLAnchorElement() {
+  SupportsDNSPrefetch::Destroyed(*this);
+}
 
 bool HTMLAnchorElement::IsInteractiveHTMLContent() const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||
@@ -79,20 +65,6 @@ bool HTMLAnchorElement::Draggable() const {
                       nsGkAtoms::_false, eIgnoreCase);
 }
 
-void HTMLAnchorElement::OnDNSPrefetchRequested() {
-  UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
-  SetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
-}
-
-void HTMLAnchorElement::OnDNSPrefetchDeferred() {
-  UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
-  SetFlags(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
-}
-
-bool HTMLAnchorElement::HasDeferredDNSPrefetchRequest() {
-  return HasFlag(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
-}
-
 nsresult HTMLAnchorElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
@@ -103,7 +75,7 @@ nsresult HTMLAnchorElement::BindToTree(BindContext& aContext,
   // Prefetch links
   if (IsInComposedDoc()) {
     aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
-    TryDNSPrefetch();
+    TryDNSPrefetch(*this);
   }
 
   return rv;
@@ -112,9 +84,9 @@ nsresult HTMLAnchorElement::BindToTree(BindContext& aContext,
 void HTMLAnchorElement::UnbindFromTree(bool aNullParent) {
   // Cancel any DNS prefetches
   // Note: Must come before ResetLinkState.  If called after, it will recreate
-  // mCachedURI based on data that is invalid - due to a call to GetHostname.
-  CancelDNSPrefetch(HTML_ANCHOR_DNS_PREFETCH_DEFERRED,
-                    HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+  // mCachedURI based on data that is invalid - due to a call to Link::GetURI()
+  // via GetURIForDNSPrefetch().
+  CancelDNSPrefetch(*this);
 
   // Without removing the link state we risk a dangling pointer
   // in the mStyledLinks hashtable
@@ -231,8 +203,7 @@ nsresult HTMLAnchorElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                           bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::href) {
-      CancelDNSPrefetch(HTML_ANCHOR_DNS_PREFETCH_DEFERRED,
-                        HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+      CancelDNSPrefetch(*this);
     }
   }
 
@@ -249,7 +220,7 @@ nsresult HTMLAnchorElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     if (aName == nsGkAtoms::href) {
       Link::ResetLinkState(aNotify, !!aValue);
       if (aValue && IsInComposedDoc()) {
-        TryDNSPrefetch();
+        TryDNSPrefetch(*this);
       }
     }
   }

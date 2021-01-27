@@ -102,34 +102,9 @@ class Link : public nsISupports {
   // This method nevers returns a null element.
   Element* GetElement() const { return mElement; }
 
-  /**
-   * DNS prefetch has been deferred until later, e.g. page load complete.
-   */
-  virtual void OnDNSPrefetchDeferred() { /*do nothing*/
-  }
-
-  /**
-   * DNS prefetch has been submitted to Host Resolver.
-   */
-  virtual void OnDNSPrefetchRequested() { /*do nothing*/
-  }
-
-  /**
-   * Checks if DNS Prefetching is ok
-   *
-   * @returns boolean
-   *          Defaults to true; should be overridden for specialised cases
-   */
-  virtual bool HasDeferredDNSPrefetchRequest() { return true; }
-
   virtual size_t SizeOfExcludingThis(mozilla::SizeOfState& aState) const;
 
   virtual bool ElementHasHref() const;
-
-  // This is called by HTMLAnchorElement and HTMLLinkElement.
-  void TryDNSPrefetch();
-  void CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
-                         nsWrapperCache::FlagsType aRequestedFlag);
 
   bool HasPendingLinkUpdate() const { return mHasPendingLinkUpdate; }
   void SetHasPendingLinkUpdate() { mHasPendingLinkUpdate = true; }
@@ -140,10 +115,6 @@ class Link : public nsISupports {
   // ClearHasPendingLinkUpdate().
   // If you change this, change also the method in nsINode.
   virtual void NodeInfoChanged(Document* aOldDoc) = 0;
-
-  bool IsInDNSPrefetch() { return mInDNSPrefetch; }
-  void SetIsInDNSPrefetch() { mInDNSPrefetch = true; }
-  void ClearIsInDNSPrefetch() { mInDNSPrefetch = false; }
 
  protected:
   virtual ~Link();
@@ -183,7 +154,6 @@ class Link : public nsISupports {
   bool mNeedsRegistration : 1;
   bool mRegistered : 1;
   bool mHasPendingLinkUpdate : 1;
-  bool mInDNSPrefetch : 1;
   bool mHistory : 1;
 };
 

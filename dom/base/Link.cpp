@@ -34,7 +34,6 @@ Link::Link(Element* aElement)
       mNeedsRegistration(false),
       mRegistered(false),
       mHasPendingLinkUpdate(false),
-      mInDNSPrefetch(false),
       mHistory(true) {
   MOZ_ASSERT(mElement, "Must have an element");
 }
@@ -45,15 +44,11 @@ Link::Link()
       mNeedsRegistration(false),
       mRegistered(false),
       mHasPendingLinkUpdate(false),
-      mInDNSPrefetch(false),
       mHistory(false) {}
 
 Link::~Link() {
   // !mElement is for mock_Link.
   MOZ_ASSERT(!mElement || !mElement->IsInComposedDoc());
-  if (IsInDNSPrefetch()) {
-    HTMLDNSPrefetch::LinkDestroyed(this);
-  }
   UnregisterFromHistory();
 }
 
@@ -61,28 +56,6 @@ bool Link::ElementHasHref() const {
   return mElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||
          (!mElement->IsHTMLElement() &&
           mElement->HasAttr(kNameSpaceID_XLink, nsGkAtoms::href));
-}
-
-void Link::TryDNSPrefetch() {
-  MOZ_ASSERT(mElement->IsInComposedDoc());
-  if (ElementHasHref() && HTMLDNSPrefetch::IsAllowed(mElement->OwnerDoc())) {
-    HTMLDNSPrefetch::Prefetch(this, HTMLDNSPrefetch::Priority::Low);
-  }
-}
-
-void Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
-                             nsWrapperCache::FlagsType aRequestedFlag) {
-  // If prefetch was deferred, clear flag and move on
-  if (mElement->HasFlag(aDeferredFlag)) {
-    mElement->UnsetFlags(aDeferredFlag);
-    // Else if prefetch was requested, clear flag and send cancellation
-  } else if (mElement->HasFlag(aRequestedFlag)) {
-    mElement->UnsetFlags(aRequestedFlag);
-    // Possible that hostname could have changed since binding, but since this
-    // covers common cases, most DNS prefetch requests will be canceled
-    HTMLDNSPrefetch::CancelPrefetch(this, HTMLDNSPrefetch::Priority::Low,
-                                    NS_ERROR_ABORT);
-  }
 }
 
 void Link::VisitedQueryFinished(bool aVisited) {
