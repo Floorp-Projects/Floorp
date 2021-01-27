@@ -359,6 +359,18 @@
     "releaseChannelCollection": "opt-out",
     "description": "A count of the number of content processes, collected every five minutes."
   },
+  "CONTENT_PROCESS_MAX": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["barret@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "98",
+    "bug_numbers": [1688079],
+    "kind": "linear",
+    "high": 500,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "The maximum number of content processes, submitted when a new maximum is reached."
+  },
   "CYCLE_COLLECTOR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
