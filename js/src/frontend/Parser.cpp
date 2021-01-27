@@ -10464,6 +10464,10 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // BigIntLiteralSuffix (the trailing "n").  Note that NonDecimalIntegerLiteral
   // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
+  if (chars.length() > UINT32_MAX) {
+    ReportAllocationOverflow(cx_);
+    return null();
+  }
 
   BigIntIndex index(this->stencil_.bigIntData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
@@ -10475,7 +10479,8 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
     return null();
   }
 
-  if (!this->stencil_.bigIntData[index].init(this->cx_, chars)) {
+  if (!this->stencil_.bigIntData[index].init(this->cx_, this->stencilAlloc(),
+                                             chars)) {
     return null();
   }
 

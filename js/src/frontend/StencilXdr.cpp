@@ -312,25 +312,13 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::BigInt(XDRState<mode>* xdr,
                                           BigIntStencil& stencil) {
-  uint64_t length;
-
+  uint32_t size;
   if (mode == XDR_ENCODE) {
-    length = stencil.length_;
+    size = stencil.source_.size();
   }
+  MOZ_TRY(xdr->codeUint32(&size));
 
-  MOZ_TRY(xdr->codeUint64(&length));
-
-  XDRTranscodeString<char16_t> chars;
-
-  if (mode == XDR_DECODE) {
-    stencil.buf_ = xdr->cx()->template make_pod_array<char16_t>(length);
-    if (!stencil.buf_) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
-    stencil.length_ = length;
-  }
-
-  return xdr->codeChars(stencil.buf_.get(), stencil.length_);
+  return XDRSpanContent(xdr, stencil.source_, size);
 }
 
 template <XDRMode mode>
