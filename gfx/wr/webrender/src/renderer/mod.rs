@@ -1059,11 +1059,7 @@ impl Renderer {
         // On other GL platforms, like macOS or Android, creating many PBOs is very inefficient.
         // This is what happens in GPU cache updates in PBO path. Instead, we switch everything
         // except software GL to use the GPU scattered updates.
-        let supports_scatter = match gl_type {
-            gl::GlType::Gl => true,
-            gl::GlType::Gles => device.supports_extension("GL_EXT_color_buffer_float"),
-        };
-
+        let supports_scatter = device.get_capabilities().supports_color_buffer_float;
         let gpu_cache_texture = gpu_cache::GpuCacheTexture::new(
             &mut device,
             supports_scatter && !is_software,
