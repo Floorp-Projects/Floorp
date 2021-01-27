@@ -2445,6 +2445,14 @@ class nsContentUtils {
    */
   static Document* GetRootDocument(Document* aDoc);
 
+  /**
+   * Returns true if aContext and the current pointer lock document
+   * have common top BrowsingContext.
+   * Note that this method returns true only if caller is in the same process
+   * as pointer lock document.
+   */
+  static bool IsInPointerLockContext(mozilla::dom::BrowsingContext* aContext);
+
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
   static void GetMetaText(nsAString& text);

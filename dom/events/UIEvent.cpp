@@ -11,7 +11,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/PointerLockManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "nsCOMPtr.h"
@@ -33,7 +32,7 @@ UIEvent::UIEvent(EventTarget* aOwner, nsPresContext* aPresContext,
       mLayerPoint(0, 0),
       mPagePoint(0, 0),
       mMovementPoint(0, 0),
-      mIsPointerLocked(PointerLockManager::IsLocked()),
+      mIsPointerLocked(EventStateManager::sIsPointerLocked),
       mLastClientPoint(EventStateManager::sLastClientPoint) {
   if (aEvent) {
     mEventIsInternal = false;
