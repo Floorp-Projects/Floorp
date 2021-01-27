@@ -4527,10 +4527,7 @@ impl Renderer {
                     if !tile.dirty_rect.is_empty() {
                         if let CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { id, .. } } =
                             tile.surface {
-                            let valid_rect = tile.valid_rect
-                                .round()
-                                .to_i32();
-                            compositor.invalidate_tile(id, valid_rect);
+                            compositor.invalidate_tile(id);
                         }
                     }
                 }
@@ -4540,9 +4537,8 @@ impl Renderer {
             // composition to happen only when the external surface is updated.
             // See update_external_native_surfaces for more details.
             for surface in &frame.composite_state.external_surfaces {
-                if let Some((native_surface_id, size)) = surface.update_params {
-                    let surface_rect = size.into();
-                    compositor.invalidate_tile(NativeTileId { surface_id: native_surface_id, x: 0, y: 0 }, surface_rect);
+                if let Some((native_surface_id, _)) = surface.update_params {
+                    compositor.invalidate_tile(NativeTileId { surface_id: native_surface_id, x: 0, y: 0 });
                 }
             }
             // Finally queue native surfaces for early composition, if applicable. By now,
@@ -6128,7 +6124,7 @@ impl CompositeState {
                 surface.image_rendering,
             );
         }
-        compositor.start_compositing(dirty_rects, &[]);
+        compositor.start_compositing(dirty_rects);
     }
 }
 

@@ -53,8 +53,7 @@ bool RenderCompositorSWGL::BeginFrame() {
   return true;
 }
 
-bool RenderCompositorSWGL::AllocateMappedBuffer(
-    const wr::DeviceIntRect* aOpaqueRects, size_t aNumOpaqueRects) {
+bool RenderCompositorSWGL::AllocateMappedBuffer() {
   // Request a new draw target to use from the widget...
   MOZ_ASSERT(!mDT);
   layers::BufferMode bufferMode = layers::BufferMode::BUFFERED;
@@ -114,31 +113,11 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
   MOZ_ASSERT(mMappedData != nullptr && mMappedStride > 0);
   wr_swgl_init_default_framebuffer(mContext, bounds.x, bounds.y, bounds.width,
                                    bounds.height, mMappedStride, mMappedData);
-
-  LayoutDeviceIntRegion opaque;
-  for (size_t i = 0; i < aNumOpaqueRects; i++) {
-    const auto& rect = aOpaqueRects[i];
-    opaque.OrWith(LayoutDeviceIntRect(rect.origin.x, rect.origin.y,
-                                      rect.size.width, rect.size.height));
-  }
-
-  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
-      BackendType::SKIA, mMappedData, bounds.Size().ToUnknownSize(),
-      mMappedStride, SurfaceFormat::B8G8R8A8, false);
-
-  LayoutDeviceIntRegion clear;
-  clear.Sub(mRegion, opaque);
-  for (auto iter = clear.RectIter(); !iter.Done(); iter.Next()) {
-    dt->ClearRect(
-        IntRectToRect((iter.Get() - bounds.TopLeft()).ToUnknownRect()));
-  }
-
   return true;
 }
 
 void RenderCompositorSWGL::StartCompositing(
-    const wr::DeviceIntRect* aDirtyRects, size_t aNumDirtyRects,
-    const wr::DeviceIntRect* aOpaqueRects, size_t aNumOpaqueRects) {
+    const wr::DeviceIntRect* aDirtyRects, size_t aNumDirtyRects) {
   if (mDT) {
     // Cancel any existing buffers that might accidentally be left from updates
     CommitMappedBuffer(false);
@@ -160,7 +139,7 @@ void RenderCompositorSWGL::StartCompositing(
   // Now that the dirty rects have been supplied and the composition region
   // is known, allocate and install a framebuffer encompassing the composition
   // region.
-  if (!AllocateMappedBuffer(aOpaqueRects, aNumOpaqueRects)) {
+  if (!AllocateMappedBuffer()) {
     gfxCriticalNote
         << "RenderCompositorSWGL failed mapping default framebuffer";
     // If allocation of the mapped default framebuffer failed, then just install

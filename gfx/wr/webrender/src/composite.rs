@@ -981,7 +981,6 @@ pub trait Compositor {
     fn invalidate_tile(
         &mut self,
         _id: NativeTileId,
-        _valid_rect: DeviceIntRect
     ) {}
 
     /// Bind this surface such that WR can issue OpenGL commands
@@ -1032,12 +1031,9 @@ pub trait Compositor {
     /// native surfaces have been added, thus it is safe to start compositing
     /// valid surfaces. The dirty rects array allows native compositors that
     /// support partial present to skip copying unchanged areas.
-    /// Optionally provides a set of rectangles for the areas known to be
-    /// opaque, this is currently only computed if the caller is SwCompositor.
     fn start_compositing(
         &mut self,
         _dirty_rects: &[DeviceIntRect],
-        _opaque_rects: &[DeviceIntRect],
     ) {}
 
     /// Commit any changes in the compositor tree for this frame. WR calls
