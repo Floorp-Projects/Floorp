@@ -511,11 +511,11 @@ void AssertValidStringPtr(JSContext* cx, JSString* str);
 void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym);
 void AssertValidValue(JSContext* cx, Value* v);
 
-void MarkValueFromJit(JSRuntime* rt, Value* vp);
-void MarkStringFromJit(JSRuntime* rt, JSString** stringp);
-void MarkObjectFromJit(JSRuntime* rt, JSObject** objp);
-void MarkShapeFromJit(JSRuntime* rt, Shape** shapep);
-void MarkObjectGroupFromJit(JSRuntime* rt, ObjectGroup** groupp);
+void JitValuePreWriteBarrier(JSRuntime* rt, Value* vp);
+void JitStringPreWriteBarrier(JSRuntime* rt, JSString** stringp);
+void JitObjectPreWriteBarrier(JSRuntime* rt, JSObject** objp);
+void JitShapePreWriteBarrier(JSRuntime* rt, Shape** shapep);
+void JitObjectGroupPreWriteBarrier(JSRuntime* rt, ObjectGroup** groupp);
 
 bool ObjectIsCallable(JSObject* obj);
 bool ObjectIsConstructor(JSObject* obj);
