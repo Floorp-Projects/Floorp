@@ -61,6 +61,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/PointerLockManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
@@ -4647,11 +4648,8 @@ void nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
 }
 
 static void MaybeUnlockPointer(BrowsingContext* aCurrentFocusedContext) {
-  nsCOMPtr<Document> pointerLockedDoc =
-      do_QueryReferent(EventStateManager::sPointerLockedDoc);
-  if (pointerLockedDoc &&
-      !nsContentUtils::IsInPointerLockContext(aCurrentFocusedContext)) {
-    Document::UnlockPointer();
+  if (!PointerLockManager::IsInLockContext(aCurrentFocusedContext)) {
+    PointerLockManager::Unlock();
   }
 }
 
@@ -4881,8 +4879,8 @@ uint64_t nsFocusManager::GenerateFocusActionId() {
 }
 
 static bool IsInPointerLockContext(nsPIDOMWindowOuter* aWin) {
-  return nsContentUtils::IsInPointerLockContext(
-      aWin ? aWin->GetBrowsingContext() : nullptr);
+  return PointerLockManager::IsInLockContext(aWin ? aWin->GetBrowsingContext()
+                                                  : nullptr);
 }
 
 void nsFocusManager::SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow) {
