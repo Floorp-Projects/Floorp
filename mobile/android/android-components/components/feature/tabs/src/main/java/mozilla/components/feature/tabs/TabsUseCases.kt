@@ -81,6 +81,20 @@ class TabsUseCases(
         operator fun invoke(sessionId: String)
 
         /**
+         * Removes the session with the provided ID. This method
+         * has no effect if the session doesn't exist.
+         *
+         * @param sessionId The ID of the session to remove.
+         * @param selectParentIfExists Whether or not to select the parent tab
+         * of the removed tab if a parent exists. Note that the default implementation
+         * of this method will ignore [selectParentIfExists] and never select a parent.
+         * This is a temporary workaround to prevent additional API breakage for
+         * subtypes other than [DefaultRemoveTabUseCase]. The default implementation
+         * should be removed together with invoke(Session).
+         */
+        operator fun invoke(sessionId: String, selectParentIfExists: Boolean) = invoke(sessionId)
+
+        /**
          * Removes the provided session.
          *
          * @param session The session to remove.
@@ -106,6 +120,21 @@ class TabsUseCases(
             val session = sessionManager.findSessionById(sessionId)
             if (session != null) {
                 invoke(session)
+            }
+        }
+
+        /**
+         * Removes the session with the provided ID. This method
+         * has no effect if the session doesn't exist.
+         *
+         * @param sessionId The ID of the session to remove.
+         * @param selectParentIfExists Whether or not to select the parent tab
+         * of the removed tab if a parent exists.
+         */
+        override operator fun invoke(sessionId: String, selectParentIfExists: Boolean) {
+            val session = sessionManager.findSessionById(sessionId)
+            if (session != null) {
+                sessionManager.remove(session, selectParentIfExists)
             }
         }
 
