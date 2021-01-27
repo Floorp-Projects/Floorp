@@ -106,7 +106,9 @@ char* DataOffer::GetData(wl_display* aDisplay, const char* aMimeType,
   LOGCLIP(("DataOffer::GetData() mime %s\n", aMimeType));
 
   int pipe_fd[2];
-  if (pipe(pipe_fd) == -1) return nullptr;
+  if (pipe(pipe_fd) == -1) {
+    return nullptr;
+  }
 
   if (!RequestDataTransfer(aMimeType, pipe_fd[1])) {
     NS_WARNING("DataOffer::RequestDataTransfer() failed!");
@@ -117,33 +119,6 @@ char* DataOffer::GetData(wl_display* aDisplay, const char* aMimeType,
 
   close(pipe_fd[1]);
   wl_display_flush(aDisplay);
-
-  struct pollfd fds;
-  fds.fd = pipe_fd[0];
-  fds.events = POLLIN;
-  int pollReturn = -1;
-
-#define MAX_CLIPBOARD_POLL_ATTEMPTS 10
-  for (int i = 0; i < MAX_CLIPBOARD_POLL_ATTEMPTS; i++) {
-    pollReturn = poll(&fds, 1, kClipboardTimeout / 1000);
-    // ret > 0 means we have data available
-    // ret = 0 means poll timeout expired
-    // ret < 0 means poll failed with error
-    if (pollReturn >= 0) {
-      break;
-    }
-    // We should try again for EINTR/EAGAIN errors,
-    // quit for all other ones.
-    if (errno != EINTR && errno != EAGAIN) {
-      break;
-    }
-  }
-  // Quit for poll error() and timeout
-  if (pollReturn <= 0) {
-    NS_WARNING("DataOffer::RequestDataTransfer() poll timeout!");
-    close(pipe_fd[0]);
-    return nullptr;
-  }
 
   GIOChannel* channel = g_io_channel_unix_new(pipe_fd[0]);
   GError* error = nullptr;
