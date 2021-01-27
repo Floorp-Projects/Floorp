@@ -54,17 +54,6 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
   mutable bool mShared;
   mutable bool mComputed;
 
-  // This class stores a pointer to a typed array's data that might be unstable
-  // across a GC. Specifically, a typed array can store its data inline in the
-  // header, which can move during compaction. This member will prevent this
-  // class from being held across a GC.
-  //
-  // Note that because this class has a nontrivial destructor, it will be
-  // considered live for its entire scope. Use the below Reset() method to mark
-  // the end of its live region if you get a false positive hazard (false
-  // alarm) after the data pointer is last used.
-  JS::AutoCheckCannotGC mNoGC;
-
  public:
   inline bool Init(JSObject* obj) {
     MOZ_ASSERT(!inited());
@@ -147,7 +136,6 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
     mComputed = true;
   }
 
-  // See the mNoGC comment above.
   inline void Reset() {
     // This method mostly exists to inform the GC rooting hazard analysis that
     // the variable can be considered dead, at least until you do anything else
