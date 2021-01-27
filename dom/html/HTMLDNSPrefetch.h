@@ -4,35 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHTMLDNSPrefetch_h___
-#define nsHTMLDNSPrefetch_h___
+#ifndef mozilla_dom_HTMLDNSPrefetch_h___
+#define mozilla_dom_HTMLDNSPrefetch_h___
 
 #include "nsCOMPtr.h"
 #include "nsIRequest.h"
 #include "nsString.h"
-#include "nsWeakReference.h"
 
 class nsITimer;
 namespace mozilla {
 
 class OriginAttributes;
 
-namespace dom {
-class Document;
-class Link;
-}  // namespace dom
-
 namespace net {
 class NeckoParent;
 }  // namespace net
-}  // namespace mozilla
 
-class nsHTMLDNSPrefetch {
+namespace dom {
+class Document;
+class Link;
+
+class HTMLDNSPrefetch {
  public:
   // The required aDocument parameter is the context requesting the prefetch -
   // under certain circumstances (e.g. headers, or security context) associated
   // with the context the prefetch will not be performed.
-  static bool IsAllowed(mozilla::dom::Document* aDocument);
+  static bool IsAllowed(Document* aDocument);
 
   static nsresult Initialize();
   static nsresult Shutdown();
@@ -54,33 +51,35 @@ class nsHTMLDNSPrefetch {
     Medium,
     High,
   };
-  static nsresult Prefetch(mozilla::dom::Link* aElement, Priority);
+  static nsresult Prefetch(Link* aElement, Priority);
   static nsresult Prefetch(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
+      const OriginAttributes& aPartitionedPrincipalOriginAttributes,
       nsIRequest::TRRMode aTRRMode, Priority);
   static nsresult CancelPrefetch(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
+      const OriginAttributes& aPartitionedPrincipalOriginAttributes,
       nsIRequest::TRRMode aTRRMode, Priority, nsresult aReason);
-  static nsresult CancelPrefetch(mozilla::dom::Link* aElement,
-                                 Priority, nsresult aReason);
+  static nsresult CancelPrefetch(Link* aElement, Priority, nsresult aReason);
 
-  static void LinkDestroyed(mozilla::dom::Link* aLink);
+  static void LinkDestroyed(Link* aLink);
 
  private:
   static uint32_t PriorityToDNSServiceFlags(Priority);
 
   static nsresult Prefetch(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
+      const OriginAttributes& aPartitionedPrincipalOriginAttributes,
       uint32_t flags);
   static nsresult CancelPrefetch(
       const nsAString& hostname, bool isHttps,
-      const mozilla::OriginAttributes& aPartitionedPrincipalOriginAttributes,
+      const OriginAttributes& aPartitionedPrincipalOriginAttributes,
       uint32_t flags, nsresult aReason);
 
-  friend class mozilla::net::NeckoParent;
+  friend class net::NeckoParent;
 };
+
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

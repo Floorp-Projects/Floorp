@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLDNSPrefetch.h"
+#include "HTMLDNSPrefetch.h"
 
 #include "base/basictypes.h"
 #include "mozilla/dom/Element.h"
@@ -38,9 +38,10 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
 using namespace mozilla::net;
+
+namespace mozilla {
+namespace dom {
 
 class NoOpDNSListener final : public nsIDNSListener {
   // This class exists to give a safe callback no-op DNSListener
@@ -107,7 +108,7 @@ static nsIDNSService* sDNSService = nullptr;
 static DeferredDNSPrefetches* sPrefetches = nullptr;
 static NoOpDNSListener* sDNSListener = nullptr;
 
-nsresult nsHTMLDNSPrefetch::Initialize() {
+nsresult HTMLDNSPrefetch::Initialize() {
   if (sInitialized) {
     NS_WARNING("Initialize() called twice");
     return NS_OK;
@@ -127,7 +128,7 @@ nsresult nsHTMLDNSPrefetch::Initialize() {
   return NS_OK;
 }
 
-nsresult nsHTMLDNSPrefetch::Shutdown() {
+nsresult HTMLDNSPrefetch::Shutdown() {
   if (!sInitialized) {
     NS_WARNING("Not Initialized");
     return NS_OK;
@@ -155,7 +156,7 @@ static bool EnsureDNSService() {
   return !!sDNSService;
 }
 
-bool nsHTMLDNSPrefetch::IsAllowed(Document* aDocument) {
+bool HTMLDNSPrefetch::IsAllowed(Document* aDocument) {
   // There is no need to do prefetch on non UI scenarios such as XMLHttpRequest.
   return aDocument->IsDNSPrefetchAllowed() && aDocument->GetWindow();
 }
@@ -170,7 +171,7 @@ static uint32_t GetDNSFlagsFromLink(Link* aElement) {
   return nsIDNSService::GetFlagsFromTRRMode(mode);
 }
 
-uint32_t nsHTMLDNSPrefetch::PriorityToDNSServiceFlags(Priority aPriority) {
+uint32_t HTMLDNSPrefetch::PriorityToDNSServiceFlags(Priority aPriority) {
   switch (aPriority) {
     case Priority::Low:
       return uint32_t(nsIDNSService::RESOLVE_PRIORITY_LOW);
@@ -183,7 +184,7 @@ uint32_t nsHTMLDNSPrefetch::PriorityToDNSServiceFlags(Priority aPriority) {
   return 0u;
 }
 
-nsresult nsHTMLDNSPrefetch::Prefetch(Link* aElement, Priority aPriority) {
+nsresult HTMLDNSPrefetch::Prefetch(Link* aElement, Priority aPriority) {
   if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -192,7 +193,7 @@ nsresult nsHTMLDNSPrefetch::Prefetch(Link* aElement, Priority aPriority) {
       aElement);
 }
 
-nsresult nsHTMLDNSPrefetch::Prefetch(
+nsresult HTMLDNSPrefetch::Prefetch(
     const nsAString& hostname, bool isHttps,
     const OriginAttributes& aPartitionedPrincipalOriginAttributes,
     uint32_t flags) {
@@ -235,7 +236,7 @@ nsresult nsHTMLDNSPrefetch::Prefetch(
   return NS_OK;
 }
 
-nsresult nsHTMLDNSPrefetch::Prefetch(
+nsresult HTMLDNSPrefetch::Prefetch(
     const nsAString& hostname, bool isHttps,
     const OriginAttributes& aPartitionedPrincipalOriginAttributes,
     nsIRequest::TRRMode aMode, Priority aPriority) {
@@ -244,8 +245,8 @@ nsresult nsHTMLDNSPrefetch::Prefetch(
                       PriorityToDNSServiceFlags(aPriority));
 }
 
-nsresult nsHTMLDNSPrefetch::CancelPrefetch(Link* aElement, Priority aPriority,
-                                           nsresult aReason) {
+nsresult HTMLDNSPrefetch::CancelPrefetch(Link* aElement, Priority aPriority,
+                                         nsresult aReason) {
   if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -273,7 +274,7 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(Link* aElement, Priority aPriority,
   return CancelPrefetch(hostname, isHttps, oa, flags, aReason);
 }
 
-nsresult nsHTMLDNSPrefetch::CancelPrefetch(
+nsresult HTMLDNSPrefetch::CancelPrefetch(
     const nsAString& hostname, bool isHttps,
     const OriginAttributes& aPartitionedPrincipalOriginAttributes,
     uint32_t flags, nsresult aReason) {
@@ -314,7 +315,7 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(
   return rv;
 }
 
-nsresult nsHTMLDNSPrefetch::CancelPrefetch(
+nsresult HTMLDNSPrefetch::CancelPrefetch(
     const nsAString& hostname, bool isHttps,
     const OriginAttributes& aPartitionedPrincipalOriginAttributes,
     nsIRequest::TRRMode aTRRMode, Priority aPriority, nsresult aReason) {
@@ -325,7 +326,7 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(
                         aReason);
 }
 
-void nsHTMLDNSPrefetch::LinkDestroyed(Link* aLink) {
+void HTMLDNSPrefetch::LinkDestroyed(Link* aLink) {
   MOZ_ASSERT(aLink->IsInDNSPrefetch());
   if (sPrefetches) {
     // Clean up all the possible links at once.
@@ -379,7 +380,7 @@ nsresult DeferredDNSPrefetches::Add(uint32_t flags, Link* aElement) {
     mTimerArmed = true;
     mTimer->InitWithNamedFuncCallback(
         Tick, this, 2000, nsITimer::TYPE_ONE_SHOT,
-        "nsHTMLDNSPrefetch::DeferredDNSPrefetches::Tick");
+        "HTMLDNSPrefetch::DeferredDNSPrefetches::Tick");
   }
 
   return NS_OK;
@@ -577,3 +578,6 @@ DeferredDNSPrefetches::Observe(nsISupports* subject, const char* topic,
 
   return NS_OK;
 }
+
+}  // namespace dom
+}  // namespace mozilla

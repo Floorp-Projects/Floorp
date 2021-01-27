@@ -44,7 +44,7 @@
 #include "mozilla/LoadContext.h"
 #include "mozilla/MozPromise.h"
 #include "nsPrintfCString.h"
-#include "nsHTMLDNSPrefetch.h"
+#include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "nsEscape.h"
 #include "SerializedLoadContext.h"
 #include "nsAuthInformationHolder.h"
@@ -540,7 +540,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
 mozilla::ipc::IPCResult NeckoParent::RecvHTMLDNSPrefetch(
     const nsString& hostname, const bool& isHttps,
     const OriginAttributes& aOriginAttributes, const uint32_t& flags) {
-  nsHTMLDNSPrefetch::Prefetch(hostname, isHttps, aOriginAttributes, flags);
+  HTMLDNSPrefetch::Prefetch(hostname, isHttps, aOriginAttributes, flags);
   return IPC_OK();
 }
 
@@ -548,8 +548,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvCancelHTMLDNSPrefetch(
     const nsString& hostname, const bool& isHttps,
     const OriginAttributes& aOriginAttributes, const uint32_t& flags,
     const nsresult& reason) {
-  nsHTMLDNSPrefetch::CancelPrefetch(hostname, isHttps, aOriginAttributes, flags,
-                                    reason);
+  HTMLDNSPrefetch::CancelPrefetch(hostname, isHttps, aOriginAttributes, flags,
+                                  reason);
   return IPC_OK();
 }
 
