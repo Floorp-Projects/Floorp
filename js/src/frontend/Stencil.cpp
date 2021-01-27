@@ -424,7 +424,7 @@ static bool InstantiateScopes(JSContext* cx, CompilationInput& input,
 static bool InstantiateScriptStencils(JSContext* cx,
                                       const CompilationStencil& stencil,
                                       CompilationGCOutput& gcOutput) {
-  MOZ_ASSERT(stencil.input.lazy == nullptr);
+  MOZ_ASSERT(stencil.isInitialStencil());
 
   Rooted<JSFunction*> fun(cx);
   for (auto item :
@@ -485,7 +485,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   MOZ_ASSERT(scriptStencil.hasSharedData());
   MOZ_ASSERT(stencil.sharedData.get(CompilationStencil::TopLevelIndex));
 
-  if (input.lazy) {
+  if (!stencil.isInitialStencil()) {
+    MOZ_ASSERT(input.lazy);
     RootedScript script(cx, JSScript::CastFromLazy(input.lazy));
     if (!JSScript::fullyInitFromStencil(cx, input, stencil, gcOutput, script,
                                         CompilationStencil::TopLevelIndex)) {
@@ -691,7 +692,8 @@ bool CompilationStencil::instantiateStencilsAfterPreparation(
     const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   // Distinguish between the initial (possibly lazy) compile and any subsequent
   // delazification compiles. Delazification will update existing GC things.
-  bool isInitialParse = (input.lazy == nullptr);
+  bool isInitialParse = stencil.isInitialStencil();
+  MOZ_ASSERT(stencil.isInitialStencil() == !input.lazy);
 
   // Phase 1: Instantate JSAtoms.
   if (!InstantiateAtoms(cx, input, stencil)) {
