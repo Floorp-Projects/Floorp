@@ -22,7 +22,7 @@ add_task(async function() {
   const doc = gPanelWindow.document;
 
   // check that both hosts appear in the storage tree
-  checkTree(doc, "sessionStorage", "http://example.com");
+  checkTree(doc, ["sessionStorage", "http://example.com"]);
   // check the table for values
   await selectTreeItem(["sessionStorage", "http://example.com"]);
   checkStorageData("foo", "bar");
@@ -43,7 +43,3 @@ add_task(async function() {
   await selectTreeItem(["sessionStorage", "http://example.net"]);
   checkStorageData("lorem2", "ipsum2");
 });
-
-function buildURLWithContent(domain, html) {
-  return `http://${domain}/document-builder.sjs?html=${encodeURI(html)}`;
-}
