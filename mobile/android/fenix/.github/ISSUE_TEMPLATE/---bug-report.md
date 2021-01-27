@@ -18,6 +18,6 @@ assignees: ''
 
 ### Device information
 
-* Android device: ?
-* Fenix version: ?
+* Device vendor / model and Android version: ?
+* Firefox for Android version: ? (go to Settings -> About Firefox)
  
