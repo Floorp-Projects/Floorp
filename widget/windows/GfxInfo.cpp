@@ -1851,13 +1851,11 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 #ifdef EARLY_BETA_OR_EARLIER
 #  if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || \
       defined(__i386) || defined(__amd64__)
-    APPEND_TO_DRIVER_BLOCKLIST2_EXT(
-        OperatingSystem::Windows, ScreenSizeStatus::SmallAndMedium,
-        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
-        DriverVendor::All, DeviceFamily::All,
-        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_ROLLOUT_NIGHTLY_SOFTWARE_WR_S_M_SCRN");
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows, DeviceFamily::All,
+                                nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
+                                nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
+                                DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
+                                "FEATURE_ROLLOUT_NIGHTLY_SOFTWARE_WR_S_M_SCRN");
 #  endif
 #endif
   }
