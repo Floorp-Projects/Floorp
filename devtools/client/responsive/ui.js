@@ -123,12 +123,6 @@ class ResponsiveUI {
     return this.resourceWatcher.watcherFront;
   }
 
-  get hasResourceWatcherSupport() {
-    return this.resourceWatcher.hasResourceWatcherSupport(
-      this.resourceWatcher.TYPES.NETWORK_EVENT
-    );
-  }
-
   /**
    * Open RDM while preserving the state of the page.
    */
@@ -415,9 +409,7 @@ class ResponsiveUI {
       { onAvailable: this.onNetworkResourceAvailable }
     );
 
-    if (this.hasResourceWatcherSupport) {
-      this.networkFront = await this.watcherFront.getNetworkParentActor();
-    }
+    this.networkFront = await this.watcherFront.getNetworkParentActor();
   }
 
   /**
@@ -851,18 +843,13 @@ class ResponsiveUI {
    *         (This is always immediate, so it's always false.)
    */
   async updateNetworkThrottling(enabled, profile) {
-    const throttlingFront =
-      this.hasResourceWatcherSupport && this.networkFront
-        ? this.networkFront
-        : this.responsiveFront;
-
     if (!enabled) {
-      await throttlingFront.clearNetworkThrottling();
+      await this.networkFront.clearNetworkThrottling();
       return false;
     }
     const data = throttlingProfiles.find(({ id }) => id == profile);
     const { download, upload, latency } = data;
-    await throttlingFront.setNetworkThrottling({
+    await this.networkFront.setNetworkThrottling({
       downloadThroughput: download,
       uploadThroughput: upload,
       latency,
