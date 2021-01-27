@@ -954,124 +954,26 @@
     <panelview id="appMenu-protonMainView" class="PanelUI-subView"
                descriptionheightworkaround="true">
       <vbox class="panel-subview-body">
-        <toolbarbutton id="appMenu-new-tab-button2"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&tabCmd.label;"
-                       key="key_newNavigatorTab"
-                       command="cmd_newNavigatorTab"/>
         <toolbarbutton id="appMenu-new-window-button2"
                        class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-new-window"
+                       label="&newNavigatorCmd.label;"
                        key="key_newNavigator"
                        command="cmd_newNavigator"/>
-        <toolbarbutton id="appMenu-new-private-window-button2"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-new-private-window"
-                       key="key_privatebrowsing"
-                       command="Tools:PrivateBrowsing"/>
-        <toolbarseparator/>
-        <toolbarbutton id="appMenu-bookmarks-button"
+        <toolbarbutton id="appMenu-library-button2"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                       data-l10n-id="library-bookmarks-menu"
+                       label="&places.library.title;"
                        closemenu="none"
-                       oncommand="BookmarkingUI.showSubView(this);"/>
-        <toolbarbutton id="appMenu-history-button"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                       label="&historyMenu.label;"
-                       closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
-        <toolbarbutton id="appMenu-downloads-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&libraryDownloads.label;"
-                       key="key_openDownloads"
-                       command="Tools:Downloads"/>
-        <toolbarbutton id="appMenu-passwords-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-passwords"
-                       oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'mainmenu' })"
-                       />
-        <toolbarbutton id="appMenu-extensions-themes-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-extensions-and-themes"
-                       key="key_openAddons"
-                       command="Tools:Addons"
-                       />
-        <toolbarseparator/>
-        <toolbarbutton id="appMenu-print-button2"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&printCmd.label;"
-                       key="printKb"
-#ifdef XP_MACOSX
-                       command="cmd_print"
-#else
-                       command="cmd_printPreview"
-#endif
-                       />
-        <toolbarbutton id="appMenu-save-file-button2"
-                       class="subviewbutton"
-                       data-l10n-id="appmenuitem-save-page"
-                       key="key_savePage"
-                       command="Browser:SavePage"/>
-        <toolbarbutton id="appMenu-find-button2"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-find-in-page"
-                       key="key_find"
-                       command="cmd_find"/>
-        <toolbaritem id="appMenu-zoom-controls2" class="toolbaritem-combined-buttons" closemenu="none">
-          <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
-          <spacer class="before-label"/>
-          <label value="&fullZoom.label;"/>
-          <!-- This spacer keeps the scrollbar from overlapping the view. -->
-          <spacer class="after-label"/>
-          <toolbarbutton id="appMenu-zoomReduce-button2"
-                         class="subviewbutton subviewbutton-iconic"
-                         command="cmd_fullZoomReduce"
-                         data-l10n-id="appmenuitem-zoom-reduce"
-                         tooltip="dynamic-shortcut-tooltip"/>
-          <toolbarbutton id="appMenu-zoomReset-button2"
-                         class="subviewbutton"
-                         command="cmd_fullZoomReset"
-                         tooltip="dynamic-shortcut-tooltip"/>
-          <toolbarbutton id="appMenu-zoomEnlarge-button2"
-                         class="subviewbutton subviewbutton-iconic"
-                         command="cmd_fullZoomEnlarge"
-                         data-l10n-id="appmenuitem-zoom-enlarge"
-                         tooltip="dynamic-shortcut-tooltip"/>
-          <toolbarseparator orient="vertical"/>
-          <toolbarbutton id="appMenu-fullscreen-button2"
-                         class="subviewbutton subviewbutton-iconic"
-                         label="&fullScreenCmd.label;"
-                         observes="View:FullScreen"
-                         type="checkbox"
-                         closemenu="auto"
-                         onclick="if (event.button == 0) this.closest('panel').hidePopup();"
-                         tooltip="dynamic-shortcut-tooltip"/>
-        </toolbaritem>
-        <toolbarseparator/>
-        <toolbarbutton id="appMenu-settings-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-settings"
-#ifdef XP_MACOSX
-                       key="key_preferencesCmdMac"
-#endif
-                       oncommand="openPreferences()"/>
-        <toolbarbutton id="appMenu-more-button2"
-                       class="subviewbutton subviewbutton-nav"
-                       data-l10n-id="appmenuitem-more-tools"
-                       closemenu="none"
-                       oncommand="PanelUI.showSubView('appMenu-moreView', this)"/>
-        <toolbarbutton id="appMenu-help-button2"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                       label="&appMenuHelp.label;"
-                       closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-helpView', this)"/>
-#ifndef XP_MACOSX
+                       oncommand="PanelUI.showSubView('appMenu-libraryView', this)"/>
         <toolbarseparator/>
         <toolbarbutton id="appMenu-quit-button2"
                        class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-exit"
-                       command="cmd_quitApplication"/>
+#ifdef XP_WIN
+                       data-l10n-id="menu-quit-button-win"
+#else
+                       data-l10n-id="menu-quit-button"
 #endif
+                       key="key_quitApplication"
+                       command="cmd_quitApplication"/>
       </vbox>
     </panelview>
 
