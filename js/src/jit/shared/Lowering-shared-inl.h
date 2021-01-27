@@ -447,6 +447,32 @@ LAllocation LIRGeneratorShared::useRegisterOrConstantAtStart(MDefinition* mir) {
   return useRegisterAtStart(mir);
 }
 
+inline bool CanUseInt32Constant(MDefinition* mir) {
+  if (!mir->isConstant()) {
+    return false;
+  }
+  MConstant* cst = mir->toConstant();
+  if (cst->type() == MIRType::IntPtr) {
+    return INT32_MIN <= cst->toIntPtr() && cst->toIntPtr() <= INT32_MAX;
+  }
+  MOZ_ASSERT(cst->type() == MIRType::Int32);
+  return true;
+}
+
+LAllocation LIRGeneratorShared::useRegisterOrInt32Constant(MDefinition* mir) {
+  if (CanUseInt32Constant(mir)) {
+    return LAllocation(mir->toConstant());
+  }
+  return useRegister(mir);
+}
+
+LAllocation LIRGeneratorShared::useAnyOrInt32Constant(MDefinition* mir) {
+  if (CanUseInt32Constant(mir)) {
+    return LAllocation(mir->toConstant());
+  }
+  return useAny(mir);
+}
+
 LAllocation LIRGeneratorShared::useRegisterOrZero(MDefinition* mir) {
   if (mir->isConstant() && mir->toConstant()->isInt32(0)) {
     return LAllocation();

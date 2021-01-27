@@ -4151,6 +4151,8 @@ class LSpectreMaskIndex : public LInstructionHelper<1, 2, 0> {
   }
   const LAllocation* index() { return getOperand(0); }
   const LAllocation* length() { return getOperand(1); }
+
+  const MSpectreMaskIndex* mir() const { return mir_->toSpectreMaskIndex(); }
 };
 
 // Load a value from a dense array's elements vector. Bail out if it's the hole

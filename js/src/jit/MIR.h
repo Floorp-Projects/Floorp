@@ -7527,7 +7527,7 @@ class MNot : public MUnaryInstruction, public TestPolicy::Data {
 // (unsigned comparisons may be used).
 class MBoundsCheck
     : public MBinaryInstruction,
-      public MixPolicy<UnboxedInt32Policy<0>, UnboxedInt32Policy<1>>::Data {
+      public MixPolicy<Int32OrIntPtrPolicy<0>, Int32OrIntPtrPolicy<1>>::Data {
   // Range over which to perform the bounds check, may be modified by GVN.
   int32_t minimum_;
   int32_t maximum_;
@@ -7540,11 +7540,12 @@ class MBoundsCheck
         fallible_(true) {
     setGuard();
     setMovable();
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-    MOZ_ASSERT(length->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::Int32 ||
+               index->type() == MIRType::IntPtr);
+    MOZ_ASSERT(index->type() == length->type());
 
     // Returns the checked index.
-    setResultType(MIRType::Int32);
+    setResultType(index->type());
   }
 
  public:
@@ -7611,17 +7612,18 @@ class MBoundsCheckLower : public MUnaryInstruction,
 
 class MSpectreMaskIndex
     : public MBinaryInstruction,
-      public MixPolicy<UnboxedInt32Policy<0>, UnboxedInt32Policy<1>>::Data {
+      public MixPolicy<Int32OrIntPtrPolicy<0>, Int32OrIntPtrPolicy<1>>::Data {
   MSpectreMaskIndex(MDefinition* index, MDefinition* length)
       : MBinaryInstruction(classOpcode, index, length) {
     // Note: this instruction does not need setGuard(): if there are no uses
     // it's fine for DCE to eliminate this instruction.
     setMovable();
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-    MOZ_ASSERT(length->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::Int32 ||
+               index->type() == MIRType::IntPtr);
+    MOZ_ASSERT(index->type() == length->type());
 
     // Returns the masked index.
-    setResultType(MIRType::Int32);
+    setResultType(index->type());
   }
 
  public:

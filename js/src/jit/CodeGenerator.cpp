@@ -10298,6 +10298,27 @@ void CodeGenerator::visitBoundsCheck(LBoundsCheck* lir) {
   const LAllocation* length = lir->length();
   LSnapshot* snapshot = lir->snapshot();
 
+  MIRType type = lir->mir()->type();
+
+  auto bailoutCmp = [&](Assembler::Condition cond, auto lhs, auto rhs) {
+    if (type == MIRType::Int32) {
+      bailoutCmp32(cond, lhs, rhs, snapshot);
+    } else {
+      MOZ_ASSERT(type == MIRType::IntPtr);
+      bailoutCmpPtr(cond, lhs, rhs, snapshot);
+    }
+  };
+
+  auto bailoutCmpConstant = [&](Assembler::Condition cond, auto lhs,
+                                int32_t rhs) {
+    if (type == MIRType::Int32) {
+      bailoutCmp32(cond, lhs, Imm32(rhs), snapshot);
+    } else {
+      MOZ_ASSERT(type == MIRType::IntPtr);
+      bailoutCmpPtr(cond, lhs, ImmWord(rhs), snapshot);
+    }
+  };
+
   if (index->isConstant()) {
     // Use uint32 so that the comparison is unsigned.
     uint32_t idx = ToInt32(index);
@@ -10311,25 +10332,20 @@ void CodeGenerator::visitBoundsCheck(LBoundsCheck* lir) {
     }
 
     if (length->isRegister()) {
-      bailoutCmp32(Assembler::BelowOrEqual, ToRegister(length), Imm32(idx),
-                   snapshot);
+      bailoutCmpConstant(Assembler::BelowOrEqual, ToRegister(length), idx);
     } else {
-      bailoutCmp32(Assembler::BelowOrEqual, ToAddress(length), Imm32(idx),
-                   snapshot);
+      bailoutCmpConstant(Assembler::BelowOrEqual, ToAddress(length), idx);
     }
     return;
   }
 
   Register indexReg = ToRegister(index);
   if (length->isConstant()) {
-    bailoutCmp32(Assembler::AboveOrEqual, indexReg, Imm32(ToInt32(length)),
-                 snapshot);
+    bailoutCmpConstant(Assembler::AboveOrEqual, indexReg, ToInt32(length));
   } else if (length->isRegister()) {
-    bailoutCmp32(Assembler::BelowOrEqual, ToRegister(length), indexReg,
-                 snapshot);
+    bailoutCmp(Assembler::BelowOrEqual, ToRegister(length), indexReg);
   } else {
-    bailoutCmp32(Assembler::BelowOrEqual, ToAddress(length), indexReg,
-                 snapshot);
+    bailoutCmp(Assembler::BelowOrEqual, ToAddress(length), indexReg);
   }
 }
 
@@ -10338,19 +10354,39 @@ void CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange* lir) {
   int32_t max = lir->mir()->maximum();
   MOZ_ASSERT(max >= min);
 
-  const LAllocation* length = lir->length();
   LSnapshot* snapshot = lir->snapshot();
+  MIRType type = lir->mir()->type();
+
+  const LAllocation* length = lir->length();
   Register temp = ToRegister(lir->getTemp(0));
+
+  auto bailoutCmp = [&](Assembler::Condition cond, auto lhs, auto rhs) {
+    if (type == MIRType::Int32) {
+      bailoutCmp32(cond, lhs, rhs, snapshot);
+    } else {
+      MOZ_ASSERT(type == MIRType::IntPtr);
+      bailoutCmpPtr(cond, lhs, rhs, snapshot);
+    }
+  };
+
+  auto bailoutCmpConstant = [&](Assembler::Condition cond, auto lhs,
+                                int32_t rhs) {
+    if (type == MIRType::Int32) {
+      bailoutCmp32(cond, lhs, Imm32(rhs), snapshot);
+    } else {
+      MOZ_ASSERT(type == MIRType::IntPtr);
+      bailoutCmpPtr(cond, lhs, ImmWord(rhs), snapshot);
+    }
+  };
+
   if (lir->index()->isConstant()) {
     int32_t nmin, nmax;
     int32_t index = ToInt32(lir->index());
     if (SafeAdd(index, min, &nmin) && SafeAdd(index, max, &nmax) && nmin >= 0) {
       if (length->isRegister()) {
-        bailoutCmp32(Assembler::BelowOrEqual, ToRegister(length), Imm32(nmax),
-                     snapshot);
+        bailoutCmpConstant(Assembler::BelowOrEqual, ToRegister(length), nmax);
       } else {
-        bailoutCmp32(Assembler::BelowOrEqual, ToAddress(length), Imm32(nmax),
-                     snapshot);
+        bailoutCmpConstant(Assembler::BelowOrEqual, ToAddress(length), nmax);
       }
       return;
     }
@@ -10365,18 +10401,26 @@ void CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange* lir) {
   if (min != max) {
     if (min != 0) {
       Label bail;
-      masm.branchAdd32(Assembler::Overflow, Imm32(min), temp, &bail);
+      if (type == MIRType::Int32) {
+        masm.branchAdd32(Assembler::Overflow, Imm32(min), temp, &bail);
+      } else {
+        masm.branchAddPtr(Assembler::Overflow, Imm32(min), temp, &bail);
+      }
       bailoutFrom(&bail, snapshot);
     }
 
-    bailoutCmp32(Assembler::LessThan, temp, Imm32(0), snapshot);
+    bailoutCmpConstant(Assembler::LessThan, temp, 0);
 
     if (min != 0) {
       int32_t diff;
       if (SafeSub(max, min, &diff)) {
         max = diff;
       } else {
-        masm.sub32(Imm32(min), temp);
+        if (type == MIRType::Int32) {
+          masm.sub32(Imm32(min), temp);
+        } else {
+          masm.subPtr(Imm32(min), temp);
+        }
       }
     }
   }
@@ -10389,17 +10433,25 @@ void CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange* lir) {
   if (max != 0) {
     if (max < 0) {
       Label bail;
-      masm.branchAdd32(Assembler::Overflow, Imm32(max), temp, &bail);
+      if (type == MIRType::Int32) {
+        masm.branchAdd32(Assembler::Overflow, Imm32(max), temp, &bail);
+      } else {
+        masm.branchAddPtr(Assembler::Overflow, Imm32(max), temp, &bail);
+      }
       bailoutFrom(&bail, snapshot);
     } else {
-      masm.add32(Imm32(max), temp);
+      if (type == MIRType::Int32) {
+        masm.add32(Imm32(max), temp);
+      } else {
+        masm.addPtr(Imm32(max), temp);
+      }
     }
   }
 
   if (length->isRegister()) {
-    bailoutCmp32(Assembler::BelowOrEqual, ToRegister(length), temp, snapshot);
+    bailoutCmp(Assembler::BelowOrEqual, ToRegister(length), temp);
   } else {
-    bailoutCmp32(Assembler::BelowOrEqual, ToAddress(length), temp, snapshot);
+    bailoutCmp(Assembler::BelowOrEqual, ToAddress(length), temp);
   }
 }
 
@@ -10416,10 +10468,19 @@ void CodeGenerator::visitSpectreMaskIndex(LSpectreMaskIndex* lir) {
   Register index = ToRegister(lir->index());
   Register output = ToRegister(lir->output());
 
-  if (length->isRegister()) {
-    masm.spectreMaskIndex32(index, ToRegister(length), output);
+  if (lir->mir()->type() == MIRType::Int32) {
+    if (length->isRegister()) {
+      masm.spectreMaskIndex32(index, ToRegister(length), output);
+    } else {
+      masm.spectreMaskIndex32(index, ToAddress(length), output);
+    }
   } else {
-    masm.spectreMaskIndex32(index, ToAddress(length), output);
+    MOZ_ASSERT(lir->mir()->type() == MIRType::IntPtr);
+    if (length->isRegister()) {
+      masm.spectreMaskIndexPtr(index, ToRegister(length), output);
+    } else {
+      masm.spectreMaskIndexPtr(index, ToAddress(length), output);
+    }
   }
 }
 
