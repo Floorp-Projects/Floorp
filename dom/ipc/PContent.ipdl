@@ -1752,6 +1752,7 @@ both:
      * another process. Child frame will send data to its ContentParent which
      * will then identify the ContentParent for the innerWindowId and pass
      * the data to the correct process.
+     * aData must be non-null.
      */
     async ReportFrameTimingData(uint64_t innerWindowId, nsString entryName,
                                 nsString initiatorType,

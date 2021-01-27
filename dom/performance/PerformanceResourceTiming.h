@@ -26,6 +26,7 @@ class PerformanceResourceTiming : public PerformanceEntry {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
       PerformanceResourceTiming, PerformanceEntry)
 
+  // aPerformanceTimingData and aPerformance must be non-null
   PerformanceResourceTiming(
       UniquePtr<PerformanceTimingData>&& aPerformanceTimingData,
       Performance* aPerformance, const nsAString& aName);
@@ -48,17 +49,15 @@ class PerformanceResourceTiming : public PerformanceEntry {
   }
 
   void GetNextHopProtocol(nsAString& aNextHopProtocol) const {
-    if (mTimingData) {
-      aNextHopProtocol = mTimingData->NextHopProtocol();
-    }
+    aNextHopProtocol = mTimingData->NextHopProtocol();
   }
 
   DOMHighResTimeStamp WorkerStart() const {
-    return mTimingData ? mTimingData->WorkerStartHighRes(mPerformance) : 0;
+    return mTimingData->WorkerStartHighRes(mPerformance);
   }
 
   DOMHighResTimeStamp FetchStart() const {
-    return mTimingData ? mTimingData->FetchStartHighRes(mPerformance) : 0;
+    return mTimingData->FetchStartHighRes(mPerformance);
   }
 
   DOMHighResTimeStamp RedirectStart(
@@ -122,7 +121,7 @@ class PerformanceResourceTiming : public PerformanceEntry {
   }
 
   DOMHighResTimeStamp ResponseEnd() const {
-    return mTimingData ? mTimingData->ResponseEndHighRes(mPerformance) : 0;
+    return mTimingData->ResponseEndHighRes(mPerformance);
   }
 
   DOMHighResTimeStamp SecureConnectionStart(
@@ -174,7 +173,7 @@ class PerformanceResourceTiming : public PerformanceEntry {
   bool ReportRedirectForCaller(Maybe<nsIPrincipal*>& aCaller) const;
 
   nsString mInitiatorType;
-  UniquePtr<PerformanceTimingData> mTimingData;
+  const UniquePtr<PerformanceTimingData> mTimingData;  // always non-null
   RefPtr<Performance> mPerformance;
 
   // The same initial requested URI as the `name` attribute.
