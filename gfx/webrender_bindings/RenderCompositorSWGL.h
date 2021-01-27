@@ -67,7 +67,8 @@ class RenderCompositorSWGL : public RenderCompositor {
 
   void ClearMappedBuffer();
 
-  bool AllocateMappedBuffer();
+  bool AllocateMappedBuffer(const wr::DeviceIntRect* aOpaqueRects,
+                            size_t aNumOpaqueRects);
 
   void CommitMappedBuffer(bool aDirty = true);
 };
