@@ -6124,7 +6124,7 @@ impl CompositeState {
                 surface.image_rendering,
             );
         }
-        compositor.start_compositing(dirty_rects);
+        compositor.start_compositing(dirty_rects, &[]);
     }
 }
 
