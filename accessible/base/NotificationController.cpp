@@ -178,9 +178,11 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
     container->SetReorderEventTarget(true);
     mMutationMap.PutEvent(reorder);
 
-    // Since this is the first child of container that is changing, the name of
-    // container may be changing.
-    QueueNameChange(target);
+    // Since this is the first child of container that is changing, the name
+    // and/or description of dependent Accessibles may be changing.
+    if (PushNameOrDescriptionChange(target)) {
+      ScheduleProcessing();
+    }
   } else {
     AccReorderEvent* event = downcast_accEvent(
         mMutationMap.GetEvent(container, EventMap::ReorderEvent));

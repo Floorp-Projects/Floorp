@@ -114,16 +114,6 @@ class NotificationController final : public EventQueue,
   }
 
   /**
-   * Creates and adds a name change event into the queue for an Accessible which
-   * depends on the given Accessible for name computation, if any.
-   */
-  void QueueNameChange(Accessible* aChangeTarget) {
-    if (PushNameChange(aChangeTarget)) {
-      ScheduleProcessing();
-    }
-  }
-
-  /**
    * Returns existing event tree for the given the accessible or creates one if
    * it doesn't exists yet.
    */
