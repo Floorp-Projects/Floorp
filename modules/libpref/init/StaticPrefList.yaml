@@ -5341,6 +5341,11 @@
   mirror: always
 #endif
 
+- name: javascript.options.large_arraybuffers
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "layers."
 #---------------------------------------------------------------------------
