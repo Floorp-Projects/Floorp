@@ -93,12 +93,9 @@ void wr_compositor_attach_external_image(void* aCompositor,
 
 void wr_compositor_start_compositing(void* aCompositor,
                                      const wr::DeviceIntRect* aDirtyRects,
-                                     size_t aNumDirtyRects,
-                                     const wr::DeviceIntRect* aOpaqueRects,
-                                     size_t aNumOpaqueRects) {
+                                     size_t aNumDirtyRects) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
-  compositor->StartCompositing(aDirtyRects, aNumDirtyRects, aOpaqueRects,
-                               aNumOpaqueRects);
+  compositor->StartCompositing(aDirtyRects, aNumDirtyRects);
 }
 
 void wr_compositor_end_frame(void* aCompositor) {
