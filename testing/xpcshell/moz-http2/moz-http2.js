@@ -20,6 +20,7 @@ const ip = require(`${node_http2_root}/../node-ip`);
 const { fork } = require("child_process");
 const path = require("path");
 const zlib = require("zlib");
+const odoh = require(`${node_http2_root}/../odoh-wasm/pkg`);
 
 // Hook into the decompression code to log the decompressed name-value pairs
 var compression_module = node_http2_root + "/lib/protocol/compressor";
@@ -890,6 +891,121 @@ function handleRequest(req, res) {
       res.writeHead(200);
       res.write(buf);
       res.end("");
+    });
+    return;
+  } else if (u.pathname === "/odohconfig") {
+    let payload = Buffer.from("");
+    req.on("data", function receiveData(chunk) {
+      payload = Buffer.concat([payload, chunk]);
+    });
+    req.on("end", function finishedData() {
+      let packet = dnsPacket.decode(payload);
+      let answers = [];
+      let odohconfig = odoh.get_odoh_config();
+      var b64encoded = Buffer.from(odohconfig).toString("base64");
+      if (packet.questions[0].type == "HTTPS") {
+        answers.push({
+          name: packet.questions[0].name,
+          type: packet.questions[0].type,
+          ttl: 55,
+          class: "IN",
+          flush: false,
+          data: {
+            priority: 1,
+            name: packet.questions[0].name,
+            values: [
+              { key: "odohconfig", value: b64encoded, needBase64Decode: true },
+            ],
+          },
+        });
+      }
+
+      let buf = dnsPacket.encode({
+        type: "response",
+        id: packet.id,
+        flags: dnsPacket.RECURSION_DESIRED,
+        questions: packet.questions,
+        answers,
+      });
+
+      res.setHeader("Content-Type", "application/dns-message");
+      res.setHeader("Content-Length", buf.length);
+      res.writeHead(200);
+      res.write(buf);
+      res.end("");
+    });
+    return;
+  } else if (u.pathname === "/odoh") {
+    let responseIP = u.query.responseIP;
+    if (!responseIP) {
+      responseIP = "5.5.5.5";
+    }
+
+    let payload = Buffer.from("");
+
+    function emitResponse(response, requestPayload) {
+      let decryptedQuery = odoh.decrypt_query(requestPayload);
+      let packet = dnsPacket.decode(Buffer.from(decryptedQuery.buffer));
+
+      function responseType() {
+        if (
+          packet.questions.length > 0 &&
+          packet.questions[0].name == "confirm.example.com" &&
+          packet.questions[0].type == "NS"
+        ) {
+          return "NS";
+        }
+
+        return ip.isV4Format(responseIP) ? "A" : "AAAA";
+      }
+
+      let answers = [];
+      if (responseIP != "none" && responseType() == packet.questions[0].type) {
+        answers.push({
+          name: u.query.hostname ? u.query.hostname : packet.questions[0].name,
+          ttl: 55,
+          type: responseType(),
+          flush: false,
+          data: responseIP,
+        });
+      }
+
+      let buf = dnsPacket.encode({
+        type: "response",
+        id: packet.id,
+        flags: dnsPacket.RECURSION_DESIRED,
+        questions: packet.questions,
+        answers,
+      });
+
+      let encryptedResponse = odoh.create_response(buf);
+
+      function writeResponse(resp, buffer) {
+        resp.setHeader("Set-Cookie", "trackyou=yes; path=/; max-age=100000;");
+        resp.setHeader("Content-Type", "application/oblivious-dns-message");
+        resp.setHeader("Content-Length", buffer.length);
+        resp.writeHead(200);
+        resp.write(buffer);
+        resp.end("");
+      }
+
+      writeResponse(response, encryptedResponse);
+    }
+
+    if (u.query.dns) {
+      payload = Buffer.from(u.query.dns, "base64");
+      emitResponse(res, payload);
+      return;
+    }
+
+    req.on("data", function receiveData(chunk) {
+      payload = Buffer.concat([payload, chunk]);
+    });
+    req.on("end", function finishedData() {
+      // parload is empty when we send redirect response.
+      if (payload.length) {
+        emitResponse(res, payload);
+      }
     });
     return;
   } else if (u.pathname === "/httpssvc_as_altsvc") {
