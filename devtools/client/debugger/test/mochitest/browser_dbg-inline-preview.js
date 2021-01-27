@@ -32,6 +32,14 @@ add_task(async function() {
     { identifier: "b:", value: '"b"' },
   ]);
 
+  // Check that referencing an object property previews the property, not the
+  // object (bug 1599917)
+  await checkInlinePreview(dbg, "objectProperties", [
+    { identifier: "obj:", value: 'Object { hello: "world", a: {…} }' },
+    { identifier: "obj.hello:", value: '"world"' },
+    { identifier: "obj.a.b:", value: '"c"' },
+  ]);
+
   // Checks that open in inspector button works in inline preview
   invokeInTab("btnClick");
   await checkInspectorIcon(dbg);

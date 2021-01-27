@@ -31,7 +31,7 @@ const {
   nodeIsLongString,
 } = require("devtools/client/shared/components/object-inspector/utils/node");
 
-function loadItemProperties(item, client, loadedProperties) {
+function loadItemProperties(item, client, loadedProperties, threadActorID) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
   let front = getFront(gripItem);
@@ -42,7 +42,10 @@ function loadItemProperties(item, client, loadedProperties) {
 
   const getObjectFront = function() {
     if (!front) {
-      front = client.createObjectFront(value);
+      front = client.createObjectFront(
+        value,
+        client.getFrontByID(threadActorID)
+      );
     }
 
     return front;
