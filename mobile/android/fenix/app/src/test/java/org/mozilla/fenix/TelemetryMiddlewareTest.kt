@@ -6,6 +6,8 @@ package org.mozilla.fenix
 
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
@@ -15,10 +17,12 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.metrics.Event
@@ -28,6 +32,7 @@ import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
+@ExperimentalCoroutinesApi
 class TelemetryMiddlewareTest {
 
     private lateinit var store: BrowserStore
@@ -35,11 +40,15 @@ class TelemetryMiddlewareTest {
     private lateinit var telemetryMiddleware: TelemetryMiddleware
     private lateinit var metrics: MetricController
     private lateinit var adsTelemetry: AdsTelemetry
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
     fun setUp() {
         settings = Settings(testContext)
-        metrics = mockk()
+        metrics = mockk(relaxed = true)
         adsTelemetry = mockk()
         telemetryMiddleware = TelemetryMiddleware(
             settings,
@@ -55,6 +64,7 @@ class TelemetryMiddlewareTest {
 
         store.dispatch(TabListAction.AddTabAction(createTab("https://mozilla.org"))).joinBlocking()
         assertEquals(1, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveOpenTabs) }
     }
 
     @Test
@@ -63,6 +73,7 @@ class TelemetryMiddlewareTest {
 
         store.dispatch(TabListAction.AddTabAction(createTab("https://mozilla.org", private = true))).joinBlocking()
         assertEquals(0, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveNoOpenTabs) }
     }
 
     @Test
@@ -76,6 +87,7 @@ class TelemetryMiddlewareTest {
         ).joinBlocking()
 
         assertEquals(2, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveOpenTabs) }
     }
 
     @Test
@@ -87,9 +99,11 @@ class TelemetryMiddlewareTest {
             )
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveOpenTabs) }
 
         store.dispatch(TabListAction.RemoveTabAction("1")).joinBlocking()
         assertEquals(1, settings.openTabsCount)
+        verify(exactly = 2) { metrics.track(Event.HaveOpenTabs) }
     }
 
     @Test
@@ -101,9 +115,11 @@ class TelemetryMiddlewareTest {
             )
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveOpenTabs) }
 
         store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
         assertEquals(0, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveNoOpenTabs) }
     }
 
     @Test
@@ -116,9 +132,11 @@ class TelemetryMiddlewareTest {
             )
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveOpenTabs) }
 
         store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
         assertEquals(0, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveNoOpenTabs) }
     }
 
     @Test
@@ -131,6 +149,7 @@ class TelemetryMiddlewareTest {
 
         store.dispatch(TabListAction.RestoreAction(tabsToRestore)).joinBlocking()
         assertEquals(2, settings.openTabsCount)
+        verify(exactly = 1) { metrics.track(Event.HaveOpenTabs) }
     }
 
     @Test

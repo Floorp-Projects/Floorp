@@ -197,6 +197,8 @@ sealed class Event {
     object SyncedTabOpened : Event()
 
     object RecentlyClosedTabsOpened : Event()
+    object HaveOpenTabs : Event()
+    object HaveNoOpenTabs : Event()
 
     object ContextMenuCopyTapped : Event()
     object ContextMenuSearchTapped : Event()

@@ -104,6 +104,11 @@ class TelemetryMiddleware(
             is TabListAction.RestoreAction -> {
                 // Update/Persist tabs count whenever it changes
                 settings.openTabsCount = context.state.normalTabs.count()
+                if (context.state.normalTabs.count() > 0) {
+                    metrics.track(Event.HaveOpenTabs)
+                } else {
+                    metrics.track(Event.HaveNoOpenTabs)
+                }
             }
         }
     }

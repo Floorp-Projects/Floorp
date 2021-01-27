@@ -720,6 +720,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ContextMenuShareTapped -> EventWrapper<NoExtraKeys>(
             { ContextualMenu.shareTapped.record(it) }
         )
+        Event.HaveOpenTabs -> EventWrapper<NoExtraKeys>(
+            { Metrics.hasOpenTabs.set(true) }
+        )
+        Event.HaveNoOpenTabs -> EventWrapper<NoExtraKeys>(
+            { Metrics.hasOpenTabs.set(false) }
+        )
 
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
