@@ -11,8 +11,8 @@ add_task(async function() {
   await openTabAndSetupStorage(url);
   const doc = gPanelWindow.document;
 
-  checkTree(doc, "localStorage", "http://example.com", true);
-  checkTree(doc, "localStorage", "about:blank", false);
+  checkTree(doc, ["localStorage", "http://example.com"], true);
+  checkTree(doc, ["localStorage", "about:blank"], false);
 });
 
 add_task(async function() {
@@ -20,5 +20,5 @@ add_task(async function() {
   await openTabAndSetupStorage("about:blank");
   const doc = gPanelWindow.document;
 
-  checkTree(doc, "localStorage", "about:blank", true);
+  checkTree(doc, ["localStorage", "about:blank"], true);
 });
