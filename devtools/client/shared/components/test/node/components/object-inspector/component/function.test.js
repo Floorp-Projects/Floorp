@@ -23,7 +23,10 @@ function generateDefaults(overrides) {
 }
 
 function mount(props) {
-  const client = { createObjectFront: grip => ObjectFront(grip) };
+  const client = {
+    createObjectFront: grip => ObjectFront(grip),
+    getFrontByID: _id => null,
+  };
 
   return mountObjectInspector({
     client,

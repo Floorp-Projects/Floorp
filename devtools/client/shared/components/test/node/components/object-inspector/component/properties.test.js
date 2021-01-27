@@ -33,6 +33,7 @@ function mount(props, { initialState } = {}) {
 
   const client = {
     createObjectFront: grip => ObjectFront(grip, { enumProperties }),
+    getFrontByID: _id => null,
   };
 
   const obj = mountObjectInspector({

@@ -71,6 +71,7 @@ add_task(async function() {
   assertPausedAtSourceAndLine(dbg, sourceId, 6);
 
   info("Resume and pause on the debugger statement");
+  await waitForRequestsToSettle(dbg);
   resume(dbg);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sourceId, 24);

@@ -76,11 +76,13 @@ function createObjectFront(grip: Grip): ObjectFront {
   return devToolsClient.createObjectFront(grip, currentThreadFront());
 }
 
-async function loadObjectProperties(root: OINode) {
+async function loadObjectProperties(root: OINode, threadActorID: string) {
   const { utils } = Reps.objectInspector;
   const properties = await utils.loadProperties.loadItemProperties(
     root,
-    devToolsClient
+    devToolsClient,
+    undefined,
+    threadActorID
   );
   return utils.node.getChildren({
     item: root,

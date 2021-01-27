@@ -27,6 +27,7 @@ function mount(stub) {
     client: {
       createObjectFront: grip => ObjectFront(grip),
       createLongStringFront: grip => LongStringFront(grip),
+      getFrontByID: _id => null,
     },
     props: {
       roots: [root],

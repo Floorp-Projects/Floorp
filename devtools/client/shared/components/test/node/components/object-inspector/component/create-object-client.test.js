@@ -22,6 +22,7 @@ function mount(props, overrides = {}) {
   const client = {
     createObjectFront:
       overrides.createObjectFront || jest.fn(grip => ObjectFront(grip)),
+    getFrontByID: _id => null,
   };
 
   return mountObjectInspector({
