@@ -266,7 +266,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
-  if (!handler_.canSkipLazyInnerFunctions()) {
+  if (this->stencil_.isInitialStencil()) {
     if (!compilationState_.scriptExtra.emplaceBack()) {
       js::ReportOutOfMemory(cx_);
       return nullptr;
@@ -1471,7 +1471,7 @@ LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
 template <class ParseHandler>
 bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     EvalSharedContext* evalSc) {
-  if (handler_.canSkipLazyClosedOverBindings()) {
+  if (!this->stencil_.isInitialStencil()) {
     // We're delazifying -- so we already checked private names during first
     // parse.
     return true;
@@ -1970,7 +1970,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   funbox->finishScriptFlags();
   funbox->copyFunctionFields(script);
 
-  if (!handler_.canSkipLazyInnerFunctions()) {
+  if (this->stencil_.isInitialStencil()) {
     ScriptStencilExtra& scriptExtra = funbox->functionExtraStencil();
     funbox->copyFunctionExtraFields(scriptExtra);
     funbox->copyScriptExtraFields(scriptExtra);
