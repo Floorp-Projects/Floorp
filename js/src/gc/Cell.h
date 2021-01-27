@@ -556,6 +556,32 @@ MOZ_ALWAYS_INLINE void PreWriteBarrier(T* thing) {
   }
 }
 
+// Pre-write barrier implementation for structures containing GC cells, taking a
+// functor to trace the structure.
+template <typename T, typename F>
+MOZ_ALWAYS_INLINE void PreWriteBarrier(JS::Zone* zone, T* data,
+                                       const F& traceFn) {
+  MOZ_ASSERT(!CurrentThreadIsIonCompiling());
+  MOZ_ASSERT(!CurrentThreadIsGCMarking());
+
+  auto* shadowZone = JS::shadow::Zone::from(zone);
+  if (!shadowZone->needsIncrementalBarrier()) {
+    return;
+  }
+
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(shadowZone->runtimeFromAnyThread()));
+  MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
+
+  traceFn(shadowZone->barrierTracer(), data);
+}
+
+// Pre-write barrier implementation for structures containing GC cells. T must
+// support a |trace| method.
+template <typename T>
+MOZ_ALWAYS_INLINE void PreWriteBarrier(JS::Zone* zone, T* data) {
+  PreWriteBarrier(zone, data, [](JSTracer* trc, T* data) { data->trace(trc); });
+}
+
 #ifdef DEBUG
 
 /* static */ void Cell::assertThingIsNotGray(Cell* cell) {

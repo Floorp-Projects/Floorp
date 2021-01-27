@@ -747,9 +747,7 @@ static MOZ_ALWAYS_INLINE Shape* PropertyTreeReadBarrier(JSContext* cx,
   if (zone->needsIncrementalBarrier()) {
     // We need a read barrier for the shape tree, since these are weak
     // pointers.
-    Shape* tmp = shape;
-    TraceManuallyBarrieredEdge(zone->barrierTracer(), &tmp, "read barrier");
-    MOZ_ASSERT(tmp == shape);
+    ReadBarrier(shape);
     return shape;
   }
 
