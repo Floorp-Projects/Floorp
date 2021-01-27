@@ -1,3 +1,56 @@
+# Release 0.2.14 (2020-10-29)
+
+- Clarify the license specification as "MIT OR Apache-2.0".
+
+**Contributors**: @cuviper
+
+# Release 0.2.13 (2020-10-29)
+
+- [The new `OverflowingAdd`, `OverflowingSub`, and `OverflowingMul` traits][180]
+  return a tuple with the operation result and a `bool` indicating overflow.
+- [The "i128" feature now overrides compiler probes for that support][185].
+  This may fix scenarios where `autocfg` probing doesn't work properly.
+- [Casts from large `f64` values to `f32` now saturate to infinity][186]. They
+  previously returned `None` because that was once thought to be undefined
+  behavior, but [rust#15536] resolved that such casts are fine.
+- [`Num::from_str_radix` documents requirements for radix support][192], which
+  are now more relaxed than previously implied. It is suggested to accept at
+  least `2..=36` without panicking, but `Err` may be returned otherwise.
+
+**Contributors**: @cuviper, @Enet4, @KaczuH, @martin-t, @newpavlov
+
+[180]: https://github.com/rust-num/num-traits/pull/180
+[185]: https://github.com/rust-num/num-traits/pull/185
+[186]: https://github.com/rust-num/num-traits/pull/186
+[192]: https://github.com/rust-num/num-traits/issues/192
+[rust#15536]: https://github.com/rust-lang/rust/issues/15536
+
+# Release 0.2.12 (2020-06-11)
+
+- [The new `WrappingNeg` trait][153] will wrap the result if it exceeds the
+  boundary of the type, e.g. `i32::MIN.wrapping_neg() == i32::MIN`.
+- [The new `SaturatingAdd`, `SaturatingSub`, and `SaturatingMul` traits][165]
+  will saturate at the numeric bounds if the operation would overflow. These
+  soft-deprecate the existing `Saturating` trait that only has addition and
+  subtraction methods.
+- [Added new constants for logarithms, `FloatConst::{LOG10_2, LOG2_10}`][171].
+
+**Contributors**: @cuviper, @ocstl, @trepetti, @vallentin
+
+[153]: https://github.com/rust-num/num-traits/pull/153
+[165]: https://github.com/rust-num/num-traits/pull/165
+[171]: https://github.com/rust-num/num-traits/pull/171
+
+# Release 0.2.11 (2020-01-09)
+
+- [Added the full circle constant τ as `FloatConst::TAU`][145].
+- [Updated the `autocfg` build dependency to 1.0][148].
+
+**Contributors**: @cuviper, @m-ou-se
+
+[145]: https://github.com/rust-num/num-traits/pull/145
+[148]: https://github.com/rust-num/num-traits/pull/148
+
 # Release 0.2.10 (2019-11-22)
 
 - [Updated the `libm` dependency to 0.2][144].

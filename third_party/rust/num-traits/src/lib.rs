@@ -42,8 +42,10 @@ pub use ops::checked::{
 };
 pub use ops::inv::Inv;
 pub use ops::mul_add::{MulAdd, MulAddAssign};
-pub use ops::saturating::Saturating;
-pub use ops::wrapping::{WrappingAdd, WrappingMul, WrappingShl, WrappingShr, WrappingSub};
+pub use ops::saturating::{Saturating, SaturatingAdd, SaturatingMul, SaturatingSub};
+pub use ops::wrapping::{
+    WrappingAdd, WrappingMul, WrappingNeg, WrappingShl, WrappingShr, WrappingSub,
+};
 pub use pow::{checked_pow, pow, Pow};
 pub use sign::{abs, abs_sub, signum, Signed, Unsigned};
 
@@ -65,7 +67,7 @@ pub mod sign;
 pub trait Num: PartialEq + Zero + One + NumOps {
     type FromStrRadixErr;
 
-    /// Convert from a string and radix <= 36.
+    /// Convert from a string and radix (typically `2..=36`).
     ///
     /// # Examples
     ///
@@ -78,6 +80,18 @@ pub trait Num: PartialEq + Zero + One + NumOps {
     /// let result = <i32 as Num>::from_str_radix("foo", 10);
     /// assert!(result.is_err());
     /// ```
+    ///
+    /// # Supported radices
+    ///
+    /// The exact range of supported radices is at the discretion of each type implementation. For
+    /// primitive integers, this is implemented by the inherent `from_str_radix` methods in the
+    /// standard library, which **panic** if the radix is not in the range from 2 to 36. The
+    /// implementation in this crate for primitive floats is similar.
+    ///
+    /// For third-party types, it is suggested that implementations should follow suit and at least
+    /// accept `2..=36` without panicking, but an `Err` may be returned for any unsupported radix.
+    /// It's possible that a type might not even support the common radix 10, nor any, if string
+    /// parsing doesn't make sense for that type.
     fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr>;
 }
 
