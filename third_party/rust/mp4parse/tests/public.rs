@@ -28,6 +28,9 @@ static VIDEO_EME_CENC_MP4: &str = "tests/bipbop_480wp_1001kbps-cenc-video-key1-i
 static AUDIO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_audio_init.mp4";
 static VIDEO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_video_init.mp4";
 static VIDEO_AV1_MP4: &str = "tests/tiny_av1.mp4";
+// This file contains invalid userdata in its copyright userdata. See
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1687357 for more information.
+static VIDEO_INVALID_USERDATA: &str = "tests/invalid_userdata.mp4";
 static IMAGE_AVIF: &str = "av1-avif/testFiles/Microsoft/Monochrome.avif";
 static IMAGE_AVIF_EXTENTS: &str = "tests/kodim-extents.avif";
 static IMAGE_AVIF_ALPHA: &str = "tests/bug-1661347.avif";
@@ -41,7 +44,6 @@ static AVIF_CORRUPT_IMAGES: &str = "tests/corrupt";
 
 // Adapted from https://github.com/GuillaumeGomez/audio-video-metadata/blob/9dff40f565af71d5502e03a2e78ae63df95cfd40/src/metadata.rs#L53
 #[test]
-#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_api() {
     let mut fd = File::open(MINI_MP4).expect("Unknown file");
     let mut buf = Vec::new();
@@ -161,7 +163,6 @@ fn public_api() {
 }
 
 #[test]
-#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_metadata() {
     let mut fd = File::open(MINI_MP4_WITH_METADATA).expect("Unknown file");
     let mut buf = Vec::new();
@@ -228,7 +229,6 @@ fn public_metadata() {
 }
 
 #[test]
-#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_metadata_gnre() {
     let mut fd = File::open(MINI_MP4_WITH_METADATA_STD_GENRE).expect("Unknown file");
     let mut buf = Vec::new();
@@ -289,6 +289,46 @@ fn public_metadata_gnre() {
     bytes[1] = cover[1];
     bytes[2] = cover[2];
     assert_eq!(u32::from_le_bytes(bytes), 0x00ff_d8ff);
+}
+
+#[test]
+fn public_invalid_metadata() {
+    // Test that reading userdata containing invalid metadata is not fatal to parsing and that
+    // expected values are still found.
+    let mut fd = File::open(VIDEO_INVALID_USERDATA).expect("Unknown file");
+    let mut buf = Vec::new();
+    fd.read_to_end(&mut buf).expect("File error");
+
+    let mut c = Cursor::new(&buf);
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
+    // Should have userdata.
+    assert!(context.userdata.is_some());
+    // But it should contain an error.
+    assert!(context.userdata.unwrap().is_err());
+    // Smoke test that other data has been parsed. Don't check everything, just make sure some
+    // values are as expected.
+    assert_eq!(context.tracks.len(), 2);
+    for track in context.tracks {
+        match track.track_type {
+            mp4::TrackType::Video => {
+                // Check some of the values in the video tkhd.
+                let tkhd = track.tkhd.unwrap();
+                assert_eq!(tkhd.disabled, false);
+                assert_eq!(tkhd.duration, 231232);
+                assert_eq!(tkhd.width, 83_886_080);
+                assert_eq!(tkhd.height, 47_185_920);
+            }
+            mp4::TrackType::Audio => {
+                // Check some of the values in the audio tkhd.
+                let tkhd = track.tkhd.unwrap();
+                assert_eq!(tkhd.disabled, false);
+                assert_eq!(tkhd.duration, 231338);
+                assert_eq!(tkhd.width, 0);
+                assert_eq!(tkhd.height, 0);
+            }
+            _ => panic!("File should not contain other tracks."),
+        }
+    }
 }
 
 #[test]
@@ -486,7 +526,6 @@ fn public_audio_cbcs() {
 }
 
 #[test]
-#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_video_cbcs() {
     let system_id = vec![
         0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb,
@@ -567,7 +606,6 @@ fn public_video_cbcs() {
 }
 
 #[test]
-#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_video_av1() {
     let mut fd = File::open(VIDEO_AV1_MP4).expect("Unknown file");
     let mut buf = Vec::new();
