@@ -813,7 +813,7 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
   masm.setupUnalignedABICall(r0);
   masm.passABIArg(r3);
   masm.passABIArg(PreBarrierReg);
-  masm.callWithABI(JitPreWriteBarrier(type));
+  masm.callWithABI(JitMarkFunction(type));
 
   // Pop the volatile regs and restore LR.
   masm.PopRegsInMask(regs);
