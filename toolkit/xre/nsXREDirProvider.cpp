@@ -853,6 +853,10 @@ static nsresult DeleteDirIfExists(nsIFile* dir) {
 
 static const char* const kAppendPrefDir[] = {"defaults", "preferences",
                                              nullptr};
+#ifdef MOZ_BACKGROUNDTASKS
+static const char* const kAppendBackgroundTasksPrefDir[] = {
+    "defaults", "backgroundtasks", nullptr};
+#endif
 
 nsresult nsXREDirProvider::GetFilesInternal(const char* aProperty,
                                             nsISimpleEnumerator** aResult) {
@@ -863,6 +867,12 @@ nsresult nsXREDirProvider::GetFilesInternal(const char* aProperty,
     nsCOMArray<nsIFile> directories;
 
     LoadDirIntoArray(mXULAppDir, kAppendPrefDir, directories);
+#ifdef MOZ_BACKGROUNDTASKS
+    if (mozilla::BackgroundTasks::IsBackgroundTaskMode()) {
+      LoadDirIntoArray(mGREDir, kAppendBackgroundTasksPrefDir, directories);
+      LoadDirIntoArray(mXULAppDir, kAppendBackgroundTasksPrefDir, directories);
+    }
+#endif
 
     rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
   } else if (!strcmp(aProperty, NS_APP_CHROME_DIR_LIST)) {
