@@ -39,6 +39,7 @@ class PerformanceNavigationTiming final : public PerformanceResourceTiming {
   // so that timestamps are relative to startTime, as opposed to the
   // performance.timing object for which timestamps are absolute and has a
   // zeroTime initialized to navigationStart
+  // aPerformanceTiming and aPerformance must be non-null.
   PerformanceNavigationTiming(
       UniquePtr<PerformanceTimingData>&& aPerformanceTiming,
       Performance* aPerformance, const nsAString& aName)
