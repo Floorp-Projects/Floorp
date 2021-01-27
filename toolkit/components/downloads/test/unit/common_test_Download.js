@@ -323,18 +323,18 @@ add_task(async function test_unix_permissions() {
         }
 
         let isTemporary = launchWhenSucceeded && (autoDelete || isPrivate);
-        let stat = await IOUtils.stat(download.target.path);
+        let stat = await OS.File.stat(download.target.path);
         if (Services.appinfo.OS == "WINNT") {
           // On Windows
           // Temporary downloads should be read-only
-          Assert.equal(stat.permissions, isTemporary ? 0o444 : 0o666);
+          Assert.equal(stat.winAttributes.readOnly, !!isTemporary);
         } else {
           // On Linux, Mac
           // Temporary downloads should be read-only and not accessible to other
           // users, while permanently downloaded files should be readable and
           // writable as specified by the system umask.
           Assert.equal(
-            stat.permissions,
+            stat.unixMode,
             isTemporary ? 0o400 : 0o666 & ~OS.Constants.Sys.umask
           );
         }
