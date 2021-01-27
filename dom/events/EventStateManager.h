@@ -317,10 +317,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   // frozen at the last mouse position while the pointer is locked.
   static CSSIntPoint sLastClientPoint;
 
-  static bool sIsPointerLocked;
-  static nsWeakPtr sPointerLockedElement;
-  static nsWeakPtr sPointerLockedDoc;
-
   /**
    * If the absolute values of mMultiplierX and/or mMultiplierY are equal or
    * larger than this value, the computed scroll amount isn't rounded down to

@@ -34,6 +34,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/PointerLockManager.h"
 #include "mozilla/PreloadService.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
@@ -2008,12 +2009,6 @@ class Document : public nsINode,
    */
   static bool HandlePendingFullscreenRequests(Document* aDocument);
 
-  void RequestPointerLock(Element* aElement, CallerType);
-  MOZ_CAN_RUN_SCRIPT bool SetPointerLock(Element* aElement, StyleCursorKind);
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  static void UnlockPointer(Document* aDoc = nullptr);
-
   // ScreenOrientation related APIs
 
   void ClearOrientationPendingPromise();
@@ -3407,7 +3402,7 @@ class Document : public nsINode,
   Element* GetUnretargetedFullScreenElement();
   bool Fullscreen() { return !!GetFullscreenElement(); }
   already_AddRefed<Promise> ExitFullscreen(ErrorResult&);
-  void ExitPointerLock() { UnlockPointer(this); }
+  void ExitPointerLock() { PointerLockManager::Unlock(this); }
   void GetFgColor(nsAString& aFgColor);
   void SetFgColor(const nsAString& aFgColor);
   void GetLinkColor(nsAString& aLinkColor);
