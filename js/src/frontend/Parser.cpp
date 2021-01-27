@@ -192,19 +192,17 @@ template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationStencil& stencil, CompilationState& compilationState,
-    BaseScript* lazyOuterFunction, void* internalSyntaxParser)
+    void* internalSyntaxParser)
     : ParserBase(cx, options, foldConstants, stencil, compilationState),
-      handler_(cx, compilationState.allocScope.alloc(), lazyOuterFunction),
+      handler_(cx, compilationState.allocScope.alloc(), stencil.input.lazy),
       internalSyntaxParser_(internalSyntaxParser) {}
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, const Unit* units,
     size_t length, bool foldConstants, CompilationStencil& stencil,
-    CompilationState& compilationState, SyntaxParser* syntaxParser,
-    BaseScript* lazyOuterFunction)
-    : Base(cx, options, foldConstants, stencil, compilationState, syntaxParser,
-           lazyOuterFunction),
+    CompilationState& compilationState, SyntaxParser* syntaxParser)
+    : Base(cx, options, foldConstants, stencil, compilationState, syntaxParser),
       tokenStream(cx, &compilationState.parserAtoms, options, units, length) {}
 
 template <typename Unit>

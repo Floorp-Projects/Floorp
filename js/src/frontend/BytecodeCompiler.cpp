@@ -608,7 +608,8 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
     syntaxParser.emplace(cx, stencil.input.options, sourceBuffer_.units(),
                          sourceBuffer_.length(),
                          /* foldConstants = */ false, stencil,
-                         compilationState_, nullptr, nullptr);
+                         compilationState_,
+                         /* syntaxParser = */ nullptr);
     if (!syntaxParser->checkOptions()) {
       return false;
     }
@@ -617,7 +618,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
   parser.emplace(cx, stencil.input.options, sourceBuffer_.units(),
                  sourceBuffer_.length(),
                  /* foldConstants = */ true, stencil, compilationState_,
-                 syntaxParser.ptrOr(nullptr), nullptr);
+                 syntaxParser.ptrOr(nullptr));
   parser->ss = stencil.input.source();
   return parser->checkOptions();
 }
@@ -1024,7 +1025,8 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
 
   Parser<FullParseHandler, Unit> parser(
       cx, stencil.input.options, units, length,
-      /* foldConstants = */ true, stencil, compilationState, nullptr, lazy);
+      /* foldConstants = */ true, stencil, compilationState,
+      /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;
   }

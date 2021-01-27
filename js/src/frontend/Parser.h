@@ -473,17 +473,16 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationStencil& stencil,
                    CompilationState& compilationState,
-                   BaseScript* lazyOuterFunction, void* internalSyntaxParser);
+                   void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationStencil& stencil,
                    CompilationState& compilationState,
-                   GeneralParser<SyntaxParseHandler, Unit>* syntaxParser,
-                   BaseScript* lazyOuterFunction)
+                   GeneralParser<SyntaxParseHandler, Unit>* syntaxParser)
       : PerHandlerParser(cx, options, foldConstants, stencil, compilationState,
-                         lazyOuterFunction, static_cast<void*>(syntaxParser)) {}
+                         static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
 
@@ -913,7 +912,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                 const Unit* units, size_t length, bool foldConstants,
                 CompilationStencil& stencil, CompilationState& compilationState,
-                SyntaxParser* syntaxParser, BaseScript* lazyOuterFunction);
+                SyntaxParser* syntaxParser);
 
   inline void setAwaitHandling(AwaitHandling awaitHandling);
   inline void setInParametersOfAsyncFunction(bool inParameters);
