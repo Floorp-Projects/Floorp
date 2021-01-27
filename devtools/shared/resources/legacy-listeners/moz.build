@@ -17,6 +17,7 @@ DevToolsModules(
     "network-events.js",
     "platform-messages.js",
     "root-node.js",
+    "server-sent-events.js",
     "session-storage.js",
     "source.js",
     "storage-utils.js",
