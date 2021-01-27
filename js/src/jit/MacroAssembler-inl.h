@@ -51,27 +51,27 @@ DynFn DynamicFunction(Sig fun) {
 }
 
 // Helper for generatePreBarrier.
-inline DynFn JitMarkFunction(MIRType type) {
+inline DynFn JitPreWriteBarrier(MIRType type) {
   switch (type) {
     case MIRType::Value: {
       using Fn = void (*)(JSRuntime * rt, Value * vp);
-      return DynamicFunction<Fn>(MarkValueFromJit);
+      return DynamicFunction<Fn>(JitValuePreWriteBarrier);
     }
     case MIRType::String: {
       using Fn = void (*)(JSRuntime * rt, JSString * *stringp);
-      return DynamicFunction<Fn>(MarkStringFromJit);
+      return DynamicFunction<Fn>(JitStringPreWriteBarrier);
     }
     case MIRType::Object: {
       using Fn = void (*)(JSRuntime * rt, JSObject * *objp);
-      return DynamicFunction<Fn>(MarkObjectFromJit);
+      return DynamicFunction<Fn>(JitObjectPreWriteBarrier);
     }
     case MIRType::Shape: {
       using Fn = void (*)(JSRuntime * rt, Shape * *shapep);
-      return DynamicFunction<Fn>(MarkShapeFromJit);
+      return DynamicFunction<Fn>(JitShapePreWriteBarrier);
     }
     case MIRType::ObjectGroup: {
       using Fn = void (*)(JSRuntime * rt, ObjectGroup * *groupp);
-      return DynamicFunction<Fn>(MarkObjectGroupFromJit);
+      return DynamicFunction<Fn>(JitObjectGroupPreWriteBarrier);
     }
     default:
       MOZ_CRASH();
