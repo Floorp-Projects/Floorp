@@ -131,9 +131,7 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
 
   let appMenuZoomReset = PanelMultiView.getViewNode(
     win.document,
-    Services.prefs.getBoolPref("browser.proton.appmenu.enabled")
-      ? "appMenu-zoomReset-button2"
-      : "appMenu-zoomReset-button"
+    "appMenu-zoomReset-button"
   );
 
   // Exit early if UI elements aren't present.
