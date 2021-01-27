@@ -19,6 +19,11 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
+    let PromEvents = {};
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
+
     // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
@@ -39,8 +44,15 @@
     // gA11yEventDumpToConsole = true; // debuggin
 
     var gQueue = null;
-    function doTests() {
+    async function doTests() {
       gQueue = new eventQueue();
+      // Later tests use await.
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
 
       gQueue.push(new setAttr("tst1", "aria-describedby", "display",
                               new invokerChecker(EVENT_DESCRIPTION_CHANGE, "tst1")));
@@ -50,7 +62,35 @@
       gQueue.push(new setAttr("tst2", "title", "title",
                               new invokerChecker(EVENT_NAME_CHANGE, "tst2")));
 
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      gQueue.invoke();
+      await queueFinished;
+      // Tests beyond this point use await rather than eventQueue.
+
+      const describedBy = getNode("describedBy");
+      const description = getNode("description");
+      let descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        describedBy
+      );
+      info("Changing text of aria-describedby target");
+      description.textContent = "d2";
+      await descChanged;
+      descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        describedBy
+      );
+      info("Adding node to aria-describedby target");
+      description.innerHTML = '<p id="descriptionChild">d3</p>';
+      await descChanged;
+      descChanged = PromEvents.waitForEvent(
+        EVENT_DESCRIPTION_CHANGE,
+        describedBy
+      );
+      info("Changing text of aria-describedby target's child");
+      getNode("descriptionChild").textContent = "d4";
+      await descChanged;
+
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -73,6 +113,9 @@
 
   <button id="tst1">btn1</button>
   <button id="tst2">btn2</button>
+
+  <div id="describedBy" aria-describedby="description"></div>
+  <div id="description">d1</div>
 
   <div id="eventdump"></div>
 </body>

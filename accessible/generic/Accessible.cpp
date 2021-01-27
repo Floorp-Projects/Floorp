@@ -2075,6 +2075,12 @@ void Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent) {
   } else {
     mContextFlags &= ~eHasNameDependent;
   }
+  if (mParent->HasDescriptionDependent() ||
+      RelationByType(RelationType::DESCRIPTION_FOR).Next()) {
+    mContextFlags |= eHasDescriptionDependent;
+  } else {
+    mContextFlags &= ~eHasDescriptionDependent;
+  }
 
   mContextFlags |=
       static_cast<uint32_t>((mParent->IsAlert() || mParent->IsInsideAlert())) &

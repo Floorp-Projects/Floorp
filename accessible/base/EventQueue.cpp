@@ -43,26 +43,32 @@ bool EventQueue::PushEvent(AccEvent* aEvent) {
       (aEvent->mEventType == nsIAccessibleEvent::EVENT_NAME_CHANGE ||
        aEvent->mEventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
        aEvent->mEventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED)) {
-    PushNameChange(aEvent->mAccessible);
+    PushNameOrDescriptionChange(aEvent->mAccessible);
   }
   return true;
 }
 
-bool EventQueue::PushNameChange(Accessible* aTarget) {
-  // Fire name change event on parent or related Accessible being labelled given
-  // that this event hasn't been coalesced, the dependent's name was calculated
-  // from this subtree, and the subtree was changed.
+bool EventQueue::PushNameOrDescriptionChange(Accessible* aTarget) {
+  // Fire name/description change event on parent or related Accessible being
+  // labelled/described given that this event hasn't been coalesced, the
+  // dependent's name/description was calculated from this subtree, and the
+  // subtree was changed.
+  const bool doName = aTarget->HasNameDependent();
+  const bool doDesc = aTarget->HasDescriptionDependent();
+  if (!doName && !doDesc) {
+    return false;
+  }
   bool pushed = false;
-  bool checkAncestor = true;
-  if (aTarget->HasNameDependent()) {
-    // Only continue traversing up the tree if it's possible that the parent
-    // Accessible's name (or an Accessible being labelled by this Accessible or
-    // an ancestor) can depend on this Accessible's name.
-    Accessible* parent = aTarget->Parent();
-    while (parent &&
-           nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeIfReqRule)) {
-      // Test possible name dependent parent.
-      if (checkAncestor &&
+  bool nameCheckAncestor = true;
+  // Only continue traversing up the tree if it's possible that the parent
+  // Accessible's name (or an Accessible being labelled by this Accessible or
+  // an ancestor) can depend on this Accessible's name.
+  Accessible* parent = aTarget->Parent();
+  while (parent &&
+         nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeIfReqRule)) {
+    // Test possible name dependent parent.
+    if (doName) {
+      if (nameCheckAncestor &&
           nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeRule)) {
         nsAutoString name;
         ENameValueFlag nameFlag = parent->Name(name);
@@ -72,16 +78,27 @@ bool EventQueue::PushNameChange(Accessible* aTarget) {
               new AccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, parent);
           pushed |= PushEvent(nameChangeEvent);
         }
-        checkAncestor = false;
+        nameCheckAncestor = false;
       }
+
       Relation rel = parent->RelationByType(RelationType::LABEL_FOR);
       while (Accessible* relTarget = rel.Next()) {
         RefPtr<AccEvent> nameChangeEvent =
             new AccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, relTarget);
         pushed |= PushEvent(nameChangeEvent);
       }
-      parent = parent->Parent();
     }
+
+    if (doDesc) {
+      Relation rel = parent->RelationByType(RelationType::DESCRIPTION_FOR);
+      while (Accessible* relTarget = rel.Next()) {
+        RefPtr<AccEvent> descChangeEvent = new AccEvent(
+            nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, relTarget);
+        pushed |= PushEvent(descChangeEvent);
+      }
+    }
+
+    parent = parent->Parent();
   }
   return pushed;
 }
