@@ -257,30 +257,6 @@ void nsTableWrapperFrame::InitChildReflowInput(nsPresContext& aPresContext,
   aReflowInput.Init(&aPresContext, cbSize, collapseBorder, collapsePadding);
 }
 
-// get the margin and padding data. ReflowInput doesn't handle the
-// case of auto margins
-void nsTableWrapperFrame::GetChildMargin(nsPresContext* aPresContext,
-                                         const ReflowInput& aOuterRI,
-                                         nsIFrame* aChildFrame,
-                                         nscoord aAvailISize,
-                                         LogicalMargin& aMargin) {
-  NS_ASSERTION(!aChildFrame->IsTableCaption(),
-               "didn't expect caption frame; writing-mode may be wrong!");
-
-  // construct a reflow input to compute margin and padding. Auto margins
-  // will not be computed at this time.
-
-  // create and init the child reflow input
-  // XXX We really shouldn't construct a reflow input to do this.
-  WritingMode wm = aOuterRI.GetWritingMode();
-  LogicalSize availSize(wm, aAvailISize, aOuterRI.AvailableSize(wm).BSize(wm));
-  ReflowInput childRI(aPresContext, aOuterRI, aChildFrame, availSize, Nothing(),
-                      ReflowInput::InitFlag::CallerWillInit);
-  InitChildReflowInput(*aPresContext, aOuterRI, childRI);
-
-  aMargin = childRI.ComputedLogicalMargin(childRI.GetWritingMode());
-}
-
 static nsSize GetContainingBlockSize(const ReflowInput& aOuterRI) {
   nsSize size(0, 0);
   const ReflowInput* containRS = aOuterRI.mCBReflowInput;
@@ -715,18 +691,6 @@ void nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext* aPresContext,
   if (NS_UNCONSTRAINEDSIZE != availBSize) {
     if (mCaptionFrames.FirstChild() == aChildFrame) {
       availBSize = NS_UNCONSTRAINEDSIZE;
-    } else {
-      LogicalMargin margin(wm);
-      GetChildMargin(aPresContext, aOuterRI, aChildFrame, outerSize.ISize(wm),
-                     margin);
-
-      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.BStart(wm),
-                   "No unconstrainedsize arithmetic, please");
-      availBSize -= margin.BStart(wm);
-
-      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.BEnd(wm),
-                   "No unconstrainedsize arithmetic, please");
-      availBSize -= margin.BEnd(wm);
     }
   }
   LogicalSize availSize(wm, aAvailISize, availBSize);
@@ -929,7 +893,6 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   OuterDoReflowChild(aPresContext, InnerTableFrame(), *innerRI, innerMet,
                      aStatus);
   LogicalSize innerSize(wm, innerMet.ISize(wm), innerMet.BSize(wm));
-  LogicalMargin innerMargin = innerRI->ComputedLogicalMargin(wm);
 
   LogicalSize containSize(wm, GetContainingBlockSize(aOuterRI));
 
@@ -942,9 +905,17 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   // Compute the desiredSize so that we can use it as the containerSize
   // for the FinishReflowChild calls below.
   LogicalSize desiredSize(wm);
+
+  // We have zero border and padding, so content-box inline-size is our desired
+  // border-box inline-size.
+  desiredSize.ISize(wm) = contentBoxISize;
+
+  // TODO: Simplified SetDesiredSize() since innerMargin is now all zero,
+  // and we only need to compute our block-size.
+  LogicalMargin innerMargin(wm);
+  nscoord dummyISize = 0;
   SetDesiredSize(captionSide, innerSize, captionSize, innerMargin,
-                 captionMargin, desiredSize.ISize(wm), desiredSize.BSize(wm),
-                 wm);
+                 captionMargin, dummyISize, desiredSize.BSize(wm), wm);
   aDesiredSize.SetSize(wm, desiredSize);
   nsSize containerSize = aDesiredSize.PhysicalSize();
   // XXX It's possible for this to be NS_UNCONSTRAINEDSIZE, which will result

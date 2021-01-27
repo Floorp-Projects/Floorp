@@ -1750,8 +1750,11 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
              "The nsTableWrapperFrame should be the out-of-flow if needed");
 
+  const WritingMode wm = aReflowInput.GetWritingMode();
+  MOZ_ASSERT(aReflowInput.ComputedLogicalMargin(wm).IsAllZero(),
+             "Only nsTableWrapperFrame can have margins!");
+
   bool isPaginated = aPresContext->IsPaginated();
-  WritingMode wm = aReflowInput.GetWritingMode();
 
   if (!GetPrevInFlow() && !mTableLayoutStrategy) {
     NS_ERROR("strategy should have been created in Init");

@@ -247,11 +247,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
   // Set the overflow areas in our reflow metrics
   void UpdateOverflowAreas(ReflowOutput& aMet);
 
-  // Get the margin.
-  void GetChildMargin(nsPresContext* aPresContext, const ReflowInput& aOuterRI,
-                      nsIFrame* aChildFrame, nscoord aAvailableWidth,
-                      mozilla::LogicalMargin& aMargin);
-
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
     return nsContainerFrame::IsFrameOfType(aFlags &
                                            (~eCanContainOverflowContainers));
