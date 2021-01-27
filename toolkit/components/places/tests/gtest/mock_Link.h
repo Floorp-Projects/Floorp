@@ -13,14 +13,13 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Link.h"
-#include "nsIContent.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 class mock_Link : public mozilla::dom::Link {
  public:
   NS_DECL_ISUPPORTS
 
-  typedef void (*Handler)(nsLinkState);
+  typedef void (*Handler)(State);
 
   explicit mock_Link(Handler aHandlerFunction, bool aRunNextTest = true)
       : mozilla::dom::Link(), mRunNextTest(aRunNextTest) {
@@ -29,7 +28,7 @@ class mock_Link : public mozilla::dom::Link {
 
   void VisitedQueryFinished(bool aVisited) final {
     // Notify our callback function.
-    mHandler(aVisited ? eLinkState_Visited : eLinkState_Unvisited);
+    mHandler(aVisited ? State::Visited : State::Unvisited);
 
     // Break the cycle so the object can be destroyed.
     mDeathGrip = nullptr;
