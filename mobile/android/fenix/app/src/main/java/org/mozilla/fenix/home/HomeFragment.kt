@@ -21,6 +21,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -273,11 +274,12 @@ class HomeFragment : Fragment() {
      * Returns a [TopSitesConfig] which specifies how many top sites to display and whether or
      * not frequently visited sites should be displayed.
      */
-    private fun getTopSitesConfig(): TopSitesConfig {
+    @VisibleForTesting
+    internal fun getTopSitesConfig(): TopSitesConfig {
         val settings = requireContext().settings()
         return TopSitesConfig(
             settings.topSitesMaxLimit,
-            FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
+            if (settings.showTopFrecentSites) FrecencyThresholdOption.SKIP_ONE_TIME_PAGES else null
         )
     }
 
@@ -428,7 +430,8 @@ class HomeFragment : Fragment() {
                     if (searchEngine != null) {
                         val iconSize =
                             requireContext().resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
-                        val searchIcon = BitmapDrawable(requireContext().resources, searchEngine.icon)
+                        val searchIcon =
+                            BitmapDrawable(requireContext().resources, searchEngine.icon)
                         searchIcon.setBounds(0, 0, iconSize, iconSize)
                         search_engine_icon?.setImageDrawable(searchIcon)
                     } else {
