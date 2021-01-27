@@ -38,6 +38,7 @@ export default class ImportErrorDialog extends HTMLElement {
     this._titleElement = shadowRoot.querySelector(".error-title");
     this._descriptionElement = shadowRoot.querySelector(".error-description");
     this._genericDialog = this.shadowRoot.querySelector("generic-dialog");
+    this._focusedElement = this.shadowRoot.querySelector("a");
     const tryImportAgain = this.shadowRoot.querySelector(".try-import-again");
     tryImportAgain.addEventListener("click", () => {
       this._genericDialog.hide();
@@ -51,7 +52,8 @@ export default class ImportErrorDialog extends HTMLElement {
     const { title, description } = this._errorMessages[errorType];
     document.l10n.setAttributes(this._titleElement, title);
     document.l10n.setAttributes(this._descriptionElement, description);
-    return this._genericDialog.show();
+    this._genericDialog.show();
+    window.AboutLoginsUtils.setFocus(this._focusedElement);
   }
 }
 customElements.define("import-error-dialog", ImportErrorDialog);

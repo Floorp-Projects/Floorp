@@ -99,7 +99,21 @@ add_task(async function test_open_import_from_csv() {
         { category: "pwmgr", method: "mgmt_menu_item_used" },
         { process: "parent" }
       );
-
+      await SpecialPowers.spawn(browser, [], async () => {
+        let dialog = Cu.waiveXrays(
+          content.document.querySelector("import-summary-dialog")
+        );
+        await ContentTaskUtils.waitForCondition(
+          () => !dialog.hidden,
+          "Waiting for the dialog to be visible"
+        );
+        let dismissButton = dialog.shadowRoot.querySelector(".dismiss-button");
+        is(
+          dialog.shadowRoot.activeElement,
+          dismissButton,
+          "dismiss button should be focused"
+        );
+      });
       EXPECTED_ERROR_MESSAGE = null;
     }
   );
@@ -190,6 +204,14 @@ add_task(async function test_open_import_from_csv_with_invalid_file() {
             .getAttribute("data-l10n-id"),
           "about-logins-import-dialog-error-file-format-description",
           "Dialog error description should be correct"
+        );
+        let learnMoreLink = dialog.shadowRoot.querySelector(
+          "a[data-l10n-id='about-logins-import-dialog-error-learn-more']"
+        );
+        is(
+          dialog.shadowRoot.activeElement,
+          learnMoreLink,
+          "Learn more link should be focused."
         );
       });
     }
