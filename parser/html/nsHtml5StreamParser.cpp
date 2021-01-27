@@ -646,7 +646,7 @@ static void HandleProcessingInstruction(void* aUserData,
 void nsHtml5StreamParser::FinalizeSniffingWithDetector(
     Span<const uint8_t> aFromSegment, uint32_t aCountToSniffingLimit,
     bool aEof) {
-  if (mSniffingBuffer) {
+  if (mFeedChardet && mSniffingBuffer) {
     FeedDetector(Span(mSniffingBuffer.get(), mSniffingLength), false);
   }
   if (mFeedChardet && !aFromSegment.IsEmpty()) {
