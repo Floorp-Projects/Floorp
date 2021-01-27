@@ -14,6 +14,7 @@
 #ifdef A11Y_LOG
 #  include "Logging.h"
 #endif
+#include "Relation.h"
 
 namespace mozilla {
 namespace a11y {
@@ -48,31 +49,41 @@ bool EventQueue::PushEvent(AccEvent* aEvent) {
 }
 
 bool EventQueue::PushNameChange(Accessible* aTarget) {
-  // Fire name change event on parent given that this event hasn't been
-  // coalesced, the parent's name was calculated from its subtree, and the
-  // subtree was changed.
+  // Fire name change event on parent or related Accessible being labelled given
+  // that this event hasn't been coalesced, the dependent's name was calculated
+  // from this subtree, and the subtree was changed.
+  bool pushed = false;
+  bool checkAncestor = true;
   if (aTarget->HasNameDependent()) {
     // Only continue traversing up the tree if it's possible that the parent
-    // accessible's name can depend on this accessible's name.
+    // Accessible's name (or an Accessible being labelled by this Accessible or
+    // an ancestor) can depend on this Accessible's name.
     Accessible* parent = aTarget->Parent();
     while (parent &&
            nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeIfReqRule)) {
       // Test possible name dependent parent.
-      if (nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeRule)) {
+      if (checkAncestor &&
+          nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeRule)) {
         nsAutoString name;
         ENameValueFlag nameFlag = parent->Name(name);
         // If name is obtained from subtree, fire name change event.
         if (nameFlag == eNameFromSubtree) {
           RefPtr<AccEvent> nameChangeEvent =
               new AccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, parent);
-          return PushEvent(nameChangeEvent);
+          pushed |= PushEvent(nameChangeEvent);
         }
-        break;
+        checkAncestor = false;
+      }
+      Relation rel = parent->RelationByType(RelationType::LABEL_FOR);
+      while (Accessible* relTarget = rel.Next()) {
+        RefPtr<AccEvent> nameChangeEvent =
+            new AccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, relTarget);
+        pushed |= PushEvent(nameChangeEvent);
       }
       parent = parent->Parent();
     }
   }
-  return false;
+  return pushed;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
