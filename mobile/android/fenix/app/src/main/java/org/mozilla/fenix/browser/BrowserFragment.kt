@@ -69,7 +69,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     tabPreview = tabPreview,
                     toolbarLayout = browserToolbarView.view,
                     store = components.core.store,
-                    sessionManager = components.core.sessionManager
+                    selectTabUseCase = components.useCases.tabsUseCases.selectTab
                 )
             )
         }

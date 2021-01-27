@@ -17,16 +17,16 @@ import androidx.core.graphics.contains
 import androidx.core.graphics.toPoint
 import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.getWindowInsets
 import org.mozilla.fenix.ext.isKeyboardVisible
-import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import kotlin.math.abs
 import kotlin.math.max
@@ -43,7 +43,7 @@ class ToolbarGestureHandler(
     private val tabPreview: TabPreview,
     private val toolbarLayout: View,
     private val store: BrowserStore,
-    private val sessionManager: SessionManager
+    private val selectTabUseCase: TabsUseCases.SelectTabUseCase
 ) : SwipeGestureListener {
 
     private enum class GestureDirection {
@@ -51,7 +51,7 @@ class ToolbarGestureHandler(
     }
 
     private sealed class Destination {
-        data class Tab(val session: Session) : Destination()
+        data class Tab(val tab: TabSessionState) : Destination()
         object None : Destination()
     }
 
@@ -140,7 +140,7 @@ class ToolbarGestureHandler(
     ) {
         val destination = getDestination()
         if (destination is Destination.Tab && isGestureComplete(velocityX)) {
-            animateToNextTab(destination.session)
+            animateToNextTab(destination.tab)
         } else {
             animateCanceledGesture(velocityX)
         }
@@ -149,14 +149,14 @@ class ToolbarGestureHandler(
     private fun getDestination(): Destination {
         val isLtr = activity.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_LTR
         val currentTab = store.state.selectedTab ?: return Destination.None
-        val currentIndex = sessionManager.sessionsOfType(currentTab.content.private).indexOfFirst {
+        val currentIndex = store.state.getNormalOrPrivateTabs(currentTab.content.private).indexOfFirst {
             it.id == currentTab.id
         }
 
         return if (currentIndex == -1) {
             Destination.None
         } else {
-            val sessions = sessionManager.sessionsOfType(currentTab.content.private)
+            val tabs = store.state.getNormalOrPrivateTabs(currentTab.content.private)
             val index = when (gestureDirection) {
                 GestureDirection.RIGHT_TO_LEFT -> if (isLtr) {
                     currentIndex + 1
@@ -170,8 +170,8 @@ class ToolbarGestureHandler(
                 }
             }
 
-            if (index < sessions.count() && index >= 0) {
-                Destination.Tab(sessions.elementAt(index))
+            if (index < tabs.count() && index >= 0) {
+                Destination.Tab(tabs.elementAt(index))
             } else {
                 Destination.None
             }
@@ -180,7 +180,7 @@ class ToolbarGestureHandler(
 
     private fun preparePreview(destination: Destination) {
         val thumbnailId = when (destination) {
-            is Destination.Tab -> destination.session.id
+            is Destination.Tab -> destination.tab.id
             is Destination.None -> return
         }
 
@@ -233,7 +233,7 @@ class ToolbarGestureHandler(
         }
     }
 
-    private fun animateToNextTab(session: Session) {
+    private fun animateToNextTab(tab: TabSessionState) {
         val browserFinalXCoordinate: Float = when (gestureDirection) {
             GestureDirection.RIGHT_TO_LEFT -> -windowWidth.toFloat() - previewOffset
             GestureDirection.LEFT_TO_RIGHT -> windowWidth.toFloat() + previewOffset
@@ -243,7 +243,7 @@ class ToolbarGestureHandler(
         getAnimator(browserFinalXCoordinate, FINISHED_GESTURE_ANIMATION_DURATION).apply {
             doOnEnd {
                 contentLayout.translationX = 0f
-                sessionManager.select(session)
+                selectTabUseCase(tab.id)
 
                 // Fade out the tab preview to prevent flickering
                 val shortAnimationDuration =
