@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"     // MOZ_ASSERT, MOZ_CRASH
 #include "mozilla/Atomics.h"        // mozilla::{Atomic, SequentiallyConsistent}
 #include "mozilla/Attributes.h"     // MOZ_MUST_USE
+#include "mozilla/CheckedInt.h"     // mozilla::CheckedInt
 #include "mozilla/HashFunctions.h"  // mozilla::HahNumber, mozilla::HashBytes
 #include "mozilla/HashTable.h"      // mozilla::HashSet
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
@@ -434,6 +435,22 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
       JSContext* cx, uint32_t codeLength, uint32_t noteLength,
       uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes);
 
+  static js::UniquePtr<ImmutableScriptData> new_(JSContext* cx,
+                                                 uint32_t totalSize);
+
+#ifdef DEBUG
+  // Validate the content, after XDR decoding.
+  void validate(uint32_t totalSize);
+#endif
+
+ private:
+  static mozilla::CheckedInt<uint32_t> sizeFor(uint32_t codeLength,
+                                               uint32_t noteLength,
+                                               uint32_t numResumeOffsets,
+                                               uint32_t numScopeNotes,
+                                               uint32_t numTryNotes);
+
+ public:
   // The code() and note() arrays together maintain an target alignment by
   // padding the source notes with null. This allows arrays with stricter
   // alignment requirements to follow them.
