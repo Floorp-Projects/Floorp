@@ -371,7 +371,11 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx, HandleDebuggerFrame frame,
   //
   // 2) The generator's script's observer count must be bumped.
 
-  RootedScript script(cx, genObj->callee().nonLazyScript());
+  RootedFunction callee(cx, &genObj->callee());
+  RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
+  if (!script) {
+    return false;
+  }
   auto info = cx->make_unique<GeneratorInfo>(genObj, script);
   if (!info) {
     return false;

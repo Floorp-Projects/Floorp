@@ -1840,12 +1840,9 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
     //  - Scripts with inner-functions or direct-eval (which can add
     //    inner-functions) should not be relazified as their Scopes may be part
     //    of another scope-chain.
-    //  - Generators and async functions may be re-entered in complex ways so
-    //    don't discard bytecode. The JIT resume code assumes this.
     //  - Functions with template literals must always return the same object
     //    instance so must not discard it by relazifying.
-    return !hasInnerFunctions() && !hasDirectEval() && !isGenerator() &&
-           !isAsync() && !hasCallSiteObj();
+    return !hasInnerFunctions() && !hasDirectEval() && !hasCallSiteObj();
   }
 
  public:
