@@ -606,6 +606,7 @@ ARCHIVE_FILES = {
                 "node-http2/**",
                 "node-ip/**",
                 "dns-packet/**",
+                "odoh-wasm/**",
                 "remotexpcshelltests.py",
                 "runxpcshelltests.py",
                 "selftest.py",
