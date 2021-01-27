@@ -24,7 +24,9 @@ using mozilla::IsNegativeZero;
 using mozilla::IsPositiveZero;
 using mozilla::NegativeInfinity;
 using mozilla::NumberEqualsInt32;
+using mozilla::NumberEqualsInt64;
 using mozilla::NumberIsInt32;
+using mozilla::NumberIsInt64;
 using mozilla::NumbersAreIdentical;
 using mozilla::PositiveInfinity;
 using mozilla::SpecificNaN;
@@ -248,6 +250,67 @@ static void TestExponentComponent() {
   TestFloatExponentComponent();
 }
 
+// Used to test Number{Is,Equals}{Int32,Int64} for -0.0, the only case where
+// NumberEquals* and NumberIs* aren't equivalent.
+template <typename T>
+static void TestEqualsIsForNegativeZero() {
+  T negZero = T(-0.0);
+
+  int32_t i32;
+  A(!NumberIsInt32(negZero, &i32));
+  A(NumberEqualsInt32(negZero, &i32));
+  A(i32 == 0);
+
+  int64_t i64;
+  A(!NumberIsInt64(negZero, &i64));
+  A(NumberEqualsInt64(negZero, &i64));
+  A(i64 == 0);
+}
+
+// Used to test Number{Is,Equals}{Int32,Int64} for int32 values.
+template <typename T>
+static void TestEqualsIsForInt32(T aVal) {
+  int32_t i32;
+  A(NumberIsInt32(aVal, &i32));
+  MOZ_ASSERT(i32 == aVal);
+  A(NumberEqualsInt32(aVal, &i32));
+  MOZ_ASSERT(i32 == aVal);
+
+  int64_t i64;
+  A(NumberIsInt64(aVal, &i64));
+  MOZ_ASSERT(i64 == aVal);
+  A(NumberEqualsInt64(aVal, &i64));
+  MOZ_ASSERT(i64 == aVal);
+};
+
+// Used to test Number{Is,Equals}{Int32,Int64} for values that fit in int64 but
+// not int32.
+template <typename T>
+static void TestEqualsIsForInt64(T aVal) {
+  int32_t i32;
+  A(!NumberIsInt32(aVal, &i32));
+  A(!NumberEqualsInt32(aVal, &i32));
+
+  int64_t i64;
+  A(NumberIsInt64(aVal, &i64));
+  MOZ_ASSERT(i64 == aVal);
+  A(NumberEqualsInt64(aVal, &i64));
+  MOZ_ASSERT(i64 == aVal);
+};
+
+// Used to test Number{Is,Equals}{Int32,Int64} for values that aren't equal to
+// any int32 or int64.
+template <typename T>
+static void TestEqualsIsForNonInteger(T aVal) {
+  int32_t i32;
+  A(!NumberIsInt32(aVal, &i32));
+  A(!NumberEqualsInt32(aVal, &i32));
+
+  int64_t i64;
+  A(!NumberIsInt64(aVal, &i64));
+  A(!NumberEqualsInt64(aVal, &i64));
+};
+
 static void TestDoublesPredicates() {
   A(IsNaN(UnspecifiedNaN<double>()));
   A(IsNaN(SpecificNaN<double>(1, 17)));
@@ -294,59 +357,60 @@ static void TestDoublesPredicates() {
   A(!IsNegativeZero(-1.0));
   A(!IsNegativeZero(1.0));
 
-  int32_t i;
-  A(NumberIsInt32(0.0, &i));
-  A(i == 0);
-  A(!NumberIsInt32(-0.0, &i));
-  A(NumberEqualsInt32(0.0, &i));
-  A(i == 0);
-  A(NumberEqualsInt32(-0.0, &i));
-  A(i == 0);
-  A(NumberIsInt32(double(INT32_MIN), &i));
-  A(i == INT32_MIN);
-  A(NumberIsInt32(double(INT32_MAX), &i));
-  A(i == INT32_MAX);
-  A(NumberEqualsInt32(double(INT32_MIN), &i));
-  A(i == INT32_MIN);
-  A(NumberEqualsInt32(double(INT32_MAX), &i));
-  A(i == INT32_MAX);
+  // Edge case: negative zero.
+  TestEqualsIsForNegativeZero<double>();
+
+  // Int32 values.
+  auto testInt32 = TestEqualsIsForInt32<double>;
+  testInt32(0.0);
+  testInt32(1.0);
+  testInt32(INT32_MIN);
+  testInt32(INT32_MAX);
+
+  // Int64 values that don't fit in int32.
+  auto testInt64 = TestEqualsIsForInt64<double>;
+  testInt64(2147483648);
+  testInt64(2147483649);
+  testInt64(-2147483649);
+  testInt64(INT64_MIN);
+  // Note: INT64_MAX can't be represented exactly as double. Use a large double
+  // very close to it.
+  testInt64(9223372036854772000.0);
+
+  constexpr double MinSafeInteger = -9007199254740991.0;
+  constexpr double MaxSafeInteger = 9007199254740991.0;
+  testInt64(MinSafeInteger);
+  testInt64(MaxSafeInteger);
+
+  // Doubles that aren't equal to any int32 or int64.
+  auto testNonInteger = TestEqualsIsForNonInteger<double>;
+  testNonInteger(NegativeInfinity<double>());
+  testNonInteger(PositiveInfinity<double>());
+  testNonInteger(UnspecifiedNaN<double>());
+  testNonInteger(-double(1ULL << 52) + 0.5);
+  testNonInteger(double(1ULL << 52) - 0.5);
+  testNonInteger(double(INT32_MAX) + 0.1);
+  testNonInteger(double(INT32_MIN) - 0.1);
+  testNonInteger(0.5);
+  testNonInteger(-0.0001);
+  testNonInteger(-9223372036854778000.0);
+  testNonInteger(9223372036854776000.0);
 
   // Sanity-check that the IEEE-754 double-precision-derived literals used in
   // testing here work as we intend them to.
   A(exp2(-1075.0) == 0.0);
   A(exp2(-1074.0) != 0.0);
+  testNonInteger(exp2(-1074.0));
+  testNonInteger(2 * exp2(-1074.0));
 
-  A(!NumberIsInt32(exp2(-1074.0), &i));
-  A(!NumberIsInt32(2 * exp2(-1074.0), &i));
-  A(!NumberIsInt32(0.5, &i));
   A(1.0 - exp2(-54.0) == 1.0);
   A(1.0 - exp2(-53.0) != 1.0);
-  A(!NumberIsInt32(1.0 - exp2(-53.0), &i));
-  A(!NumberIsInt32(1.0 - exp2(-52.0), &i));
+  testNonInteger(1.0 - exp2(-53.0));
+  testNonInteger(1.0 - exp2(-52.0));
+
   A(1.0 + exp2(-53.0) == 1.0f);
   A(1.0 + exp2(-52.0) != 1.0f);
-  A(!NumberIsInt32(1.0 + exp2(-52.0), &i));
-  A(!NumberIsInt32(1.5f, &i));
-  A(!NumberIsInt32(-double(2147483649), &i));
-  A(!NumberIsInt32(double(2147483648), &i));
-  A(!NumberIsInt32(-double(1ULL << 52) + 0.5, &i));
-  A(!NumberIsInt32(double(1ULL << 52) - 0.5, &i));
-  A(!NumberIsInt32(double(2147483648), &i));
-  A(!NumberIsInt32(double(INT32_MAX) + 0.1, &i));
-  A(!NumberIsInt32(double(INT32_MIN) - 0.1, &i));
-  A(!NumberIsInt32(NegativeInfinity<double>(), &i));
-  A(!NumberIsInt32(PositiveInfinity<double>(), &i));
-  A(!NumberIsInt32(UnspecifiedNaN<double>(), &i));
-  A(!NumberEqualsInt32(0.5, &i));
-  A(!NumberEqualsInt32(-double(2147483649), &i));
-  A(!NumberEqualsInt32(double(2147483648), &i));
-  A(!NumberEqualsInt32(-double(1ULL << 52) + 0.5, &i));
-  A(!NumberEqualsInt32(double(1ULL << 52) - 0.5, &i));
-  A(!NumberEqualsInt32(double(INT32_MAX) + 0.1, &i));
-  A(!NumberEqualsInt32(double(INT32_MIN) - 0.1, &i));
-  A(!NumberEqualsInt32(NegativeInfinity<double>(), &i));
-  A(!NumberEqualsInt32(PositiveInfinity<double>(), &i));
-  A(!NumberEqualsInt32(UnspecifiedNaN<double>(), &i));
+  testNonInteger(1.0 + exp2(-52.0));
 }
 
 static void TestFloatsPredicates() {
@@ -409,54 +473,51 @@ static void TestFloatsPredicates() {
   A(!IsPositiveZero(-1.0f));
   A(!IsPositiveZero(1.0f));
 
-  int32_t i;
+  // Edge case: negative zero.
+  TestEqualsIsForNegativeZero<float>();
+
+  // Int32 values.
+  auto testInt32 = TestEqualsIsForInt32<float>;
+  testInt32(0.0f);
+  testInt32(1.0f);
+  testInt32(INT32_MIN);
+  testInt32(float(2147483648 - 128));  // max int32_t fitting in float
   const int32_t BIG = 2097151;
-  A(NumberIsInt32(0.0f, &i));
-  A(i == 0);
-  A(!NumberIsInt32(-0.0f, &i));
-  A(NumberEqualsInt32(0.0f, &i));
-  A(i == 0);
-  A(NumberEqualsInt32(-0.0f, &i));
-  A(i == 0);
-  A(NumberIsInt32(float(INT32_MIN), &i));
-  A(i == INT32_MIN);
-  A(NumberIsInt32(float(2147483648 - 128),
-                  &i));  // max int32_t fitting in float
-  A(i == 2147483648 - 128);
-  A(NumberIsInt32(float(BIG), &i));
-  A(i == BIG);
-  A(NumberEqualsInt32(float(INT32_MIN), &i));
-  A(i == INT32_MIN);
-  A(NumberEqualsInt32(float(BIG), &i));
-  A(i == BIG);
+  testInt32(BIG);
+
+  // Int64 values that don't fit in int32.
+  auto testInt64 = TestEqualsIsForInt64<float>;
+  testInt64(INT64_MIN);
+  testInt64(9007199254740992.0f);
+  testInt64(-float(2147483648) - 256);
+  testInt64(float(2147483648));
+  testInt64(float(2147483648) + 256);
+
+  // Floats that aren't equal to any int32 or int64.
+  auto testNonInteger = TestEqualsIsForNonInteger<float>;
+  testNonInteger(NegativeInfinity<float>());
+  testNonInteger(PositiveInfinity<float>());
+  testNonInteger(UnspecifiedNaN<float>());
+  testNonInteger(0.5f);
+  testNonInteger(1.5f);
+  testNonInteger(-0.0001f);
+  testNonInteger(-19223373116872850000.0f);
+  testNonInteger(19223373116872850000.0f);
+  testNonInteger(float(BIG) + 0.1f);
+
   A(powf(2.0f, -150.0f) == 0.0f);
   A(powf(2.0f, -149.0f) != 0.0f);
-  A(!NumberIsInt32(powf(2.0f, -149.0f), &i));
-  A(!NumberIsInt32(2 * powf(2.0f, -149.0f), &i));
-  A(!NumberIsInt32(0.5f, &i));
+  testNonInteger(powf(2.0f, -149.0f));
+  testNonInteger(2 * powf(2.0f, -149.0f));
+
   A(1.0f - powf(2.0f, -25.0f) == 1.0f);
   A(1.0f - powf(2.0f, -24.0f) != 1.0f);
-  A(!NumberIsInt32(1.0f - powf(2.0f, -24.0f), &i));
-  A(!NumberIsInt32(1.0f - powf(2.0f, -23.0f), &i));
+  testNonInteger(1.0f - powf(2.0f, -24.0f));
+  testNonInteger(1.0f - powf(2.0f, -23.0f));
+
   A(1.0f + powf(2.0f, -24.0f) == 1.0f);
   A(1.0f + powf(2.0f, -23.0f) != 1.0f);
-  A(!NumberIsInt32(1.0f + powf(2.0f, -23.0f), &i));
-  A(!NumberIsInt32(1.5f, &i));
-  A(!NumberIsInt32(-float(2147483648) - 256, &i));
-  A(!NumberIsInt32(float(2147483648), &i));
-  A(!NumberIsInt32(float(2147483648) + 256, &i));
-  A(!NumberIsInt32(float(BIG) + 0.1f, &i));
-  A(!NumberIsInt32(NegativeInfinity<float>(), &i));
-  A(!NumberIsInt32(PositiveInfinity<float>(), &i));
-  A(!NumberIsInt32(UnspecifiedNaN<float>(), &i));
-  A(!NumberEqualsInt32(0.5f, &i));
-  A(!NumberEqualsInt32(-float(2147483648 + 256), &i));
-  A(!NumberEqualsInt32(float(2147483648), &i));
-  A(!NumberEqualsInt32(float(2147483648 + 256), &i));
-  A(!NumberEqualsInt32(float(BIG) + 0.1f, &i));
-  A(!NumberEqualsInt32(NegativeInfinity<float>(), &i));
-  A(!NumberEqualsInt32(PositiveInfinity<float>(), &i));
-  A(!NumberEqualsInt32(UnspecifiedNaN<float>(), &i));
+  testNonInteger(1.0f + powf(2.0f, -23.0f));
 }
 
 static void TestPredicates() {
