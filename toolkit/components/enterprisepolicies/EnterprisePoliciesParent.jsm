@@ -117,13 +117,13 @@ EnterprisePoliciesManager.prototype = {
 
     let provider = this._chooseProvider();
 
-    if (!provider) {
-      this.status = Ci.nsIEnterprisePolicies.INACTIVE;
+    if (provider.failed) {
+      this.status = Ci.nsIEnterprisePolicies.FAILED;
       return;
     }
 
-    if (provider.failed) {
-      this.status = Ci.nsIEnterprisePolicies.FAILED;
+    if (!provider.hasPolicies) {
+      this.status = Ci.nsIEnterprisePolicies.INACTIVE;
       return;
     }
 
@@ -139,22 +139,20 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _chooseProvider() {
-    let provider = null;
+    let platformProvider = null;
     if (AppConstants.platform == "win") {
-      provider = new WindowsGPOPoliciesProvider();
+      platformProvider = new WindowsGPOPoliciesProvider();
     } else if (AppConstants.platform == "macosx") {
-      provider = new macOSPoliciesProvider();
+      platformProvider = new macOSPoliciesProvider();
     }
-    if (provider && provider.hasPolicies) {
-      return provider;
+    let jsonProvider = new JSONPoliciesProvider();
+    if (platformProvider && platformProvider.hasPolicies) {
+      if (jsonProvider.hasPolicies) {
+        return new CombinedProvider(platformProvider, jsonProvider);
+      }
+      return platformProvider;
     }
-
-    provider = new JSONPoliciesProvider();
-    if (provider.hasPolicies) {
-      return provider;
-    }
-
-    return null;
+    return jsonProvider;
   },
 
   _activatePolicies(unparsedPolicies) {
@@ -476,15 +474,11 @@ function areEnterpriseOnlyPoliciesAllowed() {
 class JSONPoliciesProvider {
   constructor() {
     this._policies = null;
-    this._failed = false;
     this._readData();
   }
 
   get hasPolicies() {
-    return (
-      this._failed ||
-      (this._policies !== null && !isEmptyObject(this._policies))
-    );
+    return this._policies !== null && !isEmptyObject(this._policies);
   }
 
   get policies() {
@@ -663,5 +657,32 @@ class macOSPoliciesProvider {
 
   get failed() {
     return this._failed;
+  }
+}
+
+class CombinedProvider {
+  constructor(primaryProvider, secondaryProvider) {
+    // Combine policies with primaryProvider taking precedence.
+    // We only do this for top level policies.
+    this._policies = primaryProvider._policies;
+    for (let policyName of Object.keys(secondaryProvider.policies)) {
+      if (!(policyName in this._policies)) {
+        this._policies[policyName] = secondaryProvider.policies[policyName];
+      }
+    }
+  }
+
+  get hasPolicies() {
+    // Combined provider always has policies.
+    return true;
+  }
+
+  get policies() {
+    return this._policies;
+  }
+
+  get failed() {
+    // Combined provider never fails.
+    return false;
   }
 }
