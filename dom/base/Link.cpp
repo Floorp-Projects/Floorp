@@ -30,7 +30,7 @@ namespace mozilla::dom {
 
 Link::Link(Element* aElement)
     : mElement(aElement),
-      mLinkState(eLinkState_NotLink),
+      mState(State::NotLink),
       mNeedsRegistration(false),
       mRegistered(false),
       mHasPendingLinkUpdate(false),
@@ -41,7 +41,7 @@ Link::Link(Element* aElement)
 
 Link::Link()
     : mElement(nullptr),
-      mLinkState(eLinkState_NotLink),
+      mState(State::NotLink),
       mNeedsRegistration(false),
       mRegistered(false),
       mHasPendingLinkUpdate(false),
@@ -87,13 +87,13 @@ void Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
 
 void Link::VisitedQueryFinished(bool aVisited) {
   MOZ_ASSERT(mRegistered, "Setting the link state of an unregistered Link!");
-  MOZ_ASSERT(mLinkState == eLinkState_Unvisited,
+  MOZ_ASSERT(mState == State::Unvisited,
              "Why would we want to know our visited state otherwise?");
 
-  auto newState = aVisited ? eLinkState_Visited : eLinkState_Unvisited;
+  auto newState = aVisited ? State::Visited : State::Unvisited;
 
   // Set our current state as appropriate.
-  mLinkState = newState;
+  mState = newState;
 
   // We will be no longer registered if we're visited, as it'd be pointless, we
   // never transition from visited -> unvisited.
@@ -135,7 +135,7 @@ EventStates Link::LinkState() const {
     nsCOMPtr<nsIURI> hrefURI(GetURI());
 
     // Assume that we are not visited until we are told otherwise.
-    self->mLinkState = eLinkState_Unvisited;
+    self->mState = State::Unvisited;
 
     // Make sure the href attribute has a valid link (bug 23209).
     // If we have a good href, register with History if available.
@@ -150,11 +150,11 @@ EventStates Link::LinkState() const {
   }
 
   // Otherwise, return our known state.
-  if (mLinkState == eLinkState_Visited) {
+  if (mState == State::Visited) {
     return NS_EVENT_STATE_VISITED;
   }
 
-  if (mLinkState == eLinkState_Unvisited) {
+  if (mState == State::Unvisited) {
     return NS_EVENT_STATE_UNVISITED;
   }
 
@@ -490,21 +490,12 @@ void Link::GetHash(nsAString& _hash) {
 }
 
 void Link::ResetLinkState(bool aNotify, bool aHasHref) {
-  nsLinkState defaultState;
-
-  // The default state for links with an href is unvisited.
-  if (aHasHref) {
-    defaultState = eLinkState_Unvisited;
-  } else {
-    defaultState = eLinkState_NotLink;
-  }
-
   // If !mNeedsRegstration, then either we've never registered, or we're
   // currently registered; in either case, we should remove ourself
   // from the doc and the history.
-  if (!mNeedsRegistration && mLinkState != eLinkState_NotLink) {
+  if (!mNeedsRegistration && mState != State::NotLink) {
     Document* doc = mElement->GetComposedDoc();
-    if (doc && (mRegistered || mLinkState == eLinkState_Visited)) {
+    if (doc && (mRegistered || mState == State::Visited)) {
       // Tell the document to forget about this link if we've registered
       // with it before.
       doc->ForgetLink(this);
@@ -522,8 +513,9 @@ void Link::ResetLinkState(bool aNotify, bool aHasHref) {
   UnregisterFromHistory();
   mCachedURI = nullptr;
 
-  // Update our state back to the default.
-  mLinkState = defaultState;
+  // Update our state back to the default; the default state for links with an
+  // href is unvisited.
+  mState = aHasHref ? State::Unvisited : State::NotLink;
 
   // We have to be very careful here: if aNotify is false we do NOT
   // want to call UpdateState, because that will call into LinkState()
@@ -536,7 +528,7 @@ void Link::ResetLinkState(bool aNotify, bool aHasHref) {
   if (aNotify) {
     mElement->UpdateState(aNotify);
   } else {
-    if (mLinkState == eLinkState_Unvisited) {
+    if (mState == State::Unvisited) {
       mElement->UpdateLinkState(NS_EVENT_STATE_UNVISITED);
     } else {
       mElement->UpdateLinkState(EventStates());
