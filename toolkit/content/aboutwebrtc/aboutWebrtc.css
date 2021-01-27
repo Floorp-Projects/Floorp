@@ -110,6 +110,14 @@ table {
   font-weight: bold;
 }
 
+.info-body {
+  padding-left: 0.5em;
+}
+
+.stat-label {
+  padding-left: 0.5em;
+}
+
 .section-ctrl {
   margin: 1em 1.5em;
 }

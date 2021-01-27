@@ -24,7 +24,6 @@ def test(mod, path, entity=None):
             "chrome/global/commonDialogs.properties",
             "chrome/global/intl.properties",
             "chrome/global/intl.css",
-            "chrome/global/aboutWebrtc.properties",
         ):
             return "error"
         if re.match(r"crashreporter/[^/]*.ftl", path):
@@ -47,6 +46,9 @@ def test(mod, path, entity=None):
             return "error"
         if re.match(r"toolkit/about/[^/]*Support.ftl", path):
             # error on toolkit/about/*Support.ftl
+            return "error"
+        if re.match(r"toolkit/about/[^/]*Webrtc.ftl", path):
+            # error on toolkit/about/*Webrtc.ftl
             return "error"
         return "ignore"
 
