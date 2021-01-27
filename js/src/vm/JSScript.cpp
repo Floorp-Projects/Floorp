@@ -684,7 +684,9 @@ void js::BaseScript::swapData(UniquePtr<PrivateScriptData>& other) {
     // When disconnecting script data from the BaseScript, we must pre-barrier
     // all edges contained in it. Those edges are no longer reachable from
     // current location in the graph.
-    PreWriteBarrier(zone(), data_);
+    if (zone()->needsIncrementalBarrier()) {
+      data_->trace(zone()->barrierTracer());
+    }
 
     RemoveCellMemory(this, data_->allocationSize(),
                      MemoryUse::ScriptPrivateData);

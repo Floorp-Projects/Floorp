@@ -11,7 +11,6 @@
 
 #include "builtin/String.h"
 #include "frontend/BytecodeCompiler.h"
-#include "gc/Cell.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineIC.h"
@@ -1651,37 +1650,37 @@ bool ObjectIsConstructor(JSObject* obj) {
   return obj->isConstructor();
 }
 
-void JitValuePreWriteBarrier(JSRuntime* rt, Value* vp) {
+void MarkValueFromJit(JSRuntime* rt, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(vp->isGCThing());
   MOZ_ASSERT(!vp->toGCThing()->isMarkedBlack());
-  gc::ValuePreWriteBarrier(*vp);
+  TraceManuallyBarrieredEdge(&rt->gc.marker, vp, "write barrier");
 }
 
-void JitStringPreWriteBarrier(JSRuntime* rt, JSString** stringp) {
+void MarkStringFromJit(JSRuntime* rt, JSString** stringp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(*stringp);
   MOZ_ASSERT(!(*stringp)->isMarkedBlack());
-  gc::PreWriteBarrier(*stringp);
+  TraceManuallyBarrieredEdge(&rt->gc.marker, stringp, "write barrier");
 }
 
-void JitObjectPreWriteBarrier(JSRuntime* rt, JSObject** objp) {
+void MarkObjectFromJit(JSRuntime* rt, JSObject** objp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(*objp);
   MOZ_ASSERT(!(*objp)->isMarkedBlack());
-  gc::PreWriteBarrier(*objp);
+  TraceManuallyBarrieredEdge(&rt->gc.marker, objp, "write barrier");
 }
 
-void JitShapePreWriteBarrier(JSRuntime* rt, Shape** shapep) {
+void MarkShapeFromJit(JSRuntime* rt, Shape** shapep) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(!(*shapep)->isMarkedBlack());
-  gc::PreWriteBarrier(*shapep);
+  TraceManuallyBarrieredEdge(&rt->gc.marker, shapep, "write barrier");
 }
 
-void JitObjectGroupPreWriteBarrier(JSRuntime* rt, ObjectGroup** groupp) {
+void MarkObjectGroupFromJit(JSRuntime* rt, ObjectGroup** groupp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(!(*groupp)->isMarkedBlack());
-  gc::PreWriteBarrier(*groupp);
+  TraceManuallyBarrieredEdge(&rt->gc.marker, groupp, "write barrier");
 }
 
 bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber) {
