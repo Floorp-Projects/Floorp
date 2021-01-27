@@ -75,6 +75,90 @@ add_task(async function test_tabdialogbox_tab_switch_focus() {
 });
 
 /**
+ * Tests that if we're showing multiple tab dialogs they are focused in the
+ * correct order and custom focus handlers are called.
+ */
+add_task(async function test_tabdialogbox_multiple_focus() {
+  await BrowserTestUtils.withNewTab(gBrowser, async browser => {
+    let dialogBox = gBrowser.getTabDialogBox(browser);
+    let dialogAClose = dialogBox.open(
+      TEST_DIALOG_PATH,
+      {},
+      {
+        testCustomFocusHandler: true,
+      }
+    );
+    let dialogBClose = dialogBox.open(TEST_DIALOG_PATH);
+    let dialogCClose = dialogBox.open(
+      TEST_DIALOG_PATH,
+      {},
+      {
+        testCustomFocusHandler: true,
+      }
+    );
+
+    let dialogs = dialogBox._tabDialogManager._dialogs;
+    let [dialogA, dialogB, dialogC] = dialogs;
+
+    // Wait until all dialogs are ready
+    await Promise.all(dialogs.map(dialog => dialog._dialogReady));
+
+    // Dialog A's custom focus target should be focused
+    let dialogElementA = dialogA._frame.contentDocument.querySelector(
+      "#custom-focus-el"
+    );
+    is(
+      Services.focus.focusedElement,
+      dialogElementA,
+      "Dialog A custom focus target is focused"
+    );
+
+    // Close top dialog
+    dialogA.close();
+    await dialogAClose;
+
+    // Dialog B's first focus target should be focused
+    let dialogElementB = dialogB._frame.contentDocument.querySelector(
+      "#textbox"
+    );
+    is(
+      Services.focus.focusedElement,
+      dialogElementB,
+      "Dialog B default focus target is focused"
+    );
+
+    // close top dialog
+    dialogB.close();
+    await dialogBClose;
+
+    // Dialog C's custom focus target should be focused
+    let dialogElementC = dialogC._frame.contentDocument.querySelector(
+      "#custom-focus-el"
+    );
+    is(
+      Services.focus.focusedElement,
+      dialogElementC,
+      "Dialog C custom focus target is focused"
+    );
+
+    // Close last dialog
+    dialogC.close();
+    await dialogCClose;
+
+    is(
+      dialogBox._tabDialogManager._dialogs.length,
+      0,
+      "All dialogs should be closed"
+    );
+    is(
+      Services.focus.focusedElement,
+      browser,
+      "Focus should be back on the browser"
+    );
+  });
+});
+
+/**
  * Tests that other dialogs are still visible if one dialog is hidden.
  */
 add_task(async function test_tabdialogbox_tab_switch_hidden() {
