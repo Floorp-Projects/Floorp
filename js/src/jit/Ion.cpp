@@ -825,9 +825,7 @@ void IonScript::trace(JSTracer* trc) {
 
 /* static */
 void IonScript::preWriteBarrier(Zone* zone, IonScript* ionScript) {
-  if (zone->needsIncrementalBarrier()) {
-    ionScript->trace(zone->barrierTracer());
-  }
+  PreWriteBarrier(zone, ionScript);
 }
 
 void IonScript::copySnapshots(const SnapshotWriter* writer) {
@@ -2446,14 +2444,12 @@ static void InvalidateActivation(JSFreeOp* fop,
 
     JitCode* ionCode = ionScript->method();
 
-    JS::Zone* zone = script->zone();
-    if (zone->needsIncrementalBarrier()) {
-      // We're about to remove edges from the JSScript to gcthings
-      // embedded in the JitCode. Perform one final trace of the
-      // JitCode for the incremental GC, as it must know about
-      // those edges.
-      ionCode->traceChildren(zone->barrierTracer());
-    }
+    // We're about to remove edges from the JSScript to GC things embedded in
+    // the JitCode. Perform a barrier to let the GC know about those edges.
+    PreWriteBarrier(script->zone(), ionCode, [](JSTracer* trc, JitCode* code) {
+      code->traceChildren(trc);
+    });
+
     ionCode->setInvalidated();
 
     // Don't adjust OSI points in a bailout path.
