@@ -491,8 +491,11 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
         break;
 
       case 'e':
+      case 'E':
       case 'f':
+      case 'F':
       case 'g':
+      case 'G':
         nas[cn].type = TYPE_DOUBLE;
         break;
 
@@ -825,7 +828,9 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
       case 'e':
       case 'E':
       case 'f':
+      case 'F':
       case 'g':
+      case 'G':
         u.d = va_arg(ap, double);
         if (!nas.empty()) {
           i = fmt - dolPt;
