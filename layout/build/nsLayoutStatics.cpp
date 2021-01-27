@@ -45,11 +45,11 @@
 #include "nsTextFragment.h"
 #include "nsMediaFeatures.h"
 #include "nsCORSListenerProxy.h"
-#include "nsHTMLDNSPrefetch.h"
 #include "nsHtml5Module.h"
 #include "nsHTMLTags.h"
 #include "nsFocusManager.h"
 #include "nsListControlFrame.h"
+#include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/SVGElementFactory.h"
 #include "nsMathMLAtoms.h"
@@ -181,7 +181,7 @@ nsresult nsLayoutStatics::Initialize() {
   nsCSSRendering::Init();
   css::ImageLoader::Init();
 
-  rv = nsHTMLDNSPrefetch::Initialize();
+  rv = HTMLDNSPrefetch::Initialize();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize HTML DNS prefetch");
     return rv;
@@ -319,7 +319,7 @@ void nsLayoutStatics::Shutdown() {
   EditorController::Shutdown();
   HTMLEditorController::Shutdown();
   nsMediaFeatures::Shutdown();
-  nsHTMLDNSPrefetch::Shutdown();
+  HTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
   StaticPresData::Shutdown();
 #ifdef DEBUG

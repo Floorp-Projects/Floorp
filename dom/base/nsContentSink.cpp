@@ -47,9 +47,9 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIWebNavigation.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLDNSPrefetch.h"
 #include "nsIObserverService.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "nsParserConstants.h"
@@ -799,13 +799,13 @@ void nsContentSink::PrefetchDNS(const nsAString& aHref) {
     isHttps = uri->SchemeIs("https");
   }
 
-  if (!hostname.IsEmpty() && nsHTMLDNSPrefetch::IsAllowed(mDocument)) {
+  if (!hostname.IsEmpty() && HTMLDNSPrefetch::IsAllowed(mDocument)) {
     OriginAttributes oa;
     StoragePrincipalHelper::GetOriginAttributesForNetworkState(mDocument, oa);
 
-    nsHTMLDNSPrefetch::Prefetch(hostname, isHttps, oa,
-                                mDocument->GetChannel()->GetTRRMode(),
-                                nsHTMLDNSPrefetch::Priority::Low);
+    HTMLDNSPrefetch::Prefetch(hostname, isHttps, oa,
+                              mDocument->GetChannel()->GetTRRMode(),
+                              HTMLDNSPrefetch::Priority::Low);
   }
 }
 
