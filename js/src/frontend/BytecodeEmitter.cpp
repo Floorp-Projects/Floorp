@@ -1669,12 +1669,13 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
   }
   memcpy(code, writer.getCode().data(), len);
 
-  ObjLiteralIndex objIndex(stencil.objLiteralData.length());
+  ObjLiteralIndex objIndex(compilationState.objLiteralData.length());
   if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;
   }
-  if (!stencil.objLiteralData.emplaceBack(code, len, writer.getFlags())) {
+  if (!compilationState.objLiteralData.emplaceBack(code, len,
+                                                   writer.getFlags())) {
     js::ReportOutOfMemory(cx);
     return false;
   }

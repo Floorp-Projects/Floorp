@@ -1187,6 +1187,11 @@ bool CompilationState::finish(JSContext* cx, CompilationStencil& stencil) {
     return false;
   }
 
+  if (!CopyVectorToSpan(cx, stencil.alloc, stencil.objLiteralData,
+                        objLiteralData)) {
+    return false;
+  }
+
   if (!CopyVectorToSpan(cx, stencil.alloc, stencil.scriptData, scriptData)) {
     return false;
   }
@@ -2030,7 +2035,7 @@ void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
   json.endObject();
 
   json.beginObjectProperty("objLiteralData");
-  for (size_t i = 0; i < objLiteralData.length(); i++) {
+  for (size_t i = 0; i < objLiteralData.size(); i++) {
     SprintfLiteral(index, "ObjLiteralIndex(%zu)", i);
     json.beginObjectProperty(index);
     objLiteralData[i].dumpFields(json, this);
