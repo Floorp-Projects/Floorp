@@ -568,7 +568,7 @@ XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
     MOZ_ASSERT(scopeSize == stencil.scopeNames.size());
 
     regExpSize = stencil.regExpData.size();
-    bigIntSize = stencil.bigIntData.length();
+    bigIntSize = stencil.bigIntData.size();
     objLiteralSize = stencil.objLiteralData.length();
   }
   MOZ_TRY(XDRBaseCompilationStencilSpanSize(xdr, &scriptSize, &gcThingSize,
@@ -588,7 +588,7 @@ XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.regExpData, regExpSize));
 
-  MOZ_TRY(XDRVectorInitialized(xdr, stencil.bigIntData, bigIntSize));
+  MOZ_TRY(XDRSpanInitialized(xdr, stencil.bigIntData, bigIntSize));
   for (auto& entry : stencil.bigIntData) {
     MOZ_TRY(StencilXDR::BigInt(xdr, entry));
   }
