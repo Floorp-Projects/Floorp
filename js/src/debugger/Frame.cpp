@@ -238,7 +238,8 @@ DebuggerFrame* DebuggerFrame::create(
     JSContext* cx, HandleObject proto, HandleNativeObject debugger,
     const FrameIter* maybeIter,
     Handle<AbstractGeneratorObject*> maybeGenerator) {
-  DebuggerFrame* frame = NewObjectWithGivenProto<DebuggerFrame>(cx, proto);
+  RootedDebuggerFrame frame(cx,
+                            NewObjectWithGivenProto<DebuggerFrame>(cx, proto));
   if (!frame) {
     return nullptr;
   }
@@ -255,7 +256,7 @@ DebuggerFrame* DebuggerFrame::create(
   }
 
   if (maybeGenerator) {
-    if (!frame->setGeneratorInfo(cx, maybeGenerator)) {
+    if (!setGeneratorInfo(cx, frame, maybeGenerator)) {
       frame->freeFrameIterData(cx->runtime()->defaultFreeOp());
       return nullptr;
     }
@@ -349,19 +350,20 @@ JSScript* js::DebuggerFrame::generatorScript() const {
 }
 #endif
 
-bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
+/* static */
+bool DebuggerFrame::setGeneratorInfo(JSContext* cx, HandleDebuggerFrame frame,
                                      Handle<AbstractGeneratorObject*> genObj) {
-  cx->check(this);
+  cx->check(frame);
 
-  MOZ_ASSERT(!hasGeneratorInfo());
+  MOZ_ASSERT(!frame->hasGeneratorInfo());
   MOZ_ASSERT(!genObj->isClosed());
 
   // When we initialize the generator information, we do not need to adjust
   // the stepper increment, because either it was already incremented when
   // the step hook was added, or we're setting this into on a new DebuggerFrame
   // that has not yet had the chance for a hook to be added to it.
-  MOZ_ASSERT_IF(onStepHandler(), frameIterData());
-  MOZ_ASSERT_IF(!frameIterData(), !onStepHandler());
+  MOZ_ASSERT_IF(frame->onStepHandler(), frame->frameIterData());
+  MOZ_ASSERT_IF(!frame->frameIterData(), !frame->onStepHandler());
 
   // There are two relations we must establish:
   //
@@ -389,7 +391,7 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
     return false;
   }
 
-  InitReservedSlot(this, GENERATOR_INFO_SLOT, info.release(),
+  InitReservedSlot(frame, GENERATOR_INFO_SLOT, info.release(),
                    MemoryUse::DebuggerFrameGeneratorInfo);
   return true;
 }
