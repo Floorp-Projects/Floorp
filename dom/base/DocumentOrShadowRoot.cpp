@@ -7,6 +7,7 @@
 #include "DocumentOrShadowRoot.h"
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/PointerLockManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/AnimatableBinding.h"
@@ -300,7 +301,7 @@ Element* DocumentOrShadowRoot::GetRetargetedFocusedElement() {
 
 Element* DocumentOrShadowRoot::GetPointerLockElement() {
   nsCOMPtr<Element> pointerLockedElement =
-      do_QueryReferent(EventStateManager::sPointerLockedElement);
+      PointerLockManager::GetLockedElement();
   if (!pointerLockedElement) {
     return nullptr;
   }
