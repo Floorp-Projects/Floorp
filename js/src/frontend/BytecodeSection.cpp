@@ -52,14 +52,14 @@ mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
 }
 
 bool js::frontend::EmitScriptThingsVector(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, const CompilationInput& input,
     const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput,
     mozilla::Span<const TaggedScriptThingIndex> things,
     mozilla::Span<JS::GCCellPtr> output) {
   MOZ_ASSERT(things.size() <= INDEX_LIMIT);
   MOZ_ASSERT(things.size() == output.size());
 
-  auto& atomCache = input.atomCache;
+  const auto& atomCache = input.atomCache;
 
   for (uint32_t i = 0; i < things.size(); i++) {
     const auto& thing = things[i];
@@ -158,8 +158,8 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   list[index].length = offset - list[index].start;
 }
 
-JSObject* ObjLiteralStencil::create(JSContext* cx,
-                                    CompilationAtomCache& atomCache) const {
+JSObject* ObjLiteralStencil::create(
+    JSContext* cx, const CompilationAtomCache& atomCache) const {
   return InterpretObjLiteral(cx, atomCache, code_, flags_);
 }
 

@@ -24,10 +24,9 @@
 
 namespace js {
 
-static void InterpretObjLiteralValue(JSContext* cx,
-                                     frontend::CompilationAtomCache& atomCache,
-                                     const ObjLiteralInsn& insn,
-                                     JS::Value* valOut) {
+static void InterpretObjLiteralValue(
+    JSContext* cx, const frontend::CompilationAtomCache& atomCache,
+    const ObjLiteralInsn& insn, JS::Value* valOut) {
   switch (insn.getOp()) {
     case ObjLiteralOpcode::ConstValue:
       *valOut = insn.getConstValue();
@@ -57,7 +56,7 @@ static void InterpretObjLiteralValue(JSContext* cx,
 }
 
 static JSObject* InterpretObjLiteralObj(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    JSContext* cx, const frontend::CompilationAtomCache& atomCache,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
@@ -95,7 +94,7 @@ static JSObject* InterpretObjLiteralObj(
 }
 
 static JSObject* InterpretObjLiteralArray(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    JSContext* cx, const frontend::CompilationAtomCache& atomCache,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   ObjLiteralReader reader(literalInsns);
   ObjLiteralInsn insn;
@@ -118,7 +117,7 @@ static JSObject* InterpretObjLiteralArray(
 }
 
 JSObject* InterpretObjLiteral(JSContext* cx,
-                              frontend::CompilationAtomCache& atomCache,
+                              const frontend::CompilationAtomCache& atomCache,
                               const mozilla::Span<const uint8_t> literalInsns,
                               ObjLiteralFlags flags) {
   return flags.contains(ObjLiteralFlag::Array)
