@@ -66,14 +66,7 @@ void QuicSocketControl::HandshakeCompleted() {
 
   uint32_t state = nsIWebProgressListener::STATE_IS_SECURE;
 
-  bool distrustImminent;
   MutexAutoLock lock(mMutex);
-  nsresult rv =
-      IsCertificateDistrustImminent(mSucceededCertChain, distrustImminent);
-
-  if (NS_SUCCEEDED(rv) && distrustImminent) {
-    state |= nsIWebProgressListener::STATE_CERT_DISTRUST_IMMINENT;
-  }
 
   // If we're here, the TLS handshake has succeeded. Thus if any of these
   // booleans are true, the user has added an override for a certificate error.
