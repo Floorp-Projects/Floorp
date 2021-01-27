@@ -123,8 +123,7 @@ nsresult AccessibleCaretManager::OnSelectionChanged(Document* aDoc,
         StaticPrefs::layout_accessiblecaret_script_change_update_mode());
     if (mode == kScriptAlwaysShow ||
         (mode == kScriptUpdateVisible &&
-         (mCarets.mFirst->IsLogicallyVisible() ||
-          mCarets.mSecond->IsLogicallyVisible()))) {
+         mCarets.AreLogicallyVisible())) {
       UpdateCarets();
       return NS_OK;
     }
@@ -174,8 +173,7 @@ nsresult AccessibleCaretManager::OnSelectionChanged(Document* aDoc,
 }
 
 void AccessibleCaretManager::HideCaretsAndDispatchCaretStateChangedEvent() {
-  if (mCarets.mFirst->IsLogicallyVisible() ||
-      mCarets.mSecond->IsLogicallyVisible()) {
+  if (mCarets.AreLogicallyVisible()) {
     AC_LOG("%s", __FUNCTION__);
     mCarets.mFirst->SetAppearance(Appearance::None);
     mCarets.mSecond->SetAppearance(Appearance::None);
@@ -699,8 +697,7 @@ void AccessibleCaretManager::OnScrollStart() {
 
   mIsScrollStarted = true;
 
-  if (mCarets.mFirst->IsLogicallyVisible() ||
-      mCarets.mSecond->IsLogicallyVisible()) {
+  if (mCarets.AreLogicallyVisible()) {
     // Dispatch the event only if one of the carets is logically visible like in
     // HideCaretsAndDispatchCaretStateChangedEvent().
     DispatchCaretStateChangedEvent(CaretChangedReason::Scroll);
@@ -747,8 +744,7 @@ void AccessibleCaretManager::OnScrollPositionChanged() {
     assert.emplace(*mPresShell);
   }
 
-  if (mCarets.mFirst->IsLogicallyVisible() ||
-      mCarets.mSecond->IsLogicallyVisible()) {
+  if (mCarets.AreLogicallyVisible()) {
     if (mIsScrollStarted) {
       // We don't want extra CaretStateChangedEvents dispatched when user is
       // scrolling the page.
@@ -772,8 +768,7 @@ void AccessibleCaretManager::OnReflow() {
     assert.emplace(*mPresShell);
   }
 
-  if (mCarets.mFirst->IsLogicallyVisible() ||
-      mCarets.mSecond->IsLogicallyVisible()) {
+  if (mCarets.AreLogicallyVisible()) {
     AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
     UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
   }
@@ -1480,8 +1475,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
   init.mBoundingClientRect = domRect;
   init.mReason = aReason;
   init.mCollapsed = sel->IsCollapsed();
-  init.mCaretVisible = mCarets.mFirst->IsLogicallyVisible() ||
-                       mCarets.mSecond->IsLogicallyVisible();
+  init.mCaretVisible = mCarets.AreLogicallyVisible();
   init.mCaretVisuallyVisible = mCarets.mFirst->IsVisuallyVisible() ||
                                mCarets.mSecond->IsVisuallyVisible();
   init.mSelectedTextContent = StringifiedSelection();
