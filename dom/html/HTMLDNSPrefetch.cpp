@@ -8,6 +8,8 @@
 
 #include "base/basictypes.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLLinkElement.h"
+#include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/OriginAttributes.h"
@@ -32,7 +34,6 @@
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
 #include "nsIObserverService.h"
-#include "mozilla/dom/Link.h"
 
 #include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
@@ -63,6 +64,28 @@ NoOpDNSListener::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   return NS_OK;
 }
 
+// This is just a (size) optimization and could be avoided by storing the
+// SupportsDNSPrefetch pointer of the element in the prefetch queue, but given
+// we need this for GetURIForDNSPrefetch...
+static SupportsDNSPrefetch& ToSupportsDNSPrefetch(Element& aElement) {
+  if (auto* link = HTMLLinkElement::FromNode(aElement)) {
+    return *link;
+  }
+  auto* anchor = HTMLAnchorElement::FromNode(aElement);
+  MOZ_DIAGNOSTIC_ASSERT(anchor);
+  return *anchor;
+}
+
+nsIURI* SupportsDNSPrefetch::GetURIForDNSPrefetch(Element& aElement) {
+  MOZ_ASSERT(&ToSupportsDNSPrefetch(aElement) == this);
+  if (auto* link = HTMLLinkElement::FromNode(aElement)) {
+    return link->GetURI();
+  }
+  auto* anchor = HTMLAnchorElement::FromNode(aElement);
+  MOZ_DIAGNOSTIC_ASSERT(anchor);
+  return anchor->GetURI();
+}
+
 class DeferredDNSPrefetches final : public nsIWebProgressListener,
                                     public nsSupportsWeakReference,
                                     public nsIObserver {
@@ -74,7 +97,7 @@ class DeferredDNSPrefetches final : public nsIWebProgressListener,
   DeferredDNSPrefetches();
 
   void Activate();
-  nsresult Add(uint32_t flags, mozilla::dom::Link* aElement);
+  nsresult Add(uint32_t flags, SupportsDNSPrefetch&, Element&);
 
   void RemoveUnboundLinks();
 
@@ -83,6 +106,7 @@ class DeferredDNSPrefetches final : public nsIWebProgressListener,
   void Flush();
 
   void SubmitQueue();
+  void SubmitQueueEntry(Element&, uint32_t aFlags);
 
   uint16_t mHead;
   uint16_t mTail;
@@ -97,8 +121,8 @@ class DeferredDNSPrefetches final : public nsIWebProgressListener,
 
   struct deferred_entry {
     uint32_t mFlags;
-    // Link implementation clears this raw pointer in its destructor.
-    mozilla::dom::Link* mElement;
+    // SupportsDNSPrefetch clears this raw pointer in Destroyed().
+    Element* mElement;
   } mEntries[sMaxDeferred];
 };
 
@@ -161,14 +185,12 @@ bool HTMLDNSPrefetch::IsAllowed(Document* aDocument) {
   return aDocument->IsDNSPrefetchAllowed() && aDocument->GetWindow();
 }
 
-static uint32_t GetDNSFlagsFromLink(Link* aElement) {
-  if (!aElement || !aElement->GetElement() ||
-      !aElement->GetElement()->OwnerDoc()->GetChannel()) {
+static uint32_t GetDNSFlagsFromElement(Element& aElement) {
+  nsIChannel* channel = aElement.OwnerDoc()->GetChannel();
+  if (!channel) {
     return 0;
   }
-  nsIRequest::TRRMode mode =
-      aElement->GetElement()->OwnerDoc()->GetChannel()->GetTRRMode();
-  return nsIDNSService::GetFlagsFromTRRMode(mode);
+  return nsIDNSService::GetFlagsFromTRRMode(channel->GetTRRMode());
 }
 
 uint32_t HTMLDNSPrefetch::PriorityToDNSServiceFlags(Priority aPriority) {
@@ -184,13 +206,15 @@ uint32_t HTMLDNSPrefetch::PriorityToDNSServiceFlags(Priority aPriority) {
   return 0u;
 }
 
-nsresult HTMLDNSPrefetch::Prefetch(Link* aElement, Priority aPriority) {
+nsresult HTMLDNSPrefetch::Prefetch(SupportsDNSPrefetch& aSupports,
+                                   Element& aElement, Priority aPriority) {
+  MOZ_ASSERT(&ToSupportsDNSPrefetch(aElement) == &aSupports);
   if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   return sPrefetches->Add(
-      GetDNSFlagsFromLink(aElement) | PriorityToDNSServiceFlags(aPriority),
-      aElement);
+      GetDNSFlagsFromElement(aElement) | PriorityToDNSServiceFlags(aPriority),
+      aSupports, aElement);
 }
 
 nsresult HTMLDNSPrefetch::Prefetch(
@@ -245,33 +269,35 @@ nsresult HTMLDNSPrefetch::Prefetch(
                       PriorityToDNSServiceFlags(aPriority));
 }
 
-nsresult HTMLDNSPrefetch::CancelPrefetch(Link* aElement, Priority aPriority,
+nsresult HTMLDNSPrefetch::CancelPrefetch(SupportsDNSPrefetch& aSupports,
+                                         Element& aElement, Priority aPriority,
                                          nsresult aReason) {
+  MOZ_ASSERT(&ToSupportsDNSPrefetch(aElement) == &aSupports);
+
   if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   uint32_t flags =
-      GetDNSFlagsFromLink(aElement) | PriorityToDNSServiceFlags(aPriority);
+      GetDNSFlagsFromElement(aElement) | PriorityToDNSServiceFlags(aPriority);
 
-  nsAutoString hostname;
-  aElement->GetHostname(hostname);
+  nsIURI* uri = aSupports.GetURIForDNSPrefetch(aElement);
+  if (!uri) {
+    return NS_OK;
+  }
 
-  Element* element = aElement->GetElement();
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+  nsAutoCString hostname;
+  uri->GetAsciiHost(hostname);
 
   nsAutoString protocol;
-  aElement->GetProtocol(protocol);
-  bool isHttps = false;
-  if (protocol.EqualsLiteral("https:")) {
-    isHttps = true;
-  }
+  bool isHttps = uri->SchemeIs("https");
 
   OriginAttributes oa;
   StoragePrincipalHelper::GetOriginAttributesForNetworkState(
-      element->OwnerDoc(), oa);
+      aElement.OwnerDoc(), oa);
 
-  return CancelPrefetch(hostname, isHttps, oa, flags, aReason);
+  return CancelPrefetch(NS_ConvertUTF8toUTF16(hostname), isHttps, oa, flags,
+                        aReason);
 }
 
 nsresult HTMLDNSPrefetch::CancelPrefetch(
@@ -294,8 +320,9 @@ nsresult HTMLDNSPrefetch::CancelPrefetch(
     return NS_OK;
   }
 
-  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService())
+  if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // Forward cancellation to DNS service
   nsresult rv = sDNSService->CancelAsyncResolveNative(
@@ -326,11 +353,34 @@ nsresult HTMLDNSPrefetch::CancelPrefetch(
                         aReason);
 }
 
-void HTMLDNSPrefetch::LinkDestroyed(Link* aLink) {
-  MOZ_ASSERT(aLink->IsInDNSPrefetch());
+void HTMLDNSPrefetch::ElementDestroyed(Element& aElement,
+                                       SupportsDNSPrefetch& aSupports) {
+  MOZ_ASSERT(&ToSupportsDNSPrefetch(aElement) == &aSupports);
+  MOZ_ASSERT(aSupports.IsInDNSPrefetch());
   if (sPrefetches) {
     // Clean up all the possible links at once.
     sPrefetches->RemoveUnboundLinks();
+  }
+}
+
+void SupportsDNSPrefetch::TryDNSPrefetch(Element& aOwner) {
+  MOZ_ASSERT(aOwner.IsInComposedDoc());
+  if (HTMLDNSPrefetch::IsAllowed(aOwner.OwnerDoc())) {
+    HTMLDNSPrefetch::Prefetch(*this, aOwner, HTMLDNSPrefetch::Priority::Low);
+  }
+}
+
+void SupportsDNSPrefetch::CancelDNSPrefetch(Element& aOwner) {
+  // If prefetch was deferred, clear flag and move on
+  if (mDNSPrefetchDeferred) {
+    mDNSPrefetchDeferred = false;
+    // Else if prefetch was requested, clear flag and send cancellation
+  } else if (mDNSPrefetchRequested) {
+    mDNSPrefetchRequested = false;
+    // Possible that hostname could have changed since binding, but since this
+    // covers common cases, most DNS prefetch requests will be canceled
+    HTMLDNSPrefetch::CancelPrefetch(
+        *this, aOwner, HTMLDNSPrefetch::Priority::Low, NS_ERROR_ABORT);
   }
 }
 
@@ -352,28 +402,31 @@ NS_IMPL_ISUPPORTS(DeferredDNSPrefetches, nsIWebProgressListener,
                   nsISupportsWeakReference, nsIObserver)
 
 void DeferredDNSPrefetches::Flush() {
-  while (mHead != mTail) {
-    if (mEntries[mTail].mElement) {
-      mEntries[mTail].mElement->ClearIsInDNSPrefetch();
+  for (; mHead != mTail; mTail = (mTail + 1) & sMaxDeferredMask) {
+    Element* element = mEntries[mTail].mElement;
+    if (element) {
+      ToSupportsDNSPrefetch(*element).ClearIsInDNSPrefetch();
     }
     mEntries[mTail].mElement = nullptr;
-    mTail = (mTail + 1) & sMaxDeferredMask;
   }
 }
 
-nsresult DeferredDNSPrefetches::Add(uint32_t flags, Link* aElement) {
+nsresult DeferredDNSPrefetches::Add(uint32_t flags,
+                                    SupportsDNSPrefetch& aSupports,
+                                    Element& aElement) {
   // The FIFO has no lock, so it can only be accessed on main thread
   NS_ASSERTION(NS_IsMainThread(),
                "DeferredDNSPrefetches::Add must be on main thread");
 
-  aElement->OnDNSPrefetchDeferred();
+  aSupports.DNSPrefetchRequestDeferred();
 
-  if (((mHead + 1) & sMaxDeferredMask) == mTail)
+  if (((mHead + 1) & sMaxDeferredMask) == mTail) {
     return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
+  }
 
-  aElement->SetIsInDNSPrefetch();
+  aSupports.SetIsInDNSPrefetch();
   mEntries[mHead].mFlags = flags;
-  mEntries[mHead].mElement = aElement;
+  mEntries[mHead].mElement = &aElement;
   mHead = (mHead + 1) & sMaxDeferredMask;
 
   if (!mActiveLoaderCount && !mTimerArmed && mTimer) {
@@ -389,79 +442,88 @@ nsresult DeferredDNSPrefetches::Add(uint32_t flags, Link* aElement) {
 void DeferredDNSPrefetches::SubmitQueue() {
   NS_ASSERTION(NS_IsMainThread(),
                "DeferredDNSPrefetches::SubmitQueue must be on main thread");
-  nsCString hostName;
   if (!EnsureDNSService()) {
     return;
   }
 
-  while (mHead != mTail) {
-    nsCOMPtr<Link> link = mEntries[mTail].mElement;
-    if (link) {
-      link->ClearIsInDNSPrefetch();
-      // Only prefetch here if request was deferred and deferral not cancelled
-      if (link && link->HasDeferredDNSPrefetchRequest()) {
-        nsCOMPtr<nsIURI> hrefURI(link ? link->GetURI() : nullptr);
-        bool isLocalResource = false;
-        nsresult rv = NS_OK;
-        Element* element = link->GetElement();
-
-        hostName.Truncate();
-        bool isHttps = false;
-        if (hrefURI) {
-          hrefURI->GetAsciiHost(hostName);
-          rv = NS_URIChainHasFlags(hrefURI,
-                                   nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                                   &isLocalResource);
-          isHttps = hrefURI->SchemeIs("https");
-        }
-
-        OriginAttributes oa;
-        StoragePrincipalHelper::GetOriginAttributesForNetworkState(
-            element->OwnerDoc(), oa);
-
-        if (!hostName.IsEmpty() && NS_SUCCEEDED(rv) && !isLocalResource &&
-            element) {
-          if (IsNeckoChild()) {
-            // during shutdown gNeckoChild might be null
-            if (gNeckoChild) {
-              gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName),
-                                               isHttps, oa,
-                                               mEntries[mTail].mFlags);
-            }
-          } else {
-            nsCOMPtr<nsICancelable> tmpOutstanding;
-
-            rv = sDNSService->AsyncResolveNative(
-                hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
-                mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
-                nullptr, sDNSListener, nullptr, oa,
-                getter_AddRefs(tmpOutstanding));
-            // Fetch HTTPS RR if needed.
-            if (NS_SUCCEEDED(rv) &&
-                (StaticPrefs::network_dns_upgrade_with_https_rr() ||
-                 StaticPrefs::network_dns_use_https_rr_as_altsvc())) {
-              sDNSService->AsyncResolveNative(
-                  hostName, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
-                  mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
-                  nullptr, sDNSListener, nullptr, oa,
-                  getter_AddRefs(tmpOutstanding));
-            }
-
-            // Tell link that deferred prefetch was requested
-            if (NS_SUCCEEDED(rv)) link->OnDNSPrefetchRequested();
-          }
-        }
-      }
+  for (; mHead != mTail; mTail = (mTail + 1) & sMaxDeferredMask) {
+    Element* element = mEntries[mTail].mElement;
+    if (!element) {
+      continue;
     }
-
+    SubmitQueueEntry(*element, mEntries[mTail].mFlags);
     mEntries[mTail].mElement = nullptr;
-    mTail = (mTail + 1) & sMaxDeferredMask;
   }
 
   if (mTimerArmed) {
     mTimerArmed = false;
     mTimer->Cancel();
   }
+}
+
+void DeferredDNSPrefetches::SubmitQueueEntry(Element& aElement,
+                                             uint32_t aFlags) {
+  auto& supports = ToSupportsDNSPrefetch(aElement);
+  supports.ClearIsInDNSPrefetch();
+
+  // Only prefetch here if request was deferred and deferral not cancelled
+  if (!supports.IsDNSPrefetchRequestDeferred()) {
+    return;
+  }
+
+  nsIURI* uri = supports.GetURIForDNSPrefetch(aElement);
+  if (!uri) {
+    return;
+  }
+
+  nsAutoCString hostName;
+  uri->GetAsciiHost(hostName);
+  if (hostName.IsEmpty()) {
+    return;
+  }
+
+  bool isLocalResource = false;
+  nsresult rv = NS_URIChainHasFlags(
+      uri, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &isLocalResource);
+  if (NS_FAILED(rv) || isLocalResource) {
+    return;
+  }
+
+  OriginAttributes oa;
+  StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+      aElement.OwnerDoc(), oa);
+
+  bool isHttps = uri->SchemeIs("https");
+
+  if (IsNeckoChild()) {
+    // during shutdown gNeckoChild might be null
+    if (gNeckoChild) {
+      gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName), isHttps,
+                                       oa, mEntries[mTail].mFlags);
+    }
+  } else {
+    nsCOMPtr<nsICancelable> tmpOutstanding;
+
+    rv = sDNSService->AsyncResolveNative(
+        hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+        mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE, nullptr,
+        sDNSListener, nullptr, oa, getter_AddRefs(tmpOutstanding));
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    // Fetch HTTPS RR if needed.
+    if (StaticPrefs::network_dns_upgrade_with_https_rr() ||
+        StaticPrefs::network_dns_use_https_rr_as_altsvc()) {
+      sDNSService->AsyncResolveNative(
+          hostName, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
+          mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE, nullptr,
+          sDNSListener, nullptr, oa, getter_AddRefs(tmpOutstanding));
+    }
+  }
+
+  // Tell element that deferred prefetch was requested.
+  supports.DNSPrefetchRequestStarted();
 }
 
 void DeferredDNSPrefetches::Activate() {
@@ -481,9 +543,9 @@ void DeferredDNSPrefetches::Activate() {
 void DeferredDNSPrefetches::RemoveUnboundLinks() {
   uint16_t tail = mTail;
   while (mHead != tail) {
-    if (mEntries[tail].mElement &&
-        !mEntries[tail].mElement->GetElement()->IsInComposedDoc()) {
-      mEntries[tail].mElement->ClearIsInDNSPrefetch();
+    Element* element = mEntries[tail].mElement;
+    if (element && !element->IsInComposedDoc()) {
+      ToSupportsDNSPrefetch(*element).ClearIsInDNSPrefetch();
       mEntries[tail].mElement = nullptr;
     }
     tail = (tail + 1) & sMaxDeferredMask;
@@ -504,7 +566,9 @@ void DeferredDNSPrefetches::Tick(nsITimer* aTimer, void* aClosure) {
   // If the queue is not submitted here because there are outstanding pages
   // being loaded, there is no need to rearm the timer as the queue will be
   // submtited when those loads complete.
-  if (!self->mActiveLoaderCount) self->SubmitQueue();
+  if (!self->mActiveLoaderCount) {
+    self->SubmitQueue();
+  }
 }
 
 //////////// nsIWebProgressListener methods
@@ -524,7 +588,9 @@ DeferredDNSPrefetches::OnStateChange(nsIWebProgress* aWebProgress,
       // not go negative
       if (mActiveLoaderCount) mActiveLoaderCount--;
 
-      if (!mActiveLoaderCount) SubmitQueue();
+      if (!mActiveLoaderCount) {
+        SubmitQueue();
+      }
     } else if (progressStateFlags & STATE_START)
       mActiveLoaderCount++;
   }
