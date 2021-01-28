@@ -7,6 +7,7 @@
 #include "SocketProcessLogging.h"
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
@@ -151,6 +152,24 @@ mozilla::ipc::IPCResult SocketProcessBridgeChild::RecvTest() {
 
 void SocketProcessBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("SocketProcessBridgeChild::ActorDestroy\n"));
+  if (gNeckoChild) {
+    // Let NeckoParent know that the socket process connections must be
+    // rebuilt.
+    gNeckoChild->SendResetSocketProcessBridge();
+  }
+  nsresult res;
+  nsCOMPtr<nsISerialEventTarget> mSTSThread =
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
+  if (NS_SUCCEEDED(res) && mSTSThread) {
+    // This must be called off the main thread.  If we don't make this call
+    // ipc::BackgroundChild::GetOrCreateSocketActorForCurrentThread() will
+    // return the previous actor that is no longer able to send. This causes
+    // rebuilding the socket process connections to fail.
+    MOZ_ALWAYS_SUCCEEDS(mSTSThread->Dispatch(NS_NewRunnableFunction(
+        "net::SocketProcessBridgeChild::ActorDestroy",
+        []() { ipc::BackgroundChild::CloseForCurrentThread(); })));
+  }
+
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     os->RemoveObserver(this, "content-child-shutdown");
