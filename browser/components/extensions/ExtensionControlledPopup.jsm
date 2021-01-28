@@ -34,8 +34,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
+  "BrowserUIUtils",
+  "resource:///modules/BrowserUIUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -367,7 +367,7 @@ class ExtensionControlledPopup {
       );
     } else {
       description.appendChild(
-        BrowserUtils.getLocalizedFragment(doc, message, addonDetails)
+        BrowserUIUtils.getLocalizedFragment(doc, message, addonDetails)
       );
     }
 
