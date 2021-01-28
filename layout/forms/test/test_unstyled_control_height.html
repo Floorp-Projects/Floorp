@@ -1,0 +1,22 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  .non-native * {
+    appearance: none;
+  }
+</style>
+<div class="non-native">
+  <input>
+  <button>Foo</button>
+  <select><option>Foo</option></select>
+</div>
+<script>
+  let commonHeight = null;
+  for (let element of document.querySelectorAll(".non-native > *")) {
+    let height = element.getBoundingClientRect().height;
+    if (commonHeight === null) {
+      commonHeight = height;
+    }
+    is(height, commonHeight, "Height of the controls should match");
+  }
+</script>
