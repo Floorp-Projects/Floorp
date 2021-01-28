@@ -64,7 +64,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                         )
                         apk_contents.extract(info, tmpdir)
                         local_file = os.path.join(tmpdir, info.filename)
-                        with open(local_file) as f:
+                        with open(local_file, "rb") as f:
                             # Decompress xz-compressed file.
                             if f.read(5)[1:] == "7zXZ":
                                 cmd = ["xz", "-df", "--suffix", ".so", local_file]
