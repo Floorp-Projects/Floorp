@@ -155,6 +155,8 @@ char* DataOffer::GetData(wl_display* aDisplay, const char* aMimeType,
 }
 
 bool WaylandDataOffer::RequestDataTransfer(const char* aMimeType, int fd) {
+  LOGCLIP(
+      ("WaylandDataOffer::RequestDataTransfer MIME %s FD %d\n", aMimeType, fd));
   if (mWaylandDataOffer) {
     wl_data_offer_receive(mWaylandDataOffer, aMimeType, fd);
     return true;
@@ -164,6 +166,8 @@ bool WaylandDataOffer::RequestDataTransfer(const char* aMimeType, int fd) {
 }
 
 void WaylandDataOffer::DragOfferAccept(const char* aMimeType, uint32_t aTime) {
+  LOGDRAG(("WaylandDataOffer::DragOfferAccept MIME %s aTime %d\n", aMimeType,
+           aTime));
   wl_data_offer_accept(mWaylandDataOffer, aTime, aMimeType);
 }
 
@@ -174,6 +178,9 @@ void WaylandDataOffer::SetDragStatus(GdkDragAction aPreferredAction,
                                      uint32_t aTime) {
   uint32_t preferredAction = gdk_to_wl_actions(aPreferredAction);
   uint32_t allActions = WL_DATA_DEVICE_MANAGER_DND_ACTION_NONE;
+
+  LOGDRAG(("WaylandDataOffer::SetDragStatus aPreferredAction %d\n",
+           aPreferredAction));
 
   /* We only don't choose a preferred action if we don't accept any.
    * If we do accept any, it is currently alway copy and move
@@ -412,12 +419,17 @@ GList* nsWaylandDragContext::GetTargets() {
 
 char* nsWaylandDragContext::GetData(const char* aMimeType,
                                     uint32_t* aContentLength) {
+  LOGDRAG(("nsWaylandDragContext::GetData %s\n", aMimeType));
   mDataOffer->DragOfferAccept(aMimeType, mTime);
   return mDataOffer->GetData(mDisplay, aMimeType, aContentLength);
 }
 
 void nsRetrievalContextWayland::RegisterNewDataOffer(
     wl_data_offer* aWaylandDataOffer) {
+  LOGCLIP(
+      ("nsRetrievalContextWayland::RegisterNewDataOffer (wl_data_offer) %p\n",
+       aWaylandDataOffer));
+
   DataOffer* dataOffer = static_cast<DataOffer*>(
       g_hash_table_lookup(mActiveOffers, aWaylandDataOffer));
   MOZ_ASSERT(
@@ -432,6 +444,9 @@ void nsRetrievalContextWayland::RegisterNewDataOffer(
 
 void nsRetrievalContextWayland::RegisterNewDataOffer(
     gtk_primary_selection_offer* aPrimaryDataOffer) {
+  LOGCLIP(("nsRetrievalContextWayland::RegisterNewDataOffer (primary) %p\n",
+           aPrimaryDataOffer));
+
   DataOffer* dataOffer = static_cast<DataOffer*>(
       g_hash_table_lookup(mActiveOffers, aPrimaryDataOffer));
   MOZ_ASSERT(
@@ -446,6 +461,9 @@ void nsRetrievalContextWayland::RegisterNewDataOffer(
 
 void nsRetrievalContextWayland::RegisterNewDataOffer(
     zwp_primary_selection_offer_v1* aPrimaryDataOffer) {
+  LOGCLIP(("nsRetrievalContextWayland::RegisterNewDataOffer (primary ZWP) %p\n",
+           aPrimaryDataOffer));
+
   DataOffer* dataOffer = static_cast<DataOffer*>(
       g_hash_table_lookup(mActiveOffers, aPrimaryDataOffer));
   MOZ_ASSERT(
@@ -460,6 +478,10 @@ void nsRetrievalContextWayland::RegisterNewDataOffer(
 
 void nsRetrievalContextWayland::SetClipboardDataOffer(
     wl_data_offer* aWaylandDataOffer) {
+  LOGCLIP(
+      ("nsRetrievalContextWayland::SetClipboardDataOffer (wl_data_offer) %p\n",
+       aWaylandDataOffer));
+
   // Delete existing clipboard data offer
   mClipboardOffer = nullptr;
 
@@ -468,7 +490,11 @@ void nsRetrievalContextWayland::SetClipboardDataOffer(
   if (aWaylandDataOffer != nullptr) {
     DataOffer* dataOffer = static_cast<DataOffer*>(
         g_hash_table_lookup(mActiveOffers, aWaylandDataOffer));
-    NS_ASSERTION(dataOffer, "We're missing stored clipboard data offer!");
+#ifdef MOZ_LOGGING
+    if (!dataOffer) {
+      LOGCLIP(("    We're missing stored clipboard data offer!\n"));
+    }
+#endif
     if (dataOffer) {
       g_hash_table_remove(mActiveOffers, aWaylandDataOffer);
       mClipboardOffer = WrapUnique(dataOffer);
@@ -478,6 +504,9 @@ void nsRetrievalContextWayland::SetClipboardDataOffer(
 
 void nsRetrievalContextWayland::SetPrimaryDataOffer(
     gtk_primary_selection_offer* aPrimaryDataOffer) {
+  LOGCLIP(("nsRetrievalContextWayland::SetPrimaryDataOffer (primary) %p\n",
+           aPrimaryDataOffer));
+
   // Release any primary offer we have.
   mPrimaryOffer = nullptr;
 
@@ -486,7 +515,11 @@ void nsRetrievalContextWayland::SetPrimaryDataOffer(
   if (aPrimaryDataOffer) {
     DataOffer* dataOffer = static_cast<DataOffer*>(
         g_hash_table_lookup(mActiveOffers, aPrimaryDataOffer));
-    NS_ASSERTION(dataOffer, "We're missing primary data offer!");
+#ifdef MOZ_LOGGING
+    if (!dataOffer) {
+      LOGCLIP(("    We're missing stored primary data offer!\n"));
+    }
+#endif
     if (dataOffer) {
       g_hash_table_remove(mActiveOffers, aPrimaryDataOffer);
       mPrimaryOffer = WrapUnique(dataOffer);
@@ -496,6 +529,9 @@ void nsRetrievalContextWayland::SetPrimaryDataOffer(
 
 void nsRetrievalContextWayland::SetPrimaryDataOffer(
     zwp_primary_selection_offer_v1* aPrimaryDataOffer) {
+  LOGCLIP(("nsRetrievalContextWayland::SetPrimaryDataOffer (primary ZWP)%p\n",
+           aPrimaryDataOffer));
+
   // Release any primary offer we have.
   mPrimaryOffer = nullptr;
 
@@ -504,7 +540,11 @@ void nsRetrievalContextWayland::SetPrimaryDataOffer(
   if (aPrimaryDataOffer) {
     DataOffer* dataOffer = static_cast<DataOffer*>(
         g_hash_table_lookup(mActiveOffers, aPrimaryDataOffer));
-    NS_ASSERTION(dataOffer, "We're missing primary data offer!");
+#ifdef MOZ_LOGGING
+    if (!dataOffer) {
+      LOGCLIP(("    We're missing stored primary data offer!\n"));
+    }
+#endif
     if (dataOffer) {
       g_hash_table_remove(mActiveOffers, aPrimaryDataOffer);
       mPrimaryOffer = WrapUnique(dataOffer);
@@ -514,12 +554,19 @@ void nsRetrievalContextWayland::SetPrimaryDataOffer(
 
 void nsRetrievalContextWayland::AddDragAndDropDataOffer(
     wl_data_offer* aDropDataOffer) {
+  LOGCLIP(("nsRetrievalContextWayland::AddDragAndDropDataOffer %p\n",
+           aDropDataOffer));
+
   // Remove any existing D&D contexts.
   mDragContext = nullptr;
 
   WaylandDataOffer* dataOffer = static_cast<WaylandDataOffer*>(
       g_hash_table_lookup(mActiveOffers, aDropDataOffer));
-  NS_ASSERTION(dataOffer, "We're missing drag and drop data offer!");
+#ifdef MOZ_LOGGING
+  if (!dataOffer) {
+    LOGCLIP(("    We're missing stored Drag & Drop data offer!\n"));
+  }
+#endif
   if (dataOffer) {
     g_hash_table_remove(mActiveOffers, aDropDataOffer);
     mDragContext = new nsWaylandDragContext(dataOffer, mDisplay->GetDisplay());
@@ -531,6 +578,7 @@ nsWaylandDragContext* nsRetrievalContextWayland::GetDragContext(void) {
 }
 
 void nsRetrievalContextWayland::ClearDragAndDropDataOffer(void) {
+  LOGCLIP(("nsRetrievalContextWayland::ClearDragAndDropDataOffer()\n"));
   mDragContext = nullptr;
 }
 
@@ -539,7 +587,7 @@ void nsRetrievalContextWayland::ClearDragAndDropDataOffer(void) {
 static void data_device_data_offer(void* data,
                                    struct wl_data_device* data_device,
                                    struct wl_data_offer* offer) {
-  LOGCLIP(("data_device_data_offer() callback\n"));
+  LOGCLIP(("data_device_data_offer(), wl_data_offer %p\n", offer));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
   context->RegisterNewDataOffer(offer);
@@ -549,7 +597,7 @@ static void data_device_data_offer(void* data,
 static void data_device_selection(void* data,
                                   struct wl_data_device* wl_data_device,
                                   struct wl_data_offer* offer) {
-  LOGCLIP(("data_device_selection() callback\n"));
+  LOGCLIP(("data_device_selection(), set wl_data_offer %p\n", offer));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
   context->SetClipboardDataOffer(offer);
@@ -650,7 +698,7 @@ static const struct wl_data_device_listener data_device_listener = {
 static void primary_selection_data_offer(
     void* data, struct gtk_primary_selection_device* primary_selection_device,
     struct gtk_primary_selection_offer* primary_offer) {
-  LOGCLIP(("primary_selection_data_offer() callback\n"));
+  LOGCLIP(("primary_selection_data_offer()\n"));
   // create and add listener
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
@@ -661,7 +709,7 @@ static void primary_selection_data_offer(
     void* data,
     struct zwp_primary_selection_device_v1* primary_selection_device,
     struct zwp_primary_selection_offer_v1* primary_offer) {
-  LOGCLIP(("primary_selection_data_offer() callback\n"));
+  LOGCLIP(("primary_selection_data_offer()\n"));
   // create and add listener
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
@@ -671,7 +719,7 @@ static void primary_selection_data_offer(
 static void primary_selection_selection(
     void* data, struct gtk_primary_selection_device* primary_selection_device,
     struct gtk_primary_selection_offer* primary_offer) {
-  LOGCLIP(("primary_selection_selection() callback\n"));
+  LOGCLIP(("primary_selection_selection()\n"));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
   context->SetPrimaryDataOffer(primary_offer);
@@ -681,7 +729,7 @@ static void primary_selection_selection(
     void* data,
     struct zwp_primary_selection_device_v1* primary_selection_device,
     struct zwp_primary_selection_offer_v1* primary_offer) {
-  LOGCLIP(("primary_selection_selection() callback\n"));
+  LOGCLIP(("primary_selection_selection()\n"));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
   context->SetPrimaryDataOffer(primary_offer);
@@ -803,17 +851,26 @@ static void wayland_clipboard_contents_received(
 
 void nsRetrievalContextWayland::TransferFastTrackClipboard(
     int aClipboardRequestNumber, GtkSelectionData* aSelectionData) {
+  LOGCLIP(("nsRetrievalContextWayland::TransferFastTrackClipboard()\n"));
+
   if (mClipboardRequestNumber == aClipboardRequestNumber) {
+    LOGCLIP(("    request number matches\n"));
     int dataLength = gtk_selection_data_get_length(aSelectionData);
-    if (dataLength > 0) {
-      mClipboardDataLength = dataLength;
-      mClipboardData = reinterpret_cast<char*>(
-          g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
-      memcpy(mClipboardData, gtk_selection_data_get_data(aSelectionData),
-             sizeof(char) * mClipboardDataLength);
-      mClipboardData[mClipboardDataLength] = '\0';
+    if (!dataLength) {
+      LOGCLIP(
+          ("    gtk_selection_data_get_length() returned 0 data length!\n"));
+      return;
     }
+    LOGCLIP(("    fastracking %d bytes of data.\n", dataLength));
+    mClipboardDataLength = dataLength;
+    mClipboardData = reinterpret_cast<char*>(
+        g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
+    memcpy(mClipboardData, gtk_selection_data_get_data(aSelectionData),
+           sizeof(char) * mClipboardDataLength);
+    mClipboardData[mClipboardDataLength] = '\0';
+    LOGCLIP(("    done, mClipboardData = %p\n", mClipboardData));
   } else {
+    LOGCLIP(("    request number does not match!\n"));
     NS_WARNING("Received obsoleted clipboard data!");
   }
 }
@@ -833,25 +890,29 @@ const char* nsRetrievalContextWayland::GetClipboardData(
    */
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
   if (gdk_selection_owner_get(selection)) {
-    LOGCLIP(("  Internal clipboard content\n"));
+    LOGCLIP(("  Asking for internal clipboard content.\n"));
     mClipboardRequestNumber++;
     gtk_clipboard_request_contents(
         gtk_clipboard_get(selection), gdk_atom_intern(aMimeType, FALSE),
         wayland_clipboard_contents_received,
         new FastTrackClipboard(mClipboardRequestNumber, this));
   } else {
-    LOGCLIP(("  Remote clipboard content\n"));
+    LOGCLIP(("  Asking for remote clipboard content.\n"));
     const auto& dataOffer =
         (selection == GDK_SELECTION_PRIMARY) ? mPrimaryOffer : mClipboardOffer;
     if (!dataOffer) {
       // Something went wrong. We're requested to provide clipboard data
       // but we haven't got any from wayland.
-      NS_WARNING("Requested data without valid DataOffer!");
+      LOGCLIP(("  We're missing dataOffer! mClipboardData = null\n"));
       mClipboardData = nullptr;
       mClipboardDataLength = 0;
     } else {
+      LOGCLIP(
+          ("  Getting clipboard data from compositor, MIME %s\n", aMimeType));
       mClipboardData = dataOffer->GetData(mDisplay->GetDisplay(), aMimeType,
                                           &mClipboardDataLength);
+      LOGCLIP(("  Got %d bytes of data, mClipboardData = %p\n",
+               mClipboardDataLength, mClipboardData));
     }
   }
 
@@ -861,25 +922,36 @@ const char* nsRetrievalContextWayland::GetClipboardData(
 
 const char* nsRetrievalContextWayland::GetClipboardText(
     int32_t aWhichClipboard) {
-  LOGCLIP(("nsRetrievalContextWayland::GetClipboardText [%p]\n", this));
-
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
+
+  LOGCLIP(("nsRetrievalContextWayland::GetClipboardText [%p], clipboard %s\n",
+           this,
+           (selection == GDK_SELECTION_PRIMARY) ? "Primary" : "Selection"));
+
   const auto& dataOffer =
       (selection == GDK_SELECTION_PRIMARY) ? mPrimaryOffer : mClipboardOffer;
-  if (!dataOffer) return nullptr;
+  if (!dataOffer) {
+    LOGCLIP(("  We're missing data offer!\n"));
+    return nullptr;
+  }
 
   for (unsigned int i = 0; i < TEXT_MIME_TYPES_NUM; i++) {
     if (dataOffer->HasTarget(sTextMimeTypes[i])) {
+      LOGCLIP(("  We have %s MIME type in clipboard, ask for it.\n",
+               sTextMimeTypes[i]));
       uint32_t unused;
       return GetClipboardData(sTextMimeTypes[i], aWhichClipboard, &unused);
     }
   }
+
+  LOGCLIP(("  There isn't text MIME type in clipboard!\n"));
   return nullptr;
 }
 
 void nsRetrievalContextWayland::ReleaseClipboardData(
     const char* aClipboardData) {
-  LOGCLIP(("nsRetrievalContextWayland::ReleaseClipboardData [%p]\n", this));
+  LOGCLIP(("nsRetrievalContextWayland::ReleaseClipboardData [%p]\n",
+           aClipboardData));
 
   NS_ASSERTION(aClipboardData == mClipboardData,
                "Releasing unknown clipboard data!");
