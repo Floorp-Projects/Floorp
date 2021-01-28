@@ -101,10 +101,9 @@ int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out)
           ABORT(r);
         port = 3478;
       }
-      if(r=nr_ip4_port_to_transport_addr(ntohl(addr_int), port, IPPROTO_UDP,
-        &servers[i].u.addr))
+      if (r = nr_ip4_port_to_transport_addr(ntohl(addr_int), port, IPPROTO_UDP,
+                                            &servers[i].addr))
         ABORT(r);
-      servers[i].type = NR_ICE_STUN_SERVER_TYPE_ADDR;
       RFREE(addr);
       addr=0;
     }
@@ -281,8 +280,8 @@ int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out)
           ABORT(r);
         port = 3478;
       }
-      if(r=nr_ip4_port_to_transport_addr(ntohl(addr_int), port, IPPROTO_UDP,
-        &servers[i].turn_server.u.addr))
+      if (r = nr_ip4_port_to_transport_addr(ntohl(addr_int), port, IPPROTO_UDP,
+                                            &servers[i].turn_server.addr))
         ABORT(r);
 
 
