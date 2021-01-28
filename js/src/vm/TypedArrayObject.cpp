@@ -2714,20 +2714,20 @@ JS_FRIEND_API uint32_t JS_GetTypedArrayLength(JSObject* obj) {
   return tarr->length().deprecatedGetUint32();
 }
 
-JS_FRIEND_API uint32_t JS_GetTypedArrayByteOffset(JSObject* obj) {
+JS_FRIEND_API size_t JS_GetTypedArrayByteOffset(JSObject* obj) {
   TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!tarr) {
     return 0;
   }
-  return tarr->byteOffset().deprecatedGetUint32();
+  return tarr->byteOffset().get();
 }
 
-JS_FRIEND_API uint32_t JS_GetTypedArrayByteLength(JSObject* obj) {
+JS_FRIEND_API size_t JS_GetTypedArrayByteLength(JSObject* obj) {
   TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!tarr) {
     return 0;
   }
-  return tarr->byteLength().deprecatedGetUint32();
+  return tarr->byteLength().get();
 }
 
 JS_FRIEND_API bool JS_GetTypedArraySharedness(JSObject* obj) {
