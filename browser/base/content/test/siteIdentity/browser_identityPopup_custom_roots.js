@@ -21,7 +21,7 @@ add_task(async function test_https() {
       event => event.target == gIdentityHandler._identityPopup
     );
 
-    gIdentityHandler._identityIconBox.click();
+    gIdentityHandler._identityBox.click();
     await promisePanelOpen;
     let customRootWarning = document.getElementById(
       "identity-popup-security-decription-custom-root"
@@ -55,7 +55,7 @@ add_task(async function test_http() {
       true,
       event => event.target == gIdentityHandler._identityPopup
     );
-    gIdentityHandler._identityIconBox.click();
+    gIdentityHandler._identityBox.click();
     await promisePanelOpen;
     let customRootWarning = document.getElementById(
       "identity-popup-security-decription-custom-root"
