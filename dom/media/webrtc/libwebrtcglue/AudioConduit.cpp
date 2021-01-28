@@ -965,6 +965,10 @@ MediaConduitErrorCode WebrtcAudioConduit::DeliverPacket(const void* data,
   auto syncPromise =
       InvokeAsync(GetMainThreadSerialEventTarget(), __func__, [&] {
         auto current = TaskQueueWrapper::MainAsCurrent();
+        if (!mCall->Call()) {
+          return PacketPromise::CreateAndResolve(
+              webrtc::PacketReceiver::DELIVERY_PACKET_ERROR, __func__);
+        }
         // Bug 1499796 - we need to get passed the time the
         // packet was received
         webrtc::PacketReceiver::DeliveryStatus status =
