@@ -1265,6 +1265,9 @@ main {
     box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
   .outer-wrapper.newtab-experience .search-wrapper .search-inner-wrapper {
     min-height: 52px; }
+  .outer-wrapper.newtab-experience .search-wrapper.fake-focus .search-handoff-button {
+    border: 1px solid var(--newtab-focus-border);
+    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
 
 .outer-wrapper.newtab-experience .search-handoff-button {
   box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
@@ -1273,9 +1276,6 @@ main {
   color: var(--newtab-search-text-color);
   font-weight: 500;
   font-size: 15px; }
-  .fake-focus .outer-wrapper.newtab-experience .search-handoff-button {
-    border: 1px solid var(--newtab-focus-border);
-    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
   .outer-wrapper.newtab-experience .search-handoff-button .fake-caret {
     top: 18px; }
 
@@ -1638,7 +1638,8 @@ main {
   transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96);
   overflow: auto;
   transform: translateX(435px);
-  visibility: hidden; }
+  visibility: hidden;
+  cursor: default; }
   .customize-menu:dir(rtl) {
     transform: translateX(-435px); }
   .customize-menu.customize-animate-enter-done {
@@ -1743,7 +1744,8 @@ main {
       display: inline-block;
       width: 26px;
       height: 16px;
-      grid-column: 2; }
+      grid-column: 2;
+      margin-top: 2px; }
     .home-section .section .switch input {
       opacity: 0;
       width: 0;

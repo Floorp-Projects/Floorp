@@ -27,6 +27,13 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     .search-inner-wrapper {
       min-height: $search-height-new;
     }
+
+    &.fake-focus {
+      .search-handoff-button {
+        border: 1px solid var(--newtab-focus-border);
+        box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+      }
+    }
   }
 
   .search-handoff-button {
@@ -36,11 +43,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     color: var(--newtab-search-text-color);
     font-weight: 500;
     font-size: 15px;
-
-    .fake-focus & {
-      border: 1px solid var(--newtab-focus-border);
-      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
-    }
 
     .fake-caret {
       top: 18px;
