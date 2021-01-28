@@ -15,8 +15,6 @@ const FAVICON_URI = TEST_SITE + TEST_DIRECTORY + "file_favicon.png";
 const FAVICON_CACHE_URI = TEST_CACHE_SITE + TEST_DIRECTORY + "file_favicon.png";
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-let makeURI = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm", {})
-  .BrowserUtils.makeURI;
 
 function clearAllImageCaches() {
   let tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(
@@ -205,7 +203,7 @@ add_task(async function test_favicon_privateBrowsing() {
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let pageURI = makeURI(TEST_PAGE);
+  let pageURI = Services.io.newURI(TEST_PAGE);
 
   // Generate two random cookies for non-private window and private window
   // respectively.
