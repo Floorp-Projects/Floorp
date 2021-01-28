@@ -631,7 +631,7 @@ var gXPInstallObserver = {
             );
             let b = doc.createElementNS("http://www.w3.org/1999/xhtml", "b");
             b.textContent = options.name;
-            let fragment = BrowserUtils.getLocalizedFragment(doc, text, b);
+            let fragment = BrowserUIUtils.getLocalizedFragment(doc, text, b);
             message.appendChild(fragment);
           } else {
             message.textContent = gNavigatorBundle.getString(
