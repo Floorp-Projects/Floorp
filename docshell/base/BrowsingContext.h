@@ -984,8 +984,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_AuthorStyleDisabledDefault>);
 
   // True if the process attemping to set field is the same as the owning
-  // process.
-  bool CheckOnlyOwningProcessCanSet(ContentParent* aSource);
+  // process. Deprecated. New code that might use this should generally be moved
+  // to WindowContext or be settable only by the parent process.
+  bool LegacyCheckOnlyOwningProcessCanSet(ContentParent* aSource);
 
   // True if the process attempting to set field is the same as the embedder's
   // process.
