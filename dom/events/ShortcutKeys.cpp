@@ -51,24 +51,24 @@ KeyEventHandler* ShortcutKeys::GetHandlers(HandlerType aType) {
 /* static */
 nsAtom* ShortcutKeys::ConvertEventToDOMEventType(
     const WidgetKeyboardEvent* aWidgetKeyboardEvent) {
-  if (aWidgetKeyboardEvent->mMessage == eKeyDown) {
-    return nsGkAtoms::keydown;
+  switch (aWidgetKeyboardEvent->mMessage) {
+    case eKeyDown:
+      return nsGkAtoms::keydown;
+    case eKeyUp:
+      return nsGkAtoms::keyup;
+    // eAccessKeyNotFound event is always created from eKeyPress event and
+    // the original eKeyPress event has stopped its propagation before
+    // dispatched into the DOM tree in this process and not matched with remote
+    // content's access keys.  So, we should treat it as an eKeyPress event and
+    // execute a command if it's registered as a shortcut key.
+    case eKeyPress:
+    case eAccessKeyNotFound:
+      return nsGkAtoms::keypress;
+    default:
+      MOZ_ASSERT_UNREACHABLE(
+          "All event messages relating to shortcut keys should be handled");
+      return nullptr;
   }
-  if (aWidgetKeyboardEvent->mMessage == eKeyUp) {
-    return nsGkAtoms::keyup;
-  }
-  // eAccessKeyNotFound event is always created from eKeyPress event and
-  // the original eKeyPress event has stopped its propagation before dispatched
-  // into the DOM tree in this process and not matched with remote content's
-  // access keys.  So, we should treat it as an eKeyPress event and execute
-  // a command if it's registered as a shortcut key.
-  if (aWidgetKeyboardEvent->mMessage == eKeyPress ||
-      aWidgetKeyboardEvent->mMessage == eAccessKeyNotFound) {
-    return nsGkAtoms::keypress;
-  }
-  MOZ_ASSERT_UNREACHABLE(
-      "All event messages relating to shortcut keys should be handled");
-  return nullptr;
 }
 
 KeyEventHandler* ShortcutKeys::EnsureHandlers(HandlerType aType) {

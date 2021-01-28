@@ -171,30 +171,7 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
         mUseLegacyKeyCodeAndCharCodeValues(false),
         mEditCommandsForSingleLineEditorInitialized(false),
         mEditCommandsForMultiLineEditorInitialized(false),
-        mEditCommandsForRichTextEditorInitialized(false) {
-    // If this is a keyboard event on a plugin, it shouldn't fired on content.
-    if (IsKeyEventOnPlugin()) {
-      mFlags.mOnlySystemGroupDispatchInContent = true;
-      StopCrossProcessForwarding();
-    }
-  }
-
-  static bool IsKeyDownOrKeyDownOnPlugin(EventMessage aMessage) {
-    return aMessage == eKeyDown || aMessage == eKeyDownOnPlugin;
-  }
-  bool IsKeyDownOrKeyDownOnPlugin() const {
-    return IsKeyDownOrKeyDownOnPlugin(mMessage);
-  }
-  static bool IsKeyUpOrKeyUpOnPlugin(EventMessage aMessage) {
-    return aMessage == eKeyUp || aMessage == eKeyUpOnPlugin;
-  }
-  bool IsKeyUpOrKeyUpOnPlugin() const {
-    return IsKeyUpOrKeyUpOnPlugin(mMessage);
-  }
-  static bool IsKeyEventOnPlugin(EventMessage aMessage) {
-    return aMessage == eKeyDownOnPlugin || aMessage == eKeyUpOnPlugin;
-  }
-  bool IsKeyEventOnPlugin() const { return IsKeyEventOnPlugin(mMessage); }
+        mEditCommandsForRichTextEditorInitialized(false) {}
 
   // IsInputtingText() and IsInputtingLineBreak() are used to check if
   // it should cause eKeyPress events even on web content.

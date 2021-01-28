@@ -179,12 +179,9 @@ GlobalKeyListener::HandleEvent(dom::Event* aEvent) {
     return NS_OK;
   }
 
-  WidgetKeyboardEvent* widgetKeyboardEvent =
-      aEvent->WidgetEventPtr()->AsKeyboardEvent();
-
   // If this event was handled by APZ then don't do the default action, and
   // preventDefault to prevent any other listeners from handling the event.
-  if (widgetKeyboardEvent->mFlags.mHandledByAPZ) {
+  if (aEvent->WidgetEventPtr()->mFlags.mHandledByAPZ) {
     aEvent->PreventDefault();
     return NS_OK;
   }
