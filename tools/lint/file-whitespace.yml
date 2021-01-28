@@ -73,7 +73,6 @@ file-whitespace:
         - extensions/universalchardet
         - gfx/tests/crashtests
         - gfx/vr/nsFxrCommandLineHandler.cpp
-        - gfx/vr/vrhost/vrhostapi.cpp
         - image/test/crashtests
         - image/test/mochitest
         - image/test/reftest
