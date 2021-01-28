@@ -26,7 +26,7 @@ namespace JS {
 /**
  * Create a new ArrayBuffer with the given byte length.
  */
-extern JS_PUBLIC_API JSObject* NewArrayBuffer(JSContext* cx, uint32_t nbytes);
+extern JS_PUBLIC_API JSObject* NewArrayBuffer(JSContext* cx, size_t nbytes);
 
 /**
  * Create a new ArrayBuffer with the given |contents|, which may be null only

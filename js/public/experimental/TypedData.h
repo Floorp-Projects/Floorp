@@ -40,24 +40,23 @@ class JS_PUBLIC_API AutoRequireNoGC;
  * zeros.
  */
 
-extern JS_FRIEND_API JSObject* JS_NewInt8Array(JSContext* cx,
-                                               uint32_t nelements);
+extern JS_FRIEND_API JSObject* JS_NewInt8Array(JSContext* cx, size_t nelements);
 extern JS_FRIEND_API JSObject* JS_NewUint8Array(JSContext* cx,
-                                                uint32_t nelements);
+                                                size_t nelements);
 extern JS_FRIEND_API JSObject* JS_NewUint8ClampedArray(JSContext* cx,
-                                                       uint32_t nelements);
+                                                       size_t nelements);
 extern JS_FRIEND_API JSObject* JS_NewInt16Array(JSContext* cx,
-                                                uint32_t nelements);
+                                                size_t nelements);
 extern JS_FRIEND_API JSObject* JS_NewUint16Array(JSContext* cx,
-                                                 uint32_t nelements);
+                                                 size_t nelements);
 extern JS_FRIEND_API JSObject* JS_NewInt32Array(JSContext* cx,
-                                                uint32_t nelements);
+                                                size_t nelements);
 extern JS_FRIEND_API JSObject* JS_NewUint32Array(JSContext* cx,
-                                                 uint32_t nelements);
+                                                 size_t nelements);
 extern JS_FRIEND_API JSObject* JS_NewFloat32Array(JSContext* cx,
-                                                  uint32_t nelements);
+                                                  size_t nelements);
 extern JS_FRIEND_API JSObject* JS_NewFloat64Array(JSContext* cx,
-                                                  uint32_t nelements);
+                                                  size_t nelements);
 
 /*
  * Create a new typed array and copy in values from the given object. The
