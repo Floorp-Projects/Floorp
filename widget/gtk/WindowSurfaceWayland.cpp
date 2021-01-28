@@ -425,7 +425,6 @@ already_AddRefed<gfx::DrawTarget> WindowBackBuffer::Lock() {
               mWLBuffer ? wl_proxy_get_id((struct wl_proxy*)mWLBuffer) : -1));
 
   gfx::IntSize lockSize(mWidth, mHeight);
-  mIsLocked = true;
   return gfxPlatform::CreateDrawTargetForData(
       static_cast<unsigned char*>(mShmPool.GetImageData()), lockSize,
       BUFFER_BPP * mWidth, GetSurfaceFormat());
@@ -693,11 +692,6 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
   }
 
   return buffer->Lock();
-}
-
-void WindowSurfaceWayland::UnlockWaylandBuffer() {
-  LOGWAYLAND(("WindowSurfaceWayland::UnlockWaylandBuffer [%p]\n", (void*)this));
-  mWaylandBuffer->Unlock();
 }
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockImageSurface(
@@ -972,7 +966,6 @@ bool WindowSurfaceWayland::CommitImageCacheToWaylandBuffer() {
               long(mDelayedImageCommits.Length())));
 
   DrawDelayedImageCommits(dt, mWaylandBufferDamage);
-  UnlockWaylandBuffer();
 
   return true;
 }
@@ -1127,9 +1120,7 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
   MutexAutoLock lock(mSurfaceLock);
 
   if (mDrawToWaylandBufferDirectly) {
-    MOZ_ASSERT(mWaylandBuffer->IsLocked());
     mWaylandBufferDamage.OrWith(aInvalidRegion);
-    UnlockWaylandBuffer();
   } else {
     CacheImageSurface(aInvalidRegion);
   }
