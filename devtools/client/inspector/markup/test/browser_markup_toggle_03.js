@@ -15,7 +15,7 @@ add_task(async function() {
   const container = await getContainerForSelector("ul", inspector);
 
   info("Alt-clicking on collapsed expander should expand all children");
-  await expandContainerByClick(inspector, container, { altKey: true });
+  await toggleContainerByClick(inspector, container, { altKey: true });
 
   info("Checking that all nodes exist and are expanded");
   let nodeFronts = await getNodeFronts(inspector);
@@ -29,7 +29,7 @@ add_task(async function() {
   }
 
   info("Alt-clicking on expanded expander should collapse all children");
-  await collapseContainerByClick(inspector, container, { altKey: true });
+  await toggleContainerByClick(inspector, container, { altKey: true });
 
   info("Checking that all nodes are collapsed");
   nodeFronts = await getNodeFronts(inspector);
