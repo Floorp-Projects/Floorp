@@ -16,14 +16,14 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   is(
     gURLBar.value,
-    BrowserUtils.trimURL(goodURL),
+    BrowserUIUtils.trimURL(goodURL),
     "location bar reflects loaded page"
   );
 
   await typeAndSubmitAndStop(badURL);
   is(
     gURLBar.value,
-    BrowserUtils.trimURL(goodURL),
+    BrowserUIUtils.trimURL(goodURL),
     "location bar reflects loaded page after stop()"
   );
   gBrowser.removeCurrentTab();
@@ -34,7 +34,7 @@ add_task(async function() {
   await typeAndSubmitAndStop(badURL);
   is(
     gURLBar.value,
-    BrowserUtils.trimURL(badURL),
+    BrowserUIUtils.trimURL(badURL),
     "location bar reflects stopped page in an empty tab"
   );
   gBrowser.removeCurrentTab();
