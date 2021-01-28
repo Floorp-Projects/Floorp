@@ -252,6 +252,7 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
         /* And a srvrflx candidate for each STUN server */
         for(j=0;j<ctx->stun_server_ct;j++){
+          r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Checking STUN server %s %s", ctx->label, ctx->stun_servers[j].addr.fqdn, ctx->stun_servers[j].addr.as_string);
           /* Skip non-UDP */
           if (ctx->stun_servers[j].addr.protocol != IPPROTO_UDP) continue;
 
