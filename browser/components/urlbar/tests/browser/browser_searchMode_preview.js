@@ -11,12 +11,6 @@ const TEST_ENGINE_NAME = "Test";
 const TEST_ENGINE_DOMAIN = "example.com";
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      // TODO (Bug 1675558) - This should not be a requirement for the whole test.
-      ["browser.urlbar.update2.emptySearchBehavior", 2],
-    ],
-  });
   let testEngine = await Services.search.addEngineWithDetails(
     TEST_ENGINE_NAME,
     {
