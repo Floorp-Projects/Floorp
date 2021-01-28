@@ -91,6 +91,22 @@ pub extern "C" fn wr_swgl_set_texture_buffer(
     );
 }
 
+#[no_mangle]
+pub extern "C" fn wr_swgl_clear_color_rect(
+    ctx: *mut c_void,
+    fbo: u32,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+    r: f32,
+    g: f32,
+    b: f32,
+    a: f32,
+) {
+    swgl::Context::from(ctx).clear_color_rect(fbo, x, y, width, height, r, g, b, a);
+}
+
 /// Descriptor for a locked surface that will be directly composited by SWGL.
 #[repr(C)]
 struct WrSWGLCompositeSurfaceInfo {
@@ -1620,15 +1636,11 @@ impl Compositor for SwCompositor {
     /// frame will not have overlap dependencies assigned and so must instead
     /// be added to the late_surfaces queue to be processed at the end of the
     /// frame.
-    fn start_compositing(
-        &mut self,
-        dirty_rects: &[DeviceIntRect],
-        _opaque_rects: &[DeviceIntRect],
-    ) {
+    fn start_compositing(&mut self, dirty_rects: &[DeviceIntRect], _opaque_rects: &[DeviceIntRect]) {
         // Opaque rects are currently only computed here, not by WR itself, so we
         // ignore the passed parameter and forward our own version onto the native
         // compositor.
-        let mut opaque_rects : Vec<DeviceIntRect> = Vec::new();
+        let mut opaque_rects: Vec<DeviceIntRect> = Vec::new();
         for &(ref id, ref transform, ref clip_rect, _filter) in &self.frame_surfaces {
             if let Some(surface) = self.surfaces.get(id) {
                 if !surface.is_opaque {

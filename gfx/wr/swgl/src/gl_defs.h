@@ -44,6 +44,7 @@ typedef intptr_t GLintptr;
 #define GL_INT 0x1404
 #define GL_UNSIGNED_INT 0x1405
 #define GL_FLOAT 0x1406
+#define GL_DOUBLE 0x1408
 
 #define GL_RED 0x1903
 #define GL_GREEN 0x1904
