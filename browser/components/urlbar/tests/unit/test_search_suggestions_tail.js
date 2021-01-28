@@ -47,11 +47,6 @@ async function cleanUpSuggestions() {
 }
 
 add_task(async function setup() {
-  Services.prefs.setCharPref(
-    "browser.urlbar.matchBuckets",
-    "general:5,suggestion:Infinity"
-  );
-
   let engine = await addTestTailSuggestionsEngine(searchStr => {
     return suggestionsFn(searchStr);
   });

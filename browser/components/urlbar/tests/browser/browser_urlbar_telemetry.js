@@ -123,9 +123,9 @@ add_task(async function setup() {
     set: [["browser.urlbar.maxHistoricalSearchSuggestions", 0]],
   });
 
-  // Use the default matching bucket configuration.
+  // This test assumes that general results are shown before suggestions.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.matchBuckets", "general:5,suggestion:4"]],
+    set: [["browser.urlbar.showSearchSuggestionsFirst", false]],
   });
 
   // Allows UrlbarTestUtils to access this scope's test helpers, like Assert.

@@ -117,8 +117,6 @@ add_task(async function setup() {
       // Clear historical search suggestions to avoid interference from previous
       // tests.
       ["browser.urlbar.maxHistoricalSearchSuggestions", 0],
-      // Use the default matching bucket configuration.
-      ["browser.urlbar.matchBuckets", "general:5,suggestion:4"],
       // Turn autofill off.
       ["browser.urlbar.autoFill", false],
     ],

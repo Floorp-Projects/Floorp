@@ -472,7 +472,7 @@ add_task(async function nonEmptySearch_withHistory() {
 
     info("Test again with history before suggestions");
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.matchBuckets", "general:5,suggestion:Infinity"]],
+      set: [["browser.urlbar.showSearchSuggestionsFirst", false]],
     });
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
