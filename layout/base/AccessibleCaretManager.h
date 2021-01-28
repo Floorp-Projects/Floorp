@@ -317,6 +317,8 @@ class AccessibleCaretManager {
   struct Carets {
     AccessibleCaret* GetFirst() const { return mFirst.get(); }
 
+    AccessibleCaret* GetSecond() const { return mSecond.get(); }
+
     bool HasLogicallyVisibleCaret() const {
       return mFirst->IsLogicallyVisible() || mSecond->IsLogicallyVisible();
     }

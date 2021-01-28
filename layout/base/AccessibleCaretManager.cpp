@@ -174,7 +174,7 @@ void AccessibleCaretManager::HideCaretsAndDispatchCaretStateChangedEvent() {
   if (mCarets.HasLogicallyVisibleCaret()) {
     AC_LOG("%s", __FUNCTION__);
     mCarets.GetFirst()->SetAppearance(Appearance::None);
-    mCarets.mSecond->SetAppearance(Appearance::None);
+    mCarets.GetSecond()->SetAppearance(Appearance::None);
     mIsCaretPositionChanged = false;
     DispatchCaretStateChangedEvent(CaretChangedReason::Visibilitychange);
   }
@@ -296,7 +296,7 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
       break;
   }
 
-  mCarets.mSecond->SetAppearance(Appearance::None);
+  mCarets.GetSecond()->SetAppearance(Appearance::None);
 
   mIsCaretPositionChanged = (result == PositionChangedResult::Position);
 
@@ -346,7 +346,7 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
   PositionChangedResult firstCaretResult =
       updateSingleCaret(mCarets.GetFirst(), startFrame, startOffset);
   PositionChangedResult secondCaretResult =
-      updateSingleCaret(mCarets.mSecond.get(), endFrame, endOffset);
+      updateSingleCaret(mCarets.GetSecond(), endFrame, endOffset);
 
   mIsCaretPositionChanged =
       firstCaretResult == PositionChangedResult::Position ||
@@ -410,8 +410,8 @@ void AccessibleCaretManager::DesiredAsyncPanZoomState::Update(
           ((aAccessibleCaretManager.mCarets.GetFirst()->IsVisuallyVisible() &&
             aAccessibleCaretManager.mCarets.GetFirst()
                 ->IsInPositionFixedSubtree()) ||
-           (aAccessibleCaretManager.mCarets.mSecond->IsVisuallyVisible() &&
-            aAccessibleCaretManager.mCarets.mSecond
+           (aAccessibleCaretManager.mCarets.GetSecond()->IsVisuallyVisible() &&
+            aAccessibleCaretManager.mCarets.GetSecond()
                 ->IsInPositionFixedSubtree()))
               ? Value::Disabled
               : Value::Enabled;
@@ -421,23 +421,23 @@ void AccessibleCaretManager::DesiredAsyncPanZoomState::Update(
 
 bool AccessibleCaretManager::UpdateCaretsForOverlappingTilt() {
   if (!mCarets.GetFirst()->IsVisuallyVisible() ||
-      !mCarets.mSecond->IsVisuallyVisible()) {
+      !mCarets.GetSecond()->IsVisuallyVisible()) {
     return false;
   }
 
-  if (!mCarets.GetFirst()->Intersects(*mCarets.mSecond)) {
+  if (!mCarets.GetFirst()->Intersects(*mCarets.GetSecond())) {
     mCarets.GetFirst()->SetAppearance(Appearance::Normal);
-    mCarets.mSecond->SetAppearance(Appearance::Normal);
+    mCarets.GetSecond()->SetAppearance(Appearance::Normal);
     return false;
   }
 
   if (mCarets.GetFirst()->LogicalPosition().x <=
-      mCarets.mSecond->LogicalPosition().x) {
+      mCarets.GetSecond()->LogicalPosition().x) {
     mCarets.GetFirst()->SetAppearance(Appearance::Left);
-    mCarets.mSecond->SetAppearance(Appearance::Right);
+    mCarets.GetSecond()->SetAppearance(Appearance::Right);
   } else {
     mCarets.GetFirst()->SetAppearance(Appearance::Right);
-    mCarets.mSecond->SetAppearance(Appearance::Left);
+    mCarets.GetSecond()->SetAppearance(Appearance::Left);
   }
 
   return true;
@@ -457,9 +457,9 @@ void AccessibleCaretManager::UpdateCaretsForAlwaysTilt(
                                           ? Appearance::Left
                                           : Appearance::Right);
   }
-  if (mCarets.mSecond->IsVisuallyVisible()) {
+  if (mCarets.GetSecond()->IsVisuallyVisible()) {
     auto endFrameWritingMode = aEndFrame->GetWritingMode();
-    mCarets.mSecond->SetAppearance(
+    mCarets.GetSecond()->SetAppearance(
         endFrameWritingMode.IsBidiLTR() ? Appearance::Right : Appearance::Left);
   }
 }
@@ -486,8 +486,8 @@ nsresult AccessibleCaretManager::PressCaret(const nsPoint& aPoint,
   if (mCarets.GetFirst()->Contains(aPoint, touchArea)) {
     mActiveCaret = mCarets.GetFirst();
     SetSelectionDirection(eDirPrevious);
-  } else if (mCarets.mSecond->Contains(aPoint, touchArea)) {
-    mActiveCaret = mCarets.mSecond.get();
+  } else if (mCarets.GetSecond()->Contains(aPoint, touchArea)) {
+    mActiveCaret = mCarets.GetSecond();
     SetSelectionDirection(eDirNext);
   }
 
@@ -788,7 +788,7 @@ void AccessibleCaretManager::OnKeyboardEvent() {
 
 void AccessibleCaretManager::OnFrameReconstruction() {
   mCarets.GetFirst()->EnsureApzAware();
-  mCarets.mSecond->EnsureApzAware();
+  mCarets.GetSecond()->EnsureApzAware();
 }
 
 void AccessibleCaretManager::SetLastInputSource(uint16_t aInputSource) {
@@ -1190,7 +1190,7 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
   if (!StaticPrefs::
           layout_accessiblecaret_allow_dragging_across_other_caret()) {
     if ((mActiveCaret == mCarets.GetFirst() && *cmpToLimit == 1) ||
-        (mActiveCaret == mCarets.mSecond.get() && *cmpToLimit == -1)) {
+        (mActiveCaret == mCarets.GetSecond() && *cmpToLimit == -1)) {
       // The active caret's position is past the limit, which we don't allow
       // here. So set it to the limit, resulting in one character being
       // selected.
@@ -1208,11 +1208,11 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
         if (mActiveCaret == mCarets.GetFirst()) {
           // First caret was moved across the second caret. After making change
           // to the selection, the user will drag the second caret.
-          mActiveCaret = mCarets.mSecond.get();
+          mActiveCaret = mCarets.GetSecond();
         }
         break;
       case -1:
-        if (mActiveCaret == mCarets.mSecond.get()) {
+        if (mActiveCaret == mCarets.GetSecond()) {
           // Second caret was moved across the first caret. After making change
           // to the selection, the user will drag the first caret.
           mActiveCaret = mCarets.GetFirst();
@@ -1363,7 +1363,7 @@ nsPoint AccessibleCaretManager::AdjustDragBoundary(
     // (upper bound) of its Y-coordinate is the logical position of the second
     // caret.
     if (mActiveCaret == mCarets.GetFirst()) {
-      nscoord dragDownBoundaryY = mCarets.mSecond->LogicalPosition().y;
+      nscoord dragDownBoundaryY = mCarets.GetSecond()->LogicalPosition().y;
       if (dragDownBoundaryY > 0 && adjustedPoint.y > dragDownBoundaryY) {
         adjustedPoint.y = dragDownBoundaryY;
       }
