@@ -526,6 +526,7 @@
   filter: drop-shadow(1px 1px 1px black);
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-icon-sound[soundplaying]:not(:hover),
 .tab-icon-sound[muted]:not(:hover),
 .tab-icon-sound[activemedia-blocked]:not(:hover) {
@@ -537,11 +538,25 @@
   transition: opacity .3s linear var(--soundplaying-removal-delay);
   opacity: 0;
 }
+} /*** END !proton ***/
 
 .tab-icon-sound[muted] > .tab-icon-sound-playing-label,
 .tab-icon-sound:not([muted]) > .tab-icon-sound-muted-label {
   display: none;
 }
+
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+.tab-icon-sound:is([soundplaying], [muted], [activemedia-blocked]) > .tab-icon-sound-image:not(:hover),
+.tab-icon-sound:is([soundplaying], [muted], [activemedia-blocked]) > .tab-icon-sound-label:not(:hover) {
+  opacity: .8;
+}
+
+.tab-icon-sound[soundplaying-scheduledremoval]:not([muted]) > .tab-icon-sound-image:not(:hover),
+.tab-icon-overlay[soundplaying-scheduledremoval]:not([muted], :hover) {
+  transition: opacity .3s linear var(--soundplaying-removal-delay);
+  opacity: 0;
+}
+} /*** END proton ***/
 
 /* Tab Overflow */
 #tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator),
