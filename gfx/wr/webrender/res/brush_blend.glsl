@@ -203,41 +203,29 @@ vec4 ComponentTransfer(vec4 colora) {
     // Linear/Gamma are a simple calculation.
     int offset = 0;
     vec4 texel;
-    int k;
 
     for (int i = 0; i < 4; i++) {
-        switch (vFuncs[i]) {
-            case COMPONENT_TRANSFER_IDENTITY:
-                break;
-            case COMPONENT_TRANSFER_TABLE:
-            case COMPONENT_TRANSFER_DISCRETE: {
-                // fetch value from lookup table
-                k = int(floor(colora[i]*255.0));
-                texel = fetch_from_gpu_cache_1(v_table_address + offset + k/4);
-                colora[i] = clamp(texel[k % 4], 0.0, 1.0);
-                // offset plus 256/4 blocks
-                offset = offset + 64;
-                break;
-            }
-            case COMPONENT_TRANSFER_LINEAR: {
-                // fetch the two values for use in the linear equation
-                texel = fetch_from_gpu_cache_1(v_table_address + offset);
-                colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
-                // offset plus 1 block
-                offset = offset + 1;
-                break;
-            }
-            case COMPONENT_TRANSFER_GAMMA: {
-                // fetch the three values for use in the gamma equation
-                texel = fetch_from_gpu_cache_1(v_table_address + offset);
-                colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
-                // offset plus 1 block
-                offset = offset + 1;
-                break;
-            }
-            default:
-                // shouldn't happen
-                break;
+        if (vFuncs[i] == COMPONENT_TRANSFER_IDENTITY) {
+        } else if (vFuncs[i] == COMPONENT_TRANSFER_TABLE ||
+                   vFuncs[i] == COMPONENT_TRANSFER_DISCRETE) {
+            // fetch value from lookup table
+            int k = int(floor(colora[i]*255.0));
+            texel = fetch_from_gpu_cache_1(v_table_address + offset + k/4);
+            colora[i] = clamp(texel[k % 4], 0.0, 1.0);
+            // offset plus 256/4 blocks
+            offset = offset + 64;
+        } else if (vFuncs[i] == COMPONENT_TRANSFER_LINEAR) {
+            // fetch the two values for use in the linear equation
+            texel = fetch_from_gpu_cache_1(v_table_address + offset);
+            colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
+            // offset plus 1 block
+            offset = offset + 1;
+        } else if (vFuncs[i] == COMPONENT_TRANSFER_GAMMA) {
+            // fetch the three values for use in the gamma equation
+            texel = fetch_from_gpu_cache_1(v_table_address + offset);
+            colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
+            // offset plus 1 block
+            offset = offset + 1;
         }
     }
     return colora;
@@ -255,40 +243,31 @@ Fragment brush_fs() {
     float alpha = Cs.a;
     vec3 color = alpha != 0.0 ? Cs.rgb / alpha : Cs.rgb;
 
-    switch (v_op) {
-        case FILTER_CONTRAST:
-            color = Contrast(color, v_amount);
-            break;
-        case FILTER_INVERT:
-            color = Invert(color, v_amount);
-            break;
-        case FILTER_BRIGHTNESS:
-            color = Brightness(color, v_amount);
-            break;
-        case FILTER_SRGB_TO_LINEAR:
-            color = SrgbToLinear(color);
-            break;
-        case FILTER_LINEAR_TO_SRGB:
-            color = LinearToSrgb(color);
-            break;
-        case FILTER_COMPONENT_TRANSFER: {
-            // Get the unpremultiplied color with alpha.
-            vec4 colora = vec4(color, alpha);
-            colora = ComponentTransfer(colora);
-            color = colora.rgb;
-            alpha = colora.a;
-            break;
-        }
-        case FILTER_FLOOD:
-            color = v_color_offset.rgb;
-            alpha = v_color_offset.a;
-            break;
-        default:
-            // Color matrix type filters (sepia, hue-rotate, etc...)
-            vec4 result = vColorMat * vec4(color, alpha) + v_color_offset;
-            result = clamp(result, vec4(0.0), vec4(1.0));
-            color = result.rgb;
-            alpha = result.a;
+    if (v_op == FILTER_CONTRAST) {
+        color = Contrast(color, v_amount);
+    } else if (v_op == FILTER_INVERT) {
+        color = Invert(color, v_amount);
+    } else if (v_op == FILTER_BRIGHTNESS) {
+        color = Brightness(color, v_amount);
+    } else if (v_op == FILTER_SRGB_TO_LINEAR) {
+        color = SrgbToLinear(color);
+    } else if (v_op == FILTER_LINEAR_TO_SRGB) {
+        color = LinearToSrgb(color);
+    } else if (v_op == FILTER_COMPONENT_TRANSFER) {
+        // Get the unpremultiplied color with alpha.
+        vec4 colora = vec4(color, alpha);
+        colora = ComponentTransfer(colora);
+        color = colora.rgb;
+        alpha = colora.a;
+    } else if (v_op == FILTER_FLOOD) {
+        color = v_color_offset.rgb;
+        alpha = v_color_offset.a;
+    } else {
+        // Color matrix type filters (sepia, hue-rotate, etc...)
+        vec4 result = vColorMat * vec4(color, alpha) + v_color_offset;
+        result = clamp(result, vec4(0.0), vec4(1.0));
+        color = result.rgb;
+        alpha = result.a;
     }
 
     #ifdef WR_FEATURE_ALPHA_PASS
