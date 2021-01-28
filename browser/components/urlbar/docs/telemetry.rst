@@ -102,6 +102,15 @@ urlbar.tips
     Incremented when the user picks the update_web search intervention.
   - ``intervention_update_web-shown``
     Incremented when the update_web search intervention is shown.
+  - ``tabtosearch-shown``
+    Increment when a non-onboarding tab-to-search result is shown, once per
+    engine per engagement. Please note that the number of times non-onboarding
+    tab-to-search results are picked is the sum of all keys in
+    ``urlbar.searchmode.tabtosearch``. Please also note that more detailed
+    telemetry is recorded about both onboarding and non-onboarding tab-to-search
+    results in urlbar.tabtosearch.*. These probes in ``urlbar.tips`` are still
+    recorded because ``urlbar.tabtosearch.*`` is not currently recorded
+    in Release.
   - ``tabtosearch_onboard-shown``
     Incremented when a tab-to-search onboarding result is shown, once per engine
     per engagement. Please note that the number of times tab-to-search
