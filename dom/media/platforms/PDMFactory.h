@@ -9,6 +9,7 @@
 
 #  include <utility>
 #  include "DecoderDoctorDiagnostics.h"
+#  include "PlatformDecoderModule.h"
 #  include "mozilla/AlreadyAddRefed.h"
 #  include "mozilla/EnumSet.h"
 #  include "mozilla/MozPromise.h"
@@ -22,7 +23,6 @@ namespace mozilla {
 class CDMProxy;
 class MediaDataDecoder;
 class MediaResult;
-class PlatformDecoderModule;
 class StaticMutex;
 template <typename T>
 struct MaxEnumValue;
@@ -31,9 +31,7 @@ struct CreateDecoderParamsForAsync;
 struct SupportDecoderParams;
 enum class RemoteDecodeIn;
 
-using PDMCreateDecoderPromise =
-    MozPromise<RefPtr<MediaDataDecoder>, MediaResult,
-               /* IsExclusive = */ true>;
+using PDMCreateDecoderPromise = PlatformDecoderModule::CreateDecoderPromise;
 
 class PDMFactory final {
  public:

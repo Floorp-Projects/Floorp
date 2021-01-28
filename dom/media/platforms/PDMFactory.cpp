@@ -60,6 +60,9 @@
 
 namespace mozilla {
 
+#define PDM_INIT_LOG(msg, ...) \
+  MOZ_LOG(sPDMLog, LogLevel::Debug, ("PDMInitializer, " msg, ##__VA_ARGS__))
+
 extern already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule();
 
 class PDMInitializer final {
@@ -152,15 +155,19 @@ void PDMInitializer::InitPDMs() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sHasInitializedPDMs);
   if (XRE_IsGPUProcess()) {
+    PDM_INIT_LOG("Init PDMs in GPU process");
     InitGpuPDMs();
   } else if (XRE_IsRDDProcess()) {
+    PDM_INIT_LOG("Init PDMs in RDD process");
     InitRddPDMs();
   } else if (XRE_IsContentProcess()) {
+    PDM_INIT_LOG("Init PDMs in Content process");
     InitContentPDMs();
   } else {
     MOZ_DIAGNOSTIC_ASSERT(
         XRE_IsParentProcess(),
         "PDMFactory is only usable in the Parent/GPU/RDD/Content process");
+    PDM_INIT_LOG("Init PDMs in Chrome process");
     InitDefaultPDMs();
   }
   sHasInitializedPDMs = true;
@@ -718,4 +725,5 @@ bool PDMFactory::SupportsMimeType(const nsACString& aMimeType,
   return false;
 }
 
+#undef PDM_INIT_LOG
 }  // namespace mozilla
