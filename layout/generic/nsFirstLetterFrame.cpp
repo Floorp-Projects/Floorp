@@ -88,10 +88,9 @@ nsresult nsFirstLetterFrame::GetChildFrameContainingOffset(
   if (kid) {
     return kid->GetChildFrameContainingOffset(
         inContentOffset, inHint, outFrameContentOffset, outChildFrame);
-  } else {
-    return nsIFrame::GetChildFrameContainingOffset(
-        inContentOffset, inHint, outFrameContentOffset, outChildFrame);
   }
+  return nsIFrame::GetChildFrameContainingOffset(
+      inContentOffset, inHint, outFrameContentOffset, outChildFrame);
 }
 
 // Needed for non-floating first-letter frames and for the continuations
