@@ -14,8 +14,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
+  "BrowserUIUtils",
+  "resource:///modules/BrowserUIUtils.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
@@ -73,7 +73,7 @@ class EncryptedMediaParent extends JSWindowActorParent {
     let link = document.createXULElement("label", { is: "text-link" });
     link.setAttribute("href", baseURL + "drm-content");
     link.textContent = text;
-    return BrowserUtils.getLocalizedFragment(document, mainMessage, link);
+    return BrowserUIUtils.getLocalizedFragment(document, mainMessage, link);
   }
 
   getMessageWithBrandName(aNotificationId) {
