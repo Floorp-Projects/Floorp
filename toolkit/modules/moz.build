@@ -192,6 +192,7 @@ EXTRA_JS_MODULES += [
     "Integration.jsm",
     "JSONFile.jsm",
     "KeywordUtils.jsm",
+    "LayoutUtils.jsm",
     "Log.jsm",
     "NewTabUtils.jsm",
     "NLP.jsm",
