@@ -163,28 +163,7 @@ class EventSourceImpl final : public nsIObserver,
     mEventSource->mReadyState = aReadyState;
   }
 
-  bool IsFrozen() {
-    MutexAutoLock lock(mMutex);
-    return mFrozen;
-  }
-
-  void SetFrozen(bool aFrozen) {
-    MutexAutoLock lock(mMutex);
-    mFrozen = aFrozen;
-  }
-
   bool IsClosed() { return ReadyState() == CLOSED; }
-
-  void ShutDown() {
-    MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(!mIsShutDown);
-    mIsShutDown = true;
-  }
-
-  bool IsShutDown() {
-    MutexAutoLock lock(mMutex);
-    return mIsShutDown;
-  }
 
   RefPtr<EventSource> mEventSource;
 
@@ -270,18 +249,18 @@ class EventSourceImpl final : public nsIObserver,
   // EventSourceImpl internal states.
   // WorkerRef to keep the worker alive. (accessed on worker thread only)
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
-  // This mutex protects mServiceNotifier, mFrozen and mEventSource->mReadyState
-  // that are used in different threads.
+  // This mutex protects mServiceNotifier and mEventSource->mReadyState that are
+  // used in different threads.
   mozilla::Mutex mMutex;
   // Whether the window is frozen. May be set on main thread and read on target
-  // thread. Use mMutex to protect it before accessing it.
-  bool mFrozen;
+  // thread.
+  Atomic<bool> mFrozen;
   // There are some messages are going to be dispatched when thaw.
   bool mGoingToDispatchAllMessages;
   // Whether the EventSource is run on main thread.
-  bool mIsMainThread;
+  const bool mIsMainThread;
   // Whether the EventSourceImpl is going to be destroyed.
-  bool mIsShutDown;
+  Atomic<bool> mIsShutDown;
 
   class EventSourceServiceNotifier final {
    public:
@@ -390,9 +369,6 @@ EventSourceImpl::EventSourceImpl(EventSource* aEventSource,
       mCookieJarSettings(aCookieJarSettings),
       mTargetThread(NS_GetCurrentThread()) {
   MOZ_ASSERT(mEventSource);
-  if (!mIsMainThread) {
-    mEventSource->mIsMainThread = false;
-  }
   SetReadyState(CONNECTING);
 }
 
@@ -445,7 +421,8 @@ void EventSourceImpl::CloseInternal() {
     mServiceNotifier = nullptr;
   }
 
-  if (IsShutDown()) {
+  MOZ_ASSERT(!mIsShutDown);
+  if (mIsShutDown) {
     return;
   }
 
@@ -466,7 +443,7 @@ void EventSourceImpl::CloseInternal() {
   while (mMessagesToDispatch.GetSize() != 0) {
     delete mMessagesToDispatch.PopFront();
   }
-  SetFrozen(false);
+  mFrozen = false;
   ResetDecoder();
   mUnicodeDecoder = nullptr;
   // Release the object on its owner. Don't access to any members
@@ -479,7 +456,8 @@ void EventSourceImpl::CleanupOnMainThread() {
   MOZ_ASSERT(IsClosed());
 
   // Call ShutDown before cleaning any members.
-  ShutDown();
+  MOZ_ASSERT(!mIsShutDown);
+  mIsShutDown = true;
 
   if (mIsMainThread) {
     RemoveWindowObservers();
@@ -569,7 +547,7 @@ class ConnectRunnable final : public WorkerMainThreadRunnable {
 
 nsresult EventSourceImpl::ParseURL(const nsAString& aURL) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
   // get the src
   nsCOMPtr<nsIURI> baseURI;
   nsresult rv = GetBaseURI(getter_AddRefs(baseURI));
@@ -600,7 +578,7 @@ nsresult EventSourceImpl::ParseURL(const nsAString& aURL) {
 nsresult EventSourceImpl::AddWindowObservers() {
   AssertIsOnMainThread();
   MOZ_ASSERT(mIsMainThread);
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   NS_ENSURE_STATE(os);
 
@@ -773,7 +751,7 @@ nsresult EventSourceImpl::StreamReaderFunc(nsIInputStream* aInputStream,
     return NS_ERROR_FAILURE;
   }
   thisObject->AssertIsOnTargetThread();
-  MOZ_ASSERT(!thisObject->IsShutDown());
+  MOZ_ASSERT(!thisObject->mIsShutDown);
   thisObject->ParseSegment((const char*)aFromRawSegment, aCount);
   *aWriteCount = aCount;
   return NS_OK;
@@ -972,7 +950,7 @@ EventSourceImpl::IsOnCurrentThreadInfallible() { return IsTargetThread(); }
 
 nsresult EventSourceImpl::GetBaseURI(nsIURI** aBaseURI) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
   NS_ENSURE_ARG_POINTER(aBaseURI);
 
   *aBaseURI = nullptr;
@@ -1001,7 +979,7 @@ nsresult EventSourceImpl::GetBaseURI(nsIURI** aBaseURI) {
 
 void EventSourceImpl::SetupHttpChannel() {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
   nsresult rv = mHttpChannel->SetRequestMethod("GET"_ns);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
@@ -1030,7 +1008,7 @@ void EventSourceImpl::SetupHttpChannel() {
 nsresult EventSourceImpl::SetupReferrerInfo(
     const nsCOMPtr<Document>& aDocument) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
 
   if (aDocument) {
     auto referrerInfo = MakeRefPtr<ReferrerInfo>(*aDocument);
@@ -1270,7 +1248,7 @@ nsresult EventSourceImpl::PrintErrorOnConsole(
     const char* aBundleURI, const char* aError,
     const nsTArray<nsString>& aFormatStrings) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
   nsCOMPtr<nsIStringBundleService> bundleService =
       mozilla::services::GetStringBundleService();
   NS_ENSURE_STATE(bundleService);
@@ -1311,7 +1289,7 @@ nsresult EventSourceImpl::PrintErrorOnConsole(
 
 nsresult EventSourceImpl::ConsoleError() {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
   nsAutoCString targetSpec;
   nsresult rv = mSrc->GetSpec(targetSpec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1380,7 +1358,7 @@ NS_IMETHODIMP EventSourceImpl::Notify(nsITimer* aTimer) {
 
   MOZ_ASSERT(!mHttpChannel, "the channel hasn't been cancelled!!");
 
-  if (!IsFrozen()) {
+  if (!mFrozen) {
     nsresult rv = InitChannelAndRequestEventSource(mIsMainThread);
     if (NS_FAILED(rv)) {
       NS_WARNING("InitChannelAndRequestEventSource() failed");
@@ -1391,13 +1369,13 @@ NS_IMETHODIMP EventSourceImpl::Notify(nsITimer* aTimer) {
 
 nsresult EventSourceImpl::Thaw() {
   AssertIsOnMainThread();
-  if (IsClosed() || !IsFrozen()) {
+  if (IsClosed() || !mFrozen) {
     return NS_OK;
   }
 
   MOZ_ASSERT(!mHttpChannel, "the connection hasn't been closed!!!");
 
-  SetFrozen(false);
+  mFrozen = false;
   nsresult rv;
   if (!mGoingToDispatchAllMessages && mMessagesToDispatch.GetSize() > 0) {
     nsCOMPtr<nsIRunnable> event =
@@ -1419,18 +1397,18 @@ nsresult EventSourceImpl::Thaw() {
 
 nsresult EventSourceImpl::Freeze() {
   AssertIsOnMainThread();
-  if (IsClosed() || IsFrozen()) {
+  if (IsClosed() || mFrozen) {
     return NS_OK;
   }
 
   MOZ_ASSERT(!mHttpChannel, "the connection hasn't been closed!!!");
-  SetFrozen(true);
+  mFrozen = true;
   return NS_OK;
 }
 
 nsresult EventSourceImpl::DispatchCurrentMessageEvent() {
   AssertIsOnTargetThread();
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
   UniquePtr<Message> message(std::move(mCurrentMessage));
   ClearFields();
 
@@ -1467,7 +1445,7 @@ void EventSourceImpl::DispatchAllMessageEvents() {
   AssertIsOnTargetThread();
   mGoingToDispatchAllMessages = false;
 
-  if (IsClosed() || IsFrozen()) {
+  if (IsClosed() || mFrozen) {
     return;
   }
 
@@ -1532,7 +1510,7 @@ void EventSourceImpl::DispatchAllMessageEvents() {
       return;
     }
 
-    if (IsClosed() || IsFrozen()) {
+    if (IsClosed() || mFrozen) {
       return;
     }
   }
@@ -1546,7 +1524,7 @@ void EventSourceImpl::ClearFields() {
 }
 
 nsresult EventSourceImpl::SetFieldAndClear() {
-  MOZ_ASSERT(!IsShutDown());
+  MOZ_ASSERT(!mIsShutDown);
   AssertIsOnTargetThread();
   if (mLastFieldName.IsEmpty()) {
     mLastFieldValue.Truncate();
@@ -1624,7 +1602,7 @@ nsresult EventSourceImpl::CheckHealthOfRequestCallback(
 
   // check if we have been closed or if the request has been canceled
   // or if we have been frozen
-  if (IsClosed() || IsFrozen() || !mHttpChannel) {
+  if (IsClosed() || mFrozen || !mHttpChannel) {
     return NS_ERROR_ABORT;
   }
 
@@ -1836,7 +1814,7 @@ bool EventSourceImpl::CreateWorkerRef(WorkerPrivate* aWorkerPrivate) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (IsShutDown()) {
+  if (mIsShutDown) {
     return false;
   }
 
@@ -1875,7 +1853,7 @@ EventSourceImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent,
     return NS_DispatchToMainThread(event_ref.forget());
   }
 
-  if (IsShutDown()) {
+  if (mIsShutDown) {
     // We want to avoid clutter about errors in our shutdown logs,
     // so just report NS_OK (we have no explicit return value
     // for shutdown).
@@ -1916,7 +1894,7 @@ EventSource::EventSource(nsIGlobalObject* aGlobal,
                          bool aWithCredentials)
     : DOMEventTargetHelper(aGlobal),
       mWithCredentials(aWithCredentials),
-      mIsMainThread(true) {
+      mIsMainThread(NS_IsMainThread()) {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aCookieJarSettings);
   mESImpl = new EventSourceImpl(this, aCookieJarSettings);
