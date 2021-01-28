@@ -10,8 +10,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
+  "BrowserUIUtils",
+  "resource:///modules/BrowserUIUtils.jsm"
 );
 
 var Pocket = {
@@ -46,7 +46,7 @@ var Pocket = {
 
     let libraryButton = document.getElementById("library-button");
     if (libraryButton) {
-      BrowserUtils.setToolbarButtonHeightProperty(libraryButton);
+      BrowserUIUtils.setToolbarButtonHeightProperty(libraryButton);
     }
 
     let urlToSave = Pocket._urlToSave;
