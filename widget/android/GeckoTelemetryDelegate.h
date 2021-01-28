@@ -42,14 +42,17 @@ class GeckoTelemetryDelegate final
       return;
     }
 
-    nsTArray<int64_t>* samples = new nsTArray<int64_t>();
-    for (size_t i = 0; i < aSamples.Length(); i++) {
-      samples->AppendElement(static_cast<int64_t>(aSamples[i]));
+    // Convert aSamples to an array of int64_t. We know |samples| required
+    // capacity needs to match |aSamples.Length()|.
+    nsTArray<int64_t> samples(aSamples.Length());
+    for (size_t i = 0, l = aSamples.Length(); i < l; ++i) {
+      samples.AppendElement(static_cast<int64_t>(aSamples[i]));
     }
 
+    // LongArray::New *copies* the elements
     mProxy->DispatchHistogram(
         aIsCategorical, aName,
-        mozilla::jni::LongArray::New(samples->Elements(), samples->Length()));
+        mozilla::jni::LongArray::New(samples.Elements(), samples.Length()));
   }
 
   // Implement StreamingTelemetryDelegate.
