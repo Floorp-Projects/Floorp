@@ -40,6 +40,10 @@ BEGIN_TEST(testLargeArrayBuffers) {
   {
     RootedObject tarr(cx, JS_NewUint8Array(cx, nbytes));
     CHECK(JS_IsTypedArrayObject(tarr));
+    CHECK_EQUAL(JS_GetArrayBufferViewByteOffset(tarr), 0u);
+    CHECK_EQUAL(JS_GetArrayBufferViewByteLength(tarr), nbytes);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(tarr), 0u);
+    CHECK_EQUAL(JS_GetTypedArrayByteLength(tarr), nbytes);
 
     length = 0;
     js::GetArrayBufferViewLengthAndData(tarr, &length, &isShared, &data);
@@ -55,6 +59,10 @@ BEGIN_TEST(testLargeArrayBuffers) {
     RootedObject tarr(cx,
                       JS_NewInt16ArrayWithBuffer(cx, buffer, 0, nbytes / 2));
     CHECK(JS_IsTypedArrayObject(tarr));
+    CHECK_EQUAL(JS_GetArrayBufferViewByteOffset(tarr), 0u);
+    CHECK_EQUAL(JS_GetArrayBufferViewByteLength(tarr), nbytes);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(tarr), 0u);
+    CHECK_EQUAL(JS_GetTypedArrayByteLength(tarr), nbytes);
 
     length = 0;
     js::GetArrayBufferViewLengthAndData(tarr, &length, &isShared, &data);
@@ -70,10 +78,31 @@ BEGIN_TEST(testLargeArrayBuffers) {
   {
     RootedObject dv(cx, JS_NewDataView(cx, buffer, 0, nbytes - 10));
     CHECK(JS_IsArrayBufferViewObject(dv));
+    CHECK_EQUAL(JS_GetArrayBufferViewByteOffset(dv), 0u);
+    CHECK_EQUAL(JS_GetArrayBufferViewByteLength(dv), nbytes - 10);
 
     length = 0;
     js::GetArrayBufferViewLengthAndData(dv, &length, &isShared, &data);
     CHECK_EQUAL(length, nbytes - 10);
+  }
+
+  // Int8Array with large byteOffset.
+  {
+    RootedObject tarr(cx,
+                      JS_NewInt8ArrayWithBuffer(cx, buffer, nbytes - 200, 32));
+    CHECK(JS_IsTypedArrayObject(tarr));
+    CHECK_EQUAL(JS_GetArrayBufferViewByteOffset(tarr), nbytes - 200);
+    CHECK_EQUAL(JS_GetArrayBufferViewByteLength(tarr), 32u);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(tarr), nbytes - 200);
+    CHECK_EQUAL(JS_GetTypedArrayByteLength(tarr), 32u);
+  }
+
+  // DataView with large byteOffset.
+  {
+    RootedObject dv(cx, JS_NewDataView(cx, buffer, nbytes - 200, 32));
+    CHECK(JS_IsArrayBufferViewObject(dv));
+    CHECK_EQUAL(JS_GetArrayBufferViewByteOffset(dv), nbytes - 200);
+    CHECK_EQUAL(JS_GetArrayBufferViewByteLength(dv), 32u);
   }
 #endif
 

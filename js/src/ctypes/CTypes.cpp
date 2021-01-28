@@ -1259,8 +1259,8 @@ static bool ArgumentLengthError(JSContext* cx, const char* fun,
   return false;
 }
 
-static bool ArrayLengthMismatch(JSContext* cx, unsigned expectedLength,
-                                HandleObject arrObj, unsigned actualLength,
+static bool ArrayLengthMismatch(JSContext* cx, size_t expectedLength,
+                                HandleObject arrObj, size_t actualLength,
                                 HandleValue actual, ConversionType convType) {
   MOZ_ASSERT(arrObj && CType::IsCType(arrObj));
 
@@ -3673,13 +3673,13 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
                              arrObj, arrIndex);
           }
 
-          uint32_t sourceLength = JS_GetTypedArrayByteLength(valObj);
+          size_t sourceLength = JS_GetTypedArrayByteLength(valObj);
           size_t elementSize = CType::GetSize(baseType);
           size_t arraySize = elementSize * targetLength;
-          if (arraySize != size_t(sourceLength)) {
+          if (arraySize != sourceLength) {
             MOZ_ASSERT(!funObj);
-            return ArrayLengthMismatch(cx, arraySize, targetType,
-                                       size_t(sourceLength), val, convType);
+            return ArrayLengthMismatch(cx, arraySize, targetType, sourceLength,
+                                       val, convType);
           }
           SharedMem<void*> target = SharedMem<void*>::unshared(buffer);
           JS::AutoCheckCannotGC nogc;

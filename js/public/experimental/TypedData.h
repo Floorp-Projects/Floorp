@@ -309,7 +309,7 @@ extern JS_FRIEND_API uint32_t JS_GetTypedArrayLength(JSObject* obj);
  * be known that it would pass such a test: it is a typed array or a wrapper of
  * a typed array, and the unwrapping will succeed.
  */
-extern JS_FRIEND_API uint32_t JS_GetTypedArrayByteOffset(JSObject* obj);
+extern JS_FRIEND_API size_t JS_GetTypedArrayByteOffset(JSObject* obj);
 
 /**
  * Return the byte length of a typed array.
@@ -318,17 +318,17 @@ extern JS_FRIEND_API uint32_t JS_GetTypedArrayByteOffset(JSObject* obj);
  * be known that it would pass such a test: it is a typed array or a wrapper of
  * a typed array, and the unwrapping will succeed.
  */
-extern JS_FRIEND_API uint32_t JS_GetTypedArrayByteLength(JSObject* obj);
+extern JS_FRIEND_API size_t JS_GetTypedArrayByteLength(JSObject* obj);
 
 /**
  * More generic name for JS_GetTypedArrayByteLength to cover DataViews as well
  */
-extern JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteLength(JSObject* obj);
+extern JS_FRIEND_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj);
 
 /**
  * More generic name for JS_GetTypedArrayByteOffset to cover DataViews as well
  */
-extern JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteOffset(JSObject* obj);
+extern JS_FRIEND_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj);
 
 /*
  * Return a pointer to the start of the data referenced by a typed array. The
