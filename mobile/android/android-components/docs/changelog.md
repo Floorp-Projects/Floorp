@@ -42,6 +42,8 @@ permalink: /changelog/
 * **feature-awesomebar**
   * added `SearchEngineSuggestionProvider` that offers suggestion(s) for search engines based on user search engine list
 
+* **browser-storage-sync**
+  * Added `AutofillCreditCardsAddressesStorage` implementation of the `CreditCardsAddressesStorage` interface back by the application-services' `autofill` library. 
 
 * **concept-engine**
   * Added `defaultSettings: Settings?` parameter to registerTabHandler to supply a default Tracking Policy when opening a new extension tab.

@@ -140,6 +140,7 @@ object Dependencies {
 
     const val mozilla_glean_forUnitTests = "org.mozilla.telemetry:glean-forUnitTests:${Versions.mozilla_glean}"
 
+    const val mozilla_sync_autofill = "org.mozilla.appservices:autofill:${Versions.mozilla_appservices}"
     const val mozilla_sync_logins = "org.mozilla.appservices:logins:${Versions.mozilla_appservices}"
     const val mozilla_places = "org.mozilla.appservices:places:${Versions.mozilla_appservices}"
     const val mozilla_sync_manager = "org.mozilla.appservices:syncmanager:${Versions.mozilla_appservices}"
