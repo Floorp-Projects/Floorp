@@ -25,8 +25,7 @@ dbg.onDebuggerStatement = function (frame) {
 };
 
 assertEq(log, '');
-var evalScopes = g.evalReturningScope("canary = 'dead'; let lex = 42; debugger; // nee", g2);
+var evalScope = g.evalReturningScope("canary = 'dead'; let lex = 42; debugger; // nee", g2);
 assertEq(log, 'ecbd');
 assertEq(canary, 42);
-assertEq(evalScopes.vars.canary, 'dead');
-assertEq(evalScopes.lexicals.lex, 42);
+assertEq(evalScope.canary, 'dead');

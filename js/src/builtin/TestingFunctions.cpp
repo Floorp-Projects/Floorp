@@ -4732,7 +4732,6 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject varObj(cx);
-  RootedObject lexicalScope(cx);
 
   {
     // If we're switching globals here, ExecuteInFrameScriptEnvironment will
@@ -4744,35 +4743,21 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
+    RootedObject lexicalScope(cx);
     if (!js::ExecuteInFrameScriptEnvironment(cx, obj, script, &lexicalScope)) {
       return false;
     }
 
     varObj = lexicalScope->enclosingEnvironment()->enclosingEnvironment();
-  }
-
-  RootedObject rv(cx, JS_NewPlainObject(cx));
-  if (!rv) {
-    return false;
+    MOZ_ASSERT(varObj->is<NonSyntacticVariablesObject>());
   }
 
   RootedValue varObjVal(cx, ObjectValue(*varObj));
   if (!cx->compartment()->wrap(cx, &varObjVal)) {
     return false;
   }
-  if (!JS_SetProperty(cx, rv, "vars", varObjVal)) {
-    return false;
-  }
 
-  RootedValue lexicalScopeVal(cx, ObjectValue(*lexicalScope));
-  if (!cx->compartment()->wrap(cx, &lexicalScopeVal)) {
-    return false;
-  }
-  if (!JS_SetProperty(cx, rv, "lexicals", lexicalScopeVal)) {
-    return false;
-  }
-
-  args.rval().setObject(*rv);
+  args.rval().set(varObjVal);
   return true;
 }
 
