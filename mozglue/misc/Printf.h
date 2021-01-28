@@ -115,7 +115,7 @@ class PrintfTarget {
              const char* hxp);
   bool cvt_ll(int64_t num, int width, int prec, int radix, int type, int flags,
               const char* hexp);
-  bool cvt_f(double d, const char* fmt0, const char* fmt1);
+  bool cvt_f(double d, char c, int width, int prec, int flags);
   bool cvt_s(const char* s, int width, int prec, int flags);
 };
 
