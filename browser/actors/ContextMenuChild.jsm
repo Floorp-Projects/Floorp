@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
@@ -238,9 +237,9 @@ class ContextMenuChild extends JSWindowActorChild {
 
         if (!disable) {
           try {
-            BrowserUtils.urlSecurityCheck(
-              target.currentURI.spec,
-              target.ownerDocument.nodePrincipal
+            Services.scriptSecurityManager.checkLoadURIWithPrincipal(
+              target.ownerDocument.nodePrincipal,
+              target.currentURI
             );
             let canvas = this.document.createElement("canvas");
             canvas.width = target.naturalWidth;

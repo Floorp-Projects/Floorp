@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -3258,10 +3257,11 @@ function getDroppableData(event) {
     }
 
     try {
-      // If this throws, urlSecurityCheck would also throw, as that's what it
-      // does with things that don't pass the IO service's newURI constructor
-      // without fixup. It's conceivable we may want to relax this check in
-      // the future (so e.g. www.foo.com gets fixed up), but not right now.
+      // If this throws, checkLoadURStrWithPrincipal would also throw,
+      // as that's what it does with things that don't pass the IO
+      // service's newURI constructor without fixup. It's conceivable we
+      // may want to relax this check in the future (so e.g. www.foo.com
+      // gets fixed up), but not right now.
       let url = new URL(href);
       // If we succeed, try to pass security checks. If this works, return the
       // URL object. If the *security checks* fail, return null.
@@ -3269,9 +3269,9 @@ function getDroppableData(event) {
         let principal = Services.droppedLinkHandler.getTriggeringPrincipal(
           event
         );
-        BrowserUtils.urlSecurityCheck(
-          url,
+        Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
           principal,
+          url.href,
           Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL
         );
         return url;
