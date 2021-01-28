@@ -59,6 +59,7 @@ VALID_LICENSES = [
     "Anti-Grain-Geometry",  # http://www.antigrain.com/license/index.html
     "JPNIC",  # https://www.nic.ad.jp/ja/idn/idnkit/download/index.html
     "Khronos",  # https://www.khronos.org/openmaxdl
+    "libpng",  # http://www.libpng.org/pub/png/src/libpng-LICENSE.txt
     "Unicode",  # http://www.unicode.org/copyright.html
 ]
 
