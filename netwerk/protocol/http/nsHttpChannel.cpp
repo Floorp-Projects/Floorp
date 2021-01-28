@@ -9693,8 +9693,11 @@ nsresult nsHttpChannel::MaybeRaceCacheWithNetwork() {
   rv = netLinkSvc->GetLinkType(&linkType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!(linkType == nsINetworkLinkService::LINK_TYPE_UNKNOWN ||
-        linkType == nsINetworkLinkService::LINK_TYPE_ETHERNET ||
+  if (!(linkType == nsINetworkLinkService::LINK_TYPE_ETHERNET ||
+#ifndef MOZ_WIDGET_ANDROID
+        // On Android we don't assume an unknown link type is unmetered
+        linkType == nsINetworkLinkService::LINK_TYPE_UNKNOWN ||
+#endif
         linkType == nsINetworkLinkService::LINK_TYPE_USB ||
         linkType == nsINetworkLinkService::LINK_TYPE_WIFI)) {
     return NS_OK;
