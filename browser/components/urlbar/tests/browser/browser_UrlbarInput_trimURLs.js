@@ -102,7 +102,7 @@ function testVal(originalValue, targetValue) {
   gURLBar.value = originalValue;
   gURLBar.valueIsTyped = false;
   let trimmedValue = UrlbarPrefs.get("trimURLs")
-    ? BrowserUtils.trimURL(originalValue)
+    ? BrowserUIUtils.trimURL(originalValue)
     : originalValue;
   Assert.equal(gURLBar.value, trimmedValue, "url bar value set");
   // Now focus the urlbar and check the inputField value is properly set.
