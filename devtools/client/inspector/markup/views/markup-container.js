@@ -545,6 +545,11 @@ MarkupContainer.prototype = {
       return;
     }
 
+    // Bail out when clicking on arrow expanders to avoid selecting the row.
+    if (target.classList.contains("expander")) {
+      return;
+    }
+
     // target is the MarkupContainer itself.
     this.hovered = false;
     this.markup.navigate(this);
@@ -808,8 +813,6 @@ MarkupContainer.prototype = {
    *         Whether all descendants should also be expanded/collapsed
    */
   expandContainer: function(applyToDescendants) {
-    this.markup.navigate(this);
-
     if (this.hasChildren) {
       this.markup.setNodeExpanded(
         this.node,
