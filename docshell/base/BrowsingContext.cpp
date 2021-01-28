@@ -2433,7 +2433,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_HasMainMediaController>,
                              bool aNewValue, ContentParent* aSource) {
-  return IsTop() && CheckOnlyOwningProcessCanSet(aSource);
+  return IsTop() && LegacyCheckOnlyOwningProcessCanSet(aSource);
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_HasMainMediaController>,
@@ -2542,7 +2542,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_PlatformOverride>) {
   });
 }
 
-bool BrowsingContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
+bool BrowsingContext::LegacyCheckOnlyOwningProcessCanSet(ContentParent* aSource) {
   if (aSource) {
     MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -2593,19 +2593,19 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>,
 bool BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargeting>,
                              const bool& aAllowContentRetargeting,
                              ContentParent* aSource) {
-  return CheckOnlyOwningProcessCanSet(aSource);
+  return LegacyCheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
                              const bool& aAllowContentRetargetingOnChildren,
                              ContentParent* aSource) {
-  return CheckOnlyOwningProcessCanSet(aSource);
+  return LegacyCheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
                              const bool& aAllowPlugins,
                              ContentParent* aSource) {
-  return CheckOnlyOwningProcessCanSet(aSource);
+  return LegacyCheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_FullscreenAllowedByOwner>,
@@ -2674,7 +2674,7 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_DefaultLoadFlags>,
                              ContentParent* aSource) {
   // Bug 1623565 - Are these flags only used by the debugger, which makes it
   // possible that this field can only be settable by the parent process?
-  return CheckOnlyOwningProcessCanSet(aSource);
+  return LegacyCheckOnlyOwningProcessCanSet(aSource);
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_DefaultLoadFlags>) {
@@ -2708,7 +2708,7 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
     return false;
   }
 
-  return CheckOnlyOwningProcessCanSet(aSource);
+  return LegacyCheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_PlatformOverride>,
@@ -2718,7 +2718,7 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_PlatformOverride>,
     return false;
   }
 
-  return CheckOnlyOwningProcessCanSet(aSource);
+  return LegacyCheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool BrowsingContext::CheckOnlyEmbedderCanSet(ContentParent* aSource) {
