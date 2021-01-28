@@ -1775,6 +1775,9 @@ bool GeckoChildProcessHost::StartMacSandbox(int aArgc, char** aArgv,
 /* static */
 void GeckoChildProcessHost::GetAll(const GeckoProcessCallback& aCallback) {
   StaticMutexAutoLock lock(sMutex);
+  if (!sGeckoChildProcessHosts) {
+    return;
+  }
   for (GeckoChildProcessHost* gp = sGeckoChildProcessHosts->getFirst(); gp;
        gp = static_cast<mozilla::LinkedListElement<GeckoChildProcessHost>*>(gp)
                 ->getNext()) {
