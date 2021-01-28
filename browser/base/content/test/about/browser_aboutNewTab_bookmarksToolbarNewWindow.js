@@ -3,55 +3,99 @@
 
 "use strict";
 
-add_task(async function bookmarks_toolbar_shown_on_newtab() {
+requestLongerTimeout(2);
+
+const testCases = [
+  {
+    name: "bookmarks_toolbar_shown_on_newtab_featureEnabled_newTabEnabled",
+    featureEnabled: true,
+    newTabEnabled: true,
+  },
+  {
+    name: "bookmarks_toolbar_shown_on_newtab",
+    featureEnabled: false,
+    newTabEnabled: false,
+  },
+  {
+    name: "bookmarks_toolbar_shown_on_newtab_newTabEnabled",
+    featureEnabled: false,
+    newTabEnabled: true,
+  },
+  {
+    name: "bookmarks_toolbar_shown_on_newtab_featureEnabled",
+    featureEnabled: true,
+    newTabEnabled: false,
+  },
+];
+
+async function test_bookmarks_toolbar_visibility({
+  featureEnabled,
+  newTabEnabled,
+}) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.toolbars.bookmarks.2h2020", featureEnabled],
+      ["browser.newtabpage.enabled", newTabEnabled],
+    ],
+  });
+
+  // Ensure the toolbar doesnt become visible at any point before the tab finishes loading
+
   let url =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
       "https://example.com"
     ) + "slow_loading_page.sjs";
-  for (let featureEnabled of [true, false]) {
-    for (let newTabEnabled of [true, false]) {
-      info(
-        `Testing with the feature ${
-          featureEnabled ? "enabled" : "disabled"
-        } and newtab ${newTabEnabled ? "enabled" : "disabled"}`
-      );
-      await SpecialPowers.pushPrefEnv({
-        set: [
-          ["browser.toolbars.bookmarks.2h2020", featureEnabled],
-          ["browser.newtabpage.enabled", newTabEnabled],
-        ],
-      });
 
-      let newWindowOpened = BrowserTestUtils.domWindowOpened();
-      let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-      openUILinkIn(url, "window", { triggeringPrincipal });
+  let startTime = Date.now();
+  let newWindowOpened = BrowserTestUtils.domWindowOpened();
+  let beforeShown = TestUtils.topicObserved("browser-window-before-show");
 
-      let newWin = await newWindowOpened;
+  let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+  openUILinkIn(url, "window", { triggeringPrincipal });
 
-      let exitConditions = {
-        visible: true,
-      };
-      let slowSiteLoaded = BrowserTestUtils.firstBrowserLoaded(newWin, false);
-      slowSiteLoaded.then(result => {
-        exitConditions.earlyExit = result;
-      });
+  let newWin = await newWindowOpened;
+  let slowSiteLoaded = BrowserTestUtils.firstBrowserLoaded(newWin, false);
 
-      let result = await waitForBookmarksToolbarVisibilityWithExitConditions({
-        win: newWin,
-        exitConditions,
-        message: "Toolbar should not become visible when loading slow site",
-      });
-
-      // The visibility promise will resolve to a Boolean whereas the browser
-      // load promise will resolve to an Event object.
-      ok(
-        typeof result != "boolean",
-        "The bookmarks toolbar should not become visible before the site is loaded"
-      );
-      ok(!isBookmarksToolbarVisible(newWin), "Toolbar hidden on slow site");
-
-      await BrowserTestUtils.closeWindow(newWin);
-    }
+  function checkToolbarIsCollapsed(win, message) {
+    let toolbar = win.document.getElementById("PersonalToolbar");
+    ok(toolbar && toolbar.collapsed, message);
   }
-});
+
+  await beforeShown;
+  checkToolbarIsCollapsed(
+    newWin,
+    "Toolbar is initially hidden on the new window"
+  );
+
+  function onToolbarMutation() {
+    checkToolbarIsCollapsed(newWin, "Toolbar should remain collapsed");
+  }
+  let toolbarMutationObserver = new newWin.MutationObserver(onToolbarMutation);
+  toolbarMutationObserver.observe(
+    newWin.document.getElementById("PersonalToolbar"),
+    {
+      attributeFilter: ["collapsed"],
+    }
+  );
+
+  info("Waiting for the slow site to load");
+  await slowSiteLoaded;
+  info(`Window opened and slow site loaded in: ${Date.now() - startTime}ms`);
+
+  checkToolbarIsCollapsed(newWin, "Finally, the toolbar is still hidden");
+
+  toolbarMutationObserver.disconnect();
+  await BrowserTestUtils.closeWindow(newWin);
+}
+
+// Make separate tasks for each test case, so we get more useful stack traces on failure
+for (let testData of testCases) {
+  let tmp = {
+    async [testData.name]() {
+      info("testing with: " + JSON.stringify(testData));
+      await test_bookmarks_toolbar_visibility(testData);
+    },
+  };
+  add_task(tmp[testData.name]);
+}
