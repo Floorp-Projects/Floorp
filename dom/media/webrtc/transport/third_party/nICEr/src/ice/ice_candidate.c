@@ -566,6 +566,24 @@ static void nr_ice_candidate_fire_ready_cb(NR_SOCKET s, int how, void *cb_arg)
     cand->ready_cb(0, 0, cand->ready_cb_arg);
   }
 
+static int nr_ice_candidate_use_nr_resolver(nr_transport_addr *addr)
+  {
+    if(addr->fqdn[0] == 0) {
+      return 0;
+    }
+
+    char use = 0;
+    if(addr->protocol == IPPROTO_UDP) {
+      NR_reg_get_char(NR_ICE_REG_USE_NR_RESOLVER_FOR_UDP, &use);
+    } else if(addr->protocol == IPPROTO_TCP) {
+      NR_reg_get_char(NR_ICE_REG_USE_NR_RESOLVER_FOR_TCP, &use);
+    } else {
+      assert(0);
+    }
+
+    return use;
+  }
+
 int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, void *cb_arg)
   {
     int r,_status;
@@ -604,10 +622,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
           ABORT(R_NOT_FOUND); /* Same error code when DNS lookup fails */
         }
 
-        if(cand->stun_server->addr.fqdn[0] != 0 &&
-           cand->stun_server->addr.protocol == IPPROTO_UDP) {
-          /* UDP with FQDN, allow resolver to handle this for now, we
-           * eventually want to allow the UDP socket to handle this for us. */
+        if(nr_ice_candidate_use_nr_resolver(&cand->stun_server->addr)) {
           r_log(
               LOG_ICE, LOG_DEBUG,
               "ICE-CANDIDATE(%s): Starting DNS resolution (%u/%s - %u/%s).",
@@ -652,7 +667,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
             ABORT(r);
           }
         } else {
-          /* No DNS handling needed, just copy the address and finish init */
+          /* No nr_resolver for this, just copy the address and finish init */
           if (r = nr_transport_addr_copy(&cand->stun_server_addr,
                                          &cand->stun_server->addr)) {
             r_log(LOG_ICE,LOG_ERR,"ICE-CANDIDATE(%s): Could not copy STUN server addr", cand->label);
