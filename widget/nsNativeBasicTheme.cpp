@@ -768,24 +768,9 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
                                             DPIRatio aDpiRatio) {
   auto [backgroundColor, borderColor] = ComputeButtonColors(aState);
 
-  RefPtr<Path> pathRect = MakePathForRect(*aDrawTarget, aRect.ToUnknownRect());
+  aDrawTarget->FillRect(aRect.ToUnknownRect(),
+                        ColorPattern(ToDeviceColor(backgroundColor)));
 
-  aDrawTarget->Fill(pathRect, ColorPattern(ToDeviceColor(backgroundColor)));
-
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  Point p;
-  if (IsFrameRTL(aFrame)) {
-    p = Point(aRect.x + aRect.width - 0.5f, aRect.y);
-  } else {
-    p = Point(aRect.x - 0.5f, aRect.y);
-  }
-  builder->MoveTo(p);
-  p = Point(p.x, p.y + aRect.height);
-  builder->LineTo(p);
-  RefPtr<Path> path = builder->Finish();
-
-  aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(borderColor)),
-                      StrokeOptions(kSpinnerBorderWidth * aDpiRatio));
   const float arrowPolygonX[] = {-5.25f, -0.75f, 0.75f,  5.25f, 5.25f,
                                  4.5f,   0.75f,  -0.75f, -4.5f, -5.25f};
   const float arrowPolygonY[] = {-1.875f, 2.625f, 2.625f, -1.875f, -4.125f,
@@ -795,15 +780,15 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
   const float scaleY =
       aAppearance == StyleAppearance::SpinnerDownbutton ? scaleX : -scaleX;
 
-  builder = aDrawTarget->CreatePathBuilder();
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   auto center = aRect.Center().ToUnknownPoint();
-  p = center + Point(arrowPolygonX[0] * scaleX, arrowPolygonY[0] * scaleY);
+  Point p = center + Point(arrowPolygonX[0] * scaleX, arrowPolygonY[0] * scaleY);
   builder->MoveTo(p);
   for (int32_t i = 1; i < arrowNumPoints; i++) {
     p = center + Point(arrowPolygonX[i] * scaleX, arrowPolygonY[i] * scaleY);
     builder->LineTo(p);
   }
-  path = builder->Finish();
+  RefPtr<Path> path = builder->Finish();
   aDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
 }
 
