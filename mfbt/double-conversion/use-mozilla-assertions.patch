@@ -1,4 +1,5 @@
 diff --git a/mfbt/double-conversion/double-conversion/utils.h b/mfbt/double-conversion/double-conversion/utils.h
+index c72c333f020a1..6022132e2b495 100644
 --- a/mfbt/double-conversion/double-conversion/utils.h
 +++ b/mfbt/double-conversion/double-conversion/utils.h
 @@ -26,38 +26,38 @@
@@ -40,8 +41,8 @@ diff --git a/mfbt/double-conversion/double-conversion/utils.h b/mfbt/double-conv
  #endif
  #endif
  
- #ifndef DOUBLE_CONVERSION_UNUSED
- #ifdef __GNUC__
- #define DOUBLE_CONVERSION_UNUSED __attribute__((unused))
+ // Not all compilers support __has_attribute and combining a check for both
+ // ifdef and __has_attribute on the same preprocessor line isn't portable.
+ #ifdef __has_attribute
+ #   define DOUBLE_CONVERSION_HAS_ATTRIBUTE(x) __has_attribute(x)
  #else
- #define DOUBLE_CONVERSION_UNUSED
