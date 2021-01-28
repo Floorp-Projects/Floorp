@@ -2,11 +2,15 @@
 <html>
     <head>
         <title>Intrinsic Size Test</title>
-	<style>input, textarea { border-radius:0; background:none; border:none; }</style>
+        <style>input, textarea { border-radius:0; background:none; border:none; }</style>
     </head>
     <body>
         <div>
-            <span style="border:2px solid black"><input style="background-color:transparent; border:none; font-family:monospace; padding-left:201px"/></span>
+            <span style="border:2px solid black"><input style="background-color:transparent; border:none; font-family:monospace;"/></span>
         </div>
+        <script>
+          let input = document.querySelector("input");
+          input.style.paddingLeft = (200 + parseInt(getComputedStyle(input).paddingLeft, 10)) + "px";
+        </script>
     </body>
 </html>
