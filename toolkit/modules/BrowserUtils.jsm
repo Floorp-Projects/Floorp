@@ -19,16 +19,6 @@ ChromeUtils.defineModuleGetter(
 
 var BrowserUtils = {
   /**
-   * Prints arguments separated by a space and appends a new line.
-   */
-  dumpLn(...args) {
-    for (let a of args) {
-      dump(a + " ");
-    }
-    dump("\n");
-  },
-
-  /**
    * restartApplication: Restarts the application, keeping it in
    * safe mode if it is already in safe mode.
    */
