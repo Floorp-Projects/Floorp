@@ -7,6 +7,7 @@
 #define include_dom_media_ipc_RemoteDecoderManagerChild_h
 
 #include "GPUVideoImage.h"
+#include "PDMFactory.h"
 #include "ipc/EnumSerializer.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/PRemoteDecoderManagerChild.h"

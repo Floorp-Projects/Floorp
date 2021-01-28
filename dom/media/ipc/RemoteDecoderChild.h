@@ -9,6 +9,7 @@
 #include <functional>
 
 #include "mozilla/PRemoteDecoderChild.h"
+#include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/ShmemRecycleAllocator.h"
 
 namespace mozilla {
