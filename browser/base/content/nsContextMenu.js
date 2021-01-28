@@ -255,8 +255,12 @@ class nsContextMenu {
       this.selectionInfo = this.contentData.selectionInfo;
       this.actor = this.contentData.actor;
     } else {
+      const { SelectionUtils } = ChromeUtils.import(
+        "resource://gre/modules/SelectionUtils.jsm"
+      );
+
       this.browser = this.ownerDoc.defaultView.docShell.chromeEventHandler;
-      this.selectionInfo = BrowserUtils.getSelectionDetails(window);
+      this.selectionInfo = SelectionUtils.getSelectionDetails(window);
       this.actor = this.browser.browsingContext.currentWindowGlobal.getActor(
         "ContextMenu"
       );
