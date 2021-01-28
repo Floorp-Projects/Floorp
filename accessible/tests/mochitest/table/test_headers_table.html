@@ -426,6 +426,37 @@
 
       testHeaderCells(headerInfoMap);
 
+      // ////////////////////////////////////////////////////////////////////////
+      // Ensure correct column headers after colspan in a previous row.
+      headerInfoMap = [
+        {
+          cell: "t11r1c1",
+          columnHeaderCells: [],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t11r1c2",
+          columnHeaderCells: [],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t11r2c1_2",
+          columnHeaderCells: ["t11r1c1"],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t11r3c1",
+          columnHeaderCells: ["t11r1c1"],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t11r3c2",
+          columnHeaderCells: ["t11r1c2"],
+          rowHeaderCells: [],
+        },
+      ];
+      testHeaderCells(headerInfoMap);
+
       SimpleTest.finish();
     }
 
@@ -705,6 +736,20 @@
       <td headers="t10_females t10_betsy t10_10km" id="t10_r3c2">55:38</td>
       <td headers="t10_males t10_matt t10_10km" id="t10_r3c3">57:04</td>
       <td headers="t10_males t10_todd t10_10km" id="t10_r3c4">50:35</td>
+    </tr>
+  </table>
+
+  <table id="table11">
+    <tr>
+      <th id="t11r1c1">a</th>
+      <th id="t11r1c2">b</th>
+    </tr>
+    <tr>
+      <td id="t11r2c1_2" colspan="2"></td>
+    </tr>
+    <tr>
+      <td id="t11r3c1">e</td>
+      <td id="t11r3c2">f</td>
     </tr>
   </table>
 </body>
