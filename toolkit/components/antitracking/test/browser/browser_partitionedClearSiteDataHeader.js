@@ -24,6 +24,11 @@ const THIRD_PARTY_FRAME_ID_ORIGIN_B = "thirdPartyFrame";
 const THIRD_PARTY_FRAME_ID_ORIGIN_A = "thirdPartyFrame2";
 const STORAGE_KEY = "testKey";
 
+// Skip localStorage tests when using legacy localStorage. The legacy
+// localStorage implementation does not support clearing data by principal. See
+// Bug 1688221, Bug 1688665.
+let skipLocalStorageTests = !Services.prefs.getBoolPref("dom.storage.next_gen");
+
 /**
  * Creates an iframe in the passed browser and waits for it to load.
  * @param {Browser} browser - Browser to create the frame in.
@@ -505,6 +510,11 @@ add_task(async function cookieClearFirstParty() {
  * "Clear-Site-Data", localStorage is cleared for only that partitioned frame.
  */
 add_task(async function localStorageClearThirdParty() {
+  // Bug 1688221, Bug 1688665.
+  if (skipLocalStorageTests) {
+    info("Skipping test");
+    return;
+  }
   await runClearSiteDataTest(
     // Pre Clear-Site-Data
     () => setupInitialStorageState("localStorage"),
@@ -539,6 +549,11 @@ add_task(async function localStorageClearThirdParty() {
  * localStorage is cleared only in the first party context.
  */
 add_task(async function localStorageClearFirstParty() {
+  // Bug 1688221, Bug 1688665.
+  if (skipLocalStorageTests) {
+    info("Skipping test");
+    return;
+  }
   await runClearSiteDataTest(
     // Pre Clear-Site-Data
     () => setupInitialStorageState("localStorage"),
