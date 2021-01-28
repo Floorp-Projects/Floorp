@@ -18,7 +18,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -226,7 +226,7 @@ class UrlbarResult {
       payloadInfo.displayUrl = [...payloadInfo.url];
       let url = payloadInfo.displayUrl[0];
       if (url && UrlbarPrefs.get("trimURLs")) {
-        url = BrowserUIUtils.removeSingleTrailingSlashFromURL(url);
+        url = BrowserUtils.removeSingleTrailingSlashFromURL(url);
         if (url.startsWith("https://")) {
           url = url.substring(8);
           if (url.startsWith("www.")) {
