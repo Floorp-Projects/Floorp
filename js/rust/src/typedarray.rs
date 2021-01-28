@@ -23,7 +23,7 @@ use std::ptr;
 use std::slice;
 
 pub enum CreateWith<'a, T: 'a> {
-    Length(u32),
+    Length(usize),
     Slice(&'a [T]),
 }
 
@@ -102,7 +102,7 @@ impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
     ) -> Result<(), ()> {
         let length = match with {
             CreateWith::Length(len) => len,
-            CreateWith::Slice(slice) => slice.len() as u32,
+            CreateWith::Slice(slice) => slice.len(),
         };
 
         result.set(T::create_new(cx, length));
@@ -143,7 +143,7 @@ pub trait TypedArrayElement {
 /// Internal trait for creating new typed arrays.
 pub trait TypedArrayElementCreator: TypedArrayElement {
     /// Create a new typed array.
-    unsafe fn create_new(cx: *mut JSContext, length: u32) -> *mut JSObject;
+    unsafe fn create_new(cx: *mut JSContext, length: usize) -> *mut JSObject;
     /// Get the data.
     unsafe fn get_data(obj: *mut JSObject) -> *mut Self::Element;
 }
@@ -182,7 +182,7 @@ macro_rules! typed_array_element {
         typed_array_element!($t, $element, $unwrap, $length_and_data);
 
         impl TypedArrayElementCreator for $t {
-            unsafe fn create_new(cx: *mut JSContext, length: u32) -> *mut JSObject {
+            unsafe fn create_new(cx: *mut JSContext, length: usize) -> *mut JSObject {
                 $create_new(cx, length)
             }
 

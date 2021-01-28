@@ -2635,7 +2635,7 @@ struct ExternalTypeOf<uint8_clamped> {
 
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(NativeType, Name)                \
   JS_FRIEND_API JSObject* JS_New##Name##Array(JSContext* cx,                 \
-                                              uint32_t nelements) {          \
+                                              size_t nelements) {            \
     return TypedArrayObjectTemplate<NativeType>::fromLength(cx, nelements);  \
   }                                                                          \
                                                                              \

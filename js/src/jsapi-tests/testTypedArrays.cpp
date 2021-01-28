@@ -111,7 +111,7 @@ BEGIN_TEST(testTypedArrays) {
 // Shared memory can only be mapped by a TypedArray by creating the
 // TypedArray with a SharedArrayBuffer explicitly, so no tests here.
 
-template <JSObject* Create(JSContext*, uint32_t), typename Element,
+template <JSObject* Create(JSContext*, size_t), typename Element,
           Element* GetData(JSObject*, bool* isShared,
                            const JS::AutoRequireNoGC&)>
 bool TestPlainTypedArray(JSContext* cx) {

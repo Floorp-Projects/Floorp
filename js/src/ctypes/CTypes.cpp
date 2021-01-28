@@ -7932,7 +7932,7 @@ bool CData::ReadStringReplaceMalformed(JSContext* cx, unsigned argc,
                           js::StringBufferArena);
 }
 
-using TypedArrayConstructor = JSObject* (*)(JSContext*, uint32_t);
+using TypedArrayConstructor = JSObject* (*)(JSContext*, size_t);
 
 template <typename Type>
 TypedArrayConstructor GetTypedArrayConstructorImpl() {
