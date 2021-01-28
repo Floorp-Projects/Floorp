@@ -228,6 +228,7 @@ public class GeckoAppShell {
     static public final int LINK_TYPE_2G = 5;
     static public final int LINK_TYPE_3G = 6;
     static public final int LINK_TYPE_4G = 7;
+    static public final int LINK_TYPE_5G = 8;
 
     public static final String PREFS_OOM_EXCEPTION = "OOMException";
 
@@ -1217,6 +1218,8 @@ public class GeckoAppShell {
                 return LINK_TYPE_3G; // 3.75G
             case TelephonyManager.NETWORK_TYPE_LTE:
                 return LINK_TYPE_4G; // 3.9G
+            case TelephonyManager.NETWORK_TYPE_NR:
+                return LINK_TYPE_5G; // 5G
             case TelephonyManager.NETWORK_TYPE_UNKNOWN:
             default:
                 Log.w(LOGTAG, "Connected to an unknown mobile network!");
