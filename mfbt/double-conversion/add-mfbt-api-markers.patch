@@ -1,5 +1,5 @@
 diff --git a/mfbt/double-conversion/double-conversion/double-to-string.h b/mfbt/double-conversion/double-conversion/double-to-string.h
-index 6317a08a72aeb..52d7986fe9048 100644
+index 6317a08a72aeb..6b7d30a63138c 100644
 --- a/mfbt/double-conversion/double-conversion/double-to-string.h
 +++ b/mfbt/double-conversion/double-conversion/double-to-string.h
 @@ -23,16 +23,17 @@
@@ -20,25 +20,6 @@ index 6317a08a72aeb..52d7986fe9048 100644
   public:
    // When calling ToFixed with a double > 10^kMaxFixedDigitsBeforePoint
    // or a requested_digits parameter > kMaxFixedDigitsAfterPoint then the
-@@ -51,17 +52,17 @@ class DoubleToStringConverter {
-   static const int kMaxPrecisionDigits = 120;
- 
-   // The maximal number of digits that are needed to emit a double in base 10.
-   // A higher precision can be achieved by using more digits, but the shortest
-   // accurate representation of any double will never use more digits than
-   // kBase10MaximalLength.
-   // Note that DoubleToAscii null-terminates its input. So the given buffer
-   // should be at least kBase10MaximalLength + 1 characters long.
--  static const int kBase10MaximalLength = 17;
-+  static const MFBT_DATA int kBase10MaximalLength = 17;
- 
-   // The maximal number of digits that are needed to emit a single in base 10.
-   // A higher precision can be achieved by using more digits, but the shortest
-   // accurate representation of any single will never use more digits than
-   // kBase10MaximalLengthSingle.
-   static const int kBase10MaximalLengthSingle = 9;
- 
-   // The length of the longest string that 'ToShortest' can produce when the
 @@ -167,17 +168,17 @@ class DoubleToStringConverter {
    //
    // Flags: UNIQUE_ZERO and EMIT_POSITIVE_EXPONENT_SIGN.

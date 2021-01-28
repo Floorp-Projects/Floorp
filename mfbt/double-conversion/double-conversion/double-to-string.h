@@ -57,7 +57,7 @@ class DoubleToStringConverter {
   // kBase10MaximalLength.
   // Note that DoubleToAscii null-terminates its input. So the given buffer
   // should be at least kBase10MaximalLength + 1 characters long.
-  static const MFBT_DATA int kBase10MaximalLength = 17;
+  static const int kBase10MaximalLength = 17;
 
   // The maximal number of digits that are needed to emit a single in base 10.
   // A higher precision can be achieved by using more digits, but the shortest
