@@ -140,16 +140,12 @@ Result<std::pair<nsID, nsCOMPtr<nsISupports>>, nsresult> BodyStartWriteStream(
   CACHE_TRY_INSPECT(const auto& tmpFile,
                     BodyIdToFile(aBaseDir, id, BODY_FILE_TMP));
 
-  CACHE_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(*tmpFile, Exists));
+  CACHE_TRY_INSPECT(const auto& fileStream,
+                    CreateFileOutputStream(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo,
+                                           Client::DOMCACHE, tmpFile.get()));
 
-  CACHE_TRY(OkIf(!exists), Err(NS_ERROR_FILE_ALREADY_EXISTS));
-
-  const nsCOMPtr<nsIOutputStream> fileStream = CreateFileOutputStream(
-      PERSISTENCE_TYPE_DEFAULT, aQuotaInfo, Client::DOMCACHE, tmpFile.get());
-
-  CACHE_TRY(OkIf(fileStream), Err(NS_ERROR_UNEXPECTED));
-
-  const auto compressed = MakeRefPtr<SnappyCompressOutputStream>(fileStream);
+  const auto compressed =
+      MakeRefPtr<SnappyCompressOutputStream>(fileStream.get());
 
   const nsCOMPtr<nsIEventTarget> target =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
@@ -194,20 +190,12 @@ Result<NotNull<nsCOMPtr<nsIInputStream>>, nsresult> BodyOpen(
   CACHE_TRY_INSPECT(const auto& finalFile,
                     BodyIdToFile(aBaseDir, aId, BODY_FILE_FINAL));
 
-  CACHE_TRY_INSPECT(const bool& exists,
-                    MOZ_TO_RESULT_INVOKE(*finalFile, Exists));
-
-  // XXX This is somewhat redundant. We could just return
-  // NS_ERROR_FILE_NOT_FOUND if CreateFileInputStream fails? Or, if that might
-  // fail for other reasons, it should probably be changed to return a Result,
-  // and then we can just propagate its result.
-  CACHE_TRY(OkIf(exists), Err(NS_ERROR_FILE_NOT_FOUND));
-
-  nsCOMPtr<nsIInputStream> fileStream = CreateFileInputStream(
-      PERSISTENCE_TYPE_DEFAULT, aQuotaInfo, Client::DOMCACHE, finalFile.get());
-  CACHE_TRY(OkIf(fileStream), Err(NS_ERROR_UNEXPECTED));
-
-  return WrapNotNullUnchecked(std::move(fileStream));
+  CACHE_TRY_RETURN(CreateFileInputStream(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo,
+                                         Client::DOMCACHE, finalFile.get())
+                       .map([](NotNull<RefPtr<FileInputStream>>&& stream) {
+                         return WrapNotNullUnchecked(
+                             nsCOMPtr<nsIInputStream>{stream.get()});
+                       }));
 }
 
 nsresult BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo,

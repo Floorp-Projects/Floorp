@@ -14951,18 +14951,19 @@ already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
   nsCOMPtr<nsISupports> result;
 
   if (aReadOnly) {
-    RefPtr<FileInputStream> stream =
+    IDB_TRY_INSPECT(
+        const auto& stream,
         CreateFileInputStream(persistenceType, groupAndOrigin, Client::IDB,
-                              mFile, -1, -1, nsIFileInputStream::DEFER_OPEN);
-    result = NS_ISUPPORTS_CAST(nsIFileInputStream*, stream);
+                              mFile, -1, -1, nsIFileInputStream::DEFER_OPEN),
+        nullptr);
+    result = NS_ISUPPORTS_CAST(nsIFileInputStream*, stream.get());
   } else {
-    RefPtr<FileStream> stream =
+    IDB_TRY_INSPECT(
+        const auto& stream,
         CreateFileStream(persistenceType, groupAndOrigin, Client::IDB, mFile,
-                         -1, -1, nsIFileStream::DEFER_OPEN);
-    result = NS_ISUPPORTS_CAST(nsIFileStream*, stream);
-  }
-  if (NS_WARN_IF(!result)) {
-    return nullptr;
+                         -1, -1, nsIFileStream::DEFER_OPEN),
+        nullptr);
+    result = NS_ISUPPORTS_CAST(nsIFileStream*, stream.get());
   }
 
   return result.forget();
@@ -21557,11 +21558,13 @@ nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
   IDB_TRY(aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644));
 
   // Now try to copy the stream.
-  nsCOMPtr<nsIOutputStream> fileOutputStream = CreateFileOutputStream(
-      mFileManager->Type(), mFileManager->GroupAndOrigin(), Client::IDB,
-      &aFile);
-
-  IDB_TRY(OkIf(fileOutputStream), NS_ERROR_FAILURE);
+  IDB_TRY_UNWRAP(auto fileOutputStream,
+                 CreateFileOutputStream(mFileManager->Type(),
+                                        mFileManager->GroupAndOrigin(),
+                                        Client::IDB, &aFile)
+                     .map([](NotNull<RefPtr<FileOutputStream>>&& stream) {
+                       return nsCOMPtr<nsIOutputStream>{stream.get()};
+                     }));
 
   AutoTArray<char, kFileCopyBufferSize> buffer;
   const auto actualOutputStream =
