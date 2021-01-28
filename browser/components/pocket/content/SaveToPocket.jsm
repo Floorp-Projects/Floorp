@@ -11,8 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUIUtils",
-  "resource:///modules/BrowserUIUtils.jsm"
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -76,7 +76,7 @@ var PocketPageAction = {
               return;
             }
 
-            BrowserUIUtils.setToolbarButtonHeightProperty(urlbarNode);
+            BrowserUtils.setToolbarButtonHeightProperty(urlbarNode);
 
             PocketPageAction.urlbarNode = urlbarNode;
             PocketPageAction.urlbarNode.setAttribute("open", "true");

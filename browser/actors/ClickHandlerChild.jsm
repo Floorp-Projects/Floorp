@@ -9,6 +9,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -97,10 +102,7 @@ class ClickHandlerChild extends JSWindowActorChild {
 
     if (href) {
       try {
-        Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
-          principal,
-          href
-        );
+        BrowserUtils.urlSecurityCheck(href, principal);
       } catch (e) {
         return;
       }

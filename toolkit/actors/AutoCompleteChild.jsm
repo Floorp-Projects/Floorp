@@ -11,8 +11,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
-  "LayoutUtils",
-  "resource://gre/modules/LayoutUtils.jsm"
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -136,7 +136,7 @@ class AutoCompleteChild extends JSWindowActorChild {
       return;
     }
 
-    let rect = LayoutUtils.getElementBoundingScreenRect(element);
+    let rect = BrowserUtils.getElementBoundingScreenRect(element);
     let window = element.ownerGlobal;
     let dir = window.getComputedStyle(element).direction;
     let results = this.getResultsFromController(input);
