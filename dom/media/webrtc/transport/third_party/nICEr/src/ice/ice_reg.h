@@ -71,6 +71,8 @@ extern "C" {
 
 #define NR_ICE_REG_TRICKLE_GRACE_PERIOD     "ice.trickle_grace_period"
 #define NR_ICE_REG_PREF_FORCE_INTERFACE_NAME "ice.forced_interface_name"
+#define NR_ICE_REG_USE_NR_RESOLVER_FOR_TCP  "ice.tcp.use_nr_resolver"
+#define NR_ICE_REG_USE_NR_RESOLVER_FOR_UDP  "ice.udp.use_nr_resolver"
 
 #ifdef __cplusplus
 }
