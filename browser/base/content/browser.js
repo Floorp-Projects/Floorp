@@ -8858,7 +8858,6 @@ class TabDialogBox {
       sizeTo,
       keepOpenSameOriginNav,
       modalType = null,
-      allowFocusCheckbox = false,
     } = {},
     ...aParams
   ) {
@@ -8876,13 +8875,9 @@ class TabDialogBox {
         this._onFirstDialogOpen();
       }
 
-      let closingCallback = event => {
+      let closingCallback = () => {
         if (!hasDialogs) {
           this._onLastDialogClose();
-        }
-
-        if (allowFocusCheckbox) {
-          this.maybeSetAllowTabSwitchPermission(event.target);
         }
       };
 
@@ -9028,28 +9023,6 @@ class TabDialogBox {
       this._buildContentPromptDialog();
     }
     return this._contentDialogManager;
-  }
-
-  onNextPromptShowAllowFocusCheckboxFor(principal) {
-    this._allowTabFocusByPromptPrincipal = principal;
-  }
-
-  /**
-   * Sets the "focus-tab-by-prompt" permission for the dialog.
-   */
-  maybeSetAllowTabSwitchPermission(dialog) {
-    let checkbox = dialog.querySelector("checkbox");
-
-    if (checkbox.checked) {
-      Services.perms.addFromPrincipal(
-        this._allowTabFocusByPromptPrincipal,
-        "focus-tab-by-prompt",
-        Services.perms.ALLOW_ACTION
-      );
-    }
-
-    // Don't show the "allow tab switch checkbox" for subsequent prompts.
-    this._allowTabFocusByPromptPrincipal = null;
   }
 }
 
