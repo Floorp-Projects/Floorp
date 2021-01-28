@@ -2746,10 +2746,13 @@ MDefinition* MSub::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
-  // This optimization is only valid for Int32 values. Subtracting a floating
-  // point value from itself returns NaN when the operand is either Infinity
-  // or NaN.
+  // Optimize X - X to 0. This optimization is only valid for Int32
+  // values. Subtracting a floating point value from itself returns
+  // NaN when the operand is either Infinity or NaN.
   if (lhs() == rhs()) {
+    // Ensure that any bailouts that we depend on to guarantee that X
+    // is Int32 are not removed.
+    lhs()->setGuardRangeBailoutsUnchecked();
     return MConstant::New(alloc, Int32Value(0));
   }
 
