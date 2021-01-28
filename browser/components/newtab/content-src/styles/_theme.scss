@@ -121,9 +121,6 @@ body {
   --newtab-search-first-shadow: #{$newtab-card-firstshadow};
   --newtab-search-second-shadow: #{$newtab-card-secondshadow};
   --newtab-search-text-color: #{$newtab-card-secondary-text-color};
-  --newtab-search-new-border-color: #{$newtab-card-separator-line-color};
-  --newtab-card-first-shadow: #{$newtab-card-firstshadow};
-  --newtab-card-second-shadow: #{$newtab-card-secondshadow};
 
   &[lwt-newtab-brighttext] {
     // General styles
@@ -221,8 +218,5 @@ body {
     --newtab-search-first-shadow: #{$newtab-card-darktheme-firstshadow};
     --newtab-search-second-shadow: #{$newtab-darktheme-card-secondshadow};
     --newtab-search-text-color: #{$newtab-card-darktheme-secondary-text-color};
-    --newtab-search-new-border-color: #{$grey-70};
-    --newtab-card-first-shadow: #{$newtab-card-darktheme-firstshadow};
-    --newtab-card-second-shadow: #{$newtab-darktheme-card-secondshadow};
   }
 }
