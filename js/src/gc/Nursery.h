@@ -194,9 +194,6 @@ class Nursery {
   static const size_t Alignment = gc::ChunkSize;
   static const size_t ChunkShift = gc::ChunkShift;
 
-  // SubChunkStep is the minimum amount to adjust the nursery's size by.
-  static const size_t SubChunkStep = gc::ArenaSize;
-
   using BufferRelocationOverlay = void*;
   using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
 
