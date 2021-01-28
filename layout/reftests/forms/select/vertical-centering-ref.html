@@ -7,15 +7,12 @@
   select {
     -moz-appearance: none;
     border: none;
-    font-family: Ahem;
-    font-size: 20px;
+    font: 20px/1 Ahem;
     box-sizing: content-box;
-    /*
-     * Why are these top/bottom paddings 7px rather than 10px?  1px each is
-     * eaten up by padding on the combobox display area, but I have no idea
-     * where the extra 4px somewhere else are coming from...
-     */
-    padding: 7px 0 7px 0;
+    /* The testcase has 20px-tall text, which should be centered in a 40px-tall
+     content-box (with 10px of extra space above and below).  We emulate that
+     by having explicit 10px of padding on top and bottom. */
+    padding: 10px 0 10px 0;
   }
 </style>
 <select>
