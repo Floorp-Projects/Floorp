@@ -71,7 +71,6 @@ void NeckoChild::InitNeckoChild() {
     }
     gNeckoChild = cpc->SendPNeckoConstructor();
     NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
-    SocketProcessBridgeChild::GetSocketProcessBridge();
   }
 }
 

@@ -147,6 +147,7 @@ parent:
 
   async InitSocketProcessBridge()
     returns (Endpoint<PSocketProcessBridgeChild> endpoint);
+  async ResetSocketProcessBridge();
 
   async EnsureHSTSData()
     returns (bool result);
