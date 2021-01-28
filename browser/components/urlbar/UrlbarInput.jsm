@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
+  BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
@@ -330,7 +331,7 @@ class UrlbarInput {
       // only if there's no opener (bug 370555).
       if (
         this.window.isInitialPage(uri) &&
-        BrowserUtils.checkEmptyPageOrigin(
+        BrowserUIUtils.checkEmptyPageOrigin(
           this.window.gBrowser.selectedBrowser,
           uri
         )
@@ -349,7 +350,7 @@ class UrlbarInput {
         !this.window.isBlankPageURL(uri.spec) || uri.schemeIs("moz-extension");
     } else if (
       this.window.isInitialPage(value) &&
-      BrowserUtils.checkEmptyPageOrigin(this.window.gBrowser.selectedBrowser)
+      BrowserUIUtils.checkEmptyPageOrigin(this.window.gBrowser.selectedBrowser)
     ) {
       value = "";
       valid = true;
@@ -1076,10 +1077,10 @@ class UrlbarInput {
     if (
       result.type == UrlbarUtils.RESULT_TYPE.URL &&
       UrlbarPrefs.get("trimURLs") &&
-      result.payload.url.startsWith(BrowserUtils.trimURLProtocol)
+      result.payload.url.startsWith(BrowserUIUtils.trimURLProtocol)
     ) {
       let fixupInfo = this._getURIFixupInfo(
-        BrowserUtils.trimURL(result.payload.url)
+        BrowserUIUtils.trimURL(result.payload.url)
       );
       if (fixupInfo?.keywordAsSent) {
         allowTrim = false;
@@ -2089,12 +2090,12 @@ class UrlbarInput {
     // url. First check for a trimmed value.
 
     if (
-      !selectedVal.startsWith(BrowserUtils.trimURLProtocol) &&
+      !selectedVal.startsWith(BrowserUIUtils.trimURLProtocol) &&
       // Note _trimValue may also trim a trailing slash, thus we can't just do
       // a straight string compare to tell if the protocol was trimmed.
       !displaySpec.startsWith(this._trimValue(displaySpec))
     ) {
-      selectedVal = BrowserUtils.trimURLProtocol + selectedVal;
+      selectedVal = BrowserUIUtils.trimURLProtocol + selectedVal;
     }
 
     return selectedVal;
@@ -2176,7 +2177,7 @@ class UrlbarInput {
    *   The trimmed string
    */
   _trimValue(val) {
-    return UrlbarPrefs.get("trimURLs") ? BrowserUtils.trimURL(val) : val;
+    return UrlbarPrefs.get("trimURLs") ? BrowserUIUtils.trimURL(val) : val;
   }
 
   /**
