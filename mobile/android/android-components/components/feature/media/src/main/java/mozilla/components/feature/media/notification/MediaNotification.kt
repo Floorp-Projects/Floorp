@@ -13,7 +13,6 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.media.app.NotificationCompat.MediaStyle
-import kotlinx.coroutines.withTimeoutOrNull
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.MediaState
@@ -30,9 +29,6 @@ import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import mozilla.components.support.base.ids.SharedIdsHelper
 import java.util.Locale
-
-private const val ARTWORK_RETRIEVE_TIMEOUT = 1000L
-private const val ARTWORK_IMAGE_SIZE = 48
 
 /**
  * Helper to display a notification for web content playing media.
@@ -167,16 +163,13 @@ private suspend fun SessionState.toNotificationData(
     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.also {
         it.action = AbstractMediaSessionService.ACTION_SWITCH_TAB
     }
-    val artwork = withTimeoutOrNull(ARTWORK_RETRIEVE_TIMEOUT) {
-        mediaSessionState?.metadata?.getArtwork?.invoke(ARTWORK_IMAGE_SIZE)
-    }
 
     return when (mediaSessionState?.playbackState) {
         MediaSession.PlaybackState.PLAYING -> NotificationData(
             title = getTitleOrUrl(context, mediaSessionState?.metadata?.title),
             description = nonPrivateUrl,
             icon = R.drawable.mozac_feature_media_playing,
-            largeIcon = getNonPrivateIcon(artwork),
+            largeIcon = getNonPrivateIcon(mediaSessionState?.metadata?.getArtwork),
             action = NotificationCompat.Action.Builder(
                 R.drawable.mozac_feature_media_action_pause,
                 context.getString(R.string.mozac_feature_media_notification_action_pause),
@@ -197,7 +190,7 @@ private suspend fun SessionState.toNotificationData(
             title = getTitleOrUrl(context, mediaSessionState?.metadata?.title),
             description = nonPrivateUrl,
             icon = R.drawable.mozac_feature_media_paused,
-            largeIcon = getNonPrivateIcon(artwork),
+            largeIcon = getNonPrivateIcon(mediaSessionState?.metadata?.getArtwork),
             action = NotificationCompat.Action.Builder(
                 R.drawable.mozac_feature_media_action_play,
                 context.getString(R.string.mozac_feature_media_notification_action_play),

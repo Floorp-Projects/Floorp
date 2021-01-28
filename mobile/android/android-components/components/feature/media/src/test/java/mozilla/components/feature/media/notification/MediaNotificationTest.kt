@@ -21,6 +21,7 @@ import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -273,6 +274,54 @@ class MediaNotificationTest {
                 createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
                     mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED)
                 ))
+        )
+
+        val notification = runBlocking {
+            MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
+        }
+
+        assertEquals("", notification.text)
+        assertEquals("A site is playing media", notification.title)
+        assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
+    }
+
+    @Test
+    fun `media session notification with metadata in non private mode`() {
+        val mediaSessionState: MediaSessionState = mock()
+        val metadata: MediaSession.Metadata = mock()
+        whenever(mediaSessionState.metadata).thenReturn(metadata)
+        whenever(mediaSessionState.playbackState).thenReturn(MediaSession.PlaybackState.PAUSED)
+        whenever(metadata.title).thenReturn("test title")
+
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = false,
+                    mediaSessionState = mediaSessionState)
+            )
+        )
+
+        val notification = runBlocking {
+            MediaNotification(context, AbstractMediaSessionService::class.java).create(state.tabs[0], mock())
+        }
+
+        assertEquals("https://www.mozilla.org", notification.text)
+        assertEquals("test title", notification.title)
+        assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
+    }
+
+    @Test
+    fun `media session notification with metadata in private mode`() {
+        val mediaSessionState: MediaSessionState = mock()
+        val metadata: MediaSession.Metadata = mock()
+        whenever(mediaSessionState.metadata).thenReturn(metadata)
+        whenever(mediaSessionState.playbackState).thenReturn(MediaSession.PlaybackState.PAUSED)
+        whenever(metadata.title).thenReturn("test title")
+
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
+                    mediaSessionState = mediaSessionState)
+            )
         )
 
         val notification = runBlocking {
