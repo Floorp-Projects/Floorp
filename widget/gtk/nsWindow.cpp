@@ -5896,12 +5896,13 @@ nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
   return NS_OK;
 }
 
-LayoutDeviceIntRect nsWindow::GetTitlebarRect() {
+bool nsWindow::GetTitlebarRect(mozilla::gfx::Rect& aRect) {
   if (!mGdkWindow || !mDrawInTitlebar) {
-    return LayoutDeviceIntRect();
+    return false;
   }
 
-  return LayoutDeviceIntRect(0, 0, mBounds.width, TITLEBAR_SHAPE_MASK_HEIGHT);
+  aRect = gfx::Rect(0, 0, mBounds.width, TITLEBAR_SHAPE_MASK_HEIGHT);
+  return true;
 }
 
 void nsWindow::UpdateTitlebarTransparencyBitmap() {
