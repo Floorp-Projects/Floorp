@@ -212,6 +212,7 @@ EXTRA_JS_MODULES += [
     "RemotePageAccessManager.jsm",
     "ResetProfile.jsm",
     "ResponsivenessMonitor.jsm",
+    "SelectionUtils.jsm",
     "ServiceRequest.jsm",
     "Services.jsm",
     "ShortcutUtils.jsm",
