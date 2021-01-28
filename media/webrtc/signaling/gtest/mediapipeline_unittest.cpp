@@ -263,11 +263,11 @@ class TestAgent {
             webrtc::AudioDecoderFactory* aAudioDecoderFactory,
             webrtc::WebRtcKeyValueConfig* aTrials)
       : audio_config_(109, "opus", 48000, 2, false),
+        call_(WebRtcCallWrapper::Create(dom::RTCStatsTimestampMaker(),
+                                        aModuleThread, aAudioStateConfig,
+                                        aAudioDecoderFactory, aTrials)),
         audio_conduit_(mozilla::AudioSessionConduit::Create(
-            WebRtcCallWrapper::Create(dom::RTCStatsTimestampMaker(),
-                                      aModuleThread, aAudioStateConfig,
-                                      aAudioDecoderFactory, aTrials),
-            test_utils->sts_target())),
+            call_, test_utils->sts_target())),
         audio_pipeline_(),
         transport_(new LoopbackTransport) {}
 
@@ -301,8 +301,15 @@ class TestAgent {
   void Shutdown_s() { transport_->Shutdown(); }
 
   void Shutdown() {
-    if (audio_pipeline_) audio_pipeline_->Shutdown_m();
-    if (audio_conduit_) audio_conduit_->DeleteStreams();
+    if (audio_pipeline_) {
+      audio_pipeline_->Shutdown_m();
+    }
+    if (audio_conduit_) {
+      audio_conduit_->DeleteStreams();
+    }
+    if (call_) {
+      call_->Destroy();
+    }
 
     test_utils->sts_target()->Dispatch(
         WrapRunnable(this, &TestAgent::Shutdown_s),
@@ -335,6 +342,7 @@ class TestAgent {
 
  protected:
   mozilla::AudioCodecConfig audio_config_;
+  RefPtr<WebRtcCallWrapper> call_;
   RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
   RefPtr<FakeAudioTrack> audio_track_;
   // TODO(bcampen@mozilla.com): Right now this does not let us test RTCP in

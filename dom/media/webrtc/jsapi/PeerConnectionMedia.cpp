@@ -614,6 +614,14 @@ void PeerConnectionMedia::SelfDestruct() {
 
   mQueuedIceCtxOperations.clear();
 
+  if (mCall) {
+    // Clear any resources held by libwebrtc
+    // mMainThread because that's the Call worker thread for now
+    mMainThread->Dispatch(NS_NewRunnableFunction(
+        "PeerConnectionMedia::SelfDestruct(mCall)",
+        [call = std::move(mCall)]() { call->Destroy(); }));
+  }
+
   // Shutdown the transport (async)
   RUN_ON_THREAD(
       mSTSThread,
