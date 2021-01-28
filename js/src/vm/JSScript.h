@@ -2477,8 +2477,7 @@ JSScript* CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
                                   Handle<ScriptSourceObject*> sourceObject,
                                   SourceExtent* maybeClassExtent = nullptr);
 
-JSScript* CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
-                            HandleScript src);
+JSScript* CloneGlobalScript(JSContext* cx, HandleScript src);
 
 bool CheckCompileOptionsMatch(const JS::ReadOnlyCompileOptions& options,
                               js::ImmutableScriptFlags flags,
