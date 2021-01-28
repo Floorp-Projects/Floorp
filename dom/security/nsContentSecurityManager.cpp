@@ -36,6 +36,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
@@ -56,6 +57,11 @@ NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
 
 mozilla::LazyLogModule sCSMLog("CSMLog");
 
+// These first two are used for off-the-main-thread checks of
+// general.config.filename
+//   (which can't be checked off-main-thread).
+Atomic<bool, mozilla::Relaxed> sJSHacksChecked(false);
+Atomic<bool, mozilla::Relaxed> sJSHacksPresent(false);
 Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled(false);
 
 /* static */
