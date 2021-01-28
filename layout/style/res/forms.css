@@ -236,13 +236,13 @@ select {
   display: inline-block;
   page-break-inside: avoid;
   overflow-clip-box: padding-box !important; /* bug 992447 */
+  padding-block: 1px;
 
   /* Set some styles for drop down selects. These are overridden below for
    * list box selects. */
   background-color: -moz-Combobox;
   color: -moz-ComboboxText;
   vertical-align: baseline;
-  padding-block: 0;
   appearance: auto;
   -moz-default-appearance: menulist;
 }
@@ -252,7 +252,6 @@ select:-moz-select-list-box {
   background-color: Field;
   color: FieldText;
   vertical-align: text-bottom;
-  padding-block: 1px;
   appearance: auto;
   -moz-default-appearance: listbox;
 }
@@ -301,9 +300,6 @@ select > button[orientation="right"]:active {
 
 *|*::-moz-display-comboboxcontrol-frame {
   overflow: clip;
-  /* This block-start/end padding plus the combobox block-start/end border need to
-     add up to the block-start/end borderpadding of text inputs and buttons */
-  padding-block: 1px;
   padding-inline: 4px;
   color: unset;
   white-space: nowrap;
