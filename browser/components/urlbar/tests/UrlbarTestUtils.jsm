@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -113,7 +113,7 @@ var UrlbarTestUtils = {
     window.gURLBar.inputField.focus();
     // Using the value setter in some cases may trim and fetch unexpected
     // results, then pick an alternate path.
-    if (UrlbarPrefs.get("trimURLs") && value != BrowserUtils.trimURL(value)) {
+    if (UrlbarPrefs.get("trimURLs") && value != BrowserUIUtils.trimURL(value)) {
       window.gURLBar.inputField.value = value;
       fireInputEvent = true;
     } else {
