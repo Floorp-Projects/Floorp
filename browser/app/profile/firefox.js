@@ -332,6 +332,10 @@ pref("browser.urlbar.suggest.searches",             true);
 pref("browser.urlbar.suggest.topsites",             true);
 pref("browser.urlbar.suggest.engines",              true);
 
+// Whether to show search suggestions before general results like history and
+// bookmarks.
+pref("browser.urlbar.showSearchSuggestionsFirst", true);
+
 // As a user privacy measure, don't fetch search suggestions if a pasted string
 // is longer than this.
 pref("browser.urlbar.maxCharsForSearchSuggestions", 100);
@@ -1260,6 +1264,7 @@ pref("services.sync.prefs.sync.browser.tabs.warnOnOpen", true);
 pref("services.sync.prefs.sync.browser.taskbar.previews.enable", true);
 pref("services.sync.prefs.sync.browser.urlbar.matchBuckets", true);
 pref("services.sync.prefs.sync.browser.urlbar.maxRichResults", true);
+pref("services.sync.prefs.sync.browser.urlbar.showSearchSuggestionsFirst", true);
 pref("services.sync.prefs.sync.browser.urlbar.suggest.bookmark", true);
 pref("services.sync.prefs.sync.browser.urlbar.suggest.history", true);
 pref("services.sync.prefs.sync.browser.urlbar.suggest.openpage", true);
