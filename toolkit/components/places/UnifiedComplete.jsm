@@ -142,7 +142,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PlacesRemoteTabsAutocompleteProvider:
     "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm",
@@ -1041,7 +1041,7 @@ Search.prototype = {
     let url = null;
     let postData = null;
     try {
-      [url, postData] = await BrowserUtils.parseUrlAndPostData(
+      [url, postData] = await KeywordUtils.parseUrlAndPostData(
         entry.url.href,
         entry.postData,
         searchString
