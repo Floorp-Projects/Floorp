@@ -91,7 +91,7 @@ jobs:
         use-sccache: true
         fetches:
             toolchain:
-                - win64-clang-cl
+                - win64-clang
                 - win64-rust
                 - win64-sccache
                 - win64-cbindgen

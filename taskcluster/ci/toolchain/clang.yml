@@ -223,11 +223,11 @@ linux64-clang-11-win-cross:
         toolchain-alias: linux64-clang-win-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
-        win64-clang-cl-11-2stage: toolchain-win64-clang-cl-11-2stage
+        win64-clang-11-2stage: toolchain-win64-clang-11-2stage
     fetches:
         toolchain:
             - linux64-clang-11
-        win64-clang-cl-11-2stage:
+        win64-clang-11-2stage:
             # Put this into a new directory so it doesn't conflict with the linux toolchain
             - artifact: clang.tar.zst
               dest: clang-cl
@@ -266,12 +266,12 @@ macosx64-clang-11:
             - linux64-gcc-7
             - linux64-node
 
-win64-clang-cl-11:
+win64-clang-11:
     description: "Clang-cl 11 toolchain build"
     attributes:
         local-toolchain: true
     treeherder:
-        symbol: TW64(clang-cl-11)
+        symbol: TW64(clang-11)
     worker-type: b-win2012
     worker:
         env:
@@ -286,7 +286,7 @@ win64-clang-cl-11:
         resources:
             - 'build/build-clang/clang-11-win64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: win64-clang-cl
+        toolchain-alias: win64-clang
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -295,10 +295,10 @@ win64-clang-cl-11:
             - cmake
             - ninja
 
-win64-clang-cl-11-2stage:
+win64-clang-11-2stage:
     description: "Clang-cl 11 toolchain 2-stage quick build"
     treeherder:
-        symbol: TW64(clang-cl-11-2stage)
+        symbol: TW64(clang-11-2stage)
     worker-type: b-win2012
     worker:
         env:
@@ -310,7 +310,7 @@ win64-clang-cl-11-2stage:
         resources:
             - 'build/build-clang/clang-11-win64-2stage.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: win64-clang-cl-2stage
+        toolchain-alias: win64-clang-2stage
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:

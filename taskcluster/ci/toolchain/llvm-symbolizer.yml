@@ -32,4 +32,4 @@ win64-llvm-symbolizer:
         symbol: TW64(llvm-symbolizer)
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang
