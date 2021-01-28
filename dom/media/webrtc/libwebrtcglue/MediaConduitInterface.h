@@ -281,7 +281,10 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
   WebRtcCallWrapper(const WebRtcCallWrapper&) = delete;
   void operator=(const WebRtcCallWrapper&) = delete;
 
-  webrtc::Call* Call() const { return mCall.get(); }
+  webrtc::Call* Call() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mCall.get();
+  }
 
   virtual ~WebRtcCallWrapper() = default;
 
@@ -309,6 +312,27 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
   }
 
   DOMHighResTimeStamp GetNow() const { return mTimestampMaker.GetNow(); }
+
+  // Allow destroying the Call instance on the Call worker thread.
+  //
+  // This CallWrapper is designed to be sharable, and is held by several objects
+  // that are cycle-collectable. TaskQueueWrapper that the Call instances use
+  // for worker threads are based off SharedThreadPools, and will block
+  // xpcom-shutdown-threads until destroyed. The Call instance however will hold
+  // on to its worker threads until destroyed itself.
+  //
+  // If the last ref to this CallWrapper is held to cycle collector shutdown we
+  // end up in a deadlock where cycle collector shutdown is required to destroy
+  // the SharedThreadPool that is blocking xpcom-shutdown-threads from finishing
+  // and triggering cycle collector shutdown.
+  //
+  // It would be nice to have the invariant where this class is immutable to the
+  // degree that mCall is const, but given the above that is not possible.
+  void Destroy() {
+    MOZ_ASSERT(NS_IsMainThread());
+    auto current = TaskQueueWrapper::MainAsCurrent();
+    mCall = nullptr;
+  }
 
   const dom::RTCStatsTimestampMaker& GetTimestampMaker() const {
     return mTimestampMaker;
@@ -342,7 +366,10 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
   const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
   const UniquePtr<webrtc::RtcEventLog> mEventLog;
   const UniquePtr<webrtc::TaskQueueFactory> mTaskQueueFactory;
-  const UniquePtr<webrtc::Call> mCall;
+
+ private:
+  // Main thread only, as it's the Call worker thread.
+  UniquePtr<webrtc::Call> mCall;
 };
 
 // Abstract base classes for external encoder/decoder.
