@@ -20,6 +20,7 @@
 #include "nsISupportsUtils.h"
 #include "nsIThreadManager.h"
 #include "nsComponentManagerUtils.h"
+#include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsXPCOMCIDInternal.h"
 #include "prthread.h"
@@ -1374,7 +1375,14 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
   nsIRequest::TRRMode reqMode = rec->mEffectiveTRRMode;
   if (rec->mTrrServer.IsEmpty() &&
       (!gTRRService || !gTRRService->Enabled(reqMode))) {
-    rec->RecordReason(nsHostRecord::TRR_NOT_CONFIRMED);
+    if (NS_IsOffline()) {
+      // If we are in the NOT_CONFIRMED state _because_ we lack connectivity,
+      // then we should report that the browser is offline instead.
+      rec->RecordReason(nsHostRecord::TRR_IS_OFFLINE);
+    } else {
+      rec->RecordReason(nsHostRecord::TRR_NOT_CONFIRMED);
+    }
+
     LOG(("TrrLookup:: %s service not enabled\n", rec->host.get()));
     return NS_ERROR_UNKNOWN_HOST;
   }
