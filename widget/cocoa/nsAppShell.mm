@@ -11,6 +11,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "CustomCocoaEvents.h"
+#include "GeckoProfiler.h"
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsAppShell.h"
 #include "gfxPlatform.h"
@@ -125,11 +126,6 @@ static bool gAppShellMethodsSwizzled = false;
 @implementation GeckoNSApplication
 
 - (void)sendEvent:(NSEvent*)anEvent {
-  // Mark this function as non-idle because it's one of the exit points from
-  // the event loop (running inside of -[GeckoNSApplication nextEventMatchingMask:...])
-  // into non-idle code. So we basically unset the IDLE category from the inside.
-  AUTO_PROFILER_LABEL("-[GeckoNSApplication sendEvent:]", OTHER);
-
   mozilla::BackgroundHangMonitor().NotifyActivity();
 
   if ([anEvent type] == NSEventTypeApplicationDefined && [anEvent subtype] == kEventSubtypeTrace) {
@@ -149,21 +145,6 @@ static bool gAppShellMethodsSwizzled = false;
                         untilDate:(NSDate*)expiration
                            inMode:(NSString*)mode
                           dequeue:(BOOL)flag {
-  // When we're waiting in the event loop, this is the last function under our
-  // control that's on the stack, so this is the function that we mark with the
-  // IDLE category.
-  // However, when we're processing an event or when our CFRunLoopSource runs,
-  // this function is still on the stack - "the event loop calls us". So we
-  // need to mark functions that enter non-idle code with a different profiler
-  // category, usually OTHER. This gives the profiler a rough approximation of
-  // idleness but isn't perfect. For example, sometimes there's some Cocoa-
-  // internal activity that's triggered from the event loop, and we'll
-  // misidentify the stacks for that activity as idle because there's no Gecko
-  // code on the stack that can change the stack's category to something
-  // non-idle.
-  AUTO_PROFILER_LABEL("-[GeckoNSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]",
-                      IDLE);
-
   if (expiration) {
     mozilla::BackgroundHangMonitor().NotifyWait();
   }
@@ -232,6 +213,10 @@ nsAppShell::~nsAppShell() {
       ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
       ::CFRelease(mCFRunLoopSource);
     }
+    if (mCFRunLoopObserver) {
+      ::CFRunLoopRemoveObserver(mCFRunLoop, mCFRunLoopObserver, kCFRunLoopCommonModes);
+      ::CFRelease(mCFRunLoopObserver);
+    }
     ::CFRelease(mCFRunLoop);
   }
 
@@ -268,6 +253,43 @@ static void RemoveScreenWakeLockListener() {
     sPowerManagerService = nullptr;
     sWakeLockListener = nullptr;
   }
+}
+
+void RunLoopObserverCallback(CFRunLoopObserverRef aObserver, CFRunLoopActivity aActivity,
+                             void* aInfo) {
+  static_cast<nsAppShell*>(aInfo)->OnRunLoopActivityChanged(aActivity);
+}
+
+void nsAppShell::OnRunLoopActivityChanged(CFRunLoopActivity aActivity) {
+#ifdef MOZ_GECKO_PROFILER
+  // When the event loop is in its waiting state, we would like the profiler to know that the thread
+  // is idle. The usual way to notify the profiler of idleness would be to place a profiler label
+  // frame with the IDLE category on the stack, for the duration of the function that does the
+  // waiting. However, since macOS uses an event loop model where "the event loop calls you", we do
+  // not control the function that does the waiting; the waiting happens inside CFRunLoop code.
+  // Instead, the run loop notifies us when it enters and exits the waiting state, by calling this
+  // function.
+  // So we do not have a function under our control that stays on the stack for the duration of the
+  // wait. So, rather than putting an AutoProfilerLabel on the stack, we will manually push and pop
+  // the label frame here.
+  // The location in the stack where this label frame is inserted is somewhat arbitrary. In
+  // practice, the label frame will be at the very tip of the stack, looking like it's "inside" the
+  // mach_msg_trap wait function.
+  if (aActivity == kCFRunLoopBeforeWaiting) {
+    if (ProfilingStackOwner* profilingStackOwner =
+            AutoProfilerLabel::ProfilingStackOwnerTLS::Get()) {
+      mProfilingStackOwnerWhileWaiting = profilingStackOwner;
+      uint8_t variableOnStack = 0;
+      mProfilingStackOwnerWhileWaiting->ProfilingStack().pushLabelFrame(
+          "Native event loop idle", nullptr, &variableOnStack, JS::ProfilingCategoryPair::IDLE, 0);
+    }
+  } else {
+    if (mProfilingStackOwnerWhileWaiting) {
+      mProfilingStackOwnerWhileWaiting->ProfilingStack().pop();
+      mProfilingStackOwnerWhileWaiting = nullptr;
+    }
+  }
+#endif
 }
 
 // Init
@@ -324,6 +346,19 @@ nsresult nsAppShell::Init() {
   NS_ENSURE_STATE(mCFRunLoopSource);
 
   ::CFRunLoopAddSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
+
+  // Add a CFRunLoopObserver so that the profiler can be notified when we enter and exit the waiting
+  // state.
+  CFRunLoopObserverContext observerContext;
+  PodZero(&observerContext);
+  observerContext.info = this;
+
+  mCFRunLoopObserver = ::CFRunLoopObserverCreate(
+      kCFAllocatorDefault, kCFRunLoopBeforeWaiting | kCFRunLoopAfterWaiting | kCFRunLoopExit, true,
+      0, RunLoopObserverCallback, &observerContext);
+  NS_ENSURE_STATE(mCFRunLoopObserver);
+
+  ::CFRunLoopAddObserver(mCFRunLoop, mCFRunLoopObserver, kCFRunLoopCommonModes);
 
   hal::Init();
 
