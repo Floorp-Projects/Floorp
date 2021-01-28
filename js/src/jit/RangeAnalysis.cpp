@@ -2359,6 +2359,16 @@ bool RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header,
       lengthIns->block()->moveBefore(preLoop->lastIns(), lengthIns);
     }
 
+    // If the length is IntPtr, convert the upperTerm to that as well for the
+    // bounds check.
+    if (length->type() == MIRType::IntPtr) {
+      MOZ_ASSERT(upperTerm->type() == MIRType::Int32);
+      upperTerm = MInt32ToIntPtr::New(alloc(), upperTerm);
+      upperTerm->computeRange(alloc());
+      upperTerm->collectRangeInfoPreTrunc();
+      preLoop->insertBefore(preLoop->lastIns(), upperTerm->toInstruction());
+    }
+
     MBoundsCheck* upperCheck = MBoundsCheck::New(alloc(), upperTerm, length);
     upperCheck->setMinimum(upperConstant);
     upperCheck->setMaximum(upperConstant);
