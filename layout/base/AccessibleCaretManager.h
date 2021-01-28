@@ -339,7 +339,12 @@ class AccessibleCaretManager {
 
   class LayoutFlusher final {
    public:
+    LayoutFlusher() = default;
+
     ~LayoutFlusher();
+
+    LayoutFlusher(const LayoutFlusher&) = delete;
+    LayoutFlusher& operator=(const LayoutFlusher&) = delete;
 
     MOZ_CAN_RUN_SCRIPT void MaybeFlush(const PresShell& aPresShell);
 
