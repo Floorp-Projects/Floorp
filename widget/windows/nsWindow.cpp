@@ -92,7 +92,6 @@
 
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIKeyEventInPluginCallback.h"
 #include "nsITheme.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
@@ -139,7 +138,6 @@
 #include "mozilla/TextEvents.h"  // For WidgetKeyboardEvent
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/widget/nsAutoRollup.h"
-#include "mozilla/widget/WinNativeEventData.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsStyleConsts.h"
 #include "nsBidiKeyboard.h"
@@ -8503,17 +8501,22 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
   //
   // Windows' support for transparent accelerated surfaces isn't great.
   // Some possible approaches:
-  //  - Readback the data and update it using UpdateLayeredWindow/UpdateLayeredWindowIndirect
-  //    This is what WPF does. See CD3DDeviceLevel1::PresentWithGDI/CD3DSwapChainWithSwDC in WpfGfx.
-  //    The rationale for not using IDirect3DSurface9::GetDC is explained here:
+  //  - Readback the data and update it using
+  //  UpdateLayeredWindow/UpdateLayeredWindowIndirect
+  //    This is what WPF does. See
+  //    CD3DDeviceLevel1::PresentWithGDI/CD3DSwapChainWithSwDC in WpfGfx. The
+  //    rationale for not using IDirect3DSurface9::GetDC is explained here:
   //    https://web.archive.org/web/20160521191104/https://blogs.msdn.microsoft.com/dwayneneed/2008/09/08/transparent-windows-in-wpf/
   //  - Use D3D11_RESOURCE_MISC_GDI_COMPATIBLE, IDXGISurface1::GetDC(),
   //    and UpdateLayeredWindowIndirect.
-  //    This is suggested here: https://docs.microsoft.com/en-us/archive/msdn-magazine/2009/december/windows-with-c-layered-windows-with-direct2d
+  //    This is suggested here:
+  //    https://docs.microsoft.com/en-us/archive/msdn-magazine/2009/december/windows-with-c-layered-windows-with-direct2d
   //    but might have the same problem that IDirect3DSurface9::GetDC has.
-  //  - Creating the window with the WS_EX_NOREDIRECTIONBITMAP flag and use DirectComposition.
+  //  - Creating the window with the WS_EX_NOREDIRECTIONBITMAP flag and use
+  //  DirectComposition.
   //    Not supported on Win7.
-  //  - Using DwmExtendFrameIntoClientArea with negative margins and something to turn off the glass effect.
+  //  - Using DwmExtendFrameIntoClientArea with negative margins and something
+  //  to turn off the glass effect.
   //    This doesn't work when the DWM is not running (Win7)
   //
   // Also see bug 1150376, D3D11 composition can cause issues on some devices
@@ -8521,42 +8524,6 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
   // shadows.
   return mTransparencyMode != eTransparencyTransparent &&
          !(IsPopup() && DeviceManagerDx::Get()->IsWARP());
-}
-
-nsresult nsWindow::OnWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData,
-    nsIKeyEventInPluginCallback* aCallback) {
-  if (NS_WARN_IF(!mWnd)) {
-    return NS_OK;
-  }
-  const WinNativeKeyEventData* eventData =
-      static_cast<const WinNativeKeyEventData*>(aKeyEventData);
-  switch (eventData->mMessage) {
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN: {
-      MSG mozMsg = WinUtils::InitMSG(MOZ_WM_KEYDOWN, eventData->mWParam,
-                                     eventData->mLParam, mWnd);
-      ModifierKeyState modifierKeyState(eventData->mModifiers);
-      NativeKey nativeKey(this, mozMsg, modifierKeyState,
-                          eventData->GetKeyboardLayout());
-      return nativeKey.HandleKeyDownMessage() ? NS_SUCCESS_EVENT_CONSUMED
-                                              : NS_OK;
-    }
-    case WM_KEYUP:
-    case WM_SYSKEYUP: {
-      MSG mozMsg = WinUtils::InitMSG(MOZ_WM_KEYUP, eventData->mWParam,
-                                     eventData->mLParam, mWnd);
-      ModifierKeyState modifierKeyState(eventData->mModifiers);
-      NativeKey nativeKey(this, mozMsg, modifierKeyState,
-                          eventData->GetKeyboardLayout());
-      return nativeKey.HandleKeyUpMessage() ? NS_SUCCESS_EVENT_CONSUMED : NS_OK;
-    }
-    default:
-      // We shouldn't consume WM_*CHAR messages here even if the preceding
-      // keydown or keyup event on the plugin is consumed.  It should be
-      // managed in each plugin window rather than top level window.
-      return NS_OK;
-  }
 }
 
 bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam) {

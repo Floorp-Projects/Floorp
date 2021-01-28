@@ -2270,42 +2270,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnEventNeedingAckHandled(
   return IPC_OK();
 }
 
-void BrowserParent::HandledWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData, bool aIsConsumed) {
-  DebugOnly<bool> ok =
-      SendHandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
-  NS_WARNING_ASSERTION(ok, "SendHandledWindowedPluginKeyEvent failed");
-}
-
-mozilla::ipc::IPCResult BrowserParent::RecvOnWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData) {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (NS_WARN_IF(!widget)) {
-    // Notifies the plugin process of the key event being not consumed by us.
-    HandledWindowedPluginKeyEvent(aKeyEventData, false);
-    return IPC_OK();
-  }
-  nsresult rv = widget->OnWindowedPluginKeyEvent(aKeyEventData, this);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Notifies the plugin process of the key event being not consumed by us.
-    HandledWindowedPluginKeyEvent(aKeyEventData, false);
-    return IPC_OK();
-  }
-
-  // If the key event is posted to another process, we need to wait a call
-  // of HandledWindowedPluginKeyEvent().  So, nothing to do here in this case.
-  if (rv == NS_SUCCESS_EVENT_HANDLED_ASYNCHRONOUSLY) {
-    return IPC_OK();
-  }
-
-  // Otherwise, the key event is handled synchronously.  Let's notify the
-  // plugin process of the key event's result.
-  bool consumed = (rv == NS_SUCCESS_EVENT_CONSUMED);
-  HandledWindowedPluginKeyEvent(aKeyEventData, consumed);
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(
     const bool& aCanRaise, const CallerType aCallerType) {
   LOGBROWSERFOCUS(("RecvRequestFocus %p, aCanRaise: %d", this, aCanRaise));

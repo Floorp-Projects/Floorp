@@ -233,15 +233,9 @@ with modules["GFX"]:
 with modules["WIDGET"]:
     # Used by:
     #   - nsIWidget::NotifyIME()
-    #   - nsIWidget::OnWindowedPluginKeyEvent()
     # Returned when the notification or the event is handled and it's consumed
     # by somebody.
     errors["NS_SUCCESS_EVENT_CONSUMED"] = SUCCESS(1)
-    # Used by:
-    #   - nsIWidget::OnWindowedPluginKeyEvent()
-    # Returned when the event is handled correctly but the result will be
-    # notified asynchronously.
-    errors["NS_SUCCESS_EVENT_HANDLED_ASYNCHRONOUSLY"] = SUCCESS(2)
 
 
 # =======================================================================

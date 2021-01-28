@@ -365,16 +365,6 @@ parent:
     nested(inside_cpow) async OnEventNeedingAckHandled(EventMessage message);
 
     /**
-     * Notifies the parent process of native key event data received in a
-     * plugin process directly.
-     *
-     * aKeyEventData    The native key event data.  The actual type copied into
-     *                  NativeEventData depending on the caller.  Please check
-     *                  PluginInstanceChild.
-     */
-    nested(inside_cpow) async OnWindowedPluginKeyEvent(NativeEventData aKeyEventData);
-
-    /**
      * Request that the parent process move focus to the browser's frame. If
      * canRaise is true, the window can be raised if it is inactive.
      */
@@ -943,18 +933,6 @@ child:
      */
     async HandleAccessKey(WidgetKeyboardEvent event,
                           uint32_t[] charCodes);
-
-    /**
-     * HandledWindowedPluginKeyEvent() is always called after posting a native
-     * key event with OnWindowedPluginKeyEvent().
-     *
-     * @param aKeyEventData      The key event which was posted to the parent
-     *                           process.
-     * @param aIsConsumed        true if aKeyEventData is consumed in the
-     *                           parent process.  Otherwise, false.
-     */
-    async HandledWindowedPluginKeyEvent(NativeEventData aKeyEventData,
-                                        bool aIsConsumed);
 
     /**
      * Tell the child to create a print preview document in this browser, or

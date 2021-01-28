@@ -356,10 +356,6 @@ class nsWindow final : public nsWindowBase {
 
   const IMEContext& DefaultIMC() const { return mDefaultIMC; }
 
-  virtual nsresult OnWindowedPluginKeyEvent(
-      const mozilla::NativeEventData& aKeyEventData,
-      nsIKeyEventInPluginCallback* aCallback) override;
-
   void GetCompositorWidgetInitData(
       mozilla::widget::CompositorWidgetInitData* aInitData) override;
   bool IsTouchWindow() const { return mTouchWindow; }
