@@ -600,7 +600,7 @@ struct Texture {
   uint32_t* cleared_rows = nullptr;
 
   void init_depth_runs(uint16_t z);
-  void fill_depth_runs(uint16_t z, const IntRect& scissor);
+  void fill_depth_runs(uint16_t z);
 
   void enable_delayed_clear(uint32_t val) {
     delay_clear = height;
@@ -904,7 +904,7 @@ struct Context {
   bool scissortest = false;
   IntRect scissor = {0, 0, 0, 0};
 
-  GLfloat clearcolor[4] = {0, 0, 0, 0};
+  uint32_t clearcolor = 0;
   GLdouble cleardepth = 1;
 
   int unpack_row_length = 0;
@@ -1290,15 +1290,10 @@ void Disable(GLenum cap) {
 GLenum GetError() { return GL_NO_ERROR; }
 
 static const char* const extensions[] = {
-    "GL_ARB_blend_func_extended",
-    "GL_ARB_clear_texture",
-    "GL_ARB_copy_image",
-    "GL_ARB_draw_instanced",
-    "GL_ARB_explicit_attrib_location",
-    "GL_ARB_instanced_arrays",
-    "GL_ARB_invalidate_subdata",
-    "GL_ARB_texture_storage",
-    "GL_EXT_timer_query",
+    "GL_ARB_blend_func_extended", "GL_ARB_copy_image",
+    "GL_ARB_draw_instanced",      "GL_ARB_explicit_attrib_location",
+    "GL_ARB_instanced_arrays",    "GL_ARB_invalidate_subdata",
+    "GL_ARB_texture_storage",     "GL_EXT_timer_query",
     "GL_APPLE_rgb_422",
 };
 
@@ -1489,10 +1484,8 @@ void SetScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
 }
 
 void ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
-  ctx->clearcolor[0] = r;
-  ctx->clearcolor[1] = g;
-  ctx->clearcolor[2] = b;
-  ctx->clearcolor[3] = a;
+  I32 c = round_pixel((Float){b, g, r, a});
+  ctx->clearcolor = bit_cast<uint32_t>(CONVERT(c, U8));
 }
 
 void ClearDepth(GLdouble depth) { ctx->cleardepth = depth; }
@@ -2379,6 +2372,14 @@ static void clear_buffer(Texture& t, T value, int layer, IntRect bb,
 }
 
 template <typename T>
+static inline void clear_buffer(Texture& t, T value, int layer = 0) {
+  IntRect bb = ctx->apply_scissor(t);
+  if (bb.width() > 0) {
+    clear_buffer<T>(t, value, layer, bb);
+  }
+}
+
+template <typename T>
 static inline void force_clear_row(Texture& t, int y, int skip_start = 0,
                                    int skip_end = 0) {
   assert(t.buf != nullptr);
@@ -2465,33 +2466,28 @@ static void prepare_texture(Texture& t, const IntRect* skip) {
   }
 }
 
+static inline bool clear_requires_scissor(Texture& t) {
+  return ctx->scissortest && !ctx->scissor.contains(t.offset_bounds());
+}
+
 // Setup a clear on a texture. This may either force an immediate clear or
 // potentially punt to a delayed clear, if applicable.
 template <typename T>
-static void request_clear(Texture& t, int layer, T value,
-                          const IntRect& scissor) {
+static void request_clear(Texture& t, int layer, T value) {
   // If the clear would require a scissor, force clear anything outside
   // the scissor, and then immediately clear anything inside the scissor.
-  if (!scissor.contains(t.offset_bounds())) {
-    IntRect skip = scissor - t.offset;
+  if (clear_requires_scissor(t)) {
+    IntRect skip = ctx->scissor - t.offset;
     force_clear<T>(t, &skip);
-    clear_buffer<T>(t, value, layer, skip.intersection(t.bounds()));
+    clear_buffer<T>(t, value, layer);
   } else if (t.depth > 1) {
     // Delayed clear is not supported on texture arrays.
     t.disable_delayed_clear();
-    clear_buffer<T>(t, value, layer, t.bounds());
+    clear_buffer<T>(t, value, layer);
   } else {
     // Do delayed clear for 2D texture without scissor.
     t.enable_delayed_clear(value);
   }
-}
-
-template <typename T>
-static inline void request_clear(Texture& t, int layer, T value) {
-  // If scissoring is enabled, use the scissor rect. Otherwise, just scissor to
-  // the entire texture bounds.
-  request_clear(t, layer, value,
-                ctx->scissortest ? ctx->scissor : t.offset_bounds());
 }
 
 // Initialize a depth texture by setting the first run in each row to encompass
@@ -2513,10 +2509,10 @@ static ALWAYS_INLINE void fill_depth_run(DepthRun* dst, size_t n,
 }
 
 // Fills a scissored region of a depth texture with a given depth.
-void Texture::fill_depth_runs(uint16_t depth, const IntRect& scissor) {
+void Texture::fill_depth_runs(uint16_t depth) {
   if (!buf) return;
   assert(cleared());
-  IntRect bb = bounds().intersection(scissor - offset);
+  IntRect bb = ctx->apply_scissor(*this);
   DepthRun* runs = (DepthRun*)sample_ptr(0, bb.y0);
   for (int rows = bb.height(); rows > 0; rows--) {
     if (bb.width() >= width) {
@@ -2591,180 +2587,40 @@ GLenum CheckFramebufferStatus(GLenum target) {
   return GL_FRAMEBUFFER_COMPLETE;
 }
 
-void ClearTexSubImage(GLuint texture, GLint level, GLint xoffset, GLint yoffset,
-                      GLint zoffset, GLsizei width, GLsizei height,
-                      GLsizei depth, GLenum format, GLenum type,
-                      const void* data) {
-  if (level != 0) {
-    assert(false);
-    return;
-  }
-  Texture& t = ctx->textures[texture];
-  assert(!t.locked);
-  if (zoffset < 0) {
-    depth += zoffset;
-    zoffset = 0;
-  }
-  if (zoffset + depth > max(t.depth, 1)) {
-    depth = max(t.depth, 1) - zoffset;
-  }
-  if (width <= 0 || height <= 0 || depth <= 0) {
-    return;
-  }
-  IntRect scissor = {xoffset, yoffset, xoffset + width, yoffset + height};
-  if (t.internal_format == GL_DEPTH_COMPONENT16) {
-    uint16_t value = 0xFFFF;
-    switch (format) {
-      case GL_DEPTH_COMPONENT:
-        switch (type) {
-          case GL_DOUBLE:
-            value = uint16_t(*(const GLdouble*)data * 0xFFFF);
-            break;
-          case GL_FLOAT:
-            value = uint16_t(*(const GLfloat*)data * 0xFFFF);
-            break;
-          case GL_UNSIGNED_SHORT:
-            value = uint16_t(*(const GLushort*)data);
-            break;
-          default:
-            assert(false);
-            break;
-        }
-        break;
-      default:
-        assert(false);
-        break;
-    }
-    assert(zoffset == 0 && depth == 1);
-    if (t.cleared() && !scissor.contains(t.offset_bounds())) {
-      // If we need to scissor the clear and the depth buffer was already
-      // initialized, then just fill runs for that scissor area.
-      t.fill_depth_runs(value, scissor);
-    } else {
-      // Otherwise, the buffer is either uninitialized or the clear would
-      // encompass the entire buffer. If uninitialized, we can safely fill
-      // the entire buffer with any value and thus ignore any scissoring.
-      t.init_depth_runs(value);
-    }
-    return;
-  }
-
-  uint32_t color = 0xFF000000;
-  switch (type) {
-    case GL_FLOAT: {
-      const GLfloat* f = (const GLfloat*)data;
-      Float v = {0.0f, 0.0f, 0.0f, 1.0f};
-      switch (format) {
-        case GL_RGBA:
-          v.w = f[3];  // alpha
-          FALLTHROUGH;
-        case GL_RGB:
-          v.z = f[2];  // blue
-          FALLTHROUGH;
-        case GL_RG:
-          v.y = f[1];  // green
-          FALLTHROUGH;
-        case GL_RED:
-          v.x = f[0];  // red
-          break;
-        default:
-          assert(false);
-          break;
-      }
-      color = bit_cast<uint32_t>(CONVERT(round_pixel(v), U8));
-      break;
-    }
-    case GL_UNSIGNED_BYTE: {
-      const GLubyte* b = (const GLubyte*)data;
-      switch (format) {
-        case GL_RGBA:
-          color = (color & ~0xFF000000) | (uint32_t(b[3]) << 24);  // alpha
-          FALLTHROUGH;
-        case GL_RGB:
-          color = (color & ~0x00FF0000) | (uint32_t(b[2]) << 16);  // blue
-          FALLTHROUGH;
-        case GL_RG:
-          color = (color & ~0x0000FF00) | (uint32_t(b[1]) << 8);  // green
-          FALLTHROUGH;
-        case GL_RED:
-          color = (color & ~0x000000FF) | uint32_t(b[0]);  // red
-          break;
-        default:
-          assert(false);
-          break;
-      }
-      break;
-    }
-    default:
-      assert(false);
-      break;
-  }
-
-  for (int layer = zoffset; layer < zoffset + depth; layer++) {
-    switch (t.internal_format) {
-      case GL_RGBA8:
-        // Clear color needs to swizzle to BGRA.
-        request_clear<uint32_t>(t, layer,
-                                (color & 0xFF00FF00) |
-                                    ((color << 16) & 0xFF0000) |
-                                    ((color >> 16) & 0xFF),
-                                scissor);
-        break;
-      case GL_R8:
-        request_clear<uint8_t>(t, layer, uint8_t(color & 0xFF), scissor);
-        break;
-      case GL_RG8:
-        request_clear<uint16_t>(t, layer, uint16_t(color & 0xFFFF), scissor);
-        break;
-      default:
-        assert(false);
-        break;
-    }
-  }
-}
-
-void ClearTexImage(GLuint texture, GLint level, GLenum format, GLenum type,
-                   const void* data) {
-  Texture& t = ctx->textures[texture];
-  IntRect scissor = t.offset_bounds();
-  ClearTexSubImage(texture, level, scissor.x0, scissor.y0, 0, scissor.width(),
-                   scissor.height(), max(t.depth, 1), format, type, data);
-}
-
 void Clear(GLbitfield mask) {
   Framebuffer& fb = *get_framebuffer(GL_DRAW_FRAMEBUFFER);
   if ((mask & GL_COLOR_BUFFER_BIT) && fb.color_attachment) {
     Texture& t = ctx->textures[fb.color_attachment];
-    IntRect scissor = ctx->scissortest
-                          ? ctx->scissor.intersection(t.offset_bounds())
-                          : t.offset_bounds();
-    ClearTexSubImage(fb.color_attachment, 0, scissor.x0, scissor.y0, fb.layer,
-                     scissor.width(), scissor.height(), 1, GL_RGBA, GL_FLOAT,
-                     ctx->clearcolor);
+    assert(!t.locked);
+    if (t.internal_format == GL_RGBA8) {
+      uint32_t color = ctx->clearcolor;
+      request_clear<uint32_t>(t, fb.layer, color);
+    } else if (t.internal_format == GL_R8) {
+      uint8_t color = uint8_t((ctx->clearcolor >> 16) & 0xFF);
+      request_clear<uint8_t>(t, fb.layer, color);
+    } else if (t.internal_format == GL_RG8) {
+      uint16_t color = uint16_t((ctx->clearcolor & 0xFF00) |
+                                ((ctx->clearcolor >> 16) & 0xFF));
+      request_clear<uint16_t>(t, fb.layer, color);
+    } else {
+      assert(false);
+    }
   }
   if ((mask & GL_DEPTH_BUFFER_BIT) && fb.depth_attachment) {
     Texture& t = ctx->textures[fb.depth_attachment];
-    IntRect scissor = ctx->scissortest
-                          ? ctx->scissor.intersection(t.offset_bounds())
-                          : t.offset_bounds();
-    ClearTexSubImage(fb.depth_attachment, 0, scissor.x0, scissor.y0, 0,
-                     scissor.width(), scissor.height(), 1, GL_DEPTH_COMPONENT,
-                     GL_DOUBLE, &ctx->cleardepth);
+    assert(t.internal_format == GL_DEPTH_COMPONENT16);
+    uint16_t depth = uint16_t(0xFFFF * ctx->cleardepth);
+    if (t.cleared() && clear_requires_scissor(t)) {
+      // If we need to scissor the clear and the depth buffer was already
+      // initialized, then just fill runs for that scissor area.
+      t.fill_depth_runs(depth);
+    } else {
+      // Otherwise, the buffer is either uninitialized or the clear would
+      // encompass the entire buffer. If uninitialized, we can safely fill
+      // the entire buffer with any value and thus ignore any scissoring.
+      t.init_depth_runs(depth);
+    }
   }
-}
-
-void ClearColorRect(GLuint fbo, GLint xoffset, GLint yoffset, GLsizei width,
-                    GLsizei height, GLfloat r, GLfloat g, GLfloat b,
-                    GLfloat a) {
-  GLfloat color[] = {r, g, b, a};
-  Framebuffer& fb = ctx->framebuffers[fbo];
-  Texture& t = ctx->textures[fb.color_attachment];
-  IntRect scissor =
-      IntRect{xoffset, yoffset, xoffset + width, yoffset + height}.intersection(
-          t.offset_bounds());
-  ClearTexSubImage(fb.color_attachment, 0, scissor.x0, scissor.y0, fb.layer,
-                   scissor.width(), scissor.height(), 1, GL_RGBA, GL_FLOAT,
-                   color);
 }
 
 void InvalidateFramebuffer(GLenum target, GLsizei num_attachments,
