@@ -475,11 +475,12 @@ void Link::ResetLinkState(bool aNotify, bool aHasHref) {
     }
   }
 
-  // If we have an href, we should register with the history.
+  // If we have an href, and we're not a <link>, we should register with the
+  // history.
   //
   // FIXME(emilio): Do we really want to allow all MathML elements to be
   // :visited? That seems not great.
-  mNeedsRegistration = aHasHref;
+  mNeedsRegistration = aHasHref && !mElement->IsHTMLElement(nsGkAtoms::link);
 
   // If we've cached the URI, reset always invalidates it.
   UnregisterFromHistory();
@@ -538,8 +539,11 @@ void Link::SetHrefAttribute(nsIURI* aURI) {
 size_t Link::SizeOfExcludingThis(mozilla::SizeOfState& aState) const {
   size_t n = 0;
 
-  if (nsCOMPtr<nsISizeOf> iface = do_QueryInterface(mCachedURI)) {
-    n += iface->SizeOfIncludingThis(aState.mMallocSizeOf);
+  if (mCachedURI) {
+    nsCOMPtr<nsISizeOf> iface = do_QueryInterface(mCachedURI);
+    if (iface) {
+      n += iface->SizeOfIncludingThis(aState.mMallocSizeOf);
+    }
   }
 
   // The following members don't need to be measured:
