@@ -69,6 +69,8 @@ class HTMLMeterElement final : public nsGenericHTMLElement {
     SetDoubleAttr(nsGkAtoms::optimum, aValue, aRv);
   }
 
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLMeterElement, meter);
+
  protected:
   virtual ~HTMLMeterElement();
 

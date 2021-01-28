@@ -235,10 +235,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   void PaintRoundedFocusRect(DrawTarget* aDrawTarget,
                              const LayoutDeviceRect& aRect, DPIRatio aDpiRatio,
                              CSSCoord aRadius, CSSCoord aOffset);
-  void PaintRoundedRect(DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
-                        const sRGBColor& aBackgroundColor,
-                        const sRGBColor& aBorderColor, CSSCoord aBorderWidth,
-                        RectCornerRadii aDpiAdjustedRadii, DPIRatio aDpiRatio);
   void PaintRoundedRectWithRadius(DrawTarget* aDrawTarget,
                                   const LayoutDeviceRect& aRect,
                                   const sRGBColor& aBackgroundColor,
@@ -286,15 +282,9 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   void PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                   const LayoutDeviceRect& aRect, const EventStates& aState,
                   DPIRatio aDpiRatio, bool aHorizontal);
-  void PaintProgressBar(DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
-                        const EventStates& aState, DPIRatio aDpiRatio);
-  void PaintProgresschunk(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                          const LayoutDeviceRect& aRect,
-                          const EventStates& aState, DPIRatio aDpiRatio);
-  void PaintMeter(DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
-                  const EventStates& aState, DPIRatio aDpiRatio);
-  void PaintMeterchunk(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                       const LayoutDeviceRect& aRect, DPIRatio aDpiRatio);
+  void PaintProgress(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+                     const LayoutDeviceRect& aRect, const EventStates& aState,
+                     DPIRatio aDpiRatio, bool aIsMeter, bool aBar);
   void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                    const LayoutDeviceRect& aRect, const EventStates& aState,
                    DPIRatio aDpiRatio);
