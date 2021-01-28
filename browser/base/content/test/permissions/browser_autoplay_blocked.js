@@ -29,23 +29,23 @@ const EMPTY_PAGE =
 const AUTOPLAY_PREF = "media.autoplay.default";
 const AUTOPLAY_PERM = "autoplay-media";
 
-function openPermissionPopup() {
+function openIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(
     gBrowser.ownerGlobal,
     "popupshown",
     true,
-    event => event.target == gPermissionPanel._permissionPopup
+    event => event.target == gIdentityHandler._identityPopup
   );
-  gPermissionPanel._identityPermissionBox.click();
+  gIdentityHandler._identityBox.click();
   return promise;
 }
 
-function closePermissionPopup() {
+function closeIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(
-    gPermissionPanel._permissionPopup,
+    gIdentityHandler._identityPopup,
     "popuphidden"
   );
-  gPermissionPanel._permissionPopup.hidePopup();
+  gIdentityHandler._identityPopup.hidePopup();
   return promise;
 }
 
@@ -58,7 +58,7 @@ function autoplayBlockedIcon() {
 
 function permissionListBlockedIcons() {
   return document.querySelectorAll(
-    "image.permission-popup-permission-icon.blocked-permission-icon"
+    "image.identity-popup-permission-icon.blocked-permission-icon"
   );
 }
 
@@ -79,20 +79,6 @@ async function blockedIconHidden() {
   }, "Blocked icon is hidden");
 }
 
-function testPermListHasEntries(expectEntries) {
-  let permissionsList = document.getElementById(
-    "permission-popup-permission-list"
-  );
-  let listEntryCount = permissionsList.querySelectorAll(
-    ".permission-popup-permission-item"
-  ).length;
-  if (expectEntries) {
-    ok(listEntryCount, "List of permissions is not empty");
-    return;
-  }
-  ok(!listEntryCount, "List of permissions is empty");
-}
-
 add_task(async function setup() {
   registerCleanupFunction(() => {
     Services.perms.removeAll();
@@ -104,36 +90,44 @@ add_task(async function testMainViewVisible() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.ALLOWED);
 
   await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function() {
+    let permissionsList = document.getElementById(
+      "identity-popup-permission-list"
+    );
+    let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
+
     ok(
       BrowserTestUtils.is_hidden(autoplayBlockedIcon()),
       "Blocked icon not shown"
     );
 
-    await openPermissionPopup();
-    testPermListHasEntries(false);
-    await closePermissionPopup();
+    await openIdentityPopup();
+    ok(!BrowserTestUtils.is_hidden(emptyLabel), "List of permissions is empty");
+    await closeIdentityPopup();
   });
 
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
   await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function(browser) {
     let permissionsList = document.getElementById(
-      "permission-popup-permission-list"
+      "identity-popup-permission-list"
     );
+    let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
 
     await blockedIconShown();
 
-    await openPermissionPopup();
-    testPermListHasEntries(true);
-
+    await openIdentityPopup();
+    ok(
+      BrowserTestUtils.is_hidden(emptyLabel),
+      "List of permissions is not empty"
+    );
     let labelText = SitePermissions.getPermissionLabel(AUTOPLAY_PERM);
     let labels = permissionsList.querySelectorAll(
-      ".permission-popup-permission-label"
+      ".identity-popup-permission-label"
     );
     is(labels.length, 1, "One permission visible in main view");
     is(labels[0].textContent, labelText, "Correct value");
 
-    let menulist = document.getElementById("permission-popup-menulist");
+    let menulist = document.getElementById("identity-popup-popup-menulist");
     Assert.equal(menulist.label, "Block Audio");
 
     await EventUtils.synthesizeMouseAtCenter(menulist, { type: "mousedown" });
@@ -149,7 +143,7 @@ add_task(async function testMainViewVisible() {
 
     menuitem.click();
     menulist.menupopup.hidePopup();
-    await closePermissionPopup();
+    await closeIdentityPopup();
 
     let uri = Services.io.newURI(AUTOPLAY_PAGE);
     let state = PermissionTestUtils.getPermissionObject(uri, AUTOPLAY_PERM)
@@ -317,7 +311,7 @@ add_task(async function testBlockedAll() {
     BrowserTestUtils.loadURI(browser, MUTED_AUTOPLAY_PAGE);
     await blockedIconShown();
 
-    await openPermissionPopup();
+    await openIdentityPopup();
 
     Assert.equal(
       permissionListBlockedIcons().length,
@@ -325,7 +319,7 @@ add_task(async function testBlockedAll() {
       "Blocked icon is shown"
     );
 
-    let menulist = document.getElementById("permission-popup-menulist");
+    let menulist = document.getElementById("identity-popup-popup-menulist");
     await EventUtils.synthesizeMouseAtCenter(menulist, { type: "mousedown" });
     await TestUtils.waitForCondition(() => {
       return (
@@ -336,7 +330,7 @@ add_task(async function testBlockedAll() {
     let menuitem = menulist.getElementsByTagName("menuitem")[0];
     menuitem.click();
     menulist.menupopup.hidePopup();
-    await closePermissionPopup();
+    await closeIdentityPopup();
     gBrowser.reload();
     await blockedIconHidden();
   });

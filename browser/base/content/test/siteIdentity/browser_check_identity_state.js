@@ -20,14 +20,14 @@ function getIdentityMode(aWindow = window) {
 
 function getConnectionState() {
   // Prevents items that are being lazy loaded causing issues
-  document.getElementById("identity-icon-box").click();
+  document.getElementById("identity-box").click();
   gIdentityHandler.refreshIdentityPopup();
   return document.getElementById("identity-popup").getAttribute("connection");
 }
 
 function getSecurityConnectionBG() {
   // Get the background image of the security connection.
-  document.getElementById("identity-icon-box").click();
+  document.getElementById("identity-box").click();
   gIdentityHandler.refreshIdentityPopup();
   return gBrowser.ownerGlobal
     .getComputedStyle(
@@ -40,7 +40,7 @@ function getSecurityConnectionBG() {
 
 function getReaderModeURL() {
   // Gets the reader mode URL from "identity-popup mainView panel header span"
-  document.getElementById("identity-icon-box").click();
+  document.getElementById("identity-box").click();
   gIdentityHandler.refreshIdentityPopup();
   return document.getElementById("identity-popup-mainView-panel-header-span")
     .innerHTML;

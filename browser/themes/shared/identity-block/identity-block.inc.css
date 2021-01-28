@@ -7,14 +7,8 @@
 %filter substitution
 
 #identity-box {
-  margin-inline: @identityBoxMarginInline@;
-}
-
-/* The tracking protection icon will be hidden if it is a chrome page. There
-   will be only the brand icon in the url bar. We need to change the margin
-   in order for the identity box to cover the whole urlbar start section. */
-#identity-box[pageproxystate="valid"].chromeUI {
-  margin-inline-start: 0;
+  padding-inline: @identityBoxPaddingInline@;
+  margin-inline-end: @identityBoxMarginInlineEnd@;
 }
 
 #identity-box,
@@ -25,15 +19,19 @@
   fill-opacity: .6;
 }
 
-#identity-box[pageproxystate="invalid"] {
-  margin-inline-end: calc(@identityBoxMarginInline@ + 2px);
+/* The tracking protection icon will be hidden if it is a chrome page. There
+   will be only the brand icon in the url bar. So, we need to change the padding
+   start for proper positing the icon. */
+#identity-box[pageproxystate="valid"].chromeUI {
+  padding-inline-start: 8px;
 }
 
 #urlbar.searchButton > #urlbar-input-container > #identity-box[pageproxystate="invalid"],
-#identity-box[pageproxystate="invalid"] > #identity-permission-box,
+#identity-box[pageproxystate="invalid"] > #permissions-granted-icon,
+#identity-box[pageproxystate="invalid"] > #blocked-permissions-container,
 #identity-box[pageproxystate="invalid"] > #notification-popup-box,
-#identity-box[pageproxystate="invalid"] #identity-icon-label,
-#identity-box[pageproxystate="invalid"] #remote-control-icon {
+#identity-box[pageproxystate="invalid"] > #identity-icon-label,
+#identity-box[pageproxystate="invalid"] > #remote-control-icon {
   display: none;
 }
 
@@ -42,32 +40,28 @@
   -moz-user-focus: ignore;
 }
 
-.identity-box-button:hover:not([open=true]),
+#identity-box:hover:not(.no-hover, [open=true]),
 #tracking-protection-icon-container:hover:not([open=true]) {
   background-color: hsla(0,0%,70%,.2);
   fill-opacity: .8;
 }
 
-.identity-box-button:hover:active,
-.identity-box-button[open=true],
+#identity-box:hover:active:not(.no-hover),
+#identity-box[open=true],
 #tracking-protection-icon-container:hover:active,
 #tracking-protection-icon-container[open=true] {
   background-color: hsla(0,0%,70%,.3);
   fill-opacity: .8;
 }
 
-.identity-box-button:not(:active):-moz-focusring,
+#identity-box:not(:active):-moz-focusring,
 #tracking-protection-icon-container:not(:active):-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: -2px;
   -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
-.identity-box-button {
-  padding-inline: calc(@identityBoxPaddingInline@ / 2);
-}
-
-#identity-box[pageproxystate="valid"].chromeUI #identity-icon-label,
+#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-label,
 .urlbar-label {
   opacity: .6;
 }
@@ -89,10 +83,10 @@
   border-image-slice: 1;
 }
 
-#identity-box[pageproxystate="valid"].notSecureText > #identity-icon-box,
-#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-box,
-#identity-box[pageproxystate="valid"].extensionPage > #identity-icon-box {
-  padding-inline: 8px;
+#identity-box[pageproxystate="valid"].notSecureText,
+#identity-box[pageproxystate="valid"].chromeUI,
+#identity-box[pageproxystate="valid"].extensionPage {
+  padding-inline-end: 8px;
 }
 
 #urlbar-label-box {
@@ -122,15 +116,8 @@
 #blocked-permissions-container > .blocked-permission-icon {
   width: 16px;
   height: 16px;
-  -moz-context-properties: fill, fill-opacity;
-}
-
-.sharing-icon,
-#identity-icon,
-#tracking-protection-icon,
-.notification-anchor-icon,
-#blocked-permissions-container > .blocked-permission-icon {
   margin-inline-start: 4px;
+  -moz-context-properties: fill, fill-opacity;
 }
 
 #tracking-protection-icon {
@@ -143,51 +130,50 @@
   list-style-image: url(chrome://global/skin/icons/identity-icon.svg);
 }
 
-#identity-box[pageproxystate="valid"].chromeUI #identity-icon {
+#identity-box[pageproxystate="valid"].chromeUI > #identity-icon {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
 
-#identity-box[pageproxystate="valid"].localResource #identity-icon {
+#identity-box[pageproxystate="valid"].localResource > #identity-icon {
   list-style-image: url(chrome://global/skin/icons/document.svg);
 }
 
-#urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] #identity-icon {
+#urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] > #identity-icon {
   list-style-image: url(chrome://global/skin/icons/search-glass.svg);
   fill-opacity: .4;
 }
 
-#urlbar[actiontype="extension"] > #urlbar-input-container > #identity-box #identity-icon {
+#urlbar[actiontype="extension"] > #urlbar-input-container > #identity-box > #identity-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
 }
 
-#identity-box[pageproxystate="valid"].extensionPage #identity-icon {
+#identity-box[pageproxystate="valid"].extensionPage > #identity-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
 }
 
-#identity-box[pageproxystate="valid"].verifiedDomain #identity-icon,
-#identity-box[pageproxystate="valid"].mixedActiveBlocked #identity-icon {
+#identity-box[pageproxystate="valid"].verifiedDomain > #identity-icon,
+#identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-secure.svg);
 }
 
-#identity-box[pageproxystate="valid"].verifiedDomain #identity-icon:not([lock-icon-gray]),
-#identity-box[pageproxystate="valid"].mixedActiveBlocked #identity-icon:not([lock-icon-gray]) {
+#identity-box[pageproxystate="valid"].verifiedDomain > #identity-icon:not([lock-icon-gray]),
+#identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon:not([lock-icon-gray]) {
   fill-opacity: 1;
   fill: #12BC00;
 }
 
-#identity-box[pageproxystate="valid"].weakCipher #identity-icon,
-#identity-box[pageproxystate="valid"].mixedDisplayContent #identity-icon,
-#identity-box[pageproxystate="valid"].mixedDisplayContentLoadedActiveBlocked #identity-icon,
-#identity-box[pageproxystate="valid"].certUserOverridden #identity-icon,
-#identity-box[pageproxystate="valid"].certErrorPage #identity-icon {
+#identity-box[pageproxystate="valid"].weakCipher > #identity-icon,
+#identity-box[pageproxystate="valid"].mixedDisplayContent > #identity-icon,
+#identity-box[pageproxystate="valid"].mixedDisplayContentLoadedActiveBlocked > #identity-icon,
+#identity-box[pageproxystate="valid"].certUserOverridden > #identity-icon,
+#identity-box[pageproxystate="valid"].certErrorPage > #identity-icon {
   list-style-image: url(chrome://global/skin/icons/connection-mixed-passive-loaded.svg);
   fill: unset;
 }
 
-
-#identity-box[pageproxystate="valid"].notSecure #identity-icon,
-#identity-box[pageproxystate="valid"].mixedActiveContent #identity-icon,
-#identity-box[pageproxystate="valid"].httpsOnlyErrorPage #identity-icon {
+#identity-box[pageproxystate="valid"].notSecure > #identity-icon,
+#identity-box[pageproxystate="valid"].mixedActiveContent > #identity-icon,
+#identity-box[pageproxystate="valid"].httpsOnlyErrorPage > #identity-icon {
   list-style-image: url(chrome://global/skin/icons/connection-mixed-active-loaded.svg);
 }
 
@@ -195,15 +181,8 @@
   list-style-image: url(chrome://browser/skin/permissions.svg);
 }
 
-#identity-permission-box {
+#identity-box:not(.grantedPermissions) > #permissions-granted-icon {
   display: none;
-}
-
-#identity-permission-box[open=true],
-#identity-permission-box[hasGrantedPermissions],
-#identity-permission-box[hasPermissionIcon],
-#identity-permission-box[hasSharingIcon] {
-  display: -moz-box;
 }
 
 /* SHARING ICON */
