@@ -119,7 +119,9 @@ class WindowGlobalParent final : public WindowContext,
   // The current URI which loaded in the document.
   nsIURI* GetDocumentURI() override { return mDocumentURI; }
 
-  void GetDocumentTitle(nsAString& aTitle) const { aTitle = mDocumentTitle; }
+  void GetDocumentTitle(nsAString& aTitle) const {
+    aTitle = mDocumentTitle.valueOr(nsString());
+  }
 
   nsIPrincipal* GetContentBlockingAllowListPrincipal() const {
     return mDocContentBlockingAllowListPrincipal;
@@ -284,7 +286,7 @@ class WindowGlobalParent final : public WindowContext,
   // The principal to use for the content blocking allow list.
   nsCOMPtr<nsIPrincipal> mDocContentBlockingAllowListPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
-  nsString mDocumentTitle;
+  Maybe<nsString> mDocumentTitle;
 
   bool mIsInitialDocument;
 
