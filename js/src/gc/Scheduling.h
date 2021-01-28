@@ -390,7 +390,7 @@ static const uint32_t MinEmptyChunkCount = 1;
 static const uint32_t MaxEmptyChunkCount = 30;
 
 /* JSGC_SLICE_TIME_BUDGET_MS */
-static const int64_t DefaultTimeBudgetMS = SliceBudget::UnlimitedTimeBudget;
+static const int64_t DefaultTimeBudgetMS = 0;  // Unlimited by default.
 
 /* JSGC_INCREMENTAL_ENABLED */
 static const bool IncrementalGCEnabled = false;

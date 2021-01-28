@@ -663,7 +663,7 @@ class GCRuntime {
 
   using MaybeInvocationKind = mozilla::Maybe<JSGCInvocationKind>;
 
-  void collect(bool nonincrementalByAPI, SliceBudget budget,
+  void collect(bool nonincrementalByAPI, const SliceBudget& budget,
                const MaybeInvocationKind& gckind,
                JS::GCReason reason) JS_HAZ_GC_CALL;
 
@@ -677,7 +677,7 @@ class GCRuntime {
    *  * Ok otherwise.
    */
   MOZ_MUST_USE IncrementalResult gcCycle(bool nonincrementalByAPI,
-                                         SliceBudget budget,
+                                         const SliceBudget& budgetArg,
                                          const MaybeInvocationKind& gckind,
                                          JS::GCReason reason);
   bool shouldRepeatForDeadZone(JS::GCReason reason);

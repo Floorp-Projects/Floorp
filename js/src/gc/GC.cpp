@@ -1380,7 +1380,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
                              AutoLockGC& lock) {
   switch (key) {
     case JSGC_SLICE_TIME_BUDGET_MS:
-      defaultTimeBudgetMS_ = value ? value : SliceBudget::UnlimitedTimeBudget;
+      defaultTimeBudgetMS_ = value;
       break;
     case JSGC_MARK_STACK_LIMIT:
       if (value == 0) {
@@ -1516,13 +1516,9 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(fullChunks(lock).count() + availableChunks(lock).count() +
                       emptyChunks(lock).count());
     case JSGC_SLICE_TIME_BUDGET_MS:
-      if (defaultTimeBudgetMS_.ref() == SliceBudget::UnlimitedTimeBudget) {
-        return 0;
-      } else {
-        MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ >= 0);
-        MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ <= UINT32_MAX);
-        return uint32_t(defaultTimeBudgetMS_);
-      }
+      MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ >= 0);
+      MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ <= UINT32_MAX);
+      return uint32_t(defaultTimeBudgetMS_);
     case JSGC_MARK_STACK_LIMIT:
       return marker.maxCapacity();
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
@@ -2970,61 +2966,39 @@ void ArenaLists::checkNoArenasToUpdateForKind(AllocKind kind) {
 #endif
 }
 
-TimeStamp SliceBudget::unlimitedDeadline;
-
-void SliceBudget::Init() {
-  MOZ_ASSERT(!unlimitedDeadline);
-  uint64_t oneYearsInSeconds = 365 * 24 * 60 * 60;
-  unlimitedDeadline =
-      ReallyNow() + TimeDuration::FromSeconds(100 * oneYearsInSeconds);
-}
-
-SliceBudget::SliceBudget()
-    : timeBudget(UnlimitedTimeBudget), workBudget(UnlimitedWorkBudget) {
-  makeUnlimited();
-}
-
 SliceBudget::SliceBudget(TimeBudget time)
-    : timeBudget(time), workBudget(UnlimitedWorkBudget) {
-  if (time.budget < 0) {
-    makeUnlimited();
-  } else {
-    // Note: TimeBudget(0) is equivalent to WorkBudget(CounterReset).
-    deadline = ReallyNow() + TimeDuration::FromMilliseconds(time.budget);
-    counter = CounterReset;
-  }
+    : budget(time), counter(StepsPerTimeCheck) {
+  budget.as<TimeBudget>().deadline =
+      ReallyNow() + TimeDuration::FromMilliseconds(timeBudget());
 }
 
 SliceBudget::SliceBudget(WorkBudget work)
-    : timeBudget(UnlimitedTimeBudget), workBudget(work) {
-  if (work.budget < 0) {
-    makeUnlimited();
-  } else {
-    deadline = TimeStamp();
-    counter = work.budget;
-  }
-}
+    : budget(work), counter(work.budget) {}
 
 int SliceBudget::describe(char* buffer, size_t maxlen) const {
   if (isUnlimited()) {
     return snprintf(buffer, maxlen, "unlimited");
   } else if (isWorkBudget()) {
-    return snprintf(buffer, maxlen, "work(%" PRId64 ")", workBudget.budget);
+    return snprintf(buffer, maxlen, "work(%" PRId64 ")", workBudget());
   } else {
-    return snprintf(buffer, maxlen, "%" PRId64 "ms", timeBudget.budget);
+    return snprintf(buffer, maxlen, "%" PRId64 "ms", timeBudget());
   }
 }
 
 bool SliceBudget::checkOverBudget() {
-  if (deadline.IsNull()) {
+  MOZ_ASSERT(counter <= 0);
+  MOZ_ASSERT(!isUnlimited());
+
+  if (isWorkBudget()) {
     return true;
   }
 
-  bool over = ReallyNow() >= deadline;
-  if (!over) {
-    counter = CounterReset;
+  if (ReallyNow() >= budget.as<TimeBudget>().deadline) {
+    return true;
   }
-  return over;
+
+  counter = StepsPerTimeCheck;
+  return false;
 }
 
 void GCRuntime::requestMajorGC(JS::GCReason reason) {
@@ -6774,7 +6748,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
     // Yields between slices occurs at predetermined points in these modes; the
     // budget is not used. |isIncremental| is still true.
     stats().log("Using unlimited budget for two-slice zeal mode");
-    budget.makeUnlimited();
+    budget = SliceBudget::unlimited();
   }
 
   switch (incrementalState) {
@@ -6826,7 +6800,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
       // If we needed delayed marking for gray roots, then collect until done.
       if (isIncremental && !hasValidGrayRootsBuffer()) {
-        budget.makeUnlimited();
+        budget = SliceBudget::unlimited();
         isIncremental = false;
         stats().nonincremental(GCAbortReason::GrayRootBufferingFailed);
       }
@@ -7065,7 +7039,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     bool nonincrementalByAPI, JS::GCReason reason, SliceBudget& budget) {
   if (nonincrementalByAPI) {
     stats().nonincremental(GCAbortReason::NonIncrementalRequested);
-    budget.makeUnlimited();
+    budget = SliceBudget::unlimited();
 
     // Reset any in progress incremental GC if this was triggered via the
     // API. This isn't required for correctness, but sometimes during tests
@@ -7079,7 +7053,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
   }
 
   if (reason == JS::GCReason::ABORT_GC) {
-    budget.makeUnlimited();
+    budget = SliceBudget::unlimited();
     stats().nonincremental(GCAbortReason::AbortRequested);
     return resetIncrementalGC(GCAbortReason::AbortRequested);
   }
@@ -7095,7 +7069,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     }
 
     if (unsafeReason != GCAbortReason::None) {
-      budget.makeUnlimited();
+      budget = SliceBudget::unlimited();
       stats().nonincremental(unsafeReason);
       return resetIncrementalGC(unsafeReason);
     }
@@ -7110,7 +7084,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     if (zone->gcHeapSize.bytes() >=
         zone->gcHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "GC bytes");
-      budget.makeUnlimited();
+      budget = SliceBudget::unlimited();
       stats().nonincremental(GCAbortReason::GCBytesTrigger);
       if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
         resetReason = GCAbortReason::GCBytesTrigger;
@@ -7120,7 +7094,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     if (zone->mallocHeapSize.bytes() >=
         zone->mallocHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "malloc bytes");
-      budget.makeUnlimited();
+      budget = SliceBudget::unlimited();
       stats().nonincremental(GCAbortReason::MallocBytesTrigger);
       if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
         resetReason = GCAbortReason::MallocBytesTrigger;
@@ -7130,7 +7104,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     if (zone->jitHeapSize.bytes() >=
         zone->jitHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "JIT code bytes");
-      budget.makeUnlimited();
+      budget = SliceBudget::unlimited();
       stats().nonincremental(GCAbortReason::JitCodeBytesTrigger);
       if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
         resetReason = GCAbortReason::JitCodeBytesTrigger;
@@ -7139,7 +7113,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
 
     if (isIncrementalGCInProgress() &&
         zone->isGCScheduled() != zone->wasGCStarted()) {
-      budget.makeUnlimited();
+      budget = SliceBudget::unlimited();
       resetReason = GCAbortReason::ZoneChange;
     }
   }
@@ -7160,8 +7134,7 @@ void GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
   // minimum time budget that increases linearly with time/slice count up to a
   // maximum.
 
-  if (budget.isTimeBudget() && !budget.isUnlimited() &&
-      isIncrementalGCInProgress()) {
+  if (budget.isTimeBudget() && isIncrementalGCInProgress()) {
     // All times are in milliseconds.
     struct BudgetAtTime {
       double time;
@@ -7176,7 +7149,7 @@ void GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
         LinearInterpolate(totalTime, MinBudgetStart.time, MinBudgetStart.budget,
                           MinBudgetEnd.time, MinBudgetEnd.budget);
 
-    if (budget.timeBudget.budget < minBudget) {
+    if (budget.timeBudget() < minBudget) {
       budget = SliceBudget(TimeBudget(minBudget));
     }
   }
@@ -7265,7 +7238,7 @@ void GCRuntime::maybeCallGCCallback(JSGCStatus status, JS::GCReason reason) {
  * implementation.
  */
 MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
-    bool nonincrementalByAPI, SliceBudget budget,
+    bool nonincrementalByAPI, const SliceBudget& budgetArg,
     const MaybeInvocationKind& gckind, JS::GCReason reason) {
   // Assert if this is a GC unsafe region.
   rt->mainContextFromOwnThread()->verifyIsSafeToGC();
@@ -7290,6 +7263,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
 
   // Increase slice budget for long running collections before it is recorded by
   // AutoGCSlice.
+  SliceBudget budget(budgetArg);
   maybeIncreaseSliceBudget(budget);
 
   ScheduleZones(this);
@@ -7484,7 +7458,7 @@ struct MOZ_RAII AutoSetZoneSliceThresholds {
   GCRuntime* gc;
 };
 
-void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
+void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
                         const MaybeInvocationKind& gckindArg,
                         JS::GCReason reason) {
   MOZ_ASSERT(reason != JS::GCReason::NO_REASON);
@@ -7588,6 +7562,10 @@ SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
     } else {
       millis = defaultSliceBudgetMS();
     }
+  }
+
+  if (millis == 0) {
+    return SliceBudget::unlimited();
   }
 
   return SliceBudget(TimeBudget(millis));
