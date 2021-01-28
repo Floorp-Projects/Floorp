@@ -88,6 +88,33 @@
                 oncommand="gIdentityHandler.showSecuritySubView();"/>
       </hbox>
 
+      <!-- Permissions Section -->
+      <hbox class="identity-popup-section"
+            when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension cert-error-page https-only-error-page">
+        <vbox id="identity-popup-permissions-content" flex="1" role="group"
+              aria-labelledby="identity-popup-permissions-headline">
+          <hbox id="identity-popup-permissions-header" align="center">
+            <label id="identity-popup-permissions-headline"
+                   role="heading" aria-level="2"
+                   data-l10n-id="identity-permissions"/>
+          </hbox>
+          <vbox id="identity-popup-permission-list">
+            <vbox id="identity-popup-permission-list-default-anchor" class="identity-popup-permission-list-anchor"/>
+            <vbox class="identity-popup-permission-list-anchor" anchorfor="3rdPartyStorage">
+              <vbox id="identity-popup-storage-access-permission-list-header">
+                <hbox align="center" role="group">
+                  <image class="identity-popup-permission-icon storage-access-icon"/>
+                  <label data-l10n-id="identity-permissions-storage-access-header" class="identity-popup-permission-header-label"/>
+                </hbox>
+                <description id="identity-popup-storage-access-permission-list-hint" data-l10n-id="identity-permissions-storage-access-hint"></description>
+              </vbox>
+            </vbox>
+          </vbox>
+          <description id="identity-popup-permission-reload-hint" data-l10n-id="identity-permissions-reload-hint"></description>
+          <description id="identity-popup-permission-empty-hint" data-l10n-id="identity-permissions-empty"></description>
+        </vbox>
+      </hbox>
+
       <!-- Clear Site Data Button -->
       <vbox hidden="true"
             id="identity-popup-clear-sitedata-footer"
