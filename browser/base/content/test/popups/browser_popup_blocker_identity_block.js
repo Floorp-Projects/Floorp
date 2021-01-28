@@ -22,23 +22,23 @@ const PRINCIPAL = Services.scriptSecurityManager.createContentPrincipal(
   {}
 );
 
-function openIdentityPopup() {
+function openPermissionPopup() {
   let promise = BrowserTestUtils.waitForEvent(
     window,
     "popupshown",
     true,
-    event => event.target == gIdentityHandler._identityPopup
+    event => event.target == gPermissionPanel._permissionPopup
   );
-  gIdentityHandler._identityBox.click();
+  gPermissionPanel._identityPermissionBox.click();
   return promise;
 }
 
-function closeIdentityPopup() {
+function closePermissionPopup() {
   let promise = BrowserTestUtils.waitForEvent(
-    gIdentityHandler._identityPopup,
+    gPermissionPanel._permissionPopup,
     "popuphidden"
   );
-  gIdentityHandler._identityPopup.hidePopup();
+  gPermissionPanel._permissionPopup.hidePopup();
   return promise;
 }
 
@@ -56,12 +56,12 @@ add_task(async function check_blocked_popup_indicator() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
 
   // Blocked popup indicator should not exist in the identity popup when there are no blocked popups.
-  await openIdentityPopup();
+  await openPermissionPopup();
   Assert.equal(document.getElementById("blocked-popup-indicator-item"), null);
-  await closeIdentityPopup();
+  await closePermissionPopup();
 
   // Blocked popup notification icon should be hidden in the identity block when no popups are blocked.
-  let icon = gIdentityHandler._identityBox.querySelector(
+  let icon = gPermissionPanel._identityPermissionBox.querySelector(
     ".blocked-permission-icon[data-permission-id='popup']"
   );
   Assert.equal(icon.hasAttribute("showing"), false);
@@ -77,18 +77,18 @@ add_task(async function check_blocked_popup_indicator() {
   );
 
   // Check if blocked popup indicator text is visible in the identity popup. It should be visible.
-  document.getElementById("identity-icon").click();
-  await openIdentityPopup();
+  document.getElementById("identity-permission-box").click();
+  await openPermissionPopup();
   await TestUtils.waitForCondition(
     () => document.getElementById("blocked-popup-indicator-item") !== null
   );
 
   // Check that the default state is correctly set to "Block".
-  let menulist = document.getElementById("identity-popup-popup-menulist");
+  let menulist = document.getElementById("permission-popup-menulist");
   Assert.equal(menulist.value, "0");
   Assert.equal(menulist.label, "Block");
 
-  await closeIdentityPopup();
+  await closePermissionPopup();
 
   // Check if blocked popup icon is visible in the identity block.
   Assert.equal(icon.getAttribute("showing"), "true");
@@ -118,7 +118,7 @@ add_task(async function check_popup_showing() {
   gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen);
 
   // Open identity popup and click on "Show blocked popups".
-  await openIdentityPopup();
+  await openPermissionPopup();
   let e = document.getElementById("blocked-popup-indicator-item");
   let text = e.getElementsByTagName("label")[0];
   text.click();
@@ -159,12 +159,12 @@ add_task(async function check_permission_state_change() {
   );
 
   // Open identity popup and change permission state to allow.
-  await openIdentityPopup();
-  let menulist = document.getElementById("identity-popup-popup-menulist");
+  await openPermissionPopup();
+  let menulist = document.getElementById("permission-popup-menulist");
   menulist.menupopup.openPopup(); // Open the allow/block menu
   let menuitem = menulist.getElementsByTagName("menuitem")[0];
   menuitem.click();
-  await closeIdentityPopup();
+  await closePermissionPopup();
 
   state = SitePermissions.getForPrincipal(PRINCIPAL, "popup", gBrowser).state;
   Assert.equal(state, SitePermissions.ALLOW);
@@ -198,12 +198,12 @@ add_task(async function check_permission_state_change() {
   gBrowser.removeTab(popup);
 
   // Open identity popup and change permission state to block.
-  await openIdentityPopup();
-  menulist = document.getElementById("identity-popup-popup-menulist");
+  await openPermissionPopup();
+  menulist = document.getElementById("permission-popup-menulist");
   menulist.menupopup.openPopup(); // Open the allow/block menu
   menuitem = menulist.getElementsByTagName("menuitem")[1];
   menuitem.click();
-  await closeIdentityPopup();
+  await closePermissionPopup();
 
   // Clicking on the "Block" menuitem should remove the permission object(same behavior as UNKNOWN state).
   // We have already confirmed that popups are blocked when the permission state is BLOCK.
@@ -222,19 +222,19 @@ add_task(async function check_explicit_default_permission() {
   // since SitePermissions.jsm considers setting default permissions to be removal.
   PermissionTestUtils.add(URI, "popup", Ci.nsIPermissionManager.DENY_ACTION);
 
-  await openIdentityPopup();
-  let menulist = document.getElementById("identity-popup-popup-menulist");
+  await openPermissionPopup();
+  let menulist = document.getElementById("permission-popup-menulist");
   Assert.equal(menulist.value, "0");
   Assert.equal(menulist.label, "Block");
-  await closeIdentityPopup();
+  await closePermissionPopup();
 
   PermissionTestUtils.add(URI, "popup", Services.perms.ALLOW_ACTION);
 
-  await openIdentityPopup();
-  menulist = document.getElementById("identity-popup-popup-menulist");
+  await openPermissionPopup();
+  menulist = document.getElementById("permission-popup-menulist");
   Assert.equal(menulist.value, "1");
   Assert.equal(menulist.label, "Allow");
-  await closeIdentityPopup();
+  await closePermissionPopup();
 
   PermissionTestUtils.remove(URI, "popup");
   gBrowser.removeTab(tab);
