@@ -134,13 +134,9 @@ add_task(async function() {
     ],
   });
 
-  const { BrowserTelemetryUtils } = ChromeUtils.import(
-    "resource://gre/modules/BrowserTelemetryUtils.jsm"
-  );
-
   // Make sure we actually record telemetry for our disqualifying origin
   // count.
-  BrowserTelemetryUtils.min_interval = 1;
+  BrowserUtils.min_interval = 1;
 
   let tabs = [];
 
@@ -188,7 +184,7 @@ add_task(async function() {
   Services.prefs.clearUserPref(PREF_QUALIFIED);
   Services.prefs.clearUserPref(PREF_LAST_QUALIFIED);
   Services.prefs.clearUserPref(PREF_LAST_DISQUALIFIED);
-  BrowserTelemetryUtils._checkedInitialExperimentQualification = false;
+  BrowserUtils._checkedInitialExperimentQualification = false;
 
   info("Open a new tab to trigger the origin count code again");
   tabs.push(await openTab(SITE_ORIGINS[0]));
@@ -209,5 +205,5 @@ add_task(async function() {
 
   // Clear the cached recording interval so it resets to the default
   // value on the next call.
-  BrowserTelemetryUtils.min_interval = null;
+  BrowserUtils.min_interval = null;
 });

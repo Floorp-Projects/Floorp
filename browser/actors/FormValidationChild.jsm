@@ -10,8 +10,8 @@
 
 var EXPORTED_SYMBOLS = ["FormValidationChild"];
 
-const { LayoutUtils } = ChromeUtils.import(
-  "resource://gre/modules/LayoutUtils.jsm"
+const { BrowserUtils } = ChromeUtils.import(
+  "resource://gre/modules/BrowserUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -154,7 +154,7 @@ class FormValidationChild extends JSWindowActorChild {
 
     panelData.message = this._validationMessage;
 
-    panelData.screenRect = LayoutUtils.getElementBoundingScreenRect(aElement);
+    panelData.screenRect = BrowserUtils.getElementBoundingScreenRect(aElement);
 
     // We want to show the popup at the middle of checkbox and radio buttons
     // and where the content begin for the other elements.

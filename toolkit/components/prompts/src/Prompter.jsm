@@ -8,6 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { objectToPropBag } = ChromeUtils.import(
+  "resource://gre/modules/BrowserUtils.jsm"
+).BrowserUtils;
 // This is redefined below, for strange and unfortunate reasons.
 var { PromptUtils } = ChromeUtils.import(
   "resource://gre/modules/SharedPromptUtils.jsm"
@@ -1201,7 +1204,7 @@ class ModalPrompter {
     if (!(taskResult instanceof Object)) {
       throw new Error("task must return object");
     }
-    return PromptUtils.objectToPropBag(taskResult);
+    return objectToPropBag(taskResult);
   }
 
   /*

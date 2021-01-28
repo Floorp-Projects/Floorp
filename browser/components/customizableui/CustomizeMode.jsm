@@ -52,8 +52,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUIUtils",
-  "resource:///modules/BrowserUIUtils.jsm"
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -791,7 +791,7 @@ CustomizeMode.prototype = {
     }
     if (!this.window.gReduceMotion) {
       let overflowButton = this.$("nav-bar-overflow-button");
-      BrowserUIUtils.setToolbarButtonHeightProperty(overflowButton).then(() => {
+      BrowserUtils.setToolbarButtonHeightProperty(overflowButton).then(() => {
         overflowButton.setAttribute("animate", "true");
         overflowButton.addEventListener("animationend", function onAnimationEnd(
           event

@@ -128,7 +128,6 @@ EXTRA_JS_MODULES += [
     "AboutNewTab.jsm",
     "AppUpdater.jsm",
     "AsyncTabSwitcher.jsm",
-    "BrowserUIUtils.jsm",
     "BrowserUsageTelemetry.jsm",
     "BrowserWindowTracker.jsm",
     "ContentCrashHandlers.jsm",
