@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NewTabPagePreloading: "resource:///modules/NewTabPagePreloading.jsm",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
@@ -5717,7 +5718,7 @@ var TabsProgressListener = {
         ) {
           if (recordLoadTelemetry) {
             TelemetryStopwatch.finish(histogram, aBrowser);
-            BrowserUtils.recordSiteOriginTelemetry(browserWindows());
+            BrowserTelemetryUtils.recordSiteOriginTelemetry(browserWindows());
           }
         }
       } else if (
