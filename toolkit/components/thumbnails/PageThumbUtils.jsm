@@ -344,7 +344,7 @@ var PageThumbUtils = {
   },
 
   shouldStoreContentThumbnail(aDocument, aDocShell) {
-    if (BrowserUtils.isToolbarVisible(aDocShell, "findbar")) {
+    if (BrowserUtils.isFindbarVisible(aDocShell)) {
       return false;
     }
 
