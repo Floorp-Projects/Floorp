@@ -42,8 +42,6 @@ const ICON_DATA =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABH0lEQVRYw2P8////f4YBBEwMAwxGHcBCUMX/91DGOSj/BpT/DkpzQChGBSjfBErLQsVZhmoI/L8LpRdD6X1QietQGhYy7FB5aAgwmkLpBKi4BZTPMThDgBGjHIDF+f9mKD0fKvGBRKNdoF7sgPL1saaJwZgGDkJ9vpZMn8PAHqg5G9FyifBgD4H/W9HyOWrU/f+DIzHhkoeZxxgzZEIAVtJ9RxX+Q6DAxCmP3byhXxkxshAs5odqbcioAY3UC1CBLyTGOTqAmsfAOWRCwBvqxV0oIUB2OQAzDy3/D+a6wB7q8mCU2vD/nw94GziYIQOtDRn9oXz+IZMGBKGMbCjNh9Ii+v8HR4uIAUeLiEEbb9twELaIRlqrmHG0bzjiHQAA1LVfww8jwM4AAAAASUVORK5CYII=";
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-let makeURI = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm", {})
-  .BrowserUtils.makeURI;
 
 function clearAllImageCaches() {
   let tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(
@@ -244,8 +242,8 @@ function assertIconIsData(item) {
 }
 
 async function doTest(aTestPage, aExpectedCookies, aFaviconURL) {
-  let firstPageURI = makeURI(TEST_SITE_ONE + aTestPage);
-  let secondPageURI = makeURI(TEST_SITE_TWO + aTestPage);
+  let firstPageURI = Services.io.newURI(TEST_SITE_ONE + aTestPage);
+  let secondPageURI = Services.io.newURI(TEST_SITE_TWO + aTestPage);
 
   // Start to observe the event of that favicon has been fully loaded.
   let promiseFaviconLoaded = waitOnFaviconLoaded(aFaviconURL);
