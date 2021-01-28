@@ -24,11 +24,6 @@ XPCOMUtils.defineLazyServiceGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "CrashSubmit",
   "resource://gre/modules/CrashSubmit.jsm"
 );
@@ -46,6 +41,37 @@ const {
   PLUGIN_VULNERABLE_UPDATABLE,
   PLUGIN_CLICK_TO_PLAY_QUIET,
 } = Ci.nsIObjectLoadingContent;
+
+/**
+ * Map the plugin's name to a filtered version more suitable for UI.
+ *
+ * N.B. This should be completely dead code at this point.
+ *
+ * @param aName The full-length name string of the plugin.
+ * @return the simplified name string.
+ */
+function makeNicePluginName(aName) {
+  if (aName == "Shockwave Flash") {
+    return "Adobe Flash";
+  }
+  // Regex checks if aName begins with "Java" + non-letter char
+  if (/^Java\W/.test(aName)) {
+    return "Java";
+  }
+
+  // Clean up the plugin name by stripping off parenthetical clauses,
+  // trailing version numbers or "plugin".
+  // EG, "Foo Bar (Linux) Plugin 1.23_02" --> "Foo Bar"
+  // Do this by first stripping the numbers, etc. off the end, and then
+  // removing "Plugin" (and then trimming to get rid of any whitespace).
+  // (Otherwise, something like "Java(TM) Plug-in 1.7.0_07" gets mangled)
+  let newName = aName
+    .replace(/\(.*?\)/g, "")
+    .replace(/[\s\d\.\-\_\(\)]+$/, "")
+    .replace(/\bplug-?in\b/i, "")
+    .trim();
+  return newName;
+}
 
 const PluginManager = {
   _initialized: false,
@@ -129,7 +155,7 @@ const PluginManager = {
 
     let runID = propertyBag.getPropertyAsUint32("runID");
     let uglyPluginName = propertyBag.getPropertyAsAString("pluginName");
-    let pluginName = BrowserUtils.makeNicePluginName(uglyPluginName);
+    let pluginName = makeNicePluginName(uglyPluginName);
     let pluginDumpID = propertyBag.getPropertyAsAString("pluginDumpID");
 
     let state;
