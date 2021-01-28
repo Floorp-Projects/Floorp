@@ -99,8 +99,6 @@ const SEARCH_FILTERS = [
 ];
 
 const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
-const REMOTE_SETTING_MIGRATION_ID_PREF =
-  "browser.topsites.migratedToRemoteSetting.id";
 const DEFAULT_SITES_POLICY_PREF =
   "browser.newtabpage.activity-stream.default.sites";
 const DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH = "browser.topsites.experiment.";
@@ -200,21 +198,7 @@ this.TopSitesFeed = class TopSitesFeed {
         this.store.getState().Prefs.values[DEFAULT_SITES_PREF],
         { isStartup }
       );
-      Services.prefs.clearUserPref(REMOTE_SETTING_MIGRATION_ID_PREF);
       return;
-    }
-
-    // Unpin old search shortcuts.
-    const remoteSettingMigrationID = 1;
-    if (
-      Services.prefs.getIntPref(REMOTE_SETTING_MIGRATION_ID_PREF, 0) <
-      remoteSettingMigrationID
-    ) {
-      this.unpinAllSearchShortcuts();
-      Services.prefs.setIntPref(
-        REMOTE_SETTING_MIGRATION_ID_PREF,
-        remoteSettingMigrationID
-      );
     }
 
     // Try using default top sites from enterprise policies. The pref is locked
@@ -559,6 +543,10 @@ this.TopSitesFeed = class TopSitesFeed {
           continue;
         }
         sponsored[link.sponsored_position - 1] = link;
+
+        // Unpin search shortcut if present for the sponsored link to be shown
+        // instead.
+        this._unpinSearchShortcut(link.hostname);
       } else {
         notBlockedDefaultSites.push(
           searchShortcutsExperiment
@@ -965,6 +953,30 @@ this.TopSitesFeed = class TopSitesFeed {
       }
     }
     this.pinnedCache.expire();
+  }
+
+  _unpinSearchShortcut(vendor) {
+    for (let pinnedLink of NewTabUtils.pinnedLinks.links) {
+      if (
+        pinnedLink &&
+        pinnedLink.searchTopSite &&
+        shortURL(pinnedLink) === vendor
+      ) {
+        NewTabUtils.pinnedLinks.unpin(pinnedLink);
+        this.pinnedCache.expire();
+
+        const prevInsertedShortcuts = this.store
+          .getState()
+          .Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF].split(",");
+        this.store.dispatch(
+          ac.SetPref(
+            SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
+            prevInsertedShortcuts.filter(s => s !== vendor).join(",")
+          )
+        );
+        break;
+      }
+    }
   }
 
   /**
