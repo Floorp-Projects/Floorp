@@ -451,8 +451,6 @@ static bool InstantiateScriptStencils(JSContext* cx,
         return false;
       }
 
-      // NOTE: Inner functions can be marked `allowRelazify` after merging
-      // a stencil for delazification into the top-level stencil.
       if (scriptStencil.allowRelazify()) {
         MOZ_ASSERT(script->isRelazifiable());
         script->setAllowRelazify();
