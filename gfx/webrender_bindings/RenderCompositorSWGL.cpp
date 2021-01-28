@@ -124,15 +124,12 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
                                       rect.size.width, rect.size.height));
   }
 
-  RefPtr<DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(
-      BackendType::SKIA, mMappedData, bounds.Size().ToUnknownSize(),
-      mMappedStride, SurfaceFormat::B8G8R8A8, false);
-
   LayoutDeviceIntRegion clear;
   clear.Sub(mRegion, opaque);
   for (auto iter = clear.RectIter(); !iter.Done(); iter.Next()) {
-    dt->ClearRect(
-        IntRectToRect((iter.Get() - bounds.TopLeft()).ToUnknownRect()));
+    const auto& rect = iter.Get();
+    wr_swgl_clear_color_rect(mContext, 0, rect.x, rect.y, rect.width,
+                             rect.height, 0, 0, 0, 0);
   }
 
   return true;

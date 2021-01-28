@@ -15,8 +15,11 @@ macro_rules! debug {
 }
 
 #[repr(C)]
-struct LockedTexture { _private: [u8; 0] }
+struct LockedTexture {
+    _private: [u8; 0],
+}
 
+#[allow(dead_code)]
 extern "C" {
     fn ActiveTexture(texture: GLenum);
     fn BindTexture(target: GLenum, texture: GLuint);
@@ -62,11 +65,7 @@ extern "C" {
         level: GLint,
     );
     fn CheckFramebufferStatus(target: GLenum) -> GLenum;
-    fn InvalidateFramebuffer(
-        target: GLenum,
-        num_attachments: GLsizei,
-        attachments: *const GLenum,
-    );
+    fn InvalidateFramebuffer(target: GLenum, num_attachments: GLsizei, attachments: *const GLenum);
     fn TexStorage3D(
         target: GLenum,
         levels: GLint,
@@ -186,6 +185,31 @@ extern "C" {
     fn ClearColor(r: GLfloat, g: GLfloat, b: GLfloat, a: GLfloat);
     fn ClearDepth(depth: GLdouble);
     fn Clear(mask: GLbitfield);
+    fn ClearTexSubImage(
+        target: GLenum,
+        level: GLint,
+        xoffset: GLint,
+        yoffset: GLint,
+        zoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        depth: GLsizei,
+        format: GLenum,
+        ty: GLenum,
+        data: *const c_void,
+    );
+    fn ClearTexImage(target: GLenum, level: GLint, format: GLenum, ty: GLenum, data: *const c_void);
+    fn ClearColorRect(
+        fbo: GLuint,
+        xoffset: GLint,
+        yoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        r: GLfloat,
+        g: GLfloat,
+        b: GLfloat,
+        a: GLfloat,
+    );
     fn PixelStorei(name: GLenum, param: GLint);
     fn ReadPixels(
         x: GLint,
@@ -389,8 +413,31 @@ impl Context {
             let mut width: i32 = 0;
             let mut height: i32 = 0;
             let mut stride: i32 = 0;
-            let data_ptr = GetColorBuffer(fbo, flush as GLboolean, &mut width, &mut height, &mut stride);
+            let data_ptr = GetColorBuffer(
+                fbo,
+                flush as GLboolean,
+                &mut width,
+                &mut height,
+                &mut stride,
+            );
             (data_ptr, width, height, stride)
+        }
+    }
+
+    pub fn clear_color_rect(
+        &self,
+        fbo: GLuint,
+        xoffset: GLint,
+        yoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        r: f32,
+        g: f32,
+        b: f32,
+        a: f32,
+    ) {
+        unsafe {
+            ClearColorRect(fbo, xoffset, yoffset, width, height, r, g, b, a);
         }
     }
 
@@ -555,8 +602,8 @@ impl Gl for Context {
             let u = str::from_utf8(s).unwrap();
             const PREFIX: &'static str = "// shader: ";
             if let Some(start) = u.find(PREFIX) {
-                if let Some(end) = u[start ..].find('\n') {
-                    let name = u[start + PREFIX.len() .. start + end].trim();
+                if let Some(end) = u[start..].find('\n') {
+                    let name = u[start + PREFIX.len()..start + end].trim();
                     debug!("shader name: {}", name);
                     unsafe {
                         let c_string = CString::new(name).unwrap();
@@ -1548,13 +1595,7 @@ impl Gl for Context {
 
     fn draw_arrays(&self, mode: GLenum, first: GLint, count: GLsizei) {
         unsafe {
-            DrawElementsInstanced(
-                mode,
-                count,
-                NONE,
-                first as GLintptr,
-                1,
-            );
+            DrawElementsInstanced(mode, count, NONE, first as GLintptr, 1);
         }
     }
 
@@ -1566,13 +1607,7 @@ impl Gl for Context {
         primcount: GLsizei,
     ) {
         unsafe {
-            DrawElementsInstanced(
-                mode,
-                count,
-                NONE,
-                first as GLintptr,
-                primcount,
-            );
+            DrawElementsInstanced(mode, count, NONE, first as GLintptr, primcount);
         }
     }
 
@@ -1589,13 +1624,7 @@ impl Gl for Context {
         );
         //panic!();
         unsafe {
-            DrawElementsInstanced(
-                mode,
-                count,
-                element_type,
-                indices_offset as GLintptr,
-                1,
-            );
+            DrawElementsInstanced(mode, count, element_type, indices_offset as GLintptr, 1);
         }
     }
 
@@ -2477,14 +2506,17 @@ impl LockedResource {
 
 impl Clone for LockedResource {
     fn clone(&self) -> Self {
-        unsafe { LockResource(self.0); }
+        unsafe {
+            LockResource(self.0);
+        }
         LockedResource(self.0)
     }
 }
 
 impl Drop for LockedResource {
     fn drop(&mut self) {
-        unsafe { UnlockResource(self.0); }
+        unsafe {
+            UnlockResource(self.0);
+        }
     }
 }
-
