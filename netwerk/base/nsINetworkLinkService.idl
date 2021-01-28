@@ -22,6 +22,7 @@ interface nsINetworkLinkService : nsISupports
   const unsigned long LINK_TYPE_2G = 5;
   const unsigned long LINK_TYPE_3G = 6;
   const unsigned long LINK_TYPE_4G = 7;
+  const unsigned long LINK_TYPE_5G = 8;
 
   /**
    * This is set to true when the system is believed to have a usable
@@ -137,4 +138,7 @@ interface nsINetworkLinkService : nsISupports
 
 /** A '4G' mobile connection (e.g. LTE, UMB) */
 #define NS_NETWORK_LINK_TYPE_4G "4g"
+
+/** A '5G' mobile connection */
+#define NS_NETWORK_LINK_TYPE_5G "5g"
 %}
