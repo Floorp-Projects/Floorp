@@ -1,7 +1,8 @@
 diff --git a/mfbt/double-conversion/double-conversion/strtod.cc b/mfbt/double-conversion/double-conversion/strtod.cc
+index 850bcdaac4ad1..6ed686c8d9bfb 100644
 --- a/mfbt/double-conversion/double-conversion/strtod.cc
 +++ b/mfbt/double-conversion/double-conversion/strtod.cc
-@@ -441,32 +441,34 @@ static bool ComputeGuess(Vector<const ch
+@@ -447,32 +447,34 @@ static bool ComputeGuess(Vector<const char> trimmed, int exponent,
      return true;
    }
    if (*guess == Double::Infinity()) {
