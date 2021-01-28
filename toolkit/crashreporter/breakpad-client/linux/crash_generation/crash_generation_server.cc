@@ -271,11 +271,11 @@ CrashGenerationServer::ClientEvent(short revents)
     return true;
 
 #if defined(MOZ_OXIDIZED_BREAKPAD)
-  if (!write_minidump_linux_with_context(minidump_filename.c_str(),
-                                      crashing_pid, crash_context)) {
-    close(signal_fd);
-    return true;
-  }
+  // Ignoring the return-value here for now.
+  // The function always creates an empty minidump file even in case of an error.
+  // So we'll report that as well via the callback-functions.
+  write_minidump_linux_with_context(minidump_filename.c_str(),
+                                    crashing_pid, crash_context);
 #else
   if (!google_breakpad::WriteMinidump(minidump_filename.c_str(),
                                       crashing_pid, crash_context,

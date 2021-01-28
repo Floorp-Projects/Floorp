@@ -1,4 +1,6 @@
 // use libc::c_void;
+#[cfg(target_os = "android")]
+use crate::android::late_process_mappings;
 use crate::auxv_reader::{AuxvType, ProcfsAuxvIter};
 use crate::maps_reader::{MappingInfo, MappingInfoParsingResult, DELETED_SUFFIX};
 use crate::minidump_format::MDGUID;
@@ -165,16 +167,17 @@ impl LinuxPtraceDumper {
     fn enumerate_threads(&mut self) -> Result<()> {
         let task_path = path::PathBuf::from(format!("/proc/{}/task", self.pid));
         if task_path.is_dir() {
-            for entry in std::fs::read_dir(task_path)? {
-                let name = entry?
-                    .file_name()
-                    .to_str()
-                    .ok_or("Unparsable filename")?
-                    .parse::<Pid>();
-                if let Ok(tid) = name {
-                    self.threads.push(tid);
-                }
-            }
+            std::fs::read_dir(task_path)?
+                .into_iter()
+                .filter_map(|entry| entry.ok()) // Filter out bad entries
+                .filter_map(|entry| {
+                    entry
+                        .file_name() // Parse name to Pid, filter out those that are unparsable
+                        .to_str()
+                        .and_then(|name| name.parse::<Pid>().ok())
+                })
+                .map(|tid| self.threads.push(tid)) // Push the resulting Pids
+                .count(); // Execute iterator
         }
         Ok(())
     }
@@ -184,11 +187,16 @@ impl LinuxPtraceDumper {
         let auxv_file = std::fs::File::open(auxv_path)?;
         let input = BufReader::new(auxv_file);
         let reader = ProcfsAuxvIter::new(input);
-        for item in reader {
-            let item = item?;
-            self.auxv.insert(item.key, item.value);
+        self.auxv = reader
+            .filter_map(Result::ok)
+            .map(|x| (x.key, x.value))
+            .collect();
+
+        if self.auxv.is_empty() {
+            Err("Found no auxv entry".into())
+        } else {
+            Ok(())
         }
-        Ok(())
     }
 
     fn enumerate_mappings(&mut self) -> Result<()> {
@@ -205,10 +213,10 @@ impl LinuxPtraceDumper {
         // actual entry point to find the mapping.
         let entry_point_loc = *self.auxv.get(&libc::AT_ENTRY).unwrap_or(&0);
 
-        let auxv_path = path::PathBuf::from(format!("/proc/{}/maps", self.pid));
-        let auxv_file = std::fs::File::open(auxv_path)?;
+        let maps_path = path::PathBuf::from(format!("/proc/{}/maps", self.pid));
+        let maps_file = std::fs::File::open(maps_path)?;
 
-        for line in BufReader::new(auxv_file).lines() {
+        for line in BufReader::new(maps_file).lines() {
             // /proc/<pid>/maps looks like this
             // 7fe34a863000-7fe34a864000 rw-p 00009000 00:31 4746408                    /usr/lib64/libogg.so.0.8.4
             let line = line?;
@@ -454,29 +462,23 @@ impl LinuxPtraceDumper {
                     }
                     if section.sh_flags & u64::from(elf::section_header::SHF_ALLOC) != 0 {
                         if section.sh_flags & u64::from(elf::section_header::SHF_EXECINSTR) != 0 {
-                            unsafe {
-                                let ptr = mem_slice.as_ptr().offset(section.sh_offset.try_into()?);
-                                let text_section = std::slice::from_raw_parts(
-                                    ptr as *const u8,
-                                    section.sh_size.try_into()?,
-                                );
-
-                                // Only provide mem::size_of(MDGUID) bytes to keep identifiers produced by this
-                                // function backwards-compatible.
-                                let max_len = std::cmp::min(text_section.len(), 4096);
-                                let mut result = vec![0u8; std::mem::size_of::<MDGUID>()];
-                                let mut offset = 0;
-                                while offset < max_len {
-                                    for idx in 0..std::mem::size_of::<MDGUID>() {
-                                        if offset + idx >= text_section.len() {
-                                            break;
-                                        }
-                                        result[idx] ^= text_section[offset + idx];
+                            let text_section = &mem_slice[section.sh_offset as usize..]
+                                [..section.sh_size as usize];
+                            // Only provide mem::size_of(MDGUID) bytes to keep identifiers produced by this
+                            // function backwards-compatible.
+                            let max_len = std::cmp::min(text_section.len(), 4096);
+                            let mut result = vec![0u8; std::mem::size_of::<MDGUID>()];
+                            let mut offset = 0;
+                            while offset < max_len {
+                                for idx in 0..std::mem::size_of::<MDGUID>() {
+                                    if offset + idx >= text_section.len() {
+                                        break;
                                     }
-                                    offset += std::mem::size_of::<MDGUID>();
+                                    result[idx] ^= text_section[offset + idx];
                                 }
-                                return Ok(result);
+                                offset += std::mem::size_of::<MDGUID>();
                             }
+                            return Ok(result);
                         }
                     }
                 }
