@@ -290,7 +290,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner() {
 
 NS_IMPL_ISUPPORTS(nsPluginInstanceOwner, nsIPluginInstanceOwner,
                   nsIDOMEventListener, nsIPrivacyTransitionObserver,
-                  nsIKeyEventInPluginCallback, nsISupportsWeakReference)
+                  nsISupportsWeakReference)
 
 nsresult nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance* aInstance) {
   NS_ASSERTION(!mInstance || !aInstance,
@@ -699,23 +699,6 @@ bool nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted) {
 }
 
 #endif  // #ifdef XP_WIN
-
-void nsPluginInstanceOwner::HandledWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData, bool aIsConsumed) {
-  if (NS_WARN_IF(!mInstance)) {
-    return;
-  }
-  DebugOnly<nsresult> rv =
-      mInstance->HandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HandledWindowedPluginKeyEvent fail");
-}
-
-void nsPluginInstanceOwner::OnWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData) {
-  // Notifies the plugin process of the key event being not consumed by us.
-  HandledWindowedPluginKeyEvent(aKeyEventData, false);
-  return;
-}
 
 NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(int32_t eventModel) {
 #ifdef XP_MACOSX

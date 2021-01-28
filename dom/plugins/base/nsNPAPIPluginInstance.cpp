@@ -681,20 +681,6 @@ nsresult nsNPAPIPluginInstance::GetScrollCaptureContainer(
 }
 #endif
 
-nsresult nsNPAPIPluginInstance::HandledWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData, bool aIsConsumed) {
-  if (NS_WARN_IF(!mPlugin)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  PluginLibrary* library = mPlugin->GetLibrary();
-  if (NS_WARN_IF(!library)) {
-    return NS_ERROR_FAILURE;
-  }
-  return library->HandledWindowedPluginKeyEvent(&mNPP, aKeyEventData,
-                                                aIsConsumed);
-}
-
 void nsNPAPIPluginInstance::DidComposite() {
   if (RUNNING != mRunning) return;
 

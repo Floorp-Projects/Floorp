@@ -53,7 +53,6 @@ EXPORTS.mozilla.widget += [
     "WindowsSMTCProvider.h",
     "WinMessages.h",
     "WinModifierKeyState.h",
-    "WinNativeEventData.h",
 ]
 
 UNIFIED_SOURCES += [

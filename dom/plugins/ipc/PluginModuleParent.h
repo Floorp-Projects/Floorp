@@ -211,10 +211,6 @@ class PluginModuleParent : public PPluginModuleParent,
       NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;
 #endif
 
-  virtual nsresult HandledWindowedPluginKeyEvent(
-      NPP aInstance, const mozilla::NativeEventData& aNativeKeyData,
-      bool aIsConsumed) override;
-
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs,
                                  NPError* error) override;

@@ -283,12 +283,6 @@ class PluginInstanceParent : public PPluginInstanceParent {
                                                    int32_t* aLength);
   mozilla::ipc::IPCResult RecvRequestCommitOrCancel(const bool& aCommitted);
 
-  // for reserved shortcut key handling with windowed plugin on Windows
-  nsresult HandledWindowedPluginKeyEvent(
-      const mozilla::NativeEventData& aKeyEventData, bool aIsConsumed);
-  mozilla::ipc::IPCResult RecvOnWindowedPluginKeyEvent(
-      const mozilla::NativeEventData& aKeyEventData);
-
  private:
   // Create an appropriate platform surface for a background of size
   // |aSize|.  Return true if successful.

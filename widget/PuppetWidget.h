@@ -20,7 +20,6 @@
 #include "nsBaseScreen.h"
 #include "nsBaseWidget.h"
 #include "nsCOMArray.h"
-#include "nsIKeyEventInPluginCallback.h"
 #include "nsIScreenManager.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
@@ -284,13 +283,6 @@ class PuppetWidget : public nsBaseWidget,
 
   virtual bool HasPendingInputEvent() override;
 
-  void HandledWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
-                                     bool aIsConsumed);
-
-  virtual nsresult OnWindowedPluginKeyEvent(
-      const NativeEventData& aKeyEventData,
-      nsIKeyEventInPluginCallback* aCallback) override;
-
   virtual void LookUpDictionary(
       const nsAString& aText,
       const nsTArray<mozilla::FontRange>& aFontRangeArray,
@@ -375,8 +367,6 @@ class PuppetWidget : public nsBaseWidget,
 
   ScreenIntMargin mSafeAreaInsets;
 
-  nsCOMArray<nsIKeyEventInPluginCallback> mKeyEventInPluginCallbacks;
-
   RefPtr<TextEventDispatcherListener> mNativeTextEventDispatcherListener;
 
  protected:
@@ -389,9 +379,9 @@ class PuppetWidget : public nsBaseWidget,
   // composition may have already been committed in the main process.  In such
   // case, this will receive remaining composition events for the old
   // composition even after requesting to commit/cancel the old composition
-  // but the TextComposition for the old composition has already been destroyed.
-  // So, until this meets new eCompositionStart, following composition events
-  // should be ignored if this is set to true.
+  // but the TextComposition for the old composition has already been
+  // destroyed. So, until this meets new eCompositionStart, following
+  // composition events should be ignored if this is set to true.
   bool mIgnoreCompositionEvents;
 };
 

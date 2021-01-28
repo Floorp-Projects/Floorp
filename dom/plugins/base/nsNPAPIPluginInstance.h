@@ -127,8 +127,6 @@ class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
   nsresult GetScrollCaptureContainer(
       mozilla::layers::ImageContainer** aContainer);
 #endif
-  nsresult HandledWindowedPluginKeyEvent(
-      const mozilla::NativeEventData& aKeyEventData, bool aIsConsumed);
   nsPluginInstanceOwner* GetOwner();
   void SetOwner(nsPluginInstanceOwner* aOwner);
   void DidComposite();

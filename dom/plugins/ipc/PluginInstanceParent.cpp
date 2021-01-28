@@ -2279,28 +2279,6 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvRequestCommitOrCancel(
   return IPC_OK();
 }
 
-nsresult PluginInstanceParent::HandledWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData, bool aIsConsumed) {
-  if (NS_WARN_IF(
-          !SendHandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed))) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-mozilla::ipc::IPCResult PluginInstanceParent::RecvOnWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData) {
-  nsPluginInstanceOwner* owner = GetOwner();
-  if (NS_WARN_IF(!owner)) {
-    // Notifies the plugin process of the key event being not consumed
-    // by us.
-    HandledWindowedPluginKeyEvent(aKeyEventData, false);
-    return IPC_OK();
-  }
-  owner->OnWindowedPluginKeyEvent(aKeyEventData);
-  return IPC_OK();
-}
-
 void PluginInstanceParent::RecordDrawingModel() {
   int mode = -1;
   switch (mWindowType) {

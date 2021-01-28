@@ -135,7 +135,6 @@ EXPORTS += [
     "nsBaseScreen.h",
     "nsBaseWidget.h",
     "nsIDeviceContextSpec.h",
-    "nsIKeyEventInPluginCallback.h",
     "nsIPluginWidget.h",
     "nsIPrintDialogService.h",
     "nsIRollupListener.h",
