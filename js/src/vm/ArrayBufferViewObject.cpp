@@ -237,7 +237,7 @@ JS_FRIEND_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
   return buffer;
 }
 
-JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
+JS_FRIEND_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
   obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
     return 0;
@@ -245,10 +245,10 @@ JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
   BufferSize length = obj->is<DataViewObject>()
                           ? obj->as<DataViewObject>().byteLength()
                           : obj->as<TypedArrayObject>().byteLength();
-  return length.deprecatedGetUint32();
+  return length.get();
 }
 
-JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
+JS_FRIEND_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
     return 0;
@@ -256,7 +256,7 @@ JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   BufferSize offset = obj->is<DataViewObject>()
                           ? obj->as<DataViewObject>().byteOffset()
                           : obj->as<TypedArrayObject>().byteOffset();
-  return offset.deprecatedGetUint32();
+  return offset.get();
 }
 
 JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,
