@@ -108,8 +108,8 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
     TRR_DISABLED_FLAG = 10,           // the DISABLE_TRR flag was set
     TRR_TIMEOUT = 11,                 // the TRR channel timed out
     TRR_CHANNEL_DNS_FAIL = 12,        // DoH server name failed to resolve
-    TRR_IS_OFFLINE = 13,     // The browser is offline or lacks connectivity
-    TRR_NOT_CONFIRMED = 14,  // TRR confirmation is not done yet
+    TRR_IS_OFFLINE = 13,              // The browser is offline/no interfaces up
+    TRR_NOT_CONFIRMED = 14,           // TRR confirmation is not done yet
     TRR_DID_NOT_MAKE_QUERY = 15,  // TrrLookup exited without doing a TRR query
     TRR_UNKNOWN_CHANNEL_FAILURE = 16,  // unknown channel failure reason
     TRR_HOST_BLOCKED_TEMPORARY = 17,   // host blocklisted
@@ -124,6 +124,7 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
     TRR_EXCLUDED = 26,             // ExcludedFromTRR
     TRR_SERVER_RESPONSE_ERR = 27,  // Server responded with non-200 code
     TRR_RCODE_FAIL = 28,           // DNS response contains a non-NOERROR rcode
+    TRR_NO_CONNECTIVITY = 29,      // Not confirmed because of no connectivity
   };
 
   // Records the first reason that caused TRR to be skipped or to fail.
