@@ -390,7 +390,7 @@ static bool ExecuteInExtensibleLexicalEnvironment(JSContext* cx,
 
   RootedScript script(cx, scriptArg);
   if (script->realm() != cx->realm()) {
-    script = CloneGlobalScript(cx, ScopeKind::NonSyntactic, script);
+    script = CloneGlobalScript(cx, script);
     if (!script) {
       return false;
     }

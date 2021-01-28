@@ -2430,7 +2430,9 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    if (!JS_ExecuteScript(cx, envChain, script, args.rval())) {
+    if (!(envChain.empty()
+              ? JS_ExecuteScript(cx, script, args.rval())
+              : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
       if (catchTermination && !JS_IsExceptionPending(cx)) {
         JSAutoRealm ar1(cx, callerGlobal);
         JSString* str = JS_NewStringCopyZ(cx, "terminated");

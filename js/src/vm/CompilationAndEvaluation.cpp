@@ -320,9 +320,17 @@ class FunctionCompiler {
 
     RootedObject enclosingEnv(cx_);
     RootedScope enclosingScope(cx_);
-    if (!CreateNonSyntacticEnvironmentChain(cx_, envChain, &enclosingEnv,
-                                            &enclosingScope)) {
-      return nullptr;
+    if (envChain.empty()) {
+      // A compiled function has a burned-in environment chain, so if no exotic
+      // environment was requested, we can use the global lexical environment
+      // directly and not need to worry about any potential non-syntactic scope.
+      enclosingEnv.set(&cx_->global()->lexicalEnvironment());
+      enclosingScope.set(&cx_->global()->emptyGlobalScope());
+    } else {
+      if (!CreateNonSyntacticEnvironmentChain(cx_, envChain, &enclosingEnv,
+                                              &enclosingScope)) {
+        return nullptr;
+      }
     }
 
     cx_->check(enclosingEnv);
@@ -418,25 +426,20 @@ MOZ_NEVER_INLINE static bool ExecuteScript(JSContext* cx, HandleObject envChain,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(envChain, script);
-  MOZ_ASSERT_IF(!IsGlobalLexicalEnvironment(envChain),
-                script->hasNonSyntacticScope());
+
+  if (!IsGlobalLexicalEnvironment(envChain)) {
+    MOZ_RELEASE_ASSERT(script->hasNonSyntacticScope());
+  }
+
   return Execute(cx, script, envChain, rval);
 }
 
 static bool ExecuteScript(JSContext* cx, HandleObjectVector envChain,
-                          HandleScript scriptArg, MutableHandleValue rval) {
+                          HandleScript script, MutableHandleValue rval) {
   RootedObject env(cx);
   RootedScope dummy(cx);
   if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &dummy)) {
     return false;
-  }
-
-  RootedScript script(cx, scriptArg);
-  if (!script->hasNonSyntacticScope() && !IsGlobalLexicalEnvironment(env)) {
-    script = CloneGlobalScript(cx, ScopeKind::NonSyntactic, script);
-    if (!script) {
-      return false;
-    }
   }
 
   return ExecuteScript(cx, env, script, rval);
@@ -475,7 +478,7 @@ JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
   RootedScript script(cx, scriptArg);
   RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
   if (script->realm() != cx->realm()) {
-    script = CloneGlobalScript(cx, ScopeKind::Global, script);
+    script = CloneGlobalScript(cx, script);
     if (!script) {
       return false;
     }
@@ -488,9 +491,10 @@ JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
                                              HandleScript scriptArg,
                                              JS::MutableHandleValue rval) {
   CHECK_THREAD(cx);
+  MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
   RootedScript script(cx, scriptArg);
   if (script->realm() != cx->realm()) {
-    script = CloneGlobalScript(cx, ScopeKind::NonSyntactic, script);
+    script = CloneGlobalScript(cx, script);
     if (!script) {
       return false;
     }

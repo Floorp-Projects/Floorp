@@ -4555,10 +4555,10 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
   return dst;
 }
 
-JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
-                                HandleScript src) {
-  MOZ_ASSERT(scopeKind == ScopeKind::Global ||
-             scopeKind == ScopeKind::NonSyntactic);
+JSScript* js::CloneGlobalScript(JSContext* cx, HandleScript src) {
+  MOZ_ASSERT(src->realm() != cx->realm(),
+             "js::CloneGlobalScript should only be used for for realm "
+             "mismatches. Otherwise just share the script directly.");
 
   Rooted<ScriptSourceObject*> sourceObject(cx, src->sourceObject());
   if (cx->compartment() != sourceObject->compartment()) {
@@ -4571,7 +4571,7 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
   MOZ_ASSERT(src->bodyScopeIndex() == GCThingIndex::outermostScopeIndex());
   Rooted<GCVector<Scope*>> scopes(cx, GCVector<Scope*>(cx));
   Rooted<GlobalScope*> original(cx, &src->bodyScope()->as<GlobalScope>());
-  GlobalScope* clone = GlobalScope::clone(cx, original, scopeKind);
+  GlobalScope* clone = GlobalScope::clone(cx, original);
   if (!clone || !scopes.append(clone)) {
     return nullptr;
   }
@@ -4597,6 +4597,10 @@ JSScript* js::CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
                                       HandleFunction fun, HandleScript src,
                                       Handle<ScriptSourceObject*> sourceObject,
                                       SourceExtent* maybeClassExtent) {
+  MOZ_ASSERT(src->realm() != cx->realm(),
+             "js::CloneScriptIntoFunction should only be used for for realm "
+             "mismatches. Otherwise just share the script directly.");
+
   // We are either delazifying a self-hosted lazy function or the function
   // should be in an inactive state.
   MOZ_ASSERT(fun->isIncomplete() || fun->hasSelfHostedLazyScript());
