@@ -11,11 +11,15 @@ PYTHON = sys.executable
 PYTHON_DLL = "c:/mozilla-build/python27/python27.dll"
 VENV_PATH = os.path.join(os.getcwd(), "build/venv")
 
+PYWIN32 = "pypiwin32==219"
+if sys.version_info > (3, 0):
+    PYWIN32 = "pywin32==300"
+
 config = {
     "log_name": "raptor",
     "installer_path": "installer.exe",
     "virtualenv_path": VENV_PATH,
-    "virtualenv_modules": ["pypiwin32==219", "raptor", "mozinstall"],
+    "virtualenv_modules": [PYWIN32, "raptor", "mozinstall"],
     "exes": {
         "python": PYTHON,
         "easy_install": [
