@@ -14,6 +14,8 @@ const ENGINE_NAME = "MozSearch";
 const ENGINE_DOMAIN = "example.com";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarProviderTabToSearch:
+    "resource:///modules/UrlbarProviderTabToSearch.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
@@ -190,6 +192,7 @@ add_task(async function onboarding_impressions() {
   });
   await impressions_test(true);
   await SpecialPowers.popPrefEnv();
+  delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
 });
 
 async function impressions_test(isOnboarding) {
@@ -225,14 +228,12 @@ async function impressions_test(isOnboarding) {
 
     await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
     let scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-    if (isOnboarding) {
-      TelemetryTestUtils.assertKeyedScalar(
-        scalars,
-        "urlbar.tips",
-        "tabtosearch_onboard-shown",
-        1
-      );
-    }
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      isOnboarding ? "tabtosearch_onboard-shown" : "tabtosearch-shown",
+      1
+    );
     TelemetryTestUtils.assertKeyedScalar(
       scalars,
       isOnboarding
@@ -261,14 +262,12 @@ async function impressions_test(isOnboarding) {
     // different onboarding result and now we increment
     // tabtosearch_onboard-shown.
     scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-    if (isOnboarding) {
-      TelemetryTestUtils.assertKeyedScalar(
-        scalars,
-        "urlbar.tips",
-        "tabtosearch_onboard-shown",
-        3
-      );
-    }
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      isOnboarding ? "tabtosearch_onboard-shown" : "tabtosearch-shown",
+      3
+    );
     TelemetryTestUtils.assertKeyedScalar(
       scalars,
       isOnboarding
@@ -303,14 +302,12 @@ async function impressions_test(isOnboarding) {
     await checkForTabToSearchResult(`${ENGINE_NAME}2`, isOnboarding);
     await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
     scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-    if (isOnboarding) {
-      TelemetryTestUtils.assertKeyedScalar(
-        scalars,
-        "urlbar.tips",
-        "tabtosearch_onboard-shown",
-        4
-      );
-    }
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      isOnboarding ? "tabtosearch_onboard-shown" : "tabtosearch-shown",
+      4
+    );
     TelemetryTestUtils.assertKeyedScalar(
       scalars,
       isOnboarding
@@ -349,14 +346,12 @@ async function impressions_test(isOnboarding) {
     await checkForTabToSearchResult(`${ENGINE_NAME}2`, isOnboarding);
     await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
     scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-    if (isOnboarding) {
-      TelemetryTestUtils.assertKeyedScalar(
-        scalars,
-        "urlbar.tips",
-        "tabtosearch_onboard-shown",
-        5
-      );
-    }
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      isOnboarding ? "tabtosearch_onboard-shown" : "tabtosearch-shown",
+      5
+    );
     TelemetryTestUtils.assertKeyedScalar(
       scalars,
       isOnboarding
@@ -376,14 +371,12 @@ async function impressions_test(isOnboarding) {
     await checkForTabToSearchResult(`${ENGINE_NAME}2`, isOnboarding);
     await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
     scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-    if (isOnboarding) {
-      TelemetryTestUtils.assertKeyedScalar(
-        scalars,
-        "urlbar.tips",
-        "tabtosearch_onboard-shown",
-        6
-      );
-    }
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      isOnboarding ? "tabtosearch_onboard-shown" : "tabtosearch-shown",
+      6
+    );
     TelemetryTestUtils.assertKeyedScalar(
       scalars,
       isOnboarding
@@ -422,14 +415,12 @@ async function impressions_test(isOnboarding) {
     await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
     // We clear the scalar this time.
     scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
-    if (isOnboarding) {
-      TelemetryTestUtils.assertKeyedScalar(
-        scalars,
-        "urlbar.tips",
-        "tabtosearch_onboard-shown",
-        8
-      );
-    }
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      isOnboarding ? "tabtosearch_onboard-shown" : "tabtosearch-shown",
+      8
+    );
     TelemetryTestUtils.assertKeyedScalar(
       scalars,
       isOnboarding
