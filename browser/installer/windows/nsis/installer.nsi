@@ -51,6 +51,7 @@ Var RegisterDefaultAgent
 ; Telemetry ping fields
 Var SetAsDefault
 Var HadOldInstall
+Var InstallExisted
 Var DefaultInstDir
 Var IntroPhaseStart
 Var OptionsPhaseStart
@@ -288,6 +289,8 @@ Section "-InstallStartCleanup"
     RmDir /r "$INSTDIR\distribution"
   ${EndIf}
 
+  Call CheckIfInstallExisted
+
   ; Delete the app exe if present to prevent launching the app while we are
   ; installing.
   ClearErrors
@@ -325,6 +328,9 @@ Section "-InstallStartCleanup"
   ${EndIf}
   ${If} ${FileExists} "$INSTDIR\update-settings.ini"
     Delete "$INSTDIR\update-settings.ini"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\installation_telemetry.json"
+    Delete "$INSTDIR\installation_telemetry.json"
   ${EndIf}
 
   ; Explictly remove empty webapprt dir in case it exists (bug 757978).
@@ -856,6 +862,8 @@ Section "-InstallEndCleanup"
     ${EndIf}
   ${EndIf}
 
+  Call WriteInstallationTelemetryData
+
   StrCpy $InstallResult "success"
 
   ; When we're using the GUI, .onGUIEnd sends the ping, but of course that isn't
@@ -1200,6 +1208,111 @@ Function SendPing
   ; Send the ping request. This call will block until a response is received,
   ; but we shouldn't have any windows still open, so we won't jank anything.
   nsJSON::Set /http ping
+FunctionEnd
+
+; Record data about this installation for use in in-app Telemetry pings.
+;
+; This should be run only after a successful installation, as it will
+; pull data from $INSTDIR\application.ini.
+;
+; Unlike the install ping or post-signing data, which is only sent/written by
+; the full installer when it is not run by the stub (since the stub has more
+; information), this will always be recorded by the full installer, to reduce
+; duplication and ensure consistency.
+;
+; Note: Should be assumed to clobber all $0, $1, etc registers.
+!define JSONSet `nsJSON::Set /tree installation_data`
+Function WriteInstallationTelemetryData
+  ${JSONSet} /value "{}"
+
+  ReadINIStr $0 "$INSTDIR\application.ini" "App" "Version"
+  ${JSONSet} "version" /value '"$0"'
+  ReadINIStr $0 "$INSTDIR\application.ini" "App" "BuildID"
+  ${JSONSet} "build_id" /value '"$0"'
+
+  ; Check for write access to HKLM, if successful then report this user
+  ; as an (elevated) admin.
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+                   "Write Test"
+  ${If} ${Errors}
+    StrCpy $1 "false"
+  ${Else}
+    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    StrCpy $1 "true"
+  ${EndIf}
+  ${JSONSet} "admin_user" /value $1
+
+  ; Note: This is not the same as $HadOldInstall, which looks for any install
+  ; in the registry. $InstallExisted is true only if this run of the installer
+  ; is replacing an existing main EXE.
+  ${If} $InstallExisted != ""
+    ${JSONSet} "install_existed" /value $InstallExisted
+  ${EndIf}
+
+  ; Check for top-level profile directory
+  ; Note: This is the same check used to set $ExistingProfile in stub.nsi
+  ${If} ${FileExists} "$LOCALAPPDATA\Mozilla\Firefox"
+    StrCpy $1 "true"
+  ${Else}
+    StrCpy $1 "false"
+  ${EndIf}
+  ${JSONSet} "profdir_existed" /value $1
+
+  ${GetParameters} $0
+  ${GetOptions} $0 "/LaunchedFromStub" $1
+  ${IfNot} ${Errors}
+    ${JSONSet} "installer_type" /value '"stub"'
+  ${Else}
+    ; Not launched from stub
+    ${JSONSet} "installer_type" /value '"full"'
+
+    ; Include additional info relevant when the full installer is run directly
+
+    ${If} ${Silent}
+      StrCpy $1 "true"
+    ${Else}
+      StrCpy $1 "false"
+    ${EndIf}
+    ${JSONSet} "silent" /value $1
+
+    ${GetOptions} $0 "/LaunchedFromMSI" $1
+    ${IfNot} ${Errors}
+      StrCpy $1 "true"
+    ${Else}
+      StrCpy $1 "false"
+    ${EndIf}
+    ${JSONSet} "from_msi" /value $1
+
+    ; NOTE: for non-admin basic installs, or reinstalls, $DefaultInstDir may not
+    ; reflect the actual default path.
+    ${If} $DefaultInstDir == $INSTDIR
+      StrCpy $1 "true"
+    ${Else}
+      StrCpy $1 "false"
+    ${EndIf}
+    ${JSONSet} "default_path" /value $1
+  ${EndIf}
+
+  ; Timestamp, to allow app to detect a new install.
+  ; As a 64-bit integer isn't valid JSON, quote as a string.
+  System::Call "kernel32::GetSystemTimeAsFileTime(*l.r0)"
+  ${JSONSet} "install_timestamp" /value '"$0"'
+
+  nsJSON::Serialize /tree installation_data /file /unicode "$INSTDIR\installation_telemetry.json"
+FunctionEnd
+!undef JSONSet
+
+; Set $InstallExisted (if not yet set) by checking for the EXE.
+; Should be called before trying to delete the EXE when install begins.
+Function CheckIfInstallExisted
+  ${If} $InstallExisted == ""
+    ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+      StrCpy $InstallExisted true
+    ${Else}
+      StrCpy $InstallExisted false
+    ${EndIf}
+  ${EndIf}
 FunctionEnd
 
 ################################################################################
@@ -1598,6 +1711,8 @@ Function preSummary
 FunctionEnd
 
 Function leaveSummary
+  Call CheckIfInstallExisted
+
   ; Try to delete the app executable and if we can't delete it try to find the
   ; app's message window and prompt the user to close the app. This allows
   ; running an instance that is located in another directory. If for whatever
@@ -1660,6 +1775,7 @@ Function .onInit
   ; Initialize the variables used for telemetry
   StrCpy $SetAsDefault true
   StrCpy $HadOldInstall false
+  StrCpy $InstallExisted ""
   StrCpy $DefaultInstDir $INSTDIR
   StrCpy $IntroPhaseStart 0
   StrCpy $OptionsPhaseStart 0
