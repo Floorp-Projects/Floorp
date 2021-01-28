@@ -17,11 +17,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "FinderIterator",
   "resource://gre/modules/FinderIterator.jsm"
 );
@@ -41,6 +36,8 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const kSelectionMaxLen = 150;
 const kMatchesCountLimitPref = "accessibility.typeaheadfind.matchesCountLimit";
+
+const activeFinderRoots = new WeakSet();
 
 function Finder(docShell) {
   this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(
@@ -492,11 +489,15 @@ Finder.prototype = {
     this.enableSelection();
     this.highlighter.highlight(false);
     this.iterator.reset();
-    BrowserUtils.trackToolbarVisibility(this._docShell, "findbar", false);
+    activeFinderRoots.delete(this._docShell.browsingContext.top);
   },
 
   onFindbarOpen() {
-    BrowserUtils.trackToolbarVisibility(this._docShell, "findbar", true);
+    activeFinderRoots.add(this._docShell.browsingContext.top);
+  },
+
+  isFindbarVisible(docShell) {
+    return activeFinderRoots.has(docShell.browsingContext.top);
   },
 
   onModalHighlightChange(useModalHighlight) {
