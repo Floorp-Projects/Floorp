@@ -142,7 +142,7 @@ jobs:
             tooltool-downloads: internal
         fetches:
             toolchain:
-                - win64-clang-cl
+                - win64-clang
                 - win64-dump-syms
     win64/opt:
         attributes:
@@ -165,7 +165,7 @@ jobs:
             tooltool-downloads: internal
         fetches:
             toolchain:
-                - win64-clang-cl
+                - win64-clang
                 - win64-dump-syms
     win64-aarch64/opt:
         attributes:
@@ -188,5 +188,5 @@ jobs:
             tooltool-downloads: internal
         fetches:
             toolchain:
-                - win64-clang-cl
+                - win64-clang
                 - win64-dump-syms

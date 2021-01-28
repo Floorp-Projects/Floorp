@@ -61,7 +61,7 @@ job-defaults:
         toolchain:
             by-worker-type:
                 .*-b-win2012:
-                    - win64-clang-cl
+                    - win64-clang
                     - win64-rust
                 default:
                     - linux64-clang

@@ -255,7 +255,7 @@ win64-plain/debug:
     run-on-projects: ['trunk']
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang
             - win64-rust
             - win64-node
             - win64-nasm
@@ -351,7 +351,7 @@ win64-plain/opt:
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang
             - win64-rust
             - win64-nasm
             - win64-node
@@ -716,7 +716,7 @@ win32-rusttests/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang
             - win64-rust
             - win64-cbindgen
             - win64-sccache
@@ -759,7 +759,7 @@ win32-rusttests/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang
             - win64-rust
             - win64-cbindgen
             - win64-sccache
@@ -799,7 +799,7 @@ win64-rusttests/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang
             - win64-rust
             - win64-cbindgen
             - win64-sccache
@@ -839,7 +839,7 @@ win64-rusttests/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang
             - win64-rust
             - win64-cbindgen
             - win64-sccache
@@ -885,7 +885,7 @@ win64-ccov/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang
             - win64-rust
             - win64-rust-size
             - win64-cbindgen
