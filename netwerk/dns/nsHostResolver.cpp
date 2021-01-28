@@ -1372,6 +1372,28 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
 
   MOZ_ASSERT(!rec->mResolving);
 
+  auto hasConnectivity = [this]() -> bool {
+    if (!mNCS) {
+      return true;
+    }
+    nsINetworkConnectivityService::ConnectivityState ipv4 = mNCS->GetIPv4();
+    nsINetworkConnectivityService::ConnectivityState ipv6 = mNCS->GetIPv6();
+
+    if (ipv4 == nsINetworkConnectivityService::OK ||
+        ipv6 == nsINetworkConnectivityService::OK) {
+      return true;
+    }
+
+    if (ipv4 == nsINetworkConnectivityService::UNKNOWN ||
+        ipv6 == nsINetworkConnectivityService::UNKNOWN) {
+      // One of the checks hasn't completed yet. Optimistically assume we'll
+      // have network connectivity.
+      return true;
+    }
+
+    return false;
+  };
+
   nsIRequest::TRRMode reqMode = rec->mEffectiveTRRMode;
   if (rec->mTrrServer.IsEmpty() &&
       (!gTRRService || !gTRRService->Enabled(reqMode))) {
@@ -1379,6 +1401,9 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
       // If we are in the NOT_CONFIRMED state _because_ we lack connectivity,
       // then we should report that the browser is offline instead.
       rec->RecordReason(nsHostRecord::TRR_IS_OFFLINE);
+    }
+    if (!hasConnectivity()) {
+      rec->RecordReason(nsHostRecord::TRR_NO_CONNECTIVITY);
     } else {
       rec->RecordReason(nsHostRecord::TRR_NOT_CONFIRMED);
     }
