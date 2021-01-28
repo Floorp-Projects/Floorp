@@ -50,7 +50,7 @@ bool RenderCompositorSWGL::BeginFrame() {
   // Set up a temporary region representing the entire window surface in case a
   // dirty region is not supplied.
   ClearMappedBuffer();
-  mDirtyRegion = LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetBufferSize());
+  mRegion = LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetBufferSize());
   wr_swgl_make_current(mContext);
   return true;
 }
@@ -60,10 +60,11 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
   // Request a new draw target to use from the widget...
   MOZ_ASSERT(!mDT);
   layers::BufferMode bufferMode = layers::BufferMode::BUFFERED;
-  mDT = mWidget->StartRemoteDrawingInRegion(mDirtyRegion, &bufferMode);
+  mDT = mWidget->StartRemoteDrawingInRegion(mRegion, &bufferMode);
   if (!mDT) {
     return false;
   }
+  mWidget->ClearBeforePaint(mDT, mRegion);
   // Attempt to lock the underlying buffer directly from the draw target.
   // Verify that the size at least matches what the widget claims and that
   // the format is BGRA8 as SWGL requires.
@@ -80,7 +81,7 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
     mDT->ReleaseBits(data);
     data = nullptr;
   }
-  LayoutDeviceIntRect bounds = mDirtyRegion.GetBounds();
+  LayoutDeviceIntRect bounds = mRegion.GetBounds();
   // If locking succeeded above, just use that.
   if (data) {
     mMappedData = data;
@@ -105,7 +106,7 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
     gfx::DataSourceSurface::MappedSurface map = {nullptr, 0};
     if (!mSurface || !mSurface->Map(gfx::DataSourceSurface::READ_WRITE, &map)) {
       // We failed mapping the data surface, so need to cancel the frame.
-      mWidget->EndRemoteDrawingInRegion(mDT, mDirtyRegion);
+      mWidget->EndRemoteDrawingInRegion(mDT, mRegion);
       ClearMappedBuffer();
       return false;
     }
@@ -123,13 +124,15 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
                                       rect.size.width, rect.size.height));
   }
 
-  LayoutDeviceIntRegion clear = mWidget->GetTransparentRegion();
-  clear.AndWith(mDirtyRegion);
-  clear.SubOut(opaque);
+  RefPtr<DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(
+      BackendType::SKIA, mMappedData, bounds.Size().ToUnknownSize(),
+      mMappedStride, SurfaceFormat::B8G8R8A8, false);
+
+  LayoutDeviceIntRegion clear;
+  clear.Sub(mRegion, opaque);
   for (auto iter = clear.RectIter(); !iter.Done(); iter.Next()) {
-    const auto& rect = iter.Get();
-    wr_swgl_clear_color_rect(mContext, 0, rect.x, rect.y, rect.width,
-                             rect.height, 0, 0, 0, 0);
+    dt->ClearRect(
+        IntRectToRect((iter.Get() - bounds.TopLeft()).ToUnknownRect()));
   }
 
   return true;
@@ -142,19 +145,19 @@ void RenderCompositorSWGL::StartCompositing(
     // Cancel any existing buffers that might accidentally be left from updates
     CommitMappedBuffer(false);
     // Reset the region to the widget bounds
-    mDirtyRegion = LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetBufferSize());
+    mRegion = LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetBufferSize());
   }
   if (aNumDirtyRects) {
     // Install the dirty rects into the bounds of the existing region
-    auto bounds = mDirtyRegion.GetBounds();
-    mDirtyRegion.SetEmpty();
+    auto bounds = mRegion.GetBounds();
+    mRegion.SetEmpty();
     for (size_t i = 0; i < aNumDirtyRects; i++) {
       const auto& rect = aDirtyRects[i];
-      mDirtyRegion.OrWith(LayoutDeviceIntRect(
-          rect.origin.x, rect.origin.y, rect.size.width, rect.size.height));
+      mRegion.OrWith(LayoutDeviceIntRect(rect.origin.x, rect.origin.y,
+                                         rect.size.width, rect.size.height));
     }
     // Ensure the region lies within the widget bounds
-    mDirtyRegion.AndWith(bounds);
+    mRegion.AndWith(bounds);
   }
   // Now that the dirty rects have been supplied and the composition region
   // is known, allocate and install a framebuffer encompassing the composition
@@ -186,12 +189,12 @@ void RenderCompositorSWGL::CommitMappedBuffer(bool aDirty) {
       // that is offset from the origin to the actual bounds of the dirty
       // region. The destination DT may also be an offset partial region, but we
       // must check to see if its size matches the region bounds to verify this.
-      LayoutDeviceIntRect bounds = mDirtyRegion.GetBounds();
+      LayoutDeviceIntRect bounds = mRegion.GetBounds();
       gfx::IntPoint srcOffset = bounds.TopLeft().ToUnknownPoint();
       gfx::IntPoint dstOffset = mDT->GetSize() == bounds.Size().ToUnknownSize()
                                     ? srcOffset
                                     : gfx::IntPoint(0, 0);
-      for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
         gfx::IntRect dirtyRect = iter.Get().ToUnknownRect();
         mDT->CopySurface(mSurface, dirtyRect - srcOffset,
                          dirtyRect.TopLeft() - dstOffset);
@@ -202,7 +205,7 @@ void RenderCompositorSWGL::CommitMappedBuffer(bool aDirty) {
     mDT->ReleaseBits(mMappedData);
   }
   // Done with the DT. Hand it back to the widget and clear out any trace of it.
-  mWidget->EndRemoteDrawingInRegion(mDT, mDirtyRegion);
+  mWidget->EndRemoteDrawingInRegion(mDT, mRegion);
   ClearMappedBuffer();
 }
 
