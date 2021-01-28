@@ -33,6 +33,7 @@
           <vbox class="tab-label-container proton"
                 onoverflow="this.setAttribute('textoverflow', 'true');"
                 onunderflow="this.removeAttribute('textoverflow');"
+                align="start"
                 flex="1">
             <label class="tab-text tab-label" role="presentation"/>
             <hbox class="tab-icon-sound">
