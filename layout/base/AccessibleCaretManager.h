@@ -319,6 +319,10 @@ class AccessibleCaretManager {
       return mFirst->IsLogicallyVisible() || mSecond->IsLogicallyVisible();
     }
 
+    bool HasVisuallyVisibleCaret() const {
+      return mFirst->IsVisuallyVisible() || mSecond->IsVisuallyVisible();
+    }
+
     // First caret is attached to nsCaret in cursor mode, and is attached to
     // selection highlight as the left caret in selection mode.
     UniquePtr<AccessibleCaret> mFirst;
