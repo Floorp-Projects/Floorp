@@ -405,10 +405,10 @@ class nsWindow final : public nsBaseWidget {
   nsresult GetSystemFont(nsCString& aFontName) override;
 
   typedef enum {
-    CSD_SUPPORT_SYSTEM,  // CSD including shadows
-    CSD_SUPPORT_CLIENT,  // CSD without shadows
-    CSD_SUPPORT_NONE,    // WM does not support CSD at all
-    CSD_SUPPORT_UNKNOWN
+    GTK_DECORATION_SYSTEM,  // CSD including shadows
+    GTK_DECORATION_CLIENT,  // CSD without shadows
+    GTK_DECORATION_NONE,    // WM does not support CSD at all
+    GTK_DECORATION_UNKNOWN
   } CSDSupportLevel;
   /**
    * Get the support of Client Side Decoration by checking
@@ -564,7 +564,7 @@ class nsWindow final : public nsBaseWidget {
   // window. See bug 1225044.
   unsigned int mPendingConfigures;
 
-  // Window titlebar rendering mode, CSD_SUPPORT_NONE if it's disabled
+  // Window titlebar rendering mode, GTK_DECORATION_NONE if it's disabled
   // for this window.
   CSDSupportLevel mCSDSupportLevel;
   // Use dedicated GdkWindow for mContainer
