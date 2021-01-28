@@ -16,7 +16,7 @@ add_task(async function() {
 
   info("Getting the container for .outer-div parent element");
   let container = await getContainerForSelector(".outer-div", inspector);
-  await expandContainerByClick(inspector, container);
+  await toggleContainerByClick(inspector, container);
 
   let closeTagLine = container.closeTagLine;
   ok(
@@ -26,7 +26,7 @@ add_task(async function() {
 
   info("Expand the iframe element");
   container = await getContainerForSelector("iframe", inspector);
-  await expandContainerByClick(inspector, container);
+  await toggleContainerByClick(inspector, container);
   ok(container.expanded, "iframe is expanded");
   closeTagLine = container.closeTagLine;
   ok(
@@ -45,7 +45,7 @@ add_task(async function() {
 
   info("Expand the iframe's #document node element");
   container = getContainerForNodeFront(documentFront, inspector);
-  await expandContainerByClick(inspector, container);
+  await toggleContainerByClick(inspector, container);
   ok(container.expanded, "#document is expanded");
   ok(
     !container.closeTagLine,
