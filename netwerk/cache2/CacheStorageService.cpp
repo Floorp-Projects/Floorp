@@ -64,11 +64,12 @@ typedef nsClassHashtable<nsCStringHashKey, CacheEntryTable> GlobalEntryTables;
  */
 static GlobalEntryTables* sGlobalEntryTables;
 
-CacheMemoryConsumer::CacheMemoryConsumer(uint32_t aFlags)
-    : mReportedMemoryConsumption(0), mFlags(aFlags) {}
+CacheMemoryConsumer::CacheMemoryConsumer(uint32_t aFlags) {
+  StoreFlags(aFlags);
+}
 
 void CacheMemoryConsumer::DoMemoryReport(uint32_t aCurrentSize) {
-  if (!(mFlags & DONT_REPORT) && CacheStorageService::Self()) {
+  if (!(LoadFlags() & DONT_REPORT) && CacheStorageService::Self()) {
     CacheStorageService::Self()->OnMemoryConsumptionChange(this, aCurrentSize);
   }
 }
@@ -1278,13 +1279,13 @@ void CacheStorageService::OnMemoryConsumptionChange(
   LOG(("CacheStorageService::OnMemoryConsumptionChange [consumer=%p, size=%u]",
        aConsumer, aCurrentMemoryConsumption));
 
-  uint32_t savedMemorySize = aConsumer->mReportedMemoryConsumption;
+  uint32_t savedMemorySize = aConsumer->LoadReportedMemoryConsumption();
   if (savedMemorySize == aCurrentMemoryConsumption) return;
 
   // Exchange saved size with current one.
-  aConsumer->mReportedMemoryConsumption = aCurrentMemoryConsumption;
+  aConsumer->StoreReportedMemoryConsumption(aCurrentMemoryConsumption);
 
-  bool usingDisk = !(aConsumer->mFlags & CacheMemoryConsumer::MEMORY_ONLY);
+  bool usingDisk = !(aConsumer->LoadFlags() & CacheMemoryConsumer::MEMORY_ONLY);
   bool overLimit = Pool(usingDisk).OnMemoryConsumptionChange(
       savedMemorySize, aCurrentMemoryConsumption);
 

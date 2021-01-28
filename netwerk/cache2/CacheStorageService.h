@@ -18,6 +18,7 @@
 #include "nsProxyRelease.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/AtomicBitfields.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 #include "nsTArray.h"
@@ -43,8 +44,12 @@ class CacheEntryHandle;
 class CacheMemoryConsumer {
  private:
   friend class CacheStorageService;
-  uint32_t mReportedMemoryConsumption : 30;
-  uint32_t mFlags : 2;
+  // clang-format off
+  MOZ_ATOMIC_BITFIELDS(mAtomicBitfields, 32, (
+    (uint32_t, ReportedMemoryConsumption, 30),
+    (uint32_t, Flags, 2)
+  ))
+  // clang-format on
 
  private:
   CacheMemoryConsumer() = delete;
