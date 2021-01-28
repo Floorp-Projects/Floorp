@@ -255,14 +255,12 @@ this.PrefsFeed = class PrefsFeed {
   observe(subject, topic, data) {
     switch (topic) {
       case Region.REGION_TOPIC:
-        if (data === Region.REGION_UPDATED) {
-          this.store.dispatch(
-            ac.BroadcastToContent({
-              type: at.PREF_CHANGED,
-              data: { name: "region", value: Region.home },
-            })
-          );
-        }
+        this.store.dispatch(
+          ac.BroadcastToContent({
+            type: at.PREF_CHANGED,
+            data: { name: "region", value: Region.home },
+          })
+        );
         break;
     }
   }

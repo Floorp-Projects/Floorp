@@ -147,11 +147,9 @@ class RegionHomeObserver {
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case Region.REGION_TOPIC:
-        if (aData === Region.REGION_UPDATED) {
-          Services.obs.removeObserver(this, Region.REGION_TOPIC);
-          this.regionHomeDeferred.resolve(Region.home);
-          this.regionHomeDeferred = null;
-        }
+        Services.obs.removeObserver(this, Region.REGION_TOPIC);
+        this.regionHomeDeferred.resolve(Region.home);
+        this.regionHomeDeferred = null;
         break;
     }
   }
