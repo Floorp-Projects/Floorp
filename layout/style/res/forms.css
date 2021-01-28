@@ -997,12 +997,6 @@ input[type=number] > div > div > div:hover {
   background-color: lightblue;
 }
 
-@media (-moz-non-native-content-theme) {
-  input[type=number] {
-    padding-inline-end: 0;
-  }
-}
-
 input[type=search]::-moz-search-clear-button {
   display: block;
   cursor: default;
