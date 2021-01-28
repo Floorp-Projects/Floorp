@@ -876,46 +876,42 @@ bool js::CreateNonSyntacticEnvironmentChain(JSContext* cx,
                                             HandleObjectVector envChain,
                                             MutableHandleObject env,
                                             MutableHandleScope scope) {
+  // Callers are responsible for segregating the NonSyntactic case from simple
+  // compilation cases.
+  MOZ_RELEASE_ASSERT(!envChain.empty());
+
   RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
   if (!CreateObjectsForEnvironmentChain(cx, envChain, globalLexical, env)) {
     return false;
   }
 
-  if (!envChain.empty()) {
-    scope.set(GlobalScope::createEmpty(cx, ScopeKind::NonSyntactic));
-    if (!scope) {
-      return false;
-    }
-
-    // The XPConnect subscript loader, which may pass in its own
-    // environments to load scripts in, expects the environment chain to
-    // be the holder of "var" declarations. In SpiderMonkey, such objects
-    // are called "qualified varobjs", the "qualified" part meaning the
-    // declaration was qualified by "var". There is only sadness.
-    //
-    // See JSObject::isQualifiedVarObj.
-    if (!JSObject::setQualifiedVarObj(cx, env)) {
-      return false;
-    }
-
-    // Also get a non-syntactic lexical environment to capture 'let' and
-    // 'const' bindings. To persist lexical bindings, we have a 1-1
-    // mapping with the final unwrapped environment object (the
-    // environment that stores the 'var' bindings) and the lexical
-    // environment.
-    //
-    // TODOshu: disallow the subscript loader from using non-distinguished
-    // objects as dynamic scopes.
-    env.set(ObjectRealm::get(env).getOrCreateNonSyntacticLexicalEnvironment(
-        cx, env));
-    if (!env) {
-      return false;
-    }
-  } else {
-    scope.set(&cx->global()->emptyGlobalScope());
+  scope.set(GlobalScope::createEmpty(cx, ScopeKind::NonSyntactic));
+  if (!scope) {
+    return false;
   }
 
-  return true;
+  // The XPConnect subscript loader, which may pass in its own
+  // environments to load scripts in, expects the environment chain to
+  // be the holder of "var" declarations. In SpiderMonkey, such objects
+  // are called "qualified varobjs", the "qualified" part meaning the
+  // declaration was qualified by "var". There is only sadness.
+  //
+  // See JSObject::isQualifiedVarObj.
+  if (!JSObject::setQualifiedVarObj(cx, env)) {
+    return false;
+  }
+
+  // Also get a non-syntactic lexical environment to capture 'let' and
+  // 'const' bindings. To persist lexical bindings, we have a 1-1
+  // mapping with the final unwrapped environment object (the
+  // environment that stores the 'var' bindings) and the lexical
+  // environment.
+  //
+  // TODOshu: disallow the subscript loader from using non-distinguished
+  // objects as dynamic scopes.
+  env.set(
+      ObjectRealm::get(env).getOrCreateNonSyntacticLexicalEnvironment(cx, env));
+  return !!env;
 }
 
 /*****************************************************************************/
