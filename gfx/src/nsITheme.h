@@ -27,6 +27,7 @@ class nsIWidget;
 namespace mozilla {
 class ComputedStyle;
 enum class StyleAppearance : uint8_t;
+enum class StyleScrollbarWidth : uint8_t;
 namespace layers {
 class StackingContextHelper;
 class RenderRootStateManager;
@@ -59,7 +60,11 @@ class IpcResourceUpdateQueue;
 class nsITheme : public nsISupports {
  protected:
   using LayoutDeviceIntMargin = mozilla::LayoutDeviceIntMargin;
+  using LayoutDeviceIntSize = mozilla::LayoutDeviceIntSize;
+  using LayoutDeviceIntCoord = mozilla::LayoutDeviceIntCoord;
   using StyleAppearance = mozilla::StyleAppearance;
+  using StyleScrollbarWidth = mozilla::StyleScrollbarWidth;
+  using ComputedStyle = mozilla::ComputedStyle;
 
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHEME_IID)
@@ -91,6 +96,19 @@ class nsITheme : public nsISupports {
       StyleAppearance aWidgetType, const nsRect& aRect) {
     return false;
   }
+
+  /**
+   * Returns the minimum widths of a scrollbar for a given style, that is, the
+   * minimum width for a vertical scrollbar, and the minimum height of a
+   * horizontal scrollbar.
+   */
+  enum class Overlay { No, Yes };
+  struct ScrollbarSizes {
+    LayoutDeviceIntCoord mVertical;
+    LayoutDeviceIntCoord mHorizontal;
+  };
+  virtual ScrollbarSizes GetScrollbarSizes(
+      nsPresContext*, StyleScrollbarWidth, Overlay) = 0;
 
   /**
    * Return the border for the widget, in device pixels.

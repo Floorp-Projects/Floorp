@@ -59,10 +59,13 @@ static const CSSIntCoord kMinimumAndroidWidgetSize = 17;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeAndroid, nsNativeTheme, nsITheme)
 
+static uint32_t GetDPIRatio(nsPresContext* aPresContext) {
+  return AppUnitsPerCSSPixel() /
+         aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
+}
+
 static uint32_t GetDPIRatio(nsIFrame* aFrame) {
-  return AppUnitsPerCSSPixel() / aFrame->PresContext()
-                                     ->DeviceContext()
-                                     ->AppUnitsPerDevPixelAtUnitFullZoom();
+  return GetDPIRatio(aFrame->PresContext());
 }
 
 static bool IsDateTimeResetButton(nsIFrame* aFrame) {
@@ -798,6 +801,12 @@ nsNativeThemeAndroid::GetMinimumWidgetSize(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+auto nsNativeThemeAndroid::GetScrollbarSizes(
+    nsPresContext* aPresContext, StyleScrollbarWidth aWidth, Overlay aOverlay) -> ScrollbarSizes {
+  int32_t size = kMinimumAndroidWidgetSize * int32_t(GetDPIRatio(aPresContext));
+  return {size, size};
+}
+
 nsITheme::Transparency nsNativeThemeAndroid::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   return eUnknownTransparency;
@@ -872,7 +881,6 @@ bool nsNativeThemeAndroid::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbarNonDisappearing:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::Scrollcorner:
     case StyleAppearance::Button:

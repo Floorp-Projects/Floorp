@@ -1501,17 +1501,12 @@ nscoord ScrollFrameHelper::GetNondisappearingScrollbarWidth(
   // we're using e.g. scrollbar-width: thin, or overlay scrollbars. That's why
   // we use ScrollbarNonDisappearing.
   nsIFrame* box = verticalWM ? mHScrollbarBox : mVScrollbarBox;
-  nsITheme* theme = aState->PresContext()->Theme();
-  if (box &&
-      theme->ThemeSupportsWidget(aState->PresContext(), box,
-                                 StyleAppearance::ScrollbarNonDisappearing)) {
-    LayoutDeviceIntSize size;
-    bool canOverride = true;
-    theme->GetMinimumWidgetSize(aState->PresContext(), box,
-                                StyleAppearance::ScrollbarNonDisappearing,
-                                &size, &canOverride);
-    return aState->PresContext()->DevPixelsToAppUnits(verticalWM ? size.height
-                                                                 : size.width);
+  if (box) {
+    auto sizes = aState->PresContext()->Theme()->GetScrollbarSizes(
+        aState->PresContext(), StyleScrollbarWidth::Auto,
+        nsITheme::Overlay::No);
+    return aState->PresContext()->DevPixelsToAppUnits(
+        verticalWM ? sizes.mHorizontal : sizes.mVertical);
   }
 
   nsMargin sizes(GetDesiredScrollbarSizes(aState));

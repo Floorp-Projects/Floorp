@@ -36,6 +36,8 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
                          const EventStates& aDocumentState, DPIRatio aDpiRatio,
                          bool aIsRoot) override;
   bool ThemeSupportsScrollbarButtons() override { return false; }
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
 
  protected:
   virtual ~nsNativeBasicThemeGTK() = default;

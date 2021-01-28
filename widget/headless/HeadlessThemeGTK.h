@@ -49,7 +49,10 @@ class HeadlessThemeGTK final : private nsNativeTheme, public nsITheme {
   NS_IMETHOD_(bool)
   ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
 
-  virtual bool ThemeNeedsComboboxDropmarker() override;
+  bool ThemeNeedsComboboxDropmarker() override;
+
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
 
  protected:
   virtual ~HeadlessThemeGTK() = default;

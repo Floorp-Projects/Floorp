@@ -35,40 +35,34 @@ nsITheme::Transparency nsNativeBasicThemeGTK::GetWidgetTransparency(
   }
 }
 
+auto nsNativeBasicThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
+                                              StyleScrollbarWidth aWidth,
+                                              Overlay) -> ScrollbarSizes {
+  DPIRatio dpiRatio = GetDPIRatioForScrollbarPart(aPresContext);
+  CSSCoord size = aWidth == StyleScrollbarWidth::Thin
+                      ? kGtkMinimumThinScrollbarSize
+                      : kGtkMinimumScrollbarSize;
+  LayoutDeviceIntCoord s = (size * dpiRatio).Truncated();
+  return {s, s};
+}
+
 NS_IMETHODIMP
 nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                             nsIFrame* aFrame,
                                             StyleAppearance aAppearance,
                                             LayoutDeviceIntSize* aResult,
                                             bool* aIsOverridable) {
-  DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
-
-  switch (aAppearance) {
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-    case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-    case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-    case StyleAppearance::ScrollbartrackHorizontal:
-    case StyleAppearance::ScrollbartrackVertical:
-    case StyleAppearance::Scrollcorner: {
-      ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-      if (style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
-        aResult->SizeTo(kGtkMinimumThinScrollbarSize * dpiRatio,
-                        kGtkMinimumThinScrollbarSize * dpiRatio);
-      } else {
-        aResult->SizeTo(kGtkMinimumScrollbarSize * dpiRatio,
-                        kGtkMinimumScrollbarSize * dpiRatio);
-      }
-      break;
-    }
-    default:
-      return nsNativeBasicTheme::GetMinimumWidgetSize(
-          aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
+  if (!IsWidgetScrollbarPart(aAppearance)) {
+    return nsNativeBasicTheme::GetMinimumWidgetSize(
+        aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
   }
+
+  DPIRatio dpiRatio = GetDPIRatioForScrollbarPart(aPresContext);
+  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+  auto sizes = GetScrollbarSizes(
+      aPresContext, style->StyleUIReset()->mScrollbarWidth, Overlay::No);
+  MOZ_ASSERT(sizes.mHorizontal == sizes.mVertical);
+  aResult->SizeTo(sizes.mHorizontal, sizes.mHorizontal);
 
   switch (aAppearance) {
     case StyleAppearance::ScrollbarHorizontal:
