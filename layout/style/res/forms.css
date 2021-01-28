@@ -529,7 +529,7 @@ input:is([type=color], [type=reset], [type=button], [type=submit]) {
   /* The sum of border and padding on block-start and block-end
      must be the same here, for text inputs, and for <select>.
      Note -moz-focus-inner padding does not affect button size. */
-  padding-block: 0;
+  padding-block: 1px;
   padding-inline: 8px;
   border: 2px outset ThreeDLightShadow;
   background-color: ButtonFace;
