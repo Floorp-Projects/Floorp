@@ -15,6 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=372098
   <div id="content" style="display:none;">
     <iframe name="bug372098"></iframe>
     <a id="a" href="bug372098-link-target.html?a" target="">link</a>
+    <link id="link" href="bug372098-link-target.html?link" target=""/>
     <map>
       <area id="area" shape="default" href="bug372098-link-target.html?area" target=""/>
     </map>
@@ -23,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=372098
     <script class="testbody" type="text/javascript">
 
 var a_passed = false;
+var link_passed = false;
 var area_passed = false;
 
 /* Start the test */
@@ -40,6 +42,7 @@ function handle_load()
 function finish_test()
 {
   ok(a_passed, "The 'a' element used the correct target.");
+  ok(link_passed, "The 'link' element used the correct target.");
   ok(area_passed, "The 'area' element used the correct target.");
   SimpleTest.finish();
 }
@@ -51,6 +54,10 @@ function callback(tag)
   switch (tag) {
   case 'a':
     a_passed = true;
+    sendMouseEvent({type:'click'}, 'link');
+    return;
+  case 'link':
+    link_passed = true;
     sendMouseEvent({type:'click'}, 'area');
     return;
   case 'area':

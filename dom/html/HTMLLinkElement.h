@@ -22,8 +22,11 @@ class PreloaderBase;
 
 namespace dom {
 
+// NOTE(emilio): If we stop inheriting from Link, we need to remove the
+// IsHTMLElement(nsGkAtoms::link) checks in Link.cpp.
 class HTMLLinkElement final : public nsGenericHTMLElement,
                               public LinkStyle,
+                              public Link,
                               public SupportsDNSPrefetch {
  public:
   explicit HTMLLinkElement(
@@ -42,6 +45,11 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   void LinkAdded();
   void LinkRemoved();
 
+  // EventTarget
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT
+  nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+
   // nsINode
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
   JSObject* WrapNode(JSContext* aCx,
@@ -56,24 +64,22 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                         const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                         nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
+  bool IsLink(nsIURI** aURI) const override;
+  already_AddRefed<nsIURI> GetHrefURI() const override;
+
   // Element
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,
                       nsIPrincipal* aMaybeScriptedPrincipal,
                       nsAttrValue& aResult) override;
+  void GetLinkTarget(nsAString& aTarget) override;
+  EventStates IntrinsicState() const override;
 
   void CreateAndDispatchEvent(Document* aDoc, const nsAString& aEventName);
 
   // WebIDL
   bool Disabled() const;
   void SetDisabled(bool aDisabled, ErrorResult& aRv);
-
-  nsIURI* GetURI() {
-    if (!mCachedURI) {
-      GetURIAttr(nsGkAtoms::href, nullptr, getter_AddRefs(mCachedURI));
-    }
-    return mCachedURI.get();
-  }
 
   void GetHref(nsAString& aValue) {
     GetURIAttr(nsGkAtoms::href, nullptr, aValue);
@@ -172,7 +178,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   }
 
   void NodeInfoChanged(Document* aOldDoc) final {
-    mCachedURI = nullptr;
+    ClearHasPendingLinkUpdate();
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   }
 
@@ -211,9 +217,6 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   // this node updates or unbounds from the tree.  We want to prevent cycles,
   // the preload is held alive by other means.
   WeakPtr<PreloaderBase> mPreload;
-
-  // The cached href attribute value.
-  nsCOMPtr<nsIURI> mCachedURI;
 
   // The "explicitly enabled" flag. This flag is set whenever the `disabled`
   // attribute is explicitly unset, and makes alternate stylesheets not be
