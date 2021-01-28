@@ -6251,7 +6251,7 @@ nsresult nsContentUtils::CreateArrayBuffer(JSContext* aCx,
     return NS_ERROR_FAILURE;
   }
 
-  int32_t dataLen = aData.Length();
+  size_t dataLen = aData.Length();
   *aResult = JS::NewArrayBuffer(aCx, dataLen);
   if (!*aResult) {
     return NS_ERROR_FAILURE;

@@ -1732,7 +1732,7 @@ JS_FRIEND_API bool JS::IsDetachedArrayBufferObject(JSObject* obj) {
   return aobj->isDetached();
 }
 
-JS_FRIEND_API JSObject* JS::NewArrayBuffer(JSContext* cx, uint32_t nbytes) {
+JS_FRIEND_API JSObject* JS::NewArrayBuffer(JSContext* cx, size_t nbytes) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 

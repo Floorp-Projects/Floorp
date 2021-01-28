@@ -76,7 +76,7 @@ static JSObject* CreateDataView(JSContext* cx) {
   return JS_NewDataView(cx, buffer, 0, 8);
 }
 
-template <JSObject* CreateTypedArray(JSContext* cx, uint32_t length),
+template <JSObject* CreateTypedArray(JSContext* cx, size_t length),
           size_t Length>
 static JSObject* Create(JSContext* cx) {
   return CreateTypedArray(cx, Length);
