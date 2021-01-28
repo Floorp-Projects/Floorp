@@ -3378,12 +3378,6 @@ mozilla::ipc::IPCResult ContentChild::RecvFlushCodeCoverageCounters(
 #endif
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvGetMemoryUniqueSetSize(
-    GetMemoryUniqueSetSizeResolver&& aResolver) {
-  MemoryTelemetry::Get().GetUniqueSetSize(std::move(aResolver));
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvSetInputEventQueueEnabled() {
   nsThreadManager::get().EnableMainThreadEventPrioritization();
   return IPC_OK();
