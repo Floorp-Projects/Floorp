@@ -26,20 +26,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
   var done = false;
 
   /** Test for Bug 607529 **/
-
-  function closeWindowAndFinish() {
-    w.close();
-    window.onmessage = null;
-    SimpleTest.finish();
-  }
-
-  window.onmessage = function(e) {
-    isnot(e.data, "notcached", "Should never end up not being cached");
-  
-    if (e.data == "loaded") {
+  var bc = new BroadcastChannel("bug607529");
+  var bc_1 = new BroadcastChannel("bug607529_1");
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    isnot(msg, "notcached", "Should never end up not being cached");
+    if (msg == "loaded") {
       if (!doneOneLoad) {
         doneOneLoad = true;
-        w.location = "file_bug607529-1.html";
+        bc.postMessage("navigateToPage");
       } else {
         // This is unexpected, but it can happen on Android, probably when
         // bfcache gets purged due to memory pressure. Hence, "soft fail" there.
@@ -53,13 +48,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
         closeWindowAndFinish();
       }
     }
-    else if (e.data == "goback") {
-      w.history.back();
+    else if (msg == "revived") {
+      bc.postMessage("report");
     }
-    else if (e.data == "revived") {
-      w.postMessage("report", "*");
-    }
-    else if (e.data == "callbackHappened") {
+    else if (msg == "callbackHappened") {
       // We might get this message more than once, if the other page queues up
       // more than one callbackHappened message before we manage to close it.
       // Protect against calling SimpleTest.finish() more than once.
@@ -67,22 +59,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
         closeWindowAndFinish();
         done = true;
       }
+    } else if (msg == "closed") {
+      bc.close();
+      bc_1.close();
+      SimpleTest.finish();
     } else {
       try {
-        var msg = JSON.parse(e.data);
+        var jsonMsg = JSON.parse(msg);
       } catch (ex) {
         // In case JSON.parse throws, we pause to print the string that it
         // choked on, and then resume throwing the exception.
-        ok(false, "JSON.parse threw, when passed string '" + e.data + "'");
+        ok(false, "JSON.parse threw, when passed string '" + jsonMsg + "'");
         throw ex;
       }
-      if (msg.error) {
-        window.onerror(msg.msg, msg.url, msg.line);
+      if (jsonMsg.error) {
+        window.onerror(jsonMsg.msg, jsonMsg.url, jsonMsg.line);
       }
     }
-  };
+  }
+  bc_1.onmessage = (msgEvent) => {
+    if (msgEvent.data == "goback") {
+      bc_1.postMessage("navigateBack");
+    }
+  }
+  function closeWindowAndFinish() {
+    bc.postMessage("close");
+  }
 
-  var w = window.open("file_bug607529.html");
+  window.open("file_bug607529.html", "", "noopener");
 </script>
 </pre>
 </body>
