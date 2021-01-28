@@ -488,15 +488,23 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
     DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
     const sRGBColor& aBackgroundColor, const sRGBColor& aBorderColor,
     CSSCoord aBorderWidth, CSSCoord aRadius, DPIRatio aDpiRatio) {
-  const LayoutDeviceCoord radius(aRadius * aDpiRatio);
   const LayoutDeviceCoord borderWidth(SnapBorderWidth(aBorderWidth, aDpiRatio));
 
-  RectCornerRadii radii(radius, radius, radius, radius);
   LayoutDeviceRect rect(aRect);
   // Deflate the rect by half the border width, so that the middle of the stroke
   // fills exactly the area we want to fill and not more.
   rect.Deflate(borderWidth * 0.5f);
 
+  LayoutDeviceCoord radius(aRadius * aDpiRatio);
+  // Fix up the radius if it's too large with the rect we're going to paint.
+  {
+    LayoutDeviceCoord min = std::min(rect.width, rect.height);
+    if (radius * 2.0f > min) {
+      radius = min * 0.5f;
+    }
+  }
+
+  RectCornerRadii radii(radius, radius, radius, radius);
   RefPtr<Path> roundedRect = MakePathForRoundedRect(
       *aDrawTarget, rect.ToUnknownRect(), radii);
 
