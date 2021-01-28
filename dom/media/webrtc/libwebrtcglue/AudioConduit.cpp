@@ -55,15 +55,21 @@ RefPtr<AudioSessionConduit> AudioSessionConduit::Create(
   return MakeRefPtr<WebrtcAudioConduit>(aCall, aStsThread);
 }
 
+void WebrtcAudioConduit::DeleteStreams() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+  DeleteSendStream();
+  DeleteRecvStream();
+}
+
 /**
  * Destruction defines for our super-classes
  */
 WebrtcAudioConduit::~WebrtcAudioConduit() {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(mMutex);
-  DeleteSendStream();
-  DeleteRecvStream();
+  MOZ_ASSERT(!mSendStream && !mRecvStream,
+             "Call DeleteStreams prior to ~WebrtcAudioConduit.");
 }
 
 bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
