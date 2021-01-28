@@ -57,9 +57,11 @@
 #include <stdint.h>
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -1114,6 +1116,49 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckLoadURIWithPrincipalFromJS(nsIPrincipal* aPrincipal,
+                                                         nsIURI* aTargetURI,
+                                                         uint32_t aFlags,
+                                                         uint64_t aInnerWindowID,
+                                                         JSContext* aCx) {
+  NS_ENSURE_ARG_POINTER(aTargetURI);
+
+  nsresult rv = CheckLoadURIWithPrincipal(aPrincipal,
+                                          aTargetURI,
+                                          aFlags,
+                                          aInnerWindowID);
+  if (NS_FAILED(rv)) {
+    nsAutoCString uriStr;
+    Unused << aTargetURI->GetSpec(uriStr);
+
+    nsAutoCString message("Load of ");
+    message.Append(uriStr);
+
+    nsAutoCString principalStr;
+    Unused << aPrincipal->GetSpec(principalStr);
+    if (!principalStr.IsEmpty()) {
+      message.AppendPrintf(" from %s", principalStr.get());
+    }
+
+    message.Append(" denied");
+
+    dom::Throw(aCx, rv, message);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckLoadURIStrWithPrincipalFromJS(
+    nsIPrincipal* aPrincipal, const nsACString& aTargetURIStr,
+    uint32_t aFlags, JSContext* aCx) {
+  nsCOMPtr<nsIURI> targetURI;
+  MOZ_TRY(NS_NewURI(getter_AddRefs(targetURI), aTargetURIStr));
+
+  return CheckLoadURIWithPrincipalFromJS(aPrincipal, targetURI, aFlags, 0, aCx);
 }
 
 NS_IMETHODIMP
