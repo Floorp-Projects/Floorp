@@ -8,8 +8,8 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUIUtils",
-  "resource:///modules/BrowserUIUtils.jsm"
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -64,7 +64,7 @@ XPCOMUtils.defineLazyGetter(this, "tabHidePopup", () => {
     getLocalizedDescription: (doc, message, addonDetails) => {
       let image = doc.createXULElement("image");
       image.setAttribute("class", "extension-controlled-icon alltabs-icon");
-      return BrowserUIUtils.getLocalizedFragment(
+      return BrowserUtils.getLocalizedFragment(
         doc,
         message,
         addonDetails,

@@ -22,8 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NewTabPagePreloading: "resource:///modules/NewTabPagePreloading.jsm",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-  BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.jsm",
-  BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
@@ -4933,7 +4931,7 @@ var XULBrowserWindow = {
       );
 
       if (UrlbarPrefs.get("trimURLs")) {
-        url = BrowserUIUtils.trimURL(url);
+        url = BrowserUtils.trimURL(url);
       }
     }
 
@@ -5122,7 +5120,7 @@ var XULBrowserWindow = {
         aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT;
       if (
         (location == "about:blank" &&
-          BrowserUIUtils.checkEmptyPageOrigin(gBrowser.selectedBrowser)) ||
+          BrowserUtils.checkEmptyPageOrigin(gBrowser.selectedBrowser)) ||
         location == ""
       ) {
         // Second condition is for new tabs, otherwise
@@ -5585,7 +5583,7 @@ var CombinedStopReload = {
 
     this._cancelTransition();
     if (shouldAnimate) {
-      BrowserUIUtils.setToolbarButtonHeightProperty(this.stopReloadContainer);
+      BrowserUtils.setToolbarButtonHeightProperty(this.stopReloadContainer);
       this.stopReloadContainer.setAttribute("animate", "true");
     } else {
       this.stopReloadContainer.removeAttribute("animate");
@@ -5608,7 +5606,7 @@ var CombinedStopReload = {
       this.stopReloadContainer.closest("#nav-bar-customization-target");
 
     if (shouldAnimate) {
-      BrowserUIUtils.setToolbarButtonHeightProperty(this.stopReloadContainer);
+      BrowserUtils.setToolbarButtonHeightProperty(this.stopReloadContainer);
       this.stopReloadContainer.setAttribute("animate", "true");
     } else {
       this.stopReloadContainer.removeAttribute("animate");
@@ -5719,7 +5717,7 @@ var TabsProgressListener = {
         ) {
           if (recordLoadTelemetry) {
             TelemetryStopwatch.finish(histogram, aBrowser);
-            BrowserTelemetryUtils.recordSiteOriginTelemetry(browserWindows());
+            BrowserUtils.recordSiteOriginTelemetry(browserWindows());
           }
         }
       } else if (

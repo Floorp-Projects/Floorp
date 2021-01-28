@@ -2188,7 +2188,7 @@ var BookmarkingUI = {
     ) {
       let isBookmarked = this._itemGuids.size > 0;
       if (!isBookmarked) {
-        BrowserUIUtils.setToolbarButtonHeightProperty(this.star);
+        BrowserUtils.setToolbarButtonHeightProperty(this.star);
         // there are no other animations on this element, so we can simply
         // listen for animationend with the "once" option to clean up
         let animatableBox = document.getElementById(
