@@ -227,7 +227,9 @@ bool mozilla::PrintfTarget::cvt_l(long num, int width, int prec, int radix,
   int digits;
 
   // according to the man page this needs to happen
-  if ((prec == 0) && (num == 0)) return true;
+  if ((prec == 0) && (num == 0)) {
+    return fill_n("", 0, width, prec, type, flags);
+  }
 
   // Converting decimal is a little tricky. In the unsigned case we
   // need to stop when we hit 10 digits. In the signed case, we can
@@ -254,7 +256,9 @@ bool mozilla::PrintfTarget::cvt_l(long num, int width, int prec, int radix,
 bool mozilla::PrintfTarget::cvt_ll(int64_t num, int width, int prec, int radix,
                                    int type, int flags, const char* hexp) {
   // According to the man page, this needs to happen.
-  if (prec == 0 && num == 0) return true;
+  if (prec == 0 && num == 0) {
+    return fill_n("", 0, width, prec, type, flags);
+  }
 
   // Converting decimal is a little tricky. In the unsigned case we
   // need to stop when we hit 10 digits. In the signed case, we can
