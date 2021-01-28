@@ -1188,9 +1188,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
     scriptp.set(script);
 
-    // Reset the mutable flags to request arguments analysis as needed.
-    script->resetArgsUsageAnalysis();
-
     // Set the script in its function now so that inner scripts to be
     // decoded may iterate the static scope chain.
     if (isFunctionScript) {
@@ -3871,9 +3868,6 @@ bool JSScript::fullyInitFromStencil(
                                                 .scriptExtra[scriptIndex]
                                                 .immutableFlags);
 
-  // Derive initial mutable flags
-  script->resetArgsUsageAnalysis();
-
   // Create and initialize PrivateScriptData
   if (!PrivateScriptData::InitFromStencil(cx, script, input, stencil, gcOutput,
                                           scriptIndex)) {
@@ -3961,14 +3955,6 @@ JSScript* JSScript::fromStencil(JSContext* cx,
   }
 
   return script;
-}
-
-void JSScript::resetArgsUsageAnalysis() {
-  MOZ_ASSERT_IF(alwaysNeedsArgsObj(), argumentsHasVarBinding());
-  if (argumentsHasVarBinding()) {
-    setFlag(MutableFlags::NeedsArgsObj, alwaysNeedsArgsObj());
-    setFlag(MutableFlags::NeedsArgsAnalysis, !alwaysNeedsArgsObj());
-  }
 }
 
 #ifdef DEBUG
@@ -4535,9 +4521,6 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
   if (!dst) {
     return nullptr;
   }
-
-  // Reset the mutable flags to request arguments analysis as needed.
-  dst->resetArgsUsageAnalysis();
 
   // Maintain this flag when cloning self-hosted functions.
   if (src->isInlinableLargeFunction()) {
