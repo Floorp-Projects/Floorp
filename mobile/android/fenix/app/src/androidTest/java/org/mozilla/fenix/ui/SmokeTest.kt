@@ -1128,6 +1128,7 @@ class SmokeTest {
     fun verifyReaderViewAppearanceUI() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
+        val estimatedReadingTime = "1 - 2 minutes"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
@@ -1145,6 +1146,10 @@ class SmokeTest {
             verifyReaderViewDetected(true)
             toggleReaderView()
             mDevice.waitForIdle()
+        }
+
+        browserScreen {
+            verifyPageContent(estimatedReadingTime)
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.openReaderViewAppearance {

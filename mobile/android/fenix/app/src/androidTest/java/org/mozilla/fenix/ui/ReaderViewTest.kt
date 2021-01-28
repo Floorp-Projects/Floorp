@@ -17,6 +17,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.mDevice
 
 /**
@@ -32,6 +33,7 @@ import org.mozilla.fenix.ui.robots.mDevice
 class ReaderViewTest {
     private lateinit var mockWebServer: MockWebServer
     private var readerViewNotification: ViewVisibilityIdlingResource? = null
+    private val estimatedReadingTime = "1 - 2 minutes"
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
@@ -120,6 +122,10 @@ class ReaderViewTest {
             verifyReaderViewDetected(true)
             toggleReaderView()
             mDevice.waitForIdle()
+        }
+
+        browserScreen {
+            verifyPageContent(estimatedReadingTime)
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.closeBrowserMenuToBrowser { }
@@ -153,6 +159,10 @@ class ReaderViewTest {
             verifyReaderViewDetected(true)
             toggleReaderView()
             mDevice.waitForIdle()
+        }
+
+        browserScreen {
+            verifyPageContent(estimatedReadingTime)
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.openReaderViewAppearance {
@@ -189,6 +199,10 @@ class ReaderViewTest {
             verifyReaderViewDetected(true)
             toggleReaderView()
             mDevice.waitForIdle()
+        }
+
+        browserScreen {
+            verifyPageContent(estimatedReadingTime)
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.openReaderViewAppearance {
@@ -231,6 +245,10 @@ class ReaderViewTest {
             verifyReaderViewDetected(true)
             toggleReaderView()
             mDevice.waitForIdle()
+        }
+
+        browserScreen {
+            verifyPageContent(estimatedReadingTime)
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
         }.openReaderViewAppearance {
