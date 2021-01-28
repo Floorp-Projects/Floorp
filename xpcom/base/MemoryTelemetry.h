@@ -58,36 +58,13 @@ class MemoryTelemetry final : public nsIObserver,
 
   static Result<uint32_t, nsresult> GetOpenTabsCount();
 
-  class TotalMemoryGatherer final : public nsITimerCallback {
-   public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSITIMERCALLBACK
-
-    TotalMemoryGatherer() = default;
-
-    void CollectParentSize(int64_t aResident);
-    void CollectResult(int64_t aChildUSS);
-    void OnFailure(ipc::ResponseRejectReason aReason);
-
-    void Begin(nsIEventTarget* aThreadPool);
-
-   private:
-    ~TotalMemoryGatherer() = default;
-
-    nsresult MaybeFinish();
-
-    nsCOMPtr<nsITimer> mTimeout;
-
-    nsTArray<int64_t> mChildSizes;
-
-    int64_t mTotalMemory = 0;
-    uint32_t mRemainingChildCount = 0;
-
-    bool mHaveParentSize = false;
-  };
+  void GatherTotalMemory();
+  nsresult FinishGatheringTotalMemory(int64_t aTotalMemory,
+                                      const nsTArray<int64_t>& aChildSizes);
 
   nsCOMPtr<nsIEventTarget> mThreadPool;
-  RefPtr<TotalMemoryGatherer> mTotalMemoryGatherer;
+
+  bool mGatheringTotalMemory = false;
 
   TimeStamp mLastPoll{};
 };
