@@ -20,11 +20,7 @@
 }
 
 @supports -moz-bool-pref("widget.disable-native-theme-for-content") {
-  /* The non-native theme has 4px of widget-supplied padding on all four
-   * sides. */
-  .ltr input[type="color"]:not(.a),
-  .rtl input[type="color"]:not(.a),
-  .v-rl input[type="color"]:not(.a) {
+  :is(.ltr, .rtl, .v-rl) input[type="color"] {
     padding: 4px;
   }
 }
