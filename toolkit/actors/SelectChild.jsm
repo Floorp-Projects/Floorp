@@ -12,8 +12,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
+  "LayoutUtils",
+  "resource://gre/modules/LayoutUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -173,7 +173,7 @@ SelectContentHelper.prototype = {
   },
 
   _getBoundingContentRect() {
-    return BrowserUtils.getElementBoundingScreenRect(this.element);
+    return LayoutUtils.getElementBoundingScreenRect(this.element);
   },
 
   _buildOptionList() {
