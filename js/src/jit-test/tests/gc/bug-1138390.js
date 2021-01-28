@@ -11,10 +11,14 @@ var g = newGlobal();
 if ("gcstate" in this)
   assertEq(gcstate() === "NotActive", false);
 
-g.offThreadCompileScript('23;', {});
+g.evaluate(`
+var entry = cacheEntry("23;");
+evaluate(entry, { saveIncrementalBytecode: true });
+offThreadDecodeScript(entry);
+`);
 
 // Wait for the compilation to finish, which must finish the GC first
-assertEq(23, g.runOffThreadScript());
+assertEq(23, g.evaluate(`runOffThreadDecodedScript()`));
 if ("gcstate" in this)
    assertEq(gcstate(), "NotActive");
 
