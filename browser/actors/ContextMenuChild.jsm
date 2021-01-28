@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  SelectionUtils: "resource://gre/modules/SelectionUtils.jsm",
   InlineSpellCheckerContent:
     "resource://gre/modules/InlineSpellCheckerContent.jsm",
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
@@ -614,7 +615,7 @@ class ContextMenuChild extends JSWindowActorChild {
       } catch (e) {}
     }
 
-    let selectionInfo = BrowserUtils.getSelectionDetails(this.contentWindow);
+    let selectionInfo = SelectionUtils.getSelectionDetails(this.contentWindow);
     let loadContext = this.docShell.QueryInterface(Ci.nsILoadContext);
     let userContextId = loadContext.originAttributes.userContextId;
 
