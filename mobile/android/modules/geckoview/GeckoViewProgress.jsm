@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.jsm",
   HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
 });
 
@@ -435,7 +435,7 @@ class StateTracker extends Tracker {
       success: aIsSuccess,
     });
 
-    BrowserUtils.recordSiteOriginTelemetry(
+    BrowserTelemetryUtils.recordSiteOriginTelemetry(
       Services.wm.getEnumerator("navigator:geckoview"),
       true
     );
