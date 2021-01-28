@@ -187,9 +187,6 @@ EVENT(invalid, eFormInvalid, EventNameType_HTMLXUL, eBasicEventClass)
 EVENT(keydown, eKeyDown, EventNameType_HTMLXUL, eKeyboardEventClass)
 EVENT(keypress, eKeyPress, EventNameType_HTMLXUL, eKeyboardEventClass)
 EVENT(keyup, eKeyUp, EventNameType_HTMLXUL, eKeyboardEventClass)
-EVENT(mozkeydownonplugin, eKeyDownOnPlugin, EventNameType_None,
-      eKeyboardEventClass)
-EVENT(mozkeyuponplugin, eKeyUpOnPlugin, EventNameType_None, eKeyboardEventClass)
 NON_IDL_EVENT(mozaccesskeynotfound, eAccessKeyNotFound, EventNameType_None,
               eKeyboardEventClass)
 EVENT(loadeddata, eLoadedData, EventNameType_HTML, eBasicEventClass)
