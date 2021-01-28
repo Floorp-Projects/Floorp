@@ -82,20 +82,18 @@ vec2 get_snap_bias(int subpx_dir) {
     // accounted for while rasterizing the glyph. However, we
     // must still round with a subpixel bias rather than rounding
     // to the nearest whole pixel, depending on subpixel direciton.
-    switch (subpx_dir) {
-        case SUBPX_DIR_NONE:
-        default:
-            return vec2(0.5);
-        case SUBPX_DIR_HORIZONTAL:
-            // Glyphs positioned [-0.125, 0.125] get a
-            // subpx position of zero. So include that
-            // offset in the glyph position to ensure
-            // we round to the correct whole position.
-            return vec2(0.125, 0.5);
-        case SUBPX_DIR_VERTICAL:
-            return vec2(0.5, 0.125);
-        case SUBPX_DIR_MIXED:
-            return vec2(0.125);
+    if (subpx_dir == SUBPX_DIR_HORIZONTAL) {
+        // Glyphs positioned [-0.125, 0.125] get a
+        // subpx position of zero. So include that
+        // offset in the glyph position to ensure
+        // we round to the correct whole position.
+        return vec2(0.125, 0.5);
+    } else if (subpx_dir == SUBPX_DIR_VERTICAL) {
+        return vec2(0.5, 0.125);
+    } else if (subpx_dir == SUBPX_DIR_MIXED) {
+        return vec2(0.125);
+    } else { // subpx_dir == SUBPX_DIR_NONE
+        return vec2(0.5);
     }
 }
 
@@ -224,30 +222,24 @@ void main() {
 
     write_clip(vi.world_pos, clip_area, task);
 
-    switch (color_mode) {
-        case COLOR_MODE_ALPHA:
-        case COLOR_MODE_BITMAP:
-            v_mask_swizzle = vec2(0.0, 1.0);
-            v_color = text.color;
-            break;
-        case COLOR_MODE_SUBPX_BG_PASS2:
-        case COLOR_MODE_SUBPX_DUAL_SOURCE:
-            v_mask_swizzle = vec2(1.0, 0.0);
-            v_color = text.color;
-            break;
-        case COLOR_MODE_SUBPX_CONST_COLOR:
-        case COLOR_MODE_SUBPX_BG_PASS0:
-        case COLOR_MODE_COLOR_BITMAP:
-            v_mask_swizzle = vec2(1.0, 0.0);
-            v_color = vec4(text.color.a);
-            break;
-        case COLOR_MODE_SUBPX_BG_PASS1:
-            v_mask_swizzle = vec2(-1.0, 1.0);
-            v_color = vec4(text.color.a) * text.bg_color;
-            break;
-        default:
-            v_mask_swizzle = vec2(0.0);
-            v_color = vec4(1.0);
+    if (color_mode == COLOR_MODE_ALPHA || color_mode == COLOR_MODE_BITMAP) {
+        v_mask_swizzle = vec2(0.0, 1.0);
+        v_color = text.color;
+    } else if (color_mode == COLOR_MODE_SUBPX_BG_PASS2 ||
+               color_mode == COLOR_MODE_SUBPX_DUAL_SOURCE) {
+        v_mask_swizzle = vec2(1.0, 0.0);
+        v_color = text.color;
+    } else if (color_mode == COLOR_MODE_SUBPX_CONST_COLOR ||
+               color_mode == COLOR_MODE_SUBPX_BG_PASS0 ||
+               color_mode == COLOR_MODE_COLOR_BITMAP) {
+        v_mask_swizzle = vec2(1.0, 0.0);
+        v_color = vec4(text.color.a);
+    } else if (color_mode == COLOR_MODE_SUBPX_BG_PASS1) {
+        v_mask_swizzle = vec2(-1.0, 1.0);
+        v_color = vec4(text.color.a) * text.bg_color;
+    } else {
+        v_mask_swizzle = vec2(0.0);
+        v_color = vec4(1.0);
     }
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));

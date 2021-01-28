@@ -58,23 +58,17 @@ PER_INSTANCE in vec4 aClipParams2;
 vec2 get_outer_corner_scale(int segment) {
     vec2 p;
 
-    switch (segment) {
-        case SEGMENT_TOP_LEFT:
-            p = vec2(0.0, 0.0);
-            break;
-        case SEGMENT_TOP_RIGHT:
-            p = vec2(1.0, 0.0);
-            break;
-        case SEGMENT_BOTTOM_RIGHT:
-            p = vec2(1.0, 1.0);
-            break;
-        case SEGMENT_BOTTOM_LEFT:
-            p = vec2(0.0, 1.0);
-            break;
-        default:
-            // The result is only used for non-default segment cases
-            p = vec2(0.0);
-            break;
+    if (segment == SEGMENT_TOP_LEFT) {
+        p = vec2(0.0, 0.0);
+    } else if (segment == SEGMENT_TOP_RIGHT) {
+        p = vec2(1.0, 0.0);
+    } else if (segment == SEGMENT_BOTTOM_RIGHT) {
+        p = vec2(1.0, 1.0);
+    } else if (segment == SEGMENT_BOTTOM_LEFT) {
+        p = vec2(0.0, 1.0);
+    } else {
+        // The result is only used for non-default segment cases
+        p = vec2(0.0);
     }
 
     return p;
@@ -89,17 +83,14 @@ void main(void) {
     vec2 clip_sign = 1.0 - 2.0 * outer_scale;
 
     int mix_colors;
-    switch (segment) {
-        case SEGMENT_TOP_LEFT:
-        case SEGMENT_TOP_RIGHT:
-        case SEGMENT_BOTTOM_RIGHT:
-        case SEGMENT_BOTTOM_LEFT: {
-            mix_colors = do_aa ? MIX_AA : MIX_NO_AA;
-            break;
-        }
-        default:
-            mix_colors = DONT_MIX;
-            break;
+    if (segment == SEGMENT_TOP_LEFT ||
+        segment == SEGMENT_TOP_RIGHT ||
+        segment == SEGMENT_BOTTOM_RIGHT ||
+        segment == SEGMENT_BOTTOM_LEFT)
+    {
+        mix_colors = do_aa ? MIX_AA : MIX_NO_AA;
+    } else {
+        mix_colors = DONT_MIX;
     }
 
     vMixColors = mix_colors;
