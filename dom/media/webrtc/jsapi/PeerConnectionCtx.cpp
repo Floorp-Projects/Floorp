@@ -166,9 +166,12 @@ void PeerConnectionCtx::Destroy() {
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
 
   if (gInstance) {
-    gInstance->Cleanup();
-    delete gInstance;
+    // Null out gInstance first, so PeerConnectionImpl doesn't try to use it
+    // in Cleanup.
+    auto* instance = gInstance;
     gInstance = nullptr;
+    instance->Cleanup();
+    delete instance;
   }
 
   StopWebRtcLog();
@@ -356,6 +359,10 @@ nsresult PeerConnectionCtx::Cleanup() {
   mQueuedJSEPOperations.Clear();
   mGMPService = nullptr;
   mTransportHandler = nullptr;
+  for (auto& [id, pc] : mPeerConnections) {
+    (void)id;
+    pc->Close();
+  }
   return NS_OK;
 }
 
