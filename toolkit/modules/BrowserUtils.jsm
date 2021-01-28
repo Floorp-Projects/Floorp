@@ -14,43 +14,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 var BrowserUtils = {
   /**
-   * urlSecurityCheck: JavaScript wrapper for checkLoadURIWithPrincipal
-   * and checkLoadURIStrWithPrincipal.
-   * If |aPrincipal| is not allowed to link to |aURL|, this function throws with
-   * an error message.
-   *
-   * @param aURL
-   *        The URL a page has linked to. This could be passed either as a string
-   *        or as a nsIURI object.
-   * @param aPrincipal
-   *        The principal of the document from which aURL came.
-   * @param aFlags
-   *        Flags to be passed to checkLoadURIStr. If undefined,
-   *        nsIScriptSecurityManager.STANDARD will be passed.
-   */
-  urlSecurityCheck(aURL, aPrincipal, aFlags) {
-    var secMan = Services.scriptSecurityManager;
-    if (aFlags === undefined) {
-      aFlags = secMan.STANDARD;
-    }
-
-    try {
-      if (aURL instanceof Ci.nsIURI) {
-        secMan.checkLoadURIWithPrincipal(aPrincipal, aURL, aFlags);
-      } else {
-        secMan.checkLoadURIStrWithPrincipal(aPrincipal, aURL, aFlags);
-      }
-    } catch (e) {
-      let principalStr = "";
-      try {
-        principalStr = " from " + aPrincipal.spec;
-      } catch (e2) {}
-
-      throw new Error(`Load of ${aURL + principalStr} denied.`);
-    }
-  },
-
-  /**
    * Return or create a principal with the content of one, and the originAttributes
    * of an existing principal (e.g. on a docshell, where the originAttributes ought
    * not to change, that is, we should keep the userContextId, privateBrowsingId,

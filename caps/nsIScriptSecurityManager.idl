@@ -113,9 +113,20 @@ interface nsIScriptSecurityManager : nsISupports
      *        will only appear in the browser console, not window-associated
      *        consoles like the web console.
      */
+    [binaryname(CheckLoadURIWithPrincipal)]
+    void checkLoadURIWithPrincipalXPCOM(in nsIPrincipal aPrincipal,
+                                        in nsIURI uri,
+                                        in unsigned long flags,
+                                        [optional] in unsigned long long innerWindowID);
+
+    /**
+     * Same as the above, but when called from JS, raises exceptions with more
+     * useful messages, including both the tested URI and the principal string.
+     */
+    [implicit_jscontext, binaryname(CheckLoadURIWithPrincipalFromJS)]
     void checkLoadURIWithPrincipal(in nsIPrincipal aPrincipal,
                                    in nsIURI uri,
-                                   in unsigned long flags,
+                                   [optional] in unsigned long flags,
                                    [optional] in unsigned long long innerWindowID);
 
     /**
@@ -127,9 +138,19 @@ interface nsIScriptSecurityManager : nsISupports
      * load as well); if any of the versions of this URI is not allowed, this
      * function will return error code NS_ERROR_DOM_BAD_URI.
      */
+    [binaryname(CheckLoadURIStrWithPrincipal)]
+    void checkLoadURIStrWithPrincipalXPCOM(in nsIPrincipal aPrincipal,
+                                           in AUTF8String uri,
+                                           in unsigned long flags);
+
+    /**
+     * Same as the above, but when called from JS, raises exceptions with more
+     * useful messages, including both the tested URI and the principal string.
+     */
+    [implicit_jscontext, binaryname(CheckLoadURIStrWithPrincipalFromJS)]
     void checkLoadURIStrWithPrincipal(in nsIPrincipal aPrincipal,
                                       in AUTF8String uri,
-                                      in unsigned long flags);
+                                      [optional] in unsigned long flags);
 
     /**
      * Returns true if the URI is from a domain that is allow-listed through
