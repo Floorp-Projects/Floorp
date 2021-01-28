@@ -707,15 +707,15 @@ class ResourceWatcher {
    * Call backward compatibility code from `LegacyListeners` in order to listen for a given
    * type of resource from a given target.
    */
-  _watchResourcesForTarget(targetFront, resourceType) {
+  async _watchResourcesForTarget(targetFront, resourceType) {
     if (this._hasResourceWatcherSupportForTarget(resourceType, targetFront)) {
       // This resource / target pair should already be handled by the watcher,
       // no need to start legacy listeners.
-      return Promise.resolve();
+      return;
     }
 
     if (targetFront.isDestroyed()) {
-      return Promise.resolve();
+      return;
     }
 
     const onAvailable = this._onResourceAvailable.bind(this, { targetFront });
@@ -732,20 +732,32 @@ class ResourceWatcher {
       console.error(
         `Already started legacy listener for ${resourceType} on ${targetFront.actorID}`
       );
-      return Promise.resolve();
+      return;
     }
     this._existingLegacyListeners.set(
       targetFront,
       legacyListeners.concat(resourceType)
     );
 
-    return LegacyListeners[resourceType]({
-      targetList: this.targetList,
-      targetFront,
-      onAvailable,
-      onDestroyed,
-      onUpdated,
-    });
+    try {
+      await LegacyListeners[resourceType]({
+        targetList: this.targetList,
+        targetFront,
+        onAvailable,
+        onDestroyed,
+        onUpdated,
+      });
+    } catch (e) {
+      // Swallow the error to avoid breaking calls to watchResources which will
+      // loop on all existing targets to create legacy listeners.
+      // If a legacy listener fails to handle a target for some reason, we
+      // should still try to process other targets as much as possible.
+      // See Bug 1687645.
+      console.error(
+        `Failed to start [${resourceType}] legacy listener for target ${targetFront.actorID}`,
+        e
+      );
+    }
   }
 
   /**
