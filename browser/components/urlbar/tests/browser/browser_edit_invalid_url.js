@@ -5,7 +5,7 @@
 // modifies the selected url, or just closes the results pane, we do a visit
 // rather than searching for the trimmed string.
 
-const url = BrowserUtils.trimURLProtocol + "invalid.somehost/mytest";
+const url = BrowserUIUtils.trimURLProtocol + "invalid.somehost/mytest";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
