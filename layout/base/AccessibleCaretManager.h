@@ -315,6 +315,10 @@ class AccessibleCaretManager {
   PresShell* MOZ_NON_OWNING_REF mPresShell = nullptr;
 
   struct Carets {
+    bool HasLogicallyVisibleCaret() const {
+      return mFirst->IsLogicallyVisible() || mSecond->IsLogicallyVisible();
+    }
+
     // First caret is attached to nsCaret in cursor mode, and is attached to
     // selection highlight as the left caret in selection mode.
     UniquePtr<AccessibleCaret> mFirst;
