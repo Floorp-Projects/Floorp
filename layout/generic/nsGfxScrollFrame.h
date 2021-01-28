@@ -404,7 +404,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
       nsIFrame* aFrame, nsPresContext* aPresContext, nsRect& aRect,
       bool aHasResizer, mozilla::layers::ScrollDirection aDirection);
   // returns true if a resizer should be visible
-  bool HasResizer() { return mResizerBox && !mCollapsedResizer; }
+  bool HasResizer() { return mResizerBox; }
   void LayoutScrollbars(nsBoxLayoutState& aState, const nsRect& aContentArea,
                         const nsRect& aOldScrollArea);
 
@@ -665,8 +665,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // If true, we should be prepared to scroll using this scrollframe
   // by placing descendant content into its own layer(s)
   bool mHasBeenScrolledRecently : 1;
-  // If true, the resizer is collapsed and not displayed
-  bool mCollapsedResizer : 1;
 
   // If true, the scroll frame should always be active because we always build
   // a scrollable layer. Used for asynchronous scrolling.

@@ -1251,7 +1251,6 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
   }
 
   if (mHelper.mIsRoot) {
-    mHelper.mCollapsedResizer = true;
     reflowScrollCorner = false;
 
     // Hide the scrollbar when the scrollbar-width is set to none.
@@ -2208,7 +2207,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mMayHaveDirtyFixedChildren(false),
       mUpdateScrollbarAttributes(false),
       mHasBeenScrolledRecently(false),
-      mCollapsedResizer(false),
       mWillBuildScrollableLayer(false),
       mIsScrollParent(false),
       mAddClipRectToLayer(false),
@@ -5341,6 +5339,8 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
   }
 
   if (isResizable) {
+    MOZ_ASSERT(!mIsRoot, "Root scroll frame shouldn't be resizable");
+
     AnonymousContentKey key = AnonymousContentKey::Type_Resizer;
 
     RefPtr<NodeInfo> nodeInfo;
@@ -5383,20 +5383,10 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
         NS_WARNING("only resizable types should have resizers");
     }
     mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, dir, false);
-
-    if (mIsRoot) {
-      mResizerContent->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
-                                   reinterpret_cast<void*>(true));
-
-      mCollapsedResizer = true;
-    } else {
-      mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::element,
-                               u"_parent"_ns, false);
-    }
-
+    mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::element,
+                             u"_parent"_ns, false);
     mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
                              u"always"_ns, false);
-
     aElements.AppendElement(ContentInfo(mResizerContent, key));
   }
 
