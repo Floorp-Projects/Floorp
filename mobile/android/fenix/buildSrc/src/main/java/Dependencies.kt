@@ -19,7 +19,7 @@ object Versions {
     const val jna = "5.6.0"
 
     const val androidx_appcompat = "1.2.0"
-    const val androidx_biometric = "1.1.0-rc01"
+    const val androidx_biometric = "1.1.0"
     const val androidx_coordinator_layout = "1.1.0"
     const val androidx_constraint_layout = "2.0.4"
     const val androidx_preference = "1.1.1"
@@ -27,12 +27,12 @@ object Versions {
     const val androidx_annotation = "1.1.0"
     const val androidx_lifecycle = "2.2.0"
     const val androidx_fragment = "1.2.5"
-    const val androidx_navigation = "2.3.1"
-    const val androidx_recyclerview = "1.2.0-alpha06"
+    const val androidx_navigation = "2.3.3"
+    const val androidx_recyclerview = "1.2.0-beta01"
     const val androidx_core = "1.3.2"
-    const val androidx_paging = "2.1.0"
-    const val androidx_transition = "1.3.0"
-    const val androidx_work = "2.4.0"
+    const val androidx_paging = "2.1.2"
+    const val androidx_transition = "1.4.0"
+    const val androidx_work = "2.5.0"
     const val google_material = "1.2.1"
 
     const val mozilla_android_components = AndroidComponents.VERSION
