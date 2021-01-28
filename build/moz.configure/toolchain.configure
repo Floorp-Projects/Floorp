@@ -2056,22 +2056,23 @@ set_config("RUSTFLAGS", depends("RUSTFLAGS")(lambda flags: flags))
 # Rust compiler flags
 # ==============================================================
 
+
+@depends(moz_optimize)
+def rustc_opt_level_default(moz_optimize):
+    return "2" if moz_optimize.optimize else "0"
+
+
 option(
     env="RUSTC_OPT_LEVEL",
+    default=rustc_opt_level_default,
     nargs=1,
     help="Rust compiler optimization level (-C opt-level=%s)",
 )
 
-# --enable-release kicks in full optimizations.
-imply_option("RUSTC_OPT_LEVEL", "2", when="--enable-release")
 
-
-@depends("RUSTC_OPT_LEVEL", moz_optimize)
-def rustc_opt_level(opt_level_option, moz_optimize):
-    if opt_level_option:
-        return opt_level_option[0]
-    else:
-        return "1" if moz_optimize.optimize else "0"
+@depends("RUSTC_OPT_LEVEL")
+def rustc_opt_level(opt_level_option):
+    return opt_level_option[0]
 
 
 @depends(
