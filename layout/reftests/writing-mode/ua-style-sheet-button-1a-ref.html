@@ -17,6 +17,21 @@
 .v-rl input[type="button"] {
   padding: 8px 1px;
 }
+
+@supports -moz-bool-pref("widget.disable-native-theme-for-content") {
+  .ltr button,
+  .rtl button,
+  .ltr input[type="button"],
+  .rtl input[type="button"] {
+    padding: 1px 4px;
+  }
+
+  .v-rl button,
+  .v-rl input[type="button"] {
+    padding: 4px 1px;
+  }
+}
+
 </style>
 <div class=ltr>
   <button>one</button><br>
