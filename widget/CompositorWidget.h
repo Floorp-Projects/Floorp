@@ -165,10 +165,10 @@ class CompositorWidget {
 
   /**
    * Some widgets (namely Gtk) may need clean up underlying surface
-   * before painting to draw transparent objects correctly. Return
-   * the transparent region where this clearing is required.
+   * before painting to draw transparent objects correctly.
    */
-  virtual LayoutDeviceIntRegion GetTransparentRegion();
+  virtual void ClearBeforePaint(RefPtr<gfx::DrawTarget> aTarget,
+                                const LayoutDeviceIntRegion& aRegion) {}
 
   /**
    * Called when shutting down the LayerManager to clean-up any cached

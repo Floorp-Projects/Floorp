@@ -61,7 +61,8 @@ class GtkCompositorWidget : public CompositorWidget,
   EGLNativeWindowType GetEGLNativeWindow();
   int32_t GetDepth();
 
-  LayoutDeviceIntRegion GetTransparentRegion() override;
+  void ClearBeforePaint(RefPtr<gfx::DrawTarget> aTarget,
+                        const LayoutDeviceIntRegion& aRegion) override;
 
 #if defined(MOZ_X11)
   Display* XDisplay() const { return mXDisplay; }
