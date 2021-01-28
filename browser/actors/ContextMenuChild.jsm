@@ -17,11 +17,11 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SelectionUtils: "resource://gre/modules/SelectionUtils.jsm",
   InlineSpellCheckerContent:
     "resource://gre/modules/InlineSpellCheckerContent.jsm",
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
@@ -237,9 +237,9 @@ class ContextMenuChild extends JSWindowActorChild {
 
         if (!disable) {
           try {
-            Services.scriptSecurityManager.checkLoadURIWithPrincipal(
-              target.ownerDocument.nodePrincipal,
-              target.currentURI
+            BrowserUtils.urlSecurityCheck(
+              target.currentURI.spec,
+              target.ownerDocument.nodePrincipal
             );
             let canvas = this.document.createElement("canvas");
             canvas.width = target.naturalWidth;
@@ -614,7 +614,7 @@ class ContextMenuChild extends JSWindowActorChild {
       } catch (e) {}
     }
 
-    let selectionInfo = SelectionUtils.getSelectionDetails(this.contentWindow);
+    let selectionInfo = BrowserUtils.getSelectionDetails(this.contentWindow);
     let loadContext = this.docShell.QueryInterface(Ci.nsILoadContext);
     let userContextId = loadContext.originAttributes.userContextId;
 
