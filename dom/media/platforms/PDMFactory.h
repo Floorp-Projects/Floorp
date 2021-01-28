@@ -22,13 +22,10 @@ namespace mozilla {
 class CDMProxy;
 class MediaDataDecoder;
 class MediaResult;
-class PDMFactoryImpl;
 class PlatformDecoderModule;
 class StaticMutex;
 template <typename T>
 struct MaxEnumValue;
-template <class T>
-class StaticAutoPtr;
 struct CreateDecoderParams;
 struct CreateDecoderParamsForAsync;
 struct SupportDecoderParams;
@@ -127,10 +124,6 @@ class PDMFactory final {
 
   friend class RemoteVideoDecoderParent;
   static void EnsureInit();
-  template <class T>
-  friend class StaticAutoPtr;
-  static StaticAutoPtr<PDMFactoryImpl> sInstance;
-  static StaticMutex sMonitor;
 };
 
 // Used for IPDL serialization.
