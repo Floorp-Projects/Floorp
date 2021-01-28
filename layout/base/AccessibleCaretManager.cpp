@@ -1474,8 +1474,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
   init.mReason = aReason;
   init.mCollapsed = sel->IsCollapsed();
   init.mCaretVisible = mCarets.HasLogicallyVisibleCaret();
-  init.mCaretVisuallyVisible = mCarets.mFirst->IsVisuallyVisible() ||
-                               mCarets.mSecond->IsVisuallyVisible();
+  init.mCaretVisuallyVisible = mCarets.HasVisuallyVisibleCaret();
   init.mSelectedTextContent = StringifiedSelection();
 
   RefPtr<CaretStateChangedEvent> event = CaretStateChangedEvent::Constructor(
