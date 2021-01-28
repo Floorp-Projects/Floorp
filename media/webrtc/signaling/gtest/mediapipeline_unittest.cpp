@@ -283,6 +283,7 @@ class TestAgent {
 
   void Shutdown() {
     if (audio_pipeline_) audio_pipeline_->Shutdown_m();
+    if (audio_conduit_) audio_conduit_->DeleteStreams();
 
     test_utils->sts_target()->Dispatch(
         WrapRunnable(this, &TestAgent::Shutdown_s),
