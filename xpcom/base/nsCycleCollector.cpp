@@ -2043,7 +2043,8 @@ void CCGraphBuilder::DoneAddingRoots() {
 
 MOZ_NEVER_INLINE bool CCGraphBuilder::BuildGraph(SliceBudget& aBudget) {
   const intptr_t kNumNodesBetweenTimeChecks = 1000;
-  const intptr_t kStep = SliceBudget::CounterReset / kNumNodesBetweenTimeChecks;
+  const intptr_t kStep =
+      SliceBudget::StepsPerTimeCheck / kNumNodesBetweenTimeChecks;
 
   MOZ_ASSERT(mCurrNode);
 
@@ -3450,7 +3451,7 @@ bool nsCycleCollector::Collect(ccType aCCType, SliceBudget& aBudget,
     }
     if (continueSlice) {
       // Force SliceBudget::isOverBudget to check the time.
-      aBudget.step(SliceBudget::CounterReset);
+      aBudget.step(SliceBudget::StepsPerTimeCheck);
       continueSlice = !aBudget.isOverBudget();
     }
   } while (continueSlice);

@@ -1135,9 +1135,10 @@ void Statistics::endNurseryCollection(JS::GCReason reason) {
   allocsSinceMinorGC = {0, 0};
 }
 
-Statistics::SliceData::SliceData(SliceBudget budget, Maybe<Trigger> trigger,
-                                 JS::GCReason reason, TimeStamp start,
-                                 size_t startFaults, gc::State initialState)
+Statistics::SliceData::SliceData(const SliceBudget& budget,
+                                 Maybe<Trigger> trigger, JS::GCReason reason,
+                                 TimeStamp start, size_t startFaults,
+                                 gc::State initialState)
     : budget(budget),
       reason(reason),
       trigger(trigger),
@@ -1146,8 +1147,8 @@ Statistics::SliceData::SliceData(SliceBudget budget, Maybe<Trigger> trigger,
       startFaults(startFaults) {}
 
 void Statistics::beginSlice(const ZoneGCStats& zoneStats,
-                            JSGCInvocationKind gckind, SliceBudget budget,
-                            JS::GCReason reason) {
+                            JSGCInvocationKind gckind,
+                            const SliceBudget& budget, JS::GCReason reason) {
   MOZ_ASSERT(phaseStack.empty() ||
              (phaseStack.length() == 1 && phaseStack[0] == Phase::MUTATOR));
 
@@ -1277,7 +1278,7 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
   runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
 
   if (slice.budget.isTimeBudget()) {
-    int64_t budget_ms = slice.budget.timeBudget.budget;
+    int64_t budget_ms = slice.budget.timeBudget();
     runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS_2, budget_ms);
     if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
       runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
@@ -1604,8 +1605,7 @@ void Statistics::printSliceProfile() {
 
   if (!nonIncremental && !slice.budget.isUnlimited() &&
       slice.budget.isTimeBudget()) {
-    fprintf(stderr, " %6" PRIi64,
-            static_cast<int64_t>(slice.budget.timeBudget.budget));
+    fprintf(stderr, " %6" PRIi64, slice.budget.timeBudget());
   } else {
     fprintf(stderr, "       ");
   }
