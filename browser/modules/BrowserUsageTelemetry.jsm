@@ -19,7 +19,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -1208,7 +1208,7 @@ let BrowserUsageTelemetry = {
       }
 
       const { loadedTabCount } = getOpenTabsAndWinsCounts();
-      const siteOrigins = BrowserUtils.computeSiteOriginCount(
+      const siteOrigins = BrowserTelemetryUtils.computeSiteOriginCount(
         Services.wm.getEnumerator("navigator:browser"),
         false
       );
