@@ -15,7 +15,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SessionStateKtTest {
     private val bitmap: Bitmap = mock()
-    private val getArtwork: (suspend (Int) -> Bitmap?) = { bitmap }
+    private val getArtwork: (suspend () -> Bitmap?) = { bitmap }
+    private val getArtworkNull: (suspend () -> Bitmap?) = { null }
 
     @Test
     fun `getNonPrivateIcon returns null when in private mode`() {
@@ -62,6 +63,24 @@ class SessionStateKtTest {
         var result: Bitmap?
         runBlocking {
             result = sessionState.getNonPrivateIcon(null)
+        }
+
+        assertEquals(result, icon)
+    }
+
+    @Test
+    fun `getNonPrivateIcon returns content icon when getArtwork return null`() {
+        val sessionState: SessionState = mock()
+        val contentState: ContentState = mock()
+        val icon: Bitmap = mock()
+
+        whenever(sessionState.content).thenReturn(contentState)
+        whenever(contentState.private).thenReturn(false)
+        whenever(contentState.icon).thenReturn(icon)
+
+        var result: Bitmap?
+        runBlocking {
+            result = sessionState.getNonPrivateIcon(getArtworkNull)
         }
 
         assertEquals(result, icon)

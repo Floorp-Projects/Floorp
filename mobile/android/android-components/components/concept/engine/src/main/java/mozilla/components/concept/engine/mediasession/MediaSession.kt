@@ -45,7 +45,7 @@ class MediaSession {
         val title: String? = null,
         val artist: String? = null,
         val album: String? = null,
-        val getArtwork: (suspend (Int) -> Bitmap?)?
+        val getArtwork: (suspend () -> Bitmap?)?
     )
 
     /**

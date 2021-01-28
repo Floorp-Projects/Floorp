@@ -6,14 +6,10 @@ package mozilla.components.feature.media.ext
 
 import android.content.Context
 import android.graphics.Bitmap
-import kotlinx.coroutines.withTimeoutOrNull
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.feature.media.R
-
-private const val ARTWORK_RETRIEVE_TIMEOUT = 1000L
-private const val ARTWORK_IMAGE_SIZE = 48
 
 internal fun SessionState?.getTitleOrUrl(context: Context, title: String? = null): String = when {
     this == null -> context.getString(R.string.mozac_feature_media_notification_private_mode)
@@ -23,13 +19,13 @@ internal fun SessionState?.getTitleOrUrl(context: Context, title: String? = null
     else -> content.url
 }
 
-internal suspend fun SessionState?.getNonPrivateIcon(getArtwork: (suspend (Int) -> Bitmap?)?): Bitmap? = when {
+@Suppress("TooGenericExceptionCaught")
+internal suspend fun SessionState?.getNonPrivateIcon(
+    getArtwork: (suspend () -> Bitmap?)?
+): Bitmap? = when {
     this == null -> null
     content.private -> null
-    getArtwork != null ->
-        withTimeoutOrNull(ARTWORK_RETRIEVE_TIMEOUT) {
-            getArtwork(ARTWORK_IMAGE_SIZE)
-        }
+    getArtwork != null -> getArtwork() ?: content.icon
     else -> content.icon
 }
 
