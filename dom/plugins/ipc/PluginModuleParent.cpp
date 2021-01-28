@@ -1679,13 +1679,6 @@ nsresult PluginModuleParent::GetScrollCaptureContainer(
 }
 #endif
 
-nsresult PluginModuleParent::HandledWindowedPluginKeyEvent(
-    NPP aInstance, const NativeEventData& aNativeKeyData, bool aIsConsumed) {
-  PluginInstanceParent* pip = PluginInstanceParent::Cast(aInstance);
-  return pip ? pip->HandledWindowedPluginKeyEvent(aNativeKeyData, aIsConsumed)
-             : NS_ERROR_FAILURE;
-}
-
 void PluginModuleParent::OnInitFailure() {
   if (GetIPCChannel()->CanSend()) {
     Close();

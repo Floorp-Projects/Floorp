@@ -57,8 +57,6 @@ using namespace mozilla::widget;
 #  include <windowsx.h>
 
 #  include "mozilla/widget/WinMessages.h"
-#  include "mozilla/widget/WinModifierKeyState.h"
-#  include "mozilla/widget/WinNativeEventData.h"
 #  include "nsWindowsDllInterceptor.h"
 #  include "X11UndefineNone.h"
 
@@ -116,8 +114,6 @@ static RefPtr<DrawTarget> CreateDrawTargetForSurface(gfxASurface* aSurface) {
   return drawTarget;
 }
 
-bool PluginInstanceChild::sIsIMEComposing = false;
-
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
                                          const nsCString& aMimeType,
                                          const nsTArray<nsCString>& aNames,
@@ -132,8 +128,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #endif
       ,
       mCSSZoomFactor(0.0),
-      mPostingKeyEvents(0),
-      mPostingKeyEventsOutdated(0),
       mDrawingModel(kDefaultDrawingModel),
       mCurrentDirectSurface(nullptr),
       mAsyncInvalidateMutex("PluginInstanceChild::mAsyncInvalidateMutex"),
@@ -180,7 +174,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
       mDestroyed(false)
 #ifdef XP_WIN
       ,
-      mLastKeyEventConsumed(false),
       mLastEnableIMEState(true)
 #endif  // #ifdef XP_WIN
       ,
@@ -1286,92 +1279,6 @@ bool PluginInstanceChild::Initialize() {
   return true;
 }
 
-mozilla::ipc::IPCResult PluginInstanceChild::RecvHandledWindowedPluginKeyEvent(
-    const NativeEventData& aKeyEventData, const bool& aIsConsumed) {
-#if defined(OS_WIN)
-  const WinNativeKeyEventData* eventData =
-      static_cast<const WinNativeKeyEventData*>(aKeyEventData);
-  switch (eventData->mMessage) {
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-    case WM_KEYUP:
-    case WM_SYSKEYUP:
-      mLastKeyEventConsumed = aIsConsumed;
-      break;
-    case WM_CHAR:
-    case WM_SYSCHAR:
-    case WM_DEADCHAR:
-    case WM_SYSDEADCHAR:
-      // If preceding keydown or keyup event is consumed by the chrome
-      // process, we should consume WM_*CHAR messages too.
-      if (mLastKeyEventConsumed) {
-        return IPC_OK();
-      }
-    default:
-      MOZ_CRASH("Needs to handle all messages posted to the parent");
-  }
-#endif  // #if defined(OS_WIN)
-
-  // Unknown key input shouldn't be sent to plugin for security.
-  // XXX Is this possible if a plugin process which posted the message
-  //     already crashed and this plugin process is recreated?
-  if (NS_WARN_IF(!mPostingKeyEvents && !mPostingKeyEventsOutdated)) {
-    return IPC_OK();
-  }
-
-  // If there is outdated posting key events, we should consume the key
-  // events.
-  if (mPostingKeyEventsOutdated) {
-    mPostingKeyEventsOutdated--;
-    return IPC_OK();
-  }
-
-  mPostingKeyEvents--;
-
-  // If composition has been started after posting the key event,
-  // we should discard the event since if we send the event to plugin,
-  // the plugin may be confused and the result may be broken because
-  // the event order is shuffled.
-  if (aIsConsumed || sIsIMEComposing) {
-    return IPC_OK();
-  }
-
-#if defined(OS_WIN)
-  UINT message = 0;
-  switch (eventData->mMessage) {
-    case WM_KEYDOWN:
-      message = MOZ_WM_KEYDOWN;
-      break;
-    case WM_SYSKEYDOWN:
-      message = MOZ_WM_SYSKEYDOWN;
-      break;
-    case WM_KEYUP:
-      message = MOZ_WM_KEYUP;
-      break;
-    case WM_SYSKEYUP:
-      message = MOZ_WM_SYSKEYUP;
-      break;
-    case WM_CHAR:
-      message = MOZ_WM_CHAR;
-      break;
-    case WM_SYSCHAR:
-      message = MOZ_WM_SYSCHAR;
-      break;
-    case WM_DEADCHAR:
-      message = MOZ_WM_DEADCHAR;
-      break;
-    case WM_SYSDEADCHAR:
-      message = MOZ_WM_SYSDEADCHAR;
-      break;
-    default:
-      MOZ_CRASH("Needs to handle all messages posted to the parent");
-  }
-  PluginWindowProcInternal(mPluginWindowHWND, message, eventData->mWParam,
-                           eventData->mLParam);
-#endif
-  return IPC_OK();
-}
-
 #if defined(OS_WIN)
 
 static const TCHAR kWindowClassName[] = TEXT("GeckoPluginWindow");
@@ -1513,66 +1420,17 @@ LRESULT CALLBACK PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
       break;
     }
 
-    case WM_SETFOCUS:
-      // If this gets focus, ensure that there is no pending key events.
-      // Even if there were, we should ignore them for performance reason.
-      // Although, such case shouldn't occur.
-      NS_WARNING_ASSERTION(self->mPostingKeyEvents == 0, "pending events");
-      self->mPostingKeyEvents = 0;
-      self->mLastKeyEventConsumed = false;
-      break;
-
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-    case WM_KEYUP:
-    case WM_SYSKEYUP:
-      if (self->MaybePostKeyMessage(message, wParam, lParam)) {
-        // If PreHandleKeyMessage() posts the message to the parent
-        // process, we need to wait RecvOnKeyEventHandledBeforePlugin()
-        // to be called.
-        return 0;  // Consume current message temporarily.
-      }
-      break;
-
-    case MOZ_WM_KEYDOWN:
-      message = WM_KEYDOWN;
-      break;
-    case MOZ_WM_SYSKEYDOWN:
-      message = WM_SYSKEYDOWN;
-      break;
-    case MOZ_WM_KEYUP:
-      message = WM_KEYUP;
-      break;
-    case MOZ_WM_SYSKEYUP:
-      message = WM_SYSKEYUP;
-      break;
-    case MOZ_WM_CHAR:
-      message = WM_CHAR;
-      break;
-    case MOZ_WM_SYSCHAR:
-      message = WM_SYSCHAR;
-      break;
-    case MOZ_WM_DEADCHAR:
-      message = WM_DEADCHAR;
-      break;
-    case MOZ_WM_SYSDEADCHAR:
-      message = WM_SYSDEADCHAR;
-      break;
-
     case WM_IME_STARTCOMPOSITION:
       isIMECompositionMessage = true;
-      sIsIMEComposing = true;
       break;
     case WM_IME_ENDCOMPOSITION:
       isIMECompositionMessage = true;
-      sIsIMEComposing = false;
       break;
     case WM_IME_COMPOSITION:
       isIMECompositionMessage = true;
       // XXX Some old IME may not send WM_IME_COMPOSITION_START or
       //     WM_IME_COMPSOITION_END properly.  So, we need to check
       //     WM_IME_COMPSOITION and if it includes commit string.
-      sIsIMEComposing = !(lParam & GCS_RESULTSTR);
       break;
 
     // The plugin received keyboard focus, let the parent know so the dom
@@ -1580,15 +1438,6 @@ LRESULT CALLBACK PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
     case WM_MOUSEACTIVATE:
       self->CallPluginFocusChange(true);
       break;
-  }
-
-  // When a composition is committed, there may be pending key
-  // events which were posted to the parent process before starting
-  // the composition.  Then, we shouldn't handle it since they are
-  // now outdated.
-  if (isIMECompositionMessage && !sIsIMEComposing) {
-    self->mPostingKeyEventsOutdated += self->mPostingKeyEvents;
-    self->mPostingKeyEvents = 0;
   }
 
   // Prevent lockups due to plugins making rpc calls when the parent
@@ -1645,89 +1494,6 @@ LRESULT CALLBACK PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
   }
 
   return res;
-}
-
-bool PluginInstanceChild::ShouldPostKeyMessage(UINT message, WPARAM wParam,
-                                               LPARAM lParam) {
-  // If there is a composition, we shouldn't post the key message to the
-  // parent process because we cannot handle IME messages asynchronously.
-  // Therefore, if we posted key events to the parent process, the event
-  // order of the posted key events and IME events are shuffled.
-  if (sIsIMEComposing) {
-    return false;
-  }
-
-  // If there are some pending keyboard events which are not handled in
-  // the parent process, we should post the message for avoiding to shuffle
-  // the key event order.
-  if (mPostingKeyEvents) {
-    return true;
-  }
-
-  // If we are not waiting calls of RecvOnKeyEventHandledBeforePlugin(),
-  // we don't need to post WM_*CHAR messages.
-  switch (message) {
-    case WM_CHAR:
-    case WM_SYSCHAR:
-    case WM_DEADCHAR:
-    case WM_SYSDEADCHAR:
-      return false;
-  }
-
-  // Otherwise, we should post key message which might match with a
-  // shortcut key.
-  ModifierKeyState modifierState;
-  if (!modifierState.MaybeMatchShortcutKey()) {
-    // For better UX, we shouldn't use IPC when user tries to
-    // input character(s).
-    return false;
-  }
-
-  // Ignore modifier key events and keys already handled by IME.
-  switch (wParam) {
-    case VK_SHIFT:
-    case VK_CONTROL:
-    case VK_MENU:
-    case VK_LWIN:
-    case VK_RWIN:
-    case VK_CAPITAL:
-    case VK_NUMLOCK:
-    case VK_SCROLL:
-    // Following virtual keycodes shouldn't come with WM_(SYS)KEY* message
-    // but check it for avoiding unnecessary cross process communication.
-    case VK_LSHIFT:
-    case VK_RSHIFT:
-    case VK_LCONTROL:
-    case VK_RCONTROL:
-    case VK_LMENU:
-    case VK_RMENU:
-    case VK_PROCESSKEY:
-    case VK_PACKET:
-    case 0xFF:  // 0xFF could be sent with unidentified key by the layout.
-      return false;
-    default:
-      break;
-  }
-  return true;
-}
-
-bool PluginInstanceChild::MaybePostKeyMessage(UINT message, WPARAM wParam,
-                                              LPARAM lParam) {
-  if (!ShouldPostKeyMessage(message, wParam, lParam)) {
-    return false;
-  }
-
-  ModifierKeyState modifierState;
-  WinNativeKeyEventData winNativeKeyData(message, wParam, lParam,
-                                         modifierState);
-  NativeEventData nativeKeyData;
-  nativeKeyData.Copy(winNativeKeyData);
-  if (NS_WARN_IF(!SendOnWindowedPluginKeyEvent(nativeKeyData))) {
-    return false;
-  }
-
-  mPostingKeyEvents++;
-  return true;
 }
 
 /* set window long ptr hook for flash */

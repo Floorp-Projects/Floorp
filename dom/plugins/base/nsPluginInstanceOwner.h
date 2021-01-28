@@ -12,7 +12,6 @@
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "npapi.h"
 #include "nsCOMPtr.h"
-#include "nsIKeyEventInPluginCallback.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIPrivacyTransitionObserver.h"
 #include "nsIDOMEventListener.h"
@@ -54,7 +53,6 @@ using mozilla::widget::PuppetWidget;
 class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
                                     public nsIDOMEventListener,
                                     public nsIPrivacyTransitionObserver,
-                                    public nsIKeyEventInPluginCallback,
                                     public nsSupportsWeakReference {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -253,19 +251,6 @@ class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
   bool GetCompositionString(uint32_t aIndex, nsTArray<uint8_t>* aString,
                             int32_t* aLength);
   bool RequestCommitOrCancel(bool aCommitted);
-
-  // See nsIKeyEventInPluginCallback
-  virtual void HandledWindowedPluginKeyEvent(
-      const mozilla::NativeEventData& aKeyEventData, bool aIsConsumed) override;
-
-  /**
-   * OnWindowedPluginKeyEvent() is called when the plugin process receives
-   * native key event directly.
-   *
-   * @param aNativeKeyData      The key event which was received by the
-   *                            plugin process directly.
-   */
-  void OnWindowedPluginKeyEvent(const mozilla::NativeEventData& aNativeKeyData);
 
   void GetCSSZoomFactor(float* result);
 
