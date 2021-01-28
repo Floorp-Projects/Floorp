@@ -116,7 +116,7 @@ template <JSObject* Create(JSContext*, size_t), typename Element,
                            const JS::AutoRequireNoGC&)>
 bool TestPlainTypedArray(JSContext* cx) {
   {
-    RootedObject notArray(cx, Create(cx, UINT32_MAX));
+    RootedObject notArray(cx, Create(cx, SIZE_MAX));
     CHECK(!notArray);
   }
 
