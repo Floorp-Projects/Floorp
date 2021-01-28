@@ -186,11 +186,16 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   bool WidgetIsContainer(StyleAppearance aAppearance) override;
   bool ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
   bool ThemeNeedsComboboxDropmarker() override;
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*,
+                                   StyleScrollbarWidth,
+                                   Overlay) override;
 
  protected:
   nsNativeBasicTheme() = default;
   virtual ~nsNativeBasicTheme() = default;
 
+  static DPIRatio GetDPIRatioForScrollbarPart(nsPresContext*);
+  static DPIRatio GetDPIRatio(nsPresContext*, StyleAppearance);
   static DPIRatio GetDPIRatio(nsIFrame* aFrame, StyleAppearance);
   static bool IsDateTimeResetButton(nsIFrame* aFrame);
   static bool IsColorPickerButton(nsIFrame* aFrame);

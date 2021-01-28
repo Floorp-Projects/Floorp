@@ -42,9 +42,27 @@ static bool IsParentScrollbarRolledOver(nsIFrame* aFrame) {
                    .HasState(NS_EVENT_STATE_HOVER);
 }
 
+CSSIntCoord ScrollbarDrawingMac::GetScrollbarSize(StyleScrollbarWidth aWidth,
+                                                  bool aOverlay) {
+  bool isSmall = aWidth == StyleScrollbarWidth::Thin;
+  if (aOverlay) {
+    return isSmall ? 14 : 16;
+  }
+  return isSmall ? 11 : 15;
+}
+
+LayoutDeviceIntCoord ScrollbarDrawingMac::GetScrollbarSize(
+    StyleScrollbarWidth aWidth, bool aOverlay, float aDpiRatio) {
+  CSSIntCoord size = GetScrollbarSize(aWidth, aOverlay);
+  if (aDpiRatio >= 2.0f) {
+    return int32_t(size) * 2;
+  }
+  return int32_t(size);
+}
+
 LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
     StyleAppearance aAppearance, nsIFrame* aFrame, float aDpiRatio) {
-  auto fn = [](StyleAppearance aAppearance, nsIFrame* aFrame) -> IntSize {
+  auto minSize = [&] {
     switch (aAppearance) {
       case StyleAppearance::ScrollbarthumbHorizontal:
         return IntSize{26, 0};
@@ -55,23 +73,17 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
       case StyleAppearance::ScrollbartrackVertical:
       case StyleAppearance::ScrollbartrackHorizontal: {
         ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-        bool isSmall =
-            style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
-        if (nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) !=
-            0) {
-          if (isSmall) {
-            return IntSize{14, 14};
-          }
-          return IntSize{16, 16};
-        }
-        if (isSmall) {
-          return IntSize{11, 11};
-        }
-        return IntSize{15, 15};
+        auto scrollbarWidth = style->StyleUIReset()->mScrollbarWidth;
+        auto size = GetScrollbarSize(
+            scrollbarWidth,
+            LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars));
+        return IntSize{size, size};
       }
-      case StyleAppearance::MozMenulistArrowButton:
-      case StyleAppearance::ScrollbarNonDisappearing:
-        return IntSize{15, 15};
+      case StyleAppearance::MozMenulistArrowButton: {
+        auto size =
+            GetScrollbarSize(StyleScrollbarWidth::Auto, /* aOverlay = */ false);
+        return IntSize{size, size};
+      }
       case StyleAppearance::ScrollbarbuttonUp:
       case StyleAppearance::ScrollbarbuttonDown:
         return IntSize{15, 16};
@@ -81,9 +93,8 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
       default:
         return IntSize{};
     }
-  };
+  }();
 
-  IntSize minSize = fn(aAppearance, aFrame);
   if (aDpiRatio >= 2.0f) {
     return LayoutDeviceIntSize{minSize.width * 2, minSize.height * 2};
   }

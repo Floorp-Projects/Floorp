@@ -3388,6 +3388,14 @@ bool nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* 
   return false;
 }
 
+auto nsNativeThemeCocoa::GetScrollbarSizes(nsPresContext* aPresContext, StyleScrollbarWidth aWidth, Overlay aOverlay) -> ScrollbarSizes {
+  auto size = ScrollbarDrawingMac::GetScrollbarSize(aWidth, aOverlay == Overlay::Yes);
+  if (IsHiDPIContext(aPresContext->DeviceContext())) {
+    size *= 2;
+  }
+  return {int32_t(size), int32_t(size)};
+}
+
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                          StyleAppearance aAppearance, LayoutDeviceIntSize* aResult,
@@ -3548,10 +3556,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
     }
 
     case StyleAppearance::MozMenulistArrowButton:
-    case StyleAppearance::ScrollbarNonDisappearing: {
       *aResult = ScrollbarDrawingMac::GetMinimumWidgetSize(aAppearance, aFrame, 1.0f);
       break;
-    }
 
     case StyleAppearance::Resizer: {
       HIThemeGrowBoxDrawInfo drawInfo;
@@ -3728,7 +3734,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbartrackVertical:
     case StyleAppearance::ScrollbartrackHorizontal:
-    case StyleAppearance::ScrollbarNonDisappearing:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
     case StyleAppearance::Scrollcorner:

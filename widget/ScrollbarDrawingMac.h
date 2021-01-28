@@ -33,6 +33,10 @@ struct ScrollbarParams {
 
 class ScrollbarDrawingMac final {
  public:
+  static CSSIntCoord GetScrollbarSize(StyleScrollbarWidth, bool aOverlay);
+
+  static LayoutDeviceIntCoord GetScrollbarSize(StyleScrollbarWidth,
+                                               bool aOverlay, float aDpiRatio);
   static LayoutDeviceIntSize GetMinimumWidgetSize(StyleAppearance aAppearance,
                                                   nsIFrame* aFrame,
                                                   float aDpiRatio);

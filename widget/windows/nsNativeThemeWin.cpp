@@ -1459,16 +1459,20 @@ static bool AssumeThemePartAndStateAreTransparent(int32_t aPart,
 // with a different DPI setting from the system's default scaling, we need to
 // apply scaling to native-themed elements as the Windows theme APIs assume
 // the system default resolution.
-static inline double GetThemeDpiScaleFactor(nsIFrame* aFrame) {
+static inline double GetThemeDpiScaleFactor(nsPresContext* aPresContext) {
   if (WinUtils::IsPerMonitorDPIAware() ||
       StaticPrefs::layout_css_devPixelsPerPx() > 0.0) {
-    nsIWidget* rootWidget = aFrame->PresContext()->GetRootWidget();
+    nsIWidget* rootWidget = aPresContext->GetRootWidget();
     if (rootWidget) {
       double systemScale = WinUtils::SystemScaleFactor();
       return rootWidget->GetDefaultScale().scale / systemScale;
     }
   }
   return 1.0;
+}
+
+static inline double GetThemeDpiScaleFactor(nsIFrame* aFrame) {
+  return GetThemeDpiScaleFactor(aFrame->PresContext());
 }
 
 NS_IMETHODIMP
@@ -2634,7 +2638,6 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbarNonDisappearing:
     case StyleAppearance::Scrollcorner:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
@@ -2813,11 +2816,6 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
 
       //      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB) << 1;
       break;
-    case StyleAppearance::ScrollbarNonDisappearing: {
-      aResult->SizeTo(::GetSystemMetrics(SM_CXVSCROLL),
-                      ::GetSystemMetrics(SM_CYHSCROLL));
-      break;
-    }
     case StyleAppearance::RangeThumb: {
       if (IsRangeHorizontal(aFrame)) {
         (*aResult).width = 12;
@@ -2943,6 +2941,25 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       return NS_ERROR_FAILURE;
   }
   return NS_OK;
+}
+
+auto nsNativeThemeWin::GetScrollbarSizes(nsPresContext* aPresContext,
+                                         StyleScrollbarWidth aWidth, Overlay)
+    -> ScrollbarSizes {
+  ScrollbarSizes sizes{::GetSystemMetrics(SM_CXVSCROLL),
+                       ::GetSystemMetrics(SM_CYHSCROLL)};
+  if (aWidth == StyleScrollbarWidth::Thin) {
+    sizes.mVertical = sizes.mVertical >> 1;
+    sizes.mHorizontal = sizes.mHorizontal >> 1;
+  }
+
+  double themeScale = GetThemeDpiScaleFactor(aPresContext);
+  if (themeScale != 1.0) {
+    sizes.mVertical = NSToIntRound(sizes.mVertical * themeScale);
+    sizes.mHorizontal = NSToIntRound(sizes.mHorizontal * themeScale);
+  }
+
+  return sizes;
 }
 
 nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
