@@ -9,6 +9,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BrowserChild.h"
