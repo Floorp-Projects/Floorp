@@ -659,12 +659,6 @@ TelemetryImpl::GetDebugSlowSQL(JSContext* cx,
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetMaximalNumberOfConcurrentThreads(uint32_t* ret) {
-  *ret = nsThreadManager::get().GetHighestNumberOfThreads();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TelemetryImpl::GetUntrustedModuleLoadEvents(uint32_t aFlags, JSContext* cx,
                                             Promise** aPromise) {
 #if defined(XP_WIN)

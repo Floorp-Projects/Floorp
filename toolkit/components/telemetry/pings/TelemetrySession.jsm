@@ -431,12 +431,6 @@ var Impl = {
 
     ret.startupInterrupted = Number(Services.startup.interrupted);
 
-    let maximalNumberOfConcurrentThreads =
-      Telemetry.maximalNumberOfConcurrentThreads;
-    if (maximalNumberOfConcurrentThreads) {
-      ret.maximalNumberOfConcurrentThreads = maximalNumberOfConcurrentThreads;
-    }
-
     if (Utils.isContentProcess) {
       return ret;
     }
