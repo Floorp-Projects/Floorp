@@ -117,17 +117,17 @@ class FileStream : public FileQuotaStreamWithWrite<nsFileStream> {
   virtual ~FileStream() { Close(); }
 };
 
-already_AddRefed<FileInputStream> CreateFileInputStream(
+Result<NotNull<RefPtr<FileInputStream>>, nsresult> CreateFileInputStream(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
 
-already_AddRefed<FileOutputStream> CreateFileOutputStream(
+Result<NotNull<RefPtr<FileOutputStream>>, nsresult> CreateFileOutputStream(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
 
-already_AddRefed<FileStream> CreateFileStream(
+Result<NotNull<RefPtr<FileStream>>, nsresult> CreateFileStream(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);

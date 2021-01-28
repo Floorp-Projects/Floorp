@@ -88,40 +88,40 @@ NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
   return NS_OK;
 }
 
-already_AddRefed<FileInputStream> CreateFileInputStream(
+Result<NotNull<RefPtr<FileInputStream>>, nsresult> CreateFileInputStream(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
     int32_t aBehaviorFlags) {
-  RefPtr<FileInputStream> stream =
-      new FileInputStream(aPersistenceType, aGroupAndOrigin, aClientType);
+  const auto stream = MakeNotNull<RefPtr<FileInputStream>>(
+      aPersistenceType, aGroupAndOrigin, aClientType);
 
-  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
+  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags));
 
-  return stream.forget();
+  return stream;
 }
 
-already_AddRefed<FileOutputStream> CreateFileOutputStream(
+Result<NotNull<RefPtr<FileOutputStream>>, nsresult> CreateFileOutputStream(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
     int32_t aBehaviorFlags) {
-  RefPtr<FileOutputStream> stream =
-      new FileOutputStream(aPersistenceType, aGroupAndOrigin, aClientType);
+  const auto stream = MakeNotNull<RefPtr<FileOutputStream>>(
+      aPersistenceType, aGroupAndOrigin, aClientType);
 
-  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
+  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags));
 
-  return stream.forget();
+  return stream;
 }
 
-already_AddRefed<FileStream> CreateFileStream(
+Result<NotNull<RefPtr<FileStream>>, nsresult> CreateFileStream(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
     int32_t aBehaviorFlags) {
-  RefPtr<FileStream> stream =
-      new FileStream(aPersistenceType, aGroupAndOrigin, aClientType);
+  const auto stream = MakeNotNull<RefPtr<FileStream>>(
+      aPersistenceType, aGroupAndOrigin, aClientType);
 
-  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
+  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags));
 
-  return stream.forget();
+  return stream;
 }
 
 }  // namespace mozilla::dom::quota
