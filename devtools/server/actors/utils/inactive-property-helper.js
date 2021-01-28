@@ -365,6 +365,15 @@ class InactivePropertyHelper {
           "inactive-css-not-for-internal-table-elements-except-table-cells",
         numFixProps: 1,
       },
+      // table-layout used on non-table elements.
+      {
+        invalidProperties: ["table-layout"],
+        when: () =>
+          !this.checkComputedStyle("display", ["table", "inline-table"]),
+        fixId: "inactive-css-not-table-fix",
+        msgId: "inactive-css-not-table",
+        numFixProps: 1,
+      },
     ];
   }
 
