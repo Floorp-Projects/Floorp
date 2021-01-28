@@ -26,6 +26,11 @@ function init()
 {
   downButton = SpecialPowers.unwrap(
     SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true)[4]);
+  if (!downButton) {
+    ok(navigator.userAgent.indexOf("Linux") !== -1, "Theme doesn't support scrollbar buttons");
+    SimpleTest.finish();
+    return;
+  }
   SimpleTest.executeSoon(doTest1);
 }
 
