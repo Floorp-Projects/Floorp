@@ -831,9 +831,7 @@ this.ActivityStream = class ActivityStream {
   observe(subject, topic, data) {
     switch (topic) {
       case Region.REGION_TOPIC:
-        if (data === Region.REGION_UPDATED) {
-          this._updateDynamicPrefs();
-        }
+        this._updateDynamicPrefs();
         break;
     }
   }

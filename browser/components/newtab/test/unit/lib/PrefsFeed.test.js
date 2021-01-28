@@ -237,11 +237,7 @@ describe("PrefsFeed", () => {
   });
   describe("#observe", () => {
     it("should call dispatch from observe", () => {
-      feed.observe(
-        undefined,
-        global.Region.REGION_TOPIC,
-        global.Region.REGION_UPDATED
-      );
+      feed.observe(undefined, global.Region.REGION_TOPIC);
       assert.calledOnce(feed.store.dispatch);
     });
   });
