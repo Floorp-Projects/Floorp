@@ -19,36 +19,6 @@ ChromeUtils.defineModuleGetter(
 
 var BrowserUtils = {
   /**
-   * restartApplication: Restarts the application, keeping it in
-   * safe mode if it is already in safe mode.
-   */
-  restartApplication() {
-    let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
-      Ci.nsISupportsPRBool
-    );
-    Services.obs.notifyObservers(
-      cancelQuit,
-      "quit-application-requested",
-      "restart"
-    );
-    if (cancelQuit.data) {
-      // The quit request has been canceled.
-      return false;
-    }
-    // if already in safe mode restart in safe mode
-    if (Services.appinfo.inSafeMode) {
-      Services.startup.restartInSafeMode(
-        Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
-      );
-      return undefined;
-    }
-    Services.startup.quit(
-      Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
-    );
-    return undefined;
-  },
-
-  /**
    * Check whether a page can be considered as 'empty', that its URI
    * reflects its origin, and that if it's loaded in a tab, that tab
    * could be considered 'empty' (e.g. like the result of opening
