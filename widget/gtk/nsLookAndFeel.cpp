@@ -771,7 +771,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       GdkScreen* screen = gdk_screen_get_default();
       aResult = gdk_screen_is_composited(screen)
                     ? (nsWindow::GetSystemCSDSupportLevel() !=
-                       nsWindow::CSD_SUPPORT_NONE)
+                       nsWindow::GTK_DECORATION_NONE)
                     : false;
       break;
     }
@@ -1421,7 +1421,7 @@ void nsLookAndFeel::EnsureInit() {
   g_object_unref(labelWidget);
 
   mCSDAvailable =
-      nsWindow::GetSystemCSDSupportLevel() != nsWindow::CSD_SUPPORT_NONE;
+      nsWindow::GetSystemCSDSupportLevel() != nsWindow::GTK_DECORATION_NONE;
   mCSDHideTitlebarByDefault = nsWindow::HideTitlebarByDefault();
 
   mCSDCloseButton = false;
