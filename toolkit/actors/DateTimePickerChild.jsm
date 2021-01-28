@@ -5,8 +5,8 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm"
+  "LayoutUtils",
+  "resource://gre/modules/LayoutUtils.jsm"
 );
 
 var EXPORTED_SYMBOLS = ["DateTimePickerChild"];
@@ -78,7 +78,7 @@ class DateTimePickerChild extends JSWindowActorChild {
    * relative to the left/top of the content area.
    */
   getBoundingContentRect(aElement) {
-    return BrowserUtils.getElementBoundingScreenRect(aElement);
+    return LayoutUtils.getElementBoundingScreenRect(aElement);
   }
 
   getTimePickerPref() {
