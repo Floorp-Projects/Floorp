@@ -93,11 +93,7 @@ describe("ActivityStream", () => {
   describe("#observe", () => {
     it("should call _updateDynamicPrefs from observe", () => {
       sandbox.stub(as, "_updateDynamicPrefs");
-      as.observe(
-        undefined,
-        global.Region.REGION_TOPIC,
-        global.Region.REGION_UPDATED
-      );
+      as.observe(undefined, global.Region.REGION_TOPIC);
       assert.calledOnce(as._updateDynamicPrefs);
     });
   });

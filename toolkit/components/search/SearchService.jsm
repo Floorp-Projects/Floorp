@@ -2547,10 +2547,8 @@ SearchService.prototype = {
         });
         break;
       case Region.REGION_TOPIC:
-        if (verb == Region.REGION_UPDATED) {
-          logConsole.debug("Region updated:", Region.home);
-          this._maybeReloadEngines().catch(Cu.reportError);
-        }
+        logConsole.debug("Region updated:", Region.home);
+        this._maybeReloadEngines().catch(Cu.reportError);
         break;
     }
   },
