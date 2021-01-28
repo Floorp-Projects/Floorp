@@ -28,7 +28,10 @@ MediaTransportHandlerIPC::MediaTransportHandlerIPC(
           const RefPtr<net::SocketProcessBridgeChild>& aBridge) {
         ipc::PBackgroundChild* actor =
             ipc::BackgroundChild::GetOrCreateSocketActorForCurrentThread();
-        if (!actor) {
+        // An actor that can't send is possible if the socket process has
+        // crashed but hasn't been reconnected properly. See
+        // SocketProcessBridgeChild::ActorDestroy for more info.
+        if (!actor || !actor->CanSend()) {
           NS_WARNING(
               "MediaTransportHandlerIPC async init failed! Webrtc networking "
               "will not work!");
