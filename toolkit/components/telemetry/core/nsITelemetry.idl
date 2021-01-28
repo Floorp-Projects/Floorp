@@ -191,12 +191,6 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval debugSlowSQL;
 
   /**
-   * A number representing the highest number of concurrent threads
-   * reached during this session.
-   */
-  readonly attribute uint32_t maximalNumberOfConcurrentThreads;
-
-  /**
    * Flags for getUntrustedModuleLoadEvents.
    */
 
