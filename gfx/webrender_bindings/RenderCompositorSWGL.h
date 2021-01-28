@@ -60,7 +60,7 @@ class RenderCompositorSWGL : public RenderCompositor {
  private:
   void* mContext = nullptr;
   RefPtr<gfx::DrawTarget> mDT;
-  LayoutDeviceIntRegion mRegion;
+  LayoutDeviceIntRegion mDirtyRegion;
   RefPtr<gfx::DataSourceSurface> mSurface;
   uint8_t* mMappedData = nullptr;
   int32_t mMappedStride = 0;
