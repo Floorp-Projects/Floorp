@@ -266,60 +266,12 @@ var BrowserUtils = {
     );
   },
 
-  _visibleToolbarsMap: new WeakMap(),
-
-  /**
-   * Return true if any or a specific toolbar that interacts with the content
-   * document is visible.
-   *
-   * @param  {nsIDocShell} docShell The docShell instance that a toolbar should
-   *                                be interacting with
-   * @param  {String}      which    Identifier of a specific toolbar
-   * @return {Boolean}
-   */
-  isToolbarVisible(docShell, which) {
-    let window = this.getRootWindow(docShell);
-    if (!this._visibleToolbarsMap.has(window)) {
-      return false;
-    }
-    let toolbars = this._visibleToolbarsMap.get(window);
-    return !!toolbars && toolbars.has(which);
-  },
-
-  /**
-   * Track whether a toolbar is visible for a given a docShell.
-   *
-   * @param  {nsIDocShell} docShell  The docShell instance that a toolbar should
-   *                                 be interacting with
-   * @param  {String}      which     Identifier of a specific toolbar
-   * @param  {Boolean}     [visible] Whether the toolbar is visible. Optional,
-   *                                 defaults to `true`.
-   */
-  trackToolbarVisibility(docShell, which, visible = true) {
-    // We have to get the root window object, because XPConnect WrappedNatives
-    // can't be used as WeakMap keys.
-    let window = this.getRootWindow(docShell);
-    let toolbars = this._visibleToolbarsMap.get(window);
-    if (!toolbars) {
-      toolbars = new Set();
-      this._visibleToolbarsMap.set(window, toolbars);
-    }
-    if (!visible) {
-      toolbars.delete(which);
-    } else {
-      toolbars.add(which);
-    }
-  },
-
-  /**
-   * Retrieve the root window object (i.e. the top-most content global) for a
-   * specific docShell object.
-   *
-   * @param  {nsIDocShell} docShell
-   * @return {nsIDOMWindow}
-   */
-  getRootWindow(docShell) {
-    return docShell.browsingContext.top.window;
+  isFindbarVisible(docShell) {
+    const FINDER_JSM = "resource://gre/modules/Finder.jsm";
+    return (
+      Cu.isModuleLoaded(FINDER_JSM) &&
+      ChromeUtils.import(FINDER_JSM).Finder.isFindbarVisible(docShell)
+    );
   },
 
   /**
