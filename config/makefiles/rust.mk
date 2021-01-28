@@ -207,7 +207,12 @@ target_rust_nonltoable := force-cargo-test-run force-cargo-library-check $(forea
 
 ifdef MOZ_PGO_RUST
 ifdef MOZ_PROFILE_GENERATE
-rust_pgo_flags := -C profile-generate=$(topobjdir)
+# Our top-level Cargo.toml sets panic to abort, so we technically don't need -C panic=abort,
+# but the autocfg crate takes RUSTFLAGS verbatim and runs its compiler tests without
+# -C panic=abort (because it doesn't know it's what cargo uses), which fail on Windows
+# because -C panic=unwind (the compiler default) is not compatible with -C profile-generate
+# (https://github.com/rust-lang/rust/issues/61002).
+rust_pgo_flags := -C panic=abort -C profile-generate=$(topobjdir)
 # The C compiler may be passed extra llvm flags for PGO that we also want to pass to rust as well.
 # In PROFILE_GEN_CFLAGS, they look like "-mllvm foo", and we want "-C llvm-args=foo", so first turn
 # "-mllvm foo" into "-mllvm:foo" so that it becomes a unique argument, that we can then filter for,
