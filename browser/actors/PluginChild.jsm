@@ -9,9 +9,6 @@ var EXPORTED_SYMBOLS = ["PluginChild"];
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { BrowserUtils } = ChromeUtils.import(
-  "resource://gre/modules/BrowserUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -43,6 +40,37 @@ const OVERLAY_DISPLAY = {
 // submission, so we listen "manually" on the CPMM instead of through the actor
 // definition.
 const kSubmitMsg = "PluginParent:NPAPIPluginCrashReportSubmitted";
+
+/**
+ * Map the plugin's name to a filtered version more suitable for UI.
+ *
+ * N.B. This should be completely dead code at this point.
+ *
+ * @param aName The full-length name string of the plugin.
+ * @return the simplified name string.
+ */
+function makeNicePluginName(aName) {
+  if (aName == "Shockwave Flash") {
+    return "Adobe Flash";
+  }
+  // Regex checks if aName begins with "Java" + non-letter char
+  if (/^Java\W/.test(aName)) {
+    return "Java";
+  }
+
+  // Clean up the plugin name by stripping off parenthetical clauses,
+  // trailing version numbers or "plugin".
+  // EG, "Foo Bar (Linux) Plugin 1.23_02" --> "Foo Bar"
+  // Do this by first stripping the numbers, etc. off the end, and then
+  // removing "Plugin" (and then trimming to get rid of any whitespace).
+  // (Otherwise, something like "Java(TM) Plug-in 1.7.0_07" gets mangled)
+  let newName = aName
+    .replace(/\(.*?\)/g, "")
+    .replace(/[\s\d\.\-\_\(\)]+$/, "")
+    .replace(/\bplug-?in\b/i, "")
+    .trim();
+  return newName;
+}
 
 class PluginChild extends JSWindowActorChild {
   constructor() {
@@ -139,7 +167,7 @@ class PluginChild extends JSWindowActorChild {
   _getPluginInfo(pluginElement) {
     if (this.isKnownPlugin(pluginElement)) {
       let pluginTag = gPluginHost.getPluginTagForType(pluginElement.actualType);
-      let pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
+      let pluginName = makeNicePluginName(pluginTag.name);
       let fallbackType = pluginElement.defaultFallbackType;
       let permissionString = gPluginHost.getPermissionStringForType(
         pluginElement.actualType
@@ -169,7 +197,7 @@ class PluginChild extends JSWindowActorChild {
     // nsIObjectLoadingContent to check.
     let fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY;
     if (pluginTag) {
-      let pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
+      let pluginName = makeNicePluginName(pluginTag.name);
       let permissionString = gPluginHost.getPermissionStringForTag(pluginTag);
       return { pluginTag, pluginName, permissionString, fallbackType };
     }
