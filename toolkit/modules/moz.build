@@ -160,6 +160,7 @@ EXTRA_JS_MODULES += [
     "AppMenuNotifications.jsm",
     "AsyncPrefs.jsm",
     "BinarySearch.jsm",
+    "BrowserTelemetryUtils.jsm",
     "BrowserUtils.jsm",
     "CanonicalJSON.jsm",
     "CertUtils.jsm",
