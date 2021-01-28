@@ -72,12 +72,14 @@ class nsNativeThemeWin : private nsNativeTheme, public nsITheme {
 
   bool ThemeNeedsComboboxDropmarker() override;
 
-  virtual bool WidgetAppearanceDependsOnWindowFocus(
-      StyleAppearance aAppearance) override;
+  bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance) override;
 
   enum { eThemeGeometryTypeWindowButtons = eThemeGeometryTypeUnknown + 1 };
-  virtual ThemeGeometryType ThemeGeometryTypeForWidget(
-      nsIFrame* aFrame, StyleAppearance aAppearance) override;
+  ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame*,
+                                               StyleAppearance) override;
+
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
 
   nsNativeThemeWin();
 

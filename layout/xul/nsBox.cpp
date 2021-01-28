@@ -374,22 +374,6 @@ bool nsIFrame::AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
   return (aWidthSet && aHeightSet);
 }
 
-// This returns the scrollbar width we want to use when either native
-// theme is disabled, or the native theme claims that it doesn't support
-// scrollbar.
-static nscoord GetScrollbarWidthNoTheme(nsIFrame* aBox) {
-  ComputedStyle* scrollbarStyle = nsLayoutUtils::StyleForScrollbar(aBox);
-  switch (scrollbarStyle->StyleUIReset()->mScrollbarWidth) {
-    default:
-    case StyleScrollbarWidth::Auto:
-      return 12 * AppUnitsPerCSSPixel();
-    case StyleScrollbarWidth::Thin:
-      return 6 * AppUnitsPerCSSPixel();
-    case StyleScrollbarWidth::None:
-      return 0;
-  }
-}
-
 bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
                              bool& aHeightSet) {
   aWidthSet = false;
@@ -418,13 +402,20 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
     } else {
       switch (appearance) {
         case StyleAppearance::ScrollbarVertical:
-          aSize.width = GetScrollbarWidthNoTheme(aBox);
-          aWidthSet = true;
+        case StyleAppearance::ScrollbarHorizontal: {
+          ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aBox);
+          auto sizes = theme->GetScrollbarSizes(
+              pc, style->StyleUIReset()->mScrollbarWidth,
+              nsITheme::Overlay::No);
+          if (appearance == StyleAppearance::ScrollbarVertical) {
+            aSize.width = sizes.mVertical;
+            aWidthSet = true;
+          } else {
+            aSize.height = sizes.mHorizontal;
+            aHeightSet = true;
+          }
           break;
-        case StyleAppearance::ScrollbarHorizontal:
-          aSize.height = GetScrollbarWidthNoTheme(aBox);
-          aHeightSet = true;
-          break;
+        }
         default:
           break;
       }

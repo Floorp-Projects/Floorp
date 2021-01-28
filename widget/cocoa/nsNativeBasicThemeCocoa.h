@@ -23,6 +23,9 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
                                   mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
+
   void PaintScrollbarThumb(DrawTarget* aDrawTarget,
                            const LayoutDeviceRect& aRect, bool aHorizontal,
                            nsIFrame* aFrame, const ComputedStyle& aStyle,

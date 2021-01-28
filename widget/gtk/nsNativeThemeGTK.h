@@ -45,9 +45,9 @@ class nsNativeThemeGTK final : private nsNativeTheme,
                         StyleAppearance aAppearance,
                         LayoutDeviceIntMargin* aResult) override;
 
-  virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                 StyleAppearance aAppearance,
-                                 nsRect* aOverflowRect) override;
+  bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
+                         StyleAppearance aAppearance,
+                         nsRect* aOverflowRect) override;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
@@ -69,13 +69,11 @@ class nsNativeThemeGTK final : private nsNativeTheme,
   NS_IMETHOD_(bool)
   ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
 
-  virtual bool ThemeNeedsComboboxDropmarker() override;
-
-  virtual Transparency GetWidgetTransparency(
-      nsIFrame* aFrame, StyleAppearance aAppearance) override;
-
-  virtual bool WidgetAppearanceDependsOnWindowFocus(
-      StyleAppearance aAppearance) override;
+  bool ThemeNeedsComboboxDropmarker() override;
+  Transparency GetWidgetTransparency(nsIFrame*, StyleAppearance) override;
+  bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance) override;
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
 
   nsNativeThemeGTK();
 

@@ -149,6 +149,14 @@ bool HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
   return false;
 }
 
+static const int32_t kMinimumScrollbarSize = 10;
+
+// TODO: Should probably deal with scrollbar-width somehow.
+auto HeadlessThemeGTK::GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                         Overlay) -> ScrollbarSizes {
+  return {kMinimumScrollbarSize, kMinimumScrollbarSize};
+}
+
 NS_IMETHODIMP
 HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        nsIFrame* aFrame,
@@ -227,10 +235,10 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     case StyleAppearance::ScrollbarHorizontal:
       aResult->width = 31;
-      aResult->height = 10;
+      aResult->height = kMinimumScrollbarSize;
       break;
     case StyleAppearance::ScrollbarVertical:
-      aResult->width = 10;
+      aResult->width = kMinimumScrollbarSize;
       aResult->height = 31;
       break;
     case StyleAppearance::ScrollbarbuttonUp:

@@ -70,13 +70,12 @@ static int gLastGdkError;
 
 // Return scale factor of the monitor where the window is located
 // by the most part or layout.css.devPixelsPerPx pref if set to > 0.
-static inline gint GetMonitorScaleFactor(nsIFrame* aFrame) {
+static inline gint GetMonitorScaleFactor(nsPresContext* aPresContext) {
   // When the layout.css.devPixelsPerPx is set the scale can be < 1,
   // the real monitor scale cannot go under 1.
   double scale = StaticPrefs::layout_css_devPixelsPerPx();
   if (scale <= 0) {
-    nsIWidget* rootWidget = aFrame->PresContext()->GetRootWidget();
-    if (rootWidget) {
+    if (nsIWidget* rootWidget = aPresContext->GetRootWidget()) {
       // We need to use GetDefaultScale() despite it returns monitor scale
       // factor multiplied by font scale factor because it is the only scale
       // updated in nsPuppetWidget.
@@ -97,6 +96,10 @@ static inline gint GetMonitorScaleFactor(nsIFrame* aFrame) {
   }
   // Use monitor scaling factor where devPixelsPerPx is set
   return ScreenHelperGTK::GetGTKMonitorScaleFactor();
+}
+
+static inline gint GetMonitorScaleFactor(nsIFrame* aFrame) {
+  return GetMonitorScaleFactor(aFrame->PresContext());
 }
 
 nsNativeThemeGTK::nsNativeThemeGTK() {
@@ -1487,14 +1490,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       }
       *aIsOverridable = false;
     } break;
-    case StyleAppearance::ScrollbarNonDisappearing: {
-      const ScrollbarGTKMetrics* verticalMetrics =
-          GetActiveScrollbarMetrics(GTK_ORIENTATION_VERTICAL);
-      const ScrollbarGTKMetrics* horizontalMetrics =
-          GetActiveScrollbarMetrics(GTK_ORIENTATION_HORIZONTAL);
-      aResult->width = verticalMetrics->size.scrollbar.width;
-      aResult->height = horizontalMetrics->size.scrollbar.height;
-    } break;
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical: {
       /* While we enforce a minimum size for the thumb, this is ignored
@@ -1797,6 +1792,11 @@ nsNativeThemeGTK::ThemeChanged() {
   return NS_OK;
 }
 
+static bool CanHandleScrollbar(const ComputedStyle& aStyle) {
+  return !aStyle.StyleUI()->HasCustomScrollbars() &&
+         aStyle.StyleUIReset()->mScrollbarWidth != StyleScrollbarWidth::Thin;
+}
+
 NS_IMETHODIMP_(bool)
 nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
@@ -1807,9 +1807,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 
   if (IsWidgetScrollbarPart(aAppearance)) {
     ComputedStyle* cs = nsLayoutUtils::StyleForScrollbar(aFrame);
-    if (cs->StyleUI()->HasCustomScrollbars() ||
-        // We cannot handle thin scrollbar on GTK+ widget directly as well.
-        cs->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
+    if (!CanHandleScrollbar(*cs)) {
       return false;
     }
   }
@@ -1874,7 +1872,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbartrackVertical:
     case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarNonDisappearing:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
@@ -2001,6 +1998,26 @@ bool nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(
     default:
       return false;
   }
+}
+
+auto nsNativeThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
+                                         StyleScrollbarWidth aWidth, Overlay)
+    -> ScrollbarSizes {
+  CSSIntCoord vertical;
+  CSSIntCoord horizontal;
+  if (aWidth != StyleScrollbarWidth::Thin) {
+    const ScrollbarGTKMetrics* verticalMetrics =
+        GetActiveScrollbarMetrics(GTK_ORIENTATION_VERTICAL);
+    const ScrollbarGTKMetrics* horizontalMetrics =
+        GetActiveScrollbarMetrics(GTK_ORIENTATION_HORIZONTAL);
+    vertical = verticalMetrics->size.scrollbar.width;
+    horizontal = horizontalMetrics->size.scrollbar.height;
+  } else {
+    auto unthemed = nsLayoutUtils::UnthemedScrollbarSize(aWidth);
+    vertical = horizontal = unthemed;
+  }
+  auto scale = GetMonitorScaleFactor(aPresContext);
+  return {int32_t(vertical) * scale, int32_t(horizontal) * scale};
 }
 
 already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {

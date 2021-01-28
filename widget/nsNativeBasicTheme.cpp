@@ -60,15 +60,26 @@ static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
 }
 
 /* static */
+auto nsNativeBasicTheme::GetDPIRatioForScrollbarPart(nsPresContext* aPc)
+    -> DPIRatio {
+  return DPIRatio(float(AppUnitsPerCSSPixel()) /
+                  aPc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+}
+
+/* static */
+auto nsNativeBasicTheme::GetDPIRatio(nsPresContext* aPc,
+                                     StyleAppearance aAppearance) -> DPIRatio {
+  // Widgets react to zoom, except scrollbars.
+  if (IsWidgetScrollbarPart(aAppearance)) {
+    return GetDPIRatioForScrollbarPart(aPc);
+  }
+  return DPIRatio(float(AppUnitsPerCSSPixel()) / aPc->AppUnitsPerDevPixel());
+}
+
+/* static */
 auto nsNativeBasicTheme::GetDPIRatio(nsIFrame* aFrame,
                                      StyleAppearance aAppearance) -> DPIRatio {
-  nsPresContext* pc = aFrame->PresContext();
-  // Widgets react to zoom, except scrollbars.
-  nscoord auPerPx =
-      IsWidgetScrollbarPart(aAppearance)
-          ? pc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom()
-          : pc->AppUnitsPerDevPixel();
-  return DPIRatio(float(AppUnitsPerCSSPixel()) / auPerPx);
+  return GetDPIRatio(aFrame->PresContext(), aAppearance);
 }
 
 /* static */
@@ -432,8 +443,8 @@ static already_AddRefed<Path> GetFocusStrokePath(
   aFocusRect.Inflate(aOffset);
 
   LayoutDeviceRect focusRect(aFocusRect);
-  // Deflate the rect by half the border width, so that the middle of the stroke
-  // fills exactly the area we want to fill and not more.
+  // Deflate the rect by half the border width, so that the middle of the
+  // stroke fills exactly the area we want to fill and not more.
   focusRect.Deflate(aFocusWidth * 0.5f);
 
   return MakePathForRoundedRect(*aDrawTarget, focusRect.ToUnknownRect(), radii);
@@ -444,8 +455,8 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
                                                DPIRatio aDpiRatio,
                                                CSSCoord aRadius,
                                                CSSCoord aOffset) {
-  // NOTE(emilio): If the widths or offsets here change, make sure to tweak the
-  // GetWidgetOverflow path for FocusOutline.
+  // NOTE(emilio): If the widths or offsets here change, make sure to tweak
+  // the GetWidgetOverflow path for FocusOutline.
   auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors();
 
   LayoutDeviceRect focusRect(aRect);
@@ -491,8 +502,8 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
   const LayoutDeviceCoord borderWidth(SnapBorderWidth(aBorderWidth, aDpiRatio));
 
   LayoutDeviceRect rect(aRect);
-  // Deflate the rect by half the border width, so that the middle of the stroke
-  // fills exactly the area we want to fill and not more.
+  // Deflate the rect by half the border width, so that the middle of the
+  // stroke fills exactly the area we want to fill and not more.
   rect.Deflate(borderWidth * 0.5f);
 
   LayoutDeviceCoord radius(aRadius * aDpiRatio);
@@ -505,8 +516,8 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
   }
 
   RectCornerRadii radii(radius, radius, radius, radius);
-  RefPtr<Path> roundedRect = MakePathForRoundedRect(
-      *aDrawTarget, rect.ToUnknownRect(), radii);
+  RefPtr<Path> roundedRect =
+      MakePathForRoundedRect(*aDrawTarget, rect.ToUnknownRect(), radii);
 
   aDrawTarget->Fill(roundedRect, ColorPattern(ToDeviceColor(aBackgroundColor)));
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(aBorderColor)),
@@ -779,7 +790,8 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   auto center = aRect.Center().ToUnknownPoint();
-  Point p = center + Point(arrowPolygonX[0] * scaleX, arrowPolygonY[0] * scaleY);
+  Point p =
+      center + Point(arrowPolygonX[0] * scaleX, arrowPolygonY[0] * scaleY);
   builder->MoveTo(p);
   for (int32_t i = 1; i < arrowNumPoints; i++) {
     p = center + Point(arrowPolygonX[i] * scaleX, arrowPolygonY[i] * scaleY);
@@ -1245,9 +1257,9 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     default:
       // Various appearance values are used for XUL elements.  Normally these
       // will not be available in content documents (and thus in the content
-      // processes where the native basic theme can be used), but tests are run
-      // with the remote XUL pref enabled and so we can get in here.  So we
-      // just return an error rather than assert.
+      // processes where the native basic theme can be used), but tests are
+      // run with the remote XUL pref enabled and so we can get in here.  So
+      // we just return an error rather than assert.
       return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1259,7 +1271,8 @@ nsNativeBasicTheme::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
 aBuilder, mozilla::wr::IpcResourceUpdateQueue& aResources, const
 mozilla::layers::StackingContextHelper& aSc,
                                       mozilla::layers::RenderRootStateManager*
-aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect) {
+aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect)
+{
 }*/
 
 LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
@@ -1338,8 +1351,8 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist:
     case StyleAppearance::Button:
-      // 2px for each segment, plus 1px separation, but we paint 1px inside the
-      // border area so 4px overflow.
+      // 2px for each segment, plus 1px separation, but we paint 1px inside
+      // the border area so 4px overflow.
       overflow.SizeTo(4, 4, 4, 4);
       break;
     default:
@@ -1356,6 +1369,17 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
                                   CSSPixel::ToAppUnits(overflow.left)));
 
   return true;
+}
+
+auto nsNativeBasicTheme::GetScrollbarSizes(nsPresContext* aPresContext,
+                                           StyleScrollbarWidth aWidth, Overlay)
+    -> ScrollbarSizes {
+  CSSCoord size = aWidth == StyleScrollbarWidth::Thin
+                      ? kMinimumThinScrollbarSize
+                      : kMinimumScrollbarSize;
+  LayoutDeviceIntCoord s =
+      (size * GetDPIRatioForScrollbarPart(aPresContext)).Rounded();
+  return {s, s};
 }
 
 NS_IMETHODIMP
@@ -1403,13 +1427,12 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbartrackHorizontal:
     case StyleAppearance::ScrollbartrackVertical:
     case StyleAppearance::Scrollcorner: {
-      if (IsScrollbarWidthThin(aFrame)) {
-        aResult->SizeTo((kMinimumThinScrollbarSize * dpiRatio).Rounded(),
-                        (kMinimumThinScrollbarSize * dpiRatio).Rounded());
-      } else {
-        aResult->SizeTo((kMinimumScrollbarSize * dpiRatio).Rounded(),
-                        (kMinimumScrollbarSize * dpiRatio).Rounded());
-
+      auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+      auto width = style->StyleUIReset()->mScrollbarWidth;
+      auto sizes = GetScrollbarSizes(aPresContext, width, Overlay::No);
+      MOZ_ASSERT(sizes.mHorizontal == sizes.mVertical);
+      aResult->SizeTo(sizes.mHorizontal, sizes.mHorizontal);
+      if (width != StyleScrollbarWidth::Thin) {
         // If the scrollbar has any buttons, then we increase the minimum
         // size so that they fit too.
         //

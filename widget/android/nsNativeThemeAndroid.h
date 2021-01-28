@@ -58,6 +58,8 @@ class nsNativeThemeAndroid : private nsNativeTheme, public nsITheme {
   bool WidgetIsContainer(StyleAppearance aAppearance) override;
   bool ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
   bool ThemeNeedsComboboxDropmarker() override;
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
 
  protected:
   virtual ~nsNativeThemeAndroid() = default;
