@@ -21,9 +21,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
+  KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
   Log: "resource://gre/modules/Log.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
@@ -308,7 +308,7 @@ var UrlbarUtils = {
     }
 
     try {
-      [url, postData] = await BrowserUtils.parseUrlAndPostData(
+      [url, postData] = await KeywordUtils.parseUrlAndPostData(
         entry.url.href,
         entry.postData,
         param
