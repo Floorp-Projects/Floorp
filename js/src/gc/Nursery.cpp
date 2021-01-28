@@ -75,7 +75,7 @@ struct NurseryChunk : public ChunkBase {
                    MemCheckKind checkKind);
   void poisonAfterEvict(size_t extent = ChunkSize);
 
-  // The end of the range is always ChunkSize - ArenaSize.
+  // The end of the range is always ChunkSize.
   void markPagesUnusedHard(size_t from);
   // The start of the range is always the beginning of the chunk.
   MOZ_MUST_USE bool markPagesInUseHard(size_t to);
@@ -1650,10 +1650,10 @@ void js::Nursery::clearRecentGrowthData() {
 
 /* static */
 size_t js::Nursery::roundSize(size_t size) {
-  size_t step = size >= ChunkSize ? ChunkSize : SubChunkStep;
+  size_t step = size >= ChunkSize ? ChunkSize : SystemPageSize();
   size = Round(size, step);
 
-  MOZ_ASSERT(size >= ArenaSize);
+  MOZ_ASSERT(size >= SystemPageSize());
 
   return size;
 }
