@@ -81,34 +81,22 @@ void main(void) {
     vec2 local_pos = vi.local_pos.xy / vi.local_pos.w;
     vLocalPos = vi.local_pos;
 
-    switch (bs_data.stretch_mode_x) {
-        case MODE_STRETCH: {
-            vEdge.x = 0.5;
-            vEdge.z = (dest_rect.size.x / bs_data.src_rect_size.x) - 0.5;
-            vUv.x = (local_pos.x - dest_rect.p0.x) / bs_data.src_rect_size.x;
-            break;
-        }
-        case MODE_SIMPLE:
-        default: {
-            vEdge.xz = vec2(1.0);
-            vUv.x = (local_pos.x - dest_rect.p0.x) / dest_rect.size.x;
-            break;
-        }
+    if (bs_data.stretch_mode_x == MODE_STRETCH) {
+        vEdge.x = 0.5;
+        vEdge.z = (dest_rect.size.x / bs_data.src_rect_size.x) - 0.5;
+        vUv.x = (local_pos.x - dest_rect.p0.x) / bs_data.src_rect_size.x;
+    } else { // bs_data.stretch_mode_x == MODE_SIMPLE
+        vEdge.xz = vec2(1.0);
+        vUv.x = (local_pos.x - dest_rect.p0.x) / dest_rect.size.x;
     }
 
-    switch (bs_data.stretch_mode_y) {
-        case MODE_STRETCH: {
-            vEdge.y = 0.5;
-            vEdge.w = (dest_rect.size.y / bs_data.src_rect_size.y) - 0.5;
-            vUv.y = (local_pos.y - dest_rect.p0.y) / bs_data.src_rect_size.y;
-            break;
-        }
-        case MODE_SIMPLE:
-        default: {
-            vEdge.yw = vec2(1.0);
-            vUv.y = (local_pos.y - dest_rect.p0.y) / dest_rect.size.y;
-            break;
-        }
+    if (bs_data.stretch_mode_y == MODE_STRETCH) {
+        vEdge.y = 0.5;
+        vEdge.w = (dest_rect.size.y / bs_data.src_rect_size.y) - 0.5;
+        vUv.y = (local_pos.y - dest_rect.p0.y) / bs_data.src_rect_size.y;
+    } else { // bs_data.stretch_mode_y == MODE_SIMPLE
+        vEdge.yw = vec2(1.0);
+        vUv.y = (local_pos.y - dest_rect.p0.y) / dest_rect.size.y;
     }
 
     vUv *= vi.local_pos.w;
