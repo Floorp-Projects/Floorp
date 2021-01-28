@@ -581,3 +581,66 @@ fn test_sanitized_stacks() {
 fn test_sanitized_stacks_with_context() {
     test_sanitized_stacks_helper(Context::Without)
 }
+
+fn test_write_early_abort_helper(context: Context) {
+    let mut child = start_child_and_return("spawn_alloc_wait");
+    let pid = child.id() as i32;
+
+    let mut tmpfile = tempfile::Builder::new()
+        .prefix("additional_memory")
+        .tempfile()
+        .unwrap();
+
+    let mut f = BufReader::new(child.stdout.as_mut().expect("Can't open stdout"));
+    let mut buf = String::new();
+    let _ = f
+        .read_line(&mut buf)
+        .expect("Couldn't read address provided by child");
+    let mut output = buf.split_whitespace();
+    let memory_addr = usize::from_str_radix(output.next().unwrap().trim_start_matches("0x"), 16)
+        .expect("unable to parse mmap_addr");
+
+    // We do not read the actual memory_size, but use something that does not fit into an "isize",
+    // and should thus create an error during dumping, which should lead to a truncated minidump.
+    let memory_size = usize::MAX;
+
+    let app_memory = AppMemory {
+        ptr: memory_addr,
+        length: memory_size,
+    };
+
+    let mut tmp = MinidumpWriter::new(pid, pid);
+    if context == Context::With {
+        let crash_context = get_crash_context(pid);
+        tmp.set_crash_context(crash_context);
+    }
+
+    // This should fail, because during the dump an error is detected (try_from fails)
+    tmp.set_app_memory(vec![app_memory])
+        .dump(&mut tmpfile)
+        .expect_err("Could not write minidump");
+
+    child.kill().expect("Failed to kill process");
+    // Reap child
+    let waitres = child.wait().expect("Failed to wait for child");
+    let status = waitres.signal().expect("Child did not die due to signal");
+    assert_eq!(waitres.code(), None);
+    assert_eq!(status, Signal::SIGKILL as i32);
+
+    // Read dump file and check its contents. There should be a truncated minidump available
+    let dump = Minidump::read_path(tmpfile.path()).expect("Failed to read minidump");
+    // Should be there
+    let _: MinidumpThreadList = dump.get_stream().expect("Couldn't find MinidumpThreadList");
+    let _: MinidumpModuleList = dump.get_stream().expect("Couldn't find MinidumpThreadList");
+
+    // Should be missing:
+    assert!(dump.get_stream::<MinidumpMemoryList>().is_err());
+}
+#[test]
+fn test_write_early_abort() {
+    test_write_early_abort_helper(Context::Without)
+}
+#[test]
+fn test_write_early_abort_with_context() {
+    test_write_early_abort_helper(Context::With)
+}
