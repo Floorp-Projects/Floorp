@@ -194,26 +194,6 @@ var BrowserUtils = {
   },
 
   /**
-   * Constructs a new URI, using nsIIOService.
-   * @param aURL The URI spec.
-   * @param aOriginCharset The charset of the URI.
-   * @param aBaseURI Base URI to resolve aURL, or null.
-   * @return an nsIURI object based on aURL.
-   *
-   * @deprecated Use Services.io.newURI directly instead.
-   */
-  makeURI(aURL, aOriginCharset, aBaseURI) {
-    return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
-  },
-
-  /**
-   * @deprecated Use Services.io.newFileURI directly instead.
-   */
-  makeFileURI(aFile) {
-    return Services.io.newFileURI(aFile);
-  },
-
-  /**
    * For a given DOM element, returns its position in "screen"
    * coordinates. In a content process, the coordinates returned will
    * be relative to the left/top of the tab. In the chrome process,
@@ -559,7 +539,7 @@ var BrowserUtils = {
       linkText = selectionStr.trim();
       if (/^(?:https?|ftp):/i.test(linkText)) {
         try {
-          url = this.makeURI(linkText);
+          url = Services.io.newURI(linkText);
         } catch (ex) {}
       } else if (/^(?:[a-z\d-]+\.)+[a-z]+$/i.test(linkText)) {
         // Check if this could be a valid url, just missing the protocol.
