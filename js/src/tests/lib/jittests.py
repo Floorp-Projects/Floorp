@@ -871,7 +871,7 @@ def get_remote_results(tests, device, prefix, tempdir, options):
         # After a device error, the device is typically in a
         # state where all further tests will fail so there is no point in
         # continuing here.
-        sys.stderr.write("Error running remote tests: {}".format(e.message))
+        sys.stderr.write("Error running remote tests: {}".format(repr(e)))
 
 
 def run_tests_remote(tests, num_tests, prefix, options, slog):
