@@ -15,46 +15,41 @@
 
   <script type="application/javascript"><![CDATA[
     SimpleTest.requestCompleteLog();
-    let makeURI = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm", {}).BrowserUtils.makeURI;
 
     const BASE_URI = "http://mochi.test:8888/chrome/dom/security/test/general/";
     const FAVICON_URI = BASE_URI + "favicon_bug1277803.ico";
     const LOADING_URI = BASE_URI + "bug1277803.html";
     let testWindow; //will be used to trigger favicon load
 
-    let securityManager = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                          getService(Ci.nsIScriptSecurityManager);
-    let expectedPrincipal = securityManager.createContentPrincipal(makeURI(LOADING_URI), {});
-    let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance();
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    let expectedPrincipal = Services.scriptSecurityManager
+        .createContentPrincipal(Services.io.newURI(LOADING_URI), {});
+    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
     function runTest() {
       // Register our observer to intercept favicon requests.
-      let os = Cc["@mozilla.org/observer-service;1"].
-               getService(Ci.nsIObserverService);
-      let observer = {
-        observe: function(aSubject, aTopic, aData)
-        {
-          // Make sure this is a favicon request.
-          let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
-          if (FAVICON_URI != httpChannel.URI.spec) {
-            return;
-          }
-
-          // Ensure the topic is the one we set an observer for.
-          is(aTopic, "http-on-modify-request", "Expected observer topic");
-
-          // Check for the correct loadingPrincipal, triggeringPrincipal.
-          let triggeringPrincipal = httpChannel.loadInfo.triggeringPrincipal;
-          let loadingPrincipal = httpChannel.loadInfo.loadingPrincipal;
-
-          ok(loadingPrincipal.equals(expectedPrincipal), "Should be loading with the expected principal.");
-          ok(triggeringPrincipal.equals(expectedPrincipal), "Should be triggered with the expected principal.");
-
-          os.removeObserver(this, "http-on-modify-request");
-          SimpleTest.finish();
+      function observer(aSubject, aTopic, aData) {
+        // Make sure this is a favicon request.
+        let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+        if (FAVICON_URI != httpChannel.URI.spec) {
+          return;
         }
+
+        // Ensure the topic is the one we set an observer for.
+        is(aTopic, "http-on-modify-request", "Expected observer topic");
+
+        // Check for the correct loadingPrincipal, triggeringPrincipal.
+        let triggeringPrincipal = httpChannel.loadInfo.triggeringPrincipal;
+        let loadingPrincipal = httpChannel.loadInfo.loadingPrincipal;
+
+        ok(loadingPrincipal.equals(expectedPrincipal), "Should be loading with the expected principal.");
+        ok(triggeringPrincipal.equals(expectedPrincipal), "Should be triggered with the expected principal.");
+
+        Services.obs.removeObserver(this, "http-on-modify-request");
+        SimpleTest.finish();
       }
-      os.addObserver(observer, "http-on-modify-request");
+      Services.obs.addObserver(observer, "http-on-modify-request");
 
       // Now that the observer is set up, trigger a favicon load with navigation
       testWindow = window.open(LOADING_URI);
