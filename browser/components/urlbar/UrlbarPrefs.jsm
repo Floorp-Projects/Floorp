@@ -23,6 +23,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const PREF_URLBAR_BRANCH = "browser.urlbar.";
 
+// The two possible default values for matchBuckets, depending on whether
+// suggestions come before general.
+const MATCH_BUCKETS_SUGGESTIONS_FIRST = "suggestion:4,general:Infinity";
+const MATCH_BUCKETS_GENERAL_FIRST = "general:5,suggestion:Infinity";
+
 // Prefs are defined as [pref name, default value] or [pref name, [default
 // value, type]].  In the former case, the getter method name is inferred from
 // the typeof the default value.
@@ -97,8 +102,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the results panel should be kept open during IME composition.
   ["keepPanelOpenDuringImeComposition", false],
 
-  // Controls the composition of search results.
-  ["matchBuckets", "suggestion:4,general:Infinity"],
+  // Controls the composition of search results.  The relative ordering of the
+  // `suggestion` and `general` buckets should match the default value of
+  // `showSearchSuggestionsFirst`.
+  ["matchBuckets", MATCH_BUCKETS_SUGGESTIONS_FIRST],
 
   // If the heuristic result is a search engine result, we use this instead of
   // matchBuckets.
@@ -135,6 +142,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["shortcuts.bookmarks", true],
   ["shortcuts.tabs", true],
   ["shortcuts.history", true],
+
+  // Whether to show search suggestions before general results.  This default
+  // value should match the relative ordering of the `suggestion` and `general`
+  // buckets in `matchBuckets`.
+  ["showSearchSuggestionsFirst", true],
 
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
@@ -341,10 +353,22 @@ class Preferences {
    */
   onPrefChanged(pref) {
     this._map.delete(pref);
+
     // Some prefs may influence others.
-    if (pref == "matchBuckets") {
-      this._map.delete("matchBucketsSearch");
+    switch (pref) {
+      case "matchBuckets":
+        this._map.delete("matchBucketsSearch");
+        return;
+      case "showSearchSuggestionsFirst":
+        this.set(
+          "matchBuckets",
+          this.get(pref)
+            ? MATCH_BUCKETS_SUGGESTIONS_FIRST
+            : MATCH_BUCKETS_GENERAL_FIRST
+        );
+        return;
     }
+
     if (pref.startsWith("suggest.")) {
       this._map.delete("defaultBehavior");
     }
@@ -461,6 +485,41 @@ class Preferences {
       // Float prefs are stored as Char.
       setter: branch[`set${type == "Float" ? "Char" : type}Pref`],
     };
+  }
+
+  /**
+   * Initializes the showSearchSuggestionsFirst pref based on the matchBuckets
+   * pref.  This function can be removed when the corresponding UI migration in
+   * BrowserGlue.jsm is no longer needed.
+   */
+  initializeShowSearchSuggestionsFirstPref() {
+    let matchBuckets = [];
+    let pref = Services.prefs.getCharPref("browser.urlbar.matchBuckets", "");
+    try {
+      matchBuckets = PlacesUtils.convertMatchBucketsStringToArray(pref);
+    } catch (ex) {}
+    let bucketNames = matchBuckets.map(bucket => bucket[0]);
+    let suggestionIndex = bucketNames.indexOf("suggestion");
+    let generalIndex = bucketNames.indexOf("general");
+    let showSearchSuggestionsFirst =
+      generalIndex < 0 ||
+      (suggestionIndex >= 0 && suggestionIndex < generalIndex);
+    let oldValue = Services.prefs.getBoolPref(
+      "browser.urlbar.showSearchSuggestionsFirst"
+    );
+    Services.prefs.setBoolPref(
+      "browser.urlbar.showSearchSuggestionsFirst",
+      showSearchSuggestionsFirst
+    );
+
+    // Pref observers aren't called when a pref is set to its current value, but
+    // we always want to set matchBuckets to the appropriate default value via
+    // onPrefChanged, so call it now if necessary.  This is really only
+    // necessary for tests since the only time this function is called outside
+    // of tests is by a UI migration in BrowserGlue.
+    if (oldValue == showSearchSuggestionsFirst) {
+      this.onPrefChanged("showSearchSuggestionsFirst");
+    }
   }
 }
 

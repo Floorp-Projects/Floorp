@@ -82,6 +82,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
@@ -3285,7 +3286,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 105;
+    const UI_VERSION = 106;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3837,6 +3838,11 @@ BrowserGlue.prototype = {
         !oldPrefValue
       );
       Services.prefs.clearUserPref(oldPrefName);
+    }
+
+    // Initialize the new browser.urlbar.showSuggestionsBeforeGeneral pref.
+    if (currentUIVersion < 106) {
+      UrlbarPrefs.initializeShowSearchSuggestionsFirstPref();
     }
 
     // Update the migration version.
