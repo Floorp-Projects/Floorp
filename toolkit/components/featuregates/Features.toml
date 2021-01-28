@@ -28,26 +28,6 @@ type = "boolean"
 bug-numbers = [1205133]
 is-public = {default = false, nightly = true}
 
-[web-api-link-preload]
-title = "experimental-features-web-api-link-preload"
-description = "experimental-features-web-api-link-preload-description"
-description-links = {link = "https://developer.mozilla.org/docs/Web/HTML/Element/link", rel = "https://developer.mozilla.org/docs/Web/HTML/Element/link#attr-rel", readmore = "https://developer.mozilla.org/docs/Web/HTML/Preloading_content", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1583604"}
-restart-required = false
-preference = "network.preload"
-type = "boolean"
-bug-numbers = [1583604]
-is-public = {default = false, nightly = true}
-
-[css-focus-visible]
-title = "experimental-features-css-focus-visible"
-description = "experimental-features-css-focus-visible-description"
-description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1617600"}
-restart-required = false
-preference = "layout.css.focus-visible.enabled"
-type = "boolean"
-bug-numbers = [1617600]
-is-public = {default = false, nightly = true}
-
 [web-api-beforeinput]
 title = "experimental-features-web-api-beforeinput"
 description = "experimental-features-web-api-beforeinput-description"

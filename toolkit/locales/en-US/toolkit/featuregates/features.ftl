@@ -29,20 +29,6 @@ experimental-features-web-api-inputmode-description = Our implementation of the 
 
 # The title of the experiment should be kept in English as it may be referenced
 # by various online articles and is technical in nature.
-experimental-features-web-api-link-preload =
-    .label = Web API: <link rel="preload">
-# Do not translate "rel", "preload" or "link" here, as they are all HTML spec
-# values that do not get translated.
-experimental-features-web-api-link-preload-description = The <a data-l10n-name="rel">rel</a> attribute with value <code>"preload"</code> on a <a data-l10n-name="link">&lt;link&gt;</a> element is intended to help provide performance gains by letting you download resources earlier in the page lifecycle, ensuring that they’re available earlier and are less likely to block page rendering. Read <a data-l10n-name="readmore">“Preloading content with <code>rel="preload"</code>”</a> or see <a data-l10n-name="bugzilla">bug 1583604</a> for more details.
-
-# The title of the experiment should be kept in English as it may be referenced
-# by various online articles and is technical in nature.
-experimental-features-css-focus-visible =
-    .label = CSS: Pseudo-class: :focus-visible
-experimental-features-css-focus-visible-description = Allows focus styles to be applied to elements like buttons and form controls, only when they are focused using the keyboard (e.g. when tabbing between elements), and not when they are focused using a mouse or other pointing device. See <a data-l10n-name="bugzilla">bug 1617600</a> for more details.
-
-# The title of the experiment should be kept in English as it may be referenced
-# by various online articles and is technical in nature.
 experimental-features-web-api-beforeinput =
     .label = Web API: beforeinput Event
 # The terms "beforeinput", "input", "textarea", and "contenteditable" are technical terms
