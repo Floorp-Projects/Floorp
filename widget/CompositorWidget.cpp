@@ -61,5 +61,17 @@ RefPtr<VsyncObserver> CompositorWidget::GetVsyncObserver() const {
   return nullptr;
 }
 
+LayoutDeviceIntRegion CompositorWidget::GetTransparentRegion() {
+  // By default, we check the transparency mode to determine if the widget is
+  // transparent, and if so, designate the entire widget drawing area as
+  // transparent. Widgets wanting more complex transparency region determination
+  // should override this method.
+  auto* widget = RealWidget();
+  if (!widget || widget->GetTransparencyMode() != eTransparencyOpaque) {
+    return LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0), GetClientSize());
+  }
+  return LayoutDeviceIntRegion();
+}
+
 }  // namespace widget
 }  // namespace mozilla
