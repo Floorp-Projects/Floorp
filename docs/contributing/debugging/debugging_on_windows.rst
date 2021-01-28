@@ -30,8 +30,13 @@ and ticking the box.
 
 If you have followed the steps in :ref:`Building Firefox for
 Windows <Building Firefox On Windows>`
-and have a local debug build, you can **execute ``./mach run --debug``**
-from the same command line. It would open Visual Studio with Firefox's
+and have a local debug build, you can **execute this command from same command line.**
+
+.. code::
+
+   ./mach run --debug
+
+It would open Visual Studio with Firefox's
 run options configured. You can **click "Start" button** to run Firefox
 then, already attached in the debugger.
 
