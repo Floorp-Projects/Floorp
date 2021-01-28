@@ -104,7 +104,10 @@ def add_nightly_version(config, tasks):
 
     for task in tasks:
         if task.pop("include-nightly-version", False):
-            task["run"]["gradlew"].append('-PversionName={}'.format(formated_date_time))
+            task["run"]["gradlew"].extend([
+                '-PversionName={}'.format(formated_date_time),
+                '-Pofficial'
+            ])
         yield task
 
 
@@ -112,9 +115,10 @@ def add_nightly_version(config, tasks):
 def add_release_version(config, tasks):
     for task in tasks:
         if task.pop("include-release-version", False):
-            task["run"]["gradlew"].append(
-                '-PversionName={}'.format(config.params["version"])
-            )
+            task["run"]["gradlew"].extend([
+                '-PversionName={}'.format(config.params["version"]),
+                '-Pofficial'
+            ])
         yield task
 
 
