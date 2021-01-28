@@ -1312,12 +1312,14 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   padding: 4px 5px;
 }
 
-#appMenu-zoom-controls > .subviewbutton {
+#appMenu-zoom-controls > .subviewbutton,
+#appMenu-zoom-controls2 > .subviewbutton {
   margin-inline-start: 10px;
 }
 
 /* Unset the min-height constraint, because that works better for a text-only button. */
-#appMenu-zoomReset-button {
+#appMenu-zoomReset-button,
+#appMenu-zoomReset-button2 {
   min-height: unset;
   border: 1px solid var(--panel-separator-color);
   border-radius: 10000px;
@@ -1325,20 +1327,24 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   background-color: var(--arrowpanel-dimmed);
 }
 
-#appMenu-zoomReset-button@buttonStateHover@ {
+#appMenu-zoomReset-button@buttonStateHover@,
+#appMenu-zoomReset-button2@buttonStateHover@ {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-#appMenu-zoomReset-button@buttonStateActive@ {
+#appMenu-zoomReset-button@buttonStateActive@,
+#appMenu-zoomReset-button2@buttonStateActive@ {
   background-color: var(--arrowpanel-dimmed-even-further);
 }
 
-#appMenu-zoomReset-button > .toolbarbutton-text {
+#appMenu-zoomReset-button > .toolbarbutton-text,
+#appMenu-zoomReset-button2 > .toolbarbutton-text {
   min-width: calc(3ch + 8px);
   text-align: center;
 }
 
-#appMenu-zoom-controls > toolbarseparator[orient="vertical"] + .subviewbutton {
+#appMenu-zoom-controls > toolbarseparator[orient="vertical"] + .subviewbutton,
+#appMenu-zoom-controls2 > toolbarseparator[orient="vertical"] + .subviewbutton {
   margin-inline-start: 0;
 }
 
