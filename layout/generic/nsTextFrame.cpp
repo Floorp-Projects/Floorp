@@ -8183,6 +8183,7 @@ static int32_t FindEndOfPunctuationRun(const nsTextFragment* aFrag,
  * include leading and trailing punctuation, for example)
  */
 static bool FindFirstLetterRange(const nsTextFragment* aFrag,
+                                 const nsAtom* aLang,
                                  const gfxTextRun* aTextRun, int32_t aOffset,
                                  const gfxSkipCharsIterator& aIter,
                                  int32_t* aLength) {
@@ -8191,11 +8192,32 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   int32_t endOffset = aOffset + length;
   gfxSkipCharsIterator iter(aIter);
 
+  // Currently the only language-specific special case we handle here is the
+  // Dutch "IJ" digraph.
+  auto LangTagIsDutch = [](const nsAtom* aLang) -> bool {
+    if (!aLang) {
+      return false;
+    }
+    if (aLang == nsGkAtoms::nl) {
+      return true;
+    }
+    // We don't need to fully parse as a Locale; just check the initial subtag.
+    nsDependentAtomString langStr(aLang);
+    int32_t index = langStr.FindChar('-');
+    if (index > 0) {
+      langStr.Truncate(index);
+      return langStr.EqualsLiteral("nl");
+    }
+    return false;
+  };
+
   // skip leading whitespace, then consume clusters that start with punctuation
   i = FindEndOfPunctuationRun(
       aFrag, aTextRun, &iter, aOffset,
       GetTrimmableWhitespaceCount(aFrag, aOffset, length, 1), endOffset);
-  if (i == length) return false;
+  if (i == length) {
+    return false;
+  }
 
   // If the next character is not a letter or number, there is no first-letter.
   // Return true so that we don't go on looking, but set aLength to 0.
@@ -8212,7 +8234,8 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   bool allowSplitLigature;
 
   typedef unicode::Script Script;
-  switch (unicode::GetScriptCode(aFrag->CharAt(aOffset + i))) {
+  Script script = unicode::GetScriptCode(aFrag->CharAt(aOffset + i));
+  switch (script) {
     default:
       allowSplitLigature = true;
       break;
@@ -8269,12 +8292,29 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
 
   i = iter.GetOriginalOffset() - aOffset;
-  if (i + 1 == length) return true;
+  if (i + 1 == length) {
+    return true;
+  }
+
+  // Check for Dutch "ij" digraph special case.
+  if (script == Script::LATIN && LangTagIsDutch(aLang)) {
+    if (ToLowerCase(aFrag->CharAt(aOffset + i)) == 'i' &&
+        ToLowerCase(aFrag->CharAt(aOffset + i + 1)) == 'j') {
+      iter.SetOriginalOffset(aOffset + i + 1);
+      FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
+      i = iter.GetOriginalOffset() - aOffset;
+      if (i + 1 == length) {
+        return true;
+      }
+    }
+  }
 
   // consume clusters that start with punctuation
   i = FindEndOfPunctuationRun(aFrag, aTextRun, &iter, aOffset, i + 1,
                               endOffset);
-  if (i < length) *aLength = i;
+  if (i < length) {
+    *aLength = i;
+  }
   return true;
 }
 
@@ -9149,8 +9189,14 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       if (mTextRun) {
         int32_t firstLetterLength = length;
         if (aLineLayout.GetFirstLetterStyleOK()) {
-          completedFirstLetter = FindFirstLetterRange(frag, mTextRun, offset,
-                                                      iter, &firstLetterLength);
+          // We only pass a language code to FindFirstLetterRange if it was
+          // explicit in the content.
+          const nsStyleFont* styleFont = StyleFont();
+          const nsAtom* lang = styleFont->mExplicitLanguage
+                                   ? styleFont->mLanguage.get()
+                                   : nullptr;
+          completedFirstLetter = FindFirstLetterRange(
+              frag, lang, mTextRun, offset, iter, &firstLetterLength);
           if (newLineOffset >= 0) {
             // Don't allow a preformatted newline to be part of a first-letter.
             firstLetterLength = std::min(firstLetterLength, length - 1);
