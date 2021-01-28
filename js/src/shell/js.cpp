@@ -286,7 +286,8 @@ class js::shell::OffThreadJob {
  public:
   using Source = mozilla::Variant<JS::UniqueTwoByteChars, JS::TranscodeBuffer>;
 
-  OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source);
+  OffThreadJob(ShellContext* sc, ScriptKind kind, bool useOffThreadParseGlobal,
+               Source&& source);
   ~OffThreadJob();
 
   void cancel();
@@ -299,6 +300,7 @@ class js::shell::OffThreadJob {
  public:
   const int32_t id;
   const ScriptKind kind;
+  const bool useOffThreadParseGlobal;
 
  private:
   js::Monitor& monitor;
@@ -308,10 +310,11 @@ class js::shell::OffThreadJob {
 };
 
 static OffThreadJob* NewOffThreadJob(JSContext* cx, ScriptKind kind,
+                                     CompileOptions& options,
                                      OffThreadJob::Source&& source) {
   ShellContext* sc = GetShellContext(cx);
-  UniquePtr<OffThreadJob> job(
-      cx->new_<OffThreadJob>(sc, kind, std::move(source)));
+  UniquePtr<OffThreadJob> job(cx->new_<OffThreadJob>(
+      sc, kind, options.useOffThreadParseGlobal, std::move(source)));
   if (!job) {
     return nullptr;
   }
@@ -441,9 +444,11 @@ static void CancelOffThreadJobsForRuntime(JSContext* cx) {
 
 mozilla::Atomic<int32_t> gOffThreadJobSerial(1);
 
-OffThreadJob::OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source)
+OffThreadJob::OffThreadJob(ShellContext* sc, ScriptKind kind,
+                           bool useOffThreadParseGlobal, Source&& source)
     : id(gOffThreadJobSerial++),
       kind(kind),
+      useOffThreadParseGlobal(useOffThreadParseGlobal),
       monitor(sc->offThreadMonitor),
       state(RUNNING),
       token(nullptr),
@@ -5776,8 +5781,9 @@ static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  OffThreadJob* job = NewOffThreadJob(
-      cx, ScriptKind::Script, OffThreadJob::Source(std::move(ownedChars)));
+  OffThreadJob* job =
+      NewOffThreadJob(cx, ScriptKind::Script, options,
+                      OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
   }
@@ -5799,14 +5805,15 @@ static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
 static bool runOffThreadScript(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (OffThreadParsingMustWaitForGC(cx->runtime())) {
-    gc::FinishGC(cx);
-  }
-
   OffThreadJob* job =
       LookupOffThreadJobForArgs(cx, ScriptKind::Script, args, 0);
   if (!job) {
     return false;
+  }
+
+  if (job->useOffThreadParseGlobal &&
+      OffThreadParsingMustWaitForGC(cx->runtime())) {
+    gc::FinishGC(cx);
   }
 
   JS::OffThreadToken* token = job->waitUntilDone(cx);
@@ -5865,8 +5872,9 @@ static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  OffThreadJob* job = NewOffThreadJob(
-      cx, ScriptKind::Module, OffThreadJob::Source(std::move(ownedChars)));
+  OffThreadJob* job =
+      NewOffThreadJob(cx, ScriptKind::Module, options,
+                      OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
   }
@@ -5888,14 +5896,15 @@ static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
 static bool FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (OffThreadParsingMustWaitForGC(cx->runtime())) {
-    gc::FinishGC(cx);
-  }
-
   OffThreadJob* job =
       LookupOffThreadJobForArgs(cx, ScriptKind::Module, args, 0);
   if (!job) {
     return false;
+  }
+
+  if (job->useOffThreadParseGlobal &&
+      OffThreadParsingMustWaitForGC(cx->runtime())) {
+    gc::FinishGC(cx);
   }
 
   JS::OffThreadToken* token = job->waitUntilDone(cx);
@@ -5941,6 +5950,14 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   options.useStencilXDR =
       CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Stencil;
 
+  // In browser, we always use off-thread parse global for decode task, for
+  // performance reason.
+  // (see ScriptLoader::AttemptAsyncScriptCompile)
+  //
+  // This code should be removed, and the above code should be used, once
+  // bug 1687973 gets fixed.
+  options.useOffThreadParseGlobal = true;
+
   if (args.length() >= 2) {
     if (args[1].isPrimitive()) {
       JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
@@ -5980,7 +5997,7 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::DecodeScript,
+      NewOffThreadJob(cx, ScriptKind::DecodeScript, options,
                       OffThreadJob::Source(std::move(loadBuffer)));
   if (!job) {
     return false;
@@ -6000,14 +6017,15 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
 static bool runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (OffThreadParsingMustWaitForGC(cx->runtime())) {
-    gc::FinishGC(cx);
-  }
-
   OffThreadJob* job =
       LookupOffThreadJobForArgs(cx, ScriptKind::DecodeScript, args, 0);
   if (!job) {
     return false;
+  }
+
+  if (job->useOffThreadParseGlobal &&
+      OffThreadParsingMustWaitForGC(cx->runtime())) {
+    gc::FinishGC(cx);
   }
 
   JS::OffThreadToken* token = job->waitUntilDone(cx);
