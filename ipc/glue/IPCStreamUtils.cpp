@@ -40,6 +40,8 @@ bool SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
   MOZ_RELEASE_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
+  // If you change this size, please also update the payload size in
+  // test_reload_large_postdata.html.
   const uint64_t kTooLargeStream = 1024 * 1024;
 
   uint32_t sizeUsed = 0;
