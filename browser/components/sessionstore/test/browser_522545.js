@@ -396,7 +396,7 @@ function test() {
       );
       is(
         gURLBar.value,
-        BrowserUIUtils.trimURL("http://example.com/"),
+        BrowserUtils.trimURL("http://example.com/"),
         "Address bar's value set after loading URI"
       );
       runNextTest();

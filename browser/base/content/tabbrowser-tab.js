@@ -227,7 +227,7 @@
         return false;
       }
 
-      if (!BrowserUIUtils.checkEmptyPageOrigin(browser)) {
+      if (!BrowserUtils.checkEmptyPageOrigin(browser)) {
         return false;
       }
 

@@ -31,24 +31,8 @@ var ContentAreaUtils = {
   },
 };
 
-function urlSecurityCheck(
-  aURL,
-  aPrincipal,
-  aFlags = Services.scriptSecurityManager
-) {
-  if (aURL instanceof Ci.nsIURI) {
-    Services.scriptSecurityManager.checkLoadURIWithPrincipal(
-      aPrincipal,
-      aURL,
-      aFlags
-    );
-  } else {
-    Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
-      aPrincipal,
-      aURL,
-      aFlags
-    );
-  }
+function urlSecurityCheck(aURL, aPrincipal, aFlags) {
+  return BrowserUtils.urlSecurityCheck(aURL, aPrincipal, aFlags);
 }
 
 // Clientele: (Make sure you don't break any of these)
