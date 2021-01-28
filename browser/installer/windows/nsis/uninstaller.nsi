@@ -617,6 +617,9 @@ Section "Uninstall"
   ${If} ${FileExists} "$INSTDIR\update-settings.ini"
     Delete /REBOOTOK "$INSTDIR\update-settings.ini"
   ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\installation_telemetry.json"
+    Delete /REBOOTOK "$INSTDIR\installation_telemetry.json"
+  ${EndIf}
 
   ; Explicitly remove empty webapprt dir in case it exists (bug 757978).
   RmDir "$INSTDIR\webapprt\components"
