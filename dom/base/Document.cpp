@@ -15228,9 +15228,7 @@ void Document::SetContentTypeInternal(const nsACString& aType) {
 
 nsILoadContext* Document::GetLoadContext() const { return mDocumentContainer; }
 
-nsIDocShell* Document::GetDocShell() const {
-  return mVisible ? mDocumentContainer : nullptr;
-}
+nsIDocShell* Document::GetDocShell() const { return mDocumentContainer; }
 
 void Document::SetStateObject(nsIStructuredCloneContainer* scContainer) {
   mStateObjectContainer = scContainer;
