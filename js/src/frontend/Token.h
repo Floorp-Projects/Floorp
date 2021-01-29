@@ -16,9 +16,9 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "frontend/ParserAtom.h"  // js::frontend::{ParserAtom,ParserName}
-#include "frontend/TokenKind.h"   // js::frontend::TokenKind
-#include "js/RegExpFlags.h"       // JS::RegExpFlags
+#include "frontend/ParserAtom.h"  // js::frontend::{ParserAtom,ParserName,TaggedParserAtomIndex}
+#include "frontend/TokenKind.h"  // js::frontend::TokenKind
+#include "js/RegExpFlags.h"      // JS::RegExpFlags
 
 namespace js {
 
@@ -202,6 +202,8 @@ struct Token {
                type == TokenKind::NoSubsTemplate);
     return u.atom;
   }
+
+  TaggedParserAtomIndex atomIndex() const { return atom()->toIndex(); }
 
   JS::RegExpFlags regExpFlags() const {
     MOZ_ASSERT(type == TokenKind::RegExp);
