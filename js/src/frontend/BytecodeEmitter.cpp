@@ -1895,7 +1895,7 @@ bool BytecodeEmitter::emitPropIncDec(UnaryNode* incDec) {
       return false;
     }
   }
-  if (!poe.emitIncDec(prop->key().atom())) {
+  if (!poe.emitIncDec(prop->key().atomIndex())) {
     //              [stack] RESULT
     return false;
   }
@@ -2879,7 +2879,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
           return false;
         }
         //          [stack] # VAL
-        if (!poe.emitAssignment(prop->key().atom())) {
+        if (!poe.emitAssignment(prop->key().atomIndex())) {
           return false;
         }
         break;
@@ -4368,7 +4368,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
     switch (lhs->getKind()) {
       case ParseNodeKind::DotExpr: {
         PropertyAccess* prop = &lhs->as<PropertyAccess>();
-        if (!poe->emitGet(prop->key().atom())) {
+        if (!poe->emitGet(prop->key().atomIndex())) {
           //        [stack] # if Super
           //        [stack] THIS SUPERBASE PROP
           //        [stack] # otherwise
@@ -4470,7 +4470,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
     }
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &lhs->as<PropertyAccess>();
-      if (!poe->emitAssignment(prop->key().atom())) {
+      if (!poe->emitAssignment(prop->key().atomIndex())) {
         //          [stack] VAL
         return false;
       }
@@ -4574,7 +4574,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
         }
       }
 
-      if (!poe->emitGet(prop->key().atom())) {
+      if (!poe->emitGet(prop->key().atomIndex())) {
         //          [stack] # if Super
         //          [stack] THIS SUPERBASE LHS
         //          [stack] # otherwise
@@ -4669,7 +4669,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &lhs->as<PropertyAccess>();
 
-      if (!poe->emitAssignment(prop->key().atom())) {
+      if (!poe->emitAssignment(prop->key().atomIndex())) {
         //          [stack] RHS
         return false;
       }
@@ -6950,7 +6950,7 @@ bool BytecodeEmitter::emitDeleteProperty(UnaryNode* deleteNode) {
     }
   }
 
-  if (!poe.emitDelete(propExpr->key().atom())) {
+  if (!poe.emitDelete(propExpr->key().atomIndex())) {
     //              [stack] # if Super
     //              [stack] THIS
     //              [stack] # otherwise
@@ -7110,7 +7110,7 @@ bool BytecodeEmitter::emitDeletePropertyInOptChain(PropertyAccessBase* propExpr,
     }
   }
 
-  if (!poe.emitDelete(propExpr->key().atom())) {
+  if (!poe.emitDelete(propExpr->key().atomIndex())) {
     //              [stack] SUCCEEDED
     return false;
   }
@@ -7562,8 +7562,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
 
   switch (ParseNodeKind kind = callee->getKind()) {
     case ParseNodeKind::Name: {
-      const ParserAtom* nameAtom = callee->as<NameNode>().name();
-      if (!cone.emitNameCallee(nameAtom)) {
+      auto name = callee->as<NameNode>().nameIndex();
+      if (!cone.emitNameCallee(name)) {
         //          [stack] CALLEE THIS
         return false;
       }
@@ -7658,8 +7658,8 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call,
                                         CallOrNewEmitter& cone) {
   switch (callee->getKind()) {
     case ParseNodeKind::Name: {
-      const ParserAtom* nameAtom = callee->as<NameNode>().name();
-      if (!cone.emitNameCallee(nameAtom)) {
+      auto name = callee->as<NameNode>().nameIndex();
+      if (!cone.emitNameCallee(name)) {
         //          [stack] CALLEE THIS
         return false;
       }
@@ -7686,7 +7686,7 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call,
           return false;
         }
       }
-      if (!poe.emitGet(prop->key().atom())) {
+      if (!poe.emitGet(prop->key().atomIndex())) {
         //          [stack] CALLEE THIS?
         return false;
       }
@@ -8304,7 +8304,7 @@ bool BytecodeEmitter::emitOptionalDotExpression(PropertyAccessBase* prop,
     }
   }
 
-  if (!poe.emitGet(prop->key().atom())) {
+  if (!poe.emitGet(prop->key().atomIndex())) {
     //              [stack] PROP
     return false;
   }
@@ -8471,7 +8471,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitIncOrDec(UnaryNode* incDec) {
 // the comment on emitSwitch.
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitLabeledStatement(
     const LabeledStatement* labeledStmt) {
-  const ParserAtom* name = labeledStmt->label();
+  auto name = labeledStmt->labelIndex();
   LabelEmitter label(this);
 
   label.emitLabel(name);
@@ -8861,7 +8861,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         return false;
       }
 
-      const ParserAtom* keyAtom = key->as<NameNode>().atom();
+      auto keyAtom = key->as<NameNode>().atomIndex();
 
       if (!pe.emitInit(accessorType, keyAtom)) {
         return false;
@@ -10000,7 +10000,7 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
           return false;
         }
       } else {
-        const ParserName* paramName = bindingElement->as<NameNode>().name();
+        auto paramName = bindingElement->as<NameNode>().nameIndex();
         if (!fpe.emitRest(paramName)) {
           //        [stack]
           return false;
@@ -10059,7 +10059,7 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
         //          [stack]
         return false;
       }
-      const ParserAtom* paramName = bindingElement->as<NameNode>().name();
+      auto paramName = bindingElement->as<NameNode>().nameIndex();
       if (!fpe.emitDefaultEnd(paramName)) {
         //          [stack]
         return false;
@@ -10068,7 +10068,7 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
       continue;
     }
 
-    const ParserAtom* paramName = bindingElement->as<NameNode>().name();
+    auto paramName = bindingElement->as<NameNode>().nameIndex();
     if (!fpe.emitSimple(paramName)) {
       //            [stack]
       return false;
@@ -10946,7 +10946,7 @@ bool BytecodeEmitter::emitTree(
           return false;
         }
       }
-      if (!poe.emitGet(prop->key().atom())) {
+      if (!poe.emitGet(prop->key().atomIndex())) {
         //          [stack] PROP
         return false;
       }

@@ -264,7 +264,7 @@ bool PropertyEmitter::emitInitHomeObject() {
 }
 
 bool PropertyEmitter::emitInit(AccessorType accessorType,
-                               const ParserAtom* key) {
+                               TaggedParserAtomIndex key) {
   switch (accessorType) {
     case AccessorType::None:
       return emitInit(isClass_ ? JSOp::InitHiddenProp : JSOp::InitProp, key);
@@ -295,7 +295,7 @@ bool PropertyEmitter::emitInitIndexOrComputed(AccessorType accessorType) {
   }
 }
 
-bool PropertyEmitter::emitInit(JSOp op, const ParserAtom* key) {
+bool PropertyEmitter::emitInit(JSOp op, TaggedParserAtomIndex key) {
   MOZ_ASSERT(propertyState_ == PropertyState::PropValue ||
              propertyState_ == PropertyState::InitHomeObj);
 
@@ -305,7 +305,7 @@ bool PropertyEmitter::emitInit(JSOp op, const ParserAtom* key) {
 
   //                [stack] CTOR? OBJ CTOR? VAL
 
-  if (!bce_->emitAtomOp(op, key->toIndex())) {
+  if (!bce_->emitAtomOp(op, key)) {
     //              [stack] CTOR? OBJ CTOR?
     return false;
   }

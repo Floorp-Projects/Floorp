@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 
+#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "js/TypeDecls.h"
 #include "vm/SharedStencil.h"  // GCThingIndex
 
@@ -18,7 +19,6 @@ namespace js {
 namespace frontend {
 
 struct BytecodeEmitter;
-class ParserAtom;
 
 // Class for emitting bytecode for property operation.
 //
@@ -230,22 +230,22 @@ class MOZ_STACK_CLASS PropOpEmitter {
     return kind_ == Kind::PostIncrement || kind_ == Kind::PreIncrement;
   }
 
-  MOZ_MUST_USE bool prepareAtomIndex(const ParserAtom* prop);
+  MOZ_MUST_USE bool prepareAtomIndex(TaggedParserAtomIndex prop);
 
  public:
   MOZ_MUST_USE bool prepareForObj();
 
-  MOZ_MUST_USE bool emitGet(const ParserAtom* prop);
+  MOZ_MUST_USE bool emitGet(TaggedParserAtomIndex prop);
 
   MOZ_MUST_USE bool prepareForRhs();
   MOZ_MUST_USE bool skipObjAndRhs();
 
-  MOZ_MUST_USE bool emitDelete(const ParserAtom* prop);
+  MOZ_MUST_USE bool emitDelete(TaggedParserAtomIndex prop);
 
   // `prop` can be nullptr for CompoundAssignment.
-  MOZ_MUST_USE bool emitAssignment(const ParserAtom* prop);
+  MOZ_MUST_USE bool emitAssignment(TaggedParserAtomIndex prop);
 
-  MOZ_MUST_USE bool emitIncDec(const ParserAtom* prop);
+  MOZ_MUST_USE bool emitIncDec(TaggedParserAtomIndex prop);
 };
 
 } /* namespace frontend */

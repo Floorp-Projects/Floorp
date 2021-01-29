@@ -18,8 +18,8 @@ using namespace js::frontend;
 PropOpEmitter::PropOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind)
     : bce_(bce), kind_(kind), objKind_(objKind) {}
 
-bool PropOpEmitter::prepareAtomIndex(const ParserAtom* prop) {
-  return bce_->makeAtomIndex(prop->toIndex(), &propAtomIndex_);
+bool PropOpEmitter::prepareAtomIndex(TaggedParserAtomIndex prop) {
+  return bce_->makeAtomIndex(prop, &propAtomIndex_);
 }
 
 bool PropOpEmitter::prepareForObj() {
@@ -31,7 +31,7 @@ bool PropOpEmitter::prepareForObj() {
   return true;
 }
 
-bool PropOpEmitter::emitGet(const ParserAtom* prop) {
+bool PropOpEmitter::emitGet(TaggedParserAtomIndex prop) {
   MOZ_ASSERT(state_ == State::Obj);
 
   if (!prepareAtomIndex(prop)) {
@@ -122,7 +122,7 @@ bool PropOpEmitter::skipObjAndRhs() {
   return true;
 }
 
-bool PropOpEmitter::emitDelete(const ParserAtom* prop) {
+bool PropOpEmitter::emitDelete(TaggedParserAtomIndex prop) {
   MOZ_ASSERT_IF(!isSuper(), state_ == State::Obj);
   MOZ_ASSERT_IF(isSuper(), state_ == State::Start);
   MOZ_ASSERT(isDelete());
@@ -162,7 +162,7 @@ bool PropOpEmitter::emitDelete(const ParserAtom* prop) {
   return true;
 }
 
-bool PropOpEmitter::emitAssignment(const ParserAtom* prop) {
+bool PropOpEmitter::emitAssignment(TaggedParserAtomIndex prop) {
   MOZ_ASSERT(isSimpleAssignment() || isPropInit() || isCompoundAssignment());
   MOZ_ASSERT(state_ == State::Rhs);
 
@@ -189,7 +189,7 @@ bool PropOpEmitter::emitAssignment(const ParserAtom* prop) {
   return true;
 }
 
-bool PropOpEmitter::emitIncDec(const ParserAtom* prop) {
+bool PropOpEmitter::emitIncDec(TaggedParserAtomIndex prop) {
   MOZ_ASSERT(state_ == State::Obj);
   MOZ_ASSERT(isIncDec());
 
