@@ -341,7 +341,7 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
     //   See bug 1660275.
     AutoEnterOOMUnsafeRegion oomUnsafe;
     const ParserAtom* atom =
-        bce->compilationState.getParserAtomAt(bce->cx, name);
+        bce->compilationState.parserAtoms.getParserAtom(name);
     JSAtom* jsname =
         atom->toJSAtom(bce->cx, name, bce->stencil.input.atomCache);
     if (!jsname) {
@@ -461,7 +461,7 @@ void EmitterScope::dump(BytecodeEmitter* bce) {
 
     auto atomIndex = r.front().key();
     const auto* atom =
-        bce->compilationState.getParserAtomAt(bce->cx, atomIndex);
+        bce->compilationState.parserAtoms.getParserAtom(atomIndex);
     UniqueChars bytes = ParserAtomToPrintableString(bce->cx, atom);
     if (!bytes) {
       return;
