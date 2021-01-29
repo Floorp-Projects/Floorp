@@ -82,7 +82,6 @@ const intermittently_loaded_scripts = {
     // Test related
     "resource://testing-common/BrowserTestUtilsChild.jsm",
     "resource://testing-common/ContentEventListenerChild.jsm",
-    "resource://specialpowers/AppTestDelegateChild.jsm",
     "resource://specialpowers/SpecialPowersChild.jsm",
     "resource://specialpowers/WrapPrivileged.jsm",
   ]),

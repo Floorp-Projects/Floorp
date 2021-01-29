@@ -1,13 +1,9 @@
 "use strict";
 
-/* exported AppConstants, Assert, AppTestDelegate */
+/* exported AppConstants, Assert */
 
 var { AppConstants } = SpecialPowers.Cu.import(
   "resource://gre/modules/AppConstants.jsm",
-  {}
-);
-var { AppTestDelegate } = SpecialPowers.Cu.import(
-  "resource://specialpowers/AppTestDelegate.jsm",
   {}
 );
 
