@@ -40,11 +40,11 @@ class ParserAtomsTable;
 // GetWellKnownAtom in ParserAtom.cpp relies on the fact that
 // JSAtomState fields and this enum variants use the same order.
 enum class WellKnownAtomId : uint32_t {
-#define ENUM_ENTRY_(_, name, _2) name,
+#define ENUM_ENTRY_(_, NAME, _2) NAME,
   FOR_EACH_COMMON_PROPERTYNAME(ENUM_ENTRY_)
 #undef ENUM_ENTRY_
 
-#define ENUM_ENTRY_(name, _) name,
+#define ENUM_ENTRY_(NAME, _) NAME,
       JS_FOR_EACH_PROTOTYPE(ENUM_ENTRY_)
 #undef ENUM_ENTRY_
           Limit,
@@ -123,7 +123,7 @@ class TaggedParserAtomIndex {
     MOZ_ASSERT(uint32_t(index) < SmallIndexLimit);
 
     // Static1/Static2 string shouldn't use WellKnownAtomId.
-#define CHECK_(_, name, _2) MOZ_ASSERT(index != WellKnownAtomId::name);
+#define CHECK_(_, NAME, _2) MOZ_ASSERT(index != WellKnownAtomId::NAME);
     FOR_EACH_NON_EMPTY_TINY_PROPERTYNAME(CHECK_)
 #undef CHECK_
   }
@@ -134,31 +134,31 @@ class TaggedParserAtomIndex {
 
   class WellKnown {
    public:
-#define METHOD_(_, name, _2)                             \
-  static constexpr TaggedParserAtomIndex name() {        \
-    return TaggedParserAtomIndex(WellKnownAtomId::name); \
+#define METHOD_(_, NAME, _2)                             \
+  static constexpr TaggedParserAtomIndex NAME() {        \
+    return TaggedParserAtomIndex(WellKnownAtomId::NAME); \
   }
     FOR_EACH_NONTINY_COMMON_PROPERTYNAME(METHOD_)
 #undef METHOD_
 
-#define METHOD_(name, _)                                 \
-  static constexpr TaggedParserAtomIndex name() {        \
-    return TaggedParserAtomIndex(WellKnownAtomId::name); \
+#define METHOD_(NAME, _)                                 \
+  static constexpr TaggedParserAtomIndex NAME() {        \
+    return TaggedParserAtomIndex(WellKnownAtomId::NAME); \
   }
     JS_FOR_EACH_PROTOTYPE(METHOD_)
 #undef METHOD_
 
-#define METHOD_(_, name, str)                                    \
-  static constexpr TaggedParserAtomIndex name() {                \
-    return TaggedParserAtomIndex(StaticParserString1((str)[0])); \
+#define METHOD_(_, NAME, STR)                                    \
+  static constexpr TaggedParserAtomIndex NAME() {                \
+    return TaggedParserAtomIndex(StaticParserString1((STR)[0])); \
   }
     FOR_EACH_LENGTH1_PROPERTYNAME(METHOD_)
 #undef METHOD_
 
-#define METHOD_(_, name, str)                                         \
-  static constexpr TaggedParserAtomIndex name() {                     \
+#define METHOD_(_, NAME, STR)                                         \
+  static constexpr TaggedParserAtomIndex NAME() {                     \
     return TaggedParserAtomIndex(StaticParserString2(                 \
-        (StaticStrings::getLength2IndexStatic((str)[0], (str)[1])))); \
+        (StaticStrings::getLength2IndexStatic((STR)[0], (STR)[1])))); \
   }
     FOR_EACH_LENGTH2_PROPERTYNAME(METHOD_)
 #undef METHOD_
@@ -420,25 +420,7 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
  private:
-  TaggedParserAtomIndex toIndex() const { return index_; }
-
-  ParserAtomIndex toParserAtomIndex() const {
-    return index_.toParserAtomIndex();
-  }
-  WellKnownAtomId toWellKnownAtomId() const {
-    return index_.toWellKnownAtomId();
-  }
-  StaticParserString1 toStaticParserString1() const {
-    return index_.toStaticParserString1();
-  }
-  StaticParserString2 toStaticParserString2() const {
-    return index_.toStaticParserString2();
-  }
-
   bool isParserAtomIndex() const { return index_.isParserAtomIndex(); }
-  bool isWellKnownAtomId() const { return index_.isWellKnownAtomId(); }
-  bool isStaticParserString1() const { return index_.isStaticParserString1(); }
-  bool isStaticParserString2() const { return index_.isStaticParserString2(); }
 
  public:
   void setParserAtomIndex(ParserAtomIndex index) {
@@ -568,13 +550,13 @@ class WellKnownParserAtoms_ROM {
   StaticParserAtomEntry<1> length1Table[ASCII_STATIC_LIMIT];
   StaticParserAtomEntry<2> length2Table[NUM_LENGTH2_ENTRIES];
 
-#define PROPERTYNAME_FIELD_(_, name, text) \
-  StaticParserAtomEntry<CharTraits::length(text)> name;
+#define PROPERTYNAME_FIELD_(_, NAME, TEXT) \
+  StaticParserAtomEntry<CharTraits::length(TEXT)> NAME;
   FOR_EACH_NONTINY_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
-#define PROPERTYNAME_FIELD_(name, _) \
-  StaticParserAtomEntry<CharTraits::length(#name)> name;
+#define PROPERTYNAME_FIELD_(NAME, _) \
+  StaticParserAtomEntry<CharTraits::length(#NAME)> NAME;
   JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
@@ -595,14 +577,14 @@ class WellKnownParserAtoms_ROM {
     }
 
     // Initialize each well-known property atoms
-#define PROPERTYNAME_FIELD_(_, name, text) \
-  init(name, name.storage(), u"" text, WellKnownAtomId::name);
+#define PROPERTYNAME_FIELD_(_, NAME, TEXT) \
+  init(NAME, NAME.storage(), u"" TEXT, WellKnownAtomId::NAME);
     FOR_EACH_NONTINY_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
     // Initialize each well-known prototype atoms
-#define PROPERTYNAME_FIELD_(name, _) \
-  init(name, name.storage(), u"" #name, WellKnownAtomId::name);
+#define PROPERTYNAME_FIELD_(NAME, _) \
+  init(NAME, NAME.storage(), u"" #NAME, WellKnownAtomId::NAME);
     JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
   }
@@ -727,11 +709,11 @@ class WellKnownParserAtoms {
  public:
   // Named fields allow quickly finding an atom if it is known at compile time.
   // This is particularly useful for the Parser.
-#define PROPERTYNAME_FIELD_(_, name, _2) const ParserName* name{};
+#define PROPERTYNAME_FIELD_(_, NAME, _2) const ParserName* NAME{};
   FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
-#define PROPERTYNAME_FIELD_(name, _) const ParserName* name{};
+#define PROPERTYNAME_FIELD_(NAME, _) const ParserName* NAME{};
   JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
@@ -750,7 +732,7 @@ class WellKnownParserAtoms {
   bool initTinyStringAlias(JSContext* cx, const ParserName** name,
                            const char* str);
   bool initSingle(JSContext* cx, const ParserName** name,
-                  const ParserAtomEntry& romEntry);
+                  const ParserAtomEntry& romEntry, TaggedParserAtomIndex index);
 
  public:
   bool init(JSContext* cx);
