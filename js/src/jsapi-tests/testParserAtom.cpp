@@ -18,6 +18,7 @@ BEGIN_TEST(testParserAtom_empty) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
+  using js::frontend::TaggedParserAtomIndex;
 
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(cx->runtime(), alloc);
@@ -31,10 +32,7 @@ BEGIN_TEST(testParserAtom_empty) {
   const js::LittleEndianChars leTwoByte(bytes);
 
   // Check that the well-known empty atom matches for different entry points.
-  const ParserAtom* ref = cx->parserNames().empty;
-  CHECK(ref);
-  auto refIndex = ref->toIndex();
-  CHECK(refIndex);
+  auto refIndex = TaggedParserAtomIndex::WellKnown::empty();
   CHECK(atomTable.internAscii(cx, ascii, 0) == refIndex);
   CHECK(atomTable.internLatin1(cx, latin1, 0) == refIndex);
   CHECK(atomTable.internUtf8(cx, utf8, 0) == refIndex);
@@ -70,9 +68,9 @@ BEGIN_TEST(testParserAtom_tiny1) {
   const uint8_t bytes[] = {'a', 0};
   const js::LittleEndianChars leTwoByte(bytes);
 
-  const ParserAtom* ref = cx->parserNames().lookupTiny(&a, 1);
+  auto ref = cx->parserNames().lookupTiny(&a, 1);
   CHECK(ref);
-  auto refIndex = ref->toIndex();
+  auto refIndex = cx->parserNames().lookupTinyIndex(&a, 1);
   CHECK(refIndex);
   CHECK(atomTable.internAscii(cx, ascii, 1) == refIndex);
   CHECK(atomTable.internLatin1(cx, latin1, 1) == refIndex);
@@ -113,9 +111,7 @@ BEGIN_TEST(testParserAtom_tiny2) {
   const uint8_t bytes[] = {'a', 0, '0', 0};
   const js::LittleEndianChars leTwoByte(bytes);
 
-  const ParserAtom* ref = cx->parserNames().lookupTiny(ascii, 2);
-  CHECK(ref);
-  auto refIndex = ref->toIndex();
+  auto refIndex = cx->parserNames().lookupTinyIndex(ascii, 2);
   CHECK(refIndex);
   CHECK(atomTable.internAscii(cx, ascii, 2) == refIndex);
   CHECK(atomTable.internLatin1(cx, latin1, 2) == refIndex);

@@ -387,15 +387,15 @@ TaggedParserAtomIndex ParserAtomsTable::internAscii(JSContext* cx,
 TaggedParserAtomIndex ParserAtomsTable::internLatin1(
     JSContext* cx, const Latin1Char* latin1Ptr, uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
-  if (const ParserAtom* tiny = wellKnownTable_.lookupTiny(latin1Ptr, length)) {
-    return tiny->toIndex();
+  if (auto tiny = wellKnownTable_.lookupTinyIndex(latin1Ptr, length)) {
+    return tiny;
   }
 
   // Check for well-known atom.
   InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
   SpecificParserAtomLookup<Latin1Char> lookup(seq);
-  if (const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(lookup)) {
-    return wk->toIndex();
+  if (auto wk = wellKnownTable_.lookupChar16Seq(lookup)) {
+    return wk;
   }
 
   // Check for existing atom.
@@ -434,9 +434,9 @@ TaggedParserAtomIndex ParserAtomsTable::internUtf8(
   // Check for tiny strings which are abundant in minified code.
   // NOTE: The tiny atoms are all ASCII-only so we can directly look at the
   //        UTF-8 data without worrying about surrogates.
-  if (const ParserAtom* tiny = wellKnownTable_.lookupTiny(
+  if (auto tiny = wellKnownTable_.lookupTinyIndex(
           reinterpret_cast<const Latin1Char*>(utf8Ptr), nbyte)) {
-    return tiny->toIndex();
+    return tiny;
   }
 
   // If source text is ASCII, then the length of the target char buffer
@@ -456,7 +456,7 @@ TaggedParserAtomIndex ParserAtomsTable::internUtf8(
   // NOTE: Well-known are all ASCII so have been handled above.
   InflatedChar16Sequence<mozilla::Utf8Unit> seq(utf8Ptr, nbyte);
   SpecificParserAtomLookup<mozilla::Utf8Unit> lookup(seq);
-  MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
+  MOZ_ASSERT(!wellKnownTable_.lookupChar16Seq(lookup));
   EntryMap::AddPtr addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
     return addPtr->value();
@@ -482,15 +482,15 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16(JSContext* cx,
                                                      const char16_t* char16Ptr,
                                                      uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
-  if (const ParserAtom* tiny = wellKnownTable_.lookupTiny(char16Ptr, length)) {
-    return tiny->toIndex();
+  if (auto tiny = wellKnownTable_.lookupTinyIndex(char16Ptr, length)) {
+    return tiny;
   }
 
   // Check against well-known.
   InflatedChar16Sequence<char16_t> seq(char16Ptr, length);
   SpecificParserAtomLookup<char16_t> lookup(seq);
-  if (const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(lookup)) {
-    return wk->toIndex();
+  if (auto wk = wellKnownTable_.lookupChar16Seq(lookup)) {
+    return wk;
   }
 
   // Check for existing atom.
@@ -720,13 +720,13 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
 }
 
 template <typename CharT>
-const ParserAtom* WellKnownParserAtoms::lookupChar16Seq(
+TaggedParserAtomIndex WellKnownParserAtoms::lookupChar16Seq(
     const SpecificParserAtomLookup<CharT>& lookup) const {
   EntryMap::Ptr ptr = wellKnownMap_.readonlyThreadsafeLookup(lookup);
   if (ptr) {
-    return ptr->key()->asAtom();
+    return ptr->value();
   }
-  return nullptr;
+  return TaggedParserAtomIndex::null();
 }
 
 bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
@@ -742,7 +742,7 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
 
   // Strings matched by lookupTiny are stored in static table and aliases should
   // only be added using initTinyStringAlias.
-  MOZ_ASSERT(lookupTiny(str, len) == nullptr,
+  MOZ_ASSERT(lookupTinyIndex(str, len) == TaggedParserAtomIndex::null(),
              "Well-known atom matches a tiny StaticString. Did you add it to "
              "the wrong CommonPropertyNames.h list?");
 
@@ -773,7 +773,7 @@ bool WellKnownParserAtoms::initTinyStringAlias(JSContext* cx,
 
   // NOTE: If this assert fails, you may need to change which list is it belongs
   //       to in CommonPropertyNames.h.
-  const ParserAtom* tiny = lookupTiny(str, len);
+  auto tiny = lookupTiny(str, len);
   MOZ_ASSERT(tiny, "Tiny common name was not found");
 
   // Set alias to existing atom.
