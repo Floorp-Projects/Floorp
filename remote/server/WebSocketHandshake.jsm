@@ -93,8 +93,8 @@ function processRequest({ requestLine, headers }) {
     !connection ||
     !connection
       .split(",")
-      .map(t => t.trim())
-      .includes("Upgrade")
+      .map(t => t.trim().toLowerCase())
+      .includes("upgrade")
   ) {
     throw new Error("The handshake request has incorrect Connection header");
   }
