@@ -42,16 +42,24 @@ static void TestPrintfTargetPrint() {
   checker.print("test string");
 }
 
-static bool MOZ_FORMAT_PRINTF(2, 3)
-    print_one(const char* expect, const char* fmt, ...) {
+static bool MOZ_FORMAT_PRINTF(4, 5)
+    check_print(const char* file, int line, const char* expect, const char* fmt,
+                ...) {
   va_list ap;
 
   va_start(ap, fmt);
   mozilla::SmprintfPointer output = mozilla::Vsmprintf(fmt, ap);
   va_end(ap);
 
-  return output && !strcmp(output.get(), expect);
+  bool ret = output && !strcmp(output.get(), expect);
+  if (!ret && strcmp(expect, "ignore") != 0) {
+    fprintf(stderr, "(actual) \"%s\" != (expected) \"%s\" (%s:%d)\n",
+            output.get(), expect, file, line);
+  }
+  return ret;
 }
+
+#define print_one(...) check_print(__FILE__, __LINE__, __VA_ARGS__)
 
 static const char* zero() { return nullptr; }
 
