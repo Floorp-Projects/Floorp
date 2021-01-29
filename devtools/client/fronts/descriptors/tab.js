@@ -213,13 +213,6 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
    * Process change can go in both ways.
    */
   async _onRemotenessChange() {
-    // Responsive design does a crazy dance around tabs and triggers
-    // remotenesschange events. But we should ignore them as at the end
-    // the content doesn't change its remoteness.
-    if (this.localTab.isResponsiveDesignMode) {
-      return;
-    }
-
     // The front that was created for DevTools page extension does not have corresponding toolbox.
     if (this.isDevToolsExtensionContext) {
       return;
