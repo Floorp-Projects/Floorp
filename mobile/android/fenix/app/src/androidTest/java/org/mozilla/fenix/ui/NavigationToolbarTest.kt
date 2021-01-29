@@ -66,7 +66,6 @@ class NavigationToolbarTest {
         }
     }
 
-    @Ignore("Flaky test: https://github.com/mozilla-mobile/fenix/issues/12894")
     @Test
     fun goForwardTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -79,7 +78,8 @@ class NavigationToolbarTest {
         }.enterURLAndEnterToBrowser(nextWebPage.url) {
             mDevice.waitForIdle()
             verifyUrl(nextWebPage.url.toString())
-            mDevice.pressBack()
+        }.openThreeDotMenu {
+        }.goBack {
             mDevice.waitForIdle()
             verifyUrl(defaultWebPage.url.toString())
         }
