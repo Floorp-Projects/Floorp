@@ -286,7 +286,9 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
       cx_, extent, stencil_, compilationState_, inheritedDirectives,
-      generatorKind, asyncKind, explicitName, flags, index);
+      generatorKind, asyncKind,
+      explicitName ? explicitName->toIndex() : TaggedParserAtomIndex::null(),
+      flags, index);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -847,7 +849,7 @@ bool PerHandlerParser<ParseHandler>::
     propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope) {
   // Now that we have all the declared names in the scope, check which
   // functions should exhibit Annex B semantics.
-  if (!scope.propagateAndMarkAnnexBFunctionBoxes(pc_)) {
+  if (!scope.propagateAndMarkAnnexBFunctionBoxes(pc_, this)) {
     return false;
   }
 
@@ -1657,7 +1659,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   // For eval scripts, since all bindings are automatically considered
   // closed over, we don't need to call propagateFreeNamesAndMarkClosed-
   // OverBindings. However, Annex B.3.3 functions still need to be marked.
-  if (!varScope.propagateAndMarkAnnexBFunctionBoxes(pc_)) {
+  if (!varScope.propagateAndMarkAnnexBFunctionBoxes(pc_, this)) {
     return nullptr;
   }
 
@@ -1718,7 +1720,7 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
   // For global scripts, whether bindings are closed over or not doesn't
   // matter, so no need to call propagateFreeNamesAndMarkClosedOver-
   // Bindings. However, Annex B.3.3 functions still need to be marked.
-  if (!varScope.propagateAndMarkAnnexBFunctionBoxes(pc_)) {
+  if (!varScope.propagateAndMarkAnnexBFunctionBoxes(pc_, this)) {
     return nullptr;
   }
 
@@ -3470,12 +3472,15 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
   // Revalidate the function name when we transitioned to strict mode.
   if ((kind == FunctionSyntaxKind::Statement ||
        kind == FunctionSyntaxKind::Expression) &&
-      funbox->explicitName() && !inheritedStrict && pc_->sc()->strict()) {
+      funbox->explicitNameIndex() && !inheritedStrict && pc_->sc()->strict()) {
     MOZ_ASSERT(pc_->sc()->hasExplicitUseStrict(),
                "strict mode should only change when a 'use strict' directive "
                "is present");
 
-    const ParserName* propertyName = funbox->explicitName()->asName();
+    const ParserName* propertyName =
+        this->compilationState_
+            .getParserAtomAt(cx_, funbox->explicitNameIndex())
+            ->asName();
     YieldHandling nameYieldHandling;
     if (kind == FunctionSyntaxKind::Expression) {
       // Named lambda has binding inside it.

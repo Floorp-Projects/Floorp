@@ -3280,8 +3280,7 @@ bool BytecodeEmitter::setFunName(FunctionBox* funbox,
     return true;
   }
 
-  const ParserAtom* atom = compilationState.getParserAtomAt(cx, name);
-  funbox->setInferredName(atom);
+  funbox->setInferredName(name);
   return true;
 }
 

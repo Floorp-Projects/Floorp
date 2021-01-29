@@ -235,13 +235,14 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     *retId = nullptr;
 
     // If the function already has a name, use that.
-    if (funbox->displayAtom()) {
+    if (funbox->displayAtomIndex()) {
       if (!prefix_) {
-        *retId = funbox->displayAtom();
+        *retId = parserAtoms_.getParserAtom(funbox->displayAtomIndex());
         return true;
       }
       if (!buf_.append(prefix_) || !buf_.append('/') ||
-          !buf_.append(funbox->displayAtom())) {
+          !buf_.append(
+              parserAtoms_.getParserAtom(funbox->displayAtomIndex()))) {
         return false;
       }
       *retId = buf_.finishParserAtom(parserAtoms_);
@@ -329,7 +330,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     // Skip assigning the guessed name if the function has a (dynamically)
     // computed inferred name.
     if (!funNode->isDirectRHSAnonFunction()) {
-      funbox->setGuessedAtom(*retId);
+      funbox->setGuessedAtom((*retId)->toIndex());
     }
     return true;
   }
