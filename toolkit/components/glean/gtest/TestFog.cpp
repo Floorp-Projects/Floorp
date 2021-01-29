@@ -35,15 +35,11 @@ TEST(FOG, FogInitDoesntCrash)
 {
   Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
   ASSERT_EQ(NS_OK, fog_init());
-  // Fog init isn't actually done (it passes work to a background thread)
-  Preferences::SetBool(DATA_PREF, false);
-  Preferences::SetBool(DATA_PREF, true);
 }
 
-// TODO: to be enabled after changes from bug 1677455 are vendored.
-// extern "C" void Rust_MeasureInitializeTime();
-// TEST(FOG, TestMeasureInitializeTime)
-// { Rust_MeasureInitializeTime(); }
+extern "C" void Rust_MeasureInitializeTime();
+TEST(FOG, TestMeasureInitializeTime)
+{ Rust_MeasureInitializeTime(); }
 
 TEST(FOG, BuiltinPingsRegistered)
 {
