@@ -243,9 +243,23 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       hasDuplicateParameters(false),
       hasExprBody_(false),
       isFunctionFieldCopiedToStencil(false),
-      isInitialCompilation(stencil.isInitialStencil()) {}
+      isInitialCompilation(stencil.isInitialStencil()),
+      isStandalone(false),
+      hasNonSyntacticEnclosingScopeForStandalone(false) {}
 
-void FunctionBox::initFromLazyFunction(JSFunction* fun) {
+void FunctionBox::initFromLazyFunction(JSFunction* fun,
+                                       ScopeContext& scopeContext,
+                                       FunctionFlags flags,
+                                       FunctionSyntaxKind kind) {
+  initFromLazyFunctionShared(fun);
+  initStandaloneOrLazy(scopeContext, flags, kind);
+}
+
+void FunctionBox::initFromLazyFunctionToSkip(JSFunction* fun) {
+  initFromLazyFunctionShared(fun);
+}
+
+void FunctionBox::initFromLazyFunctionShared(JSFunction* fun) {
   BaseScript* lazy = fun->baseScript();
   immutableFlags_ = lazy->immutableFlags();
   extent_ = lazy->extent();
@@ -315,6 +329,18 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 
 void FunctionBox::initStandalone(ScopeContext& scopeContext,
                                  FunctionFlags flags, FunctionSyntaxKind kind) {
+  initStandaloneOrLazy(scopeContext, flags, kind);
+
+  isStandalone = true;
+  if (scopeContext.effectiveScope) {
+    hasNonSyntacticEnclosingScopeForStandalone =
+        !scopeContext.effectiveScope->as<GlobalScope>().isSyntactic();
+  }
+}
+
+void FunctionBox::initStandaloneOrLazy(ScopeContext& scopeContext,
+                                       FunctionFlags flags,
+                                       FunctionSyntaxKind kind) {
   if (flags.isArrow()) {
     allowNewTarget_ = scopeContext.allowNewTarget;
     allowSuperProperty_ = scopeContext.allowSuperProperty;
