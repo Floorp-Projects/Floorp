@@ -799,8 +799,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitInitializeForInOrOfTarget(TernaryNode* forHead);
 
-  MOZ_MUST_USE bool emitBreak(const ParserName* label);
-  MOZ_MUST_USE bool emitContinue(const ParserName* label);
+  MOZ_MUST_USE bool emitBreak(TaggedParserAtomIndex label);
+  MOZ_MUST_USE bool emitContinue(TaggedParserAtomIndex label);
 
   MOZ_MUST_USE bool emitFunctionFormalParameters(ListNode* paramsBody);
   MOZ_MUST_USE bool emitInitializeFunctionSpecialNames();
