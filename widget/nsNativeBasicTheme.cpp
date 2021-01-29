@@ -1277,26 +1277,29 @@ aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect)
 
 LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
   switch (aAppearance) {
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
-    case StyleAppearance::NumberInput: {
-      LayoutDeviceIntCoord w = SnapBorderWidth(kTextFieldBorderWidth, dpiRatio);
-      return LayoutDeviceIntMargin(w, w, w, w);
-    }
+    case StyleAppearance::NumberInput:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton: {
-      LayoutDeviceIntCoord w = SnapBorderWidth(kMenulistBorderWidth, dpiRatio);
-      return LayoutDeviceIntMargin(w, w, w, w);
-    }
-    case StyleAppearance::Button: {
-      LayoutDeviceIntCoord w = SnapBorderWidth(kButtonBorderWidth, dpiRatio);
-      return LayoutDeviceIntMargin(w, w, w, w);
-    }
+    case StyleAppearance::MenulistButton:
+    case StyleAppearance::Button:
+      // Return the border size from the UA sheet, even though what we paint
+      // doesn't actually match that. We know this is the UA sheet border
+      // because we disable native theming when different border widths are
+      // specified by authors, see nsNativeBasicTheme::IsWidgetStyled.
+      //
+      // The Rounded() bit is technically redundant, but needed to appease the
+      // type system, we should always end up with full device pixels due to
+      // round_border_to_device_pixels at style time.
+      return LayoutDeviceIntMargin::FromAppUnits(
+                 aFrame->StyleBorder()->GetComputedBorder(),
+                 aFrame->PresContext()->AppUnitsPerDevPixel())
+          .Rounded();
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio: {
+      DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
       LayoutDeviceIntCoord w =
           SnapBorderWidth(kCheckboxRadioBorderWidth, dpiRatio);
       return LayoutDeviceIntMargin(w, w, w, w);
