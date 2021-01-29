@@ -1236,7 +1236,16 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   // message manager per process, treat this script as run-once. Run-once
   // scripts can be compiled directly for the target global, and will be dropped
   // from the preloader cache after they're executed and serialized.
+  //
+  // NOTE: This does not affect the JS::CompileOptions. We generate the same
+  // bytecode as though it were run multiple times. This is required for the
+  // batch decoding from ScriptPreloader to work.
   bool isRunOnce = !aShouldCache || IsProcessScoped();
+
+  // We don't cache data: scripts!
+  nsAutoCString scheme;
+  uri->GetScheme(scheme);
+  bool useScriptPreloader = aShouldCache && !scheme.EqualsLiteral("data");
 
   // If the script will be reused in this session, compile it in the compilation
   // scope instead of the current global to avoid keeping the current
@@ -1251,6 +1260,7 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   ScriptPreloader::FillCompileOptionsForCachedScript(options);
   options.setFileAndLine(url.get(), 1);
   options.setNonSyntacticScope(true);
+  options.setSourceIsLazy(true);
 
   JS::Rooted<JSScript*> script(cx);
   script =
@@ -1290,6 +1300,12 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
       return;
     }
 
+    // If we are not encoding to the ScriptPreloader cache, we can now relax the
+    // compile options and use the JS syntax-parser for lower latency.
+    if (!useScriptPreloader || !ScriptPreloader::GetChildSingleton().Active()) {
+      options.setSourceIsLazy(false);
+    }
+
     JS::UniqueTwoByteChars srcChars(dataStringBuf);
 
     JS::SourceText<char16_t> srcBuf;
@@ -1306,10 +1322,7 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   MOZ_ASSERT(script);
   aScriptp.set(script);
 
-  nsAutoCString scheme;
-  uri->GetScheme(scheme);
-  // We don't cache data: scripts!
-  if (aShouldCache && !scheme.EqualsLiteral("data")) {
+  if (useScriptPreloader) {
     ScriptPreloader::GetChildSingleton().NoteScript(url, url, script,
                                                     isRunOnce);
 
