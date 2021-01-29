@@ -193,11 +193,16 @@ void brush_vs(
     // Derive the texture coordinates for this image, based on
     // whether the source image is a local-space or screen-space
     // image.
-    if (raster_space == RASTER_SCREEN) {
-        // Since the screen space UVs specify an arbitrary quad, do
-        // a bilinear interpolation to get the correct UV for this
-        // local position.
-        f = get_image_quad_uv(specific_resource_address, f);
+    switch (raster_space) {
+        case RASTER_SCREEN: {
+            // Since the screen space UVs specify an arbitrary quad, do
+            // a bilinear interpolation to get the correct UV for this
+            // local position.
+            f = get_image_quad_uv(specific_resource_address, f);
+            break;
+        }
+        default:
+            break;
     }
 #endif
 
@@ -227,31 +232,41 @@ void brush_vs(
     v_tile_repeat = repeat.xy;
 
     float opacity = float(prim_user_data.z) / 65535.0;
-    if (blend_mode == BLEND_MODE_ALPHA) {
-        image_data.color.a *= opacity;
-    } else { // blend_mode == BLEND_MODE_PREMUL_ALPHA
-        image_data.color *= opacity;
+    switch (blend_mode) {
+        case BLEND_MODE_ALPHA:
+            image_data.color.a *= opacity;
+            break;
+        case BLEND_MODE_PREMUL_ALPHA:
+        default:
+            image_data.color *= opacity;
+            break;
     }
 
-    if (color_mode == COLOR_MODE_ALPHA || color_mode == COLOR_MODE_BITMAP) {
-        v_mask_swizzle = vec2(0.0, 1.0);
-        v_color = image_data.color;
-    } else if (color_mode == COLOR_MODE_SUBPX_BG_PASS2 ||
-               color_mode == COLOR_MODE_SUBPX_DUAL_SOURCE ||
-               color_mode == COLOR_MODE_IMAGE) {
-        v_mask_swizzle = vec2(1.0, 0.0);
-        v_color = image_data.color;
-    } else if (color_mode == COLOR_MODE_SUBPX_CONST_COLOR ||
-               color_mode == COLOR_MODE_SUBPX_BG_PASS0 ||
-               color_mode == COLOR_MODE_COLOR_BITMAP) {
-        v_mask_swizzle = vec2(1.0, 0.0);
-        v_color = vec4(image_data.color.a);
-    } else if (color_mode == COLOR_MODE_SUBPX_BG_PASS1) {
-        v_mask_swizzle = vec2(-1.0, 1.0);
-        v_color = vec4(image_data.color.a) * image_data.background_color;
-    } else {
-        v_mask_swizzle = vec2(0.0);
-        v_color = vec4(1.0);
+    switch (color_mode) {
+        case COLOR_MODE_ALPHA:
+        case COLOR_MODE_BITMAP:
+            v_mask_swizzle = vec2(0.0, 1.0);
+            v_color = image_data.color;
+            break;
+        case COLOR_MODE_SUBPX_BG_PASS2:
+        case COLOR_MODE_SUBPX_DUAL_SOURCE:
+        case COLOR_MODE_IMAGE:
+            v_mask_swizzle = vec2(1.0, 0.0);
+            v_color = image_data.color;
+            break;
+        case COLOR_MODE_SUBPX_CONST_COLOR:
+        case COLOR_MODE_SUBPX_BG_PASS0:
+        case COLOR_MODE_COLOR_BITMAP:
+            v_mask_swizzle = vec2(1.0, 0.0);
+            v_color = vec4(image_data.color.a);
+            break;
+        case COLOR_MODE_SUBPX_BG_PASS1:
+            v_mask_swizzle = vec2(-1.0, 1.0);
+            v_color = vec4(image_data.color.a) * image_data.background_color;
+            break;
+        default:
+            v_mask_swizzle = vec2(0.0);
+            v_color = vec4(1.0);
     }
 
     v_local_pos = vi.local_pos;
