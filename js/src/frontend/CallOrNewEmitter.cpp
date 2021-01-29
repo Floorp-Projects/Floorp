@@ -32,7 +32,7 @@ bool CallOrNewEmitter::emitNameCallee(const ParserAtom* name) {
   MOZ_ASSERT(state_ == State::Start);
 
   NameOpEmitter noe(
-      bce_, name,
+      bce_, name->toIndex(),
       isCall() ? NameOpEmitter::Kind::Call : NameOpEmitter::Kind::Get);
   if (!noe.emitGet()) {
     //              [stack] CALLEE THIS

@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 #include "frontend/NameAnalysisTypes.h"
-#include "frontend/ParserAtom.h"  // ParserAtom
+#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "js/TypeDecls.h"
 #include "vm/SharedStencil.h"  // GCThingIndex
 
@@ -81,7 +81,7 @@ class MOZ_STACK_CLASS NameOpEmitter {
 
   bool emittedBindOp_ = false;
 
-  const ParserAtom* name_;
+  TaggedParserAtomIndex name_;
 
   GCThingIndex atomIndex_;
 
@@ -134,8 +134,8 @@ class MOZ_STACK_CLASS NameOpEmitter {
 #endif
 
  public:
-  NameOpEmitter(BytecodeEmitter* bce, const ParserAtom* name, Kind kind);
-  NameOpEmitter(BytecodeEmitter* bce, const ParserAtom* name,
+  NameOpEmitter(BytecodeEmitter* bce, TaggedParserAtomIndex name, Kind kind);
+  NameOpEmitter(BytecodeEmitter* bce, TaggedParserAtomIndex name,
                 const NameLocation& loc, Kind kind);
 
  private:

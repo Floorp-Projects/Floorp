@@ -140,14 +140,14 @@ bool FunctionEmitter::emitAgain() {
                 bce_->sc->asFunctionBox()->hasParameterExprs));
   }
 
-  NameOpEmitter noe(bce_, name_, *lhsLoc,
+  NameOpEmitter noe(bce_, name_->toIndex(), *lhsLoc,
                     NameOpEmitter::Kind::SimpleAssignment);
   if (!noe.prepareForRhs()) {
     //              [stack]
     return false;
   }
 
-  if (!bce_->emitGetName(name_)) {
+  if (!bce_->emitGetName(name_->toIndex())) {
     //              [stack] FUN
     return false;
   }
@@ -271,7 +271,7 @@ bool FunctionEmitter::emitHoisted(GCThingIndex index) {
   // For functions nested within functions and blocks, make a lambda and
   // initialize the binding name of the function in the current scope.
 
-  NameOpEmitter noe(bce_, name_, NameOpEmitter::Kind::Initialize);
+  NameOpEmitter noe(bce_, name_->toIndex(), NameOpEmitter::Kind::Initialize);
   if (!noe.prepareForRhs()) {
     //              [stack]
     return false;
@@ -478,13 +478,12 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
   //
   //   function f(x, y = 42) { var y; }
   //
-  const ParserAtom* name = nullptr;
   for (ParserBindingIter bi(*funbox_->functionScopeBindings(), true); bi;
        bi++) {
-    name = bce_->compilationState.getParserAtomAt(bce_->cx, bi.name());
+    auto name = bi.name();
 
     // There may not be a var binding of the same name.
-    if (!bce_->locationOfNameBoundInScope(name->toIndex(),
+    if (!bce_->locationOfNameBoundInScope(name,
                                           extraBodyVarEmitterScope_.ptr())) {
       continue;
     }
@@ -492,8 +491,8 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
     // The '.this' and '.generator' function special
     // bindings should never appear in the extra var
     // scope. 'arguments', however, may.
-    MOZ_ASSERT(name != bce_->cx->parserNames().dotThis &&
-               name != bce_->cx->parserNames().dotGenerator);
+    MOZ_ASSERT(name != TaggedParserAtomIndex::WellKnown::dotThis() &&
+               name != TaggedParserAtomIndex::WellKnown::dotGenerator());
 
     NameOpEmitter noe(bce_, name, NameOpEmitter::Kind::Initialize);
     if (!noe.prepareForRhs()) {
@@ -501,8 +500,8 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
       return false;
     }
 
-    NameLocation paramLoc = *bce_->locationOfNameBoundInScope(
-        name->toIndex(), functionEmitterScope_.ptr());
+    NameLocation paramLoc =
+        *bce_->locationOfNameBoundInScope(name, functionEmitterScope_.ptr());
     if (!bce_->emitGetNameAtLocation(name, paramLoc)) {
       //            [stack] VAL
       return false;
@@ -934,7 +933,8 @@ bool FunctionParamsEmitter::emitAssignment(const ParserAtom* paramName) {
              paramLoc.kind() == NameLocation::Kind::FrameSlot ||
              paramLoc.kind() == NameLocation::Kind::EnvironmentCoordinate);
 
-  NameOpEmitter noe(bce_, paramName, paramLoc, NameOpEmitter::Kind::Initialize);
+  NameOpEmitter noe(bce_, paramName->toIndex(), paramLoc,
+                    NameOpEmitter::Kind::Initialize);
   if (!noe.prepareForRhs()) {
     //              [stack] ARG
     return false;

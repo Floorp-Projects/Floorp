@@ -19,7 +19,7 @@ PropOpEmitter::PropOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind)
     : bce_(bce), kind_(kind), objKind_(objKind) {}
 
 bool PropOpEmitter::prepareAtomIndex(const ParserAtom* prop) {
-  return bce_->makeAtomIndex(prop, &propAtomIndex_);
+  return bce_->makeAtomIndex(prop->toIndex(), &propAtomIndex_);
 }
 
 bool PropOpEmitter::prepareForObj() {

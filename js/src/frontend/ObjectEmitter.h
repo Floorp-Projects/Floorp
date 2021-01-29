@@ -17,6 +17,7 @@
 #include "frontend/EmitterScope.h"    // EmitterScope
 #include "frontend/NameOpEmitter.h"   // NameOpEmitter
 #include "frontend/ParseNode.h"       // AccessorType
+#include "frontend/ParserAtom.h"      // ParserAtom, TaggedParserAtomIndex
 #include "frontend/TDZCheckCache.h"   // TDZCheckCache
 #include "vm/BytecodeUtil.h"          // JSOp
 #include "vm/NativeObject.h"          // PlainObject
@@ -753,8 +754,8 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   size_t numInitializers_ = 0;
 #endif
 
-  const ParserAtom* name_;
-  const ParserAtom* nameForAnonymousClass_;
+  TaggedParserAtomIndex name_;
+  TaggedParserAtomIndex nameForAnonymousClass_;
   bool hasNameOnStack_ = false;
   mozilla::Maybe<NameOpEmitter> initializersAssignment_;
   size_t initializerIndex_ = 0;
@@ -771,12 +772,12 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //        Statically inferred name of the class (only for anonymous classes)
   // @param hasNameOnStack
   //        If true the name is on the stack (only for anonymous classes)
-  MOZ_MUST_USE bool emitClass(const ParserAtom* name,
-                              const ParserAtom* nameForAnonymousClass,
+  MOZ_MUST_USE bool emitClass(TaggedParserAtomIndex name,
+                              TaggedParserAtomIndex nameForAnonymousClass,
                               bool hasNameOnStack);
-  MOZ_MUST_USE bool emitDerivedClass(const ParserAtom* name,
-                                     const ParserAtom* nameForAnonymousClass,
-                                     bool hasNameOnStack);
+  MOZ_MUST_USE bool emitDerivedClass(
+      TaggedParserAtomIndex name, TaggedParserAtomIndex nameForAnonymousClass,
+      bool hasNameOnStack);
 
   // @param needsHomeObject
   //        True if the constructor contains `super.foo`
