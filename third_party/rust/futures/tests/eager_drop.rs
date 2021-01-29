@@ -1,13 +1,9 @@
-use futures::channel::oneshot;
-use futures::future::{self, Future, FutureExt, TryFutureExt};
-use futures::task::{Context, Poll};
-use futures_test::future::FutureTestExt;
-use pin_utils::unsafe_pinned;
-use std::pin::Pin;
-use std::sync::mpsc;
-
 #[test]
 fn map_ok() {
+    use futures::future::{self, FutureExt, TryFutureExt};
+    use futures_test::future::FutureTestExt;
+    use std::sync::mpsc;
+
     // The closure given to `map_ok` should have been dropped by the time `map`
     // runs.
     let (tx1, rx1) = mpsc::channel::<()>();
@@ -26,6 +22,10 @@ fn map_ok() {
 
 #[test]
 fn map_err() {
+    use futures::future::{self, FutureExt, TryFutureExt};
+    use futures_test::future::FutureTestExt;
+    use std::sync::mpsc;
+
     // The closure given to `map_err` should have been dropped by the time `map`
     // runs.
     let (tx1, rx1) = mpsc::channel::<()>();
@@ -42,76 +42,96 @@ fn map_err() {
     rx2.recv().unwrap();
 }
 
-struct FutureData<F, T> {
-    _data: T,
-    future: F,
-}
+mod channelled {
+    use futures::future::Future;
+    use futures::task::{Context,Poll};
+    use pin_project::pin_project;
+    use std::pin::Pin;
 
-impl<F, T> FutureData<F, T> {
-    unsafe_pinned!(future: F);
-}
-
-impl<F: Future, T: Send + 'static> Future for FutureData<F, T> {
-    type Output = F::Output;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<F::Output> {
-        self.future().poll(cx)
+    #[pin_project]
+    struct FutureData<F, T> {
+        _data: T,
+        #[pin]
+        future: F,
     }
-}
 
-#[test]
-fn then_drops_eagerly() {
-    let (tx0, rx0) = oneshot::channel::<()>();
-    let (tx1, rx1) = mpsc::channel::<()>();
-    let (tx2, rx2) = mpsc::channel::<()>();
+    impl<F: Future, T: Send + 'static> Future for FutureData<F, T> {
+        type Output = F::Output;
 
-    FutureData { _data: tx1, future: rx0.unwrap_or_else(|_| { panic!() }) }
-        .then(move |_| {
-            assert!(rx1.recv().is_err()); // tx1 should have been dropped
-            tx2.send(()).unwrap();
-            future::ready(())
-        })
-        .run_in_background();
+        fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<F::Output> {
+            self.project().future.poll(cx)
+        }
+    }
 
-    assert_eq!(Err(mpsc::TryRecvError::Empty), rx2.try_recv());
-    tx0.send(()).unwrap();
-    rx2.recv().unwrap();
-}
+    #[test]
+    fn then_drops_eagerly() {
+        use futures::channel::oneshot;
+        use futures::future::{self, FutureExt, TryFutureExt};
+        use futures_test::future::FutureTestExt;
+        use std::sync::mpsc;
 
-#[test]
-fn and_then_drops_eagerly() {
-    let (tx0, rx0) = oneshot::channel::<Result<(), ()>>();
-    let (tx1, rx1) = mpsc::channel::<()>();
-    let (tx2, rx2) = mpsc::channel::<()>();
+        let (tx0, rx0) = oneshot::channel::<()>();
+        let (tx1, rx1) = mpsc::channel::<()>();
+        let (tx2, rx2) = mpsc::channel::<()>();
 
-    FutureData { _data: tx1, future: rx0.unwrap_or_else(|_| { panic!() }) }
-        .and_then(move |_| {
-            assert!(rx1.recv().is_err()); // tx1 should have been dropped
-            tx2.send(()).unwrap();
-            future::ready(Ok(()))
-        })
-        .run_in_background();
+        FutureData { _data: tx1, future: rx0.unwrap_or_else(|_| { panic!() }) }
+            .then(move |_| {
+                assert!(rx1.recv().is_err()); // tx1 should have been dropped
+                tx2.send(()).unwrap();
+                future::ready(())
+            })
+            .run_in_background();
 
-    assert_eq!(Err(mpsc::TryRecvError::Empty), rx2.try_recv());
-    tx0.send(Ok(())).unwrap();
-    rx2.recv().unwrap();
-}
+        assert_eq!(Err(mpsc::TryRecvError::Empty), rx2.try_recv());
+        tx0.send(()).unwrap();
+        rx2.recv().unwrap();
+    }
 
-#[test]
-fn or_else_drops_eagerly() {
-    let (tx0, rx0) = oneshot::channel::<Result<(), ()>>();
-    let (tx1, rx1) = mpsc::channel::<()>();
-    let (tx2, rx2) = mpsc::channel::<()>();
+    #[test]
+    fn and_then_drops_eagerly() {
+        use futures::channel::oneshot;
+        use futures::future::{self, TryFutureExt};
+        use futures_test::future::FutureTestExt;
+        use std::sync::mpsc;
 
-    FutureData { _data: tx1, future: rx0.unwrap_or_else(|_| { panic!() }) }
-        .or_else(move |_| {
-            assert!(rx1.recv().is_err()); // tx1 should have been dropped
-            tx2.send(()).unwrap();
-            future::ready::<Result<(), ()>>(Ok(()))
-        })
-        .run_in_background();
+        let (tx0, rx0) = oneshot::channel::<Result<(), ()>>();
+        let (tx1, rx1) = mpsc::channel::<()>();
+        let (tx2, rx2) = mpsc::channel::<()>();
 
-    assert_eq!(Err(mpsc::TryRecvError::Empty), rx2.try_recv());
-    tx0.send(Err(())).unwrap();
-    rx2.recv().unwrap();
+        FutureData { _data: tx1, future: rx0.unwrap_or_else(|_| { panic!() }) }
+            .and_then(move |_| {
+                assert!(rx1.recv().is_err()); // tx1 should have been dropped
+                tx2.send(()).unwrap();
+                future::ready(Ok(()))
+            })
+            .run_in_background();
+
+        assert_eq!(Err(mpsc::TryRecvError::Empty), rx2.try_recv());
+        tx0.send(Ok(())).unwrap();
+        rx2.recv().unwrap();
+    }
+
+    #[test]
+    fn or_else_drops_eagerly() {
+        use futures::channel::oneshot;
+        use futures::future::{self, TryFutureExt};
+        use futures_test::future::FutureTestExt;
+        use std::sync::mpsc;
+
+        let (tx0, rx0) = oneshot::channel::<Result<(), ()>>();
+        let (tx1, rx1) = mpsc::channel::<()>();
+        let (tx2, rx2) = mpsc::channel::<()>();
+
+        FutureData { _data: tx1, future: rx0.unwrap_or_else(|_| { panic!() }) }
+            .or_else(move |_| {
+                assert!(rx1.recv().is_err()); // tx1 should have been dropped
+                tx2.send(()).unwrap();
+                future::ready::<Result<(), ()>>(Ok(()))
+            })
+            .run_in_background();
+
+        assert_eq!(Err(mpsc::TryRecvError::Empty), rx2.try_recv());
+        tx0.send(Err(())).unwrap();
+        rx2.recv().unwrap();
+    }
 }

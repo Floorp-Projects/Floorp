@@ -1,6 +1,8 @@
 use crate::lock::BiLock;
+use futures_core::ready;
 use futures_core::task::{Context, Poll};
 use futures_io::{AsyncRead, AsyncWrite, IoSlice, IoSliceMut};
+use core::fmt;
 use std::io;
 use std::pin::Pin;
 
@@ -30,6 +32,26 @@ fn lock_and_then<T, U, E, F>(
 pub(super) fn split<T: AsyncRead + AsyncWrite>(t: T) -> (ReadHalf<T>, WriteHalf<T>) {
     let (a, b) = BiLock::new(t);
     (ReadHalf { handle: a }, WriteHalf { handle: b })
+}
+
+impl<T: Unpin> ReadHalf<T> {
+    /// Attempts to put the two "halves" of a split `AsyncRead + AsyncWrite` back
+    /// together. Succeeds only if the `ReadHalf<T>` and `WriteHalf<T>` are
+    /// a matching pair originating from the same call to `AsyncReadExt::split`.
+    pub fn reunite(self, other: WriteHalf<T>) -> Result<T, ReuniteError<T>> {
+        self.handle.reunite(other.handle).map_err(|err| {
+            ReuniteError(ReadHalf { handle: err.0 }, WriteHalf { handle: err.1 })
+        })
+    }
+}
+
+impl<T: Unpin> WriteHalf<T> {
+    /// Attempts to put the two "halves" of a split `AsyncRead + AsyncWrite` back
+    /// together. Succeeds only if the `ReadHalf<T>` and `WriteHalf<T>` are
+    /// a matching pair originating from the same call to `AsyncReadExt::split`.
+    pub fn reunite(self, other: ReadHalf<T>) -> Result<T, ReuniteError<T>> {
+        other.reunite(self)
+    }
 }
 
 impl<R: AsyncRead> AsyncRead for ReadHalf<R> {
@@ -67,3 +89,24 @@ impl<W: AsyncWrite> AsyncWrite for WriteHalf<W> {
         lock_and_then(&self.handle, cx, |l, cx| l.poll_close(cx))
     }
 }
+
+/// Error indicating a `ReadHalf<T>` and `WriteHalf<T>` were not two halves
+/// of a `AsyncRead + AsyncWrite`, and thus could not be `reunite`d.
+pub struct ReuniteError<T>(pub ReadHalf<T>, pub WriteHalf<T>);
+
+impl<T> fmt::Debug for ReuniteError<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("ReuniteError")
+            .field(&"...")
+            .finish()
+    }
+}
+
+impl<T> fmt::Display for ReuniteError<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "tried to reunite a ReadHalf and WriteHalf that don't form a pair")
+    }
+}
+
+#[cfg(feature = "std")]
+impl<T: core::any::Any> std::error::Error for ReuniteError<T> {}

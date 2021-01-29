@@ -1,9 +1,9 @@
-use futures::executor::block_on;
-use futures::pin_mut;
-use futures::stream::{self, Peekable, StreamExt};
-
 #[test]
 fn peekable() {
+    use futures::executor::block_on;
+    use futures::pin_mut;
+    use futures::stream::{self, Peekable, StreamExt};
+
     block_on(async {
         let peekable: Peekable<_> = stream::iter(vec![1u8, 2, 3]).peekable();
         pin_mut!(peekable);

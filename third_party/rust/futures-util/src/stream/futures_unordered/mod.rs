@@ -121,13 +121,19 @@ impl LocalSpawn for FuturesUnordered<LocalFutureObj<'_, ()>> {
 // notifiaction is received, the task will only be inserted into the ready to
 // run queue if it isn't inserted already.
 
-impl<Fut: Future> FuturesUnordered<Fut> {
+impl<Fut> Default for FuturesUnordered<Fut> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<Fut> FuturesUnordered<Fut> {
     /// Constructs a new, empty [`FuturesUnordered`].
     ///
     /// The returned [`FuturesUnordered`] does not contain any futures.
     /// In this state, [`FuturesUnordered::poll_next`](Stream::poll_next) will
     /// return [`Poll::Ready(None)`](Poll::Ready).
-    pub fn new() -> FuturesUnordered<Fut> {
+    pub fn new() -> Self {
         let stub = Arc::new(Task {
             future: UnsafeCell::new(None),
             next_all: AtomicPtr::new(ptr::null_mut()),
@@ -145,21 +151,13 @@ impl<Fut: Future> FuturesUnordered<Fut> {
             stub,
         });
 
-        FuturesUnordered {
+        Self {
             head_all: AtomicPtr::new(ptr::null_mut()),
             ready_to_run_queue,
             is_terminated: AtomicBool::new(false),
         }
     }
-}
 
-impl<Fut: Future> Default for FuturesUnordered<Fut> {
-    fn default() -> FuturesUnordered<Fut> {
-        FuturesUnordered::new()
-    }
-}
-
-impl<Fut> FuturesUnordered<Fut> {
     /// Returns the number of futures contained in the set.
     ///
     /// This represents the total number of in-flight futures.
@@ -607,12 +605,12 @@ impl<Fut> Drop for FuturesUnordered<Fut> {
     }
 }
 
-impl<Fut: Future> FromIterator<Fut> for FuturesUnordered<Fut> {
+impl<Fut> FromIterator<Fut> for FuturesUnordered<Fut> {
     fn from_iter<I>(iter: I) -> Self
     where
         I: IntoIterator<Item = Fut>,
     {
-        let acc = FuturesUnordered::new();
+        let acc = Self::new();
         iter.into_iter().fold(acc, |acc, item| { acc.push(item); acc })
     }
 }
@@ -620,5 +618,16 @@ impl<Fut: Future> FromIterator<Fut> for FuturesUnordered<Fut> {
 impl<Fut: Future> FusedStream for FuturesUnordered<Fut> {
     fn is_terminated(&self) -> bool {
         self.is_terminated.load(Relaxed)
+    }
+}
+
+impl<Fut> Extend<Fut> for FuturesUnordered<Fut> {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = Fut>,
+    {
+        for item in iter {
+            self.push(item);
+        }
     }
 }

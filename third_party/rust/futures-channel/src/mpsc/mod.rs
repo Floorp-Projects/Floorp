@@ -109,7 +109,7 @@ struct BoundedSenderInner<T> {
     // unblocked.
     sender_task: Arc<Mutex<SenderTask>>,
 
-    // True if the sender might be blocked. This is an optimization to avoid
+    // `true` if the sender might be blocked. This is an optimization to avoid
     // having to lock the mutex most of the time.
     maybe_parked: bool,
 }
@@ -189,7 +189,7 @@ impl fmt::Display for SendError {
 impl std::error::Error for SendError {}
 
 impl SendError {
-    /// Returns true if this error is a result of the channel being full.
+    /// Returns `true` if this error is a result of the channel being full.
     pub fn is_full(&self) -> bool {
         match self.kind {
             SendErrorKind::Full => true,
@@ -197,7 +197,7 @@ impl SendError {
         }
     }
 
-    /// Returns true if this error is a result of the receiver being dropped.
+    /// Returns `true` if this error is a result of the receiver being dropped.
     pub fn is_disconnected(&self) -> bool {
         match self.kind {
             SendErrorKind::Disconnected => true,
@@ -227,12 +227,12 @@ impl<T> fmt::Display for TrySendError<T> {
 impl<T: core::any::Any> std::error::Error for TrySendError<T> {}
 
 impl<T> TrySendError<T> {
-    /// Returns true if this error is a result of the channel being full.
+    /// Returns `true` if this error is a result of the channel being full.
     pub fn is_full(&self) -> bool {
         self.err.is_full()
     }
 
-    /// Returns true if this error is a result of the receiver being dropped.
+    /// Returns `true` if this error is a result of the receiver being dropped.
     pub fn is_disconnected(&self) -> bool {
         self.err.is_disconnected()
     }
@@ -334,7 +334,7 @@ struct SenderTask {
 
 impl SenderTask {
     fn new() -> Self {
-        SenderTask {
+        Self {
             task: None,
             is_parked: false,
         }
@@ -481,6 +481,11 @@ impl<T> UnboundedSenderInner<T> {
         Arc::ptr_eq(&self.inner, &other.inner)
     }
 
+    /// Returns whether the sender send to this receiver.
+    fn is_connected_to(&self, inner: &Arc<UnboundedInner<T>>) -> bool {
+        Arc::ptr_eq(&self.inner, inner)
+    }
+
     /// Returns pointer to the Arc containing sender
     ///
     /// The returned pointer is not referenced and should be only used for hashing!
@@ -536,7 +541,7 @@ impl<T> BoundedSenderInner<T> {
         // This operation will also atomically determine if the sender task
         // should be parked.
         //
-        // None is returned in the case that the channel has been closed by the
+        // `None` is returned in the case that the channel has been closed by the
         // receiver. This happens when `Receiver::close` is called or the
         // receiver is dropped.
         let park_self = match self.inc_num_messages() {
@@ -655,6 +660,11 @@ impl<T> BoundedSenderInner<T> {
     /// Returns whether the senders send to the same receiver.
     fn same_receiver(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.inner, &other.inner)
+    }
+
+    /// Returns whether the sender send to this receiver.
+    fn is_connected_to(&self, receiver: &Arc<BoundedInner<T>>) -> bool {
+        Arc::ptr_eq(&self.inner, receiver)
     }
 
     /// Returns pointer to the Arc containing sender
@@ -779,6 +789,14 @@ impl<T> Sender<T> {
         }
     }
 
+    /// Returns whether the sender send to this receiver.
+    pub fn is_connected_to(&self, receiver: &Receiver<T>) -> bool {
+        match (&self.0, &receiver.inner) {
+            (Some(inner), Some(receiver)) => inner.is_connected_to(receiver),
+            _ => false,
+        }
+    }
+
     /// Hashes the receiver into the provided hasher
     pub fn hash_receiver<H>(&self, hasher: &mut H) where H: std::hash::Hasher {
         use std::hash::Hash;
@@ -860,6 +878,14 @@ impl<T> UnboundedSender<T> {
         }
     }
 
+    /// Returns whether the sender send to this receiver.
+    pub fn is_connected_to(&self, receiver: &UnboundedReceiver<T>) -> bool {
+        match (&self.0, &receiver.inner) {
+            (Some(inner), Some(receiver)) => inner.is_connected_to(receiver),
+            _ => false,
+        }
+    }
+
     /// Hashes the receiver into the provided hasher
     pub fn hash_receiver<H>(&self, hasher: &mut H) where H: std::hash::Hasher {
         use std::hash::Hash;
@@ -870,19 +896,19 @@ impl<T> UnboundedSender<T> {
 }
 
 impl<T> Clone for Sender<T> {
-    fn clone(&self) -> Sender<T> {
-        Sender(self.0.clone())
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
     }
 }
 
 impl<T> Clone for UnboundedSender<T> {
-    fn clone(&self) -> UnboundedSender<T> {
-        UnboundedSender(self.0.clone())
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
     }
 }
 
 impl<T> Clone for UnboundedSenderInner<T> {
-    fn clone(&self) -> UnboundedSenderInner<T> {
+    fn clone(&self) -> Self {
         // Since this atomic op isn't actually guarding any memory and we don't
         // care about any orderings besides the ordering on the single atomic
         // variable, a relaxed ordering is acceptable.
@@ -897,23 +923,22 @@ impl<T> Clone for UnboundedSenderInner<T> {
             debug_assert!(curr < MAX_BUFFER);
 
             let next = curr + 1;
-            let actual = self.inner.num_senders.compare_and_swap(curr, next, SeqCst);
-
-            // The ABA problem doesn't matter here. We only care that the
-            // number of senders never exceeds the maximum.
-            if actual == curr {
-                return UnboundedSenderInner {
-                    inner: self.inner.clone(),
-                };
+            match self.inner.num_senders.compare_exchange(curr, next, SeqCst, SeqCst) {
+                Ok(_) => {
+                    // The ABA problem doesn't matter here. We only care that the
+                    // number of senders never exceeds the maximum.
+                    return Self {
+                        inner: self.inner.clone(),
+                    };
+                }
+                Err(actual) => curr = actual,
             }
-
-            curr = actual;
         }
     }
 }
 
 impl<T> Clone for BoundedSenderInner<T> {
-    fn clone(&self) -> BoundedSenderInner<T> {
+    fn clone(&self) -> Self {
         // Since this atomic op isn't actually guarding any memory and we don't
         // care about any orderings besides the ordering on the single atomic
         // variable, a relaxed ordering is acceptable.
@@ -928,19 +953,18 @@ impl<T> Clone for BoundedSenderInner<T> {
             debug_assert!(curr < self.inner.max_senders());
 
             let next = curr + 1;
-            let actual = self.inner.num_senders.compare_and_swap(curr, next, SeqCst);
-
-            // The ABA problem doesn't matter here. We only care that the
-            // number of senders never exceeds the maximum.
-            if actual == curr {
-                return BoundedSenderInner {
-                    inner: self.inner.clone(),
-                    sender_task: Arc::new(Mutex::new(SenderTask::new())),
-                    maybe_parked: false,
-                };
+            match self.inner.num_senders.compare_exchange(curr, next, SeqCst, SeqCst) {
+                Ok(_) => {
+                    // The ABA problem doesn't matter here. We only care that the
+                    // number of senders never exceeds the maximum.
+                    return Self {
+                        inner: self.inner.clone(),
+                        sender_task: Arc::new(Mutex::new(SenderTask::new())),
+                        maybe_parked: false,
+                    };
+                }
+                Err(actual) => curr = actual,
             }
-
-            curr = actual;
         }
     }
 }
@@ -997,7 +1021,7 @@ impl<T> Receiver<T> {
     /// no longer empty.
     ///
     /// This function will panic if called after `try_next` or `poll_next` has
-    /// returned None.
+    /// returned `None`.
     pub fn try_next(&mut self) -> Result<Option<T>, TryRecvError> {
         match self.next_message() {
             Poll::Ready(msg) => {
@@ -1127,7 +1151,7 @@ impl<T> UnboundedReceiver<T> {
     /// no longer empty.
     ///
     /// This function will panic if called after `try_next` or `poll_next` has
-    /// returned None.
+    /// returned `None`.
     pub fn try_next(&mut self) -> Result<Option<T>, TryRecvError> {
         match self.next_message() {
             Poll::Ready(msg) => {

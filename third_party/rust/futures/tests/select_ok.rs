@@ -1,8 +1,8 @@
-use futures::executor::block_on;
-use futures::future::{err, ok, select_ok};
-
 #[test]
 fn ignore_err() {
+    use futures::executor::block_on;
+    use futures::future::{err, ok, select_ok};
+
     let v = vec![
         err(1),
         err(2),
@@ -23,6 +23,9 @@ fn ignore_err() {
 
 #[test]
 fn last_err() {
+    use futures::executor::block_on;
+    use futures::future::{err, ok, select_ok};
+
     let v = vec![
         ok(1),
         err(2),

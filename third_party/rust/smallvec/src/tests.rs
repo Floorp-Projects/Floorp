@@ -905,3 +905,16 @@ fn empty_macro() {
 fn zero_size_items() {
     SmallVec::<[(); 0]>::new().push(());
 }
+
+#[test]
+fn test_insert_many_overflow() {
+    let mut v: SmallVec<[u8; 1]> = SmallVec::new();
+    v.push(123);
+
+    // Prepare an iterator with small lower bound
+    let iter = (0u8..5).filter(|n| n % 2 == 0);
+    assert_eq!(iter.size_hint().0, 0);
+
+    v.insert_many(0, iter);
+    assert_eq!(&*v, &[0, 2, 4, 123]);
+}

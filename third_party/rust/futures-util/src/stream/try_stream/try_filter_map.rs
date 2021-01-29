@@ -1,24 +1,25 @@
 use core::fmt;
 use core::pin::Pin;
 use futures_core::future::{TryFuture};
+use futures_core::ready;
 use futures_core::stream::{Stream, TryStream, FusedStream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
-use pin_utils::{unsafe_pinned, unsafe_unpinned};
+use pin_project_lite::pin_project;
 
-/// Stream for the [`try_filter_map`](super::TryStreamExt::try_filter_map)
-/// method.
-#[must_use = "streams do nothing unless polled"]
-pub struct TryFilterMap<St, Fut, F> {
-    stream: St,
-    f: F,
-    pending: Option<Fut>,
+pin_project! {
+    /// Stream for the [`try_filter_map`](super::TryStreamExt::try_filter_map)
+    /// method.
+    #[must_use = "streams do nothing unless polled"]
+    pub struct TryFilterMap<St, Fut, F> {
+        #[pin]
+        stream: St,
+        f: F,
+        #[pin]
+        pending: Option<Fut>,
+    }
 }
-
-impl<St, Fut, F> Unpin for TryFilterMap<St, Fut, F>
-    where St: Unpin, Fut: Unpin,
-{}
 
 impl<St, Fut, F> fmt::Debug for TryFilterMap<St, Fut, F>
 where
@@ -34,45 +35,11 @@ where
 }
 
 impl<St, Fut, F> TryFilterMap<St, Fut, F> {
-    unsafe_pinned!(stream: St);
-    unsafe_unpinned!(f: F);
-    unsafe_pinned!(pending: Option<Fut>);
-
     pub(super) fn new(stream: St, f: F) -> Self {
-        TryFilterMap { stream, f, pending: None }
+        Self { stream, f, pending: None }
     }
 
-    /// Acquires a reference to the underlying stream that this combinator is
-    /// pulling from.
-    pub fn get_ref(&self) -> &St {
-        &self.stream
-    }
-
-    /// Acquires a mutable reference to the underlying stream that this
-    /// combinator is pulling from.
-    ///
-    /// Note that care must be taken to avoid tampering with the state of the
-    /// stream which may otherwise confuse this combinator.
-    pub fn get_mut(&mut self) -> &mut St {
-        &mut self.stream
-    }
-
-    /// Acquires a pinned mutable reference to the underlying stream that this
-    /// combinator is pulling from.
-    ///
-    /// Note that care must be taken to avoid tampering with the state of the
-    /// stream which may otherwise confuse this combinator.
-    pub fn get_pin_mut(self: Pin<&mut Self>) -> Pin<&mut St> {
-        self.stream()
-    }
-
-    /// Consumes this combinator, returning the underlying stream.
-    ///
-    /// Note that this may discard intermediate state of this combinator, so
-    /// care should be taken to avoid losing resources when this is called.
-    pub fn into_inner(self) -> St {
-        self.stream
-    }
+    delegate_access_inner!(stream, St, ());
 }
 
 impl<St, Fut, F, T> FusedStream for TryFilterMap<St, Fut, F>
@@ -93,25 +60,28 @@ impl<St, Fut, F, T> Stream for TryFilterMap<St, Fut, F>
     type Item = Result<T, St::Error>;
 
     fn poll_next(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-    ) -> Poll<Option<Result<T, St::Error>>> {
-        loop {
-            if self.pending.is_none() {
-                let item = match ready!(self.as_mut().stream().try_poll_next(cx)?) {
-                    Some(x) => x,
-                    None => return Poll::Ready(None),
-                };
-                let fut = (self.as_mut().f())(item);
-                self.as_mut().pending().set(Some(fut));
-            }
+    ) -> Poll<Option<Self::Item>> {
+        let mut this = self.project();
 
-            let result = ready!(self.as_mut().pending().as_pin_mut().unwrap().try_poll(cx));
-            self.as_mut().pending().set(None);
-            if let Some(x) = result? {
-                return Poll::Ready(Some(Ok(x)));
+        Poll::Ready(loop {
+            if let Some(p) = this.pending.as_mut().as_pin_mut() {
+                // We have an item in progress, poll that until it's done
+                let res = ready!(p.try_poll(cx));
+                this.pending.set(None);
+                let item = res?;
+                if item.is_some() {
+                    break item.map(Ok);
+                }
+            } else if let Some(item) = ready!(this.stream.as_mut().try_poll_next(cx)?) {
+                // No item in progress, but the stream is still going
+                this.pending.set(Some((this.f)(item)));
+            } else {
+                // The stream is done
+                break None;
             }
-        }
+        })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

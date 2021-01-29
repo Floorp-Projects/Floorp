@@ -1,13 +1,67 @@
-use futures::executor::block_on;
-use futures::future::{Future, FutureExt};
-use futures::io::{AsyncSeek, AsyncSeekExt, AsyncWrite, AsyncWriteExt, BufWriter, Cursor, SeekFrom};
-use futures::task::{Context, Poll};
-use futures_test::task::noop_context;
-use std::io;
-use std::pin::Pin;
+mod maybe_pending {
+    use futures::io::AsyncWrite;
+    use futures::task::{Context, Poll};
+    use std::io;
+    use std::pin::Pin;
+
+    pub struct MaybePending {
+        pub inner: Vec<u8>,
+        ready: bool,
+    }
+
+    impl MaybePending {
+        pub fn new(inner: Vec<u8>) -> Self {
+            Self { inner, ready: false }
+        }
+    }
+
+    impl AsyncWrite for MaybePending {
+        fn poll_write(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+            buf: &[u8],
+        ) -> Poll<io::Result<usize>> {
+            if self.ready {
+                self.ready = false;
+                Pin::new(&mut self.inner).poll_write(cx, buf)
+            } else {
+                self.ready = true;
+                Poll::Pending
+            }
+        }
+
+        fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+            Pin::new(&mut self.inner).poll_flush(cx)
+        }
+
+        fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+            Pin::new(&mut self.inner).poll_close(cx)
+        }
+    }
+}
+
+mod util {
+    use futures::future::Future;
+
+    pub fn run<F: Future + Unpin>(mut f: F) -> F::Output {
+        use futures::future::FutureExt;
+        use futures::task::Poll;
+        use futures_test::task::noop_context;
+
+        let mut cx = noop_context();
+        loop {
+            if let Poll::Ready(x) = f.poll_unpin(&mut cx) {
+                return x;
+            }
+        }
+    }
+}
 
 #[test]
 fn buf_writer() {
+    use futures::executor::block_on;
+    use futures::io::{AsyncWriteExt, BufWriter};
+
     let mut writer = BufWriter::with_capacity(2, Vec::new());
 
     block_on(writer.write(&[0, 1])).unwrap();
@@ -50,6 +104,9 @@ fn buf_writer() {
 
 #[test]
 fn buf_writer_inner_flushes() {
+    use futures::executor::block_on;
+    use futures::io::{AsyncWriteExt, BufWriter};
+
     let mut w = BufWriter::with_capacity(3, Vec::new());
     block_on(w.write(&[0, 1])).unwrap();
     assert_eq!(*w.get_ref(), []);
@@ -60,6 +117,9 @@ fn buf_writer_inner_flushes() {
 
 #[test]
 fn buf_writer_seek() {
+    use futures::executor::block_on;
+    use futures::io::{AsyncSeekExt, AsyncWriteExt, BufWriter, Cursor, SeekFrom};
+
     // FIXME: when https://github.com/rust-lang/futures-rs/issues/1510 fixed,
     // use `Vec::new` instead of `vec![0; 8]`.
     let mut w = BufWriter::with_capacity(3, Cursor::new(vec![0; 8]));
@@ -73,52 +133,13 @@ fn buf_writer_seek() {
     assert_eq!(&w.into_inner().into_inner()[..], &[0, 1, 8, 9, 4, 5, 6, 7]);
 }
 
-struct MaybePending {
-    inner: Vec<u8>,
-    ready: bool,
-}
-
-impl MaybePending {
-    fn new(inner: Vec<u8>) -> Self {
-        Self { inner, ready: false }
-    }
-}
-
-impl AsyncWrite for MaybePending {
-    fn poll_write(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &[u8],
-    ) -> Poll<io::Result<usize>> {
-        if self.ready {
-            self.ready = false;
-            Pin::new(&mut self.inner).poll_write(cx, buf)
-        } else {
-            self.ready = true;
-            Poll::Pending
-        }
-    }
-
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.inner).poll_flush(cx)
-    }
-
-    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.inner).poll_close(cx)
-    }
-}
-
-fn run<F: Future + Unpin>(mut f: F) -> F::Output {
-    let mut cx = noop_context();
-    loop {
-        if let Poll::Ready(x) = f.poll_unpin(&mut cx) {
-            return x;
-        }
-    }
-}
-
 #[test]
 fn maybe_pending_buf_writer() {
+    use futures::io::{AsyncWriteExt, BufWriter};
+
+    use maybe_pending::MaybePending;
+    use util::run;
+
     let mut writer = BufWriter::with_capacity(2, MaybePending::new(Vec::new()));
 
     run(writer.write(&[0, 1])).unwrap();
@@ -161,6 +182,11 @@ fn maybe_pending_buf_writer() {
 
 #[test]
 fn maybe_pending_buf_writer_inner_flushes() {
+    use futures::io::{AsyncWriteExt, BufWriter};
+
+    use maybe_pending::MaybePending;
+    use util::run;
+
     let mut w = BufWriter::with_capacity(3, MaybePending::new(Vec::new()));
     run(w.write(&[0, 1])).unwrap();
     assert_eq!(&w.get_ref().inner, &[]);
@@ -169,59 +195,65 @@ fn maybe_pending_buf_writer_inner_flushes() {
     assert_eq!(w, [0, 1]);
 }
 
-
-struct MaybePendingSeek {
-    inner: Cursor<Vec<u8>>,
-    ready_write: bool,
-    ready_seek: bool,
-}
-
-impl MaybePendingSeek {
-    fn new(inner: Vec<u8>) -> Self {
-        Self { inner: Cursor::new(inner), ready_write: false, ready_seek: false }
-    }
-}
-
-impl AsyncWrite for MaybePendingSeek {
-    fn poll_write(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &[u8],
-    ) -> Poll<io::Result<usize>> {
-        if self.ready_write {
-            self.ready_write = false;
-            Pin::new(&mut self.inner).poll_write(cx, buf)
-        } else {
-            self.ready_write = true;
-            Poll::Pending
-        }
-    }
-
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.inner).poll_flush(cx)
-    }
-
-    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.inner).poll_close(cx)
-    }
-}
-
-impl AsyncSeek for MaybePendingSeek {
-    fn poll_seek(mut self: Pin<&mut Self>, cx: &mut Context<'_>, pos: SeekFrom)
-        -> Poll<io::Result<u64>>
-    {
-        if self.ready_seek {
-            self.ready_seek = false;
-            Pin::new(&mut self.inner).poll_seek(cx, pos)
-        } else {
-            self.ready_seek = true;
-            Poll::Pending
-        }
-    }
-}
-
 #[test]
 fn maybe_pending_buf_writer_seek() {
+    use futures::io::{AsyncSeek, AsyncSeekExt, AsyncWrite, AsyncWriteExt, BufWriter, Cursor, SeekFrom};
+    use futures::task::{Context, Poll};
+    use std::io;
+    use std::pin::Pin;
+
+    use util::run;
+
+    struct MaybePendingSeek {
+        inner: Cursor<Vec<u8>>,
+        ready_write: bool,
+        ready_seek: bool,
+    }
+
+    impl MaybePendingSeek {
+        fn new(inner: Vec<u8>) -> Self {
+            Self { inner: Cursor::new(inner), ready_write: false, ready_seek: false }
+        }
+    }
+
+    impl AsyncWrite for MaybePendingSeek {
+        fn poll_write(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+            buf: &[u8],
+        ) -> Poll<io::Result<usize>> {
+            if self.ready_write {
+                self.ready_write = false;
+                Pin::new(&mut self.inner).poll_write(cx, buf)
+            } else {
+                self.ready_write = true;
+                Poll::Pending
+            }
+        }
+
+        fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+            Pin::new(&mut self.inner).poll_flush(cx)
+        }
+
+        fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+            Pin::new(&mut self.inner).poll_close(cx)
+        }
+    }
+
+    impl AsyncSeek for MaybePendingSeek {
+        fn poll_seek(mut self: Pin<&mut Self>, cx: &mut Context<'_>, pos: SeekFrom)
+            -> Poll<io::Result<u64>>
+        {
+            if self.ready_seek {
+                self.ready_seek = false;
+                Pin::new(&mut self.inner).poll_seek(cx, pos)
+            } else {
+                self.ready_seek = true;
+                Poll::Pending
+            }
+        }
+    }
+
     // FIXME: when https://github.com/rust-lang/futures-rs/issues/1510 fixed,
     // use `Vec::new` instead of `vec![0; 8]`.
     let mut w = BufWriter::with_capacity(3, MaybePendingSeek::new(vec![0; 8]));

@@ -1,4 +1,5 @@
 use core::pin::Pin;
+use futures_core::ready;
 use futures_core::stream::FusedStream;
 use futures_core::future::{Future, FusedFuture};
 use futures_core::task::{Context, Poll};
@@ -14,7 +15,7 @@ pub struct SelectNextSome<'a, St: ?Sized> {
 
 impl<'a, St: ?Sized> SelectNextSome<'a, St> {
     pub(super) fn new(stream: &'a mut St) -> Self {
-        SelectNextSome { stream }
+        Self { stream }
     }
 }
 

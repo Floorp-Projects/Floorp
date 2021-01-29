@@ -1,4 +1,5 @@
 use futures_core::future::Future;
+use futures_core::ready;
 use futures_core::task::{Context, Poll};
 use futures_io::AsyncRead;
 use std::io;
@@ -27,11 +28,16 @@ impl<'a, R: AsyncRead + ?Sized + Unpin> ReadToEnd<'a, R> {
     }
 }
 
-struct Guard<'a> { buf: &'a mut Vec<u8>, len: usize }
+struct Guard<'a> {
+    buf: &'a mut Vec<u8>,
+    len: usize,
+}
 
 impl Drop for Guard<'_> {
     fn drop(&mut self) {
-        unsafe { self.buf.set_len(self.len); }
+        unsafe {
+            self.buf.set_len(self.len);
+        }
     }
 }
 
@@ -50,8 +56,10 @@ pub(super) fn read_to_end_internal<R: AsyncRead + ?Sized>(
     buf: &mut Vec<u8>,
     start_len: usize,
 ) -> Poll<io::Result<usize>> {
-    let mut g = Guard { len: buf.len(), buf };
-    let ret;
+    let mut g = Guard {
+        len: buf.len(),
+        buf,
+    };
     loop {
         if g.len == g.buf.len() {
             unsafe {
@@ -62,24 +70,24 @@ pub(super) fn read_to_end_internal<R: AsyncRead + ?Sized>(
             }
         }
 
-        match ready!(rd.as_mut().poll_read(cx, &mut g.buf[g.len..])) {
-            Ok(0) => {
-                ret = Poll::Ready(Ok(g.len - start_len));
-                break;
+        let buf = &mut g.buf[g.len..];
+        match ready!(rd.as_mut().poll_read(cx, buf)) {
+            Ok(0) => return Poll::Ready(Ok(g.len - start_len)),
+            Ok(n) => {
+                // We can't allow bogus values from read. If it is too large, the returned vec could have its length
+                // set past its capacity, or if it overflows the vec could be shortened which could create an invalid
+                // string if this is called via read_to_string.
+                assert!(n <= buf.len());
+                g.len += n;
             }
-            Ok(n) => g.len += n,
-            Err(e) => {
-                ret = Poll::Ready(Err(e));
-                break;
-            }
+            Err(e) => return Poll::Ready(Err(e)),
         }
     }
-
-    ret
 }
 
 impl<A> Future for ReadToEnd<'_, A>
-    where A: AsyncRead + ?Sized + Unpin,
+where
+    A: AsyncRead + ?Sized + Unpin,
 {
     type Output = io::Result<usize>;
 
