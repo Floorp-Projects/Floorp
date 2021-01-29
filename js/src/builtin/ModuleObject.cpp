@@ -1538,7 +1538,7 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
   NameNode* moduleSpec = &importNode->right()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
-  const ParserAtom* module = moduleSpec->atom();
+  auto module = moduleSpec->atomIndex();
   if (!maybeAppendRequestedModule(module, moduleSpec)) {
     return false;
   }
@@ -1550,21 +1550,20 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
     NameNode* importNameNode = &spec->left()->as<NameNode>();
     NameNode* localNameNode = &spec->right()->as<NameNode>();
 
-    const ParserAtom* importName = importNameNode->atom();
-    const ParserAtom* localName = localNameNode->atom();
+    auto importName = importNameNode->atomIndex();
+    auto localName = localNameNode->atomIndex();
 
     uint32_t line;
     uint32_t column;
     eitherParser_.computeLineAndColumn(importNameNode->pn_pos.begin, &line,
                                        &column);
 
-    module->markUsedByStencil();
-    localName->markUsedByStencil();
-    importName->markUsedByStencil();
+    markUsedByStencil(module);
+    markUsedByStencil(localName);
+    markUsedByStencil(importName);
     auto entry = frontend::StencilModuleEntry::importEntry(
-        module->toIndex(), localName->toIndex(), importName->toIndex(), line,
-        column);
-    if (!importEntries_.put(localName->toIndex(), entry)) {
+        module, localName, importName, line, column);
+    if (!importEntries_.put(localName, entry)) {
       return false;
     }
   }
@@ -1584,8 +1583,8 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
 
   if (isDefault && exportNode->as<BinaryNode>().right()) {
     // This is an export default containing an expression.
-    const ParserAtom* localName = cx_->parserNames().default_;
-    const ParserAtom* exportName = cx_->parserNames().default_;
+    auto localName = TaggedParserAtomIndex::WellKnown::default_();
+    auto exportName = TaggedParserAtomIndex::WellKnown::default_();
     return appendExportEntry(exportName, localName);
   }
 
@@ -1599,8 +1598,8 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
         NameNode* localNameNode = &spec->left()->as<NameNode>();
         NameNode* exportNameNode = &spec->right()->as<NameNode>();
 
-        const ParserAtom* localName = localNameNode->atom();
-        const ParserAtom* exportName = exportNameNode->atom();
+        auto localName = localNameNode->atomIndex();
+        auto exportName = exportNameNode->atomIndex();
 
         if (!appendExportEntry(exportName, localName, spec)) {
           return false;
@@ -1612,10 +1611,9 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
     case ParseNodeKind::ClassDecl: {
       const ClassNode& cls = kid->as<ClassNode>();
       MOZ_ASSERT(cls.names());
-      const frontend::ParserAtom* localName =
-          cls.names()->innerBinding()->atom();
-      const frontend::ParserAtom* exportName =
-          isDefault ? cx_->parserNames().default_ : localName;
+      auto localName = cls.names()->innerBinding()->atomIndex();
+      auto exportName =
+          isDefault ? TaggedParserAtomIndex::WellKnown::default_() : localName;
       if (!appendExportEntry(exportName, localName)) {
         return false;
       }
@@ -1633,10 +1631,10 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
         }
 
         if (binding->isKind(ParseNodeKind::Name)) {
-          const frontend::ParserAtom* localName =
-              binding->as<NameNode>().atom();
-          const frontend::ParserAtom* exportName =
-              isDefault ? cx_->parserNames().default_ : localName;
+          auto localName = binding->as<NameNode>().atomIndex();
+          auto exportName = isDefault
+                                ? TaggedParserAtomIndex::WellKnown::default_()
+                                : localName;
           if (!appendExportEntry(exportName, localName)) {
             return false;
           }
@@ -1657,9 +1655,9 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
     case ParseNodeKind::Function: {
       FunctionBox* box = kid->as<FunctionNode>().funbox();
       MOZ_ASSERT(!box->isArrow());
-      const frontend::ParserAtom* localName = box->explicitName();
-      const frontend::ParserAtom* exportName =
-          isDefault ? cx_->parserNames().default_ : localName;
+      auto localName = box->explicitNameIndex();
+      auto exportName =
+          isDefault ? TaggedParserAtomIndex::WellKnown::default_() : localName;
       if (!appendExportEntry(exportName, localName)) {
         return false;
       }
@@ -1677,7 +1675,7 @@ bool ModuleBuilder::processExportBinding(frontend::ParseNode* binding) {
   using namespace js::frontend;
 
   if (binding->isKind(ParseNodeKind::Name)) {
-    const frontend::ParserAtom* name = binding->as<NameNode>().atom();
+    auto name = binding->as<NameNode>().atomIndex();
     return appendExportEntry(name, name);
   }
 
@@ -1758,7 +1756,7 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
   NameNode* moduleSpec = &exportNode->right()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
-  const frontend::ParserAtom* module = moduleSpec->atom();
+  auto module = moduleSpec->atomIndex();
 
   if (!maybeAppendRequestedModule(module, moduleSpec)) {
     return false;
@@ -1770,8 +1768,8 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
       NameNode* exportNameNode =
           &spec->as<BinaryNode>().right()->as<NameNode>();
 
-      const frontend::ParserAtom* bindingName = localNameNode->atom();
-      const frontend::ParserAtom* exportName = exportNameNode->atom();
+      auto bindingName = localNameNode->atomIndex();
+      auto exportName = exportNameNode->atomIndex();
 
       if (!appendExportFromEntry(exportName, module, bindingName,
                                  localNameNode)) {
@@ -1779,8 +1777,9 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
       }
     } else {
       MOZ_ASSERT(spec->isKind(ParseNodeKind::ExportBatchSpecStmt));
-      const frontend::ParserAtom* exportName = cx_->parserNames().star;
-      if (!appendExportFromEntry(nullptr, module, exportName, spec)) {
+      auto exportName = TaggedParserAtomIndex::WellKnown::star();
+      if (!appendExportFromEntry(TaggedParserAtomIndex::null(), module,
+                                 exportName, spec)) {
         return false;
       }
     }
@@ -1800,24 +1799,25 @@ frontend::StencilModuleEntry* ModuleBuilder::importEntryFor(
   return &ptr->value();
 }
 
-bool ModuleBuilder::hasExportedName(const frontend::ParserAtom* name) const {
+bool ModuleBuilder::hasExportedName(
+    frontend::TaggedParserAtomIndex name) const {
   MOZ_ASSERT(name);
   return exportNames_.has(name);
 }
 
-bool ModuleBuilder::appendExportEntry(const frontend::ParserAtom* exportName,
-                                      const frontend::ParserAtom* localName,
-                                      frontend::ParseNode* node) {
+bool ModuleBuilder::appendExportEntry(
+    frontend::TaggedParserAtomIndex exportName,
+    frontend::TaggedParserAtomIndex localName, frontend::ParseNode* node) {
   uint32_t line = 0;
   uint32_t column = 0;
   if (node) {
     eitherParser_.computeLineAndColumn(node->pn_pos.begin, &line, &column);
   }
 
-  localName->markUsedByStencil();
-  exportName->markUsedByStencil();
+  markUsedByStencil(localName);
+  markUsedByStencil(exportName);
   auto entry = frontend::StencilModuleEntry::exportAsEntry(
-      localName->toIndex(), exportName->toIndex(), line, column);
+      localName, exportName, line, column);
   if (!exportEntries_.append(entry)) {
     return false;
   }
@@ -1832,23 +1832,20 @@ bool ModuleBuilder::appendExportEntry(const frontend::ParserAtom* exportName,
 }
 
 bool ModuleBuilder::appendExportFromEntry(
-    const frontend::ParserAtom* exportName,
-    const frontend::ParserAtom* moduleRequest,
-    const frontend::ParserAtom* importName, frontend::ParseNode* node) {
+    frontend::TaggedParserAtomIndex exportName,
+    frontend::TaggedParserAtomIndex moduleRequest,
+    frontend::TaggedParserAtomIndex importName, frontend::ParseNode* node) {
   uint32_t line;
   uint32_t column;
   eitherParser_.computeLineAndColumn(node->pn_pos.begin, &line, &column);
 
-  moduleRequest->markUsedByStencil();
-  importName->markUsedByStencil();
+  markUsedByStencil(moduleRequest);
+  markUsedByStencil(importName);
   if (exportName) {
-    exportName->markUsedByStencil();
+    markUsedByStencil(exportName);
   }
   auto entry = frontend::StencilModuleEntry::exportFromEntry(
-      moduleRequest->toIndex(), importName->toIndex(),
-      exportName ? exportName->toIndex()
-                 : frontend::TaggedParserAtomIndex::null(),
-      line, column);
+      moduleRequest, importName, exportName, line, column);
   if (!exportEntries_.append(entry)) {
     return false;
   }
@@ -1857,7 +1854,7 @@ bool ModuleBuilder::appendExportFromEntry(
 }
 
 bool ModuleBuilder::maybeAppendRequestedModule(
-    const frontend::ParserAtom* specifier, frontend::ParseNode* node) {
+    frontend::TaggedParserAtomIndex specifier, frontend::ParseNode* node) {
   if (requestedModuleSpecifiers_.has(specifier)) {
     return true;
   }
@@ -1866,15 +1863,19 @@ bool ModuleBuilder::maybeAppendRequestedModule(
   uint32_t column;
   eitherParser_.computeLineAndColumn(node->pn_pos.begin, &line, &column);
 
-  specifier->markUsedByStencil();
-  auto entry = frontend::StencilModuleEntry::moduleRequest(specifier->toIndex(),
-                                                           line, column);
+  markUsedByStencil(specifier);
+  auto entry =
+      frontend::StencilModuleEntry::moduleRequest(specifier, line, column);
   if (!requestedModules_.append(entry)) {
     js::ReportOutOfMemory(cx_);
     return false;
   }
 
   return requestedModuleSpecifiers_.put(specifier);
+}
+
+void ModuleBuilder::markUsedByStencil(frontend::TaggedParserAtomIndex name) {
+  eitherParser_.getCompilationState().parserAtoms.markUsedByStencil(name);
 }
 
 template <typename T>

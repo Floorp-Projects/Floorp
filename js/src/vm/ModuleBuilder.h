@@ -12,8 +12,8 @@
 #include "jstypes.h"               // JS_PUBLIC_API
 #include "builtin/ModuleObject.h"  // js::{{Im,Ex}portEntry,Requested{Module,}}Object
 #include "frontend/EitherParser.h"  // js::frontend::EitherParser
-#include "frontend/ParserAtom.h"  // js::frontend::{ParserAtom, TaggedParserAtomIndex}
-#include "frontend/Stencil.h"  // js::frontend::StencilModuleEntry
+#include "frontend/ParserAtom.h"    // js::frontend::TaggedParserAtomIndex
+#include "frontend/Stencil.h"       // js::frontend::StencilModuleEntry
 #include "frontend/TaggedParserAtomIndexHasher.h"  // frontend::TaggedParserAtomIndexHasher
 #include "js/GCHashTable.h"                        // JS::GCHash{Map,Set}
 #include "js/GCVector.h"                           // JS::GCVector
@@ -48,7 +48,7 @@ class MOZ_STACK_CLASS ModuleBuilder {
   bool processExport(frontend::ParseNode* exportNode);
   bool processExportFrom(frontend::BinaryNode* exportNode);
 
-  bool hasExportedName(const frontend::ParserAtom* name) const;
+  bool hasExportedName(frontend::TaggedParserAtomIndex name) const;
 
   bool buildTables(frontend::StencilModuleMetadata& metadata);
 
@@ -62,7 +62,9 @@ class MOZ_STACK_CLASS ModuleBuilder {
  private:
   using RequestedModuleVector =
       Vector<frontend::StencilModuleEntry, 0, js::SystemAllocPolicy>;
-  using AtomSet = HashSet<const frontend::ParserAtom*>;
+
+  using AtomSet = HashSet<frontend::TaggedParserAtomIndex,
+                          frontend::TaggedParserAtomIndexHasher>;
   using ExportEntryVector = Vector<frontend::StencilModuleEntry>;
   using ImportEntryMap =
       HashMap<frontend::TaggedParserAtomIndex, frontend::StencilModuleEntry,
@@ -88,17 +90,19 @@ class MOZ_STACK_CLASS ModuleBuilder {
   bool processExportArrayBinding(frontend::ListNode* array);
   bool processExportObjectBinding(frontend::ListNode* obj);
 
-  bool appendExportEntry(const frontend::ParserAtom* exportName,
-                         const frontend::ParserAtom* localName,
+  bool appendExportEntry(frontend::TaggedParserAtomIndex exportName,
+                         frontend::TaggedParserAtomIndex localName,
                          frontend::ParseNode* node = nullptr);
 
-  bool appendExportFromEntry(const frontend::ParserAtom* exportName,
-                             const frontend::ParserAtom* moduleRequest,
-                             const frontend::ParserAtom* importName,
+  bool appendExportFromEntry(frontend::TaggedParserAtomIndex exportName,
+                             frontend::TaggedParserAtomIndex moduleRequest,
+                             frontend::TaggedParserAtomIndex importName,
                              frontend::ParseNode* node);
 
-  bool maybeAppendRequestedModule(const frontend::ParserAtom* specifier,
+  bool maybeAppendRequestedModule(frontend::TaggedParserAtomIndex specifier,
                                   frontend::ParseNode* node);
+
+  void markUsedByStencil(frontend::TaggedParserAtomIndex name);
 };
 
 template <typename T>
