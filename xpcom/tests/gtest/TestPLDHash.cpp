@@ -337,6 +337,51 @@ TEST(PLDHashTableTest, Iterator)
   ASSERT_EQ(t.Capacity(), unsigned(PLDHashTable::kMinCapacity));
 }
 
+TEST(PLDHashTableTest, WithEntryHandle)
+{
+  PLDHashTable t(&trivialOps, sizeof(PLDHashEntryStub));
+
+  PLDHashEntryHdr* entry1 =
+      t.WithEntryHandle((const void*)88, [](auto entryHandle) {
+        EXPECT_FALSE(entryHandle);
+
+        bool initEntryCalled = false;
+        PLDHashEntryHdr* entry =
+            entryHandle.OrInsert([&initEntryCalled](PLDHashEntryHdr* entry) {
+              EXPECT_TRUE(entry);
+              TrivialInitEntry(entry, (const void*)88);
+              initEntryCalled = true;
+            });
+        EXPECT_TRUE(initEntryCalled);
+        EXPECT_EQ(entryHandle.Entry(), entry);
+
+        return entry;
+      });
+  ASSERT_TRUE(entry1);
+  ASSERT_EQ(t.EntryCount(), 1u);
+
+  PLDHashEntryHdr* entry2 =
+      t.WithEntryHandle((const void*)88, [](auto entryHandle) {
+        EXPECT_TRUE(entryHandle);
+
+        bool initEntryCalled = false;
+        PLDHashEntryHdr* entry =
+            entryHandle.OrInsert([&initEntryCalled](PLDHashEntryHdr* entry) {
+              EXPECT_TRUE(entry);
+              TrivialInitEntry(entry, (const void*)88);
+              initEntryCalled = true;
+            });
+        EXPECT_FALSE(initEntryCalled);
+        EXPECT_EQ(entryHandle.Entry(), entry);
+
+        return entry;
+      });
+  ASSERT_TRUE(entry2);
+  ASSERT_EQ(t.EntryCount(), 1u);
+
+  ASSERT_EQ(entry1, entry2);
+}
+
 // This test involves resizing a table repeatedly up to 512 MiB in size. On
 // 32-bit platforms (Win32, Android) it sometimes OOMs, causing the test to
 // fail. (See bug 931062 and bug 1267227.) Therefore, we only run it on 64-bit

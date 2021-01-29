@@ -44,23 +44,6 @@ class nsDataHashtable : public nsBaseHashtable<KeyClass, DataType, DataType> {
     }
     return nullptr;
   }
-
-  /**
-   * Retrieve the value for a key and remove the corresponding entry at
-   * the same time.
-   *
-   * @param aKey the key to retrieve and remove
-   * @return the found value, or Nothing if no entry was found with the
-   *   given key.
-   */
-  mozilla::Maybe<DataType> GetAndRemove(KeyType aKey) {
-    mozilla::Maybe<DataType> value;
-    if (EntryType* ent = this->GetEntry(aKey)) {
-      value.emplace(std::move(*ent->GetModifiableData()));
-      this->RemoveEntry(ent);
-    }
-    return value;
-  }
 };
 
 #endif  // nsDataHashtable_h__
