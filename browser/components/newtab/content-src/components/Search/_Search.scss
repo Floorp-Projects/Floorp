@@ -7,25 +7,32 @@ $search-button-width: 48px;
 $glyph-forward: url('chrome://browser/skin/forward.svg');
 
 .outer-wrapper.newtab-experience {
+  $search-icon-padding: 16px;
+  $search-icon-width: 2 * $search-icon-padding + $search-icon-size -4;
+
   .search-wrapper {
     padding-bottom: 38px;
 
-    input {
-      box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
-      border: 0;
-      border-radius: 8px;
-      color: var(--newtab-search-text-color);
-      font-weight: 500;
-      font-size: 15px;
+    .search-inner-wrapper {
+      min-height: $search-height-new;
+      width: $searchbar-width-small-new;
+
+      @media (min-width: $break-point-medium) {
+        width: $searchbar-width-medium-new;
+      }
+
+      @media (min-width: $break-point-large) {
+        width: $searchbar-width-large-new;
+      }
+
+      @media (min-width: $break-point-widest) {
+        width: $searchbar-width-largest-new;
+      }
     }
 
     input:focus {
       border: 1px solid var(--newtab-focus-border);
       box-shadow: 0 0 0 2px var(--newtab-focus-outline);
-    }
-
-    .search-inner-wrapper {
-      min-height: $search-height-new;
     }
 
     &.fake-focus {
@@ -34,18 +41,32 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
         box-shadow: 0 0 0 2px var(--newtab-focus-outline);
       }
     }
-  }
 
-  .search-handoff-button {
-    box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
-    border: 0;
-    border-radius: 8px;
-    color: var(--newtab-search-text-color);
-    font-weight: 500;
-    font-size: 15px;
+    .search-handoff-button,
+    input {
+      background: var(--newtab-textbox-background-color) var(--newtab-search-icon) $search-icon-padding center no-repeat;
+      background-size: $search-icon-size;
+      padding-inline-start: $search-icon-width;
+      padding-inline-end: 10px;
+      box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--newtab-search-text-color);
+      font-weight: 500;
+      font-size: 15px;
+    }
 
-    .fake-caret {
-      top: 18px;
+    .search-handoff-button {
+      padding-inline-end: 15px;
+
+      .fake-caret {
+        top: 18px;
+        inset-inline-start: $search-icon-width;
+
+        &:dir(rtl) {
+          background-position-x: right $search-icon-padding;
+        }
+      }
     }
   }
 }
@@ -300,41 +321,14 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       }
     }
 
-    &:not(.newtab-experience) {
-      .search-wrapper {
-        $search-height: 35px;
-        $search-icon-size: 16px;
-        $search-icon-padding: 16px;
-
-        border-bottom: solid 1px var(--newtab-border-secondary-color);
-        padding: 30px 0;
-      }
-    }
-
-    &.newtab-experience {
-      main {
-        padding-top: 124px;
-      }
-
-      &.visible-logo {
-        main {
-          padding-top: 254px;
-        }
-      }
-
-      .search-wrapper {
-        $search-height: 45px;
-        $search-icon-size: 16px;
-        $search-icon-padding: 16px;
-
-        border-bottom: solid 1px var(--newtab-seperator-line-color);
-        padding: 27px 0;
-      }
-    }
-
     .search-wrapper {
-      $search-header-bar-height: 95px;
+      $search-height: 35px;
+      $search-icon-size: 16px;
+      $search-icon-padding: 16px;
 
+      border-bottom: solid 1px var(--newtab-border-secondary-color);
+      padding: 30px 0;
+      $search-header-bar-height: 95px;
       background-color: var(--newtab-search-header-background-color);
       min-height: $search-header-bar-height;
       left: 0;
@@ -356,8 +350,46 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
         }
       }
 
+      .search-handoff-button .fake-caret {
+        top: 14px;
+      }
+
       .logo-and-wordmark {
         display: none;
+      }
+    }
+
+    &.newtab-experience {
+      main {
+        padding-top: 124px;
+      }
+
+      &.visible-logo {
+        main {
+          padding-top: 254px;
+        }
+      }
+
+      .search-wrapper {
+        $search-height: 45px;
+        $search-icon-size: 24px;
+        $search-icon-padding: 16px;
+
+        border-bottom: solid 1px var(--newtab-seperator-line-color);
+        padding: 27px 0;
+
+        .search-inner-wrapper {
+          min-height: $search-height;
+        }
+
+        input {
+          background-position-x: $search-icon-padding;
+          background-size: $search-icon-size;
+
+          &:dir(rtl) {
+            background-position-x: right $search-icon-padding;
+          }
+        }
       }
     }
 

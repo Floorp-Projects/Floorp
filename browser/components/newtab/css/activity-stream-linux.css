@@ -523,9 +523,9 @@ main {
   border-radius: 4px;
   background-color: var(--newtab-background-button-color);
   color: var(--newtab-background-button-text-color);
-  padding: 0 10px;
+  padding: 3px 10px;
   min-height: 32px;
-  max-width: 150px; }
+  max-width: 117px; }
   .personalize-button:hover {
     background-color: var(--newtab-background-button-hover-color); }
   .personalize-button:active {
@@ -1257,31 +1257,43 @@ main {
 
 .outer-wrapper.newtab-experience .search-wrapper {
   padding-bottom: 38px; }
+  .outer-wrapper.newtab-experience .search-wrapper .search-inner-wrapper {
+    min-height: 52px;
+    width: 200px; }
+    @media (min-width: 610px) {
+      .outer-wrapper.newtab-experience .search-wrapper .search-inner-wrapper {
+        width: 360px; } }
+    @media (min-width: 866px) {
+      .outer-wrapper.newtab-experience .search-wrapper .search-inner-wrapper {
+        width: 600px; } }
+    @media (min-width: 1122px) {
+      .outer-wrapper.newtab-experience .search-wrapper .search-inner-wrapper {
+        width: 720px; } }
+  .outer-wrapper.newtab-experience .search-wrapper input:focus {
+    border: 1px solid var(--newtab-focus-border);
+    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
+  .outer-wrapper.newtab-experience .search-wrapper.fake-focus .search-handoff-button {
+    border: 1px solid var(--newtab-focus-border);
+    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
+  .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button,
   .outer-wrapper.newtab-experience .search-wrapper input {
+    background: var(--newtab-textbox-background-color) var(--newtab-search-icon) 16px center no-repeat;
+    background-size: 24px;
+    padding-inline-start: 52px;
+    padding-inline-end: 10px;
     box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
-    border: 0;
+    border: 1px solid transparent;
     border-radius: 8px;
     color: var(--newtab-search-text-color);
     font-weight: 500;
     font-size: 15px; }
-  .outer-wrapper.newtab-experience .search-wrapper input:focus {
-    border: 1px solid var(--newtab-focus-border);
-    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
-  .outer-wrapper.newtab-experience .search-wrapper .search-inner-wrapper {
-    min-height: 52px; }
-  .outer-wrapper.newtab-experience .search-wrapper.fake-focus .search-handoff-button {
-    border: 1px solid var(--newtab-focus-border);
-    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
-
-.outer-wrapper.newtab-experience .search-handoff-button {
-  box-shadow: 0 3px 8px var(--newtab-search-first-shadow), 0 0 2px var(--newtab-search-second-shadow);
-  border: 0;
-  border-radius: 8px;
-  color: var(--newtab-search-text-color);
-  font-weight: 500;
-  font-size: 15px; }
-  .outer-wrapper.newtab-experience .search-handoff-button .fake-caret {
-    top: 18px; }
+  .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button {
+    padding-inline-end: 15px; }
+    .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button .fake-caret {
+      top: 18px;
+      inset-inline-start: 52px; }
+      .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button .fake-caret:dir(rtl) {
+        background-position-x: right 16px; }
 
 .search-wrapper {
   padding: 34px 0 64px; }
@@ -1449,17 +1461,9 @@ main {
     padding-top: 146px; }
   body:not(.inline-onboarding) .fixed-search.visible-logo main {
     padding-top: 276px; }
-  body:not(.inline-onboarding) .fixed-search:not(.newtab-experience) .search-wrapper {
-    border-bottom: solid 1px var(--newtab-border-secondary-color);
-    padding: 30px 0; }
-  body:not(.inline-onboarding) .fixed-search.newtab-experience main {
-    padding-top: 124px; }
-  body:not(.inline-onboarding) .fixed-search.newtab-experience.visible-logo main {
-    padding-top: 254px; }
-  body:not(.inline-onboarding) .fixed-search.newtab-experience .search-wrapper {
-    border-bottom: solid 1px var(--newtab-seperator-line-color);
-    padding: 27px 0; }
   body:not(.inline-onboarding) .fixed-search .search-wrapper {
+    border-bottom: solid 1px var(--newtab-border-secondary-color);
+    padding: 30px 0;
     background-color: var(--newtab-search-header-background-color);
     min-height: 95px;
     left: 0;
@@ -1468,14 +1472,30 @@ main {
     width: 100%;
     z-index: 9; }
     body:not(.inline-onboarding) .fixed-search .search-wrapper .search-inner-wrapper {
-      min-height: 48px; }
+      min-height: 35px; }
     body:not(.inline-onboarding) .fixed-search .search-wrapper input {
-      background-position-x: 12px;
-      background-size: 24px; }
+      background-position-x: 16px;
+      background-size: 16px; }
       body:not(.inline-onboarding) .fixed-search .search-wrapper input:dir(rtl) {
-        background-position-x: right 12px; }
+        background-position-x: right 16px; }
+    body:not(.inline-onboarding) .fixed-search .search-wrapper .search-handoff-button .fake-caret {
+      top: 14px; }
     body:not(.inline-onboarding) .fixed-search .search-wrapper .logo-and-wordmark {
       display: none; }
+  body:not(.inline-onboarding) .fixed-search.newtab-experience main {
+    padding-top: 124px; }
+  body:not(.inline-onboarding) .fixed-search.newtab-experience.visible-logo main {
+    padding-top: 254px; }
+  body:not(.inline-onboarding) .fixed-search.newtab-experience .search-wrapper {
+    border-bottom: solid 1px var(--newtab-seperator-line-color);
+    padding: 27px 0; }
+    body:not(.inline-onboarding) .fixed-search.newtab-experience .search-wrapper .search-inner-wrapper {
+      min-height: 45px; }
+    body:not(.inline-onboarding) .fixed-search.newtab-experience .search-wrapper input {
+      background-position-x: 16px;
+      background-size: 24px; }
+      body:not(.inline-onboarding) .fixed-search.newtab-experience .search-wrapper input:dir(rtl) {
+        background-position-x: right 16px; }
   body:not(.inline-onboarding) .fixed-search .search-handoff-button {
     background-position-x: 12px;
     background-size: 24px; }
